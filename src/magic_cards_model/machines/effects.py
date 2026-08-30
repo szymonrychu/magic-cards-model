@@ -75,6 +75,7 @@ from .delayed import (
     return_subject_to_hand,
 )
 from .layers import (
+    Characteristics,
     ContinuousEffect,
     ContinuousEffects,
     Duration,
@@ -2053,7 +2054,7 @@ def untap_ability_targets(game: "Game", stack_object: "StackObject") -> None:
             target.untap()
 
 
-def put_counters_on_ability_targets(kind: Counter, amount: int) -> TargetedClause:
+def put_counters_on_ability_targets(kind: Counter | str, amount: int) -> TargetedClause:
     """Put counters on each permanent this still legally targets (CR 122.1)."""
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
@@ -2129,9 +2130,14 @@ _DAMAGE_TARGET_RE = re.compile(
 )
 #: "Put N +1/+1 (or -1/-1) counters on target X." and Anafenza's "on
 #: *another* target tapped creature you control" - the same reasoning as
-#: `_TAP_UNTAP_TARGET_RE`.
+#: `_TAP_UNTAP_TARGET_RE`. `kind` is any single lowercase word, not only the
+#: two P/T kinds: CR 122.1 leaves a counter's name open ("charge", "fate",
+#: whatever a card invents), and Oblivion Stone's "Put a fate counter on
+#: target permanent" is exactly that - a named counter with no rules of its
+#: own, put on by a plain activated ability this shape already reads once the
+#: kind word is not pinned to the two P/T spellings.
 _COUNTER_TARGET_RE = re.compile(
-    rf"put (?P<n>{_COUNT}) (?P<kind>\+1/\+1|-1/-1) counters? on (?P<phrase>.*target.+)",
+    rf"put (?P<n>{_COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on (?P<phrase>.*target.+)",
     re.IGNORECASE,
 )
 #: "<Source> deals N damage divided as you choose among one or two targets."
@@ -2448,7 +2454,21 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
         if not _targets_understood(match.group("phrase"), count_agnostic=True):
             return None
         amount = _count(match.group("n"))
-        kind = Counter.PLUS_ONE if match.group("kind") == "+1/+1" else Counter.MINUS_ONE
+        kind_word = match.group("kind").lower()
+        kind: Counter | str
+        if kind_word == "+1/+1":
+            kind = Counter.PLUS_ONE
+        elif kind_word == "-1/-1":
+            kind = Counter.MINUS_ONE
+        else:
+            # A single bare word: "charge", "fate", or any other CR 122.1
+            # counter name a card invents. `Counter` names the ones the rules
+            # themselves care about; anything else stays the plain string
+            # `Counters` already stores it under.
+            try:
+                kind = Counter(kind_word)
+            except ValueError:
+                kind = kind_word
         return put_counters_on_ability_targets(kind, amount)
 
     if match := _DAMAGE_TARGET_RE.fullmatch(clause):
@@ -3418,6 +3438,12 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     sacrifice_unless_energy = _parse_sacrifice_unless_pay_energy(effect_text)
     if sacrifice_unless_energy is not None:
         return sacrifice_unless_energy
+    destroy_each_then_remove_counters = _parse_destroy_each_then_remove_all_counters(effect_text)
+    if destroy_each_then_remove_counters is not None:
+        return destroy_each_then_remove_counters
+    destroy_each = _parse_destroy_each_clause(_strip_non_effect_preamble(effect_text).strip())
+    if destroy_each is not None:
+        return destroy_each
     parsed = parse_mixed_effect(effect_text)
     if parsed is not None:
         return parsed
@@ -3645,6 +3671,415 @@ def _parse_x_energy_pay_destroy_by_mana_value(text: str) -> Effect | None:
     return effect
 
 
+# ---------------------------------------------------------------------------
+# Mass destruction and mass sacrifice: "destroy each <qualifier>" and "each
+# player sacrifices all <qualifier>" - CR 701.8a's destroy and CR 701.21a's
+# sacrifice, each applied to every matching permanent on the battlefield
+# rather than to a target CR 601.2c would announce and CR 608.2b would
+# recheck. The family: All Is Dust (sacrifice, colored), Engineered
+# Explosives and Culling Ritual (destroy, mana value against a printed
+# constant or a self-referential counter count), Oblivion Stone (destroy,
+# absence of a named counter, then an unconditional counter sweep). Wrath of
+# the Skies shares the same "destroy each <qualifier> with mana value <cmp>"
+# shape but is matched by its own dedicated parser above, ahead of this one,
+# for its energy-payment right-hand side.
+# ---------------------------------------------------------------------------
+
+#: "destroy each <qualifier>[ without a <kind> counter on it][ with mana
+#: value <cmp>]." <qualifier> is `_parse_mass_type_qualifier`'s grammar.
+_DESTROY_EACH_RE = re.compile(r"^destroy each (?P<rest>.+?)\.?$", re.IGNORECASE | re.DOTALL)
+
+#: "<qualifier> without a <kind> counter on it" - Oblivion Stone's own
+#: absence-of-a-counter restriction (CR 122.1: a counter's presence or
+#: absence is state the effect can read, not a characteristic).
+_MASS_WITHOUT_COUNTER_RE = re.compile(
+    r"^(?P<qualifier>.+?) without a (?P<kind>[a-z]+) counter on it$", re.IGNORECASE
+)
+
+#: "<qualifier> with mana value equal to <rhs>" / "<qualifier> with mana
+#: value N or less"/"...or greater" - CR 202.3's number, compared against a
+#: printed constant or a count read off the clause's own source.
+_MASS_MANA_VALUE_RE = re.compile(
+    r"^(?P<inner>.+?) with mana value (?:"
+    r"equal to (?P<eq>.+)"
+    r"|(?P<n>\d+) or (?P<dir>less|greater)"
+    r")$",
+    re.IGNORECASE,
+)
+
+#: "the number of <kind> counters on this <noun>" - Engineered Explosives's
+#: own self-referential right-hand side: "Destroy each nonland permanent
+#: with mana value equal to the number of charge counters on this artifact."
+_MASS_COUNTERS_ON_SELF_RE = re.compile(
+    r"^the number of (?P<kind>[a-z]+) counters on this \w+$", re.IGNORECASE
+)
+
+#: Normalises an Oxford-or-not "X, Y, and Z" / "X or Y" list to plain commas,
+#: so a type list reads the same however it is punctuated - Wrath of the
+#: Skies and a hypothetical "artifact or creature" both split the same way.
+_MASS_TYPE_JOIN_RE = re.compile(r",?\s+(?:and|or)\s+", re.IGNORECASE)
+
+
+def _parse_mass_type_qualifier(phrase: str) -> Callable[[Characteristics], bool] | None:
+    """A predicate for the qualifier half of a mass destruction/sacrifice
+    clause, read off the *computed* board (CR 613.5) rather than the raw
+    printing - `game.characteristics_of` is what a layer-6 type change or a
+    layer-5 colour change would otherwise be missed by.
+
+    <qualifier> is an optional "nonland " prefix (CR 205.2a's negation) ahead
+    of either:
+
+    - the bare word "permanent"/"permanents" - no restriction at all,
+    - "colored permanent"/"colorless permanent" (CR 105.2b, CR 105.2c), or
+    - one or more CR 205.2a card types joined by a comma, "and", or "or",
+      with no trailing "permanent" word - Wrath of the Skies's own
+      "artifact, creature, and enchantment".
+
+    Returns `None` for anything else - a subtype list, a colour name, a
+    controller restriction - so an unread qualifier fails the whole clause
+    rather than silently matching everything or nothing.
+    """
+    lowered = phrase.strip().lower()
+    nonland = lowered.startswith("nonland ")
+    if nonland:
+        lowered = lowered.removeprefix("nonland ").strip()
+    bare = re.sub(r"(?:^|\s+)permanents?$", "", lowered).strip()
+
+    type_predicate: Callable[[Characteristics], bool]
+    if bare == "":
+
+        def type_predicate(chars: Characteristics) -> bool:
+            return True
+
+    elif bare == "colored":
+
+        def type_predicate(chars: Characteristics) -> bool:
+            return bool(chars.colors)
+
+    elif bare == "colorless":
+
+        def type_predicate(chars: Characteristics) -> bool:
+            return not chars.colors
+
+    else:
+        words = [word for word in _MASS_TYPE_JOIN_RE.sub(", ", bare).split(",") if word.strip()]
+        types: list[Type] = []
+        for word in words:
+            try:
+                types.append(Type(word.strip()))
+            except ValueError:
+                return None
+        if not types:
+            return None
+        type_tuple = tuple(types)
+
+        def type_predicate(chars: Characteristics, types: tuple[Type, ...] = type_tuple) -> bool:
+            return any(one_type in chars.types for one_type in types)
+
+    def matches(chars: Characteristics) -> bool:
+        if nonland and Type.LAND in chars.types:
+            return False
+        return type_predicate(chars)
+
+    return matches
+
+
+def _parse_mass_mv_rhs(text: str) -> Callable[["Game", CardState | None], int | None] | None:
+    """The right-hand side of a mass-destruction mana-value comparison: a
+    printed constant (Culling Ritual's "2") or a count of counters on the
+    clause's own source (Engineered Explosives's "the number of charge
+    counters on this artifact"). Returns `None` for text neither shape reads.
+    """
+    stripped = text.strip()
+    if stripped.isdigit():
+        value = int(stripped)
+
+        def constant(game: "Game", source: CardState | None) -> int | None:
+            return value
+
+        return constant
+    match = _MASS_COUNTERS_ON_SELF_RE.fullmatch(stripped)
+    if match is None:
+        return None
+    kind = match.group("kind").lower()
+
+    def counters_on_source(game: "Game", source: CardState | None) -> int | None:
+        if source is None:
+            return None
+        # CR 603.10a / CR 400.7: Engineered Explosives sacrifices itself as
+        # part of this same activation's cost, so by the time this ability
+        # resolves it is a fresh, empty object in the graveyard -
+        # `CardState.move_to` clears `counters` and keeps what was there on
+        # `last_known_counters` for exactly this "look back at what just
+        # left" reference. A source that never left keeps reading its live
+        # counters, which is the general case for any future card sharing
+        # this shape without a self-sacrifice cost.
+        counters = (
+            source.counters if source.zone is Zone.BATTLEFIELD else source.last_known_counters
+        )
+        return counters[kind]
+
+    return counters_on_source
+
+
+def _parse_mass_mv_comparison(
+    match: re.Match[str],
+) -> Callable[["Game", Characteristics, CardState | None], bool] | None:
+    """`_MASS_MANA_VALUE_RE`'s comparison half, as a predicate over
+    (game, candidate's characteristics, this clause's own source).
+    """
+    eq_rhs = match.group("eq")
+    if eq_rhs is not None:
+        rhs = _parse_mass_mv_rhs(eq_rhs)
+        if rhs is None:
+            return None
+
+        def equals(game: "Game", chars: Characteristics, source: CardState | None) -> bool:
+            threshold = rhs(game, source)
+            return threshold is not None and chars.mana_value == threshold
+
+        return equals
+
+    n_text = match.group("n")
+    direction = match.group("dir")
+    if n_text is None or direction is None:
+        return None
+    bound = int(n_text)
+    if direction.lower() == "less":
+
+        def at_most(game: "Game", chars: Characteristics, source: CardState | None) -> bool:
+            return chars.mana_value <= bound
+
+        return at_most
+
+    def at_least(game: "Game", chars: Characteristics, source: CardState | None) -> bool:
+        return chars.mana_value >= bound
+
+    return at_least
+
+
+def _parse_mass_destroy_predicate(
+    rest: str,
+) -> Callable[["Game", CardState, CardState | None], bool] | None:
+    """The whole description behind `_DESTROY_EACH_RE`'s `rest` group - a
+    type qualifier, an optional absence-of-counter restriction, and an
+    optional mana-value comparison, ANDed together - as a predicate over
+    (game, candidate permanent, this clause's own source).
+    """
+    text = rest.strip()
+    mv_comparison = None
+    mv_match = _MASS_MANA_VALUE_RE.fullmatch(text)
+    if mv_match is not None:
+        mv_comparison = _parse_mass_mv_comparison(mv_match)
+        if mv_comparison is None:
+            return None
+        text = mv_match.group("inner").strip()
+    counter_kind = None
+    without_match = _MASS_WITHOUT_COUNTER_RE.fullmatch(text)
+    if without_match is not None:
+        counter_kind = without_match.group("kind").lower()
+        text = without_match.group("qualifier").strip()
+    type_matches = _parse_mass_type_qualifier(text)
+    if type_matches is None:
+        return None
+
+    def predicate(game: "Game", permanent: CardState, source: CardState | None) -> bool:
+        chars = game.characteristics_of(permanent)
+        if not type_matches(chars):
+            return False
+        if counter_kind is not None and chars.counters.get(counter_kind, 0) > 0:
+            return False
+        return mv_comparison is None or mv_comparison(game, chars, source)
+
+    return predicate
+
+
+def _destroy_matching(
+    game: "Game",
+    predicate: Callable[["Game", CardState, CardState | None], bool],
+    source: CardState | None,
+) -> int:
+    """Destroy every permanent on the battlefield right now that `predicate`
+    holds for, and answer how many actually left.
+
+    CR 608.2f: "some spells and abilities include actions taken on multiple
+    ... objects. In most cases, each such action is processed simultaneously."
+    The candidate set is snapshotted from `game.battlefield` once, before
+    anything is destroyed, so an earlier destruction in this same loop (and
+    whatever state-based or triggered consequence it causes) cannot change
+    what the rest of the loop still sees; each permanent's zone is rechecked
+    immediately before its own `destroy` call for the same reason CR 608.2b
+    rechecks a target - a permanent an earlier step in this loop already
+    removed cannot be destroyed again. `Game.destroy` itself is what enforces
+    CR 702.12b's indestructible, so an indestructible candidate is identified
+    here but does not count toward the returned total.
+    """
+    destroyed = 0
+    for permanent in [p for p in list(game.battlefield) if predicate(game, p, source)]:
+        if permanent.zone is Zone.BATTLEFIELD:
+            game.destroy(permanent)
+            if permanent.zone is not Zone.BATTLEFIELD:
+                destroyed += 1
+    return destroyed
+
+
+def _parse_destroy_each_clause(sentence: str) -> TargetedClause | None:
+    """ "Destroy each <qualifier>[ without a counter][ with mana value ...]."
+    on its own, with no second instruction - Engineered Explosives's whole
+    ability text. `source` is the spell itself, or the activating ability's
+    own source permanent (CR 113.7a: found by id, whatever zone it is in
+    now), since nothing here is targeted at all.
+    """
+    match = _DESTROY_EACH_RE.fullmatch(sentence.strip())
+    if match is None:
+        return None
+    predicate = _parse_mass_destroy_predicate(match.group("rest"))
+    if predicate is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = stack_object if isinstance(stack_object, CardState) else stack_object.source(game)
+        _destroy_matching(game, predicate, source)
+
+    return effect
+
+
+#: Oblivion Stone's own second activated ability: "Destroy each nonland
+#: permanent without a fate counter on it, then remove all fate counters
+#: from all permanents." - one CR 608.2c instruction in two clauses joined
+#: by "then", the second an unconditional sweep of every permanent still on
+#: the battlefield, not only the ones the first clause just destroyed.
+_DESTROY_EACH_THEN_REMOVE_ALL_COUNTERS_RE = re.compile(
+    r"^destroy each (?P<clause>.+? without a (?P<kind>[a-z]+) counter on it), "
+    r"then remove all (?P=kind) counters from all permanents\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_destroy_each_then_remove_all_counters(text: str) -> AbilityEffect | None:
+    """`_DESTROY_EACH_THEN_REMOVE_ALL_COUNTERS_RE`'s shape: destroy every
+    matching permanent, then remove every counter of the named kind from
+    every permanent still on the battlefield - including ones the first half
+    did not touch, and including ones that never had the counter at all
+    (CR 122: removing zero of a kind that is not there is simply nothing to
+    remove, not an error).
+    """
+    match = _DESTROY_EACH_THEN_REMOVE_ALL_COUNTERS_RE.fullmatch(
+        _strip_non_effect_preamble(text).strip()
+    )
+    if match is None:
+        return None
+    predicate = _parse_mass_destroy_predicate(match.group("clause"))
+    if predicate is None:
+        return None
+    kind = match.group("kind").lower()
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        _destroy_matching(game, predicate, source)
+        for permanent in list(game.battlefield):
+            present = permanent.counters[kind]
+            if present:
+                permanent.remove_counters(kind, present)
+
+    return effect
+
+
+#: Culling Ritual: "Destroy each nonland permanent with mana value 2 or
+#: less. Add {B} or {G} for each permanent destroyed this way." - the second
+#: instruction counts the first's own result, the mirror image of Wrath of
+#: the Skies (whose *first* instruction is the payment the *second* counts).
+_DESTROY_EACH_THEN_ADD_MANA_PER_DESTROYED_RE = re.compile(
+    r"^destroy each (?P<clause>.+?)\.\s*"
+    r"add (?P<colors>\{[wubrgc]\}(?:\s+or\s+\{[wubrgc]\})+) for each permanent destroyed "
+    r"this way\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_destroy_each_then_add_mana_per_destroyed(text: str) -> Effect | None:
+    """`_DESTROY_EACH_THEN_ADD_MANA_PER_DESTROYED_RE`'s shape.
+
+    The colour of each unit of mana is the controller's own choice (CR
+    601.2b's kind of choice, made as the spell resolves), asked once per
+    permanent destroyed rather than once for the whole batch - "for each
+    permanent destroyed this way" counts mana in per-unit terms (CR 107.4),
+    and nothing pins every unit to the same colour. `DecisionKind.CHOOSE_A_
+    QUALITY` is the kind CR 614.12a's own "choose a color" already asks
+    through; reused here with `options` narrowed to the two colours this
+    card actually offers rather than all five.
+    """
+    match = _DESTROY_EACH_THEN_ADD_MANA_PER_DESTROYED_RE.fullmatch(
+        _strip_non_effect_preamble(text).strip()
+    )
+    if match is None:
+        return None
+    predicate = _parse_mass_destroy_predicate(match.group("clause"))
+    if predicate is None:
+        return None
+    symbols = tuple(
+        dict.fromkeys(s.upper() for s in _MANA_SYMBOL_RE.findall(match.group("colors")))
+    )
+    if len(symbols) < 2:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        destroyed = _destroy_matching(game, predicate, spell)
+        if destroyed <= 0:
+            return
+        player = game.controller_of(spell)
+        pool = player.mana_pool
+        for _ in range(destroyed):
+            decision = Decision(
+                kind=DecisionKind.CHOOSE_A_QUALITY,
+                player=player.username,
+                prompt=f"choose a color for {spell.name}'s mana",
+                source=spell.name,
+                options=symbols,
+            )
+            value = game.ask(decision)
+            assert isinstance(value, str)
+            pool.add(Color(value))
+
+    return effect
+
+
+#: All Is Dust: "Each player sacrifices all permanents they control that are
+#: one or more colors." CR 701.21a's sacrifice, not CR 701.8a's destroy, so
+#: CR 702.12b's indestructible never enters into it - the single easiest
+#: thing to get wrong about this card.
+_EACH_PLAYER_SACRIFICES_COLORED_RE = re.compile(
+    r"^each player sacrifices all permanents they control that are one or more colors\.?$",
+    re.IGNORECASE,
+)
+
+
+def each_player_sacrifices_colored_permanents(game: "Game", spell: CardState) -> None:
+    """`_EACH_PLAYER_SACRIFICES_COLORED_RE`'s shape.
+
+    CR 608.2f: the action is processed for every player. Nothing about
+    *which* permanents each player sacrifices is a choice - it is "all" of a
+    fixed description, not "a" or "N of their choice" - so there is no
+    CR 101.4 APNAP order to get right or wrong here; `game.players_in_game`
+    is walked only for a stable, repeatable order, the same reasoning
+    `each_player_exiles_sacrifices_and_returns_creatures` above already
+    documents for its own "each player" steps. Each player's own candidates
+    are snapshotted before any of them are sacrificed, so one player's
+    sacrifice (and whatever it triggers) cannot change what a later player's
+    own step still sees.
+    """
+    for player in game.players_in_game:
+        controlled = [
+            permanent
+            for permanent in list(game.battlefield)
+            if permanent.controller == player.username
+            and bool(game.characteristics_of(permanent).colors)
+        ]
+        for permanent in controlled:
+            if permanent.zone is Zone.BATTLEFIELD:
+                game.sacrifice(permanent)
+
+
 def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     """The spell-side twin of `_ability_effect_or_notice`, for `effect_for`.
 
@@ -3673,6 +4108,14 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     x_energy_destroy = _parse_x_energy_pay_destroy_by_mana_value(effect_text)
     if x_energy_destroy is not None:
         return x_energy_destroy
+    if _EACH_PLAYER_SACRIFICES_COLORED_RE.fullmatch(whole):
+        return each_player_sacrifices_colored_permanents
+    destroy_each_then_add_mana = _parse_destroy_each_then_add_mana_per_destroyed(effect_text)
+    if destroy_each_then_add_mana is not None:
+        return destroy_each_then_add_mana
+    destroy_each_for_spell = _parse_destroy_each_clause(whole)
+    if destroy_each_for_spell is not None:
+        return destroy_each_for_spell
     parsed = parse_mixed_effect_for_spell(effect_text)
     if parsed is not None:
         return parsed

@@ -74,6 +74,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ..models.card import Color, Supertype, Type
 from ..models.card_state import CardState, Counter
+from ..models.mana import ManaCost
 from ..models.zone import Zone
 from .abilities import layer_readable_sentences
 from .combat import Keyword
@@ -330,10 +331,23 @@ def printed_characteristics(
     power = _as_number(up_face.power) if up_face is not None else _as_number(card.power)
     toughness = _as_number(up_face.toughness) if up_face is not None else _as_number(card.toughness)
     colors = up_face.colors if up_face is not None and up_face.colors is not None else card.colors
+    # CR 202.3a/712.8f: an MDFC played for its land face has *that* face's own
+    # mana cost - none printed on a land, so a mana value of 0 - not the spell
+    # face's `card.cmc`, which is what Scryfall's top-level `cmc` always
+    # reports for a modal double-faced card. `state._land_face` is only ever
+    # set for that one case (`land_face_played`'s docstring); an ordinary
+    # `transform` card's back face is never modelled as being up (see the
+    # comment above `up_face`), so `card.cmc` - already the front face's cost
+    # per CR 202.3b/712.8e - stays right for every other permanent here.
+    mana_value = (
+        ManaCost.parse(up_face.mana_cost or "").converted
+        if state.land_face_played is not None and up_face is not None
+        else card.cmc
+    )
     return Characteristics(
         card_id=state.id,
         name=card.name,
-        mana_value=card.cmc,
+        mana_value=mana_value,
         controller=state.controller,
         supertypes=tuple(card.supertypes),
         types=tuple(state.types),
