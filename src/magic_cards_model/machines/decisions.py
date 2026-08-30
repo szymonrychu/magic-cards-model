@@ -266,6 +266,13 @@ class Decision:
     #: string" (a card name, a creature type - too large a set to enumerate).
     #: Populated with the five colors' letter codes for a color choice.
     options: tuple[str, ...] = ()
+    #: `CHOOSE_CARDS` only: `True` (the default, every existing question) means
+    #: `amount` is exact - the cleanup discard, which always names precisely
+    #: how many. `False` means CR 107.1c's "any number" - Valakut Awakening's
+    #: "put any number of cards from your hand" - so `amount` is a ceiling
+    #: (every card offered) and any count from zero up to it, inclusive, is a
+    #: legal answer.
+    exact: bool = True
 
 
 def legal_options(decision: Decision) -> tuple[bool, ...]:
@@ -314,6 +321,14 @@ def default_answer(decision: Decision) -> object:
         # always legal, and is what an unscripted player does.
         return ()
     if decision.kind is DecisionKind.CHOOSE_CARDS:
+        if not decision.exact:
+            # CR 107.1c's "any number": the least-destructive, most-reversible
+            # answer is none at all - the same posture `SCRY`/`SURVEIL`'s own
+            # "keep everything on top" default already takes - not `amount`
+            # cards, which for Valakut Awakening's "any number of cards from
+            # your hand" would otherwise default an unscripted player to
+            # emptying their whole hand.
+            return ()
         # The back of `cards`, in the order the caller offered them. The
         # cleanup discard offers the hand in hand order, so this is exactly
         # "discard from the back of the hand" - the behaviour this kind

@@ -563,6 +563,19 @@ class CardState(BaseModel):
     read for the common case.
     """
     targets: list[TargetRef] = Field(default_factory=list)
+    division: list[int] | None = None
+    """CR 601.2d's announced division, one share per entry of `targets` in the
+    same order - `None` when this spell divides nothing, or when it does but
+    the caster's announcement was never recorded (kept `None` rather than
+    defaulted to an even split here, so `machines/effects.py`'s divided-damage
+    effect can tell "nothing was announced, split as evenly as it goes" apart
+    from "1 and 1 was announced on purpose"). Set once, by
+    `Casting.announce_division`, at the same CR 601.2c/d moment `targets`
+    itself is fixed - CR 115.7f then keeps it unchanged even if a target is
+    later removed and the spell's targets are changed, since a removed
+    target's own share is dropped rather than handed to whoever is left
+    (CR 608.2b already reads targets that way; this mirrors it for shares).
+    """
     summoning_sick: bool = True
     """True until its controller's turn begins with it already there.
 

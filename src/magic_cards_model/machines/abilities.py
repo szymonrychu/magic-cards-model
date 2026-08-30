@@ -894,10 +894,32 @@ def keyword_ability(card: Card, keyword: str) -> KeywordAbility | None:
 
 
 def layer_readable_sentences(
-    text: str | None, known_keywords: list[str] | None = None
+    text: str | None, known_keywords: list[str] | None = None, *, static_only: bool = False
 ) -> list[str]:
     """Every sentence of `text` this module's own line classifier says a
     continuous effect (CR 611.2, CR 611.3) could plausibly come from.
+
+    `static_only=True` restricts this to `StaticAbility` bodies alone (CR
+    604.1), dropping the `ActivatedAbility`/`TriggeredAbility` bodies the
+    default reads too. `machines/layers.py::effects_for`'s battlefield sweep
+    needs exactly that restriction: it asks, for every permanent, "does this
+    card's *static* ability generate a continuous effect" (CR 611.3), always
+    with an empty `targets` sequence. The default's inclusion of a triggered
+    or activated ability's own effect body is safe for `parsed_layer_effects`
+    itself there - every shape it reads produces nothing for an empty target
+    set, per the note below - but `looks_like_unparsed_layer_effect` has no
+    such safety net: it does not build an effect, it only asks "does this
+    text look like an attempted shape", and a triggered ability's own
+    resolution-time magnitude (Kraul Harpooner's "This creature gets +X/+0
+    ... where X is the number of creature cards in your graveyard", fully
+    handled by `_parse_undergrowth_pump_and_fight_clause` when the trigger
+    actually resolves) reads as exactly that - a false `LayerNotice` on a
+    card whose ability already works. `static_only=True` is how the
+    battlefield sweep asks its notice question without that false positive,
+    while `create_continuous_effect_of_ability`'s own call (resolving one
+    specific ability, with real targets) keeps reading the default so
+    Oliphaunt's and Basking Rootwalla's rowless triggered/activated pumps
+    still reach this classifier at all.
 
     `machines/layers.py`'s shape parser used to derive its sentences by
     stripping reminder text and an activation cost off each raw oracle-text
@@ -954,7 +976,7 @@ def layer_readable_sentences(
             body: str | None = None
             if isinstance(ability, StaticAbility):
                 body = ability.text
-            elif isinstance(ability, (ActivatedAbility, TriggeredAbility)):
+            elif not static_only and isinstance(ability, (ActivatedAbility, TriggeredAbility)):
                 body = ability.effect
             if not body:
                 continue

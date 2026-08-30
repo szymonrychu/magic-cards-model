@@ -704,6 +704,13 @@ class Casting(BaseModel):
     entwined: bool = False
     """CR 702.42a: the entwine cost is being paid, so every mode was chosen."""
     targets: list[TargetRef] = Field(default_factory=list)
+    division: list[int] | None = None
+    """CR 601.2d's announced division, one share per entry of `targets` in
+    order - set by `announce_division`, `None` until then (and `None` stays
+    the answer for a spell that never calls it, so `machines/effects.py`'s
+    divided-damage effect falls back to splitting as evenly as it goes, the
+    behaviour every existing scenario that never announces a division already
+    relies on)."""
     mode_target_slices: list[list[TargetRef]] = Field(default_factory=list)
     """CR 700.2f: `self.targets`, the same announcement, bucketed one list per
     chosen mode instance instead of flattened - set by `choose_targets`, and
@@ -1311,6 +1318,38 @@ class Casting(BaseModel):
             for index in range(len(self.chosen_mode_numbers))
         ]
 
+    def announce_division(self, shares: Iterable[int]) -> None:
+        """CR 601.2d: announce how a divided effect is split among the
+        targets already chosen - Electrolyze's 2 damage as 1 and 1 (or all 2
+        on one target), Shatterskull Smashing's X (or twice X) split however
+        the caster likes.
+
+        Targets must already be announced (`choose_targets`): `shares` is one
+        entry per entry of `self.targets`, in that same order, and CR 115.7f
+        then keeps this fixed if a target is later changed. For a variable
+        (X) division, `self.x_value` must already reflect CR 107.3a's
+        announced X - `determine_cost` sets that - since the total to divide
+        is not known before then; the doubling condition, if the card has
+        one, is applied here from `TargetingProfile.division.
+        doubled_if_x_at_least`.
+
+        A card whose text carries no division at all raises, the same way
+        `choose_targets` refuses an illegal target rather than silently doing
+        nothing.
+        """
+        profile = self.targeting
+        if profile.division is None:
+            raise ValueError(f"{self.spell.name} does not divide anything to announce (CR 601.2d)")
+        resolved_shares = [int(share) for share in shares]
+        amount = profile.division.amount
+        if amount is None:
+            amount = self.x_value
+            threshold = profile.division.doubled_if_x_at_least
+            if threshold is not None and self.x_value >= threshold:
+                amount = 2 * self.x_value
+        profile.check_division(resolved_shares, self.targets, amount=amount)
+        self.division = resolved_shares
+
     def _enchant_refusal(self, target: Any) -> str | None:
         """Why enchant stops this Aura spell targeting that, or None (CR 702.5a).
 
@@ -1548,6 +1587,11 @@ class Casting(BaseModel):
         self.spell.move_to(Zone.STACK)
         # The spell carries its targets with it, so resolution knows what it hits.
         self.spell.targets = list(self.targets)
+        # CR 601.2d: the announced division, if any, travels with the spell
+        # the same way its targets do - `None` when `announce_division` was
+        # never called, which `deal_divided_damage` reads as "fall back to
+        # splitting the total as evenly as it goes" rather than an error.
+        self.spell.division = list(self.division) if self.division is not None else None
         if self.face is not None and self.spell.card.layout is Layout.SPLIT:
             # CR 709.3b: "While on the stack, only the characteristics of the
             # half being cast exist." `CardState.face_played` is what

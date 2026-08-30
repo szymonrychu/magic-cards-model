@@ -1210,6 +1210,84 @@ _PUMP_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: Fiend Artisan: "This creature gets +1/+1 for each creature card in your
+#: graveyard." No duration (CR 611.3: a static ability's own effect, unlike
+#: `_PUMP_RE`'s "until end of turn" one-shot), and the magnitude is a live
+#: graveyard count rather than a fixed number - `_self_pump_per_graveyard_
+#: card_builder` reads `context.graveyard_of` at build time, which
+#: `effects_for` recomputes every time the board is (CR 613.5), so this stays
+#: current rather than freezing at whatever the graveyard held when the
+#: permanent entered.
+_SELF_PUMP_PER_GRAVEYARD_CARD_RE = re.compile(
+    r"^this creature gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) for each "
+    r"(?P<qualifier>[a-z]+) cards? in your graveyard\.?$",
+    re.IGNORECASE,
+)
+
+
+def _card_type_word(word: str) -> Type | None:
+    """ "creature[s]" -> `Type.CREATURE` (CR 205.2a), or `None` for anything
+    not one of the fifteen printed card types. The same singularisation
+    `machines/effects.py::_singular_card_type` does for `count_expression`'s
+    identical phrase, kept local rather than imported - `machines/effects.py`
+    already imports from this module, so the reverse import would be
+    circular.
+    """
+    singular = word[:-1] if word.lower().endswith("s") else word
+    try:
+        return Type(singular.lower())
+    except ValueError:
+        return None
+
+
+def _self_pump_per_graveyard_card_builder(
+    power: int, toughness: int, card_type: Type
+) -> EffectBuilder:
+    """Fiend Artisan: "This creature gets +1/+1 for each creature card in
+    your graveyard."
+
+    Sublayer 7c (CR 613.4c: "modify power and/or toughness ... don't set") -
+    unlike Tarmogoyf's or Boneyard Wurm's characteristic-defining "power and
+    toughness are equal to" shape (sublayer 7a, CR 613.4a), this *adds* to the
+    printed 1/1 rather than replacing it. No duration (CR 611.3: a static
+    ability's effect lasts exactly as long as its source has it), so a
+    permanent with an empty graveyard correctly reads as its own printed 1/1,
+    not 0/0. The count is read off `context.graveyard_of` at build time, the
+    same live-recompute trick Boneyard Wurm's row uses: `effects_for` rebuilds
+    this every time the board is computed (CR 613.5), so the bonus tracks the
+    controller's graveyard as it grows and shrinks rather than freezing it.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        count = sum(
+            1 for state in context.graveyard_of(source.controller) if card_type in state.types
+        )
+        if count == 0:
+            return []
+        amount_power, amount_toughness = power * count, toughness * count
+        return [
+            ContinuousEffect(
+                description=(
+                    f"{source.name}: {amount_power:+d}/{amount_toughness:+d} from "
+                    f"{count} {card_type.value} card(s) in graveyard"
+                ),
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.MODIFY,
+                timestamp=timestamp,
+                source_id=source.id,
+                selector=_only(source.id),
+                modification=modify_power_toughness(amount_power, amount_toughness),
+            )
+        ]
+
+    return builder
+
+
 _KEYWORD_GRANT_RE = re.compile(
     rf"^{_SUBJECT} gains (?P<keyword>[a-z ]+) until end of turn\.?$",
     re.IGNORECASE,
@@ -1416,7 +1494,7 @@ def _normalize_duration_first(sentence: str) -> str:
     return f"{rest} until end of turn."
 
 
-def _effect_sentences(oracle_text: str | None) -> list[str]:
+def _effect_sentences(oracle_text: str | None, *, static_only: bool = False) -> list[str]:
     """Every sentence a continuous effect could come from, off a card's own
     printed text.
 
@@ -1441,8 +1519,16 @@ def _effect_sentences(oracle_text: str | None) -> list[str]:
     `targets` sequence, and every shape below produces nothing for an empty
     target set, so the sentence being readable here only ever creates a real
     effect when the ability actually resolves and supplies its targets.
+
+    `static_only=True` narrows this to `StaticAbility` bodies alone - see
+    `layer_readable_sentences`'s own docstring for why `effects_for`'s
+    `looks_like_unparsed_layer_effect` call needs exactly that restriction
+    and the effect-building call does not strictly need it but takes it too,
+    for symmetry: a triggered/activated ability's own effect body should
+    never be treated as this permanent's *static* (CR 611.3) contribution,
+    whether or not it happens to parse.
     """
-    return layer_readable_sentences(oracle_text)
+    return layer_readable_sentences(oracle_text, static_only=static_only)
 
 
 def _pump_and_keyword_builder(power: int, toughness: int, keyword: str | None) -> EffectBuilder:
@@ -1842,6 +1928,13 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
                 return None
             keyword = keyword.strip().capitalize()
         return _pump_and_keyword_builder(power, toughness, keyword)
+    if match := _SELF_PUMP_PER_GRAVEYARD_CARD_RE.fullmatch(sentence):
+        card_type = _card_type_word(match.group("qualifier"))
+        if card_type is None:
+            return None
+        return _self_pump_per_graveyard_card_builder(
+            int(match.group("power")), int(match.group("toughness")), card_type
+        )
     if match := _KEYWORD_GRANT_RE.fullmatch(sentence):
         keyword = match.group("keyword").strip()
         if keyword.lower() not in _KNOWN_KEYWORDS:
@@ -1905,7 +1998,9 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
     return None
 
 
-def parsed_layer_effects(oracle_text: str | None) -> EffectBuilder | None:
+def parsed_layer_effects(
+    oracle_text: str | None, *, static_only: bool = False
+) -> EffectBuilder | None:
     """Every sentence of `oracle_text` that is one of the generalised shapes
     above, combined into one builder - or `None` if none of them matched at all.
 
@@ -1913,10 +2008,15 @@ def parsed_layer_effects(oracle_text: str | None) -> EffectBuilder | None:
     intervening *if*, a bare keyword line, a token-creation instruction) are
     silently skipped rather than failing the whole card: they belong to a
     different registry or mechanism, not to a continuous effect at all.
+
+    `static_only=True` restricts the sentences considered to `StaticAbility`
+    bodies (see `_effect_sentences`) - `effects_for`'s battlefield sweep uses
+    it so a triggered/activated ability's own effect text is never read as
+    this permanent's static contribution.
     """
     builders = [
         builder
-        for sentence in _effect_sentences(oracle_text)
+        for sentence in _effect_sentences(oracle_text, static_only=static_only)
         if (builder := _parse_layer_sentence(sentence)) is not None
     ]
     if not builders:
@@ -1936,18 +2036,24 @@ def parsed_layer_effects(oracle_text: str | None) -> EffectBuilder | None:
     return combined
 
 
-def looks_like_unparsed_layer_effect(oracle_text: str | None) -> bool:
+def looks_like_unparsed_layer_effect(oracle_text: str | None, *, static_only: bool = False) -> bool:
     """True if some sentence of `oracle_text` reads like one of the
     pump/keyword-grant/anthem shapes above but did not fully match - the
     fail-closed signal a caller records as a `LayerNotice` instead of
     silently producing nothing, mirroring `looks_like_unparsed_cost_modifier`
     (`machines/cost.py`) and the effect `TargetingNotice`/`InterveningIfNotice`
     (`machines/triggers.py`) already record for targets and intervening *if*.
+
+    `static_only=True` is what `effects_for`'s battlefield sweep passes: see
+    `layer_readable_sentences`'s docstring for why an unrestricted call here
+    would fire a false notice on a permanent whose triggered ability (Kraul
+    Harpooner's undergrowth pump) already resolves correctly through its own
+    dedicated parser and never touches this function's answer at all.
     """
     return any(
         _LOOKS_LIKE_LAYER_EFFECT_RE.match(_normalize_duration_first(sentence))
         and _parse_layer_sentence(sentence) is None
-        for sentence in _effect_sentences(oracle_text)
+        for sentence in _effect_sentences(oracle_text, static_only=static_only)
     )
 
 
@@ -1957,7 +2063,11 @@ def is_resolution_layer_effect_text(text: str | None) -> bool:
     keyword grant, a base P/T set, or "becomes a[n] <type> creature ...".
     The anthem shape is deliberately excluded (CR 611.3: "creatures you
     control get +N/+N" is always a permanent's own static ability), even
-    when it fully parses.
+    when it fully parses - and so is Fiend Artisan's durationless "this
+    creature gets +N/+N for each ... in your graveyard" self-pump, for the
+    identical reason: it opens like `_PUMP_RE`'s one-shot shape but carries no
+    "until end of turn", so it is CR 611.3's own static ability, never a
+    resolving spell's or ability's effect.
 
     `machines/effects.py` uses this - not `parsed_layer_effects` or
     `looks_like_unparsed_layer_effect` directly - to decide whether an
@@ -1975,11 +2085,12 @@ def is_resolution_layer_effect_text(text: str | None) -> bool:
     for sentence in _effect_sentences(text):
         normalized = _normalize_duration_first(sentence)
         anthem_opening = _LOOKS_LIKE_ANTHEM_RE.match(normalized)
+        self_graveyard_pump_opening = _SELF_PUMP_PER_GRAVEYARD_CARD_RE.match(normalized)
         has_duration = Duration.UNTIL_END_OF_TURN in normalized
-        if anthem_opening and not has_duration:
+        if (anthem_opening or self_graveyard_pump_opening) and not has_duration:
             # CR 611.3's own static shape: "lasts for as long as the object
             # with that static ability remains on the battlefield", i.e.
-            # never expires on its own - the one shape excluded on purpose.
+            # never expires on its own - the two shapes excluded on purpose.
             continue
         if anthem_opening and has_duration:
             # Same opening words, but an explicit duration ("Creatures you
@@ -2732,6 +2843,8 @@ def effects_for(
     targets: Sequence[CardState] = (),
     context: LayerContext | None = None,
     notices: list[LayerNotice] | None = None,
+    *,
+    static_only: bool = False,
 ) -> list[ContinuousEffect]:
     """The continuous effects one card generates, or none if it is not registered
     and its own oracle text is not one of `parsed_layer_effects`'s shapes either.
@@ -2744,6 +2857,30 @@ def effects_for(
     `ContinuousEffects` always does - collects a `LayerNotice` for oracle text
     that reads like a pump/keyword/anthem shape but did not fully parse,
     rather than the card silently doing nothing.
+
+    This one function serves two different callers with two different
+    questions, which is what `static_only` tells apart:
+
+    - `static_effects` (the battlefield sweep, called for every permanent
+      every time the board is computed, CR 613.5) asks "does this
+      permanent's own *static* ability (CR 611.3) generate a continuous
+      effect" - `static_only=True`, since a triggered or activated ability's
+      own effect body is never this permanent's static contribution, whether
+      or not it happens to parse. Without this, Kraul Harpooner's undergrowth
+      pump - "This creature gets +X/+0 ... where X is the number of creature
+      cards in your graveyard", fully handled by its own dedicated
+      `_parse_undergrowth_pump_and_fight_clause` when the trigger actually
+      resolves - used to record a false `LayerNotice` here, because the sweep
+      read that triggered ability's own sentence and it looks like (but is
+      not) one of this module's generalised pump shapes.
+    - `ContinuousEffects.create` (a spell or ability that has just resolved,
+      CR 611.2) asks "what does *this resolving ability's own effect* say" -
+      `static_only=False` (the default), because the resolving ability may
+      well be the `TriggeredAbility`/`ActivatedAbility` whose body this
+      builds the effect from (Oliphaunt's attack trigger, Basking Rootwalla's
+      activated pump): restricting to `StaticAbility` bodies there would make
+      `create_continuous_effect_of_ability` blind to the exact text it exists
+      to read.
     """
     builder = LAYER_EFFECTS.get(source.name)
     # `oracle_text` reads the up face (CR 712.8d/712.8f); `card.oracle_text`
@@ -2753,11 +2890,11 @@ def effects_for(
     # face-up side went unread.
     text = source.oracle_text
     if builder is None:
-        builder = parsed_layer_effects(text)
+        builder = parsed_layer_effects(text, static_only=static_only)
     if builder is None:
         if (
             notices is not None
-            and looks_like_unparsed_layer_effect(text)
+            and looks_like_unparsed_layer_effect(text, static_only=static_only)
             # The board is recomputed continually (CR 613.5), so the same
             # unreadable permanent is asked about over and over - record it
             # once, not once per computation.
@@ -2784,7 +2921,7 @@ def static_effects(
     shared = context or LayerContext()
     effects: list[ContinuousEffect] = []
     for timestamp, permanent in enumerate(permanents, start=1):
-        effects.extend(effects_for(permanent, timestamp, (), shared, notices))
+        effects.extend(effects_for(permanent, timestamp, (), shared, notices, static_only=True))
     return effects
 
 
@@ -2994,7 +3131,14 @@ class ContinuousEffects(BaseModel):
         effects: list[ContinuousEffect] = []
         for permanent in permanents:
             effects.extend(
-                effects_for(permanent, self.entered[permanent.id], (), shared, self.layer_notices)
+                effects_for(
+                    permanent,
+                    self.entered[permanent.id],
+                    (),
+                    shared,
+                    self.layer_notices,
+                    static_only=True,
+                )
             )
         return effects + self.active
 

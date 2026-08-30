@@ -87,16 +87,18 @@ def test_a_ground_creature_with_granted_double_strike_still_gets_blocked():
     )
 
 
-def test_fiend_artisans_variable_pump_is_not_one_of_the_generalised_shapes():
+def test_fiend_artisans_variable_pump_counts_the_graveyard_live():
     """ "This creature gets +1/+1 for each creature card in your graveyard."
 
-    Starts exactly like the pump shape `parsed_layer_effects` reads
-    ("this creature gets"), but the amount is not a fixed +N/+N - it counts the
-    controller's graveyard, which no shape this wave generalises accounts for.
-    Fail-closed: the printed 1/1 is untouched and a `LayerNotice` records that
-    the text looked like this wave's territory but could not be read, rather
-    than the card silently doing nothing indistinguishable from having no text
-    at all.
+    W13: `_self_pump_per_graveyard_card_builder` (`machines/layers.py`) reads
+    this shape - CR 613.4c's sublayer 7c modifier, not Tarmogoyf's/Boneyard
+    Wurm's sublayer 7a characteristic-defining "power and toughness are equal
+    to" shape, since this one adds to the printed 1/1 rather than replacing
+    it. No duration (CR 611.3: a static ability's own effect lasts exactly as
+    long as its source has it), and the count is read off the controller's
+    graveyard fresh every time `effects_for` rebuilds it (CR 613.5), so a
+    second creature card landing in the graveyard mid-turn grows the bonus
+    without anything re-triggering.
     """
     scenario = (
         Scenario()
@@ -107,17 +109,18 @@ def test_fiend_artisans_variable_pump_is_not_one_of_the_generalised_shapes():
     scenario.start_at(Step.PRECOMBAT_MAIN)
     artisan = scenario.creature("Fiend Artisan", "alice")
 
-    board = scenario.game.continuous_effects.board(scenario.game.battlefield)
+    # `Game.computed_board` (not the bare `continuous_effects.board` the rest
+    # of this file uses) because the graveyard count needs a populated
+    # `LayerContext.graveyard_by_controller` - `Game.computed_board` is what
+    # builds that from every player's real graveyard (CR 205.2a); an empty
+    # context, as the earlier notice-only version of this test used, reads
+    # every graveyard as empty and would find nothing to count either way.
+    board = scenario.game.computed_board()
 
-    assert board.of(artisan).power_toughness == (1, 1), "the count is not read; nothing applied"
-    notices = scenario.game.continuous_effects.layer_notices
-    assert notices == [
-        LayerNotice(
-            source_id=artisan.id,
-            source_name="Fiend Artisan",
-            text=card("Fiend Artisan").oracle_text,
-        )
-    ]
+    assert board.of(artisan).power_toughness == (2, 2), (
+        "printed 1/1 plus one creature card in the bin"
+    )
+    assert scenario.game.continuous_effects.layer_notices == []
 
 
 def test_a_triggered_abilitys_own_pump_reaches_the_layer_engine_with_no_row():

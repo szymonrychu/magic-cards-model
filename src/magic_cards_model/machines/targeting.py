@@ -621,10 +621,21 @@ class Division(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
-    amount: int
-    """How much there is to divide: Electrolyze's 2 damage."""
+    amount: int | None
+    """How much there is to divide: Electrolyze's 2 damage. `None` for a
+    variable amount printed as "X" (Shatterskull Smashing's "X damage divided
+    as you choose among ..."), which CR 107.3a fixes only once the caster
+    announces X - `check_division`'s `amount` parameter is how a caller
+    supplies the resolved number for one of these."""
     what: str
     """What is being divided, as the card words it: "damage", "+1/+1 counters"."""
+    doubled_if_x_at_least: int | None = None
+    """Shatterskull Smashing's own second sentence: "If X is 6 or more, ...
+    deals twice X damage divided as you choose among them instead." A second
+    generalised condition alongside the plain X division above, not a second
+    card-specific field - any future card phrasing the identical "if X is N or
+    more, twice X ... instead" doubles the same way. `None` for every fixed
+    or plain-X division that carries no such clause."""
 
 
 class TargetingProfile(BaseModel):
@@ -817,7 +828,9 @@ class TargetingProfile(BaseModel):
                 )
         return result
 
-    def check_division(self, shares: Sequence[int], targets: Sequence[Any]) -> None:
+    def check_division(
+        self, shares: Sequence[int], targets: Sequence[Any], *, amount: int | None = None
+    ) -> None:
         """Raise if this is not a legal division of the effect (CR 601.2d).
 
         One share per target, in the order the targets were announced. Every
@@ -825,9 +838,22 @@ class TargetingProfile(BaseModel):
         least one of whatever is being divided", and they add up to exactly the
         amount the card divides - CR 107.1a rules out splitting it any other
         way.
+
+        `amount` overrides `self.division.amount` for a variable division
+        (Shatterskull Smashing's X, doubled if X is 6 or more): the printed
+        amount is `None` there because CR 107.3a's X is not fixed until the
+        caster announces it, so the caller resolves the real number (from
+        `Casting.x_value`, doubled per `Division.doubled_if_x_at_least`) and
+        hands it in here rather than this method guessing at X itself.
         """
         if self.division is None:
             raise ValueError("this spell divides nothing, so there is no division to announce")
+        total = self.division.amount if amount is None else amount
+        if total is None:
+            raise ValueError(
+                f"{self.division.what} is a variable (X) division; pass amount= "
+                f"with X already resolved (CR 107.3a, CR 601.2d)"
+            )
         if len(shares) != len(targets):
             raise ValueError(
                 f"the division needs one share per target: {len(shares)} shares for "
@@ -837,9 +863,9 @@ class TargetingProfile(BaseModel):
             raise ValueError(
                 f"each target must receive at least one of the {self.division.what} (CR 601.2d)"
             )
-        if sum(shares) != self.division.amount:
+        if sum(shares) != total:
             raise ValueError(
-                f"the division must use all {self.division.amount} {self.division.what}, "
+                f"the division must use all {total} {self.division.what}, "
                 f"not {sum(shares)} (CR 601.2d)"
             )
 
@@ -1312,19 +1338,38 @@ def _parse(oracle_text: str, spell_only: bool = True) -> TargetingProfile:
     return TargetingProfile(requirements=tuple(requirements), division=division)
 
 
+#: Shatterskull Smashing's second sentence: "If X is 6 or more, [Name] deals
+#: twice X damage divided as you choose among them instead." Generalised on
+#: the threshold and card name, not keyed to this one printing - any future
+#: card phrasing the identical doubling condition reads the same way.
+_DOUBLED_IF_X_AT_LEAST_RE = re.compile(
+    r"\bif x is (?P<threshold>\d+) or more\b[^.]*\btwice x\b", re.IGNORECASE | re.DOTALL
+)
+
+
 def _read_division(text: str) -> Division | None:
     """The effect this text divides among its targets, if any (CR 601.2d).
 
     "Electrolyze deals 2 damage divided as you choose among one or two targets"
     and "Distribute two +1/+1 counters among one or two target creatures" are
-    the two shapes; both put the amount before the word "among" and the targets
-    after it.
+    the two fixed-amount shapes; both put the amount before the word "among"
+    and the targets after it. A third shape has no fixed amount at all -
+    Shatterskull Smashing's "deals X damage divided as you choose among up to
+    two target creatures and/or planeswalkers" - CR 107.3a's X, not resolved
+    until the caster announces it as part of the same casting (`Division.
+    amount` is `None` for this one), optionally doubled by a second sentence
+    `_DOUBLED_IF_X_AT_LEAST_RE` reads off the same whole text.
     """
     match = _DIVIDED.search(text)
     if match is None:
         return None
     if match.group("damage") is not None:
-        amount = _count_word(match.group("damage").lower())
+        word = match.group("damage").lower()
+        if word == "x":
+            doubled = _DOUBLED_IF_X_AT_LEAST_RE.search(text)
+            threshold = int(doubled.group("threshold")) if doubled else None
+            return Division(amount=None, what="damage", doubled_if_x_at_least=threshold)
+        amount = _count_word(word)
         return None if amount is None else Division(amount=amount, what="damage")
     amount = _count_word(match.group("counters").lower())
     if amount is None:

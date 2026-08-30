@@ -2537,9 +2537,19 @@ class Game(BaseModel):
                     f"{decision.prompt}: cannot choose a card that was not offered: "
                     f"{', '.join(stray)}"
                 )
-            if len(value) != decision.amount:
+            if decision.exact:
+                if len(value) != decision.amount:
+                    raise ValueError(
+                        f"{decision.prompt}: needs {decision.amount} card(s) chosen, "
+                        f"{len(value)} given"
+                    )
+            elif len(value) > decision.amount:
+                # CR 107.1c: "any number" runs zero up to every card offered,
+                # never a fixed count - Valakut Awakening's own "any number of
+                # cards from your hand" is the shape `exact=False` reads.
                 raise ValueError(
-                    f"{decision.prompt}: needs {decision.amount} card(s) chosen, {len(value)} given"
+                    f"{decision.prompt}: at most {decision.amount} card(s) may be chosen "
+                    f"(CR 107.1c), {len(value)} given"
                 )
             return value
 

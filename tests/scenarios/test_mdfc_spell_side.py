@@ -36,25 +36,43 @@ directly. Two more call sites had the identical defect and are fixed alongside
   read from its text: casting one and passing any target raised "too many
   targets ... at most 0" instead of accepting the printed target.
 
-Sink into Stupor // Soporific Springs is the one of these four fixtures whose
-spell-side text is a shape `machines/effects.py`'s clause parser already
-reads end to end, so it is the only one proven all the way through here.
-Shatterskull Smashing, Valakut Awakening and Turntimber Symbiosis are proven
-up to the fix's actual boundary - their spell-side oracle text is now read
-correctly (`effect_for` receives the real sentence, not `None`) - and then
-marked `xfail`: none of their clause shapes exist in the parser yet
-(`docs/engine-coverage.md`'s "Recording an announced division" row already
-documents that `_DIVIDED_DAMAGE_RE` only reads a fixed damage amount, not an
-"X damage, doubled if X is 6 or more" clause; the other two are an impulsive
-draw-and-mill-back and a look-seven-put-a-creature-onto-the-battlefield
-effect, neither of which has a registry row or a generic shape either). That
-gap predates this fix and is unrelated to it - the same three sentences would
-be just as unparsed on a normal, single-faced card.
+Sink into Stupor // Soporific Springs was already the one of these four
+fixtures whose spell-side text is a shape `machines/effects.py`'s clause
+parser reads end to end. **W13** closes the other three, which used to be
+`xfail` here up to the DFC fix's own boundary (their oracle text read
+correctly, but no clause shape existed for their effects):
+
+- **Shatterskull Smashing** - "X damage divided as you choose among up to two
+  targets, doubled if X is 6 or more" needed CR 601.2d's announced division
+  recorded somewhere real: `Casting.announce_division`, `CardState.division`,
+  and `TargetingProfile.Division.amount` widened to `int | None` for a
+  variable (X) amount, with `doubled_if_x_at_least` as the generalised
+  "doubled if X is N or more" condition. `_parse_x_damage_divided_and_
+  doubled_clause` in `machines/effects.py` reads X off `Game.cast_record` at
+  resolution and pays out through the same `_deal_divided_damage_shares` a
+  plain fixed-amount division (Electrolyze) now also goes through - the
+  caster's real announcement if there is one, an even split otherwise, which
+  is what keeps every existing Electrolyze scenario byte-for-byte unchanged.
+- **Valakut Awakening** - "put any number of cards from your hand on the
+  bottom of your library, then draw that many plus one" is CR 608.2d's plain
+  choice among the caster's own hand, `CHOOSE_CARDS` widened with a new
+  `Decision.exact=False` for CR 107.1c's "any number" (zero up to every card
+  offered, default answer none rather than all of them).
+- **Turntimber Symbiosis** - "look at the top seven ... may put a creature
+  card ... onto the battlefield [with bonus counters if cheap] ... put the
+  rest on the bottom in a random order" is `_parse_look_top_n_may_
+  battlefield_creature_bonus_clause`, close kin to `malevolent_rumble`'s
+  "reveal the top four ... may put a permanent card into your hand" but with
+  the battlefield (not the hand) as the kept card's destination and the
+  library's bottom (not the graveyard) for the rest.
+
+None of the three effects are keyed to these cards by name - each is a
+generalised clause shape any future card in the same phrasing would also
+reach, per this project's "parse off oracle text, no card-name keys" rule.
 """
 
-import pytest
-
 from magic_cards_model.models import Zone
+from magic_cards_model.models.card_state import Counter
 
 from .harness import Scenario
 
@@ -109,20 +127,20 @@ def test_sink_into_stupor_bounces_a_spell_on_the_stack():
 # -- the other three: oracle text now reads correctly, effect still unmodelled --
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Shatterskull Smashing's spell side now has its real oracle text read "
-    "(the DFC-null-field bug this file covers is fixed - `effect_for` sees the "
-    "printed sentence, not `None`), but `machines/effects.py` has no clause shape "
-    'for "X damage divided as you choose among up to two targets, doubled if X is '
-    "6 or more\" - `docs/engine-coverage.md`'s 'Recording an announced division' row "
-    "already documents that `_DIVIDED_DAMAGE_RE` only reads a fixed damage amount, "
-    "never an X. Unrelated to the DFC fix: the same sentence would be just as "
-    "unparsed on a single-faced card.",
-)
 def test_shatterskull_smashing_deals_its_divided_damage():
     """Shatterskull Smashing: "deals X damage divided as you choose among up
     to two target creatures and/or planeswalkers."
+
+    W13 gives CR 601.2d's announced division somewhere to live -
+    `Casting.announce_division`, checked by `TargetingProfile.check_division`
+    and carried to the stack on `CardState.division` - and reads Shatterskull
+    Smashing's own X-based amount off `machines/targeting.py`'s `Division.
+    amount=None` (variable) case. `casting.x_value` is set directly, ahead of
+    `choose_targets`, because `Casting.targeting` substitutes X into the whole
+    oracle text once it knows one (needed for "up to X target" cards) and
+    would otherwise read this card's own "X damage divided ..." as "0 damage
+    divided ...", same as CR 601.2b's real order: X is announced before
+    targets.
     """
     scenario = (
         Scenario()
@@ -134,6 +152,7 @@ def test_shatterskull_smashing_deals_its_divided_damage():
     bears = scenario.creature("Grizzly Bears", "bob")
 
     casting = scenario.cast("Shatterskull Smashing")
+    casting.x_value = 3
     casting.choose_targets([bears])
     casting.determine_cost(x_value=3)
     payment = casting.begin_paying()
@@ -147,20 +166,80 @@ def test_shatterskull_smashing_deals_its_divided_damage():
     assert bears.zone is Zone.GRAVEYARD, "3 damage is lethal to a 2/2"
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Valakut Awakening's spell side now has its real oracle text read (same "
-    "DFC-null-field fix as the rest of this file), but its loot-for-more effect - "
-    '"Put any number of cards from your hand on the bottom of your library, then '
-    'draw that many cards plus one" - has no `EFFECTS` row and matches no shape '
-    "`machines/effects.py`'s clause parser reads, so `effect_for` still returns "
-    "None. Unrelated to the DFC fix: the same sentence is unparsed regardless of "
-    "which face it is printed on.",
-)
+def test_shatterskull_smashing_divides_x_across_two_targets_as_announced():
+    """The caster's own CR 601.2d announcement, not an even split: X=5 across
+    a 2-toughness and a 3-toughness creature, 1 and 4, kills only the second.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Shatterskull Smashing"], battlefield=["Mountain"] * 7)
+        .player("bob", battlefield=["Grizzly Bears", "Watchwolf"])
+        .build()
+    )
+    _to_main(scenario)
+    bears = scenario.creature("Grizzly Bears", "bob")  # 2/2
+    wolf = scenario.creature("Watchwolf", "bob")  # 3/3
+
+    casting = scenario.cast("Shatterskull Smashing")
+    casting.x_value = 5
+    casting.choose_targets([bears, wolf])
+    casting.announce_division([1, 4])
+    casting.determine_cost(x_value=5)
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *scenario.untapped_sources(*(["Mountain"] * 7)))
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    assert bears.zone is Zone.BATTLEFIELD and bears.damage == 1, "1 damage does not kill a 2/2"
+    assert wolf.zone is Zone.GRAVEYARD, "4 damage kills a 3/3"
+
+
+def test_shatterskull_smashing_doubles_at_x_six_or_more():
+    """CR 601.2d's "twice X" branch: X=6 deals 12, not 6.
+
+    Emrakul, the Promised End's printed 13 toughness survives either number,
+    so the marked-damage count itself (not just "did it die") is what tells
+    the doubled total apart from the plain one - and its own "protection from
+    instants" does not apply, since Shatterskull Smashing is a sorcery.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Shatterskull Smashing"], battlefield=["Mountain"] * 8)
+        .player("bob", battlefield=["Emrakul, the Promised End"])
+        .build()
+    )
+    _to_main(scenario)
+    emrakul = scenario.creature("Emrakul, the Promised End", "bob")
+
+    casting = scenario.cast("Shatterskull Smashing")
+    casting.x_value = 6
+    casting.choose_targets([emrakul])
+    casting.determine_cost(x_value=6)
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *scenario.untapped_sources(*(["Mountain"] * 8)))
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    assert emrakul.zone is Zone.BATTLEFIELD, "13 toughness survives even the doubled 12"
+    assert emrakul.damage == 12, "X is 6, so twice X (12) is dealt, not X"
+
+
 def test_valakut_awakening_loots_cards_away():
     """Valakut Awakening: put any number of hand cards on the bottom of the
-    library, then draw that many plus one - net card advantage, not just a
-    filter.
+    library, then draw that many plus one - a filter, not card advantage.
+
+    W13: putting N cards on the bottom and then drawing N plus one always
+    nets exactly +1 card relative to the moment before the bottoming (CR
+    608.2c: the two sentences are one instruction, the draw count linked to
+    however many actually went to the bottom) - so relative to *before
+    casting the spell*, hand size is unchanged: the one card spent casting
+    Valakut Awakening is exactly replaced by the "plus one" of the draw, no
+    matter how many of the caster's own cards they choose to bottom first.
+    That is what makes this a *filter* (find better cards, keep the same hand
+    size) rather than card advantage the way a plain draw spell is. Which
+    cards go is CR 608.2d's plain choice - `scenario.will_choose_cards`
+    scripts both Forests so the test proves the choice actually moved them,
+    not just that *some* draw happened.
     """
     scenario = (
         Scenario()
@@ -174,32 +253,39 @@ def test_valakut_awakening_loots_cards_away():
     )
     _to_main(scenario)
     hand_before_casting = len(scenario.player("alice").hand)
+    forests = [card for card in scenario.player("alice").hand if card.name == "Forest"]
+    scenario.will_choose_cards(*forests, username="alice", source="Valakut Awakening")
 
     sources = scenario.untapped_sources("Mountain", "Mountain", "Mountain")
     scenario.cast_and_resolve("Valakut Awakening", *sources)
 
     # Casting Valakut Awakening itself removes it from hand (1 card, not a
     # target - "put any number of cards" is the caster's own choice during
-    # resolution, CR 608.2d, not a CR 601.2c target). Putting both Forests on
-    # the bottom and drawing three back (2 + 1) is +2 cards net.
+    # resolution, CR 608.2d, not a CR 601.2c target). Bottoming both Forests
+    # and drawing three back (2 + 1) leaves hand size exactly where it
+    # started - the spell is a wash on card count, by design.
     after = len(scenario.player("alice").hand)
-    assert after == hand_before_casting - 1 + 3, "both Forests bottomed, three cards drawn back"
+    assert after == hand_before_casting, (
+        "bottoming N and drawing N+1 is always a net +1, wash overall"
+    )
+    assert all(forest.zone is Zone.LIBRARY for forest in forests), "both Forests actually moved"
+    assert all(forest not in scenario.player("alice").hand for forest in forests)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Turntimber Symbiosis's spell side now has its real oracle text read "
-    "(same DFC-null-field fix as the rest of this file), but its impulsive-draw "
-    'shape - "Look at the top seven cards of your library. You may put a creature '
-    'card from among them onto the battlefield ..." - has no `EFFECTS` row and '
-    "matches no generic clause shape either, so `effect_for` still returns None. "
-    "Unrelated to the DFC fix: the same sentence is unparsed regardless of which "
-    "face it is printed on.",
-)
 def test_turntimber_symbiosis_puts_a_creature_onto_the_battlefield():
     """Turntimber Symbiosis: look at the top seven, may put a creature onto
     the battlefield, cheap ones (mana value 3 or less) arrive with three
     extra +1/+1 counters.
+
+    W13: `_parse_look_top_n_may_battlefield_creature_bonus_clause`
+    (`machines/effects.py`) reads this shape - CR 608.2d's plain "you may",
+    close kin to `malevolent_rumble`'s "reveal the top four ... may put a
+    permanent card into your hand", except the kept card's destination is the
+    battlefield (CR 110.2a, no casting) and the rest go to the *bottom* of the
+    library in a random order rather than the graveyard. With exactly one
+    creature among the seven looked at, both the `MAY` and the `CHOOSE_CARDS`
+    default answers (take it; the sole candidate) put it onto the battlefield
+    with no scripting needed.
     """
     scenario = (
         Scenario()
@@ -220,6 +306,6 @@ def test_turntimber_symbiosis_puts_a_creature_onto_the_battlefield():
 
     bears = scenario.creature("Grizzly Bears", "alice")
     assert bears.zone is Zone.BATTLEFIELD
-    assert bears.counters.plus_one_plus_one == 3, (
+    assert bears.counter_count(Counter.PLUS_ONE) == 3, (
         "mana value 2, so it gets the three bonus counters"
     )

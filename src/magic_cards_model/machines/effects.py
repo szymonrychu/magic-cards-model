@@ -160,10 +160,13 @@ def deal_divided_damage(total: int) -> Effect:
     """Damage "divided as you choose among one or two targets" (CR 601.2d).
 
     "The player announces the division. Each of these targets must receive at
-    least one of whatever is being divided." There is nobody here to announce
-    it, so the division is as even as it goes and the remainder lands on the
-    first target chosen - which for Electrolyze's 2 damage is the whole of it on
-    one target, or 1 each on two.
+    least one of whatever is being divided." W13 gives that announcement
+    somewhere to live - `spell.division`, set by `Casting.announce_division`
+    - and `_deal_divided_damage_shares` reads it when it is there. A caster
+    who never announces one (every scenario that predates this mechanism)
+    still gets the old fallback: split as evenly as it goes with the
+    remainder on the first target, which for Electrolyze's 2 damage is the
+    whole of it on one target, or 1 each on two either way.
 
     Only targets that are still legal on resolution are paid out (CR 608.2b),
     and the share the illegal ones would have had is simply not dealt: the
@@ -171,18 +174,43 @@ def deal_divided_damage(total: int) -> Effect:
     """
 
     def effect(game: "Game", spell: CardState) -> None:
-        chosen = len(spell.targets)
-        if chosen == 0:
-            return
-        shares = [total // chosen] * chosen
-        for index in range(total % chosen):
-            shares[index] += 1
-        for reference, share in zip(spell.targets, shares, strict=True):
-            target = game.legal_target(spell, reference)
-            if target is not None and share > 0:
-                game.deal_damage(target, share, source=spell)
+        _deal_divided_damage_shares(game, spell, total)
 
     return effect
+
+
+def _divided_damage_shares(total: int, chosen: int, announced: list[int] | None) -> list[int]:
+    """The per-target shares a divided-damage effect pays out (CR 601.2d).
+
+    `announced` is `spell.division` - the caster's real CR 601.2c/d
+    announcement, recorded by `Casting.announce_division` and carried on the
+    spell. When it is there and matches the target count, it is used exactly
+    as announced. When it is not (no caller ever announced one - every
+    scenario that predates this mechanism, and any that still does not use
+    it), the total is split as evenly as it goes with the remainder on the
+    first target, exactly `deal_divided_damage`'s original behaviour.
+    """
+    if announced is not None and len(announced) == chosen:
+        return list(announced)
+    shares = [total // chosen] * chosen
+    for index in range(total % chosen):
+        shares[index] += 1
+    return shares
+
+
+def _deal_divided_damage_shares(game: "Game", spell: CardState, total: int) -> None:
+    """Pay out `total` damage divided among `spell.targets` (CR 601.2d, CR
+    608.2b). Shared by `deal_divided_damage` (a fixed printed amount) and
+    Shatterskull Smashing's own X-based, conditionally doubled version.
+    """
+    chosen = len(spell.targets)
+    if chosen == 0 or total <= 0:
+        return
+    shares = _divided_damage_shares(total, chosen, spell.division)
+    for reference, share in zip(spell.targets, shares, strict=True):
+        target = game.legal_target(spell, reference)
+        if target is not None and share > 0:
+            game.deal_damage(target, share, source=spell)
 
 
 def draw_cards(count: int) -> Effect:
@@ -3107,6 +3135,181 @@ _DIVIDED_DAMAGE_RE = re.compile(
     rf".*\bdeals? (?P<n>{_COUNT}) damage divided as you choose among one or two targets\.?$",
     re.IGNORECASE,
 )
+#: Shatterskull Smashing: "deals X damage divided as you choose among up to
+#: two target creatures and/or planeswalkers. If X is 6 or more, [Name] deals
+#: twice X damage divided as you choose among them instead." Read whole, like
+#: `_UNDERGROWTH_PUMP_AND_FIGHT_RE` above: "them" in the second sentence is
+#: anaphoric (CR 400.7) for whatever the first sentence's target phrase named,
+#: one CR 608.2c instruction across two sentences rather than something
+#: `split_effect_clauses` could cut apart and still read. Tried on the
+#: *unsubstituted* text (the literal word "x", never a caster's chosen
+#: number) - `machines/targeting.py`'s own `Division.doubled_if_x_at_least`
+#: reads the identical threshold for CR 601.2d's announcement, so the two
+#: stay in lockstep without either one hard-coding the other's answer.
+_X_DAMAGE_DIVIDED_DOUBLED_RE = re.compile(
+    r"^.*\bdeals? x damage divided as you choose among "
+    r"(?P<phrase>up to \S+ target[^.]+)\.\s*"
+    r"if x is (?P<threshold>\d+) or more,.*deals twice x damage divided as you choose "
+    r"among them instead\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_x_damage_divided_and_doubled_clause(text: str) -> Effect | None:
+    """Shatterskull Smashing's own shape - see `_X_DAMAGE_DIVIDED_DOUBLED_RE`.
+
+    X is read at resolution off `Game.cast_record` (CR 107.3a), doubled if it
+    meets the printed threshold, and the total is paid out through the same
+    `_deal_divided_damage_shares` `deal_divided_damage` uses - the caster's
+    real CR 601.2d announcement (`spell.division`) if there is one, an even
+    split otherwise.
+    """
+    whole = _strip_non_effect_preamble(text).strip()
+    match = _X_DAMAGE_DIVIDED_DOUBLED_RE.fullmatch(whole)
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=True):
+        return None
+    threshold = int(match.group("threshold"))
+
+    def effect(game: "Game", spell: CardState) -> None:
+        x_value = game.cast_record(spell).x_value
+        total = 2 * x_value if x_value >= threshold else x_value
+        _deal_divided_damage_shares(game, spell, total)
+
+    return effect
+
+
+#: Valakut Awakening: "Put any number of cards from your hand on the bottom
+#: of your library, then draw that many cards plus one." A linked quantity
+#: (CR 608.2c): the draw count is not printed, it is whatever "that many" -
+#: the number actually put on the bottom - turns out to be, plus one, so the
+#: two halves cannot be two independent clauses.
+_BOTTOM_HAND_THEN_DRAW_PLUS_ONE_RE = re.compile(
+    r"^put any number of cards from your hand on the bottom of your library, "
+    r"then draw that many cards plus one\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_bottom_hand_then_draw_plus_one_clause(text: str) -> Effect | None:
+    """Valakut Awakening - see `_BOTTOM_HAND_THEN_DRAW_PLUS_ONE_RE`.
+
+    CR 107.1c: "any number" runs zero upward, so the caster's own `CHOOSE_
+    CARDS` answer (`exact=False`) may bottom nothing at all, in which case the
+    spell still draws its own "plus one" card. Which cards go is CR 608.2d's
+    plain choice, offered in hand order the way `discard_two_draw_two_
+    create_token`'s own `CHOOSE_CARDS` question already is; putting one on the
+    bottom is `Player.move`, the same call `puts_graveyard_on_bottom_of_
+    library` makes for Endurance, with no shuffle (CR 701.24a's shuffle verb
+    is never printed here) and no randomised order (unlike Endurance's "in a
+    random order", this text names none, so the caster's own choice order is
+    what lands on the bottom).
+    """
+    whole = _strip_non_effect_preamble(text).strip()
+    if _BOTTOM_HAND_THEN_DRAW_PLUS_ONE_RE.fullmatch(whole) is None:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell)
+        hand = list(controller.hand)
+        if hand:
+            decision = Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=controller.username,
+                prompt="put any number of cards from your hand on the bottom of your library",
+                source=spell.name,
+                amount=len(hand),
+                cards=tuple(state.id for state in hand),
+                exact=False,
+            )
+            chosen_ids = game.ask(decision)
+        else:
+            chosen_ids = ()
+        by_id = {state.id: state for state in hand}
+        bottomed = [by_id[card_id] for card_id in chosen_ids]
+        for state in bottomed:
+            controller.move(state, Zone.LIBRARY)
+        game.draw_cards(controller.username, len(bottomed) + 1)
+
+    return effect
+
+
+#: Turntimber Symbiosis: "Look at the top seven cards of your library. You may
+#: put a creature card from among them onto the battlefield. If that card has
+#: mana value 3 or less, it enters with three additional +1/+1 counters on
+#: it. Put the rest on the bottom of your library in a random order."
+_LOOK_TOP_N_MAY_BATTLEFIELD_CREATURE_BONUS_RE = re.compile(
+    r"^look at the top (?P<n>[\w-]+) cards? of your library\. "
+    r"you may put a creature card from among them onto the battlefield\. "
+    r"if that card has mana value (?P<threshold>\d+) or less, it enters with "
+    r"(?P<bonus>[\w-]+) additional \+1/\+1 counters? on it\. "
+    r"put the rest on the bottom of your library in a random order\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_look_top_n_may_battlefield_creature_bonus_clause(text: str) -> Effect | None:
+    """Turntimber Symbiosis - see `_LOOK_TOP_N_MAY_BATTLEFIELD_CREATURE_
+    BONUS_RE`. An impulsive-look shape close to `malevolent_rumble`'s "reveal
+    the top four ... may put a permanent card into your hand ... put the rest
+    into your graveyard" (CR 608.2d's plain "you may", `CHOOSE_CARDS` for
+    *which* card among several candidates), but the destination for the kept
+    card is the battlefield, not the hand, and the destination for the rest is
+    the bottom of the library in a random order (CR 701.24a's shuffle verb is
+    never printed here, so `Game.shuffle_library` is not called - the same
+    non-shuffle randomisation `puts_graveyard_on_bottom_of_library` already
+    uses for Endurance) rather than the graveyard.
+
+    Put onto the battlefield through `Game.put_onto_battlefield` (CR 110.2a:
+    no casting, so no "when you cast" trigger fires), then, only for the kept
+    card and only if its own mana value is at or under the printed threshold,
+    `CardState.add_counters(Counter.PLUS_ONE, bonus)` (CR 122.1a).
+    """
+    whole = _strip_non_effect_preamble(text).strip()
+    match = _LOOK_TOP_N_MAY_BATTLEFIELD_CREATURE_BONUS_RE.fullmatch(whole)
+    if match is None:
+        return None
+    n = _count(match.group("n"))
+    threshold = int(match.group("threshold"))
+    bonus = _count(match.group("bonus"))
+    if n is None or bonus is None:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell)
+        looked = list(controller.library[:n])
+        creatures = [state for state in looked if state.card.is_creature]
+        chosen: CardState | None = None
+        if creatures and game.may(
+            controller.username, "put a creature card onto the battlefield", source=spell.name
+        ):
+            decision = Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=controller.username,
+                prompt="choose a creature card to put onto the battlefield",
+                source=spell.name,
+                amount=1,
+                cards=tuple(state.id for state in reversed(creatures)),
+            )
+            chosen_ids = game.ask(decision)
+            by_id = {state.id: state for state in creatures}
+            chosen = by_id[chosen_ids[0]]
+        rest = [state for state in looked if state is not chosen]
+        if chosen is not None:
+            put = game.put_onto_battlefield(chosen, controller.username)
+            if put.mana_value <= threshold:
+                put.add_counters(Counter.PLUS_ONE, bonus)
+        if rest:
+            rng = Random(f"{game.shuffle_seed}:{game.shuffles_performed}:top-{n}-bottom")  # noqa: S311
+            rng.shuffle(rest)
+            for state in rest:
+                controller.move(state, Zone.LIBRARY)
+            game.shuffles_performed += 1
+
+    return effect
+
+
 #: "<Source> deals N damage to each opponent." (Guttersnipe) - CR 119.3, with
 #: no target at all: "each opponent" is CR 102.2's "the other player" (in a
 #: two-player game), not something chosen.
@@ -4618,6 +4821,103 @@ def _parse_transform_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: Ajani, Nacatl Avenger's `−4`: "Each opponent chooses an artifact, a
+#: creature, an enchantment, and a planeswalker from among the nonland
+#: permanents they control, then sacrifices the rest." A "choose one of each
+#: of N types, sacrifice everything else" shape, generalised on the type list
+#: rather than keyed to this one card - any future ability phrasing the
+#: identical sentence with a different mix of types reads the same way.
+_EACH_OPPONENT_CHOOSE_ONE_OF_EACH_TYPE_THEN_SACRIFICE_RE = re.compile(
+    r"^each opponent chooses (?P<phrase>.+) from among the nonland permanents "
+    r"they control, then sacrifices the rest\.?$",
+    re.IGNORECASE,
+)
+#: One item of the comma/"and"-separated list: "an artifact", "a creature".
+_TYPE_ITEM_RE = re.compile(r"^an?\s+(?P<type>[a-z]+)$", re.IGNORECASE)
+
+
+def _parse_each_opponent_choose_one_of_each_type_then_sacrifice(
+    text: str,
+) -> AbilityEffect | None:
+    """See `_EACH_OPPONENT_CHOOSE_ONE_OF_EACH_TYPE_THEN_SACRIFICE_RE`.
+
+    CR 101.4/601.7a-style "each opponent" choices are each that opponent's
+    own (not Ajani's controller's) - `Decision.player=opponent.username` for
+    every question this asks, one `CHOOSE_CARDS` per type per opponent, over
+    that opponent's *own* nonland permanents. A permanent already claimed for
+    an earlier type in the list cannot be claimed again (CR 601.2c's "the same
+    target can't be chosen multiple times" logic, applied to a choice rather
+    than a target): a creature that is also, say, an artifact could otherwise
+    be "kept" twice and let one more permanent slip past the sacrifice.
+
+    An opponent controls zero of a given type keeps nothing of that type
+    (CR 107.1a: there is no zero-permanent "artifact" to choose) - the
+    question is not even asked, rather than raising or defaulting to some
+    other permanent. Everything that ends up unclaimed is then sacrificed
+    (CR 701.21a), each by its own controller, in one batch per opponent -
+    APNAP order (CR 101.4) is not relevant to what any one opponent's own
+    sacrifice contains, only to the order the opponents are asked in, which
+    this reads off `game.players_in_game`'s existing turn order.
+    """
+    whole = _strip_non_effect_preamble(text).strip()
+    match = _EACH_OPPONENT_CHOOSE_ONE_OF_EACH_TYPE_THEN_SACRIFICE_RE.fullmatch(whole)
+    if match is None:
+        return None
+    items = [
+        item.strip()
+        for item in re.split(r",\s*(?:and\s+)?|\s+and\s+", match.group("phrase"))
+        if item.strip()
+    ]
+    if not items:
+        return None
+    types: list[Type] = []
+    for item in items:
+        item_match = _TYPE_ITEM_RE.match(item)
+        if item_match is None:
+            return None
+        try:
+            types.append(Type(item_match.group("type").lower()))
+        except ValueError:
+            return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        for opponent in _opponents(game, ability.controller):
+            nonland = [
+                permanent
+                for permanent in game.permanents_controlled_by(opponent.username)
+                if Type.LAND not in permanent.types
+            ]
+            keep: set[UUID] = set()
+            for card_type in types:
+                candidates = [
+                    permanent
+                    for permanent in nonland
+                    if card_type in permanent.types and permanent.id not in keep
+                ]
+                if not candidates:
+                    # CR 107.1a: no such permanent to choose, so none of this
+                    # type is kept - not a required-but-unmet choice.
+                    continue
+                article = "an" if card_type.value[0] in "aeiou" else "a"
+                decision = Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=opponent.username,
+                    prompt=f"choose {article} {card_type.value} to keep",
+                    source=ability.source_name,
+                    amount=1,
+                    cards=tuple(permanent.id for permanent in candidates),
+                )
+                chosen_ids = game.ask(decision)
+                keep.add(chosen_ids[0])
+            for permanent in nonland:
+                if permanent.id in keep:
+                    continue
+                if permanent.zone is Zone.BATTLEFIELD:
+                    game.sacrifice(permanent)
+
+    return effect
+
+
 def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     """`parse_mixed_effect` on `effect_text`, or - if that failed specifically
     on an unreadable anaphoric second clause - a stand-in effect that records
@@ -4663,6 +4963,11 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     undergrowth_pump_and_fight = _parse_undergrowth_pump_and_fight_clause(effect_text)
     if undergrowth_pump_and_fight is not None:
         return undergrowth_pump_and_fight
+    each_opponent_choose_then_sacrifice = (
+        _parse_each_opponent_choose_one_of_each_type_then_sacrifice(effect_text)
+    )
+    if each_opponent_choose_then_sacrifice is not None:
+        return each_opponent_choose_then_sacrifice
     conditional_sacrifice = _parse_conditional_sacrifice_clause(effect_text, for_spell=False)
     if conditional_sacrifice is not None:
         return conditional_sacrifice
@@ -5491,6 +5796,15 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     x_energy_destroy = _parse_x_energy_pay_destroy_by_mana_value(effect_text)
     if x_energy_destroy is not None:
         return x_energy_destroy
+    x_divided_damage_doubled = _parse_x_damage_divided_and_doubled_clause(effect_text)
+    if x_divided_damage_doubled is not None:
+        return x_divided_damage_doubled
+    bottom_hand_then_draw = _parse_bottom_hand_then_draw_plus_one_clause(effect_text)
+    if bottom_hand_then_draw is not None:
+        return bottom_hand_then_draw
+    look_top_n_battlefield = _parse_look_top_n_may_battlefield_creature_bonus_clause(effect_text)
+    if look_top_n_battlefield is not None:
+        return look_top_n_battlefield
     if _EACH_PLAYER_SACRIFICES_COLORED_RE.fullmatch(whole):
         return each_player_sacrifices_colored_permanents
     destroy_each_then_add_mana = _parse_destroy_each_then_add_mana_per_destroyed(effect_text)
