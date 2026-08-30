@@ -385,17 +385,20 @@ def test_declining_the_may_leaves_the_target_untapped_alaborn_cavalier():
 # --------------------------------------------------------------------------
 
 
-def test_an_unparseable_you_may_asks_nothing_and_does_nothing():
+def test_an_impossible_you_may_discard_is_asked_but_never_affirmative():
     """Formidable Speaker: "you may discard a card. If you do, search your
     library for a creature card, reveal it, put it into your hand, then
-    shuffle." Discarding is not in this wave's clause vocabulary, so
-    `parse_clause_effect` refuses the inner clause, `_parse_optional_player_clause`
-    refuses the "you may" wrapper around it, and `_parse_player_clauses`
-    throws away the whole ability - the second sentence ("if you do") never
-    even gets a chance to matter, because nothing is ever asked.
+    shuffle." "You may discard a card. If you do, ..." (CR 118.12) is now
+    read by `_merge_may_discard_if_you_do_clauses` in `machines/effects.py` -
+    see `test_conditional_discard_clauses.py` for the full corner-case
+    coverage of this shape, including the discard-then-search happy path.
 
-    Fail-closed, not "ask and then ignore the answer": `questions_asked()` is
-    empty, proving no `Game.may` question reached the player at all.
+    This scenario's hand is empty by the time the ETB trigger resolves (the
+    only card in it was Formidable Speaker itself, now on the battlefield),
+    so CR 608.2d's "can't choose an option that's illegal" makes the
+    affirmative impossible - the question is still asked and recorded (the
+    same `affirmative_is_legal=False` shape `may_pay_life` already uses for
+    CR 119.4), just never answerable "yes".
     """
     scenario = (
         Scenario().player("alice", hand=["Formidable Speaker"], battlefield=["Forest"] * 3).build()
@@ -409,4 +412,6 @@ def test_an_unparseable_you_may_asks_nothing_and_does_nothing():
     scenario.pass_until_resolved()
 
     assert [state.name for state in alice.hand] == before
-    assert [q for q in scenario.questions_asked() if q.kind is DecisionKind.MAY] == []
+    may_questions = [q for q in scenario.questions_asked() if q.kind is DecisionKind.MAY]
+    assert may_questions
+    assert may_questions[-1].affirmative_is_legal is False
