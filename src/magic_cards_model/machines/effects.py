@@ -63,7 +63,7 @@ from pydantic import BaseModel, ConfigDict
 from ..models.card import Color, Supertype, Type
 from ..models.card_state import CardState, Counter, ExileAnnotation, ExileMarker
 from ..models.player import Player
-from ..models.token import MONSTER_ROLE, PREDEFINED, TREASURE, TokenDefinition, create_tokens
+from ..models.token import MONSTER_ROLE, PREDEFINED, TokenDefinition, create_tokens
 from ..models.zone import Zone
 from .abilities import TriggerEvent
 from .decisions import Decision, DecisionKind
@@ -473,75 +473,6 @@ def hangarback_dies(game: "Game", ability: AbilityOnStack) -> None:
         return
     counters = source.counters if source.zone is Zone.BATTLEFIELD else source.last_known_counters
     create_tokens(game, THOPTER, ability.controller, counters[Counter.PLUS_ONE])
-
-
-def ragavan_combat_damage(game: "Game", ability: AbilityOnStack) -> None:
-    """Ragavan, Nimble Pilferer: "Whenever Ragavan deals combat damage to a
-    player, create a Treasure token and exile the top card of that player's
-    library. Until end of turn, you may cast that card."
-
-    "That player" is not a target Ragavan's ability ever announces (CR 601.2c
-    never runs for it) - it is CR 607.1's plain within-one-ability anaphora
-    back to the condition clause's own object, the player the combat damage
-    landed on, which is exactly what `ability.event.player` is holding by the
-    time this resolves (`Game.deal_damage`'s own `TriggerEvent.DEALS_DAMAGE`
-    emission).
-
-    Two of the three sentences run: the Treasure (CR 111.10a's predefined
-    token) and the exile of the top card of that player's library, through
-    `Game.exile_permanent`, which is generic over which zone a card is
-    exiled from. **"Until end of turn, you may cast that card" does not** -
-    see `UnmodeledTriggerEffectNotice` for why a per-instance, time-boxed cast
-    permission is a missing primitive rather than a hard parse. Leaving the
-    card sitting in the shared exile zone with no such permission is not a
-    half-executed instruction: "you may cast" is one of CR 608.2d's optional
-    actions, and a controller who was offered the cast and simply never took
-    it leaves an identical board.
-    """
-    controller = game.player(ability.controller)
-    create_tokens(game, TREASURE, controller.username)
-
-    victim_username = ability.event.player if ability.event is not None else None
-    unread_text = "Until end of turn, you may cast that card."
-    if victim_username is not None:
-        victim = game.player(victim_username)
-        if victim.library:
-            game.exile_permanent(victim.library[0])
-    game.unmodeled_trigger_effect_notices.append(
-        UnmodeledTriggerEffectNotice(
-            source_id=ability.source_id,
-            source_name=ability.source_name,
-            text=unread_text,
-        )
-    )
-
-
-def _unmodeled_trigger_notice(unread_text: str) -> AbilityEffect:
-    """A triggered ability whose condition fires for real but whose whole
-    resolution clause names a mechanism this engine has no primitive for -
-    see `UnmodeledTriggerEffectNotice`. Unlike Ragavan's, none of Nashi's or
-    Questing Beast's resolution text runs at all: Nashi's mill amount and
-    Questing Beast's damage amount are both readable now
-    (`GameEvent.amount`), but Nashi's "any number of ... into your hand" has
-    no `DecisionKind.CHOOSE_CARDS` shape that asks for anything but an exact
-    count, and Questing Beast's "target planeswalker that player controls"
-    needs a target restricted by the trigger event rather than by the
-    ability's own printed text, which `machines/targeting.py` cannot express.
-    Executing only the mill, or only a damage instance with no target chosen,
-    would each be a half-run instruction - CR 608.2c gives no license to run
-    part of one sentence and stop - so nothing in the clause runs at all.
-    """
-
-    def unmodeled_trigger_notice_only(game: "Game", ability: AbilityOnStack) -> None:
-        game.unmodeled_trigger_effect_notices.append(
-            UnmodeledTriggerEffectNotice(
-                source_id=ability.source_id,
-                source_name=ability.source_name,
-                text=unread_text,
-            )
-        )
-
-    return unmodeled_trigger_notice_only
 
 
 def monstrous_rage(game: "Game", spell: CardState) -> None:
@@ -3169,6 +3100,50 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
 
         return imprint_notice_only
 
+    unread_cast_permission = _unreadable_cast_permission_clause(effect_text, for_spell=False)
+    if unread_cast_permission is not None:
+
+        def cast_permission_notice_only(game: "Game", ability: AbilityOnStack) -> None:
+            game.unmodeled_trigger_effect_notices.append(
+                UnmodeledTriggerEffectNotice(
+                    source_id=ability.source_id,
+                    source_name=ability.source_name,
+                    text=unread_cast_permission,
+                )
+            )
+
+        return cast_permission_notice_only
+
+    unread_hand_choice = _unreadable_unbounded_hand_choice_clause(effect_text, for_spell=False)
+    if unread_hand_choice is not None:
+
+        def unbounded_hand_choice_notice_only(game: "Game", ability: AbilityOnStack) -> None:
+            game.unmodeled_trigger_effect_notices.append(
+                UnmodeledTriggerEffectNotice(
+                    source_id=ability.source_id,
+                    source_name=ability.source_name,
+                    text=unread_hand_choice,
+                )
+            )
+
+        return unbounded_hand_choice_notice_only
+
+    unread_event_player_target = _unreadable_event_player_target_clause(
+        effect_text, for_spell=False
+    )
+    if unread_event_player_target is not None:
+
+        def event_player_target_notice_only(game: "Game", ability: AbilityOnStack) -> None:
+            game.unmodeled_trigger_effect_notices.append(
+                UnmodeledTriggerEffectNotice(
+                    source_id=ability.source_id,
+                    source_name=ability.source_name,
+                    text=unread_event_player_target,
+                )
+            )
+
+        return event_player_target_notice_only
+
     return None
 
 
@@ -4442,6 +4417,134 @@ class UnmodeledTriggerEffectNotice(BaseModel):
     when none of it runs."""
 
 
+#: "until end of turn, you may cast that card"/"you may cast it"/"you may cast
+#: those cards" - Ragavan, Nimble Pilferer's own third sentence, generalised
+#: to whatever future card prints the same shape rather than matched by name.
+#: A per-instance, time-boxed permission to cast a *specific* exiled object is
+#: a missing primitive: `machines/casting.keyword_cast_options` only ever
+#: reads a *static* grant off a card's own printed keyword line, read once per
+#: printing, never a dynamic one a resolving ability hands out to one
+#: particular card in exile.
+_CAST_PERMISSION_CLAUSE_RE = re.compile(
+    r"^(?:until end of turn, )?you may cast (?:it|that card|those cards)$",
+    re.IGNORECASE,
+)
+
+#: "you may put any number of ... into your hand" - Nashi, Searcher in the
+#: Dark's own second sentence. `DecisionKind.CHOOSE_CARDS` in
+#: `machines/decisions.py` only ever asks for an exact `amount`
+#: (`Game.ask`'s own check: "needs {amount} card(s) chosen"), never an
+#: unbounded "as many as you like" - CR 608.2d's choice, with no decision
+#: shape built for it yet.
+_UNBOUNDED_HAND_CHOICE_RE = re.compile(
+    r"^you may put any number of .+ into your hand$", re.IGNORECASE
+)
+
+#: "target <type> that player controls" - Questing Beast's own tail, where
+#: "that player" is whoever the trigger's own combat damage was dealt to
+#: (CR 120.2a), not the ability's controller. `machines/targeting.
+#: profile_for_text` only ever reads a targeting restriction off the
+#: ability's own static printed text - "you control"/"an opponent controls"
+#: against the *controller* - and has no way to restrict a target by what an
+#: upstream game event says instead.
+_EVENT_PLAYER_TARGET_RE = re.compile(r"target \w+(?:\s\w+)? that player controls", re.IGNORECASE)
+
+
+def _unreadable_cast_permission_clause(text: str, *, for_spell: bool) -> str | None:
+    """The clause of `text` matching `_CAST_PERMISSION_CLAUSE_RE`, if any -
+    used only to decide whether an effect this wave already failed to parse
+    (via `parse_mixed_effect`) deserves an `UnmodeledTriggerEffectNotice`, the
+    same "caller already tried and failed" contract every other `_unreadable_
+    *_clause` function here keeps.
+
+    Ability-only: nothing in the pool prints this shape on a spell, and a
+    spell has no `AbilityOnStack` to have handed out a time-boxed permission
+    in the first place.
+    """
+    if for_spell:
+        return None
+    clauses = _prepare_effect_clauses(text)
+    if clauses is None:
+        return None
+    for clause in clauses:
+        if _CAST_PERMISSION_CLAUSE_RE.fullmatch(clause.strip()):
+            return clause
+    return None
+
+
+def _unreadable_unbounded_hand_choice_clause(text: str, *, for_spell: bool) -> str | None:
+    """The clause of `text` matching `_UNBOUNDED_HAND_CHOICE_RE`, if any - see
+    `_unreadable_cast_permission_clause`'s docstring for the "already tried
+    and failed" contract this shares.
+    """
+    if for_spell:
+        return None
+    clauses = _prepare_effect_clauses(text)
+    if clauses is None:
+        return None
+    for clause in clauses:
+        if _UNBOUNDED_HAND_CHOICE_RE.fullmatch(clause.strip()):
+            return clause
+    return None
+
+
+def _unreadable_event_player_target_clause(text: str, *, for_spell: bool) -> str | None:
+    """The clause of `text` containing `_EVENT_PLAYER_TARGET_RE`'s shape, if
+    any - see `_unreadable_cast_permission_clause`'s docstring for the
+    "already tried and failed" contract this shares. A `search`, not a
+    `fullmatch`: the restriction is a tail of a larger sentence ("it deals
+    that much damage to target planeswalker that player controls"), not a
+    clause of its own.
+    """
+    if for_spell:
+        return None
+    clauses = _prepare_effect_clauses(text)
+    if clauses is None:
+        return None
+    for clause in clauses:
+        if _EVENT_PLAYER_TARGET_RE.search(clause):
+            return clause
+    return None
+
+
+#: "exile the top card of that player's library" - Ragavan, Nimble Pilferer's
+#: own second clause. "That player" is CR 607.1's within-one-ability anaphora
+#: back to a combat-damage-to-a-player trigger's own event (CR 120.2a) - the
+#: player the damage landed on - not a target the ability ever announces
+#: (CR 601.2c never runs for it), so this reads `ability.event.player` rather
+#: than `stack_object.targets` the way `_LOOK_AT_TOP_CARD_RE`'s "target
+#: player's library" reads an actual target.
+_EXILE_TOP_OF_THAT_PLAYERS_LIBRARY_RE = re.compile(
+    r"^exile the top card of that player's library$", re.IGNORECASE
+)
+
+
+def _parse_exile_that_players_library_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """Ability-only (`for_spell=False`): a spell has no `ability.event` to
+    resolve "that player" against, and nothing in the pool prints this shape
+    on a spell.
+    """
+    if for_spell:
+        return None
+    if not _EXILE_TOP_OF_THAT_PLAYERS_LIBRARY_RE.fullmatch(clause.strip()):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        ability = stack_object
+        assert isinstance(ability, AbilityOnStack)
+        event = ability.event
+        username = event.player if event is not None else None
+        if username is None:
+            return
+        player = game.player(username)
+        if player.library:
+            game.exile_permanent(player.library[0])
+
+    return effect
+
+
 def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """One clause of a mixed effect: the targeted shape first, then a token
     creation, then a search, then the imprint shape, then a delayed-trigger
@@ -4470,6 +4573,11 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     earthbend_clause = _parse_earthbend_clause(clause, for_spell=for_spell)
     if earthbend_clause is not None:
         return earthbend_clause
+    exile_that_players_library = _parse_exile_that_players_library_clause(
+        clause, for_spell=for_spell
+    )
+    if exile_that_players_library is not None:
+        return exile_that_players_library
     if _LOOK_AT_TOP_CARD_RE.fullmatch(clause.strip()):
         return _look_at_top_card
     player_clause = _parse_optional_player_clause(clause)
@@ -4765,25 +4873,30 @@ TRIGGER_EFFECTS: dict[TriggerKey, AbilityEffect] = {
     ("Ocelot Pride", TriggerEvent.BEGINNING_OF_STEP, ""): ocelot_pride_end_step,
     ("Seasoned Pyromancer", TriggerEvent.ENTERS_THE_BATTLEFIELD, ""): seasoned_pyromancer,
     ("Hangarback Walker", TriggerEvent.DIES, ""): hangarback_dies,
-    # -- combat damage to a player (CR 120.2a) ---------------------------
-    # The condition - "whenever [this creature] deals combat damage to a
-    # player"/"to an opponent" - is not a table lookup at all: TriggerEvent.
-    # DEALS_DAMAGE and `machines/triggers.condition_matches` read it generically
-    # off any card's own printed text, "combat damage" against `GameEvent.
-    # combat` and "to a player"/"to an opponent" against `GameEvent.player`, so
-    # a card with this shape and no row below still triggers correctly - see
-    # `tests/scenarios/test_trigger_events.py`. Only the three cards' own
-    # *resolution* clauses are name-keyed here, the same way every other
-    # bespoke resolution in this table is.
-    ("Ragavan, Nimble Pilferer", TriggerEvent.DEALS_DAMAGE, ""): ragavan_combat_damage,
-    ("Nashi, Searcher in the Dark", TriggerEvent.DEALS_DAMAGE, ""): _unmodeled_trigger_notice(
-        "you mill that many cards. You may put any number of legendary and/or "
-        "enchantment cards from among them into your hand. If you put no cards "
-        "into your hand this way, put a +1/+1 counter on Nashi."
-    ),
-    ("Questing Beast", TriggerEvent.DEALS_DAMAGE, ""): _unmodeled_trigger_notice(
-        "it deals that much damage to target planeswalker that player controls."
-    ),
+    # Ragavan, Nimble Pilferer's, Nashi, Searcher in the Dark's, and Questing
+    # Beast's combat-damage-to-a-player triggers are not entered here at all
+    # (CR 120.2a): the condition - "whenever [this creature] deals combat
+    # damage to a player"/"to an opponent" - is read generically off any
+    # card's own printed text by `TriggerEvent.DEALS_DAMAGE` and
+    # `machines/triggers.condition_matches`, and the *resolution* is now
+    # `parse_mixed_effect`'s business too. "Create a Treasure token" is
+    # `_parse_token_clause`'s shape; "exile the top card of that player's
+    # library" is `_parse_exile_that_players_library_clause`'s, reading "that
+    # player" off `ability.event.player` (CR 607.1's within-one-ability
+    # anaphora back to the trigger's own object) rather than a target the
+    # ability ever announces. Ragavan's third sentence - "Until end of turn,
+    # you may cast that card" - is a missing primitive (a per-instance,
+    # time-boxed cast permission), so `_unreadable_cast_permission_clause`
+    # voids the *whole* ability with an `UnmodeledTriggerEffectNotice` rather
+    # than run the first two sentences and drop the third (CR 608.2c has no
+    # notion of running half an effect - see `_ability_effect_or_notice`).
+    # Nashi's "you may put any number of ... into your hand" and Questing
+    # Beast's "target planeswalker that player controls" are the same
+    # missing-primitive shape, read by `_unreadable_unbounded_hand_choice_
+    # clause` and `_unreadable_event_player_target_clause` respectively - see
+    # `tests/scenarios/test_trigger_events.py` for the trigger firing and
+    # `tests/scenarios/test_combat_damage_to_player_effects.py` for the
+    # resolution.
     # Soul Warden's "Whenever another creature enters, you gain 1 life." and
     # the surveil lands' (Elegant Parlor, Thundering Falls) and Dragon's Rage
     # Channeler's "surveil 1" are deliberately **not** entered here any more.
