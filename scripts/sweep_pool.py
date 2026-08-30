@@ -277,6 +277,7 @@ _NOTICE_STAND_IN_NAMES = frozenset(
         "delayed_notice_only",
         "imprint_notice_only",
         "conditional_notice_only",
+        "unmodeled_trigger_notice_only",
     }
 )
 
