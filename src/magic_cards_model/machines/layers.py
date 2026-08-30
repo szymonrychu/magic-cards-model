@@ -975,6 +975,22 @@ def define_power_toughness(count: Count, power: int = 0, toughness: int = 0) -> 
     return modification
 
 
+def define_power(count: Count, power: int = 0) -> Modification:
+    """Sublayer 7a, power only (CR 613.4a).
+
+    Some CDAs define only one half - Nighthawk Scavenger's printed toughness is
+    a plain `3` (CR 208.1), not a `*`, so only its power box carries the ability
+    (CR 208.2a). `define_power_toughness` cannot express that: it always
+    overwrites both halves, which would erase a real printed toughness that no
+    ability ever named. This leaves toughness exactly as layers 1-6 left it.
+    """
+
+    def modification(chars: Characteristics, board: Board) -> Characteristics:
+        return chars.with_(power=count(chars, board) + power)
+
+    return modification
+
+
 def modify_power_toughness(power: int, toughness: int) -> Modification:
     """Sublayer 7c (CR 613.4c). Adds; never sets.
 
@@ -1556,7 +1572,34 @@ class LayerContext(BaseModel):
     #: Urge's *delirium* counts "cards in **your** graveyard". Filling one with
     #: the other is the kind of plausible-and-wrong that only shows up in a
     #: two-player game where the opponent has a card type you do not.
+    #:
+    #: A resolving spell or ability has exactly one controller to ask, which is
+    #: why this is a single tuple rather than a mapping.
     your_graveyard: tuple[CardState, ...] = ()
+
+    #: Every graveyard, keyed by the username of the player it belongs to.
+    #: A static ability's "your graveyard" (Boneyard Wurm) has no single
+    #: controller the way a resolving spell does - `static_effects` shares one
+    #: `LayerContext` across every permanent on the battlefield, each with its
+    #: own controller - so the per-source answer has to be looked up rather
+    #: than handed in directly the way `your_graveyard` is.
+    graveyard_by_controller: Mapping[str, tuple[CardState, ...]] = Field(default_factory=dict)
+
+    def graveyard_of(self, controller: str | None) -> tuple[CardState, ...]:
+        """The graveyard a static ability's own controller sees, or none if
+        `controller` is not one this context knows about."""
+        if controller is None:
+            return ()
+        return self.graveyard_by_controller.get(controller, ())
+
+    def opponents_graveyard_of(self, controller: str | None) -> tuple[CardState, ...]:
+        """Every card in a graveyard that is not `controller`'s own (Nighthawk
+        Scavenger's "your opponents' graveyards") - `graveyards` minus
+        `graveyard_of(controller)`, by identity rather than by owner, since a
+        card's owner is not tracked here and two players can never share a
+        `CardState`."""
+        own = {card.id for card in self.graveyard_of(controller)}
+        return tuple(card for card in self.graveyards if card.id not in own)
 
 
 #: A card name to the continuous effects a copy of it generates. `source` is the
@@ -1857,6 +1900,82 @@ def _tarmogoyf(
     ]
 
 
+def _boneyard_wurm(
+    source: CardState,
+    timestamp: int,
+    targets: Sequence[CardState],
+    context: LayerContext,
+) -> list[ContinuousEffect]:
+    """ "Boneyard Wurm's power and toughness are each equal to the number of
+    creature cards in your graveyard."
+
+    A characteristic-defining ability (CR 604.3, CR 604.3a) in sublayer 7a
+    (CR 613.4a), like Tarmogoyf's - but it counts *creature cards*, not card
+    types (CR 300.1), and only **your** graveyard, not every graveyard, so a
+    stack of Bears in the opponent's bin does not grow it. `context.graveyard_of`
+    looks up the caster's own graveyard by controller, because unlike Tarmogoyf
+    (whose count is the same for everyone) this one is a different number for
+    every player it could be printed under.
+    """
+    text = (
+        "Boneyard Wurm's power and toughness are each equal to the number of "
+        "creature cards in your graveyard."
+    )
+    creatures = sum(1 for card in context.graveyard_of(source.controller) if card.card.is_creature)
+    return [
+        ContinuousEffect(
+            description=(
+                f"Boneyard Wurm: {creatures}/{creatures} from creature cards in your graveyard"
+            ),
+            layer=Layer.POWER_TOUGHNESS,
+            sublayer=Sublayer.CHARACTERISTIC_DEFINING,
+            characteristic_defining=True,
+            timestamp=timestamp,
+            source_id=source.id,
+            source_ability=text,
+            selector=_only(source.id),
+            modification=define_power_toughness(lambda chars, board: creatures, 0, 0),
+        )
+    ]
+
+
+def _nighthawk_scavenger(
+    source: CardState,
+    timestamp: int,
+    targets: Sequence[CardState],
+    context: LayerContext,
+) -> list[ContinuousEffect]:
+    """ "Nighthawk Scavenger's power is equal to 1 plus the number of card
+    types among cards in your opponents' graveyards."
+
+    A third graveyard-reading shape alongside Tarmogoyf's (every graveyard) and
+    Boneyard Wurm's (your own): this one counts every graveyard *except* your
+    own, which `context.opponents_graveyard_of` answers as the set difference
+    of the other two. Its toughness box is a plain `3` (CR 208.1) - only power
+    is a CDA - so this is `define_power`, not `define_power_toughness`, and the
+    printed Flying/deathtouch/lifelink lines need no entry at all (CR 604.3:
+    only the P/T sentence is the characteristic-defining ability).
+    """
+    text = (
+        "Nighthawk Scavenger's power is equal to 1 plus the number of card "
+        "types among cards in your opponents' graveyards."
+    )
+    types = count_card_types(context.opponents_graveyard_of(source.controller))
+    return [
+        ContinuousEffect(
+            description=f"Nighthawk Scavenger: power 1+{types} from opponents' graveyards",
+            layer=Layer.POWER_TOUGHNESS,
+            sublayer=Sublayer.CHARACTERISTIC_DEFINING,
+            characteristic_defining=True,
+            timestamp=timestamp,
+            source_id=source.id,
+            source_ability=text,
+            selector=_only(source.id),
+            modification=define_power(lambda chars, board: types, 1),
+        )
+    ]
+
+
 def _allosaurus_rider(
     source: CardState,
     timestamp: int,
@@ -2111,6 +2230,8 @@ LAYER_EFFECTS: dict[str, EffectBuilder] = {
     "Dress Down": _dress_down,
     "Relentless Rats": _relentless_rats,
     "Tarmogoyf": _tarmogoyf,
+    "Boneyard Wurm": _boneyard_wurm,
+    "Nighthawk Scavenger": _nighthawk_scavenger,
     "Allosaurus Rider": _allosaurus_rider,
     "Tishana's Tidebinder": _tishanas_tidebinder,
     # The pump and first strike are the generalised shapes; the *Delirium*

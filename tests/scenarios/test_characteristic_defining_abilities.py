@@ -12,13 +12,20 @@ characteristic-defining abilities that define power and/or toughness are
 applied." So a CDA always loses to a later 7b that sets a value and always
 underlies a 7c that adds one, whatever the timestamps say (CR 613.7).
 
-Two real printings carry one: Tarmogoyf counts card types in every graveyard
-(CR 300.1), and Allosaurus Rider counts lands on the battlefield. The first
-reads a zone the layer engine never sees, which is what `LayerContext` is for;
-the second reads the board as layers 1-6 left it.
+Four real printings carry one: Tarmogoyf counts card types in every graveyard
+(CR 300.1), Boneyard Wurm counts creature cards in its own controller's
+graveyard only, Nighthawk Scavenger counts card types in every graveyard
+*except* its own controller's, and Allosaurus Rider counts lands on the
+battlefield. The first three read a zone the layer engine never sees, which is
+what `LayerContext` is for; the last reads the board as layers 1-6 left it.
 
-`Game` does not consult `machines/layers.py`, so these ask the layer engine
-about a board the scenario harness built. Every CR number here was looked up
+Most of this file asks the layer engine directly about a board the scenario
+harness built. The section headed "`Game` threads the graveyards through" asks
+`Game.power_of` / `Game.computed_board()` instead - that boundary is exactly
+where this suite once went wrong: `Game.computed_board()` called
+`continuous_effects.board(...)` with no `LayerContext` at all, so every
+graveyard-reading CDA was built against an empty world and a Tarmogoyf over a
+full graveyard still came back a static 0/1. Every CR number here was looked up
 with `knowledge_search(type="rules")`.
 """
 
@@ -42,9 +49,13 @@ def permanent(name: str, controller: str = "alice"):
 
 
 def graveyards_of(scenario) -> LayerContext:
-    """Every card in every graveyard, which is the number Tarmogoyf counts."""
+    """Every card in every graveyard, which is the number Tarmogoyf counts -
+    and each player's own, which is the number Boneyard Wurm counts."""
     return LayerContext(
-        graveyards=tuple(card for player in scenario.game.players for card in player.graveyard)
+        graveyards=tuple(card for player in scenario.game.players for card in player.graveyard),
+        graveyard_by_controller={
+            player.username: tuple(player.graveyard) for player in scenario.game.players
+        },
     )
 
 
@@ -396,6 +407,305 @@ def test_two_characteristic_defining_abilities_do_not_interfere():
     assert board.of(goyf).power_toughness == (1, 2)
     assert board.of(rider).power_toughness == (2, 2)
     assert board.journal.cycles == []
+
+
+# --------------------------------------------------------------------------
+# `Game` threads the graveyards through
+# --------------------------------------------------------------------------
+#
+# Everything above hands `LayerContext` to the layer engine by hand. These ask
+# `Game.power_of` / `Game.toughness_of` / `Game.computed_board()` instead -
+# the real path combat, state-based actions, and targeting all use - to prove
+# `Game.computed_board()` itself builds the `LayerContext`, not just the
+# harness. `Game` still does not consult the layer engine for
+# `CardState.power`/`.toughness` themselves (see "Gaps" below); this is about
+# the questions `Game` *does* answer through it.
+
+
+def test_game_power_of_is_not_a_static_zero_one_over_a_real_graveyard():
+    """The defect this section exists to catch, stated directly.
+
+    `Game.computed_board()` used to call `continuous_effects.board(...)` with
+    no `LayerContext`, so a Tarmogoyf's CDA was built against an empty
+    graveyard whatever was actually in one - `game.power_of` came back 0 over
+    a graveyard holding a Lightning Bolt, when CR 613.4a says it should be 1.
+    """
+    scenario = (
+        Scenario().player("alice", battlefield=["Tarmogoyf"], graveyard=["Lightning Bolt"]).build()
+    )
+    goyf = scenario.creature("Tarmogoyf", "alice")
+
+    assert scenario.game.power_of(goyf) == 1
+    assert scenario.game.toughness_of(goyf) == 2
+
+
+def test_game_power_of_over_an_empty_graveyard_is_still_zero_one():
+    """The other end of the same check: no graveyard, no card types, 0/1 -
+    not `None`, because the CDA still applies in 7a (CR 613.4a)."""
+    scenario = Scenario().player("alice", battlefield=["Tarmogoyf"]).build()
+    goyf = scenario.creature("Tarmogoyf", "alice")
+
+    assert scenario.game.power_of(goyf) == 0
+    assert scenario.game.toughness_of(goyf) == 1
+
+
+def test_game_power_of_counts_both_players_graveyards():
+    """`Game.computed_board()` gathers every graveyard in the game, not just
+    the Goyf's controller's - the same "all graveyards" as the direct tests
+    above, now asked through `Game`."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Tarmogoyf"], graveyard=["Lightning Bolt"])
+        .player("bob", graveyard=["Grizzly Bears", "Forest"])
+        .build()
+    )
+    goyf = scenario.creature("Tarmogoyf", "alice")
+
+    assert scenario.game.power_of(goyf) == 3
+
+
+def test_a_goyf_growing_mid_game_changes_the_damage_it_deals_in_combat():
+    """CR 613.5's "continually and automatically" through the real combat path.
+
+    An empty-graveyard Goyf is a harmless 0/1 and could not profitably attack;
+    once a Bolt and the creature it killed are both in a graveyard it is a
+    2/3, and unblocked combat damage - which `machines/combat.py` computes by
+    calling `Game.power_of` - takes bob from 20 to 18.
+    """
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Lightning Bolt"], battlefield=["Mountain", "Tarmogoyf"])
+        .player("bob", life=20, battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    goyf = scenario.creature("Tarmogoyf", "alice")
+    assert scenario.game.power_of(goyf) == 0
+
+    bears = scenario.creature("Grizzly Bears", "bob")
+    (mountain,) = scenario.untapped_sources("Mountain", username="alice")
+    scenario.cast_and_resolve("Lightning Bolt", mountain, username="alice", targets=[bears])
+    assert bears.zone is Zone.GRAVEYARD
+    assert scenario.game.power_of(goyf) == 2, "an instant and a creature, two card types"
+
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(goyf)
+    scenario.no_blocks()
+    scenario.combat_damage()
+
+    assert scenario.player("bob").life == 18
+
+
+def test_a_goyf_the_graveyards_grew_dies_to_dismember_through_state_based_actions():
+    """The `compute_board`-only version of this earlier in the file, now
+    played all the way through `Game` (CR 704.5f).
+
+    Four card types make the Goyf a 4/5; Dismember's -5/-5 takes its computed
+    toughness to 0, and `Game.check_state_based_actions` - which asks
+    `Game.computed_board()` for that number, not `CardState.toughness` - puts
+    it in the graveyard without anyone calling combat or a Dismember-specific
+    check.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Dismember"],
+            battlefield=["Swamp", "Tarmogoyf"],
+            graveyard=["Lightning Bolt", "Grizzly Bears", "Forest", "Sol Ring"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    goyf = scenario.creature("Tarmogoyf", "alice")
+    assert scenario.game.power_of(goyf) == 4
+
+    (swamp,) = scenario.untapped_sources("Swamp", username="alice")
+    scenario.cast_and_resolve("Dismember", swamp, username="alice", targets=[goyf])
+
+    assert goyf.zone is Zone.GRAVEYARD
+
+
+def test_lifelink_combat_damage_gains_life_equal_to_the_cdas_computed_power():
+    """An effect that reads the CDA's *computed* power, not a cached one
+    (CR 702.15b, CR 613.4a).
+
+    Nighthawk Scavenger prints its own lifelink (CR 702.15a), so unblocked
+    combat damage - `machines/combat.py` computes it by calling `Game.power_of`
+    - both hits bob for the CDA's live answer and gains alice exactly that much
+    life, proving the life total change tracks `Game.power_of` rather than the
+    printed `1+*` on the card.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", life=20, battlefield=["Nighthawk Scavenger"])
+        .player("bob", life=20, graveyard=["Lightning Bolt", "Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    hawk = scenario.creature("Nighthawk Scavenger", "alice")
+    assert scenario.game.power_of(hawk) == 3, "1 plus two card types in bob's own graveyard"
+
+    scenario.attack_with(hawk)
+    scenario.no_blocks()
+    scenario.combat_damage()
+
+    assert scenario.player("bob").life == 17
+    assert scenario.player("alice").life == 23
+
+
+# --------------------------------------------------------------------------
+# Boneyard Wurm: a CDA that counts only its own controller's graveyard
+# --------------------------------------------------------------------------
+#
+# Tarmogoyf's graveyard count is the same number for every permanent that asks
+# - it does not matter who controls the Goyf. Boneyard Wurm's is not: "your
+# graveyard" is a different zone for every controller, which is exactly the
+# shape `LayerContext.your_graveyard` cannot answer for a static ability
+# shared across a whole battlefield (see its docstring) - that gap is what
+# `LayerContext.graveyard_by_controller` and `graveyard_of` are for.
+
+
+def test_boneyard_wurm_counts_creature_cards_not_card_types():
+    """ "the number of creature cards in your graveyard" - a Bolt and a
+    Counterspell in the bin are zero creature cards, whatever `count_card_types`
+    would make of them."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Boneyard Wurm"],
+            graveyard=["Lightning Bolt", "Counterspell", "Grizzly Bears"],
+        )
+        .build()
+    )
+    wurm = scenario.creature("Boneyard Wurm", "alice")
+
+    assert scenario.game.power_of(wurm) == 1
+    assert scenario.game.toughness_of(wurm) == 1
+
+
+def test_boneyard_wurm_does_not_count_the_opponents_graveyard():
+    """ "your graveyard" - unlike Tarmogoyf, the opponent's creature cards are
+    not the Wurm's to count."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Boneyard Wurm"])
+        .player("bob", graveyard=["Grizzly Bears"])
+        .build()
+    )
+    wurm = scenario.creature("Boneyard Wurm", "alice")
+
+    assert scenario.game.power_of(wurm) == 0
+
+
+def test_boneyard_wurm_and_tarmogoyf_read_different_graveyards_on_one_board():
+    """Both CDAs share sublayer 7a on the same battlefield, one counting every
+    graveyard and the other counting only its own controller's - proof
+    `Game.computed_board()`'s single `LayerContext` answers both questions at
+    once rather than picking one meaning of "graveyard" for everybody."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Tarmogoyf", "Boneyard Wurm"],
+            graveyard=["Grizzly Bears"],
+        )
+        .player("bob", graveyard=["Lightning Bolt", "Forest"])
+        .build()
+    )
+    goyf = scenario.creature("Tarmogoyf", "alice")
+    wurm = scenario.creature("Boneyard Wurm", "alice")
+
+    assert scenario.game.power_of(goyf) == 3, "creature, instant, land - three types, both bins"
+    assert scenario.game.power_of(wurm) == 1, "one creature card, alice's bin only"
+
+
+# --------------------------------------------------------------------------
+# Nighthawk Scavenger: a third graveyard-reading CDA, and one that defines
+# only power
+# --------------------------------------------------------------------------
+#
+# Tarmogoyf reads every graveyard; Boneyard Wurm reads only its own
+# controller's. Nighthawk Scavenger reads the third possible answer -
+# everyone's graveyard *except* its own controller's - which
+# `LayerContext.opponents_graveyard_of` derives from the other two rather than
+# needing a fourth stored field. Its toughness is a plain printed `3`, not a
+# `*` (CR 208.1), so this is also the only card in the pool whose CDA defines
+# power alone (`define_power`) rather than both halves at once.
+
+
+def test_nighthawk_scavengers_toughness_is_the_printed_number_not_a_cda():
+    """CR 208.2a's ability is worded about power only - "Nighthawk Scavenger's
+    *power* is equal to ..." - so toughness never enters 7a at all and stays
+    the printed 3 whatever the graveyards hold."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Nighthawk Scavenger"])
+        .player("bob", graveyard=["Lightning Bolt", "Grizzly Bears", "Forest", "Sol Ring"])
+        .build()
+    )
+    hawk = scenario.creature("Nighthawk Scavenger", "alice")
+
+    assert scenario.game.toughness_of(hawk) == 3
+
+
+def test_nighthawk_scavenger_does_not_count_its_own_controllers_graveyard():
+    """ "your opponents' graveyards" - the reverse of Boneyard Wurm's "your
+    graveyard": alice's own bin is exactly the one bin that does not count."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Nighthawk Scavenger"],
+            graveyard=["Lightning Bolt", "Grizzly Bears", "Forest"],
+        )
+        .build()
+    )
+    hawk = scenario.creature("Nighthawk Scavenger", "alice")
+
+    assert scenario.game.power_of(hawk) == 1, "1 plus zero - alice's own graveyard doesn't count"
+
+
+def test_nighthawk_scavenger_counts_every_opponent_in_a_multiplayer_game():
+    """ "your opponents' graveyards", plural - in a three-player game that is
+    two bins, not one."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Nighthawk Scavenger"])
+        .player("bob", graveyard=["Lightning Bolt"])
+        .player("carol", graveyard=["Grizzly Bears", "Forest"])
+        .build()
+    )
+    hawk = scenario.creature("Nighthawk Scavenger", "alice")
+
+    assert scenario.game.power_of(hawk) == 4, "1 plus three types across bob's and carol's bins"
+
+
+def test_all_three_graveyard_reading_cdas_coexist_on_one_board():
+    """Tarmogoyf (every graveyard), Boneyard Wurm (your own), and Nighthawk
+    Scavenger (your opponents') all in sublayer 7a at once, each computed off
+    the one `LayerContext` `Game.computed_board()` built - proof the three
+    derived views (`graveyards`, `graveyard_of`, `opponents_graveyard_of`)
+    disagree with each other exactly where the cards themselves do."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Tarmogoyf", "Boneyard Wurm", "Nighthawk Scavenger"],
+            graveyard=["Grizzly Bears"],
+        )
+        .player("bob", graveyard=["Lightning Bolt", "Forest"])
+        .build()
+    )
+    goyf = scenario.creature("Tarmogoyf", "alice")
+    wurm = scenario.creature("Boneyard Wurm", "alice")
+    hawk = scenario.creature("Nighthawk Scavenger", "alice")
+
+    assert scenario.game.power_of(goyf) == 3, "creature, instant, land - both bins"
+    assert scenario.game.power_of(wurm) == 1, "one creature card - alice's bin only"
+    assert scenario.game.power_of(hawk) == 3, "1 plus two types - bob's bin only"
 
 
 # --------------------------------------------------------------------------
