@@ -2519,6 +2519,70 @@ class Game(BaseModel):
             top_order=tuple(state.id for state in on_top),
         )
 
+    def look_at_top_and_split(
+        self,
+        player: Player | str,
+        count: int,
+        *,
+        source: str | None = None,
+        prompt: str | None = None,
+    ) -> tuple[list[CardState], list[CardState]]:
+        """Look at the top `count` cards and split them into two groups, the
+        same CR 608.2d question `scry` and `surveil` already ask (CR 701.22a,
+        CR 701.25a) generalised past those two rules' own fixed pair of
+        destinations.
+
+        `scry` always puts the `CardSplit.moved` half on the *bottom* of the
+        library and the rest back on *top*; `surveil` always puts `moved` in
+        the *graveyard*. Duskwatch Recruiter's activated ability ("look at the
+        top three cards of your library. You may reveal a creature card from
+        among them and put it into your hand. Put the rest on the bottom of
+        your library in any order.") needs neither pair - its chosen half goes
+        to *hand* and its rest half goes to the *bottom* - so this method asks
+        the identical CardSplit question CR 701.22a/701.25a already share and
+        then, unlike `scry`/`surveil`, does nothing to `player.library` at all:
+        both returned groups are already off the library, in the answer's own
+        order, and it is entirely the caller's job to decide where each group
+        actually goes. That is what lets a caller reach a pair of destinations
+        neither built-in rule has, without a third method duplicating the
+        look-then-split machinery `_look_at_top`/`_split_top` already hold.
+
+        Reuses `DecisionKind.SCRY` rather than adding a new kind - the
+        question underneath ("which of these `count` cards move to the first
+        group, and in what order do the rest come back") is exactly the one
+        `scry` already asks; only what a caller does with the two halves
+        afterward differs.
+
+        Returns `(moved, rest)`. `CR 701.22a`'s question, not `CR 701.22a`'s
+        answer's placement - callers using this for something CR 701.22a does
+        not describe (Duskwatch Recruiter's is CR 702's "look at" wording, not
+        scry) are answerable to their own card's printed order, not this
+        method's name.
+        """
+        if isinstance(player, str):
+            player = self.player(player)
+        if count <= 0:
+            return [], []
+
+        looked_at = self._look_at_top(player, count)
+        answer = self.ask(
+            Decision(
+                kind=DecisionKind.SCRY,
+                player=player.username,
+                prompt=prompt or f"look at the top {count} card(s)",
+                source=source,
+                amount=count,
+                cards=tuple(state.id for state in looked_at),
+            )
+        )
+        assert isinstance(answer, CardSplit)
+        moved, rest = self._split_top(player, looked_at, answer)
+        library = player.library
+        for state in looked_at:
+            if state in library:
+                library.remove(state)
+        return moved, rest
+
     # -- shuffling and searching (CR 701.23, CR 701.24) -----------------------
 
     def shuffle_library(self, player: Player | str, *, keep: list[CardState] | None = None) -> None:
@@ -2565,23 +2629,36 @@ class Game(BaseModel):
         optional: bool = False,
         shuffle: bool = True,
         source: str | None = None,
+        zone: Zone = Zone.LIBRARY,
     ) -> list[CardState]:
-        """Search a library, take what was found out of it, then shuffle.
+        """Search one of a player's zones, take what was found out of it, and
+        (library only) shuffle.
 
         CR 701.23a: "To search for a card in a zone, look at all cards in that
         zone (even if it's a hidden zone) and find a card that matches the given
-        description." The whole library is visible to the searcher, which is why
+        description." The whole zone is visible to the searcher, which is why
         this takes a predicate over every card rather than looking only at the
-        top.
+        top. `zone` names *which* zone (CR 701.23a's search is always of one
+        zone at a time) and defaults to the library, this method's original and
+        still most common use - `search_library` keeps its name so every
+        existing library search stays untouched, rather than being renamed out
+        from under them for a widening only some callers need.
 
-        CR 701.23b is the rule that makes a search a *decision*: "If a player is
-        searching a hidden zone for cards with a stated quality ... that player
-        isn't required to find some or all of those cards even if they're
-        present in that zone." A library is a hidden zone (CR 400.2 lists the
-        public ones and the library is not among them), so failing to find is
-        always legal. That is what `optional` asks about - and note it is not
-        the same question as CR 701.23g's "you *may* search", which the caller
-        asks with `Game.may` before calling this at all.
+        The Stone Brain's and Surgical Extraction's own "search its owner's
+        graveyard, hand, and library" is not a hidden search of all three zones
+        at once; it is CR 701.23a's ordinary single-zone search, run three
+        times, once per zone this same predicate applies to unchanged.
+
+        CR 701.23b is the rule that makes a search of a *hidden* zone a
+        decision: "If a player is searching a hidden zone for cards with a
+        stated quality ... that player isn't required to find some or all of
+        those cards even if they're present in that zone." CR 400.2 makes the
+        library and the hand hidden zones and the graveyard a public one, but
+        this method does not special-case that distinction - `optional`
+        already defaults to `False` (find everything this predicate and
+        `count` allow, the shape every zone-widened caller in this pool wants),
+        and a caller searching a hidden zone for a genuinely declinable find
+        opts into `optional=True` exactly as it always could for the library.
 
         CR 701.23d is the exception: "If a player is searching a hidden zone
         simply for a quantity of cards, such as 'a card' or 'three cards,' that
@@ -2591,29 +2668,31 @@ class Game(BaseModel):
         CR 701.23e: nothing is revealed unless the effect says so, so nothing is
         revealed here.
 
-        The cards found are removed from the library and returned; the caller
-        decides where they go. The shuffle then happens without them, per
-        CR 701.24b - which is the same thing as shuffling before moving them,
-        and avoids having to put them back first.
+        The cards found are removed from `zone` and returned; the caller
+        decides where they go. `shuffle` only ever does anything when
+        `zone` is `Zone.LIBRARY` - CR 701.24b's post-search shuffle is a
+        library-specific rule with no hand or graveyard equivalent - so a
+        caller searching another zone can leave it at its default with no
+        effect.
         """
         if isinstance(player, str):
             player = self.player(player)
 
         found: list[CardState] = []
-        for state in list(player.library):
+        for state in list(player.cards_in(zone)):
             if len(found) >= count:
                 break
             if not matches(state):
                 continue
             if optional and not self.may(
-                player, f"find {state.card.name} while searching your library", source=source
+                player, f"find {state.card.name} while searching your {zone.value}", source=source
             ):
                 continue
             found.append(state)
 
         for state in found:
-            player.library.remove(state)
-        if shuffle:
+            player.cards_in(zone).remove(state)
+        if shuffle and zone is Zone.LIBRARY:
             self.shuffle_library(player)
         return found
 
