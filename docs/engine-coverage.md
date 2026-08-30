@@ -666,21 +666,34 @@ point of failing closed, not a bug to route around.
   "~47 you-may clauses"; the real number was 1): across the whole fixture
   pool, exactly two cards are unlocked end to end by the zones relaxation -
   Faerie Macabre ("Exile up to two target cards from graveyards") and
-  Keen-Eyed Curator ("Exile target card from a graveyard"). Three look-alikes
-  are **not** unlocked, and are asserted to still do nothing:
-  Tormod's Crypt and Bojuka Bog's "exile target player's graveyard" targets
-  the *player* (`allows_cards=False`), which `exile_ability_targets`'s
-  `isinstance(target, CardState)` check silently skips - exiling a whole
-  zone's contents is a different effect shape this wave does not build.
+  Keen-Eyed Curator ("Exile target card from a graveyard").
   Kozilek's Command's "Exile up to X target cards from graveyards" was one
   mode of a modal spell, and `effect_for` did not dispatch modes at all at the
   time this paragraph was written - it now does (`resolve_modal_spell`, see
   the Modelled table's "What a mode does on resolution" row), and this mode
-  reaches `exile_ability_targets` through it like any other card's. Raise Dead and
-  Eternal Witness's "return ... to **your** hand" (rather than "to its
-  owner's hand") still fails `_RETURN_TARGET_RE` outright, an unrelated,
-  pre-existing phrasing gap, so no return-clause fixture card is unlocked by
-  this wave - only the exile side is proven working.
+  reaches `exile_ability_targets` through it like any other card's.
+  **A later wave closed the two remaining look-alikes.** Tormod's Crypt and
+  Bojuka Bog's "exile target player's graveyard" targets the *player*
+  (`allows_cards=False`), which `exile_ability_targets`'s
+  `isinstance(target, CardState)` check can never reach - `exile_target_
+  players_graveyard` is a separate clause `_parse_targeted_clause` now routes
+  "target player's graveyard" phrases to instead, ahead of the generic
+  exile-target regex, and empties every card in the targeted player's own
+  graveyard (own included) into exile. Raise Dead and Eternal Witness's
+  "return ... to **your** hand" (rather than "to its owner's hand") used to
+  fail `_RETURN_TARGET_RE` outright; `_RETURN_FROM_YOUR_GRAVEYARD_TO_HAND_RE`
+  is the sibling pattern that reads it. Rest in Peace's "exile all
+  graveyards" and Sanctifier en-Vec's "exile all cards that are `<quality>`
+  from all graveyards" (no target at all) and Endurance's "up to one target
+  player puts all the cards from their graveyard on the bottom of their
+  library in a random order" (CR 115.6) are new shapes entirely - see
+  `tests/scenarios/test_graveyard_zone_effects.py`. Rest in Peace's and
+  Sanctifier en-Vec's own second sentences ("If a card ... would be put into
+  a graveyard ..., exile it instead") are static replacement effects, a
+  different ability from the one this closes, and remain unattempted - there
+  is no home in `machines/effects.py` for a graveyard-redirecting
+  replacement the way `machines/replacement.py` already has for "enters
+  tapped".
 - **A triggered ability's targets, chosen before its source exists, are not
   checked.** `Game.why_cannot_target_with_trigger` looks for the source card
   on the battlefield or the stack (CR 603.6a); an enters-the-battlefield

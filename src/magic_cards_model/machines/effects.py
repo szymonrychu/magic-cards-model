@@ -55,6 +55,7 @@ travel.
 
 import re
 from collections.abc import Callable
+from random import Random
 from typing import TYPE_CHECKING
 from uuid import UUID
 
@@ -963,16 +964,158 @@ def exile_ability_targets(game: "Game", ability: AbilityOnStack) -> None:
     One look-alike stays unreached by this: Tormod's Crypt and Bojuka Bog's
     "exile target player's graveyard" *targets the player*, not a card
     (`allows_cards=False`), so this function's `isinstance(target, CardState)`
-    check silently skips it - exiling one player's whole graveyard is a
-    different effect shape this wave does not build. Kozilek's Command's
-    "Exile up to X target cards from graveyards" is one mode of a modal
-    spell and *does* reach this function now, through `resolve_modal_spell`
-    (`parse_mode_effect` falls back to `parse_mixed_effect_for_spell`, which
-    reads this shape the same way any non-modal card's text would).
+    check silently skips it - that shape is `exile_target_players_graveyard`
+    below instead, a separate clause the parser routes to on sight of the
+    "player's graveyard" phrase rather than this function ever seeing it.
+    Kozilek's Command's "Exile up to X target cards from graveyards" is one
+    mode of a modal spell and *does* reach this function now, through
+    `resolve_modal_spell` (`parse_mode_effect` falls back to
+    `parse_mixed_effect_for_spell`, which reads this shape the same way any
+    non-modal card's text would).
     """
     for target in game.resolve_targets(ability):
         if isinstance(target, CardState):
             game.exile_permanent(target)
+
+
+def exile_target_players_graveyard(game: "Game", stack_object: "StackObject") -> None:
+    """Bojuka Bog / Tormod's Crypt: "exile target player's graveyard."
+
+    CR 115.1: "The targets are object(s) and/or player(s) the spell or ability
+    will affect" - here the *target* is the player, not a card, which is why
+    `exile_ability_targets`'s `isinstance(target, CardState)` check can never
+    reach this shape (`_targets_understood`'s `allow_player_targets` gate is
+    what tells the two apart while parsing). `game.resolve_targets` already
+    reruns CR 608.2b for a player target - gone from the game is illegal,
+    still in it is not - so by the time this runs the player is a real,
+    current `Player`.
+
+    CR 404.1: "A player's graveyard is their discard pile", one of the
+    per-player zones on `Player`, not the target itself. Once the player is
+    confirmed legal, every card sitting in *their* graveyard right now - full
+    or empty, the caster's own or an opponent's - is exiled one by one through
+    `Game.exile_permanent` (CR 406.2/701.13a: exile moves an object "from
+    whatever zone it's currently in", so a graveyard card is as reachable as a
+    permanent). An empty graveyard is exactly as legal a target as a full one:
+    nothing in CR 115 or CR 608.2b conditions targeting a player on what is in
+    their zones, only on whether they are still in the game.
+    """
+    for target in game.resolve_targets(stack_object):
+        if isinstance(target, Player):
+            for card_state in list(target.graveyard):
+                game.exile_permanent(card_state)
+
+
+def exile_all_graveyards(game: "Game", stack_object: "StackObject") -> None:
+    """Rest in Peace: "exile all graveyards."
+
+    No target at all - every player's graveyard, own included (CR 404.1), is
+    emptied into the shared exile zone (CR 406.2/701.13a). `game.players_in_game`
+    is CR 104.3a's still-playing set, so a player who has already conceded or
+    lost contributes nothing (there is no graveyard left to read a rule about).
+
+    Rest in Peace's second sentence - "If a card or token would be put into a
+    graveyard from anywhere, exile it instead" - is a static replacement
+    effect (CR 614), a different ability entirely from this one's ETB trigger,
+    and is not attempted here: `machines/effects.py` has no home for a
+    graveyard-redirecting replacement effect the way `machines/replacement.py`
+    already does for "enters tapped". It is not counted by this file's own
+    sweep either, the same way a shockland's own replacement text is not -
+    see `docs/mcp-tools.md`/`scripts/sweep_pool.py`'s own scope note.
+    """
+    for player in game.players_in_game:
+        for card_state in list(player.graveyard):
+            game.exile_permanent(card_state)
+
+
+#: Reused by `_exile_matching_from_all_graveyards`, defined lower in this file
+#: next to `_HAND_EXILE_COLOR_WORDS` - forward reference is fine, since this is
+#: only ever called once the whole module has finished importing.
+def _graveyard_exile_quality_matcher(quality: str) -> Callable[[CardState], bool] | None:
+    """A predicate for "cards that are `<quality>`" - Sanctifier en-Vec's
+    "black or red" - or `None` if this wave cannot read every word of it.
+
+    Reuses `_hand_exile_quality_matcher`'s single-word colour/type reading
+    (CR 105.2c's five colours, CR 205.2a's card types) rather than duplicating
+    it, splitting on "or"/comma the same way `_quality_matcher` does for a
+    search's stated quality. Fail-closed per word: a quality this wave cannot
+    read - a supertype, a subtype - refuses the whole clause (CR 608.2c)
+    rather than exiling the wrong, narrower set of cards silently.
+    """
+    words = [
+        word.strip() for word in re.split(r",\s*|\s+or\s+", quality.strip().lower()) if word.strip()
+    ]
+    if not words:
+        return None
+    matchers = []
+    for word in words:
+        matcher = _hand_exile_quality_matcher(word)
+        if matcher is None:
+            return None
+        matchers.append(matcher)
+
+    def matches(state: CardState) -> bool:
+        return any(matcher(state) for matcher in matchers)
+
+    return matches
+
+
+def _exile_matching_from_all_graveyards(
+    matches: Callable[[CardState], bool],
+) -> TargetedClause:
+    """Sanctifier en-Vec: "exile all cards that are black or red from all
+    graveyards" - the filtered twin of `exile_all_graveyards`, keeping only
+    the cards `matches` accepts (CR 404.1's graveyards, CR 406.2/701.13a's
+    exile). No target either; every player's graveyard is read, the caster's
+    own included, the same as the unfiltered shape.
+
+    Sanctifier en-Vec's own second sentence is the same kind of static
+    replacement effect Rest in Peace's is, and is left unattempted for the
+    same reason - see `exile_all_graveyards`.
+    """
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        for player in game.players_in_game:
+            for card_state in list(player.graveyard):
+                if matches(card_state):
+                    game.exile_permanent(card_state)
+
+    return effect
+
+
+def puts_graveyard_on_bottom_of_library(game: "Game", stack_object: "StackObject") -> None:
+    """Endurance: "up to one target player puts all the cards from their
+    graveyard on the bottom of their library in a random order."
+
+    CR 115.6: "up to one target" may legally choose zero, in which case
+    `game.resolve_targets` returns nothing and this does nothing - a real
+    answer to "nobody was chosen," not a fizzle. When a player was chosen and
+    is still in the game (CR 608.2b), every card in *their* graveyard (CR
+    404.1) moves to the bottom of *their* library (CR 401.2: a library stays
+    face-down and in whatever order it is put) - own graveyard included, an
+    empty one just as legal a target as a full one, the same as
+    `exile_target_players_graveyard`.
+
+    "In a random order" is not CR 701.24's shuffle - that verb is reserved for
+    "shuffle" itself (CR 701.24a), and this text never says it - so no shuffle
+    trigger fires here, the same distinction `machines/keywords.cascade`
+    already draws for "put the exiled cards on the bottom in a random order."
+    The randomisation reuses `Game.shuffle_library`'s own reproducible seed
+    (`shuffle_seed` plus a running counter) rather than a bare, unseeded
+    `Random()`, so a scenario asserting on the resulting library order stays
+    deterministic.
+    """
+    for target in game.resolve_targets(stack_object):
+        if not isinstance(target, Player):
+            continue
+        cards = list(target.graveyard)
+        if not cards:
+            continue
+        rng = Random(f"{game.shuffle_seed}:{game.shuffles_performed}:graveyard-bottom")  # noqa: S311
+        rng.shuffle(cards)
+        for card_state in cards:
+            target.move(card_state, Zone.LIBRARY)
+        game.shuffles_performed += 1
 
 
 def tishanas_tidebinder(game: "Game", ability: AbilityOnStack) -> None:
@@ -1911,6 +2054,24 @@ def put_counters_on_ability_targets(kind: Counter, amount: int) -> TargetedClaus
 #: to the end of the clause, count words and all - `_targets_understood`
 #: needs the count word, if any, to see "up to two" and refuse it.
 _DESTROY_TARGET_RE = re.compile(r"destroy (?P<phrase>(?:any target|.*target.+))", re.IGNORECASE)
+#: "Exile target player's graveyard." (Bojuka Bog, Tormod's Crypt) - checked
+#: ahead of `_EXILE_TARGET_RE` below, which would otherwise match the same
+#: text (its `.*target.+` phrase is a superset), read `_targets_understood`
+#: with `allow_player_targets` left at its default `False`, refuse the whole
+#: clause on the player-target it cannot see, and `return None` before this
+#: pattern ever got a turn - `_parse_targeted_clause` commits to the first
+#: regex that fullmatches, not the first that also parses successfully.
+_EXILE_TARGET_PLAYERS_GRAVEYARD_RE = re.compile(
+    r"^exile (?P<phrase>.*target player's graveyard)\.?$", re.IGNORECASE
+)
+#: "Exile all graveyards." (Rest in Peace) and "Exile all cards that are
+#: `<quality>` from all graveyards." (Sanctifier en-Vec) - no "target" at all
+#: (CR 115.1 has nothing to target here), so neither collides with
+#: `_EXILE_TARGET_RE`'s "target" requirement.
+_EXILE_ALL_GRAVEYARDS_RE = re.compile(r"^exile all graveyards\.?$", re.IGNORECASE)
+_EXILE_QUALITY_FROM_ALL_GRAVEYARDS_RE = re.compile(
+    r"^exile all cards that are (?P<quality>.+?) from all graveyards\.?$", re.IGNORECASE
+)
 _EXILE_TARGET_RE = re.compile(r"exile (?P<phrase>(?:any target|.*target.+))", re.IGNORECASE)
 #: "Counter target spell." - the unconditional shape (CR 701.5a), as opposed
 #: to Mystic Confluence's "Counter target spell unless its controller pays
@@ -1920,6 +2081,26 @@ _EXILE_TARGET_RE = re.compile(r"exile (?P<phrase>(?:any target|.*target.+))", re
 _COUNTER_TARGET_SPELL_RE = re.compile(r"^counter target spell\.?$", re.IGNORECASE)
 _RETURN_TARGET_RE = re.compile(
     r"return (?P<phrase>.*target.+?) to its owner'?s hand", re.IGNORECASE
+)
+#: "Return target card from your graveyard to your hand." (Eternal Witness,
+#: wrapped in "you may") and "Return target creature card from your graveyard
+#: to your hand." (Raise Dead) - the same verb as `_RETURN_TARGET_RE` but "to
+#: your hand" rather than "to its owner's hand", so the two patterns never
+#: collide. `phrase` keeps "from your graveyard" inside it so
+#: `_targets_understood` can see the zone the way it already reads "target
+#: creature card in your graveyard" for `return_ability_targets_to_hand`
+#: elsewhere in this file.
+_RETURN_FROM_YOUR_GRAVEYARD_TO_HAND_RE = re.compile(
+    r"return (?P<phrase>.*target.+from your graveyard) to your hand\.?$", re.IGNORECASE
+)
+#: "Up to one target player puts all the cards from their graveyard on the
+#: bottom of their library in a random order." (Endurance) - CR 115.6's "up
+#: to one" prefix sits before "target player", which is why `phrase` starts
+#: with a greedy `.+` rather than anchoring on the word "target" itself.
+_GRAVEYARD_TO_BOTTOM_OF_LIBRARY_RE = re.compile(
+    r"^(?P<phrase>.*target player) puts all the cards from (?:their|his or her) graveyard "
+    r"on the bottom of (?:their|his or her) library in a random order\.?$",
+    re.IGNORECASE,
 )
 #: "Tap target X." and "Untap target X." - and Kiora's Follower's "Untap
 #: *another* target permanent", where "another" sits between the verb and
@@ -2197,6 +2378,23 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
             return None
         return destroy_ability_targets
 
+    if match := _EXILE_TARGET_PLAYERS_GRAVEYARD_RE.fullmatch(clause):
+        # Ahead of `_EXILE_TARGET_RE`: that pattern's phrase is a superset of
+        # this one's and would otherwise commit first, read the player target
+        # with `allow_player_targets` left `False`, and refuse the clause.
+        if not _targets_understood(match.group("phrase"), allow_player_targets=True):
+            return None
+        return exile_target_players_graveyard
+
+    if _EXILE_ALL_GRAVEYARDS_RE.fullmatch(clause):
+        return exile_all_graveyards  # type: ignore[return-value]
+
+    if match := _EXILE_QUALITY_FROM_ALL_GRAVEYARDS_RE.fullmatch(clause):
+        matches = _graveyard_exile_quality_matcher(match.group("quality"))
+        if matches is None:
+            return None
+        return _exile_matching_from_all_graveyards(matches)
+
     if match := _EXILE_TARGET_RE.fullmatch(clause):
         if not _targets_understood(
             match.group("phrase"), count_agnostic=True, battlefield_only=False
@@ -2204,12 +2402,26 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
             return None
         return exile_ability_targets
 
+    if match := _RETURN_FROM_YOUR_GRAVEYARD_TO_HAND_RE.fullmatch(clause):
+        if not _targets_understood(
+            match.group("phrase"), count_agnostic=True, battlefield_only=False
+        ):
+            return None
+        return return_ability_targets_to_hand
+
     if match := _RETURN_TARGET_RE.fullmatch(clause):
         if not _targets_understood(
             match.group("phrase"), count_agnostic=True, battlefield_only=False
         ):
             return None
         return return_ability_targets_to_hand
+
+    if match := _GRAVEYARD_TO_BOTTOM_OF_LIBRARY_RE.fullmatch(clause):
+        if not _targets_understood(
+            match.group("phrase"), count_agnostic=True, allow_player_targets=True
+        ):
+            return None
+        return puts_graveyard_on_bottom_of_library
 
     if match := _TAP_UNTAP_TARGET_RE.fullmatch(clause):
         if not _targets_understood(match.group("phrase"), count_agnostic=True):

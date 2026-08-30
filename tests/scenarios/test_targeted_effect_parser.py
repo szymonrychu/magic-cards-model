@@ -514,15 +514,15 @@ def test_keen_eyed_curator_exiles_a_graveyard_card_end_to_end():
     assert bears.zone is Zone.EXILE
 
 
-def test_tormod_and_bojuka_still_do_not_actually_exile_a_graveyard():
+def test_tormod_and_bojuka_now_exile_the_targeted_players_graveyard():
     """Tormod's Crypt and Bojuka Bog say "exile target player's graveyard" -
-    they target the *player*, not a card (`allows_cards=False`), so
-    `exile_ability_targets`'s `isinstance(target, CardState)` check silently
-    skips the player and nothing is exiled. This is a different, still-open
-    gap - exiling a whole zone's contents is not a shape this wave builds -
-    and it is unaffected by relaxing the zones guard: measured here so this
-    survey does not repeat the old "~47 you-may clauses" mistake of counting
-    a card as unlocked because a related-looking clause now parses.
+    they target the *player*, not a card (`allows_cards=False`), which is why
+    `exile_ability_targets`'s `isinstance(target, CardState)` check can never
+    reach this shape. That is no longer a silent gap: `exile_target_players_
+    graveyard` (`machines/effects.py`) is the clause `_parse_targeted_clause`
+    now routes "target player's graveyard" phrases to, ahead of the generic
+    exile-target regex. See `tests/scenarios/test_exile_a_players_graveyard.py`
+    for the corner cases (empty graveyard, own graveyard, ordering).
     """
     scenario = (
         Scenario()
@@ -540,7 +540,7 @@ def test_tormod_and_bojuka_still_do_not_actually_exile_a_graveyard():
     scenario.game.activate_ability(crypt, 0, "alice", targets=["bob"])
     scenario.pass_until_resolved()
 
-    assert bears.zone is Zone.GRAVEYARD, "targeting the player does not reach their cards"
+    assert bears.zone is Zone.EXILE, "targeting the player now reaches their graveyard"
 
 
 def test_prismatic_ending_resolves_without_exiling_a_legal_looking_target():
