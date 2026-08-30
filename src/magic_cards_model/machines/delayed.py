@@ -54,7 +54,7 @@ for it and `machines/triggers.py` is not this file's to change.
 """
 
 from collections.abc import Callable
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
@@ -68,6 +68,10 @@ from .turn import Step
 if TYPE_CHECKING:
     from ..models.game import Game
 
+#: What a delayed triggered ability does when it resolves. Keyed by the string
+#: in `DelayedTrigger.effect`, or carried directly on `DelayedTrigger.callback`.
+DelayedEffect = Callable[["Game", AbilityOnStack, "DelayedTrigger"], None]
+
 
 class DelayedTrigger(BaseModel):
     """One delayed triggered ability, waiting for its event (CR 603.7)."""
@@ -79,9 +83,27 @@ class DelayedTrigger(BaseModel):
     failure message. CR 603.7 says the word "when"/"whenever"/"at" is in there
     somewhere even though it does not usually begin the ability."""
 
-    effect: str
-    """The key into `DELAYED_EFFECTS`. A key with no entry does nothing, exactly
-    as a spell with no `EFFECTS` entry does nothing."""
+    effect: str = ""
+    """The key into `DELAYED_EFFECTS`, for the hand-written entries (warp,
+    Emrakul's extra turn, and the test-only sacrifice helper) that predate
+    `callback`. Left empty when `callback` is set instead."""
+
+    callback: Any = Field(default=None, exclude=True, repr=False)
+    """A `DelayedEffect`, or `None`. Typed `Any` rather than `DelayedEffect`
+    itself for the same reason `AbilityOnStack.keyword_activation` is
+    (`machines/triggers.py`): a `Callable[["Game", ...], None]` field forces
+    pydantic to resolve the forward reference to `Game` when the schema is
+    built, which is before `Game` exists in this module's world.
+
+    What this ability does, read straight off a card's own printed text by
+    `machines/effects.py`'s delayed-trigger clause parser, with no registry
+    row. `DELAYED_EFFECTS` used to be the only way in, and its own docstring's
+    justification - "the ability has no printed text to read" - never held for
+    a delayed trigger a card prints itself (Phelia, Exuberant Shepherd's own
+    "at the beginning of the next end step, return that card ..."), so a
+    parsed clause carries its own callable here instead of adding another
+    name-keyed row. Checked ahead of `effect`/`DELAYED_EFFECTS` in
+    `DelayedTriggers.effect_for`."""
 
     event: TriggerEvent
     """The event to watch for, in the vocabulary `Game.emit` already speaks."""
@@ -118,6 +140,16 @@ class DelayedTrigger(BaseModel):
     expected_zone: Zone | None = None
     """Where CR 603.7c expects that object to be when the ability resolves.
     Somewhere else and the ability resolves without affecting it."""
+
+    expected_stamp: UUID | None = None
+    """`CardState.zone_change_stamp` as it was when this trigger was created
+    (CR 603.7c's parenthetical): "if that object left that zone and then
+    returned, it's a new object and thus won't be affected." A same-`id`,
+    same-zone match is not enough to prove that - `still_affects` also
+    requires the stamp to match, so an object that round-tripped through
+    another zone and landed back in `expected_zone` by some other route is
+    correctly refused. `None` skips the check, for a trigger built before this
+    existed."""
 
     remaining: int | None = 1
     """How many more times this may trigger (CR 603.7b). One unless the ability
@@ -177,12 +209,11 @@ class DelayedTrigger(BaseModel):
             return None
         if self.expected_zone is not None and found.zone is not self.expected_zone:
             return None
+        if self.expected_stamp is not None and found.zone_change_stamp != self.expected_stamp:
+            # CR 603.7c's parenthetical: same zone, same `id`, but a different
+            # incarnation - it left and came back, so it is a new object.
+            return None
         return found
-
-
-#: What a delayed triggered ability does when it resolves. Keyed by the string
-#: in `DelayedTrigger.effect`.
-DelayedEffect = Callable[["Game", AbilityOnStack, DelayedTrigger], None]
 
 
 def _exile_warped(game: "Game", ability: AbilityOnStack, trigger: DelayedTrigger) -> None:
@@ -228,6 +259,58 @@ def _sacrifice_subject(game: "Game", ability: AbilityOnStack, trigger: DelayedTr
     permanent = trigger.still_affects(game)
     if permanent is not None:
         game.put_into_graveyard(permanent)
+
+
+def return_subject_to_battlefield_under_owner(
+    game: "Game", ability: AbilityOnStack, trigger: DelayedTrigger
+) -> None:
+    """ "At the beginning of the next end step, return that card to the
+    battlefield under its owner's control" - Phelia, Exuberant Shepherd's
+    shape, and the blink idiom generally (Blizzard Strix, Angel of
+    Condemnation, Astral Drift).
+
+    CR 610.3c: "An object returned to the battlefield this way returns under
+    its owner's control unless otherwise specified" - the owner, not whoever
+    controlled it before it left, which is why this reads `owner` rather than
+    `controller_or_owner`. CR 110.5b: permanents enter untapped by default,
+    and nothing here retaps it - it left `tapped=False` on the way into exile
+    (`CardState.move_to`) and nothing has touched it since. CR 603.7c is what
+    stops this reaching a permanent that is no longer where it was exiled to,
+    or that left and came back as a new object (`expected_stamp`).
+
+    A token never gets here in the first place: `CardState.exile_permanent`
+    already ran without objection to put it into exile, but CR 111.8 refuses a
+    *second* zone change for a token that has already left the battlefield
+    once, so `Game.put_onto_battlefield` (via `enter_the_battlefield`) silently
+    declines and the token stays in exile - where CR 111.7/704.5d already
+    destines it to cease to exist as a state-based action.
+    """
+    permanent = trigger.still_affects(game)
+    if permanent is None or permanent.owner is None:
+        return
+    game.put_onto_battlefield(permanent, permanent.owner, tapped=False)
+
+
+def return_subject_to_hand(game: "Game", ability: AbilityOnStack, trigger: DelayedTrigger) -> None:
+    """ "Return it to its owner's hand at the beginning of the next end step" -
+    Aether Membrane's and dash's shape (CR 701.19a). `Game.return_to_hand`
+    already goes to the *owner's* hand, whoever controls it now.
+    """
+    permanent = trigger.still_affects(game)
+    if permanent is not None:
+        game.return_to_hand(permanent)
+
+
+def draw_a_card_for_controller(
+    game: "Game", ability: AbilityOnStack, trigger: DelayedTrigger
+) -> None:
+    """ "Draw a card at the beginning of the next turn's upkeep" - Mishra's
+    Bauble's second half. No object is named at all (CR 603.7c has nothing to
+    check), so this is the creating ability's controller, drawing on their own
+    behalf (CR 121.2).
+    """
+    if game.is_in_game(trigger.controller):
+        game.draw_cards(trigger.controller, 1)
 
 
 DELAYED_EFFECTS: dict[str, DelayedEffect] = {
@@ -295,9 +378,18 @@ class DelayedTriggers(BaseModel):
         return self.pending.get(ability.id)
 
     def effect_for(self, ability: AbilityOnStack) -> DelayedEffect | None:
-        """What this ability does, or None if it is not one of ours."""
+        """What this ability does, or None if it is not one of ours.
+
+        `callback` wins when a parsed clause carried one - see its docstring
+        on `DelayedTrigger` - and `DELAYED_EFFECTS`'s string key is the
+        fallback for the hand-written triggers that predate it.
+        """
         trigger = self.pending.get(ability.id)
-        return DELAYED_EFFECTS.get(trigger.effect) if trigger is not None else None
+        if trigger is None:
+            return None
+        if trigger.callback is not None:
+            return trigger.callback
+        return DELAYED_EFFECTS.get(trigger.effect)
 
     def discard(self, ability: AbilityOnStack) -> None:
         """Forget an ability that has finished resolving (CR 608.2n)."""

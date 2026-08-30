@@ -777,10 +777,12 @@ does not extend to:
 
 Also out of scope, and left failing closed exactly as before: stack-object
 anaphora (Access Denied, Force of Negation, Delay, Transcendent Dragon,
-Subtlety - "that spell" refers to an object on the stack, not a permanent) and
-delayed-trigger anaphora across a later zone change (Phelia, Ephemerate,
-Postmortem Lunge) - genuinely different object models from the battlefield
-LKI this wave reads.
+Subtlety - "that spell" refers to an object on the stack, not a permanent).
+Phelia's own delayed-trigger anaphora is fixed - see "Delayed-trigger clauses"
+below; Ephemerate's "exile target creature you control, then return it" is a
+different shape (CR 400.7j, one resolution, not a delayed trigger) and is
+still unbuilt; Postmortem Lunge's antecedent (a reanimation target named by a
+variable mana value) is still unread.
 
 Scenario coverage: `tests/scenarios/test_anaphoric_referent_clauses.py`. Unit
 coverage for the parser and the notice: `tests/test_mixed_effects.py`.
@@ -907,6 +909,75 @@ own printed text - see the card-by-card table above. Ugin's two triggers are
 still told apart correctly with no marker at all, because
 `Game._effect_of` always hands `trigger_effect_for` the *resolving* ability's
 own text.
+
+## Delayed-trigger clauses parsed off printed text
+
+Phelia, Exuberant Shepherd's attack trigger used to resolve and do nothing:
+"exile up to one other target nonland permanent" parsed and ran, but "At the
+beginning of the next end step, return that card to the battlefield under its
+owner's control. If it entered under your control, put a +1/+1 counter on
+Phelia." had no reader, so `_parse_mixed_clauses` correctly refused the whole
+ability (CR 608.2c has no notion of running half an instruction) - silently.
+`machines/delayed.py` already had every piece of CR 603.7's machinery
+(`DelayedTrigger`, creation timing, one-shot spend, the CR 603.7c zone check,
+CR 603.7d/e source and controller capture) for warp and Emrakul's extra turn;
+the gap was purely that nothing read a printed "at the beginning of the next
+\<step\>, \<verb\> it" off a card and called `DelayedTriggers.create`.
+
+`_parse_delayed_blink_clauses` in `machines/effects.py` is the fix for
+Phelia's own shape: it runs the exile clause itself (rather than delegating to
+`exile_ability_targets`, which throws the moved object away), then closes over
+the exiled `CardState` when it builds the `DelayedTrigger` - the same
+clause-linking idea `_parse_anaphoric_clause_pair` already uses for "destroy/
+exile target X. Its controller ...". A third, optional rider clause ("if it
+entered under your control, put a +1/+1 counter on \<name\>") reads the
+recipient's name generically against the resolving source's own name at run
+time, so it is not one more name-keyed table row. `_parse_delayed_single_clause`
+covers the shape with no antecedent of its own: no object at all ("draw a
+card", Mishra's Bauble) or the trigger's own event subject (Aether Membrane's
+"return that creature ..." off `ability.event.related_id`, CR 509.1a's other
+half of a blocking pair). `DelayedTrigger.callback` now carries a parsed
+clause's own closure directly, ahead of `DELAYED_EFFECTS`'s string key, for
+the same reason that registry's "no printed text to read" justification never
+applied here.
+
+**CR 603.7c's identity gap, fixed and already latent for warp.** A delayed
+trigger names its subject by `id` plus an expected zone, but this engine
+mutates a `CardState` in place across a zone change rather than replacing it
+(CR 400.7's "new object" is otherwise unrepresented) - so an object that left
+its expected zone and came back to it by some *other* route still matched,
+which CR 603.7c's parenthetical explicitly forbids ("if that object left that
+zone and then returned, it's a new object and thus won't be affected").
+`CardState.zone_change_stamp` is a fresh id stamped on every `move_to` call;
+`DelayedTrigger.expected_stamp` captures it at creation and `still_affects`
+now requires a match. This was already reachable through warp's own delayed
+exile before this fix (a warped permanent blinked and returned to the
+battlefield before the end step would have been wrongly exiled as if it were
+the original) - `_create_resolution_delayed_triggers` now stamps it too.
+
+Fixed: Phelia, Exuberant Shepherd; Aether Membrane ("return that creature to
+its owner's hand at end of combat", CR 511.2's own `BEGINNING_OF_STEP` timing);
+Mishra's Bauble (plus a no-op reader for "look at the top card of target
+player's library", CR 701.20e); Ragavan, Nimble Pilferer's dash (the identical
+return-to-hand executor `_create_resolution_delayed_triggers` already needed
+for warp).
+
+**Left failing closed, on purpose, with a `DelayedClauseNotice` instead of
+silence:** Postmortem Lunge (the antecedent is a reanimation target named by a
+variable mana value X, not this wave's exile-or-event-subject shape) and
+Nahiri, the Harbinger's -8 (the antecedent is a search result). A half-run
+blink is worse than the pre-existing no-op - an opponent's permanent exiled
+forever is a strictly worse board than the card doing nothing - so neither
+executes any part of its instruction. **Deliberately excluded:** Dalkovan
+Encampment and Voice of Victory take a *plural* token subject ("Sacrifice
+them"), a different shape this wave does not read; Ephemerate's "exile target
+creature you control, then return it" is CR 400.7j's one-resolution blink, not
+a delayed trigger, and is a different wave's work.
+
+Scenario coverage: `tests/scenarios/test_delayed_trigger_clause_parsing.py`.
+The pre-existing `tests/scenarios/test_delayed_triggered_abilities.py` and
+`tests/scenarios/test_dash.py` cover the generic `machines/delayed.py`
+mechanism this wave builds on.
 
 ## The Modern metagame sweep
 
@@ -1063,12 +1134,12 @@ Foundry, Stomping Ground, Breeding Pool and the rest of the cycle.
 | Guide of Souls | Its "Whenever you attack" trigger now fires (once per combat, CR 508.3d), but its effect still does nothing: energy; "when you do" reflexive triggers; flying counters; adding a creature type | CR 107.14, CR 613.1f |
 | Kozilek's Command | Tokens and scry both work; `EFFECTS` is keyed by card name, so there is no modal dispatch and no mode can be executed. The `{X}` value is recorded on the cast record but unread | CR 700.2a, CR 601.2b |
 | Malevolent Rumble | **Registered in full.** The decision over the four revealed cards is a real `Game.may` / `CHOOSE_CARDS` question now (CR 608.2d); the unscripted default takes the first permanent card in library order | CR 111.1, CR 608.2c |
-| Mishra's Bauble | A delayed triggered ability - "draw a card at the beginning of the next turn's upkeep" | CR 603.7, CR 603.7a |
+| Mishra's Bauble | **Fixed.** "Look at the top card of target player's library" is a no-op (CR 701.20e, purely informational) and "draw a card at the beginning of the next turn's upkeep" is a parsed delayed trigger - see "Delayed-trigger clauses" below | CR 603.7, CR 701.20e |
 | Monstrous Rage | **Registered in full.** +2/+0 in sublayer 7c, and the Monster Role token created attached to the target, granting +1/+1 in 7c and trample in layer 6. CR 704.5m and CR 704.5z are both dispatched, and combat reads the granted trample off the computed board | CR 111.10k, CR 303.7, CR 704.5m, CR 704.5z |
 | Mosswort Bridge | Hideaway; "play the exiled card without paying its mana cost" if total power 10 or greater | CR 702.75a |
 | Ocelot Pride | **The end-step Cat token is created**, and its intervening *if* ("if you gained life this turn") is judged for real. The second sentence - *ascend*, the city's blessing, and copying every token that entered this turn - is not attempted; keeps its `TRIGGER_EFFECTS` row (W4) because `_parse_token_clause` fails that sentence's token *copy* closed and takes the whole trigger down with it (CR 608.2c), which the row alone avoids | CR 111.1, CR 702.131a, CR 603.4, CR 707.2 |
 | Preordain | **Registered in full**: scry 2, then draw, in printed order (CR 608.2c), with the scry a real question (CR 608.2d). No `EFFECTS` row any more - `parse_player_effect_for_spell` reads it | CR 701.22a, CR 608.2c |
-| Ragavan, Nimble Pilferer | Treasure tokens exist (CR 111.10a) but the trigger never fires: `TriggerEvent` has no member for damage being dealt, so "whenever this creature deals combat damage to a player" is parsed with `event=None`. Also missing: casting an exiled card of another player's, and dash | CR 111.10a, CR 702.109 |
+| Ragavan, Nimble Pilferer | Treasure tokens exist (CR 111.10a) but the trigger never fires: `TriggerEvent` has no member for damage being dealt, so "whenever this creature deals combat damage to a player" is parsed with `event=None`. **Dash's own delayed return is fixed** - `Game._create_resolution_delayed_triggers` now builds it the same way it builds warp's. Also missing: casting an exiled card of another player's | CR 111.10a, CR 702.109a |
 | Ranger-Captain of Eos | Its enters trigger works. "Your opponents can't cast noncreature spells this turn" is a rules-modifying continuous effect outside the seven layers | CR 611.3 |
 | Seasoned Pyromancer | **Its enters trigger is registered in full**, Elemental tokens included; which two cards are discarded is a real `CHOOSE_CARDS` question (CR 701.9b) through `Game.ask`, defaulting to the front of hand when unscripted. Its graveyard-activated ability still needs abilities that function from a graveyard | CR 111.1, CR 608.2c |
 | Slickshot Show-Off | Its prowess-like trigger is a layer 7c pump per noncreature spell. Plot is modelled now (see the Modelled table), so the trigger is all that is missing | CR 613.4c, CR 116.2k |
