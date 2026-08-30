@@ -59,3 +59,27 @@ names every missing symbol and its contract exactly.
   call, but recommend it.
 
 Related: [[restart-api-server-after-fixes]], [[autonomous-playtest-loop]].
+
+## Verify a merge by ancestry, not by reading a log line (2026-08-30)
+
+A `git merge` was reported and believed landed because `git log --oneline | head`
+showed the feature commit on top. It was not in `main`'s history at all. The next
+worktree branched from the older base, and merging it silently reverted the
+feature - `ACTIVATED_EFFECTS` went back from 0 rows to 2 and the whole routing
+function vanished.
+
+**The test suite could not catch this.** The branch carried the feature AND its
+tests, so when it was absent nothing was left behind to fail: 2689 passed, green,
+wrong. A green suite proves the code that is present works; it says nothing about
+code that never arrived.
+
+After every merge, check the two things that cannot lie:
+
+    git merge-base --is-ancestor <branch> HEAD && echo in || echo MISSING
+    # plus one concrete assertion about what the merge was FOR,
+    # e.g. the registry row count the wave was supposed to change
+
+What surfaced it was a one-line disagreement: an agent explained a skip-count
+change one way, and I had measured it myself and knew the real cause. **Chase the
+small discrepancy in an agent's report** - the plausible explanation for an
+off-by-one is usually where the real defect is hiding.
