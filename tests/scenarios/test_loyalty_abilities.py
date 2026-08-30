@@ -280,10 +280,13 @@ def test_paying_a_negative_cost_to_zero_triggers_the_state_based_action():
 
     CR 606.4 makes the counter change the cost, so each activation removes two
     loyalty counters; CR 306.5c makes what remains her loyalty; CR 704.5i puts
-    her into her owner's graveyard when it reaches 0. The state-based action
-    is checked on `Game.check_state_based_actions` directly, so the dispatch
-    inside `Game` is what is under test - the scenario harness's own SBA
-    helper is not involved. Two Blood Moons (not legendary, so both are legal
+    her into her owner's graveyard when it reaches 0. That check now runs as
+    soon as the cost is paid: `Game.retain_priority` checks state-based actions
+    (CR 704.3) because CR 117.3c hands priority straight back to the activator,
+    which counts as "a player would receive priority" - so Nahiri is already
+    gone before her own ability resolves. CR 113.7a is what lets the ability
+    resolve anyway, reading the target off the stack rather than off a source
+    that no longer exists. Two Blood Moons (not legendary, so both are legal
     permanents at once) are the enchantments her -2 points at, one per
     activation: `machines/effects.py`'s targeted-effect parser now reads this
     ability's own printed text and actually exiles its target (see
@@ -314,12 +317,16 @@ def test_paying_a_negative_cost_to_zero_triggers_the_state_based_action():
     _alice_next_turn(scenario)
 
     scenario.activate(nahiri, index=1, targets=[second_moon])
-    assert nahiri.loyalty == 0
-
-    leaving = scenario.game.check_state_based_actions()
-    assert nahiri in leaving
-    assert nahiri.zone is Zone.GRAVEYARD, "CR 704.5i: a planeswalker at 0 loyalty"
+    assert nahiri.zone is Zone.GRAVEYARD, (
+        "CR 704.5i: 0 loyalty is checked as soon as retain_priority hands "
+        "priority back (CR 117.3c, 704.3), before her ability resolves"
+    )
     assert nahiri in scenario.player("alice").cards_in(Zone.GRAVEYARD)
+
+    scenario.pass_until_resolved()
+    assert second_moon.zone is Zone.EXILE, (
+        "CR 113.7a: the ability resolves on its own even though its source is gone"
+    )
 
 
 # -- targets on a loyalty ability (CR 602.2b) ------------------------------

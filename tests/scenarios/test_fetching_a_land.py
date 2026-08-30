@@ -320,12 +320,16 @@ def test_each_fetchland_looks_for_its_own_two_types():
     assert scenario.battlefield_names() == ["Forest"]
 
 
-def test_a_fetchland_at_one_life_still_pays_and_does_not_lose_the_game_yet():
+def test_a_fetchland_at_one_life_loses_the_game_before_the_search():
     """CR 119.4: "a player may [pay life] only if their life total is greater
     than or equal to the amount of the payment" - so paying 1 at 1 life is legal
-    and lands exactly on 0. CR 118.3b subtracts it. Losing at 0 or less is the
-    separate state-based action CR 704.5a, which CR 104.3b times "the next time
-    a player would receive priority", so the payment stands on its own.
+    and lands exactly on 0 (CR 118.3b). But CR 104.3b times the loss for 0 or
+    less life at "the next time a player would receive priority", and CR 117.3c
+    gives the activator priority right back as the very next thing that happens
+    after activating - so the loss (CR 704.5a) is checked there, before the
+    ability that cost the life ever resolves. This is the well-known real-life
+    interaction: cracking a fetch land down to 0 life loses the game outright,
+    with no chance to see what the search would have found.
     """
     scenario = _fetch_board(life=1).build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
@@ -334,6 +338,10 @@ def test_a_fetchland_at_one_life_still_pays_and_does_not_lose_the_game_yet():
     scenario.activate(mesa, sacrificing=[mesa])
 
     assert scenario.player("alice").life == 0
+    assert not scenario.game.is_in_game("alice"), (
+        "CR 704.5a, checked by CR 117.3c's retained priority"
+    )
+    assert scenario.game.winner == "bob"
 
 
 # -- corner cases the model does not cover yet -----------------------------

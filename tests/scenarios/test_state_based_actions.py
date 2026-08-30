@@ -200,21 +200,33 @@ def test_a_nonlegendary_duplicate_is_untouched():
 def test_state_based_actions_run_before_anyone_gets_priority():
     """CR 704.3: the check happens whenever a player *would* get priority.
 
-    Nobody calls it here; resolving the Bolt is what runs it, and the 0/0 that
-    was already on the battlefield goes at the same time as the burned creature.
+    `Game.retain_priority` now runs that check too (CR 117.3c is such a moment),
+    so a 0-toughness creature already on the battlefield would not survive to
+    see the Bolt resolve - it dies the instant the Bolt is put on the stack and
+    the caster is handed priority back. To keep this test's point (several
+    state-based actions performed together, CR 704.3's "single event"), the
+    Walker is put onto the battlefield *after* the Bolt is already on the
+    stack, with no priority-check moment in between, so both it and the bolted
+    Bears are only found invalid at the same check: the one the Bolt's
+    resolution triggers.
     """
     scenario = (
         Scenario()
-        .player("alice", hand=["Lightning Bolt"], battlefield=["Mountain"])
-        .player("bob", battlefield=["Grizzly Bears", "Hangarback Walker"])
+        .player(
+            "alice",
+            hand=["Lightning Bolt"],
+            battlefield=["Mountain"],
+        )
+        .player("bob", hand=["Hangarback Walker"], battlefield=["Grizzly Bears"])
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
     bears = scenario.creature("Grizzly Bears", username="bob")
-    walker = scenario.creature("Hangarback Walker", username="bob")
     (mountain,) = scenario.untapped_sources("Mountain", username="alice")
 
-    scenario.cast_and_resolve("Lightning Bolt", mountain, username="alice", targets=[bears])
+    scenario.cast_onto_stack("Lightning Bolt", mountain, username="alice", targets=[bears])
+    walker = scenario.put_onto_battlefield("Hangarback Walker", username="bob")
+    scenario.resolve_top()
 
     assert bears.zone is Zone.GRAVEYARD, "CR 704.5g"
     assert walker.zone is Zone.GRAVEYARD, "CR 704.5f, in the same check"
@@ -236,3 +248,138 @@ def test_a_check_that_changes_the_game_is_repeated():
 
     assert walker in gone
     assert scenario.game.winner == "bob"
+
+
+# -- the reported defect: SBAs after a mutating path other than resolving ---
+#
+# Bob played a second Flagstones of Trokair while already controlling one and
+# both stayed on the battlefield through a priority pass. The cause:
+# `Game.play_land` (CR 116.2a's special action, no stack, no priority change)
+# left nothing to catch the duplicate, and `Game.pass_priority` only ever
+# checked state-based actions indirectly, through `resolve_top`, when the
+# stack had something to resolve - never on a plain pass with an empty stack.
+# `Game.retain_priority`, the other place CR 117.3c hands priority back
+# without a pass (after casting or activating), had the same gap. All three
+# now run `Game._check_state_based_actions_and_stack_triggers` first.
+
+
+def test_a_second_legendary_land_dies_on_the_next_priority_pass():
+    """The reported defect, reproduced exactly: play a second Flagstones of
+    Trokair while already controlling one, then pass priority. CR 116.2a means
+    playing the land changes nothing about who holds priority, so both copies
+    are legally on the battlefield until the moment CR 704.3 next applies -
+    which `pass_priority` must check before acting on the pass.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Flagstones of Trokair"], battlefield=["Flagstones of Trokair"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    first = scenario.find("Flagstones of Trokair", Zone.BATTLEFIELD, "alice")
+
+    scenario.play_land("Flagstones of Trokair", "alice")
+    assert len(scenario.battlefield_names()) == 2, "both are legal until the next check"
+
+    scenario.pass_priority("alice")
+
+    assert scenario.battlefield_names() == ["Flagstones of Trokair"]
+    assert scenario.find("Flagstones of Trokair", Zone.BATTLEFIELD, "alice") is first, (
+        "the docstring on `_legend_rule_losers` keeps the first copy on the "
+        "battlefield rather than asking the controller - deterministic, so "
+        "this holds on every run"
+    )
+    assert [state.name for state in scenario.player("alice").graveyard] == ["Flagstones of Trokair"]
+
+
+def test_a_second_legendary_creature_from_a_non_cast_effect_dies_too():
+    """Different card, different mutating path: a permanent that reaches the
+    battlefield without being cast (the Tooth and Nail shape, CR 601 does not
+    apply) is exactly as invisible to the legend rule until the next priority
+    check as a played land is. `put_onto_battlefield` puts no ability on the
+    stack and does not call `retain_priority`, so only the general fix in
+    `pass_priority` catches this.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Ragavan, Nimble Pilferer"],
+            battlefield=["Ragavan, Nimble Pilferer"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    scenario.put_onto_battlefield("Ragavan, Nimble Pilferer", username="alice")
+    assert len(scenario.battlefield_names()) == 2
+
+    scenario.pass_priority("alice")
+
+    assert scenario.battlefield_names() == ["Ragavan, Nimble Pilferer"]
+    assert len(scenario.player("alice").graveyard) == 1
+
+
+def test_the_legend_rule_still_leaves_each_players_own_copy_after_a_land_drop():
+    """Fail-open risk: the legend rule is per controller (CR 704.5j says
+    "controlled by the same player"). Two different players each playing their
+    own Flagstones of Trokair must not collide just because the general SBA
+    check now runs after every land drop.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Flagstones of Trokair"], battlefield=["Flagstones of Trokair"])
+        .player("bob", battlefield=["Flagstones of Trokair"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    scenario.play_land("Flagstones of Trokair", "alice")
+    scenario.pass_priority("alice")
+
+    assert len(scenario.game.permanents_controlled_by("alice")) == 1, (
+        "the legend rule caught alice's own duplicate"
+    )
+    assert len(scenario.game.permanents_controlled_by("bob")) == 1, (
+        "CR 704.5j is per controller - bob's copy is untouched by alice's check"
+    )
+    assert scenario.player("alice").graveyard != []
+    assert scenario.player("bob").graveyard == []
+
+
+def test_a_legendary_entering_and_another_dying_share_one_check():
+    """Fail-open risk: a legendary permanent entering while a different
+    permanent is already dying must be handled in the same CR 704.3 pass
+    without either condition interfering with the other. The Bolt is put on
+    the stack, then a second Flagstones is put straight onto the battlefield
+    (no stack, no priority moment of its own) before the Bolt resolves, so
+    both the lethal damage and the legend rule are only found by the one
+    check the Bolt's resolution triggers.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Lightning Bolt", "Flagstones of Trokair"],
+            battlefield=["Mountain", "Flagstones of Trokair", "Ragavan, Nimble Pilferer"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    ragavan = scenario.creature("Ragavan, Nimble Pilferer", username="alice")
+    (mountain,) = scenario.untapped_sources("Mountain", username="alice")
+
+    scenario.cast_onto_stack("Lightning Bolt", mountain, username="alice", targets=[ragavan])
+    scenario.put_onto_battlefield("Flagstones of Trokair", username="alice")
+    scenario.resolve_top()
+
+    assert ragavan.zone is Zone.GRAVEYARD, "CR 704.5g: lethal damage from the Bolt"
+    remaining = [
+        state
+        for state in scenario.game.permanents_controlled_by("alice")
+        if state.name == "Flagstones of Trokair"
+    ]
+    assert len(remaining) == 1, "CR 704.5j: the legend rule, caught in the same check"
