@@ -40,7 +40,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
 
 from ..models.card import Card, Color, Supertype, Type
-from ..models.card_state import CardState, Counter
+from ..models.card_state import CardState, Counter, CounterKind
 from ..models.mana import ManaCost, ManaPayment, ManaPool
 from ..models.zone import Zone
 from .abilities import (
@@ -271,6 +271,13 @@ class ComponentKind(StrEnum):
     EXILE = "exile"
     PAY_LIFE = "pay_life"
     REMOVE_COUNTERS = "remove_counters"
+    #: "Put a -1/-1 counter on this creature:" (Devoted Druid), the templated
+    #: twin of `REMOVE_COUNTERS` (CR 118.3, 122.1, 122.6). Unlike a loyalty
+    #: cost's counters, which live on the ability's own source by definition
+    #: (CR 606.4), this kind carries an explicit `counter_kind` because a
+    #: printed cost can put on any named kind (Devoted Druid's -1/-1, a
+    #: hypothetical +1/+1 or keyword counter).
+    PLACE_COUNTERS = "place_counters"
     #: CR 606.4: "The cost to activate a loyalty ability of a permanent is to
     #: put on or remove from that permanent a certain number of loyalty
     #: counters, as shown by the loyalty symbol in the ability's cost." The
@@ -292,6 +299,7 @@ _OBJECT_KINDS = frozenset(
         ComponentKind.DISCARD,
         ComponentKind.EXILE,
         ComponentKind.REMOVE_COUNTERS,
+        ComponentKind.PLACE_COUNTERS,
         ComponentKind.EXERT,
     }
 )
@@ -352,7 +360,12 @@ class CostComponent(BaseModel):
     kind: ComponentKind
     payer: str | None = None
     amount: int = 0
-    """Life to pay, or counters to remove."""
+    """Life to pay, or counters to place/remove."""
+
+    counter_kind: str = Counter.PLUS_ONE.value
+    """Which kind of counter `PLACE_COUNTERS`/`REMOVE_COUNTERS` acts on - a
+    named `Counter` or any string a card invents (CR 122.1). Unused by every
+    other component kind."""
 
     required: int = 0
     """How many objects this component needs chosen. Zero for paying life."""
@@ -405,13 +418,46 @@ class CostComponent(BaseModel):
             ComponentKind.DISCARD: lambda _: self._why_not_in_zone(Zone.HAND),
             ComponentKind.EXILE: lambda _: self._why_not_in_zone(self.zone),
             ComponentKind.PAY_LIFE: self._why_not_life,
-            ComponentKind.REMOVE_COUNTERS: lambda _: (
-                "counters are not modelled, so a cost that removes them cannot be paid"
-            ),
+            ComponentKind.REMOVE_COUNTERS: self._why_not_remove_counters,
+            ComponentKind.PLACE_COUNTERS: self._why_not_place_counters,
             ComponentKind.LOYALTY: self._why_not_loyalty,
             ComponentKind.EXERT: self._why_not_exert,
         }
         return checks[self.kind](game)
+
+    def _why_not_remove_counters(self, _game: Any) -> str | None:
+        """CR 118.3: the counters removed by a cost have to be there already.
+
+        Same principle CR 118.3 states for a tapped permanent and CR 606.6
+        states for a loyalty ability's negative cost - "a permanent that's
+        already tapped can't [pay a cost that taps it]" generalises to any
+        resource a cost spends, counters included, and the whole cost is
+        checked before anything is spent.
+        """
+        for card in self.cards:
+            if card.zone is not Zone.BATTLEFIELD:
+                return f"{card.name} is not on the battlefield, so its counters cannot be removed"
+            if not card.can_remove_counters(self.counter_kind, self.amount):
+                have = card.counter_count(self.counter_kind)
+                return (
+                    f"{card.name} has {have} {self.counter_kind} counter(s), not the "
+                    f"{self.amount} its cost removes (CR 118.3)"
+                )
+        return self._why_not_controlled()
+
+    def _why_not_place_counters(self, _game: Any) -> str | None:
+        """Putting a counter on as a cost needs only a permanent to put it on.
+
+        CR 122.6: "putting counters on an object" refers to it while it's on
+        the battlefield, so a permanent that has already left has nothing to
+        put a counter on. Unlike removing counters, there is no further
+        resource requirement (CR 118.3) - a cost that puts a counter on is
+        always payable once the permanent exists to receive it.
+        """
+        for card in self.cards:
+            if card.zone is not Zone.BATTLEFIELD:
+                return f"{card.name} is not on the battlefield, so a counter cannot be put on it"
+        return self._why_not_controlled()
 
     def _why_not_loyalty(self, _game: Any) -> str | None:
         """CR 606.4 and 606.6: the counters go on or come off the source itself.
@@ -544,6 +590,23 @@ class CostComponent(BaseModel):
                 game.exile.append(card)
         elif self.kind is ComponentKind.PAY_LIFE and self.amount:
             game.player(self.payer).lose_life(self.amount)
+        elif self.kind is ComponentKind.REMOVE_COUNTERS:
+            # The counters come off at payment time (CR 601.2h/602.2b: the
+            # cost is paid before the ability resolves), not when the
+            # ability's effect resolves - Walking Ballista's damage and its
+            # cost are two different things, and the counter is already gone
+            # even if the ability is later countered on the stack.
+            for card in self.cards:
+                self._remember_counters(card)
+                card.remove_counters(self.counter_kind, self.amount)
+        elif self.kind is ComponentKind.PLACE_COUNTERS:
+            # Same timing as above, the other direction (Devoted Druid): the
+            # counter lands on the permanent as the cost is paid, so a
+            # toughness drop from a -1/-1 counter is visible immediately,
+            # before the ability that untapped it has even resolved.
+            for card in self.cards:
+                self._remember_counters(card)
+                card.add_counters(self.counter_kind, self.amount)
         elif self.kind is ComponentKind.LOYALTY:
             # CR 606.4: the counter change *is* the cost, so it happens at
             # payment time - on activation, before the ability is on the stack
@@ -576,7 +639,11 @@ class CostComponent(BaseModel):
             # Tapping moves nothing, so untapping is the whole rewind.
             for card, _ in reversed(self._undo):
                 card.untap(exert_applies=False)
-        elif self.kind is ComponentKind.LOYALTY:
+        elif self.kind in (
+            ComponentKind.LOYALTY,
+            ComponentKind.REMOVE_COUNTERS,
+            ComponentKind.PLACE_COUNTERS,
+        ):
             # The counters were mutated in place, and the permanent never left
             # the battlefield, so the rewind puts the snapshotted `Counters`
             # model back wholesale. Not `_return`, which removes the card from
@@ -605,14 +672,16 @@ class CostComponent(BaseModel):
         self._undo.append((card, snapshot))
 
     def _remember_counters(self, card: CardState) -> None:
-        """Snapshot a card's counters for the rewind of a loyalty cost.
+        """Snapshot a card's counters for the rewind of a counter-based cost
+        (loyalty, `PLACE_COUNTERS`, `REMOVE_COUNTERS`).
 
         Not `_remember`: that snapshots every field *by reference*, and paying
-        a loyalty cost mutates `counters` in place (CR 122.1e - the counters
-        are the planeswalker's loyalty), so a by-reference snapshot would
-        record the payment as if it had already happened and the rewind would
-        rewind nothing. A deep copy of the `Counters` model is what unpay
-        restores.
+        one of these costs mutates `counters` in place (CR 122.1e - a loyalty
+        counter *is* the planeswalker's loyalty, and the same in-place
+        `Counters.add`/`.remove` backs every other counter kind), so a
+        by-reference snapshot would record the payment as if it had already
+        happened and the rewind would rewind nothing. A deep copy of the
+        `Counters` model is what unpay restores.
         """
         self._undo.append((card, {"counters": card.counters.model_copy(deep=True)}))
 
@@ -761,20 +830,59 @@ def loyalty_cost(
 
 
 def remove_counters_cost(
-    card: CardState, amount: int, payer: str | None = None, description: str = ""
+    card: CardState | None,
+    amount: int,
+    counter_kind: CounterKind = Counter.PLUS_ONE,
+    payer: str | None = None,
+    description: str = "",
 ) -> CostComponent:
-    """Remove counters from a permanent as a cost.
+    """Remove counters from a permanent as a cost (CR 118.3, CR 122.1).
 
-    Counter kinds other than loyalty are not modelled in this engine, so this
-    component exists to be refused rather than paid. Loyalty counters have
-    their own component: `loyalty_cost`, where the counter change is the whole
-    cost of a loyalty ability (CR 606.4).
+    Walking Ballista's "Remove a +1/+1 counter from this creature: It deals 1
+    damage to any target" is the printing this reads (`cost_component_for_phrase`
+    builds it from the sentence). Loyalty counters have their own component,
+    `loyalty_cost`, where the counter change is the whole cost of a loyalty
+    ability (CR 606.4) rather than a chosen amount of a chosen kind.
+
+    `card` may be left `None` when the caller does not yet know which
+    permanent this is - the self-referential "this creature" shape a printed
+    cost sentence reads into, filled in by whoever resolves the self-reference
+    (`Game.activation_cost`), the same way `exert_cost`/`exile_cost` do.
     """
     return CostComponent(
         kind=ComponentKind.REMOVE_COUNTERS,
-        cards=[card],
+        cards=[card] if card is not None else [],
         required=1,
         amount=amount,
+        counter_kind=str(counter_kind),
+        payer=payer,
+        description=description,
+    )
+
+
+def place_counters_cost(
+    card: CardState | None,
+    amount: int,
+    counter_kind: CounterKind = Counter.PLUS_ONE,
+    payer: str | None = None,
+    description: str = "",
+) -> CostComponent:
+    """Put counters on a permanent as a cost (CR 118.3, CR 122.1, CR 122.6).
+
+    Devoted Druid's "Put a -1/-1 counter on this creature: Untap this
+    creature." is the printing this reads. Unlike `remove_counters_cost`,
+    nothing about the permanent's current counters can make this unpayable -
+    only whether it is still there to receive one (`_why_not_place_counters`).
+
+    `card` may be left `None` for the same self-referential reason
+    `remove_counters_cost` allows it.
+    """
+    return CostComponent(
+        kind=ComponentKind.PLACE_COUNTERS,
+        cards=[card] if card is not None else [],
+        required=1,
+        amount=amount,
+        counter_kind=str(counter_kind),
         payer=payer,
         description=description,
     )
@@ -1087,6 +1195,35 @@ _PHRASE_DISCARD = re.compile(r"^discard (?P<count>\w+) (?P<quality>[\w ]*?)cards
 _PHRASE_EXERT_SELF = re.compile(
     r"^exert this (?:land|creature|permanent|artifact|enchantment)$", re.IGNORECASE
 )
+#: "Put a -1/-1 counter on this creature" (Devoted Druid) and "Remove a +1/+1
+#: counter from this creature" (Walking Ballista) - CR 118.3, 122.1, 122.6.
+#: Only the self-referential "this <type>" shape is read; a cost that names a
+#: chosen target ("Remove a counter from target permanent") would need target
+#: resolution this builder does not have, so it is left unmatched and the
+#: caller fails closed (see `cost_component_for_phrase`'s docstring).
+_COUNTER_SELF_SUBJECT = r"this (?:creature|permanent|artifact|enchantment|planeswalker|land)"
+_PHRASE_PLACE_COUNTERS = re.compile(
+    rf"^put (?P<count>\w+) (?P<kind>[\w+/−-]+) counters? on {_COUNTER_SELF_SUBJECT}$",
+    re.IGNORECASE,
+)
+_PHRASE_REMOVE_COUNTERS = re.compile(
+    rf"^remove (?P<count>\w+) (?P<kind>[\w+/−-]+) counters? from {_COUNTER_SELF_SUBJECT}$",
+    re.IGNORECASE,
+)
+
+
+def _counter_kind_word(word: str) -> str:
+    """Normalise a counter kind read out of a cost sentence.
+
+    `+1/+1` and `-1/-1` are kept exactly as `Counter` spells them (accepting
+    the U+2212 minus Scryfall sometimes prints, same as `_LOYALTY_SYMBOL`);
+    any named kind - "oil", "fate", "charge" - is lower-cased so it matches
+    however else the engine already stores it (Gemstone Caverns's "luck" is
+    lower-cased the same way in `machines/abilities.py`).
+    """
+    if re.fullmatch(r"[+−-]1/[+−-]1", word):
+        return word.replace("−", "-")
+    return word.lower()
 
 
 def _count(word: str) -> int | None:
@@ -1134,8 +1271,18 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
     to be *paid*, which means knowing that it exiles one black card out of the
     caster's hand.
 
+    Also reads "Put a -1/-1 counter on this creature" (Devoted Druid) and
+    "Remove a +1/+1 counter from this creature" (Walking Ballista) - the
+    templated counter-cost shapes CR 122.1/122.6 describe - but only the
+    self-referential "this <type>" form; a phrase naming a chosen target
+    ("Remove a counter from target permanent") is outside what this builder
+    can resolve and returns None like any other unread shape.
+
     Returns None for a phrase it cannot read, so the caller can leave the
-    keyword unexecuted rather than charge the wrong thing.
+    keyword unexecuted rather than charge the wrong thing - `Game.activation_cost`
+    turns that `None` into a raised refusal (CR 602.5) instead of silently
+    skipping the cost, so an ability this cannot template is refused, never
+    activated for free.
     """
     text = phrase.strip().rstrip(".")
 
@@ -1148,6 +1295,22 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
         # caller knows which that is, so the component is built empty and
         # correctly refuses to be paid until the card is filled in (CR 118.3).
         return exert_cost(payer=payer, required=1, description=text)
+
+    place = _PHRASE_PLACE_COUNTERS.match(text)
+    if place is not None:
+        count = _count(place.group("count"))
+        if count is None:
+            return None
+        kind = _counter_kind_word(place.group("kind"))
+        return place_counters_cost(None, count, counter_kind=kind, payer=payer, description=text)
+
+    remove_counters = _PHRASE_REMOVE_COUNTERS.match(text)
+    if remove_counters is not None:
+        count = _count(remove_counters.group("count"))
+        if count is None:
+            return None
+        kind = _counter_kind_word(remove_counters.group("kind"))
+        return remove_counters_cost(None, count, counter_kind=kind, payer=payer, description=text)
 
     exile = _PHRASE_EXILE.match(text)
     if exile is not None:

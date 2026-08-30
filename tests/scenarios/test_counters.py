@@ -458,11 +458,6 @@ def test_a_poisoned_player_actually_loses_the_game():
 # --------------------------------------------------------------------------
 
 
-@pytest.mark.xfail(
-    reason="ComponentKind.REMOVE_COUNTERS is refused outright in machines/cost.py, "
-    "which is owned elsewhere; CardState.remove_counters is what it needs to call",
-    strict=True,
-)
 def test_removing_counters_pays_a_cost():
     """CR 118.3: a cost that removes counters is payable exactly when they are
     there. Walking Ballista's "remove a +1/+1 counter from this creature: it
