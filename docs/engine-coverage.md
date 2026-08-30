@@ -365,10 +365,10 @@ is a keyword the report will never mention again.
 engine. There are three tables in it.
 
 **`EFFECTS`, what a spell does.** Counterspell,
-Swords to Plowshares, Electrolyze, Twisted Image, Giant Growth, Dismember,
-Lava Dart, Unholy Heat, Mutagenic Growth, Assault Strobe, Violent Urge,
+Swords to Plowshares, Twisted Image, Giant Growth, Dismember,
+Unholy Heat, Mutagenic Growth, Assault Strobe, Violent Urge,
 Malevolent Rumble, Monstrous Rage, Savor the Moment,
-Preordain, Fog, Angelsong, Bandage, Awe Strike. Lightning Bolt no longer has a
+Preordain. Lightning Bolt no longer has a
 row - see "Targeted single-object effects (wave 2)" below - and neither does
 Lightning Helix any more: "deals 3 damage to any target and you gain 3 life"
 mixes a targeted clause and a player clause, which `parse_mixed_effect_for_spell`
@@ -376,9 +376,21 @@ now reads clause by clause, trying the targeted parser and then the player
 parser on each one (see "Mixed targeted/player effects" below). Spectral
 Procession is gone too (W4): "Create three 1/1 white Spirit creature tokens
 with flying" is one clause of `_parse_token_clause`'s shape - see "Token
-creation (wave 4)" below. Every other card without a row either resolves and
-does nothing or is reached by one of the effect parsers off its own printed
-text.
+creation (wave 4)" below. **W8 removes six more rows**: Electrolyze
+("deals N damage divided as you choose among one or two targets", read by
+`_DIVIDED_DAMAGE_RE`), Lava Dart and Violent Urge were tried too but Lava
+Dart's flashback line still refuses the whole text (its row stays, see below)
+while Violent Urge's own second-sentence *delirium* shape already reached
+`create_continuous_effect` through `_is_layer_effect_text`, so its row was
+dead weight the same way Preordain's used to be; Fog/Angelsong ("prevent all
+combat damage that would be dealt this turn", `_PREVENT_ALL_COMBAT_DAMAGE_RE`),
+Bandage ("prevent the next N damage that would be dealt to \<target> this
+turn", `_PREVENT_NEXT_DAMAGE_TO_TARGET_RE`), and Awe Strike ("the next time
+target creature would deal damage this turn, prevent that damage[, You gain
+life equal to the damage prevented this way.]", read as one CR 608.2c
+instruction by `_merge_prevent_damage_from_target_clauses`). Every other card
+without a row either resolves and does nothing or is reached by one of the
+effect parsers off its own printed text.
 
 The remaining three are the earlier token wave:
 
@@ -393,26 +405,26 @@ Four more came in with the decision point and the prevention shields:
 | Card | What executes | What does not |
 |---|---|---|
 | Preordain | Scry 2, then draw, in printed order (CR 608.2c). The scry is a real question put to the controller (CR 608.2d, CR 701.22a), and CR 701.22b's "scry 0 is not a scry" falls out of `Game.scry`. Has no `EFFECTS` row: `parse_player_effect_for_spell` reads both clauses straight off the printed text | Nothing |
-| Fog, Angelsong | A combat-only `ShieldKind.ALL` prevention shield over the whole board (CR 615.1, CR 615.1a), expiring in the cleanup step (CR 514.2) | Nothing. Angelsong's cycling is a way to discard it rather than cast it (CR 702.29a) and never reaches the registry |
-| Bandage | A `ShieldKind.AMOUNT` shield of 1 on the target (CR 615.7), then the draw (CR 608.2c). "Any target" is a permanent or a player and either can be shielded | Nothing |
-| Awe Strike | A `ShieldKind.NEXT_INSTANCE` shield naming the targeted creature as the *source* (CR 615.8), so its next instance of damage is prevented wherever it was headed | Nothing. The shield sets `gains_life_when_prevented=True`, so "You gain life equal to the damage prevented this way" (CR 615.5) runs from `Game.apply_prevention_shield` |
+| Fog, Angelsong | A combat-only `ShieldKind.ALL` prevention shield over the whole board (CR 615.1, CR 615.1a), expiring in the cleanup step (CR 514.2). No `EFFECTS` row any more (W8): `_PREVENT_ALL_COMBAT_DAMAGE_RE` reads the sentence off the printed text | Nothing. Angelsong's cycling is a way to discard it rather than cast it (CR 702.29a) and never reaches the parser |
+| Bandage | A `ShieldKind.AMOUNT` shield of 1 on the target (CR 615.7), then the draw (CR 608.2c). "Any target" is a permanent or a player and either can be shielded. No `EFFECTS` row any more (W8): `_PREVENT_NEXT_DAMAGE_TO_TARGET_RE` reads the first clause, the ordinary player-clause parser reads the draw | Nothing |
+| Awe Strike | A `ShieldKind.NEXT_INSTANCE` shield naming the targeted creature as the *source* (CR 615.8), so its next instance of damage is prevented wherever it was headed. No `EFFECTS` row any more (W8): `_merge_prevent_damage_from_target_clauses` reads both sentences as one CR 608.2c instruction | Nothing. The shield sets `gains_life_when_prevented=True` only because the card's own second sentence says so, so "You gain life equal to the damage prevented this way" (CR 615.5) runs from `Game.apply_prevention_shield` |
 
 The last four came out of the Modern metagame sweep below:
 
 | Card | What executes | What does not |
 |---|---|---|
-| Lava Dart | 1 damage to any target | Its flashback (CR 702.34) is a way to cast it, not part of resolution - `machines/casting.py`'s problem, not this table's |
+| Lava Dart | 1 damage to any target - exactly `_DAMAGE_TARGET_RE`'s shape, but its row stays (W8 tried deleting it): `Card.oracle_text` is two lines here, the second being "Flashback-Sacrifice a Mountain." (CR 702.34), and `_prepare_effect_clauses` refuses the whole text as one unreadable clause rather than reading the first line alone - see `tests/test_targeted_effects.py::test_a_flashback_line_takes_the_whole_effect_down` | Its flashback (CR 702.34) is a way to cast it, not part of resolution - `machines/casting.py`'s problem, not this table's |
 | Unholy Heat | 2 damage, or 6 with *delirium*. The count is card types (CR 205.2a, CR 300.1) among cards in **your** graveyard, taken at resolution | Nothing. *Delirium* is an ability word with no rules meaning of its own (CR 207.2c), so the whole mechanic is that one sentence |
 | Mutagenic Growth | +2/+2 until end of turn, sublayer 7c (CR 613.4c) | Needs a `ContinuousEffects` on the `Game`; without one it resolves and does nothing |
 | Assault Strobe | Grants double strike (CR 702.4) in layer 6 (CR 613.1f, CR 113.10) | Nothing. Combat reads the granted double strike off the computed board, so CR 510.4's extra damage step follows |
-| Violent Urge | +1/+0 in 7c and first strike in layer 6, plus double strike when *delirium* holds. One resolution across two layers (CR 613.6), and the granted first strike causes the extra damage step | Nothing |
+| Violent Urge | +1/+0 in 7c and first strike in layer 6, plus double strike when *delirium* holds. One resolution across two layers (CR 613.6), and the granted first strike causes the extra damage step. No `EFFECTS` row any more (W8): the whole text - including its ability-word-prefixed *Delirium* second sentence - is read whole by `_is_layer_effect_text`'s fallback to `create_continuous_effect`, the row having been dead weight since that fallback existed | Nothing |
 
 Two of those are half-effects, and the half that is missing is a continuous
 effect in both cases:
 
 | Card | What executes | What does not |
 |---|---|---|
-| Electrolyze | Two damage divided among the targets, then the draw (CR 121.1). The targets *are* announced now - `machines/targeting.py` reads "one or two targets" as one CR 115.4 target with a floor of one and a ceiling of two | The *division* is still the engine's, not the caster's (CR 601.2d): nothing stores an announced split, so `deal_divided_damage` divides as evenly as it goes |
+| Electrolyze | Two damage divided among the targets, then the draw (CR 121.1). The targets *are* announced now - `machines/targeting.py` reads "one or two targets" as one CR 115.4 target with a floor of one and a ceiling of two. No `EFFECTS` row any more (W8): `_DIVIDED_DAMAGE_RE` reads the first clause off the printed text, the ordinary player-clause parser reads the draw | The *division* is still the engine's, not the caster's (CR 601.2d): nothing stores an announced split, so `deal_divided_damage` divides as evenly as it goes |
 | Twisted Image | The switch (sublayer 7d, CR 613.4d, until end of turn) and then the draw, in printed order (CR 608.2c) | Nothing. `Game` holds the `ContinuousEffects` store now, so the switch reaches the board and CR 704.5g judges lethal damage against it |
 
 **`TRIGGER_EFFECTS`, what a triggered ability does**, keyed by
@@ -428,11 +440,11 @@ resolving ability's text when a card has more than one. An empty marker means
 | Solemn Simulacrum | enters | Searches the library for the first basic land and puts it onto the battlefield tapped, **then shuffles** (CR 701.24a, CR 701.24b). The "you may" is a real question now (CR 608.2d) whose default is to take it. Has no `TRIGGER_EFFECTS` row: `parse_search_and_put_effect` reads it straight off the printed text. |
 | White Orchid Phantom | enters | Destroys the targeted nonbasic land (CR 701.8a), then its **controller** - not the Phantom's controller - searches their library for a basic land and puts it onto the battlefield **tapped**, then shuffles, in printed order (CR 608.2c). Has no `TRIGGER_EFFECTS` row (W3): the destroy is `_parse_targeted_clause`'s shape, the search is `_parse_search_clause`'s "its controller may" shape (`_build_search_clause`), and `parse_mixed_effect` reads both clauses off the printed text with no table row - the same two-clause shape as Ghost Quarter's activated ability below. |
 | Solemn Simulacrum | dies | Draws a card. The "you may" is a real `Game.may` question now (CR 608.2d); the default is still to take it. Has no `TRIGGER_EFFECTS` row: `parse_player_effect`'s "you may draw a card" clause reads it. |
-| Guttersnipe | cast | Two damage to each opponent. Whole ability. |
+| Guttersnipe | cast | Two damage to each opponent. Whole ability. No `TRIGGER_EFFECTS` row any more (W8): `_DAMAGE_EACH_OPPONENT_RE` reads "\<source> deals N damage to each opponent" straight off the printed text, and covers Impact Tremors (no row, ever) the same way - `tests/scenarios/test_triggered_abilities.py::test_a_card_with_no_registry_row_gets_the_each_opponent_damage_shape_too`. |
 | Hellrider | attacks | One damage to the attacked player. Damage to a planeswalker does nothing, because loyalty is not modelled. |
 | Ashmouth Hound | blocks | One damage to the other creature in the pair. Whole ability. |
 | Delver of Secrets | beginning of upkeep | Looks at the top card and transforms on an instant or sorcery. The flag flips; **no characteristics change**, because `Card` still reports the front face and there is no layers hook for it - a transformed Delver is not yet a 3/2 flier. |
-| Thopter Assembly | beginning of upkeep | Returns itself to its owner's hand. **The five Thopter tokens are still not created**, but only because this entry has not been extended - tokens are modelled now (`models/token.py`), and `THOPTER` in `machines/effects.py` is the definition it would use. Its intervening *if* keeps being true meanwhile. |
+| Thopter Assembly | beginning of upkeep | Returns itself to its owner's hand **and now creates the five Thopter tokens too** (W8: `create_tokens`/`THOPTER` were already in this file for Hangarback Walker, so the docstring claiming tokens were unmodelled was stale - a row-masked bug found while auditing this entry for deletion, fixed without deleting the row). Its intervening *if* ("if you control no Thopters other than this creature", CR 603.4) is still not modelled, so it fires - and returns/recreates - every upkeep rather than only the first. |
 | Devourer of Destiny | cast | Exiles the targeted permanent. The "that's one or more colors" restriction is not checked. Has no `TRIGGER_EFFECTS` row: `parse_targeted_effect` reads its single "exile target permanent" clause straight off the printed text. |
 | Tishana's Tidebinder | enters | Counters the targeted activated or triggered ability (CR 113.9), then records the layer 6 "for as long as this creature remains on the battlefield" effect on the countered ability's source (CR 611.2b, 613.1f). Both halves run: `Game.find_ability_by_id` resolves the target, and `Game.why_cannot_activate` asks the computed board whether the ability survived (CR 613.5). |
 | Ulamog, the Ceaseless Hunger | cast | No `TRIGGER_EFFECTS` row any more (wave 2): "exile two target permanents" is `parse_targeted_effect`'s count-agnostic exile shape (`_targets_understood`), so it exiles both targeted permanents (CR 701.13a) before the 10/10 resolves off the ability's own printed text. Its *attack* trigger - exiling the top twenty of the defending player's library - has no entry. |

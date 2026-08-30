@@ -234,6 +234,36 @@ def test_a_cast_trigger_fires_when_a_spell_is_cast():
     assert bears.zone is Zone.GRAVEYARD
 
 
+def test_a_card_with_no_registry_row_gets_the_each_opponent_damage_shape_too():
+    """Impact Tremors: "Whenever a creature you control enters, this
+    enchantment deals 1 damage to each opponent."
+
+    Guttersnipe's trigger used to need its own `TRIGGER_EFFECTS` row; deleting
+    it in favour of `_DAMAGE_EACH_OPPONENT_RE` (`machines/effects.py`) is only
+    real if a *different* card printing the same shape works with no row of
+    its own at all - Impact Tremors has never had one.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            library=["Forest"],
+            hand=["Grizzly Bears"],
+            battlefield=["Impact Tremors"] + ["Forest"] * 2,
+        )
+        .player("bob", library=["Forest"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Forest", "Forest")
+
+    scenario.cast_and_resolve("Grizzly Bears", *sources)
+    assert scenario.stack_names() == ["Impact Tremors's triggered ability"]
+    scenario.pass_until_resolved()
+
+    assert scenario.player("bob").life == 19
+
+
 def test_a_creature_spell_does_not_fire_an_instant_or_sorcery_cast_trigger():
     """The condition names a type, so a Grizzly Bears is not one (CR 603.2)."""
     scenario = (
@@ -547,8 +577,12 @@ def test_an_intervening_if_that_is_false_stops_the_ability_triggering():
 def test_an_intervening_if_that_is_true_lets_the_ability_trigger():
     """The control: one Thopter Assembly, so the clause holds and it triggers.
 
-    Only the first half of the effect happens - the five Thopter tokens are not
-    created, because tokens are not modelled. See `docs/engine-coverage.md`.
+    Both halves of the effect happen, in printed order (CR 608.2c): the
+    Assembly returns to hand and five 1/1 colorless Thopter artifact creature
+    tokens with flying are created (CR 111, CR 701.7a) - `create_tokens`/
+    `THOPTER` were already load-bearing elsewhere in `machines/effects.py`
+    (Hangarback Walker), so the old claim that tokens were unmodelled here was
+    stale rather than a real gap. See `docs/engine-coverage.md`.
     """
     scenario = (
         Scenario()
@@ -562,6 +596,8 @@ def test_an_intervening_if_that_is_true_lets_the_ability_trigger():
     assert scenario.stack_names() == ["Thopter Assembly's triggered ability"]
     scenario.pass_until_resolved()
     assert assembly.zone is Zone.HAND
+    thopters = [state for state in scenario.game.battlefield if state.name == "Thopter Token"]
+    assert len(thopters) == 5
 
 
 def test_an_intervening_if_is_checked_again_on_resolution():
