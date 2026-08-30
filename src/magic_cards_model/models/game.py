@@ -17,6 +17,12 @@ from ..machines.abilities import (
     TriggerEvent,
     parse_abilities,
 )
+from ..machines.casting import (
+    PlayAction,
+    PlayPermission,
+    play_permissions_on,
+    usable_play_permission,
+)
 from ..machines.combat import (
     Attack,
     CombatMachine,
@@ -474,6 +480,13 @@ class Game(BaseModel):
     priority: PriorityMachine | None = None
     combat: CombatMachine = Field(default_factory=CombatMachine)
     lands_played: dict[str, int] = Field(default_factory=dict)
+    play_permissions: list[PlayPermission] = Field(default_factory=list)
+    """CR 601.3's dynamic half: permissions a resolving effect handed out to
+    specific cards - Ugin, Eye of the Storms' −11, Ragavan, Nimble Pilferer's
+    combat-damage trigger. Granted through `grant_play_permission`, read
+    through `machines/casting.usable_play_permission`, and dropped in the
+    cleanup step (CR 514.2). Deliberately a list of per-object records rather
+    than a flag on the cards: see `PlayPermission`'s own docstring."""
     winner: str | None = None
     drawn: bool = False
     """Whether the game ended in a draw (CR 104.4a).
@@ -1083,6 +1096,11 @@ class Game(BaseModel):
             shield
             for shield in self.prevention_shields
             if not shield.spent and not shield.until_end_of_turn
+        ]
+        # CR 514.2's same sentence: "all 'until end of turn' ... effects end".
+        # A card exiled by Ugin's −11 stays exiled and stops being castable.
+        self.play_permissions = [
+            permission for permission in self.play_permissions if not permission.until_end_of_turn
         ]
         return discarded
 
@@ -4142,6 +4160,63 @@ class Game(BaseModel):
             )
         return None
 
+    # -- permission to play a card from somewhere else (CR 601.3) ----------
+
+    def grant_play_permission(
+        self,
+        card: CardState,
+        player: str,
+        *,
+        action: PlayAction = PlayAction.CAST,
+        pays_mana_cost: bool = True,
+        source_name: str = "",
+        rule: str = "CR 601.3",
+        zone: Zone = Zone.EXILE,
+        until_end_of_turn: bool = True,
+    ) -> PlayPermission:
+        """CR 601.3: let `player` play this one card out of `zone`, for a turn.
+
+        The primitive behind Ugin, Eye of the Storms' "−11: ... Until end of
+        turn, you may cast those cards without paying their mana costs." and
+        Ragavan, Nimble Pilferer's "... Until end of turn, you may cast that
+        card." Both are the same shape: a resolving ability names cards it has
+        just exiled and says who may play them and for how long.
+
+        The permission is stamped with the object's `zone_change_stamp`
+        (CR 400.7), so it dies the moment the card moves - it cannot be
+        re-earned by a card that leaves exile and returns, and it never leaks
+        to a different card in the same pile.
+
+        `player` is who may play it, which CR 108.3 leaves free to differ from
+        the owner: Ragavan exiles from the damaged player's library and hands
+        the permission to the Ragavan controller.
+
+        `pays_mana_cost=False` is CR 118.9's "without paying its mana cost".
+        `action=PlayAction.PLAY` is CR 601.1a's wider word, which reaches the
+        land drop; `PlayAction.CAST` never does.
+        """
+        turn = self.turn
+        permission = PlayPermission(
+            card_id=card.id,
+            zone_change_stamp=card.zone_change_stamp,
+            player=player,
+            zone=zone,
+            action=action,
+            pays_mana_cost=pays_mana_cost,
+            source_name=source_name,
+            rule=rule,
+            until_end_of_turn=until_end_of_turn,
+            granted_turns_taken=None if turn is None else int(turn.turns_taken),
+        )
+        self.play_permissions.append(permission)
+        return permission
+
+    def play_permission_for(
+        self, card: CardState, player: str, action: PlayAction = PlayAction.CAST
+    ) -> PlayPermission | None:
+        """The live permission letting `player` take `action` with `card`, or None."""
+        return usable_play_permission(self, card, player, action)
+
     def can_play_land(self, username: str) -> bool:
         """Whether `username` may play a land right now (CR 305.1-305.3).
 
@@ -4173,6 +4248,26 @@ class Game(BaseModel):
         refusal = self.why_cannot_play_land(username)
         if refusal is not None:
             raise ValueError(refusal)
+        if land.zone is not Zone.HAND:
+            # CR 305.1 plays a land "from their hand"; CR 701.18a's "from the
+            # zone it's in (usually the hand)" is the wider action, and only an
+            # effect can open one of those other zones (CR 601.3's twin for
+            # lands). A `PlayPermission` that says *cast* is not one of them -
+            # CR 601.1a keeps playing a land and casting a spell apart.
+            permission = self.play_permission_for(land, username, PlayAction.PLAY)
+            if permission is None:
+                granted = play_permissions_on(self, land)
+                if granted:
+                    # A permission names this object and does not stretch this
+                    # far - say which way it falls short (cast-not-play, wrong
+                    # player, expired) rather than "nothing allows this".
+                    raise ValueError(
+                        granted[0].why_not(land, username, self, action=PlayAction.PLAY)
+                    )
+                raise ValueError(
+                    f"nothing allows {username} to play {land.name} from the "
+                    f"{land.zone.value} (CR 305.1, CR 701.18a)"
+                )
 
         # CR 305.2a counts "lands played as special actions and lands played
         # during the resolution of spells and abilities", so any future effect
@@ -5085,6 +5180,14 @@ class Game(BaseModel):
             self.loyalty_activations = {}  # CR 606.3's once-per-turn is per turn too
             self.spells_cast_this_turn = {}
             self.life_gained_this_turn = set()
+            # `play_permissions` is deliberately **not** cleared here. CR 514.2
+            # ends an "until end of turn" effect in the cleanup step and
+            # `cleanup_step` does exactly that; a game driven step by step may
+            # never run one, and `PlayPermission.expired` - which compares
+            # `turns_taken` - is what answers correctly in that case. Purging
+            # here as well would replace that specific refusal ("that turn is
+            # over") with the generic "nothing allows this", which is a worse
+            # message for the same wrong move.
             self.end_of_combat()
             self.begin_turn_for(self.turn.active_player)
             self._sync_player_control()  # CR 723.1

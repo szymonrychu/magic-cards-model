@@ -529,10 +529,18 @@ class PlayedScenario:
 
     # -- special actions --------------------------------------------------
 
-    def play_land(self, name: str, username: str | None = None) -> CardState:
-        """Play a land from hand. A special action: no stack, no priority pass."""
+    def play_land(
+        self, name: str, username: str | None = None, from_zone: Zone = Zone.HAND
+    ) -> CardState:
+        """Play a land. A special action: no stack, no priority pass.
+
+        `from_zone` is CR 701.18a's "from the zone it's in (usually the hand)":
+        an effect can hand out permission to play a land from somewhere else
+        (`Game.grant_play_permission` with `PlayAction.PLAY`), and `play_land`
+        refuses any other zone without one.
+        """
         player = self.player(username)
-        land = self.find(name, Zone.HAND, player.username)
+        land = self.find(name, from_zone, player.username)
         return self.game.play_land(land, player.username)
 
     # -- combat -----------------------------------------------------------

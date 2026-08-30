@@ -53,6 +53,7 @@ Existing files, as a guide to where a new case belongs:
 | `test_ward.py`, `test_prowess.py`, `test_cascade.py`, `test_persist.py`, `test_mobilize.py` | CR 702 keywords that *are* triggered abilities, generated from the keyword line |
 | `test_morph.py` | CR 702.37, 708.2: a card cast face down, and what it is while it is |
 | `test_madness.py` | CR 702.35: a discard replaced into exile, and casting from that pile |
+| `test_play_from_exile.py` | CR 601.3, 601.1a, 514.2: a resolving ability's time-boxed permission to play *specific* exiled cards - Ugin's −11 and Ragavan's trigger - against `test_madness.py`'s static, keyword-driven grant |
 | `test_indestructible.py` | CR 702.12: what "can't be destroyed" does and does not stop |
 | `test_exert.py` | CR 701.43: not untapping next untap step, once |
 | `test_enchant.py` | CR 702.5, 303.4a: what an Aura may target and be attached to |
