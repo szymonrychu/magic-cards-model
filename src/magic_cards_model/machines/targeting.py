@@ -192,6 +192,15 @@ class TargetRequirement(BaseModel):
     nonbasic land, even if it has a basic land type")."""
     must_be_token: bool | None = None
     """True for "target token", False for "target nontoken ..." (CR 111.1)."""
+    historic: bool = False
+    """True for "target historic ..." (Abstergo Entertainment). CR 700.6:
+    "The term historic refers to an object that has the legendary supertype,
+    the artifact card type, or the Saga subtype." A disjunction across three
+    different characteristics - card type, supertype, *and* subtype at
+    once - that `card_types`/`required_supertypes` alone cannot express
+    together (each is itself only an OR within one axis), so this gets its
+    own field and its own check, `_rejects_historic`, rather than trying to
+    fold it into either."""
     combat_states: frozenset[CombatState] = frozenset()
     """Which of attacking and blocking would satisfy this (CR 508.1k, 509.1g).
 
@@ -333,6 +342,9 @@ class TargetRequirement(BaseModel):
         if self.excluded_supertypes and (set(target.card.supertypes) & self.excluded_supertypes):
             unwanted = " or ".join(sorted(kind.value for kind in self.excluded_supertypes))
             return f"{self.phrase} cannot target a {unwanted} permanent, and {target.name} is one"
+        historic = self._rejects_historic(target)
+        if historic is not None:
+            return historic
         if self.must_be_tapped is not None and target.tapped is not self.must_be_tapped:
             state = "tapped" if self.must_be_tapped else "untapped"
             return f"{self.phrase} needs a {state} permanent, and {target.name} is not"
@@ -346,6 +358,25 @@ class TargetRequirement(BaseModel):
         if comparison is not None:
             return comparison
         return self._rejects_controller(target, caster)
+
+    def _rejects_historic(self, target: CardState) -> str | None:
+        """CR 700.6: legendary, artifact, or Saga - checked off the card's own
+        printed characteristics, the same way `required_supertypes` reads
+        `target.card.supertypes` directly rather than through a layer-6
+        recompute; nothing in the pool grants "historic" itself with a
+        continuous effect.
+        """
+        if not self.historic:
+            return None
+        card = target.card
+        is_historic = (
+            Supertype.LEGENDARY in card.supertypes
+            or Type.ARTIFACT in card.types
+            or "Saga" in card.subtypes
+        )
+        if is_historic:
+            return None
+        return f"{self.phrase} needs a historic card, and {target.name} is not one"
 
     def _rejects_token(self, target: CardState) -> str | None:
         """CR 111.1: a token is a permanent that no card represents.
@@ -1016,7 +1047,17 @@ _EARTHBEND_TARGET_TEXT = "target land you control"
 #: ability's target. `re.IGNORECASE | re.DOTALL` matches `_REFLEXIVE_CLAUSE_RE`
 #: in `machines/effects.py`: the two have to agree on where the boundary is,
 #: or one module could see a target the other has already sliced away.
-_REFLEXIVE_CLAUSE_TAIL = re.compile(r"\bwhen you do,.*$", re.IGNORECASE | re.DOTALL)
+#:
+#: CR 603.12's other template - "when [something happens] this way," - is the
+#: same cut for the same reason: Agatha's Soul Cauldron's "Exile target card
+#: from a graveyard. When a creature card is exiled this way, put a +1/+1
+#: counter on target creature you control." announces only the first
+#: sentence's target now; the second belongs to the reflexive ability CR
+#: 603.3d creates later. `machines/effects.py`'s own
+#: `_EXILE_TARGET_REFLEXIVE_CREATURE_RE` has to agree on this same boundary.
+_REFLEXIVE_CLAUSE_TAIL = re.compile(
+    r"\bwhen you do,.*$|\bwhen [^,]+ this way,.*$", re.IGNORECASE | re.DOTALL
+)
 
 
 def profile_for_text(text: str) -> TargetingProfile:
@@ -1382,6 +1423,7 @@ def _read_phrase(prefix: str, suffix: str) -> TargetRequirement | None:
         must_be_tapped=must_be_tapped,
         excludes_source=excludes_source or adjectives.excludes_source,
         must_be_token=adjectives.must_be_token,
+        historic=adjectives.historic,
         combat_states=frozenset(adjectives.combat_states),
         comparison_attribute=comparison_attribute,
         comparison_operator=comparison_operator,
@@ -1399,6 +1441,7 @@ class _Adjectives:
         self.combat_states: set[CombatState] = set()
         self.must_be_tapped: bool | None = None
         self.must_be_token: bool | None = None
+        self.historic = False
         self.excludes_source = False
         self.read = 0
 
@@ -1416,6 +1459,8 @@ class _Adjectives:
             self.excludes_source = True
         elif word in _SUPERTYPE_NOUNS:
             self.required_supertypes.add(_SUPERTYPE_NOUNS[word])
+        elif word == "historic":
+            self.historic = True
         elif (excluded := _negated_type(word)) is not None:
             self.excluded_types.add(excluded)
         elif (excluded_super := _negated_supertype(word)) is not None:

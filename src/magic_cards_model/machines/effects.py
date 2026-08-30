@@ -1924,14 +1924,21 @@ _SURVEIL_RE = re.compile(r"surveils? (?P<n>\d+)", re.IGNORECASE)
 _SCRY_RE = re.compile(r"scr(?:y|ies) (?P<n>\d+)", re.IGNORECASE)
 
 
-def _mill(game: "Game", player: Player, count: int) -> None:
+def _mill(game: "Game", player: Player, count: int) -> list[CardState]:
     """CR 701.17a, routed through `Game.put_into_graveyard` the way
     `Game.surveil` moves its own graveyard-bound cards - so a replacement
     effect watching a card enter a graveyard (Rest in Peace) still gets its
     say (CR 614.1a).
+
+    Returns the cards actually milled (fewer than `count` at an empty
+    library, CR 701.17a's own "as many of those cards as possible") - Grist,
+    the Hunger Tide's `+1` and Tyvar, Jubilant Brawler's `-2` both act on
+    *which* cards this specific mill moved, not the graveyard generally.
     """
-    for card in player.library[:count]:
+    milled = list(player.library[:count])
+    for card in milled:
         game.put_into_graveyard(card)
+    return milled
 
 
 def parse_clause_effect(clause: str) -> ClauseEffect | None:
@@ -2567,6 +2574,132 @@ def _parse_put_counters_on_group_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+def _counter_kind(word: str) -> Counter | str:
+    """Normalise a printed counter-kind word into what `add_counters`/
+    `remove_counters` key on - the two CR 122.1a power/toughness spellings as
+    `Counter.PLUS_ONE`/`Counter.MINUS_ONE`, and any other bare word (`oil`,
+    `charge`, `fate`, ...) as the matching `Counter` member when the rules
+    name one, or the plain lower-cased string otherwise (CR 122.1's kinds are
+    an open set).
+    """
+    lowered = word.lower()
+    if lowered == "+1/+1":
+        return Counter.PLUS_ONE
+    if lowered == "-1/-1":
+        return Counter.MINUS_ONE
+    try:
+        return Counter(lowered)
+    except ValueError:
+        return lowered
+
+
+# --------------------------------------------------------------------------
+# W7a: put N counters on *this* permanent, or untap it - CR 602.2's activated
+# ability naming no target at all, only itself (CR 113.7a's own object).
+# Walking Ballista's "{4}: Put a +1/+1 counter on this creature." and Devoted
+# Druid's "Put a -1/-1 counter on this creature: Untap this creature." are
+# both this shape: a plain self-reference, never a "target", so
+# `_parse_targeted_clause`'s whole `TargetedClause` family (which always reads
+# a target off `game.resolve_targets`) is the wrong tool - these two read
+# `ability.source(game)` instead, the same self lookup `damage_each_opponent`
+# and `_parse_destroy_each_clause` already use for a source-only effect with
+# nothing to target.
+# --------------------------------------------------------------------------
+
+#: "Put N `<kind>` counter(s) on this `<noun>`." - the self-referential twin of
+#: `_COUNTER_TARGET_RE`'s "on target X" and `_COUNTER_EACH_GROUP_RE`'s "on each
+#: `<group>` you control". `<noun>` is any word ("creature", "artifact",
+#: "permanent") - the source's own name has already been normalised to "this
+#: permanent" by `_self_normalized_effect_text` by the time this ever runs, so
+#: a card that prints its own name instead of "this" (The Filigree Sylex, and
+#: Grist, the Hunger Tide's own "+1") reads exactly the same way.
+_COUNTER_ON_SELF_RE = re.compile(
+    rf"^put (?P<n>{_COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on this \w+\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_put_counters_on_self_clause(text: str) -> AbilityEffect | None:
+    """`_COUNTER_ON_SELF_RE`'s shape - Walking Ballista's `{4}` ability and
+    The Filigree Sylex's `{T}` ability (CR 122.1).
+
+    CR 113.7a: an ability existing "independently of its source"'s object can
+    still be found by id in whatever zone it now occupies, but only a
+    permanent still on the battlefield can receive a counter (CR 122.1: a
+    counter marks a permanent, and one that left the battlefield is a new
+    object with no counters to add to; `CardState.move_to` already clears them
+    on the way out).
+    """
+    match = _COUNTER_ON_SELF_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    amount = _count(match.group("n"))
+    kind = _counter_kind(match.group("kind"))
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is not None and source.zone is Zone.BATTLEFIELD:
+            game.add_counters(source, kind, amount)
+
+    return effect
+
+
+#: "Untap this creature." (Devoted Druid) - CR 701.26b's untap with no target
+#: at all, the source's own cost-side counter placement having already been
+#: paid by `cost.py`'s `PLACE_COUNTERS` component by the time this runs.
+_UNTAP_SELF_RE = re.compile(r"^untap this \w+\.?$", re.IGNORECASE)
+
+
+def _parse_untap_self_clause(text: str) -> AbilityEffect | None:
+    """`_UNTAP_SELF_RE`'s shape - Devoted Druid's "Put a -1/-1 counter on this
+    creature: Untap this creature." (CR 701.26b).
+
+    The Devoted Druid + Vizier of Remedies loop this enables terminates on its
+    own: nothing here prevents the state-based action CR 704.5f already
+    performs once enough -1/-1 counters bring toughness to 0 - this function
+    only ever reads whether the source is *still* on the battlefield before
+    untapping it, the same check `_parse_put_counters_on_self_clause` makes.
+    """
+    if _UNTAP_SELF_RE.fullmatch(text.strip()) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is not None and source.zone is Zone.BATTLEFIELD:
+            source.untap()
+
+    return effect
+
+
+def _parse_whole_text_token_clause(text: str) -> AbilityEffect | None:
+    """A "Create ... token ..." ability read as *one whole, unsplit clause* -
+    The Legend of Roku's `{8}` ability, "Create a 4/4 red Dragon creature
+    token with flying and firebending 4."
+
+    `_ability_effect_or_notice`'s ordinary path is `parse_mixed_effect`, which
+    runs `split_effect_clauses` first - and that splitter's `_CLAUSE_SEPARATOR`
+    cuts on a bare "and" (built for a sentence that joins two independent
+    instructions, Lightning Helix's shape), which is wrong for a *comma-free
+    two-item list inside one token's own "with" tail*: "with flying and
+    firebending 4" would be cut into "with flying" and "firebending 4" before
+    `_parse_token_clause` ever saw the whole tail, and the leftover
+    "firebending 4" clause matches no shape at all - the whole ability failed
+    closed over one keyword list, not because the token itself was unreadable.
+    `_parse_token_clause` is tried directly against the untouched text
+    instead; its own regex only ever fullmatches a *complete* token-creation
+    sentence, so a card whose token clause is one instruction among several
+    still falls through to the ordinary per-clause path unaffected.
+    """
+    # `split_effect_clauses` always strips one trailing "." before a clause
+    # ever reaches `_parse_token_clause`; going around that splitter (see the
+    # docstring above) means doing the same trim here - `_TOKEN_CLAUSE_RE`'s
+    # own trailing `\.?` never gets the chance to, since its greedy DOTALL
+    # `tail` group is satisfied first and simply absorbs the period instead.
+    return _parse_token_clause(
+        _strip_non_effect_preamble(text).strip().rstrip("."), for_spell=False
+    )
+
+
 #: `phrase` always captures from the word "target" itself (or "any target")
 #: to the end of the clause, count words and all - `_targets_understood`
 #: needs the count word, if any, to see "up to two" and refuse it.
@@ -2989,21 +3122,7 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
         if not _targets_understood(match.group("phrase"), count_agnostic=True):
             return None
         amount = _count(match.group("n"))
-        kind_word = match.group("kind").lower()
-        kind: Counter | str
-        if kind_word == "+1/+1":
-            kind = Counter.PLUS_ONE
-        elif kind_word == "-1/-1":
-            kind = Counter.MINUS_ONE
-        else:
-            # A single bare word: "charge", "fate", or any other CR 122.1
-            # counter name a card invents. `Counter` names the ones the rules
-            # themselves care about; anything else stays the plain string
-            # `Counters` already stores it under.
-            try:
-                kind = Counter(kind_word)
-            except ValueError:
-                kind = kind_word
+        kind = _counter_kind(match.group("kind"))
         return put_counters_on_ability_targets(kind, amount)
 
     if match := _DAMAGE_TARGET_RE.fullmatch(clause):
@@ -3179,6 +3298,19 @@ _TOKEN_COLOR_WORDS = {
     "green": Color.GREEN,
 }
 
+#: "N" keyword abilities: CR 702.189a - "Firebending is a triggered ability.
+#: 'Firebending N' means 'Whenever this creature attacks, add N {R}. Until end
+#: of combat, you don't lose this mana as steps and phases end.'" The Legend
+#: of Roku's `{8}` ability grants exactly this on the Dragon token it creates.
+#: Recorded on the token as a plain keyword string - the same shape
+#: `_TOKEN_KEYWORDS` already stores a bare keyword under - rather than as a
+#: real triggered ability: nothing in `machines/triggers.py` fires it, so a
+#: token with "Firebending 4" attacks without ever adding the mana. That gap
+#: is left open rather than guessed at (`docs/engine-coverage.md`); what this
+#: wave fixes is that the token itself, and its other keyword (flying), are
+#: created at all, which used to fail the whole clause and create nothing.
+_LEVELED_TOKEN_KEYWORDS = {"firebending"}
+
 
 def _parse_token_tail(tail: str | None) -> tuple[tuple[str, ...], str | None] | None:
     """The "with <...>" part of a token's noun phrase, or `None` if this wave
@@ -3205,9 +3337,20 @@ def _parse_token_tail(tail: str | None) -> tuple[tuple[str, ...], str | None] | 
     if quote := re.fullmatch(r'["“](?P<text>.+)["”]', tail, re.DOTALL):
         return (), quote.group("text")
     parts = [part.strip() for part in re.split(r",\s*|\s+and\s+", tail) if part.strip()]
-    if not parts or any(part.lower() not in _TOKEN_KEYWORDS for part in parts):
+    if not parts:
         return None
-    return tuple(part.title() for part in parts), None
+    keywords: list[str] = []
+    for part in parts:
+        lowered = part.lower()
+        if lowered in _TOKEN_KEYWORDS:
+            keywords.append(part.title())
+            continue
+        leveled = re.fullmatch(r"(?P<word>[a-z]+) (?P<n>\d+)", lowered)
+        if leveled is not None and leveled.group("word") in _LEVELED_TOKEN_KEYWORDS:
+            keywords.append(f"{leveled.group('word').title()} {leveled.group('n')}")
+            continue
+        return None
+    return tuple(keywords), None
 
 
 def _parse_generic_token_descriptor(words: list[str], tail: str | None) -> TokenDefinition | None:
@@ -3926,6 +4069,122 @@ def _parse_sacrifice_unless_pay_energy(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: Grist, the Hunger Tide's `+1`, read whole: "Create a 1/1 black and green
+#: Insect creature token, then mill a card. If an Insect card was milled this
+#: way, put a loyalty counter on this permanent and repeat this process." -
+#: the token descriptor is read the same way `_parse_generic_token_descriptor`
+#: reads any other, so only the mill-then-repeat half is templated here.
+#: Grist's own name has already become "this permanent" by the time this
+#: runs (`_self_normalized_effect_text`).
+_CREATE_TOKEN_MILL_REPEAT_RE = re.compile(
+    r"^create (?P<n>a|one) (?P<desc>.+?) tokens?, then mill a card\. "
+    r"if an? (?P<kind>[a-z]+) card was milled this way, "
+    r"put a loyalty counter on this permanent and repeat this process\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_create_token_mill_repeat_clause(text: str) -> AbilityEffect | None:
+    """`_CREATE_TOKEN_MILL_REPEAT_RE`'s shape - Grist, the Hunger Tide's `+1`.
+
+    CR 118.4's own "repeat this process" reads here as an ordinary Python loop
+    inside one resolution, not a second stack object (nothing in CR 603.12
+    covers "repeat" the way it covers "when you do") - each pass creates one
+    token, mills one card, and only continues if *that* card was the named
+    subtype (CR 205.3, checked against the card's own printed subtypes, since
+    a card in the graveyard carries no continuous effect to compute a layer 4
+    change from). The loop terminates on its own: `_mill` mills nothing once
+    the library is empty (CR 701.17a's "as many ... as possible"), which reads
+    here as "no card was milled", never true to the "if" condition.
+    """
+    match = _CREATE_TOKEN_MILL_REPEAT_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    words = match.group("desc").strip().split()
+    definition = _parse_generic_token_descriptor(words, None)
+    if definition is None:
+        return None
+    kind_word = match.group("kind").strip()
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = game.player(ability.controller)
+        while True:
+            create_tokens(game, definition, player.username, 1)
+            milled = _mill(game, player, 1)
+            if not milled or kind_word.lower() not in {s.lower() for s in milled[0].card.subtypes}:
+                return
+            source = ability.source(game)
+            if source is not None and source.zone is Zone.BATTLEFIELD:
+                game.add_counters(source, Counter.LOYALTY, 1)
+
+    return effect
+
+
+#: Tyvar, Jubilant Brawler's `-2`, read whole: "Mill three cards, then you may
+#: return a creature card with mana value 2 or less from your graveyard to
+#: the battlefield." - a resolution-time choice among candidates (CR 608.2d),
+#: not a "target" at all, the same shape `_bring_in_from_outside_the_game_or_
+#: exile`'s `DecisionKind.CHOOSE_CARDS` already reads for Karn's `-2`.
+_MILL_THEN_MAY_RETURN_CREATURE_RE = re.compile(
+    rf"^mill (?P<n>{_COUNT}) cards?, then you may return a creature card "
+    r"with mana value (?P<max_mv>\d+) or less from your graveyard "
+    r"to the battlefield\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_mill_then_may_return_creature_clause(text: str) -> AbilityEffect | None:
+    """`_MILL_THEN_MAY_RETURN_CREATURE_RE`'s shape - Tyvar, Jubilant
+    Brawler's `-2`.
+
+    The candidate pool is read *after* the mill, so a creature this same
+    resolution just put into the graveyard is itself eligible - CR 400.2's
+    graveyard has no "just arrived" exception, and the sentence names no
+    other timing. `Game.may` is asked only once a legal candidate actually
+    exists (CR 608.2d), matching `_bring_in_from_outside_the_game_or_exile`'s
+    own guard.
+    """
+    match = _MILL_THEN_MAY_RETURN_CREATURE_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    count = _count(match.group("n"))
+    ceiling = int(match.group("max_mv"))
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = game.player(ability.controller)
+        _mill(game, player, count)
+        candidates = [
+            state
+            for state in player.cards_in(Zone.GRAVEYARD)
+            if Type.CREATURE in state.card.types and (state.card.cmc or 0) <= ceiling
+        ]
+        if not candidates:
+            return
+        if not game.may(
+            player,
+            f"return a creature card with mana value {ceiling} or less from your "
+            f"graveyard to the battlefield",
+            source=ability.source_name,
+        ):
+            return
+        chosen_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=player.username,
+                prompt="choose a creature card to return to the battlefield",
+                source=ability.source_name,
+                amount=1,
+                cards=tuple(candidate.id for candidate in candidates),
+            )
+        )
+        assert isinstance(chosen_ids, tuple)
+        by_id = {candidate.id: candidate for candidate in candidates}
+        chosen = by_id[chosen_ids[0]]
+        game.put_onto_battlefield(chosen, player.username)
+
+    return effect
+
+
 def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     """`parse_mixed_effect` on `effect_text`, or - if that failed specifically
     on an unreadable anaphoric second clause - a stand-in effect that records
@@ -3989,6 +4248,26 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     put_counters_on_group = _parse_put_counters_on_group_clause(effect_text)
     if put_counters_on_group is not None:
         return put_counters_on_group
+    put_counters_on_self = _parse_put_counters_on_self_clause(effect_text)
+    if put_counters_on_self is not None:
+        return put_counters_on_self
+    untap_self = _parse_untap_self_clause(effect_text)
+    if untap_self is not None:
+        return untap_self
+    whole_text_token = _parse_whole_text_token_clause(effect_text)
+    if whole_text_token is not None:
+        return whole_text_token
+    exile_reflexive_creature_counter = _parse_exile_target_card_reflexive_creature_counter(
+        effect_text
+    )
+    if exile_reflexive_creature_counter is not None:
+        return exile_reflexive_creature_counter
+    create_token_mill_repeat = _parse_create_token_mill_repeat_clause(effect_text)
+    if create_token_mill_repeat is not None:
+        return create_token_mill_repeat
+    mill_then_may_return_creature = _parse_mill_then_may_return_creature_clause(effect_text)
+    if mill_then_may_return_creature is not None:
+        return mill_then_may_return_creature
     each_opponent_loses_life = _parse_each_opponent_loses_life_equal_to(effect_text)
     if each_opponent_loses_life is not None:
         return each_opponent_loses_life
@@ -5793,6 +6072,81 @@ def _parse_reflexive_sacrifice_clause(text: str) -> AbilityEffect | None:
             controller=player.username,
             source_id=ability.source_id,
             source_name=source_name,
+            callback=resolve_reflexive,
+        )
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# "Exile target card from a graveyard. When a creature card is exiled this
+# way, <consequence>." (CR 603.12) - Agatha's Soul Cauldron's `{T}` ability.
+# --------------------------------------------------------------------------
+#
+# A second CR 603.12 shape, alongside `_parse_reflexive_sacrifice_clause`
+# above: the action is unconditional (an ordinary "exile target card", no
+# "you may"), and what makes the reflexive ability exist is not a player's
+# choice but *what kind of card* the first sentence actually exiled - CR
+# 603.12's own "trigger based on whether the trigger event ... occurred" reads
+# here as "was the exiled card a creature card", checked against the object
+# `game.exile_permanent` just moved, once, right after it moves. Reusing
+# `create_reflexive_trigger` rather than building a second reflexive-ability
+# primitive, per the trap this wave was warned about.
+#
+# `profile_for_text`'s `_REFLEXIVE_CLAUSE_TAIL` cuts this same "when ... this
+# way," tail before reading the outer ability's own target, so the activation
+# only ever announces the first sentence's "target card from a graveyard" -
+# the second target ("target creature you control") is announced later, when
+# the reflexive ability itself goes on the stack (CR 603.3d), exactly the way
+# `_parse_reflexive_sacrifice_clause`'s own consequence target is.
+
+_EXILE_TARGET_REFLEXIVE_CREATURE_RE = re.compile(
+    r"^exile (?P<phrase>target card from a graveyard)\.\s*"
+    r"when a creature card is exiled this way,\s*(?P<consequence>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_exile_target_card_reflexive_creature_counter(text: str) -> AbilityEffect | None:
+    """`_EXILE_TARGET_REFLEXIVE_CREATURE_RE`'s shape - Agatha's Soul
+    Cauldron's `{T}` ability.
+
+    CR 400.7/CR 700.4: whether the exiled object "is a creature card" is read
+    off its own printed card type, not the battlefield's layer 6 (it never
+    reaches the battlefield at all), so `Type.CREATURE in target.card.types`
+    is checked on the object `game.exile_permanent` just moved.
+    """
+    match = _EXILE_TARGET_REFLEXIVE_CREATURE_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=True, battlefield_only=False):
+        return None
+    consequence_text = match.group("consequence").strip()
+    consequence_effect = parse_mixed_effect(consequence_text)
+    if consequence_effect is None:
+        return None
+
+    def resolve_reflexive(
+        game: "Game", reflexive_ability: AbilityOnStack, trigger: DelayedTrigger
+    ) -> None:
+        consequence_effect(game, reflexive_ability)
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        exiled_a_creature = False
+        for target in game.resolve_targets(ability):
+            if not isinstance(target, CardState):
+                continue
+            is_creature = Type.CREATURE in target.card.types
+            game.exile_permanent(target)
+            if is_creature:
+                exiled_a_creature = True
+        if not exiled_a_creature:
+            return
+        game.create_reflexive_trigger(
+            text=consequence_text,
+            controller=ability.controller,
+            source_id=ability.source_id,
+            source_name=ability.source_name,
             callback=resolve_reflexive,
         )
 
@@ -7821,8 +8175,32 @@ def _dispatch_by_printed_text(
     return dispatch
 
 
+#: Some printings template a self-reference as the card's own name rather
+#: than CR 700.7's "this [something]" - The Filigree Sylex's "Put an oil
+#: counter on The Filigree Sylex." and "... equal to the number of oil
+#: counters on The Filigree Sylex.", and Grist, the Hunger Tide's own "put a
+#: loyalty counter on Grist" (the short form before the comma, not the full
+#: printed name). CR 201.5: "Text that refers to the object it's on by name
+#: means just that particular object" - the same reference CR 700.7's "this
+#: [something]" makes, just spelled differently, so this rewrites either
+#: wording to "this permanent" once, ahead of every other parser, letting
+#: `_parse_put_counters_on_self_clause` and `_parse_destroy_each_clause` (via
+#: `_MASS_COUNTERS_ON_SELF_RE`'s "this <word>") read both the same way rather
+#: than needing a second copy of each shape keyed on a literal name.
+def _self_normalized_effect_text(card_name: str, effect_text: str) -> str:
+    front = card_name.split("//")[0].strip()
+    candidates = {card_name, front}
+    if "," in front:
+        candidates.add(front.split(",", 1)[0].strip())
+    normalized = effect_text
+    for name in candidates:
+        if name:
+            normalized = re.sub(rf"\b{re.escape(name)}\b", "this permanent", normalized)
+    return normalized
+
+
 def activated_effect_for(
-    card_name: str, index: int, effect_text: str | None = None
+    card_name: str, index: int, effect_text: str | None = None, *, x_value: int | None = None
 ) -> AbilityEffect | None:
     """The effect of a card's activated ability at `index`, or a parsed one.
 
@@ -7834,6 +8212,16 @@ def activated_effect_for(
     Ghost Quarter's "Destroy target land. Its controller may search ..."
     through a targeted clause and a search clause together, with no row of
     its own.
+
+    `x_value` is CR 107.3a's X as `Game.activate_ability` recorded it on the
+    `AbilityOnStack`, mirroring `effect_for`'s own handling for a spell:
+    `None` for an ability whose printed cost carries no `{X}` at all, which
+    leaves a bare "X" written into the effect's own rules text (CR 107.3f, not
+    this one) untouched. Fiend Artisan's "Search your library for a creature
+    card with mana value X or less" is unreadable by `_SEARCH_AND_PUT_RE`
+    until X is substituted for a real number, so - exactly as `effect_for`
+    does for a spell - the unsubstituted text is tried first and the
+    substituted text only once that comes back empty.
     """
     front = card_name.split("//")[0].strip()
     explicit = ACTIVATED_EFFECTS.get((card_name, index)) or ACTIVATED_EFFECTS.get((front, index))
@@ -7841,7 +8229,11 @@ def activated_effect_for(
         return explicit
     if effect_text is None:
         return None
-    return _ability_effect_or_notice(effect_text)
+    effect_text = _self_normalized_effect_text(card_name, effect_text)
+    effect = _ability_effect_or_notice(effect_text)
+    if effect is not None or x_value is None:
+        return effect
+    return _ability_effect_or_notice(substitute_x(effect_text, x_value))
 
 
 # --------------------------------------------------------------------------

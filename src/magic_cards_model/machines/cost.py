@@ -782,9 +782,21 @@ class CostComponent(BaseModel):
         elif self.kind is ComponentKind.EXILE:
             for card in self.cards:
                 self._remember(card)
-                game.player(self.payer).cards_in(card.zone).remove(card)
-                card.move_to(Zone.EXILE)
-                game.exile.append(card)
+                if card.zone is Zone.BATTLEFIELD:
+                    # A self-exile cost off the battlefield (Abstergo
+                    # Entertainment's "Exile Abstergo Entertainment") is a
+                    # permanent, not a card sitting in one player's own zone -
+                    # `Game.exile_permanent` is what every other battlefield
+                    # exile in this engine already goes through (aura
+                    # detachment, CR 506.4's combat removal, the
+                    # battlefield-to-exile event), so this reuses it rather
+                    # than the plain player-zone move below, which assumes a
+                    # `Player.cards_in` zone and cannot find a shared one.
+                    game.exile_permanent(card)
+                else:
+                    game.player(self.payer).cards_in(card.zone).remove(card)
+                    card.move_to(Zone.EXILE)
+                    game.exile.append(card)
         elif self.kind is ComponentKind.PAY_LIFE and self.amount:
             game.player(self.payer).lose_life(self.amount)
         elif self.kind is ComponentKind.REMOVE_COUNTERS:
@@ -1551,12 +1563,28 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
 
     exile = _PHRASE_EXILE.match(text)
     if exile is not None:
-        zone = _ZONE_WORDS.get((exile.group("zone") or "hand").lower(), Zone.HAND)
         if exile.group("count") is None:
             # "Exile this card [from your graveyard]": CR 700.7's self-
             # reference, so there is nothing to choose - only the caller
             # knows which permanent this is, same as `_PHRASE_EXERT_SELF`.
-            return exile_cost(payer=payer, required=1, description=text, zone=zone)
+            # With no "from ..." clause at all, the object is whichever
+            # permanent the ability is printed on, and CR 602.1a requires
+            # that permanent to already be on the battlefield to activate
+            # it - so the default zone here is the battlefield, not the
+            # hand (Abstergo Entertainment's own "Exile Abstergo
+            # Entertainment", normalised to "Exile this card" by
+            # `Game._self_normalized_cost_text` before this ever runs).
+            # Every other card in the pool that reaches this branch states
+            # a zone explicitly (Seasoned Pyromancer's, Fanatic of Rhonas's
+            # own "Exile this card from your graveyard"), so nothing already
+            # depends on the old hand default.
+            self_zone = (
+                _ZONE_WORDS.get(exile.group("zone").lower(), Zone.BATTLEFIELD)
+                if exile.group("zone")
+                else Zone.BATTLEFIELD
+            )
+            return exile_cost(payer=payer, required=1, description=text, zone=self_zone)
+        zone = _ZONE_WORDS.get((exile.group("zone") or "hand").lower(), Zone.HAND)
         count = _count(exile.group("count"))
         requirement = _requirement(exile.group("quality"))
         if count is None or requirement is None:

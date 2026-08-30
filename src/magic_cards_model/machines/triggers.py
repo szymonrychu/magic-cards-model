@@ -252,6 +252,16 @@ class AbilityOnStack(BaseModel):
     """The event that triggered it, for an effect that needs to know which
     creature attacked or what blocked what. None for an activated ability."""
 
+    x_value: int = 0
+    """CR 107.3a's X, as announced when this ability was activated (CR 602.2b
+    - "the remainder of the process for activating an ability is identical to
+    the process for casting a spell", which includes announcing X). Zero for
+    an ability whose cost carries no `{X}` at all - Fiend Artisan's
+    "{X}{B/G}, {T}, Sacrifice another creature: Search your library for a
+    creature card with mana value X or less ..." is the only ability in the
+    pool that reads this; `machines/effects.py`'s `activated_effect_for` is
+    what turns it back into the literal word "X" in the ability's own text."""
+
     keyword_activation: Any = Field(default=None, exclude=True, repr=False)
     """The `machines/keywords.KeywordActivation` this ability came from, if any.
 

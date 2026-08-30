@@ -152,6 +152,49 @@ _PROTECTION = re.compile(r"protection from ([^.;\n]+)", re.IGNORECASE)
 #: only the caller building the cost knows which it is.
 _SELF_REFERENCE = re.compile(r"\bthis\b", re.IGNORECASE)
 
+
+def _cost_refers_to_self(text: str, permanent: CardState) -> bool:
+    """Whether a printed cost sentence names *this* permanent (CR 602.1a).
+
+    Most printings use the generic "this <type>" `_SELF_REFERENCE` already
+    reads, but some (The Filigree Sylex's "{T}, Sacrifice The Filigree
+    Sylex: ...", Grist, the Hunger Tide's short "Grist" before the comma)
+    name the permanent's own printed name instead - CR 201.5: "Text that
+    refers to the object it's on by name means just that particular object."
+    Checked as a whole word, not a bare substring, so a shorter card's name
+    that happens to be a prefix of another word in the cost sentence is never
+    mistaken for a reference.
+    """
+    if _SELF_REFERENCE.search(text):
+        return True
+    front = permanent.card.name.split("//")[0].strip()
+    names = {front}
+    if "," in front:
+        names.add(front.split(",", 1)[0].strip())
+    return any(name and re.search(rf"\b{re.escape(name)}\b", text) for name in names)
+
+
+def _self_normalized_cost_text(text: str, permanent: CardState) -> str:
+    """A printed cost sentence with `permanent`'s own printed name rewritten
+    to "this card" - the phrasing `machines/cost.cost_component_for_phrase`
+    already reads for a self-referential cost (CR 700.7, CR 201.5).
+
+    Abstergo Entertainment's own "{3}, {T}, Exile Abstergo Entertainment:
+    ..." is the only cost in the pool phrased this way rather than with
+    "this land"/"this permanent"; a cost that never names itself comes back
+    unchanged.
+    """
+    front = permanent.card.name.split("//")[0].strip()
+    names = {front}
+    if "," in front:
+        names.add(front.split(",", 1)[0].strip())
+    normalized = text
+    for name in names:
+        if name:
+            normalized = re.sub(rf"\b{re.escape(name)}\b", "this card", normalized)
+    return normalized
+
+
 #: CR 601.2f cost reduction of the shape Emrakul, the Promised End prints.
 #: Narrow on purpose: the amount, and the thing being counted, are both read
 #: back out and anything else is left alone rather than guessed at.
@@ -1767,7 +1810,15 @@ class Game(BaseModel):
         if isinstance(ability.ability, ActivatedAbility):
             index = self._activated_index(ability)
             if index is not None:
-                return activated_effect_for(ability.source_name, index, ability.ability.effect)
+                # CR 107.3a's X, only when the printed cost actually carries
+                # one (Fiend Artisan's `{X}{B/G}`) - the same "only if {X} is
+                # in the mana cost" gate `resolve_top` uses for a spell's own
+                # `x_value`, so an ordinary ability's bare "X" in its rules
+                # text (CR 107.3f) is never mistaken for this one.
+                x_value = ability.x_value if "{X}" in ability.ability.cost else None
+                return activated_effect_for(
+                    ability.source_name, index, ability.ability.effect, x_value=x_value
+                )
         return None
 
     def _activated_index(self, ability: AbilityOnStack) -> int | None:
@@ -5045,7 +5096,7 @@ class Game(BaseModel):
         if component is None:
             if pool:
                 chosen = [pool.pop(0)]
-            elif _SELF_REFERENCE.search(text):
+            elif _cost_refers_to_self(text, permanent):
                 chosen = [permanent]
             else:
                 chosen = []
@@ -5054,7 +5105,7 @@ class Game(BaseModel):
         chosen = []
         while pool and len(chosen) < component.required:
             chosen.append(pool.pop(0))
-        if not chosen and _SELF_REFERENCE.search(text):
+        if not chosen and _cost_refers_to_self(text, permanent):
             chosen = [permanent]
         return component.model_copy(update={"cards": chosen})
 
@@ -5066,6 +5117,7 @@ class Game(BaseModel):
         *,
         sacrificing: list[CardState] | None = None,
         discarding: list[CardState] | None = None,
+        x_value: int = 0,
     ) -> TotalCost:
         """The total cost of one activation (CR 602.1a, 601.2f).
 
@@ -5076,6 +5128,12 @@ class Game(BaseModel):
         next card from `sacrificing` or `discarding`; leaving it empty builds a
         cost that correctly refuses to be paid (CR 118.3) rather than one that
         cannot be built.
+
+        `x_value` is CR 107.3a's X, announced as this activation begins
+        (CR 602.2b), the same moment `Casting.determine_cost` fixes X for a
+        spell. `ManaCost.with_x` folds it in when the printed cost has one -
+        Fiend Artisan's `{X}{B/G}` - and is a no-op otherwise, so every other
+        activated ability in the pool is unaffected.
         """
         ability = self.activated_abilities(permanent)[index]
         controller = controller or self.controller_of(permanent).username
@@ -5086,7 +5144,7 @@ class Game(BaseModel):
         components = []
         for piece in ability.costs:
             if piece.kind is CostKind.MANA:
-                mana = increase(mana, ManaCost.parse(piece.text))
+                mana = increase(mana, ManaCost.parse(piece.text).with_x(x_value))
             elif piece.kind is CostKind.TAP:
                 components.append(tap_cost(permanent, payer=controller, description=piece.text))
             elif piece.kind is CostKind.SACRIFICE:
@@ -5124,10 +5182,12 @@ class Game(BaseModel):
                 # `machines/cost.cost_component_for_phrase` is the reader that
                 # turns the sentence into something payable - "Exert this land"
                 # (CR 701.43a), "Exile a black card from your hand" (CR 118.9).
-                component = cost_component_for_phrase(piece.text, payer=controller)
+                component = cost_component_for_phrase(
+                    _self_normalized_cost_text(piece.text, permanent), payer=controller
+                )
                 if component is None:
                     raise ValueError(f"cannot build a cost for {piece.text!r}")
-                if not component.cards and _SELF_REFERENCE.search(piece.text):
+                if not component.cards and _cost_refers_to_self(piece.text, permanent):
                     # "Exert **this** land": only the caller knows which
                     # permanent the ability is on, so the reader builds the
                     # component empty and it is filled in here (CR 602.1a - the
@@ -5145,18 +5205,30 @@ class Game(BaseModel):
         *,
         sacrificing: list[CardState] | None = None,
         discarding: list[CardState] | None = None,
+        x_value: int = 0,
     ) -> CostPayment:
         """Announce an activation and open its payment (CR 602.2a, 602.2b).
 
         Raises if the ability is prohibited from being activated at all
         (CR 602.5), before anything has been spent.
+
+        `x_value` is CR 107.3a's X, announced now (CR 602.2b puts the whole of
+        CR 601.2b's announcement, X included, at this same moment) - the
+        caller must hand the identical value to `activate_ability` afterward,
+        the same two-call split `Casting.determine_cost`/`choose_modes` and
+        `Casting.cast` already require of a spell's X.
         """
         refusal = self.why_cannot_activate(permanent, index, controller)
         if refusal is not None:
             raise ValueError(refusal)
         controller = controller or self.controller_of(permanent).username
         total = self.activation_cost(
-            permanent, index, controller, sacrificing=sacrificing, discarding=discarding
+            permanent,
+            index,
+            controller,
+            sacrificing=sacrificing,
+            discarding=discarding,
+            x_value=x_value,
         )
         # CR 106.6: an activation is what Shang-Chi's and Eldrazi Temple's
         # mana is restricted *to*, and what Cavern of Souls's and Delighted
@@ -5175,6 +5247,7 @@ class Game(BaseModel):
         *,
         targets: list[object] | None = None,
         color: Color | None = None,
+        x_value: int = 0,
     ) -> AbilityOnStack | None:
         """Finish activating: put the ability on the stack (CR 602.2).
 
@@ -5277,6 +5350,7 @@ class Game(BaseModel):
             source_name=permanent.name,
             controller=controller,
             targets=[TargetRef.coerce(target) for target in targets or []],
+            x_value=x_value,
         )
         self.stack.append(on_stack)
         # CR 117.3c hands priority straight back, so anything that triggered

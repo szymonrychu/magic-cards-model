@@ -716,6 +716,7 @@ class PlayedScenario:
         targets: list[Target] | None = None,
         color: Color | None = None,
         auto: bool = False,
+        x_value: int = 0,
     ) -> AbilityOnStack | None:
         """Activate one of `source`'s abilities, paying with `mana_sources`.
 
@@ -728,10 +729,20 @@ class PlayedScenario:
         own choice of what *this* ability produces, not the mana payment - it
         stays a plain argument even when `auto=True` lets `auto_pay` solve the
         cost of activating it.
+
+        `x_value` is CR 107.3a's X (Fiend Artisan's `{X}{B/G}`), announced
+        once here and threaded through both `begin_activating` and
+        `activate_ability` - the same value has to reach both, exactly the
+        way a spell's `x_value` reaches both `determine_cost` and `cast`.
         """
         controller = username or self.game.controller_of(source).username
         payment = self.game.begin_activating(
-            source, index, controller, sacrificing=sacrificing, discarding=discarding
+            source,
+            index,
+            controller,
+            sacrificing=sacrificing,
+            discarding=discarding,
+            x_value=x_value,
         )
         if auto:
             payment.auto_tap(self.game.permanents_controlled_by(controller))
@@ -740,7 +751,7 @@ class PlayedScenario:
                 payment.tap_for_mana(mana_source, mana_from(mana_source))
         payment.pay()
         ability = self.game.activate_ability(
-            source, index, controller, targets=targets, color=color
+            source, index, controller, targets=targets, color=color, x_value=x_value
         )
         self.game.retain_priority(controller)
         return ability
