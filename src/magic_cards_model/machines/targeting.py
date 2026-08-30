@@ -104,6 +104,7 @@ from ..models.card import Card, Supertype, Type
 from ..models.card_state import CardState, TargetRef
 from ..models.zone import Zone
 from .abilities import keyword_abilities
+from .combat import has_keyword
 from .modes import Mode, modal_profile, mode_rules_text
 
 # --------------------------------------------------------------------------
@@ -229,6 +230,16 @@ class TargetRequirement(BaseModel):
     an unevaluable restriction that quietly let everything through would be a
     wrong game state that looks right - worse than refusing a legal target."""
 
+    required_keyword: str | None = None
+    """"with flying" in "target creature you don't control with flying"
+    (Kraul Harpooner) - a trailing keyword-ability clause, read off the same
+    closed CR 702 evasion/combat vocabulary `machines/combat.py::Keyword`
+    already speaks. Only a small, explicitly named set is read
+    (`_WITH_KEYWORD_RE`) rather than any "with <word>" at all: an unrecognised
+    "with" clause is left exactly as before this field existed - silently
+    unenforced - so a card this narrow reader does not know about does not
+    regress from "ignored" to "the whole targeting text refuses to parse"."""
+
     @property
     def optional(self) -> bool:
         """True when none of these targets has to be chosen (CR 115.6)."""
@@ -345,7 +356,26 @@ class TargetRequirement(BaseModel):
         comparison = self._rejects_comparison(target, game)
         if comparison is not None:
             return comparison
+        keyword = self._rejects_required_keyword(target, game)
+        if keyword is not None:
+            return keyword
         return self._rejects_controller(target, caster)
+
+    def _rejects_required_keyword(self, target: CardState, game: Any = None) -> str | None:
+        """CR 702: "with flying" and its like siblings (Kraul Harpooner).
+
+        Without a game there is no computed board to read a granted keyword
+        off, so this fails open the same way `_rejects_combat_state` does
+        without one - a false rejection would be worse than an unchecked one.
+        """
+        if self.required_keyword is None or game is None:
+            return None
+        if not has_keyword(target, self.required_keyword, game):
+            return (
+                f"{self.phrase} needs a creature with {self.required_keyword}, "
+                f"and {target.name} is not"
+            )
+        return None
 
     def _rejects_token(self, target: CardState) -> str | None:
         """CR 111.1: a token is a permanent that no card represents.
@@ -1338,6 +1368,8 @@ def _read_phrase(prefix: str, suffix: str) -> TargetRequirement | None:
         return None
     comparison_attribute, comparison_operator, comparison_value, rest = comparison
 
+    required_keyword, rest = _extract_required_keyword(rest)
+
     if not nouns_read:
         # Nothing but adjectives: "target token you control". CR 111.1 makes a
         # token a permanent, so that is what is left once the adjectives are
@@ -1386,6 +1418,7 @@ def _read_phrase(prefix: str, suffix: str) -> TargetRequirement | None:
         comparison_attribute=comparison_attribute,
         comparison_operator=comparison_operator,
         comparison_value=comparison_value,
+        required_keyword=required_keyword,
     )
 
 
@@ -1591,6 +1624,29 @@ def _extract_comparison(
     value = None if token.lower() == "x" else int(token)
     remaining = rest[: match.start()] + rest[match.end() :]
     return attribute, operator, value, remaining
+
+
+#: A trailing "with `<keyword>`" clause - "target creature you don't control
+#: with flying" (Kraul Harpooner). Deliberately a small, explicit vocabulary
+#: rather than "with (?P<keyword>.+)$": an unrecognised "with" clause (a
+#: counter, "with the highest power", CR 205.2a shapes this reader is not
+#: meant to reach) is left exactly as unenforced as it always was, rather
+#: than newly failing the whole phrase closed - only a *recognised* keyword
+#: gains enforcement here.
+_WITH_KEYWORD_RE = re.compile(
+    r"\bwith\s+(?P<keyword>flying|reach|trample|menace|haste|vigilance|"
+    r"first strike|double strike|defender|deathtouch|lifelink)$",
+    re.IGNORECASE,
+)
+
+
+def _extract_required_keyword(rest: str) -> tuple[str | None, str]:
+    """Read a trailing "with `<keyword>`" clause out of `rest` (CR 702), or
+    leave it untouched when there is none - see `_WITH_KEYWORD_RE`."""
+    match = _WITH_KEYWORD_RE.search(rest)
+    if match is None:
+        return None, rest
+    return match.group("keyword").lower(), rest[: match.start()].strip()
 
 
 _ALL_NOUNS = frozenset(_TYPE_NOUNS) | _PERMANENT_NOUNS | _PLAYER_NOUNS | _SPELL_NOUNS | _CARD_NOUNS
