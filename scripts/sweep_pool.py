@@ -272,7 +272,12 @@ def has_rules_text(printing: Card) -> bool:
 #: behaviour rather than a card silently doing nothing - so a dispatcher
 #: returning one of these by name is "notice", not "handled".
 _NOTICE_STAND_IN_NAMES = frozenset(
-    {"anaphoric_notice_only", "delayed_notice_only", "imprint_notice_only"}
+    {
+        "anaphoric_notice_only",
+        "delayed_notice_only",
+        "imprint_notice_only",
+        "conditional_notice_only",
+    }
 )
 
 HANDLED = "handled"
