@@ -118,3 +118,102 @@ def test_fiend_artisans_variable_pump_is_not_one_of_the_generalised_shapes():
             text=card("Fiend Artisan").oracle_text,
         )
     ]
+
+
+def test_a_triggered_abilitys_own_pump_reaches_the_layer_engine_with_no_row():
+    """Oliphaunt: "Whenever this creature attacks, another target creature you
+    control gets +2/+0 and gains trample until end of turn."
+
+    Ability-side routing to `create_continuous_effect_of_ability` used to be
+    a per-card `ACTIVATED_EFFECTS`/`TRIGGER_EFFECTS` row - Basking Rootwalla's
+    self-pump and Karn, the Great Creator's own +1 each had one whose only job
+    was to route the ability there, since the actual reading of the text was
+    always `parsed_layer_effects`'s. Oliphaunt has never had a row, and until
+    the routing itself became text-driven (`_is_layer_effect_text` in
+    `machines/effects.py`) its attack trigger reached nothing at all: the
+    trigger fired but resolved to do nothing, an ability-side twin of the
+    spell-side Tower Above bug below.
+
+    Proven functionally, not just on the computed board: CR 702.19b lets a
+    trampler assign only as much damage to a blocker as that blocker needs to
+    die, sending the rest to the defending player. Raging Goblin's printed 1
+    power could never trample a 2-toughness blocker at all; both the +2/+0
+    and the trample grant have to actually apply for one damage to reach bob.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", library=["Forest"], battlefield=["Oliphaunt", "Raging Goblin"])
+        .player("bob", library=["Forest"], battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    oliphaunt, goblin = scenario.creatures("Oliphaunt", "Raging Goblin", username="alice")
+    bears = scenario.creature("Grizzly Bears", "bob")
+
+    scenario.choose_trigger_targets("Oliphaunt", [goblin])
+    scenario.attack_with(oliphaunt, goblin)
+    scenario.block(goblin, bears)
+    scenario.pass_until_resolved()  # Oliphaunt's attack trigger
+
+    board = scenario.game.continuous_effects.board(scenario.game.battlefield)
+    assert board.of(goblin).power_toughness == (3, 1), "+2/+0, not a set - CR 613.4c"
+
+    bob_life_before = scenario.player("bob").life
+    scenario.combat_damage()
+
+    assert bears.zone.value == "graveyard", "2 lethal damage still kills the 2/2 blocker"
+    assert bob_life_before - scenario.player("bob").life == 6 + 1, (
+        "Oliphaunt's own 6 unblocked, plus one trampled through the goblin's blocker"
+    )
+
+
+def test_tower_above_leads_with_its_duration_and_still_fails_closed_with_a_notice():
+    """Tower Above: "Until end of turn, target creature gets +4/+4 and gains
+    trample, wither, and \"When this creature attacks, target creature blocks
+    it this turn if able.\""
+
+    The duration opens the sentence rather than trailing it -
+    `_LOOKS_LIKE_LAYER_EFFECT_RE` used to anchor on the *subject* coming
+    first, so this text failed even the loose "does this look like our
+    territory" check and produced neither an effect nor a `LayerNotice`: a
+    cast Tower Above did nothing, indistinguishable from a card with no text
+    at all. `_normalize_duration_first` reads the duration regardless of
+    where it sits (CR 611.2a states it "as stated by the spell or ability",
+    with no rule pinning its position), so the sentence is now recognised -
+    but the granted keywords are still not one of `_KNOWN_KEYWORDS`'s single
+    words (a bare "trample, wither, and \"...\"" is not this wave's territory
+    at all), so it fails closed with a notice rather than silently applying
+    only part of what is printed.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Tower Above"],
+            battlefield=["Forest", "Forest", "Forest", "Grizzly Bears"],
+        )
+        .player("bob", library=["Forest"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    forests = scenario.untapped_sources("Forest", "Forest", "Forest")
+
+    # `machines/targeting.py` counts both "target creature" phrases in the
+    # printed text - the real one in the pump sentence, and the one quoted
+    # inside the granted triggered ability's own text - as separate instances
+    # of the word (CR 115.3) needing an announcement, not just the first;
+    # that scan is unrelated to this file's routing fix, so both are aimed at
+    # the same creature here rather than reworking the announcement.
+    tower_above = scenario.cast_and_resolve("Tower Above", *forests, targets=[bears, bears])
+
+    board = scenario.game.continuous_effects.board(scenario.game.battlefield)
+    assert board.of(bears).power_toughness == (2, 2), "nothing applied - the printed 2/2 stands"
+    notices = scenario.game.continuous_effects.layer_notices
+    assert notices == [
+        LayerNotice(
+            source_id=tower_above.id,
+            source_name="Tower Above",
+            text=card("Tower Above").oracle_text,
+        )
+    ]

@@ -31,6 +31,8 @@ from magic_cards_model.machines.effects import (
     ACTIVATED_EFFECTS,
     EFFECTS,
     TRIGGER_EFFECTS,
+    _is_layer_effect_text,
+    create_continuous_effect_of_ability,
     parse_mixed_effect,
     parse_mixed_effect_for_spell,
 )
@@ -55,9 +57,17 @@ def _ability_fallback(text: str) -> object | None:
     tries a targeted clause, then a search clause, then a player clause on
     each clause of the text, so it subsumes the old three-call fallback
     (`parse_search_and_put_effect` or `parse_targeted_effect` or
-    `parse_player_effect`) this test used before.
+    `parse_player_effect`) this test used before. `_is_layer_effect_text`
+    (added when ability-side routing to `create_continuous_effect_of_ability`
+    became text-driven) is the second half of `_ability_effect_or_notice`'s
+    fallback: a continuous-effect shape `parse_mixed_effect`'s clause splitter
+    cannot read whole - Basking Rootwalla's and Karn, the Great Creator's own
+    rows were retired exactly because this reaches them without one.
     """
-    return parse_mixed_effect(text)
+    parsed = parse_mixed_effect(text)
+    if parsed is not None:
+        return parsed
+    return create_continuous_effect_of_ability if _is_layer_effect_text(text) else None
 
 
 def _triggered_effect_text(card_name: str, event: TriggerEvent, marker: str) -> str:
