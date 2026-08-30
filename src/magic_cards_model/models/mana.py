@@ -28,7 +28,7 @@ from itertools import combinations_with_replacement, product
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from .card import Card, Color, Layout
+from .card import Card, Color, Layout, Supertype, Type
 
 _SYMBOL = re.compile(r"\{([^}]+)\}")
 
@@ -441,40 +441,243 @@ def _reduction_parts(by: ManaCost) -> tuple[int, Counter[Color]]:
     return generic, colored
 
 
+# --------------------------------------------------------------------------
+# Spend restrictions (CR 106.6)
+# --------------------------------------------------------------------------
+#
+# CR 106.6, looked up this session: "Some spells or abilities that produce mana
+# restrict how that mana can be spent, have an additional effect that affects
+# the spell or ability that mana is spent on, or create a delayed triggered
+# ability..." Only the first of those three - the restriction on *how the mana
+# can be spent* - is modelled here.
+#
+# Two consequences of that wording decide the whole design:
+#
+# - The restriction is on the **mana**, not on its source. The mana ability has
+#   long since resolved (CR 605.3b) by the time the mana is spent, so the tag
+#   travels with the mana in the pool and outlives its source leaving the
+#   battlefield. `ManaPool.restricted` is where it lives.
+# - It restricts what the mana **can** pay for, not merely what the player is
+#   advised to pay with it, so a payment that would spend it on anything else
+#   is not a legal payment at all (CR 118.3a: "Paying mana is done by removing
+#   the indicated mana from a player's mana pool") and `payment_for` refuses
+#   rather than deprioritising.
+#
+# The tag dies with the mana: CR 703.4q and CR 500.5, both looked up this
+# session - "as each step or phase ends, any unspent mana left in a player's
+# mana pool empties" - so `ManaPool.empty` clears `restricted` along with
+# `floating`, and there is no separate lifetime to get wrong.
+
+
+class SpendPurpose(StrEnum):
+    """What mana is being spent on, as far as a CR 106.6 restriction cares.
+
+    Every printed restriction in this pool distinguishes casting a spell from
+    activating an ability - Eldrazi Temple's "cast colorless Eldrazi spells or
+    activate abilities of colorless Eldrazi" prints both halves side by side -
+    so this is the axis a restriction is checked on first.
+    """
+
+    CAST_SPELL = "cast_spell"
+    ACTIVATE_ABILITY = "activate_ability"
+
+
+class ManaSpend(BaseModel):
+    """The object mana is about to be spent on, reduced to what a restriction
+    can ask about: whether it is being cast or activated, and the
+    characteristics of the spell (for a cast) or of the ability's source (for
+    an activation).
+
+    "Abilities of creature sources" is a question about the **source**, not
+    about a spell - Shang-Chi's mana pays to activate an ability of a creature
+    already on the battlefield and does not pay for a creature *spell* - so the
+    two are built by two different constructors and never conflated.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    purpose: SpendPurpose
+    name: str = ""
+    """Whose cost this is, for the message when the mana is refused."""
+
+    types: frozenset[Type] = frozenset()
+    subtypes: frozenset[str] = frozenset()
+    """Lowercased, since a restriction's chosen creature type is matched
+    case-insensitively against a printed subtype."""
+    supertypes: frozenset[Supertype] = frozenset()
+    colorless: bool = False
+
+    @classmethod
+    def _of(cls, purpose: SpendPurpose, card: Card) -> "ManaSpend":
+        return cls(
+            purpose=purpose,
+            name=card.name,
+            types=frozenset(card.types),
+            subtypes=frozenset(subtype.lower() for subtype in card.subtypes),
+            supertypes=frozenset(card.supertypes),
+            colorless=not card.colors,
+        )
+
+    @classmethod
+    def casting(cls, card: Card) -> "ManaSpend":
+        """Mana spent to cast `card` as a spell."""
+        return cls._of(SpendPurpose.CAST_SPELL, card)
+
+    @classmethod
+    def activating(cls, card: Card) -> "ManaSpend":
+        """Mana spent to activate an ability whose source is `card`."""
+        return cls._of(SpendPurpose.ACTIVATE_ABILITY, card)
+
+
+class SpendClause(BaseModel):
+    """One thing a CR 106.6 restriction permits its mana to be spent on.
+
+    A restriction can permit more than one - Eldrazi Temple's is two clauses
+    joined by "or" - so a restriction holds a tuple of these and the mana is
+    spendable if **any** of them accepts.
+
+    Every field is a further narrowing and an empty one asks nothing, except
+    that `purpose` is always required: a clause with no purpose could not be
+    read off a printed sentence in the first place.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    purpose: SpendPurpose
+    types: frozenset[Type] = frozenset()
+    """At least one of these card types, "creature spell" style."""
+    subtypes: frozenset[str] = frozenset()
+    """At least one of these subtypes, lowercased - Cavern of Souls's chosen
+    creature type."""
+    supertypes: frozenset[Supertype] = frozenset()
+    """All of these supertypes - Delighted Halfling's "a legendary spell"."""
+    colorless: bool = False
+    """Eldrazi Temple's "colorless": the object must have no colours."""
+
+    def accepts(self, spend: ManaSpend) -> bool:
+        if spend.purpose is not self.purpose:
+            return False
+        if self.colorless and not spend.colorless:
+            return False
+        if self.types and not (self.types & spend.types):
+            return False
+        if self.subtypes and not (self.subtypes & spend.subtypes):
+            return False
+        return self.supertypes <= spend.supertypes
+
+
+class ManaRestriction(BaseModel):
+    """A CR 106.6 "Spend this mana only to ..." tag, carried by the mana.
+
+    `text` is the printed sentence verbatim, so a refusal can quote the card
+    rather than the parser's reading of it.
+
+    A restriction with **no** clauses is the fail-closed reading of a sentence
+    this engine could not parse: `allows` then answers False for everything, so
+    the mana exists, is announced (CR 106.4a), empties with the pool
+    (CR 703.4q), and pays for nothing at all. Producing mana that looks
+    spendable and is not is the exact defect this subsystem was written to
+    avoid, so an unread restriction fails towards refusing, never towards
+    permitting.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    text: str
+    clauses: tuple[SpendClause, ...] = ()
+
+    @property
+    def understood(self) -> bool:
+        """Whether the printed sentence was read into anything checkable."""
+        return bool(self.clauses)
+
+    def allows(self, spend: ManaSpend | None) -> bool:
+        """Whether this mana may pay for `spend`.
+
+        `None` means the caller could not say what the mana is being spent on.
+        That is refused for the same reason an unread sentence is: the engine
+        cannot show the restriction was honoured, so it does not pretend it
+        was.
+        """
+        if spend is None:
+            return False
+        return any(clause.accepts(spend) for clause in self.clauses)
+
+    def __str__(self) -> str:
+        return self.text
+
+
+class RestrictedMana(BaseModel):
+    """How much mana in a pool carries one particular restriction.
+
+    A pool holds a list of these beside its `floating` total, rather than
+    replacing `floating`, so every existing reader of the pool still sees the
+    whole amount of mana that is there - the restriction narrows what may be
+    *done* with it, and CR 106.4a still has the player announce all of it.
+    """
+
+    restriction: ManaRestriction
+    amounts: dict[Color, int] = Field(default_factory=dict)
+
+    @property
+    def total(self) -> int:
+        return sum(self.amounts.values())
+
+
 class ManaPayment(BaseModel):
     """One settled way to pay a cost: what each symbol was paid with.
 
     `options` lines up with `ManaCost.symbols`. `spend` is the mana taken out
     of the pool, of which `snow_spent` came from snow sources, and `life_paid`
     is what the payer still owes their life total (CR 118.13a).
+
+    `restricted_spent` says how much of `spend` carried a CR 106.6 restriction
+    and which - the pool needs it to take the mana out of the right bucket, and
+    a test needs it to prove that restricted mana was preferred over
+    unrestricted mana that would also have paid.
     """
 
     options: tuple[PaymentOption, ...] = ()
     spend: dict[Color, int] = Field(default_factory=dict)
     snow_spent: dict[Color, int] = Field(default_factory=dict)
+    restricted_spent: list[RestrictedMana] = Field(default_factory=list)
     life_paid: int = 0
 
     @property
     def mana_spent(self) -> int:
         return sum(self.spend.values())
 
+    @property
+    def restricted_mana_spent(self) -> int:
+        return sum(entry.total for entry in self.restricted_spent)
+
 
 # --------------------------------------------------------------------------
 # The pool
 # --------------------------------------------------------------------------
 
-_Bucket = tuple[Color, bool]  # (colour, came from a snow source)
+#: (colour, came from a snow source, index into `ManaPool.restricted` or -1
+#: for mana with no CR 106.6 restriction on it).
+_Bucket = tuple[Color, bool, int]
+
+#: The `_Bucket` slot meaning "no spend restriction".
+UNRESTRICTED = -1
 
 
 class ManaPool(BaseModel):
     """Mana floating in a player's pool.
 
     Mana knows whether it came from a snow source (CR 106.3), because `{S}`
-    can only be paid with mana that did.
+    can only be paid with mana that did, and whether a CR 106.6 spend
+    restriction came with it, because that decides what it may pay for at all.
     """
 
     floating: dict[Color, int] = Field(default_factory=dict)
     snow: dict[Color, int] = Field(default_factory=dict)
+    restricted: list[RestrictedMana] = Field(default_factory=list)
+    """The CR 106.6-restricted part of `floating`, one entry per distinct
+    restriction. Never more than `floating` holds of that colour; the rest of
+    `floating` is spendable on anything."""
 
     @property
     def total(self) -> int:
@@ -488,32 +691,76 @@ class ManaPool(BaseModel):
     def snow_total(self) -> int:
         return sum(self.snow.values())
 
-    def add(self, color: Color, amount: int = 1, snow: bool = False) -> None:
+    @property
+    def restricted_total(self) -> int:
+        return sum(entry.total for entry in self.restricted)
+
+    def restrictions(self) -> list[ManaRestriction]:
+        """Every distinct restriction currently on mana in this pool."""
+        return [entry.restriction for entry in self.restricted if entry.total]
+
+    def add(
+        self,
+        color: Color,
+        amount: int = 1,
+        snow: bool = False,
+        restriction: "ManaRestriction | None" = None,
+    ) -> None:
         if amount < 0:
             raise ValueError("cannot add a negative amount of mana")
         self.floating[color] = self.floating.get(color, 0) + amount
         if snow:
             self.snow[color] = self.snow.get(color, 0) + amount
+        if restriction is not None and amount:
+            entry = self._entry_for(restriction)
+            entry.amounts[color] = entry.amounts.get(color, 0) + amount
 
-    def add_all(self, colors: Iterable[Color], snow: bool = False) -> None:
+    def add_all(
+        self,
+        colors: Iterable[Color],
+        snow: bool = False,
+        restriction: "ManaRestriction | None" = None,
+    ) -> None:
         for color in colors:
-            self.add(color, snow=snow)
+            self.add(color, snow=snow, restriction=restriction)
 
     def empty(self) -> None:
-        """Empty the pool, as happens when each step and phase ends."""
+        """Empty the pool, as happens when each step and phase ends.
+
+        CR 703.4q and CR 500.5: "as each step or phase ends, any unspent mana
+        left in a player's mana pool empties". The restriction goes with the
+        mana it was on, because it was never anywhere else - it is not a
+        property of the source, which may still be on the battlefield, so
+        there is nothing left over to carry into the next step.
+        """
         self.floating = {}
         self.snow = {}
+        self.restricted = []
+
+    def _entry_for(self, restriction: ManaRestriction) -> RestrictedMana:
+        for entry in self.restricted:
+            if entry.restriction == restriction:
+                return entry
+        entry = RestrictedMana(restriction=restriction)
+        self.restricted.append(entry)
+        return entry
 
     # -- paying ------------------------------------------------------------
 
-    def can_pay(self, cost: ManaCost, *, life_available: int = 0) -> bool:
+    def can_pay(
+        self, cost: ManaCost, *, life_available: int = 0, spend: ManaSpend | None = None
+    ) -> bool:
         """True if some way of paying `cost` exists.
 
         `life_available` is what the payer may spend on Phyrexian symbols; it
         defaults to nothing, so a Phyrexian cost is only payable with mana
         unless the caller says the life is on the table.
+
+        `spend` is what the mana would be paid for, which is what any CR 106.6
+        restricted mana in the pool is judged against. Left out, restricted
+        mana is not counted as available at all.
         """
-        return self.payment_for(cost, life_available=life_available) is not None
+        return self.payment_for(cost, life_available=life_available, spend=spend) is not None
 
     def payment_for(
         self,
@@ -521,12 +768,19 @@ class ManaPool(BaseModel):
         *,
         life_available: int = 0,
         choices: Sequence[int | None] | None = None,
+        spend: ManaSpend | None = None,
     ) -> ManaPayment | None:
         """Work out a way to pay `cost`, or None if the pool cannot.
 
         The payer may pin any symbol's choice by passing `choices`, one index
         into that symbol's `options` per symbol, `None` to leave it open. What
         is left open is chosen for them: least life first, then least mana.
+
+        `spend` names what the cost belongs to, so mana carrying a CR 106.6
+        restriction can be judged against it. Restricted mana the restriction
+        does not permit is not available to this payment at all - a pool of
+        two restricted mana cannot pay a cost it is not allowed to pay, which
+        is a refusal, not a preference.
         """
         if cost.x_count:
             raise ValueError("resolve X with ManaCost.with_x before paying")
@@ -540,7 +794,7 @@ class ManaPool(BaseModel):
                 continue
             if best is not None and life > best.life_paid:
                 continue
-            settled = self._settle(options, life)
+            settled = self._settle(options, life, spend)
             if settled is None:
                 continue
             if best is None or (settled.life_paid, settled.mana_spent) < (
@@ -556,6 +810,7 @@ class ManaPool(BaseModel):
         *,
         life_available: int = 0,
         payment: ManaPayment | None = None,
+        spend: ManaSpend | None = None,
     ) -> "ManaPool":
         """Spend `cost` from the pool and return what is left floating.
 
@@ -567,7 +822,7 @@ class ManaPool(BaseModel):
         `payment_for` first when the cost has a Phyrexian symbol.
         """
         if payment is None:
-            payment = self.payment_for(cost, life_available=life_available)
+            payment = self.payment_for(cost, life_available=life_available, spend=spend)
         if payment is None:
             raise ValueError(f"pool {self.floating} cannot pay {cost}")
 
@@ -578,9 +833,16 @@ class ManaPool(BaseModel):
             self.floating[color] = left
         for color, amount in payment.snow_spent.items():
             self.snow[color] = max(self.snow.get(color, 0) - amount, 0)
+        for taken in payment.restricted_spent:
+            entry = self._entry_for(taken.restriction)
+            for color, amount in taken.amounts.items():
+                entry.amounts[color] = max(entry.amounts.get(color, 0) - amount, 0)
 
         self.floating = {color: n for color, n in self.floating.items() if n > 0}
         self.snow = {color: n for color, n in self.snow.items() if n > 0}
+        for entry in self.restricted:
+            entry.amounts = {color: n for color, n in entry.amounts.items() if n > 0}
+        self.restricted = [entry for entry in self.restricted if entry.amounts]
         return self
 
     # -- the search --------------------------------------------------------
@@ -617,7 +879,12 @@ class ManaPool(BaseModel):
                 assignment.update(group)
             yield tuple(assignment[i] for i in range(len(cost.symbols)))
 
-    def _settle(self, options: Sequence[PaymentOption], life: int) -> ManaPayment | None:
+    def _settle(
+        self,
+        options: Sequence[PaymentOption],
+        life: int,
+        spend_on: ManaSpend | None = None,
+    ) -> ManaPayment | None:
         """Can the pool cover these fixed demands? If so, with what mana?"""
         generic = sum(option.generic for option in options)
         snow_needed = sum(1 for option in options if option.snow)
@@ -625,11 +892,14 @@ class ManaPool(BaseModel):
             option.color for option in options if option.color is not None and not option.snow
         )
 
-        buckets = self._buckets()
+        buckets = self._spendable_buckets(spend_on)
         # Most restrictive demand first: a fixed colour, then snow (any colour
         # but only from a snow source), then generic, which takes anything.
+        # Each `allowed` list is filtered out of `buckets`, which is already in
+        # preference order, so the order survives into the flow solver - that
+        # is what makes a restricted bucket the one spent when either would do.
         demands: list[tuple[int, list[_Bucket]]] = [
-            (count, [(color, False), (color, True)]) for color, count in colors.items()
+            (count, [b for b in buckets if b[0] == color]) for color, count in colors.items()
         ]
         if snow_needed:
             demands.append((snow_needed, [b for b in buckets if b[1]]))
@@ -642,30 +912,86 @@ class ManaPool(BaseModel):
 
         spend: Counter[Color] = Counter()
         snow_spent: Counter[Color] = Counter()
-        for (color, is_snow), amount in spent.items():
+        restricted_spent: dict[int, Counter[Color]] = {}
+        for (color, is_snow, slot), amount in spent.items():
             spend[color] += amount
             if is_snow:
                 snow_spent[color] += amount
+            if slot != UNRESTRICTED:
+                restricted_spent.setdefault(slot, Counter())[color] += amount
         return ManaPayment(
             options=tuple(options),
             spend=dict(spend),
             snow_spent=dict(snow_spent),
+            restricted_spent=[
+                RestrictedMana(restriction=self.restricted[slot].restriction, amounts=dict(taken))
+                for slot, taken in sorted(restricted_spent.items())
+            ],
             life_paid=life,
         )
 
-    def _buckets(self) -> dict[_Bucket, int]:
-        """The pool split into snow and non-snow mana, plentiful first.
+    def _spendable_buckets(self, spend_on: ManaSpend | None) -> dict[_Bucket, int]:
+        """`_buckets`, minus every bucket CR 106.6 forbids this payment.
 
-        Non-snow comes first so a payment that has a choice leaves snow mana
-        floating for a `{S}` that may still need it.
+        Mana whose restriction does not permit `spend_on` is not merely a last
+        resort here, it is absent: the pool genuinely cannot pay with it, and a
+        cost that needs it is refused (CR 118.3a - paying is removing the
+        indicated mana from the pool, and this mana may not be removed for
+        this).
+        """
+        return {
+            bucket: amount
+            for bucket, amount in self._buckets().items()
+            if bucket[2] == UNRESTRICTED or self.restricted[bucket[2]].restriction.allows(spend_on)
+        }
+
+    def _buckets(self) -> dict[_Bucket, int]:
+        """The pool split by restriction and by snow, least flexible first.
+
+        The order is the whole of this engine's spending preference, and it is
+        one rule: spend the mana that can do the least, so the mana that can do
+        the most is what stays floating.
+
+        - **Restricted before unrestricted.** A CR 106.6 restriction only ever
+          narrows what mana can do, so restricted mana is strictly the less
+          useful of the two and burning the unrestricted mana first would
+          strand it - a board where a legal play is then wrongly refused. This
+          is a choice about *which* mana pays among several that legally could
+          (CR 118.3a leaves it to the payer); it never lets restricted mana pay
+          for something its restriction forbids, which `_spendable_buckets` has
+          already made impossible.
+        - **Non-snow before snow**, for exactly the same reason: snow mana can
+          pay a `{S}` and anything else, so it is the flexible one and is left
+          floating for a `{S}` that may still need it (CR 107.4h, 106.3).
+        - Then the most plentiful bucket, which only decides between equals.
+
+        The snow count is allocated to the unrestricted part of a colour
+        first. Nothing in this card pool produces mana that is both snow and
+        restricted, so the two never actually meet; when they do, the choice
+        made here is the conservative one, keeping the restricted bucket the
+        plain one.
         """
         buckets: dict[_Bucket, int] = {}
         for color, amount in self.floating.items():
-            snow = min(self.snow.get(color, 0), amount)
-            for is_snow, count in ((False, amount - snow), (True, snow)):
+            per_slot = [
+                (slot, entry.amounts.get(color, 0))
+                for slot, entry in enumerate(self.restricted)
+                if entry.amounts.get(color, 0)
+            ]
+            restricted_here = sum(count for _slot, count in per_slot)
+            unrestricted = max(amount - restricted_here, 0)
+            snow = min(self.snow.get(color, 0), unrestricted)
+            for is_snow, count in ((False, unrestricted - snow), (True, snow)):
                 if count:
-                    buckets[(color, is_snow)] = count
-        return dict(sorted(buckets.items(), key=lambda item: (item[0][1], -item[1])))
+                    buckets[(color, is_snow, UNRESTRICTED)] = count
+            for slot, count in per_slot:
+                buckets[(color, False, slot)] = count
+        return dict(
+            sorted(
+                buckets.items(),
+                key=lambda item: (item[0][2] == UNRESTRICTED, item[0][1], -item[1]),
+            )
+        )
 
 
 def _assign(

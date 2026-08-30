@@ -102,7 +102,13 @@ from ..models.zone import Zone
 # --------------------------------------------------------------------------
 
 _SYMBOL = re.compile(r"\{([WUBRGC])\}")
-_ANY_COLOR = re.compile(r"one mana of any color", re.IGNORECASE)
+#: "Add one mana of any color." (Cavern of Souls, Delighted Halfling) and
+#: "Add two mana of any one color." (Shang-Chi, Master of Kung Fu). The second
+#: shape adds more than one mana and requires them all to be the same colour,
+#: which is what "any **one** color" says; the count is kept so `resolve` adds
+#: that many rather than always one.
+_ANY_COLOR = re.compile(r"(?P<count>one|two|three|a) mana of any (?:one )?color", re.IGNORECASE)
+_ANY_COLOR_COUNTS = {"a": 1, "one": 1, "two": 2, "three": 3}
 _MANA_COST_IN_COST = re.compile(r"\{(\d+|[WUBRGCX])\}")
 
 #: `Add {G}, {R}, or {W}` is a choice; `Add {C}{C}` is both at once. The comma
@@ -162,6 +168,10 @@ class ManaAbility(BaseModel):
     options: list[list[Color]]
     #: True if the ability can add mana of any colour.
     any_color: bool = False
+    #: How much mana an `any_color` ability adds, all of the one chosen colour.
+    #: 1 for "Add one mana of any color"; 2 for Shang-Chi's "Add two mana of
+    #: any one color."
+    any_color_count: int = 1
     #: True if activating it costs mana. CR 605.1a says nothing about the cost
     #: containing mana - such an ability is still a mana ability - so this is
     #: shape information for callers that need to know what there is to pay,
@@ -181,7 +191,7 @@ class ManaAbility(BaseModel):
     @property
     def amount(self) -> int:
         """How much mana one activation adds, ignoring any conditional clause."""
-        return 1 if self.any_color else len(self.options[0])
+        return self.any_color_count if self.any_color else len(self.options[0])
 
     def produces(self, color: Color | None = None) -> list[Color]:
         """What this ability adds, given a chosen colour where it has a choice.
@@ -244,7 +254,7 @@ class ManaAbility(BaseModel):
         if any_color:
             if color is None:
                 raise ValueError("this ability adds any colour; pass the colour chosen")
-            return [color]
+            return [color] * self.any_color_count
 
         if len(options) == 1:
             only = options[0]
@@ -291,8 +301,14 @@ def parse_mana_abilities(card: Card) -> list[ManaAbility]:
 
 
 def _parse_effect(effect: str) -> ManaAbility | None:
-    if _ANY_COLOR.search(effect):
-        return ManaAbility(options=[[color] for color in _COLORS], any_color=True)
+    any_color = _ANY_COLOR.search(effect)
+    if any_color:
+        count = _ANY_COLOR_COUNTS[any_color.group("count").lower()]
+        return ManaAbility(
+            options=[[color] * count for color in _COLORS],
+            any_color=True,
+            any_color_count=count,
+        )
 
     # A choice reads `{G}, {R}, or {W}`; a multiple reads `{C}{C}`.
     parts = [part for part in _CHOICE_SEPARATOR.split(effect) if _SYMBOL.search(part)]

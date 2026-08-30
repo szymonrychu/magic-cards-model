@@ -359,20 +359,19 @@ def test_mox_opal_metalcraft_works_with_three_artifacts():
 
 
 # --------------------------------------------------------------------------
-# Spend restrictions (defect 6) - explicitly punted, see docs/engine-coverage.md
+# Spend restrictions (CR 106.6) - the *production* half.
+#
+# What the restricted mana may then pay for, and what it refuses, is a mechanic
+# of its own and lives in `tests/scenarios/test_mana_spend_restrictions.py`.
+# These two only check that activating the restricted ability still produces
+# the mana and that the tag arrives on it.
 # --------------------------------------------------------------------------
 
 
-@pytest.mark.xfail(
-    reason=(
-        "Spend restrictions ('Spend this mana only to cast colorless Eldrazi "
-        "spells or activate abilities of colorless Eldrazi') are not modelled: "
-        "`ManaPool`/`ManaPayment` carry no restriction tag, so nothing is ever "
-        "checked at spend time. Eldrazi Temple still makes the mana - only the "
-        "restriction is unenforced. See docs/engine-coverage.md."
-    )
-)
-def test_eldrazi_temple_spend_restriction_is_not_enforced():
+def test_eldrazi_temples_restricted_ability_produces_tagged_mana():
+    """`{T}: Add {C}{C}. Spend this mana only to cast colorless Eldrazi spells
+    or activate abilities of colorless Eldrazi.` - two colourless mana, both
+    carrying the restriction (CR 106.6)."""
     scenario = Scenario().player("alice", battlefield=["Eldrazi Temple"]).build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     (temple,) = scenario.untapped_sources("Eldrazi Temple")
@@ -380,25 +379,21 @@ def test_eldrazi_temple_spend_restriction_is_not_enforced():
     scenario.activate(temple, index=1)
     pool = scenario.player().mana_pool
 
-    # What real enforcement would need: mana produced this way refusing to pay
-    # for a non-Eldrazi spell. Nothing here checks that, which is the gap.
     assert pool.floating == {Color.COLORLESS: 2}
-    raise AssertionError("spend restrictions are not modelled; remove this xfail once they are")
+    assert pool.restricted_total == 2
+    assert pool.restrictions()[0].understood is True
 
 
-@pytest.mark.xfail(
-    reason=(
-        "Cavern of Souls restricts its any-colour mana to casting a creature "
-        "spell of the chosen type, which needs both a per-object 'chosen "
-        "type' marker and a spend restriction - neither is modelled. "
-        "See docs/engine-coverage.md."
-    )
-)
-def test_cavern_of_souls_spend_restriction_is_not_enforced():
+def test_cavern_of_souls_restricted_ability_produces_tagged_mana():
+    """Cavern of Souls's any-colour ability, with no creature type chosen: the
+    mana is still produced and still announced (CR 106.4a), and its restriction
+    is present but unreadable, so it pays for nothing at all."""
     scenario = Scenario().player("alice", battlefield=["Cavern of Souls"]).build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     (cavern,) = scenario.untapped_sources("Cavern of Souls")
 
     scenario.activate(cavern, index=1, color=Color.BLUE)
+    pool = scenario.player().mana_pool
 
-    raise AssertionError("spend restrictions and chosen-type tracking are not modelled")
+    assert pool.floating == {Color.BLUE: 1}
+    assert pool.restrictions()[0].understood is False
