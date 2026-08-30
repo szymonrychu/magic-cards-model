@@ -1708,8 +1708,22 @@ def is_resolution_layer_effect_text(text: str | None) -> bool:
     """
     for sentence in _effect_sentences(text):
         normalized = _normalize_duration_first(sentence)
-        if _LOOKS_LIKE_ANTHEM_RE.match(normalized):
+        anthem_opening = _LOOKS_LIKE_ANTHEM_RE.match(normalized)
+        has_duration = Duration.UNTIL_END_OF_TURN in normalized
+        if anthem_opening and not has_duration:
+            # CR 611.3's own static shape: "lasts for as long as the object
+            # with that static ability remains on the battlefield", i.e.
+            # never expires on its own - the one shape excluded on purpose.
             continue
+        if anthem_opening and has_duration:
+            # Same opening words, but an explicit duration ("Creatures you
+            # control get +1/+0 until end of turn.", Violent Outburst) is
+            # never CR 611.3's forever-lasting anthem - it can only be CR
+            # 611.2's one-shot group pump, which `_ANTHEM_RE` does not parse
+            # (it has no duration group at all) and nothing else here reads
+            # either, so this counts as a failed-parse attempt rather than
+            # routing through the anthem's durationless `continue` above.
+            return True
         if _parse_layer_sentence(sentence) is not None:
             return True
         if _LOOKS_LIKE_RESOLUTION_LAYER_EFFECT_RE.match(normalized):

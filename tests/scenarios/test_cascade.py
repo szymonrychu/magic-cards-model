@@ -23,8 +23,14 @@ writes CR 702.85a's expansion out as a `TriggeredAbility` and
 `machines/triggers.py` matches the cast event against it. CR 702.85a's "functions
 only while the spell with cascade is on the stack" is what makes the *spell* the
 source, which is why `Game.emit` asking the spells on the stack matters. What it
-does when it resolves is `cascade`, still driven by hand here - see the xfail at
-the bottom and `docs/engine-coverage.md`.
+does when it resolves - the exile-and-bottom half - is also automatic now:
+`Game._effect_of` asks `machines/keywords.keyword_effect_for` before the
+card-name registries, so the trigger resolving on the stack really does call
+`cascade`. The "you may cast it" half stays a scenario's own decision, the same
+concession every optional trigger in this engine makes (CR 608.2d has nobody
+here to ask) - see `test_the_hit_may_be_cast_from_exile_without_paying_its_
+mana_cost` and `tests/scenarios/test_living_end.py`'s cascade-into-Living-End
+test for the free cast actually happening and actually resolving.
 
 The exiling here is checked against the current wording of CR 702.85a, which
 says "a nonland card **whose mana value is less than this spell's mana value**".
@@ -38,14 +44,6 @@ from magic_cards_model.machines.keywords import cascade, has_cascade, keyword_tr
 from magic_cards_model.models import Zone
 from tests.cards import card
 from tests.scenarios.harness import Scenario
-
-NO_KEYWORD_EFFECT_DISPATCH = (
-    "The cascade trigger is generated and put on the stack above the spell, and then "
-    "resolves doing nothing: Game._effect_of looks an ability's effect up by "
-    "(card name, event) in machines/effects.TRIGGER_EFFECTS, and a keyword ability "
-    "belongs to no card name. machines/keywords.keyword_effect_for answers and "
-    "nothing consults it. See docs/engine-coverage.md."
-)
 
 
 def board(*library: str) -> Scenario:
@@ -236,3 +234,48 @@ def test_the_cascade_trigger_exiles_when_it_resolves():
 
     bolt = scenario.find("Lightning Bolt", Zone.EXILE)
     assert bolt.zone is Zone.EXILE
+
+
+def test_violent_outbursts_own_pump_fails_closed_instead_of_silently():
+    """Cascade is only half of Violent Outburst's printed text; the other half
+    is "Creatures you control get +1/+0 until end of turn." - a card whose own
+    resolution has nothing to do with cascade, but which still has to survive
+    being cast at all through a text pipeline that now strips the Cascade
+    line's reminder text out of the way (see `_CASCADE_LINE_RE` in
+    `machines/effects.py`, added this wave so the periods inside that reminder
+    stop being read as sentence boundaries around the real effect).
+
+    What is left is a group pump with a duration - "Creatures you control get
+    +N/+N until end of turn" - which `machines/layers.py` does not build a
+    continuous effect for yet: CR 611.3's anthem shape ("Creatures you control
+    get +N/+N", no duration, always a permanent's own static ability) used to
+    swallow this one too by matching on its opening words alone, so it never
+    even reached the fail-closed check. Now the duration takes it out of the
+    anthem exemption and into `LayerNotice` territory instead: nothing is
+    silently skipped, and nothing pretends the team got bigger when it did
+    not.
+    """
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Violent Outburst"],
+            library=["Lightning Bolt"],
+            battlefield=["Mountain", "Forest", "Forest", "Grizzly Bears"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.cast_onto_stack(
+        "Violent Outburst", *scenario.untapped_sources("Mountain", "Forest", "Forest")
+    )
+
+    scenario.resolve_top()  # the cascade trigger
+    scenario.resolve_top()  # Violent Outburst itself
+
+    bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD)
+    assert scenario.game.characteristics_of(bears).power_toughness == (2, 2)
+    assert len(scenario.game.continuous_effects.layer_notices) == 1
+    assert scenario.game.continuous_effects.layer_notices[0].source_name == "Violent Outburst"
