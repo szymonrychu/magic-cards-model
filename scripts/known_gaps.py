@@ -1,0 +1,81 @@
+"""Print the known-gap list that playtest player agents must not report.
+
+The playtest loop hands each player agent a "do not report these" list. Curating
+that list by hand went stale three times in one session - each miss cost a whole
+game, because a player spent its only report on a mechanic already documented as
+missing (Utopia Sprawl's colour choice, Ocelot Pride's ascend, Mobilize's
+tokens).
+
+The list has a single source of truth already: the "Not modelled" table in
+`docs/engine-coverage.md`. This script reads it, so the brief cannot drift from
+the doc. Keep the doc current and the players stay current.
+
+    uv run python scripts/known_gaps.py            # one line per gap
+    uv run python scripts/known_gaps.py --detail   # include the note column
+"""
+
+from __future__ import annotations
+
+import argparse
+import re
+from pathlib import Path
+
+DOC = Path(__file__).resolve().parent.parent / "docs" / "engine-coverage.md"
+
+_HEADING = re.compile(r"^##\s+(?P<title>.+?)\s*$")
+_SEPARATOR = re.compile(r"^\|[\s:|-]+\|$")
+
+
+def not_modelled_rows(text: str) -> list[tuple[str, str, str]]:
+    """Every row of the "Not modelled" table, as (area, rules, note)."""
+    rows: list[tuple[str, str, str]] = []
+    in_section = False
+    for line in text.splitlines():
+        heading = _HEADING.match(line)
+        if heading:
+            # Any following "##" heading ends the section.
+            in_section = heading.group("title").strip().lower() == "not modelled"
+            continue
+        if not in_section or not line.startswith("|"):
+            continue
+        if _SEPARATOR.match(line):
+            continue
+        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+        if len(cells) < 3 or cells[0].lower() == "area":
+            continue
+        rows.append((cells[0], cells[1], cells[2]))
+    return rows
+
+
+def _plain(markdown: str) -> str:
+    """Strip the markdown a terminal brief does not need."""
+    text = re.sub(r"`([^`]*)`", r"\1", markdown)
+    text = re.sub(r"\*\*([^*]*)\*\*", r"\1", text)
+    return re.sub(r"\*([^*]*)\*", r"\1", text)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--detail",
+        action="store_true",
+        help="include each gap's note, not just its name",
+    )
+    args = parser.parse_args()
+
+    rows = not_modelled_rows(DOC.read_text())
+    if not rows:
+        raise SystemExit(f"no 'Not modelled' table found in {DOC}")
+
+    print("Known gaps - do NOT report these. Source: docs/engine-coverage.md")
+    print()
+    for area, rules, note in rows:
+        print(f"- {_plain(area)} ({_plain(rules)})")
+        if args.detail:
+            print(f"    {_plain(note)}")
+    print()
+    print(f"{len(rows)} known gaps.")
+
+
+if __name__ == "__main__":
+    main()
