@@ -1174,6 +1174,7 @@ class Casting(BaseModel):
             self.game.note_cast(
                 self.spell,
                 keyword=self.keyword_used,
+                origin_zone=self.origin_zone,
                 face=self.face,
                 modes=list(self.chosen_mode_numbers),
                 mode_targets=[list(slice_) for slice_ in self.mode_target_slices],
