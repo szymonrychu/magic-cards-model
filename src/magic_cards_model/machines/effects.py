@@ -6451,6 +6451,41 @@ def vexing_bauble_counter(game: "Game", ability: AbilityOnStack) -> None:
         game.counter(spell)
 
 
+def chalice_of_the_void_counter(game: "Game", ability: AbilityOnStack) -> None:
+    """Chalice of the Void: "Whenever a player casts a spell with mana value
+    equal to the number of charge counters on this artifact, counter that
+    spell."
+
+    The same shape as `vexing_bauble_counter`: "that spell" is the trigger
+    event's own subject, not a target CR 601.2c ever asked anyone to choose,
+    so it is read off `ability.event` and not through `Game.resolve_targets`.
+    `machines/triggers.condition_matches` (CAST_SPELL, the
+    `_MANA_VALUE_EQUALS_COUNTERS` shape) has already done the mana-value-vs-
+    charge-counters comparison by the time this runs - CR 603.4's trigger
+    check, done once, when the spell was cast - so this only has to find the
+    spell and counter it (CR 701.6a: "A countered spell is put into its
+    owner's graveyard"), including the case where the counting player
+    controls Chalice too (the card names no exception, so CR 603.2 fires it
+    on the caster's own casts exactly the same as an opponent's).
+
+    Triggers on casting, so the spell is still on the stack (CR 601.2i's
+    announcement is long done, resolution has not started) when this ability
+    resolves above it - `Game.counter` puts it wherever the CR actually sends
+    a countered spell (its owner's graveyard, or a rebound/flashback
+    replacement's own exile), not always the graveyard outright.
+
+    CR 608.2b's ordinary "the target is gone" outcome covers a spell that
+    already left the stack by the time this resolves (countered or resolved
+    first by something that responded to it): nothing to counter, so nothing
+    happens - the same fizzle-quietly behaviour `vexing_bauble_counter` has.
+    """
+    if ability.event is None or ability.event.subject_id is None:
+        return
+    spell = game.find_by_id(ability.event.subject_id)
+    if spell is not None and spell in game.stack:
+        game.counter(spell)
+
+
 #: One triggered ability, identified: the card it is printed on, the event it
 #: watches, and a lowercase fragment of its own printed text. The fragment is
 #: empty for a card whose triggers on that event are all one entry's business.
@@ -6510,6 +6545,7 @@ TRIGGER_EFFECTS: dict[TriggerKey, AbilityEffect] = {
     # reaches it the same way Devourer of Destiny's does above.
     #
     ("Vexing Bauble", TriggerEvent.CAST_SPELL, ""): vexing_bauble_counter,
+    ("Chalice of the Void", TriggerEvent.CAST_SPELL, ""): chalice_of_the_void_counter,
     #
     # Ranger-Captain of Eos's "you may search your library for a creature card
     # with mana value 1 or less, reveal it, put it into your hand, then

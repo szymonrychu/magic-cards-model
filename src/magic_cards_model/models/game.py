@@ -1205,6 +1205,22 @@ class Game(BaseModel):
 
         # CR 601.2a: the card is now a spell on the stack, so the casting event
         # has happened and anything watching for it triggers (CR 603.2).
+        # CR 202.3e: while this spell is on the stack, an {X} in its cost is
+        # the value actually chosen for X, not CR 107.3g's off-stack "X is 0"
+        # reading `card_state.card.cmc` gives - `Game.note_cast` (called by
+        # `Casting.cast` before this) already has that value on record, the
+        # same one CR 107.3m's own X-counters replacement in
+        # `machines/replacement.py` reads. Chalice of the Void's "mana value
+        # equal to the number of charge counters" needs this real number, not
+        # the printed one - see `GameEvent.amount`'s docstring.
+        # CR 107.3i: "all instances of X on an object have the same value at
+        # any given time" - Walking Ballista's `{X}{X}` is two symbols each
+        # worth the one chosen X, so the printed cmc (which already reads
+        # both as 0, CR 107.3g) gains `count * x_value`, not just `x_value`.
+        mana_value = card_state.card.cmc or 0
+        x_count = (card_state.mana_cost or "").count("{X}")
+        if x_count:
+            mana_value += x_count * self.cast_record(card_state).x_value
         self.emit(
             GameEvent(
                 event=TriggerEvent.CAST_SPELL,
@@ -1215,6 +1231,7 @@ class Game(BaseModel):
                 subject_types=card_state.types,
                 subject_subtypes=card_state.subtypes,
                 player=controller,
+                amount=int(mana_value),
             )
         )
         # CR 117.3c gives priority straight back to the caster, so this is the
