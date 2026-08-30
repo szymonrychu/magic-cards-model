@@ -75,6 +75,7 @@ from ..models.token import (
 from ..models.zone import Zone
 from .abilities import TriggerEvent
 from .casting import PlayAction
+from .casting_restrictions import parse_casting_rule_clause
 from .decisions import Decision, DecisionKind
 from .delayed import (
     DelayedTrigger,
@@ -7286,6 +7287,11 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     if add_mana is not None:
         return add_mana
     # -- end Wave W11 single-clause addition -------------------------------
+    # -- Wave W5's own single-clause addition (CR 611.1) -------------------
+    casting_rule = parse_casting_rule_clause(clause, for_spell=for_spell)
+    if casting_rule is not None:
+        return casting_rule
+    # -- end Wave W5 single-clause addition ---------------------------------
     player_clause = _parse_optional_player_clause(clause)
     if player_clause is None:
         return None

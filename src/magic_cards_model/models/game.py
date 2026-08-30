@@ -23,6 +23,7 @@ from ..machines.casting import (
     play_permissions_on,
     usable_play_permission,
 )
+from ..machines.casting_restrictions import CastingRuleEffect
 from ..machines.combat import (
     Attack,
     CombatMachine,
@@ -91,6 +92,7 @@ from ..machines.layers import (
     Characteristics,
     ComputedBoard,
     ContinuousEffects,
+    Duration,
     LayerContext,
     LayerNotice,
     additional_land_plays,
@@ -603,6 +605,21 @@ class Game(BaseModel):
     priority: PriorityMachine | None = None
     combat: CombatMachine = Field(default_factory=CombatMachine)
     lands_played: dict[str, int] = Field(default_factory=dict)
+    casting_rule_effects: list[CastingRuleEffect] = Field(default_factory=list)
+    """CR 611.1's third kind of continuous effect - one that "affects players
+    or the rules of the game" rather than any object's characteristics, so
+    the layer system (CR 613) has nothing to compute for it. Ranger-Captain of
+    Eos's "Your opponents can't cast noncreature spells this turn" is
+    recorded here when its sacrifice-cost ability resolves, and Teferi, Time
+    Raveler's "+1: Until your next turn, you may cast sorcery spells as
+    though they had flash" is recorded here too - both outlive the instant
+    they were created, unlike Teferi's *other* half (his static restricting
+    opponents to sorcery-speed timing), which is read straight off the
+    battlefield by `machines.casting_restrictions.sorcery_speed_restriction_
+    source` and needs no record at all. `cleanup_step` drops the
+    "until end of turn" entries and `begin_turn_for` drops the "until your
+    next turn" ones, exactly as `play_permissions` already does for its own
+    two durations."""
     play_permissions: list[PlayPermission] = Field(default_factory=list)
     """CR 601.3's dynamic half: permissions a resolving effect handed out to
     specific cards - Ugin, Eye of the Storms' −11, Ragavan, Nimble Pilferer's
@@ -1234,6 +1251,13 @@ class Game(BaseModel):
         self.play_permissions = [
             permission for permission in self.play_permissions if not permission.until_end_of_turn
         ]
+        # CR 514.2's same sentence, for CR 611.1's "affects the rules of the
+        # game" effects: Ranger-Captain of Eos's "this turn" noncreature ban.
+        self.casting_rule_effects = [
+            effect
+            for effect in self.casting_rule_effects
+            if effect.duration is not Duration.UNTIL_END_OF_TURN
+        ]
         return discarded
 
     def remove_all_damage(self) -> None:
@@ -1255,6 +1279,17 @@ class Game(BaseModel):
         for permanent in self.permanents_controlled_by(username):
             permanent.summoning_sick = False
         self.continuous_effects.end_for_next_turn(username)
+        # Teferi, Time Raveler's +1: "Until your next turn" ends the moment
+        # this player's next turn would begin (CR 800.4m), the same instant
+        # `end_for_next_turn` clears its own layer effects for this player.
+        self.casting_rule_effects = [
+            effect
+            for effect in self.casting_rule_effects
+            if not (
+                effect.duration is Duration.UNTIL_YOUR_NEXT_TURN
+                and effect.until_next_turn_of == username
+            )
+        ]
 
     def can_activate_tap_ability(self, permanent: CardState) -> bool:
         """Whether a `{T}` ability of this permanent may be activated (CR 302.6).
