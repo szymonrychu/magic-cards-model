@@ -236,24 +236,23 @@ def test_the_cascade_trigger_exiles_when_it_resolves():
     assert bolt.zone is Zone.EXILE
 
 
-def test_violent_outbursts_own_pump_fails_closed_instead_of_silently():
+def test_violent_outbursts_own_pump_actually_pumps():
     """Cascade is only half of Violent Outburst's printed text; the other half
     is "Creatures you control get +1/+0 until end of turn." - a card whose own
     resolution has nothing to do with cascade, but which still has to survive
-    being cast at all through a text pipeline that now strips the Cascade
-    line's reminder text out of the way (see `_CASCADE_LINE_RE` in
-    `machines/effects.py`, added this wave so the periods inside that reminder
-    stop being read as sentence boundaries around the real effect).
+    being cast at all through a text pipeline that strips the Cascade line's
+    reminder text out of the way (see `_CASCADE_LINE_RE` in
+    `machines/effects.py`, so the periods inside that reminder stop being
+    read as sentence boundaries around the real effect).
 
     What is left is a group pump with a duration - "Creatures you control get
-    +N/+N until end of turn" - which `machines/layers.py` does not build a
-    continuous effect for yet: CR 611.3's anthem shape ("Creatures you control
-    get +N/+N", no duration, always a permanent's own static ability) used to
-    swallow this one too by matching on its opening words alone, so it never
-    even reached the fail-closed check. Now the duration takes it out of the
-    anthem exemption and into `LayerNotice` territory instead: nothing is
-    silently skipped, and nothing pretends the team got bigger when it did
-    not.
+    +N/+N until end of turn" (CR 611.2) - told apart from CR 611.3's anthem
+    ("Creatures you control get +N/+N", no duration, always a permanent's own
+    static ability) by that explicit duration. `_mass_pump_spell_effect` in
+    `machines/effects.py` now builds the actual continuous effect: every
+    creature alice controls when this resolves - Grizzly Bears and Violent
+    Outburst's own token/spell side has none, so just the Bears - gets +1/+0
+    until end of turn.
     """
     scenario = (
         Scenario()
@@ -276,6 +275,5 @@ def test_violent_outbursts_own_pump_fails_closed_instead_of_silently():
     scenario.resolve_top()  # Violent Outburst itself
 
     bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD)
-    assert scenario.game.characteristics_of(bears).power_toughness == (2, 2)
-    assert len(scenario.game.continuous_effects.layer_notices) == 1
-    assert scenario.game.continuous_effects.layer_notices[0].source_name == "Violent Outburst"
+    assert scenario.game.characteristics_of(bears).power_toughness == (3, 2)
+    assert scenario.game.continuous_effects.layer_notices == []

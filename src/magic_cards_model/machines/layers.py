@@ -1208,6 +1208,28 @@ _ANTHEM_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "[Other] creatures [you control|your opponents control] [gain <keyword(s)>
+#: and ]get +N/+N until end of turn." (Violent Outburst's own "Creatures you
+#: control get +1/+0 until end of turn."; Craterhoof Behemoth's "creatures you
+#: control gain trample and get +X/+X until end of turn" once
+#: `machines/effects.py` has already substituted a literal number for "X" -
+#: see `_mass_pump_ability_effect`/`_mass_pump_spell_effect` there, which read
+#: the "where X is ..." magnitude off the *live* board before this regex ever
+#: sees the sentence, since this module has no `Game` to ask). CR 611.2's
+#: one-shot group pump, told apart from `_ANTHEM_RE`'s CR 611.3 anthem by its
+#: explicit duration (`is_resolution_layer_effect_text`'s docstring already
+#: documents why an explicit duration can never be the anthem's forever-lasting
+#: shape). The row `docs/engine-coverage.md` used to carry for this - "the
+#: actual continuous effect for a team-wide temporary pump is still not built" -
+#: is closed by this shape plus `_mass_pump_until_eot_builder` below.
+_MASS_PUMP_UNTIL_EOT_RE = re.compile(
+    r"^(?P<other>other )?creatures (?P<whose>you control|your opponents control) "
+    r"(?:gain (?P<keywords>[a-z]+(?: [a-z]+)?(?:,\s*[a-z]+(?: [a-z]+)?)*"
+    r"(?:\s+and\s+[a-z]+(?: [a-z]+)?)?) and )?"
+    r"get (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) until end of turn\.?$",
+    re.IGNORECASE,
+)
+
 #: "[Other] creatures [you control|your opponents control] have <keyword>[,
 #: <keyword>, ... and <keyword>]." (True Conviction: "Creatures you control
 #: have double strike and lifelink.") - the anthem shape's keyword-granting
@@ -1292,6 +1314,19 @@ _BECOMES_CREATURE_WITH_MANA_VALUE_PT_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "Target permanent becomes an artifact in addition to its other types until
+#: end of turn." (Liquimetal Coating) - layer 4 (CR 613.1d), and "in addition
+#: to" rather than a replacement: `add_type` keeps whatever types the
+#: permanent already had, unlike `set_basic_land_type`'s CR 305.7 path (used
+#: nowhere near this shape) which would strip them. `extra_type` is read
+#: through the same `_OTHER_PERMANENT_TYPE_WORDS` map Karn's own "becomes a[n]
+#: <type> creature" shape above uses.
+_BECOMES_TYPE_IN_ADDITION_RE = re.compile(
+    r"^target permanent becomes an? (?P<extra_type>[a-z]+) in addition to its "
+    r"other types until end of turn\.?$",
+    re.IGNORECASE,
+)
+
 #: The pump/keyword-grant/base-P/T-set/becomes-creature shapes' opening words
 #: - everything `_LOOKS_LIKE_LAYER_EFFECT_RE` matches **except** the anthem
 #: shape - so a caller can ask "does this look like a one-shot *resolution*
@@ -1299,7 +1334,8 @@ _BECOMES_CREATURE_WITH_MANA_VALUE_PT_RE = re.compile(
 #: answering yes. `machines/effects.py`'s routing needs exactly that
 #: distinction: see `is_resolution_layer_effect_text`.
 _LOOKS_LIKE_RESOLUTION_LAYER_EFFECT_RE = re.compile(
-    rf"^{_SUBJECT} (?:gets?|gains?|has|have)\b|^Until your next turn, up to \S+ target\b",
+    rf"^{_SUBJECT} (?:gets?|gains?|has|have)\b|^Until your next turn, up to \S+ target\b"
+    r"|^target permanent becomes\b",
     re.IGNORECASE,
 )
 
@@ -1495,6 +1531,58 @@ def _anthem_builder(
     return builder
 
 
+def _mass_pump_until_eot_builder(power: int, toughness: int, keywords: list[str]) -> EffectBuilder:
+    """ "[Other] creatures [you control|your opponents control] [gain <keyword(s)>
+    and ]get +N/+N until end of turn." (CR 611.2).
+
+    Unlike `_anthem_builder`'s live `Selector` - right because a *static*
+    ability's group (CR 611.3) has to keep re-including whoever is on the
+    battlefield the moment CR 613.5 recomputes it - this is CR 611.2c's
+    fixed-at-resolution shape: "the set of objects it affects is determined
+    when the effect begins ... any objects that come under [that] control
+    later aren't affected." The caller (`machines/effects.py`'s
+    `_run_mass_pump`) resolves `targets` to the concrete creatures this
+    affects once, before calling, the same way `_pump_and_keyword_builder`
+    already fixes a single subject's id rather than re-selecting it - a
+    creature that enters afterward is never swept in, and the sublayer 7c
+    modifier plus each layer 6 grant are set-once, not recomputed.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        effects: list[ContinuousEffect] = []
+        for target in targets:
+            effects.append(
+                ContinuousEffect(
+                    description=f"{source.name}: {target.name} gets {power:+d}/{toughness:+d}",
+                    layer=Layer.POWER_TOUGHNESS,
+                    sublayer=Sublayer.MODIFY,
+                    timestamp=timestamp,
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=_only(target.id),
+                    modification=modify_power_toughness(power, toughness),
+                )
+            )
+            for keyword in keywords:
+                effects.append(
+                    ContinuousEffect(
+                        description=f"{source.name}: {target.name} gains {keyword}",
+                        layer=Layer.ABILITY,
+                        timestamp=timestamp,
+                        duration=Duration.UNTIL_END_OF_TURN,
+                        selector=_only(target.id),
+                        modification=grant_ability(keyword),
+                    )
+                )
+        return effects
+
+    return builder
+
+
 def _creature_group(source: CardState, *, other: bool, whose: str) -> tuple[Selector, str]:
     """The selector and printed subject `_anthem_builder` and
     `_indefinite_keyword_grant_builder` share: "[other] creatures [you
@@ -1580,6 +1668,40 @@ def _base_pt_set_builder(power: int, toughness: int) -> EffectBuilder:
                 duration=Duration.UNTIL_END_OF_TURN,
                 selector=_only(target.id),
                 modification=set_power_toughness(power, toughness),
+            )
+            for target in targets
+        ]
+
+    return builder
+
+
+def _becomes_type_in_addition_builder(extra_type: Type) -> EffectBuilder:
+    """ "Target permanent becomes an artifact in addition to its other types
+    until end of turn." (Liquimetal Coating) - layer 4 only (CR 613.1d),
+    additive: `add_type` keeps every type the permanent already had, which is
+    the whole difference from Karn's "becomes a[n] <type> creature" shape
+    above (that one *replaces* the target's types with the ones it names,
+    CR 205.1a - it just happens to name the old type again alongside the
+    new one). One-shot and temporary (CR 611.2), unlike a static ability's
+    indefinite grant, so it is timestamped and fixed to `targets` here the
+    same way `_pump_and_keyword_builder` fixes its own single subject.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: {target.name} becomes a "
+                f"{extra_type.value} in addition to its other types",
+                layer=Layer.TYPE,
+                timestamp=timestamp,
+                duration=Duration.UNTIL_END_OF_TURN,
+                selector=_only(target.id),
+                modification=add_type(extra_type),
             )
             for target in targets
         ]
@@ -1713,6 +1835,16 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
             whose=match.group("whose").lower(),
             line=sentence,
         )
+    if match := _MASS_PUMP_UNTIL_EOT_RE.fullmatch(sentence):
+        keywords: list[str] = []
+        if match.group("keywords") is not None:
+            validated = _split_and_validate_keywords(match.group("keywords"))
+            if validated is None:
+                return None
+            keywords = validated
+        return _mass_pump_until_eot_builder(
+            int(match.group("power")), int(match.group("toughness")), keywords
+        )
     if match := _INDEFINITE_KEYWORD_GRANT_RE.fullmatch(sentence):
         keywords = _split_and_validate_keywords(match.group("keywords"))
         if keywords is None:
@@ -1745,6 +1877,11 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
         if extra_type is None:
             return None
         return _becomes_creature_with_mana_value_pt_builder(extra_type)
+    if match := _BECOMES_TYPE_IN_ADDITION_RE.fullmatch(sentence):
+        extra_type = _OTHER_PERMANENT_TYPE_WORDS.get(match.group("extra_type").lower())
+        if extra_type is None:
+            return None
+        return _becomes_type_in_addition_builder(extra_type)
     return None
 
 
