@@ -53,7 +53,7 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ..models.card import Card, Type
+from ..models.card import Card, Color, Type
 from ..models.card_state import CardState, Counter, TargetRef
 from ..models.zone import Zone
 from .abilities import (
@@ -67,7 +67,7 @@ from .abilities import (
 from .turn import Step
 
 if TYPE_CHECKING:  # pragma: no cover - import cycle: Game builds on the machines
-    from ..models.game import Game
+    from ..models.game import CastRecord, Game
 
 
 class GameEvent(BaseModel):
@@ -779,6 +779,68 @@ def _first_spell_this_turn_holds(
     return False
 
 
+#: CR 702.33d's "if it was kicked" (Sowing Mycospawn) and CR 702.33f's
+#: per-kicker variant, "if it was kicked with its [quality] kicker" - not in
+#: the pool, so only the plain form is matched; a named-kicker clause falls
+#: through to the fail-closed default rather than being misread as the plain
+#: form.
+_KICKED_CLAUSE = re.compile(r"^it was kicked$")
+
+#: CR 601.2h's "no mana was spent to cast it" (Vexing Bauble) and "[mana
+#: symbols] was spent to cast it" (Wistfulness's "{G}{G}", Drowner of Truth's
+#: "{C}") - both always phrased as "... to cast it" in the pool, never "...
+#: to cast this spell/creature".
+_NO_MANA_SPENT_CLAUSE = re.compile(r"^no mana was spent to cast it$")
+_MANA_SPENT_CLAUSE = re.compile(r"^(?P<symbols>(?:\{[wubrgc]\})+) was spent to cast it$")
+_MANA_SYMBOL_LETTER = re.compile(r"\{([wubrgc])\}")
+_COLOR_LETTERS: dict[str, Color] = {
+    "w": Color.WHITE,
+    "u": Color.BLUE,
+    "b": Color.BLACK,
+    "r": Color.RED,
+    "g": Color.GREEN,
+    "c": Color.COLORLESS,
+}
+
+
+def _cast_record_for_clause(
+    game: "Game", ability: TriggeredAbility, source: CardState, event: "GameEvent | None"
+) -> "CastRecord | None":
+    """The `CastRecord` a mana-spent or kicked clause's "it" refers to, or
+    `None` if there is no longer one to read.
+
+    A self-referential clause - Sowing Mycospawn's "if it was kicked" ("it" is
+    "this spell"), Wistfulness's and Drowner of Truth's "if ... was spent to
+    cast it" ("it" is "this creature"/"this spell") - means the ability's own
+    source, whose id is unchanged whether it is still a spell on the stack or
+    has since resolved onto the battlefield (CR 400.7 moves the object, not its
+    identity). Vexing Bauble's "Whenever a player casts a spell, if no mana was
+    spent to cast it" is not self-referential at all: "it" is *that* spell, the
+    trigger event's own subject, not Vexing Bauble itself.
+
+    CR 601.2h's spend is recorded by `Game.note_cast` before the CAST_SPELL
+    event that reaches this is ever emitted (`Game.put_on_stack`), so the
+    record exists by the time this is first asked about, whichever object it
+    belongs to. It does not necessarily still exist by CR 608.2a's *recheck*:
+    `Game.resolve_top` (both the successful and the fizzled branches) and
+    `Game.counter` all discard a spell's `CastRecord` once nothing on the
+    normal path will read it again, but an intervening *if* one stack level up
+    can still be waiting to ask about that exact spell after it fizzles or is
+    countered. Reading `Game.cast_records` directly here, instead of going
+    through `Game.cast_record`'s empty-record default, is what keeps "nobody
+    ever recorded a cast" and "the record was cleaned up" both distinguishable
+    from a genuine "no mana was spent" - the caller is the one that turns a
+    missing record into a fail-closed `InterveningIfNotice` rather than a
+    silent, wrong-object-shaped true.
+    """
+    if event is not None and not _self_referential(ability.condition, source.name):
+        subject = game.find_by_id(event.subject_id) if event.subject_id else None
+        if subject is None:
+            return None
+        return game.cast_records.get(subject.id)
+    return game.cast_records.get(source.id)
+
+
 def intervening_if_holds(
     game: "Game",
     ability: TriggeredAbility,
@@ -791,15 +853,20 @@ def intervening_if_holds(
     condition is true. The ability triggers only if it's true" (CR 603.4);
     CR 608.2a rechecks the same clause again as the ability resolves.
 
-    Four clause shapes are read: persist's "it had no -1/-1 counters on it"
+    Clause shapes read: persist's "it had no -1/-1 counters on it"
     (CR 702.79a), Thopter Assembly's "you control no [subtype]s other than
-    this creature", Ocelot Pride's "you gained life this turn", and Alania,
-    Divergent Storm's "it's the first [type] spell ... you've cast this turn".
+    this creature", Ocelot Pride's "you gained life this turn", Alania,
+    Divergent Storm's "it's the first [type] spell ... you've cast this turn",
+    kicker's "if it was kicked" (CR 702.33a, 702.33d), and CR 601.2h's "if no
+    mana was spent to cast it" / "if [mana symbols] was spent to cast it"
+    (Vexing Bauble, Wistfulness, Drowner of Truth). The last two read
+    `Game.cast_record` - see `_cast_record_for_clause` for whose record "it"
+    means, and `machines/casting.Casting.cast`/`Game.note_cast` for where the
+    record comes from: `CostPayment.mana_payment.spend` at the moment CR 601.2h
+    pays the total cost, and `Casting.kicked` at the moment CR 601.2b announces
+    which optional additional costs are being paid.
 
-    Anything else - kicker's "if it was kicked" (CR 702.33a), Vexing Bauble's
-    and Wistfulness's "if [no] mana [of a color] was spent to cast it"
-    (CR 601.2h reads what was spent, but nothing records it against the spell
-    afterwards) - **fails closed**: CR 603.4 only lets the ability trigger if
+    Anything else **fails closed**: CR 603.4 only lets the ability trigger if
     the condition is true, and a condition this module cannot read is not
     *known* to be true, so the ability does not trigger. This is the opposite
     of the old default, which read anything it could not recognise as true -
@@ -810,6 +877,29 @@ def intervening_if_holds(
     clause = (ability.intervening_if or "").lower().strip()
     if not clause:
         return True
+
+    if _KICKED_CLAUSE.match(clause):
+        record = _cast_record_for_clause(game, ability, source, event)
+        if record is None:
+            return _fail_closed(game, ability, source)
+        return record.kicked > 0
+
+    if _NO_MANA_SPENT_CLAUSE.match(clause):
+        record = _cast_record_for_clause(game, ability, source, event)
+        if record is None:
+            return _fail_closed(game, ability, source)
+        return not record.any_mana_spent
+
+    mana_match = _MANA_SPENT_CLAUSE.match(clause)
+    if mana_match is not None:
+        record = _cast_record_for_clause(game, ability, source, event)
+        if record is None:
+            return _fail_closed(game, ability, source)
+        required: dict[Color, int] = {}
+        for letter in _MANA_SYMBOL_LETTER.findall(mana_match.group("symbols")):
+            color = _COLOR_LETTERS[letter]
+            required[color] = required.get(color, 0) + 1
+        return all(record.mana_of_color_spent(color) >= count for color, count in required.items())
 
     if clause == "it had no -1/-1 counters on it":
         # CR 702.79a asks about the permanent as it last existed on the
@@ -838,6 +928,16 @@ def intervening_if_holds(
     if first_spell is not None:
         return first_spell
 
+    return _fail_closed(game, ability, source)
+
+
+def _fail_closed(game: "Game", ability: TriggeredAbility, source: CardState) -> bool:
+    """Record CR 603.4/608.2a's refusal and answer false - never true - for a
+    clause this module cannot currently read, whether that is because nothing
+    here recognises its shape or because the `CastRecord` it needs is gone
+    (see `_cast_record_for_clause`). Shared so every unreadable clause leaves
+    the same trail on `game.intervening_if_notices`.
+    """
     game.intervening_if_notices.append(
         InterveningIfNotice(
             source_id=source.id,

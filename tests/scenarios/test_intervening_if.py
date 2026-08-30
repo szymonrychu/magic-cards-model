@@ -22,81 +22,26 @@ rather than indistinguishable from a legal "the condition was false".
 Of the pool's seven cards with an intervening *if*:
 
 - **evaluated for real**: Ocelot Pride ("you gained life this turn", tracked by
-  `Game.life_gained_this_turn`) and Thopter Assembly ("you control no Thopters
-  other than this creature", already read before this fix).
-- **fail closed, audibly**: Sowing Mycospawn ("it was kicked" - kicker payment
-  is not recorded past `CastingStep`), Vexing Bauble and Wistfulness's two
-  abilities ("[no] mana [of a color] was spent to cast it" - nothing records
-  what was spent on a resolved spell), and Alania, Divergent Storm ("it's the
-  first instant spell, the first sorcery spell, or the first Otter spell other
-  than Alania you've cast this turn" - `_first_spell_this_turn_holds` reads
-  this shape, but `machines/abilities._parse_triggered` splits the intervening
-  *if* on its *own* internal commas and never hands it the whole clause; see
-  the pre-existing `xfail`,
+  `Game.life_gained_this_turn`), Thopter Assembly ("you control no Thopters
+  other than this creature", already read before this fix), Sowing Mycospawn
+  ("it was kicked", CR 702.33d, read off `Game.cast_record(spell).kicked`),
+  and Vexing Bauble and Wistfulness's two abilities ("[no] mana [of a color]
+  was spent to cast it", CR 601.2h, read off
+  `Game.cast_record(spell).mana_spent` - see `test_mana_spent_intervening_if.py`
+  for these last two).
+- **fail closed, audibly**: Alania, Divergent Storm ("it's the first instant
+  spell, the first sorcery spell, or the first Otter spell other than Alania
+  you've cast this turn" - `_first_spell_this_turn_holds` reads this shape,
+  but `machines/abilities._parse_triggered` splits the intervening *if* on its
+  *own* internal commas and never hands it the whole clause; see the
+  pre-existing `xfail`,
   `tests/test_abilities.py::test_an_intervening_if_with_internal_commas_splits_correctly`).
 """
 
 from magic_cards_model.machines import Step
-from magic_cards_model.machines.triggers import InterveningIfNotice
 from tests.scenarios.harness import Scenario
 
 # -- fails closed, audibly ---------------------------------------------------
-
-
-def test_vexing_bauble_fails_closed_on_mana_spent():
-    """ "Whenever a player casts a spell, if no mana was spent to cast it,
-    counter that spell." Nothing records what was spent on a resolved spell,
-    so the clause cannot be read - the ability must not trigger, and the
-    refusal must be visible.
-    """
-    scenario = (
-        Scenario()
-        .player(
-            "alice",
-            library=["Forest"],
-            hand=["Lightning Bolt"],
-            battlefield=["Vexing Bauble", "Mountain"],
-        )
-        .player("bob", library=["Forest"])
-        .build()
-    )
-    scenario.start_at(Step.PRECOMBAT_MAIN)
-    (mountain,) = scenario.untapped_sources("Mountain")
-
-    bauble = scenario.creature("Vexing Bauble", "alice")
-    scenario.cast_onto_stack("Lightning Bolt", mountain, targets=[scenario.player("bob")])
-
-    assert scenario.stack_names() == ["Lightning Bolt"]
-    assert scenario.pending_triggers == []
-    assert scenario.game.intervening_if_notices == [
-        InterveningIfNotice(
-            source_id=bauble.id,
-            source_name="Vexing Bauble",
-            clause="no mana was spent to cast it",
-        )
-    ]
-
-
-def test_wistfulness_fails_closed_on_both_mana_spent_clauses():
-    """Wistfulness prints two ENTERS triggers, each gated on a different color
-    pair having been spent. Neither can be read, so neither fires - and both
-    refusals are recorded, not just the first.
-    """
-    scenario = (
-        Scenario()
-        .player("alice", library=["Forest"], hand=["Wistfulness"], battlefield=["Forest"] * 5)
-        .player("bob", library=["Forest"], battlefield=["Grizzly Bears"])
-        .build()
-    )
-    scenario.start_at(Step.PRECOMBAT_MAIN)
-    sources = scenario.untapped_sources(*(["Forest"] * 5))
-    scenario.cast_onto_stack("Wistfulness", *sources, auto=True)
-    scenario.pass_until_resolved()
-
-    assert scenario.stack_names() == []
-    assert scenario.pending_triggers == []
-    clauses = {notice.clause for notice in scenario.game.intervening_if_notices}
-    assert clauses == {"{G}{G} was spent to cast it", "{U}{U} was spent to cast it"}
 
 
 def test_alania_fails_closed_because_the_clause_is_not_split_correctly():
