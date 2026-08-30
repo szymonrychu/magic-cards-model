@@ -62,24 +62,36 @@ type="rules")` in the session that wrote this file:
   (CR 704.5g), not something this file has to force by hand.
 
 Guide of Souls and Ajani, Nacatl Avenger also print "When you do" clauses,
-and both are deliberately **not** built out here:
+each a shape `_parse_reflexive_sacrifice_clause` alone cannot read - one is a
+paid cost rather than a sacrifice, the other a mandatory action rather than a
+"you may" - and a later wave (W4) generalised the dispatcher to cover both:
 
-- Guide of Souls' "you may pay {E}{E}{E}" is blocked on energy being
-  gainable but not payable at all (no general may-pay-a-cost decision
-  exists yet - see `docs/engine-coverage.md`). `test_guide_of_souls_...`
-  below checks the *other* thing this wave fixes for it: the failure is now
-  a recorded `ReflexiveClauseNotice`, not silence.
-- Ajani, Nacatl Avenger's "Create a token. When you do, if ..., he deals
-  damage ..." is a *mandatory* action (not "you may") with an intervening
-  *if* (CR 603.4) nested inside the reflexive clause - a second missing
-  primitive on top of the first. `test_ajani_...` below checks the same
-  notice, not the intervening-if.
+- **Guide of Souls** - "you may pay {E}{E}{E}. When you do, ..." -
+  `_parse_reflexive_pay_energy_clause`, built on `DecisionKind.PAY_ENERGY`/
+  `Game.may_pay_energy` (Static Prison's own primitive).
+  `test_guide_of_souls_pays_energy_and_the_reflexive_ability_resolves` below
+  is the happy path; `test_guide_of_souls_declining_the_energy_creates_no_
+  trigger_and_spends_nothing` and `test_guide_of_souls_target_removed_in_
+  response_fizzles_the_reflexive_ability` are its corner cases.
+- **Ajani, Nacatl Avenger** - "Create a token. When you do, if you control a
+  red permanent other than Ajani, he deals damage ..." -
+  `_parse_reflexive_mandatory_token_clause`, CR 603.12's "instruct" half (no
+  `MAY` decision at all) with CR 603.4's intervening *if* checked once,
+  immediately after the token exists. `test_ajani_...` below covers both the
+  condition holding and failing, driven through a real activation: a sibling
+  wave taught CR 712's transform to reach `Game.activated_abilities`, so
+  Ajani is transformed for real (CR 701.27a) and the `0` is activated the
+  ordinary way, rather than this file building the back face's
+  `AbilityOnStack` by hand the way it had to before that landed.
 """
 
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card_state import Counter
 from tests.scenarios.harness import Scenario
+
+GUIDE = "Guide of Souls"
+AJANI = "Ajani, Nacatl Pariah // Ajani, Nacatl Avenger"
 
 GRIST = "Grist, the Hunger Tide"
 
@@ -296,61 +308,132 @@ def test_an_if_you_do_card_still_has_no_separate_stack_object():
 
 
 # --------------------------------------------------------------------------
-# Silence must become a notice (Guide of Souls, Ajani, Nacatl Avenger)
+# Guide of Souls: a non-sacrifice paid cost (CR 107.14, CR 118.3, CR 603.12)
 # --------------------------------------------------------------------------
 
 
-def test_guide_of_souls_attack_trigger_records_a_notice_instead_of_nothing():
-    """ "Whenever you attack, you may pay {E}{E}{E}. When you do, ..." -
-    paying energy is a missing primitive (`docs/engine-coverage.md`), so
-    `_parse_reflexive_sacrifice_clause` cannot read this shape at all. Before
-    this wave the trigger resolved and did nothing, with no trace anywhere;
-    now `_unreadable_reflexive_clause` records why.
-    """
+def _guide_board(energy: int = 3) -> "Scenario":
     scenario = (
         Scenario()
         .manual_turn_based_actions()
-        .player("alice", battlefield=["Guide of Souls", "Grizzly Bears"])
+        .player("alice", battlefield=[GUIDE, "Grizzly Bears"])
         .player("bob", battlefield=["Hill Giant"])
         .build()
     )
-    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.player("alice").add_counters(Counter.ENERGY, energy)
+    return scenario
+
+
+def test_guide_of_souls_pays_energy_and_the_reflexive_ability_resolves():
+    """Paying {E}{E}{E} creates a second, independent stack object (CR
+    603.12, same as Grist above), and its own consequence - two +1/+1
+    counters, a flying counter (CR 122.1b), and "becomes an Angel in
+    addition to its other types" (layer 4, CR 613.1d, no stated duration so
+    it lasts for as long as the permanent exists, CR 611.2c) - runs once
+    *that* ability resolves, not before.
+    """
+    scenario = _guide_board()
     bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+
+    scenario.attack_with(bears)
+    scenario.game.put_triggers_on_stack()  # the outer "Whenever you attack" trigger only
+    # CR 603.3d: queued *after* the outer trigger's own batch, which shares
+    # Guide's name and would otherwise consume-and-discard this answer before
+    # the reflexive ability - not created until the outer trigger resolves,
+    # below - ever exists to ask for it (`Game.put_triggers_on_stack`'s own
+    # docstring: "consumed by this one batch and no other").
+    scenario.choose_trigger_targets(GUIDE, [bears])
+    scenario.will_pay_the_energy(True, source=GUIDE)
+    scenario.resolve_top()  # "Whenever you attack": pays energy, creates the reflexive ability
+
+    assert scenario.player("alice").energy == 0
+    assert scenario.stack_names() == [f"{GUIDE}'s triggered ability"]
+    assert scenario.game.reflexive_clause_notices == []
+
+    scenario.resolve_top()  # the reflexive ability itself
+
+    assert bears.counters[Counter.PLUS_ONE] == 2
+    assert bears.counters["flying"] == 1
+    assert "Angel" in scenario.game.characteristics_of(bears).subtypes
+    from magic_cards_model.models.card import Type
+
+    assert Type.CREATURE in scenario.game.characteristics_of(bears).types, (
+        "additive (CR 205.1b): still a Bear, now an Angel too"
+    )
+
+    from magic_cards_model.machines.combat import Keyword, has_keyword
+
+    assert has_keyword(bears, Keyword.FLYING, scenario.game), "CR 122.1b: the counter grants it"
+
+
+def test_guide_of_souls_declining_the_energy_creates_no_trigger_and_spends_nothing():
+    """CR 608.2d: declining is legal - no energy spent, no reflexive ability,
+    no second stack object, the same shape Grist's own decline test proves."""
+    scenario = _guide_board()
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.start_at(Step.DECLARE_ATTACKERS)
 
     scenario.attack_with(bears)
     scenario.game.put_triggers_on_stack()
+    scenario.will_pay_the_energy(False, source=GUIDE)
     scenario.resolve_top()
 
-    assert len(scenario.game.reflexive_clause_notices) == 1
-    notice = scenario.game.reflexive_clause_notices[0]
-    assert notice.source_name == "Guide of Souls"
-    assert "pay {E}{E}{E}" in notice.text
-    assert scenario.stack_names() == [], "no reflexive ability was ever created"
+    assert scenario.player("alice").energy == 3
+    assert bears.counters.as_dict() == {}
+    assert scenario.stack_names() == []
 
 
-def test_ajani_nacatl_avengers_mandatory_reflexive_clause_records_a_notice():
-    """Avenger's "0: Create a 2/1 ... token. When you do, if you control a red
-    permanent other than Ajani, he deals damage ... to any target." - a
-    *mandatory* action (not "you may") with an intervening *if* (CR 603.4)
-    nested in the reflexive clause, so `_parse_reflexive_sacrifice_clause`
-    (which only reads "you may sacrifice ...") correctly refuses it too.
-
-    Driven through a real activation now that CR 712's transform reaches
-    characteristics: Ajani is transformed (CR 701.27a), which makes him the
-    planeswalker Ajani, Nacatl Avenger with that face's loyalty abilities and
-    only those (CR 712.8e, CR 109.3), and the `0` is activated and resolved by
-    the ordinary path. Before that landed, `Game.activated_abilities` read the
-    front face regardless and this test had to build the `AbilityOnStack` by
-    hand.
-    """
+def test_guide_of_souls_target_removed_in_response_fizzles_the_reflexive_ability():
+    """CR 608.2b: bob's Lightning Bolt kills the chosen attacker in response.
+    The energy stays spent - there is no path back to refund a cost, the same
+    "no refund on a fizzle" rule `test_a_target_that_dies_in_response_
+    fizzles_but_the_sacrifice_stays_paid` proves for Grist's sacrifice."""
     scenario = (
         Scenario()
         .manual_turn_based_actions()
-        .player("alice", battlefield=["Ajani, Nacatl Pariah // Ajani, Nacatl Avenger"])
-        .player("bob", battlefield=[])
+        .player("alice", battlefield=[GUIDE, "Raging Goblin"])
+        .player("bob", hand=["Lightning Bolt"], battlefield=["Mountain"])
         .build()
     )
-    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.player("alice").add_counters(Counter.ENERGY, 3)
+    goblin = scenario.creature("Raging Goblin", "alice")
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+
+    scenario.attack_with(goblin)
+    scenario.game.put_triggers_on_stack()
+    scenario.will_pay_the_energy(True, source=GUIDE)
+    scenario.resolve_top()
+    scenario.choose_trigger_targets(GUIDE, [goblin])
+
+    assert scenario.player("alice").energy == 0
+
+    scenario.pass_priority("alice")
+    (mountain,) = scenario.untapped_sources("Mountain", username="bob")
+    scenario.cast_and_resolve("Lightning Bolt", mountain, username="bob", targets=[goblin])
+    assert goblin.zone is Zone.GRAVEYARD
+
+    scenario.pass_until_resolved()  # the reflexive ability: fizzles (CR 608.2b)
+
+    assert scenario.stack_names() == []
+    assert scenario.player("alice").energy == 0, "the cost stays paid - there is no refund"
+
+
+# --------------------------------------------------------------------------
+# Ajani, Nacatl Avenger: a mandatory action with a nested intervening if
+# (CR 603.4, CR 603.12)
+# --------------------------------------------------------------------------
+
+
+def _ajani_activated_zero_ability(scenario: "Scenario"):
+    """Driven through a real activation now that CR 712's transform reaches
+    characteristics: Ajani is transformed (CR 701.27a), which makes him the
+    planeswalker Ajani, Nacatl Avenger with that face's loyalty abilities and
+    only those (CR 712.8e, CR 109.3), and the `0` is activated through the
+    ordinary path - `Game.activated_abilities` now reads the up face, so this
+    no longer needs the hand-built `AbilityOnStack` this file used before that
+    landed.
+    """
     # CR 201.1: an untransformed double-faced permanent has only the front
     # face's name ("Ajani, Nacatl Pariah") - `machines/triggers.py`'s own name
     # fix, unrelated to this file.
@@ -359,11 +442,70 @@ def test_ajani_nacatl_avengers_mandatory_reflexive_clause_records_a_notice():
     ajani.add_counters(Counter.LOYALTY, 3)  # CR 306.5b, as if he had entered so
     zero_ability = scenario.game.activated_abilities(ajani)[1]
     assert zero_ability.cost == "0"
-
     scenario.activate(ajani, index=1)
+    return ajani
+
+
+def test_ajani_deals_damage_when_the_intervening_if_holds():
+    """A red permanent other than Ajani (Raging Goblin) makes CR 603.4's
+    condition true - checked once, immediately after the mandatory token
+    exists (CR 603.12) - so the reflexive ability is created and, once it
+    resolves, deals damage equal to the number of creatures alice controls
+    to whatever it targets. Transformed Ajani is a planeswalker, not a
+    creature (CR 712.8e, CR 109.3), so that count is the goblin and the
+    fresh token - two, not three - the same characteristic-boundary case
+    the CR 712 transform wave's own fix makes visible here.
+    """
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", battlefield=[AJANI, "Raging Goblin"])
+        .player("bob", battlefield=[])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bob = scenario.player("bob")
+    ajani = _ajani_activated_zero_ability(scenario)
+    # CR 603.3d: queued ahead of time - `resolve_top` below both resolves the
+    # "0" ability and (CR 603.3, `Game._before_priority`) puts the reflexive
+    # ability it creates on the stack in the same call, asking its target then.
+    scenario.choose_trigger_targets(ajani.name, ["bob"])
+    scenario.resolve_top()  # "0": creates the token, checks the if, creates the reflexive ability
+
+    tokens = [state for state in scenario.game.battlefield if state.name == "Cat Warrior Token"]
+    assert len(tokens) == 1
+    assert scenario.game.reflexive_clause_notices == []
+    assert scenario.stack_names() == [f"{ajani.name}'s triggered ability"]
+
+    scenario.resolve_top()  # the reflexive ability itself
+
+    assert bob.life == 18, (
+        "2 creatures: Raging Goblin and the fresh token - Ajani is a planeswalker"
+    )
+
+
+def test_ajani_creates_no_reflexive_ability_when_the_intervening_if_fails():
+    """With no other red permanent, CR 603.4's condition is false the moment
+    it is checked - the token is still created (CR 603.12's "instruct" half
+    has no `MAY` to decline), but no reflexive ability, no stack object, and
+    no damage follow it, rather than a reflexive ability that resolves and
+    silently does nothing.
+    """
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", battlefield=[AJANI])
+        .player("bob", battlefield=[])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bob = scenario.player("bob")
+    _ajani_activated_zero_ability(scenario)
     scenario.resolve_top()
 
-    assert len(scenario.game.reflexive_clause_notices) == 1
-    notice = scenario.game.reflexive_clause_notices[0]
-    assert "Create a 2/1" in notice.text
-    assert "When you do" in notice.text
+    tokens = [state for state in scenario.game.battlefield if state.name == "Cat Warrior Token"]
+    assert len(tokens) == 1, "CR 603.12: the mandatory action still happens"
+    assert scenario.game.reflexive_clause_notices == []
+    assert not scenario.game.pending_triggers
+    assert scenario.stack_names() == []
+    assert bob.life == 20

@@ -94,12 +94,14 @@ from .layers import (
     LayerContext,
     LayerNotice,
     Sublayer,
+    add_subtype,
     add_type,
     count_card_types,
     creatures_controlled_by,
     creatures_controlled_by_opponents_of,
     grant_ability,
     is_resolution_layer_effect_text,
+    modify_power_toughness,
     only_this_incarnation,
     other_creatures_controlled_by,
     parsed_layer_effects,
@@ -1178,6 +1180,27 @@ def damage_each_opponent(amount: int) -> AbilityEffect:
         source = ability.source(game)
         for opponent in _opponents(game, ability.controller):
             game.deal_damage(opponent, amount, source=source)
+
+    return effect
+
+
+def damage_each_creature(amount: int) -> AbilityEffect:
+    """Extinguisher Battleship: "this Spacecraft deals 4 damage to each
+    creature" (CR 119.3) - CR 102.2 has nothing to say here, since "each
+    creature" names every creature on the battlefield, not a player group.
+
+    Read off the *computed* board (CR 613.5): a noncreature permanent that
+    became a creature only through a continuous effect still takes the
+    damage, and one that stopped being a creature does not - the same
+    correction `count_expression`'s "you control" reading already applies.
+    """
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        board = game.computed_board()
+        for creature in list(game.battlefield):
+            if Type.CREATURE in board.of(creature).types:
+                game.deal_damage(creature, amount, source=source)
 
     return effect
 
@@ -2943,6 +2966,12 @@ _DIVIDED_DAMAGE_RE = re.compile(
 _DAMAGE_EACH_OPPONENT_RE = re.compile(
     rf".*\bdeals? (?P<n>{_COUNT}) damage to each opponent\.?$", re.IGNORECASE
 )
+#: "<Source> deals N damage to each creature." (Extinguisher Battleship) -
+#: CR 119.3, also with no target: "each creature" is every creature on the
+#: battlefield, not something chosen or a player group.
+_DAMAGE_EACH_CREATURE_RE = re.compile(
+    rf".*\bdeals? (?P<n>{_COUNT}) damage to each creature\.?$", re.IGNORECASE
+)
 #: "Prevent all combat damage that would be dealt this turn." (Fog, Angelsong)
 #: - CR 615.1a's prevention effect naming neither a permanent nor a player, so
 #: the shield protects the whole board; see `prevent_all_combat_damage`.
@@ -3288,6 +3317,16 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
             return None
         amount = _count(match.group("n"))
         return damage_each_opponent(amount)  # type: ignore[return-value]
+
+    if match := _DAMAGE_EACH_CREATURE_RE.fullmatch(clause):
+        # No target either (every creature on the battlefield, CR 119.3), and
+        # `damage_each_creature` reads `ability.source`, which only an
+        # `AbilityOnStack` has - the same ability-side-only shape as the
+        # each-opponent clause just above.
+        if for_spell:
+            return None
+        amount = _count(match.group("n"))
+        return damage_each_creature(amount)  # type: ignore[return-value]
 
     if _PREVENT_ALL_COMBAT_DAMAGE_RE.fullmatch(clause):
         return prevent_all_combat_damage  # type: ignore[return-value]
@@ -4344,12 +4383,24 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     outside_the_game = _parse_outside_the_game_fetch(effect_text)
     if outside_the_game is not None:
         return outside_the_game
+    undergrowth_pump_and_fight = _parse_undergrowth_pump_and_fight_clause(effect_text)
+    if undergrowth_pump_and_fight is not None:
+        return undergrowth_pump_and_fight
     conditional_sacrifice = _parse_conditional_sacrifice_clause(effect_text, for_spell=False)
     if conditional_sacrifice is not None:
         return conditional_sacrifice
     reflexive_sacrifice = _parse_reflexive_sacrifice_clause(effect_text)
     if reflexive_sacrifice is not None:
         return reflexive_sacrifice
+    reflexive_pay_energy = _parse_reflexive_pay_energy_clause(effect_text)
+    if reflexive_pay_energy is not None:
+        return reflexive_pay_energy
+    reflexive_mandatory_token = _parse_reflexive_mandatory_token_clause(effect_text)
+    if reflexive_mandatory_token is not None:
+        return reflexive_mandatory_token
+    dalkovan_attack_tokens = _parse_attack_this_turn_create_tapped_attacking_tokens(effect_text)
+    if dalkovan_attack_tokens is not None:
+        return dalkovan_attack_tokens
     mana_adding = _parse_mana_adding_trigger(effect_text)
     if mana_adding is not None:
         return mana_adding
@@ -6103,6 +6154,10 @@ def _unreadable_reflexive_clause(text: str) -> str | None:
         return None
     if _parse_reflexive_sacrifice_clause(text) is not None:
         return None
+    if _parse_reflexive_pay_energy_clause(text) is not None:
+        return None
+    if _parse_reflexive_mandatory_token_clause(text) is not None:
+        return None
     return whole
 
 
@@ -6181,6 +6236,489 @@ def _parse_reflexive_sacrifice_clause(text: str) -> AbilityEffect | None:
             source_id=ability.source_id,
             source_name=source_name,
             callback=resolve_reflexive,
+        )
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# CR 603.12 generalised: a non-sacrifice paid cost, and a mandatory action
+# --------------------------------------------------------------------------
+#
+# `_parse_reflexive_sacrifice_clause` above only reads "you may sacrifice
+# ... When you do, ...". Two more CR 603.12 shapes are in the pool:
+#
+# - Guide of Souls' "Whenever you attack, you may pay {E}{E}{E}. When you
+#   do, ..." - the "you may" half is a *cost*, not a sacrifice, and
+#   `DecisionKind.PAY_ENERGY`/`Game.may_pay_energy` (built for Static
+#   Prison's "unless you pay {E}") is what makes it payable at all now.
+# - Ajani, Nacatl Avenger's "Create a token. When you do, if ..., he deals
+#   damage ..." - a *mandatory* action, not "you may" at all (CR 603.12's
+#   "allow **or instruct**"), with an intervening *if* (CR 603.4) nested in
+#   the reflexive clause itself.
+#
+# Both still create the reflexive ability only once the action has actually
+# happened (`_REFLEXIVE_MAY_PAY_ENERGY_RE`'s decline, `_REFLEXIVE_MANDATORY_
+# TOKEN_RE`'s replaced-into-nothing token creation), the same trap
+# `_parse_reflexive_sacrifice_clause` already guards.
+
+#: "you may pay {E}{E}{E}. When you do, `<consequence>`." - the fixed-amount
+#: energy cost `_REFLEXIVE_MAY_SACRIFICE_RE` does not cover.
+_REFLEXIVE_MAY_PAY_ENERGY_RE = re.compile(
+    r"^you may pay (?P<energy>(?:\{e\})+)\.\s*when you do,\s*(?P<consequence>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+#: "put `<n>` +1/+1 counters and a[n] `<keyword>` counter on `<phrase>`. It
+#: becomes a[n] `<subtype>` in addition to its other types." - Guide of
+#: Souls' own reflexive consequence: two keyword counters (CR 122.1a, CR
+#: 122.1b) in one clause, then an anaphoric "It" (CR 400.7) naming the same
+#: target for a layer 4 type change (CR 613.1d) with no stated duration, so
+#: it lasts for as long as the permanent exists (CR 611.2c) rather than
+#: "until end of turn" the way `_BECOMES_TYPE_IN_ADDITION_RE` above always
+#: does - the whole reason this is its own reader rather than a
+#: `parsed_layer_effects` sentence.
+_COUNTERS_AND_BECOMES_TYPE_RE = re.compile(
+    r"^put (?P<n>\w+) \+1/\+1 counters? and an? (?P<keyword>[a-z]+) counter on "
+    r"(?P<phrase>target [^.]+)\.\s*it becomes an? (?P<subtype>[a-z]+) in addition to "
+    r"its other types\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_counters_and_becomes_type_clause(text: str) -> AbilityEffect | None:
+    """Guide of Souls' own consequence, see `_COUNTERS_AND_BECOMES_TYPE_RE`.
+
+    The keyword counter is CR 122.1b: "A keyword counter on a permanent ...
+    causes that object to gain that keyword" - stored under the keyword's own
+    name (`CardState.counters`'s own docstring), and read back by
+    `machines/combat.py::has_keyword` through `printed_characteristics`'s own
+    keyword-counter lines. The type change has no target of its own to
+    re-announce: it is the same object clause one just put the counters on,
+    discovered here rather than asked for again (CR 608.2b's recheck already
+    happened once, for the ability's one real target).
+    """
+    match = _COUNTERS_AND_BECOMES_TYPE_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=True):
+        return None
+    amount = _count(match.group("n"))
+    keyword = match.group("keyword").lower()
+    subtype = match.group("subtype").capitalize()
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source_name = ability.source_name
+        for target in game.resolve_targets(ability):
+            if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
+                continue
+            game.add_counters(target, Counter.PLUS_ONE, amount)
+            game.add_counters(target, keyword, 1)
+            store = continuous_effects(game)
+            store.add(
+                ContinuousEffect(
+                    description=(
+                        f"{source_name}: {target.name} becomes a {subtype} "
+                        "in addition to its other types"
+                    ),
+                    layer=Layer.TYPE,
+                    timestamp=store.tick(),
+                    duration=Duration.INDEFINITE,
+                    selector=lambda chars, board, tid=target.id: chars.card_id == tid,
+                    modification=add_subtype(subtype),
+                )
+            )
+
+    return effect
+
+
+def _parse_reflexive_pay_energy_clause(text: str) -> AbilityEffect | None:
+    """ "You may pay {E}{E}{E}. When you do, `<consequence>`." (CR 603.12,
+    CR 107.14, CR 118.3) - Guide of Souls' attack trigger, the fixed-amount
+    energy-cost twin of `_parse_reflexive_sacrifice_clause`'s sacrifice.
+
+    `Game.may_pay_energy` already asks CR 608.2d's question and pays exactly
+    the right amount - built for Static Prison's "unless you pay {E}" - so
+    this only has to ask it in the affirmative sense and, only once it comes
+    back true, create the reflexive ability the same way the sacrifice
+    version does. A "no" answer - unaffordable or declined - spends no energy
+    and creates nothing, the same "the cost stays paid, the trigger does not
+    exist otherwise" shape as the sacrifice version, just for a cost that
+    cannot be un-paid because it never was.
+    """
+    match = _REFLEXIVE_MAY_PAY_ENERGY_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    amount = len(re.findall(r"\{e\}", match.group("energy"), re.IGNORECASE))
+    consequence_text = match.group("consequence").strip()
+    consequence_effect = _parse_counters_and_becomes_type_clause(
+        consequence_text
+    ) or parse_mixed_effect(consequence_text)
+    if consequence_effect is None:
+        return None
+
+    def resolve_reflexive(
+        game: "Game", reflexive_ability: AbilityOnStack, trigger: DelayedTrigger
+    ) -> None:
+        consequence_effect(game, reflexive_ability)
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = game.controller_of(ability)
+        source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
+        paid = game.may_pay_energy(player, amount, source=source_name)
+        if not paid:
+            return
+        game.create_reflexive_trigger(
+            text=consequence_text,
+            controller=player.username,
+            source_id=ability.source_id,
+            source_name=source_name,
+            callback=resolve_reflexive,
+        )
+
+    return effect
+
+
+#: "Create `<n>` `<token description>` token[s]." with no "you may" at all -
+#: CR 603.12's "allow **or instruct**" read the mandatory way. Ajani, Nacatl
+#: Avenger's `0`: "Create a 2/1 white Cat Warrior creature token. When you
+#: do, ...".
+_REFLEXIVE_MANDATORY_TOKEN_RE = re.compile(
+    r"^(?P<action>create .+? tokens?)\.\s*when you do,\s*(?P<consequence>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+#: "if you control a[n] `<color>` permanent other than `<name>`, [he|she|it|
+#: they] deals damage equal to `<expr>` to any target." - the intervening
+#: *if* (CR 603.4) nested inside Ajani, Nacatl Avenger's own reflexive
+#: clause. `<name>` is read and thrown away: "other than Ajani" is CR 400.7's
+#: self-reference (this permanent is the only "Ajani" the sentence could
+#: mean), the same idiom `machines/triggers.py`'s own `_self_referential`
+#: reads for an ordinary trigger's condition, so the exclusion is applied by
+#: id (the ability's own source) rather than by matching the captured name.
+_IF_CONTROL_COLORED_PERMANENT_DEALS_DAMAGE_RE = re.compile(
+    r"^if you control an? (?P<color>white|blue|black|red|green) permanent other than "
+    r"[a-z' ]+?,\s*(?:he|she|they|it) deals damage equal to (?P<expr>.+?) to any target\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_if_control_colored_permanent_damage_clause(
+    text: str,
+) -> tuple[Callable[["Game", str, UUID | None], bool], AbilityEffect] | None:
+    """The condition-and-damage pair `_IF_CONTROL_COLORED_PERMANENT_DEALS_
+    DAMAGE_RE` reads, split apart so a caller can check CR 603.4's condition
+    once - at whatever moment it decides is "checked immediately" (CR 603.12)
+    - rather than re-deriving it from the consequence text a second time.
+    """
+    match = _IF_CONTROL_COLORED_PERMANENT_DEALS_DAMAGE_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    color = _TOKEN_COLOR_WORDS.get(match.group("color").lower())
+    if color is None:
+        return None
+    count_fn = count_expression(match.group("expr"))
+    if count_fn is None:
+        return None
+
+    def condition_holds(game: "Game", controller: str, excluded_id: UUID | None) -> bool:
+        board = game.computed_board()
+        return any(
+            permanent.id != excluded_id
+            and board.of(permanent).controller == controller
+            and color in board.of(permanent).colors
+            for permanent in game.battlefield
+        )
+
+    def deal_the_damage(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.controller_of(ability)
+        amount = count_fn(game, controller.username)
+        if amount <= 0:
+            return
+        source = ability.source(game)
+        for target in game.resolve_targets(ability):
+            game.deal_damage(target, amount, source=source)
+
+    return condition_holds, deal_the_damage
+
+
+def _parse_reflexive_mandatory_token_clause(text: str) -> AbilityEffect | None:
+    """ "Create `<n>` `<token>` token[s]. When you do, if ..., `<damage>`."
+    (CR 603.12, CR 603.4) - Ajani, Nacatl Avenger's `0`.
+
+    CR 603.12 reads "allow or instruct" - this is the "instruct" half, so
+    there is no `MAY` decision at all: the token is simply created, and the
+    reflexive ability is created right after, exactly as the sacrifice and
+    energy versions do once *their* optional action goes through. What is
+    still conditional is CR 603.4's intervening *if*, nested one level in -
+    checked here, immediately after the token exists (CR 603.12's own
+    "checked immediately after being created"), so a controller who does not
+    control a qualifying permanent gets a token and no reflexive ability at
+    all, not a reflexive ability that quietly does nothing when it resolves.
+    """
+    match = _REFLEXIVE_MANDATORY_TOKEN_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    action_text = match.group("action").strip() + "."
+    consequence_text = match.group("consequence").strip()
+    token_match = _TOKEN_CLAUSE_RE.fullmatch(action_text)
+    if token_match is None:
+        return None
+    count = _count(token_match.group("n"))
+    words = token_match.group("desc").strip().split()
+    tail = token_match.group("tail")
+    if not words:
+        return None
+    predefined_name = " ".join(words)
+    definition = (
+        PREDEFINED[predefined_name]
+        if tail is None and predefined_name in PREDEFINED
+        else _parse_generic_token_descriptor(words, tail)
+    )
+    if definition is None:
+        return None
+    condition_and_damage = _parse_if_control_colored_permanent_damage_clause(consequence_text)
+    if condition_and_damage is None:
+        return None
+    condition_holds, deal_the_damage = condition_and_damage
+
+    def resolve_reflexive(
+        game: "Game", reflexive_ability: AbilityOnStack, trigger: DelayedTrigger
+    ) -> None:
+        deal_the_damage(game, reflexive_ability)
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.controller_of(ability)
+        source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
+        created = create_tokens(game, definition, controller.username, count)
+        if not created:
+            # CR 603.12: the action never actually happened (a replacement
+            # effect ate it), so there is nothing to reflect.
+            return
+        if not condition_holds(game, controller.username, ability.source_id):
+            return
+        game.create_reflexive_trigger(
+            text=consequence_text,
+            controller=controller.username,
+            source_id=ability.source_id,
+            source_name=source_name,
+            callback=resolve_reflexive,
+        )
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# Fight (CR 701.14) and Kraul Harpooner's own pump-then-fight shape
+# --------------------------------------------------------------------------
+
+
+def _fight(game: "Game", a: CardState, b: CardState) -> None:
+    """CR 701.14a: "Each of those creatures deals damage equal to its power to
+    the other creature." Simultaneous - neither call below sees the other's
+    result, since state-based actions are not checked until both are done -
+    and CR 701.14d: "The damage dealt when a creature fights isn't combat
+    damage," so nothing here touches `machines/combat.py`.
+
+    CR 701.14b: "If one or both creatures instructed to fight are no longer on
+    the battlefield or are no longer creatures, neither of them fights or
+    deals damage" - checked by every caller before this is reached, not
+    re-checked here, the same division of labour `destroy_ability_targets`
+    already draws between "is this still legal" and "do the thing".
+    """
+    power_a = game.power_of(a) or 0
+    power_b = game.power_of(b) or 0
+    game.deal_damage(b, power_a, source=a)
+    game.deal_damage(a, power_b, source=b)
+
+
+#: Kraul Harpooner's own enters trigger, read whole ahead of the per-clause
+#: splitter for the same reason `_EACH_PLAYER_EXILE_SACRIFICE_RETURN_RE` is:
+#: the fight clause's "that creature" is anaphoric (CR 400.7) for whatever
+#: `<phrase>` names, and the pump's own magnitude is `count_expression`'s
+#: "the number of creature cards in your graveyard" - both belong to one CR
+#: 608.2c instruction, not three independent clauses `_CLAUSE_SEPARATOR`'s
+#: "then"/"," cuts would otherwise scatter. The ability word ("Undergrowth
+#: — ") is already stripped by `machines/abilities.py` before this text is
+#: ever seen (CR 207.2c).
+_UNDERGROWTH_PUMP_AND_FIGHT_RE = re.compile(
+    r"^choose (?P<phrase>up to \S+ target [^.]+)\.\s*"
+    r"this creature gets \+x/\+0 until end of turn,\s*where x is (?P<expr>[^,]+),\s*"
+    r"then you may have this creature fight that creature\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_undergrowth_pump_and_fight_clause(text: str) -> AbilityEffect | None:
+    """Kraul Harpooner: "choose up to one target creature you don't control
+    with flying. This creature gets +X/+0 until end of turn, where X is the
+    number of creature cards in your graveyard, then you may have this
+    creature fight that creature."
+
+    Printed order (CR 608.2c): the pump always happens - X is computed and
+    applied whether or not a target was chosen (CR 115.6's "up to one"
+    legally choosing zero, trap this file's own docstring calls out) - and
+    only *then* does the optional fight ask its `MAY` question, and only if
+    there is a "that creature" for it to name at all.
+    """
+    whole = _strip_non_effect_preamble(text).strip()
+    match = _UNDERGROWTH_PUMP_AND_FIGHT_RE.fullmatch(whole)
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=True):
+        return None
+    count_fn = count_expression(match.group("expr"))
+    if count_fn is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        controller = game.controller_of(ability)
+        amount = count_fn(game, controller.username)
+        store = continuous_effects(game)
+        store.add(
+            ContinuousEffect(
+                description=f"{source.name} gets +{amount}/+0 until end of turn",
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.MODIFY,
+                timestamp=store.tick(),
+                duration=Duration.UNTIL_END_OF_TURN,
+                selector=lambda chars, board, sid=source.id: chars.card_id == sid,
+                modification=modify_power_toughness(amount, 0),
+            )
+        )
+        targets = [
+            target for target in game.resolve_targets(ability) if isinstance(target, CardState)
+        ]
+        if not targets:
+            # CR 115.6: "up to one" legally chose zero - nothing to fight.
+            return
+        opponent_creature = targets[0]
+        board = game.computed_board()
+        if (
+            source.zone is not Zone.BATTLEFIELD
+            or opponent_creature.zone is not Zone.BATTLEFIELD
+            or Type.CREATURE not in board.of(source).types
+            or Type.CREATURE not in board.of(opponent_creature).types
+        ):
+            # CR 701.14b: either is gone, or no longer a creature.
+            return
+        prompt = f"have {source.name} fight {opponent_creature.name}"
+        if not game.may(controller.username, prompt, source=source.name):
+            return
+        _fight(game, source, opponent_creature)
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# Dalkovan Encampment's own "whenever you attack this turn" delayed trigger
+# --------------------------------------------------------------------------
+#
+# "{2}{W}, {T}: Whenever you attack this turn, create two 1/1 red Warrior
+# creature tokens that are tapped and attacking. Sacrifice them at the
+# beginning of the next end step." Activating this ability does not itself
+# create any tokens - CR 603.7a: it creates a *delayed* triggered ability
+# (`machines/delayed.py`) that watches for "you attack" (CR 508.3d, the same
+# subjectless per-attacking-player event `machines/triggers.py` already reads
+# for Guide of Souls) and fires **on every attack for the rest of this turn**,
+# not once - CR 603.7b's "unless it has a stated duration, such as 'this
+# turn'" is exactly Dalkovan's own words, so `remaining=None` plus
+# `expires_end_of_turn=True` (swept by `DelayedTriggers.expire_this_turn` in
+# `Game.cleanup_step`, CR 514.2) is what keeps it from also firing on the
+# next turn's attack.
+#
+# Each firing creates its own two tokens tapped and attacking (CR 508.4,
+# already proven directly in `tests/scenarios/test_tokens.py`), attacking
+# whichever defender the activating player is already attacking - the
+# tokens have no defender of their own printed anywhere, so this reads it
+# off the controller's own currently-declared attack, CR 102.2's two-player
+# default when more than one exists. Each token created this way gets its
+# *own* one-shot delayed trigger reusing the existing `"sacrifice"` entry in
+# `DELAYED_EFFECTS` (`_sacrifice_subject`) - the same "sacrifice this
+# specific object at the next end step" idiom `return_subject_to_hand`'s
+# siblings already use, not a new plural-subject field on `DelayedTrigger`.
+
+_ATTACK_THIS_TURN_TAPPED_ATTACKING_TOKENS_RE = re.compile(
+    r"^whenever you attack this turn,\s*create (?P<n>\w+) (?P<desc>.+?) tokens? "
+    r"that are tapped and attacking\.\s*sacrifice them at the beginning of the "
+    r"next end step\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_attack_this_turn_create_tapped_attacking_tokens(text: str) -> AbilityEffect | None:
+    match = _ATTACK_THIS_TURN_TAPPED_ATTACKING_TOKENS_RE.fullmatch(
+        _strip_non_effect_preamble(text).strip()
+    )
+    if match is None:
+        return None
+    count = _count(match.group("n"))
+    words = match.group("desc").strip().split()
+    definition = _parse_generic_token_descriptor(words, None)
+    if definition is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.controller_of(ability)
+        source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
+
+        def create_attacking_tokens(
+            game: "Game", trigger_ability: AbilityOnStack, trigger: DelayedTrigger
+        ) -> None:
+            defender = next(
+                (
+                    attack.defender
+                    for attack in game.combat.attacks
+                    if (attacker := game.find_by_id(attack.attacker_id)) is not None
+                    and game.controller_of(attacker).username == controller.username
+                ),
+                None,
+            )
+            created = create_tokens(
+                game,
+                definition,
+                controller.username,
+                count,
+                tapped=True,
+                attacking=defender,
+            )
+            for token in created:
+                game.create_delayed_trigger(
+                    DelayedTrigger(
+                        text="Sacrifice them at the beginning of the next end step.",
+                        effect="sacrifice",
+                        event=TriggerEvent.BEGINNING_OF_STEP,
+                        step=Step.END_STEP,
+                        controller=controller.username,
+                        source_id=source_id,
+                        source_name=source_name,
+                        subject_id=token.id,
+                        expected_zone=Zone.BATTLEFIELD,
+                        expected_stamp=token.zone_change_stamp,
+                    )
+                )
+
+        game.create_delayed_trigger(
+            DelayedTrigger(
+                text=match.group(0),
+                event=TriggerEvent.ATTACKS,
+                controller=controller.username,
+                source_id=source_id,
+                source_name=source_name,
+                # `only_when_active` only ever compares `event.player` against
+                # this name (`DelayedTrigger.matches`) - CR 508.1a already
+                # limits attack declaration to the active player, so reusing
+                # it as "the event's own attacking player" rather than adding
+                # a second, identical-in-effect field is exact, not a stretch.
+                only_when_active=controller.username,
+                subjectless_only=True,
+                remaining=None,
+                expires_end_of_turn=True,
+                callback=create_attacking_tokens,
+            )
         )
 
     return effect
