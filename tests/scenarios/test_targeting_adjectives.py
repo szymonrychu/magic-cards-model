@@ -295,8 +295,27 @@ def test_a_nontoken_permanent_cannot_be_chosen_for_target_token():
 
 
 def guide_profile():
-    """Guide of Souls' attack trigger: "target attacking creature"."""
-    return profile_for_text(ability_text("Guide of Souls", "attacking"))
+    """Guide of Souls' reflexive "When you do" clause: "target attacking creature".
+
+    CR 603.12 makes this text a *second*, independent triggered ability's own
+    - not the outer "Whenever you attack" trigger's - and `profile_for_text`
+    now cuts everything from "when you do" onward before reading the outer
+    ability, so `ability_text`'s raw line can no longer be profiled whole (see
+    `machines/targeting.py::profile_for_text` and `test_the_outer_attack_
+    trigger_has_no_target_of_its_own` below, which is the regression test for
+    that cut). This reads the reflexive clause's own substring instead - the
+    text `Game.create_reflexive_trigger` would actually hand to `profile_for_
+    text` once Guide's `{E}{E}{E}` were payable (it is not yet - see
+    `docs/engine-coverage.md` - so today this ability resolves as a
+    `ReflexiveClauseNotice` rather than ever reaching the stack). The
+    "attacking creature" adjective machinery under test here does not care
+    which ability the text came from, so testing it against this substring
+    stays a faithful check of real printed words.
+    """
+    whole = ability_text("Guide of Souls", "attacking")
+    _, _, consequence = whole.partition("When you do,")
+    assert consequence, "Guide of Souls' attack trigger no longer reads 'When you do,'"
+    return profile_for_text(consequence.strip())
 
 
 def combat_board() -> Scenario:
@@ -409,13 +428,23 @@ def test_without_a_game_the_combat_restriction_is_not_checked():
         guide_profile().check([card_state("Mountain", Zone.BATTLEFIELD, controller="alice")], "a")
 
 
-def test_the_guides_trigger_refuses_a_creature_that_is_not_attacking():
-    """CR 115.1: an ability declares its targets as it goes on the stack too."""
+def test_the_outer_attack_trigger_has_no_target_of_its_own():
+    """CR 603.3d: the target belongs to the *reflexive* ability CR 603.12
+    creates once {E}{E}{E} is paid, not to "Whenever you attack" itself.
+
+    Before `profile_for_text` learned to cut a "when you do" tail (see its
+    own docstring in `machines/targeting.py`), this call raised - the outer
+    trigger's announcement had harvested "target attacking creature" out of
+    its own reflexive clause and enforced it here, which is the live defect
+    the fix closes. Guide's outer trigger prints no target of its own at all,
+    so naming one for it is simply not refused - there is nothing to check,
+    the same "an ability with no targeting requirement at all is not asked
+    anything" shape `Game._ask_trigger_targets` already documents.
+    """
     scenario = combat_board().build()
     scenario.start_at(Step.DECLARE_ATTACKERS)
 
     bears, giant = scenario.creatures("Grizzly Bears", "Hill Giant", username="alice")
     scenario.attack_with(bears)
 
-    with pytest.raises(ValueError, match="attacking"):
-        scenario.choose_trigger_targets("Guide of Souls", [giant])
+    scenario.choose_trigger_targets("Guide of Souls", [giant])  # not attacking, and not refused

@@ -3367,31 +3367,6 @@ def _parse_sacrifice_unless_pay_energy(text: str) -> AbilityEffect | None:
     return effect
 
 
-#: "You may pay {E}{E}{E}. When you do, ..." (Guide of Souls's attack
-#: trigger) - CR 603.12's reflexive trigger, a second ability that triggers
-#: off the first one's own optional cost being paid. Out of scope for this
-#: wave on purpose: the missing primitive is the reflexive trigger itself
-#: (`machines/decisions.py`/`machines/delayed.py`, being built by a sibling
-#: wave against Grist), not the energy payment - `may_pay_energy` above
-#: already asks and pays exactly this fixed amount correctly. Recognised only
-#: so a card of this shape gets an `UnmodeledTriggerEffectNotice` instead of
-#: silently doing nothing, the same "unreadable is not the same as no effect"
-#: discipline every other notice in this file already keeps.
-_PAY_ENERGY_REFLEXIVE_RE = re.compile(
-    r"^you may pay (?:\{e\})+\.\s*when you do,", re.IGNORECASE | re.DOTALL
-)
-
-
-def _unreadable_pay_energy_reflexive_clause(text: str) -> str | None:
-    """`text`, if it opens with Guide of Souls's "you may pay {E}...When you
-    do," reflexive-trigger shape (CR 603.12) - a real effect this wave cannot
-    run, not "no effect here"."""
-    whole = text.strip()
-    if _PAY_ENERGY_REFLEXIVE_RE.match(whole):
-        return whole
-    return None
-
-
 def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     """`parse_mixed_effect` on `effect_text`, or - if that failed specifically
     on an unreadable anaphoric second clause - a stand-in effect that records
@@ -3434,6 +3409,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     conditional_sacrifice = _parse_conditional_sacrifice_clause(effect_text, for_spell=False)
     if conditional_sacrifice is not None:
         return conditional_sacrifice
+    reflexive_sacrifice = _parse_reflexive_sacrifice_clause(effect_text)
+    if reflexive_sacrifice is not None:
+        return reflexive_sacrifice
     mana_adding = _parse_mana_adding_trigger(effect_text)
     if mana_adding is not None:
         return mana_adding
@@ -3515,20 +3493,6 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
 
         return cast_permission_notice_only
 
-    unread_pay_energy_reflexive = _unreadable_pay_energy_reflexive_clause(effect_text)
-    if unread_pay_energy_reflexive is not None:
-
-        def pay_energy_reflexive_notice_only(game: "Game", ability: AbilityOnStack) -> None:
-            game.unmodeled_trigger_effect_notices.append(
-                UnmodeledTriggerEffectNotice(
-                    source_id=ability.source_id,
-                    source_name=ability.source_name,
-                    text=unread_pay_energy_reflexive,
-                )
-            )
-
-        return pay_energy_reflexive_notice_only
-
     unread_hand_choice = _unreadable_unbounded_hand_choice_clause(effect_text, for_spell=False)
     if unread_hand_choice is not None:
 
@@ -3558,6 +3522,20 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
             )
 
         return event_player_target_notice_only
+
+    unread_reflexive = _unreadable_reflexive_clause(effect_text)
+    if unread_reflexive is not None:
+
+        def reflexive_notice_only(game: "Game", ability: AbilityOnStack) -> None:
+            game.reflexive_clause_notices.append(
+                ReflexiveClauseNotice(
+                    source_id=ability.source_id,
+                    source_name=ability.source_name,
+                    text=unread_reflexive,
+                )
+            )
+
+        return reflexive_notice_only
 
     return None
 
@@ -4199,9 +4177,11 @@ def _sacrifice_restriction(
     restriction: str,
 ) -> tuple[bool, Callable[["Game", Player, UUID], list[CardState]]] | None:
     """`restriction` - the text between "sacrifice" and the following period -
-    read as either "this `<type>`" (the permanent bearing the ability itself,
-    Sanctum of Ugin) or "another `<type>`" (a second permanent the player
-    controls of the stated type, Disciple of Freyalise), paired with a
+    read as "this `<type>`" (the permanent bearing the ability itself,
+    Sanctum of Ugin), "another `<type>`" (a second permanent the player
+    controls of the stated type, Disciple of Freyalise), or a bare "a `<type>`"
+    /"an `<type>`" (any permanent of the stated type the player controls, no
+    self-exclusion - Grist, the Hunger Tide's "-2") - each paired with a
     function that reads the actual legal candidates off the battlefield at
     resolution time - never at parse time, since what is on the battlefield
     changes between then and resolution.
@@ -4210,13 +4190,12 @@ def _sacrifice_restriction(
     CR 608.2d choice of *which* permanent to sacrifice (false for "this
     `<type>`", where there is only ever one, CR 601.2c never asks a question
     with one answer) or a genuine one among however many candidates
-    `candidates` finds (true only in name for "another `<type>`" - the
-    "false"/"true" pairing here is the reverse of confusing: `is_self` is
-    true for the self-reference shape).
+    `candidates` finds (true only in name for "another `<type>`"/bare "a
+    `<type>`" - the "false"/"true" pairing here is the reverse of confusing:
+    `is_self` is true for the self-reference shape).
 
-    Anything else - "a `<type>`" with no "this"/"another", a compound
-    restriction, a `<type>` this wave cannot read as a single `Type` - comes
-    back `None`, fail-closed.
+    Anything else - a compound restriction, a `<type>` this wave cannot read
+    as a single `Type` - comes back `None`, fail-closed.
     """
     restriction = restriction.strip().lower()
     if restriction.startswith("this "):
@@ -4249,6 +4228,25 @@ def _sacrifice_restriction(
             ]
 
         return False, other_candidates
+
+    for article in ("a ", "an "):
+        if not restriction.startswith(article):
+            continue
+        try:
+            card_type = Type(restriction.removeprefix(article).strip())
+        except ValueError:
+            return None
+
+        def any_candidates(
+            game: "Game", player: Player, source_id: UUID, card_type: Type = card_type
+        ) -> list[CardState]:
+            return [
+                permanent
+                for permanent in game.battlefield
+                if permanent.controller == player.username and card_type in permanent.card.types
+            ]
+
+        return False, any_candidates
 
     return None
 
@@ -4439,6 +4437,205 @@ def _parse_conditional_sacrifice_clause(text: str, *, for_spell: bool) -> Target
         power = game.power_of(chosen)
         game.sacrifice(chosen)
         consequence(game, player, power, source_name)
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# "You may sacrifice ... When you do, ..." (CR 603.12)
+# --------------------------------------------------------------------------
+#
+# Verified this session with `knowledge_search(q="...", type="rules")`:
+#
+#   CR 603.12 - "A resolving spell or ability may allow or instruct a player
+#   to take an action and create a triggered ability that triggers 'when [a
+#   player] [does or doesn't]' take that action or 'when [something happens]
+#   this way.' These reflexive triggered abilities follow the rules for
+#   delayed triggered abilities (see rule 603.7), except that they're checked
+#   immediately after being created and trigger based on whether the trigger
+#   event or events occurred earlier during the resolution of the spell or
+#   ability that created them."
+#
+#   CR 405.6a - "Effects don't go on the stack; they're the result of spells
+#   and abilities resolving. Effects may create delayed triggered abilities,
+#   however, and these may go on the stack when they trigger."
+#
+# This is the shape CR 118.12's "If you do" is often confused with, and the
+# two resolve completely differently. "If you do" (`_parse_conditional_
+# sacrifice_clause` above) reads: the consequence is *part of the same
+# resolution*, no new stack object, no priority in between (CR 118.12's own
+# "regardless of what events actually occurred" is about the cost, not a
+# second object). "When you do" creates a *second*, independent triggered
+# ability (CR 603.12) that goes on the stack of its own accord the next time
+# a player would receive priority (CR 603.3) - which is exactly what lets an
+# opponent respond to Grist's "When you do, destroy target creature or
+# planeswalker" before it resolves, and exactly what CR 405.6a says an
+# ordinary one-shot effect could never do on its own.
+#
+# Grist, the Hunger Tide's "−2: You may sacrifice a creature. When you do,
+# destroy target creature or planeswalker." is the vehicle: sacrifice is
+# already a modelled cost with a working `MAY` decision (`_sacrifice_
+# restriction` above), so this reuses that and only adds what CR 603.12 adds
+# on top - a second stack object, created (not resolved) here, whose own
+# target is chosen when *it* goes on the stack (CR 603.3d), not now.
+#
+# Two traps this shape earns, both guarded against explicitly:
+#
+# - **The target must not be asked for here.** `machines/targeting.py`'s
+#   `profile_for_text` is what `Game._ask_trigger_targets` and `Game.
+#   activate_ability` read the *outer* ability's own targeting profile from,
+#   and both hand it the ability's raw printed text - which still contains
+#   the reflexive clause's "target creature or planeswalker" if nothing
+#   strips it. `profile_for_text` now cuts everything from "when you do"
+#   onward before parsing, so the outer ability (Grist's `-2`, Guide of
+#   Souls' "Whenever you attack") is never asked to announce a target that
+#   belongs to an ability that may never even be created (CR 603.3d).
+# - **The cost stays paid on a fizzle.** The sacrifice happens here, inside
+#   the *parent's* resolution, before the reflexive ability even exists;
+#   `Game.create_reflexive_trigger` only ever queues it afterward. If the
+#   reflexive ability's own target later becomes illegal (CR 608.2b), only
+#   the reflexive ability's effect is skipped - there is no path back to
+#   un-sacrifice the creature, because nothing here ever offers one.
+#
+# Only the "you may sacrifice" shape is read below. A mandatory action
+# ("Create a token. When you do, ...", Ajani, Nacatl Avenger's `0`) or an
+# optional action that is not a sacrifice ("you may pay {E}{E}{E}", Guide of
+# Souls' attack trigger - blocked on there being no general may-pay-a-cost
+# primitive at all, see `docs/engine-coverage.md`) is deliberately left
+# unread rather than guessed at; `_unreadable_reflexive_clause` is what turns
+# that refusal into a `ReflexiveClauseNotice` instead of the silent nothing
+# both cards resolved to before this wave.
+
+#: "You may sacrifice `<restriction>`. When you do, `<consequence>`." - the
+#: same restriction shape `_MAY_SACRIFICE_IF_YOU_DO_RE` reads, with "when"
+#: for "if" so the two can never both match the same text.
+_REFLEXIVE_MAY_SACRIFICE_RE = re.compile(
+    r"^you may sacrifice (?P<restriction>[^.]+)\.\s*when you do,\s*(?P<consequence>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+#: Any "`<action>`. When you do, `<consequence>`." shape at all, read only to
+#: tell "not this shape" apart from "this shape, but unreadable" for
+#: `_unreadable_reflexive_clause` - the same role `_MAY_SACRIFICE_IF_YOU_DO_RE`
+#: plays for `_unreadable_conditional_clause`.
+_REFLEXIVE_CLAUSE_RE = re.compile(
+    r"^(?P<action>.+?)\.\s*when you do,\s*(?P<consequence>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+class ReflexiveClauseNotice(BaseModel):
+    """One "`<action>`. When you do, `<consequence>`." effect (CR 603.12)
+    whose action or consequence this wave could not read.
+
+    Guide of Souls' "you may pay {E}{E}{E}. When you do, put two +1/+1
+    counters and a flying counter on target attacking creature ..." is the
+    reason this exists rather than the ability simply resolving as nothing:
+    paying energy is a missing primitive (`docs/engine-coverage.md`), but a
+    trigger that does nothing must still say why, the same unreadable-is-not-
+    the-same-as-no-effect record `ConditionalClauseNotice` and its siblings
+    already keep."""
+
+    model_config = ConfigDict(frozen=True)
+
+    source_id: UUID | None
+    source_name: str
+    text: str
+    """The unreadable clause itself, as printed."""
+
+
+def _unreadable_reflexive_clause(text: str) -> str | None:
+    """The "`<action>`. When you do, `<consequence>`." clause inside `text`,
+    if it matches CR 603.12's shape but `_parse_reflexive_sacrifice_clause`
+    still cannot read it - used only to decide whether a parse failure
+    deserves a `ReflexiveClauseNotice`, the same way `_unreadable_conditional_
+    clause` decides for its own shape.
+    """
+    whole = _strip_non_effect_preamble(text).strip()
+    match = _REFLEXIVE_CLAUSE_RE.fullmatch(whole)
+    if match is None:
+        return None
+    if _parse_reflexive_sacrifice_clause(text) is not None:
+        return None
+    return whole
+
+
+def _parse_reflexive_sacrifice_clause(text: str) -> AbilityEffect | None:
+    """ "You may sacrifice `<restriction>`. When you do, `<consequence>`."
+    (CR 603.12), read off the ability's own printed text so no registry row
+    is needed - Grist, the Hunger Tide's `-2`.
+
+    The "you may" half is exactly `_parse_conditional_sacrifice_clause`'s:
+    `DecisionKind.MAY` with `affirmative_is_legal` set to whether a legal
+    permanent to sacrifice exists (CR 608.2d), then `DecisionKind.CHOOSE_
+    CARDS` if there is a real choice of which. What differs is what happens
+    once the player says yes: CR 118.12 would run the consequence right here;
+    CR 603.12 instead creates a *second* triggered ability
+    (`Game.create_reflexive_trigger`) and leaves it for the stack, so
+    `<consequence>` is parsed once, up front, into an ordinary `AbilityEffect`
+    (`parse_mixed_effect`) that runs when *that* ability resolves - reading
+    its own targets off itself (CR 608.2b's recheck included), never off the
+    parent.
+    """
+    match = _REFLEXIVE_MAY_SACRIFICE_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    restriction = _sacrifice_restriction(match.group("restriction"))
+    if restriction is None:
+        return None
+    is_self, candidates_of = restriction
+    consequence_text = match.group("consequence").strip()
+    consequence_effect = parse_mixed_effect(consequence_text)
+    if consequence_effect is None:
+        return None
+    prompt = f"sacrifice {match.group('restriction').strip()}"
+
+    def resolve_reflexive(
+        game: "Game", reflexive_ability: AbilityOnStack, trigger: DelayedTrigger
+    ) -> None:
+        consequence_effect(game, reflexive_ability)
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = game.controller_of(ability)
+        source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
+        candidates = candidates_of(game, player, source_id)
+        decision = Decision(
+            kind=DecisionKind.MAY,
+            player=player.username,
+            prompt=prompt,
+            source=source_name,
+            affirmative_is_legal=bool(candidates),
+        )
+        if not game.ask(decision):
+            return
+        if is_self:
+            chosen = candidates[0]
+        else:
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=player.username,
+                    prompt="choose a permanent to sacrifice",
+                    source=source_name,
+                    amount=1,
+                    cards=tuple(candidate.id for candidate in candidates),
+                )
+            )
+            assert isinstance(chosen_ids, tuple)
+            by_id = {candidate.id: candidate for candidate in candidates}
+            chosen = by_id[chosen_ids[0]]
+        game.sacrifice(chosen)
+        # CR 603.12: the reflexive ability is created *now*, after the action
+        # - not before it, and not offered a target of its own until it goes
+        # on the stack (CR 603.3d), which `create_reflexive_trigger` defers to
+        # `Game.put_triggers_on_stack`.
+        game.create_reflexive_trigger(
+            text=consequence_text,
+            controller=player.username,
+            source_id=ability.source_id,
+            source_name=source_name,
+            callback=resolve_reflexive,
+        )
 
     return effect
 

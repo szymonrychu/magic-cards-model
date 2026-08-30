@@ -53,6 +53,7 @@ from ..machines.decisions import (
     legal_options,
 )
 from ..machines.delayed import (
+    DelayedEffect,
     DelayedTrigger,
     DelayedTriggers,
     rebound_recast,
@@ -64,6 +65,7 @@ from ..machines.effects import (
     DelayedClauseNotice,
     ImprintNotice,
     ModeNotice,
+    ReflexiveClauseNotice,
     UnmodeledTriggerEffectNotice,
     activated_effect_for,
     effect_for,
@@ -566,6 +568,15 @@ class Game(BaseModel):
     at all, with nothing anywhere recording that a choice had gone unoffered.
     The same unreadable-is-not-the-same-as-no-effect record every other
     notice list here keeps."""
+
+    reflexive_clause_notices: list[ReflexiveClauseNotice] = Field(default_factory=list)
+    """One entry per "`<action>`. When you do, `<consequence>`." effect
+    (CR 603.12) whose action or consequence could not be read - Guide of
+    Souls' own defect before this list existed: its attack trigger's "you may
+    pay {E}{E}{E}" resolved offering no choice at all (paying energy is a
+    missing primitive, `docs/engine-coverage.md`), with nothing anywhere
+    recording that a choice had gone unoffered. The same unreadable-is-not-
+    the-same-as-no-effect record every other notice list here keeps."""
 
     unwired_choice_notices: list[UnwiredChoiceNotice] = Field(default_factory=list)
     """One entry per sentence of a card that reads back its own CR 614.12a
@@ -1321,6 +1332,41 @@ class Game(BaseModel):
         fills that in, because only the caller knows which it was.
         """
         return self.delayed_triggers.create(trigger)
+
+    def create_reflexive_trigger(
+        self,
+        *,
+        text: str,
+        controller: str,
+        source_id: UUID | None,
+        source_name: str,
+        callback: DelayedEffect,
+    ) -> AbilityOnStack:
+        """Create a reflexive triggered ability (CR 603.12) and queue it for
+        the stack.
+
+        `machines/effects.py`'s "you may sacrifice ... When you do, ..."
+        clause is the way in: called only once the action it reflects has
+        actually happened (Grist, the Hunger Tide's sacrifice), which is what
+        lets `DelayedTriggers.create_reflexive` treat CR 603.12's "checked
+        immediately after being created" as already satisfied rather than
+        something to watch for.
+
+        Appending straight to `pending_triggers` - the same queue `emit`
+        fills for every ordinary trigger - is what makes `put_triggers_on_
+        stack` pick this up the next time a player would receive priority
+        (CR 603.3), asking its own targets then rather than now (CR 603.3d),
+        and giving opponents a real stack object to respond to (CR 405.6a).
+        """
+        ability = self.delayed_triggers.create_reflexive(
+            text=text,
+            controller=controller,
+            source_id=source_id,
+            source_name=source_name,
+            callback=callback,
+        )
+        self.pending_triggers.append(ability)
+        return ability
 
     def _create_resolution_delayed_triggers(self, spell: CardState) -> None:
         """Delayed triggered abilities a resolving permanent spell creates (CR 603.7a).

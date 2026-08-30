@@ -21,12 +21,21 @@ per-card table row (`machines/effects.py`):
   (`_parse_sacrifice_unless_pay_energy`).
 
 Guide of Souls's "you may pay {E}{E}{E}. When you do, ..." is a fourth shape -
-CR 603.12's reflexive trigger - and is deliberately **not** built here: the
-missing primitive is the reflexive trigger itself, being built by a sibling
-wave, not the energy payment. `test_guide_of_souls_records_a_notice_instead_
-of_resolving_silently` below proves it now leaves a trace instead of doing
-nothing with no record anywhere - the same "unreadable is not the same as no
-effect" discipline every other notice in `machines/effects.py` already keeps.
+CR 603.12's reflexive trigger - and is deliberately **not** built here. A
+sibling wave landed the reflexive-trigger machinery itself
+(`machines/effects.py`'s `_parse_reflexive_sacrifice_clause`,
+`ReflexiveClauseNotice`) against Grist, the Hunger Tide while this wave was in
+flight, so the piece genuinely missing for Guide of Souls is narrower than it
+first looked: not "no reflexive trigger support" and not "no may-pay-a-cost
+decision" (this wave built that one, `DecisionKind.PAY_ENERGY`/
+`Game.may_pay_energy`), but that `_parse_reflexive_sacrifice_clause` only
+reads a reflexive **sacrifice**, never an arbitrary paid cost - so "you may
+pay {E}{E}{E}" still falls through to the general `_unreadable_reflexive_
+clause` and records a `ReflexiveClauseNotice` rather than resolving.
+`test_guide_of_souls_records_a_notice_instead_of_resolving_silently` below
+proves it now leaves a trace instead of doing nothing with no record
+anywhere - the same "unreadable is not the same as no effect" discipline
+every other notice in `machines/effects.py` already keeps.
 
 Every CR number here was looked up with `knowledge_search(q="...",
 type="rules")` in the session that wrote this file:
@@ -44,7 +53,7 @@ type="rules")` in the session that wrote this file:
 """
 
 from magic_cards_model.machines import Step
-from magic_cards_model.machines.effects import UnmodeledTriggerEffectNotice
+from magic_cards_model.machines.effects import ReflexiveClauseNotice
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card_state import Counter
 from tests.scenarios.harness import Scenario
@@ -320,15 +329,18 @@ def test_static_prison_refuses_a_scripted_yes_it_cannot_afford():
 
 def test_guide_of_souls_records_a_notice_instead_of_resolving_silently():
     """The trigger fires and goes on the stack correctly (CR 508.3d) - only
-    its *resolution* is unread, because the missing primitive is the
-    reflexive trigger itself (CR 603.12), not the energy payment
-    (`may_pay_energy` already asks and pays exactly this fixed amount
-    correctly, as `test_static_prison_survives_when_its_controller_pays_the_
-    energy` above proves for the same call). Before this wave this resolved
-    with no effect and no trace; now it leaves an `UnmodeledTriggerEffectNotice`
-    naming Guide of Souls, and alice's energy - untouched either way, since
-    nothing here ever asks the question - is asserted directly so a future
-    regression that *did* silently drain it would be caught."""
+    its *resolution* is unread. Both primitives it once lacked now exist (a
+    reflexive trigger, built by a sibling wave against Grist, the Hunger
+    Tide; a may-pay-a-cost decision, built by this wave - `may_pay_energy`
+    already asks and pays exactly this fixed amount correctly, as
+    `test_static_prison_survives_when_its_controller_pays_the_energy` above
+    proves for the same call) but nothing yet connects a reflexive trigger to
+    a non-sacrifice paid cost, so this still falls through to the general
+    `ReflexiveClauseNotice` (CR 603.12) rather than resolving. Before either
+    wave this resolved with no effect and no trace at all; alice's energy -
+    untouched either way, since nothing here ever asks the question - is
+    asserted directly so a future regression that *did* silently drain it
+    would be caught."""
     scenario = (
         Scenario()
         .player("alice", library=["Forest"], battlefield=["Guide of Souls", "Raging Goblin"])
@@ -342,9 +354,9 @@ def test_guide_of_souls_records_a_notice_instead_of_resolving_silently():
     scenario.resolve_top()
 
     assert scenario.player("alice").energy == 0
-    notices = scenario.game.unmodeled_trigger_effect_notices
+    notices = scenario.game.reflexive_clause_notices
     assert len(notices) == 1
     notice = notices[0]
-    assert isinstance(notice, UnmodeledTriggerEffectNotice)
+    assert isinstance(notice, ReflexiveClauseNotice)
     assert notice.source_name == "Guide of Souls"
     assert "when you do" in notice.text.lower()
