@@ -33,10 +33,42 @@ Stupor // Soporific Springs, and Turntimber Symbiosis // Turntimber,
 Serpentine Wood - covering both shapes of land back (an unconditional "enters
 tapped" and the "you may pay 3 life" shockland-style choice) and both shapes
 of front (a creature and three spells).
+
+## The observer-side half of the same bug
+
+The tests above cover *the entering permanent's own* trigger - CR 712.8f
+correctly denies Witch-Blessed Meadow the creature face's "when this creature
+enters" line. A second, real-game defect was a different object entirely:
+Guide of Souls ("Whenever another creature you control enters, you gain 1 life
+and get {E}") fired anyway when a player played Witch Enchanter for its land
+face - a Land entered, not a Creature, and Guide of Souls should never have
+triggered.
+
+The cause was `Game._enters_event` handing `condition_matches` the raw
+`Card` (`permanent.card`), whose `.types` reads `Card.front_type_line`
+(structurally the front face, CR 712.8a) rather than `CardState.types`, which
+is already up-face aware (`land_face_played`/`up_face`). `GameEvent` now
+carries `subject_types`/`subject_subtypes` computed from the `CardState` at
+the moment each event is built, and every type-or-subtype check in
+`machines/triggers.py` (`_types_match`, `_subtype_matches`, and
+`_first_spell_this_turn_holds`'s `_category_matches`) reads those instead of
+the raw printing - CR 603.10 checks the object "as it exists" at the trigger
+event, and for an entering permanent that is the face that's actually up.
+
+The same bug has an unreported mirror image: "Landfall — Whenever a land you
+control enters, ..." (an ordinary CR 603.6a enters-the-battlefield trigger,
+Landfall being an ability word with no rules meaning of its own, CR 207.2c)
+could never fire off *any* MDFC-with-a-land-face fixture, because their
+front faces are
+Creature/Instant/Sorcery and the raw `Card.types` read never saw the land that
+actually entered. Both directions are tested together below, in one game,
+because a fix that only silences the false positive and leaves the false
+negative unnoticed is half a fix wearing a passing test suite.
 """
 
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Color, Type, Zone
+from magic_cards_model.models.card_state import Counter
 
 from .harness import Scenario
 
@@ -244,3 +276,88 @@ def test_a_plain_land_is_still_unaffected_by_the_land_face_lookup():
 
     assert forest.zone is Zone.BATTLEFIELD
     assert forest.name == "Forest"
+
+
+# -- the observer-side bug: an MDFC land drop is not a creature entering -----
+
+
+def test_witch_blessed_meadow_does_not_trigger_guide_of_souls_but_a_real_creature_still_does():
+    """The exact real-game defect, both halves in one game.
+
+    Alice controls Guide of Souls ("Whenever another creature you control
+    enters, you gain 1 life and get {E}") at 18 life with 2 energy already -
+    the numbers from the reported game. Playing Witch Enchanter for its land
+    face must change neither: a Land entered, not a Creature (CR 712.8f), so
+    `_types_match`'s "creature" requirement must see `CardState.types` (the up
+    face) and refuse. Then, in the same game, casting an ordinary creature
+    (Grizzly Bears) must still trigger Guide of Souls exactly once - proving
+    the type check was actually evaluated and not simply forced closed, which
+    is trap #6: a test that only checks "no trigger on the land" would pass
+    just as well if the type check were broken into always-False.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            life=18,
+            hand=["Witch Enchanter", "Grizzly Bears"],
+            battlefield=["Guide of Souls", "Forest", "Forest"],
+            library=["Plains"],
+        )
+        .player("bob", library=["Plains"])
+        .build()
+    )
+    scenario.player("alice").add_counters(Counter.ENERGY, 2)
+    _to_main(scenario)
+    scenario.will_pay_the_life(False)  # isolate the trigger check from the life-payment choice
+
+    meadow = scenario.play_land("Witch Enchanter")
+
+    assert meadow.zone is Zone.BATTLEFIELD
+    assert meadow.types == (Type.LAND,)
+    assert scenario.pending_triggers == [], (
+        "a Land entering is not a Creature entering (CR 712.8f) - Guide of "
+        "Souls must not have triggered"
+    )
+    assert scenario.game.stack_is_empty, (
+        "no trigger should have gone on the stack, so nothing is left "
+        "unresolved for the land drop to have caused"
+    )
+    assert scenario.player("alice").life == 18
+    assert scenario.player("alice").energy == 2
+
+    sources = scenario.untapped_sources("Forest", "Forest")
+    scenario.cast_and_resolve("Grizzly Bears", *sources)
+    assert scenario.stack_names() == ["Guide of Souls's triggered ability"]
+    scenario.pass_until_resolved()
+
+    assert scenario.player("alice").life == 19, "a real creature entering still triggers it"
+    assert scenario.player("alice").energy == 3
+
+
+def test_landfall_fires_when_an_mdfcs_land_face_is_played():
+    """The unreported false-negative half: Icetill Explorer's Landfall
+    ("Whenever a land you control enters, mill a card", CR 603.6a - an
+    ordinary enters-the-battlefield trigger) must fire off Witch-Blessed
+    Meadow entering exactly as it does off a plain Forest
+    (`test_icetill_explorer_mills_a_card_on_landfall` in
+    `test_player_effect_parser.py`) - the land actually on the battlefield,
+    not the front face's Creature type nobody asked the permanent to have.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Witch Enchanter"],
+            library=["Mountain"],
+            battlefield=["Icetill Explorer"],
+        )
+        .player("bob", library=["Plains"])
+        .build()
+    )
+    _to_main(scenario)
+
+    scenario.play_land("Witch Enchanter")
+    scenario.pass_until_resolved()
+
+    assert [state.card.name for state in scenario.player("alice").graveyard] == ["Mountain"]

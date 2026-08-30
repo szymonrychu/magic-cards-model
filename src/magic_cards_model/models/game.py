@@ -1199,6 +1199,8 @@ class Game(BaseModel):
                 subject_name=card_state.name,
                 subject_controller=controller,
                 subject_card=card_state.card,
+                subject_types=card_state.types,
+                subject_subtypes=card_state.subtypes,
                 player=controller,
             )
         )
@@ -1624,6 +1626,12 @@ class Game(BaseModel):
             subject_name=permanent.name,
             subject_controller=permanent.controller,
             subject_card=permanent.card,
+            # CR 712.8f, 603.10: judged by the face that's actually up on the
+            # battlefield (`CardState.types`/`.subtypes`, land-face aware), not
+            # `permanent.card.types`'s front-face-only read - a Witch-Blessed
+            # Meadow entering as a land is not a creature entering.
+            subject_types=permanent.types,
+            subject_subtypes=permanent.subtypes,
             player=permanent.controller,
         )
 
@@ -2996,6 +3004,8 @@ class Game(BaseModel):
                 subject_name=source.name if source is not None else None,
                 subject_controller=source.controller if source is not None else None,
                 subject_card=source.card if source is not None else None,
+                subject_types=source.types if source is not None else None,
+                subject_subtypes=source.subtypes if source is not None else None,
                 player=target.username if isinstance(target, Player) else None,
                 combat=event.combat,
                 amount=event.amount,
@@ -3265,6 +3275,8 @@ class Game(BaseModel):
                 subject_name=permanent.name,
                 subject_controller=permanent.controller,
                 subject_card=permanent.card,
+                subject_types=permanent.types,
+                subject_subtypes=permanent.subtypes,
                 player=permanent.controller,
             )
         )
@@ -3328,6 +3340,12 @@ class Game(BaseModel):
                     subject_name=card_state.name,
                     subject_controller=card_state.controller,
                     subject_card=card_state.card,
+                    # CR 603.10a: dies is a look-back event, and
+                    # `land_face_played` is not cleared by `move_to`, so this
+                    # still reads the face that was up immediately before the
+                    # permanent left the battlefield.
+                    subject_types=card_state.types,
+                    subject_subtypes=card_state.subtypes,
                     player=card_state.controller,
                 )
             )
@@ -3826,6 +3844,8 @@ class Game(BaseModel):
                 subject_name=creature.name,
                 subject_controller=self.controller_of(creature).username,
                 subject_card=creature.card,
+                subject_types=creature.types,
+                subject_subtypes=creature.subtypes,
                 defender=attack.defender,
                 player=self.controller_of(creature).username,
             )
