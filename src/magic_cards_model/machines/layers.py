@@ -47,9 +47,13 @@ so there is no cached value to go stale (CR 613.5: "the application of
 continuous effects ... is continually and automatically performed by the game").
 
 `LAYER_EFFECTS` at the bottom is a scripted registry keyed by card name, the
-same shape `machines/effects.py` uses for spells. The card data still comes from
-Scryfall; only the mapping from a card's text to the effects it generates is
-written by hand, because nothing parses static abilities yet.
+same shape `machines/effects.py` uses for spells, kept only for shapes
+`parsed_layer_effects` cannot read. `parsed_layer_effects` itself is driven by
+`machines/abilities.py`'s own ability parser - `layer_readable_sentences` hands
+it every `StaticAbility` and every `ActivatedAbility.effect` `parse_abilities`
+found, rather than re-deriving reminder-stripped, cost-stripped sentences from
+raw oracle text a second time. A card whose shape neither the parser nor the
+registry reads still generates nothing, silently - see `LayerNotice`.
 
 A static ability's effect exists exactly while its source does (CR 611.3b), so
 it is rebuilt from the battlefield each time and never stored. An effect created
@@ -71,6 +75,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from ..models.card import Color, Supertype, Type
 from ..models.card_state import CardState, Counter
 from ..models.zone import Zone
+from .abilities import layer_readable_sentences
 from .combat import Keyword
 
 # --------------------------------------------------------------------------
@@ -1070,49 +1075,56 @@ def switch_power_toughness(chars: Characteristics, board: Board) -> Characterist
 
 # --------------------------------------------------------------------------
 # Parsed from oracle text: pump, keyword-grant, type-change and P/T-set
-# shapes (W5, W6)
+# shapes (W5, W6, W7)
 # --------------------------------------------------------------------------
 #
-# `LAYER_EFFECTS` below is a per-card registry because nothing parses static
-# text - the module docstring says so plainly. This section is the first
-# crack in that wall: shapes that generalise across the card pool rather than
-# needing a hand-written row each:
+# `LAYER_EFFECTS` below is a per-card registry, kept only for shapes this
+# section's parser does not generalise. The sentences it runs against come from
+# `machines/abilities.py`'s own ability parser (`layer_readable_sentences`),
+# not a second, independent reading of raw oracle text - see `_effect_sentences`.
 #
 #     "Target creature gets +N/+N until end of turn."                     (CR 613.4c)
 #     "Target creature gets +N/+N and gains <keyword> until end of turn." (CR 613.4c, CR 613.1f)
 #     "Target creature gains <keyword> until end of turn."                (CR 613.1f, CR 113.10)
 #     "Creatures you control get +N/+N."                                  (CR 613.4c, static)
+#     "Creatures you control have <keyword>[, <keyword> and <keyword>]."  (CR 613.1f, static)
 #     "This creature has base power and toughness N/N until end of turn." (CR 613.4b)
 #     "Until your next turn, up to one target ... becomes a[n] <type>
 #      creature with power and toughness each equal to its mana value."   (CR 613.1d, 613.4b, 613.6)
 #
 # each also read for a permanent's own "this creature" (an activated
 # ability's own source, `_basking_rootwalla`'s old shape) and, for the anthem
-# one, the "other creatures you control" / "creatures your opponents
-# control" variants Elesh Norn prints as two separate lines. The last two
-# (W6) are Karn, the Great Creator's +1 and Flexible Waterbender's waterbend
-# ability - a type change plus a P/T *set* (not a modifier) is a different
-# rules shape from the first four, which is why sublayer 7b (`Sublayer.SET`)
-# rather than 7c (`Sublayer.MODIFY`) is what tells "gets +N/+N" and "has base
-# power and toughness N/N" apart once both apply to the same creature
-# (CR 613.4).
+# and indefinite-keyword-grant ones, the "other creatures you control" /
+# "creatures your opponents control" variants Elesh Norn and Elesh Norn's
+# keyword-granting cousins print as separate lines. The type-change/P/T-set
+# pair (W6) is Karn, the Great Creator's +1 and Flexible Waterbender's
+# waterbend ability - a type change plus a P/T *set* (not a modifier) is a
+# different rules shape from the pump/anthem ones, which is why sublayer 7b
+# (`Sublayer.SET`) rather than 7c (`Sublayer.MODIFY`) is what tells "gets
+# +N/+N" and "has base power and toughness N/N" apart once both apply to the
+# same creature (CR 613.4).
 #
 # `effects_for` tries `LAYER_EFFECTS` first and only falls back to
 # `parsed_layer_effects` on a miss, so a future printing that needs an
 # exception can still get an explicit row that shadows the parser.
 #
-# **Fail-closed.** A sentence that opens the same way one of these four does -
+# **Fail-closed.** A sentence that opens the same way one of these shapes does -
 # "target creature gets", "this creature gets", "creatures you control get",
-# "creatures your opponents control get" - but does not fully match is never
-# silently dropped: `looks_like_unparsed_layer_effect` catches it and
-# `effects_for` records a `LayerNotice` instead of producing nothing that
-# looks identical to a card with no effect at all. Fiend Artisan's "for each
-# creature card in your graveyard" and Violent Outburst's "... until end of
-# turn" team-wide pump are real pool cards this parser cannot read, and both
-# are exactly this case. Any other sentence - "Whenever ...", "Delirium —
-# ...", a bare "Vigilance" line, Dryad of the Ilysian Grove's land-drop grant
-# - is not this wave's territory at all and produces no notice, the same way
-# `_dryad_of_the_ilysian_grove`'s own docstring already documents leaving that
+# "creatures you control have", "creatures your opponents control get/have" -
+# but does not fully match is never silently dropped: `looks_like_unparsed_
+# layer_effect` catches it and `effects_for` records a `LayerNotice` instead of
+# producing nothing that looks identical to a card with no effect at all. Fiend
+# Artisan's "for each creature card in your graveyard" and Violent Outburst's
+# "... until end of turn" team-wide pump are real pool cards this parser cannot
+# read, and both are exactly this case; Mosswort Bridge's "if creatures you
+# control have total power 10 or greater" is not - it is an activated
+# ability's own intervening condition, not the sentence's own opening words
+# (see `_indefinite_keyword_grant_builder`'s own remarks), so it is correctly
+# never even offered to `_LOOKS_LIKE_LAYER_EFFECT_RE`. Any other sentence -
+# "Whenever ...", "Delirium — ...", a bare "Vigilance" line, Dryad of the
+# Ilysian Grove's land-drop grant - is not this wave's territory at all and
+# produces no notice, the same way `_dryad_of_the_ilysian_grove`'s own
+# docstring already documents leaving that
 # line to nobody.
 
 #: The two subjects this wave's parser reads: a spell's own target, or an
@@ -1134,6 +1146,24 @@ _KEYWORD_GRANT_RE = re.compile(
 _ANTHEM_RE = re.compile(
     r"^(?P<other>other )?creatures (?P<whose>you control|your opponents control) get "
     r"(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)\.?$",
+    re.IGNORECASE,
+)
+
+#: "[Other] creatures [you control|your opponents control] have <keyword>[,
+#: <keyword>, ... and <keyword>]." (True Conviction: "Creatures you control
+#: have double strike and lifelink.") - the anthem shape's keyword-granting
+#: twin: no "until end of turn" (CR 611.3's static effect lasts exactly as
+#: long as its source does, CR 611.3b), so it lands in layer 6 (CR 613.1f)
+#: rather than the temporary layer-6 grant `_KEYWORD_GRANT_RE` reads for a
+#: single targeted or self-referential creature. Anything printed after
+#: "have"/"has" is checked keyword-by-keyword against `_KNOWN_KEYWORDS` by
+#: `_split_and_validate_keywords`, so a card naming something outside that
+#: whitelist - or a non-keyword clause "have total power 10 or greater"
+#: (Mosswort Bridge) - fails the match and falls to
+#: `looks_like_unparsed_layer_effect` instead of granting the wrong thing.
+_INDEFINITE_KEYWORD_GRANT_RE = re.compile(
+    r"^(?P<other>other )?creatures (?P<whose>you control|your opponents control) "
+    r"(?:have|has) (?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*)\.?$",
     re.IGNORECASE,
 )
 
@@ -1187,43 +1217,29 @@ _BECOMES_CREATURE_WITH_MANA_VALUE_PT_RE = re.compile(
 #: silently producing nothing (see `looks_like_unparsed_layer_effect`).
 _LOOKS_LIKE_LAYER_EFFECT_RE = re.compile(
     rf"^{_SUBJECT} (?:gets?|gains?|has|have)\b"
-    r"|^(?:other )?creatures (?:you control|your opponents control) get\b"
+    r"|^(?:other )?creatures (?:you control|your opponents control) (?:get|have|has)\b"
     r"|^Until your next turn, up to \S+ target\b",
     re.IGNORECASE,
 )
 
-#: An activated ability's mana cost ahead of its effect - "{1}{G}: This
-#: creature gets +2/+2 until end of turn." (Basking Rootwalla) - or a loyalty
-#: cost's `[+N]`/`[0]`/`[−N]` symbol (CR 107.7, CR 606.2) ahead of it - "+1:
-#: Until your next turn, ..." (Karn, the Great Creator). Neither is part of
-#: the sentence itself (CR 601.2h separates a cost from what it pays for).
-_ACTIVATION_COST_PREFIX_RE = re.compile(r"^(?:(?:\{[^{}]+\})+|[+−-]\d+|0)\s*:\s*")
-
-#: A whole line of reminder text (CR 207.2a), wherever it sits - Dismember's
-#: and Mutagenic Growth's Phyrexian-mana explainer prints *before* the effect
-#: rather than after it.
-_TRAILING_REMINDER_RE = re.compile(r"\s*\([^()]*\)\s*$")
-
 
 def _effect_sentences(oracle_text: str | None) -> list[str]:
-    """Every sentence of a card's oracle text, reminder text stripped.
+    """Every sentence a continuous effect could come from, off a card's own
+    printed text.
 
-    One printed line can hold more than one instruction - Monstrous Rage's
-    pump and its token creation are two sentences on one line; Basking
-    Rootwalla's activation cost and its "activate only once" restriction are
-    two more - so this splits below the line level, on ". " boundaries, after
-    dropping a line's own trailing reminder text and any activation cost
-    ahead of it.
+    This used to re-derive its sentences from raw oracle text: strip a line's
+    trailing reminder text, strip an activation cost ahead of a colon, then
+    split what is left on ". " boundaries. That duplicated
+    `machines/abilities.py`'s own line classifier - which already tells a
+    `StaticAbility` line from an `ActivatedAbility`'s cost-and-effect, and
+    already strips reminder text (CR 207.2a) anywhere in the line, not only at
+    its end - without ever consulting it, so `StaticAbility` was parsed
+    upstream and thrown away. `layer_readable_sentences` is that classifier,
+    read for exactly the two kinds of line a continuous effect's own sentence
+    can be (CR 604.1 static, or CR 602.1 activated with its cost split off);
+    see its docstring for why a triggered or keyword line is not one of them.
     """
-    sentences: list[str] = []
-    for line in _ability_lines(oracle_text):
-        cleaned = _TRAILING_REMINDER_RE.sub("", line).strip()
-        cleaned = _ACTIVATION_COST_PREFIX_RE.sub("", cleaned)
-        for sentence in re.split(r"(?<=\.)\s+", cleaned):
-            sentence = sentence.strip()
-            if sentence:
-                sentences.append(sentence)
-    return sentences
+    return layer_readable_sentences(oracle_text)
 
 
 def _pump_and_keyword_builder(power: int, toughness: int, keyword: str | None) -> EffectBuilder:
@@ -1315,16 +1331,7 @@ def _anthem_builder(
         targets: Sequence[CardState],
         context: LayerContext,
     ) -> list[ContinuousEffect]:
-        if whose == "you control":
-            selector = (
-                other_creatures_controlled_by(source.id, source.controller)
-                if other
-                else creatures_controlled_by(source.controller)
-            )
-            subject = "other creatures you control" if other else "creatures you control"
-        else:
-            selector = creatures_controlled_by_opponents_of(source.controller)
-            subject = "creatures your opponents control"
+        selector, subject = _creature_group(source, other=other, whose=whose)
         return [
             ContinuousEffect(
                 description=f"{source.name}: {subject} get {power:+d}/{toughness:+d}",
@@ -1336,6 +1343,61 @@ def _anthem_builder(
                 selector=selector,
                 modification=modify_power_toughness(power, toughness),
             )
+        ]
+
+    return builder
+
+
+def _creature_group(source: CardState, *, other: bool, whose: str) -> tuple[Selector, str]:
+    """The selector and printed subject `_anthem_builder` and
+    `_indefinite_keyword_grant_builder` share: "[other] creatures [you
+    control|your opponents control]", read off the same three regex groups
+    both shapes parse.
+    """
+    if whose == "you control":
+        selector = (
+            other_creatures_controlled_by(source.id, source.controller)
+            if other
+            else creatures_controlled_by(source.controller)
+        )
+        subject = "other creatures you control" if other else "creatures you control"
+        return selector, subject
+    return (
+        creatures_controlled_by_opponents_of(source.controller),
+        "creatures your opponents control",
+    )
+
+
+def _indefinite_keyword_grant_builder(
+    keywords: list[str], *, other: bool, whose: str, line: str
+) -> EffectBuilder:
+    """ "[Other] creatures [you control|your opponents control] have <keyword(s)>."
+    (True Conviction) - layer 6 (CR 613.1f), one grant per keyword.
+
+    A static ability's effect (CR 611.3), so - like `_anthem_builder` - it is
+    timestamped off the source permanent (CR 613.7a) and stops the moment the
+    source loses the ability (CR 613.6): `source_ability` is the exact printed
+    sentence, matching what layer 6 removal matches on.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        selector, subject = _creature_group(source, other=other, whose=whose)
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: {subject} have {keyword}",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=line,
+                selector=selector,
+                modification=grant_ability(keyword),
+            )
+            for keyword in keywords
         ]
 
     return builder
@@ -1444,8 +1506,20 @@ def _becomes_creature_with_mana_value_pt_builder(extra_type: Type) -> EffectBuil
 _KNOWN_KEYWORDS = frozenset(keyword.value for keyword in Keyword)
 
 
+def _split_and_validate_keywords(raw: str) -> list[str] | None:
+    """ "double strike and lifelink" / "menace, deathtouch and first strike" ->
+    each keyword, capitalised - or `None` if any of them is not on
+    `_KNOWN_KEYWORDS`'s whitelist, the same fail-closed rule the single-keyword
+    shapes already enforce.
+    """
+    parts = [part.strip() for part in re.split(r",\s*|\s+and\s+", raw) if part.strip()]
+    if not parts or any(part.lower() not in _KNOWN_KEYWORDS for part in parts):
+        return None
+    return [part.capitalize() for part in parts]
+
+
 def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
-    """One of the four generalised shapes, or `None` if this is not one of them."""
+    """One of the generalised shapes below, or `None` if this is not one of them."""
     if match := _PUMP_RE.fullmatch(sentence):
         power, toughness = int(match.group("power")), int(match.group("toughness"))
         keyword = match.group("keyword")
@@ -1467,6 +1541,16 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
             whose=match.group("whose").lower(),
             line=sentence,
         )
+    if match := _INDEFINITE_KEYWORD_GRANT_RE.fullmatch(sentence):
+        keywords = _split_and_validate_keywords(match.group("keywords"))
+        if keywords is None:
+            return None
+        return _indefinite_keyword_grant_builder(
+            keywords,
+            other=match.group("other") is not None,
+            whose=match.group("whose").lower(),
+            line=sentence,
+        )
     if match := _BASE_PT_SET_RE.fullmatch(sentence):
         return _base_pt_set_builder(int(match.group("power")), int(match.group("toughness")))
     if match := _BECOMES_CREATURE_WITH_MANA_VALUE_PT_RE.fullmatch(sentence):
@@ -1478,8 +1562,8 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
 
 
 def parsed_layer_effects(oracle_text: str | None) -> EffectBuilder | None:
-    """Every sentence of `oracle_text` that is one of this wave's four shapes,
-    combined into one builder - or `None` if none of them matched at all.
+    """Every sentence of `oracle_text` that is one of the generalised shapes
+    above, combined into one builder - or `None` if none of them matched at all.
 
     Sentences outside this wave's territory (a triggered ability, an
     intervening *if*, a bare keyword line, a token-creation instruction) are
@@ -1509,8 +1593,8 @@ def parsed_layer_effects(oracle_text: str | None) -> EffectBuilder | None:
 
 
 def looks_like_unparsed_layer_effect(oracle_text: str | None) -> bool:
-    """True if some sentence of `oracle_text` reads like one of this wave's
-    four pump/keyword-grant/anthem shapes but did not fully match - the
+    """True if some sentence of `oracle_text` reads like one of the
+    pump/keyword-grant/anthem shapes above but did not fully match - the
     fail-closed signal a caller records as a `LayerNotice` instead of
     silently producing nothing, mirroring `looks_like_unparsed_cost_modifier`
     (`machines/cost.py`) and the effect `TargetingNotice`/`InterveningIfNotice`

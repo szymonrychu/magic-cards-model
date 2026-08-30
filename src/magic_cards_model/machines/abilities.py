@@ -749,6 +749,66 @@ def keyword_ability(card: Card, keyword: str) -> KeywordAbility | None:
     return None
 
 
+def layer_readable_sentences(
+    text: str | None, known_keywords: list[str] | None = None
+) -> list[str]:
+    """Every sentence of `text` this module's own line classifier says a
+    continuous effect (CR 611.2, CR 611.3) could plausibly come from.
+
+    `machines/layers.py`'s shape parser used to derive its sentences by
+    stripping reminder text and an activation cost off each raw oracle-text
+    line itself, duplicating this module's classification without ever
+    consulting it - `StaticAbility` was parsed and thrown away. This is the
+    seam that fixes that: it reuses `_parse_line`, the same classifier
+    `parse_abilities` runs, on text that may have no card behind it (a
+    resolving spell's own printed text is fine; a rebuilt permanent's ability
+    list, in `keywords_in_lines`'s style, would be too, though no caller needs
+    that yet).
+
+    Two kinds of line can hold a continuous effect and are read here:
+
+    - A `StaticAbility` (CR 604.1) - its `text` verbatim, reminder and any
+      ability word already stripped. This is also where a spell's own effect
+      lands: `parse_abilities`'s module docstring documents that this parser
+      calls a leftover line static even on an instant or sorcery, because it
+      does not read type lines - which is exactly right here, since CR 611.2's
+      one-shot effect and CR 604.1's continuous one are read by the same
+      shapes (a pump's duration is what tells them apart, not which category
+      parsed it).
+    - An `ActivatedAbility` (CR 602.1) - its `effect`, i.e. everything after
+      the cost's colon, cost and any trailing activation instructions already
+      split off. Basking Rootwalla's `{1}{G}: This creature gets +2/+2 until
+      end of turn.` reaches the pump shape this way, with no separate cost
+      regex needed.
+
+    A `TriggeredAbility`, `KeywordAbility`, or `UnparsedAbility` line is
+    skipped: none of them is a continuous effect's own sentence (CR 603
+    abilities are `machines/triggers.py`'s job), and a shape that only exists
+    inside one - "Whenever ~ enters, target creature gets +1/+1 until end of
+    turn." - was never read by the sentence this parser strips reminder text
+    from either, so nothing here narrows what used to match.
+
+    One line can hold more than one sentence (Violent Urge's pump and its
+    *Delirium* clause are one `StaticAbility` line), so each classified line
+    is split on its own top-level ". " boundaries before being returned.
+    """
+    sentences: list[str] = []
+    for line in (text or "").split("\n"):
+        for ability in _parse_line(line, list(known_keywords or []), face=""):
+            body: str | None = None
+            if isinstance(ability, StaticAbility):
+                body = ability.text
+            elif isinstance(ability, ActivatedAbility):
+                body = ability.effect
+            if not body:
+                continue
+            for sentence in re.split(r"(?<=\.)\s+", body.strip()):
+                sentence = sentence.strip()
+                if sentence:
+                    sentences.append(sentence)
+    return sentences
+
+
 # --------------------------------------------------------------------------
 # Line parsing
 # --------------------------------------------------------------------------
