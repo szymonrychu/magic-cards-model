@@ -1259,7 +1259,13 @@ class Game(BaseModel):
         # every modal-DFC spell side (Shatterskull Smashing, Valakut
         # Awakening, Sink into Stupor, Turntimber Symbiosis) resolve to
         # nothing, since `effect_text` came back empty.
-        effect = effect_for(spell.name, spell.oracle_text)
+        # CR 107.3a: X is fixed for the whole spell once announced, but only
+        # for a spell that actually has `{X}` in its own mana cost - a spell
+        # whose text defines its own X some other way (CR 107.3f) gets no
+        # substitution at all, which is `effect_for`'s own `x_value=None`
+        # default. `spell.mana_cost` already reads the up face of a DFC.
+        x_value = self.cast_record(spell).x_value if "{X}" in (spell.mana_cost or "") else None
+        effect = effect_for(spell.name, spell.oracle_text, x_value=x_value)
         if effect is not None:
             effect(self, spell)
 
@@ -3327,6 +3333,17 @@ class Game(BaseModel):
         elif event.destination is Zone.EXILE:
             card_state.move_to(Zone.EXILE)
             self.exile.append(card_state)
+        elif event.destination is Zone.LIBRARY:
+            # Green Sun's Zenith's own "Shuffle [this] into its owner's
+            # library" (`machines/replacement.py`'s `_stack_replacements`
+            # redirects the destination here, off that same sentence). CR
+            # 701.24c: the library is shuffled the moment the card lands in
+            # it, even though it arrived straight off the stack rather than
+            # out of a search - there is no separate scripted "then shuffle"
+            # clause for this one the way a search effect prints its own.
+            owner = self._owner_of(card_state)
+            owner.add(card_state, Zone.LIBRARY)
+            self.shuffle_library(owner)
         else:
             raise ValueError(f"a graveyard replacement sent {card_state.name} nowhere")
 

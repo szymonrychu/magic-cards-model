@@ -812,7 +812,33 @@ EFFECTS: dict[str, Effect] = {
 }
 
 
-def effect_for(card_name: str, effect_text: str | None = None) -> Effect | None:
+#: "Shuffle <card's own name> into its owner's library" (Green Sun's Zenith).
+#: CR 304.2/307.2's "the actions stated in its rules text are followed" runs
+#: this sentence during resolution the same as any other, but the *result* -
+#: the spell leaving the stack for the library instead of the graveyard - is
+#: applied by `machines/replacement.py`'s `_stack_replacements` off the same
+#: sentence (see its own docstring): the destination is not something a
+#: spell-resolution clause *runs*, it is what CR 608.2n/CR 304.2/CR 307.2's own
+#: final "put into its owner's graveyard" step is replaced by, the same split
+#: `_REBOUND_LINE_RE` already draws for CR 702.88a's rebound. Left in the text,
+#: this sentence matches no clause shape `_parse_mixed_clause` reads and fails
+#: the whole effect closed (CR 608.2c has no half-effect) - which is exactly
+#: the bug this exists to fix: Green Sun's Zenith's search never ran because
+#: its second sentence poisoned the first (`_parse_mixed_clauses`' fail-closed
+#: policy, working as intended, on a clause nothing yet read). Stripping it
+#: here by the resolving card's own name, not a name table, keeps this generic
+#: for any future card of the same shape.
+def _strip_self_shuffle_clause(card_name: str, text: str) -> str:
+    pattern = re.compile(
+        rf"(?:^|(?<=[.\s]))Shuffle {re.escape(card_name)} into its owner's library\.?\s*",
+        re.IGNORECASE,
+    )
+    return pattern.sub("", text)
+
+
+def effect_for(
+    card_name: str, effect_text: str | None = None, *, x_value: int | None = None
+) -> Effect | None:
     """A spell's effect: an explicit `EFFECTS` row if there is one, otherwise
     `parse_mixed_effect_for_spell` on the card's own oracle text - one
     per-clause dispatcher that tries each clause as a targeted clause and then
@@ -827,15 +853,39 @@ def effect_for(card_name: str, effect_text: str | None = None) -> Effect | None:
     chosen off `Game.cast_record` and runs each one's own clause, keyed by
     nothing but the card's own printed text - no per-card row needed here
     either.
+
+    `x_value` is CR 107.3a's X as the caster announced it, read by the caller
+    off `Game.cast_record` - `None` for a spell with no `{X}` in its own mana
+    cost, which leaves every bare "X" in the text alone. That matters: a card
+    that defines its own X in its rules text instead (Craterhoof Behemoth's
+    "get +X/+X ... where X is the number of creatures you control") is CR
+    107.3f's X, not CR 107.3a's, and substituting the cast X into it would be
+    wrong, not merely unhelpful - `None` keeps this function out of that
+    card's way entirely.
+
+    Given a real value, the *unsubstituted* text is still tried first:
+    Wrath of the Skies's `_parse_x_energy_pay_destroy_by_mana_value` and
+    Galvanic Discharge's `_parse_target_get_energy_pay_damage` already read
+    `Game.cast_record` for themselves at resolution and match the literal
+    word "X" in their own regex - substituting it away first would silently
+    turn a working parser into a non-match. Only if that first pass reads
+    nothing is the text substituted (the same way `machines/modes.py`'s
+    `substitute_x` already does for a modal spell's own mode text) and tried
+    again, which is what makes a search's "mana value X or less" readable by
+    `_SEARCH_AND_PUT_RE`'s `\\d+` group.
     """
     explicit = EFFECTS.get(card_name)
     if explicit is not None:
         return explicit
     if effect_text is None:
         return None
+    effect_text = _strip_self_shuffle_clause(card_name, effect_text)
     if is_modal_text(effect_text):
         return resolve_modal_spell
-    return _spell_effect_or_notice(effect_text)
+    effect = _spell_effect_or_notice(effect_text)
+    if effect is not None or x_value is None:
+        return effect
+    return _spell_effect_or_notice(substitute_x(effect_text, x_value))
 
 
 # --------------------------------------------------------------------------
