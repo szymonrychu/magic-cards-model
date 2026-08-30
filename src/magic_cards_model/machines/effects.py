@@ -3307,6 +3307,71 @@ def _parse_mana_adding_trigger(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "Sacrifice this <type> unless you pay {E}[{E}...]." (Static Prison) - a
+#: fixed-amount CR 107.14/118.3 energy cost that averts the sacrifice rather
+#: than causing a bonus. Only the self-referential "this <type>" subject is
+#: read, the same restriction `machines/cost.py`'s `_PHRASE_EXERT_SELF` and
+#: `_COUNTER_SELF_SUBJECT` hold their own self-referential cost shapes to - a
+#: printed cost naming some other permanent would need target resolution this
+#: template does not have.
+_SACRIFICE_UNLESS_PAY_ENERGY_RE = re.compile(
+    r"^sacrifice this (?:creature|permanent|artifact|enchantment|planeswalker|land) "
+    r"unless you pay (?P<e>(?:\{e\})+)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_sacrifice_unless_pay_energy(text: str) -> AbilityEffect | None:
+    """CR 107.14, CR 118.3: "Sacrifice this <type> unless you pay {E}...",
+    read off the ability's own printed text (Static Prison's upkeep trigger).
+
+    `Game.may_pay_energy` is the same fixed-amount question `may_pay_life`
+    already asks for CR 119.4's life-total floor, turned the other way round:
+    paying is what avoids the sacrifice, so a "no" - declined, or illegal for
+    lack of energy - sacrifices the source instead of doing nothing.
+    """
+    match = _SACRIFICE_UNLESS_PAY_ENERGY_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    amount = len(re.findall(r"\{e\}", match.group("e"), re.IGNORECASE))
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        player = game.player(ability.controller)
+        paid = game.may_pay_energy(player, amount, source=ability.source_name)
+        if not paid:
+            game.sacrifice(source)
+
+    return effect
+
+
+#: "You may pay {E}{E}{E}. When you do, ..." (Guide of Souls's attack
+#: trigger) - CR 603.12's reflexive trigger, a second ability that triggers
+#: off the first one's own optional cost being paid. Out of scope for this
+#: wave on purpose: the missing primitive is the reflexive trigger itself
+#: (`machines/decisions.py`/`machines/delayed.py`, being built by a sibling
+#: wave against Grist), not the energy payment - `may_pay_energy` above
+#: already asks and pays exactly this fixed amount correctly. Recognised only
+#: so a card of this shape gets an `UnmodeledTriggerEffectNotice` instead of
+#: silently doing nothing, the same "unreadable is not the same as no effect"
+#: discipline every other notice in this file already keeps.
+_PAY_ENERGY_REFLEXIVE_RE = re.compile(
+    r"^you may pay (?:\{e\})+\.\s*when you do,", re.IGNORECASE | re.DOTALL
+)
+
+
+def _unreadable_pay_energy_reflexive_clause(text: str) -> str | None:
+    """`text`, if it opens with Guide of Souls's "you may pay {E}...When you
+    do," reflexive-trigger shape (CR 603.12) - a real effect this wave cannot
+    run, not "no effect here"."""
+    whole = text.strip()
+    if _PAY_ENERGY_REFLEXIVE_RE.match(whole):
+        return whole
+    return None
+
+
 def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     """`parse_mixed_effect` on `effect_text`, or - if that failed specifically
     on an unreadable anaphoric second clause - a stand-in effect that records
@@ -3352,6 +3417,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     mana_adding = _parse_mana_adding_trigger(effect_text)
     if mana_adding is not None:
         return mana_adding
+    sacrifice_unless_energy = _parse_sacrifice_unless_pay_energy(effect_text)
+    if sacrifice_unless_energy is not None:
+        return sacrifice_unless_energy
     parsed = parse_mixed_effect(effect_text)
     if parsed is not None:
         return parsed
@@ -3427,6 +3495,20 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
 
         return cast_permission_notice_only
 
+    unread_pay_energy_reflexive = _unreadable_pay_energy_reflexive_clause(effect_text)
+    if unread_pay_energy_reflexive is not None:
+
+        def pay_energy_reflexive_notice_only(game: "Game", ability: AbilityOnStack) -> None:
+            game.unmodeled_trigger_effect_notices.append(
+                UnmodeledTriggerEffectNotice(
+                    source_id=ability.source_id,
+                    source_name=ability.source_name,
+                    text=unread_pay_energy_reflexive,
+                )
+            )
+
+        return pay_energy_reflexive_notice_only
+
     unread_hand_choice = _unreadable_unbounded_hand_choice_clause(effect_text, for_spell=False)
     if unread_hand_choice is not None:
 
@@ -3460,6 +3542,111 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     return None
 
 
+#: "Choose target creature or planeswalker. You get {E}{E}{E} (three energy
+#: counters), then you may pay any amount of {E}. `<name>` deals that much
+#: damage to that permanent." (Galvanic Discharge) - CR 107.14/118.3's
+#: variable-amount energy payment, referenced downstream by a damage clause
+#: none of `_parse_targeted_clause`'s fixed-number shapes can read ("that
+#: much" is not a literal number). Read whole, ahead of `parse_mixed_effect_
+#: for_spell`'s per-clause split, the same way `_EACH_PLAYER_EXILE_SACRIFICE_
+#: RETURN_RE` reads its own "then"-joined sentence as one CR 608.2c
+#: instruction below - `split_effect_clauses` would otherwise cut this into
+#: three fragments none of which reads as a known clause shape on its own.
+#: The card's own name is not matched literally, so any future card sharing
+#: this exact template reads for free.
+_TARGET_GET_ENERGY_PAY_DAMAGE_RE = re.compile(
+    r"^choose (?P<phrase>target[^.]+)\.\s*"
+    r"you get (?P<e>(?:\{e\})+)\s*(?:\([^()]*\))?,\s*"
+    r"then you may pay any amount of \{e\}\.\s*"
+    r"[^.]+ deals that much damage to that permanent\.$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_target_get_energy_pay_damage(text: str) -> Effect | None:
+    """Galvanic Discharge's own shape, see `_TARGET_GET_ENERGY_PAY_DAMAGE_RE`.
+
+    The target was already chosen at CR 601.2c announcement (`machines/
+    targeting.py` reads "target creature or planeswalker" the same whether it
+    sits after "Choose" or after a verb like "destroy"), so this only has to
+    grant the energy, ask CR 608.2d's variable-amount question, and deal that
+    much damage to whatever `game.resolve_targets` still finds legal (CR
+    608.2b) - exactly `deal_damage`'s own shape, with a paid amount standing
+    in for a printed number.
+    """
+    whole = _strip_non_effect_preamble(text).strip()
+    match = _TARGET_GET_ENERGY_PAY_DAMAGE_RE.fullmatch(whole)
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase")):
+        return None
+    energy_amount = len(re.findall(r"\{e\}", match.group("e"), re.IGNORECASE))
+
+    def effect(game: "Game", spell: CardState) -> None:
+        player = game.controller_of(spell)
+        if energy_amount:
+            player.add_counters(Counter.ENERGY, energy_amount)
+        paid = game.pay_any_amount_of_energy(player, source=spell.card.name)
+        if paid <= 0:
+            return
+        for target in game.resolve_targets(spell):
+            game.deal_damage(target, paid, source=spell)
+
+    return effect
+
+
+#: "You get X {E} (energy counters), then you may pay any amount of {E}.
+#: Destroy each artifact, creature, and enchantment with mana value less than
+#: or equal to the amount of {E} paid this way." (Wrath of the Skies) - the
+#: same variable-amount energy payment as Galvanic Discharge, referenced by a
+#: mass-destruction clause keyed off the amount paid instead of a target.
+_X_ENERGY_PAY_DESTROY_BY_MANA_VALUE_RE = re.compile(
+    r"^you get x \{e\}\s*(?:\([^()]*\))?,\s*then you may pay any amount of \{e\}\.\s*"
+    r"destroy each artifact, creature, and enchantment with mana value less than or "
+    r"equal to the amount of \{e\} paid this way\.$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_x_energy_pay_destroy_by_mana_value(text: str) -> Effect | None:
+    """Wrath of the Skies's own shape, see
+    `_X_ENERGY_PAY_DESTROY_BY_MANA_VALUE_RE`.
+
+    `X` is fixed once for the whole spell at announcement (CR 107.3a) and read
+    back off `Game.cast_record` the same way `parse_mode_effect` already reads
+    it for a modal card's own `X` mode. `game.battlefield` is snapshotted into
+    a plain list before anything is destroyed, so destroying one permanent
+    (and whatever state-based or triggered consequence that causes) cannot
+    change what this loop is still iterating over; each permanent's zone is
+    rechecked immediately before it is destroyed for the same reason CR
+    608.2b targets get rechecked - a permanent already gone by the time its
+    turn comes cannot be destroyed again.
+    """
+    whole = _strip_non_effect_preamble(text).strip()
+    if _X_ENERGY_PAY_DESTROY_BY_MANA_VALUE_RE.fullmatch(whole) is None:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        player = game.controller_of(spell)
+        x_value = game.cast_record(spell).x_value
+        if x_value > 0:
+            player.add_counters(Counter.ENERGY, x_value)
+        paid = game.pay_any_amount_of_energy(player, source=spell.card.name)
+        if paid <= 0:
+            return
+        candidates = [
+            permanent
+            for permanent in list(game.battlefield)
+            if set(permanent.card.types) & {Type.ARTIFACT, Type.CREATURE, Type.ENCHANTMENT}
+            and (permanent.card.cmc or 0) <= paid
+        ]
+        for permanent in candidates:
+            if permanent.zone is Zone.BATTLEFIELD:
+                game.destroy(permanent)
+
+    return effect
+
+
 def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     """The spell-side twin of `_ability_effect_or_notice`, for `effect_for`.
 
@@ -3482,6 +3669,12 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     conditional_sacrifice = _parse_conditional_sacrifice_clause(effect_text, for_spell=True)
     if conditional_sacrifice is not None:
         return conditional_sacrifice
+    target_energy_damage = _parse_target_get_energy_pay_damage(effect_text)
+    if target_energy_damage is not None:
+        return target_energy_damage
+    x_energy_destroy = _parse_x_energy_pay_destroy_by_mana_value(effect_text)
+    if x_energy_destroy is not None:
+        return x_energy_destroy
     parsed = parse_mixed_effect_for_spell(effect_text)
     if parsed is not None:
         return parsed

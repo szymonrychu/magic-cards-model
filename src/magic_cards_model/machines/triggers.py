@@ -328,6 +328,11 @@ _STEP_PHRASES: tuple[tuple[str, Step], ...] = (
     ("draw step", Step.DRAW),
     ("untap step", Step.UNTAP),
     ("precombat main phase", Step.PRECOMBAT_MAIN),
+    # CR 505.1: "the first main phase (also known as the precombat main
+    # phase)" - Static Prison's own "the beginning of your first main phase"
+    # is this same phase under its other name, not a step this table was
+    # missing a mapping for.
+    ("first main phase", Step.PRECOMBAT_MAIN),
     ("postcombat main phase", Step.POSTCOMBAT_MAIN),
     ("combat", Step.BEGINNING_OF_COMBAT),
 )

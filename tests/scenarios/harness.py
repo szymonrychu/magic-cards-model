@@ -340,6 +340,42 @@ class PlayedScenario:
         """
         self._queue(DecisionKind.PAY_LIFE, paid, username, source, times)
 
+    def will_pay_the_energy(
+        self,
+        paid: bool = True,
+        *,
+        username: str | None = None,
+        source: str | None = None,
+        times: int | None = 1,
+    ) -> None:
+        """Answer the next fixed-amount "you may pay {E}..."/"...unless you
+        pay {E}" (CR 107.14, CR 118.3, CR 608.2d).
+
+        Refusing is always legal; paying is not, below the energy needed, and
+        a scenario that asks to pay anyway gets a `ValueError` naming CR 608.2d,
+        the same shape `will_pay_the_life` already holds for CR 119.4.
+        """
+        self._queue(DecisionKind.PAY_ENERGY, paid, username, source, times)
+
+    def will_pay_energy_amount(
+        self,
+        amount: int,
+        *,
+        username: str | None = None,
+        source: str | None = None,
+        times: int | None = 1,
+    ) -> None:
+        """Answer the next "you may pay any amount of {E}" (CR 107.14, CR
+        118.3, CR 608.2d) with exactly `amount`.
+
+        `amount` is validated against however much energy the player actually
+        has when asked, not against whatever a scenario expects up front - a
+        scripted amount greater than that gets `Game.ask`'s `ValueError`
+        naming CR 118.3, the same way an out-of-range `will_pay_the_life`
+        would.
+        """
+        self._queue(DecisionKind.PAY_ENERGY_AMOUNT, amount, username, source, times)
+
     def will_choose(
         self,
         value: str,

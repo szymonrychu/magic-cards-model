@@ -116,6 +116,20 @@ class DecisionKind(StrEnum):
     MAY = "may"
     #: "You may pay N life" (CR 119.4). Illegal below N life, hence its own kind.
     PAY_LIFE = "pay_life"
+    #: A fixed-amount "you may pay {E}..." (Static Prison's "unless you pay
+    #: {E}" is the same shape read the other way round: paying is what avoids
+    #: the bad outcome rather than what causes a good one, but CR 107.14's
+    #: payment and CR 118.3's affordability check are identical either way).
+    #: Illegal when the player does not have `amount` energy counters to
+    #: remove, the same `affirmative_is_legal` shape `PAY_LIFE` already uses
+    #: for CR 119.4's life-total floor.
+    PAY_ENERGY = "pay_energy"
+    #: "You may pay any amount of {E}" (Galvanic Discharge, Wrath of the
+    #: Skies) - CR 107.14/118.3's variable-amount cousin of `PAY_ENERGY`. The
+    #: answer is an `int` from 0 up to `Decision.amount` (the energy the
+    #: player has when asked), not a bool: declining is paying 0, which is
+    #: always legal, and paying more than is available is not (CR 118.3).
+    PAY_ENERGY_AMOUNT = "pay_energy_amount"
     #: Scry N: which of the looked-at cards go to the bottom (CR 701.22a).
     SCRY = "scry"
     #: Surveil N: which of them go to the graveyard (CR 701.25a).
@@ -236,7 +250,7 @@ def legal_options(decision: Decision) -> tuple[bool, ...]:
     a subset of the cards and every subset is legal, so `SCRY` and `SURVEIL`
     return both booleans and are validated by `Game` instead.
     """
-    if decision.kind in (DecisionKind.MAY, DecisionKind.PAY_LIFE):
+    if decision.kind in (DecisionKind.MAY, DecisionKind.PAY_LIFE, DecisionKind.PAY_ENERGY):
         return (True, False) if decision.affirmative_is_legal else (False,)
     return (True, False)
 
@@ -249,8 +263,15 @@ def default_answer(decision: Decision) -> object:
     """
     if decision.kind is DecisionKind.MULLIGAN:
         return False
-    if decision.kind in (DecisionKind.MAY, DecisionKind.PAY_LIFE):
+    if decision.kind in (DecisionKind.MAY, DecisionKind.PAY_LIFE, DecisionKind.PAY_ENERGY):
         return decision.affirmative_is_legal
+    if decision.kind is DecisionKind.PAY_ENERGY_AMOUNT:
+        # Paying nothing is always legal (the variable-amount floor CR 118.3
+        # never forbids), and is the least-committal answer - the same
+        # "leave it as it was" convention `SCRY`/`SURVEIL`'s "keep everything
+        # on top" default follows, not a claim that 0 is somehow the right
+        # amount for an unscripted player to pay.
+        return 0
     if decision.kind in (DecisionKind.DECLARE_ATTACKERS, DecisionKind.DECLARE_BLOCKERS):
         # CR 508.1 says "if any" and CR 509.1 says "may": declaring nobody is
         # always legal, and is what an unscripted player does.

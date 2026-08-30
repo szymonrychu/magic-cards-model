@@ -104,7 +104,13 @@ from ..machines.triggers import (
 )
 from ..machines.turn import MAIN_PHASES, NO_PRIORITY, TURN_ORDER, Step, TurnMachine
 from .card import Card, Color, Supertype, Type
-from .card_state import CardState, ExileMarker, TargetRef, planeswalkers_with_zero_loyalty
+from .card_state import (
+    CardState,
+    Counter,
+    ExileMarker,
+    TargetRef,
+    planeswalkers_with_zero_loyalty,
+)
 from .mana import ManaCost
 from .player import Player
 from .token import move_refused, tokens_that_cease_to_exist
@@ -1930,13 +1936,23 @@ class Game(BaseModel):
         if not found:
             return default_answer(decision)
 
-        if decision.kind in (DecisionKind.MAY, DecisionKind.PAY_LIFE):
+        if decision.kind in (DecisionKind.MAY, DecisionKind.PAY_LIFE, DecisionKind.PAY_ENERGY):
             if not isinstance(value, bool):
                 raise ValueError(f"{decision.prompt}: a yes-or-no question needs a bool answer")
             if value not in allowed:
                 raise ValueError(
                     f"{decision.prompt}: that option is illegal, so CR 608.2d "
                     f"does not allow choosing it"
+                )
+            return value
+
+        if decision.kind is DecisionKind.PAY_ENERGY_AMOUNT:
+            if not isinstance(value, int) or isinstance(value, bool):
+                raise ValueError(f"{decision.prompt}: needs an integer amount of energy")
+            if value < 0 or value > decision.amount:
+                raise ValueError(
+                    f"{decision.prompt}: cannot pay {value} energy, only {decision.amount} "
+                    f"available (CR 118.3, CR 107.14)"
                 )
             return value
 
@@ -2063,6 +2079,93 @@ class Game(BaseModel):
         if amount > 0:
             player.lose_life(amount)
         return True
+
+    def may_pay_energy(
+        self, player: Player | str, amount: int, *, source: str | None = None
+    ) -> bool:
+        """ "You may pay {E}{E}..." / "...unless you pay {E}", asked and then
+        paid (CR 107.14, CR 118.3, CR 608.2d).
+
+        CR 107.14: "To pay {E}, a player removes one energy counter from
+        themselves." CR 118.3: "A player can't pay a cost without having the
+        necessary resources to pay it fully" - so the affirmative is illegal
+        below `amount` energy, exactly the shape `may_pay_life` already uses
+        for CR 119.4's life-total floor, and the same reason: a scripted "yes"
+        below the floor is a rules violation, not merely a bad idea, so it is
+        removed from `legal_options` rather than trusted to self-police.
+
+        Static Prison's "sacrifice this enchantment unless you pay {E}" reads
+        this the same call the other way round: paying is what avoids the
+        sacrifice rather than what causes a bonus, but the payment itself -
+        can it be paid, and does paying spend exactly `amount` energy and
+        nothing else - is identical either way.
+
+        Returns whether the energy was paid, and pays it. A "no" answer -
+        whether scripted, declined by a live provider, or the fixed-cost
+        default (`default_answer` takes the affirmative when it is legal,
+        same as `PAY_LIFE`) - leaves the player's energy untouched.
+        """
+        if isinstance(player, str):
+            player = self.player(player)
+        payable = amount <= 0 or player.energy >= amount
+        answer = self.ask(
+            Decision(
+                kind=DecisionKind.PAY_ENERGY,
+                player=player.username,
+                prompt=f"pay {amount} energy",
+                source=source,
+                amount=amount,
+                affirmative_is_legal=payable,
+            )
+        )
+        if not answer:
+            return False
+        if amount > 0:
+            player.remove_counters(Counter.ENERGY, amount)
+        return True
+
+    def pay_any_amount_of_energy(
+        self,
+        player: Player | str,
+        *,
+        source: str | None = None,
+        prompt: str = "pay any amount of {E}",
+    ) -> int:
+        """ "You may pay any amount of {E}" (Galvanic Discharge, Wrath of the
+        Skies) - CR 107.14, CR 118.3, CR 608.2d's variable-amount cousin of
+        `may_pay_energy`.
+
+        Unlike a fixed `{E}{E}{E}`, this is a real choice among every amount
+        from 0 up to however much energy the player has *right now* - `amount`
+        pays no more than that (CR 118.3), and 0 is always legal (declining).
+        `Game.ask` validates the answer is an int in that range; nothing here
+        or in `default_answer` ever substitutes the maximum for an unscripted
+        or declined answer - CR 608.2d's choice is the player's, not an
+        optimiser's, and a card that keys its own effect off the amount paid
+        (Galvanic Discharge's damage, Wrath of the Skies's mana-value ceiling)
+        would silently always deal maximum damage or destroy everything if
+        this ever defaulted upward.
+
+        Returns however much was actually paid (0 if declined or unaffordable
+        to pay more), and pays exactly that - never a partial amount on top of
+        a partial deduction, since the whole payment is one `remove_counters`
+        call once the amount is already known to be legal.
+        """
+        if isinstance(player, str):
+            player = self.player(player)
+        available = player.energy
+        decision = Decision(
+            kind=DecisionKind.PAY_ENERGY_AMOUNT,
+            player=player.username,
+            prompt=prompt,
+            source=source,
+            amount=available,
+        )
+        paid = self.ask(decision)
+        assert isinstance(paid, int)
+        if paid > 0:
+            player.remove_counters(Counter.ENERGY, paid)
+        return paid
 
     def _look_at_top(self, player: Player, count: int) -> list[CardState]:
         """The top `count` cards, or as many as there are (CR 701.22a, 701.25a)."""
