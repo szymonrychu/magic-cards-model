@@ -991,8 +991,7 @@ def intervening_if_holds(
         others = [
             state
             for state in game.permanents_controlled_by(controller)
-            if state.id != source.id
-            and any(word.lower() == subtype for word in state.card.subtypes)
+            if state.id != source.id and any(word.lower() == subtype for word in state.subtypes)
         ]
         return not others
 
@@ -1004,7 +1003,44 @@ def intervening_if_holds(
     if first_spell is not None:
         return first_spell
 
+    last_turn = _spells_cast_last_turn_holds(game, clause)
+    if last_turn is not None:
+        return last_turn
+
     return _fail_closed(game, ability, source)
+
+
+#: "if no spells were cast last turn" - the werewolves' transform condition
+#: (Duskwatch Recruiter, and every other card printed with this line).
+_NO_SPELLS_LAST_TURN = re.compile(r"^no spells were cast last turn$")
+#: "if a player cast two or more spells last turn" - the mirror condition on
+#: the back face (Krallenhorde Howler), asked of *each* player separately: one
+#: player casting two is what it wants, not two spells between them.
+_SPELLS_CAST_LAST_TURN = re.compile(r"^a player cast (?P<count>\w+) or more spells last turn$")
+
+#: The counts these clauses are printed with, spelled out as the cards spell
+#: them. A number this does not know is left to `_fail_closed`.
+_NUMBER_WORDS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5}
+
+
+def _spells_cast_last_turn_holds(game: "Game", clause: str) -> bool | None:
+    """The two "last turn" spell-count clauses, or None if this is neither.
+
+    Both are ordinary CR 603.4 intervening *if* clauses, and both are answered
+    from `Game.spells_cast_last_turn` - the snapshot taken as a turn begins,
+    counting each spell at the moment it was cast (CR 601.2a, CR 601.2i).
+    """
+    if _NO_SPELLS_LAST_TURN.match(clause):
+        return not any(game.spells_cast_last_turn.values())
+
+    match = _SPELLS_CAST_LAST_TURN.match(clause)
+    if match is not None:
+        wanted = _NUMBER_WORDS.get(match.group("count"))
+        if wanted is None:
+            return None
+        return any(len(cast) >= wanted for cast in game.spells_cast_last_turn.values())
+
+    return None
 
 
 def _fail_closed(game: "Game", ability: TriggeredAbility, source: CardState) -> bool:
@@ -1061,7 +1097,7 @@ def triggered_abilities_of(card: Card) -> list[TriggeredAbility]:
     return printed + keyword_triggered_abilities(card)
 
 
-def activated_abilities_of(card: Card) -> list[ActivatedAbility]:
+def activated_abilities_of(card: Card, face: str | None = None) -> list[ActivatedAbility]:
     """Every activated ability printed on a card (CR 113.3b, 602.1).
 
     A basic land prints none of its own - its mana ability is reminder text,
@@ -1070,9 +1106,20 @@ def activated_abilities_of(card: Card) -> list[ActivatedAbility]:
     `intrinsic_land_ability` (CR 305.6). That is what lets `Game.activate_ability`
     tap a Forest at all, not only pay a mana cost with it through the
     `tap_for_mana` shortcut.
+
+    `face` narrows the list to the abilities printed on one face, and is how a
+    double-faced permanent's abilities follow the face that is up: CR 109.3
+    counts abilities among an object's characteristics and CR 712.8d/712.8e/
+    712.8f give such a permanent only the characteristics of the face that's
+    up, so a transformed Ajani, Nacatl Pariah has Ajani, Nacatl Avenger's three
+    loyalty abilities and none of his front face's, and an untransformed one has
+    neither. `CardState.up_face_name` is what callers pass; `None` - every
+    single-faced card - filters nothing.
     """
     printed = [
-        ability for ability in parse_abilities(card) if isinstance(ability, ActivatedAbility)
+        ability
+        for ability in parse_abilities(card)
+        if isinstance(ability, ActivatedAbility) and (face is None or ability.face == face)
     ]
     if printed:
         return printed
@@ -1091,12 +1138,16 @@ def triggers_for(game: "Game", event: GameEvent, sources: list[CardState]) -> li
     for source in sources:
         controller = source.controller or game.active_player.username
         for ability in triggered_abilities_of(source.card):
-            if source.land_face_played is not None and ability.face != source.land_face_played:
-                # CR 712.8f: a modal double-faced permanent has only the
-                # characteristics of the face that's up - Witch-Blessed
-                # Meadow, played as a land (CR 712.12), has no "when this
-                # creature enters" trigger, because that line was printed on
-                # Witch Enchanter's face, not the one that's actually up.
+            up_face_name = source.up_face_name
+            if up_face_name is not None and ability.face != up_face_name:
+                # CR 712.8d/712.8e/712.8f: a double-faced permanent has only
+                # the characteristics of the face that's up, and CR 109.3
+                # counts abilities among them. Witch-Blessed Meadow, played as
+                # a land (CR 712.12), has no "when this creature enters"
+                # trigger, because that line was printed on Witch Enchanter's
+                # face; a transformed Duskwatch Recruiter has Krallenhorde
+                # Howler's upkeep trigger and not its own (CR 701.27g), and an
+                # untransformed one has the mirror.
                 continue
             if not condition_matches(ability, source, controller, event):
                 continue
