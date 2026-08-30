@@ -53,7 +53,11 @@ def test_a_bolt_whose_only_target_was_exiled_in_response_does_nothing():
 
     assert spell.zone is Zone.GRAVEYARD
     assert spell.id in scenario.game.fizzled
-    assert scenario.player("bob").life == 20, "no effects at all, not even redirected ones"
+    # Swords already resolved (the earlier assertion) and gained bob life
+    # equal to the Bears' power (2) before the Bolt ever got a turn to fizzle
+    # - that life gain is Swords' own effect, not one of the Bolt's, so the
+    # Bolt fizzling clean is still "no effects at all" for the Bolt itself.
+    assert scenario.player("bob").life == 22, "no effects at all, not even redirected ones"
 
 
 def test_a_bolt_still_resolves_if_its_target_merely_gained_damage():

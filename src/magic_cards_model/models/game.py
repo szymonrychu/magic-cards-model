@@ -46,7 +46,13 @@ from ..machines.decisions import (
     legal_options,
 )
 from ..machines.delayed import DelayedTrigger, DelayedTriggers
-from ..machines.effects import ModeNotice, activated_effect_for, effect_for, trigger_effect_for
+from ..machines.effects import (
+    AnaphoricClauseNotice,
+    ModeNotice,
+    activated_effect_for,
+    effect_for,
+    trigger_effect_for,
+)
 from ..machines.keywords import (
     aura_state_based_actions,
     equipment_state_based_actions,
@@ -486,6 +492,14 @@ class Game(BaseModel):
     cost increase that silently fails to apply looks identical to ordinary
     play, which is the DDR#978 defect this is written against; recording it
     here keeps the gap visible instead."""
+
+    anaphoric_clause_notices: list[AnaphoricClauseNotice] = Field(default_factory=list)
+    """One entry per "<verb> target X. Its/that X's controller ..." effect
+    whose anaphoric second sentence (CR 400.7) could not be read - Solitude's
+    own defect: it used to exile a legally-targeted creature and gain no life
+    at all, with nothing anywhere recording that the second sentence had gone
+    unread. The same unreadable-is-not-the-same-as-no-effect record every
+    other notice list here keeps."""
 
     spells_cast_this_turn: dict[str, list[CardState]] = Field(default_factory=dict)
     """Every spell each player has cast this turn, keyed by controller

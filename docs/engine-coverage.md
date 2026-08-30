@@ -684,6 +684,59 @@ consequences:
   `tests/test_mixed_effects.py::test_a_modal_card_whose_every_mode_is_player_parseable_does_not_run_them_all`
   pins the behaviour with a synthetic string for exactly that reason.
 
+### Anaphoric "controller" clauses: "\<destroy/exile\> target X. Its/that X's controller ..."
+
+Solitude's own defect, found in a playtest: its enters trigger ("exile up to
+one other target creature. That creature's controller gains life equal to its
+power.") resolved with a legal target and did nothing at all - no exile, no
+life gain, and no record anywhere that the second sentence had gone unread.
+`_parse_mixed_clauses` correctly refused the whole effect per clause
+(CR 608.2c has no notion of running half an instruction), but silently.
+
+`_parse_anaphoric_clause_pair` in `machines/effects.py` reads both sentences as
+one instruction: the first names a target (CR 608.2b legality applies only
+here), the second is CR 400.7's plain anaphora back to whatever the first
+found - never a fresh target of its own. The referent's controller and power
+are snapshotted from the battlefield **before** the first sentence's verb runs
+(CR 608.2i) - reading them afterward would see `CardState.move_to`'s empty
+husk (counters cleared, layers no longer computed for an off-battlefield
+permanent) and silently return the bare printed power instead of the real one.
+An unreadable second sentence now leaves an `AnaphoricClauseNotice` on
+`Game.anaphoric_clause_notices` instead of failing silently.
+
+Six real cards in the fixture pool now resolve in full through this, with no
+registry row: **Solitude**, **Swords to Plowshares** (`EFFECTS` row deleted -
+the old `exile_targets` exiled and never gained the life, a live fail-open
+this fix corrects), **Assassin's Trophy**, **Ghost Quarter**, **White Orchid
+Phantom**, **Cityscape Leveler**. Two still fail closed, for reasons this wave
+does not extend to:
+
+- **Boseiju, Who Endures'** Channel ability, for two separate reasons: its
+  search sentence reads "a land card with a basic land type" rather than the
+  "a basic land card" phrasing `_REFERENT_SEARCH_RE` understands (a
+  pre-existing search-quality gap, not new to anaphora), and its own destroy
+  clause is followed by a third sentence ("This ability costs {1} less to
+  activate for each legendary creature you control.") no clause parser reads
+  either. `_unreadable_anaphoric_clause` correctly reports the search
+  sentence, not the unrelated cost line.
+- **Craterous Stomp's** "Craterous Stomp deals 3 damage to target creature an
+  opponent controls. Each other creature that player controls becomes a
+  Coward..." is a different shape entirely: the first clause is damage, not
+  destroy/exile (so the object never moves and there is no LKI question), and
+  the second clause acts on a *group* of permanents the referent controls
+  rather than reading a value or searching - a group continuous type-changing
+  effect this wave does not build.
+
+Also out of scope, and left failing closed exactly as before: stack-object
+anaphora (Access Denied, Force of Negation, Delay, Transcendent Dragon,
+Subtlety - "that spell" refers to an object on the stack, not a permanent) and
+delayed-trigger anaphora across a later zone change (Phelia, Ephemerate,
+Postmortem Lunge) - genuinely different object models from the battlefield
+LKI this wave reads.
+
+Scenario coverage: `tests/scenarios/test_anaphoric_referent_clauses.py`. Unit
+coverage for the parser and the notice: `tests/test_mixed_effects.py`.
+
 ## Token creation (wave 4)
 
 `_parse_token_clause` in `machines/effects.py` reads CR 701.7a's "create ...
@@ -972,7 +1025,6 @@ Foundry, Stomping Ground, Breeding Pool and the rest of the cycle.
 | Seasoned Pyromancer | **Its enters trigger is registered in full**, Elemental tokens included; which two cards are discarded is a real `CHOOSE_CARDS` question (CR 701.9b) through `Game.ask`, defaulting to the front of hand when unscripted. Its graveyard-activated ability still needs abilities that function from a graveyard | CR 111.1, CR 608.2c |
 | Slickshot Show-Off | Its prowess-like trigger is a layer 7c pump per noncreature spell. Plot is modelled now (see the Modelled table), so the trigger is all that is missing | CR 613.4c, CR 116.2k |
 | Slumbering Trudge | Stun counters; `X` read at resolution; "enters tapped if X is 2 or less" | CR 614.1c |
-| Solitude | Evoke parses; the enters trigger ("exile up to one other target creature, its controller gains life equal to its power") has no entry | CR 701.13a |
 | Surgical Extraction | Targeting a card in a graveyard, then searching three zones of the *owner* for cards with the same name | CR 701.23a, CR 701.13a |
 | Thraben Charm | Modal dispatch; "damage equal to twice the number of creatures you control" | CR 700.2a |
 | Turntimber Symbiosis | Look at seven, a decision, and "enters with three additional +1/+1 counters" | CR 122.1, CR 614.1c |
