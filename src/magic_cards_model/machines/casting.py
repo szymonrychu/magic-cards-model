@@ -25,7 +25,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ..models.card import Card, Type
 from ..models.card_state import CardState, ExileAnnotation, ExileMarker, TargetRef
-from ..models.mana import ManaCost
+from ..models.mana import ManaCost, ManaSpend
 from ..models.zone import Zone
 from .abilities import KeywordAbility, TriggerEvent, keyword_abilities
 from .cost import (
@@ -1119,7 +1119,14 @@ class Casting(BaseModel):
             self.additional_costs.append(TotalCost.of(additional).assign_payer(self.caster))
 
         self.payment = CostPayment.for_total(
-            self.total_cost.assign_payer(self.caster), game=self.game, payer=self.caster
+            self.total_cost.assign_payer(self.caster),
+            game=self.game,
+            payer=self.caster,
+            # CR 106.6: the payment has to know what it is paying for, or mana
+            # carrying a spend restriction cannot be judged against it. This is
+            # a *cast*, which is what tells Cavern of Souls's mana apart from
+            # Shang-Chi's - the latter pays for no spell at all.
+            spend=ManaSpend.casting(self.spell.card),
         )
         if choices is not None:
             self.payment.choose(choices)

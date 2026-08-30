@@ -39,6 +39,7 @@ from ..machines.cost import (
     loyalty_cost,
     pay_life_cost,
     sacrifice_cost,
+    spend_restriction,
     tap_cost,
 )
 from ..machines.decisions import (
@@ -121,7 +122,7 @@ from .card_state import (
     TargetRef,
     planeswalkers_with_zero_loyalty,
 )
-from .mana import ManaCost
+from .mana import ManaCost, ManaSpend
 from .player import Player
 from .token import move_refused, tokens_that_cease_to_exist
 from .zone import Zone
@@ -4665,7 +4666,14 @@ class Game(BaseModel):
         total = self.activation_cost(
             permanent, index, controller, sacrificing=sacrificing, discarding=discarding
         )
-        return CostPayment.for_total(total, game=self, payer=controller)
+        # CR 106.6: an activation is what Shang-Chi's and Eldrazi Temple's
+        # mana is restricted *to*, and what Cavern of Souls's and Delighted
+        # Halfling's is restricted *from*, so the payment is told which it is
+        # and whose ability it belongs to (the source's characteristics are
+        # what "abilities of creature sources" asks about, not the ability's).
+        return CostPayment.for_total(
+            total, game=self, payer=controller, spend=ManaSpend.activating(permanent.card)
+        )
 
     def activate_ability(
         self,
@@ -4746,8 +4754,16 @@ class Game(BaseModel):
             produced_mana = ability.mana.resolve(
                 land_types, own_counters, color, has_imprinted_card
             )
+            # CR 106.6: a "Spend this mana only to ..." sentence in this
+            # ability's own effect text restricts the mana it just made. The
+            # tag goes on the mana in the pool, not on `permanent` - the mana
+            # ability has resolved (CR 605.3b) and the mana outlives it, so a
+            # source that leaves the battlefield takes nothing back with it.
+            # `permanent` is passed only to resolve "the chosen type"
+            # (CR 614.12a records the answer on the object that was asked).
+            restriction = spend_restriction(ability.effect, permanent)
             for produced in produced_mana:
-                self.player(controller).mana_pool.add(produced)
+                self.player(controller).mana_pool.add(produced, restriction=restriction)
             # CR 106.12: "to 'tap [a permanent] for mana' is to activate a mana
             # ability of that permanent that includes the {T} symbol in its
             # activation cost" - so only a `{T}: ...` ability counts, not
