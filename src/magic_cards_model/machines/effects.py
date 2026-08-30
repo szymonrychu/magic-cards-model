@@ -1598,6 +1598,19 @@ _SUSPEND_LINE_RE = re.compile(r"^Suspend \d+—[^\n]+\n+", re.MULTILINE | re.IGN
 #: card pairing bare "Cascade" with its own resolution text hits the same bug.
 _CASCADE_LINE_RE = re.compile(r"^Cascade(?:\s*\([^()]*\))?[ \t]*\n+", re.MULTILINE | re.IGNORECASE)
 
+#: Rebound's own line (CR 702.88a), reminder text and all - Ephemerate prints
+#: it *after* its one resolution sentence ("Exile target creature you
+#: control, then return it to the battlefield under its owner's control.
+#: \nRebound (...)"), unlike Suspend/Cascade's own lines above, which lead.
+#: CR 702.88a is explicit that rebound "represents a static ability that
+#: functions while the spell is on the stack" - it is never itself a CR
+#: 608.2c resolution instruction, so leaving it in would hand `split_effect_
+#: clauses` a bare "Rebound" clause with nothing this wave reads, taking the
+#: real effect down with it (see `test_rebound.py`'s parser-level check).
+_REBOUND_LINE_RE = re.compile(
+    r"^[ \t]*Rebound(?:\s*\([^()]*\))?[ \t]*\n?", re.MULTILINE | re.IGNORECASE
+)
+
 
 def _strip_non_effect_preamble(text: str) -> str:
     """Sentences that describe the spell but are not part of resolving it."""
@@ -1605,6 +1618,7 @@ def _strip_non_effect_preamble(text: str) -> str:
     text = _CANT_BE_COUNTERED_LINE_RE.sub("", text)
     text = _SUSPEND_LINE_RE.sub("", text)
     text = _CASCADE_LINE_RE.sub("", text)
+    text = _REBOUND_LINE_RE.sub("", text)
     text = _REMINDER_LINE_RE.sub("", text)
     return text
 
@@ -2949,9 +2963,15 @@ def _unreadable_anaphoric_clause(text: str, *, for_spell: bool) -> str | None:
         verb_match = _DESTROY_TARGET_RE.fullmatch(first) or _EXILE_TARGET_RE.fullmatch(first)
         if verb_match is None:
             continue
-        if not _ANAPHORIC_SUBJECT_RE.fullmatch(second.strip()):
+        second_stripped = second.strip()
+        if _ANAPHORIC_SUBJECT_RE.fullmatch(second_stripped):
+            if _parse_anaphoric_clause_pair(first, second, for_spell=for_spell) is None:
+                return second
             continue
-        if _parse_anaphoric_clause_pair(first, second, for_spell=for_spell) is None:
+        if (
+            _LOOKS_LIKE_RETURN_TO_BATTLEFIELD_RE.match(second_stripped)
+            and _parse_exile_then_return_clause_pair(first, second, for_spell=for_spell) is None
+        ):
             return second
     return None
 
@@ -3245,6 +3265,106 @@ def _parse_anaphoric_clause_pair(
             # verb for a token that has already left the battlefield once.
             return
         second_clause(game, referent, power, source)
+
+    return effect
+
+
+#: "return it/that card/that permanent/that creature to the battlefield[
+#: tapped][ transformed][ under its owner's/your control]." - the return half
+#: of Ephemerate's own "Exile target creature you control, then return it to
+#: the battlefield under its owner's control." (CR 608.2c: one instruction in
+#: two sentences), and of the same "blink" idiom wherever else a card states
+#: it as a direct instruction rather than through a delayed trigger -
+#: `machines/delayed.return_subject_to_battlefield_under_owner` already
+#: covers Phelia's own "at the beginning of the next end step" variant, and
+#: `machines/keywords.persist_return`/`earthbend` cover the two keyworded
+#: shapes; none of the three reach this regex, and this one does not reach
+#: them. `fullmatch` only, and no bare "return it to the battlefield." with
+#: none of the three optional groups - that shape names no controller at all
+#: and CR 110.2a leaves it to whoever the effect names elsewhere, which is
+#: not something a lone regex on this one sentence can decide, so it is left
+#: unread (see `_UNREAD_RETURN_TO_BATTLEFIELD_RE` below) rather than guessed.
+_RETURN_TO_BATTLEFIELD_RE = re.compile(
+    r"^return (?:it|that (?:card|permanent|creature))"
+    r" to the battlefield"
+    r"(?P<tapped> tapped)?"
+    r"(?P<transformed> transformed)?"
+    r"(?: under (?P<control>its owner's|your) control)?\.?$",
+    re.IGNORECASE,
+)
+
+#: A looser prefix match for the same shape, used only by
+#: `_unreadable_anaphoric_clause` to tell "this is recognisably a return-to-
+#: battlefield sentence this wave cannot fully read" apart from "this is some
+#: other second sentence entirely" - CR 608.2c has no notion of running half
+#: of "exile ..., then return ...", so a card whose own wording falls outside
+#: `_RETURN_TO_BATTLEFIELD_RE`'s three optional groups must still take the
+#: whole effect down with it rather than silently keep only the exile half
+#: (trap: an exile with nothing to return it is strictly worse than doing
+#: nothing at all).
+_LOOKS_LIKE_RETURN_TO_BATTLEFIELD_RE = re.compile(
+    r"^return (?:it|that \w+) to the battlefield", re.IGNORECASE
+)
+
+
+def _parse_exile_then_return_clause_pair(
+    first: str, second: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """ "Exile target X, then return it to the battlefield ..." as one CR
+    608.2c instruction, or `None` if this shape does not match.
+
+    The exile half is `_EXILE_TARGET_RE`, exactly the shape `exile_ability_
+    targets` reads alone - CR 608.2b's target-legality recheck belongs only
+    to it, since "it" in the second sentence is CR 400.7's anaphora back to
+    whatever the first sentence found, not a target of its own (the same
+    reasoning `_parse_anaphoric_clause_pair` already documents for "its
+    controller ...").
+
+    `Game.exile_permanent` then `Game.put_onto_battlefield` are the same two
+    primitives `each_player_exiles_sacrifices_and_returns_creatures` already
+    uses for Living End, so what comes back is CR 400.7's genuine new object:
+    a fresh `zone_change_stamp`, no memory of its counters (CR 122.2), and
+    summoning-sick again (CR 302.6, 508.1a) - `move_to`'s battlefield branch
+    sets that unconditionally and this function never touches it.
+
+    CR 110.2a is why the controller is read off the card's own words rather
+    than defaulted to whoever controls the resolving spell or ability: "If an
+    effect instructs a player to put an object onto the battlefield, that
+    object enters the battlefield under that player's control unless the
+    effect states otherwise" - Ephemerate states otherwise ("under its
+    owner's control"), so `exiled.owner`, not the caster, is who `Game.
+    put_onto_battlefield` is called with. Owner and controller are never
+    collapsed into one question: a creature blinked out from under an
+    opponent's control returns to the *opponent*, not to whoever cast
+    Ephemerate, exactly when the card says "its owner's control", and to the
+    caster only when it says "your control" instead.
+    """
+    return_match = _RETURN_TO_BATTLEFIELD_RE.fullmatch(second.strip())
+    if return_match is None:
+        return None
+    exile_match = _EXILE_TARGET_RE.fullmatch(first.strip())
+    if exile_match is None:
+        return None
+    if not _targets_understood(exile_match.group("phrase"), count_agnostic=True):
+        return None
+
+    tapped = return_match.group("tapped") is not None
+    transformed = return_match.group("transformed") is not None
+    control = return_match.group("control")
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        for target in game.resolve_targets(stack_object):
+            if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
+                continue
+            exiled = game.exile_permanent(target)
+            if exiled.zone is not Zone.EXILE:
+                continue  # CR 111.8: a token refused the move; nothing to return.
+            owner = exiled.owner or controller
+            new_controller = owner if control == "its owner's" else controller
+            returned = game.put_onto_battlefield(exiled, new_controller, tapped=tapped)
+            if transformed and returned.zone is Zone.BATTLEFIELD:
+                returned.transform()
 
     return effect
 
@@ -4382,13 +4502,15 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     """Every clause of `text`, or `None` the moment one clause (or one
     anaphoric pair of clauses) matches nothing this wave reads.
 
-    A run of two or more consecutive clauses is tried first, against two
+    A run of two or more consecutive clauses is tried first, against several
     different shapes that are each one CR 608.2c instruction `split_effect_
     clauses` has cut apart on its own separators, not several independent
     ones: `_merge_continuous_pump_keyword_clauses` for "gets +N/+N and gains
-    <keyword>" (Give In to Violence, CR 611.2), and `_parse_anaphoric_clause_
+    <keyword>" (Give In to Violence, CR 611.2), `_parse_anaphoric_clause_
     pair` for "destroy/exile target X. Its/that X's controller ..." (CR
-    400.7). Only when a clause opens neither does it fall back to
+    400.7), and `_parse_exile_then_return_clause_pair` for "exile target X,
+    then return it to the battlefield ..." (Ephemerate). Only when a clause
+    run opens none of these does it fall back to
     `_parse_mixed_clause`'s ordinary one-clause-at-a-time dispatch - Fatal
     Push's Revolt line is still read by neither and still takes the whole
     effect down with it.
@@ -4425,6 +4547,13 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             continue
         if index + 1 < len(clauses):
             paired = _parse_anaphoric_clause_pair(
+                clauses[index], clauses[index + 1], for_spell=for_spell
+            )
+            if paired is not None:
+                parsed.append(paired)
+                index += 2
+                continue
+            paired = _parse_exile_then_return_clause_pair(
                 clauses[index], clauses[index + 1], for_spell=for_spell
             )
             if paired is not None:

@@ -814,9 +814,10 @@ anaphora (Access Denied, Force of Negation, Delay, Transcendent Dragon,
 Subtlety - "that spell" refers to an object on the stack, not a permanent).
 Phelia's own delayed-trigger anaphora is fixed - see "Delayed-trigger clauses"
 below; Ephemerate's "exile target creature you control, then return it" is a
-different shape (CR 400.7j, one resolution, not a delayed trigger) and is
-still unbuilt; Postmortem Lunge's antecedent (a reanimation target named by a
-variable mana value) is still unread.
+different shape (one resolution, CR 400.7's new object, not a delayed
+trigger) and is fixed too - see "Exile-then-return clauses" further down;
+Postmortem Lunge's antecedent (a reanimation target named by a variable mana
+value) is still unread.
 
 Scenario coverage: `tests/scenarios/test_anaphoric_referent_clauses.py`. Unit
 coverage for the parser and the notice: `tests/test_mixed_effects.py`.
@@ -1004,14 +1005,120 @@ blink is worse than the pre-existing no-op - an opponent's permanent exiled
 forever is a strictly worse board than the card doing nothing - so neither
 executes any part of its instruction. **Deliberately excluded:** Dalkovan
 Encampment and Voice of Victory take a *plural* token subject ("Sacrifice
-them"), a different shape this wave does not read; Ephemerate's "exile target
-creature you control, then return it" is CR 400.7j's one-resolution blink, not
-a delayed trigger, and is a different wave's work.
+them"), a different shape this wave does not read.
 
 Scenario coverage: `tests/scenarios/test_delayed_trigger_clause_parsing.py`.
 The pre-existing `tests/scenarios/test_delayed_triggered_abilities.py` and
 `tests/scenarios/test_dash.py` cover the generic `machines/delayed.py`
 mechanism this wave builds on.
+
+## Exile-then-return clauses: Ephemerate's own blink, and Rebound
+
+Two defects, fixed together because the same card exposed both. Every CR
+number below was looked up with `knowledge_search(type="rules")` in the
+session that fixed this.
+
+**Defect 1 - no reader for "return it to the battlefield".** Ephemerate's
+"Exile target creature you control, then return it to the battlefield under
+its owner's control." used to resolve and do nothing: clause 1 parsed alone
+as an ordinary exile (`_EXILE_TARGET_RE`), clause 2 had no reader anywhere -
+only `_RETURN_TARGET_RE`'s "return it to its owner's hand" existed - so
+`_parse_mixed_clauses`'s all-or-nothing fold correctly discarded the whole
+effect (CR 608.2c has no notion of running half an instruction), but
+*silently*: the sweeper listed Ephemerate as `silent`, not as a recorded
+notice. `_parse_exile_then_return_clause_pair` in `machines/effects.py` is the
+fix, wired into the same clause-pair dispatch `_parse_anaphoric_clause_pair`
+already uses: a parameterised reader for "exile target X, then return it to
+the battlefield[ tapped][ transformed][ under its owner's/your control]", not
+a card-name row. `_RETURN_TO_BATTLEFIELD_RE` reads the three optional groups;
+a card whose wording falls outside them (recognised by the looser
+`_LOOKS_LIKE_RETURN_TO_BATTLEFIELD_RE` prefix match) still takes the whole
+effect down through `_unreadable_anaphoric_clause`'s now-shared notice path,
+rather than silently keeping only the exile half - an exile with nothing to
+return it is a strictly worse board than doing nothing at all, so fail-closed
+had to stay fail-closed.
+
+Three rules this reader has to get right, none of them free from the existing
+`exile_ability_targets`/`Game.exile_permanent`/`Game.put_onto_battlefield`
+primitives it composes:
+
+- **CR 400.7** - the returned object is a new one. `CardState.move_to`
+  already implements this (fresh `zone_change_stamp`, `id` unchanged), so
+  reusing `Game.exile_permanent` then `Game.put_onto_battlefield` - the same
+  two calls `each_player_exiles_sacrifices_and_returns_creatures` already uses
+  for Living End - was enough; no parallel path was written.
+- **CR 110.2 / 110.2a** - the controller of the returned permanent is read off
+  the card's own words ("its owner's control" vs "your control"), never
+  defaulted to whoever controls the resolving spell. Owner and controller are
+  never collapsed into one question: a creature blinked out from under an
+  opponent's control returns to the *opponent* when the card says "its
+  owner's control".
+- **CR 122.2 / CR 302.6 / CR 508.1a** - counters and summoning sickness follow
+  automatically from `move_to`'s battlefield branch; this reader never
+  "restores" either.
+
+**A latent bug this reader's own test (`test_ephemerate_drops_an_aura_
+attached_to_the_blink_target`) surfaced and `Game._detach_dependents` fixes:**
+`CardState.move_to` already clears the *moved* card's own `attachment` as it
+leaves (CR 400.7), but nothing cleared an Aura or Equipment's `attached_to`
+pointing *at* it - stored by id, and this engine mutates a `CardState` in
+place rather than minting a fresh id on return, so a permanent exiled and
+returned **within one resolution** (no state-based-action check runs in
+between; CR 704.3 only checks before a player would next receive priority)
+had the same id both times and an Aura would silently "follow" the blink with
+nothing ever catching it. `Game.exile_permanent` now calls `_detach_dependents`
+the moment a permanent actually leaves the battlefield, `unattach()`-ing
+anything pointing at it; the ordinary `aura_state_based_actions`/`equipment_
+state_based_actions` sweep that runs once the whole spell finishes resolving
+then does its real CR 704.5m/704.5n job (an Aura pointing at nothing goes to
+its owner's graveyard, an Equipment pointing at nothing stays on the
+battlefield unattached) exactly as if a live check had run in between.
+
+**Defect 2 - Rebound was not implemented at all** (`grep -rn "rebound"` used
+to return zero hits). CR 702.88a: "If this spell was cast from your hand,
+instead of putting it into your graveyard as it resolves, exile it and, at
+the beginning of your next upkeep, you may cast this card from exile without
+paying its mana cost." Built as a keyword, in `machines/keywords.has_rebound`
+plus `machines/delayed.rebound_recast`, never a name row, even though
+Ephemerate is the only rebound card in the pool:
+
+- The exile-instead-of-graveyard half hangs off the same hook flashback and
+  Adventure already use - `Game.put_into_graveyard`'s own
+  `ReplaceableEvent(kind=ZONE_CHANGE, destination=GRAVEYARD)`, applied in
+  `machines/replacement._stack_replacements`. Unlike flashback (CR 702.34a's
+  "any time it would leave the stack", which deliberately also catches a
+  countered or fizzled spell), rebound's own CR 702.88a wording is narrower -
+  "as it resolves" - so a new `ReplaceableEvent.resolving` flag, set only by
+  `resolve_top`'s genuine CR 608 resolution path, gates it: a countered spell
+  (CR 701.6, never resolves) or a fizzled one (CR 608.2b, "doesn't resolve"
+  either) goes to the graveyard the ordinary way instead.
+- "If this spell was cast from your hand" is read off `Game.cast_records`
+  (`CastRecord.origin_zone`, new, copied from `Casting.origin_zone` as the
+  spell goes on the stack) - read *before* `resolve_top` pops the record, not
+  from the card's own printed text, which is what stops an Ephemerate cast
+  from a graveyard or from its own previous rebound recast rebounding again
+  (an infinite exile-and-recast loop otherwise).
+- The delayed trigger for "at the beginning of your next upkeep" is a
+  `DelayedTrigger` with `expected_zone=Zone.EXILE` plus `expected_stamp` (CR
+  603.7c) and, since CR 702.88a says "**your** next upkeep" and not "the next
+  upkeep", `only_when_active` set to the caster - the same scoping Emrakul,
+  the Promised End's extra-turn trigger already needed, and for the same
+  reason: without it, a one-shot trigger (CR 603.7b) created during erin's
+  turn would spend itself on the opponent's upkeep if that happens to come
+  first, and erin's own upkeep would never see it.
+- The recast itself (CR 702.88b: "follows the rules for paying alternative
+  costs") is `Game.cast_free_from_exile` - not the interactive `Casting`
+  state machine (there is no live announcement to drive from inside a
+  resolving ability's effect function), but the same "ask the controller"
+  pattern `Game._ask_trigger_targets` already uses for a triggered ability's
+  own CR 603.3d target announcement, then `Game.put_on_stack` plus
+  `Game.note_cast(..., origin_zone=Zone.EXILE)`.
+
+Scenario coverage: `tests/scenarios/test_ephemerate.py` (the blink, the Aura
+trap, owner vs. controller, counters, Guide of Souls not firing off itself)
+and `tests/scenarios/test_rebound.py` (exile instead of graveyard, the
+next-upkeep recast, declining it, and the countered/fizzled spells that must
+not be exiled at all).
 
 ## The Modern metagame sweep
 
