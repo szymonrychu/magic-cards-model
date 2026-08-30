@@ -993,6 +993,16 @@ def profile_for_modes_with_owners(
     return profile, owners
 
 
+#: CR 701.66a: "Earthbend N" means "Target land you control becomes a 0/0
+#: land creature ..." - the word "target" is in the keyword's own *meaning*,
+#: never in what a card actually prints ("Earthbend 1.", no reminder text
+#: required - Bumi, Unleashed prints exactly that with none at all). The
+#: ordinary word-scan below finds nothing to read unless it is told, once,
+#: what the rule itself already says the target is.
+_EARTHBEND = re.compile(r"\bearthbend\b", re.IGNORECASE)
+_EARTHBEND_TARGET_TEXT = "target land you control"
+
+
 def profile_for_text(text: str) -> TargetingProfile:
     """What one piece of rules text may target, read on its own (CR 115.1).
 
@@ -1004,7 +1014,16 @@ def profile_for_text(text: str) -> TargetingProfile:
 
     Tishana's Tidebinder's "counter up to one target activated or triggered
     ability" is the case that needs it.
+
+    Earthbend is special-cased ahead of the ordinary scan: every call site that
+    needs a targeted ability's restriction - `Game._ask_trigger_targets` (CR
+    601.2c's announcement), `Game.why_cannot_target_with_trigger` and
+    `Game.resolve_target`'s CR 608.2b recheck - funnels through this one
+    function, so teaching it here is what makes "Earthbend N" targetable at
+    every one of those without three separate patches.
     """
+    if _EARTHBEND.search(text):
+        return _parse(_EARTHBEND_TARGET_TEXT, spell_only=False)
     return _parse(_REMINDER.sub("", text), spell_only=False)
 
 

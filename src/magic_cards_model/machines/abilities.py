@@ -463,7 +463,7 @@ class TriggerWord(StrEnum):
 class TriggerEvent(StrEnum):
     """The common trigger shapes, recognised off the condition text.
 
-    Only these seventeen are recognised; every other condition leaves `event`
+    Only these eighteen are recognised; every other condition leaves `event`
     None with `condition` still holding the printed text.
     """
 
@@ -534,6 +534,13 @@ class TriggerEvent(StrEnum):
     #: and produces mana". `CostPayment.tap_for_mana` is the only place the
     #: engine taps a permanent for mana, so that is where this is emitted.
     TAPPED_FOR_MANA = "tapped_for_mana"
+    #: A permanent moving from the battlefield straight to exile - the "or is
+    #: put into exile" half of CR 701.66a's earthbend. Distinct from `EXILED`
+    #: (CR 702.35a), which is scoped to madness's own narrower "exiled this
+    #: way"; this is the general battlefield-to-exile move, the same shape
+    #: `DIES` already is for a battlefield-to-graveyard move. Emitted by
+    #: `Game.exile_permanent`, the only place that performs this move.
+    LEAVES_BATTLEFIELD_TO_EXILE = "leaves_battlefield_to_exile"
 
 
 class CostKind(StrEnum):

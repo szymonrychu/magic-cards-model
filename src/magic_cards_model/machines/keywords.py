@@ -119,6 +119,12 @@ def executes(keyword: str) -> bool:
         "mobilize",
         "indestructible",
         "exert",
+        # CR 701.66a. A CR 701 keyword *action* embedded in another ability's
+        # effect text, not a CR 702 keyword ability printed on its own - so
+        # its clause parser lives in `machines/effects.py`
+        # (`_parse_earthbend_clause`), not here. Listed explicitly so the pool
+        # sweeper reports it as executed rather than silently ignored.
+        "earthbend",
     }
 
 

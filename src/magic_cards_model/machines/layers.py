@@ -773,6 +773,30 @@ def _only(card_id: UUID) -> Selector:
     return selector
 
 
+def only_this_incarnation(permanent: CardState, stamp: UUID) -> Selector:
+    """Like `_only`, but also refuses CR 400.7's "new object" - same `id`, but
+    a permanent that left its zone and came back since `stamp` was taken.
+
+    `Selector` only sees `Characteristics` and the computed `Board`, and
+    neither carries a `zone_change_stamp` - `CardState.id` is never reissued
+    on a zone change, only the stamp is, so this reads the live `CardState`
+    directly rather than through the board. That is the same thing a
+    `Duration.FOR_AS_LONG_AS` `Condition` already does for a live count, and
+    it matters for exactly the same reason: an effect with `Duration.
+    INDEFINITE` is never swept away by `ContinuousEffects.end_the_turn`, so an
+    effect scoped only to `card_id` would keep re-applying to whatever the
+    same id becomes forever - including a permanent CR 603.7's own delayed
+    return already sent back to the battlefield as a plain, unanimated land.
+    Earthbend (CR 701.66a) is the first user; nothing before it created an
+    indefinite effect on an object that could round-trip through another zone.
+    """
+
+    def selector(chars: Characteristics, board: Board) -> bool:
+        return chars.card_id == permanent.id and permanent.zone_change_stamp == stamp
+
+    return selector
+
+
 def every_creature(chars: Characteristics, board: Board) -> bool:
     return chars.is_creature
 
