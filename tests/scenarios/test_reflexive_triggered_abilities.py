@@ -78,10 +78,11 @@ paid cost rather than a sacrifice, the other a mandatory action rather than a
   `_parse_reflexive_mandatory_token_clause`, CR 603.12's "instruct" half (no
   `MAY` decision at all) with CR 603.4's intervening *if* checked once,
   immediately after the token exists. `test_ajani_...` below covers both the
-  condition holding and failing; the transform gap
-  (`test_double_faced_creature_characteristics.py`'s own docstring) is still
-  out of scope, so both tests build the back face's `AbilityOnStack` by hand
-  the same way this file's docstring already explained before W4 landed.
+  condition holding and failing, driven through a real activation: a sibling
+  wave taught CR 712's transform to reach `Game.activated_abilities`, so
+  Ajani is transformed for real (CR 701.27a) and the `0` is activated the
+  ordinary way, rather than this file building the back face's
+  `AbilityOnStack` by hand the way it had to before that landed.
 """
 
 from magic_cards_model.machines import Step
@@ -424,39 +425,24 @@ def test_guide_of_souls_target_removed_in_response_fizzles_the_reflexive_ability
 # --------------------------------------------------------------------------
 
 
-def _ajani_zero_ability_on_stack(scenario: "Scenario"):
-    """Ajani cannot actually *activate* this ability through the ordinary path
-    while front-face-up: CR 712.8d gives an untransformed double-faced
-    permanent only its front face's characteristics, and this engine's own
-    `Game._still_has_ability` (layer 6, CR 613.1f) already enforces that much
-    - `game.begin_activating` correctly refuses it with "no longer has that
-    ability". Transforming Ajani for real is a separate, already-documented
-    gap (`test_double_faced_creature_characteristics.py`'s own docstring -
-    "Nothing here reads `CardState.transformed` yet"), out of scope for this
-    wave. So this reaches resolution the way `Game._resolve_ability` would
-    once that gap is closed: it builds the real `AbilityOnStack` for the back
-    face's own printed "0:" ability directly and pushes it onto the stack,
-    exercising exactly the CR 603.12/603.4 parsing this file is about without
-    depending on CR 712 transform support existing yet.
+def _ajani_activated_zero_ability(scenario: "Scenario"):
+    """Driven through a real activation now that CR 712's transform reaches
+    characteristics: Ajani is transformed (CR 701.27a), which makes him the
+    planeswalker Ajani, Nacatl Avenger with that face's loyalty abilities and
+    only those (CR 712.8e, CR 109.3), and the `0` is activated through the
+    ordinary path - `Game.activated_abilities` now reads the up face, so this
+    no longer needs the hand-built `AbilityOnStack` this file used before that
+    landed.
     """
-    from magic_cards_model.machines import AbilityKind, abilities_of_kind
-    from magic_cards_model.machines.triggers import AbilityOnStack
-
     # CR 201.1: an untransformed double-faced permanent has only the front
     # face's name ("Ajani, Nacatl Pariah") - `machines/triggers.py`'s own name
     # fix, unrelated to this file.
     ajani = scenario.find("Ajani, Nacatl Pariah", Zone.BATTLEFIELD, "alice")
-    zero_ability = abilities_of_kind(ajani.card, AbilityKind.ACTIVATED)[1]
+    ajani.transform()  # CR 701.27a
+    ajani.add_counters(Counter.LOYALTY, 3)  # CR 306.5b, as if he had entered so
+    zero_ability = scenario.game.activated_abilities(ajani)[1]
     assert zero_ability.cost == "0"
-    scenario.game.stack.append(
-        AbilityOnStack(
-            kind=AbilityKind.ACTIVATED,
-            ability=zero_ability,
-            source_id=ajani.id,
-            source_name=ajani.name,
-            controller="alice",
-        )
-    )
+    scenario.activate(ajani, index=1)
     return ajani
 
 
@@ -465,7 +451,10 @@ def test_ajani_deals_damage_when_the_intervening_if_holds():
     condition true - checked once, immediately after the mandatory token
     exists (CR 603.12) - so the reflexive ability is created and, once it
     resolves, deals damage equal to the number of creatures alice controls
-    (herself, the goblin, and the fresh token: 3) to whatever it targets.
+    to whatever it targets. Transformed Ajani is a planeswalker, not a
+    creature (CR 712.8e, CR 109.3), so that count is the goblin and the
+    fresh token - two, not three - the same characteristic-boundary case
+    the CR 712 transform wave's own fix makes visible here.
     """
     scenario = (
         Scenario()
@@ -476,7 +465,7 @@ def test_ajani_deals_damage_when_the_intervening_if_holds():
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
     bob = scenario.player("bob")
-    ajani = _ajani_zero_ability_on_stack(scenario)
+    ajani = _ajani_activated_zero_ability(scenario)
     # CR 603.3d: queued ahead of time - `resolve_top` below both resolves the
     # "0" ability and (CR 603.3, `Game._before_priority`) puts the reflexive
     # ability it creates on the stack in the same call, asking its target then.
@@ -490,7 +479,9 @@ def test_ajani_deals_damage_when_the_intervening_if_holds():
 
     scenario.resolve_top()  # the reflexive ability itself
 
-    assert bob.life == 17, "3 creatures: Ajani, Raging Goblin, and the fresh token"
+    assert bob.life == 18, (
+        "2 creatures: Raging Goblin and the fresh token - Ajani is a planeswalker"
+    )
 
 
 def test_ajani_creates_no_reflexive_ability_when_the_intervening_if_fails():
@@ -509,7 +500,7 @@ def test_ajani_creates_no_reflexive_ability_when_the_intervening_if_fails():
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
     bob = scenario.player("bob")
-    _ajani_zero_ability_on_stack(scenario)
+    _ajani_activated_zero_ability(scenario)
     scenario.resolve_top()
 
     tokens = [state for state in scenario.game.battlefield if state.name == "Cat Warrior Token"]

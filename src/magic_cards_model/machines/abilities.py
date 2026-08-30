@@ -646,6 +646,69 @@ class BaseAbility(BaseModel):
     ability_word: str | None = None
 
 
+class ActivationCostReduction(BaseModel):
+    """CR 601.2f's "reduce the cost" step, applied to an activated ability's
+    own cost via CR 602.2b ("the remainder of the process for activating an
+    ability is identical to the process for casting a spell"): "This ability
+    costs [N] less to activate for each [quality] you control."
+
+    Read as a **separate static ability** from whatever the rest of the
+    paragraph's activated ability does, not a third clause of its effect - CR
+    702.41a ("Affinity ... means 'This spell costs {1} less to cast for each
+    [text] you control.'") and CR 702.125a ("Undaunted ... means 'This spell
+    costs {1} less to cast for each opponent you have.'") are the CR's own
+    precedent for this exact sentence shape being a static ability in its own
+    right, and CR 604.1 ("Static abilities ... are written as statements, and
+    they're simply true") is what a sentence like this always is. Boseiju's
+    and Otawara's Channel abilities print theirs sharing a line with the
+    destroy/bounce effect with no blank line or bullet between them, but
+    sharing a printed line is not the same as sharing an ability (CR 607.2h
+    is the CR's own example of two abilities linked by sharing one paragraph
+    while staying distinct) - so `_parse_activated` splits this sentence off
+    `ActivatedAbility.effect` rather than leaving it there to sink the whole
+    thing when a clause parser cannot read it.
+    """
+
+    amount: int
+    #: The quality's own words, as printed - "legendary creature". Read
+    #: generically off a CR 205.4a supertype and/or CR 205.2a card type by
+    #: `Game.activation_cost_reduction_for`; no card name involved.
+    quality: str
+
+
+#: "This ability costs {N} less to activate for each <quality> you control."
+#: - matched only as the *last* sentence of an activated ability's effect, so
+#: it is read the same way whichever card prints it, never by name.
+_TRAILING_ACTIVATION_COST_REDUCTION_RE = re.compile(
+    r"^this ability costs \{(?P<amount>\d+)\} less to activate for each "
+    r"(?P<quality>.+?) you control\.?$",
+    re.IGNORECASE,
+)
+
+
+def _split_off_trailing_cost_reduction(effect: str) -> tuple[str, ActivationCostReduction | None]:
+    """Peel a trailing "This ability costs [N] less ..." sentence off an
+    activated ability's effect text, if it has one (CR 601.2f via CR 602.2b).
+
+    Splits on the same "end of sentence" boundary the rest of this module
+    uses (`re.split(r"(?<=\\.)\\s+", ...)`), so a two-sentence effect like
+    Otawara's ("Return target ... to its owner's hand. This ability costs
+    {1} less ...") is told apart correctly, and a one-sentence effect that
+    happens to end the same way a reduction sentence would is not touched
+    unless it *is* the whole sentence.
+    """
+    sentences = [s for s in re.split(r"(?<=\.)\s+", effect.strip()) if s]
+    if not sentences:
+        return effect, None
+    match = _TRAILING_ACTIVATION_COST_REDUCTION_RE.match(sentences[-1].strip())
+    if match is None:
+        return effect, None
+    reduction = ActivationCostReduction(
+        amount=int(match.group("amount")), quality=match.group("quality").strip()
+    )
+    return " ".join(sentences[:-1]).strip(), reduction
+
+
 class ActivatedAbility(BaseAbility):
     """CR 602.1: `[Cost]: [Effect.] [Activation instructions (if any).]`"""
 
@@ -683,6 +746,11 @@ class ActivatedAbility(BaseAbility):
     #: message can cite the rule it is actually enforcing rather than a
     #: guessed one. `None` exactly when `zone` is `None`.
     zone_rule: str | None = None
+    #: A trailing "This ability costs [N] less to activate for each [quality]
+    #: you control" sentence, split off `effect` before it was stored - see
+    #: `ActivationCostReduction`'s own docstring for why this is a separate
+    #: ability rather than a clause of the one above it.
+    cost_reduction: ActivationCostReduction | None = None
 
 
 class TriggeredAbility(BaseAbility):
@@ -1257,7 +1325,15 @@ def _parse_activated(text: str, common: dict) -> ActivatedAbility | None:
         instructions = instruction_match.group(1).strip()
         after = after[: instruction_match.start(1)].strip()
 
-    add = _ADD.match(after)
+    # CR 601.2f via CR 602.2b: a trailing "This ability costs [N] less ..."
+    # sentence is a separate static ability (`ActivationCostReduction`'s own
+    # docstring), split off before anything below reads `after` as *the*
+    # effect - Boseiju's and Otawara's Channel abilities would otherwise carry
+    # a third sentence no clause parser in `machines/effects.py` reads,
+    # sinking the whole paragraph under the project's own fail-closed rule.
+    effect_text, cost_reduction = _split_off_trailing_cost_reduction(after)
+
+    add = _ADD.match(effect_text)
     costs = [_classify_cost(part) for part in _split_top_level(cost)]
     # CR 606.2 makes an ability a loyalty ability when a loyalty symbol is in
     # its cost, and CR 107.7 prints the symbol as the whole cost, so a single
@@ -1274,18 +1350,19 @@ def _parse_activated(text: str, common: dict) -> ActivatedAbility | None:
             mana.costs_mana = any(piece.kind is CostKind.MANA for piece in costs)
             mana.conditional = _parse_conditional_clauses(add.group("rest"))
 
-    zone, zone_rule = _activated_ability_zone(costs, after)
+    zone, zone_rule = _activated_ability_zone(costs, effect_text)
 
     return ActivatedAbility(
         **common,
         cost=cost,
         costs=costs,
-        effect=after,
+        effect=effect_text,
         instructions=instructions,
         mana=mana,
         loyalty=loyalty,
         zone=zone,
         zone_rule=zone_rule,
+        cost_reduction=cost_reduction,
     )
 
 

@@ -263,7 +263,10 @@ def _defender_refusal(game: "Game", defender: TargetRef, active: str) -> str | N
     permanent = game.resolve_target(defender)
     if not isinstance(permanent, CardState) or permanent.zone is not Zone.BATTLEFIELD:
         return "that permanent is not on the battlefield"
-    if not set(permanent.card.types) & ATTACKABLE_PERMANENT_TYPES:
+    # `permanent.types`, not `permanent.card.types`: a transformed Ajani,
+    # Nacatl Pariah is a planeswalker (CR 712.8e) and may be attacked, and a
+    # modal double-faced permanent played as its land face is not (CR 712.8f).
+    if not set(permanent.types) & ATTACKABLE_PERMANENT_TYPES:
         return f"{permanent.name} is not a player, planeswalker, or battle"
     if game.controller_of(permanent).username == active:
         return f"{permanent.name} is not controlled by an opponent"
@@ -482,7 +485,7 @@ def landwalk_refusal(game: "Game", attacker: CardState, defending: str | None) -
         lands = [
             permanent
             for permanent in game.permanents_controlled_by(defending)
-            if land_type in permanent.card.subtypes
+            if land_type in permanent.subtypes
         ]
         if lands:
             return (
