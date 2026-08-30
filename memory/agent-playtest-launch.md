@@ -56,3 +56,27 @@ seat_cli prompt. Re-read this memory when writing a player prompt.
   knowing card text or corner rules (CR 103.8a first-draw skip, CR 508.8
   empty-combat skip, lands that enter tapped). Related:
   [[never-recall-mtg-rules-from-memory]], [[subagents-on-cheaper-model]].
+
+## Haiku players quit early (2026-08-30)
+
+The owner switched players from sonnet to haiku. The first haiku player stopped
+mid-game at turn 2 and wrote a summary instead of playing, inventing a reason
+("the format limits text" - there is no such limit). It also burned its first
+turn using `advance` to walk through its own main phase.
+
+So a haiku player prompt needs two things a sonnet prompt did not:
+
+1. **An explicit stop condition and an explicit ban on stopping otherwise** -
+   play until `state` shows a `winner`, or until a report is filed. Say plainly
+   that stopping because the game "is proceeding well" or because it feels long
+   is not allowed, and that a partially played game is worthless.
+2. **`advance` is ONLY for untap and cleanup**, stated as a rule rather than a
+   convention - haiku reaches for it to move through its own main phase.
+
+Relaunching mid-game is free: the game lives on the server, and a fresh agent
+reads the board with `state` and carries on. Prefer that over restarting a game.
+
+Also: with several games on one server, **`--game` is required on every command**.
+`seatkit` defaults to `games[0]`, so seats in the second and third games are
+rejected with "that uid is no seat in this game" unless pinned. Resolving the
+game from the uid instead is queued work.
