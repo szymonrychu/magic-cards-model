@@ -577,17 +577,6 @@ def test_ajanis_enters_trigger_creates_a_cat_warrior():
     assert cat.card.subtypes == ["Cat", "Warrior"]
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="The trigger itself now fires: `condition_matches` reads a non-self DIES "
-    "condition narrowed by subtype ('one or more other Cats you control die'), so a Cat "
-    "token dying puts Ajani's second ability on the stack - see "
-    "test_dies_trigger_scope.py::test_another_cat_dying_triggers_ajanis_transform_ability "
-    "for that half. What is still missing is the *effect*: `machines/effects.py` has no "
-    "entry for Ajani's DIES trigger, so it resolves and does nothing - exiling and "
-    "returning him transformed needs a way to turn a creature into its planeswalker face, "
-    "which does not exist yet.",
-)
 def test_a_cat_token_dying_flips_ajani():
     """Ajani, Nacatl Pariah: "Whenever one or more other Cats you control die, you
     may exile Ajani, then return him to the battlefield transformed under his
@@ -596,7 +585,11 @@ def test_a_cat_token_dying_flips_ajani():
     A Cat token dying is a Cat you control dying: CR 700.4's "dies" and CR 111.7's
     parenthesis together mean the token really did go to a graveyard and really
     is visible to a dies trigger. This is the interaction that makes Ajani a
-    metagame card, and it is the transform half that is still missing.
+    metagame card, and both halves now work: `_parse_may_exile_self_then_return_
+    clause` reads the effect off the trigger's own text (CR 201.5's name
+    self-reference, no registry row), and CR 712.14a's "transformed" is how he
+    *enters*, so CR 306.5b puts Ajani, Nacatl Avenger's printed 3 loyalty
+    counters on as he arrives (CR 712.8e gives him that face's characteristics).
     """
     scenario = (
         Scenario()
@@ -621,6 +614,9 @@ def test_a_cat_token_dying_flips_ajani():
         scenario.resolve_top()
 
     assert ajani.transformed
+    assert ajani.name == "Ajani, Nacatl Avenger"
+    assert Type.PLANESWALKER in ajani.types
+    assert ajani.loyalty == 3
 
 
 def test_seasoned_pyromancer_makes_an_elemental_for_each_nonland_discarded():

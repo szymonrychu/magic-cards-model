@@ -41,6 +41,7 @@ from ..machines.cost import (
     cost_component_for_phrase,
     cost_modifier_effect,
     discard_cost,
+    exile_cost,
     increase,
     looks_like_unparsed_cost_modifier,
     loyalty_cost,
@@ -153,6 +154,23 @@ _PROTECTION = re.compile(r"protection from ([^.;\n]+)", re.IGNORECASE)
 #: ability's source is the object it is printed on, so "this" is that object and
 #: only the caller building the cost knows which it is.
 _SELF_REFERENCE = re.compile(r"\bthis\b", re.IGNORECASE)
+
+
+def _exiles_itself_by_name(text: str, permanent: "CardState") -> bool:
+    """Whether `text` is "Exile `<permanent's own printed name>`" - CR 201.5's
+    other self-reference form: "If an object's text uses the object's own
+    name, it's referring to that object, even if there are other objects with
+    the same name." The Stone Brain's own "Exile The Stone Brain" is the
+    pool's only example of this on a cost line; `_SELF_REFERENCE` only ever
+    catches the "this `<type>`" spelling (CR 700.7), not a bare printed name.
+
+    An exact match (case-insensitive) on "exile `<name>`" alone, not a
+    substring search - a cost line naming some *other* object by name (a
+    hypothetical "Exile a card named `<X>`") is a different shape entirely and
+    must not be waved through as if it referred to `permanent`.
+    """
+    return text.strip().rstrip(".").lower() == f"exile {permanent.name.lower()}"
+
 
 #: CR 601.2f cost reduction of the shape Emrakul, the Promised End prints.
 #: Narrow on purpose: the amount, and the thing being counted, are both read
@@ -812,6 +830,18 @@ class Game(BaseModel):
     `_first_spell_this_turn_holds`'s "first [type] spell you've cast this
     turn" intervening *if* clauses. Cleared when a new turn begins."""
 
+    spells_cast_last_turn: dict[str, list[CardState]] = Field(default_factory=dict)
+    """What `spells_cast_this_turn` held during the turn before this one.
+
+    The werewolves' question (CR 603.4's intervening *if*): Duskwatch Recruiter
+    transforms "if no spells were cast last turn" and Krallenhorde Howler
+    transforms back "if a player cast two or more spells last turn". Neither is
+    answerable from `spells_cast_this_turn`, which is emptied as a new turn
+    begins - so it is snapshotted here at that same moment instead of being
+    thrown away. A spell is counted when it is cast (CR 601.2a, CR 601.2i),
+    which is exactly what `put_on_stack` already records.
+    """
+
     life_gained_this_turn: set[str] = Field(default_factory=set)
     """Which players have gained life this turn (CR 119.9 treats any source
     of the gain the same way). `Player.gain_life` is the single place a life
@@ -1043,8 +1073,8 @@ class Game(BaseModel):
         return frozenset(
             subtype
             for state in self.permanents_controlled_by(controller)
-            if state.card.is_land
-            for subtype in state.card.subtypes
+            if Type.LAND in state.types
+            for subtype in state.subtypes
         )
 
     def untap_step(self) -> None:
@@ -1390,6 +1420,22 @@ class Game(BaseModel):
 
         # CR 601.2a: the card is now a spell on the stack, so the casting event
         # has happened and anything watching for it triggers (CR 603.2).
+        # CR 202.3e: while this spell is on the stack, an {X} in its cost is
+        # the value actually chosen for X, not CR 107.3g's off-stack "X is 0"
+        # reading `card_state.card.cmc` gives - `Game.note_cast` (called by
+        # `Casting.cast` before this) already has that value on record, the
+        # same one CR 107.3m's own X-counters replacement in
+        # `machines/replacement.py` reads. Chalice of the Void's "mana value
+        # equal to the number of charge counters" needs this real number, not
+        # the printed one - see `GameEvent.amount`'s docstring.
+        # CR 107.3i: "all instances of X on an object have the same value at
+        # any given time" - Walking Ballista's `{X}{X}` is two symbols each
+        # worth the one chosen X, so the printed cmc (which already reads
+        # both as 0, CR 107.3g) gains `count * x_value`, not just `x_value`.
+        mana_value = card_state.card.cmc or 0
+        x_count = (card_state.mana_cost or "").count("{X}")
+        if x_count:
+            mana_value += x_count * self.cast_record(card_state).x_value
         self.emit(
             GameEvent(
                 event=TriggerEvent.CAST_SPELL,
@@ -1400,6 +1446,7 @@ class Game(BaseModel):
                 subject_types=card_state.types,
                 subject_subtypes=card_state.subtypes,
                 player=controller,
+                amount=int(mana_value),
             )
         )
         # CR 117.3c gives priority straight back to the caster, so this is the
@@ -1791,9 +1838,11 @@ class Game(BaseModel):
     def _activated_index(self, ability: AbilityOnStack) -> int | None:
         source = ability.source(self)
         card = source.card if source is not None else None
-        if card is None:
+        if card is None or source is None:
             return None
-        for index, printed in enumerate(activated_abilities_of(card)):
+        # The same face `Game.activated_abilities` lists (CR 712.8d, 712.8e),
+        # or the indexes disagree the moment a permanent is transformed.
+        for index, printed in enumerate(activated_abilities_of(card, source.up_face_name)):
             if printed.text == ability.ability.text:
                 return index
         return None
@@ -2156,6 +2205,7 @@ class Game(BaseModel):
         controller: str,
         *,
         tapped: bool = False,
+        transformed: bool = False,
         was_cast: bool,
         attach_to: "Targetable | None" = None,
     ) -> CardState:
@@ -2238,6 +2288,15 @@ class Game(BaseModel):
             return card_state
 
         self._take_out_of_every_zone(card_state)
+        # CR 712.14a: "if a spell or ability puts a double-faced card onto the
+        # battlefield 'transformed' ..., it enters the battlefield with its
+        # back face up." Set *before* the move, because `move_to` is where
+        # CR 306.5b's intrinsic "enters with loyalty counters equal to its
+        # printed loyalty" is applied, and the printed loyalty a transformed
+        # Ajani, Nacatl Pariah enters with is his back face's 3 - read off
+        # whichever face is up. A card that has no back face is left alone
+        # (CR 701.28c's "nothing happens" for the sibling action).
+        card_state.transformed = transformed and card_state.card.back_face is not None
         card_state.move_to(Zone.BATTLEFIELD)
         card_state.tapped = event.tapped
         # CR 702.131 (ascend): "entered this turn" needs a turn-number stamp,
@@ -2263,7 +2322,12 @@ class Game(BaseModel):
         return card_state
 
     def put_onto_battlefield(
-        self, card_state: CardState, controller: str, *, tapped: bool = False
+        self,
+        card_state: CardState,
+        controller: str,
+        *,
+        tapped: bool = False,
+        transformed: bool = False,
     ) -> CardState:
         """Put a card onto the battlefield without casting it (CR 110.2a).
 
@@ -2274,8 +2338,17 @@ class Game(BaseModel):
         if its trigger event actually occurs" (CR 603.2g) means a "when you cast
         this spell" ability never fires. Enters-the-battlefield abilities do
         (CR 603.6a), because that event *did* happen.
+
+        `transformed` is CR 712.14a's "onto the battlefield transformed": the
+        permanent arrives with its back face up, and so with that face's
+        characteristics from the moment it exists - including the printed
+        loyalty CR 306.5b puts on as it enters, which is the only way a
+        creature face like Ajani, Nacatl Pariah becomes a planeswalker with any
+        loyalty at all.
         """
-        return self.enter_the_battlefield(card_state, controller, tapped=tapped, was_cast=False)
+        return self.enter_the_battlefield(
+            card_state, controller, tapped=tapped, transformed=transformed, was_cast=False
+        )
 
     # -- decisions made during resolution (CR 608.2d) -------------------------
 
@@ -2869,7 +2942,7 @@ class Game(BaseModel):
             if not matches(state):
                 continue
             if optional and not self.may(
-                player, f"find {state.card.name} while searching your {zone.value}", source=source
+                player, f"find {state.name} while searching your {zone.value}", source=source
             ):
                 continue
             found.append(state)
@@ -3513,10 +3586,10 @@ class Game(BaseModel):
         wanted = quality.strip().lower()
         card_type = _card_type_named(wanted)
         if card_type is not None:
-            return card_type in source.card.types
+            return card_type in source.types
         color = _COLOR_WORDS.get(wanted)
         if color is not None:
-            return color in (source.card.colors or [])
+            return color in source.colors
         return False
 
     def protection_from_damage(self, event: ReplaceableEvent) -> str | None:
@@ -4087,7 +4160,7 @@ class Game(BaseModel):
         stamps = self.continuous_effects.entered
         groups: dict[tuple[UUID, str], list[CardState]] = {}
         for permanent in self.battlefield:
-            if "Role" not in permanent.card.subtypes or permanent.attached_to is None:
+            if "Role" not in permanent.subtypes or permanent.attached_to is None:
                 continue
             groups.setdefault((permanent.attached_to, permanent.controller or ""), []).append(
                 permanent
@@ -4162,7 +4235,7 @@ class Game(BaseModel):
         kept: set[tuple[str, str]] = set()
         losers: list[CardState] = []
         for state in self.battlefield:
-            if Supertype.LEGENDARY not in state.card.supertypes:
+            if Supertype.LEGENDARY not in state.supertypes:
                 continue
             key = (self.controller_of(state).username, state.name)
             if key in kept:
@@ -4620,9 +4693,7 @@ class Game(BaseModel):
             return ManaCost()
 
         owner = caster or spell.controller or self.active_player.username
-        types = {
-            card_type for card in self.player(owner).graveyard for card_type in card.card.types
-        }
+        types = {card_type for card in self.player(owner).graveyard for card_type in card.types}
         amount = int(match.group(1)) * len(types)
         return ManaCost.parse(f"{{{amount}}}") if amount else ManaCost()
 
@@ -4726,8 +4797,14 @@ class Game(BaseModel):
         CR 602.1: an activated ability is written `[Cost]: [Effect.]
         [Activation instructions (if any).]`. The index into this list is what
         `activate_ability` and `machines/effects.py` key on.
+
+        Narrowed to the face that is up (CR 712.8d, 712.8e, 712.8f, CR 109.3):
+        a transformed Ajani, Nacatl Pariah has his back face's `+2`, `0` and
+        `−4` and nothing else, and Duskwatch Recruiter loses its `{2}{G}` look
+        the moment it becomes Krallenhorde Howler. `_activated_index` reads the
+        same face, so an ability's index stays the index of this list.
         """
-        return activated_abilities_of(permanent.card)
+        return activated_abilities_of(permanent.card, permanent.up_face_name)
 
     def why_cannot_activate(
         self, permanent: CardState, index: int = 0, controller: str | None = None
@@ -4867,7 +4944,7 @@ class Game(BaseModel):
             needed = _CONDITION_COUNT_WORDS.get(match.group("count").lower())
             card_type = _card_type_named(match.group("quality"))
             if needed is not None and card_type is not None:
-                count = sum(1 for state in controlled if card_type in state.card.types)
+                count = sum(1 for state in controlled if card_type in state.types)
                 return count >= needed
 
         match = _ACTIVATE_ONLY_IF_POWER.search(instructions)
@@ -4989,7 +5066,7 @@ class Game(BaseModel):
         try:
             return card_type in self.characteristics_of(permanent).types
         except KeyError:
-            return card_type in permanent.card.types
+            return card_type in permanent.types
 
     def _still_has_ability(self, permanent: CardState, ability: ActivatedAbility) -> bool:
         """Whether the computed board still shows this ability on the permanent.
@@ -5143,9 +5220,31 @@ class Game(BaseModel):
                 # turns the sentence into something payable - "Exert this land"
                 # (CR 701.43a), "Exile a black card from your hand" (CR 118.9).
                 component = cost_component_for_phrase(piece.text, payer=controller)
+                if component is None and _exiles_itself_by_name(piece.text, permanent):
+                    # CR 201.5: "if an object's text uses its own name, it is
+                    # referring to that particular object" - the same
+                    # self-reference `_SELF_REFERENCE`'s bare "this" already
+                    # reads, spelled with the printed name instead. The Stone
+                    # Brain's own "Exile The Stone Brain" is the pool's only
+                    # example: `_PHRASE_EXILE` only reads "exile this card" or
+                    # a quality-and-count phrase, neither of which a bare
+                    # self-name is, so it comes back `None` and is built here
+                    # instead - straight from the battlefield (CR 113.6: an
+                    # activated ability's source is normally there), the same
+                    # empty-then-filled shape `_SELF_REFERENCE`'s branch below
+                    # uses for "this".
+                    component = exile_cost(
+                        payer=controller,
+                        required=1,
+                        description=piece.text,
+                        zone=Zone.BATTLEFIELD,
+                    )
                 if component is None:
                     raise ValueError(f"cannot build a cost for {piece.text!r}")
-                if not component.cards and _SELF_REFERENCE.search(piece.text):
+                if not component.cards and (
+                    _SELF_REFERENCE.search(piece.text)
+                    or _exiles_itself_by_name(piece.text, permanent)
+                ):
                     # "Exert **this** land": only the caller knows which
                     # permanent the ability is on, so the reader builds the
                     # component empty and it is filled in here (CR 602.1a - the
@@ -5153,7 +5252,80 @@ class Game(BaseModel):
                     component = component.model_copy(update={"cards": [permanent]})
                 components.append(component)
 
+        if ability.cost_reduction is not None:
+            # CR 601.2f, applied to an activated ability's own cost via CR
+            # 602.2b: "This ability costs [N] less to activate for each
+            # [quality] you control" - read structurally off
+            # `ActivatedAbility.cost_reduction` (`machines/abilities.py`
+            # already split it from the effect as its own static ability, not
+            # a clause of it - see `ActivationCostReduction`'s docstring).
+            mana = mana.minus(self.activation_cost_reduction_for(permanent, ability, controller))
+
         return TotalCost(mana=mana, components=components).assign_payer(controller)
+
+    def activation_cost_reduction_for(
+        self, permanent: CardState, ability: ActivatedAbility, controller: str
+    ) -> ManaCost:
+        """What `ability`'s own "costs [N] less to activate for each [quality]
+        you control" sentence takes off its cost right now (CR 601.2f via CR
+        602.2b) - the activated-ability twin of `cost_reduction_for`, which
+        only ever reads a *spell's* own self-discount.
+
+        The quality is read generically, off its own words - a CR 205.4a
+        supertype ("legendary"), a CR 205.2a card type ("creature"), or both -
+        the same way `_activation_condition_holds`'s "Activate only if you
+        control ..." already counts a quality, so a future card printing this
+        exact sentence with a different quality needs no table row either.
+        Reads printed characteristics only (`state.card.types`/`.supertypes`),
+        the same simplification `_activation_condition_holds` already makes,
+        not the layer-computed board.
+
+        A quality this cannot read at all records a `CostModifierNotice`
+        rather than quietly reducing by nothing - the same "unreadable is not
+        the same as no effect" rule `static_cost_modifiers_for` already keeps
+        for a permanent's *other* static cost text (DDR#978).
+        """
+        reduction = ability.cost_reduction
+        if reduction is None:
+            return ManaCost()
+
+        words = reduction.quality.strip().lower().split()
+        supertypes: list[Supertype] = []
+        types: list[Type] = []
+        for word in words:
+            singular = word.removesuffix("s")
+            try:
+                supertypes.append(Supertype(singular))
+                continue
+            except ValueError:
+                pass
+            try:
+                types.append(Type(singular))
+                continue
+            except ValueError:
+                pass
+        if not types:
+            already_noticed = any(
+                notice.source_id == permanent.id for notice in self.cost_modifier_notices
+            )
+            if not already_noticed:
+                self.cost_modifier_notices.append(
+                    CostModifierNotice(
+                        source_id=permanent.id,
+                        source_name=permanent.name,
+                        text=ability.raw,
+                    )
+                )
+            return ManaCost()
+
+        count = sum(
+            1
+            for state in self.permanents_controlled_by(controller)
+            if all(t in state.card.types for t in types)
+            and all(s in state.card.supertypes for s in supertypes)
+        )
+        amount = reduction.amount * count
+        return ManaCost.parse(f"{{{amount}}}") if amount else ManaCost()
 
     def begin_activating(
         self,
@@ -5609,6 +5781,10 @@ class Game(BaseModel):
             self.lands_played = {}
             self.activations = {}  # CR 602.5b restrictions are per turn
             self.loyalty_activations = {}  # CR 606.3's once-per-turn is per turn too
+            # Snapshotted, not dropped: "last turn" is a question the
+            # werewolves ask every upkeep (CR 603.4) and nothing else can
+            # answer once this is cleared.
+            self.spells_cast_last_turn = self.spells_cast_this_turn
             self.spells_cast_this_turn = {}
             self.life_gained_this_turn = set()
             # `play_permissions` is deliberately **not** cleared here. CR 514.2

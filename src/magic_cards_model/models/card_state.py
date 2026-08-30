@@ -7,7 +7,7 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, RootModel, model_validator
 
-from .card import Card, Type, subtypes_of, types_of
+from .card import Card, Color, Supertype, Type, subtypes_of, supertypes_of, types_of
 from .zone import Zone
 
 PERMANENT_TYPES = frozenset(
@@ -473,10 +473,21 @@ class CardState(BaseModel):
 
     CR 701.27a: "To transform a permanent, turn it over so that its other face is
     up." CR 712.18 adds that it does not become a new object, so this is a flag
-    on the same `CardState` rather than a swap for a different one. Nothing else
-    in the engine reads it yet: `Card` still reports the front face's power,
-    toughness and types, so a transformed Delver of Secrets is flagged but is not
-    yet a 3/2 flier.
+    on the same `CardState` rather than a swap for a different one.
+
+    It feeds characteristics: `up_face` returns `Card.back_face` while this is
+    set, so CR 712.8e's "while a nonmodal double-faced permanent has its back
+    face up, it has only the characteristics of its back face" is what `name`,
+    `types`, `subtypes`, `supertypes`, `colors`, `oracle_text`, `keywords`,
+    `mana_cost`, `power`, `toughness` and `loyalty` all report - a transformed
+    Delver of Secrets is a 3/2 flying Human Insect. Mana value is the one
+    characteristic that does *not* move (CR 202.3b, CR 712.8e: "its mana value
+    is calculated using the mana cost of its front face"), which `mana_value`
+    below is careful about.
+
+    Only ever true on the battlefield: CR 712.8a gives a double-faced card in
+    every other zone its front face's characteristics only, and `move_to`
+    clears the flag on the way out.
     """
     land_face_played: str | None = None
     """The name of the face this permanent entered as, when it was played as
@@ -670,41 +681,120 @@ class CardState(BaseModel):
         single-faced card whose own top-level fields already are the up face
         (CR 712.8a, 712.8d, 712.8f, 712.12).
 
-        The land face when this was an MDFC played for its land side, since
-        CR 712.8f gives a modal double-faced permanent "only the
-        characteristics of the face that's up" and `land_face_played` is how
-        that choice is recorded (CR 712.12). Otherwise the front face:
-        CR 712.8a makes it the only face this card has anywhere but the
-        battlefield or stack, and CR 712.8d makes it the same on the
-        battlefield while the front face is up - which, by this project's own
-        documented boundary (`transformed`'s docstring), is every permanent
-        this reads, since `transformed` deliberately does not feed
-        characteristics yet.
+        Three cases, and the discriminator differs for each:
+
+        - The **land face**, when this was an MDFC played for its land side.
+          CR 712.8f gives a modal double-faced permanent "only the
+          characteristics of the face that's up" and `land_face_played` is how
+          that choice is recorded (CR 712.12). It is chosen once, as the card
+          is played, and never changes.
+        - The **back face**, while `transformed` is set. CR 701.27a turns the
+          permanent over, CR 701.27g calls the result a transformed permanent,
+          and CR 712.8e gives it "only the characteristics of its back face".
+          Unlike the modal case this changes during the game, in both
+          directions, and it is a property of the permanent rather than of a
+          choice made on the way in.
+        - The **front face** otherwise: CR 712.8a makes it the only face this
+          card has anywhere but the battlefield or stack, and CR 712.8d makes
+          it the same on the battlefield while the front face is up.
+
+        `None` for an ordinary single-faced card, whose own top-level fields
+        already *are* the up face - every caller must keep that fallback, or a
+        single-faced permanent ends up with no characteristics at all.
         """
         land_face = self._land_face
         if land_face is not None:
             return land_face
+        if self.transformed:
+            back_face = self.card.back_face
+            if back_face is not None:
+                return back_face
         return self.card.front_face
 
     @property
+    def up_face_name(self) -> str | None:
+        """The name of the face that is up, or None for a single-faced card.
+
+        The key an ability is matched to its face by (`BaseAbility.face`):
+        CR 712.8d/712.8e give a double-faced permanent only the characteristics
+        of whichever face is up, and CR 109.3 lists abilities among an object's
+        characteristics, so a line printed on the other face is not one this
+        object has. `machines/triggers.py` and `Game.activated_abilities` both
+        filter on it; `None` means "do not filter", since a single-faced card's
+        every line is on the only face it has.
+        """
+        up_face = self.up_face
+        return up_face.name if up_face is not None else None
+
+    @property
     def types(self) -> tuple[Type, ...]:
-        """This object's card types (CR 205.2a, CR 708.2)."""
+        """This object's card types (CR 205.2a, CR 708.2).
+
+        Read off `up_face`'s own type line when there is a face (CR 712.8d,
+        712.8e, 712.8f), so a transformed Delver of Secrets is a Human Insect
+        and a transformed Ajani, Nacatl Pariah is a Planeswalker rather than
+        the Cat Warrior his front face prints. `Card.types` parses
+        `front_type_line` only, which is the right answer for every
+        single-faced card and the wrong one for a permanent showing any other
+        face.
+        """
         if self.face_down_characteristics is not None:
             return self.face_down_characteristics.types
-        land_face = self._land_face
-        if land_face is not None:
-            return tuple(types_of(land_face.type_line or ""))
+        up_face = self.up_face
+        if up_face is not None:
+            return tuple(types_of(up_face.type_line or ""))
         return tuple(self.card.types)
 
     @property
     def subtypes(self) -> tuple[str, ...]:
-        """This object's subtypes (CR 205.3, CR 708.2). Face down, there are none."""
+        """This object's subtypes (CR 205.3, CR 708.2). Face down, there are none.
+
+        The same `up_face` read as `types` - a transformed Ajani is an Ajani
+        planeswalker and no longer a Cat, which is exactly what his own back
+        face's "+1/+1 counter on each Cat you control" has to be counted
+        against.
+        """
         if self.face_down_characteristics is not None:
             return self.face_down_characteristics.subtypes
-        land_face = self._land_face
-        if land_face is not None:
-            return tuple(subtypes_of(land_face.type_line or ""))
+        up_face = self.up_face
+        if up_face is not None:
+            return tuple(subtypes_of(up_face.type_line or ""))
         return tuple(self.card.subtypes)
+
+    @property
+    def supertypes(self) -> tuple[Supertype, ...]:
+        """This object's supertypes (CR 205.4, CR 708.2).
+
+        Face down, CR 708.2 leaves it with no supertypes at all - "a 2/2
+        creature with no text, no name, no subtypes, and no mana cost" is the
+        whole of what it has, and CR 205.4 supertypes are not on that list.
+        Otherwise the same `up_face` read as `types`: a back face may be
+        legendary where the front is not (CR 712.8e), and the legend rule
+        (CR 704.5j) has to see that.
+        """
+        if self.face_down_characteristics is not None:
+            return ()
+        up_face = self.up_face
+        if up_face is not None:
+            return tuple(supertypes_of(up_face.type_line or ""))
+        return tuple(self.card.supertypes)
+
+    @property
+    def colors(self) -> tuple[Color, ...]:
+        """This object's colors (CR 105.2, CR 202.2, CR 708.2).
+
+        A back face prints no mana cost, so its colour comes from its colour
+        indicator (CR 202.2f, CR 204.1) - Scryfall reports both `colors` and
+        `color_indicator` on the face, and `colors` is already the answer.
+        Face down, CR 708.2 leaves it colorless along with everything else it
+        does not list.
+        """
+        if self.face_down_characteristics is not None:
+            return ()
+        up_face = self.up_face
+        if up_face is not None and up_face.colors is not None:
+            return tuple(up_face.colors)
+        return tuple(self.card.colors or ())
 
     @property
     def keywords(self) -> tuple[str, ...]:
@@ -714,14 +804,27 @@ class CardState(BaseModel):
         is what stops a face-down creature with flying flying. Disguise lists
         ward {2} (CR 702.168b), so that one keyword survives.
 
-        `Card.keywords` is not per-face - Scryfall already reports it as the
-        whole card's keyword abilities regardless of which face prints one -
-        so there is no face to fall back to here the way there is for power,
-        toughness and oracle text.
+        `Card.keywords` is not per-face - Scryfall reports the whole card's
+        keyword abilities regardless of which face prints one, so Delver of
+        Secrets' printing lists Flying even though only Insectile Aberration,
+        its back face, has it. CR 109.3 counts abilities among an object's
+        characteristics and CR 712.8d/712.8e give a double-faced permanent only
+        the characteristics of the face that is up, so on a card that *has*
+        faces the printing's list is filtered down to the keywords actually
+        printed on the up face - by the same line classifier that parses them
+        anywhere else, rather than a second spelling of it. A single-faced card
+        has one face and is left exactly as the printing reports it.
         """
         if self.face_down_characteristics is not None:
             return self.face_down_characteristics.keywords
-        return tuple(self.card.keywords)
+        if not self.card.card_faces:
+            return tuple(self.card.keywords)
+        # Imported here: `machines/` imports `models/`, so the reverse import
+        # only resolves at call time.
+        from ..machines.abilities import keywords_in_lines
+
+        on_this_face = keywords_in_lines(self.oracle_text.split("\n"), list(self.card.keywords))
+        return tuple(keyword for keyword in self.card.keywords if keyword.lower() in on_this_face)
 
     @property
     def oracle_text(self) -> str:
@@ -738,10 +841,37 @@ class CardState(BaseModel):
         """This object's mana cost (CR 202.1, CR 708.2). Face down, there is none."""
         if self.face_down_characteristics is not None:
             return self.face_down_characteristics.mana_cost
+        up_face = self.up_face
+        if up_face is not None:
+            return up_face.mana_cost or None
+        return self.card.mana_cost
+
+    @property
+    def mana_value(self) -> float:
+        """This object's mana value (CR 202.3, CR 708.2).
+
+        Not simply the mana cost that is up. CR 202.3b: "the mana value of the
+        back face of a nonmodal double-faced permanent or spell's back face is
+        calculated as though it had the mana cost of its front face", and
+        CR 712.8e repeats it as the one exception to a transformed permanent
+        having only its back face's characteristics - Insectile Aberration
+        prints no mana cost but its mana value is still 1, not 0. Scryfall's
+        top-level `cmc` is already the front face's for a `transform` card, so
+        it is what a transformed permanent reports.
+
+        A modal double-faced permanent played for its land face is the other
+        way round (CR 712.8f, CR 202.3a): that face's own mana cost - none - is
+        what counts, giving 0 rather than the spell face's `cmc`. CR 708.2
+        gives a face-down permanent no mana cost at all, so 0 by CR 202.3a.
+        """
+        if self.face_down_characteristics is not None:
+            return 0.0
         land_face = self._land_face
         if land_face is not None:
-            return land_face.mana_cost or None
-        return self.card.mana_cost
+            from .mana import ManaCost
+
+            return float(ManaCost.parse(land_face.mana_cost or "").converted)
+        return self.card.cmc
 
     @property
     def is_permanent(self) -> bool:
@@ -1112,6 +1242,23 @@ class CardState(BaseModel):
         return Type.PLANESWALKER in self.types
 
     @property
+    def _printed_loyalty(self) -> str | None:
+        """The loyalty number printed on the face that is up (CR 209.1).
+
+        Scryfall leaves the top-level `loyalty` null on a `transform` card and
+        prints the number on the face that carries it - Ajani, Nacatl Pariah's
+        3 is on Ajani, Nacatl Avenger, his back face. CR 712.8e gives a
+        transformed permanent only that face's characteristics, and CR 109.3
+        counts loyalty among them, so this reads `up_face` like every other
+        characteristic and falls back to the top-level field for a single-faced
+        planeswalker.
+        """
+        up_face = self.up_face
+        if up_face is not None and up_face.loyalty is not None:
+            return up_face.loyalty
+        return self.card.loyalty
+
+    @property
     def loyalty(self) -> int | None:
         """This planeswalker's loyalty, or None if it is not one (CR 306.5).
 
@@ -1142,7 +1289,7 @@ class CardState(BaseModel):
         """
         if not self.is_planeswalker:
             return
-        printed = _as_number(self.card.loyalty)
+        printed = _as_number(self._printed_loyalty)
         if printed is not None:
             self.counters.add(Counter.LOYALTY, printed)
 
