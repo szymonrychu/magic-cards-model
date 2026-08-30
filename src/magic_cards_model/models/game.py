@@ -1173,7 +1173,7 @@ class Game(BaseModel):
         """
         attackers_by_defender: dict[str, list[UUID]] = {}
         for attack in self.combat.attacks:
-            defender = combat_rules.defending_player(self, attack)
+            defender = combat_rules.defending_player(self, attack.defender)
             attackers_by_defender.setdefault(defender, []).append(attack.attacker_id)
 
         blocks: list[tuple[CardState, CardState]] = []
@@ -1484,6 +1484,23 @@ class Game(BaseModel):
                 attach_to=attachment,
             )
             self._create_resolution_delayed_triggers(spell)
+            # Deliberately *not* popped here, unlike the graveyard-bound branch
+            # below. CR 608.2a rechecks a triggered ability's intervening *if*
+            # again as it resolves, and an "enters, if [mana] was spent to cast
+            # it" ability (Wistfulness) is only created *now* - it has not
+            # resolved yet, and will not until a later priority round, by which
+            # time this permanent is long past `enter_the_battlefield`. Popping
+            # the record here left that later recheck reading `CastRecord()`'s
+            # empty default (`cast_record`'s own fallback) - "no mana was
+            # spent" - and the ability silently did nothing on every resolution
+            # even though it had correctly gone on the stack in the first
+            # place (`test_wistfulness_paid_with_double_blue_draws_two_then_
+            # discards_one` is the regression test). The record is keyed by
+            # `spell.id`, which never changes while this incarnation persists
+            # (CR 400.7), so it stays correct for as long as the permanent
+            # does; a later recast of the same physical card after it leaves
+            # and returns overwrites it with a fresh record before this one
+            # could ever be misread as belonging to that new cast.
         else:
             # CR 614.1: the move to the graveyard is an event like any other, so
             # it goes through the replacement effects. That is the hook
@@ -1497,11 +1514,19 @@ class Game(BaseModel):
             # needs to know whether the spell was cast from hand, and that is
             # `Game.cast_records[spell.id]` - which is popped two lines below,
             # so it has to be read before `put_into_graveyard` runs, not after.
+            #
+            # Popped here, unlike the permanent branch above: a non-permanent
+            # spell's own "when you cast this" trigger (if any) sits *above* it
+            # on the stack and has already resolved by the time control
+            # reaches this branch (CR 603.3), and nothing else this engine
+            # builds watches a graveyard-bound spell's own cast facts once it
+            # is there - so there is no later recheck this needs to survive
+            # for, and leaving it around risks nothing but also gains nothing.
             cast_from_hand = self.cast_record(spell).origin_zone is Zone.HAND
             self.put_into_graveyard(spell, resolving=True)
             self._create_rebound_delayed_trigger(spell, cast_from_hand)
+            self.cast_records.pop(spell.id, None)
 
-        self.cast_records.pop(spell.id, None)
         self._before_priority()
         return spell
 
@@ -2362,6 +2387,11 @@ class Game(BaseModel):
                 )
             return value
 
+        if decision.kind is DecisionKind.PUT_ON_TOP_OR_BOTTOM:
+            if not isinstance(value, bool):
+                raise ValueError(f"{decision.prompt}: needs a top-or-bottom bool answer")
+            return value
+
         if not isinstance(value, CardSplit):
             raise ValueError(f"{decision.prompt}: needs a CardSplit answer")
         looked_at = set(decision.cards)
@@ -3021,12 +3051,32 @@ class Game(BaseModel):
         which is the rule that stops a Raise Dead or a flicker effect recurring a
         dead token: "If such a token would change zones, it remains in its
         current zone instead."
+
+        Emits `TriggerEvent.LEAVES_BATTLEFIELD_TO_HAND` when the move was
+        actually from the battlefield - the third of the three "left the
+        battlefield" events alongside `DIES` and `LEAVES_BATTLEFIELD_TO_EXILE`,
+        added for Static Prison's "until this enchantment leaves the
+        battlefield" (CR 610.3c's kind of one-shot return): a bounced
+        Static Prison is exactly as much a departure as a destroyed or exiled
+        one, and nothing watched this path before.
         """
         if move_refused(permanent, Zone.HAND) is not None:
             return permanent
+        was_on_battlefield = permanent in self.battlefield
         self._take_out_of_every_zone(permanent)
         self.combat.remove(permanent.id)  # CR 506.4
         self._owner_of(permanent).add(permanent, Zone.HAND)
+        if was_on_battlefield:
+            self.emit(
+                GameEvent(
+                    event=TriggerEvent.LEAVES_BATTLEFIELD_TO_HAND,
+                    subject_id=permanent.id,
+                    subject_name=permanent.name,
+                    subject_controller=permanent.controller,
+                    subject_card=permanent.card,
+                    player=permanent.controller,
+                )
+            )
         return permanent
 
     # -- targeting and effects --------------------------------------------

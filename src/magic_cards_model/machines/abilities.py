@@ -558,6 +558,16 @@ class TriggerEvent(StrEnum):
     #: `DIES` already is for a battlefield-to-graveyard move. Emitted by
     #: `Game.exile_permanent`, the only place that performs this move.
     LEAVES_BATTLEFIELD_TO_EXILE = "leaves_battlefield_to_exile"
+    #: A permanent moving from the battlefield straight to its owner's hand
+    #: (CR 701.19a's "return") - the third of the three ways a permanent
+    #: actually leaves the battlefield in this pool, alongside `DIES` and
+    #: `LEAVES_BATTLEFIELD_TO_EXILE`. Static Prison's own "until this
+    #: enchantment leaves the battlefield" needs all three watched: a bounced
+    #: Static Prison releases its exiled card exactly as a destroyed or
+    #: exiled one does, and until this existed nothing emitted on that path
+    #: at all. Emitted by `Game.return_to_hand`, the only place that performs
+    #: this move.
+    LEAVES_BATTLEFIELD_TO_HAND = "leaves_battlefield_to_hand"
 
 
 class CostKind(StrEnum):

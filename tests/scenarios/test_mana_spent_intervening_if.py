@@ -140,6 +140,75 @@ def test_wistfulness_paid_with_double_blue_triggers_only_the_blue_ability():
     assert scenario.stack_names() == ["Wistfulness's triggered ability"]
 
 
+def _wistfulness_draw_discard_board() -> Scenario:
+    """Enough library to actually draw two, unlike `_wistfulness_board`'s
+    single Forest - the tests above only care whether the trigger goes on
+    the stack, these care whether its effect (CR 121.2's draw, CR 701.9a's
+    discard) actually happens.
+    """
+    return (
+        Scenario()
+        .player(
+            "alice",
+            library=["Forest", "Mountain"],
+            hand=["Wistfulness", "Lightning Bolt"],
+            battlefield=["Island"] * 5,
+        )
+        .player("bob", library=["Forest"])
+    )
+
+
+def test_wistfulness_paid_with_double_blue_draws_two_then_discards_one():
+    """CR 121.2: two individual draws, then CR 701.9a's discard - net +1 card
+    in hand (Wistfulness itself left the hand to be cast; two are drawn; one
+    is discarded), and the drawn cards are the ones actually on top of the
+    library, not merely a count.
+    """
+    scenario = _wistfulness_draw_discard_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources(*(["Island"] * 5))
+    forest = scenario.find("Forest", Zone.LIBRARY, "alice")
+    mountain = scenario.find("Mountain", Zone.LIBRARY, "alice")
+
+    wistfulness = scenario.cast_onto_stack("Wistfulness", *sources)
+    scenario.pass_until_resolved()  # Wistfulness enters the battlefield
+    scenario.pass_until_resolved()  # the {U}{U} triggered ability
+
+    alice = scenario.player("alice")
+    assert wistfulness.zone is Zone.BATTLEFIELD
+    assert forest.zone is Zone.HAND
+    assert alice.library == []
+    # Lightning Bolt was in hand from the start; Forest and Mountain were
+    # both drawn (CR 121.2); exactly one of the three is now discarded
+    # (CR 701.9b's unscripted default is the back of the offered hand, which
+    # lands on Mountain - the most recently drawn card).
+    assert mountain.zone is Zone.GRAVEYARD
+    assert len(alice.hand) == 2
+    assert {state.name for state in alice.hand} == {"Forest", "Lightning Bolt"}
+
+
+def test_wistfulness_discard_is_a_real_choice_not_a_random_card():
+    """CR 701.9b: absent an override, *the discarding player* chooses which
+    card - scripted here to keep Lightning Bolt and discard Forest instead
+    of the unscripted default, proving the choice is a real `CHOOSE_CARDS`
+    question and not a hardcoded "discard the last card drawn".
+    """
+    scenario = _wistfulness_draw_discard_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources(*(["Island"] * 5))
+    forest = scenario.find("Forest", Zone.LIBRARY, "alice")
+
+    scenario.cast_onto_stack("Wistfulness", *sources)
+    scenario.pass_until_resolved()
+
+    scenario.will_choose_cards(forest, username="alice", source="Wistfulness")
+    scenario.pass_until_resolved()  # the {U}{U} triggered ability
+
+    alice = scenario.player("alice")
+    assert forest.zone is Zone.GRAVEYARD
+    assert "Lightning Bolt" in [state.name for state in alice.hand]
+
+
 def test_wistfulness_paid_with_neither_color_doubled_triggers_neither_ability():
     """Pay the two hybrid symbols with one green and one blue, and the three
     generic with colorless Wastes mana: one green, one blue, neither reaching

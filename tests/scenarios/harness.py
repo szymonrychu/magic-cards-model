@@ -347,6 +347,22 @@ class PlayedScenario:
         """
         self._queue(DecisionKind.PAY_LIFE, paid, username, source, times)
 
+    def will_choose_top(
+        self,
+        top: bool = True,
+        *,
+        username: str | None = None,
+        source: str | None = None,
+        times: int | None = 1,
+    ) -> None:
+        """Answer the next "puts it on their choice of the top or bottom of
+        their library" (CR 401.2, CR 608.2d) - Subtlety's own choice. `top`
+        names the answer: `True` for the top (the documented default,
+        `DecisionKind.PUT_ON_TOP_OR_BOTTOM`'s own least-destructive choice),
+        `False` for the bottom.
+        """
+        self._queue(DecisionKind.PUT_ON_TOP_OR_BOTTOM, top, username, source, times)
+
     def will_pay_the_energy(
         self,
         paid: bool = True,
