@@ -38,11 +38,12 @@ tournament lists, never `statistics_archetypes` core_cards).
 
 **Never idle while a game runs** (added 2026-08-30 by the user: "work on known
 gaps while players are busy"). A game takes tens of minutes of agent wall-clock;
-that window is for the known-gap backlog, not for watching. Dispatch gap work in
-parallel with the players, on a scratch branch or in a worktree so a mid-game
-engine edit cannot change the code the running server booted from. The running
-server is pinned to the code it started with, so parallel edits are safe to
-write but must not be *deployed* until the game ends.
+that window is for the known-gap backlog, not for watching. **Dispatch gap work
+in worktrees** (`isolation: "worktree"`), one per agent - the owner's standing
+instruction as of 2026-08-30. Two agents editing one tree is how a review agent
+came to run `git checkout` over another agent's uncommitted work. The running
+server is pinned to the code it booted with, so parallel edits never reach the
+live game; merge and restart only between games.
 
 Standing backlog, in order: the `REPLACEMENTS` registry conversion (last of the
 three name-keyed registries), mana-spent/kicker tracking (5 abilities fail

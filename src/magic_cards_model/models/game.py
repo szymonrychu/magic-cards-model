@@ -19,17 +19,23 @@ from ..machines.abilities import (
 )
 from ..machines.combat import Attack, CombatMachine, Keyword, has_keyword
 from ..machines.cost import (
+    CostComponent,
+    CostModifierKind,
+    CostModifierNotice,
     CostPayment,
     TotalCost,
     cost_component_for_phrase,
+    cost_modifier_effect,
     discard_cost,
     increase,
+    looks_like_unparsed_cost_modifier,
     loyalty_cost,
     pay_life_cost,
     sacrifice_cost,
     tap_cost,
 )
 from ..machines.decisions import (
+    NOT_ANSWERED,
     CardSplit,
     Decision,
     DecisionKind,
@@ -40,7 +46,7 @@ from ..machines.decisions import (
     legal_options,
 )
 from ..machines.delayed import DelayedTrigger, DelayedTriggers
-from ..machines.effects import activated_effect_for, effect_for, trigger_effect_for
+from ..machines.effects import ModeNotice, activated_effect_for, effect_for, trigger_effect_for
 from ..machines.keywords import (
     aura_state_based_actions,
     equipment_state_based_actions,
@@ -64,9 +70,13 @@ from ..machines.targeting import (
 from ..machines.triggers import (
     AbilityOnStack,
     GameEvent,
+    InterveningIfNotice,
+    TargetingNotice,
+    TargetingNoticeKind,
     activated_abilities_of,
     apnap_order,
     intervening_if_holds,
+    tapped_for_mana_event,
     triggers_for,
 )
 from ..machines.turn import MAIN_PHASES, NO_PRIORITY, TURN_ORDER, Step, TurnMachine
@@ -176,6 +186,29 @@ _SORCERY_TIMING = re.compile(
     re.IGNORECASE,
 )
 
+#: Mox Opal's Metalcraft: "Activate only if you control three or more
+#: artifacts." Number words rather than digits, matching how these two
+#: restrictions are actually printed in the pool.
+_ACTIVATE_ONLY_IF_CONTROL = re.compile(
+    r"activate only if you control (?P<count>\w+) or more (?P<quality>\w+)s?",
+    re.IGNORECASE,
+)
+#: Fanatic of Rhonas's Ferocious: "Activate only if you control a creature
+#: with power 4 or greater."
+_ACTIVATE_ONLY_IF_POWER = re.compile(
+    r"activate only if you control a creature with power (?P<power>\d+) or greater",
+    re.IGNORECASE,
+)
+_CONDITION_COUNT_WORDS: dict[str, int] = {
+    "a": 1,
+    "an": 1,
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+}
+
 
 def _card_type_named(quality: str) -> Type | None:
     """The card type a protection quality names, or None if it names something else.
@@ -203,6 +236,9 @@ class CastRecord(BaseModel):
     - `face` - CR 715.3d exiles a spell "that was cast as an Adventure".
     - `modes` - CR 700.2c makes which targets a modal spell has depend on which
       modes were chosen, which CR 608.2b then rechecks on resolution.
+    - `mode_targets` - CR 700.2f: a modal spell may have "different targeting
+      requirements for each mode", so each chosen mode keeps its own slice of
+      what was targeted rather than sharing one flat list.
 
     Written by `Game.note_cast`, which `machines/casting.py` calls as the spell
     goes on the stack.
@@ -214,6 +250,9 @@ class CastRecord(BaseModel):
     """The name of the face being cast, for a card with more than one (CR 715.3)."""
     modes: list[int] = Field(default_factory=list)
     """The chosen modes, as their 1-based position on the card (CR 700.2)."""
+    mode_targets: list[list[TargetRef]] = Field(default_factory=list)
+    """Each chosen mode's own targets (CR 700.2f), aligned by position with
+    `modes` - `mode_targets[i]` is what mode `modes[i]` targets."""
     x_value: int = 0
     """The value announced for X (CR 107.3a), which a mode's target count may use."""
 
@@ -388,6 +427,54 @@ class Game(BaseModel):
     and follows the same rules as CR 601.2c-d. There is no player here to ask,
     so a scenario says in advance what a given card's trigger aims at.
     """
+
+    targeting_notices: list[TargetingNotice] = Field(default_factory=list)
+    """One entry per triggered ability whose targets could not be worked out
+    normally (`Game._ask_trigger_targets`) - either the restriction itself was
+    unreadable, or it was read fine but nothing on the battlefield satisfies
+    it right now. Both leave the ability on the stack with no targets
+    (CR 603.3d's outcome is unchanged either way); this is only the record of
+    which of the two happened, so a gap in the parser stays visible instead of
+    looking identical to a legal "nothing to target"."""
+
+    intervening_if_notices: list[InterveningIfNotice] = Field(default_factory=list)
+    """One entry per triggered ability whose intervening *if* clause
+    (CR 603.4) could not be evaluated. `intervening_if_holds` fails such a
+    clause closed - the ability does not trigger - and records it here rather
+    than leaving that indistinguishable from a clause that was read and found
+    false."""
+
+    mode_notices: list[ModeNotice] = Field(default_factory=list)
+    """One entry per chosen mode of a resolving modal spell (CR 700.2a) whose
+    text `resolve_modal_spell` could not read into an effect - the same
+    unreadable-is-not-the-same-as-no-effect record every other notice list
+    here keeps, so a mode that silently does nothing is not indistinguishable
+    from one that legitimately has nothing left to do."""
+
+    cost_modifier_notices: list[CostModifierNotice] = Field(default_factory=list)
+    """One entry per permanent whose static cost-modifying text
+    (`static_cost_modifiers_for`) could not be read - Grand Arbiter Augustin
+    IV's controller-relative "Spells your opponents cast cost {1} more to
+    cast" is the example neither `cost_modifier_effect`'s shapes cover. A
+    cost increase that silently fails to apply looks identical to ordinary
+    play, which is the DDR#978 defect this is written against; recording it
+    here keeps the gap visible instead."""
+
+    spells_cast_this_turn: dict[str, list[CardState]] = Field(default_factory=dict)
+    """Every spell each player has cast this turn, keyed by controller
+    (CR 601.2a marks the casting event; `put_on_stack` records it here).
+    Feeds Damping Sphere's per-spell cost increase and
+    `_first_spell_this_turn_holds`'s "first [type] spell you've cast this
+    turn" intervening *if* clauses. Cleared when a new turn begins."""
+
+    life_gained_this_turn: set[str] = Field(default_factory=set)
+    """Which players have gained life this turn (CR 119.9 treats any source
+    of the gain the same way). `Player.gain_life` is the single place a life
+    total actually goes up, so it is recorded there rather than only at
+    `Game.gain_life`'s call site - a direct gain (an effect, a cost paid with
+    life the other way) used to leave this unrecorded. Feeds Ocelot Pride's
+    "you gained life this turn" intervening *if*. Cleared when a new turn
+    begins."""
 
     activations: dict[str, int] = Field(default_factory=dict)
     """How often each ability has been activated this turn, keyed
@@ -597,6 +684,23 @@ class Game(BaseModel):
             for state in self.battlefield
             if state.controller == username or state.controller is None
         ]
+
+    def _controlled_land_types(self, controller: str) -> frozenset[str]:
+        """Land subtypes (CR 205.3i) this player controls, as single words.
+
+        Feeds `ManaAbility.resolve`'s conditional "If you control an Urza's
+        Mine and an Urza's Power-Plant, ..." clauses. CR 305.5: "Land
+        subtypes are always a single word", which is why `Card.subtypes`
+        already reads "Urza's Mine" as the two words "Urza's" and "Mine" -
+        the same words `machines/abilities.py` reads off the condition's own
+        printed sentence - so nothing further needs parsing here.
+        """
+        return frozenset(
+            subtype
+            for state in self.permanents_controlled_by(controller)
+            if state.card.is_land
+            for subtype in state.card.subtypes
+        )
 
     def untap_step(self) -> None:
         """Untap everything the active player controls (CR 502.3).
@@ -810,9 +914,14 @@ class Game(BaseModel):
         "Continuously since their most recent turn began" (CR 302.6) is a
         one-way door per turn: everything they control right now has been here
         since the turn began, by definition.
+
+        CR 800.4m: an "until [a player's] next turn" effect "will last until
+        that turn would have begun" - the same moment, so any effect keyed to
+        this player's next turn ends here too (Karn, the Great Creator's +1).
         """
         for permanent in self.permanents_controlled_by(username):
             permanent.summoning_sick = False
+        self.continuous_effects.end_for_next_turn(username)
 
     def can_activate_tap_ability(self, permanent: CardState) -> bool:
         """Whether a `{T}` ability of this permanent may be activated (CR 302.6).
@@ -831,13 +940,14 @@ class Game(BaseModel):
         keyword: str | None = None,
         face: str | None = None,
         modes: list[int] | None = None,
+        mode_targets: list[list[TargetRef]] | None = None,
         x_value: int = 0,
     ) -> "CastRecord":
         """Record how a spell was cast, for the rules that ask afterwards.
 
         CR 601.2b is where a caster announces an alternative cost, a face, and
         the modes; the `CardState` that reaches the stack carries none of that.
-        Four rules need it later:
+        Five rules need it later:
 
         - **CR 702.34a** - "If the flashback cost was paid, exile this card
           instead of putting it anywhere else any time it would leave the
@@ -849,12 +959,21 @@ class Game(BaseModel):
           exiles it."
         - **CR 700.2c** - which targets a modal spell has depends on the modes
           chosen, which CR 608.2b then rechecks.
+        - **CR 700.2f** - "Modal spells ... may have different targeting
+          requirements for each mode", so each mode keeps its own slice of
+          what was targeted rather than one flat list shared by all of them.
 
         `machines/casting.py` calls this as the spell goes on the stack. A spell
         cast without going through a `Casting` has no record and is treated as
         cast plainly, which is exactly right.
         """
-        record = CastRecord(keyword=keyword, face=face, modes=list(modes or []), x_value=x_value)
+        record = CastRecord(
+            keyword=keyword,
+            face=face,
+            modes=list(modes or []),
+            mode_targets=[list(slice_) for slice_ in mode_targets or []],
+            x_value=x_value,
+        )
         self.cast_records[spell.id] = record
         return record
 
@@ -880,15 +999,17 @@ class Game(BaseModel):
         """
         if move_refused(card_state, Zone.STACK) is not None:
             return card_state
-        owner = self.player(controller)
-        for zone_cards in owner.zones.values():
-            if card_state in zone_cards:
-                zone_cards.remove(card_state)
+        # Exile and the command zone are modelled as shared, not per-player
+        # (`shared_zones`, not `owner.zones`) - a card foretold, plotted, or
+        # exiled by an Adventure sits there, and was left behind (duplicated
+        # onto the stack) when only the player's own zones were searched.
+        self._take_out_of_every_zone(card_state)
 
         card_state.controller = controller
         card_state.move_to(Zone.STACK)
         if card_state not in self.stack:
             self.stack.append(card_state)
+        self.spells_cast_this_turn.setdefault(controller, []).append(card_state)
 
         # CR 601.2a: the card is now a spell on the stack, so the casting event
         # has happened and anything watching for it triggers (CR 603.2).
@@ -937,7 +1058,7 @@ class Game(BaseModel):
             self._before_priority()
             return spell
 
-        effect = effect_for(spell.card.name)
+        effect = effect_for(spell.card.name, spell.card.oracle_text)
         if effect is not None:
             effect(self, spell)
 
@@ -1070,11 +1191,13 @@ class Game(BaseModel):
         if keyword is not None:
             return keyword
         if isinstance(ability.ability, TriggeredAbility) and ability.ability.event is not None:
-            return trigger_effect_for(ability.source_name, ability.ability.event)
+            return trigger_effect_for(
+                ability.source_name, ability.ability.event, ability.ability.effect
+            )
         if isinstance(ability.ability, ActivatedAbility):
             index = self._activated_index(ability)
             if index is not None:
-                return activated_effect_for(ability.source_name, index)
+                return activated_effect_for(ability.source_name, index, ability.ability.effect)
         return None
 
     def _activated_index(self, ability: AbilityOnStack) -> int | None:
@@ -1163,6 +1286,12 @@ class Game(BaseModel):
         is what makes a scenario reproducible.
 
         Targets are chosen here, not when the ability triggered (CR 603.3d).
+
+        A `choose_trigger_targets` answer is consumed by this one batch and no
+        other: it is thrown away once every waiting ability has had its turn,
+        so a later, separate trigger sharing the same source name (a second
+        cast of the same card, or an unrelated delayed trigger printed on the
+        same card) is asked fresh rather than inheriting a stale answer.
         """
         if not self.pending_triggers:
             return []
@@ -1174,11 +1303,127 @@ class Game(BaseModel):
         for ability in ordered:
             ability.targets = list(self._targets_for_trigger(ability))
             self.stack.append(ability)
+        for ability in ordered:
+            self.trigger_targets.pop(ability.source_name, None)
+            self.trigger_targets.pop(ability.source_name.split("//")[0].strip(), None)
         return ordered
 
     def _targets_for_trigger(self, ability: AbilityOnStack) -> list[TargetRef]:
+        """What this triggered ability targets, as it goes on the stack (CR 603.3d).
+
+        A scripted `choose_trigger_targets(card_name, ...)` answer wins outright
+        - it is keyed by name rather than by ability instance on purpose, so
+        two simultaneous triggers sharing a name (Ugin, Eye of the Storms'
+        pair of "when you cast this spell" lines) both see it. Nothing
+        scripted falls through to `_ask_trigger_targets`, which asks this
+        ability *instance*, addressed to its own controller.
+        """
         front = ability.source_name.split("//")[0].strip()
-        return self.trigger_targets.get(ability.source_name, self.trigger_targets.get(front, []))
+        if ability.source_name in self.trigger_targets:
+            return self.trigger_targets[ability.source_name]
+        if front in self.trigger_targets:
+            return self.trigger_targets[front]
+        return self._ask_trigger_targets(ability)
+
+    def _ask_trigger_targets(self, ability: AbilityOnStack) -> list[TargetRef]:
+        """Ask a triggered ability's own controller for its targets (CR 603.3d).
+
+        "The remainder of the process for putting a triggered ability on the
+        stack is identical to the process for casting a spell listed in rules
+        601.2c-601.2d" - so this is CR 601.2c's target announcement, put to
+        `ability.controller` through the ordinary `Game.ask` `CHOOSE_TARGETS`
+        question, with the legal candidates worked out by
+        `TargetRequirement.rejects` - the same checker `activate_ability` and
+        `choose_trigger_targets` already use.
+
+        Two things can leave this with no targets and something to say about
+        why, recorded on `targeting_notices` rather than silently returned as
+        if nothing were amiss (the DDR#978-shaped defect: an ability that
+        does nothing looks identical to one with nothing to point at):
+
+        - the restriction itself could not be read at all
+          (`TargetingProfile.understood` is False) - `TargetingNoticeKind.UNPARSED`;
+        - it was read fine, but nothing on the battlefield satisfies it right
+          now - `TargetingNoticeKind.NO_LEGAL_TARGET`, a legal game state
+          (CR 608.2d's own "nobody says otherwise" default), not a bug.
+
+        An ability with no targeting requirement at all is not asked anything
+        and gets no notice either - there is nothing to be silent about.
+        """
+        printed = ability.ability
+        text = printed.text if isinstance(printed, TriggeredAbility) else ""
+        profile = profile_for_text(text)
+        if not profile.understood:
+            self.targeting_notices.append(
+                TargetingNotice(
+                    kind=TargetingNoticeKind.UNPARSED,
+                    source_id=ability.source_id,
+                    source_name=ability.source_name,
+                    text=text,
+                )
+            )
+            return []
+        if not profile.requirements:
+            return []
+
+        candidates = self._legal_target_candidates(profile, ability.controller, ability.source_id)
+        if not candidates:
+            self.targeting_notices.append(
+                TargetingNotice(
+                    kind=TargetingNoticeKind.NO_LEGAL_TARGET,
+                    source_id=ability.source_id,
+                    source_name=ability.source_name,
+                    text=text,
+                )
+            )
+            return []
+
+        decision = Decision(
+            kind=DecisionKind.CHOOSE_TARGETS,
+            player=ability.controller,
+            prompt=f"choose targets for {ability.source_name}",
+            source=ability.source_name,
+            targets=tuple(TargetRef.coerce(candidate) for candidate in candidates),
+            target_maximum=profile.max_targets,
+        )
+        chosen = self.ask(decision)
+        assert isinstance(chosen, (list, tuple))
+        return list(chosen)
+
+    def _legal_target_candidates(
+        self, profile: TargetingProfile, controller: str, source_id: UUID | None
+    ) -> list[Targetable]:
+        """Every object or player `profile` could legally land on right now.
+
+        Used only to tell CR 608.2d's "nothing satisfies the restriction"
+        apart from "the restriction could not be read" - not a full
+        target-choosing implementation, so every legal candidate is returned
+        rather than just the first, letting the caller (a live decision, or
+        this file's own notice check) pick among them.
+        """
+        seen: set[UUID] = set()
+        candidates: list[Targetable] = []
+        for zone_cards in self.shared_zones.values():
+            for state in zone_cards:
+                if isinstance(state, CardState) and state.id not in seen:
+                    seen.add(state.id)
+                    candidates.append(state)
+        for player in self.players:
+            for zone_cards in player.zones.values():
+                for state in zone_cards:
+                    if state.id not in seen:
+                        seen.add(state.id)
+                        candidates.append(state)
+        if profile.requirements and any(r.allows_players for r in profile.requirements):
+            candidates.extend(self.players)
+        return [
+            candidate
+            for candidate in candidates
+            if any(
+                requirement.rejects(candidate, controller, self, source_id) is None
+                for requirement in profile.requirements
+            )
+        ]
 
     def choose_trigger_targets(self, card_name: str, targets: list[object]) -> None:
         """Say what a card's triggered ability will target when it goes on the stack.
@@ -1231,7 +1476,7 @@ class Game(BaseModel):
             if not profile.understood or not profile.requirements:
                 continue
             try:
-                profile.check(list(targets), controller, self)
+                profile.check(list(targets), controller, self, source_id=source.id)
             except ValueError as refusal:
                 reasons.append(str(refusal))
             else:
@@ -1385,10 +1630,19 @@ class Game(BaseModel):
         It is still recorded in `decisions.asked`, with
         `affirmative_is_legal` False, because "there was nothing to decide" is a
         fact a scenario may want to assert.
+
+        A scripted answer always wins; only once none matches is a live
+        `decisions.provider` (if one is set) consulted, and only once that
+        also has nothing - `NOT_ANSWERED`, or no provider at all - does
+        `default_answer` speak for the player.
         """
         self.decisions.asked.append(decision)
         allowed = legal_options(decision)
         found, value = self.decisions.take(decision)
+        if not found and self.decisions.provider is not None:
+            provided = self.decisions.provider.decide(decision)
+            if provided is not NOT_ANSWERED:
+                found, value = True, provided
         if not found:
             return default_answer(decision)
 
@@ -1402,6 +1656,37 @@ class Game(BaseModel):
                 )
             return value
 
+        if decision.kind is DecisionKind.CHOOSE_CARDS:
+            if not isinstance(value, tuple) or not all(isinstance(v, UUID) for v in value):
+                raise ValueError(f"{decision.prompt}: needs a tuple of chosen card ids")
+            offered = set(decision.cards)
+            stray = [str(card_id) for card_id in value if card_id not in offered]
+            if stray:
+                raise ValueError(
+                    f"{decision.prompt}: cannot choose a card that was not offered: "
+                    f"{', '.join(stray)}"
+                )
+            if len(value) != decision.amount:
+                raise ValueError(
+                    f"{decision.prompt}: needs {decision.amount} card(s) chosen, {len(value)} given"
+                )
+            return value
+
+        if decision.kind is DecisionKind.CHOOSE_TARGETS:
+            if not isinstance(value, (tuple, list)):
+                raise ValueError(f"{decision.prompt}: needs a tuple of targets")
+            chosen = [TargetRef.coerce(target) for target in value]
+            legal = set(decision.targets)
+            stray = [str(ref) for ref in chosen if ref not in legal]
+            if stray:
+                raise ValueError(f"{decision.prompt}: not a legal target: {', '.join(stray)}")
+            if decision.target_maximum is not None and len(chosen) > decision.target_maximum:
+                raise ValueError(
+                    f"{decision.prompt}: too many targets chosen, at most "
+                    f"{decision.target_maximum} (CR 115.6)"
+                )
+            return chosen
+
         if not isinstance(value, CardSplit):
             raise ValueError(f"{decision.prompt}: needs a CardSplit answer")
         looked_at = set(decision.cards)
@@ -1412,6 +1697,31 @@ class Game(BaseModel):
                 f"(CR 701.22a, CR 701.25a): {', '.join(stray)}"
             )
         return value
+
+    def ask_cleanup_discard(self, player: Player, needed: int) -> list[CardState]:
+        """Which cards a player discards to their maximum hand size (CR 514.1).
+
+        CR 701.9b: "By default, effects that cause a player to discard a card
+        allow the affected player to choose which card to discard" - the
+        cleanup discard is such an effect, so this is a `CHOOSE_CARDS`
+        question through `Game.ask`, the same CR 608.2d machinery every other
+        discard-a-card choice in `machines/effects.py` uses.
+
+        The hand is offered in hand order, so `default_answer`'s "back of the
+        offered cards" lands on the actual back of the hand - the behaviour
+        `Player.discard_to_maximum_hand_size` had before this question existed.
+        """
+        decision = Decision(
+            kind=DecisionKind.CHOOSE_CARDS,
+            player=player.username,
+            prompt=f"discard {needed} card(s) to maximum hand size",
+            amount=needed,
+            cards=tuple(state.id for state in player.hand),
+        )
+        chosen_ids = self.ask(decision)
+        assert isinstance(chosen_ids, tuple)
+        by_id = {state.id: state for state in player.hand}
+        return [by_id[card_id] for card_id in chosen_ids]
 
     def may(self, player: Player | str, prompt: str, *, source: str | None = None) -> bool:
         """A plain "you may" during resolution (CR 608.2d).
@@ -1781,8 +2091,7 @@ class Game(BaseModel):
         """
         if move_refused(permanent, Zone.HAND) is not None:
             return permanent
-        if permanent in self.battlefield:
-            self.battlefield.remove(permanent)
+        self._take_out_of_every_zone(permanent)
         self.combat.remove(permanent.id)  # CR 506.4
         self._owner_of(permanent).add(permanent, Zone.HAND)
         return permanent
@@ -1870,10 +2179,12 @@ class Game(BaseModel):
         (`machines/targeting.py`), so a card whose text the parser cannot read
         is treated as still legal rather than made to fizzle on a guess.
 
-        An **ability** on the stack is only checked for "is it still there".
-        `machines/targeting.py` reads a card's text, and an ability's targeting
-        requirement is printed inside the ability rather than as the card's own
-        spell text, so there is nothing there for it to read.
+        An **ability** on the stack is checked against its own printed text
+        (`ability.ability.text`, the same source `activate_ability` and
+        `_ask_trigger_targets` already read with `profile_for_text`) rather
+        than a spell's `targeting_profile` - CR 113.1c's ability has no card
+        text of its own to look up by name, but it carries its restriction
+        right there on the object.
         """
         thing = self.resolve_target(target)
         if thing is None:
@@ -1886,7 +2197,16 @@ class Game(BaseModel):
             return None
 
         if isinstance(spell, AbilityOnStack):
-            return thing
+            profile = profile_for_text(spell.ability.text)
+            if not profile.understood or not profile.requirements:
+                return thing
+            caster = spell.controller
+            if any(
+                requirement.rejects(thing, caster, self, spell.source_id) is None
+                for requirement in profile.requirements
+            ):
+                return thing
+            return None
 
         profile = self._resolution_profile(spell)
         if not profile.understood or not profile.requirements:
@@ -2400,8 +2720,7 @@ class Game(BaseModel):
         """
         if move_refused(permanent, Zone.EXILE) is not None:
             return permanent
-        if permanent in self.battlefield:
-            self.battlefield.remove(permanent)
+        self._take_out_of_every_zone(permanent)
         self.combat.remove(permanent.id)  # CR 506.4
         permanent.move_to(Zone.EXILE)
         self.exile.append(permanent)
@@ -2558,7 +2877,10 @@ class Game(BaseModel):
             for state in list(self.battlefield)
             # CR 704.5f before CR 704.5g: a 0-toughness creature is put into the
             # graveyard whatever damage it has, and regeneration cannot stop it.
-            if state.is_creature and self._dies_to_state_based_action(state, board)
+            # `board.of(state).is_creature` rather than the printed
+            # `state.is_creature` (CR 613.5): an animated artifact (Karn, the
+            # Great Creator's +1) is a creature on the computed board only.
+            if board.of(state).is_creature and self._dies_to_state_based_action(state, board)
         ]
         leaving += [state for state in self._legend_rule_losers() if state not in leaving]
         # CR 704.5m, read off the Aura's own enchant ability (CR 702.5a) by
@@ -2802,6 +3124,13 @@ class Game(BaseModel):
         """Declare a whole attack at once, in order (CR 508.1, 508.2b)."""
         for creature, defender in attacks:
             self.declare_attacker(creature, defender)
+        if attacks:
+            # CR 508.3d: "An ability that reads 'Whenever [a player] attacks,
+            # . . .' triggers if one or more creatures that player controls
+            # are declared as attackers" - once for the whole declaration,
+            # not once per attacker, so this is its own subject-less event
+            # alongside each creature's own ATTACKS event above.
+            self.emit(GameEvent(event=TriggerEvent.ATTACKS, player=self.active_player.username))
         self.put_triggers_on_stack()
 
     def can_block(self, blocker: CardState, attacker: CardState) -> bool:
@@ -3050,6 +3379,71 @@ class Game(BaseModel):
         amount = int(match.group(1)) * len(types)
         return ManaCost.parse(f"{{{amount}}}") if amount else ManaCost()
 
+    def static_cost_modifiers_for(
+        self, spell: CardState, caster: str | None = None
+    ) -> tuple[list[ManaCost], int | None]:
+        """Board-wide static cost increases and the floor in play right now
+        (CR 601.2f, 611.3).
+
+        Unlike `cost_reduction_for`, which reads *this* spell's own text for a
+        self-discount, this reads every *other* permanent's static ability for
+        a tax or a floor on spells in general: Sphere of Resistance and Thorn
+        of Amethyst's flat increases, Damping Sphere's per-spell-this-turn
+        increase, Trinisphere's floor. `Casting.total_cost` folds this in for
+        every ordinary cast, so nothing has to opt in the way
+        `determine_total_cost` does for a self-reduction.
+
+        A permanent whose text names a card-type qualifier ("Noncreature
+        spells cost {1} more") only taxes a spell that lacks that type
+        (CR 205.2b: a multi-type card is checked against all of them). A
+        permanent whose ability requires being untapped (Trinisphere's own
+        clause) is skipped while tapped (CR 611.3b: a static ability's effect
+        applies only while its source carries it).
+
+        Text that reads like a cost modifier but does not match one of
+        `cost_modifier_effect`'s recognised shapes - Grand Arbiter Augustin
+        IV's controller-relative "Spells your opponents cast cost {1} more to
+        cast" - is neither applied nor silently skipped: a `CostModifierNotice`
+        is appended to `cost_modifier_notices` instead (DDR#978 - an increase
+        that fails to apply looks identical to ordinary play). Deduplicated by
+        source, since this runs every time a cost is priced.
+        """
+        caster = caster or spell.controller or self.active_player.username
+        increases: list[ManaCost] = []
+        floor: int | None = None
+        already_noticed = {notice.source_id for notice in self.cost_modifier_notices}
+
+        for permanent in self.battlefield:
+            text = permanent.card.oracle_text or ""
+            if not text:
+                continue
+            effect = cost_modifier_effect(text)
+            if effect is None:
+                if looks_like_unparsed_cost_modifier(text) and permanent.id not in already_noticed:
+                    already_noticed.add(permanent.id)
+                    self.cost_modifier_notices.append(
+                        CostModifierNotice(
+                            source_id=permanent.id, source_name=permanent.name, text=text
+                        )
+                    )
+                continue
+
+            if effect.kind is CostModifierKind.FLOOR:
+                if effect.requires_untapped and permanent.tapped:
+                    continue
+                if floor is None or effect.amount > floor:
+                    floor = effect.amount
+            elif effect.kind is CostModifierKind.FLAT_INCREASE:
+                if effect.excludes_type is not None and effect.excludes_type in spell.card.types:
+                    continue
+                increases.append(ManaCost.parse(f"{{{effect.amount}}}"))
+            elif effect.kind is CostModifierKind.PER_SPELL_INCREASE:
+                prior = len(self.spells_cast_this_turn.get(caster, []))
+                if prior:
+                    increases.append(ManaCost.parse(f"{{{effect.amount * prior}}}"))
+
+        return increases, floor
+
     def determine_total_cost(self, casting: object) -> CostPayment:
         """CR 601.2f: work out the reduction now, then lock the total cost in.
 
@@ -3194,7 +3588,43 @@ class Game(BaseModel):
                 f"{controller}'s main phase, with the stack empty "
                 f"(CR 602.5d, CR 307.5)"
             )
+        if "activate only if" in instructions and not self._activation_condition_holds(
+            ability, controller
+        ):
+            return f"{permanent.name}'s activation restriction is not met (CR 602.5b)"
         return None
+
+    def _activation_condition_holds(self, ability: ActivatedAbility, controller: str) -> bool:
+        """Whether an "Activate only if [board state]" restriction is met (CR 602.5b).
+
+        Two shapes are read, both of this pool's own examples: Mox Opal's
+        Metalcraft ("you control three or more artifacts") and Fanatic of
+        Rhonas's Ferocious ("you control a creature with power 4 or
+        greater"). Anything else this cannot read is **not** blocked - an
+        unparsed restriction refusing every activation would trade a narrow,
+        documented gap (see `docs/engine-coverage.md`) for a much louder
+        wrong one, on cards this restriction was never meant to touch.
+        """
+        instructions = ability.instructions or ""
+        controlled = self.permanents_controlled_by(controller)
+
+        match = _ACTIVATE_ONLY_IF_CONTROL.search(instructions)
+        if match is not None:
+            needed = _CONDITION_COUNT_WORDS.get(match.group("count").lower())
+            card_type = _card_type_named(match.group("quality"))
+            if needed is not None and card_type is not None:
+                count = sum(1 for state in controlled if card_type in state.card.types)
+                return count >= needed
+
+        match = _ACTIVATE_ONLY_IF_POWER.search(instructions)
+        if match is not None:
+            threshold = int(match.group("power"))
+            return any(
+                state.is_creature and state.power is not None and state.power >= threshold
+                for state in controlled
+            )
+
+        return True
 
     def _still_has_ability(self, permanent: CardState, ability: ActivatedAbility) -> bool:
         """Whether the computed board still shows this ability on the permanent.
@@ -3234,6 +3664,49 @@ class Game(BaseModel):
         """
         return self.loyalty_activations.get(str(permanent.id), 0)
 
+    def _choice_cost(
+        self,
+        text: str,
+        permanent: CardState,
+        pool: list[CardState],
+        controller: str,
+        builder: Callable[..., CostComponent],
+    ) -> CostComponent:
+        """One `[Sacrifice|Discard]` cost piece, self-reference and quality
+        requirement both handled (CR 602.1a, CR 118.3).
+
+        `cost_component_for_phrase` already reads the qualified shape -
+        "Sacrifice a Goblin", "Discard two cards" - into a component carrying
+        a `CardRequirement`, but always with `cards=[]`: it has no `pool` to
+        choose from and no permanent to self-reference. This fills the gap
+        either way: from `pool` (the caller's nomination) up to however many
+        the cost asks for, or with `permanent` itself when nothing was
+        nominated and the text names "this" card - the same self-reference
+        `CostKind.OTHER`'s own fill-in below handles.
+
+        Falls back to `builder` directly - no requirement, "sacrifice
+        anything" - only when the phrase does not match the qualified shape
+        at all (CR 602.1a - "Sacrifice this land"'s `count` position holds the
+        word "this", not a number, so `cost_component_for_phrase` cannot read
+        it as one).
+        """
+        component = cost_component_for_phrase(text, payer=controller)
+        if component is None:
+            if pool:
+                chosen = [pool.pop(0)]
+            elif _SELF_REFERENCE.search(text):
+                chosen = [permanent]
+            else:
+                chosen = []
+            return builder(*chosen, payer=controller, required=1, description=text)
+
+        chosen = []
+        while pool and len(chosen) < component.required:
+            chosen.append(pool.pop(0))
+        if not chosen and _SELF_REFERENCE.search(text):
+            chosen = [permanent]
+        return component.model_copy(update={"cards": chosen})
+
     def activation_cost(
         self,
         permanent: CardState,
@@ -3266,14 +3739,12 @@ class Game(BaseModel):
             elif piece.kind is CostKind.TAP:
                 components.append(tap_cost(permanent, payer=controller, description=piece.text))
             elif piece.kind is CostKind.SACRIFICE:
-                chosen = [sacrifices.pop(0)] if sacrifices else []
                 components.append(
-                    sacrifice_cost(*chosen, payer=controller, required=1, description=piece.text)
+                    self._choice_cost(piece.text, permanent, sacrifices, controller, sacrifice_cost)
                 )
             elif piece.kind is CostKind.DISCARD:
-                chosen = [discards.pop(0)] if discards else []
                 components.append(
-                    discard_cost(*chosen, payer=controller, required=1, description=piece.text)
+                    self._choice_cost(piece.text, permanent, discards, controller, discard_cost)
                 )
             elif piece.kind is CostKind.PAY_LIFE:
                 digits = re.search(r"\d+", piece.text)
@@ -3345,6 +3816,7 @@ class Game(BaseModel):
         controller: str | None = None,
         *,
         targets: list[object] | None = None,
+        color: Color | None = None,
     ) -> AbilityOnStack | None:
         """Finish activating: put the ability on the stack (CR 602.2).
 
@@ -3367,6 +3839,12 @@ class Game(BaseModel):
         Rather, it resolves immediately after it is activated" - so the mana
         goes into its controller's pool here and `None` comes back, meaning
         nothing was put on the stack.
+
+        `color` is the colour picked for a mana ability offering a choice (a
+        dual land, an "any color" source) - `ManaAbility.resolve` is what
+        actually makes the choice and raises its own clear message when one
+        is needed but missing, or when the one given is not on offer. It is
+        not consulted at all for an ability with only one possible output.
         """
         ability = self.activated_abilities(permanent)[index]
         controller = controller or self.controller_of(permanent).username
@@ -3404,8 +3882,21 @@ class Game(BaseModel):
             # effect, and nothing in the printed cost or effect moves a card
             # to or from a library. CR 605.3b: no stack at all; the mana lands
             # in the pool immediately.
-            for color in ability.mana.produces():
-                self.player(controller).mana_pool.add(color)
+            land_types = self._controlled_land_types(controller)
+            own_counters = frozenset(permanent.counters.counts)
+            for produced in ability.mana.resolve(land_types, own_counters, color):
+                self.player(controller).mana_pool.add(produced)
+            # CR 106.12: "to 'tap [a permanent] for mana' is to activate a mana
+            # ability of that permanent that includes the {T} symbol in its
+            # activation cost" - so only a `{T}: ...` ability counts, not
+            # Skirk Prospector's sacrifice-only one. CR 106.12a is the event
+            # Leyline of Abundance and Utopia Sprawl watch for, even though
+            # CR 605.3b means this ability itself never touched the stack
+            # (`tapped_for_mana_event`'s own docstring is the other half of
+            # this: `CostPayment.tap_for_mana` emits the same event when a
+            # source pays for a spell instead of being activated directly).
+            if any(piece.kind is CostKind.TAP for piece in ability.costs):
+                self.emit(tapped_for_mana_event(permanent))
             self.put_triggers_on_stack()
             return None
 
@@ -3540,7 +4031,19 @@ class Game(BaseModel):
         return self.player(state.controller) if state.controller else self.active_player
 
     def _owner_of(self, state: CardState) -> Player:
-        return self.controller_of(state)
+        """Whose private zones a card goes to when nobody names a player (CR 108.3).
+
+        `CardState.owner` is the actual answer - set once when the card
+        entered the game and never keyed to the zone it happens to sit in
+        right now, unlike `find_owner`'s zone lookup (which cannot answer at
+        all for a card already taken out of every zone on its way to a new
+        one - milling from *bob's* library was landing in whoever the active
+        player was, because by the time this ran the card had already left
+        bob's zones). Only a card with no `owner` set at all - most of this
+        engine's own test fixtures, which usually skip it - falls back to
+        `controller_of`'s active-player default.
+        """
+        return self.player(state.owner) if state.owner else self.controller_of(state)
 
     def find_owner(self, state: CardState) -> Player | None:
         """Whose card this is, by the zone it is sitting in.
@@ -3699,6 +4202,8 @@ class Game(BaseModel):
             self.lands_played = {}
             self.activations = {}  # CR 602.5b restrictions are per turn
             self.loyalty_activations = {}  # CR 606.3's once-per-turn is per turn too
+            self.spells_cast_this_turn = {}
+            self.life_gained_this_turn = set()
             self.end_of_combat()
             self.begin_turn_for(self.turn.active_player)
             self._sync_player_control()  # CR 723.1

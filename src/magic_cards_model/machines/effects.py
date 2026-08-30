@@ -724,12 +724,22 @@ def effect_for(card_name: str, effect_text: str | None = None) -> Effect | None:
     as a player clause, so a card mixing both kinds (Lightning Helix) parses
     without needing a row. An explicit row always wins, so nothing already
     scripted changes behaviour.
+
+    A modal card (CR 700.2's bulleted "Choose one/two/...") is dispatched to
+    `resolve_modal_spell` instead: `_prepare_effect_clauses` refuses modal text
+    outright (a bulleted list is not a linear sequence of clauses), so nothing
+    would otherwise reach it. `resolve_modal_spell` reads which modes were
+    chosen off `Game.cast_record` and runs each one's own clause, keyed by
+    nothing but the card's own printed text - no per-card row needed here
+    either.
     """
     explicit = EFFECTS.get(card_name)
     if explicit is not None:
         return explicit
     if effect_text is None:
         return None
+    if is_modal_text(effect_text):
+        return resolve_modal_spell
     return parse_mixed_effect_for_spell(effect_text)
 
 

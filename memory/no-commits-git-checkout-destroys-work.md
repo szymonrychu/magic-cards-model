@@ -1,9 +1,24 @@
 ---
 name: no-commits-git-checkout-destroys-work
-description: This repo has zero commits, so any git command that "restores" a file overwrites it with an ancient index blob - it already destroyed a day and a half of game.py
+description: How a git checkout against a stale index destroyed a day and a half of game.py, how it was recovered, and the commit-and-worktree discipline the owner set afterwards
 metadata:
   type: project
 ---
+
+**RESOLVED 2026-08-30.** Both repos now have real commits (`magic-cards-model`
+7ea38ee, `magic-cards-model-api` be2f6e2 - the API repo was not a git repo at
+all). The owner's standing instruction afterwards was: **"from now on start real
+commits, go with the parallel work over worktrees."**
+
+So, from now on:
+- **Commit real checkpoints as work lands** - do not ask each time, it is
+  pre-authorised. A green suite is a commit point.
+- **Run parallel agent work in worktrees** (`isolation: "worktree"` on the Agent
+  tool). This now works; it failed before only because a repo with no commits
+  has no base branch to fork from.
+
+The rest of this memory is the incident it came from - keep it, because the
+recovery technique is the reusable part.
 
 **`magic-cards-model` has NO git commits.** Everything is staged and has never
 been committed, so `git log` says "does not have any commits yet" and the index

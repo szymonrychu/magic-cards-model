@@ -7,7 +7,7 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, RootModel, model_validator
 
-from .card import Card, Color, Type
+from .card import Card, Type
 from .zone import Zone
 
 PERMANENT_TYPES = frozenset(
