@@ -102,7 +102,7 @@ from magic_cards_model.machines.layers import (  # noqa: E402
 )
 from magic_cards_model.machines.modes import modal_profile  # noqa: E402
 from magic_cards_model.machines.targeting import profile_for_text  # noqa: E402
-from magic_cards_model.models.card import Card, Type  # noqa: E402
+from magic_cards_model.models.card import Card, Layout, Type, types_of  # noqa: E402
 
 #: Keywords that need no code because they change what a card *is*, not what the
 #: engine has to do. Each is inert in the sense that the rules attach no action
@@ -353,6 +353,81 @@ def _dispatch_category(effect: object, printing: Card) -> str:
     return HANDLED
 
 
+#: CR 107.3a's X, substituted into a card's own text before classification so
+#: an X-bounded clause (Green Sun's Zenith's "mana value X or less", Fiend
+#: Artisan's activated ability of the same shape) is judged on what it does
+#: in a real game rather than on the untouched literal "X" no numeric parser
+#: matches. Two values, deliberately, not one: 0 is CR 107.3a's own floor and
+#: a legal choice a caster can make (Green Sun's Zenith for X=0 is a real,
+#: legal cast that finds nothing per CR 701.23b -
+#: `test_x_zero_is_a_legal_search_that_finds_nothing_above_its_own_bound`), so
+#: probing only 0 would wrongly read a clause whose only readable shape needs
+#: X>0 as silent, and probing only a nonzero value would miss the reverse.
+#: 3 is an arbitrary nonzero probe: large enough that a small "or less"/"or
+#: greater" bound is exercised meaningfully, small enough to stay a plausible
+#: value nobody would mistake for anything else. `classify_card`'s own "best
+#: outcome wins" rule (CR 608.2n) picks whichever probe a real dispatcher can
+#: read, so trying both never scores a card worse than trying one.
+_X_PROBE_VALUES: tuple[int, ...] = (0, 3)
+
+
+def _x_candidates(cost_or_mana_cost: str | None) -> tuple[int | None, ...]:
+    """Every X value `classify_card` should try for one clause.
+
+    Mirrors `models/game.py`'s own gate for a real resolution
+    (`"{X}" in (spell.mana_cost or "")` for a spell, `"{X}" in ability.ability.cost`
+    for an activated ability): `None` - leave a bare "X" in the text alone,
+    the same as a card that defines its own X in its rules text (CR 107.3f)
+    rather than in its cost (CR 107.3a) - unless the cost that actually pays
+    for this clause carries `{X}`, in which case every value in
+    `_X_PROBE_VALUES` is tried.
+    """
+    if cost_or_mana_cost and "{X}" in cost_or_mana_cost:
+        return _X_PROBE_VALUES
+    return (None,)
+
+
+def _spell_faces(printing: Card) -> list[tuple[str, str, str | None]]:
+    """The (name, oracle_text, mana_cost) triples `classify_card` should feed
+    to `effect_for`, one per face a real cast could put on the stack with
+    only that face's own characteristics (CR 712.8a/712.8d/712.8f).
+
+    `effect_for` never splits a combined "A // B" name itself the way
+    `trigger_effect_for`/`activated_effect_for` do (see their own
+    docstrings), and the printing's own top-level `oracle_text`/`mana_cost`
+    are `None` on real Scryfall data for a split, transform or modal-DFC card
+    - reading them directly is what let Wear // Tear and Sink into Stupor //
+    Soporific Springs read as silent while their own scenario tests
+    (`test_split_cards.py`, `test_mdfc_spell_side.py`) already pass.
+
+    - **Layout.SPLIT** (CR 709.3): both halves are independently castable
+      (CR 709.3a), so both faces are returned, each under its own name and
+      text - never the combined printing's own blank top-level fields.
+    - **Layout.MODAL_DFC** (CR 712.12): a land face is played as a CR 305.1
+      special action, never cast, so it is dropped here; the remaining
+      face(s) are returned by their own name/text/cost the same way.
+    - **everything else** (a single-faced card, or a `transform` card whose
+      only directly castable face is the front, CR 712.8a): one face, using
+      `front_oracle_text` (already the right fallback for a blank top-level
+      field, per its own docstring) and the front face's own name/cost where
+      one exists, since a resolving `CardState`'s name is never the combined
+      string either (`CardState.name`'s own docstring).
+    """
+    faces = printing.card_faces or []
+    if printing.layout is Layout.SPLIT and faces:
+        return [(face.name, face.oracle_text or "", face.mana_cost) for face in faces]
+    if printing.layout is Layout.MODAL_DFC and faces:
+        return [
+            (face.name, face.oracle_text or "", face.mana_cost)
+            for face in faces
+            if Type.LAND not in types_of(face.type_line or "")
+        ]
+    front = printing.front_face
+    name = front.name if front is not None else printing.name
+    mana_cost = front.mana_cost if front is not None else printing.mana_cost
+    return [(name, printing.front_oracle_text, mana_cost)]
+
+
 def classify_card(printing: Card) -> tuple[str, str]:
     """The real outcome of playing this card, and one example clause when the
     answer is the dangerous one.
@@ -365,6 +440,14 @@ def classify_card(printing: Card) -> tuple[str, str]:
     overall answer is the best one seen anywhere on it (CR 608.2n: an ability
     with no effect still went on the stack and is not the card's only ability),
     because a card is only genuinely dead if *nothing* on it does anything.
+
+    The top-level spell dispatch runs once per `_spell_faces` entry - both
+    halves of a split card, the non-land face(s) of a modal DFC, or just the
+    one face everything else has - rather than once against the combined
+    printing, and every clause whose paying cost carries CR 107.3a's `{X}`
+    (a spell's own mana cost, or an activated ability's own cost) is tried at
+    every value in `_x_candidates`/`_X_PROBE_VALUES` rather than left with
+    the literal, unsubstituted "X" no numeric parser matches.
 
     Three things never reach a dispatcher and are read directly instead:
 
@@ -386,9 +469,10 @@ def classify_card(printing: Card) -> tuple[str, str]:
     outcomes: list[tuple[str, str]] = []
 
     if not printing.is_land:
-        outcomes.append(
-            (_dispatch_category(effect_for(printing.name, printing.oracle_text), printing), "")
-        )
+        for name, text, mana_cost in _spell_faces(printing):
+            for x_value in _x_candidates(mana_cost):
+                effect = effect_for(name, text, x_value=x_value)
+                outcomes.append((_dispatch_category(effect, printing), ""))
 
     activated_index = 0
     for ability in parse_abilities(printing):
@@ -397,8 +481,9 @@ def classify_card(printing: Card) -> tuple[str, str]:
             activated_index += 1
             if ability.mana is not None and ability.loyalty is None:
                 continue
-            effect = activated_effect_for(printing.name, index, ability.effect)
-            outcomes.append((_dispatch_category(effect, printing), ability.text))
+            for x_value in _x_candidates(ability.cost):
+                effect = activated_effect_for(printing.name, index, ability.effect, x_value=x_value)
+                outcomes.append((_dispatch_category(effect, printing), ability.text))
         elif isinstance(ability, TriggeredAbility):
             if ability.event is None:
                 outcomes.append((SILENT, ability.text))
