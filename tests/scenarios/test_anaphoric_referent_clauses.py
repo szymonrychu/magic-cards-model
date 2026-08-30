@@ -35,8 +35,6 @@ type="rules")` in the session that wrote this file.
   reading a negative last-known power floors at zero.
 """
 
-import pytest
-
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card_state import Counter
@@ -296,23 +294,6 @@ def test_cityscape_leveler_does_not_destroy_indestructible_ulamog_and_grants_no_
 # -- A `*` power creature: the LKI snapshot has to read the computed value --
 
 
-@pytest.mark.xfail(
-    reason=(
-        "Game.power_of/Game.computed_board() builds no LayerContext at all "
-        "(continuous_effects.board(self.battlefield) is called with no "
-        "context, so all_effects falls back to LayerContext()'s empty "
-        "graveyards=()), so a real game currently computes every Tarmogoyf "
-        "as a 0/1 regardless of what is actually in any graveyard. That is a "
-        "pre-existing gap in Game.computed_board() unrelated to this defect "
-        "(Solitude's anaphoric clause) and out of this fix's scope - "
-        "confirmed by calling game.power_of directly on a Tarmogoyf over a "
-        "stocked graveyard in the session that wrote this test. This test "
-        "documents trap 7 (a `*` power creature must gain its computed "
-        "power, not 0 and not a crash) and will pass once that separate gap "
-        "is closed."
-    ),
-    strict=True,
-)
 def test_a_star_power_creature_would_gain_its_computed_power_not_zero():
     """Trap 7: `CardState.power` is `None` for a `*` characteristic-defining
     ability (Tarmogoyf: "power ... equal to the number of card types among
