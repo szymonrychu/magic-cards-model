@@ -1301,6 +1301,7 @@ class Game(BaseModel):
         discarded = self.active_player.discard_to_maximum_hand_size()
         self.remove_all_damage()
         self.continuous_effects.end_the_turn()  # CR 514.2, the other half
+        self.delayed_triggers.expire_this_turn()  # CR 514.2, the delayed-trigger half
         self.prevention_shields = [
             shield
             for shield in self.prevention_shields

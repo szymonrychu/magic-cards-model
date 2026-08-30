@@ -21,21 +21,15 @@ per-card table row (`machines/effects.py`):
   (`_parse_sacrifice_unless_pay_energy`).
 
 Guide of Souls's "you may pay {E}{E}{E}. When you do, ..." is a fourth shape -
-CR 603.12's reflexive trigger - and is deliberately **not** built here. A
-sibling wave landed the reflexive-trigger machinery itself
-(`machines/effects.py`'s `_parse_reflexive_sacrifice_clause`,
-`ReflexiveClauseNotice`) against Grist, the Hunger Tide while this wave was in
-flight, so the piece genuinely missing for Guide of Souls is narrower than it
-first looked: not "no reflexive trigger support" and not "no may-pay-a-cost
-decision" (this wave built that one, `DecisionKind.PAY_ENERGY`/
-`Game.may_pay_energy`), but that `_parse_reflexive_sacrifice_clause` only
-reads a reflexive **sacrifice**, never an arbitrary paid cost - so "you may
-pay {E}{E}{E}" still falls through to the general `_unreadable_reflexive_
-clause` and records a `ReflexiveClauseNotice` rather than resolving.
-`test_guide_of_souls_records_a_notice_instead_of_resolving_silently` below
-proves it now leaves a trace instead of doing nothing with no record
-anywhere - the same "unreadable is not the same as no effect" discipline
-every other notice in `machines/effects.py` already keeps.
+CR 603.12's reflexive trigger - and is now built too
+(`_parse_reflexive_pay_energy_clause` in `machines/effects.py`, W4): the
+`may_pay_energy` call this file already proves for Static Prison is exactly
+what Guide's own attack trigger asks, and once it comes back paid a second,
+independent triggered ability is created the same way Grist, the Hunger
+Tide's sacrifice creates one (`tests/scenarios/test_reflexive_triggered_
+abilities.py` is where the full CR 603.12 stack-object behaviour, including
+Guide's own corner cases, is proven end to end) - this file only checks that
+alice's energy is spent exactly when the ability says it should be.
 
 Every CR number here was looked up with `knowledge_search(q="...",
 type="rules")` in the session that wrote this file:
@@ -53,7 +47,6 @@ type="rules")` in the session that wrote this file:
 """
 
 from magic_cards_model.machines import Step
-from magic_cards_model.machines.effects import ReflexiveClauseNotice
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card_state import Counter
 from tests.scenarios.harness import Scenario
@@ -323,24 +316,43 @@ def test_static_prison_refuses_a_scripted_yes_it_cannot_afford():
 # Guide of Souls: "Whenever you attack, you may pay {E}{E}{E}. When you do,
 # put two +1/+1 counters and a flying counter on target attacking creature.
 # It becomes an Angel in addition to its other types." - CR 603.12's
-# reflexive trigger, out of scope for this wave.
+# reflexive trigger, now built (`_parse_reflexive_pay_energy_clause`, W4).
+# Full coverage - the reflexive ability as its own stack object, its
+# consequence, declining, and a fizzled target - lives in
+# `tests/scenarios/test_reflexive_triggered_abilities.py`; this file only
+# checks the energy half, which is what it is about.
 # --------------------------------------------------------------------------
 
 
-def test_guide_of_souls_records_a_notice_instead_of_resolving_silently():
-    """The trigger fires and goes on the stack correctly (CR 508.3d) - only
-    its *resolution* is unread. Both primitives it once lacked now exist (a
-    reflexive trigger, built by a sibling wave against Grist, the Hunger
-    Tide; a may-pay-a-cost decision, built by this wave - `may_pay_energy`
-    already asks and pays exactly this fixed amount correctly, as
+def test_guide_of_souls_attack_trigger_asks_and_pays_exactly_three_energy():
+    """CR 608.2d's question is put and, once answered yes, pays exactly
+    `{E}{E}{E}` - the same `may_pay_energy` call
     `test_static_prison_survives_when_its_controller_pays_the_energy` above
-    proves for the same call) but nothing yet connects a reflexive trigger to
-    a non-sacrifice paid cost, so this still falls through to the general
-    `ReflexiveClauseNotice` (CR 603.12) rather than resolving. Before either
-    wave this resolved with no effect and no trace at all; alice's energy -
-    untouched either way, since nothing here ever asks the question - is
-    asserted directly so a future regression that *did* silently drain it
-    would be caught."""
+    proves, now reached through a reflexive trigger (CR 603.12) rather than a
+    plain "unless" clause."""
+    scenario = (
+        Scenario()
+        .player("alice", library=["Forest"], battlefield=["Guide of Souls", "Raging Goblin"])
+        .player("bob", library=["Forest"])
+        .build()
+    )
+    scenario.player("alice").add_counters(Counter.ENERGY, 3)
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    guide, goblin = scenario.creatures("Guide of Souls", "Raging Goblin", username="alice")
+
+    scenario.attack_with(guide, goblin)
+    scenario.will_pay_the_energy(True, source="Guide of Souls")
+    scenario.resolve_top()
+
+    assert scenario.player("alice").energy == 0
+    assert scenario.game.reflexive_clause_notices == []
+    assert scenario.stack_names() == ["Guide of Souls's triggered ability"]
+
+
+def test_guide_of_souls_cannot_afford_the_energy_and_pays_nothing():
+    """CR 118.3: with no energy at all, "yes" is not a legal answer -
+    `affirmative_is_legal` is False, and the unscripted default of "no"
+    leaves alice's energy untouched and creates no reflexive ability."""
     scenario = (
         Scenario()
         .player("alice", library=["Forest"], battlefield=["Guide of Souls", "Raging Goblin"])
@@ -354,9 +366,5 @@ def test_guide_of_souls_records_a_notice_instead_of_resolving_silently():
     scenario.resolve_top()
 
     assert scenario.player("alice").energy == 0
-    notices = scenario.game.reflexive_clause_notices
-    assert len(notices) == 1
-    notice = notices[0]
-    assert isinstance(notice, ReflexiveClauseNotice)
-    assert notice.source_name == "Guide of Souls"
-    assert "when you do" in notice.text.lower()
+    assert scenario.game.reflexive_clause_notices == []
+    assert scenario.stack_names() == []

@@ -167,6 +167,29 @@ class DelayedTrigger(BaseModel):
     has a stated duration; None means "no limit", for a duration-bounded ability
     that fires on every occurrence."""
 
+    subjectless_only: bool = False
+    """Match only an event with no `subject_id` at all - CR 508.3d's "you
+    attack" shape (`machines/triggers.py`'s own `condition_matches` reads the
+    identical `event.subject_id is None` for the ordinary, printed version of
+    this trigger). `Game.declare_attackers` emits *two* `ATTACKS` events per
+    attack declared with one or more attackers: one per attacking creature
+    (`subject_id` set) and one subjectless summary, once per attacking
+    player. Dalkovan Encampment's delayed trigger has no per-creature meaning
+    at all ("whenever you attack", not "whenever this creature attacks"), so
+    without this it would match both and fire twice per declaration -
+    `test_dalkovan_encampment_creates_warriors_tapped_and_attacking` is the
+    regression guard."""
+
+    expires_end_of_turn: bool = False
+    """CR 603.7b's "unless it has a stated duration, such as 'this turn'":
+    Dalkovan Encampment's "Whenever you attack this turn" is exactly that
+    stated duration - `remaining=None` lets it fire on every attack for the
+    rest of the turn rather than only once, and this flag is what stops it
+    from also firing on next turn's attack. CR 514.2 ends every "this turn"
+    effect in the cleanup step, so `DelayedTriggers.expire_this_turn` (called
+    from `Game.cleanup_step`, alongside `ContinuousEffects.end_the_turn`) is
+    what actually drops it - matching does not check the calendar itself."""
+
     sibling_ids: tuple[UUID, ...] = ()
     """Other `DelayedTrigger`s created alongside this one that watch for a
     different event but the same underlying CR 603.7a ability - earthbend's
@@ -196,6 +219,8 @@ class DelayedTrigger(BaseModel):
         if event.event is not self.event:
             return False
         if self.step is not None and event.step is not self.step:
+            return False
+        if self.subjectless_only and event.subject_id is not None:
             return False
         if (
             self.subject_id is not None
@@ -493,6 +518,23 @@ class DelayedTriggers(BaseModel):
             if trigger.remaining is None or trigger.remaining > 0
         ]
         return fired
+
+    def expire_this_turn(self) -> list[DelayedTrigger]:
+        """CR 514.2: end every "this turn" delayed trigger, in the cleanup step.
+
+        The `ContinuousEffects.end_the_turn` twin for a trigger rather than a
+        static effect - Dalkovan Encampment's "Whenever you attack this turn"
+        needs to stop matching once the turn that created it is over, or it
+        would also fire on every later turn's attack. Only
+        `expires_end_of_turn` triggers are touched; an ordinary one-shot
+        delayed trigger (Warp's exile, a sacrifice at the next end step) has
+        no such duration and outlives this call untouched, same as a static
+        effect with no "until end of turn" survives `end_the_turn`.
+        """
+        ending = [trigger for trigger in self.triggers if trigger.expires_end_of_turn]
+        ending_ids = {trigger.id for trigger in ending}
+        self.triggers = [trigger for trigger in self.triggers if trigger.id not in ending_ids]
+        return ending
 
     def trigger_for(self, ability: AbilityOnStack) -> DelayedTrigger | None:
         """The delayed ability an object on the stack came from, if it came from one."""

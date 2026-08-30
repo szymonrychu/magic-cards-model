@@ -343,7 +343,8 @@ def printed_characteristics(
         types=tuple(state.types),
         subtypes=tuple(state.subtypes),
         colors=tuple(state.colors),
-        abilities=tuple(_ability_lines(state.oracle_text)),
+        abilities=tuple(_ability_lines(state.oracle_text))
+        + _keyword_counter_lines(on_the_permanent),
         power=power,
         toughness=toughness,
         counters=on_the_permanent,
@@ -352,6 +353,28 @@ def printed_characteristics(
 
 def _ability_lines(oracle_text: str | None) -> list[str]:
     return [line.strip() for line in (oracle_text or "").splitlines() if line.strip()]
+
+
+def _keyword_counter_lines(counters: Mapping[str, int]) -> tuple[str, ...]:
+    """CR 122.1b: "A keyword counter on a permanent ... causes that object to
+    gain that keyword" - Guide of Souls' own reflexive consequence puts a
+    flying counter on a creature that may print no flying anywhere.
+
+    Read as ordinary ability lines feeding straight into the same
+    `keywords_in_lines` vocabulary `machines/combat.py::has_keyword` already
+    reads off `Characteristics.abilities` for a static or layer-6-granted
+    keyword - a keyword counter is neither of those (CR 122.1 counters are
+    not continuous effects and have no layer of their own), but the reader on
+    the other end cannot tell the difference and does not need to. Only a
+    name `machines/combat.py`'s own `Keyword` vocabulary recognises is turned
+    into a line; an invented counter name ("charge", "fate") is a counter
+    CR 122.1 leaves alone and never becomes an ability.
+    """
+    return tuple(
+        keyword.value.replace("_", " ").title()
+        for keyword in Keyword
+        if counters.get(keyword.value, 0) > 0
+    )
 
 
 def _as_number(value: str | None) -> int | None:
