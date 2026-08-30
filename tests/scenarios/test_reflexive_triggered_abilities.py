@@ -78,6 +78,7 @@ and both are deliberately **not** built out here:
 
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
+from magic_cards_model.models.card_state import Counter
 from tests.scenarios.harness import Scenario
 
 GRIST = "Grist, the Hunger Tide"
@@ -334,23 +335,14 @@ def test_ajani_nacatl_avengers_mandatory_reflexive_clause_records_a_notice():
     nested in the reflexive clause, so `_parse_reflexive_sacrifice_clause`
     (which only reads "you may sacrifice ...") correctly refuses it too.
 
-    Ajani cannot actually *activate* this ability through the ordinary path
-    while front-face-up: CR 712.8d gives an untransformed double-faced
-    permanent only its front face's characteristics, and this engine's own
-    `Game._still_has_ability` (layer 6, CR 613.1f) already enforces that much
-    - `game.begin_activating` correctly refuses it with "no longer has that
-    ability". Transforming Ajani for real is a separate, already-documented
-    gap (`test_double_faced_creature_characteristics.py`'s own docstring -
-    "Nothing here reads `CardState.transformed` yet"), out of scope for this
-    wave. So this test reaches resolution the way `Game._resolve_ability`
-    would once that gap is closed: it builds the real `AbilityOnStack` for
-    the back face's own printed "0:" ability directly and resolves it,
-    exercising exactly the CR 603.12 parsing and notice this file is about
-    without depending on CR 712 transform support existing yet.
+    Driven through a real activation now that CR 712's transform reaches
+    characteristics: Ajani is transformed (CR 701.27a), which makes him the
+    planeswalker Ajani, Nacatl Avenger with that face's loyalty abilities and
+    only those (CR 712.8e, CR 109.3), and the `0` is activated and resolved by
+    the ordinary path. Before that landed, `Game.activated_abilities` read the
+    front face regardless and this test had to build the `AbilityOnStack` by
+    hand.
     """
-    from magic_cards_model.machines import AbilityKind, abilities_of_kind
-    from magic_cards_model.machines.triggers import AbilityOnStack
-
     scenario = (
         Scenario()
         .manual_turn_based_actions()
@@ -363,18 +355,12 @@ def test_ajani_nacatl_avengers_mandatory_reflexive_clause_records_a_notice():
     # face's name ("Ajani, Nacatl Pariah") - `machines/triggers.py`'s own name
     # fix, unrelated to this file.
     ajani = scenario.find("Ajani, Nacatl Pariah", Zone.BATTLEFIELD, "alice")
-    zero_ability = abilities_of_kind(ajani.card, AbilityKind.ACTIVATED)[1]
+    ajani.transform()  # CR 701.27a
+    ajani.add_counters(Counter.LOYALTY, 3)  # CR 306.5b, as if he had entered so
+    zero_ability = scenario.game.activated_abilities(ajani)[1]
     assert zero_ability.cost == "0"
 
-    scenario.game.stack.append(
-        AbilityOnStack(
-            kind=AbilityKind.ACTIVATED,
-            ability=zero_ability,
-            source_id=ajani.id,
-            source_name=ajani.name,
-            controller="alice",
-        )
-    )
+    scenario.activate(ajani, index=1)
     scenario.resolve_top()
 
     assert len(scenario.game.reflexive_clause_notices) == 1

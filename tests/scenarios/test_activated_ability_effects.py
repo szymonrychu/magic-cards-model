@@ -261,53 +261,30 @@ def test_filigree_sylexs_third_ability_refuses_a_distribution_cost():
 
 
 def test_avatar_rokus_eight_ability_creates_the_dragon_token():
-    """**Structural blocker, pre-existing and out of this wave's scope**:
-    `CardState.up_face` "deliberately does not feed characteristics yet"
-    (its own docstring, `models/card_state.py`) - `transformed` never makes
-    `up_face` return the back face, so `Game.characteristics_of` keeps
-    computing this permanent's abilities off the *front* face (the Saga's
-    chapter lines) no matter what `CardState.transform()` does.
-    `Game._still_has_ability` (`models/game.py`) then never finds the `{8}`
-    ability's text among those computed lines and `why_cannot_activate`
-    refuses it with "no longer has that ability ... (CR 613.1f)" - the exact
-    gap `docs/engine-coverage.md`'s "A double-faced creature's power,
-    toughness, oracle text and colors" row already documents ("`CardState.
-    transformed` still does not feed characteristics"), and the same one
-    `test_mass_counter_placement.py`'s Ajani xfail and `docs/engine-coverage.
-    md`'s own Ajani, Nacatl Avenger row hit for a back-face loyalty ability.
-
-    Rather than go through the blocked `activate_ability` gate, this follows
-    the precedent `test_reflexive_triggered_abilities.py`'s own Ajani test
-    sets: build the real `AbilityOnStack` for the back face's printed `{8}`
-    ability directly and resolve it, exercising exactly the token-creation
-    parsing this wave adds (`_parse_whole_text_token_clause`,
-    `_LEVELED_TOKEN_KEYWORDS`) without depending on CR 712 transform support
-    that does not exist yet.
+    """Reached through a real `.transform()` and `Game.activate_ability`, not
+    an `AbilityOnStack` built by hand: a sibling wave's "Transforming a
+    permanent" fix (`docs/engine-coverage.md`) makes `CardState.up_face`
+    follow `.transformed` now, so `activated_abilities`/`Game._still_has_
+    ability` both read the back face's `{8}` ability once Avatar Roku is
+    actually the face that is up (CR 712.8d, 712.8e).
     """
-    from magic_cards_model.machines import AbilityKind, abilities_of_kind
-
     scenario = (
         Scenario()
-        .player("alice", battlefield=["The Legend of Roku // Avatar Roku"])
+        .player(
+            "alice",
+            battlefield=["The Legend of Roku // Avatar Roku"] + ["Mountain"] * 8,
+        )
         .player("bob", library=["Island"])
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
     roku = scenario.creature("The Legend of Roku", "alice")  # CardState.name reads the front face
-    eight_ability = abilities_of_kind(roku.card, AbilityKind.ACTIVATED)[0]
-    assert eight_ability.cost == "{8}"
+    roku.transform()  # CR 714: this ability is only Avatar Roku's
+    sources = scenario.untapped_sources(*(["Mountain"] * 8))
 
     before = {state.id for state in scenario.game.battlefield}
-    scenario.game.stack.append(
-        AbilityOnStack(
-            kind=AbilityKind.ACTIVATED,
-            ability=eight_ability,
-            source_id=roku.id,
-            source_name=roku.name,
-            controller="alice",
-        )
-    )
-    scenario.resolve_top()
+    scenario.activate(roku, *sources)
+    scenario.pass_until_resolved()
 
     dragons = [state for state in scenario.game.battlefield if state.id not in before]
     assert len(dragons) == 1

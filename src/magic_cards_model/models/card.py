@@ -215,8 +215,7 @@ class Card(ScryfallModel):
     @property
     def supertypes(self) -> list[Supertype]:
         """Supertypes on the front face, parsed out of `type_line`."""
-        words = _words_before_dash(self.front_type_line)
-        return [s for s in Supertype if s.value in words]
+        return supertypes_of(self.front_type_line)
 
     @property
     def types(self) -> list[Type]:
@@ -280,6 +279,28 @@ class Card(ScryfallModel):
         return self.card_faces[0] if self.card_faces else None
 
     @property
+    def back_face(self) -> "CardFace | None":
+        """This card's back face, or None when it has fewer than two faces
+        (CR 712.1, 712.8e).
+
+        The face a transformed permanent shows: CR 701.27a turns the permanent
+        over "so that its other face is up", CR 701.27g names the result a
+        "transformed permanent", and CR 712.8e is what it then reads as - "while
+        a nonmodal double-faced permanent has its back face up, it has only the
+        characteristics of its back face". The one exception CR 712.8e itself
+        carves out is mana value, which is "calculated using the mana cost of
+        its front face" (CR 202.3b) - a back face prints no mana cost at all, so
+        a caller reading mana value must not read this face for it.
+
+        `CardState.up_face` is the only place the choice between this and
+        `front_face` is made; nothing off the battlefield ever reaches it,
+        since CR 712.8a gives a double-faced card in every other zone only its
+        front face's characteristics.
+        """
+        faces = self.card_faces or []
+        return faces[1] if len(faces) > 1 else None
+
+    @property
     def land_face(self) -> "CardFace | None":
         """This card's land face, or None (CR 712.12).
 
@@ -312,6 +333,17 @@ def types_of(type_line: str) -> list[Type]:
     """
     words = _words_before_dash(type_line)
     return [t for t in Type if t.value in words]
+
+
+def supertypes_of(type_line: str) -> list[Supertype]:
+    """Supertypes parsed out of a single face's `type_line` (CR 205.4a).
+
+    Shared by `Card.supertypes` (the front face) and `CardState.supertypes`,
+    which reads whichever face is up (CR 712.8d, 712.8e, 712.8f) - the same
+    split `types_of` already makes.
+    """
+    words = _words_before_dash(type_line)
+    return [s for s in Supertype if s.value in words]
 
 
 def subtypes_of(type_line: str) -> list[str]:
