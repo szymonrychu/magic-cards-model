@@ -1015,6 +1015,13 @@ def triggers_for(game: "Game", event: GameEvent, sources: list[CardState]) -> li
     for source in sources:
         controller = source.controller or game.active_player.username
         for ability in triggered_abilities_of(source.card):
+            if source.land_face_played is not None and ability.face != source.land_face_played:
+                # CR 712.8f: a modal double-faced permanent has only the
+                # characteristics of the face that's up - Witch-Blessed
+                # Meadow, played as a land (CR 712.12), has no "when this
+                # creature enters" trigger, because that line was printed on
+                # Witch Enchanter's face, not the one that's actually up.
+                continue
             if not condition_matches(ability, source, controller, event):
                 continue
             if source.zone not in zones_ability_functions_in(ability, source):

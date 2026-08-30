@@ -221,14 +221,12 @@ class Card(ScryfallModel):
     @property
     def types(self) -> list[Type]:
         """Card types on the front face, parsed out of `type_line`."""
-        words = _words_before_dash(self.front_type_line)
-        return [t for t in Type if t.value in words]
+        return types_of(self.front_type_line)
 
     @property
     def subtypes(self) -> list[str]:
         """Subtypes on the front face, right of the em dash in `type_line`."""
-        _, _, right = self.front_type_line.partition("—")
-        return right.split()
+        return subtypes_of(self.front_type_line)
 
     @property
     def is_land(self) -> bool:
@@ -238,8 +236,42 @@ class Card(ScryfallModel):
     def is_creature(self) -> bool:
         return Type.CREATURE in self.types
 
+    @property
+    def land_face(self) -> "CardFace | None":
+        """This card's land face, or None (CR 712.12).
+
+        `is_land` only ever reads the front face - correct while the card sits
+        anywhere but the battlefield or stack (CR 712.8a) - so it says False
+        for a modal double-faced card like Valakut Awakening // Valakut
+        Stoneforge, whose land is the *back* face. This is the mirror read
+        `Casting.base_cost` already needed for an MDFC's blank top-level
+        `mana_cost`: the land's own characteristics live only on `card_faces`,
+        so a caller choosing which face to play (CR 712.12) has to look there.
+        """
+        for face in self.card_faces or []:
+            if face.type_line and "land" in _words_before_dash(face.type_line):
+                return face
+        return None
+
 
 def _words_before_dash(type_line: str) -> frozenset[str]:
     """Lowercased words left of the em dash. Module level: `set` is a Card field."""
     left, _, _ = type_line.partition("—")
     return frozenset(word.lower() for word in left.split())
+
+
+def types_of(type_line: str) -> list[Type]:
+    """Card types parsed out of a single face's `type_line`.
+
+    Shared by `Card.types` (the front face) and any caller reading a single
+    `CardFace.type_line` directly - a modal double-faced card's chosen face
+    (CR 712.8f) needs the same parse, not just the front one.
+    """
+    words = _words_before_dash(type_line)
+    return [t for t in Type if t.value in words]
+
+
+def subtypes_of(type_line: str) -> list[str]:
+    """Subtypes parsed out of a single face's `type_line`, right of the em dash."""
+    _, _, right = type_line.partition("—")
+    return right.split()

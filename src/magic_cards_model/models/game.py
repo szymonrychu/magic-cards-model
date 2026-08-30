@@ -3454,8 +3454,20 @@ class Game(BaseModel):
 
         Nobody gets a chance to respond, because nothing is ever put on the
         stack (CR 116.2a, 505.5b). Priority does not change hands.
+
+        A modal double-faced card is not a land by `Card.is_land`, which only
+        ever reads the front face (CR 712.8a) - Witch Enchanter // Witch-
+        Blessed Meadow's front is a creature. `Card.land_face` is the mirror
+        read for its back: CR 712.12 lets a player play an MDFC as a land by
+        choosing "one of its faces that's a land" before it hits the
+        battlefield, and CR 712.8f then gives the permanent only that face's
+        characteristics for as long as it stays there. There is no separate
+        "playing an MDFC's land face" special action in the rules - it is the
+        same CR 305.1 land drop, so it is checked and counted exactly like any
+        other land below.
         """
-        if not land.card.is_land:
+        land_face = land.card.land_face
+        if not land.card.is_land and land_face is None:
             raise ValueError(f"{land.name} is not a land")
         refusal = self.why_cannot_play_land(username)
         if refusal is not None:
@@ -3466,6 +3478,9 @@ class Game(BaseModel):
         # that plays a land during a resolution must come through here to be
         # counted. A land PUT onto the battlefield (CR 305.4) must not.
         self.lands_played[username] = self.lands_played.get(username, 0) + 1
+
+        if not land.card.is_land and land_face is not None:
+            land.land_face_played = land_face.name
 
         # Playing a land is not casting it (CR 116.2a, 305.1), so `was_cast` is
         # False. The land itself used no stack, but its enters-the-battlefield

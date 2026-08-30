@@ -7,7 +7,7 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, RootModel, model_validator
 
-from .card import Card, Type
+from .card import Card, Type, subtypes_of, types_of
 from .zone import Zone
 
 PERMANENT_TYPES = frozenset(
@@ -416,6 +416,19 @@ class CardState(BaseModel):
     toughness and types, so a transformed Delver of Secrets is flagged but is not
     yet a 3/2 flier.
     """
+    land_face_played: str | None = None
+    """The name of the face this permanent entered as, when it was played as
+    the land face of a modal double-faced card (CR 712.12).
+
+    Set only by `Game.play_land`, and only when it chose the back face -
+    Witch-Blessed Meadow rather than Witch Enchanter. CR 712.8f: "While a
+    modal double-faced ... permanent is on the battlefield, it has only the
+    characteristics of the face that's up," so `types`, `subtypes`,
+    `oracle_text`, `mana_cost` and `name` below read this face instead of the
+    card's front once it is set. Unlike `transformed` (CR 701.27a), the
+    choice is made once, when the card is played, and never changes after -
+    an MDFC does not transform back and forth.
+    """
     exerted: bool = False
     """True while this permanent will not untap during its controller's next
     untap step (CR 701.43a).
@@ -535,10 +548,23 @@ class CardState(BaseModel):
     # once other continuous effects are in play.
 
     @property
+    def _land_face(self) -> Any:
+        """The `CardFace` named by `land_face_played`, or None."""
+        if self.land_face_played is None:
+            return None
+        for face in self.card.card_faces or []:
+            if face.name == self.land_face_played:
+                return face
+        return None
+
+    @property
     def types(self) -> tuple[Type, ...]:
         """This object's card types (CR 205.2a, CR 708.2)."""
         if self.face_down_characteristics is not None:
             return self.face_down_characteristics.types
+        land_face = self._land_face
+        if land_face is not None:
+            return tuple(types_of(land_face.type_line or ""))
         return tuple(self.card.types)
 
     @property
@@ -546,6 +572,9 @@ class CardState(BaseModel):
         """This object's subtypes (CR 205.3, CR 708.2). Face down, there are none."""
         if self.face_down_characteristics is not None:
             return self.face_down_characteristics.subtypes
+        land_face = self._land_face
+        if land_face is not None:
+            return tuple(subtypes_of(land_face.type_line or ""))
         return tuple(self.card.subtypes)
 
     @property
@@ -565,6 +594,9 @@ class CardState(BaseModel):
         """This object's rules text (CR 708.2). Face down, it is empty."""
         if self.face_down_characteristics is not None:
             return self.face_down_characteristics.oracle_text
+        land_face = self._land_face
+        if land_face is not None:
+            return land_face.oracle_text or ""
         return self.card.oracle_text or ""
 
     @property
@@ -572,6 +604,9 @@ class CardState(BaseModel):
         """This object's mana cost (CR 202.1, CR 708.2). Face down, there is none."""
         if self.face_down_characteristics is not None:
             return self.face_down_characteristics.mana_cost
+        land_face = self._land_face
+        if land_face is not None:
+            return land_face.mana_cost or None
         return self.card.mana_cost
 
     @property
@@ -723,6 +758,9 @@ class CardState(BaseModel):
         """
         if self.face_down_characteristics is not None:
             return self.face_down_characteristics.name
+        land_face = self._land_face
+        if land_face is not None:
+            return land_face.name
         return self.card.name
 
     @property
