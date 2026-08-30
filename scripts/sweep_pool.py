@@ -307,7 +307,11 @@ def _layer_category(printing: Card) -> str | None:
     text = printing.oracle_text
     if printing.name in LAYER_EFFECTS or parsed_layer_effects(text) is not None:
         return HANDLED
-    if looks_like_unparsed_layer_effect(text):
+    # `static_only=True` for the same reason the battlefield sweep passes it:
+    # without it, a *triggered* ability's own effect sentence ("... gets +X/+X
+    # until end of turn") is mistaken for an unparsed static pump and reported
+    # as a gap on a card whose trigger works perfectly (Kraul Harpooner).
+    if looks_like_unparsed_layer_effect(text, static_only=True):
         return NOTICE
     return None
 
