@@ -274,7 +274,17 @@ checks, because the first two return green on an empty merge:
 git merge-base --is-ancestor <branch> HEAD && echo IN
 ls tests/scenarios/test_<name_the_fix_agent_reported>.py   # it must exist
 mise run test
+cd ../magic-cards-model-api && uv run pytest    # the cross-repo contract
 ```
+
+**The fourth check is not optional.** The engine's own suite cannot see a
+cross-repo contract break. When an engine wave adds a `DecisionKind`, the API's
+`decide` endpoint cannot answer it, a live seat's every answer is refused, and
+the game *hangs* — every seat in that match, not just the card. That killed a
+real game (`choose_a_quality`, from a merge verified green on the engine suite
+alone). The API's `test_every_decision_kind_is_answerable_or_served_elsewhere`
+catches it at merge time instead of turn 3, and it has already caught a second
+one (`pay_mana`) — but only if you run it.
 
 **"The total must move" means the passed count rises by at least the number of
 tests the fix agent said it added.** Note the count before merging and compare.

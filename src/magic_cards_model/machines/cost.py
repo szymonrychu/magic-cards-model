@@ -1144,6 +1144,13 @@ _ADDITIONAL = re.compile(
 _ALTERNATIVE = re.compile(
     r"^You may (?P<what>[^.]+?) rather than pay this spell's mana cost\.", re.MULTILINE
 )
+#: Force of Negation's and Force of Vigor's own cousin of `_ALTERNATIVE`: the
+#: same CR 118.9 offer, gated on a plain "if it's not your turn" timing
+#: condition printed ahead of it rather than offered unconditionally.
+_ALTERNATIVE_IF_NOT_YOUR_TURN = re.compile(
+    r"^If it's not your turn, you may (?P<what>[^.]+?) rather than pay this spell's mana cost\.",
+    re.MULTILINE,
+)
 
 
 def additional_cost_phrases(card: Card) -> list[str]:
@@ -1154,6 +1161,39 @@ def additional_cost_phrases(card: Card) -> list[str]:
 def alternative_cost_phrases(card: Card) -> list[str]:
     """The "rather than pay this spell's mana cost" offers on the card (CR 118.9)."""
     return [match.group("what") for match in _ALTERNATIVE.finditer(card.oracle_text or "")]
+
+
+class AlternativeCostOffer(BaseModel):
+    """One CR 118.9 "rather than pay this spell's mana cost" offer, read off a
+    spell's own printed text rather than off a named keyword - Force of
+    Will's pitch cost is inline text, not a keyword the way Evoke or
+    Flashback is, so `_option_from_keyword` never sees it.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    phrase: str
+    requires_not_your_turn: bool = False
+    """Force of Negation's and Force of Vigor's own gate: the offer only
+    exists "if it's not your turn"."""
+
+
+def alternative_cost_offers(card: Card) -> list[AlternativeCostOffer]:
+    """Every inline CR 118.9 offer this card's own text prints - Force of
+    Will's unconditional "You may pay 1 life and exile a blue card from your
+    hand rather than pay this spell's mana cost." and Force of Negation's
+    "If it's not your turn, you may exile a blue card from your hand rather
+    than pay this spell's mana cost." alike.
+    """
+    offers = [
+        AlternativeCostOffer(phrase=match.group("what"))
+        for match in _ALTERNATIVE.finditer(card.oracle_text or "")
+    ]
+    offers.extend(
+        AlternativeCostOffer(phrase=match.group("what"), requires_not_your_turn=True)
+        for match in _ALTERNATIVE_IF_NOT_YOUR_TURN.finditer(card.oracle_text or "")
+    )
+    return offers
 
 
 # --------------------------------------------------------------------------
@@ -1373,9 +1413,17 @@ def total_cost_for_phrase(phrase: str, payer: str | None = None) -> TotalCost | 
 _ONLY_MANA = re.compile(r"^(?:\{[^{}]+\}|\s)+$")
 
 
+#: Splits a printed cost on its commas, or on a joining "and" with no comma at
+#: all - "pay 1 life and exile a blue card from your hand" (Force of Will's
+#: pitch cost) never has one. A run of mana symbols never contains the word
+#: "and", so this never cuts one of those in half.
+_COST_PHRASE_SEPARATOR = re.compile(r",\s*|\s+and\s+")
+
+
 def _split_cost_phrase(phrase: str) -> list[str]:
-    """Split a printed cost on its commas, keeping a run of mana symbols whole."""
-    return [part.strip() for part in phrase.strip().rstrip(".").split(",") if part.strip()]
+    """Split a printed cost into its components, keeping mana symbols whole."""
+    parts = _COST_PHRASE_SEPARATOR.split(phrase.strip().rstrip("."))
+    return [part.strip() for part in parts if part.strip()]
 
 
 # --------------------------------------------------------------------------

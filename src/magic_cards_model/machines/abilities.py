@@ -95,6 +95,7 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, Field
 
 from ..models.card import Card, Color, Type
+from ..models.zone import Zone
 
 # --------------------------------------------------------------------------
 # Mana abilities (CR 605)
@@ -652,6 +653,20 @@ class ActivatedAbility(BaseAbility):
     #: Ugin's `0: Add {C}{C}{C}.` out of the mana-ability fast path (CR 605.1a:
     #: a mana ability "it's not a loyalty ability").
     loyalty: LoyaltyCost | None = None
+    #: The zone this ability functions in, when its own cost or effect says so
+    #: (CR 113.6j, CR 113.6m) - `None` for the CR 113.6 default, "on the
+    #: battlefield". Read by `_activated_ability_zone` off the printed cost and
+    #: effect alone, so a future card built the same way (discarding itself, or
+    #: returning itself from its graveyard) needs no table row to be read
+    #: correctly. Boseiju's and Otawara's Channel abilities discard themselves
+    #: as part of their own printed cost, so this reads `HAND` for both without
+    #: either name ever appearing here; World Breaker's "Return this card from
+    #: your graveyard to your hand" reads `GRAVEYARD` the same way.
+    zone: Zone | None = None
+    #: The CR 113.6 sub-rule `zone` was read from, alongside it so a refusal
+    #: message can cite the rule it is actually enforcing rather than a
+    #: guessed one. `None` exactly when `zone` is `None`.
+    zone_rule: str | None = None
 
 
 class TriggeredAbility(BaseAbility):
@@ -1164,6 +1179,47 @@ def _trigger_event(condition: str) -> TriggerEvent | None:
     return None
 
 
+#: CR 113.6j: "An object's activated ability that has a cost that can't be
+#: paid while the object is on the battlefield functions from any zone in
+#: which its cost can be paid." CR 701.9a defines discarding as moving a card
+#: from its owner's *hand* to their graveyard, so a cost that discards the very
+#: object the ability is printed on can never be paid on the battlefield - the
+#: ability functions only in a hand. This is the general shape Channel prints
+#: (Boseiju, Otawara) and the one Waker of Waves prints with no ability word at
+#: all; neither name appears here, only the cost's own words.
+_DISCARDS_ITSELF = re.compile(r"^discard this (?:card|permanent)$", re.IGNORECASE)
+
+#: CR 113.6m: "An ability whose cost or effect specifies that it moves the
+#: object it's on out of a particular zone functions only in that zone, unless
+#: its trigger condition or a previous part of its cost or effect already
+#: established a different zone." World Breaker's "Return this card from your
+#: graveyard to your hand" names its own graveyard as where it starts, so the
+#: ability functions only there.
+_RETURNS_ITSELF_FROM_GRAVEYARD = re.compile(
+    r"\bthis (?:card|permanent)\b[^.]{0,60}\bfrom (?:your|their|its owner's) graveyard\b",
+    re.IGNORECASE,
+)
+
+
+def _activated_ability_zone(costs: list[Cost], effect: str) -> tuple[Zone | None, str | None]:
+    """Which zone this printed activated ability functions in, and the CR
+    113.6 sub-rule that says so - `(None, None)` for the CR 113.6 default of
+    "on the battlefield".
+
+    Read off the ability's own cost and effect text alone, the way CR 113.6
+    itself reads it, so nothing here is a per-card table: any future card
+    shaped the same way - discarding itself, or returning itself from its own
+    graveyard - is read correctly with no row added.
+    """
+    if any(
+        piece.kind is CostKind.DISCARD and _DISCARDS_ITSELF.match(piece.text) for piece in costs
+    ):
+        return Zone.HAND, "CR 113.6j"
+    if _RETURNS_ITSELF_FROM_GRAVEYARD.search(effect):
+        return Zone.GRAVEYARD, "CR 113.6m"
+    return None, None
+
+
 def _parse_activated(text: str, common: dict) -> ActivatedAbility | None:
     """Split at the first colon that is not inside quotes (CR 602.1a).
 
@@ -1202,6 +1258,8 @@ def _parse_activated(text: str, common: dict) -> ActivatedAbility | None:
             mana.costs_mana = any(piece.kind is CostKind.MANA for piece in costs)
             mana.conditional = _parse_conditional_clauses(add.group("rest"))
 
+    zone, zone_rule = _activated_ability_zone(costs, after)
+
     return ActivatedAbility(
         **common,
         cost=cost,
@@ -1210,6 +1268,8 @@ def _parse_activated(text: str, common: dict) -> ActivatedAbility | None:
         instructions=instructions,
         mana=mana,
         loyalty=loyalty,
+        zone=zone,
+        zone_rule=zone_rule,
     )
 
 
