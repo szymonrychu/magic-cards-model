@@ -322,6 +322,19 @@ Every one of these was added after a player failed without it.
   A gap the doc does not record is a gap players keep re-reporting, so when a
   wave leaves something deliberately unbuilt, the doc entry is part of the wave,
   not paperwork after it.
+
+- **"Resolves and does nothing" is NOT reportable** — pass
+  `scripts/known_gaps.py --silent` and paste that list too. The sweeper already
+  enumerates every silent card, and they are worked in batches; a player that
+  spends its one report on one spends it on something already counted.
+
+  **What a game finds that a sweeper never can is a card that does the WRONG
+  thing.** Say so explicitly and give examples: an effect with the wrong
+  target/amount/player/zone, a trigger firing when it should not or failing to
+  fire when it should, a cost payable that should not have been, wrong state
+  after combat or a turn boundary, a board that looks plausible and is not. The
+  MDFC-land-face defect is the model — a land entered, a creature-ETB trigger
+  fired anyway, and two resources silently went wrong.
 - **Play the deck's mechanics actively**, not just legally: attack, block, use
   activated abilities, let triggers resolve, cast the awkward cards. A player
   that takes only safe lines finds nothing, and "zero reports" from passive play
