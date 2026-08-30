@@ -1316,6 +1316,65 @@ cleared; the branches are pinned down one at a time in
 `scenarios/test_decisions_during_resolution.py`. Covers Steam Vents, Sacred
 Foundry, Stomping Ground, Breeding Pool and the rest of the cycle.
 
+## Hidden-zone choices (wave W1)
+
+Three primitives, each reused generally rather than built narrowly for one
+card:
+
+- **A player other than a revealed hand's owner choosing from it** (CR
+  701.20a, CR 701.9b's "some effects ... allow another player to choose which
+  card is discarded"). Thoughtseize's own paragraph - reveal, an overridden
+  choice, the discard, an unconditional life loss - is read as one anaphoric
+  run of clauses by `_merge_reveal_hand_choose_discard_clauses` in
+  `machines/effects.py`, since "it"/"that card" thread through all four
+  sentences and none can be parsed alone.
+- **"Target player discards N cards"** (CR 701.9a), CR 701.9b's *default*
+  chooser left alone - `_parse_target_player_discards_clause`. Go Blank's own
+  second clause ("Then exile that player's graveyard") reuses the existing
+  `exile_target_players_graveyard` outright rather than a copy of it, since
+  both clauses resolve the same single target off `game.resolve_targets`.
+  This also closes a pre-existing gap for Mind Rot ("Target player discards
+  two cards.", `test_judge_triggers.py`'s DDR#886 scenario) - its own half now
+  runs; Captain Howler's "whenever you discard" trigger still parses with no
+  event, so that scenario still (and correctly) `xfail`s.
+- **Look at the top N cards and split them into two destinations**, general
+  past `Game.scry`/`Game.surveil`'s own fixed pair - `Game.look_at_top_and_
+  split` in `models/game.py`, reusing `DecisionKind.SCRY`'s question rather
+  than adding a kind. Duskwatch Recruiter's `{2}{G}` ability ("look at the top
+  three... reveal a creature card... put the rest on the bottom in any
+  order") sends its taken half to hand and its rest half to the bottom -
+  neither of scry's own destinations - which is exactly why the primitive
+  takes both groups off the library and leaves placement to the caller.
+  `_merge_look_top_reveal_to_hand_clauses` enforces the card's own
+  restriction (creature, at most one) on top of the generic split, since
+  `CardSplit` itself has no notion of either.
+
+"You may discard a card. If you do, `<consequence>`." (CR 118.12's discard
+cousin of the existing sacrifice shape) is also now read,
+`_merge_may_discard_if_you_do_clauses`, reusing `_parse_sacrifice_consequence`
+outright for the "if you do" half. Formidable Speaker's ETB is the vehicle.
+
+`Game.search_library` is widened to take a `zone: Zone = Zone.LIBRARY`
+parameter (P7) - the same predicate-and-count search, run against a player's
+hand or graveyard instead of their library, with the CR 701.24b shuffle only
+firing for the library. **Not wired up to a card yet**: The Stone Brain and
+Surgical Extraction both need it (search a graveyard, hand, and library for
+copies of a chosen/targeted name), but neither is built - see their own rows
+in the table below. The primitive is proven only by direct calls, not by a
+scenario test naming an actual card.
+
+**Refused, and why**: **The Stone Brain** and **Surgical Extraction** are not
+built this wave. Both need a targeting/choice shape this wave does not own -
+Surgical Extraction targets *a card sitting in a graveyard, excluding basic
+lands* (`machines/targeting.py` has no "other than a basic land card"
+exclusion), and The Stone Brain needs "choose a card name" as a genuine
+mid-resolution instruction feeding a capped, three-zone search with a
+per-hand-card replacement draw. `DecisionKind.CHOOSE_A_QUALITY` (already
+general enough for a card name, per its own docstring) plus the newly
+widened `search_library` are the right vehicles for a future wave; wiring the
+name choice and the exile-then-draw bookkeeping together was judged too much
+new surface for this wave's three owned primitives.
+
 ### Cards from the metagame that still do nothing, and what each needs
 
 | Card | Missing mechanic | Rule |
@@ -1360,7 +1419,8 @@ Foundry, Stomping Ground, Breeding Pool and the rest of the cycle.
 | Slickshot Show-Off | Its prowess-like trigger is a layer 7c pump per noncreature spell. Plot is modelled now (see the Modelled table), so the trigger is all that is missing | CR 613.4c, CR 116.2k |
 | Slumbering Trudge | Stun counters; `X` read at resolution; "enters tapped if X is 2 or less" | CR 614.1c |
 | Static Prison | **The "unless you pay" ability is registered in full.** "At the beginning of your first main phase, sacrifice this enchantment unless you pay {E}" is `_parse_sacrifice_unless_pay_energy`, using `Game.may_pay_energy` the same fixed-amount question `may_pay_life` already asks for CR 119.4, turned the other way round: paying is what averts the sacrifice. Its own ETB - "exile target nonland permanent an opponent controls until this enchantment leaves the battlefield. You get {E}{E}" - is not: the exile carries a duration this wave's targeted-clause reader does not parse, so the whole trigger (energy grant included) still does nothing, a pre-existing gap `tests/test_effects.py::test_static_prisons_enters_trigger_does_not_parse_as_a_whole` already documents | CR 107.14, CR 118.3, CR 406.2 |
-| Surgical Extraction | Targeting a card in a graveyard, then searching three zones of the *owner* for cards with the same name | CR 701.23a, CR 701.13a |
+| Surgical Extraction | Targeting a card in a graveyard *other than a basic land card* - `machines/targeting.py` has no "other than a basic land" exclusion - then searching three zones of the *owner* for cards with the same name. `Game.search_library`'s `zone` parameter (W1) can now run that search once wired to a real target and name | CR 701.23a, CR 701.13a |
+| The Stone Brain | "Choose a card name" as a genuine mid-resolution instruction (not tied to an ETB the way `DecisionKind.CHOOSE_A_QUALITY` has been used so far, though its own docstring already documents the general reuse), feeding a capped ("up to four"), three-zone search of a targeted opponent (`Game.search_library`'s `zone` parameter, W1) and a replacement draw for each card exiled specifically from hand | CR 701.23a, CR 701.13a |
 | Thraben Charm | Modal dispatch; "damage equal to twice the number of creatures you control" | CR 700.2a |
 | Turntimber Symbiosis | Look at seven, a decision, and "enters with three additional +1/+1 counters" | CR 122.1, CR 614.1c |
 | Voice of Victory | Mobilize; "your opponents can't cast spells during your turn" - a rules-modifying static ability | CR 702.181, CR 611.3 |

@@ -5916,6 +5916,380 @@ def _parse_city_blessing_token_copy_clause(
     return effect
 
 
+# --------------------------------------------------------------------------
+# Wave W1: a non-owner choosing from a revealed hand (CR 701.20a, CR 701.9b),
+# "target player discards N cards" (CR 701.9a), and Formidable Speaker's
+# "you may discard a card. If you do, ..." (CR 118.12's discard cousin) -
+# Thoughtseize, Go Blank, and Formidable Speaker. Duskwatch Recruiter's
+# "look at the top three ..." activated ability sits in its own block further
+# down, next to `Game.look_at_top_and_split`, the primitive it and it alone
+# needs here.
+#
+# Verified this session with `knowledge_search(q="...", type="rules")`:
+#
+#   CR 701.20a - "To reveal a card, show that card to all players for a brief
+#   time."
+#   CR 701.9a - "To discard a card, move it from its owner's hand to that
+#   player's graveyard."
+#   CR 701.9b - "By default, effects that cause a player to discard a card
+#   allow the affected player to choose which card to discard. Some effects,
+#   however, require a random discard or allow another player to choose
+#   which card is discarded" - Thoughtseize's own "You choose a nonland card
+#   from it" is exactly that override, read by naming `Decision.player` as
+#   the resolving spell's controller rather than the revealing player.
+# --------------------------------------------------------------------------
+
+#: "target player reveals their hand" - Thoughtseize's own first sentence.
+_REVEAL_HAND_RE = re.compile(r"^target player reveals their hand$", re.IGNORECASE)
+#: "you choose a/an <quality> card from it" - Thoughtseize's own second
+#: sentence, the CR 701.9b override handing the choice to the resolving
+#: spell's controller instead of the revealed player.
+_CHOOSE_CARD_FROM_REVEALED_RE = re.compile(
+    r"^you choose (?:a|an) (?P<quality>.+?) card from it$", re.IGNORECASE
+)
+#: "that player discards that card" - the anaphoric tail naming the same
+#: player `_REVEAL_HAND_RE` targeted and the same card
+#: `_CHOOSE_CARD_FROM_REVEALED_RE` just chose.
+_DISCARD_THAT_CARD_RE = re.compile(r"^that player discards that card$", re.IGNORECASE)
+#: "you lose N life" - Thoughtseize's own optional fourth sentence.
+_YOU_LOSE_LIFE_RE = re.compile(r"^you lose (?P<life>\d+) life$", re.IGNORECASE)
+
+
+def _nonland_or_typed_card_matcher(quality: str) -> Callable[[CardState], bool] | None:
+    """A predicate for "a `<quality>` card", where `<quality>` is either a
+    bare type `_quality_matcher` already reads, or that type's negation,
+    spelled "non`<type>`" (Thoughtseize's own "nonland"). `_quality_matcher`
+    has no notion of "non" - every caller before this one only ever named
+    what to *include* - so this reads the negation itself and delegates
+    everything else.
+    """
+    quality = quality.strip().lower()
+    if quality.startswith("non"):
+        try:
+            excluded = Type(quality.removeprefix("non").strip())
+        except ValueError:
+            return None
+
+        def not_matches(state: CardState) -> bool:
+            return excluded not in state.card.types
+
+        return not_matches
+    return _quality_matcher(quality)
+
+
+def _merge_reveal_hand_choose_discard_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """Thoughtseize's whole paragraph, read as one anaphoric run of clauses
+    rather than four independent ones: "it" in the second sentence is the
+    hand `_REVEAL_HAND_RE` just revealed, and "that card" in the third is
+    whichever one `_CHOOSE_CARD_FROM_REVEALED_RE` just chose. Neither of
+    those can be resolved by a clause parsed alone, which is why this is a
+    multi-clause merge (see `_parse_mixed_clauses`'s own docstring) rather
+    than three entries in `_parse_mixed_clause`'s single-clause chain.
+
+    The trailing "you lose N life" is genuinely optional - Thoughtseize
+    prints it, a hypothetical zero-life-cost cousin would not - and is read
+    unconditionally regardless of whether a card was actually discarded
+    (CR 608.2c's printed order has no "if you do" gate on it the way
+    `_parse_conditional_sacrifice_clause`'s consequence does).
+
+    A hand with no nonland (or otherwise qualifying) card is CR 608.2d's
+    "impossible option": nothing is asked and the reveal simply shows an
+    all-land hand for nothing, exactly as the paper card does.
+    """
+    if index + 2 >= len(clauses):
+        return None
+    if _REVEAL_HAND_RE.fullmatch(clauses[index].strip()) is None:
+        return None
+    if not _targets_understood("target player", allow_player_targets=True):
+        return None
+    choose_match = _CHOOSE_CARD_FROM_REVEALED_RE.fullmatch(clauses[index + 1].strip())
+    if choose_match is None:
+        return None
+    matches = _nonland_or_typed_card_matcher(choose_match.group("quality"))
+    if matches is None:
+        return None
+    if _DISCARD_THAT_CARD_RE.fullmatch(clauses[index + 2].strip()) is None:
+        return None
+    consumed = 3
+    life_loss = 0
+    if index + 3 < len(clauses):
+        life_match = _YOU_LOSE_LIFE_RE.fullmatch(clauses[index + 3].strip())
+        if life_match is not None:
+            life_loss = int(life_match.group("life"))
+            consumed = 4
+
+    quality_description = choose_match.group("quality").strip()
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object)
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        revealer = next(
+            (target for target in game.resolve_targets(stack_object) if isinstance(target, Player)),
+            None,
+        )
+        if revealer is not None:
+            candidates = [state for state in revealer.hand if matches(state)]
+            if candidates:
+                chosen_ids = game.ask(
+                    Decision(
+                        kind=DecisionKind.CHOOSE_CARDS,
+                        player=controller.username,
+                        prompt=(
+                            f"choose a {quality_description} card from "
+                            f"{revealer.username}'s revealed hand"
+                        ),
+                        source=source,
+                        amount=1,
+                        cards=tuple(state.id for state in candidates),
+                    )
+                )
+                assert isinstance(chosen_ids, tuple)
+                by_id = {state.id: state for state in candidates}
+                revealer.discard(by_id[chosen_ids[0]])
+        if life_loss:
+            controller.lose_life(life_loss)
+
+    return consumed, effect
+
+
+#: "target player discards <count> cards" - Go Blank's own first clause, and
+#: P2's general vehicle: a plain CR 701.9a discard with no chooser override,
+#: so CR 701.9b's default (the discarding player themselves) is left alone.
+_TARGET_PLAYER_DISCARDS_RE = re.compile(
+    r"^target player discards "
+    r"(?P<count>a|an|one|two|three|four|five|six|seven|eight|nine|ten|\d+) cards?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_target_player_discards_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """ "Target player discards N cards." (CR 701.9a), CR 701.9b's default
+    chooser untouched - unlike Thoughtseize's own discard
+    (`_merge_reveal_hand_choose_discard_clauses`), where "you choose" overrides
+    it.
+
+    A hand with fewer than N cards is not a rules violation the way CR
+    119.4's life payment floor is: the player simply discards their whole
+    hand, one at a time, which is why `needed` is capped at the hand's own
+    size before ever asking `CHOOSE_CARDS` for it.
+    """
+    match = _TARGET_PLAYER_DISCARDS_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    if not _targets_understood("target player", allow_player_targets=True):
+        return None
+    count_text = match.group("count").lower()
+    count = _NUMBER_WORDS.get(count_text)
+    if count is None:
+        count = int(count_text)
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        for target in game.resolve_targets(stack_object):
+            if not isinstance(target, Player):
+                continue
+            needed = min(count, len(target.hand))
+            if needed <= 0:
+                continue
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=target.username,
+                    prompt=f"discard {needed} card(s)",
+                    source=source,
+                    amount=needed,
+                    cards=tuple(state.id for state in target.hand),
+                )
+            )
+            assert isinstance(chosen_ids, tuple)
+            by_id = {state.id: state for state in target.hand}
+            for card_id in chosen_ids:
+                target.discard(by_id[card_id])
+
+    return effect
+
+
+#: "then exile that player's graveyard" - Go Blank's own second clause,
+#: anaphoric to the same target its first clause (`_TARGET_PLAYER_DISCARDS_RE`)
+#: already discarded into that graveyard. Reuses `exile_target_players_
+#: graveyard` outright rather than a copy of it: that function already reads
+#: the player off `game.resolve_targets(stack_object)`, which is exactly the
+#: same target this clause means by "that player" - Go Blank prints only one
+#: target for its whole text, so both clauses resolve it to the same `Player`.
+_THEN_EXILE_THAT_PLAYERS_GRAVEYARD_RE = re.compile(
+    r"^then exile that player'?s graveyard$", re.IGNORECASE
+)
+
+#: "you may discard a card" - Formidable Speaker's own first clause, CR
+#: 118.12's optional cost half of "[Do something]. If [a player] does, ...".
+_MAY_DISCARD_A_CARD_RE = re.compile(r"^you may discard a card$", re.IGNORECASE)
+#: "if you do, <consequence>" - CR 118.12's own consequence clause, split off
+#: from `_MAY_DISCARD_A_CARD_RE`'s clause by `_prepare_effect_clauses`'s
+#: period splitting the same way `_MAY_SACRIFICE_IF_YOU_DO_RE`'s own two
+#: halves would be if that shape were not read as one whole-text regex
+#: instead - this one has to be a multi-clause merge, since "you may discard
+#: a card. If you do, search ..." reaches `_parse_mixed_clause` as two
+#: already-split clauses.
+_IF_YOU_DO_RE = re.compile(r"^if you do,\s*(?P<consequence>.+)$", re.IGNORECASE | re.DOTALL)
+
+
+def _merge_may_discard_if_you_do_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """Formidable Speaker's ETB trigger: "you may discard a card. If you do,
+    search your library for a creature card, reveal it, put it into your
+    hand, then shuffle." (CR 118.12's discard-flavoured cousin of
+    `_parse_conditional_sacrifice_clause`'s sacrifice.)
+
+    Reuses `_parse_sacrifice_consequence` outright for the "if you do" half:
+    that function's own two shapes (a magnitude-threaded pair of clauses, or
+    a plain mandatory search) are not sacrifice-specific in what they read,
+    only in the docstring's own worked examples - Formidable Speaker's
+    consequence is exactly `_SEARCH_AND_PUT_RE`'s shape, which
+    `_parse_sacrifice_consequence` already tries. The `power` argument every
+    consequence function takes is `None` here, since a discard produces no
+    magnitude the way a sacrifice's power does, and `_search_and_place_for`'s
+    own effect never reads it.
+    """
+    if index + 1 >= len(clauses):
+        return None
+    if _MAY_DISCARD_A_CARD_RE.fullmatch(clauses[index].strip()) is None:
+        return None
+    if_match = _IF_YOU_DO_RE.fullmatch(clauses[index + 1].strip())
+    if if_match is None:
+        return None
+    consequence = _parse_sacrifice_consequence(if_match.group("consequence"))
+    if consequence is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        player = game.controller_of(stack_object)
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        decision = Decision(
+            kind=DecisionKind.MAY,
+            player=player.username,
+            prompt="discard a card",
+            source=source,
+            affirmative_is_legal=bool(player.hand),
+        )
+        if not game.ask(decision):
+            return
+        chosen_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=player.username,
+                prompt="choose a card to discard",
+                source=source,
+                amount=1,
+                cards=tuple(state.id for state in player.hand),
+            )
+        )
+        assert isinstance(chosen_ids, tuple)
+        by_id = {state.id: state for state in player.hand}
+        player.discard(by_id[chosen_ids[0]])
+        consequence(game, player, None, source)
+
+    return 2, effect
+
+
+# --------------------------------------------------------------------------
+# Wave W1's third primitive: look at the top N cards and split them between
+# two destinations, general past `Game.scry`/`Game.surveil`'s own fixed
+# pair - `Game.look_at_top_and_split`, next to `scry`/`surveil` themselves in
+# `models/game.py`. Duskwatch Recruiter's `{2}{G}` ability is the vehicle:
+# "Look at the top three cards of your library. You may reveal a creature
+# card from among them and put it into your hand. Put the rest on the bottom
+# of your library in any order." - a creature-only, at-most-one cousin of
+# scry's "any number, any card" split, with "to hand"/"to the bottom" in
+# place of scry's "to the bottom"/"back on top".
+# --------------------------------------------------------------------------
+
+#: "look at the top <count> cards of your library" - Duskwatch Recruiter's
+#: own first clause.
+_LOOK_AT_TOP_N_CARDS_RE = re.compile(
+    r"^look at the top (?P<count>\w+) cards? of your library$", re.IGNORECASE
+)
+#: "you may reveal a/an <quality> card from among them" - the second clause,
+#: naming which of the looked-at cards may be taken.
+_MAY_REVEAL_FROM_AMONG_THEM_RE = re.compile(
+    r"^you may reveal (?:a|an) (?P<quality>.+?) card from among them$", re.IGNORECASE
+)
+#: "put it into your hand" - `_CLAUSE_SEPARATOR`'s own "and" split of the
+#: second sentence's tail.
+_PUT_IT_INTO_YOUR_HAND_RE = re.compile(r"^put it into your hand$", re.IGNORECASE)
+#: "put the rest on the bottom of your library in any order" - Duskwatch
+#: Recruiter's own third sentence. "In any order" (not "a random order") is
+#: the same CR 608.2d free choice `scry`'s own "any order" already is, which
+#: is why `Game.look_at_top_and_split`'s `CardSplit.top_order` is read
+#: straight through rather than randomised here.
+_PUT_REST_ON_BOTTOM_ANY_ORDER_RE = re.compile(
+    r"^put the rest on the bottom of your library in any order$", re.IGNORECASE
+)
+
+
+def _merge_look_top_reveal_to_hand_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """Duskwatch Recruiter's whole `{2}{G}` ability, read as one anaphoric run
+    of four clauses (`_CLAUSE_SEPARATOR` cuts the second sentence's own
+    "... among them and put it into your hand" in two at "and") rather than
+    four independent ones - "them" is the top `count` cards the first clause
+    looked at, "it" is whichever one the second clause chose, and "the rest"
+    is whatever is left of that same set.
+
+    `Game.look_at_top_and_split` asks the generic CR 608.2d split question
+    with no notion of "only a creature card" or "at most one" built in - both
+    are this card's own restriction, not the primitive's - so this function
+    enforces them itself once the answer comes back: a `moved` half with more
+    than one card, or one that fails the quality predicate, is CR 608.2d's
+    "can't choose an option that's illegal", raised the same way `Game.ask`
+    already raises for an illegal `CHOOSE_TARGETS`/`CHOOSE_CARDS` answer.
+    """
+    if index + 3 >= len(clauses):
+        return None
+    look_match = _LOOK_AT_TOP_N_CARDS_RE.fullmatch(clauses[index].strip())
+    if look_match is None:
+        return None
+    count_text = look_match.group("count").lower()
+    count = _NUMBER_WORDS.get(count_text)
+    if count is None:
+        try:
+            count = int(count_text)
+        except ValueError:
+            return None
+    reveal_match = _MAY_REVEAL_FROM_AMONG_THEM_RE.fullmatch(clauses[index + 1].strip())
+    if reveal_match is None:
+        return None
+    matches = _quality_matcher(reveal_match.group("quality"))
+    if _PUT_IT_INTO_YOUR_HAND_RE.fullmatch(clauses[index + 2].strip()) is None:
+        return None
+    if _PUT_REST_ON_BOTTOM_ANY_ORDER_RE.fullmatch(clauses[index + 3].strip()) is None:
+        return None
+    quality_description = reveal_match.group("quality").strip()
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        player = game.controller_of(stack_object)
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        moved, rest = game.look_at_top_and_split(
+            player,
+            count,
+            source=source,
+            prompt=f"reveal a {quality_description} card from the top {count}",
+        )
+        if len(moved) > 1 or any(not matches(state) for state in moved):
+            raise ValueError(
+                f"{source}: may reveal at most one {quality_description} card this way (CR 608.2d)"
+            )
+        for state in moved:
+            player.add(state, Zone.HAND)
+        for state in rest:
+            player.library.append(state)
+
+    return 4, effect
+
+
 def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """One clause of a mixed effect: the targeted shape first, then a token
     creation, then a search, then the imprint shape, then a delayed-trigger
@@ -5954,6 +6328,13 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
         return exile_that_players_library
     if _LOOK_AT_TOP_CARD_RE.fullmatch(clause.strip()):
         return _look_at_top_card
+    # -- Wave W1's own single-clause additions, contiguous block ----------
+    target_player_discards = _parse_target_player_discards_clause(clause, for_spell=for_spell)
+    if target_player_discards is not None:
+        return target_player_discards
+    if _THEN_EXILE_THAT_PLAYERS_GRAVEYARD_RE.fullmatch(clause.strip()):
+        return exile_target_players_graveyard
+    # -- end Wave W1 single-clause additions -------------------------------
     player_clause = _parse_optional_player_clause(clause)
     if player_clause is None:
         return None
@@ -6013,6 +6394,26 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             parsed.append(effect)
             index += consumed
             continue
+        # -- Wave W1's own multi-clause merges, contiguous block -----------
+        merged = _merge_reveal_hand_choose_discard_clauses(clauses, index, for_spell=for_spell)
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_may_discard_if_you_do_clauses(clauses, index, for_spell=for_spell)
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_look_top_reveal_to_hand_clauses(clauses, index, for_spell=for_spell)
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        # -- end Wave W1 multi-clause merges --------------------------------
         if index + 1 < len(clauses):
             paired = _parse_anaphoric_clause_pair(
                 clauses[index], clauses[index + 1], for_spell=for_spell
