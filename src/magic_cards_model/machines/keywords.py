@@ -68,7 +68,7 @@ from .layers import (
     Sublayer,
     modify_power_toughness,
 )
-from .triggers import AbilityOnStack, GameEvent, triggers_for
+from .triggers import AbilityOnStack, GameEvent, activated_abilities_of, triggers_for
 
 
 class KeywordRule(StrEnum):
@@ -412,6 +412,21 @@ class KeywordActivation(BaseModel):
     twice when both the resolver and `resolve` know how to run it."""
     result: Any = Field(default=None, exclude=True, repr=False)
     """Whatever the effect returned, kept for the caller that asked."""
+    generic_effect: bool = False
+    """True for a printed, non-keyword activated ability (CR 602.1) whose
+    effect is whatever `machines/effects.py` already makes of its own text -
+    the ordinary path a battlefield activation of the same ability reaches.
+
+    Channel and its P9 siblings (`docs/engine-coverage.md`) have no fixed rules
+    meaning the way cycling's "draw a card" does: the text after the colon is
+    arbitrary, card by card, and this module has no business guessing at it.
+    Set this instead of adding a `KEYWORD_EFFECTS` row, and `activate` leaves
+    `AbilityOnStack.keyword_activation` unset so `Game._effect_of` falls
+    through past `keyword_effect_for` to its own `ActivatedAbility` branch -
+    `_activated_index` finds the ability by its printed text regardless of
+    which zone it was activated from (CR 113.7a: the ability on the stack is
+    independent of its source), and `activated_effect_for` resolves it exactly
+    the way it would from the battlefield."""
 
     def run_effect(self) -> Any:
         """Apply this keyword's effect, once (CR 608.2).
@@ -492,8 +507,10 @@ class KeywordActivation(BaseModel):
             controller=self.player,
             targets=list(self.targets),
             # The link back, so the effect is findable from the object on the
-            # stack rather than only from here (CR 113.1c, CR 608.2).
-            keyword_activation=self,
+            # stack rather than only from here (CR 113.1c, CR 608.2) - unset
+            # for `generic_effect`, so `Game._effect_of` reaches the ordinary
+            # card-text resolution instead of asking this module for one.
+            keyword_activation=None if self.generic_effect else self,
         )
         self.game.stack.append(self.on_stack)
         self.game.put_triggers_on_stack()  # CR 117.3c hands priority straight back
@@ -917,6 +934,94 @@ def equipped_creature(game: Any, equipment: CardState) -> CardState | None:
         return None
     host = game.find_by_id(equipment.attached_to)
     return host if isinstance(host, CardState) else None
+
+
+# --------------------------------------------------------------------------
+# Activated abilities that function off the battlefield (CR 113.6j, 113.6m)
+# --------------------------------------------------------------------------
+#
+# Cycling and equip are CR 702 keywords: the ability they expand to has one
+# fixed meaning, the same on every card that prints it, which is why each gets
+# its own hand-written effect above. Channel (Boseiju, Otawara), and the plain,
+# unkeyworded abilities on World Breaker and Waker of Waves, are the opposite
+# shape: `[Cost]: [Effect.]` printed like any battlefield activated ability,
+# whose *effect* is arbitrary card text - the only unusual thing about them is
+# where they function, which `abilities._activated_ability_zone` already read
+# off the printed cost and effect while parsing (CR 113.6j: a cost that can't
+# be paid on the battlefield; CR 113.6m: an effect that names the object's own
+# graveyard as where it starts). `KeywordActivation` still does the work -
+# CR 602.5's wrong-zone refusal is the same question whichever rule put the
+# ability there - but `generic_effect=True` sends its resolution back to the
+# ordinary per-card path instead of asking this module for a fixed one.
+
+
+def off_battlefield_activation(
+    game: Any,
+    card: CardState,
+    player: str,
+    index: int = 0,
+    *,
+    targets: list[Any] | None = None,
+    sacrificing: list[CardState] | None = None,
+    discarding: list[CardState] | None = None,
+) -> KeywordActivation:
+    """Build the activation for one of this card's printed activated abilities
+    that functions off the battlefield (CR 113.6j, CR 113.6m).
+
+    `index` counts only among the abilities `abilities.parse_abilities` read a
+    `zone` for, in printed order - Boseiju's `{T}: Add {G}` does not have one,
+    so `index=0` is always its Channel ability even though Channel is not the
+    card's first printed ability.
+
+    `targets` is announced and checked here (CR 601.2c, via CR 602.2b's "the
+    remainder of the process ... is identical to ... casting a spell"), the
+    same way `Game.activate_ability` checks a battlefield activation against
+    the ability's own text rather than the card's spell text (CR 113.1c) - a
+    target this ability's own printed text refuses is refused just as early
+    whether the ability functions on the battlefield or not.
+
+    CR 113.7a: once this is put on the stack (`KeywordActivation.activate`),
+    the ability exists independently of `card` - the discard or sacrifice a
+    caller pays through `begin_paying` happens *before* `activate`, so by the
+    time this ability is on the stack its own source may already have left the
+    zone it was activated from (Channel's cost is discarding this very card).
+    Nothing about resolving the ability depends on finding it there again.
+    """
+    from .targeting import profile_for_text
+
+    candidates = [
+        (source_index, ability)
+        for source_index, ability in enumerate(activated_abilities_of(card.card))
+        if ability.zone is not None
+    ]
+    if index >= len(candidates):
+        raise ValueError(
+            f"{card.name} has no activated ability functioning off the battlefield, number {index}"
+        )
+    source_index, ability = candidates[index]
+    zone = ability.zone
+    zone_rule = ability.zone_rule
+    assert zone is not None and zone_rule is not None  # `zone` implies `zone_rule` (abilities.py)
+
+    profile = profile_for_text(ability.text)
+    if profile.understood and profile.requirements:
+        profile.check(list(targets or []), player, game)
+
+    cost = game.activation_cost(
+        card, source_index, player, sacrificing=sacrificing, discarding=discarding
+    )
+    return KeywordActivation(
+        card=card,
+        player=player,
+        keyword=ability.ability_word or "activated",
+        rule=zone_rule,
+        zone=zone,
+        cost=cost,
+        ability=ability,
+        targets=[TargetRef.coerce(target) for target in targets or []],
+        generic_effect=True,
+        game=game,
+    )
 
 
 # --------------------------------------------------------------------------
