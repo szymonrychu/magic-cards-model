@@ -187,6 +187,17 @@ class DecisionKind(StrEnum):
     #: that asks already knows, from the card's own printed text, and records
     #: it on `CardState.choice`'s own `ChoiceKind` once the answer comes back.
     CHOOSE_A_QUALITY = "choose_a_quality"
+    #: "[Its owner] puts it on their choice of the top or bottom of their
+    #: library" (Subtlety) - CR 608.2d's own choice, made by whichever player
+    #: the effect names (CR 401.2's order otherwise fixed), not by the
+    #: resolving ability's controller. `True` is the top, `False` the bottom -
+    #: a plain boolean rather than `CHOOSE_A_QUALITY`'s open `options` string,
+    #: because there are exactly two answers and neither is a color, a card
+    #: name, or a creature type (that kind's own documented scope, CR 614.1c/
+    #: 614.12a). The default keeps the card visible rather than buried, the
+    #: same "least destructive, most reversible" posture `SCRY`/`SURVEIL`'s own
+    #: "keep everything on top" default already takes.
+    PUT_ON_TOP_OR_BOTTOM = "put_on_top_or_bottom"
 
 
 @dataclass(frozen=True)
@@ -296,6 +307,8 @@ def default_answer(decision: Decision) -> object:
         # on top" default follows, not a claim that 0 is somehow the right
         # amount for an unscripted player to pay.
         return 0
+    if decision.kind is DecisionKind.PUT_ON_TOP_OR_BOTTOM:
+        return True
     if decision.kind in (DecisionKind.DECLARE_ATTACKERS, DecisionKind.DECLARE_BLOCKERS):
         # CR 508.1 says "if any" and CR 509.1 says "may": declaring nobody is
         # always legal, and is what an unscripted player does.

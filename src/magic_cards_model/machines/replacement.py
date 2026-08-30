@@ -1116,7 +1116,7 @@ def _your_graveyard(game: "Game", source: CardState, card: CardState) -> bool:
 
 
 def _black_or_red(game: "Game", source: CardState, card: CardState) -> bool:
-    colors = card.card.colors or []
+    colors = card.colors
     return Color.BLACK in colors or Color.RED in colors
 
 
@@ -1136,7 +1136,7 @@ def _kalitas_applies(game: "Game", source: CardState, event: ReplaceableEvent) -
         and event.origin is Zone.BATTLEFIELD
         and card is not None
         and not is_token(card)
-        and Type.CREATURE in card.card.types
+        and Type.CREATURE in card.types
         and _is_opponent(game, card.controller, source.controller)
     )
 
@@ -1155,7 +1155,7 @@ def _containment_priest_applies(game: "Game", source: CardState, event: Replacea
         and not event.was_cast
         and card is not None
         and not is_token(card)
-        and Type.CREATURE in card.card.types
+        and Type.CREATURE in card.types
     )
 
 

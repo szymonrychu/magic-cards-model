@@ -29,6 +29,11 @@ from ..models.card_state import CardState, ExileAnnotation, ExileMarker, TargetR
 from ..models.mana import ManaCost, ManaSpend
 from ..models.zone import Zone
 from .abilities import KeywordAbility, TriggerEvent, keyword_abilities
+from .casting_restrictions import (
+    has_sorcery_speed_flash_grant,
+    restricted_from_noncreature_casting,
+    sorcery_speed_restriction_source,
+)
 from .cost import (
     CostPayment,
     CostStep,
@@ -592,15 +597,36 @@ def why_cannot_cast_now(spell: CardState, caster: str, game: Any = None) -> str 
 
     Answered against the game because it is a question about the turn: without
     one there is nothing to ask, and the answer is None.
+
+    **Teferi, Time Raveler's two halves, checked in the right order.** His
+    static, "Each opponent can cast spells only any time they could cast a
+    sorcery," removes *every* instant-speed exception - CR 304.1's instant
+    permission and CR 702.8a's flash both - for an opponent, so it is read
+    before either of them, but only once sorcery-speed timing has already
+    failed: a restricted opponent whose own main phase it is, with an empty
+    stack, needs no exception at all (CR 611.1 does not add a *second*
+    restriction on top of ordinary permission). His +1, "Until your next
+    turn, you may cast sorcery spells as though they had flash," is the
+    opposite direction and touches only its own controller: a sorcery this
+    caster could not otherwise cast at instant speed is let through the same
+    way `has_flash` already lets an instant-speed creature through.
     """
     if game is None:
         return None
+    if game.can_cast_sorcery(caster):
+        return None
+    restricting_source = sorcery_speed_restriction_source(game, caster)
+    if restricting_source is not None:
+        return (
+            f"{restricting_source} restricts {caster} to casting spells only any time "
+            f"they could cast a sorcery, and it is not (CR 117.1a, CR 611.1)"
+        )
     if Type.INSTANT in spell.card.types:
         return None  # CR 304.1
     if has_flash(spell.card):
         return None  # CR 702.8a
-    if game.can_cast_sorcery(caster):
-        return None
+    if Type.SORCERY in spell.card.types and has_sorcery_speed_flash_grant(game, caster):
+        return None  # Teferi, Time Raveler's +1
     if spell.zone is not Zone.HAND and castable_from(spell.card, spell.zone):
         # A keyword is what allows this cast at all (CR 601.3), and each one
         # carries its own timing - plot's "only as a sorcery" (CR 702.170a),
@@ -611,6 +637,26 @@ def why_cannot_cast_now(spell: CardState, caster: str, game: Any = None) -> str 
         f"{spell.name} is not an instant and has no flash, so {caster} can only cast it "
         f"during their own main phase with the stack empty (CR 117.1a, CR 702.8a)"
     )
+
+
+def why_cannot_cast_restriction(spell: CardState, caster: str, game: Any = None) -> str | None:
+    """CR 611.1: why a rules-modifying continuous effect refuses this cast
+    outright, or None.
+
+    Distinct from `why_cannot_cast_now`'s timing question: Ranger-Captain of
+    Eos's "Your opponents can't cast noncreature spells this turn" is a flat
+    prohibition that holds at any timing, so it is checked separately rather
+    than folded into the sorcery-speed logic above.
+    """
+    if game is None:
+        return None
+    restriction = restricted_from_noncreature_casting(game, caster)
+    if restriction is not None and Type.CREATURE not in spell.card.types:
+        return (
+            f"{restriction.source_name} says {caster} can't cast noncreature spells "
+            f"this turn (CR 611.1)"
+        )
+    return None
 
 
 class CastingStep(StrEnum):
@@ -714,6 +760,9 @@ class Casting(BaseModel):
         they are checked here rather than after the cost has been paid.
         """
         refusal = why_cannot_cast_now(self.spell, self.caster, self.game)
+        if refusal is not None:
+            raise ValueError(refusal)
+        refusal = why_cannot_cast_restriction(self.spell, self.caster, self.game)
         if refusal is not None:
             raise ValueError(refusal)
 

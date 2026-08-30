@@ -577,17 +577,6 @@ def test_ajanis_enters_trigger_creates_a_cat_warrior():
     assert cat.card.subtypes == ["Cat", "Warrior"]
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="The trigger itself now fires: `condition_matches` reads a non-self DIES "
-    "condition narrowed by subtype ('one or more other Cats you control die'), so a Cat "
-    "token dying puts Ajani's second ability on the stack - see "
-    "test_dies_trigger_scope.py::test_another_cat_dying_triggers_ajanis_transform_ability "
-    "for that half. What is still missing is the *effect*: `machines/effects.py` has no "
-    "entry for Ajani's DIES trigger, so it resolves and does nothing - exiling and "
-    "returning him transformed needs a way to turn a creature into its planeswalker face, "
-    "which does not exist yet.",
-)
 def test_a_cat_token_dying_flips_ajani():
     """Ajani, Nacatl Pariah: "Whenever one or more other Cats you control die, you
     may exile Ajani, then return him to the battlefield transformed under his
@@ -596,7 +585,11 @@ def test_a_cat_token_dying_flips_ajani():
     A Cat token dying is a Cat you control dying: CR 700.4's "dies" and CR 111.7's
     parenthesis together mean the token really did go to a graveyard and really
     is visible to a dies trigger. This is the interaction that makes Ajani a
-    metagame card, and it is the transform half that is still missing.
+    metagame card, and both halves now work: `_parse_may_exile_self_then_return_
+    clause` reads the effect off the trigger's own text (CR 201.5's name
+    self-reference, no registry row), and CR 712.14a's "transformed" is how he
+    *enters*, so CR 306.5b puts Ajani, Nacatl Avenger's printed 3 loyalty
+    counters on as he arrives (CR 712.8e gives him that face's characteristics).
     """
     scenario = (
         Scenario()
@@ -621,6 +614,9 @@ def test_a_cat_token_dying_flips_ajani():
         scenario.resolve_top()
 
     assert ajani.transformed
+    assert ajani.name == "Ajani, Nacatl Avenger"
+    assert Type.PLANESWALKER in ajani.types
+    assert ajani.loyalty == 3
 
 
 def test_seasoned_pyromancer_makes_an_elemental_for_each_nonland_discarded():
@@ -930,14 +926,6 @@ def test_kozileks_command_creates_x_eldrazi_spawn():
     assert len(spawn) == 2
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Dalkovan Encampment's third ability creates a delayed triggered ability with a "
-    "stated duration - 'Whenever you attack this turn' (CR 603.7b) - and machines/delayed.py "
-    "has no ATTACKS-per-declaration shape and no way to expire a trigger at end of turn. Its "
-    "second half, 'Sacrifice them at the beginning of the next end step', needs the created "
-    "tokens' ids carried into a second delayed trigger. The hook is in machines/delayed.py.",
-)
 def test_dalkovan_encampment_creates_warriors_tapped_and_attacking():
     """Dalkovan Encampment: "{2}{W}, {T}: Whenever you attack this turn, create two
     1/1 red Warrior creature tokens that are tapped and attacking. Sacrifice them
@@ -981,3 +969,132 @@ def test_dalkovan_encampment_creates_warriors_tapped_and_attacking():
     warriors = [state for state in scenario.game.battlefield if state.name == "Warrior Token"]
     assert len(warriors) == 2
     assert all(state.tapped and scenario.game.is_attacking(state) for state in warriors)
+
+
+def _dalkovan_board():
+    return (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            battlefield=[
+                "Dalkovan Encampment",
+                "Plains",
+                "Plains",
+                "Plains",
+                "Grizzly Bears",
+            ],
+        )
+        .player("bob")
+        .build()
+    )
+
+
+def _activate_dalkovan(scenario: "Scenario"):
+    encampment = scenario.find("Dalkovan Encampment", Zone.BATTLEFIELD)
+    sources = scenario.untapped_sources("Plains", "Plains", "Plains", username="alice")
+    scenario.activate(encampment, *sources, index=1, username="alice")
+    while scenario.game.stack:
+        scenario.resolve_top()
+
+
+def test_dalkovan_encampment_warriors_are_sacrificed_at_the_next_end_step():
+    """The second half: "Sacrifice them at the beginning of the next end
+    step" - CR 603.7, one one-shot delayed trigger per token (each reusing
+    `machines/delayed.py`'s existing `"sacrifice"` entry), not a single
+    trigger that only manages to sacrifice one of the two.
+    """
+    scenario = _dalkovan_board()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    bears.summoning_sick = False
+    _activate_dalkovan(scenario)
+
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(bears, defending="bob")
+    scenario.game.put_triggers_on_stack()
+    while scenario.game.stack:
+        scenario.resolve_top()
+    warriors = [state for state in scenario.game.battlefield if state.name == "Warrior Token"]
+    assert len(warriors) == 2
+
+    while scenario.step is not Step.END_STEP:
+        scenario.advance()
+    while scenario.game.stack:
+        scenario.resolve_top()
+
+    assert all(state.zone is Zone.GRAVEYARD for state in warriors)
+
+
+def test_dalkovan_encampment_fires_again_on_a_second_attack_the_same_turn():
+    """CR 603.7b's own "unless it has a stated duration, such as 'this
+    turn'": the delayed trigger is not spent after its first firing, so a
+    second attack declaration later in the same turn creates two *more*
+    tokens on top of the first two. A second real combat phase needs extra-
+    combat machinery this engine does not model, so the second declaration
+    is reached the same way `Game.declare_attackers` itself would emit it -
+    the identical subjectless `ATTACKS` event, by hand.
+    """
+    from magic_cards_model.machines.abilities import TriggerEvent
+    from magic_cards_model.machines.triggers import GameEvent
+
+    scenario = _dalkovan_board()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    bears.summoning_sick = False
+    _activate_dalkovan(scenario)
+
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(bears, defending="bob")
+    scenario.game.put_triggers_on_stack()
+    while scenario.game.stack:
+        scenario.resolve_top()
+    assert len([s for s in scenario.game.battlefield if s.name == "Warrior Token"]) == 2
+
+    scenario.game.emit(GameEvent(event=TriggerEvent.ATTACKS, player="alice"))
+    scenario.game.put_triggers_on_stack()
+    while scenario.game.stack:
+        scenario.resolve_top()
+
+    assert len([s for s in scenario.game.battlefield if s.name == "Warrior Token"]) == 4
+
+
+def test_dalkovan_encampment_does_not_fire_after_cleanup_expires_it():
+    """CR 514.2 ends every "this turn" effect in the cleanup step - so once
+    `DelayedTriggers.expire_this_turn` has run, a later attack (a new turn's
+    own combat, reached here the same subjectless-`ATTACKS`-event way
+    `test_dalkovan_encampment_fires_again_on_a_second_attack_the_same_turn`
+    reaches its second attack, since neither test wants the turn machinery's
+    own untap/draw bookkeeping to be what is under test) creates no tokens
+    and queues no reflexive-style trigger at all.
+    """
+    from magic_cards_model.machines.abilities import TriggerEvent
+    from magic_cards_model.machines.triggers import GameEvent
+
+    scenario = _dalkovan_board()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    bears.summoning_sick = False
+    _activate_dalkovan(scenario)
+
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(bears, defending="bob")
+    scenario.game.put_triggers_on_stack()
+    while scenario.game.stack:
+        scenario.resolve_top()
+    assert len([s for s in scenario.game.battlefield if s.name == "Warrior Token"]) == 2
+
+    while scenario.step is not Step.CLEANUP:
+        scenario.advance()
+        while scenario.game.stack:
+            scenario.resolve_top()  # the per-token sacrifice at the end step (CR 603.7)
+    scenario.turn_based_actions()  # CR 514.2: expires the delayed trigger
+
+    scenario.game.emit(GameEvent(event=TriggerEvent.ATTACKS, player="alice"))
+    scenario.game.put_triggers_on_stack()
+    while scenario.game.stack:
+        scenario.resolve_top()
+
+    assert not any(
+        s.name == "Warrior Token" and s.zone is Zone.BATTLEFIELD for s in scenario.game.battlefield
+    )

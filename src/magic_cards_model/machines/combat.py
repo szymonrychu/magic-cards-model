@@ -263,7 +263,10 @@ def _defender_refusal(game: "Game", defender: TargetRef, active: str) -> str | N
     permanent = game.resolve_target(defender)
     if not isinstance(permanent, CardState) or permanent.zone is not Zone.BATTLEFIELD:
         return "that permanent is not on the battlefield"
-    if not set(permanent.card.types) & ATTACKABLE_PERMANENT_TYPES:
+    # `permanent.types`, not `permanent.card.types`: a transformed Ajani,
+    # Nacatl Pariah is a planeswalker (CR 712.8e) and may be attacked, and a
+    # modal double-faced permanent played as its land face is not (CR 712.8f).
+    if not set(permanent.types) & ATTACKABLE_PERMANENT_TYPES:
         return f"{permanent.name} is not a player, planeswalker, or battle"
     if game.controller_of(permanent).username == active:
         return f"{permanent.name} is not controlled by an opponent"
@@ -434,7 +437,7 @@ def block_refusal(game: "Game", blocker: CardState, attack: Attack) -> str | Non
     if blocker.tapped:
         return f"{blocker.name} is tapped"
 
-    defending = defending_player(game, attack)
+    defending = defending_player(game, attack.defender)
     if game.controller_of(blocker).username != defending:
         return f"{blocker.name} is not controlled by {defending}"
 
@@ -482,7 +485,7 @@ def landwalk_refusal(game: "Game", attacker: CardState, defending: str | None) -
         lands = [
             permanent
             for permanent in game.permanents_controlled_by(defending)
-            if land_type in permanent.card.subtypes
+            if land_type in permanent.subtypes
         ]
         if lands:
             return (
@@ -546,11 +549,21 @@ def declare_blockers(game: "Game", blocks: list[tuple[CardState, CardState]]) ->
     combat.blockers_declared = True
 
 
-def defending_player(game: "Game", attack: Attack) -> str | None:
-    """Who is defending against this attack: the player, or the permanent's controller."""
-    if attack.defender.is_player:
-        return attack.defender.username
-    permanent = game.resolve_target(attack.defender)
+def defending_player(game: "Game", defender: TargetRef) -> str | None:
+    """Who is defending against an attack on `defender` (CR 508.5): the player
+    themselves, or - when the attack names a planeswalker or a battle - that
+    permanent's controller.
+
+    Takes the `TargetRef` directly rather than the whole `Attack`, so a
+    triggered ability's own `GameEvent.defender` (CR 508.1a's same field,
+    carried onto the event `Game.declare_attacker` emits) can ask this
+    question too - Ulamog, the Ceaseless Hunger's "whenever Ulamog attacks,
+    defending player ..." reads a defending player off an *event*, not off a
+    live `Attack` still in `game.combat`.
+    """
+    if defender.is_player:
+        return defender.username
+    permanent = game.resolve_target(defender)
     if isinstance(permanent, CardState):
         return game.controller_of(permanent).username
     return None

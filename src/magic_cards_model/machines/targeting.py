@@ -104,6 +104,7 @@ from ..models.card import Card, Color, Supertype, Type
 from ..models.card_state import CardState, TargetRef
 from ..models.zone import Zone
 from .abilities import keyword_abilities
+from .combat import has_keyword
 from .modes import Mode, modal_profile, mode_rules_text
 
 # --------------------------------------------------------------------------
@@ -199,6 +200,15 @@ class TargetRequirement(BaseModel):
     mean something different (CR 105.2c: no color, not any color)."""
     must_be_token: bool | None = None
     """True for "target token", False for "target nontoken ..." (CR 111.1)."""
+    historic: bool = False
+    """True for "target historic ..." (Abstergo Entertainment). CR 700.6:
+    "The term historic refers to an object that has the legendary supertype,
+    the artifact card type, or the Saga subtype." A disjunction across three
+    different characteristics - card type, supertype, *and* subtype at
+    once - that `card_types`/`required_supertypes` alone cannot express
+    together (each is itself only an OR within one axis), so this gets its
+    own field and its own check, `_rejects_historic`, rather than trying to
+    fold it into either."""
     combat_states: frozenset[CombatState] = frozenset()
     """Which of attacking and blocking would satisfy this (CR 508.1k, 509.1g).
 
@@ -245,6 +255,16 @@ class TargetRequirement(BaseModel):
     fresh every time `rejects` is asked - at announcement (CR 601.2c) and
     again at resolution (CR 608.2b) - rather than fixed once, since whether a
     permanent left the battlefield this turn can change between the two."""
+
+    required_keyword: str | None = None
+    """"with flying" in "target creature you don't control with flying"
+    (Kraul Harpooner) - a trailing keyword-ability clause, read off the same
+    closed CR 702 evasion/combat vocabulary `machines/combat.py::Keyword`
+    already speaks. Only a small, explicitly named set is read
+    (`_WITH_KEYWORD_RE`) rather than any "with <word>" at all: an unrecognised
+    "with" clause is left exactly as before this field existed - silently
+    unenforced - so a card this narrow reader does not know about does not
+    regress from "ignored" to "the whole targeting text refuses to parse"."""
 
     @property
     def optional(self) -> bool:
@@ -342,12 +362,10 @@ class TargetRequirement(BaseModel):
             if self.excluded_card_types and (current_types & self.excluded_card_types):
                 unwanted = " or ".join(sorted(kind.value for kind in self.excluded_card_types))
                 return f"{self.phrase} cannot target a {unwanted}, and {target.name} is one"
-        if self.required_supertypes and not (
-            set(target.card.supertypes) & self.required_supertypes
-        ):
+        if self.required_supertypes and not (set(target.supertypes) & self.required_supertypes):
             wanted = " or ".join(sorted(kind.value for kind in self.required_supertypes))
             return f"{self.phrase} needs a {wanted} permanent, and {target.name} is not one"
-        if self.excluded_supertypes and (set(target.card.supertypes) & self.excluded_supertypes):
+        if self.excluded_supertypes and (set(target.supertypes) & self.excluded_supertypes):
             unwanted = " or ".join(sorted(kind.value for kind in self.excluded_supertypes))
             return f"{self.phrase} cannot target a {unwanted} permanent, and {target.name} is one"
         if self.required_colors and not (
@@ -355,6 +373,9 @@ class TargetRequirement(BaseModel):
         ):
             wanted = " or ".join(sorted(color.name.lower() for color in self.required_colors))
             return f"{self.phrase} needs a {wanted} permanent, and {target.name} is not one"
+        historic = self._rejects_historic(target)
+        if historic is not None:
+            return historic
         if self.must_be_tapped is not None and target.tapped is not self.must_be_tapped:
             state = "tapped" if self.must_be_tapped else "untapped"
             return f"{self.phrase} needs a {state} permanent, and {target.name} is not"
@@ -367,7 +388,45 @@ class TargetRequirement(BaseModel):
         comparison = self._rejects_comparison(target, game, caster)
         if comparison is not None:
             return comparison
+        keyword = self._rejects_required_keyword(target, game)
+        if keyword is not None:
+            return keyword
         return self._rejects_controller(target, caster)
+
+    def _rejects_historic(self, target: CardState) -> str | None:
+        """CR 700.6: legendary, artifact, or Saga - checked off the card's own
+        printed characteristics, the same way `required_supertypes` reads
+        `target.card.supertypes` directly rather than through a layer-6
+        recompute; nothing in the pool grants "historic" itself with a
+        continuous effect.
+        """
+        if not self.historic:
+            return None
+        card = target.card
+        is_historic = (
+            Supertype.LEGENDARY in card.supertypes
+            or Type.ARTIFACT in card.types
+            or "Saga" in card.subtypes
+        )
+        if is_historic:
+            return None
+        return f"{self.phrase} needs a historic card, and {target.name} is not one"
+
+    def _rejects_required_keyword(self, target: CardState, game: Any = None) -> str | None:
+        """CR 702: "with flying" and its like siblings (Kraul Harpooner).
+
+        Without a game there is no computed board to read a granted keyword
+        off, so this fails open the same way `_rejects_combat_state` does
+        without one - a false rejection would be worse than an unchecked one.
+        """
+        if self.required_keyword is None or game is None:
+            return None
+        if not has_keyword(target, self.required_keyword, game):
+            return (
+                f"{self.phrase} needs a creature with {self.required_keyword}, "
+                f"and {target.name} is not"
+            )
+        return None
 
     def _rejects_token(self, target: CardState) -> str | None:
         """CR 111.1: a token is a permanent that no card represents.
@@ -421,7 +480,7 @@ class TargetRequirement(BaseModel):
         characteristics_of = getattr(game, "characteristics_of", None)
         if target.zone is Zone.BATTLEFIELD and characteristics_of is not None:
             return characteristics_of(target).types
-        return target.card.types
+        return target.types
 
     def _current_colors(self, target: CardState, game: Any) -> tuple[Color, ...]:
         """This target's colors right now (CR 105.1), layers included (CR
@@ -487,7 +546,7 @@ class TargetRequirement(BaseModel):
             # Off the battlefield, no layer applies, so the printed values are
             # the only ones there are to compare against (CR 613's layers are
             # all about permanents).
-            mana_value, power, toughness = target.card.cmc, target.power, target.toughness
+            mana_value, power, toughness = target.mana_value, target.power, target.toughness
         if self.comparison_attribute is ComparisonAttribute.MANA_VALUE:
             values: list[float] = [mana_value]
         elif self.comparison_attribute is ComparisonAttribute.POWER:
@@ -917,6 +976,61 @@ _ZONES = {
     "exile": Zone.EXILE,
 }
 
+#: "other than a/an <quality> card" - Surgical Extraction's own "other than a
+#: basic land card" on a bare "target card in a graveyard". `<quality>` is one
+#: or two words (a supertype, a card type, or both - "basic land" is both at
+#: once), read the same vocabulary `_SUPERTYPE_NOUNS`/`_TYPE_NOUNS` already
+#: use for a *leading* adjective, just applied to a *trailing* exclusion
+#: clause instead.
+_OTHER_THAN_CARD_RE = re.compile(
+    r"\bother than (?:a|an)\s+(?P<quality>[a-z]+(?:\s+[a-z]+)?)\s+card\b", re.IGNORECASE
+)
+
+
+def _read_other_than_exclusion(
+    tail: str,
+) -> tuple[frozenset[Supertype], frozenset[Type]] | None:
+    """`_OTHER_THAN_CARD_RE`'s own quality, split into excluded supertypes and
+    card types - CR 205.4a's "basic" only ever appears on a land, so "other
+    than a basic land card" is correctly read by excluding the supertype
+    alone; a hypothetical "other than an artifact card" would exclude the
+    card type instead, and either word could appear alone or together.
+
+    Returns `(frozenset(), frozenset())` - a real "no exclusion", not a
+    refusal - when `tail` carries no such clause at all. Fails closed
+    (`None`) when the clause is attempted but names a quality this wave does
+    not recognise, rather than silently admitting a card its own text says
+    is excluded.
+    """
+    match = _OTHER_THAN_CARD_RE.search(tail)
+    if match is None:
+        return frozenset(), frozenset()
+    words = match.group("quality").lower().split()
+    supertype_words = [word for word in words if word in _SUPERTYPE_NOUNS]
+    type_words = [word for word in words if word in _TYPE_NOUNS]
+    if len(supertype_words) + len(type_words) != len(words):
+        return None  # a word this parser does not read as either
+    if supertype_words and type_words:
+        # A compound like "basic land card": excluding *both* the type and
+        # the supertype independently would over-exclude (every land, basic
+        # or not, once `excluded_card_types` alone contains LAND). CR 205.4a
+        # closes "basic" to lands only ("the supertypes are basic,
+        # legendary, ongoing, snow, and world", and only a land is ever
+        # printed with "Basic" on its type line), so excluding the
+        # supertype alone already excludes exactly the compound noun with no
+        # separate type exclusion needed. That substitution is not sound for
+        # the other four supertypes (a legendary creature, a snow anything,
+        # a world enchantment all pair a supertype with a type that is *not*
+        # exclusive to it), so anything but "basic" here is refused rather
+        # than guessed at.
+        if set(supertype_words) != {"basic"}:
+            return None
+        return frozenset({Supertype.BASIC}), frozenset()
+    if supertype_words:
+        return frozenset(_SUPERTYPE_NOUNS[word] for word in supertype_words), frozenset()
+    return frozenset(), frozenset(_TYPE_NOUNS[word] for word in type_words)
+
+
 _CACHE: dict[tuple[str, str], TargetingProfile] = {}
 
 
@@ -1069,7 +1183,17 @@ _EARTHBEND_TARGET_TEXT = "target land you control"
 #: ability's target. `re.IGNORECASE | re.DOTALL` matches `_REFLEXIVE_CLAUSE_RE`
 #: in `machines/effects.py`: the two have to agree on where the boundary is,
 #: or one module could see a target the other has already sliced away.
-_REFLEXIVE_CLAUSE_TAIL = re.compile(r"\bwhen you do,.*$", re.IGNORECASE | re.DOTALL)
+#:
+#: CR 603.12's other template - "when [something happens] this way," - is the
+#: same cut for the same reason: Agatha's Soul Cauldron's "Exile target card
+#: from a graveyard. When a creature card is exiled this way, put a +1/+1
+#: counter on target creature you control." announces only the first
+#: sentence's target now; the second belongs to the reflexive ability CR
+#: 603.3d creates later. `machines/effects.py`'s own
+#: `_EXILE_TARGET_REFLEXIVE_CREATURE_RE` has to agree on this same boundary.
+_REFLEXIVE_CLAUSE_TAIL = re.compile(
+    r"\bwhen you do,.*$|\bwhen [^,]+ this way,.*$", re.IGNORECASE | re.DOTALL
+)
 
 
 def profile_for_text(text: str) -> TargetingProfile:
@@ -1422,6 +1546,8 @@ def _read_phrase(prefix: str, suffix: str) -> TargetRequirement | None:
         return None
     comparison_attribute, comparison_operator, comparison_value, rest = comparison
 
+    required_keyword, rest = _extract_required_keyword(rest)
+
     if not nouns_read:
         # Nothing but adjectives: "target token you control". CR 111.1 makes a
         # token a permanent, so that is what is left once the adjectives are
@@ -1432,6 +1558,8 @@ def _read_phrase(prefix: str, suffix: str) -> TargetRequirement | None:
             return None
         allows_cards = True
 
+    extra_excluded_supertypes: frozenset[Supertype] = frozenset()
+    extra_excluded_types: frozenset[Type] = frozenset()
     if rest.startswith("card") or bare_card:
         # "target creature card in your graveyard" is a card, not a permanent,
         # and so is a bare "target card". Either way the zone has to be stated:
@@ -1443,6 +1571,16 @@ def _read_phrase(prefix: str, suffix: str) -> TargetRequirement | None:
         whose = zone_match.group("whose")
         if whose is not None and whose.lower() == "your":
             controller = ControllerRestriction.YOU
+        # "... other than a basic land card" (Surgical Extraction) - a
+        # compound-noun exclusion on the bare "target card" itself, past the
+        # zone clause. Read here rather than by `_Adjectives`, which only
+        # ever reads a leading adjective *before* the noun it excludes
+        # ("target nonbasic land"); this "other than" tail comes after the
+        # noun and the zone both.
+        exclusion = _read_other_than_exclusion(rest[zone_match.end() :])
+        if exclusion is None:
+            return None
+        extra_excluded_supertypes, extra_excluded_types = exclusion
     else:
         control_match = _CONTROL_CLAUSE.match(rest)
         if control_match is not None:
@@ -1455,9 +1593,9 @@ def _read_phrase(prefix: str, suffix: str) -> TargetRequirement | None:
         unbounded=unbounded,
         variable_count=variable,
         card_types=frozenset(card_types),
-        excluded_card_types=frozenset(adjectives.excluded_types),
+        excluded_card_types=frozenset(adjectives.excluded_types) | extra_excluded_types,
         required_supertypes=frozenset(adjectives.required_supertypes),
-        excluded_supertypes=frozenset(adjectives.excluded_supertypes),
+        excluded_supertypes=frozenset(adjectives.excluded_supertypes) | extra_excluded_supertypes,
         required_colors=frozenset(adjectives.required_colors),
         allows_cards=allows_cards,
         allows_players=allows_players,
@@ -1467,10 +1605,12 @@ def _read_phrase(prefix: str, suffix: str) -> TargetRequirement | None:
         must_be_tapped=must_be_tapped,
         excludes_source=excludes_source or adjectives.excludes_source,
         must_be_token=adjectives.must_be_token,
+        historic=adjectives.historic,
         combat_states=frozenset(adjectives.combat_states),
         comparison_attribute=comparison_attribute,
         comparison_operator=comparison_operator,
         comparison_value=comparison_value,
+        required_keyword=required_keyword,
     )
 
 
@@ -1485,6 +1625,7 @@ class _Adjectives:
         self.combat_states: set[CombatState] = set()
         self.must_be_tapped: bool | None = None
         self.must_be_token: bool | None = None
+        self.historic = False
         self.excludes_source = False
         self.read = 0
 
@@ -1504,6 +1645,8 @@ class _Adjectives:
             self.required_supertypes.add(_SUPERTYPE_NOUNS[word])
         elif word in _COLOR_WORDS:
             self.required_colors.add(_COLOR_WORDS[word])
+        elif word == "historic":
+            self.historic = True
         elif (excluded := _negated_type(word)) is not None:
             self.excluded_types.add(excluded)
         elif (excluded_super := _negated_supertype(word)) is not None:
@@ -1680,6 +1823,29 @@ def _extract_comparison(
     value = None if token.lower() == "x" else int(token)
     remaining = rest[: match.start()] + rest[match.end() :]
     return attribute, operator, value, remaining
+
+
+#: A trailing "with `<keyword>`" clause - "target creature you don't control
+#: with flying" (Kraul Harpooner). Deliberately a small, explicit vocabulary
+#: rather than "with (?P<keyword>.+)$": an unrecognised "with" clause (a
+#: counter, "with the highest power", CR 205.2a shapes this reader is not
+#: meant to reach) is left exactly as unenforced as it always was, rather
+#: than newly failing the whole phrase closed - only a *recognised* keyword
+#: gains enforcement here.
+_WITH_KEYWORD_RE = re.compile(
+    r"\bwith\s+(?P<keyword>flying|reach|trample|menace|haste|vigilance|"
+    r"first strike|double strike|defender|deathtouch|lifelink)$",
+    re.IGNORECASE,
+)
+
+
+def _extract_required_keyword(rest: str) -> tuple[str | None, str]:
+    """Read a trailing "with `<keyword>`" clause out of `rest` (CR 702), or
+    leave it untouched when there is none - see `_WITH_KEYWORD_RE`."""
+    match = _WITH_KEYWORD_RE.search(rest)
+    if match is None:
+        return None, rest
+    return match.group("keyword").lower(), rest[: match.start()].strip()
 
 
 _ALL_NOUNS = frozenset(_TYPE_NOUNS) | _PERMANENT_NOUNS | _PLAYER_NOUNS | _SPELL_NOUNS | _CARD_NOUNS

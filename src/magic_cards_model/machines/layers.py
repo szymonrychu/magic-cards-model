@@ -74,7 +74,6 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ..models.card import Color, Supertype, Type
 from ..models.card_state import CardState, Counter
-from ..models.mana import ManaCost
 from ..models.zone import Zone
 from .abilities import layer_readable_sentences
 from .combat import Keyword
@@ -314,46 +313,38 @@ def printed_characteristics(
             toughness=face_down.toughness,
             counters=on_the_permanent,
         )
-    # CR 712.8a/712.8d: a double-faced permanent's characteristics are its
-    # front face's, everywhere but the battlefield and stack too - and this
-    # project's own `CardState.transformed` docstring is why "front face" is
-    # right even on the battlefield: nothing reads `transformed` yet, so a
-    # flipped permanent is not modelled as having flipped for this purpose.
-    # `state.land_face_played` overrides that with the land face an MDFC was
-    # actually played as (CR 712.8f, 712.12) - `CardState.up_face` is the one
-    # place that choice is made, so oracle text, power and toughness read it
-    # through `state.oracle_text`/`up_face` rather than `card.oracle_text`
-    # directly, which is null for a `transform` or `modal_dfc` card and would
-    # otherwise leave this creature with no text and no P/T at all. `name`
-    # deliberately stays `card.name` - see `CardState.name`'s docstring for
-    # why that one is out of scope here.
+    # CR 712.8d/712.8e/712.8f: a double-faced permanent has only the
+    # characteristics of the face that is up - the front face by default
+    # (CR 712.8a, 712.8d), the back face while it is transformed (CR 712.8e),
+    # the land face when an MDFC was played as one (CR 712.8f, CR 712.12).
+    # `CardState.up_face` is the one place that choice is made, and every
+    # characteristic here is read through the `CardState` property that
+    # consults it rather than off the raw `Card`, whose top-level `power`,
+    # `toughness`, `oracle_text`, `colors` and `name` are null (or the
+    # combined "Front // Back" string) for a `transform` or `modal_dfc` card.
+    #
+    # CR 202.3b/712.8e is the single exception: mana value is "calculated using
+    # the mana cost of its front face" even while the back face is up, which is
+    # exactly what `CardState.mana_value` encodes.
+    #
+    # Power and toughness are read off the face directly rather than through
+    # `CardState.power`/`.toughness`, which already fold counters in (CR 122.1a)
+    # - these are the *printed* values layer 7a starts from, and CR 613.4c
+    # applies the counters again in sublayer 7c.
     up_face = state.up_face
     power = _as_number(up_face.power) if up_face is not None else _as_number(card.power)
     toughness = _as_number(up_face.toughness) if up_face is not None else _as_number(card.toughness)
-    colors = up_face.colors if up_face is not None and up_face.colors is not None else card.colors
-    # CR 202.3a/712.8f: an MDFC played for its land face has *that* face's own
-    # mana cost - none printed on a land, so a mana value of 0 - not the spell
-    # face's `card.cmc`, which is what Scryfall's top-level `cmc` always
-    # reports for a modal double-faced card. `state._land_face` is only ever
-    # set for that one case (`land_face_played`'s docstring); an ordinary
-    # `transform` card's back face is never modelled as being up (see the
-    # comment above `up_face`), so `card.cmc` - already the front face's cost
-    # per CR 202.3b/712.8e - stays right for every other permanent here.
-    mana_value = (
-        ManaCost.parse(up_face.mana_cost or "").converted
-        if state.land_face_played is not None and up_face is not None
-        else card.cmc
-    )
     return Characteristics(
         card_id=state.id,
-        name=card.name,
-        mana_value=mana_value,
+        name=state.name,
+        mana_value=state.mana_value,
         controller=state.controller,
-        supertypes=tuple(card.supertypes),
+        supertypes=tuple(state.supertypes),
         types=tuple(state.types),
         subtypes=tuple(state.subtypes),
-        colors=tuple(colors or ()),
-        abilities=tuple(_ability_lines(state.oracle_text)),
+        colors=tuple(state.colors),
+        abilities=tuple(_ability_lines(state.oracle_text))
+        + _keyword_counter_lines(on_the_permanent),
         power=power,
         toughness=toughness,
         counters=on_the_permanent,
@@ -362,6 +353,28 @@ def printed_characteristics(
 
 def _ability_lines(oracle_text: str | None) -> list[str]:
     return [line.strip() for line in (oracle_text or "").splitlines() if line.strip()]
+
+
+def _keyword_counter_lines(counters: Mapping[str, int]) -> tuple[str, ...]:
+    """CR 122.1b: "A keyword counter on a permanent ... causes that object to
+    gain that keyword" - Guide of Souls' own reflexive consequence puts a
+    flying counter on a creature that may print no flying anywhere.
+
+    Read as ordinary ability lines feeding straight into the same
+    `keywords_in_lines` vocabulary `machines/combat.py::has_keyword` already
+    reads off `Characteristics.abilities` for a static or layer-6-granted
+    keyword - a keyword counter is neither of those (CR 122.1 counters are
+    not continuous effects and have no layer of their own), but the reader on
+    the other end cannot tell the difference and does not need to. Only a
+    name `machines/combat.py`'s own `Keyword` vocabulary recognises is turned
+    into a line; an invented counter name ("charge", "fate") is a counter
+    CR 122.1 leaves alone and never becomes an ability.
+    """
+    return tuple(
+        keyword.value.replace("_", " ").title()
+        for keyword in Keyword
+        if counters.get(keyword.value, 0) > 0
+    )
 
 
 def _as_number(value: str | None) -> int | None:
@@ -1114,7 +1127,7 @@ def count_card_types(cards: Iterable[CardState]) -> int:
     """
     types: set[Type] = set()
     for state in cards:
-        types.update(state.card.types)
+        types.update(state.types)
     return len(types)
 
 

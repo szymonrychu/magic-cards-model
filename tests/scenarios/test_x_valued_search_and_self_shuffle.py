@@ -313,3 +313,88 @@ def test_no_x_and_no_self_shuffle_row_shadows_the_dispatcher():
     from magic_cards_model.machines.effects import EFFECTS
 
     assert "Green Sun's Zenith" not in EFFECTS
+
+
+# -- Nature's Rhythm: the same X-valued search, poisoned by a second keyword
+# ability on its own second line rather than by a missing X substitution ----
+#
+# "Search your library for a creature card with mana value X or less, put it
+# onto the battlefield, then shuffle.\nHarmonize {X}{G}{G}{G}{G} (...)" -
+# `docs/engine-coverage.md` already named this gap: the X-substitution half of
+# the Green Sun's Zenith fix (above) already made "mana value X or less"
+# readable, but Harmonize's own line (CR 702.180, CR 702.180a - a static
+# ability granting an alternative cast permission from the graveyard, never a
+# CR 608.2c resolution instruction) was not one of `_strip_non_effect_
+# preamble`'s recognised keyword lines, so `split_effect_clauses` read it as a
+# second, unparseable clause and `_parse_mixed_clauses`'s fail-closed policy
+# took the real search down with it - exactly the Suspend/Cascade/Replicate/
+# Cycling bug this file's own module docstring already describes, for a
+# keyword this engine still does not otherwise build (casting from the
+# graveyard, tapping a creature to discount the cost - `_HARMONIZE_LINE_RE`
+# only stops the line from poisoning an unrelated sentence, same as those).
+
+
+def test_natures_rhythm_finds_a_legal_creature_at_x_two():
+    """The exact shape `docs/engine-coverage.md` named as still broken: X=2
+    legally finds Grizzly Bears (mana value 2), and the Harmonize line below
+    the real effect must not have taken the search down with it.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Nature's Rhythm"],
+            battlefield=["Forest", "Forest", "Forest", "Forest"],
+            library=["Grizzly Bears"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Forest", "Forest", "Forest", "Forest")
+
+    casting = scenario.cast("Nature's Rhythm")
+    casting.determine_cost(x_value=2)
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *sources)
+    scenario.put_on_stack(casting)
+    rhythm = scenario.resolve_top()
+
+    assert scenario.find("Grizzly Bears", Zone.BATTLEFIELD).zone is Zone.BATTLEFIELD
+    assert rhythm.zone is Zone.GRAVEYARD
+
+
+def test_natures_rhythm_at_x_zero_finds_nothing_above_its_own_bound():
+    """CR 701.23b again: a legal search that simply finds nothing, since
+    Grizzly Bears (mana value 2) is over an X=0 ceiling. Nature's Rhythm's
+    own cost is {X}{G}{G}, so X=0 still needs two green mana to cast at all.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Nature's Rhythm"],
+            battlefield=["Forest", "Forest"],
+            library=["Grizzly Bears"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Forest", "Forest")
+
+    casting = scenario.cast("Nature's Rhythm")
+    casting.determine_cost(x_value=0)
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *sources)
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    assert scenario.battlefield_names() == ["Forest", "Forest"]
+    assert scenario.find("Grizzly Bears", Zone.LIBRARY).zone is Zone.LIBRARY
+
+
+def test_no_natures_rhythm_row_shadows_the_dispatcher():
+    """The same guard as Green Sun's Zenith's own row check above: the fix is
+    the generic `_HARMONIZE_LINE_RE` strip, not a per-card `EFFECTS` entry."""
+    from magic_cards_model.machines.effects import EFFECTS
+
+    assert "Nature's Rhythm" not in EFFECTS
