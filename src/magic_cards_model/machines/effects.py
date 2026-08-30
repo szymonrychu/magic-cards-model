@@ -1165,13 +1165,37 @@ def _named_type_matcher(word: str) -> Callable[[CardState], bool]:
     return matches
 
 
+def _quality_word_matcher(word: str) -> Callable[[CardState], bool]:
+    """One space-separated word of a search's stated quality - `_named_type_
+    matcher`'s bare type or land type, or that same type qualified by a color
+    adjective: "a colorless creature card" (Sanctum of Ugin) names a color
+    *and* a type together, not two alternatives the way "artifact or creature"
+    does, so `_named_type_matcher("colorless creature")` alone would try to
+    read the whole two-word phrase as one type name, fail, and match nothing
+    at all - a search that silently never finds anything is exactly the kind
+    of quiet gap this wave is closing, not a new one to open. `_HAND_EXILE_
+    COLOR_WORDS` is reused rather than duplicated - CR 105.2c's five colors
+    plus colorless mean the same thing here as they do for Ugin's Labyrinth's
+    own imprint quality.
+    """
+    parts = word.split()
+    if len(parts) == 2 and parts[0] in _HAND_EXILE_COLOR_WORDS:
+        color = _HAND_EXILE_COLOR_WORDS[parts[0]]
+        type_matches = _named_type_matcher(parts[1])
+        if color is None:
+            return lambda state: not state.card.colors and type_matches(state)
+        return lambda state: color in (state.card.colors or []) and type_matches(state)
+    return _named_type_matcher(word)
+
+
 def _quality_matcher(quality: str) -> Callable[[CardState], bool]:
     """A predicate for "a `<quality>` card" out of a search sentence.
 
     "Basic land" adds CR 205.4c's supertype check on top of whatever the rest
     of the phrase already means. Anything else is one or more type/subtype
-    words joined by "or" or a comma - fetchlands print two, Flagstones one -
-    and matching any one of them is enough, the same "or" the card prints.
+    words (each optionally qualified by a color, see `_quality_word_matcher`)
+    joined by "or" or a comma - fetchlands print two, Flagstones one - and
+    matching any one of them is enough, the same "or" the card prints.
     """
     lowered = quality.strip().lower()
     if lowered.startswith("basic "):
@@ -1182,7 +1206,7 @@ def _quality_matcher(quality: str) -> Callable[[CardState], bool]:
 
         return basic_matches
     words = [word.strip() for word in re.split(r",\s*|\s+or\s+", lowered) if word.strip()]
-    matchers = [_named_type_matcher(word) for word in words]
+    matchers = [_quality_word_matcher(word) for word in words]
 
     def matches(state: CardState) -> bool:
         return any(matcher(state) for matcher in matchers)
@@ -3002,12 +3026,38 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     and Karn's targeted "+1" both route to - no `ACTIVATED_EFFECTS` row is
     needed for either any more, and none is needed for a triggered ability
     of the same shape either, which is what lights up Oliphaunt.
+
+    Tried ahead of everything else: `_parse_conditional_sacrifice_clause`'s
+    "you may sacrifice ... If you do, ..." shape (CR 118.12) has to be read
+    off the *whole*, unsplit text the same way `_EACH_PLAYER_EXILE_SACRIFICE_
+    RETURN_RE` is in `_spell_effect_or_notice` below - Disciple of Freyalise's
+    own "you gain X life and draw X cards, where X is that creature's power"
+    is one CR 608.2c instruction that `split_effect_clauses`'s bare "and" cut
+    would otherwise slice into fragments none of `parse_mixed_effect`'s
+    per-clause parsers read.
     """
+    conditional_sacrifice = _parse_conditional_sacrifice_clause(effect_text, for_spell=False)
+    if conditional_sacrifice is not None:
+        return conditional_sacrifice
     parsed = parse_mixed_effect(effect_text)
     if parsed is not None:
         return parsed
     if _is_layer_effect_text(effect_text):
         return create_continuous_effect_of_ability
+    unread_conditional = _unreadable_conditional_clause(effect_text, for_spell=False)
+    if unread_conditional is not None:
+
+        def conditional_notice_only(game: "Game", ability: AbilityOnStack) -> None:
+            game.conditional_clause_notices.append(
+                ConditionalClauseNotice(
+                    source_id=ability.source_id,
+                    source_name=ability.source_name,
+                    text=unread_conditional,
+                )
+            )
+
+        return conditional_notice_only
+
     unread_anaphoric = _unreadable_anaphoric_clause(effect_text, for_spell=False)
     if unread_anaphoric is not None:
 
@@ -3072,11 +3122,26 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
         # own ", then " joins are CR 608.2c instructions in one breath, not
         # three clauses `_CLAUSE_SEPARATOR` may cut apart and fail separately.
         return each_player_exiles_sacrifices_and_returns_creatures
+    conditional_sacrifice = _parse_conditional_sacrifice_clause(effect_text, for_spell=True)
+    if conditional_sacrifice is not None:
+        return conditional_sacrifice
     parsed = parse_mixed_effect_for_spell(effect_text)
     if parsed is not None:
         return parsed
     if _is_layer_effect_text(effect_text):
         return create_continuous_effect
+    unread_conditional = _unreadable_conditional_clause(effect_text, for_spell=True)
+    if unread_conditional is not None:
+
+        def conditional_notice_only(game: "Game", spell: CardState) -> None:
+            game.conditional_clause_notices.append(
+                ConditionalClauseNotice(
+                    source_id=spell.id, source_name=spell.card.name, text=unread_conditional
+                )
+            )
+
+        return conditional_notice_only
+
     unread = _unreadable_anaphoric_clause(effect_text, for_spell=True)
     if unread is not None:
 
@@ -3387,6 +3452,323 @@ def _parse_return_imprinted_clause(clause: str, *, for_spell: bool) -> TargetedC
         owner_name = card.owner or game.controller_of(stack_object).username
         game.exile.remove(card)
         game.player(owner_name).add(card, Zone.HAND)
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# "You may sacrifice ... If you do, ..." (CR 118.12)
+# --------------------------------------------------------------------------
+#
+# Verified this session with `knowledge_search(q="...", type="rules")`, then
+# read in full off the local CR mirror at the tail `knowledge_search`'s own
+# 180-character truncation cut off, at CR 118.12 (the search's own excerpt
+# confirmed that number and no other):
+#
+#   "Some spells, activated abilities, and triggered abilities read, '[Do
+#   something]. If [a player] [does, doesn't, or can't], [effect].' Or '[A
+#   player] may [do something]. If [that player] [does, doesn't, or can't],
+#   [effect].' The action [do something] is a cost, paid when the spell or
+#   ability resolves. The 'If [a player] [does, doesn't, or can't]' clause
+#   checks whether the player chose to pay an optional cost or started to pay
+#   a mandatory cost, regardless of what events actually occurred."
+#
+# Two consequences of that last sentence drive everything below:
+#
+# - "If you do" is not a check on the *board* after the sacrifice - it is a
+#   check on the *choice*. Once CR 608.2d's "you may" comes back yes, the
+#   sacrifice always succeeds (CR 701.21a has no failure mode for sacrificing
+#   a permanent you control - unlike `destroy`, nothing refuses it), so this
+#   never has to ask "did it actually happen"; it only has to ask "did the
+#   player say yes", exactly the `Game.may`/`Game.ask(MAY)` question
+#   `_optional_clause` and `_optional_targeted_clause` already put for every
+#   other "you may".
+# - CR 608.2d then forbids offering a choice with no legal way to pay it: a
+#   "you may sacrifice another creature" with no other creature to sacrifice
+#   is not merely a bad idea, it is impossible, the same `affirmative_is_
+#   legal` shape `may_pay_life` (CR 119.4) and `_parse_imprint_clause`
+#   (CR 608.2d generally) already use. Disciple of Freyalise with no other
+#   creature on the battlefield is never asked the question at all.
+#
+# The sacrificed permanent's power is read **before** `Game.sacrifice` moves
+# it to the graveyard, the same CR 608.2i snapshot `_parse_anaphoric_clause_
+# pair` already takes for "its controller gains life equal to its power" -
+# reading it afterward would see the empty post-`move_to` husk instead of the
+# real, possibly anthemed or +1/+1-countered, value.
+
+#: The whole shape, read off the ability's own printed text with the clause
+#: splitter never touched: `split_effect_clauses`'s bare `\band\b` cut would
+#: otherwise slice Disciple of Freyalise's own "you gain X life and draw X
+#: cards, where X is that creature's power" into three unrelated fragments,
+#: the same reason `_EACH_PLAYER_EXILE_SACRIFICE_RETURN_RE` is read whole
+#: ahead of the ordinary dispatcher rather than through it.
+_MAY_SACRIFICE_IF_YOU_DO_RE = re.compile(
+    r"^you may sacrifice (?P<restriction>[^.]+)\.\s*if you do,\s*(?P<consequence>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+#: Every noun `_sacrifice_restriction` accepts after "this " - a card type
+#: (CR 205.2a) or the bare word "permanent" itself. Slayer of the Wicked's
+#: "target Vampire, Werewolf, or Zombie" kind of compound restriction is not
+#: read here any more than it is by `_targets_understood` - a restriction
+#: this wave cannot pin down to a single `Type` fails the whole clause
+#: (see `_sacrifice_restriction`), which is what earns it a `ConditionalClause
+#: Notice` instead of silently offering to sacrifice anything at all.
+_SACRIFICE_SELF_NOUNS: frozenset[str] = frozenset({member.value for member in Type}) | {"permanent"}
+
+#: "you gain X life" / "draw X cards" - the two `_parse_x_magnitude_body`
+#: clauses this wave reads with the sacrificed permanent's power substituted
+#: in for X. Anything else in the "where X is ..." body (a token count, a
+#: counter placed, a fixed-number clause `parse_clause_effect` already reads
+#: on its own) is refused rather than guessed at.
+_GAIN_X_LIFE_RE = re.compile(r"^(?:you )?gains? X life$", re.IGNORECASE)
+_DRAW_X_CARDS_RE = re.compile(r"^draws? X cards?$", re.IGNORECASE)
+
+
+def _sacrifice_restriction(
+    restriction: str,
+) -> tuple[bool, Callable[["Game", Player, UUID], list[CardState]]] | None:
+    """`restriction` - the text between "sacrifice" and the following period -
+    read as either "this `<type>`" (the permanent bearing the ability itself,
+    Sanctum of Ugin) or "another `<type>`" (a second permanent the player
+    controls of the stated type, Disciple of Freyalise), paired with a
+    function that reads the actual legal candidates off the battlefield at
+    resolution time - never at parse time, since what is on the battlefield
+    changes between then and resolution.
+
+    Returns `(is_self, candidates)`: `is_self` says whether there is a real
+    CR 608.2d choice of *which* permanent to sacrifice (false for "this
+    `<type>`", where there is only ever one, CR 601.2c never asks a question
+    with one answer) or a genuine one among however many candidates
+    `candidates` finds (true only in name for "another `<type>`" - the
+    "false"/"true" pairing here is the reverse of confusing: `is_self` is
+    true for the self-reference shape).
+
+    Anything else - "a `<type>`" with no "this"/"another", a compound
+    restriction, a `<type>` this wave cannot read as a single `Type` - comes
+    back `None`, fail-closed.
+    """
+    restriction = restriction.strip().lower()
+    if restriction.startswith("this "):
+        noun = restriction.removeprefix("this ").strip()
+        if noun not in _SACRIFICE_SELF_NOUNS:
+            return None
+
+        def self_candidates(game: "Game", player: Player, source_id: UUID) -> list[CardState]:
+            permanent = game.find_by_id(source_id)
+            if permanent is None or permanent.zone is not Zone.BATTLEFIELD:
+                return []
+            return [permanent]
+
+        return True, self_candidates
+
+    if restriction.startswith("another "):
+        noun = restriction.removeprefix("another ").strip()
+        try:
+            card_type = Type(noun)
+        except ValueError:
+            return None
+
+        def other_candidates(game: "Game", player: Player, source_id: UUID) -> list[CardState]:
+            return [
+                permanent
+                for permanent in game.battlefield
+                if permanent.controller == player.username
+                and permanent.id != source_id
+                and card_type in permanent.card.types
+            ]
+
+        return False, other_candidates
+
+    return None
+
+
+def _is_referent_power_expression(expr: str) -> bool:
+    """Whether `expr` - the tail of a "where X is `<expr>`" clause - is
+    exactly a sacrificed permanent's power, read the same two ways CR 400.7's
+    anaphora prints it: "its power" and "that `<type>`'s power" (Disciple of
+    Freyalise's own wording). The only value expression this wave reads off a
+    sacrificed permanent, the same narrow scope `_read_referent_power_
+    expression` already draws for a destroyed or exiled one.
+    """
+    lowered = expr.strip().rstrip(".").strip().lower()
+    return lowered == "its power" or bool(re.fullmatch(r"that [a-z]+'s power", lowered))
+
+
+def _parse_x_magnitude_body(body: str) -> Callable[["Game", Player, int], None] | None:
+    """ "you gain X life and draw X cards" - the pre-"where X is" half of a
+    magnitude-threaded consequence - split on the same bare " and " CR 608.2c
+    treats as joining two instructions, with each half read by `_GAIN_X_LIFE_
+    RE` or `_DRAW_X_CARDS_RE`. Fail-closed on any clause neither reads, the
+    same discipline `_parse_player_clauses` already holds to for a plain
+    (non-X) player clause.
+    """
+    parts = [part.strip() for part in re.split(r"\s+and\s+", body.strip()) if part.strip()]
+    if not parts:
+        return None
+    steps: list[Callable[[Game, Player, int], None]] = []
+    for part in parts:
+        if _GAIN_X_LIFE_RE.fullmatch(part):
+            steps.append(lambda game, player, amount: player.gain_life(amount))
+        elif _DRAW_X_CARDS_RE.fullmatch(part):
+            steps.append(lambda game, player, amount: game.draw_cards(player.username, amount))
+        else:
+            return None
+
+    def run(game: "Game", player: Player, amount: int) -> None:
+        for step in steps:
+            step(game, player, amount)
+
+    return run
+
+
+#: The "if you do" consequence's signature once the optional cost has been
+#: paid: the resolving object's controller, the sacrificed permanent's power
+#: read before it left the battlefield (`None` only the way `Game.power_of`
+#: is already `None` - an unresolved `*` characteristic-defining ability, not
+#: a magnitude-free consequence, which never calls this argument at all), and
+#: the source name for `Game.may`/`Game.ask` prompts a nested search still
+#: needs.
+_SacrificeConsequence = Callable[["Game", Player, int | None, str], None]
+
+
+def _parse_sacrifice_consequence(consequence: str) -> _SacrificeConsequence | None:
+    """The "If you do, `<consequence>`" half, read as either a magnitude-
+    threaded pair of clauses ("you gain X life and draw X cards, where X is
+    that creature's power", Disciple of Freyalise) or a plain mandatory
+    search ("search your library for a colorless creature card, reveal it,
+    put it into your hand, then shuffle", Sanctum of Ugin - mandatory because
+    CR 118.12's own "you may" already gated the sacrifice; nothing asks a
+    second "you may" for the consequence itself, which is why this reaches
+    `_search_and_place_for` with `optional=False` rather than going through
+    `_parse_search_clause`'s "you may " subject group).
+    """
+    consequence = consequence.strip().rstrip(".").strip()
+
+    magnitude_match = re.fullmatch(
+        r"(?P<body>.+?),\s*where X is (?P<expr>.+)", consequence, re.IGNORECASE | re.DOTALL
+    )
+    if magnitude_match is not None:
+        if not _is_referent_power_expression(magnitude_match.group("expr")):
+            return None
+        run = _parse_x_magnitude_body(magnitude_match.group("body"))
+        if run is None:
+            return None
+
+        def magnitude_effect(game: "Game", player: Player, power: int | None, source: str) -> None:
+            run(game, player, max(power, 0) if power is not None else 0)
+
+        return magnitude_effect
+
+    search_match = _SEARCH_AND_PUT_RE.fullmatch(consequence)
+    if search_match is not None:
+        search_run = _search_and_place_for(search_match, optional=False)
+
+        def search_effect(game: "Game", player: Player, power: int | None, source: str) -> None:
+            search_run(game, player, source)
+
+        return search_effect
+
+    return None
+
+
+class ConditionalClauseNotice(BaseModel):
+    """One "you may sacrifice `<restriction>`. If you do, `<consequence>`."
+    effect (CR 118.12) whose restriction or consequence this wave could not
+    read.
+
+    The same unreadable-is-not-the-same-as-no-effect record `TargetingNotice`,
+    `InterveningIfNotice`, `ModeNotice`, `AnaphoricClauseNotice`, `ImprintNotice`,
+    `LayerNotice`, and `CostModifierNotice` already keep for their own gaps -
+    this shape's own defect, before this wave, was every card printing it
+    (Disciple of Freyalise, Sanctum of Ugin, and Necrodominance's variable-life
+    cousin) resolving with no effect and no trace of why.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    source_id: UUID | None
+    source_name: str
+    text: str
+    """The unreadable clause itself, as printed."""
+
+
+def _unreadable_conditional_clause(text: str, *, for_spell: bool) -> str | None:
+    """The "you may sacrifice ... If you do, ..." clause inside `text`, if it
+    matches CR 118.12's shape but `_parse_conditional_sacrifice_clause` still
+    cannot read its restriction or consequence - used only to decide whether
+    a parse failure deserves a `ConditionalClauseNotice`, the same way
+    `_unreadable_imprint_quality` decides for its own shape.
+    """
+    whole = _strip_non_effect_preamble(text).strip()
+    match = _MAY_SACRIFICE_IF_YOU_DO_RE.fullmatch(whole)
+    if match is None:
+        return None
+    if _parse_conditional_sacrifice_clause(text, for_spell=for_spell) is not None:
+        return None
+    return whole
+
+
+def _parse_conditional_sacrifice_clause(text: str, *, for_spell: bool) -> TargetedClause | None:
+    """ "You may sacrifice `<restriction>`. If you do, `<consequence>`." (CR
+    118.12), read off the ability's own printed text so no registry row is
+    needed - Disciple of Freyalise's and Sanctum of Ugin's own defect before
+    this wave: both used to resolve doing nothing, with nothing anywhere
+    recording that a choice had gone unoffered.
+
+    The "you may" is `DecisionKind.MAY` with `affirmative_is_legal` set to
+    whether a legal permanent to sacrifice actually exists right now (see
+    `_sacrifice_restriction`) - the same shape `_parse_imprint_clause` and
+    `may_pay_life` already use for their own CR 608.2d/CR 119.4 impossible-
+    option cases. Once "yes" is chosen, CR 118.12 says the consequence runs
+    regardless of anything downstream - CR 701.21a's sacrifice has no failure
+    mode for a permanent the player controls, so "did you do it" is only ever
+    "did you say yes", never a second check on the board afterward.
+    """
+    match = _MAY_SACRIFICE_IF_YOU_DO_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    restriction = _sacrifice_restriction(match.group("restriction"))
+    if restriction is None:
+        return None
+    is_self, candidates_of = restriction
+    consequence = _parse_sacrifice_consequence(match.group("consequence"))
+    if consequence is None:
+        return None
+    prompt = f"sacrifice {match.group('restriction').strip()}"
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        player = game.controller_of(stack_object)
+        source_id, source_name = _permanent_id_and_name(stack_object, for_spell=for_spell)
+        candidates = candidates_of(game, player, source_id)
+        decision = Decision(
+            kind=DecisionKind.MAY,
+            player=player.username,
+            prompt=prompt,
+            source=source_name,
+            affirmative_is_legal=bool(candidates),
+        )
+        if not game.ask(decision):
+            return
+        if is_self:
+            chosen = candidates[0]
+        else:
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=player.username,
+                    prompt="choose a permanent to sacrifice",
+                    source=source_name,
+                    amount=1,
+                    cards=tuple(candidate.id for candidate in candidates),
+                )
+            )
+            assert isinstance(chosen_ids, tuple)
+            by_id = {candidate.id: candidate for candidate in candidates}
+            chosen = by_id[chosen_ids[0]]
+        power = game.power_of(chosen)
+        game.sacrifice(chosen)
+        consequence(game, player, power, source_name)
 
     return effect
 

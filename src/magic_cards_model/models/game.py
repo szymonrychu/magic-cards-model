@@ -55,6 +55,7 @@ from ..machines.decisions import (
 from ..machines.delayed import DelayedTrigger, DelayedTriggers, return_subject_to_hand
 from ..machines.effects import (
     AnaphoricClauseNotice,
+    ConditionalClauseNotice,
     DelayedClauseNotice,
     ImprintNotice,
     ModeNotice,
@@ -530,6 +531,15 @@ class Game(BaseModel):
     trigger used to resolve offering no decision at all, with nothing anywhere
     recording that a choice had gone unoffered. The same unreadable-is-not-
     the-same-as-no-effect record every other notice list here keeps."""
+
+    conditional_clause_notices: list[ConditionalClauseNotice] = Field(default_factory=list)
+    """One entry per "you may sacrifice `<restriction>`. If you do,
+    `<consequence>`." effect (CR 118.12) whose restriction or consequence
+    could not be read - Disciple of Freyalise's and Sanctum of Ugin's own
+    defect before this list existed: both used to resolve offering no choice
+    at all, with nothing anywhere recording that a choice had gone unoffered.
+    The same unreadable-is-not-the-same-as-no-effect record every other
+    notice list here keeps."""
 
     delayed_clause_notices: list[DelayedClauseNotice] = Field(default_factory=list)
     """One entry per delayed-trigger clause (CR 603.7) whose timing this wave
