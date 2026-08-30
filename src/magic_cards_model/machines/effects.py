@@ -1793,16 +1793,103 @@ _COUNTER_TARGET_RE = re.compile(
 #: "Target creature gets +N/+N until end of turn." (Giant Growth, Dismember,
 #: Mutagenic Growth) and "Target creature gains <keyword> until end of turn."
 #: (Assault Strobe) - a continuous effect from a resolving spell (CR 611.2),
-#: sublayer 7c or layer 6 (CR 613.4c, CR 613.1f). `split_effect_clauses`
-#: already breaks "gets +N/+N *and gains* <keyword>" (Violent Urge) into two
-#: clauses on its own "and" separator, so that combined shape is not read
-#: here - it stays a per-card row. Routes to `create_continuous_effect`, which
-#: reads the card's real text through `machines/layers.py`'s
-#: `parsed_layer_effects` rather than anything hard-coded to these two shapes.
+#: sublayer 7c or layer 6 (CR 613.4c, CR 613.1f). The combined shape, "gets
+#: +N/+N *and gains* <keyword>" (Give In to Violence, Violent Urge), is not
+#: this regex's job any more - `split_effect_clauses` cuts it in half on its
+#: own "and" separator before this ever runs, so
+#: `_merge_continuous_pump_keyword_clauses` below undoes that cut first. Routes
+#: to `create_continuous_effect`, which reads the card's real text through
+#: `machines/layers.py`'s `parsed_layer_effects` rather than anything
+#: hard-coded to these two shapes.
 _CONTINUOUS_PUMP_OR_KEYWORD_RE = re.compile(
     r"^target creature (?:gets [+-]\d+/[+-]\d+|gains [a-z ]+) until end of turn\.?$",
     re.IGNORECASE,
 )
+
+#: The pump half of a combined "gets +N/+N and gains <keyword>" sentence
+#: (Give In to Violence: "Target creature gets +2/+2 and gains lifelink until
+#: end of turn."), once `split_effect_clauses`'s own "and" separator has cut
+#: the duration and the keyword off the end of it.
+_BARE_CONTINUOUS_PUMP_RE = re.compile(r"^target creature gets [+-]\d+/[+-]\d+$", re.IGNORECASE)
+#: The keyword half of the *reversed* order, "gains <keyword> and gets +N/+N"
+#: - a shape this pool has no real card for, but CR 608.2c does not care which
+#: half a card prints first, so it is read the same way as the forward order.
+_BARE_CONTINUOUS_KEYWORD_START_RE = re.compile(
+    r"^target creature gains [a-z]+(?: [a-z]+)?$", re.IGNORECASE
+)
+#: One more keyword in a run of them (Aerial Maneuver: "gains flying and first
+#: strike" splits into a "gains flying" piece and a "first strike until end of
+#: turn" piece, one bare word or two-word keyword name per clause, only the
+#: last one carrying "until <duration>"). This does not check the word against
+#: `Keyword` - that is `machines/layers.py`'s job once the whole spell reaches
+#: `create_continuous_effect`; a keyword or a conjunction it does not know
+#: (Aerial Maneuver's two keywords, Tainted Strike's infect) fails closed there
+#: with a `LayerNotice` rather than never reaching a parser at all.
+_CONTINUOUS_KEYWORD_CONTINUATION_RE = re.compile(
+    r"^(?:gains?\s+)?(?P<word>[a-z]+(?:\s[a-z]+)?)"
+    r"(?:\s+until\s+(?P<duration>end of turn|your next turn))?\.?$",
+    re.IGNORECASE,
+)
+#: The pump half of the reversed order's tail, once "and" has cut it away from
+#: the keyword that opened the sentence.
+_BARE_CONTINUOUS_PUMP_TAIL_RE = re.compile(
+    r"^gets [+-]\d+/[+-]\d+ until (?:end of turn|your next turn)\.?$", re.IGNORECASE
+)
+
+
+def _merge_continuous_pump_keyword_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """Undo `split_effect_clauses`'s own "and" cut through "Target creature
+    gets +N/+N and gains <keyword>[, and gains another, ...] until end of
+    turn." (or its reverse) so the two or more clauses it left behind are
+    handled as the one CR 608.2c instruction they actually are (CR 611.2), not
+    several unreadable fragments.
+
+    Spell-only: an ability's own continuous pump/keyword grant is never read
+    off its printed text at all (`_CONTINUOUS_PUMP_OR_KEYWORD_RE`'s own
+    docstring explains why) - it goes through `create_continuous_effect_of_ability`
+    keyed by ability index instead, so this returns `None` outright when
+    `for_spell` is false rather than guessing at a shape nothing here reads.
+
+    Deliberately loose about what counts as "a keyword": this only recognises
+    the *shape* the split left behind, not whether any word in it is one
+    `machines/layers.py` or `machines/combat.py` actually models. Whatever gets
+    merged back together is handed whole to `create_continuous_effect`, which
+    reads the spell's own oracle text through `parsed_layer_effects` - the same
+    parser a plain "gets +N/+N until end of turn." already goes through, and
+    the one that turns a keyword it does not know, a reversed order it does not
+    read, more than one keyword conjoined, or a duration other than "until end
+    of turn" into a `LayerNotice` rather than a silent no-op.
+
+    Returns how many clauses starting at `index` belong to this one
+    instruction, and the effect to run for all of them, or `None` if `index`
+    is not the start of this shape at all.
+    """
+    if not for_spell:
+        return None
+    first = clauses[index]
+    if _BARE_CONTINUOUS_PUMP_RE.fullmatch(first):
+        cursor = index + 1
+        found_duration = False
+        while cursor < len(clauses):
+            match = _CONTINUOUS_KEYWORD_CONTINUATION_RE.fullmatch(clauses[cursor])
+            if match is None:
+                break
+            cursor += 1
+            if match.group("duration") is not None:
+                found_duration = True
+                break
+        if found_duration:
+            return cursor - index, create_continuous_effect  # type: ignore[return-value]
+        return None
+    if (
+        _BARE_CONTINUOUS_KEYWORD_START_RE.fullmatch(first)
+        and index + 1 < len(clauses)
+        and _BARE_CONTINUOUS_PUMP_TAIL_RE.fullmatch(clauses[index + 1])
+    ):
+        return 2, create_continuous_effect  # type: ignore[return-value]
+    return None
 
 
 def _optional_targeted_clause(
@@ -2762,16 +2849,18 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     """Every clause of `text`, or `None` the moment one clause (or one
     anaphoric pair of clauses) matches nothing this wave reads.
 
-    A consecutive pair is tried first, through `_parse_anaphoric_clause_pair`
-    - "destroy/exile target X. Its/that X's controller ..." is two sentences
-    that are one CR 608.2c instruction with an anaphoric second half (CR
-    400.7), not two independent clauses, so it has to be read together or not
-    at all. Only when a clause does not open such a pair does it fall back to
+    A run of two or more consecutive clauses is tried first, against two
+    different shapes that are each one CR 608.2c instruction `split_effect_
+    clauses` has cut apart on its own separators, not several independent
+    ones: `_merge_continuous_pump_keyword_clauses` for "gets +N/+N and gains
+    <keyword>" (Give In to Violence, CR 611.2), and `_parse_anaphoric_clause_
+    pair` for "destroy/exile target X. Its/that X's controller ..." (CR
+    400.7). Only when a clause opens neither does it fall back to
     `_parse_mixed_clause`'s ordinary one-clause-at-a-time dispatch - Fatal
     Push's Revolt line is still read by neither and still takes the whole
     effect down with it.
 
-    Fail-closed **per clause (or pair), not per parser**: CR 608.2c has no
+    Fail-closed **per clause (or run), not per parser**: CR 608.2c has no
     notion of running half an effect, so a card with one clause nothing here
     reads still comes back `None` for the whole thing, exactly as
     `_parse_targeted_clauses` and `_parse_player_clauses` already refuse it
@@ -2783,6 +2872,12 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     parsed: list[TargetedClause] = []
     index = 0
     while index < len(clauses):
+        merged = _merge_continuous_pump_keyword_clauses(clauses, index, for_spell=for_spell)
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
         if index + 1 < len(clauses):
             paired = _parse_anaphoric_clause_pair(
                 clauses[index], clauses[index + 1], for_spell=for_spell

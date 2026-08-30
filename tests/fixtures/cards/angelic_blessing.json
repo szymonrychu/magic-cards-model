@@ -1,0 +1,128 @@
+{
+  "object": "card",
+  "id": "731fa8e8-2329-4e1a-9ffa-0b4b95b93274",
+  "oracle_id": "d3758fca-0522-4b5a-a1cc-3b2b3ab299ba",
+  "multiverse_ids": [
+    397647
+  ],
+  "mtgo_id": 56950,
+  "mtgo_foil_id": 56951,
+  "name": "Angelic Blessing",
+  "lang": "en",
+  "released_at": "2015-05-06",
+  "uri": "https://api.scryfall.com/cards/731fa8e8-2329-4e1a-9ffa-0b4b95b93274",
+  "scryfall_uri": "https://scryfall.com/card/tpr/1/angelic-blessing?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T10:28:32Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/7/3/731fa8e8-2329-4e1a-9ffa-0b4b95b93274.jpg?1783938512",
+    "normal": "https://cards.scryfall.io/normal/front/7/3/731fa8e8-2329-4e1a-9ffa-0b4b95b93274.jpg?1783938512",
+    "large": "https://cards.scryfall.io/large/front/7/3/731fa8e8-2329-4e1a-9ffa-0b4b95b93274.jpg?1783938512",
+    "png": "https://cards.scryfall.io/png/front/7/3/731fa8e8-2329-4e1a-9ffa-0b4b95b93274.png?1783938512",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/7/3/731fa8e8-2329-4e1a-9ffa-0b4b95b93274.jpg?1783938512",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/7/3/731fa8e8-2329-4e1a-9ffa-0b4b95b93274.jpg?1783938512",
+    "thumb": "https://cards.scryfall.io/thumb/front/7/3/731fa8e8-2329-4e1a-9ffa-0b4b95b93274.webp?1783938512",
+    "grid": "https://cards.scryfall.io/grid/front/7/3/731fa8e8-2329-4e1a-9ffa-0b4b95b93274.webp?1783938512",
+    "display": "https://cards.scryfall.io/display/front/7/3/731fa8e8-2329-4e1a-9ffa-0b4b95b93274.webp?1783938512",
+    "art": "https://cards.scryfall.io/art/front/7/3/731fa8e8-2329-4e1a-9ffa-0b4b95b93274.webp?1783938512",
+    "crop": "https://cards.scryfall.io/crop/front/7/3/731fa8e8-2329-4e1a-9ffa-0b4b95b93274.webp?1783938512"
+  },
+  "mana_cost": "{2}{W}",
+  "cmc": 3.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Target creature gets +3/+3 and gains flying until end of turn. (It can't be blocked except by creatures with flying or reach.)",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "41b3e002-ab58-46a0-8024-056ee843e267",
+  "set": "tpr",
+  "set_name": "Tempest Remastered",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/41b3e002-ab58-46a0-8024-056ee843e267",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atpr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/tpr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/731fa8e8-2329-4e1a-9ffa-0b4b95b93274/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ad3758fca-0522-4b5a-a1cc-3b2b3ab299ba&unique=prints",
+  "collector_number": "1",
+  "digital": true,
+  "rarity": "common",
+  "flavor_text": "Only the warrior who can admit mortal weakness will be bolstered by immortal strength.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Mark Zug",
+  "artist_ids": [
+    "48e2b98c-5467-4671-bd42-4c3746115117"
+  ],
+  "illustration_id": "74f8c64f-dbd5-49de-ae60-c8194f47da04",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 25907,
+  "prices": {
+    "usd": null,
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": null,
+    "eur_foil": null,
+    "tix": "0.05"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=397647&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAngelic%2BBlessing",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAngelic%2BBlessing",
+    "edhrec": "https://edhrec.com/route/?cc=Angelic+Blessing"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fmagic%2Fproduct%3FproductLineName%3Dmagic%26q%3DAngelic%2BBlessing%26view%3Dgrid",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products/Search?referrer=scryfall&searchString=Angelic+Blessing&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/56950?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
