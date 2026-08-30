@@ -5023,7 +5023,80 @@ class Game(BaseModel):
                     component = component.model_copy(update={"cards": [permanent]})
                 components.append(component)
 
+        if ability.cost_reduction is not None:
+            # CR 601.2f, applied to an activated ability's own cost via CR
+            # 602.2b: "This ability costs [N] less to activate for each
+            # [quality] you control" - read structurally off
+            # `ActivatedAbility.cost_reduction` (`machines/abilities.py`
+            # already split it from the effect as its own static ability, not
+            # a clause of it - see `ActivationCostReduction`'s docstring).
+            mana = mana.minus(self.activation_cost_reduction_for(permanent, ability, controller))
+
         return TotalCost(mana=mana, components=components).assign_payer(controller)
+
+    def activation_cost_reduction_for(
+        self, permanent: CardState, ability: ActivatedAbility, controller: str
+    ) -> ManaCost:
+        """What `ability`'s own "costs [N] less to activate for each [quality]
+        you control" sentence takes off its cost right now (CR 601.2f via CR
+        602.2b) - the activated-ability twin of `cost_reduction_for`, which
+        only ever reads a *spell's* own self-discount.
+
+        The quality is read generically, off its own words - a CR 205.4a
+        supertype ("legendary"), a CR 205.2a card type ("creature"), or both -
+        the same way `_activation_condition_holds`'s "Activate only if you
+        control ..." already counts a quality, so a future card printing this
+        exact sentence with a different quality needs no table row either.
+        Reads printed characteristics only (`state.card.types`/`.supertypes`),
+        the same simplification `_activation_condition_holds` already makes,
+        not the layer-computed board.
+
+        A quality this cannot read at all records a `CostModifierNotice`
+        rather than quietly reducing by nothing - the same "unreadable is not
+        the same as no effect" rule `static_cost_modifiers_for` already keeps
+        for a permanent's *other* static cost text (DDR#978).
+        """
+        reduction = ability.cost_reduction
+        if reduction is None:
+            return ManaCost()
+
+        words = reduction.quality.strip().lower().split()
+        supertypes: list[Supertype] = []
+        types: list[Type] = []
+        for word in words:
+            singular = word.removesuffix("s")
+            try:
+                supertypes.append(Supertype(singular))
+                continue
+            except ValueError:
+                pass
+            try:
+                types.append(Type(singular))
+                continue
+            except ValueError:
+                pass
+        if not types:
+            already_noticed = any(
+                notice.source_id == permanent.id for notice in self.cost_modifier_notices
+            )
+            if not already_noticed:
+                self.cost_modifier_notices.append(
+                    CostModifierNotice(
+                        source_id=permanent.id,
+                        source_name=permanent.name,
+                        text=ability.raw,
+                    )
+                )
+            return ManaCost()
+
+        count = sum(
+            1
+            for state in self.permanents_controlled_by(controller)
+            if all(t in state.card.types for t in types)
+            and all(s in state.card.supertypes for s in supertypes)
+        )
+        amount = reduction.amount * count
+        return ManaCost.parse(f"{{{amount}}}") if amount else ManaCost()
 
     def begin_activating(
         self,
