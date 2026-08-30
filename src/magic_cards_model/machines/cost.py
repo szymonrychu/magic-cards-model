@@ -395,6 +395,74 @@ def _auto_tap_candidates(payment: "CostPayment", sources: Iterable[CardState]) -
     return [(source, options, restriction) for source, options, restriction, _any in candidates]
 
 
+def _withheld_mana_sources(
+    payment: "CostPayment", sources: Iterable[CardState]
+) -> list[tuple[CardState, ActivatedAbility]]:
+    """Every source among `sources` that `auto_tap` never considered because
+    every mana ability it has costs more than a bare `{T}` - the land, or
+    creature, that a refusal ought to name rather than leave the player to
+    find by trial and error.
+
+    CR 118.3c: activating a mana ability is never mandatory, even to pay a
+    cost that is otherwise due, so `free_tap_mana_abilities` will not spend a
+    life payment, a sacrifice, a discard, or any other cost the player did not
+    choose - Nurturing Peatland's `{T}, Pay 1 life: Add {B} or {G}` is
+    withheld exactly this way. This walks the same eligibility filters
+    `_auto_tap_candidates` applies (on the battlefield, untapped, controlled
+    by the payer, legal to tap for mana right now) before checking abilities,
+    so a tapped land or one with no relevant ability at all is never named as
+    though it had been passed over.
+
+    A source with at least one bare-`{T}` mana ability is not withheld even if
+    it also prints a costlier one (Tinder Farm's free `{T}: Add {G}` sits
+    alongside a sacrifice ability) - `auto_tap` already had a free option to
+    reach for, so that source is not what stood between the player and a
+    legal payment.
+    """
+    withheld: list[tuple[CardState, ActivatedAbility]] = []
+    for source in sources:
+        if source.zone is not Zone.BATTLEFIELD or source.tapped:
+            continue
+        if payment.payer is not None and source.controller not in (None, payment.payer):
+            continue
+        if not can_tap_for_mana(source, payment.game):
+            continue
+        if free_tap_mana_abilities(source.card):
+            continue
+        for ability in parse_abilities(source.card):
+            if not isinstance(ability, ActivatedAbility) or ability.mana is None:
+                continue
+            if [piece.kind for piece in ability.costs] == [CostKind.TAP]:
+                continue
+            withheld.append((source, ability))
+    return withheld
+
+
+def _unpayable_cost_message(payment: "CostPayment", sources: Iterable[CardState]) -> str:
+    """The message `auto_tap` raises when no combination pays `payment.cost`.
+
+    Names every source `_withheld_mana_sources` found so the refusal reads as
+    "here is the source that could have helped and the cost it needed" rather
+    than "the cost cannot be paid" - which is true only of automatic payment,
+    not of the cost itself, and read the first time as an engine bug (see the
+    module-level notes on `auto_tap` for the CR 118.3c reasoning). When no
+    source was withheld, the plain cost-only message is kept so a genuinely
+    unpayable cost - two Forests asked for {R}{W} - is never made to sound as
+    though some source was passed over when none was.
+    """
+    base = f"no combination of the available mana sources can pay {payment.cost}"
+    withheld = _withheld_mana_sources(payment, sources)
+    if not withheld:
+        return base
+    named = "; ".join(
+        f"{source.name} was not auto-tapped because its only mana ability "
+        f"costs more than {{T}} ({ability.cost}: {ability.effect}) - "
+        "activate it manually to include it"
+        for source, ability in withheld
+    )
+    return f"{base}: {named}"
+
+
 def _solve_colours(
     combo: Sequence[_Candidate],
     base_floating: dict[Color, int],
@@ -1896,11 +1964,17 @@ class CostPayment(BaseModel):
         any-colour source) so a flexible source stays untapped - see
         `_flexibility`. Raises a `ValueError` naming the cost if no legal
         assignment of `sources` exists; nothing is tapped when that happens.
+        When the reason is that a source was withheld by the `{T}`-only rule
+        above, the message names that source and the cost it needed (see
+        `_unpayable_cost_message`) rather than just reporting the cost as
+        unpayable, which would read as a solver bug rather than as "activate
+        that one yourself".
         """
         self._require_open()
         if not self.shortfall:
             return []
 
+        sources = list(sources)
         candidates = _auto_tap_candidates(self, sources)
         base_floating = dict(self.pool.floating)
         base_snow = dict(self.pool.snow)
@@ -1931,7 +2005,7 @@ class CostPayment(BaseModel):
                         self.tap_for_mana(source, colors, chosen[id(source)])
                     return [source for source, _ in plan]
 
-        raise ValueError(f"no combination of the available mana sources can pay {self.cost}")
+        raise ValueError(_unpayable_cost_message(self, sources))
 
     def add_mana(self, color: Color, amount: int = 1, snow: bool = False) -> ManaPool:
         """Add mana that came from somewhere other than tapping a permanent."""

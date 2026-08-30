@@ -235,6 +235,91 @@ def test_sunbaked_canyon_life_payment_is_not_auto_tapped():
     assert scenario.player("alice").life == life_before
 
 
+def test_refusal_names_the_withheld_life_payment_source():
+    """The reported defect: alice controls an untapped Forest, an untapped
+    Nurturing Peatland, and an untapped Delighted Halfling, and tries to cast
+    Tyvar, Jubilant Brawler (`{1}{B}{G}`).
+
+    The refusal itself is correct - Forest makes one mana and Delighted
+    Halfling's only usable abilities are its free colourless `{T}: Add {C}.`
+    and an any-colour ability restricted to legendary spells (CR 106.6),
+    which Tyvar's cast satisfies, but two sources can never produce three
+    mana. Nurturing Peatland's `{T}, Pay 1 life: Add {B} or {G}` is withheld
+    by CR 118.3c and would have made the third, so the message must name it
+    and the cost it needed rather than just declaring `{1}{B}{G}` unpayable -
+    a player reading only the old message has no way to tell "automatic
+    payment gave up" from "this is not payable at all"."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Tyvar, Jubilant Brawler"],
+            battlefield=["Forest", "Nurturing Peatland", "Delighted Halfling"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (peatland,) = scenario.untapped_sources("Nurturing Peatland")
+    casting = scenario.cast("Tyvar, Jubilant Brawler", "alice")
+    payment = casting.begin_paying()
+    life_before = scenario.player("alice").life
+
+    with pytest.raises(ValueError, match="Nurturing Peatland") as excinfo:
+        payment.auto_tap(scenario.game.permanents_controlled_by("alice"))
+
+    message = str(excinfo.value)
+    assert "{1}{B}{G}" in message
+    assert "Pay 1 life" in message
+    assert peatland.tapped is False  # fail closed: nothing was tapped either
+    assert scenario.player("alice").life == life_before
+
+
+def test_refusal_names_a_withheld_sacrifice_cost_source():
+    """The same wording applies to a non-{T} cost that is not a life payment.
+    Skirk Prospector's only mana ability is `Sacrifice a Goblin: Add {R}.` -
+    no `{T}` at all - so it is withheld the same way Nurturing Peatland's
+    life-payment ability is, and the refusal must name it and quote its cost
+    rather than treating only life payments as worth explaining."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Lightning Bolt"], battlefield=["Skirk Prospector"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (prospector,) = scenario.untapped_sources("Skirk Prospector")
+    casting = scenario.cast("Lightning Bolt", "alice", targets=["alice"])
+    payment = casting.begin_paying()
+
+    with pytest.raises(ValueError, match="Skirk Prospector") as excinfo:
+        payment.auto_tap(scenario.game.permanents_controlled_by("alice"))
+
+    message = str(excinfo.value)
+    assert "Sacrifice a Goblin" in message
+    assert prospector.tapped is False
+
+
+def test_refusal_blames_no_source_when_none_was_withheld():
+    """Two Forests cannot make `{R}{W}` no matter what is auto-tapped or
+    activated by hand - nothing was withheld here, so the message must not
+    name a source at all. This is the control case for the two tests above:
+    a genuinely unpayable cost must not be made to sound as though some
+    land was passed over when none was."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Lightning Helix"], battlefield=["Forest", "Forest"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    casting = scenario.cast("Lightning Helix", "alice", targets=["alice"])
+    payment = casting.begin_paying()
+
+    with pytest.raises(ValueError) as excinfo:
+        payment.auto_tap(scenario.game.permanents_controlled_by("alice"))
+
+    message = str(excinfo.value)
+    assert message == "no combination of the available mana sources can pay {R}{W}"
+
+
 def test_tinder_farm_uses_its_free_ability_not_the_sacrifice_one():
     """Tinder Farm has a plain `{T}: Add {G}.` and a `{T}, Sacrifice this
     land: Add {R}{W}.`. Auto-tap uses the free one and leaves the land on the
