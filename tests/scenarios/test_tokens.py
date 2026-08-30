@@ -704,7 +704,9 @@ def test_ocelot_pride_creates_a_cat_at_the_end_step():
     `Player.gain_life` straight, bypassing `Game.gain_life` (and so CR 614.1a's
     replacement effects) entirely - a separate, pre-existing gap outside this
     fix's scope. The second sentence - the city's blessing copying every token
-    that entered this turn (CR 702.131a) - is not modelled at all.
+    that entered this turn (CR 702.131b) - is a genuine no-op here because
+    alice never reaches ten permanents; see `tests/scenarios/test_ascend.py`
+    for that half of the ability end to end.
     """
     scenario = (
         Scenario()

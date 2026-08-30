@@ -18,10 +18,19 @@ changing what the card does. This file is what those did not already cover:
 Drowner of Truth's quoted rules text, a predefined token reached by a card that
 never had a row at all (Generous Ent's Food), a token entering firing another
 permanent's own enters trigger with no help from a hand-written case, and the
-two fail-closed guarantees the task asked to be proven rather than assumed:
-Ocelot Pride and Hangarback Walker's full printed text refusing to parse at
-all, copy clause and variable count included, so neither can ever be
-half-executed if their table rows were ever removed.
+fail-closed guarantee the task asked to be proven rather than assumed:
+Hangarback Walker's full printed text refusing to parse at all, variable count
+included, so it can never be half-executed if its table row were ever removed.
+
+A later wave built *ascend* and the city's blessing (CR 702.131) end to end -
+`Player.has_citys_blessing`, `CardState.turn_entered`, and `token_copy_of` - so
+Ocelot Pride's second sentence, "Then if you have the city's blessing, for
+each token you control that entered this turn, create a token that's a copy
+of it.", is readable too now (`_parse_city_blessing_token_copy_clause`) and no
+longer fails closed; its row is gone. See `tests/scenarios/test_ascend.py` for
+that mechanic end to end, and
+`test_ocelot_prides_full_text_now_parses_as_one_ability` below for the parser
+check this file used to run the other way.
 
 Every CR number here was looked up with `knowledge_search(q="...",
 type="rules")` in the session that wrote this file:
@@ -36,8 +45,12 @@ type="rules")` in the session that wrote this file:
   '{2}, {T}, Sacrifice this token: You gain 3 life.'"
 - **CR 707.2** - a copy "acquires the copiable values of the original
   object's characteristics" - what "create a token that's a copy of ..."
-  needs and this parser does not read, so it fails closed rather than
-  creating a blank token.
+  needs. `_parse_token_clause` still refuses this shape outright (it fails
+  closed rather than creating a blank token); `_parse_city_blessing_token_copy_clause`
+  reads Ocelot Pride's specific "copy of it" shape through `token_copy_of`.
+- **CR 702.131b, CR 702.131c** - *ascend*'s "any time you control ten or more
+  permanents ... you get the city's blessing for the rest of the game", and
+  the city's blessing as a designation nothing ever takes away.
 - **CR 608.2c** - "The controller of the spell or ability follows its
   instructions in the order written" - one unreadable clause among several
   takes the whole effect down with it.
@@ -85,9 +98,12 @@ def test_the_four_token_rows_this_wave_removed_are_gone():
     assert ("Ajani, Nacatl Pariah", TriggerEvent.ENTERS_THE_BATTLEFIELD, "") not in TRIGGER_EFFECTS
     assert ("Drowner of Truth", TriggerEvent.CAST_SPELL, "") not in TRIGGER_EFFECTS
     assert ("Wurmcoil Engine", TriggerEvent.DIES, "") not in TRIGGER_EFFECTS
-    # Ocelot Pride and Hangarback Walker keep theirs - their second clause
-    # needs a copy or a variable count this wave's parser cannot read.
-    assert ("Ocelot Pride", TriggerEvent.BEGINNING_OF_STEP, "") in TRIGGER_EFFECTS
+    # Ocelot Pride's row is gone too, now that ascend and the city's blessing
+    # are built (see test_ascend.py): both of its sentences are readable off
+    # its own printed text with no row. Hangarback Walker keeps its row - its
+    # count depends on the permanent's own counters at the moment it dies,
+    # which no clause shape here reads.
+    assert ("Ocelot Pride", TriggerEvent.BEGINNING_OF_STEP, "") not in TRIGGER_EFFECTS
     assert ("Hangarback Walker", TriggerEvent.DIES, "") in TRIGGER_EFFECTS
 
 
@@ -215,25 +231,24 @@ def test_a_created_token_fires_another_permanents_enters_trigger():
 # --------------------------------------------------------------------------
 
 
-def test_ocelot_prides_full_text_fails_closed_because_of_its_copy_clause():
+def test_ocelot_prides_full_text_now_parses_as_one_ability():
     """Ocelot Pride: "create a 1/1 white Cat creature token. Then if you have
     the city's blessing, for each token you control that entered this turn,
-    create a token that's a copy of it." Its first sentence alone is exactly
-    `_parse_token_clause`'s shape; its second needs a token *copy* (CR 707.2)
-    and a variable count this wave does not read.
+    create a token that's a copy of it." Its first sentence is
+    `_parse_token_clause`'s ordinary shape; its second is
+    `_parse_city_blessing_token_copy_clause`'s (CR 702.131, CR 707.2), now
+    that *ascend*, the city's blessing, and "entered this turn" are all built.
 
-    CR 608.2c has no notion of running half an effect, so `parse_mixed_effect`
-    on the *whole* printed text must come back `None` - not the first
-    sentence's tokens with the second silently dropped. This is a direct check
-    of the parser, independent of `ocelot_pride_end_step`'s hand-written row,
-    which is what actually runs in a real game and is untouched by this wave
-    (see `test_tokens.py::test_ocelot_pride_creates_a_cat_at_the_end_step`).
-    The row exists *because* this is what the fallback would do if it did not:
-    nothing, cleanly, rather than half of the card's text.
+    Both clauses read, so `parse_mixed_effect` on the *whole* printed text
+    comes back a real effect, not `None` - this is what makes it safe for the
+    card to have no `TRIGGER_EFFECTS` row at all: `trigger_effect_for`'s
+    fallback reaches the whole paragraph, not half of it (CR 608.2c). See
+    `tests/scenarios/test_ascend.py` for the effect run end to end through a
+    real game.
     """
     text = _triggered_effect_text("Ocelot Pride", TriggerEvent.BEGINNING_OF_STEP)
     assert "copy of it" in text.lower()
-    assert parse_mixed_effect(text) is None
+    assert parse_mixed_effect(text) is not None
 
 
 def test_hangarback_walkers_full_text_fails_closed_because_of_its_count():

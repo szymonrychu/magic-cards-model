@@ -76,6 +76,18 @@ class Player(BaseModel):
     """Set when a draw found no cards. The player loses the next time state-based
     actions are checked (CR 104.3c, 704.5b) - which the game does, not the player."""
 
+    has_citys_blessing: bool = False
+    """CR 702.131c: "a designation that has no rules meaning other than to act
+    as a marker that other rules and effects can identify." Granted by *ascend*
+    (CR 702.131b, checked by `machines.keywords.ascend_state_based_actions`
+    the same background-check way `equipment_state_based_actions` and
+    `aura_state_based_actions` run) once a player controls ten or more
+    permanents.
+
+    Set-only: CR 702.131c gives no rule that ever takes it away, so a player
+    who drops back under ten permanents keeps it, and this field is never
+    cleared on a new turn the way `life_gained_this_turn` is."""
+
     game: Any = Field(default=None, exclude=True, repr=False)
     """The game this player is in, set by `Game.model_post_init`.
 

@@ -64,7 +64,14 @@ from pydantic import BaseModel, ConfigDict
 from ..models.card import Color, Supertype, Type
 from ..models.card_state import CardState, ChoiceKind, Counter, ExileAnnotation, ExileMarker
 from ..models.player import Player
-from ..models.token import MONSTER_ROLE, PREDEFINED, TokenDefinition, create_tokens
+from ..models.token import (
+    MONSTER_ROLE,
+    PREDEFINED,
+    TokenDefinition,
+    create_tokens,
+    is_token,
+    token_copy_of,
+)
 from ..models.zone import Zone
 from .abilities import TriggerEvent
 from .decisions import Decision, DecisionKind
@@ -323,16 +330,6 @@ ELDRAZI_SPAWN = TokenDefinition(
     rules_text="Sacrifice this token: Add {C}.",
 )
 
-#: "1/1 white Cat creature token" - Ocelot Pride. Ajani, Nacatl Pariah's "2/1
-#: white Cat Warrior creature token" and Spectral Procession's "1/1 white
-#: Spirit creature tokens with flying" are not hand-written constants any more
-#: (W4): both are `_parse_token_clause`'s shape, read off the card's own
-#: printed text with no table row. `CAT` stays because `ocelot_pride_end_step`
-#: keeps its row - Ocelot Pride's second sentence needs a token *copy*
-#: (CR 707.2), which this wave's parser fails closed on, and CR 608.2c has no
-#: notion of running half a trigger's text.
-CAT = TokenDefinition(subtypes=("Cat",), colors=(Color.WHITE,), power=1, toughness=1)
-
 #: "1/1 red Elemental creature token" - Seasoned Pyromancer.
 ELEMENTAL = TokenDefinition(subtypes=("Elemental",), colors=(Color.RED,), power=1, toughness=1)
 
@@ -356,27 +353,6 @@ THOPTER = TokenDefinition(
     toughness=1,
     keywords=("Flying",),
 )
-
-
-def ocelot_pride_end_step(game: "Game", ability: AbilityOnStack) -> None:
-    """Ocelot Pride: "At the beginning of your end step, if you gained life this
-    turn, create a 1/1 white Cat creature token. Then if you have the city's
-    blessing, for each token you control that entered this turn, create a token
-    that's a copy of it."
-
-    Only the first sentence executes, and it executes **unconditionally**. Two
-    deviations, both recorded in `docs/engine-coverage.md`:
-
-    - "if you gained life this turn" is an intervening *if* (CR 603.4). Nothing
-      tracks life gained during a turn, so `intervening_if_holds` reads the
-      clause as true and the trigger always fires.
-    - the second sentence needs the city's blessing (*ascend*, CR 702.131a: "If
-      you control ten or more permanents and you don't have the city's blessing,
-      you get the city's blessing for the rest of the game"), which is not
-      modelled, and needs to know which tokens entered this turn, which nothing
-      records. It is not attempted.
-    """
-    create_tokens(game, CAT, ability.controller)
 
 
 def seasoned_pyromancer(game: "Game", ability: AbilityOnStack) -> None:
@@ -2628,16 +2604,20 @@ def parse_targeted_effect(text: str) -> AbilityEffect | None:
 # CR 608.2c give below:
 #
 # - **"a token that's a copy of ..."** (Repudiate, Fanatic of Rhonas's
-#   eternalize, Caretaker's Talent, Tamiyo's -X, and Ocelot Pride's own second
-#   sentence) needs the copied object's copiable values (CR 707.2), which this
-#   parser does not read off anything - checked for and refused before the
-#   noun-phrase regex is even tried, so it cannot be mistaken for one.
+#   eternalize, Caretaker's Talent, Tamiyo's -X) needs the copied object's
+#   copiable values (CR 707.2), which this parser does not read off anything -
+#   checked for and refused before the noun-phrase regex is even tried, so it
+#   cannot be mistaken for one. Ocelot Pride's own "for each token you control
+#   that entered this turn, create a token that's a copy of it" is the one
+#   copy shape this file *does* read - `_parse_city_blessing_token_copy_clause`,
+#   below the token-clause section, matches that exact templated shape
+#   (CR 702.131's ascend / the city's blessing) and reads the copy through
+#   `token_copy_of` (CR 707.2) rather than through this parser.
 # - **A count this parser cannot read as a fixed number** - Hangarback
 #   Walker's "for each +1/+1 counter on this creature", Seasoned Pyromancer's
-#   "for each nonland card discarded this way", Ocelot Pride's "for each token
-#   you control that entered this turn" - is not a `_COUNT` word at all, so
-#   `_TOKEN_CLAUSE_RE` simply does not match text of that shape; nothing
-#   silently falls back to a count of one.
+#   "for each nonland card discarded this way" - is not a `_COUNT` word at
+#   all, so `_TOKEN_CLAUSE_RE` simply does not match text of that shape;
+#   nothing silently falls back to a count of one.
 # - **A tail after "with" that is not a single quoted ability or a keyword
 #   from `_TOKEN_KEYWORDS`** fails the whole clause rather than dropping the
 #   unread part - Hangarback Walker's "with flying for each +1/+1 counter on
@@ -5861,6 +5841,81 @@ def _parse_exile_that_players_library_clause(
     return effect
 
 
+#: Ocelot Pride: "Then if you have the city's blessing, for each token you
+#: control that entered this turn, create a token that's a copy of it."
+#: Templated (CR 702.131 - *ascend* and the city's blessing are both reminder
+#: text the rules print on more than one card), read by shape rather than by
+#: card name, so a future card with this exact sentence is covered for free.
+#: `split_effect_clauses`'s "then" splitting does not strip the leading
+#: "Then " off the second half of a two-sentence effect - see
+#: `split_effect_clauses` - so the leading word has to be tolerated here.
+_CITY_BLESSING_TOKEN_COPY_RE = re.compile(
+    r"^(?:then\s+)?if you have the city's blessing,\s*"
+    r"for each token you control that entered this turn,\s*"
+    r"create a token that's a copy of it\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_city_blessing_token_copy_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """Ocelot Pride's second sentence, read as one instruction (CR 608.2c).
+
+    Two things this is *not*:
+
+    - **Not an intervening *if*** (CR 603.4, CR 608.2a). Ocelot Pride's
+      intervening *if* is "if you gained life this turn", the clause
+      immediately after the trigger condition itself, already pulled off by
+      `abilities._parse_triggered` into `TriggeredAbility.intervening_if`
+      before this text is ever seen. "If you have the city's blessing" sits
+      mid-effect instead, so it is an ordinary conditional instruction,
+      checked once while this half of the ability resolves in printed order -
+      CR 608.2c's "the controller ... follows its instructions in the order
+      written" - not rechecked as the ability leaves the stack.
+    - **Not `_parse_token_clause`'s shape.** That parser refuses any clause
+      naming a copy outright (CR 707.2); this is the one place in the file
+      that reads a copy, through `token_copy_of` instead.
+
+    "For each token you control that entered this turn" is read as the set of
+    such tokens *at the moment this instruction starts to resolve* - the same
+    once-counted convention `hangarback_dies` already uses for "for each
+    +1/+1 counter on this creature" - so a copy this instruction itself
+    creates is not folded back into its own count and copied again in the
+    same resolution. It is a token that entered this turn in its own right,
+    for the *next* time this ability resolves.
+
+    Ability-only (`for_spell=False`): nothing in the pool prints this shape on
+    a spell, and the shape depends on `AbilityOnStack.controller` and on
+    `CardState.turn_entered`, neither of which a resolving spell has reason
+    to consult the same way.
+    """
+    if for_spell:
+        return None
+    if not _CITY_BLESSING_TOKEN_COPY_RE.fullmatch(clause.strip()):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        ability = stack_object
+        assert isinstance(ability, AbilityOnStack)
+        controller = game.controller_of(ability).username
+        player = game.player(controller)
+        if not player.has_citys_blessing:
+            return
+        turn_number = getattr(game.turn, "turn_number", None)
+        if turn_number is None:
+            return
+        entered_this_turn = [
+            state
+            for state in game.permanents_controlled_by(controller)
+            if is_token(state) and state.turn_entered == turn_number
+        ]
+        for state in entered_this_turn:
+            token_copy_of(game, state, controller)
+
+    return effect
+
+
 def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """One clause of a mixed effect: the targeted shape first, then a token
     creation, then a search, then the imprint shape, then a delayed-trigger
@@ -5874,6 +5929,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     token = _parse_token_clause(clause, for_spell=for_spell)
     if token is not None:
         return token
+    city_blessing_copy = _parse_city_blessing_token_copy_clause(clause, for_spell=for_spell)
+    if city_blessing_copy is not None:
+        return city_blessing_copy
     search = _parse_search_clause(clause, for_spell=for_spell)
     if search is not None:
         return search
@@ -6195,7 +6253,23 @@ TRIGGER_EFFECTS: dict[TriggerKey, AbilityEffect] = {
     # Wurm token fire it.
     #
     # See `tests/scenarios/test_registry_is_minimal.py` for all three.
-    ("Ocelot Pride", TriggerEvent.BEGINNING_OF_STEP, ""): ocelot_pride_end_step,
+    #
+    # Ocelot Pride's end-step trigger - "if you gained life this turn, create
+    # a 1/1 white Cat creature token. Then if you have the city's blessing,
+    # for each token you control that entered this turn, create a token
+    # that's a copy of it." - is not entered here either. Every ability in
+    # this project must be read as a whole paragraph (see the design ruling in
+    # `docs/engine-coverage.md`): a card-name row that ran only the first
+    # sentence, unconditionally, while the second - the whole point of
+    # *ascend* and the city's blessing - silently never ran, is exactly the
+    # half-execution CR 608.2c forbids, and this project's history has a real
+    # game where that bug went unnoticed for two whole turns. Both sentences
+    # are readable now: the first is `_parse_token_clause`'s ordinary shape,
+    # and the second is `_parse_city_blessing_token_copy_clause`'s (CR 702.131,
+    # CR 707.2), so `trigger_effect_for`'s fallback reads the whole ability
+    # with no row at all, and a future ascend card with the same "for each
+    # token you control that entered this turn, create a token that's a copy
+    # of it" shape is covered for free. See `tests/scenarios/test_ascend.py`.
     ("Seasoned Pyromancer", TriggerEvent.ENTERS_THE_BATTLEFIELD, ""): seasoned_pyromancer,
     ("Hangarback Walker", TriggerEvent.DIES, ""): hangarback_dies,
     # Ragavan, Nimble Pilferer's, Nashi, Searcher in the Dark's, and Questing

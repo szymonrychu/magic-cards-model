@@ -558,6 +558,23 @@ class CardState(BaseModel):
     pile no longer means anything.
     """
 
+    turn_entered: int | None = None
+    """The turn number this permanent arrived on the battlefield, or `None` if
+    nothing was counting (built outside a game, or before a turn existed).
+
+    Stamped once, in `Game.enter_the_battlefield` - the single choke point
+    every route onto the battlefield runs through (CR 110.2a, CR 111.7,
+    CR 603.6a) - so a card put onto the battlefield without being cast, a
+    resolving permanent spell, and a token all get one the same way. This is
+    the same shape as `ExileAnnotation.turn_exiled`, a turn-number stamp rather
+    than a boolean, because "entered this turn" (Ocelot Pride, CR 702.131) has
+    to stop being true once the next turn begins, not just once - unlike
+    `summoning_sick`, which is cleared by `Game.begin_turn_for` and so cannot
+    itself answer "did this arrive on the *current* turn specifically" once a
+    permanent has stopped being sick without a real turn boundary having
+    passed (a mid-turn effect that removes summoning sickness).
+    """
+
     counters: Counters = Field(default_factory=Counters)
     """The counters on this object (CR 122.1).
 

@@ -303,6 +303,11 @@ Every one of these was added after a player failed without it.
   `cast` then `pass`. Using `advance` in a main phase skips your own turn.
 - **If `pass` is refused with "you do not have priority", wait again — never
   `advance`.** That strands the stack.
+- **Always bound the wait: `wait --max-seconds 30`, called in a loop.** A bare
+  `wait` blocks indefinitely, the shell backgrounds it, and the player's turn
+  ends having done nothing. Three seats died this way in one session, each
+  reporting some variant of "I'll wait for the background command" as its final
+  answer. A bounded wait returns promptly and the player calls it again.
 - **Decisions:** a pending decision freezes the game; answering it is the only
   legal move; a command may return early specifically to hand you one. An
   unanswered decision times out to a default and silently wastes the card.

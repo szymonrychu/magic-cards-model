@@ -821,6 +821,58 @@ def equipment_state_based_actions(game: Any) -> list[CardState]:
     return unattached
 
 
+def has_ascend(card: Card) -> bool:
+    """Whether this card's own printed text grants *ascend* (CR 702.131)."""
+    return any(keyword.lower() == "ascend" for keyword in card.keywords)
+
+
+def ascend_state_based_actions(game: Any) -> list[str]:
+    """CR 702.131b: "Ascend on a permanent represents a static ability. It
+    means 'Any time you control ten or more permanents and you don't have the
+    city's blessing, you get the city's blessing for the rest of the game.'"
+
+    Read as a background check the same way `equipment_state_based_actions`
+    and `aura_state_based_actions` are, rather than through
+    `machines/triggers.py`: an "any time ... is true" static ability is
+    CR 603.8's *state trigger* shape, not an ordinary event-triggered ability
+    with a stack object of its own, so there is no `AbilityOnStack` for it to
+    put on the stack. Getting the blessing is not itself a game object that
+    resolves - it just happens, the moment the condition is met.
+
+    `Player.has_citys_blessing` is CR 702.131c's designation, "no rules
+    meaning other than to act as a marker" that, once set, nothing in the
+    rules ever clears - so this only ever turns the flag on, and a player who
+    already has it is skipped outright rather than rechecked.
+
+    **CR 702.131a** (ascend printed on an instant or sorcery, a spell ability
+    checked once as the spell resolves rather than a permanent's static
+    check) is not modelled: nothing in the card pool prints ascend on a
+    non-permanent.
+
+    **Not modelled**: CR 702.131d - "After a player gets the city's blessing,
+    continuous effects are reapplied before the game checks to see if the
+    game state or preceding events have matched any trigger conditions." This
+    engine's continuous effects are recomputed from scratch on every
+    `computed_board()` call rather than reapplied incrementally, so there is
+    no separate reapplication step for this rule to slot into; the only
+    consequence would be a trigger that itself depends on already having the
+    blessing seeing it one instant later than CR 702.131d demands, which
+    nothing in the pool exercises.
+    """
+    blessed: list[str] = []
+    for player in game.players_in_game:
+        if player.has_citys_blessing:
+            continue
+        permanents = game.permanents_controlled_by(player.username)
+        if len(permanents) < 10:
+            continue
+        if not any(has_ascend(permanent.card) for permanent in permanents):
+            continue
+        player.has_citys_blessing = True
+        blessed.append(player.username)
+    return blessed
+
+
 def attachment_state_based_actions(game: Any) -> list[CardState]:
     """CR 704.5p: a permanent that may not be attached to anything at all.
 
