@@ -63,6 +63,7 @@ from ..machines.layers import (
     Characteristics,
     ComputedBoard,
     ContinuousEffects,
+    LayerContext,
     additional_land_plays,
 )
 from ..machines.priority import PriorityMachine, PriorityOutcome
@@ -2887,9 +2888,24 @@ class Game(BaseModel):
         `CardState.power` and `.toughness` are the *printed* values plus counters
         (CR 122.1a) and know nothing about layers, so anything in this file that
         needs a real power or toughness asks here instead.
+
+        A `LayerContext` of every graveyard goes with the battlefield, because a
+        characteristic-defining ability can be printed on the card it affects
+        while counting something the layer engine never sees on its own -
+        Tarmogoyf's power (CR 604.3, CR 604.3a, CR 613.4a) counts card types
+        "among cards in all graveyards" (CR 300.1), and Boneyard Wurm's counts
+        creature cards in its own controller's graveyard only. Without this,
+        every such CDA is built against an empty world and reads as if every
+        graveyard were empty, whatever is actually in them.
         """
         self.continuous_effects.note(self.battlefield)
-        return self.continuous_effects.board(self.battlefield)
+        context = LayerContext(
+            graveyards=tuple(card for player in self.players_in_game for card in player.graveyard),
+            graveyard_by_controller={
+                player.username: tuple(player.graveyard) for player in self.players_in_game
+            },
+        )
+        return self.continuous_effects.board(self.battlefield, context)
 
     def characteristics_of(self, permanent: CardState) -> Characteristics:
         """This permanent's characteristics right now, layers included (CR 613.5)."""
