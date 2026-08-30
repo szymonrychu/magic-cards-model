@@ -587,6 +587,28 @@ class CardState(BaseModel):
         return None
 
     @property
+    def up_face(self) -> Any:
+        """The face this object's characteristics come from, or None for a
+        single-faced card whose own top-level fields already are the up face
+        (CR 712.8a, 712.8d, 712.8f, 712.12).
+
+        The land face when this was an MDFC played for its land side, since
+        CR 712.8f gives a modal double-faced permanent "only the
+        characteristics of the face that's up" and `land_face_played` is how
+        that choice is recorded (CR 712.12). Otherwise the front face:
+        CR 712.8a makes it the only face this card has anywhere but the
+        battlefield or stack, and CR 712.8d makes it the same on the
+        battlefield while the front face is up - which, by this project's own
+        documented boundary (`transformed`'s docstring), is every permanent
+        this reads, since `transformed` deliberately does not feed
+        characteristics yet.
+        """
+        land_face = self._land_face
+        if land_face is not None:
+            return land_face
+        return self.card.front_face
+
+    @property
     def types(self) -> tuple[Type, ...]:
         """This object's card types (CR 205.2a, CR 708.2)."""
         if self.face_down_characteristics is not None:
@@ -613,6 +635,11 @@ class CardState(BaseModel):
         A face-down permanent has "no text" (CR 702.37c), so it has none - which
         is what stops a face-down creature with flying flying. Disguise lists
         ward {2} (CR 702.168b), so that one keyword survives.
+
+        `Card.keywords` is not per-face - Scryfall already reports it as the
+        whole card's keyword abilities regardless of which face prints one -
+        so there is no face to fall back to here the way there is for power,
+        toughness and oracle text.
         """
         if self.face_down_characteristics is not None:
             return self.face_down_characteristics.keywords
@@ -623,9 +650,9 @@ class CardState(BaseModel):
         """This object's rules text (CR 708.2). Face down, it is empty."""
         if self.face_down_characteristics is not None:
             return self.face_down_characteristics.oracle_text
-        land_face = self._land_face
-        if land_face is not None:
-            return land_face.oracle_text or ""
+        up_face = self.up_face
+        if up_face is not None:
+            return up_face.oracle_text or ""
         return self.card.oracle_text or ""
 
     @property
@@ -674,18 +701,29 @@ class CardState(BaseModel):
         other continuous effects are in play - but it is what makes a creature
         with enough -1/-1 counters die to CR 704.5f without the state-based
         action check having to compute the board.
+
+        A `transform` or `modal_dfc` card leaves the top-level `toughness`
+        null and puts each face's own value on `card_faces` instead, so
+        `up_face` is read first (CR 712.8a, 712.8d, 712.8f) - without it, a
+        double-faced creature would have no toughness at all rather than its
+        printed one, and CR 704.5g's lethal-damage check would never fire.
         """
         if self.face_down_characteristics is not None:
             # CR 708.2: face down, 2 is what its toughness *is*; the counters
             # still apply on top, in sublayer 7c (CR 613.4c).
             base = self.face_down_characteristics.toughness
             return base + self.counters.power_toughness_modifier
-        printed = _as_number(self.card.toughness)
+        up_face = self.up_face
+        printed = _as_number(up_face.toughness if up_face is not None else self.card.toughness)
         return None if printed is None else printed + self.counters.power_toughness_modifier
 
     @property
     def power(self) -> int | None:
         """Power as a number, or None for `*` and other non-numeric values.
+
+        A `transform` or `modal_dfc` card leaves the top-level `power` null
+        and puts each face's own value on `card_faces` instead, so `up_face`
+        is read first for the same reason as `toughness`.
 
         Printed power plus its counters (CR 122.1a), for the same reason as
         `toughness`. Combat damage is assigned equal to power (CR 510.1a), so
@@ -694,7 +732,8 @@ class CardState(BaseModel):
         if self.face_down_characteristics is not None:
             base = self.face_down_characteristics.power
             return base + self.counters.power_toughness_modifier
-        printed = _as_number(self.card.power)
+        up_face = self.up_face
+        printed = _as_number(up_face.power if up_face is not None else self.card.power)
         return None if printed is None else printed + self.counters.power_toughness_modifier
 
     @property
@@ -789,6 +828,17 @@ class CardState(BaseModel):
         string here - it is not the card's name kept quiet, and CR 704.5j's
         legend rule and every "another creature named ..." depend on the
         difference.
+
+        Deliberately still `card.name` - Scryfall's "Front // Back" - rather
+        than `up_face`'s single-face name for anything but the land-face case:
+        CR 712.8a/712.8d say a double-faced permanent is named after whichever
+        face is up, but a wide swath of this project's existing scenario
+        tests already key lookups (`scenario.creature`, `scenario.find`) off
+        the combined Scryfall name for a double-faced card played on its front
+        face, and reading it as a single-face name here would silently change
+        what every one of those tests is asking for. Out of scope for the
+        power/toughness/oracle-text fix this docstring's neighbours make;
+        tracked rather than folded in unreviewed.
         """
         if self.face_down_characteristics is not None:
             return self.face_down_characteristics.name

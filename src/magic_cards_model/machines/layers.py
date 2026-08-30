@@ -313,18 +313,35 @@ def printed_characteristics(
             toughness=face_down.toughness,
             counters=on_the_permanent,
         )
+    # CR 712.8a/712.8d: a double-faced permanent's characteristics are its
+    # front face's, everywhere but the battlefield and stack too - and this
+    # project's own `CardState.transformed` docstring is why "front face" is
+    # right even on the battlefield: nothing reads `transformed` yet, so a
+    # flipped permanent is not modelled as having flipped for this purpose.
+    # `state.land_face_played` overrides that with the land face an MDFC was
+    # actually played as (CR 712.8f, 712.12) - `CardState.up_face` is the one
+    # place that choice is made, so oracle text, power and toughness read it
+    # through `state.oracle_text`/`up_face` rather than `card.oracle_text`
+    # directly, which is null for a `transform` or `modal_dfc` card and would
+    # otherwise leave this creature with no text and no P/T at all. `name`
+    # deliberately stays `card.name` - see `CardState.name`'s docstring for
+    # why that one is out of scope here.
+    up_face = state.up_face
+    power = _as_number(up_face.power) if up_face is not None else _as_number(card.power)
+    toughness = _as_number(up_face.toughness) if up_face is not None else _as_number(card.toughness)
+    colors = up_face.colors if up_face is not None and up_face.colors is not None else card.colors
     return Characteristics(
         card_id=state.id,
         name=card.name,
         mana_value=card.cmc,
         controller=state.controller,
         supertypes=tuple(card.supertypes),
-        types=tuple(card.types),
-        subtypes=tuple(card.subtypes),
-        colors=tuple(card.colors or ()),
-        abilities=tuple(_ability_lines(card.oracle_text)),
-        power=_as_number(card.power),
-        toughness=_as_number(card.toughness),
+        types=tuple(state.types),
+        subtypes=tuple(state.subtypes),
+        colors=tuple(colors or ()),
+        abilities=tuple(_ability_lines(state.oracle_text)),
+        power=power,
+        toughness=toughness,
         counters=on_the_permanent,
     )
 

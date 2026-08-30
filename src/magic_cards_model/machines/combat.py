@@ -635,7 +635,9 @@ def combat_damage_step(game: "Game") -> list[tuple["Targetable", int]]:
             if attacker is None or attacker.zone is not Zone.BATTLEFIELD:
                 continue
             power = _power_of(game, blocker)
-            if power > 0:
+            if power is None:
+                _record_undefined_power(game, blocker)
+            elif power > 0:
                 assignments.append((blocker, attacker, power))
 
     for source, target, amount in assignments:
@@ -675,7 +677,28 @@ def _deal_combat_damage(game: "Game", source: CardState, target: "Targetable", a
     return dealt
 
 
-def _power_of(game: "Game | None", creature: CardState) -> int:
+class UndefinedPowerNotice(BaseModel):
+    """One creature whose power could not be computed when combat needed it.
+
+    A printed `*` with no characteristic-defining ability the engine can read
+    leaves `Characteristics.power` (and `CardState.power`) `None` rather than a
+    number - see `machines/layers.py`'s `_as_number`. CR 208.5 would treat that
+    `*` as 0, and `power or 0` used to do exactly that: an unreadable power
+    silently became a real, comparable number, which is indistinguishable from
+    a creature that genuinely deals no damage. That is the same "unreadable is
+    not the same as no effect" gap `LayerNotice`, `EvasionNotice` and the other
+    notices already record, so a creature combat cannot compute a power for
+    gets one of these instead of a fabricated 0, and assigns no combat damage
+    for the step rather than a wrong amount.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    source_id: UUID | None
+    source_name: str
+
+
+def _power_of(game: "Game | None", creature: CardState) -> int | None:
     """CR 510.1a: a creature assigns combat damage equal to its power.
 
     "Each attacking creature and each blocking creature assigns combat damage
@@ -684,9 +707,28 @@ def _power_of(game: "Game | None", creature: CardState) -> int:
     question: the one the layer system leaves it with, not the printed value.
     `Game.power_of` computes the board; without a game the printed value plus
     counters (CR 122.1a) is all there is.
+
+    None when that power is genuinely unknown - see `UndefinedPowerNotice`.
+    Callers must not fold that into 0 themselves; they record the notice and
+    skip the assignment instead.
     """
-    power = game.power_of(creature) if game is not None else creature.power
-    return power or 0
+    return game.power_of(creature) if game is not None else creature.power
+
+
+def _record_undefined_power(game: "Game | None", creature: CardState) -> None:
+    """Record `creature`'s power as unreadable, once per creature (CR 510.1a).
+
+    Mirrors `attack_refusal`'s dedup of `EvasionNotice` by `source_id`, so a
+    creature whose power stays unreadable for the rest of combat is not
+    reported once per damage step.
+    """
+    if game is None:
+        return
+    if any(notice.source_id == creature.id for notice in game.undefined_power_notices):
+        return
+    game.undefined_power_notices.append(
+        UndefinedPowerNotice(source_id=creature.id, source_name=creature.name)
+    )
 
 
 def _toughness_of(game: "Game | None", creature: CardState) -> int | None:
@@ -728,6 +770,9 @@ def _attacker_assignment(
     leftover has nowhere to go but the last blocker.
     """
     power = _power_of(game, attacker)
+    if power is None:
+        _record_undefined_power(game, attacker)
+        return []
     if power <= 0:  # CR 510.1a
         return []
 
