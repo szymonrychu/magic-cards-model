@@ -66,6 +66,7 @@ from ..machines.effects import (
     ImprintNotice,
     ModeNotice,
     ReflexiveClauseNotice,
+    SuspendRedirectNotice,
     UnmodeledTriggerEffectNotice,
     activated_effect_for,
     effect_for,
@@ -590,6 +591,17 @@ class Game(BaseModel):
     excluded from this list entirely, and Voice of All's permanent-targeted
     protection grant already gets a `LayerNotice` for free from the existing
     static-ability sweep, so it is not duplicated here either."""
+
+    suspend_redirect_notices: list[SuspendRedirectNotice] = Field(default_factory=list)
+    """One entry per "counter target spell. If it is countered this way,
+    exile it with N time counters ... . If it doesn't have suspend, it gains
+    suspend." effect (Delay) - recognised, but deliberately not executed,
+    because CR 702.62a's suspend is not built anywhere in this engine
+    (`ExileMarker` has no `SUSPENDED` entry, nothing removes a time counter at
+    upkeep) and countering the spell while silently dropping "it gains
+    suspend" would leave the card exiled with no way back, which is not what
+    it says. See `SuspendRedirectNotice` for why the whole paragraph fails
+    closed instead of half-executing it."""
 
     delayed_clause_notices: list[DelayedClauseNotice] = Field(default_factory=list)
     """One entry per delayed-trigger clause (CR 603.7) whose timing this wave
@@ -2111,7 +2123,12 @@ class Game(BaseModel):
         if not found:
             return default_answer(decision)
 
-        if decision.kind in (DecisionKind.MAY, DecisionKind.PAY_LIFE, DecisionKind.PAY_ENERGY):
+        if decision.kind in (
+            DecisionKind.MAY,
+            DecisionKind.PAY_LIFE,
+            DecisionKind.PAY_ENERGY,
+            DecisionKind.PAY_MANA,
+        ):
             if not isinstance(value, bool):
                 raise ValueError(f"{decision.prompt}: a yes-or-no question needs a bool answer")
             if value not in allowed:
@@ -2297,6 +2314,43 @@ class Game(BaseModel):
             return False
         if amount > 0:
             player.remove_counters(Counter.ENERGY, amount)
+        return True
+
+    def may_pay_mana(self, player: Player | str, amount: int, *, source: str | None = None) -> bool:
+        """ "Unless its controller pays {N}", asked and then paid (CR 118.12a,
+        CR 608.2d) - Censor's and Mystical Dispute's shape.
+
+        CR 118.12a: "[Do something] unless [a player does something else]"
+        means "[a player] may [do something else]. If [that player] doesn't,
+        [effect]." - the same reading `may_pay_energy` already gives Static
+        Prison's own "unless", just with the branches swapped: paying here is
+        what *avoids* the counter, not what triggers a bonus.
+
+        Only mana already floating in the player's pool counts. CR 608.2g
+        lets a player activate mana abilities right here, but nothing calls
+        this mid-resolution with an interactive tap step, so a player who
+        would have to tap a land is refused exactly as if they had no mana at
+        all - see `docs/engine-coverage.md`.
+
+        Returns whether the mana was paid, and spends it.
+        """
+        if isinstance(player, str):
+            player = self.player(player)
+        payable = amount <= 0 or player.mana_pool.total >= amount
+        answer = self.ask(
+            Decision(
+                kind=DecisionKind.PAY_MANA,
+                player=player.username,
+                prompt=f"pay {{{amount}}} or the spell is countered",
+                source=source,
+                amount=amount,
+                affirmative_is_legal=payable,
+            )
+        )
+        if not answer:
+            return False
+        if amount > 0:
+            player.mana_pool.pay(ManaCost.parse(f"{{{amount}}}"))
         return True
 
     def pay_any_amount_of_energy(
@@ -3182,7 +3236,7 @@ class Game(BaseModel):
         self.emit(GameEvent(event=TriggerEvent.LOSES_LIFE, player=player.username))
         return lost
 
-    def counter(self, spell: StackObject) -> StackObject:
+    def counter(self, spell: StackObject, *, to_exile: bool = False) -> StackObject:
         """Counter a spell or an ability on the stack: it never resolves (CR 701.6).
 
         CR 113.9: an activated or triggered ability on the stack is not a spell,
@@ -3190,16 +3244,32 @@ class Game(BaseModel):
         goes nowhere when it is - there is no card behind it (CR 405.1) - while a
         countered spell is put into its owner's graveyard.
 
+        `to_exile` is Force of Negation's and Delay's own override - "exile it
+        instead of putting it into its owner's graveyard" - read by
+        `machines/effects.py`'s paired clause parsers off the card's second
+        sentence. It moves the card straight to the shared exile zone rather
+        than through `put_into_graveyard`'s own CR 614 replacement check,
+        because the card was never headed for a graveyard to begin with; the
+        card's own text is what is redirecting it, not a separate replacement
+        effect watching for the move.
+
         Countering is a trigger event in its own right (CR 701.6a is the verb,
         CR 603.10e the look back in time), which is why the event is emitted
-        after the spell has moved to its graveyard: the subject is found where
-        it went, and the trigger reads it as it last existed on the stack.
+        after the spell has moved to its graveyard (or exile): the subject is
+        found where it went, and the trigger reads it as it last existed on
+        the stack.
         """
         if spell not in self.stack:
             raise ValueError(f"{spell.name} is not on the stack")
         self.stack.remove(spell)
         if isinstance(spell, CardState):
-            self.put_into_graveyard(spell)
+            if to_exile:
+                self._take_out_of_every_zone(spell)
+                self.combat.remove(spell.id)  # CR 506.4
+                spell.move_to(Zone.EXILE)
+                self.exile.append(spell)
+            else:
+                self.put_into_graveyard(spell)
             # Same cleanup `resolve_top` does on every other way off the
             # stack: a countered spell will not be read again through the
             # normal fast-forward paths, and a `CastRecord` this module can no

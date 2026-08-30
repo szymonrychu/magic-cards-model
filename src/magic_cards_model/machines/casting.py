@@ -28,7 +28,14 @@ from ..models.card_state import CardState, ExileAnnotation, ExileMarker, TargetR
 from ..models.mana import ManaCost
 from ..models.zone import Zone
 from .abilities import KeywordAbility, TriggerEvent, keyword_abilities
-from .cost import CostPayment, CostStep, TotalCost, apply_modifications, total_cost_for_phrase
+from .cost import (
+    CostPayment,
+    CostStep,
+    TotalCost,
+    alternative_cost_offers,
+    apply_modifications,
+    total_cost_for_phrase,
+)
 from .keywords import (
     FACE_DOWN_CAST_COST,
     enchant_restrictions,
@@ -766,6 +773,49 @@ class Casting(BaseModel):
                 remaining = remaining[component.required :]
         self.choose_alternative_cost(cost)
         return self.step
+
+    def use_pitch_cost(self, *, choosing: list[CardState] | None = None) -> CastingStep:
+        """CR 118.9's alternative cost, read straight off the card's own
+        printed text rather than a named keyword - Force of Will's "You may
+        pay 1 life and exile a blue card from your hand rather than pay this
+        spell's mana cost." `_option_from_keyword` never sees this: nothing
+        here names a keyword ability the way Evoke or Flashback does.
+
+        Mirrors `use_keyword`: which card(s) pay a component (the blue card
+        exiled, here) is chosen now (CR 601.2b), and paying happens later
+        through the ordinary `CostPayment` path once `begin_paying` opens.
+
+        Raises when the card prints no such offer, when its printed cost
+        could not be read, or - Force of Negation's and Force of Vigor's own
+        gate - when it is only offered "if it's not your turn" and it is.
+        """
+        offers = alternative_cost_offers(self.spell.card)
+        if not offers:
+            raise ValueError(f"{self.spell.name} has no inline alternative cost to pay (CR 118.9)")
+        offer = offers[0]
+        if offer.requires_not_your_turn and not self._is_not_my_turn():
+            raise ValueError(
+                f"{self.spell.name}'s alternative cost can only be paid on an opponent's turn"
+            )
+        cost = total_cost_for_phrase(offer.phrase, payer=self.caster)
+        if cost is None:
+            raise ValueError(f"{self.spell.name}'s alternative cost could not be read")
+        self._enter_modes()
+        remaining = list(choosing or [])
+        for component in cost.components:
+            if component.required and not component.cards:
+                component.cards = remaining[: component.required]
+                remaining = remaining[component.required :]
+        self.choose_alternative_cost(cost)
+        return self.step
+
+    def _is_not_my_turn(self) -> bool:
+        """Force of Negation's and Force of Vigor's own condition: whoever is
+        casting is not the active player right now."""
+        turn = getattr(self.game, "turn", None)
+        if turn is None:
+            return False
+        return turn.active_player != self.caster
 
     def pay_escalate(self, *, choosing: list[CardState] | None = None) -> CastingStep:
         """CR 702.120a: pay the escalate cost for each mode beyond the first.
