@@ -91,6 +91,32 @@ class GameEvent(BaseModel):
     """The printing of the subject, kept so a cast trigger can ask what kind of
     spell it was after the card has moved on."""
 
+    subject_types: tuple[Type, ...] | None = None
+    """The subject's card types *as they actually are* right now (CR 712.8f,
+    712.8a, 712.12), not the raw printing's front-face-only types.
+
+    `subject_card.types` reads `Card.front_type_line`, which is structurally
+    the front face - correct outside the battlefield and stack (CR 712.8a) but
+    wrong for a modal double-faced permanent played for its back face: "While a
+    modal double-faced ... permanent is on the battlefield, it has only the
+    characteristics of the face that's up" (CR 712.8f), and CR 603.10 checks a
+    trigger condition against the object "as it exists" (an enters-the-
+    battlefield trigger is not one of the look-back exceptions, so this is the
+    permanent as it exists on the battlefield now). `CardState.types` already
+    reads the up face - the land face when `land_face_played` names one,
+    otherwise the front face - so this is that value, captured at the moment
+    the event is built rather than recomputed from a bare `Card` later.
+    `None` for an event with no `CardState` subject to ask (a countered spell
+    once removed from the stack, a leaves-battlefield-to-exile event no
+    condition reads by type) - callers that use this fall back to "matches
+    nothing named" the same way `subject_card=None` already did."""
+
+    subject_subtypes: tuple[str, ...] | None = None
+    """The subject's subtypes, read the same up-face-aware way as
+    `subject_types` (CR 205.3a, 712.8f) - "whenever another Merfolk enters"
+    needs the face that's actually up, not `Card.subtypes`'s front-face-only
+    read."""
+
     related_id: UUID | None = None
     """The other creature in a blocking pair (CR 509.1a)."""
 
@@ -283,6 +309,8 @@ def tapped_for_mana_event(source: CardState) -> GameEvent:
         subject_name=source.name,
         subject_controller=source.controller,
         subject_card=source.card,
+        subject_types=source.types,
+        subject_subtypes=source.subtypes,
     )
 
 
@@ -388,14 +416,20 @@ def _required_types(condition: str) -> tuple[set[Type], set[Type]]:
     return required, forbidden
 
 
-def _types_match(card: Card | None, condition: str) -> bool:
+def _types_match(types: tuple[Type, ...] | None, condition: str) -> bool:
+    """Whether `types` satisfies a condition's type words (CR 712.8f).
+
+    Takes the subject's *actual* types - `GameEvent.subject_types`, up-face
+    aware - rather than a raw `Card`, whose `.types` reads the front face only
+    (CR 712.8a) and is wrong for an MDFC on the battlefield for its back face.
+    """
     required, forbidden = _required_types(condition)
-    if card is None:
+    if types is None:
         return not required and not forbidden
-    types = set(card.types)
-    if forbidden & types:
+    type_set = set(types)
+    if forbidden & type_set:
         return False
-    return not required or bool(required & types)
+    return not required or bool(required & type_set)
 
 
 #: "one or more other Cats you control die" names a creature *subtype*
@@ -409,12 +443,15 @@ def _required_subtype(condition: str) -> str | None:
     return match.group(1) if match else None
 
 
-def _subtype_matches(card: Card | None, subtype: str | None) -> bool:
+def _subtype_matches(subtypes: tuple[str, ...] | None, subtype: str | None) -> bool:
+    """Whether `subtypes` names `subtype` (CR 712.8f). See `_types_match`'s
+    docstring for why this reads `GameEvent.subject_subtypes`, not a raw
+    `Card`."""
     if subtype is None:
         return True
-    if card is None:
+    if subtypes is None:
         return False
-    return any(word.lower() == subtype.lower() for word in card.subtypes)
+    return any(word.lower() == subtype.lower() for word in subtypes)
 
 
 def _controller_clause_holds(
@@ -512,7 +549,7 @@ def condition_matches(
             return False
         return _controller_clause_holds(
             condition, controller, event.subject_controller
-        ) and _types_match(event.subject_card, condition)
+        ) and _types_match(event.subject_types, condition)
 
     if ability.event is TriggerEvent.DIES:
         if event.subject_id == source.id:
@@ -529,8 +566,8 @@ def condition_matches(
         subtype = _required_subtype(condition)
         return (
             _controller_clause_holds(condition, controller, event.subject_controller)
-            and _types_match(event.subject_card, condition)
-            and _subtype_matches(event.subject_card, subtype)
+            and _types_match(event.subject_types, condition)
+            and _subtype_matches(event.subject_subtypes, subtype)
         )
 
     if ability.event is TriggerEvent.ATTACKS:
@@ -546,7 +583,7 @@ def condition_matches(
             return event.subject_id == source.id
         return _controller_clause_holds(
             condition, controller, event.subject_controller
-        ) and _types_match(event.subject_card, condition)
+        ) and _types_match(event.subject_types, condition)
 
     if ability.event is TriggerEvent.BLOCKS:
         if not mine:
@@ -568,7 +605,7 @@ def condition_matches(
         if mine and "this spell" in lowered:
             return event.subject_id == source.id
         return _controller_clause_holds(condition, controller, event.player) and _types_match(
-            event.subject_card, condition
+            event.subject_types, condition
         )
 
     if ability.event is TriggerEvent.EXILED:
@@ -609,7 +646,7 @@ def condition_matches(
                 return False
         elif not (
             _controller_clause_holds(condition, controller, event.subject_controller)
-            and _types_match(event.subject_card, condition)
+            and _types_match(event.subject_types, condition)
         ):
             return False
         if "combat damage" in lowered and not event.combat:
@@ -625,7 +662,7 @@ def condition_matches(
             return event.subject_id == source.id
         return _controller_clause_holds(
             condition, controller, event.subject_controller
-        ) and _types_match(event.subject_card, condition)
+        ) and _types_match(event.subject_types, condition)
 
     if ability.event in (TriggerEvent.BECOMES_TAPPED, TriggerEvent.BECOMES_UNTAPPED):
         return mine and event.subject_id == source.id
@@ -641,7 +678,7 @@ def condition_matches(
         # type. Nothing in the pool prints the self-referential form.
         return _controller_clause_holds(
             condition, controller, event.subject_controller
-        ) and _types_match(event.subject_card, condition)
+        ) and _types_match(event.subject_types, condition)
 
     return False
 
@@ -770,24 +807,30 @@ def _first_spell_this_turn_holds(
 
     excluded = (match.group("excluded") or "").strip()
     controller = source.controller or game.active_player.username
-    card = event.subject_card
+    subject_types = event.subject_types or ()
+    subject_subtypes = event.subject_subtypes or ()
     cast_this_turn = game.spells_cast_this_turn.get(controller, [])
 
-    def _category_matches(word: str, candidate: Card) -> bool:
+    def _category_matches(word: str, types: tuple[Type, ...], subtypes: tuple[str, ...]) -> bool:
         type_ = _TYPE_WORDS.get(word)
         if type_ is not None:
-            return type_ in candidate.types
-        return any(subtype.lower() == word for subtype in candidate.subtypes)
+            return type_ in types
+        return any(subtype.lower() == word for subtype in subtypes)
 
     for word in words:
-        if not _category_matches(word, card):
+        if not _category_matches(word, subject_types, subject_subtypes):
             continue
         earlier = [
             state
             for state in cast_this_turn
             if state.id != event.subject_id
             and not (excluded and excluded in state.name.lower())
-            and _category_matches(word, state.card)
+            # `state.types`/`state.subtypes` are `CardState`'s own up-face-aware
+            # read (CR 712.8f) rather than `state.card`'s front-face-only one -
+            # never actually different for a *cast* spell, since a card is
+            # never cast as its MDFC land face, but reading the same field the
+            # rest of this module now reads is what keeps this in step with it.
+            and _category_matches(word, state.types, state.subtypes)
         ]
         if not earlier:
             return True

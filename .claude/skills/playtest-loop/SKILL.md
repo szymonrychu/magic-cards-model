@@ -26,6 +26,30 @@ allowed as documented special exceptions, nothing else is.
 loop. It carries the two rules that outrank everything here: never state a CR
 number from memory, and never mock.
 
+## Reporting discipline: say almost nothing
+
+The orchestrator's user-facing output is not a status feed. Working silently
+while dispatching agents is the expected default, not a lapse.
+
+**Report only these:**
+
+- a game that ran to a **winner**, and whether it was clean
+- the **goal condition** or the **context ceiling** firing
+- a **decision that is genuinely the user's** (ask it, do not narrate around it)
+- something that **changes what the user believes** — a policy contradiction, a
+  defect the loop itself caused, a correction to something already said
+
+**Never report:** which agents were dispatched, merges that went as predicted,
+per-wave sweeper deltas, adjudication summaries, trap lists, what is in flight,
+or what happens next. All of that is visible in the tooling and is noise here.
+
+One or two lines is a normal turn. Zero lines is a normal turn. A table of
+cumulative metrics is not, unless a game just ended or the loop is stopping.
+
+Numbers still get **verified** exactly as rigorously as before — the discipline
+is on what gets *said*, never on what gets *checked*. Silent does not mean
+unverified.
+
 ## Termination and notification
 
 Run until **either**:
