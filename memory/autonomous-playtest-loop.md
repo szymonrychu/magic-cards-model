@@ -9,8 +9,9 @@ Standing assignment (given 2026-08-29): run an autonomous loop that plays real
 decks against each other through the API and drives every defect it finds to a
 global engine fix. Target: three consecutive clean games per deck pair.
 
-Deck pairs, in order: urzatron vs blink, then creatures toolbox vs boros energy,
-then eldrazi ramp vs living end. Decklists come from `statistics_decks` (real
+Deck pairs: urzatron vs blink, creatures toolbox vs boros energy, and eldrazi
+ramp vs living end - now run as three CONCURRENT matchups per iteration rather
+than one pair at a time. Decklists come from `statistics_decks` (real
 tournament lists, never `statistics_archetypes` core_cards).
 
 **The loop:**
@@ -30,8 +31,16 @@ tournament lists, never `statistics_archetypes` core_cards).
 5. A game that finishes clean still gets reviewed - a HAIKU agent summarizes the
    log and the issues it spots feed the same loop.
 
+**Three matchups run CONCURRENTLY per iteration** (2026-08-30), not one. The
+server holds several games at once - `store` already keys by `game_id`; it was
+only `serve.py` that booted a single game. Arm one watcher per game and treat a
+report from any of them as the stop signal for that game only; the others keep
+playing. Three games per iteration means three times the defect surface per unit
+of wall-clock, which is the point.
+
 **Role assignment (fixed by the user):**
-- playing: sonnet or haiku
+- playing: **haiku** (switched from sonnet 2026-08-30 - players are the most
+  numerous and least demanding role, and there are now six of them at a time)
 - implementation and review: sonnet
 - game-log summary: haiku
 - rule investigation and problem confirmation: opus, fable when very complicated
