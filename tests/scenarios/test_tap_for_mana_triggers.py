@@ -110,17 +110,24 @@ def test_an_opponents_creature_tapped_for_mana_does_not_trigger_badgermole_cub()
 
 
 def test_the_enchanted_land_being_tapped_for_mana_triggers_utopia_sprawl():
-    """`test_aura_attachment.py`'s pattern for attaching an Aura without a full
-    cast: `machines/effects.py` has no entry that attaches a resolving Aura,
-    so the attachment is made directly and the trigger is what is under test.
+    """Cast and resolved for real: `resolve_top` now runs CR 608.3c for an Aura
+    spell, attaching it to the target it resolved with, so this no longer needs
+    `test_aura_attachment.py`'s hand-attach workaround - a real Utopia Sprawl,
+    cast at a real Forest, is what enchants it.
     """
     scenario = (
-        Scenario().player("alice", battlefield=["Forest", "Utopia Sprawl"]).player("bob").build()
+        Scenario()
+        .player("alice", hand=["Utopia Sprawl"], battlefield=["Forest", "Forest"])
+        .player("bob")
+        .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    forest = scenario.find("Forest", Zone.BATTLEFIELD)
-    sprawl = scenario.find("Utopia Sprawl", Zone.BATTLEFIELD)
-    sprawl.attach_to(forest)
+    payer, forest = scenario.untapped_sources("Forest", "Forest", username="alice")
+
+    sprawl = scenario.cast_and_resolve("Utopia Sprawl", payer, targets=[forest])
+
+    assert sprawl.zone is Zone.BATTLEFIELD
+    assert sprawl.attached_to == forest.id
 
     scenario.activate(forest)
 
@@ -133,14 +140,16 @@ def test_a_different_land_being_tapped_does_not_trigger_utopia_sprawl():
     """
     scenario = (
         Scenario()
-        .player("alice", battlefield=["Forest", "Forest", "Utopia Sprawl"])
+        .player("alice", hand=["Utopia Sprawl"], battlefield=["Forest", "Forest", "Forest"])
         .player("bob")
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    enchanted, other = scenario.untapped_sources("Forest", "Forest", username="alice")
-    sprawl = scenario.find("Utopia Sprawl", Zone.BATTLEFIELD)
-    sprawl.attach_to(enchanted)
+    payer, enchanted, other = scenario.untapped_sources(
+        "Forest", "Forest", "Forest", username="alice"
+    )
+
+    scenario.cast_and_resolve("Utopia Sprawl", payer, targets=[enchanted])
 
     scenario.activate(other)
 

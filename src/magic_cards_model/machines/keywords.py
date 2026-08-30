@@ -1426,16 +1426,32 @@ def aura_state_based_actions(game: Any) -> list[CardState]:
     opposite of an Equipment (CR 704.5n), which merely becomes unattached, and
     the reason the two need separate functions.
 
-    Not dispatched by `Game.check_state_based_actions` - see
-    `docs/engine-coverage.md` for the hook, which is the same one
-    `equipment_state_based_actions` needs.
+    Dispatched by `Game.check_state_based_actions` (see the call there for the
+    CR 704.5m citation) - this docstring used to say otherwise, which was wrong
+    by the time it was read.
+
+    `permanent.attached_to` only narrows to a card (see its own docstring), so
+    a player attachment - an "Enchant player" Aura, Curse of Exhaustion in the
+    test pool - is read off `attachment` directly here rather than through that
+    property, which would otherwise read every Aura on a player as attached to
+    nothing and bin it every check.
     """
     doomed: list[CardState] = []
     for permanent in list(game.battlefield):
         if "Aura" not in permanent.subtypes:
             continue
-        host = game.find_by_id(permanent.attached_to) if permanent.attached_to else None
-        illegal = host is None or host.zone is not Zone.BATTLEFIELD
+        attachment = permanent.attachment
+        if attachment is None:
+            doomed.append(permanent)
+            continue
+        if attachment.is_player:
+            username = attachment.username
+            host = game.player(username) if username and game.is_in_game(username) else None
+        else:
+            host = game.find_by_id(attachment.card_id)
+        illegal = host is None or (
+            isinstance(host, CardState) and host.zone is not Zone.BATTLEFIELD
+        )
         if not illegal:
             controller = game.controller_of(permanent)
             illegal = (
