@@ -307,9 +307,21 @@ Every one of these was added after a player failed without it.
   legal move; a command may return early specifically to hand you one. An
   unanswered decision times out to a default and silently wastes the card.
 - **A do-not-report list** of currently-known gaps, so reports aren't wasted.
-  Source of truth: `docs/engine-coverage.md` (its "not modelled" section), plus
-  whatever waves are in flight right now. Keep it current — a stale list wastes
-  a player's whole game on a known gap.
+  **Generate it, never hand-curate it:**
+
+  ```sh
+  uv run python scripts/known_gaps.py     # --detail for each gap's note
+  ```
+
+  It reads the "Not modelled" table in `docs/engine-coverage.md`, the single
+  source of truth. Hand-curating this list went stale **three times in one
+  session** — Utopia Sprawl's colour choice, Ocelot Pride's ascend, and
+  Mobilize's tokens each cost a player its whole game on an already-documented
+  gap. Paste the generated list, then add only the waves in flight right now.
+
+  A gap the doc does not record is a gap players keep re-reporting, so when a
+  wave leaves something deliberately unbuilt, the doc entry is part of the wave,
+  not paperwork after it.
 - **Play the deck's mechanics actively**, not just legally: attack, block, use
   activated abilities, let triggers resolve, cast the awkward cards. A player
   that takes only safe lines finds nothing, and "zero reports" from passive play
