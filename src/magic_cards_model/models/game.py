@@ -1107,6 +1107,12 @@ class Game(BaseModel):
         through `_resolve_ability` instead, because CR 608.2n removes it from the
         stack rather than putting it anywhere.
 
+        An Aura is a permanent spell too, but CR 608.3c gives it one more step
+        than "enters the battlefield": it enters *attached* to whatever it was
+        targeting, so `_aura_attachment` re-resolves that target and
+        `enter_the_battlefield` is asked to attach it in the same event, not
+        afterwards - see both docstrings.
+
         State-based actions are checked afterwards and anything that triggered is
         put on the stack, since both happen before any player next receives
         priority (CR 704.3, 603.3).
@@ -1142,8 +1148,35 @@ class Game(BaseModel):
             # CR 608.3, 608.3a: a resolving permanent spell "becomes a permanent
             # and enters the battlefield under the control of the spell's
             # controller". It was cast, so Containment Priest does not catch it.
+            if "Aura" in spell.subtypes:
+                attachment = self._aura_attachment(spell)
+                if attachment is None:
+                    # Not fizzled (that was checked above), yet nothing to
+                    # attach to - a shape `machines/targeting.py` cannot fully
+                    # read for this Aura. CR 608.3c gives it nothing to enter
+                    # attached to, and letting it land unattached would only
+                    # have CR 704.5m destroy it a moment later - so it does not
+                    # enter at all, the same fail-closed policy as the fizzle
+                    # branch just above.
+                    self.targeting_notices.append(
+                        TargetingNotice(
+                            kind=TargetingNoticeKind.NO_LEGAL_TARGET,
+                            source_id=spell.id,
+                            source_name=spell.name,
+                            text=spell.oracle_text,
+                        )
+                    )
+                    self.put_into_graveyard(spell)
+                    self.cast_records.pop(spell.id, None)
+                    self._before_priority()
+                    return spell
+            else:
+                attachment = None
             self.enter_the_battlefield(
-                spell, spell.controller or self.active_player.username, was_cast=True
+                spell,
+                spell.controller or self.active_player.username,
+                was_cast=True,
+                attach_to=attachment,
             )
             self._create_resolution_delayed_triggers(spell)
         else:
@@ -1610,7 +1643,13 @@ class Game(BaseModel):
                 zone_cards.remove(card_state)
 
     def enter_the_battlefield(
-        self, card_state: CardState, controller: str, *, tapped: bool = False, was_cast: bool
+        self,
+        card_state: CardState,
+        controller: str,
+        *,
+        tapped: bool = False,
+        was_cast: bool,
+        attach_to: "Targetable | None" = None,
     ) -> CardState:
         """A permanent enters the battlefield, replacement effects first (CR 614.12).
 
@@ -1626,6 +1665,26 @@ class Game(BaseModel):
         CR 614.6: the entering event then never happens, so nothing enters, no
         enters-the-battlefield ability triggers (CR 603.6a), and the counters and
         the tapped state the modified event was carrying are dropped with it.
+
+        `attach_to` is CR 608.3c's half of the same event: a resolving Aura
+        spell "becomes a permanent and is put onto the battlefield under the
+        control of the spell's controller attached to the player or object it
+        was targeting" - attached as it enters, not mutated afterwards, which is
+        why it is applied here rather than by the caller. That is also what
+        keeps a Containment Priest redirect honest: if the replacement above
+        sends the event to exile or a graveyard instead, `event.destination` is
+        no longer `Zone.BATTLEFIELD` and this returns before `attach_to` is ever
+        touched, so nothing is left attached to something that never arrived.
+        `resolve_top` is the caller, and it is the only one that passes this -
+        every other route onto the battlefield leaves it `None` and this is a
+        no-op, exactly the old behaviour.
+
+        CR 303.4d says an Aura can't enchant itself, and if it somehow does
+        anyway, "the Aura is put into its owner's graveyard" rather than the
+        engine raising out of the middle of a spell's resolution - targeting
+        already keeps this from happening in practice (an Aura spell cannot
+        legally target itself), but the fallback is here so a caller that
+        manages to ask for it fails onto a real rule instead of a crash.
 
         Counters the permanent arrives with are placed after it is on the
         battlefield, through `add_counters`, because CR 122.6 counts them as
@@ -1660,10 +1719,23 @@ class Game(BaseModel):
                 self._owner_of(card_state).add(card_state, event.destination or Zone.GRAVEYARD)
             return card_state
 
+        if (
+            attach_to is not None
+            and isinstance(attach_to, CardState)
+            and attach_to.id == card_state.id
+        ):
+            # CR 303.4d: an Aura can't enchant itself - see the docstring above.
+            self._take_out_of_every_zone(card_state)
+            self._owner_of(card_state).add(card_state, Zone.GRAVEYARD)
+            return card_state
+
         self._take_out_of_every_zone(card_state)
         card_state.move_to(Zone.BATTLEFIELD)
         card_state.tapped = event.tapped
         self.battlefield.append(card_state)
+
+        if attach_to is not None:
+            card_state.attach_to(attach_to)  # CR 608.3c, 701.3a
 
         # CR 613.7a: "a continuous effect generated by a static ability has the
         # same timestamp as the object the static ability is on". Stamped as it
@@ -2430,6 +2502,26 @@ class Game(BaseModel):
         if not spell.targets:
             return False
         return all(self.legal_target(spell, target) is None for target in spell.targets)
+
+    def _aura_attachment(self, spell: CardState) -> Targetable | None:
+        """What a resolving Aura spell attaches to (CR 608.3c, 303.4a).
+
+        An Aura spell's only target is what it will enchant, so once
+        `resolve_top` has confirmed the spell did not fizzle (CR 608.2b), at
+        least one target is still legal - and CR 702.5a's enchant ability gives
+        it exactly one to begin with. This re-resolves it from the
+        announcement through `resolve_targets` rather than trusting the id
+        `spell.targets` recorded: the creature it named may have died and come
+        back as a new object (CR 400.7), or the id may now belong to nothing at
+        all, and attaching to a stale reference would just relocate this bug
+        instead of fixing it.
+
+        None means the parser could not read something about this Aura's
+        targeting well enough to say - `resolve_top` fails closed on that
+        rather than putting the Aura onto the battlefield unattached.
+        """
+        targets = self.resolve_targets(spell)
+        return targets[0] if targets else None
 
     def resolve_card_targets(self, spell: StackObject) -> list[CardState]:
         """Just the card targets, for effects that cannot touch a player."""

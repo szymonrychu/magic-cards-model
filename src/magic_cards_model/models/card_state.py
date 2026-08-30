@@ -683,18 +683,23 @@ class CardState(BaseModel):
         """Whether this permanent is attached to something (CR 301.5a)."""
         return self.attachment is not None
 
-    def attach_to(self, permanent: "CardState") -> None:
-        """Attach this permanent to another one (CR 701.3a).
+    def attach_to(self, target: "CardState | Any") -> None:
+        """Attach this permanent to another object or player (CR 701.3a).
 
         "To attach an Aura, Equipment, or Fortification to an object or player
         means to take it from where it currently is and put it onto that object
         or player. If something is attached to a permanent on the battlefield,
         it becomes attached to the new object or player and becomes unattached
         from the previous one" - which is why this overwrites rather than adds.
+
+        `target` is a `CardState` for the common case, or anything
+        `TargetRef.coerce` reads as a player (a `Player`, or a bare username) -
+        an "Enchant player" Aura needs the latter, and `attachment` is already
+        typed to carry either (CR 115.1).
         """
-        if permanent.id == self.id:
+        if isinstance(target, CardState) and target.id == self.id:
             raise ValueError(f"{self.name} cannot be attached to itself")
-        self.attachment = TargetRef.to_card(permanent)
+        self.attachment = TargetRef.coerce(target)
 
     def unattach(self) -> None:
         """Move this permanent away from whatever it was on (CR 701.3d).

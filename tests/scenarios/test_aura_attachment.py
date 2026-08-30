@@ -18,8 +18,6 @@ Roles are Auras too (CR 303.7) and have a file of their own,
 `test_role_tokens.py`, because being a token brings CR 704.5d with it.
 """
 
-import pytest
-
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario
@@ -207,36 +205,37 @@ def test_an_equipment_falls_off_where_an_aura_would_have_died():
 # --------------------------------------------------------------------------
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="CR 704.5m also covers an Aura attached to a *player*, and "
-    "CardState.attached_to is a UUID naming a card - models/card_state.py has no way to "
-    "record a player as the enchanted object, so 'enchant player' Auras cannot be attached "
-    "at all and the illegal-player half of CR 704.5m has nothing to act on. The hook is on "
-    "models/card_state.py, which this change does not own: attached_to needs to accept a "
-    "TargetRef rather than a card id.",
-)
 def test_an_aura_on_a_player_who_left_the_game_is_binned():
     """CR 303.4c's third clause: an Aura goes to its owner's graveyard when "the
     player it was attached to has left the game".
 
     CR 800.4a is what removes the player (looked up: it is 800.4a, not 800.4).
     An "enchant player" Aura on a conceded player is the only way CR 704.5m's
-    "or player" branch is reachable, and `CardState.attached_to` cannot express
-    it.
+    "or player" branch is reachable. `CardState.attach_to` now reads a target
+    through `TargetRef.coerce`, which accepts a `Player` as readily as a
+    `CardState`, and `aura_state_based_actions` reads a player attachment off
+    `attachment` directly rather than through `attached_to` (which only ever
+    narrows to a card) - so this is no longer out of reach.
+
+    Curse of Exhaustion is `Enchant player`, not `Enchant creature` like Hyena
+    Umbra - the point of this test is a *legal* attachment that only becomes
+    illegal once carol leaves, and an Aura that cannot enchant a player at all
+    would already be illegal before that, for the wrong reason.
     """
     scenario = (
         Scenario()
-        .player("alice", battlefield=["Hyena Umbra"])
+        .player("alice", battlefield=["Curse of Exhaustion"])
         .player("bob")
         .player("carol")
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    umbra = scenario.find("Hyena Umbra", Zone.BATTLEFIELD, username="alice")
-    umbra.attach_to(scenario.player("carol"))  # CardState.attach_to takes a CardState
+    curse = scenario.find("Curse of Exhaustion", Zone.BATTLEFIELD, username="alice")
+    curse.attach_to(scenario.player("carol"))
+
+    assert scenario.state_based_actions() == []
 
     scenario.game.concede("carol")
     scenario.state_based_actions()
 
-    assert umbra.zone is Zone.GRAVEYARD
+    assert curse.zone is Zone.GRAVEYARD
