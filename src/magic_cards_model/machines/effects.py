@@ -74,10 +74,18 @@ from .delayed import (
     return_subject_to_hand,
 )
 from .layers import (
+    ContinuousEffect,
     ContinuousEffects,
+    Duration,
+    Layer,
     LayerContext,
+    Sublayer,
+    add_type,
     count_card_types,
+    grant_ability,
     is_resolution_layer_effect_text,
+    only_this_incarnation,
+    set_power_toughness,
 )
 from .modes import Mode, is_modal_text, modal_profile, substitute_x
 from .targeting import profile_for_text
@@ -3481,6 +3489,214 @@ _RETURN_TO_BATTLEFIELD_OWNER_RE = re.compile(
 _DRAW_A_CARD_RE = re.compile(r"^draw a card$", re.IGNORECASE)
 
 
+# --------------------------------------------------------------------------
+# Earthbend (CR 701.66a)
+# --------------------------------------------------------------------------
+#
+# "Earthbend N" is a CR 701 keyword *action*, not a CR 702 keyword ability, so
+# it is written out here rather than in `machines/keywords.py` - it is never
+# the whole of an ability the way cycling or equip are; it is embedded in
+# another ability's effect text (Badgermole Cub's "When this creature enters,
+# earthbend 1."). `machines/keywords.executes` is still told about it, so the
+# pool sweeper does not report it as silently ignored.
+#
+# Not keyed on reminder text: Bumi, Unleashed prints "earthbend 4." with no
+# reminder at all, and this module's callers already strip reminder text
+# before a clause ever reaches here.
+
+#: "Earthbend N." - never printed with the word "target" (that is CR 701.66a's
+#: own wording, not the card's); `targeting.profile_for_text` is taught the
+#: keyword's implied target so this only has to read the number.
+_EARTHBEND_RE = re.compile(r"^earthbend (?P<n>\d+)$", re.IGNORECASE)
+
+
+def earthbend(
+    game: "Game",
+    land: CardState,
+    amount: int,
+    controller: str,
+    source_id: UUID | None,
+    source_name: str,
+) -> None:
+    """CR 701.66a: "Earthbend N" means "Target land you control becomes a 0/0
+    land creature with haste in addition to its other types. Put N +1/+1
+    counters on it. When that land dies or is put into exile, return it to
+    the battlefield tapped under your control."
+
+    Three simultaneous changes, all created now (CR 608.2c has no notion of
+    running half an instruction) and all scoped to *this* incarnation of
+    `land` (`layers.only_this_incarnation`) rather than its bare id:
+
+    - Layer 4: the creature type is *added* (CR 205.1b's "in addition to its
+      other types") with `layers.add_type` - never `layers.set_basic_land_type`,
+      which is CR 305.7's "sets a land's subtype" path and would strip the
+      land's own mana ability along with its old types.
+    - Sublayer 7b: power and toughness are *set* to 0/0 (CR 613.4b) with
+      `layers.set_power_toughness`. The `amount` +1/+1 counters that follow
+      land in sublayer 7c (CR 613.4c) through `Game.add_counters` instead of a
+      second continuous effect - `layers._counter_effects` already turns real
+      counters into that sublayer's effect, and CR 613.4 fixes 7b-before-7c
+      regardless of timestamp, so a freshly set 0/0 plus one counter is
+      unconditionally a 1/1. CR 704.3/117.5 only check state-based actions
+      when a player would receive priority, never mid-resolution, so the land
+      is never briefly a legal-to-die 0/0 between the two.
+    - Layer 6: haste, granted with the ordinary `layers.grant_ability`.
+
+    `Duration.INDEFINITE` (CR 611.2a) is correct - earthbend states no
+    end - and is exactly why the scoping matters: `ContinuousEffects.
+    end_the_turn` never removes an `INDEFINITE` effect, so one scoped only to
+    `land.id` would still match after CR 603.7's own delayed return sent this
+    same id back as a plain, unanimated land (CR 400.7's "new object"),
+    silently re-animating it for free and forever.
+
+    The delayed return is created twice, once per half of "dies or is put
+    into exile" - `TriggerEvent.DIES` and `TriggerEvent.LEAVES_BATTLEFIELD_
+    TO_EXILE` are two different events, so CR 603.7a's one ability needs one
+    `DelayedTrigger` per event it watches. Whichever fires first consumes its
+    own one-shot `remaining` (CR 603.7b) and returns the land; the other is
+    dropped by `_dismiss_other_earthbend_trigger` rather than left to spend
+    itself uselessly (harmlessly, since its `expected_stamp` can never match
+    again once the land has moved on - but tidiness, not correctness, is why
+    it is dropped). Both watch `still_affects` at *resolution* (CR 603.7c),
+    which is what stops a land that was, say, bounced to hand instead from
+    being affected at all.
+    """
+    stamp = land.zone_change_stamp
+    effects = game.continuous_effects
+    for description, layer, sublayer, modification in (
+        (
+            f"earthbend: {land.name} becomes a land creature",
+            Layer.TYPE,
+            None,
+            add_type(Type.CREATURE),
+        ),
+        (
+            f"earthbend: {land.name} is 0/0",
+            Layer.POWER_TOUGHNESS,
+            Sublayer.SET,
+            set_power_toughness(0, 0),
+        ),
+        (f"earthbend: {land.name} has haste", Layer.ABILITY, None, grant_ability("Haste")),
+    ):
+        effects.add(
+            ContinuousEffect(
+                description=description,
+                layer=layer,
+                sublayer=sublayer,
+                timestamp=effects.tick(),
+                duration=Duration.INDEFINITE,
+                selector=only_this_incarnation(land, stamp),
+                modification=modification,
+            )
+        )
+    game.add_counters(land, Counter.PLUS_ONE, amount)
+
+    siblings: list[DelayedTrigger] = []
+    for event, zone in (
+        (TriggerEvent.DIES, Zone.GRAVEYARD),
+        (TriggerEvent.LEAVES_BATTLEFIELD_TO_EXILE, Zone.EXILE),
+    ):
+        siblings.append(
+            game.create_delayed_trigger(
+                DelayedTrigger(
+                    text=(
+                        "When that land dies or is put into exile, return it "
+                        "to the battlefield tapped under your control."
+                    ),
+                    event=event,
+                    controller=controller,
+                    source_id=source_id,
+                    source_name=source_name,
+                    subject_id=land.id,
+                    expected_zone=zone,
+                    # No `expected_stamp` here, unlike the blink idiom's use of
+                    # this same field: those triggers are created *after* the
+                    # object has already arrived in `expected_zone`, so the
+                    # stamp they capture is that arrival's own stamp, and it
+                    # only changes if the object leaves and comes back before
+                    # the trigger resolves (CR 603.7c's parenthetical). This
+                    # trigger is created *before* the land has died or been
+                    # exiled - CR 603.7a fires it the moment earthbend
+                    # resolves - so `land.zone_change_stamp` right now is its
+                    # *battlefield* incarnation's stamp, and CR 400.7 always
+                    # reassigns a new one the instant it actually dies or is
+                    # exiled. Capturing it here would make `still_affects`
+                    # compare against a stamp the object can never wear again,
+                    # so the return would never fire at all. `expected_zone`
+                    # plus `subject_id` alone already give CR 603.7c's real
+                    # guarantee for this shape: if something else moves the
+                    # land out of that zone again first, `still_affects`
+                    # correctly stops affecting it.
+                    callback=_return_earthbent_land,
+                )
+            )
+        )
+    for trigger in siblings:
+        trigger.sibling_ids = tuple(other.id for other in siblings if other is not trigger)
+
+
+def _return_earthbent_land(game: "Game", ability: AbilityOnStack, trigger: DelayedTrigger) -> None:
+    """CR 701.66a's own return: tapped, and under the earthbend ability's
+    *controller* - not `delayed.return_subject_to_battlefield_under_owner`'s
+    owner-and-untapped default, which is CR 610.3c's default for a blink
+    effect that says nothing more specific. Earthbend overrides both halves
+    of that default explicitly, so it needs its own callback rather than the
+    shared one.
+    """
+    permanent = trigger.still_affects(game)
+    _dismiss_other_earthbend_trigger(game, trigger)
+    if permanent is None:
+        return
+    game.put_onto_battlefield(permanent, trigger.controller, tapped=True)
+
+
+def _dismiss_other_earthbend_trigger(game: "Game", trigger: DelayedTrigger) -> None:
+    """Drop the sibling delayed trigger for "dies **or** is put into exile"
+    once either half has fired - CR 603.7a describes one ability watching for
+    either event, and this engine represents that as two `DelayedTrigger`s
+    sharing one subject because each watches one event. Not load-bearing for
+    correctness (the sibling's `expected_stamp` can never match again once
+    the land has moved on), only for not leaving a dead watcher behind.
+    """
+    game.delayed_triggers.triggers = [
+        candidate
+        for candidate in game.delayed_triggers.triggers
+        if candidate.id not in trigger.sibling_ids
+    ]
+
+
+def _parse_earthbend_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """ "Earthbend N." - the whole of an ability's effect text once its
+    trigger condition ("When this creature enters, ") has been split off.
+
+    Reads only the target the *ability* chose (CR 601.2c/603.3d already ran
+    by the time this resolves, using the restriction `targeting.profile_for_
+    text` supplies for any text containing the word "earthbend") - there is
+    nothing left for this clause to parse out of the card's own words beyond
+    the number.
+    """
+    if for_spell:
+        return None  # no card in the pool prints earthbend on a spell.
+    match = _EARTHBEND_RE.fullmatch(clause.strip().rstrip("."))
+    if match is None:
+        return None
+    amount = int(match.group("n"))
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        ability = stack_object
+        assert isinstance(ability, AbilityOnStack)
+        targets = [
+            target for target in game.resolve_targets(ability) if isinstance(target, CardState)
+        ]
+        if not targets:
+            return  # CR 608.2b: no legal target left, earthbend does nothing.
+        earthbend(
+            game, targets[0], amount, ability.controller, ability.source_id, ability.source_name
+        )
+
+    return effect
+
+
 def _parse_delayed_single_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """A whole ability whose *only* clause is a delayed-trigger creation, with
     no antecedent clause of its own to supply "it": either there is no object
@@ -3763,6 +3979,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     delayed = _parse_delayed_single_clause(clause, for_spell=for_spell)
     if delayed is not None:
         return delayed
+    earthbend_clause = _parse_earthbend_clause(clause, for_spell=for_spell)
+    if earthbend_clause is not None:
+        return earthbend_clause
     if _LOOK_AT_TOP_CARD_RE.fullmatch(clause.strip()):
         return _look_at_top_card
     player_clause = _parse_optional_player_clause(clause)

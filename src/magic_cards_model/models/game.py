@@ -1432,7 +1432,12 @@ class Game(BaseModel):
             sources = self.spells_on_stack + sources
         elif (
             event.event
-            in (TriggerEvent.DIES, TriggerEvent.IS_SACRIFICED, TriggerEvent.SPELL_IS_COUNTERED)
+            in (
+                TriggerEvent.DIES,
+                TriggerEvent.IS_SACRIFICED,
+                TriggerEvent.SPELL_IS_COUNTERED,
+                TriggerEvent.LEAVES_BATTLEFIELD_TO_EXILE,
+            )
             and event.subject_id is not None
         ):
             gone = self.find_by_id(event.subject_id)
@@ -3024,13 +3029,32 @@ class Game(BaseModel):
         """Move a permanent to the shared exile zone.
 
         Refused for a token that has already left the battlefield (CR 111.8).
+
+        Emits `TriggerEvent.LEAVES_BATTLEFIELD_TO_EXILE` when the move was
+        actually from the battlefield - the "or is put into exile" half of
+        CR 701.66a's earthbend, and the general battlefield-to-exile event
+        `machines/triggers.py` never had before: `DIES` already exists for the
+        battlefield-to-graveyard half of the same idea, but nothing watched
+        this one, so a delayed trigger waiting for it had nothing to fire on.
         """
         if move_refused(permanent, Zone.EXILE) is not None:
             return permanent
+        was_on_battlefield = permanent in self.battlefield
         self._take_out_of_every_zone(permanent)
         self.combat.remove(permanent.id)  # CR 506.4
         permanent.move_to(Zone.EXILE)
         self.exile.append(permanent)
+        if was_on_battlefield:
+            self.emit(
+                GameEvent(
+                    event=TriggerEvent.LEAVES_BATTLEFIELD_TO_EXILE,
+                    subject_id=permanent.id,
+                    subject_name=permanent.name,
+                    subject_controller=permanent.controller,
+                    subject_card=permanent.card,
+                    player=permanent.controller,
+                )
+            )
         return permanent
 
     def check_state_based_actions(self) -> list[CardState]:

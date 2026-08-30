@@ -156,13 +156,41 @@ class DelayedTrigger(BaseModel):
     has a stated duration; None means "no limit", for a duration-bounded ability
     that fires on every occurrence."""
 
+    sibling_ids: tuple[UUID, ...] = ()
+    """Other `DelayedTrigger`s created alongside this one that watch for a
+    different event but the same underlying CR 603.7a ability - earthbend's
+    "when that land dies **or** is put into exile" is one ability watching two
+    events, represented as two `DelayedTrigger`s since each of those only
+    watches one. Read by `machines/effects.py`'s earthbend callback to drop
+    the sibling once either half fires, so a one-shot ability does not sit
+    around forever after it has already done its job."""
+
     def matches(self, event: GameEvent) -> bool:
-        """Whether this event is the one being waited for (CR 603.2, 603.7b)."""
+        """Whether this event is the one being waited for (CR 603.2, 603.7b).
+
+        Every delayed trigger shipped before earthbend watches
+        `BEGINNING_OF_STEP`, whose `GameEvent` never carries a `subject_id` -
+        so this subject check was never reachable and the latent bug below
+        never surfaced. Earthbend is the first *event-keyed, subject-scoped*
+        delayed trigger (CR 701.66a's "when that land dies or is put into
+        exile"): without this check, a `DIES`-keyed trigger watching one
+        specific land matched *any* creature's death, and CR 603.7b's
+        one-shot `remaining` was spent on the wrong one - the real death
+        would then find nothing left waiting. Guarded on both sides being
+        non-None so a subject-less trigger (draw a card, grant an extra turn)
+        and a step event (which never has a subject at all) are unaffected.
+        """
         if self.remaining is not None and self.remaining <= 0:
             return False
         if event.event is not self.event:
             return False
         if self.step is not None and event.step is not self.step:
+            return False
+        if (
+            self.subject_id is not None
+            and event.subject_id is not None
+            and event.subject_id != self.subject_id
+        ):
             return False
         return self.only_when_active is None or event.player == self.only_when_active
 
