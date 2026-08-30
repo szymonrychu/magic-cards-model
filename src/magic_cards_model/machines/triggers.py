@@ -149,10 +149,21 @@ class GameEvent(BaseModel):
     than by object - "that much damage" (Questing Beast), "that many cards"
     (Nashi, Searcher in the Dark) - which is CR 607.1's linked-ability shape
     read within one ability rather than across two: the condition clause
-    establishes the quantity and the effect clause points back at it. Only a
-    damage event populates this today, with the amount CR 615.1's prevention
-    and CR 608.2b's legality checks already settled on (`Game.deal_damage`'s
-    own `event.amount` after replacement, not the raw amount requested)."""
+    establishes the quantity and the effect clause points back at it. A
+    damage event populates this with the amount CR 615.1's prevention and
+    CR 608.2b's legality checks already settled on (`Game.deal_damage`'s own
+    `event.amount` after replacement, not the raw amount requested).
+
+    A cast event populates it too, with the spell's mana value **as it is on
+    the stack** (CR 202.3e: "X is treated as ... the number chosen for it
+    while the object is on the stack"), which `Game.put_on_stack` works out
+    from `Card.cmc` (CR 107.3g's own X-is-0 reading of the printed cost) plus
+    whatever `Game.cast_record` says X was paid as. This is *not* the same
+    number as `subject_card.cmc` on this same event, which is always the
+    static printed value - Chalice of the Void's "mana value equal to the
+    number of charge counters" is exactly the condition that needs the real,
+    on-stack number, not the printed one, or a Chalice on 3 would never catch
+    a Fireball cast for X=3."""
 
 
 class TargetingNoticeKind(StrEnum):
@@ -601,7 +612,14 @@ def condition_matches(
             if event.subject_card is None:
                 return False
             threshold = source.counters[mv_match.group("kind")]
-            return event.subject_card.cmc == threshold
+            # CR 202.3e: on the stack, an {X} spell's mana value is the value
+            # chosen for X, not the printed cost's X-as-0 reading -
+            # `event.amount` is `Game.put_on_stack`'s own computation of that
+            # real number (see `GameEvent.amount`'s docstring); a spell with
+            # no {X} at all has `event.amount` equal to `subject_card.cmc`
+            # anyway, so this is not a narrower read for the ordinary case.
+            mana_value = event.amount if event.amount is not None else event.subject_card.cmc
+            return mana_value == threshold
         if mine and "this spell" in lowered:
             return event.subject_id == source.id
         return _controller_clause_holds(condition, controller, event.player) and _types_match(

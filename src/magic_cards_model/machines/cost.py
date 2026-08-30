@@ -782,9 +782,22 @@ class CostComponent(BaseModel):
         elif self.kind is ComponentKind.EXILE:
             for card in self.cards:
                 self._remember(card)
-                game.player(self.payer).cards_in(card.zone).remove(card)
-                card.move_to(Zone.EXILE)
-                game.exile.append(card)
+                # CR 406.2: exile moves an object "from whatever zone it's
+                # currently in" - not only a per-player zone the way the old
+                # `game.player(self.payer).cards_in(card.zone).remove(card)`
+                # assumed. Every exile-as-a-cost example before The Stone
+                # Brain (Force of Will's hand, Seasoned Pyromancer's
+                # graveyard) happened to be one of `self.payer`'s own
+                # zones, so that assumption went untested until a cost
+                # exiling a permanent straight off the shared battlefield
+                # (`zone=Zone.BATTLEFIELD`) tried to remove it from a list
+                # that was never holding it and raised `ValueError:
+                # list.remove(x): x not in list`. `Game.exile_permanent`
+                # already handles every zone generically - battlefield
+                # departure events, token refusal (CR 111.8), combat
+                # clean-up - so this delegates outright rather than
+                # special-casing one more zone by hand.
+                game.exile_permanent(card)
         elif self.kind is ComponentKind.PAY_LIFE and self.amount:
             game.player(self.payer).lose_life(self.amount)
         elif self.kind is ComponentKind.REMOVE_COUNTERS:
