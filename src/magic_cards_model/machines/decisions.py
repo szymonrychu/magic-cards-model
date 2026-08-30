@@ -150,6 +150,15 @@ class DecisionKind(StrEnum):
     #: empty, so an ability that is not answered targets nothing, exactly as it
     #: did before this kind existed; see `Game.put_triggers_on_stack`.
     CHOOSE_TARGETS = "choose_targets"
+    #: "As [this] enters, choose a color/card name/creature type" (CR 614.1c,
+    #: CR 614.12a). One kind for all three shapes: `Decision.options` narrows
+    #: the legal answers to the five colors for a color choice, and is empty
+    #: for the other two, whose universe (every card name; every creature
+    #: type) is too large to enumerate here. Which of the three was actually
+    #: asked is not carried on the `Decision` at all - the replacement effect
+    #: that asks already knows, from the card's own printed text, and records
+    #: it on `CardState.choice`'s own `ChoiceKind` once the answer comes back.
+    CHOOSE_A_QUALITY = "choose_a_quality"
 
 
 @dataclass(frozen=True)
@@ -214,6 +223,10 @@ class Decision:
     #: 1 does not refuse an ability with too few targets chosen, only too many
     #: or an illegal one.
     target_maximum: int | None = None
+    #: The legal answers to a `CHOOSE_A_QUALITY` question, or empty for "any
+    #: string" (a card name, a creature type - too large a set to enumerate).
+    #: Populated with the five colors' letter codes for a color choice.
+    options: tuple[str, ...] = ()
 
 
 def legal_options(decision: Decision) -> tuple[bool, ...]:
@@ -255,6 +268,13 @@ def default_answer(decision: Decision) -> object:
         # targeting requirement and nobody to ask goes on the stack with no
         # targets, byte-identical to the behaviour this kind replaced.
         return ()
+    if decision.kind is DecisionKind.CHOOSE_A_QUALITY:
+        # CR 614.12a's choice is mandatory - there is no "decline" branch the
+        # way `MAY` has one - so an unscripted answer still has to name
+        # something. The first offered option for a color choice; an empty
+        # string for the other two, which offer none: there is no rule-backed
+        # "first card name" or "first creature type" to reach for.
+        return decision.options[0] if decision.options else ""
     return CardSplit()
 
 

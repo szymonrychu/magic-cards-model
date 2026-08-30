@@ -21,10 +21,8 @@ whole way from the stack to a legal attachment (or, correctly, to a
 graveyard).
 """
 
-import pytest
-
 from magic_cards_model.machines import Step
-from magic_cards_model.models import Zone
+from magic_cards_model.models import Color, Zone
 from tests.scenarios.harness import Scenario
 
 
@@ -72,20 +70,17 @@ def test_utopia_sprawl_attaches_to_the_forest_it_targeted():
     assert sprawl.zone is Zone.BATTLEFIELD
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Utopia Sprawl attaches correctly now, but adds no mana either way. Two separate "
-    "gaps sit behind that: (1) CR 614.12a's 'As this Aura enters, choose a color' is a "
-    "replacement effect made before it enters (CR 614.1c) - not a trigger (CR 603.6d) - and "
-    "nothing anywhere records the choice; (2) the 'Whenever enchanted Forest is tapped for "
-    "mana' trigger reaches the stack (see scenarios/test_tap_for_mana_triggers.py) but has no "
-    "EFFECTS entry, so it resolves and adds nothing. See docs/engine-coverage.md.",
-)
 def test_utopia_sprawl_adds_the_chosen_color_when_the_forest_is_tapped():
     """CR 508.1b's whole point: enchanted Forest taps for an extra mana of the
     chosen color. Attaching correctly is necessary but not sufficient - this is
     the assertion that would pass for the wrong reason if it only checked
     `attached_to` and stopped there.
+
+    The chosen color is blue, deliberately not green - Utopia Sprawl sits on a
+    Forest, so "add {G}" would make the pool go to 2 with the CR 614.12a choice
+    still never made, and the symptom would pass for the wrong reason. Asserting
+    on both colors separately is what catches that: a green-defaulting bug still
+    gets the total right but the blue count wrong.
     """
     scenario = (
         Scenario()
@@ -95,15 +90,60 @@ def test_utopia_sprawl_adds_the_chosen_color_when_the_forest_is_tapped():
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
     payer, forest = scenario.untapped_sources("Forest", "Forest", username="alice")
+    scenario.will_choose(Color.BLUE.value, source="Utopia Sprawl")
     scenario.cast_and_resolve("Utopia Sprawl", payer, targets=[forest])
 
-    pool_before = scenario.player("alice").mana_pool.total
+    pool_before = dict(scenario.player("alice").mana_pool.floating)
     scenario.activate(forest)
     scenario.pass_until_resolved()
 
-    assert scenario.player("alice").mana_pool.total == pool_before + 2, (
-        "one from the Forest itself, one from Utopia Sprawl's chosen color"
+    pool_after = scenario.player("alice").mana_pool.floating
+    assert pool_after.get(Color.GREEN, 0) == pool_before.get(Color.GREEN, 0) + 1, (
+        "the Forest's own {G}"
     )
+    assert pool_after.get(Color.BLUE, 0) == pool_before.get(Color.BLUE, 0) + 1, (
+        "Utopia Sprawl's chosen color, not the Forest's own"
+    )
+
+
+def test_utopia_sprawls_bonus_mana_pays_for_a_spell():
+    """Not just an inspect-the-pool assertion: the bonus mana has to be able to
+    pay a real cost, or a fix that only wrote to the wrong pool during a cast
+    would still pass a pool-only check.
+
+    `CostPayment.tap_for_mana` (paying a spell's total cost) puts base land mana
+    into the *payment's* own pool, not `player.mana_pool` - but CR 605.4a's
+    triggered mana ability still goes through the ordinary stack in this engine
+    (a documented simplification, see `docs/engine-coverage.md`), so the bonus
+    mana from resolving Utopia Sprawl's trigger cannot land in time to help pay
+    for the very cast that tapped the enchanted Forest. It lands in
+    `player.mana_pool` instead, floating, exactly where a mana ability's output
+    always goes (CR 106.1) - and `CostPayment.begin` opens a *later* payment's
+    pool as a copy of that same floating mana, so tapping ahead of resolving a
+    spell and then casting it is a legal way to spend it, not a workaround.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Utopia Sprawl", "Grizzly Bears"], battlefield=["Forest", "Forest"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    payer, forest = scenario.untapped_sources("Forest", "Forest", username="alice")
+    scenario.will_choose(Color.BLUE.value, source="Utopia Sprawl")
+    scenario.cast_and_resolve("Utopia Sprawl", payer, targets=[forest])
+
+    # Tap the enchanted Forest and let the trigger resolve *before* casting
+    # anything - not as part of Grizzly Bears' own payment.
+    scenario.activate(forest)
+    scenario.pass_until_resolved()
+    assert scenario.player("alice").mana_pool.floating == {Color.GREEN: 1, Color.BLUE: 1}
+
+    # Grizzly Bears costs {1}{G}: the floating {G} pays the colored symbol,
+    # the floating {U} pays the generic one - no further land is tapped.
+    bears = scenario.cast_and_resolve("Grizzly Bears")
+
+    assert bears.zone is Zone.BATTLEFIELD
 
 
 def test_pariah_attaches_to_the_creature_it_targeted():
