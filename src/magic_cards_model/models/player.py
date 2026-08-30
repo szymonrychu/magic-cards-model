@@ -225,13 +225,25 @@ class Player(BaseModel):
         `self.game`) has nothing to ask, so it falls straight back to that same
         default. Returns what was discarded, which is empty when the hand was
         already small enough.
+
+        CR 514.1's turn-based action only fires "if the active player's hand
+        contains more cards than their maximum hand size" - at or under it,
+        there is nothing to discard and, per CR 701.9b, nothing to choose
+        either (there is exactly one legal answer: discard none). `needed ==
+        0` short-circuits before ever calling `Game.ask_cleanup_discard`, so a
+        player already within their maximum hand size is never asked a
+        decision with no real choice in it - a live decision provider
+        (`magic-cards-model-api`) would otherwise park a request for a whole
+        decision timeout only to be answered "discard nothing".
         """
         needed = self.cards_over_maximum_hand_size
         if chosen is None:
-            if self.game is not None:
+            if needed == 0:
+                chosen = []
+            elif self.game is not None:
                 chosen = self.game.ask_cleanup_discard(self, needed)
             else:
-                chosen = self.hand[len(self.hand) - needed :] if needed else []
+                chosen = self.hand[len(self.hand) - needed :]
         if len(chosen) != needed:
             raise ValueError(f"{self.username} must discard {needed} cards, not {len(chosen)}")
         return [self.discard(card_state) for card_state in chosen]

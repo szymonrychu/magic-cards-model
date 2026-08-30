@@ -13,7 +13,7 @@ file turns it on, because that is the mechanic under test.
 import pytest
 
 from magic_cards_model.machines import Step
-from magic_cards_model.machines.decisions import NOT_ANSWERED, Decision
+from magic_cards_model.machines.decisions import NOT_ANSWERED, Decision, DecisionKind
 from magic_cards_model.models import Zone
 
 from .harness import PlayedScenario, Scenario
@@ -164,6 +164,24 @@ def test_a_hand_at_maximum_size_discards_nothing():
 
     assert len(scenario.player("alice").hand) == 7
     assert scenario.player("alice").graveyard == []
+
+
+def test_a_hand_at_or_under_maximum_size_is_never_asked_to_discard():
+    """CR 514.1's turn-based action only fires when the hand has more cards
+    than the maximum - at or under it there is nothing to discard and, per CR
+    701.9b, nothing to choose either. A live decision provider (the playtest
+    API) parks a whole decision timeout waiting on an answer to "discard 0
+    card(s)", which cannot be a real choice - so this must never even reach
+    `Game.ask` (`decisions.asked`), not just resolve to an empty discard."""
+    scenario = driven(alice={"hand": ["Mountain"] * 7}, bob={})
+    advance_to(scenario, "alice", Step.CLEANUP)
+
+    discard_questions = [
+        question
+        for question in scenario.questions_asked()
+        if question.kind is DecisionKind.CHOOSE_CARDS
+    ]
+    assert discard_questions == []
 
 
 def test_only_the_active_player_discards_in_cleanup():
