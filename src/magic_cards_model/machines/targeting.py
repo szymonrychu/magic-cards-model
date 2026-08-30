@@ -864,6 +864,61 @@ _ZONES = {
     "exile": Zone.EXILE,
 }
 
+#: "other than a/an <quality> card" - Surgical Extraction's own "other than a
+#: basic land card" on a bare "target card in a graveyard". `<quality>` is one
+#: or two words (a supertype, a card type, or both - "basic land" is both at
+#: once), read the same vocabulary `_SUPERTYPE_NOUNS`/`_TYPE_NOUNS` already
+#: use for a *leading* adjective, just applied to a *trailing* exclusion
+#: clause instead.
+_OTHER_THAN_CARD_RE = re.compile(
+    r"\bother than (?:a|an)\s+(?P<quality>[a-z]+(?:\s+[a-z]+)?)\s+card\b", re.IGNORECASE
+)
+
+
+def _read_other_than_exclusion(
+    tail: str,
+) -> tuple[frozenset[Supertype], frozenset[Type]] | None:
+    """`_OTHER_THAN_CARD_RE`'s own quality, split into excluded supertypes and
+    card types - CR 205.4a's "basic" only ever appears on a land, so "other
+    than a basic land card" is correctly read by excluding the supertype
+    alone; a hypothetical "other than an artifact card" would exclude the
+    card type instead, and either word could appear alone or together.
+
+    Returns `(frozenset(), frozenset())` - a real "no exclusion", not a
+    refusal - when `tail` carries no such clause at all. Fails closed
+    (`None`) when the clause is attempted but names a quality this wave does
+    not recognise, rather than silently admitting a card its own text says
+    is excluded.
+    """
+    match = _OTHER_THAN_CARD_RE.search(tail)
+    if match is None:
+        return frozenset(), frozenset()
+    words = match.group("quality").lower().split()
+    supertype_words = [word for word in words if word in _SUPERTYPE_NOUNS]
+    type_words = [word for word in words if word in _TYPE_NOUNS]
+    if len(supertype_words) + len(type_words) != len(words):
+        return None  # a word this parser does not read as either
+    if supertype_words and type_words:
+        # A compound like "basic land card": excluding *both* the type and
+        # the supertype independently would over-exclude (every land, basic
+        # or not, once `excluded_card_types` alone contains LAND). CR 205.4a
+        # closes "basic" to lands only ("the supertypes are basic,
+        # legendary, ongoing, snow, and world", and only a land is ever
+        # printed with "Basic" on its type line), so excluding the
+        # supertype alone already excludes exactly the compound noun with no
+        # separate type exclusion needed. That substitution is not sound for
+        # the other four supertypes (a legendary creature, a snow anything,
+        # a world enchantment all pair a supertype with a type that is *not*
+        # exclusive to it), so anything but "basic" here is refused rather
+        # than guessed at.
+        if set(supertype_words) != {"basic"}:
+            return None
+        return frozenset({Supertype.BASIC}), frozenset()
+    if supertype_words:
+        return frozenset(_SUPERTYPE_NOUNS[word] for word in supertype_words), frozenset()
+    return frozenset(), frozenset(_TYPE_NOUNS[word] for word in type_words)
+
+
 _CACHE: dict[tuple[str, str], TargetingProfile] = {}
 
 
@@ -1348,6 +1403,8 @@ def _read_phrase(prefix: str, suffix: str) -> TargetRequirement | None:
             return None
         allows_cards = True
 
+    extra_excluded_supertypes: frozenset[Supertype] = frozenset()
+    extra_excluded_types: frozenset[Type] = frozenset()
     if rest.startswith("card") or bare_card:
         # "target creature card in your graveyard" is a card, not a permanent,
         # and so is a bare "target card". Either way the zone has to be stated:
@@ -1359,6 +1416,16 @@ def _read_phrase(prefix: str, suffix: str) -> TargetRequirement | None:
         whose = zone_match.group("whose")
         if whose is not None and whose.lower() == "your":
             controller = ControllerRestriction.YOU
+        # "... other than a basic land card" (Surgical Extraction) - a
+        # compound-noun exclusion on the bare "target card" itself, past the
+        # zone clause. Read here rather than by `_Adjectives`, which only
+        # ever reads a leading adjective *before* the noun it excludes
+        # ("target nonbasic land"); this "other than" tail comes after the
+        # noun and the zone both.
+        exclusion = _read_other_than_exclusion(rest[zone_match.end() :])
+        if exclusion is None:
+            return None
+        extra_excluded_supertypes, extra_excluded_types = exclusion
     else:
         control_match = _CONTROL_CLAUSE.match(rest)
         if control_match is not None:
@@ -1371,9 +1438,9 @@ def _read_phrase(prefix: str, suffix: str) -> TargetRequirement | None:
         unbounded=unbounded,
         variable_count=variable,
         card_types=frozenset(card_types),
-        excluded_card_types=frozenset(adjectives.excluded_types),
+        excluded_card_types=frozenset(adjectives.excluded_types) | extra_excluded_types,
         required_supertypes=frozenset(adjectives.required_supertypes),
-        excluded_supertypes=frozenset(adjectives.excluded_supertypes),
+        excluded_supertypes=frozenset(adjectives.excluded_supertypes) | extra_excluded_supertypes,
         allows_cards=allows_cards,
         allows_players=allows_players,
         opponent_only=opponent_only and not allows_cards,

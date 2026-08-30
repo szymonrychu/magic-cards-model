@@ -34,6 +34,7 @@ from ..machines.cost import (
     cost_component_for_phrase,
     cost_modifier_effect,
     discard_cost,
+    exile_cost,
     increase,
     looks_like_unparsed_cost_modifier,
     loyalty_cost,
@@ -145,6 +146,23 @@ _PROTECTION = re.compile(r"protection from ([^.;\n]+)", re.IGNORECASE)
 #: ability's source is the object it is printed on, so "this" is that object and
 #: only the caller building the cost knows which it is.
 _SELF_REFERENCE = re.compile(r"\bthis\b", re.IGNORECASE)
+
+
+def _exiles_itself_by_name(text: str, permanent: "CardState") -> bool:
+    """Whether `text` is "Exile `<permanent's own printed name>`" - CR 201.5's
+    other self-reference form: "If an object's text uses the object's own
+    name, it's referring to that object, even if there are other objects with
+    the same name." The Stone Brain's own "Exile The Stone Brain" is the
+    pool's only example of this on a cost line; `_SELF_REFERENCE` only ever
+    catches the "this `<type>`" spelling (CR 700.7), not a bare printed name.
+
+    An exact match (case-insensitive) on "exile `<name>`" alone, not a
+    substring search - a cost line naming some *other* object by name (a
+    hypothetical "Exile a card named `<X>`") is a different shape entirely and
+    must not be waved through as if it referred to `permanent`.
+    """
+    return text.strip().rstrip(".").lower() == f"exile {permanent.name.lower()}"
+
 
 #: CR 601.2f cost reduction of the shape Emrakul, the Promised End prints.
 #: Narrow on purpose: the amount, and the thing being counted, are both read
@@ -5013,9 +5031,31 @@ class Game(BaseModel):
                 # turns the sentence into something payable - "Exert this land"
                 # (CR 701.43a), "Exile a black card from your hand" (CR 118.9).
                 component = cost_component_for_phrase(piece.text, payer=controller)
+                if component is None and _exiles_itself_by_name(piece.text, permanent):
+                    # CR 201.5: "if an object's text uses its own name, it is
+                    # referring to that particular object" - the same
+                    # self-reference `_SELF_REFERENCE`'s bare "this" already
+                    # reads, spelled with the printed name instead. The Stone
+                    # Brain's own "Exile The Stone Brain" is the pool's only
+                    # example: `_PHRASE_EXILE` only reads "exile this card" or
+                    # a quality-and-count phrase, neither of which a bare
+                    # self-name is, so it comes back `None` and is built here
+                    # instead - straight from the battlefield (CR 113.6: an
+                    # activated ability's source is normally there), the same
+                    # empty-then-filled shape `_SELF_REFERENCE`'s branch below
+                    # uses for "this".
+                    component = exile_cost(
+                        payer=controller,
+                        required=1,
+                        description=piece.text,
+                        zone=Zone.BATTLEFIELD,
+                    )
                 if component is None:
                     raise ValueError(f"cannot build a cost for {piece.text!r}")
-                if not component.cards and _SELF_REFERENCE.search(piece.text):
+                if not component.cards and (
+                    _SELF_REFERENCE.search(piece.text)
+                    or _exiles_itself_by_name(piece.text, permanent)
+                ):
                     # "Exert **this** land": only the caller knows which
                     # permanent the ability is on, so the reader builds the
                     # component empty and it is filled in here (CR 602.1a - the

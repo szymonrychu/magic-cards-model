@@ -1370,23 +1370,46 @@ outright for the "if you do" half. Formidable Speaker's ETB is the vehicle.
 `Game.search_library` is widened to take a `zone: Zone = Zone.LIBRARY`
 parameter (P7) - the same predicate-and-count search, run against a player's
 hand or graveyard instead of their library, with the CR 701.24b shuffle only
-firing for the library. **Not wired up to a card yet**: The Stone Brain and
-Surgical Extraction both need it (search a graveyard, hand, and library for
-copies of a chosen/targeted name), but neither is built - see their own rows
-in the table below. The primitive is proven only by direct calls, not by a
-scenario test naming an actual card.
+firing for the library. **Wired up**: `_search_and_exile_matching_name` in
+`machines/effects.py` calls it once per zone (graveyard, hand, library, in
+printed order) for both **The Stone Brain** and **Surgical Extraction** -
+"choose a card name"/"the same name as that card", then search all three
+zones for matches and exile them, capped at "up to four" (Stone Brain) or
+uncapped ("any number", Surgical Extraction), with the CR 701.24b/e shuffle
+only ever touching the library. Both cards' own "graveyard, hand, and
+library" and "with that name and exile them" wording carries a bare "and"
+`_CLAUSE_SEPARATOR` would otherwise fragment, so both are read whole - a new
+early check inside `_parse_mixed_clauses` tries the unsplit `text` before
+any splitting happens, ahead of the ordinary per-clause dispatch.
 
-**Refused, and why**: **The Stone Brain** and **Surgical Extraction** are not
-built this wave. Both need a targeting/choice shape this wave does not own -
-Surgical Extraction targets *a card sitting in a graveyard, excluding basic
-lands* (`machines/targeting.py` has no "other than a basic land card"
-exclusion), and The Stone Brain needs "choose a card name" as a genuine
-mid-resolution instruction feeding a capped, three-zone search with a
-per-hand-card replacement draw. `DecisionKind.CHOOSE_A_QUALITY` (already
-general enough for a card name, per its own docstring) plus the newly
-widened `search_library` are the right vehicles for a future wave; wiring the
-name choice and the exile-then-draw bookkeeping together was judged too much
-new surface for this wave's three owned primitives.
+The Stone Brain's own "choose a card name" reuses `DecisionKind.CHOOSE_A_
+QUALITY` (no new kind) - the same question CR 614.12a's "as this enters,
+choose a card name" already asks through for Pithing Needle and Disruptor
+Flute, here asked mid-resolution instead of as an entering-the-battlefield
+replacement effect, with the answer used locally rather than stored on
+`CardState.choice` (nothing in either card's own text reads it back
+anaphorically the way "the chosen name" does). Surgical Extraction needs no
+such question at all - its name comes directly off the card its own
+"target card in a graveyard other than a basic land card" found, a new
+`machines/targeting.py` shape (`_read_other_than_exclusion`) that excludes
+`Supertype.BASIC` alone rather than also excluding `Type.LAND` - CR 205.4a
+closes "basic" to lands only, so the supertype alone already reads "basic
+land card" correctly, and adding the type on top would wrongly refuse a
+perfectly legal nonbasic dual too.
+
+The Stone Brain's own cost, "Exile The Stone Brain", turned up two
+pre-existing gaps in getting *there*, both fixed alongside this wave's own
+work since neither card could be activated at all otherwise: `machines/
+abilities.py`'s cost classifier and `_SELF_REFERENCE` (`models/game.py`) only
+ever read a self-reference spelled "this `<type>`" (CR 700.7), not CR 201.5's
+other form - a cost sentence repeating the permanent's own printed name -
+so `_exiles_itself_by_name` reads that form too; and `CostComponent.pay`'s
+own `ComponentKind.EXILE` branch assumed the exiled card always sat in one of
+the *payer's* own per-player zones (true for every pre-existing example -
+Force of Will's hand, Seasoned Pyromancer's graveyard) and broke the first
+time a cost exiled a permanent straight off the shared battlefield instead;
+it now delegates to `Game.exile_permanent` outright rather than mutating a
+zone list by hand.
 
 ### Cards from the metagame that still do nothing, and what each needs
 
@@ -1432,8 +1455,6 @@ new surface for this wave's three owned primitives.
 | Slickshot Show-Off | Its prowess-like trigger is a layer 7c pump per noncreature spell. Plot is modelled now (see the Modelled table), so the trigger is all that is missing | CR 613.4c, CR 116.2k |
 | Slumbering Trudge | Stun counters; `X` read at resolution; "enters tapped if X is 2 or less" | CR 614.1c |
 | Static Prison | **The "unless you pay" ability is registered in full.** "At the beginning of your first main phase, sacrifice this enchantment unless you pay {E}" is `_parse_sacrifice_unless_pay_energy`, using `Game.may_pay_energy` the same fixed-amount question `may_pay_life` already asks for CR 119.4, turned the other way round: paying is what averts the sacrifice. Its own ETB - "exile target nonland permanent an opponent controls until this enchantment leaves the battlefield. You get {E}{E}" - is not: the exile carries a duration this wave's targeted-clause reader does not parse, so the whole trigger (energy grant included) still does nothing, a pre-existing gap `tests/test_effects.py::test_static_prisons_enters_trigger_does_not_parse_as_a_whole` already documents | CR 107.14, CR 118.3, CR 406.2 |
-| Surgical Extraction | Targeting a card in a graveyard *other than a basic land card* - `machines/targeting.py` has no "other than a basic land" exclusion - then searching three zones of the *owner* for cards with the same name. `Game.search_library`'s `zone` parameter (W1) can now run that search once wired to a real target and name | CR 701.23a, CR 701.13a |
-| The Stone Brain | "Choose a card name" as a genuine mid-resolution instruction (not tied to an ETB the way `DecisionKind.CHOOSE_A_QUALITY` has been used so far, though its own docstring already documents the general reuse), feeding a capped ("up to four"), three-zone search of a targeted opponent (`Game.search_library`'s `zone` parameter, W1) and a replacement draw for each card exiled specifically from hand | CR 701.23a, CR 701.13a |
 | Thraben Charm | Modal dispatch; "damage equal to twice the number of creatures you control" | CR 700.2a |
 | Turntimber Symbiosis | Look at seven, a decision, and "enters with three additional +1/+1 counters" | CR 122.1, CR 614.1c |
 | Voice of Victory | Mobilize; "your opponents can't cast spells during your turn" - a rules-modifying static ability | CR 702.181, CR 611.3 |

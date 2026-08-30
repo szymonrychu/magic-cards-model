@@ -6570,6 +6570,244 @@ def _merge_look_top_reveal_to_hand_clauses(
     return 4, effect
 
 
+# --------------------------------------------------------------------------
+# Wave W1 (revisited): "choose a card name"/"the same name as that card",
+# then search a graveyard, a hand, and a library for cards with that name and
+# exile them (CR 701.23a, run three times, once per zone) - The Stone Brain
+# and Surgical Extraction. Matched whole, ahead of `_parse_mixed_clauses`'
+# ordinary per-clause splitting: both cards' own "graveyard, hand, and
+# library" and "with that name and exile them" each carry a bare "and"
+# `_CLAUSE_SEPARATOR` would otherwise cut into unreadable fragments, so this
+# reads the whole `text` argument `_parse_mixed_clauses` already has in
+# scope, before `_prepare_effect_clauses` ever runs on it - the same
+# "read it whole, then dispatch" shape `_parse_conditional_sacrifice_clause`
+# uses from its own callers, reached from inside this wave's own dispatch
+# surface instead of `_ability_effect_or_notice`/`_spell_effect_or_notice`.
+#
+# CR 701.23a: "To search for a card in a zone, look at all cards in that zone
+# (even if it's a hidden zone) and find a card that matches the given
+# description." Verified this session, along with the rest of the P7 zone
+# widening's own citations (CR 701.23b/d, CR 701.24b/e) already recorded on
+# `Game.search_library` in `models/game.py`, which both cards' own search
+# reuses via its `zone` parameter - the wiring that parameter existed for.
+# --------------------------------------------------------------------------
+
+
+def _search_and_exile_matching_name(
+    game: "Game",
+    zones_owner: Player,
+    name: str,
+    *,
+    chooser: Player,
+    cap: int | None,
+    source: str,
+) -> tuple[list[CardState], int]:
+    """Search `zones_owner`'s graveyard, hand, and library, in that printed
+    order, for cards named `name`, exile every one found (capped at `cap`
+    total, or every match when `cap` is `None` - Surgical Extraction's own
+    "any number"), and shuffle only the library (CR 701.24b), once,
+    regardless of whether the library search itself found anything
+    (CR 701.24e).
+
+    `chooser` is who decides *which* matches to take when there are more
+    than `cap` of them - CR 701.23g's "you" search, not `zones_owner`, who is
+    only the zones' owner and not necessarily the one doing the searching
+    (The Stone Brain searches an *opponent's* zones; Surgical Extraction may
+    search the caster's own, if the targeted card sat in their own
+    graveyard). The choice is a real `DecisionKind.CHOOSE_CARDS` question
+    over every zone's matches at once, offered before anything is removed
+    from any zone - taking the cap's worth greedily out of whichever zone
+    happened to search first would silently prefer that zone's matches over
+    an otherwise identical one two zones later, which is not what "up to
+    four" printed with no zone preference means.
+
+    When the total is at or under `cap` (or `cap` is `None`), nothing is
+    asked at all: CR 701.23d's "must find that many (or as many as
+    possible)" leaves no real choice once every match is going to be taken
+    anyway, the same no-question-when-there-is-no-real-choice shape
+    `Player.discard_to_maximum_hand_size` already holds for a hand already
+    within its maximum.
+
+    Returns `(exiled, exiled_from_hand)` - the second is The Stone Brain's own
+    "for each card exiled from their hand this way" count; Surgical
+    Extraction's caller has no use for it and ignores it.
+    """
+    zones_in_order = (Zone.GRAVEYARD, Zone.HAND, Zone.LIBRARY)
+    candidates = {
+        zone: [state for state in zones_owner.cards_in(zone) if state.name == name]
+        for zone in zones_in_order
+    }
+    total = sum(len(states) for states in candidates.values())
+    if cap is not None and total > cap:
+        offered = [state for zone in zones_in_order for state in candidates[zone]]
+        chosen_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=chooser.username,
+                prompt=f"choose {cap} card(s) named {name!r} to exile",
+                source=source,
+                amount=cap,
+                cards=tuple(state.id for state in offered),
+            )
+        )
+        assert isinstance(chosen_ids, tuple)
+        chosen = set(chosen_ids)
+        candidates = {
+            zone: [state for state in states if state.id in chosen]
+            for zone, states in candidates.items()
+        }
+
+    exiled: list[CardState] = []
+    exiled_from_hand = 0
+    for zone in zones_in_order:
+        wanted_ids = {state.id for state in candidates[zone]}
+        found = game.search_library(
+            zones_owner,
+            lambda state, wanted_ids=wanted_ids: state.id in wanted_ids,
+            count=max(len(wanted_ids), 0) or 1,
+            optional=False,
+            zone=zone,
+            source=source,
+        )
+        for state in found:
+            game.exile_permanent(state)
+            exiled.append(state)
+            if zone is Zone.HAND:
+                exiled_from_hand += 1
+    return exiled, exiled_from_hand
+
+
+#: The Stone Brain: "Choose a card name. Search target opponent's graveyard,
+#: hand, and library for up to four cards with that name and exile them.
+#: That player shuffles, then draws a card for each card exiled from their
+#: hand this way." Read off the activated ability's own `effect` field
+#: (`{2}, {T}, Exile The Stone Brain:` and the trailing "Activate only as a
+#: sorcery." are both already stripped by `machines/abilities.py` before this
+#: text is ever seen).
+_STONE_BRAIN_RE = re.compile(
+    r"^choose a card name\.\s*"
+    r"search target opponent's graveyard, hand, and library for up to "
+    r"(?P<cap>a|an|one|two|three|four|five|six|seven|eight|nine|ten|\d+) cards? "
+    r"with that name and exile them\.\s*"
+    r"that player shuffles, then draws a card for each card exiled from "
+    r"their hand this way\.?$",
+    re.IGNORECASE,
+)
+
+#: Surgical Extraction: "Choose target card in a graveyard other than a basic
+#: land card. Search its owner's graveyard, hand, and library for any number
+#: of cards with the same name as that card and exile them. Then that player
+#: shuffles." The leading "({B/P} can be paid with either {B} or 2 life.)"
+#: reminder line is already gone by the time this runs - `_strip_non_effect_
+#: preamble`'s own `_REMINDER_LINE_RE` strips a leading reminder line for
+#: every spell, Dismember and Mutagenic Growth among them.
+_SURGICAL_EXTRACTION_RE = re.compile(
+    r"^choose target card in a graveyard other than a basic land card\.\s*"
+    r"search its owner's graveyard, hand, and library for any number of cards "
+    r"with the same name as that card and exile them\.\s*"
+    r"then that player shuffles\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_stone_brain_clause(text: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_STONE_BRAIN_RE`'s shape. Ability-only (`for_spell=False`): nothing in
+    the pool prints this shape on a spell, and the effect reads `ability.
+    source_name` for its own search prompts, which a resolving spell has no
+    equivalent of the same way.
+    """
+    if for_spell:
+        return None
+    match = _STONE_BRAIN_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    if not _targets_understood("target opponent", allow_player_targets=True):
+        return None
+    cap = _NUMBER_WORDS.get(match.group("cap").lower())
+    if cap is None:
+        cap = int(match.group("cap"))
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        ability = stack_object
+        assert isinstance(ability, AbilityOnStack)
+        controller = game.controller_of(ability)
+        source = ability.source_name
+        target_player = next(
+            (target for target in game.resolve_targets(ability) if isinstance(target, Player)),
+            None,
+        )
+        if target_player is None:
+            return
+        name = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_A_QUALITY,
+                player=controller.username,
+                prompt="choose a card name",
+                source=source,
+            )
+        )
+        assert isinstance(name, str)
+        _exiled, exiled_from_hand = _search_and_exile_matching_name(
+            game, target_player, name, chooser=controller, cap=cap, source=source
+        )
+        if exiled_from_hand:
+            game.draw_cards(target_player.username, exiled_from_hand)
+
+    return effect
+
+
+def _parse_surgical_extraction_clause(text: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_SURGICAL_EXTRACTION_RE`'s shape. Spell-only (`for_spell=True`):
+    Surgical Extraction is the only card in the pool printing it, and it is a
+    spell (an instant); the name comes off the target itself, not off a
+    `CHOOSE_A_QUALITY` question, so nothing here needs an ability's own
+    `source_name`/`controller` machinery either way.
+    """
+    if not for_spell:
+        return None
+    match = _SURGICAL_EXTRACTION_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    if not _targets_understood(
+        "target card in a graveyard other than a basic land card",
+        count_agnostic=False,
+        battlefield_only=False,
+    ):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        spell = stack_object
+        assert isinstance(spell, CardState)
+        controller = game.controller_of(spell)
+        target_card = next(
+            (target for target in game.resolve_targets(spell) if isinstance(target, CardState)),
+            None,
+        )
+        if target_card is None or target_card.owner is None:
+            return
+        owner = game.player(target_card.owner)
+        _search_and_exile_matching_name(
+            game, owner, target_card.name, chooser=controller, cap=None, source=spell.name
+        )
+
+    return effect
+
+
+def _parse_choose_name_search_and_exile_whole_text(
+    text: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """Try `_parse_stone_brain_clause`, then `_parse_surgical_extraction_
+    clause`, against the *whole*, unsplit effect text - see this section's
+    own module comment for why a per-clause dispatch cannot read either
+    card's own "graveyard, hand, and library"/"with that name and exile
+    them" wording.
+    """
+    stone_brain = _parse_stone_brain_clause(text, for_spell=for_spell)
+    if stone_brain is not None:
+        return stone_brain
+    return _parse_surgical_extraction_clause(text, for_spell=for_spell)
+
+
 def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """One clause of a mixed effect: the targeted shape first, then a token
     creation, then a search, then the imprint shape, then a delayed-trigger
@@ -6649,7 +6887,18 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     reads still comes back `None` for the whole thing, exactly as
     `_parse_targeted_clauses` and `_parse_player_clauses` already refuse it
     alone.
+
+    Tried first, against the whole unsplit `text`: `_parse_choose_name_
+    search_and_exile_whole_text` (The Stone Brain, Surgical Extraction) -
+    both cards' own "graveyard, hand, and library"/"with that name and exile
+    them" wording carries a bare "and" `_CLAUSE_SEPARATOR` would otherwise
+    cut into fragments no per-clause parser below could ever read back
+    together, so this has to see the paragraph whole before anything splits
+    it.
     """
+    whole_text_effect = _parse_choose_name_search_and_exile_whole_text(text, for_spell=for_spell)
+    if whole_text_effect is not None:
+        return [whole_text_effect]
     clauses = _prepare_effect_clauses(text)
     if clauses is None:
         return None
