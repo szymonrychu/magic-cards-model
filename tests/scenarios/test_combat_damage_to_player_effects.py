@@ -7,8 +7,15 @@ already proves `TriggerEvent.DEALS_DAMAGE` and `machines/triggers.
 condition_matches` read "deals combat damage to a player"/"to an opponent"
 generically off any card's own printed text (CR 603.2), so a card with this
 shape and no code written for it specifically still triggers correctly. What
-this file is about is what happens once the ability resolves - and, for all
-three cards in the pool, the answer is: nothing does, and a notice says why.
+this file is about is what happens once the ability resolves.
+
+**Ragavan's whole paragraph now runs**: Treasure, exile, and the "until end of
+turn, you may cast that card" permission (CR 601.3) that used to void the
+ability, now built as `machines/casting.PlayPermission` and granted by
+`Game.grant_play_permission`. The permission's own rules - who may cast it,
+when it stops, what it does not allow - are `test_play_from_exile.py`'s
+business, not this file's. **Nashi and Questing Beast still fail closed**, each
+for its own missing primitive, and the notice paragraphs below are about them.
 
 Every rule cited here was looked up with `knowledge_search(type="rules")` in
 the session that wrote the file:
@@ -25,17 +32,16 @@ the session that wrote the file:
   instructions in the order written" - which this codebase already reads as
   giving no license to run *part* of a multi-clause ability and stop
   (`_parse_mixed_clauses`'s own docstring: "CR 608.2c has no notion of running
-  half an effect"). Ragavan's "create a Treasure token and exile the top card
-  of that player's library" is two clauses this engine can read on their own,
-  but the third - "Until end of turn, you may cast that card" - is a missing
-  primitive (see `UnmodeledTriggerEffectNotice`), and running the first two
-  while quietly dropping the third would leave a card sitting in exile that
-  its controller can never legally use: a board that looks right and is not,
-  which this project treats as worse than the ability doing nothing at all.
-  So none of the three clauses runs, and the whole ability leaves a notice
-  instead - consistent with how `AnaphoricClauseNotice`, `DelayedClauseNotice`,
-  and `ConditionalClauseNotice` already treat an unreadable trailing clause on
-  an otherwise-readable ability.
+  half an effect"). Nashi's and Questing Beast's abilities are still read that
+  way: each has a clause naming a primitive that does not exist, so the whole
+  ability leaves a notice rather than a half-built board - consistent with how
+  `AnaphoricClauseNotice`, `DelayedClauseNotice`, and `ConditionalClauseNotice`
+  already treat an unreadable trailing clause on an otherwise-readable ability.
+  Ragavan was the third such card until the play-from-exile wave built the
+  primitive his third sentence names; his whole paragraph runs now.
+- **CR 607.1** - the within-one-ability link that makes "that card" in
+  Ragavan's third sentence mean whatever his second sentence just exiled, and
+  "that player" in his second mean whoever his trigger's damage landed on.
 - CR 101.3 / CR 609.3 ("any part of an instruction that's impossible to
   perform is ignored"/"does only as much as possible") do not apply here:
   those rules are for something the *game itself* recognises as impossible at
@@ -46,8 +52,9 @@ the session that wrote the file:
   convention in this codebase for exactly that gap is the fail-closed notice,
   not a partial run.
 
-Every one of the three cards below fires for real and goes on the stack, and
-every one leaves an `UnmodeledTriggerEffectNotice` instead of a partial board.
+All three cards below fire for real and go on the stack. Ragavan's resolves in
+full; Nashi's and Questing Beast's each leave an `UnmodeledTriggerEffectNotice`
+instead of a partial board.
 """
 
 from magic_cards_model.machines import Step
@@ -137,19 +144,19 @@ def test_ragavans_trigger_goes_on_the_stack_with_no_targets_and_no_targeting_not
 # -- Ragavan, Nimble Pilferer ------------------------------------------------
 
 
-def test_ragavan_creates_no_treasure_and_exiles_nothing_when_unblocked():
-    """The trigger fires (CR 120.2a) and goes on the stack, but resolves to
-    nothing: "Until end of turn, you may cast that card" is a per-instance,
-    time-boxed cast permission this engine has no primitive for, and running
-    "create a Treasure token and exile the top card of that player's library"
-    while dropping that permission would leave the exiled card with no way
-    its controller could ever legally use it - a half-executed instruction
-    (CR 608.2c). One `UnmodeledTriggerEffectNotice` is recorded instead.
+def test_ragavan_makes_a_treasure_and_exiles_the_top_card_with_a_cast_permission():
+    """All three clauses now run, in printed order (CR 608.2c).
 
-    This is the test that fails on the unfixed engine - before this wave, the
-    trigger's condition was not recognised at all (`event=None`), so nothing
-    happened *and* nothing was recorded; see the commit history for the
-    before/after run.
+    "Create a Treasure token" (CR 111.10a), "exile the top card of that
+    player's library" (CR 607.1's anaphora back to the trigger's own damaged
+    player) and "Until end of turn, you may cast that card" (CR 601.3's
+    permission, `machines/casting.PlayPermission`) are one paragraph and
+    resolve as one. Nothing is left unread, so no notice is recorded any more -
+    the ability used to void itself with an `UnmodeledTriggerEffectNotice`
+    because the third clause named a primitive that did not exist.
+
+    The permission goes to **alice**, who controls Ragavan, while CR 108.3
+    leaves the card owned by bob, whose library it came off.
     """
     scenario = ragavan_board(["Forest", "Island"]).build()
     top_of_library = scenario.player("bob").library[0]
@@ -161,14 +168,15 @@ def test_ragavan_creates_no_treasure_and_exiles_nothing_when_unblocked():
     scenario.combat_damage()
     resolve_all(scenario)
 
-    assert not any(state.name == "Treasure Token" for state in scenario.game.battlefield)
-    assert top_of_library.zone is Zone.LIBRARY
-    assert top_of_library not in scenario.game.exile
+    assert any(state.name == "Treasure Token" for state in scenario.game.battlefield)
+    assert top_of_library.zone is Zone.EXILE
+    assert top_of_library.owner == "bob"
 
-    notices = scenario.game.unmodeled_trigger_effect_notices
-    assert len(notices) == 1
-    assert notices[0].source_name == "Ragavan, Nimble Pilferer"
-    assert "you may cast that card" in notices[0].text
+    permission = scenario.game.play_permission_for(top_of_library, "alice")
+    assert permission is not None, "CR 601.3: alice may cast it"
+    assert permission.pays_mana_cost, "Ragavan says nothing about paying nothing"
+    assert scenario.game.play_permission_for(top_of_library, "bob") is None
+    assert scenario.game.unmodeled_trigger_effect_notices == []
 
 
 def test_ragavan_does_not_trigger_at_all_when_his_combat_damage_is_blocked():
@@ -199,12 +207,12 @@ def test_ragavan_does_not_trigger_at_all_when_his_combat_damage_is_blocked():
     assert scenario.game.unmodeled_trigger_effect_notices == []
 
 
-def test_ragavan_leaves_one_notice_per_combat_damage_step_under_double_strike():
+def test_ragavan_resolves_once_per_combat_damage_step_under_double_strike():
     """CR 510.4/702.4b: an unblocked double striker deals two separate
     instances of combat damage to the defending player, and CR 603.2 fires a
     triggered ability once per event - so Ragavan's trigger goes on the stack
-    twice, once after each step, and each resolution leaves its own notice
-    rather than the two collapsing into one.
+    twice, once after each step, and each resolution exiles its own card and
+    hands out its own permission rather than the two collapsing into one.
 
     Assault Strobe is a real instant that grants double strike (verified
     oracle text, `tests/fixtures/cards/assault_strobe.json`); nothing about
@@ -233,26 +241,31 @@ def test_ragavan_leaves_one_notice_per_combat_damage_step_under_double_strike():
     scenario.combat_damage()
     resolve_all(scenario)
 
-    assert not any(state.name == "Treasure Token" for state in scenario.game.battlefield)
-    assert scenario.player("bob").library == library_before
-    notices = scenario.game.unmodeled_trigger_effect_notices
-    assert len(notices) == 2
-    assert all(notice.source_name == "Ragavan, Nimble Pilferer" for notice in notices)
+    treasures = [state for state in scenario.game.battlefield if state.name == "Treasure Token"]
+    assert len(treasures) == 2
+    assert scenario.player("bob").library == library_before[2:]
+    exiled = [state for state in library_before[:2] if state.zone is Zone.EXILE]
+    assert len(exiled) == 2
+    assert all(scenario.game.play_permission_for(state, "alice") is not None for state in exiled), (
+        "each resolution grants its own permission, over its own card"
+    )
+    assert scenario.game.unmodeled_trigger_effect_notices == []
 
 
-def test_ragavans_notice_is_still_recorded_once_ragavan_is_gone():
+def test_ragavans_ability_still_resolves_once_ragavan_is_gone():
     """CR 608.2n: an ability with no card behind it any more still resolves.
 
     Ragavan connects, the trigger goes on the stack, and then - with priority
     still to be had before it resolves - alice's Ragavan is removed from the
     game entirely (state-based action for 0 toughness, forced here by direct
     damage rather than a hand-written mock). The ability still has its
-    `source_id`/`source_name` from when it triggered (CR 113.7a), so the
-    notice still gets recorded with no living source to look up - proving the
-    fail-closed path does not silently depend on the source still existing
-    the way the (never-built) Treasure/exile path would have.
+    `source_id`/`source_name` from when it triggered (CR 113.7a), and the
+    whole paragraph still runs: the Treasure is made, the card is exiled, and
+    the permission is granted to alice, who no longer controls the creature
+    that granted it. CR 608.2 does not consult the source for any of that.
     """
     scenario = ragavan_board(["Forest"]).build()
+    top_of_library = scenario.player("bob").library[0]
     ragavan = scenario.creature("Ragavan, Nimble Pilferer", "alice")
 
     scenario.start_at(Step.DECLARE_ATTACKERS)
@@ -271,9 +284,10 @@ def test_ragavans_notice_is_still_recorded_once_ragavan_is_gone():
 
     resolve_all(scenario)
 
-    notices = scenario.game.unmodeled_trigger_effect_notices
-    assert len(notices) == 1
-    assert notices[0].source_name == "Ragavan, Nimble Pilferer"
+    assert any(state.name == "Treasure Token" for state in scenario.game.battlefield)
+    assert top_of_library.zone is Zone.EXILE
+    assert scenario.game.play_permission_for(top_of_library, "alice") is not None
+    assert scenario.game.unmodeled_trigger_effect_notices == []
 
 
 # -- Nashi, Searcher in the Dark and Questing Beast: fail-closed -------------
