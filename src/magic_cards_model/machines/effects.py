@@ -211,6 +211,31 @@ def counter_targets(game: "Game", spell: CardState) -> None:
             game.counter(target)
 
 
+def _counter_unless_pays_effect(amount: int) -> Effect:
+    """ "Counter target spell unless its controller pays {N}." (CR 118.12a).
+
+    Read as one CR 608.2c instruction, not two: the question is put to the
+    *targeted* spell's controller (`Game.may_pay_mana`'s `player`, not this
+    counterspell's caster), because CR 118.12a's "[a player] may [do
+    something else]" names whoever the "unless" clause names. A target that
+    has already left the stack (CR 608.2b: countered first, resolved, or
+    otherwise gone) is simply skipped, the same as plain `counter_targets`.
+    """
+
+    def effect(game: "Game", spell: CardState) -> None:
+        for reference in spell.targets:
+            if not reference.is_card:
+                continue
+            target = next((item for item in game.stack if item.id == reference.card_id), None)
+            if target is None:
+                continue
+            paid = game.may_pay_mana(target.controller, amount, source=spell.name)
+            if not paid:
+                game.counter(target)
+
+    return effect
+
+
 def continuous_effects(game: "Game") -> ContinuousEffects:
     """The game's store of continuous effects with a duration (CR 611.2).
 
@@ -1768,6 +1793,19 @@ _SUSPEND_LINE_RE = re.compile(r"^Suspend \d+—[^\n]+\n+", re.MULTILINE | re.IGN
 #: card pairing bare "Cascade" with its own resolution text hits the same bug.
 _CASCADE_LINE_RE = re.compile(r"^Cascade(?:\s*\([^()]*\))?[ \t]*\n+", re.MULTILINE | re.IGNORECASE)
 
+#: Replicate's own line (CR 702.56a), reminder text and all - Consign to
+#: Memory prints "Replicate {1} (...)" ahead of its own "Counter target
+#: triggered ability or colorless spell.", the same lead-in shape Suspend's
+#: line already strips. Replicate itself (an additional cost paid as the
+#: spell is cast, copying it once per time paid) is not read anywhere in this
+#: engine - `scripts/sweep_pool.py --keywords` reports it as ignored, and
+#: `docs/engine-coverage.md` records the gap - so a card printing it counters
+#: its one real target correctly and creates no copies, rather than losing
+#: its whole effect to a line nothing here executes.
+_REPLICATE_LINE_RE = re.compile(
+    r"^Replicate [^\n(]+(?:\([^()]*\))?[ \t]*\n+", re.MULTILINE | re.IGNORECASE
+)
+
 #: Rebound's own line (CR 702.88a), reminder text and all - Ephemerate prints
 #: it *after* its one resolution sentence ("Exile target creature you
 #: control, then return it to the battlefield under its owner's control.
@@ -1781,6 +1819,46 @@ _REBOUND_LINE_RE = re.compile(
     r"^[ \t]*Rebound(?:\s*\([^()]*\))?[ \t]*\n?", re.MULTILINE | re.IGNORECASE
 )
 
+#: Cycling's own line (CR 702.29a), reminder text and all - Censor prints
+#: "Cycling {U} (...)" *after* its own resolution sentence. Cycling is a
+#: separate activated ability (discard this card, draw a card), never an
+#: instruction the counter effect itself carries out, so without this strip
+#: `split_effect_clauses` reads "Cycling {U}" as a second, unreadable clause
+#: of the *same* effect and `_parse_mixed_clauses`'s fail-closed-per-clause
+#: rule takes the real "Counter target spell unless ..." sentence down with
+#: it - exactly the Suspend/Cascade/Replicate bug this file already
+#: documents for those three lines.
+_CYCLING_LINE_RE = re.compile(
+    r"[ \t]*\n?[ \t]*Cycling [^\n(]+(?:\([^()]*\))?[ \t]*\n?", re.MULTILINE | re.IGNORECASE
+)
+
+#: Force of Will's and Force of Negation's own CR 118.9 pitch line - "You may
+#: pay 1 life and exile a blue card from your hand rather than pay this
+#: spell's mana cost." or, gated on a plain timing condition rather than a
+#: numbered rule, "If it's not your turn, you may exile a blue card from your
+#: hand rather than pay this spell's mana cost."
+#: Read (and paid) by `machines/cost.alternative_cost_offers`/`machines/
+#: casting.Casting.use_pitch_cost` - never part of what the *spell* does on
+#: resolution, so it is stripped here the same way `_ADDITIONAL_COST_LINE_RE`
+#: strips CR 118.8a's "As an additional cost to cast this spell, ...".
+_PITCH_ALTERNATIVE_COST_LINE_RE = re.compile(
+    r"^(?:If it's not your turn, )?You may [^.]+? rather than pay this spell's mana cost\.\s*",
+    re.IGNORECASE | re.MULTILINE,
+)
+
+#: "This spell costs {N} less to cast if [condition]." (Mystical Dispute) - a
+#: static ability about *announcing* the spell (CR 601.2f), never part of
+#: what it does on resolution. This self-referential reduction (as opposed to
+#: `machines/cost.cost_modifier_effect`'s board-static "Spells cost {N} more
+#: to cast", read off a *different* permanent) is not computed anywhere in
+#: this engine - stripping it here only keeps it from being misread as an
+#: unparseable resolution clause and taking "Counter target spell unless its
+#: controller pays ..." down with it; the reduction itself is a separate,
+#: documented gap (`docs/engine-coverage.md`).
+_SELF_COST_REDUCTION_LINE_RE = re.compile(
+    r"^This spell costs \{\d+\} less to cast if [^.]+\.\s*", re.IGNORECASE | re.MULTILINE
+)
+
 
 def _strip_non_effect_preamble(text: str) -> str:
     """Sentences that describe the spell but are not part of resolving it."""
@@ -1788,6 +1866,10 @@ def _strip_non_effect_preamble(text: str) -> str:
     text = _CANT_BE_COUNTERED_LINE_RE.sub("", text)
     text = _SUSPEND_LINE_RE.sub("", text)
     text = _CASCADE_LINE_RE.sub("", text)
+    text = _REPLICATE_LINE_RE.sub("", text)
+    text = _CYCLING_LINE_RE.sub("", text)
+    text = _PITCH_ALTERNATIVE_COST_LINE_RE.sub("", text)
+    text = _SELF_COST_REDUCTION_LINE_RE.sub("", text)
     text = _REBOUND_LINE_RE.sub("", text)
     text = _REMINDER_LINE_RE.sub("", text)
     return text
@@ -2114,12 +2196,40 @@ _EXILE_QUALITY_FROM_ALL_GRAVEYARDS_RE = re.compile(
     r"^exile all cards that are (?P<quality>.+?) from all graveyards\.?$", re.IGNORECASE
 )
 _EXILE_TARGET_RE = re.compile(r"exile (?P<phrase>(?:any target|.*target.+))", re.IGNORECASE)
-#: "Counter target spell." - the unconditional shape (CR 701.5a), as opposed
-#: to Mystic Confluence's "Counter target spell unless its controller pays
-#: {3}." or Cryptic Command's own "Counter target spell or ability.", neither
-#: of which this reaches: the trailing `$` refuses anything printed after
-#: "spell", rather than silently dropping a condition the card actually has.
-_COUNTER_TARGET_SPELL_RE = re.compile(r"^counter target spell\.?$", re.IGNORECASE)
+#: "Counter target spell." - the unconditional shape (CR 701.5a) - and its
+#: qualified cousins, "Counter target `<qualifier>` spell." (Force of
+#: Negation's "noncreature", a colour word, a card type). The qualifier is
+#: read and thrown away: `counter_targets` walks whatever the caster actually
+#: targeted, and CR 601.2c/`machines/targeting.py` is what enforces the
+#: restriction at announcement, not this dispatcher. Still refused: Mystic
+#: Confluence's "Counter target spell unless its controller pays {3}." and
+#: Cryptic Command's own "Counter target spell or ability." - the trailing `$`
+#: refuses anything printed after "spell", rather than silently dropping a
+#: condition the card actually has. Those two shapes get their own regexes
+#: below (`_COUNTER_UNLESS_PAYS_RE`, `_COUNTER_TARGET_ABILITY_OR_SPELL_RE`)
+#: instead of being folded in here.
+_SPELL_QUALIFIER_WORD = (
+    r"(?:non)?(?:creature|artifact|enchantment|land|planeswalker|instant|sorcery|battle"
+    r"|white|blue|black|red|green|colorless|multicolored|monocolored)"
+)
+_COUNTER_TARGET_SPELL_RE = re.compile(
+    rf"^counter target(?: {_SPELL_QUALIFIER_WORD})? spell\.?$", re.IGNORECASE
+)
+#: "Counter target spell unless its controller pays {N}." (CR 118.12a) -
+#: Censor and Mystical Dispute. See `_counter_unless_pays_effect`.
+_COUNTER_UNLESS_PAYS_RE = re.compile(
+    r"^counter target spell unless its controller pays \{(?P<n>\d+)\}\.?$", re.IGNORECASE
+)
+#: "Counter target triggered ability or colorless spell." (Consign to
+#: Memory) and the like - a compound target rather than a single qualified
+#: noun, so `_COUNTER_TARGET_SPELL_RE` does not reach it. `counter_targets`
+#: does not care which half of the "or" was actually targeted - see its own
+#: docstring - so this only has to recognise the shape, not re-derive it.
+_COUNTER_TARGET_ABILITY_OR_SPELL_RE = re.compile(
+    r"^counter target (?:(?:activated|triggered)\s+)*abilit(?:y|ies) or "
+    rf"(?:{_SPELL_QUALIFIER_WORD} )?spell\.?$",
+    re.IGNORECASE,
+)
 _RETURN_TARGET_RE = re.compile(
     r"return (?P<phrase>.*target.+?) to its owner'?s hand", re.IGNORECASE
 )
@@ -2412,12 +2522,17 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
         # index rather than a clause shape.
         return create_continuous_effect  # type: ignore[return-value]
 
-    if _COUNTER_TARGET_SPELL_RE.fullmatch(clause):
+    if _COUNTER_TARGET_SPELL_RE.fullmatch(clause) or _COUNTER_TARGET_ABILITY_OR_SPELL_RE.fullmatch(
+        clause
+    ):
         # `counter_targets` walks the stack for a targeted spell (CR 608.2b)
         # and is only meaningful for a resolving *spell* - an ability naming
         # this shape does not turn up in the pool, and guessing at one would
         # be worse than refusing it.
         return counter_targets if for_spell else None
+
+    if match := _COUNTER_UNLESS_PAYS_RE.fullmatch(clause):
+        return _counter_unless_pays_effect(int(match.group("n"))) if for_spell else None
 
     if match := _DESTROY_TARGET_RE.fullmatch(clause):
         if not _targets_understood(match.group("phrase"), count_agnostic=True):
@@ -4146,6 +4261,14 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     destroy_each_for_spell = _parse_destroy_each_clause(whole)
     if destroy_each_for_spell is not None:
         return destroy_each_for_spell
+    if _COUNTER_THEN_SUSPEND_REDIRECT_RE.fullmatch(re.sub(r"\s*\([^()]*\)\s*$", "", whole)):
+
+        def suspend_redirect_notice_only(game: "Game", spell: CardState) -> None:
+            game.suspend_redirect_notices.append(
+                SuspendRedirectNotice(source_id=spell.id, source_name=spell.card.name, text=whole)
+            )
+
+        return suspend_redirect_notice_only
     parsed = parse_mixed_effect_for_spell(effect_text)
     if parsed is not None:
         return parsed
@@ -4366,6 +4489,117 @@ def _parse_exile_then_return_clause_pair(
             returned = game.put_onto_battlefield(exiled, new_controller, tapped=tapped)
             if transformed and returned.zone is Zone.BATTLEFIELD:
                 returned.transform()
+
+    return effect
+
+
+#: "Create X 1/1 colorless Thopter artifact creature tokens with flying, where
+#: X is that spell's mana value." (Access Denied) - CR 107.3's X, set by the
+#: very spell the paired first clause just countered, not chosen by the
+#: caster. `desc`/`tail` are read exactly like `_TOKEN_CLAUSE_RE`'s own groups
+#: (`_parse_generic_token_descriptor`/`_parse_token_tail`); only the leading
+#: "X" and the trailing "where X is ..." are specific to this shape.
+_CREATE_TOKENS_WHERE_X_IS_THAT_SPELLS_MANA_VALUE_RE = re.compile(
+    r"^create x (?P<desc>.+?) \btokens?\b(?:\s+with\s+(?P<tail>.+?))?"
+    r",?\s*where x is that spell'?s mana value\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_counter_then_create_tokens_by_mana_value_pair(
+    first: str, second: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """ "Counter target spell. Create X ... tokens ..., where X is that
+    spell's mana value." as one CR 608.2c instruction pair, or `None` if this
+    shape does not match.
+
+    CR 400.7's anaphora: "that spell" in the second sentence is whatever the
+    first sentence's "target spell" found, not a target of its own - the same
+    reasoning `_parse_anaphoric_clause_pair` already documents for "its
+    controller ...". The mana value is read off the countered spell's own
+    printed card (`CardState.card.cmc`) *before* the token count is decided,
+    which only matters in that both happen in the same breath here: `Game.
+    counter` never changes what `.card` reports, so the order between
+    countering and reading the mana value could not produce a different
+    answer either way, unlike a permanent's power or toughness once it has
+    left the battlefield (see `hangarback_walkers_thopters`'s own docstring
+    for why *that* one has to read `last_known_counters`).
+
+    A target that already left the stack (CR 608.2b) is neither countered nor
+    read for a mana value, and no tokens are created - there is no spell left
+    to have had one.
+    """
+    if not for_spell:
+        return None
+    if not _COUNTER_TARGET_SPELL_RE.fullmatch(first.strip()):
+        return None
+    match = _CREATE_TOKENS_WHERE_X_IS_THAT_SPELLS_MANA_VALUE_RE.fullmatch(second.strip())
+    if match is None:
+        return None
+    words = match.group("desc").strip().split()
+    if not words:
+        return None
+    definition = _parse_generic_token_descriptor(words, match.group("tail"))
+    if definition is None:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell).username
+        countered: CardState | None = None
+        for reference in spell.targets:
+            if not reference.is_card:
+                continue
+            target = next((item for item in game.stack if item.id == reference.card_id), None)
+            if target is not None:
+                countered = target
+                game.counter(target)
+        if countered is None:
+            return
+        mana_value = int(countered.card.cmc)
+        create_tokens(game, definition, controller, mana_value)
+
+    return effect
+
+
+#: "If that spell is countered this way, exile it instead of putting it into
+#: its owner's graveyard." (Force of Negation) - CR 701.6a's default
+#: destination, overridden. `that spell` is CR 400.7 anaphora back to
+#: whatever the first sentence's "target ... spell" found, the same reading
+#: `_parse_counter_then_create_tokens_by_mana_value_pair` and
+#: `_parse_anaphoric_clause_pair` already give a second sentence's pronoun.
+_COUNTER_THEN_EXILE_INSTEAD_RE = re.compile(
+    r"^if (?:that|the) spell is countered this way, exile it instead of "
+    r"putting it into its owner'?s graveyard\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_counter_then_exile_instead_of_graveyard_pair(
+    first: str, second: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """ "Counter target ... spell. If that spell is countered this way, exile
+    it instead of putting it into its owner's graveyard." as one CR 608.2c
+    instruction pair, or `None` if this shape does not match.
+
+    `Game.counter` always sends a countered spell to its owner's graveyard
+    (CR 701.6a); `to_exile=True` is exactly this override. A target that
+    already left the stack is simply not countered and nothing is exiled, the
+    same as plain `counter_targets`.
+    """
+    if not for_spell:
+        return None
+    if not _COUNTER_TARGET_SPELL_RE.fullmatch(first.strip()):
+        return None
+    if not _COUNTER_THEN_EXILE_INSTEAD_RE.fullmatch(second.strip()):
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        for reference in spell.targets:
+            if not reference.is_card:
+                continue
+            target = next((item for item in game.stack if item.id == reference.card_id), None)
+            if target is not None:
+                game.counter(target, to_exile=True)
 
     return effect
 
@@ -4832,6 +5066,49 @@ class ConditionalClauseNotice(BaseModel):
     source_name: str
     text: str
     """The unreadable clause itself, as printed."""
+
+
+class SuspendRedirectNotice(BaseModel):
+    """A "counter target spell. If [it] is countered this way, exile it with
+    N time counters ... instead of ... graveyard. If it doesn't have suspend,
+    it gains suspend." effect (Delay) - genuinely read (the shape is
+    recognised), but deliberately not executed.
+
+    CR 702.62a's suspend is three abilities, and `docs/engine-coverage.md`
+    already tracks none of them as built: `ExileMarker` has no `SUSPENDED`
+    entry, nothing removes a time counter at upkeep, and nothing grants the
+    cast-for-free permission once the last one comes off. Half-doing this -
+    countering the spell and exiling it with three time counters while never
+    honouring "it gains suspend" - would be exactly the forbidden shape: a
+    board that looks right (the spell is gone) and is not (it can now never
+    come back, when the card says it eventually can). So the whole paragraph
+    fails closed instead: no counter, no exile, no counters placed - and this
+    notice is the record that something real went unread, not a silent no-op.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    source_id: UUID | None
+    source_name: str
+    text: str
+    """The unreadable clause itself, as printed."""
+
+
+#: "Counter target `<qualifier>` spell. If [it/that spell] is countered this
+#: way, exile it with `<n>` time counters on it instead of putting it into its
+#: owner's graveyard. If it doesn't have suspend, it gains suspend." (Delay) -
+#: recognised whole, on purpose, rather than split into `_COUNTER_TARGET_
+#: SPELL_RE`'s own clause plus two unreadable ones: `_parse_mixed_clauses`
+#: already fails the whole card closed the moment one clause of several does
+#: not parse, but that leaves *no record* that anything was seen at all -
+#: this pattern exists only to turn that silence into a `SuspendRedirectNotice`.
+_COUNTER_THEN_SUSPEND_REDIRECT_RE = re.compile(
+    rf"^counter target(?: {_SPELL_QUALIFIER_WORD})? spell\. "
+    r"if (?:that|the) spell is countered this way, exile it with \w+ time counters? on it "
+    r"instead of putting it into its owner'?s graveyard\. "
+    r"if it doesn'?t have suspend, it gains suspend\.?$",
+    re.IGNORECASE,
+)
 
 
 def _unreadable_conditional_clause(text: str, *, for_spell: bool) -> str | None:
@@ -6423,6 +6700,20 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
                 index += 2
                 continue
             paired = _parse_exile_then_return_clause_pair(
+                clauses[index], clauses[index + 1], for_spell=for_spell
+            )
+            if paired is not None:
+                parsed.append(paired)
+                index += 2
+                continue
+            paired = _parse_counter_then_create_tokens_by_mana_value_pair(
+                clauses[index], clauses[index + 1], for_spell=for_spell
+            )
+            if paired is not None:
+                parsed.append(paired)
+                index += 2
+                continue
+            paired = _parse_counter_then_exile_instead_of_graveyard_pair(
                 clauses[index], clauses[index + 1], for_spell=for_spell
             )
             if paired is not None:

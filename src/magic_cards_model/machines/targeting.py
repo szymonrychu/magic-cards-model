@@ -1214,8 +1214,18 @@ def _read_phrase(prefix: str, suffix: str) -> TargetRequirement | None:
 
     noun_phrase = re.split(r"[.;]", suffix)[0]
 
+    # `.fullmatch`, not `.match`: "triggered ability or colorless spell"
+    # (Consign to Memory) starts with an ability phrase too, and a bare
+    # prefix match would silently read the whole target as "an ability" and
+    # drop the "or colorless spell" alternative on the floor - a restriction
+    # that then actively refuses a perfectly legal spell target, which is
+    # worse than not checking at all. Requiring the ability phrase to consume
+    # the entire noun phrase keeps Tishana's Tidebinder's plain "target
+    # activated or triggered ability" working exactly as before, while a
+    # genuine "ability or spell" compound now falls through unread
+    # (`understood=False`) instead of being wrongly enforced.
     ability = _ABILITY_PHRASE.match(noun_phrase)
-    if ability is not None:
+    if ability is not None and ability.end() == len(noun_phrase.rstrip()):
         # CR 115.2(b): an ability on the stack is an object that cannot exist on
         # the battlefield, and a spell may target one when it says so.
         return TargetRequirement(
