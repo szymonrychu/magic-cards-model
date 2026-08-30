@@ -558,6 +558,21 @@ class CardState(BaseModel):
     exactly that question, and there is nothing else left to ask.
     """
 
+    zone_change_stamp: UUID = Field(default_factory=uuid4)
+    """Which incarnation of this object we are on (CR 400.7).
+
+    "An object that moves from one zone to another becomes a new object with
+    no memory of, or relation to, its previous existence." This engine keeps
+    one `CardState` and mutates it in place across a zone change rather than
+    replacing it, so `id` alone cannot tell a card that has always been in
+    exile apart from a card that left exile and came back to it by some other
+    route - and CR 603.7c's parenthetical is explicit that the second one
+    "is a new object and thus won't be affected." `move_to` reassigns this on
+    every call, so a delayed trigger that captured it at creation
+    (`DelayedTrigger.expected_stamp`) can tell a round trip from a card that
+    simply never moved.
+    """
+
     @property
     def controller_or_owner(self) -> str | None:
         """CR 108.4a's fallback: the controller, or the owner when there is none.
@@ -896,6 +911,11 @@ class CardState(BaseModel):
         object, so anything holding the old `Counters` - a cost rewind, say -
         still holds what was there.
         """
+        # CR 400.7: every zone change is a new object, whatever the previous
+        # one carried. `id` stays put (this engine mutates rather than
+        # replaces), so this is what tells a round trip apart from a card
+        # that simply stayed put - see `DelayedTrigger.expected_stamp`.
+        self.zone_change_stamp = uuid4()
         self.zone = zone
         # CR 704.8 / CR 603.10a: an ability that looks back in time needs the
         # counters the object had as it left, and CR 122.2 has just taken them

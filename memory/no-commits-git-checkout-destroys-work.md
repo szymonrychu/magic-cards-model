@@ -106,3 +106,27 @@ Waves that touch `models/game.py`, `machines/effects.py` or `machines/layers.py`
 conflict with each other routinely - those three files are where nearly every
 mechanic lands. Expect a resolution pass, and hand it to an agent with BOTH
 sides' tests named, since a merge here is a semantic decision, not a textual one.
+
+## Never merge on `main` while games are running (2026-08-30)
+
+The API server imports `magic-cards-model` **in editable mode from the working
+tree**, and `seat_cli` spawns a fresh process per command. So an unresolved merge
+in `main` - conflict markers in `game.py` and `effects.py` - makes every player
+command die with `SyntaxError`, mid-game, in every concurrent match at once.
+
+A merge with conflicts leaves the tree unimportable for as long as resolution
+takes, which for a real semantic conflict is many minutes.
+
+**Order of operations for an iteration:**
+
+1. Land every merge and confirm `main` is clean AND importable
+   (`python -c "import magic_cards_model.models.game"`).
+2. Only then boot the server and dispatch players.
+3. Keep every fix wave in a worktree for the whole game, and merge only between
+   iterations - never while a match is live.
+
+The two players who hit this both behaved correctly: they diagnosed the broken
+import, identified it as an environment problem rather than a rules bug,
+explicitly refused to resolve another agent's conflict, and changed nothing.
+That is the behaviour the prompts ask for, and it is worth keeping - a player
+that "helpfully" fixed the tree would have been far worse.

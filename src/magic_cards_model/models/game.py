@@ -45,9 +45,10 @@ from ..machines.decisions import (
     default_answer,
     legal_options,
 )
-from ..machines.delayed import DelayedTrigger, DelayedTriggers
+from ..machines.delayed import DelayedTrigger, DelayedTriggers, return_subject_to_hand
 from ..machines.effects import (
     AnaphoricClauseNotice,
+    DelayedClauseNotice,
     ImprintNotice,
     ModeNotice,
     activated_effect_for,
@@ -522,6 +523,16 @@ class Game(BaseModel):
     trigger used to resolve offering no decision at all, with nothing anywhere
     recording that a choice had gone unoffered. The same unreadable-is-not-
     the-same-as-no-effect record every other notice list here keeps."""
+
+    delayed_clause_notices: list[DelayedClauseNotice] = Field(default_factory=list)
+    """One entry per delayed-trigger clause (CR 603.7) whose timing this wave
+    recognised but whose antecedent or verb it still could not read - Phelia,
+    Exuberant Shepherd's own defect before this list existed: its attack
+    trigger exiled a legal target and never returned it, with nothing
+    recording that the second and third sentences had gone unread. Postmortem
+    Lunge and Nahiri, the Harbinger's -8 land here too: both name a delayed
+    return, but off an antecedent (a variable-mana-value reanimation target, a
+    search result) this wave does not yet capture."""
 
     evasion_notices: list[EvasionNotice] = Field(default_factory=list)
     """One entry per attacker whose own "can't be blocked" restriction text
@@ -1224,32 +1235,54 @@ class Game(BaseModel):
         battlefield." So this runs *after* `enter_the_battlefield`, and the
         object the ability refers to is the permanent, not the spell.
 
-        One keyword needs it. CR 702.185a: "Warp represents two static abilities
-        that function while the card with warp is on the stack, one of which may
-        create a delayed triggered ability. ... 'If this spell's warp cost was
-        paid, exile the permanent this spell becomes at the beginning of the
-        next end step.'"
+        Two keywords need it. CR 702.185a: "Warp represents two static
+        abilities that function while the card with warp is on the stack, one
+        of which may create a delayed triggered ability. ... 'If this spell's
+        warp cost was paid, exile the permanent this spell becomes at the
+        beginning of the next end step.'" CR 702.109a's dash is the same
+        shape with a different verb: "If this spell's dash cost was paid,
+        return the permanent this spell becomes to its owner's hand at the
+        beginning of the next end step."
 
         CR 603.7d/e give the ability the creating spell's source and its
         controller as it resolved, which is what is recorded here.
         """
-        if not self.was_cast_with(spell, "Warp"):
-            return
-        self.delayed_triggers.create(
-            DelayedTrigger(
-                text=(
-                    "Exile the permanent this spell becomes at the beginning of the next end step."
-                ),
-                effect="warp:exile",
-                event=TriggerEvent.BEGINNING_OF_STEP,
-                step=Step.END_STEP,
-                controller=spell.controller or self.active_player.username,
-                source_id=spell.id,
-                source_name=spell.name,
-                subject_id=spell.id,
-                expected_zone=Zone.BATTLEFIELD,  # CR 603.7c
+        if self.was_cast_with(spell, "Warp"):
+            self.delayed_triggers.create(
+                DelayedTrigger(
+                    text=(
+                        "Exile the permanent this spell becomes at the "
+                        "beginning of the next end step."
+                    ),
+                    effect="warp:exile",
+                    event=TriggerEvent.BEGINNING_OF_STEP,
+                    step=Step.END_STEP,
+                    controller=spell.controller or self.active_player.username,
+                    source_id=spell.id,
+                    source_name=spell.name,
+                    subject_id=spell.id,
+                    expected_zone=Zone.BATTLEFIELD,  # CR 603.7c
+                    expected_stamp=spell.zone_change_stamp,  # CR 603.7c parenthetical
+                )
             )
-        )
+        if self.was_cast_with(spell, "Dash"):
+            self.delayed_triggers.create(
+                DelayedTrigger(
+                    text=(
+                        "Return the permanent this spell becomes to its "
+                        "owner's hand at the beginning of the next end step."
+                    ),
+                    controller=spell.controller or self.active_player.username,
+                    source_id=spell.id,
+                    source_name=spell.name,
+                    subject_id=spell.id,
+                    expected_zone=Zone.BATTLEFIELD,  # CR 603.7c
+                    expected_stamp=spell.zone_change_stamp,  # CR 603.7c parenthetical
+                    event=TriggerEvent.BEGINNING_OF_STEP,
+                    step=Step.END_STEP,
+                    callback=return_subject_to_hand,
+                )
+            )
 
     def _resolve_ability(self, ability: AbilityOnStack) -> AbilityOnStack:
         """Resolve an ability that was on the stack (CR 608.2).

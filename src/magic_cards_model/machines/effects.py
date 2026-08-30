@@ -67,7 +67,12 @@ from ..models.token import MONSTER_ROLE, PREDEFINED, TokenDefinition, create_tok
 from ..models.zone import Zone
 from .abilities import TriggerEvent
 from .decisions import Decision, DecisionKind
-from .delayed import DelayedTrigger
+from .delayed import (
+    DelayedTrigger,
+    draw_a_card_for_controller,
+    return_subject_to_battlefield_under_owner,
+    return_subject_to_hand,
+)
 from .layers import (
     ContinuousEffects,
     LayerContext,
@@ -2995,7 +3000,6 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
         return parsed
     if _is_layer_effect_text(effect_text):
         return create_continuous_effect_of_ability
-
     unread_anaphoric = _unreadable_anaphoric_clause(effect_text, for_spell=False)
     if unread_anaphoric is not None:
 
@@ -3009,6 +3013,20 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
             )
 
         return anaphoric_notice_only
+
+    unread_delayed = _unreadable_delayed_clause(effect_text, for_spell=False)
+    if unread_delayed is not None:
+
+        def delayed_notice_only(game: "Game", ability: AbilityOnStack) -> None:
+            game.delayed_clause_notices.append(
+                DelayedClauseNotice(
+                    source_id=ability.source_id,
+                    source_name=ability.source_name,
+                    text=unread_delayed,
+                )
+            )
+
+        return delayed_notice_only
 
     unread_imprint = _unreadable_imprint_quality(effect_text)
     if unread_imprint is not None:
@@ -3052,15 +3070,26 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     if _is_layer_effect_text(effect_text):
         return create_continuous_effect
     unread = _unreadable_anaphoric_clause(effect_text, for_spell=True)
-    if unread is None:
+    if unread is not None:
+
+        def anaphoric_notice_only(game: "Game", spell: CardState) -> None:
+            game.anaphoric_clause_notices.append(
+                AnaphoricClauseNotice(source_id=spell.id, source_name=spell.card.name, text=unread)
+            )
+
+        return anaphoric_notice_only
+    unread_delayed = _unreadable_delayed_clause(effect_text, for_spell=True)
+    if unread_delayed is None:
         return None
 
-    def notice_only(game: "Game", spell: CardState) -> None:
-        game.anaphoric_clause_notices.append(
-            AnaphoricClauseNotice(source_id=spell.id, source_name=spell.card.name, text=unread)
+    def delayed_notice_only(game: "Game", spell: CardState) -> None:
+        game.delayed_clause_notices.append(
+            DelayedClauseNotice(
+                source_id=spell.id, source_name=spell.card.name, text=unread_delayed
+            )
         )
 
-    return notice_only
+    return delayed_notice_only
 
 
 def _parse_anaphoric_clause_pair(
@@ -3354,12 +3383,367 @@ def _parse_return_imprinted_clause(clause: str, *, for_spell: bool) -> TargetedC
     return effect
 
 
+# --------------------------------------------------------------------------
+# Delayed-trigger clauses (CR 603.7)
+# --------------------------------------------------------------------------
+#
+# "At the beginning of the next end step, return that card to the battlefield
+# under its owner's control" is not something that happens *now* - it is an
+# instruction to create a delayed triggered ability (`machines/delayed.py`)
+# that fires later. Phelia, Exuberant Shepherd's attack trigger used to resolve
+# and do nothing: its first clause ("exile up to one other target nonland
+# permanent") is `_EXILE_TARGET_RE`'s ordinary shape, but its second and third
+# clauses had no reader, so `parse_mixed_effect` correctly refused the *whole*
+# ability (CR 608.2c has no notion of running half an instruction) - silently.
+#
+# The linkage this needs that no other clause pair does: clause two's "that
+# card" is not a target of its own (CR 400.7's anaphora, same idea as
+# `_ANAPHORIC_SUBJECT_RE`), it is whichever object clause one's own verb just
+# moved - discovered only once clause one actually runs, at resolution. So the
+# combined effect below runs clause one itself (rather than delegating to
+# `exile_ability_targets`, which throws the moved object away) and closes over
+# the result when it builds the `DelayedTrigger`.
+
+#: The timing phrases this wave reads, mapped to the `Step` a `BEGINNING_OF_
+#: STEP` event carries for them. CR 511.2: "abilities that trigger 'at end of
+#: combat' trigger as the end of combat step begins" - the same event shape
+#: every other "at the beginning of ..." trigger already uses, just a
+#: different step. CR 513.2 (and its "likewise" for the upkeep) is why waiting
+#: for the *next* occurrence is always correct with no extra bookkeeping: an
+#: event already emitted for the current occurrence of a step never fires
+#: `DelayedTrigger.matches` a second time, so a trigger created during that
+#: step's own beginning is already waiting for the next turn's, not this
+#: turn's - exactly what CR 513.2 asks for.
+_DELAYED_TIMING_STEPS: dict[str, Step] = {
+    "the beginning of the next end step": Step.END_STEP,
+    "the beginning of the next turn's upkeep": Step.UPKEEP,
+    "end of combat": Step.END_OF_COMBAT,
+}
+
+_DELAYED_TIMING_PATTERN = "|".join(re.escape(phrase) for phrase in _DELAYED_TIMING_STEPS)
+
+#: "At <timing>, <verb>." - Phelia's own word order.
+_DELAYED_TIMING_LEADING_RE = re.compile(
+    rf"^at (?P<timing>{_DELAYED_TIMING_PATTERN}),\s*(?P<verb>.+)$", re.IGNORECASE
+)
+#: "<Verb> at <timing>." - Postmortem Lunge's, Nahiri's, Aether Membrane's,
+#: Mishra's Bauble's, and dash's reminder text's word order.
+_DELAYED_TIMING_TRAILING_RE = re.compile(
+    rf"^(?P<verb>.+?)\s+at (?P<timing>{_DELAYED_TIMING_PATTERN})$", re.IGNORECASE
+)
+
+
+def _parse_delayed_timing_clause(clause: str) -> tuple[Step, str] | None:
+    """Split `clause` into the step it waits for and the verb phrase left
+    over, in whichever of the two word orders `_DELAYED_TIMING_STEPS` prints
+    it in - or `None` if it names no timing phrase this wave reads at all."""
+    clause = clause.strip().rstrip(".")
+    match = _DELAYED_TIMING_LEADING_RE.fullmatch(clause) or _DELAYED_TIMING_TRAILING_RE.fullmatch(
+        clause
+    )
+    if match is None:
+        return None
+    step = _DELAYED_TIMING_STEPS.get(match.group("timing").lower())
+    if step is None:
+        return None
+    return step, match.group("verb").strip()
+
+
+#: "look at the top card of target player's/your/their library" - Mishra's
+#: Bauble's first clause, ahead of its own delayed-trigger second clause.
+#: CR 701.20e: "looking at a card follows the same rules as revealing a card,
+#: except that the card is shown only to the specified player" - purely
+#: informational, so there is nothing for this engine's board state to do.
+_LOOK_AT_TOP_CARD_RE = re.compile(
+    r"^look at the top card of (?:target player's|your|their) library$", re.IGNORECASE
+)
+
+
+def _look_at_top_card(game: "Game", stack_object: "StackObject") -> None:
+    """No-op (CR 701.20e): hidden information this engine does not model a
+    player "seeing" beyond what `Game.find_by_id` already lets any test read
+    directly. `Game.resolve_targets` still runs, so a target that is gone by
+    resolution is refused the ordinary way (CR 608.2b) even though nothing
+    here reads what came back."""
+    game.resolve_targets(stack_object)
+
+
+#: "return that card/it/that creature/that permanent to the battlefield under
+#: its/their owner's control" - the blink idiom (Phelia, Blizzard Strix, Angel
+#: of Condemnation, Astral Drift all print it verbatim).
+_RETURN_TO_BATTLEFIELD_OWNER_RE = re.compile(
+    r"^return (?:it|that card|that creature|that permanent) to the battlefield "
+    r"under (?:its|their) owner'?s control$",
+    re.IGNORECASE,
+)
+
+#: "draw a card" - Mishra's Bauble's second half, with no object at all.
+_DRAW_A_CARD_RE = re.compile(r"^draw a card$", re.IGNORECASE)
+
+
+def _parse_delayed_single_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """A whole ability whose *only* clause is a delayed-trigger creation, with
+    no antecedent clause of its own to supply "it": either there is no object
+    at all (Mishra's Bauble's "draw a card"), or the object is the trigger's
+    own event subject rather than anything targeted (Aether Membrane's "return
+    that creature to its owner's hand at end of combat" - CR 509.1a's "the
+    other creature in a blocking pair", read off `ability.event.related_id`
+    the same way `damage_the_other_combatant` already does).
+
+    Ability-only (`for_spell=False`): a spell has no `ability.event` to read a
+    bare pronoun off, and neither shape appears on a spell in this pool.
+    """
+    if for_spell:
+        return None
+    timing = _parse_delayed_timing_clause(clause)
+    if timing is None:
+        return None
+    step, verb = timing
+
+    if _DRAW_A_CARD_RE.fullmatch(verb):
+
+        def draw_effect(game: "Game", stack_object: "StackObject") -> None:
+            ability = stack_object
+            assert isinstance(ability, AbilityOnStack)
+            game.create_delayed_trigger(
+                DelayedTrigger(
+                    text=clause,
+                    event=TriggerEvent.BEGINNING_OF_STEP,
+                    step=step,
+                    controller=ability.controller,
+                    source_id=ability.source_id,
+                    source_name=ability.source_name,
+                    callback=draw_a_card_for_controller,
+                )
+            )
+
+        return draw_effect
+
+    if _RETURN_TO_HAND_RE.fullmatch(verb):
+
+        def return_to_hand_effect(game: "Game", stack_object: "StackObject") -> None:
+            ability = stack_object
+            assert isinstance(ability, AbilityOnStack)
+            event = ability.event
+            subject_id = event.related_id if event is not None else None
+            if subject_id is None and event is not None:
+                subject_id = event.subject_id
+            if subject_id is None:
+                return
+            subject = game.find_by_id(subject_id)
+            if not isinstance(subject, CardState):
+                return
+            game.create_delayed_trigger(
+                DelayedTrigger(
+                    text=clause,
+                    event=TriggerEvent.BEGINNING_OF_STEP,
+                    step=step,
+                    controller=ability.controller,
+                    source_id=ability.source_id,
+                    source_name=ability.source_name,
+                    subject_id=subject.id,
+                    expected_zone=Zone.BATTLEFIELD,
+                    expected_stamp=subject.zone_change_stamp,
+                    callback=return_subject_to_hand,
+                )
+            )
+
+        return return_to_hand_effect
+
+    return None
+
+
+#: "return it/that card/that creature/that permanent to its owner's/your/
+#: their owner's/their hand" - Aether Membrane's own shape.
+_RETURN_TO_HAND_RE = re.compile(
+    r"^return (?:it|that card|that creature|that permanent) to "
+    r"(?:its owner's|your|their owner's|their) hand$",
+    re.IGNORECASE,
+)
+
+#: "if it entered under your control, put N +1/+1 counter(s) on <recipient>" -
+#: Phelia's own rider, generalised: `<recipient>` is read and checked against
+#: the *resolving* source's own name at run time (its short form, "Phelia",
+#: included), never hardcoded, so this reads any card printing the same shape
+#: rather than being one more name-keyed table row.
+_RETURN_RIDER_COUNTER_RE = re.compile(
+    r"^if it entered under your control, "
+    r"put (?P<n>a|one|two|three|four|five) \+1/\+1 counters? on (?P<who>.+)$",
+    re.IGNORECASE,
+)
+
+#: What the rider does once the delayed return has happened: `Callable[[Game,
+#: the returned card, the creating ability's controller username, the
+#: creating source's id, the creating source's name], None]`.
+_ReturnRider = Callable[["Game", CardState, str, UUID | None, str], None]
+
+
+def _parse_return_rider_clause(clause: str) -> _ReturnRider | None:
+    """Phelia's third sentence: "If it entered under your control, put a
+    +1/+1 counter on Phelia." Conditional on the delayed return itself (not on
+    anything true when the outer ability resolved), so it has to run as part
+    of the delayed trigger's own resolution, not the attack trigger's.
+    """
+    match = _RETURN_RIDER_COUNTER_RE.fullmatch(clause.strip().rstrip("."))
+    if match is None:
+        return None
+    amount = _count(match.group("n"))
+    who = match.group("who").strip().lower()
+
+    def rider(
+        game: "Game",
+        returned: CardState,
+        controller: str,
+        source_id: UUID | None,
+        source_name: str,
+    ) -> None:
+        if returned.controller != controller:
+            return  # "if it entered under your control"
+        recipient = game.find_by_id(source_id) if source_id is not None else None
+        if recipient is None or recipient.zone is not Zone.BATTLEFIELD:
+            return  # the source is gone; CR 608.2b's outcome for no legal target
+        short_name = source_name.split(",")[0].strip().lower()
+        if who not in ("this creature", "this permanent", source_name.lower(), short_name):
+            return
+        game.add_counters(recipient, Counter.PLUS_ONE, amount)
+
+    return rider
+
+
+def _parse_delayed_blink_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """ "Exile up to one other target nonland permanent. At the beginning of
+    the next end step, return that card to the battlefield under its owner's
+    control[. If it entered under your control, put a +1/+1 counter on
+    <recipient>.]" as one combined instruction (CR 608.2c) - two or three
+    consecutive clauses starting at `index`, or `None` if `index` is not the
+    start of this shape.
+
+    The linkage: clause two's "that card" is CR 400.7's anaphora back to
+    whatever clause one's own exile just moved, discovered only as clause one
+    actually runs - so the combined effect below exiles the target itself
+    (not `exile_ability_targets`, which has nowhere to hand the result back
+    to) and closes over the exiled `CardState` when it builds the
+    `DelayedTrigger`, the same way `_parse_anaphoric_clause_pair` closes over
+    its own first clause's target.
+    """
+    exile_match = _EXILE_TARGET_RE.fullmatch(clauses[index])
+    if exile_match is None:
+        return None
+    if not _targets_understood(
+        exile_match.group("phrase"), count_agnostic=True, battlefield_only=False
+    ):
+        return None
+    if index + 1 >= len(clauses):
+        return None
+    timing = _parse_delayed_timing_clause(clauses[index + 1])
+    if timing is None:
+        return None
+    step, verb = timing
+    if not _RETURN_TO_BATTLEFIELD_OWNER_RE.fullmatch(verb):
+        return None
+
+    consumed = 2
+    rider: _ReturnRider | None = None
+    if index + 2 < len(clauses):
+        maybe_rider = _parse_return_rider_clause(clauses[index + 2])
+        if maybe_rider is not None:
+            rider = maybe_rider
+            consumed = 3
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source_name = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        source_id = stack_object.id if for_spell else stack_object.source_id  # type: ignore[union-attr]
+        controller = game.controller_of(stack_object).username
+        targets = [
+            target for target in game.resolve_targets(stack_object) if isinstance(target, CardState)
+        ]
+        if not targets:
+            # CR 115.6: "up to one" chose zero, or CR 608.2b left nothing
+            # legal - nothing to exile, so nothing to delay either.
+            return
+        target = targets[0]
+        game.exile_permanent(target)
+        if target.zone is not Zone.EXILE:
+            # CR 111.8 refused it (a token that already left the battlefield
+            # once) - no delayed return for something that never left.
+            return
+
+        if rider is None:
+            callback = return_subject_to_battlefield_under_owner
+        else:
+
+            def callback(game: "Game", ability: AbilityOnStack, trigger: DelayedTrigger) -> None:
+                returned = trigger.still_affects(game)
+                if returned is None or returned.owner is None:
+                    return
+                game.put_onto_battlefield(returned, returned.owner, tapped=False)
+                if returned.zone is Zone.BATTLEFIELD:
+                    rider(game, returned, controller, source_id, source_name)
+
+        game.create_delayed_trigger(
+            DelayedTrigger(
+                text=clauses[index + 1],
+                event=TriggerEvent.BEGINNING_OF_STEP,
+                step=step,
+                controller=controller,
+                source_id=source_id,
+                source_name=source_name,
+                subject_id=target.id,
+                expected_zone=Zone.EXILE,
+                expected_stamp=target.zone_change_stamp,
+                callback=callback,
+            )
+        )
+
+    return consumed, effect
+
+
+class DelayedClauseNotice(BaseModel):
+    """One delayed-trigger clause (CR 603.7) whose timing this wave recognised
+    - "at the beginning of the next end step", "at end of combat", "at the
+    beginning of the next turn's upkeep" - but whose antecedent or verb it
+    still could not read, so `parse_mixed_effect`/`parse_mixed_effect_for_
+    spell` refused the whole ability rather than exiling (say) a permanent it
+    could never guarantee returning. Postmortem Lunge's "Exile it at the
+    beginning of the next end step" (the antecedent is a reanimation target
+    with a variable mana value, not this wave's shape) and Nahiri, the
+    Harbinger's -8 (the antecedent is a search result, not a target or an
+    event subject) are both this: the same "unreadable is not the same as no
+    effect" record `AnaphoricClauseNotice` and its siblings already keep.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    source_id: UUID | None
+    source_name: str
+    text: str
+
+
+def _unreadable_delayed_clause(text: str, *, for_spell: bool) -> str | None:
+    """The first clause of `text` that names one of `_DELAYED_TIMING_STEPS`'s
+    phrases, if `_prepare_effect_clauses` can split it out at all - used only
+    to decide whether an effect this wave already failed to parse deserves a
+    `DelayedClauseNotice`, not to parse it (the caller already tried and
+    failed by the time this runs, exactly as `_unreadable_anaphoric_clause`'s
+    caller does).
+    """
+    clauses = _prepare_effect_clauses(text)
+    if clauses is None:
+        return None
+    for clause in clauses:
+        if _parse_delayed_timing_clause(clause) is not None:
+            return clause
+    return None
+
+
 def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """One clause of a mixed effect: the targeted shape first, then a token
-    creation, then a search, then the imprint shape, then the plain player
-    shape (CR 608.2c does not care which kind of instruction a card lists
-    first, so no parser gets priority for any reason beyond "try this one,
-    then the next").
+    creation, then a search, then the imprint shape, then a delayed-trigger
+    creation, then the plain player shape (CR 608.2c does not care which kind
+    of instruction a card lists first, so no parser gets priority for any
+    reason beyond "try this one, then the next").
     """
     targeted = _parse_targeted_clause(clause, for_spell=for_spell)
     if targeted is not None:
@@ -3376,6 +3760,11 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     return_imprinted = _parse_return_imprinted_clause(clause, for_spell=for_spell)
     if return_imprinted is not None:
         return return_imprinted
+    delayed = _parse_delayed_single_clause(clause, for_spell=for_spell)
+    if delayed is not None:
+        return delayed
+    if _LOOK_AT_TOP_CARD_RE.fullmatch(clause.strip()):
+        return _look_at_top_card
     player_clause = _parse_optional_player_clause(clause)
     if player_clause is None:
         return None
@@ -3422,6 +3811,12 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             index += consumed
             continue
         merged = _merge_prevent_damage_from_target_clauses(clauses, index)
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _parse_delayed_blink_clauses(clauses, index, for_spell=for_spell)
         if merged is not None:
             consumed, effect = merged
             parsed.append(effect)

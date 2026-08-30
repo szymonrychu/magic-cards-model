@@ -150,23 +150,27 @@ def test_a_dashed_creature_has_haste():
     assert has_keyword(ragavan, Keyword.HASTE, scenario.game)
 
 
-@pytest.mark.xfail(
-    reason=(
-        "CR 702.109a's second ability is a delayed triggered ability (CR 603.7) created "
-        "as the permanent enters (CR 608.3g). Game._create_resolution_delayed_triggers "
-        "builds warp's and nothing builds dash's. See docs/engine-coverage.md."
-    ),
-    strict=True,
-)
 def test_a_dashed_creature_goes_back_to_hand_at_the_next_end_step():
     """CR 702.109a: "return the permanent this spell becomes to its owner's hand
-    at the beginning of the next end step"."""
+    at the beginning of the next end step".
+
+    `Game._create_resolution_delayed_triggers` now builds dash's delayed
+    trigger the same way it already built warp's - `machines/delayed.py`'s
+    `return_subject_to_hand` is the executor, shared with Aether Membrane's
+    "return that creature to its owner's hand at end of combat".
+
+    The turn is walked with `scenario.advance()` rather than jumped to with
+    `start_at`: CR 500.6's "a step began" event is what `Game.advance` emits,
+    and a delayed trigger only fires off that event - `start_at` moves the
+    turn machine directly and fires nothing, so it would never trigger this
+    even once the executor existed.
+    """
     scenario = board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     ragavan = dash_it(scenario)
 
-    scenario.start_at(Step.END_STEP)
-    scenario.game.put_triggers_on_stack()
+    while scenario.step is not Step.END_STEP:
+        scenario.advance()
     while not scenario.game.stack_is_empty:
         scenario.resolve_top()
 
