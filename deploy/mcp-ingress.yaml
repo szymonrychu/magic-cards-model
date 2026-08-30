@@ -1,0 +1,45 @@
+# Static ingress exposing the spellslinger MCP server to the home network.
+#
+# The service itself is helm-managed (chart spellslinger-mcp-http) and ships no
+# ingress, so this is applied on its own:
+#
+#     kubectl apply -f deploy/mcp-ingress.yaml
+#
+# LAN only. The MCP endpoint has no authentication of its own, so the source
+# range is the only thing keeping it off the public internet - the same pattern
+# the lightrag-tmp ingresses in the tatara namespace use. Do not widen it
+# without putting auth in front first.
+#
+# *.szymonrichert.pl resolves to 192.168.1.25 on the LAN and to the public IP
+# outside it, so this host works from home with no extra DNS record.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: spellslinger-mcp-http-lan
+  namespace: spellslinger-development
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    kubernetes.io/tls-acme: "true"
+    nginx.ingress.kubernetes.io/whitelist-source-range: 192.168.0.0/16,10.0.0.0/8,172.16.0.0/12
+    # MCP streams over long-lived responses; the default 60s read timeout cuts
+    # tool calls off mid-flight.
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: mcp.szymonrichert.pl
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: spellslinger-mcp-http
+                port:
+                  number: 8080
+  tls:
+    - hosts:
+        - mcp.szymonrichert.pl
+      secretName: spellslinger-mcp-http-tls

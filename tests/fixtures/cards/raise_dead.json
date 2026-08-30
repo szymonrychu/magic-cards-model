@@ -1,0 +1,134 @@
+{
+  "object": "card",
+  "id": "4950c3c2-80c1-4447-ac38-cf40f76b9545",
+  "oracle_id": "cbc9c731-181a-4f00-a7b0-eb7e56eac2ea",
+  "multiverse_ids": [
+    429907
+  ],
+  "mtgo_id": 64330,
+  "mtgo_foil_id": 64331,
+  "tcgplayer_id": 131394,
+  "cardmarket_id": 297410,
+  "name": "Raise Dead",
+  "lang": "en",
+  "released_at": "2017-04-15",
+  "uri": "https://api.scryfall.com/cards/4950c3c2-80c1-4447-ac38-cf40f76b9545",
+  "scryfall_uri": "https://scryfall.com/card/w17/18/raise-dead?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:55:46Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/4/9/4950c3c2-80c1-4447-ac38-cf40f76b9545.jpg?1783936546",
+    "normal": "https://cards.scryfall.io/normal/front/4/9/4950c3c2-80c1-4447-ac38-cf40f76b9545.jpg?1783936546",
+    "large": "https://cards.scryfall.io/large/front/4/9/4950c3c2-80c1-4447-ac38-cf40f76b9545.jpg?1783936546",
+    "png": "https://cards.scryfall.io/png/front/4/9/4950c3c2-80c1-4447-ac38-cf40f76b9545.png?1783936546",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/4/9/4950c3c2-80c1-4447-ac38-cf40f76b9545.jpg?1783936546",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/4/9/4950c3c2-80c1-4447-ac38-cf40f76b9545.jpg?1783936546",
+    "thumb": "https://cards.scryfall.io/thumb/front/4/9/4950c3c2-80c1-4447-ac38-cf40f76b9545.webp?1783936546",
+    "grid": "https://cards.scryfall.io/grid/front/4/9/4950c3c2-80c1-4447-ac38-cf40f76b9545.webp?1783936546",
+    "display": "https://cards.scryfall.io/display/front/4/9/4950c3c2-80c1-4447-ac38-cf40f76b9545.webp?1783936546",
+    "art": "https://cards.scryfall.io/art/front/4/9/4950c3c2-80c1-4447-ac38-cf40f76b9545.webp?1783936546",
+    "crop": "https://cards.scryfall.io/crop/front/4/9/4950c3c2-80c1-4447-ac38-cf40f76b9545.webp?1783936546"
+  },
+  "mana_cost": "{B}",
+  "cmc": 1.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Return target creature card from your graveyard to your hand.",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "2027da7f-c82a-4080-af34-4b9edf7c5132",
+  "set": "w17",
+  "set_name": "Welcome Deck 2017",
+  "set_type": "starter",
+  "set_uri": "https://api.scryfall.com/sets/2027da7f-c82a-4080-af34-4b9edf7c5132",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aw17&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/w17?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/4950c3c2-80c1-4447-ac38-cf40f76b9545/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Acbc9c731-181a-4f00-a7b0-eb7e56eac2ea&unique=prints",
+  "collector_number": "18",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "The earth cannot hold that which magic commands.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Carl Critchlow",
+  "artist_ids": [
+    "17948f16-611a-44b8-8d10-9895a0bdfff1"
+  ],
+  "illustration_id": "3f783491-fe42-4154-843e-71b7c1bf9647",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "starterdeck"
+  ],
+  "edhrec_rank": 9121,
+  "penny_rank": 11170,
+  "prices": {
+    "usd": "0.14",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.09",
+    "eur_foil": null,
+    "tix": "0.04"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=429907&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRaise%2BDead",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DRaise%2BDead",
+    "edhrec": "https://edhrec.com/route/?cc=Raise+Dead"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F131394%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=297410&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/64330?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

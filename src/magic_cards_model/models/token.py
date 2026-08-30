@@ -1,0 +1,647 @@
+"""Tokens: what one is, how it is created, and when it ceases to exist (CR 111).
+
+Every rule number in this file was looked up with
+`knowledge_search(q=..., type="rules")` in the session that wrote it and then
+read **in full** out of the 2026-08-19 Comprehensive Rules, because the search
+excerpts truncate at roughly 150 characters and CR 111 keeps its operative
+clauses in the tail. The load-bearing ones:
+
+- **CR 111.1** - "Some effects put tokens onto the battlefield. A token is a
+  marker used to represent any permanent that isn't represented by a card."
+- **CR 111.2** - "The player who creates a token is its owner. The token enters
+  the battlefield under that player's control."
+- **CR 111.3** - "The spell or ability that creates a token may define the values
+  of any number of characteristics for the token. This becomes the token's
+  'text.' The characteristic values defined this way are **functionally
+  equivalent to the characteristic values that are printed on a card**; for
+  example, they define the token's copiable values. A token doesn't have any
+  characteristics not defined by the spell or ability that created it."
+
+  That sentence is the whole design of this module. A token's stated
+  characteristics *are* a printed card's characteristics as far as the rules are
+  concerned, so a `TokenDefinition` is turned into a `Card` and a token is a
+  `CardState` over it. That is not hand-written card data standing in for a real
+  printing - there is no printing to stand in for. CR 111.6 keeps the line
+  straight: "A token isn't a card (even if represented by a card that has a
+  Magic back...)", which is what `TokenState.token` records.
+
+- **CR 111.4** - "A spell or ability that creates a token sets both its name and
+  its subtype(s). If the spell or ability doesn't specify the name of the token,
+  its name is the same as its subtype(s) plus the word 'Token.'" So a "1/1 white
+  Spirit creature token" is named `Spirit Token`, and Minsc's Boo is named `Boo`
+  because the card says so.
+- **CR 111.5** - a token whose characteristics a rule or effect forbids from
+  entering the battlefield is *not created* at all.
+- **CR 111.7** - "A token that's in a zone other than the battlefield ceases to
+  exist. This is a state-based action; see rule 704. (Note that if a token
+  changes zones, applicable triggered abilities will trigger before the token
+  ceases to exist.)" The parenthesis matters: a token's dies trigger *does*
+  happen. **CR 704.5d** states the same action from the state-based side: "If a
+  token is in a zone other than the battlefield, it ceases to exist."
+- **CR 111.8** - "A token that has left the battlefield can't move to another
+  zone or come back onto the battlefield. If such a token would change zones, it
+  remains in its current zone instead. It ceases to exist the next time
+  state-based actions are checked."
+- **CR 111.10** - the predefined tokens. Four are needed by the current pool:
+  CR 111.10a's Treasure, CR 111.10b's Food, CR 111.10h's Powerstone, and
+  CR 111.10k's Monster Role.
+- **CR 111.13** - "A copy of a permanent spell becomes a token as it resolves."
+  Not the same thing as *creating* a token copy, which is CR 707.2 copying plus
+  CR 701.7a creating; the distinction is on `token_copy_of`.
+- **CR 110.1** - "A permanent is a card **or token** on the battlefield", which is
+  why a token needs no special case anywhere else in the engine.
+- **CR 205.2c** - "Tokens have card types even though they aren't cards."
+- **CR 109.3** - an object's characteristics are "name, mana cost, color, color
+  indicator, card type, subtype, supertype, rules text, abilities, power,
+  toughness, loyalty, defense, hand modifier, and life modifier". Rarity and set
+  are *not* characteristics, so the values this module puts in those two `Card`
+  fields carry no rules meaning.
+- **CR 202.3a** - "The mana value of an object with no mana cost is 0."
+
+## Where the rest of each rule lives
+
+Three of the rules above are only half here, because the other half belongs to
+`models/game.py` and `models/player.py`:
+
+- **CR 704.5d** is a state-based action, dispatched by
+  `Game._state_based_actions_once`, which calls `tokens_that_cease_to_exist`.
+- **CR 111.8** needs both halves to agree: `TokenState.move_to` declines to
+  change the token's `zone`, and every caller that moves a card between zone
+  lists asks `move_refused` first so a refused move is not relisted.
+- **CR 701.7b**'s creation event is raised by `create_tokens` and
+  `token_copy_of` through `machines/replacement.py`, which is what Doubling
+  Season's token half watches.
+"""
+
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Any
+from uuid import uuid4
+
+from pydantic import BaseModel, ConfigDict
+
+from .card import Card, Color, Layout, Legalities, Legality, Rarity, Supertype, Type
+from .card_state import CardState, CounterKind
+from .zone import Zone
+
+if TYPE_CHECKING:  # pragma: no cover - import cycle: Game builds on the models
+    from .card_state import TargetRef
+    from .game import Game
+
+#: A token is not a card, so it is legal in nothing. `Card.legalities` is a
+#: deckbuilding field and not a characteristic (CR 109.3), so this is filler.
+_NO_LEGALITY = Legalities(
+    standard=Legality.NOT_LEGAL, pioneer=Legality.NOT_LEGAL, modern=Legality.NOT_LEGAL
+)
+
+#: Types in the order a type line prints them, so a synthesised line reads the
+#: way the card that creates the token reads (CR 205.1a).
+_TYPE_ORDER: tuple[Type, ...] = (
+    Type.KINDRED,
+    Type.ARTIFACT,
+    Type.ENCHANTMENT,
+    Type.LAND,
+    Type.CREATURE,
+    Type.PLANESWALKER,
+    Type.BATTLE,
+    Type.INSTANT,
+    Type.SORCERY,
+)
+
+
+class TokenDefinition(BaseModel):
+    """What a spell or ability says a token is (CR 111.3).
+
+    "The spell or ability that creates a token may define the values of any
+    number of characteristics for the token. This becomes the token's 'text.'"
+    Everything left unset is absent rather than defaulted, because CR 111.3 ends
+    "A token doesn't have any characteristics not defined by the spell or ability
+    that created it" - a 1/1 green Saproling has no mana cost, no supertypes, no
+    rules text and no abilities.
+
+    Frozen, because a definition is the printed text of the effect that creates
+    the token and several tokens created by one resolution share it.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    types: tuple[Type, ...] = (Type.CREATURE,)
+    subtypes: tuple[str, ...] = ()
+    supertypes: tuple[Supertype, ...] = ()
+    colors: tuple[Color, ...] = ()
+    """Empty means colorless (CR 105.2). A token has no mana cost, so its colour
+    is whatever the creating effect stated and nothing else."""
+
+    power: int | None = None
+    toughness: int | None = None
+
+    name: str | None = None
+    """Set only when the card names the token - "create Boo, a legendary 1/1 red
+    Hamster creature token" (CR 111.9). Left None, CR 111.4 derives the name."""
+
+    rules_text: str | None = None
+    """The abilities the creating effect granted, as they would be printed."""
+
+    keywords: tuple[str, ...] = ()
+    """Keyword abilities, held the way a Scryfall printing holds them so that
+    everything already reading `Card.keywords` - `machines/combat.py`'s
+    `has_keyword` and `machines/abilities.parse_abilities`, for two - sees a
+    token's flying or deathtouch.
+
+    A keyword that takes a parameter is named here *and* printed in `rules_text`,
+    exactly as a printing carries it: Hyena Umbra's Scryfall object lists
+    `Enchant` in `keywords` and prints `Enchant creature` in its oracle text.
+    `oracle_text` below does not print such a keyword twice."""
+
+    @property
+    def card_name(self) -> str:
+        """The token's name (CR 111.4).
+
+        "If the spell or ability doesn't specify the name of the token, its name
+        is the same as its subtype(s) plus the word 'Token.'" A token with no
+        subtypes and no stated name has nothing to build one out of, so it is
+        called `Token`.
+        """
+        if self.name is not None:
+            return self.name
+        return " ".join([*self.subtypes, "Token"]).strip()
+
+    @property
+    def type_line(self) -> str:
+        """The type line these characteristics would print as (CR 205.1a)."""
+        left = [supertype.value.capitalize() for supertype in self.supertypes]
+        left += [
+            card_type.value.capitalize() for card_type in _TYPE_ORDER if card_type in self.types
+        ]
+        line = " ".join(left)
+        return f"{line} — {' '.join(self.subtypes)}" if self.subtypes else line
+
+    @property
+    def oracle_text(self) -> str | None:
+        """The token's rules text: its keywords, then whatever else it was given.
+
+        Printed the way a real card prints them, so the ability parser reads a
+        token's text the same way it reads a printing's. CR 111.3 is the licence:
+        the stated characteristics "are functionally equivalent to the
+        characteristic values that are printed on a card", so the text has to
+        look like printed text or the readers that expect printed text will miss
+        it.
+
+        A keyword whose printed form the definition already spells out in
+        `rules_text` is not printed a second time. CR 702.5a's "Enchant [object
+        or player]" is the case that needs it: the Monster Role names `Enchant`
+        as a keyword (CR 111.10k) and prints `Enchant creature` as the line, and
+        a Scryfall printing of an Aura carries exactly that pair.
+        """
+        printed = [line.strip().lower() for line in (self.rules_text or "").splitlines()]
+        bare = [
+            keyword
+            for keyword in self.keywords
+            if not any(line.startswith(keyword.lower()) for line in printed)
+        ]
+        lines = [", ".join(bare)] if bare else []
+        if self.rules_text:
+            lines.append(self.rules_text)
+        return "\n".join(lines) or None
+
+    def to_card(self) -> Card:
+        """These characteristics as the object the rest of the engine reads.
+
+        CR 111.3 says a token's stated characteristics are "functionally
+        equivalent to the characteristic values that are printed on a card", so
+        this is the rule and not a shortcut. `layout` is `Layout.TOKEN`, which is
+        both what Scryfall marks a token object with and the marker that survives
+        a `model_dump`/`model_validate` round trip - see `is_token`.
+
+        `cmc` is 0 by CR 202.3a, since a token has no mana cost. `rarity` and
+        `set` are not characteristics (CR 109.3) and mean nothing here.
+        """
+        return Card(
+            id=uuid4(),
+            name=self.card_name,
+            type_line=self.type_line,
+            mana_cost=None,
+            cmc=0.0,
+            oracle_text=self.oracle_text,
+            colors=list(self.colors),
+            color_identity=list(self.colors),
+            keywords=list(self.keywords),
+            power=None if self.power is None else str(self.power),
+            toughness=None if self.toughness is None else str(self.toughness),
+            layout=Layout.TOKEN,
+            legalities=_NO_LEGALITY,
+            rarity=Rarity.COMMON,
+            set="token",
+        )
+
+
+class TokenState(CardState):
+    """One token in a game (CR 111.1).
+
+    A `CardState` over a synthesised `Card`, because CR 110.1 makes a token a
+    permanent exactly like a card is one and CR 111.6 says it "is subject to
+    anything that affects permanents in general". Everything the engine already
+    does to a permanent - entering, tapping, attacking, dying, layers, counters -
+    therefore works on a token without a single special case.
+
+    Two things are its own:
+
+    - `token` is `CardState`'s own flag (CR 111.6, CR 108.2b), defaulted to True
+      here so a token cannot be built without it. `machines/targeting.py` reads
+      the same flag for CR 111.1's "target token" and "target nontoken
+      permanent".
+    - `move_to` enforces CR 111.8, which nothing else in the engine does.
+    """
+
+    token: bool = True
+
+    left_the_battlefield: bool = False
+    """True once this token has been on the battlefield and gone (CR 111.8).
+
+    Not a rules concept of its own - it is what CR 111.8's "a token that has left
+    the battlefield" needs somebody to remember, since the token's current zone
+    cannot tell a token that died from one that was never put onto the
+    battlefield in the first place.
+    """
+
+    def move_to(self, zone: Zone) -> None:
+        """CR 111.8: a token that has left the battlefield does not move again.
+
+        "A token that has left the battlefield can't move to another zone or come
+        back onto the battlefield. If such a token would change zones, it remains
+        in its current zone instead. It ceases to exist the next time state-based
+        actions are checked."
+
+        The *first* move off the battlefield is allowed - that is the move that
+        makes it a token that has left - and CR 111.7's parenthesis is why it has
+        to be: "if a token changes zones, applicable triggered abilities will
+        trigger before the token ceases to exist", so a token really does reach
+        the graveyard and really does fire its dies trigger.
+        """
+        if self.left_the_battlefield:
+            return
+        if self.zone is Zone.BATTLEFIELD and zone is not Zone.BATTLEFIELD:
+            self.left_the_battlefield = True
+        super().move_to(zone)
+
+
+def move_refused(state: Any, zone: Zone) -> str | None:
+    """Why CR 111.8 refuses to move this object, or None if it does not.
+
+    "A token that has left the battlefield can't move to another zone or come
+    back onto the battlefield. If such a token would change zones, it remains in
+    its current zone instead. It ceases to exist the next time state-based
+    actions are checked."
+
+    `TokenState.move_to` enforces the *token's* half - it declines to change
+    `zone` - but a zone is two things in this engine: the token's own `zone`
+    attribute and the list it is sitting in. Every caller that moves a card
+    between lists asks here first, so the two halves cannot disagree; a token
+    that refused the move must not be relisted anywhere, or the game state says
+    it is in a zone its own `zone` denies.
+
+    Read through `getattr` rather than `isinstance(state, TokenState)` for the
+    same reason `is_token` has two answers: `Game` holds its zones as
+    `list[CardState]`, so a token round-tripped through `model_validate` comes
+    back as a plain `CardState` and only the field survives.
+    """
+    if not getattr(state, "left_the_battlefield", False):
+        return None
+    return (
+        f"{getattr(state, 'name', 'a token')} has left the battlefield and cannot move "
+        f"to {zone.value} (CR 111.8)"
+    )
+
+
+def is_token(state: Any) -> bool:
+    """Whether this object is a token rather than a card (CR 111.1, CR 111.6).
+
+    Two answers, and they agree. `CardState.token` is the direct one, and it is
+    what `machines/targeting.py` reads. The `Card.layout` one is the belt to that
+    braces: `Game` holds its zones as `list[CardState]`, so a token that has been
+    round-tripped through `model_validate` is rebuilt as a plain `CardState` and
+    keeps the flag - but a caller that built a permanent from a token's `Card`
+    without setting the flag is still caught, because the token's `Card` is
+    synthesised with `Layout.TOKEN`, which is both what Scryfall marks a token
+    object with and a value no real printing in the pool carries.
+    """
+    if getattr(state, "token", False):
+        return True
+    card = getattr(state, "card", None)
+    return getattr(card, "layout", None) in (Layout.TOKEN, Layout.DOUBLE_FACED_TOKEN)
+
+
+# --------------------------------------------------------------------------
+# Predefined tokens (CR 111.10)
+# --------------------------------------------------------------------------
+
+#: CR 111.10a: "A Treasure token is a colorless Treasure artifact token with
+#: '{T}, Sacrifice this token: Add one mana of any color.'"
+TREASURE = TokenDefinition(
+    types=(Type.ARTIFACT,),
+    subtypes=("Treasure",),
+    rules_text="{T}, Sacrifice this token: Add one mana of any color.",
+)
+
+#: CR 111.10b: "A Food token is a colorless Food artifact token with '{2}, {T},
+#: Sacrifice this token: You gain 3 life.'" - Generous Ent.
+FOOD = TokenDefinition(
+    types=(Type.ARTIFACT,),
+    subtypes=("Food",),
+    rules_text="{2}, {T}, Sacrifice this token: You gain 3 life.",
+)
+
+#: CR 111.10h: "A Powerstone token is a colorless Powerstone artifact token
+#: with '{T}: Add {C}. This mana can't be spent to cast a nonartifact
+#: spell.'" - Cityscape Leveler.
+POWERSTONE = TokenDefinition(
+    types=(Type.ARTIFACT,),
+    subtypes=("Powerstone",),
+    rules_text="{T}: Add {C}. This mana can't be spent to cast a nonartifact spell.",
+)
+
+#: CR 111.10k: "A Monster Role token is a colorless Aura Role enchantment token
+#: named Monster with enchant creature and 'Enchanted creature gets +1/+1 and has
+#: trample.'" The name is stated by the rule, so CR 111.4 does not derive one.
+#:
+#: `Enchant` is named as a keyword as well as printed, because that is how a
+#: printing carries it and because CR 704.5m's reader
+#: (`machines/keywords.enchant_restrictions`) finds an enchant ability by asking
+#: `machines/abilities.parse_abilities`, which matches keywords against the
+#: object's keyword list. A Role whose enchant ability nothing can see is an Aura
+#: attached to an object nothing can call legal, and CR 704.5m bins it on sight.
+MONSTER_ROLE = TokenDefinition(
+    types=(Type.ENCHANTMENT,),
+    subtypes=("Aura", "Role"),
+    name="Monster",
+    keywords=("Enchant",),
+    rules_text="Enchant creature\nEnchanted creature gets +1/+1 and has trample.",
+)
+
+#: The predefined tokens this engine knows, by the name a card calls them
+#: (CR 111.10). The list in the rules is much longer; these are the ones the
+#: card pool reaches for.
+PREDEFINED: dict[str, TokenDefinition] = {
+    "Treasure": TREASURE,
+    "Food": FOOD,
+    "Powerstone": POWERSTONE,
+    "Monster": MONSTER_ROLE,
+}
+
+
+# --------------------------------------------------------------------------
+# Creating them (CR 701.7)
+# --------------------------------------------------------------------------
+
+
+def create_tokens(
+    game: "Game",
+    definition: TokenDefinition,
+    controller: str,
+    count: int = 1,
+    *,
+    tapped: bool = False,
+    attacking: "TargetRef | str | None" = None,
+    counters: dict[CounterKind, int] | None = None,
+    attached_to: CardState | None = None,
+) -> list[TokenState]:
+    """Create `count` tokens with these characteristics (CR 701.7a, CR 111.2).
+
+    CR 701.7a: "To create one or more tokens with certain characteristics, put
+    the specified number of tokens with the specified characteristics onto the
+    battlefield." So this is `Game.put_onto_battlefield`, which means a token
+    goes through the same replacement effects (CR 701.7b) and fires the same
+    enters-the-battlefield triggers (CR 603.6a) any other permanent does.
+
+    CR 111.2 puts it under the creating player's control, and CR 302.6 leaves it
+    summoning sick like anything else that just arrived - a token creature cannot
+    attack the turn it was created unless it was given haste.
+
+    `attacking` is CR 508.4, and `tapped` with it is Dalkovan Encampment's "tapped
+    and attacking": **"Such creatures are 'attacking' but, for the purposes of
+    trigger events and effects, they never 'attacked.'"** That whole sentence is
+    in the tail `knowledge_search` cuts off, and it is why nothing here emits an
+    `ATTACKS` event. CR 508.4c adds that such a creature "isn't affected by
+    requirements or restrictions that apply to the declaration of attackers", so
+    summoning sickness (CR 302.6) does not stop it either.
+
+    Two ways it does not become an attacker even so, both checked here:
+    CR 506.3b, put onto the battlefield attacking "under the control of any
+    player except an attacking player"; and CR 506.3c / CR 508.4a, attacking a
+    player who is no longer in the game.
+
+    `counters` are put on after the token has arrived, because CR 122.6 counts
+    them as counters being put on the object - which is the second event inside
+    the first that Doubling Season's counter half watches for.
+
+    **How many** is a replaceable event of its own (CR 701.7b): "If a replacement
+    effect applies to a token being created, that effect applies before
+    considering any continuous effects that will modify the characteristics of
+    that token. If a replacement effect applies to a token entering the
+    battlefield, that effect applies after considering any continuous effects
+    that will modify the characteristics of that token." The two sentences are
+    two different events, and this is the first of them - raised here, before a
+    single token has been built, which is what lets Doubling Season double the
+    count while the characteristics are still nothing but a `TokenDefinition`.
+    The second sentence is the ordinary `ENTERS_BATTLEFIELD` event that
+    `Game.put_onto_battlefield` raises below, once per token.
+
+    **What is not modelled**: CR 111.5, "if a spell or ability would create a
+    token, but a rule or effect states that a permanent with one or more of that
+    token's characteristics can't enter the battlefield, the token is not
+    created". That is a check against the rules-modifying continuous effects of
+    CR 611.3, which this engine does not have; a token is always created here.
+    """
+    if count <= 0:
+        return []
+
+    # Imported here rather than at module scope: `machines/replacement.py` reads
+    # `is_token` off this module, so a top-level import would close the cycle.
+    from ..machines.replacement import EventKind, ReplaceableEvent, apply_replacements
+
+    creation = ReplaceableEvent(
+        kind=EventKind.CREATE_TOKENS,
+        player=game.player(controller),  # CR 111.2: the creator is the owner
+        amount=count,
+    )
+    apply_replacements(game, creation)
+    count = creation.amount
+    if count <= 0:
+        return []
+
+    card = definition.to_card()
+    created: list[TokenState] = []
+    for _ in range(count):
+        token = TokenState(card=card, zone=Zone.STACK, controller=controller)
+        # `zone=Zone.STACK` is only where it is *before* it exists: nothing holds
+        # it, and `enter_the_battlefield` calls `move_to(BATTLEFIELD)` at once.
+        # It is never a token in a zone other than the battlefield for the
+        # purposes of CR 111.7, because no state-based action is checked in
+        # between (CR 704.3 checks only when a player would get priority).
+        game.put_onto_battlefield(token, controller, tapped=tapped)
+        if token.zone is not Zone.BATTLEFIELD:
+            # A replacement effect sent it elsewhere (CR 614.6). CR 111.7 will
+            # have it cease to exist; it is not attacking and takes no counters.
+            created.append(token)
+            continue
+        if attached_to is not None:
+            token.attach_to(attached_to)  # CR 701.3a
+        for kind, amount in (counters or {}).items():
+            game.add_counters(token, kind, amount)
+        if attacking is not None:
+            _put_onto_the_battlefield_attacking(game, token, attacking)
+        created.append(token)
+    return created
+
+
+def create_predefined_tokens(
+    game: "Game", name: str, controller: str, count: int = 1, **options: Any
+) -> list[TokenState]:
+    """Create a token the rules define by name (CR 111.10).
+
+    "Some effects instruct a player to create a predefined token. These effects
+    use the definition below to determine the characteristics the token is
+    created with." A name the rules do not define raises rather than inventing
+    one: CR 111.11 would send an unknown name to the Oracle card reference, which
+    this engine has no way to consult at runtime.
+    """
+    definition = PREDEFINED.get(name)
+    if definition is None:
+        raise ValueError(f"{name} is not a predefined token this engine knows (CR 111.10)")
+    return create_tokens(game, definition, controller, count, **options)
+
+
+def token_copy_of(
+    game: "Game", original: CardState, controller: str, count: int = 1, **options: Any
+) -> list[TokenState]:
+    """ "Create a token that's a copy of [something]" (CR 701.7a, CR 707.2).
+
+    CR 707.2: "the copy acquires the copiable values of the original object's
+    characteristics ... The copiable values are the values derived from the text
+    printed on the object ... Other effects (including type-changing and
+    text-changing effects), status, counters, and stickers are not copied."
+
+    Sharing the original's `Card` object is exactly that: the `Card` is the
+    printed text and nothing else, so the copy gets the name, types, power and
+    abilities and gets none of the counters, damage, tapped status or continuous
+    effects the original is carrying. It works on a token original too, because
+    CR 111.3 makes a token's stated characteristics its copiable values.
+
+    CR 111.4's last example is the naming consequence: a token copy of Doomed
+    Dissenter is named Doomed Dissenter, not "Human Token".
+
+    **This is not CR 111.13.** That rule is about a copy of a permanent *spell*,
+    which "becomes a token as it resolves" and is explicitly "not 'created' for
+    the purposes of any replacement effects or triggered abilities that refer to
+    creating a token". This is a created token and does count.
+
+    A token copy is still a token being created, so CR 701.7b's creation event is
+    raised here too and Doubling Season doubles a token copy exactly as it
+    doubles any other.
+
+    **Not modelled**: CR 707.2's "as ... enters" power-and-toughness setting and
+    face-down status, and CR 111.12's "a copy of a nonexistent object" - the
+    caller has an object in hand, so there is nothing nonexistent to copy.
+    """
+    if count <= 0:
+        return []
+    from ..machines.replacement import EventKind, ReplaceableEvent, apply_replacements
+
+    creation = ReplaceableEvent(
+        kind=EventKind.CREATE_TOKENS, player=game.player(controller), amount=count
+    )
+    apply_replacements(game, creation)
+    count = creation.amount
+
+    created: list[TokenState] = []
+    for _ in range(count):
+        copy = TokenState(card=original.card, zone=Zone.STACK, controller=controller)
+        game.put_onto_battlefield(copy, controller, tapped=bool(options.get("tapped")))
+        created.append(copy)
+    return created
+
+
+def _put_onto_the_battlefield_attacking(
+    game: "Game", token: TokenState, attacking: "TargetRef | str"
+) -> None:
+    """CR 508.4: a creature put onto the battlefield already in combat.
+
+    CR 506.3a keeps a noncreature permanent out of it; CR 506.3b keeps out
+    anything not controlled by an attacking player; CR 506.3c and CR 508.4a keep
+    out an attack on a player who has left the game. In each case "that creature
+    does enter the battlefield, but it's never considered to be an attacking
+    creature", which is why every branch here returns rather than raising.
+    """
+    from ..machines.combat import Attack  # local: combat imports the models
+    from .card_state import TargetRef
+
+    if not token.is_creature:
+        return  # CR 506.3a
+    if token.controller != game.active_player.username:
+        return  # CR 506.3b
+    defender = TargetRef.coerce(attacking)
+    if defender.is_player and not game.is_in_game(str(defender.username)):
+        return  # CR 506.3c, CR 508.4a
+    if defender.is_card and game.find_by_id(defender.card_id) is None:  # type: ignore[arg-type]
+        return  # CR 506.3c
+    game.combat.attacks.append(Attack(attacker_id=token.id, defender=defender))
+
+
+# --------------------------------------------------------------------------
+# Ceasing to exist (CR 111.7, CR 704.5d)
+# --------------------------------------------------------------------------
+
+
+def tokens_that_cease_to_exist(game: "Game") -> list[CardState]:
+    """The state-based action of CR 704.5d, performed (CR 111.7).
+
+    "If a token is in a zone other than the battlefield, it ceases to exist."
+    Ceasing to exist is not going to a graveyard and not being exiled - the token
+    is simply removed from wherever it is and is gone. Returns what went, so a
+    caller can report it alongside the permanents CR 704.5f and CR 704.5g took.
+
+    CR 111.7's parenthesis is honoured by *where* this runs rather than by
+    anything in it: "if a token changes zones, applicable triggered abilities
+    will trigger before the token ceases to exist", and CR 704.3 only checks
+    state-based actions when a player would receive priority, by which time
+    `Game.put_into_graveyard` has already emitted the dies event.
+
+    `Game._state_based_actions_once` calls this at the **start** of a round, not
+    the end, which is CR 704.3 read literally: "the game checks for any of the
+    listed conditions for state-based actions, then performs all applicable
+    state-based actions simultaneously as a single event". A token that CR 704.5g
+    kills in this round was on the battlefield when the conditions were checked,
+    so CR 704.5d did not apply to it yet; it applies on the repeat check, which
+    CR 704.3 guarantees happens because an action was performed. The final state
+    is the same either way, and this ordering is the one the rule describes.
+    """
+    gone: list[CardState] = []
+    battlefield = game.shared_zones[Zone.BATTLEFIELD]
+    for zone, cards in game.shared_zones.items():
+        if zone is Zone.BATTLEFIELD:
+            continue
+        gone.extend(_remove_tokens(cards))
+    for player in game.players:
+        for cards in player.zones.values():
+            if cards is battlefield:  # pragma: no cover - players hold no battlefield
+                continue
+            gone.extend(_remove_tokens(cards))
+    return gone
+
+
+def _remove_tokens(cards: list[Any]) -> list[CardState]:
+    """Take every token out of one zone's list, returning them."""
+    doomed = [state for state in cards if isinstance(state, CardState) and is_token(state)]
+    for state in doomed:
+        cards.remove(state)
+    return doomed
+
+
+def tokens_among(permanents: Iterable[CardState]) -> list[CardState]:
+    """The tokens in a collection of permanents (CR 111.1).
+
+    Note what does *not* belong here: a token that ceases to exist does not die.
+    CR 700.4 makes "dies" mean "is put into a graveyard from the battlefield",
+    and that already happened in `Game.put_into_graveyard` before CR 704.5d ran.
+    Ceasing to exist is not a zone change and triggers nothing.
+    """
+    return [state for state in permanents if is_token(state)]

@@ -1,0 +1,151 @@
+{
+  "object": "card",
+  "id": "4c398d11-a2fc-43e2-96e9-7f3383e1a43c",
+  "oracle_id": "9070c98b-fd01-4eeb-a4ec-fc464946c7c0",
+  "multiverse_ids": [
+    692180
+  ],
+  "mtgo_id": 137235,
+  "tcgplayer_id": 615206,
+  "cardmarket_id": 807940,
+  "name": "Stridehangar Automaton",
+  "lang": "en",
+  "released_at": "2025-02-14",
+  "uri": "https://api.scryfall.com/cards/4c398d11-a2fc-43e2-96e9-7f3383e1a43c",
+  "scryfall_uri": "https://scryfall.com/card/drc/19/stridehangar-automaton?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T01:55:49Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/4/c/4c398d11-a2fc-43e2-96e9-7f3383e1a43c.jpg?1783907749",
+    "normal": "https://cards.scryfall.io/normal/front/4/c/4c398d11-a2fc-43e2-96e9-7f3383e1a43c.jpg?1783907749",
+    "large": "https://cards.scryfall.io/large/front/4/c/4c398d11-a2fc-43e2-96e9-7f3383e1a43c.jpg?1783907749",
+    "png": "https://cards.scryfall.io/png/front/4/c/4c398d11-a2fc-43e2-96e9-7f3383e1a43c.png?1783907749",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/4/c/4c398d11-a2fc-43e2-96e9-7f3383e1a43c.jpg?1783907749",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/4/c/4c398d11-a2fc-43e2-96e9-7f3383e1a43c.jpg?1783907749",
+    "thumb": "https://cards.scryfall.io/thumb/front/4/c/4c398d11-a2fc-43e2-96e9-7f3383e1a43c.webp?1783907749",
+    "grid": "https://cards.scryfall.io/grid/front/4/c/4c398d11-a2fc-43e2-96e9-7f3383e1a43c.webp?1783907749",
+    "display": "https://cards.scryfall.io/display/front/4/c/4c398d11-a2fc-43e2-96e9-7f3383e1a43c.webp?1783907749",
+    "art": "https://cards.scryfall.io/art/front/4/c/4c398d11-a2fc-43e2-96e9-7f3383e1a43c.webp?1783907749",
+    "crop": "https://cards.scryfall.io/crop/front/4/c/4c398d11-a2fc-43e2-96e9-7f3383e1a43c.webp?1783907749"
+  },
+  "mana_cost": "{3}",
+  "cmc": 3.0,
+  "type_line": "Artifact Creature \u2014 Construct",
+  "oracle_text": "Thopters you control get +1/+1.\nIf one or more artifact tokens would be created under your control, those tokens plus an additional 1/1 colorless Thopter artifact creature token with flying are created instead.",
+  "power": "1",
+  "toughness": "4",
+  "colors": [],
+  "color_identity": [],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "78e52380-13a1-44fe-b762-e71261cac3d0",
+      "component": "token",
+      "name": "Thopter",
+      "type_line": "Token Artifact Creature \u2014 Thopter",
+      "uri": "https://api.scryfall.com/cards/78e52380-13a1-44fe-b762-e71261cac3d0"
+    },
+    {
+      "object": "related_card",
+      "id": "f87adc0a-813e-4afe-9e4e-c2d2202c3256",
+      "component": "combo_piece",
+      "name": "Stridehangar Automaton",
+      "type_line": "Artifact Creature \u2014 Construct",
+      "uri": "https://api.scryfall.com/cards/f87adc0a-813e-4afe-9e4e-c2d2202c3256"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "d33ef7a4-41bb-4f16-bad3-b3ee13c257e6",
+  "set": "drc",
+  "set_name": "Aetherdrift Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/d33ef7a4-41bb-4f16-bad3-b3ee13c257e6",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Adrc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/drc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/4c398d11-a2fc-43e2-96e9-7f3383e1a43c/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A9070c98b-fd01-4eeb-a4ec-fc464946c7c0&unique=prints",
+  "collector_number": "19",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "\"Avishkar greets the Multiverse with an open hand, but do not assume we are defenseless.\"\n\u2014Pia Nalaar",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Aaron J. Riley",
+  "artist_ids": [
+    "f21b412c-aef5-4d15-88be-4f40615acde3"
+  ],
+  "illustration_id": "b1e40ee9-398f-4470-965d-acd8259ca8f3",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 1726,
+  "preview": {
+    "source": "The Command Zone",
+    "source_uri": "https://www.youtube.com/watch?v=km1f1W0Tl6k",
+    "previewed_at": "2025-01-23"
+  },
+  "prices": {
+    "usd": "2.83",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "3.34",
+    "eur_foil": null,
+    "tix": "7.49"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=692180&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DStridehangar%2BAutomaton",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DStridehangar%2BAutomaton",
+    "edhrec": "https://edhrec.com/route/?cc=Stridehangar+Automaton"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F615206%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=807940&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/137235?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -1,0 +1,141 @@
+{
+  "object": "card",
+  "id": "c68e8342-78d2-4826-a287-64c371b97d19",
+  "oracle_id": "1197a595-3afc-4f18-b868-bbb096771922",
+  "multiverse_ids": [
+    466933
+  ],
+  "mtgo_id": 73257,
+  "arena_id": 69964,
+  "tcgplayer_id": 192638,
+  "cardmarket_id": 378765,
+  "name": "Leyline of Abundance",
+  "lang": "en",
+  "released_at": "2019-07-12",
+  "uri": "https://api.scryfall.com/cards/c68e8342-78d2-4826-a287-64c371b97d19",
+  "scryfall_uri": "https://scryfall.com/card/m20/179/leyline-of-abundance?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T08:56:02Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/c/6/c68e8342-78d2-4826-a287-64c371b97d19.jpg?1783932962",
+    "normal": "https://cards.scryfall.io/normal/front/c/6/c68e8342-78d2-4826-a287-64c371b97d19.jpg?1783932962",
+    "large": "https://cards.scryfall.io/large/front/c/6/c68e8342-78d2-4826-a287-64c371b97d19.jpg?1783932962",
+    "png": "https://cards.scryfall.io/png/front/c/6/c68e8342-78d2-4826-a287-64c371b97d19.png?1783932962",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/c/6/c68e8342-78d2-4826-a287-64c371b97d19.jpg?1783932962",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/c/6/c68e8342-78d2-4826-a287-64c371b97d19.jpg?1783932962",
+    "thumb": "https://cards.scryfall.io/thumb/front/c/6/c68e8342-78d2-4826-a287-64c371b97d19.webp?1783932962",
+    "grid": "https://cards.scryfall.io/grid/front/c/6/c68e8342-78d2-4826-a287-64c371b97d19.webp?1783932962",
+    "display": "https://cards.scryfall.io/display/front/c/6/c68e8342-78d2-4826-a287-64c371b97d19.webp?1783932962",
+    "art": "https://cards.scryfall.io/art/front/c/6/c68e8342-78d2-4826-a287-64c371b97d19.webp?1783932962",
+    "crop": "https://cards.scryfall.io/crop/front/c/6/c68e8342-78d2-4826-a287-64c371b97d19.webp?1783932962"
+  },
+  "mana_cost": "{2}{G}{G}",
+  "cmc": 4.0,
+  "type_line": "Enchantment",
+  "oracle_text": "If this card is in your opening hand, you may begin the game with it on the battlefield.\nWhenever you tap a creature for mana, add an additional {G}.\n{6}{G}{G}: Put a +1/+1 counter on each creature you control.",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [],
+  "produced_mana": [
+    "G"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "banned",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "4a787360-9767-4f44-80b1-2405dc5e39c7",
+  "set": "m20",
+  "set_name": "Core Set 2020",
+  "set_type": "core",
+  "set_uri": "https://api.scryfall.com/sets/4a787360-9767-4f44-80b1-2405dc5e39c7",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Am20&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/m20?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/c68e8342-78d2-4826-a287-64c371b97d19/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A1197a595-3afc-4f18-b868-bbb096771922&unique=prints",
+  "collector_number": "179",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Noah Bradley",
+  "artist_ids": [
+    "81995d11-da98-4f8b-89bd-b88ca2ddb06b"
+  ],
+  "illustration_id": "20873644-c047-4193-81e0-eab3d4723e28",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 2959,
+  "penny_rank": 2640,
+  "preview": {
+    "source": "Movistar eSports",
+    "source_uri": "https://esports.as.com/otros/Descubre-Linea-mistica-abundancia_0_1255674429.html",
+    "previewed_at": "2019-06-19"
+  },
+  "prices": {
+    "usd": "2.59",
+    "usd_foil": "1.91",
+    "usd_etched": null,
+    "eur": "1.05",
+    "eur_foil": "2.17",
+    "tix": "4.83"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=466933&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DLeyline%2Bof%2BAbundance",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DLeyline%2Bof%2BAbundance",
+    "edhrec": "https://edhrec.com/route/?cc=Leyline+of+Abundance"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F192638%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=378765&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/73257?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -1,0 +1,399 @@
+"""Modal spells and abilities, read off oracle text (CR 700.2).
+
+CR 700.2: "A spell or ability is modal if it has two or more options in a
+bulleted list preceded by instructions for a player to choose a number of those
+options, such as 'Choose one -.'" Each option is a mode. That is exactly the
+shape this module looks for: an instruction line beginning `Choose`, followed by
+lines beginning with a bullet.
+
+The sub-rules this module implements, all looked up rather than remembered:
+
+- **CR 700.2a** - the controller of a modal spell or activated ability chooses
+  the mode(s) as part of casting it. `machines/casting.py` does that at
+  `CastingStep.MODES`, which CR 601.2b puts before targets are chosen.
+- **CR 700.2c** - a spell that targets only if a particular mode is chosen needs
+  those targets chosen only if that mode was chosen. This is why the targeting
+  profile of a modal card is derived *for a set of modes*, not for the card.
+- **CR 700.2d** - a player choosing more than one mode normally can't choose the
+  same mode more than once. Some cards say they may; Mystic Confluence prints
+  "You may choose the same mode more than once." `repeatable` records it.
+- **CR 700.2f / CR 115.8** - modal spells may have different targeting
+  requirements for each mode.
+- **CR 702.42a Entwine** - "You may choose all modes of this spell instead of
+  just the number specified" for its cost. `entwine_cost` records the cost; a
+  casting that pays it says so with `entwined=True`.
+- **CR 702.120a Escalate** - an additional cost "for each mode you choose beyond
+  the first". `escalate_cost` records it. Cards with escalate print
+  "Choose one or more -", so the mode *count* needs nothing special; what
+  escalate changes is what the caster pays, which is the caller's job.
+
+Deliberately not handled, each of them leaving `understood=False` rather than a
+confident wrong answer:
+
+- **CR 700.2h** - a mode with its own cost printed before its effect (Spree,
+  CR 702.172a; Tiered, CR 702.183a).
+- **CR 700.2i** - pawprint modes, chosen by paying `{P}` worth of modes rather
+  than by counting bullets.
+- **CR 700.2e / CR 601.7** - a mode chosen by a player other than the
+  controller.
+
+This module is parsing and validation only. It never touches game state.
+"""
+
+import re
+from collections.abc import Iterable, Sequence
+
+from pydantic import BaseModel, ConfigDict
+
+from ..models.card import Card
+
+#: The bullet WOTC prints in front of each mode.
+BULLET = "•"
+
+_INSTRUCTION = re.compile(r"^choose\b(?P<rest>.*)$", re.IGNORECASE)
+_REPEATABLE = re.compile(r"you may choose the same mode more than once", re.IGNORECASE)
+_UP_TO = re.compile(r"^\s*up to (?P<count>[\w]+)\b")
+_OR_MORE = re.compile(r"^\s*(?P<count>[\w]+)\s+or\s+(?:more|both)\b", re.IGNORECASE)
+_PLAIN = re.compile(r"^\s*(?P<count>[\w]+)\b")
+
+#: CR 700.2h: a mode whose effect is preceded by a cost, as Spree prints it.
+_MODE_WITH_COST = re.compile(r"^\s*(?:\{[^{}]+\}|\+\s*\{[^{}]+\})+\s*[-—]")
+#: CR 700.2i: pawprint modes are not counted in bullets at all.
+_PAWPRINT = re.compile(r"\{P\}")
+
+_ENTWINE = re.compile(r"^Entwine\s*[-—]?\s*(?P<cost>[^(]+)", re.IGNORECASE)
+_ESCALATE = re.compile(r"^Escalate\s*[-—]?\s*(?P<cost>[^(]+)", re.IGNORECASE)
+
+_WORD_NUMBERS = {
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+    "ten": 10,
+}
+
+_REMINDER = re.compile(r"\([^()]*\)")
+_X = re.compile(r"(?<![\w])X(?![\w])")
+
+
+class Mode(BaseModel):
+    """One option from the bulleted list (CR 700.2)."""
+
+    model_config = ConfigDict(frozen=True)
+
+    #: 1-based position on the card, the way a player would point at it.
+    number: int
+    #: The bullet's text exactly as printed, bullet character removed.
+    text: str
+
+    def __str__(self) -> str:
+        return f"{self.number}. {self.text}"
+
+
+class ModalProfile(BaseModel):
+    """The modal structure of one card: its instruction and its modes."""
+
+    model_config = ConfigDict(frozen=True)
+
+    #: The instruction line as printed, e.g. `Choose one -`.
+    instruction: str
+    modes: tuple[Mode, ...]
+    #: How many modes must be chosen, and how many may be (CR 700.2).
+    minimum: int
+    maximum: int
+    #: CR 700.2d: whether the card allows the same mode more than once.
+    repeatable: bool = False
+    #: CR 702.42a: the entwine cost, if the card has entwine.
+    entwine_cost: str | None = None
+    #: CR 702.120a: the escalate cost, if the card has escalate.
+    escalate_cost: str | None = None
+    #: False when the card is modal but this parser could not read its
+    #: structure. Callers must not enforce anything from an unread profile.
+    understood: bool = True
+
+    @property
+    def has_entwine(self) -> bool:
+        return self.entwine_cost is not None
+
+    def mode(self, spec: "int | str | Mode") -> Mode:
+        """The mode a caster meant, by number, by text, or already resolved.
+
+        A string matches a mode's printed text case-insensitively, either whole
+        or as a unique substring, so a test can say `"Destroy target
+        enchantment"` without pasting the bullet exactly.
+        """
+        if isinstance(spec, Mode):
+            if spec not in self.modes:
+                raise ValueError(f"{spec.text!r} is not a mode of this spell")
+            return spec
+        if isinstance(spec, int):
+            for mode in self.modes:
+                if mode.number == spec:
+                    return mode
+            raise ValueError(
+                f"there is no mode {spec}: this spell has {len(self.modes)} modes, "
+                f"numbered 1 to {len(self.modes)}"
+            )
+
+        wanted = spec.strip().lower()
+        exact = [mode for mode in self.modes if mode.text.lower() == wanted]
+        if len(exact) == 1:
+            return exact[0]
+        partial = [mode for mode in self.modes if wanted and wanted in mode.text.lower()]
+        if len(partial) == 1:
+            return partial[0]
+        if len(partial) > 1:
+            raise ValueError(f"{spec!r} matches more than one mode of this spell")
+        raise ValueError(f"{spec!r} is not a mode of this spell")
+
+    def resolve(
+        self,
+        chosen: Sequence["int | str | Mode"],
+        *,
+        entwined: bool = False,
+    ) -> tuple[Mode, ...]:
+        """The modes a caster announced, checked against what the card allows.
+
+        CR 700.2a has the modes chosen as part of casting, so everything wrong
+        with the choice is wrong *now*: an unknown mode, a repeat the card does
+        not allow (CR 700.2d), or the wrong number of them.
+
+        `entwined` is CR 702.42a: paying the entwine cost lets the caster choose
+        all of the modes instead of the number the instruction specifies.
+        """
+        modes = tuple(self.mode(spec) for spec in chosen)
+
+        if not self.repeatable:
+            seen: set[int] = set()
+            for mode in modes:
+                if mode.number in seen:
+                    raise ValueError(
+                        f"mode {mode.number} was chosen twice, and this spell does not "
+                        f"say the same mode may be chosen more than once (CR 700.2d)"
+                    )
+                seen.add(mode.number)
+
+        minimum, maximum = self.allowed_range(entwined=entwined)
+        if len(modes) < minimum:
+            raise ValueError(
+                f"too few modes: {len(modes)} chosen where the spell requires {minimum}"
+            )
+        if len(modes) > maximum:
+            raise ValueError(
+                f"too many modes: {len(modes)} chosen where the spell allows at most {maximum}"
+            )
+        return modes
+
+    def allowed_range(self, *, entwined: bool = False) -> tuple[int, int]:
+        """How many modes may be chosen, entwine included (CR 702.42a)."""
+        if entwined:
+            if not self.has_entwine:
+                raise ValueError("this spell has no entwine cost to pay")
+            return len(self.modes), len(self.modes)
+        return self.minimum, self.maximum
+
+
+_CACHE: dict[tuple[str, str], ModalProfile | None] = {}
+
+
+def modal_profile(card: Card) -> ModalProfile | None:
+    """The card's modal structure, or None if it is not a modal card.
+
+    Cached, since a printing's oracle text never changes.
+    """
+    key = (card.name, card.oracle_text or "")
+    if key not in _CACHE:
+        _CACHE[key] = _parse(card.oracle_text or "", card.keywords)
+    return _CACHE[key]
+
+
+def is_modal(card: Card) -> bool:
+    """CR 700.2: does this card offer a bulleted list of modes at all?"""
+    return modal_profile(card) is not None
+
+
+def is_modal_text(oracle_text: str | None) -> bool:
+    """CR 700.2, from raw oracle text alone, no `Card` required.
+
+    A card's modality follows entirely from its bulleted list and the
+    instruction line in front of it - unlike `entwine_cost`/`escalate_cost`,
+    nothing here is gated on `Card.keywords`. That makes this safe for a
+    caller holding only text, such as `effects.py`'s clause parser, which
+    needs to tell a genuinely modal card ("Choose two -" with a bulleted
+    list) apart from a card that merely contains the word "Choose" in an
+    ordinary instruction ("Choose target creature ...", "Choose a creature
+    type"), without constructing a full `Card`.
+    """
+    return _parse(oracle_text or "", ()) is not None
+
+
+def substitute_x(text: str, x_value: int | None) -> str:
+    """CR 107.3a/CR 107.3c: X has no value until the caster announces one for
+    this spell or ability; given one, it applies "while that spell or ability
+    is on the stack" - throughout its whole text, not just the mana cost. This
+    is that substitution on its own, for callers (`machines/effects.py`'s
+    per-mode dispatch) that need X applied to a mode's *effect* text, where
+    `mode_rules_text`'s quote-blanking would destroy a quoted ability the
+    effect still needs to read.
+    """
+    if x_value is None:
+        return text
+    return _X.sub(str(x_value), text)
+
+
+def mode_rules_text(mode: Mode, x_value: int | None = None) -> str:
+    """One mode's text, prepared for a parser that reads rules templates.
+
+    Two things get in the way of reading a mode the way a whole card is read:
+
+    - Text in quotes is an ability being granted to something else, not
+      instructions to follow now. Kozilek's Command's first mode makes tokens
+      with `"Sacrifice this token: Add {C}."` - the colon inside those quotes
+      would otherwise make the line look like an activated ability. Quoted
+      spans are blanked, keeping every other index where it was.
+    - X has no value until the caster announces one (CR 107.3a). Given one,
+      it is substituted in, so "up to X target cards" becomes countable.
+
+    This blanks quotes *before* substituting X, which is right for a
+    *targeting* profile (the only current caller, `profile_for_modes`) - it
+    never needs to read inside a quoted granted ability at all. A caller that
+    needs the mode's actual effect, quoted ability included, wants
+    `substitute_x` on the mode's own unblanked text instead.
+    """
+    text = _blank_quotes(mode.text)
+    return substitute_x(text, x_value)
+
+
+# --------------------------------------------------------------------------
+# Parsing
+# --------------------------------------------------------------------------
+
+
+def _parse(oracle_text: str, keywords: Iterable[str]) -> ModalProfile | None:
+    lines = [line.strip() for line in oracle_text.splitlines()]
+    bullets = [index for index, line in enumerate(lines) if line.startswith(BULLET)]
+    if not bullets:
+        return None
+
+    first = bullets[0]
+    instruction_line = next(
+        (lines[index] for index in range(first - 1, -1, -1) if lines[index]),
+        None,
+    )
+    if instruction_line is None or _INSTRUCTION.match(instruction_line) is None:
+        # A bulleted list with no "Choose ..." in front of it is not the
+        # templating CR 700.2 describes. Say so rather than guess at it.
+        return ModalProfile(
+            instruction=instruction_line or "",
+            modes=(),
+            minimum=0,
+            maximum=0,
+            understood=False,
+        )
+
+    modes = tuple(
+        Mode(number=number, text=lines[index].removeprefix(BULLET).strip())
+        for number, index in enumerate(bullets, start=1)
+    )
+
+    keyword_set = {keyword.lower() for keyword in keywords}
+    profile_kwargs = {
+        "instruction": instruction_line,
+        "modes": modes,
+        "repeatable": bool(_REPEATABLE.search(instruction_line)),
+        "entwine_cost": _keyword_cost(lines, _ENTWINE, "entwine", keyword_set),
+        "escalate_cost": _keyword_cost(lines, _ESCALATE, "escalate", keyword_set),
+    }
+
+    counted = _read_counts(instruction_line, len(modes))
+    unreadable = (
+        counted is None
+        or _PAWPRINT.search(instruction_line) is not None
+        or any(_MODE_WITH_COST.match(mode.text) for mode in modes)
+    )
+    if unreadable:
+        minimum, maximum = counted or (0, 0)
+        return ModalProfile(**profile_kwargs, minimum=minimum, maximum=maximum, understood=False)
+
+    minimum, maximum = counted
+    return ModalProfile(**profile_kwargs, minimum=minimum, maximum=maximum)
+
+
+def _read_counts(instruction: str, mode_count: int) -> tuple[int, int] | None:
+    """How many modes the instruction line asks for, as (minimum, maximum).
+
+    The templates, all of them real:
+
+        Choose one -            exactly one
+        Choose two -            exactly two
+        Choose one or both -    at least one, up to every mode
+        Choose one or more -    at least one, up to every mode
+        Choose up to two -      as few as none
+        Choose three. You may choose the same mode more than once.
+    """
+    match = _INSTRUCTION.match(instruction)
+    if match is None:
+        return None
+    rest = match.group("rest")
+
+    up_to = _UP_TO.match(rest)
+    if up_to is not None:
+        count = _number(up_to.group("count"))
+        return None if count is None else (0, min(count, mode_count))
+
+    or_more = _OR_MORE.match(rest)
+    if or_more is not None:
+        count = _number(or_more.group("count"))
+        return None if count is None else (count, mode_count)
+
+    plain = _PLAIN.match(rest)
+    if plain is None:
+        return None
+    count = _number(plain.group("count"))
+    if count is None or count > mode_count:
+        return None
+    return count, count
+
+
+def _number(word: str) -> int | None:
+    if word.isdigit():
+        return int(word)
+    return _WORD_NUMBERS.get(word.lower())
+
+
+def _keyword_cost(
+    lines: Sequence[str],
+    pattern: re.Pattern[str],
+    keyword: str,
+    keywords: set[str],
+) -> str | None:
+    """The cost printed on an `Entwine {2}` or `Escalate-Discard a card.` line.
+
+    Gated on the printing's own Scryfall `keywords` list, so a card that merely
+    mentions the word in its text does not grow the ability.
+    """
+    if keyword not in keywords:
+        return None
+    for line in lines:
+        match = pattern.match(line)
+        if match is not None:
+            return _REMINDER.sub("", match.group("cost")).strip().rstrip(".").strip()
+    return None
+
+
+def _blank_quotes(text: str) -> str:
+    """Replace quoted spans with spaces, keeping every other index the same."""
+    out = list(text)
+    inside = False
+    for index, char in enumerate(out):
+        if char == '"':
+            inside = not inside
+            out[index] = " "
+        elif inside:
+            out[index] = " "
+    return "".join(out)

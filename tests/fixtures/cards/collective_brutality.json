@@ -1,0 +1,133 @@
+{
+  "object": "card",
+  "id": "ae35b6c5-3bfd-483e-9c85-58629b717d7f",
+  "oracle_id": "22a78443-db21-4656-b38a-e3e3186fd94b",
+  "multiverse_ids": [
+    685931
+  ],
+  "mtgo_id": 135590,
+  "tcgplayer_id": 609893,
+  "cardmarket_id": 805749,
+  "name": "Collective Brutality",
+  "lang": "en",
+  "released_at": "2025-01-24",
+  "uri": "https://api.scryfall.com/cards/ae35b6c5-3bfd-483e-9c85-58629b717d7f",
+  "scryfall_uri": "https://scryfall.com/card/inr/101/collective-brutality?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:02:28Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/a/e/ae35b6c5-3bfd-483e-9c85-58629b717d7f.jpg?1783908148",
+    "normal": "https://cards.scryfall.io/normal/front/a/e/ae35b6c5-3bfd-483e-9c85-58629b717d7f.jpg?1783908148",
+    "large": "https://cards.scryfall.io/large/front/a/e/ae35b6c5-3bfd-483e-9c85-58629b717d7f.jpg?1783908148",
+    "png": "https://cards.scryfall.io/png/front/a/e/ae35b6c5-3bfd-483e-9c85-58629b717d7f.png?1783908148",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/a/e/ae35b6c5-3bfd-483e-9c85-58629b717d7f.jpg?1783908148",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/a/e/ae35b6c5-3bfd-483e-9c85-58629b717d7f.jpg?1783908148",
+    "thumb": "https://cards.scryfall.io/thumb/front/a/e/ae35b6c5-3bfd-483e-9c85-58629b717d7f.webp?1783908148",
+    "grid": "https://cards.scryfall.io/grid/front/a/e/ae35b6c5-3bfd-483e-9c85-58629b717d7f.webp?1783908148",
+    "display": "https://cards.scryfall.io/display/front/a/e/ae35b6c5-3bfd-483e-9c85-58629b717d7f.webp?1783908148",
+    "art": "https://cards.scryfall.io/art/front/a/e/ae35b6c5-3bfd-483e-9c85-58629b717d7f.webp?1783908148",
+    "crop": "https://cards.scryfall.io/crop/front/a/e/ae35b6c5-3bfd-483e-9c85-58629b717d7f.webp?1783908148"
+  },
+  "mana_cost": "{1}{B}",
+  "cmc": 2.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Escalate\u2014Discard a card. (Pay this cost for each mode chosen beyond the first.)\nChoose one or more \u2014\n\u2022 Target opponent reveals their hand. You choose an instant or sorcery card from it. That player discards that card.\n\u2022 Target creature gets -2/-2 until end of turn.\n\u2022 Target opponent loses 2 life and you gain 2 life.",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Escalate"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "b9618c8c-9f31-4b42-9798-2991893c27bf",
+  "set": "inr",
+  "set_name": "Innistrad Remastered",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/b9618c8c-9f31-4b42-9798-2991893c27bf",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ainr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/inr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/ae35b6c5-3bfd-483e-9c85-58629b717d7f/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A22a78443-db21-4656-b38a-e3e3186fd94b&unique=prints",
+  "collector_number": "101",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Johann Bodin",
+  "artist_ids": [
+    "d92e2dd9-9ef6-43f6-81f8-df87f9066983"
+  ],
+  "illustration_id": "48d37aad-95a0-4b75-9d80-f33469e2fb4a",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 11859,
+  "penny_rank": 233,
+  "prices": {
+    "usd": "0.38",
+    "usd_foil": "0.37",
+    "usd_etched": null,
+    "eur": "0.42",
+    "eur_foil": "0.59",
+    "tix": "0.14"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=685931&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCollective%2BBrutality",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCollective%2BBrutality",
+    "edhrec": "https://edhrec.com/route/?cc=Collective+Brutality"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F609893%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=805749&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/135590?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

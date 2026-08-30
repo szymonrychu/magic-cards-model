@@ -1,0 +1,136 @@
+{
+  "object": "card",
+  "id": "8be64d5d-779e-4c63-baf4-00a07f73fc9f",
+  "oracle_id": "5efea57b-937d-46ac-999e-490316e0f820",
+  "multiverse_ids": [
+    270856
+  ],
+  "mtgo_id": 43650,
+  "mtgo_foil_id": 43651,
+  "tcgplayer_id": 58061,
+  "cardmarket_id": 253622,
+  "name": "Aether Membrane",
+  "lang": "en",
+  "released_at": "2012-03-30",
+  "uri": "https://api.scryfall.com/cards/8be64d5d-779e-4c63-baf4-00a07f73fc9f",
+  "scryfall_uri": "https://scryfall.com/card/ddi/48/aether-membrane?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T11:06:07Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/8/b/8be64d5d-779e-4c63-baf4-00a07f73fc9f.jpg?1783940767",
+    "normal": "https://cards.scryfall.io/normal/front/8/b/8be64d5d-779e-4c63-baf4-00a07f73fc9f.jpg?1783940767",
+    "large": "https://cards.scryfall.io/large/front/8/b/8be64d5d-779e-4c63-baf4-00a07f73fc9f.jpg?1783940767",
+    "png": "https://cards.scryfall.io/png/front/8/b/8be64d5d-779e-4c63-baf4-00a07f73fc9f.png?1783940767",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/8/b/8be64d5d-779e-4c63-baf4-00a07f73fc9f.jpg?1783940767",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/8/b/8be64d5d-779e-4c63-baf4-00a07f73fc9f.jpg?1783940767",
+    "thumb": "https://cards.scryfall.io/thumb/front/8/b/8be64d5d-779e-4c63-baf4-00a07f73fc9f.webp?1783940767",
+    "grid": "https://cards.scryfall.io/grid/front/8/b/8be64d5d-779e-4c63-baf4-00a07f73fc9f.webp?1783940767",
+    "display": "https://cards.scryfall.io/display/front/8/b/8be64d5d-779e-4c63-baf4-00a07f73fc9f.webp?1783940767",
+    "art": "https://cards.scryfall.io/art/front/8/b/8be64d5d-779e-4c63-baf4-00a07f73fc9f.webp?1783940767",
+    "crop": "https://cards.scryfall.io/crop/front/8/b/8be64d5d-779e-4c63-baf4-00a07f73fc9f.webp?1783940767"
+  },
+  "mana_cost": "{1}{R}{R}",
+  "cmc": 3.0,
+  "type_line": "Creature \u2014 Wall",
+  "oracle_text": "Defender; reach (This creature can block creatures with flying.)\nWhenever this creature blocks a creature, return that creature to its owner's hand at end of combat.",
+  "power": "0",
+  "toughness": "5",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Reach",
+    "Defender"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "a29e8ace-bbcd-4507-b159-7ec77d28f792",
+  "set": "ddi",
+  "set_name": "Duel Decks: Venser vs. Koth",
+  "set_type": "duel_deck",
+  "set_uri": "https://api.scryfall.com/sets/a29e8ace-bbcd-4507-b159-7ec77d28f792",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Addi&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ddi?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/8be64d5d-779e-4c63-baf4-00a07f73fc9f/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A5efea57b-937d-46ac-999e-490316e0f820&unique=prints",
+  "collector_number": "48",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Zoltan Boros & Gabor Szikszai",
+  "artist_ids": [
+    "1885e6cb-c827-4896-994e-3d0a027d602f",
+    "44c3877f-8771-43dc-9e40-f4c765f59d2e"
+  ],
+  "illustration_id": "37fe9164-d749-4a61-ac9c-82b1e7dcdbdd",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 12658,
+  "penny_rank": 11523,
+  "prices": {
+    "usd": "0.54",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.50",
+    "eur_foil": null,
+    "tix": "0.15"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=270856&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAether%2BMembrane",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAether%2BMembrane",
+    "edhrec": "https://edhrec.com/route/?cc=Aether+Membrane"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F58061%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=253622&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/43650?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

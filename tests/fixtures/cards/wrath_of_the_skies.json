@@ -1,0 +1,156 @@
+{
+  "object": "card",
+  "id": "4ef1882e-b422-4f30-8a6c-bd71c2601660",
+  "oracle_id": "21efa6f2-3e7c-4576-b5a3-0b75b2843442",
+  "multiverse_ids": [
+    662201
+  ],
+  "mtgo_id": 126115,
+  "arena_id": 90898,
+  "tcgplayer_id": 552614,
+  "cardmarket_id": 771509,
+  "name": "Wrath of the Skies",
+  "lang": "en",
+  "released_at": "2024-06-14",
+  "uri": "https://api.scryfall.com/cards/4ef1882e-b422-4f30-8a6c-bd71c2601660",
+  "scryfall_uri": "https://scryfall.com/card/mh3/49/wrath-of-the-skies?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:54:54Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/4/e/4ef1882e-b422-4f30-8a6c-bd71c2601660.jpg?1783911294",
+    "normal": "https://cards.scryfall.io/normal/front/4/e/4ef1882e-b422-4f30-8a6c-bd71c2601660.jpg?1783911294",
+    "large": "https://cards.scryfall.io/large/front/4/e/4ef1882e-b422-4f30-8a6c-bd71c2601660.jpg?1783911294",
+    "png": "https://cards.scryfall.io/png/front/4/e/4ef1882e-b422-4f30-8a6c-bd71c2601660.png?1783911294",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/4/e/4ef1882e-b422-4f30-8a6c-bd71c2601660.jpg?1783911294",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/4/e/4ef1882e-b422-4f30-8a6c-bd71c2601660.jpg?1783911294",
+    "thumb": "https://cards.scryfall.io/thumb/front/4/e/4ef1882e-b422-4f30-8a6c-bd71c2601660.webp?1783911294",
+    "grid": "https://cards.scryfall.io/grid/front/4/e/4ef1882e-b422-4f30-8a6c-bd71c2601660.webp?1783911294",
+    "display": "https://cards.scryfall.io/display/front/4/e/4ef1882e-b422-4f30-8a6c-bd71c2601660.webp?1783911294",
+    "art": "https://cards.scryfall.io/art/front/4/e/4ef1882e-b422-4f30-8a6c-bd71c2601660.webp?1783911294",
+    "crop": "https://cards.scryfall.io/crop/front/4/e/4ef1882e-b422-4f30-8a6c-bd71c2601660.webp?1783911294"
+  },
+  "mana_cost": "{X}{W}{W}",
+  "cmc": 2.0,
+  "type_line": "Sorcery",
+  "oracle_text": "You get X {E} (energy counters), then you may pay any amount of {E}. Destroy each artifact, creature, and enchantment with mana value less than or equal to the amount of {E} paid this way.",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "7325714a-bd27-4215-9826-3785089ffa23",
+      "component": "combo_piece",
+      "name": "Wrath of the Skies",
+      "type_line": "Sorcery",
+      "uri": "https://api.scryfall.com/cards/7325714a-bd27-4215-9826-3785089ffa23"
+    },
+    {
+      "object": "related_card",
+      "id": "1c516212-ad39-4396-8e05-ae57f100309f",
+      "component": "combo_piece",
+      "name": "Energy Reserve",
+      "type_line": "Card",
+      "uri": "https://api.scryfall.com/cards/1c516212-ad39-4396-8e05-ae57f100309f"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "3ed80bb6-77e8-4aa7-8262-95377a38aba1",
+  "set": "mh3",
+  "set_name": "Modern Horizons 3",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/3ed80bb6-77e8-4aa7-8262-95377a38aba1",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amh3&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mh3?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/4ef1882e-b422-4f30-8a6c-bd71c2601660/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A21efa6f2-3e7c-4576-b5a3-0b75b2843442&unique=prints",
+  "collector_number": "49",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "Even the weather of Dominaria shifts to assail would-be invaders.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Franz Vohwinkel",
+  "artist_ids": [
+    "3a243c17-3baa-4b53-9599-645311cd7d3d"
+  ],
+  "illustration_id": "7de67129-39db-4474-9267-732e1cba46fb",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 9205,
+  "preview": {
+    "source": "AliasV",
+    "source_uri": "https://x.com/AliasVEDH/status/1793271230134411385",
+    "previewed_at": "2024-05-22"
+  },
+  "prices": {
+    "usd": "2.26",
+    "usd_foil": "3.76",
+    "usd_etched": null,
+    "eur": "2.10",
+    "eur_foil": "2.97",
+    "tix": "5.75"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=662201&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DWrath%2Bof%2Bthe%2BSkies",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DWrath%2Bof%2Bthe%2BSkies",
+    "edhrec": "https://edhrec.com/route/?cc=Wrath+of+the+Skies"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F552614%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=771509&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/126115?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

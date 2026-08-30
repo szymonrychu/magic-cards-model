@@ -1,0 +1,136 @@
+{
+  "object": "card",
+  "id": "1d21ae20-2ef5-4dc0-aced-97497e6a8025",
+  "oracle_id": "7bd36106-04fe-481f-b16e-e076dcbb183b",
+  "multiverse_ids": [
+    612553
+  ],
+  "mtgo_id": 111066,
+  "tcgplayer_id": 491782,
+  "cardmarket_id": 705836,
+  "name": "Kalonian Hydra",
+  "lang": "en",
+  "released_at": "2023-04-21",
+  "uri": "https://api.scryfall.com/cards/1d21ae20-2ef5-4dc0-aced-97497e6a8025",
+  "scryfall_uri": "https://scryfall.com/card/moc/305/kalonian-hydra?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T04:32:17Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/1/d/1d21ae20-2ef5-4dc0-aced-97497e6a8025.jpg?1783917137",
+    "normal": "https://cards.scryfall.io/normal/front/1/d/1d21ae20-2ef5-4dc0-aced-97497e6a8025.jpg?1783917137",
+    "large": "https://cards.scryfall.io/large/front/1/d/1d21ae20-2ef5-4dc0-aced-97497e6a8025.jpg?1783917137",
+    "png": "https://cards.scryfall.io/png/front/1/d/1d21ae20-2ef5-4dc0-aced-97497e6a8025.png?1783917137",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/1/d/1d21ae20-2ef5-4dc0-aced-97497e6a8025.jpg?1783917137",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/1/d/1d21ae20-2ef5-4dc0-aced-97497e6a8025.jpg?1783917137",
+    "thumb": "https://cards.scryfall.io/thumb/front/1/d/1d21ae20-2ef5-4dc0-aced-97497e6a8025.webp?1783917137",
+    "grid": "https://cards.scryfall.io/grid/front/1/d/1d21ae20-2ef5-4dc0-aced-97497e6a8025.webp?1783917137",
+    "display": "https://cards.scryfall.io/display/front/1/d/1d21ae20-2ef5-4dc0-aced-97497e6a8025.webp?1783917137",
+    "art": "https://cards.scryfall.io/art/front/1/d/1d21ae20-2ef5-4dc0-aced-97497e6a8025.webp?1783917137",
+    "crop": "https://cards.scryfall.io/crop/front/1/d/1d21ae20-2ef5-4dc0-aced-97497e6a8025.webp?1783917137"
+  },
+  "mana_cost": "{3}{G}{G}",
+  "cmc": 5.0,
+  "type_line": "Creature \u2014 Hydra",
+  "oracle_text": "Trample\nThis creature enters with four +1/+1 counters on it.\nWhenever this creature attacks, double the number of +1/+1 counters on each creature you control.",
+  "power": "0",
+  "toughness": "0",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Trample",
+    "Double"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "6bba5de9-5afb-42af-a7eb-24ac854bf671",
+  "set": "moc",
+  "set_name": "March of the Machine Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/6bba5de9-5afb-42af-a7eb-24ac854bf671",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amoc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/moc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/1d21ae20-2ef5-4dc0-aced-97497e6a8025/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A7bd36106-04fe-481f-b16e-e076dcbb183b&unique=prints",
+  "collector_number": "305",
+  "digital": false,
+  "rarity": "mythic",
+  "flavor_text": "Even baloths fear its feeding time.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Chris Rahn",
+  "artist_ids": [
+    "7742047e-0f80-4c0f-a530-d07460165e86"
+  ],
+  "illustration_id": "4a5e2c9f-6ede-4260-a4fe-10665d294a21",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 1115,
+  "penny_rank": 6244,
+  "prices": {
+    "usd": "6.61",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "4.80",
+    "eur_foil": null,
+    "tix": "1.16"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=612553&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DKalonian%2BHydra",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DKalonian%2BHydra",
+    "edhrec": "https://edhrec.com/route/?cc=Kalonian+Hydra"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F491782%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=705836&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/111066?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

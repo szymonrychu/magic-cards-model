@@ -1,0 +1,158 @@
+{
+  "object": "card",
+  "id": "eef5a0ae-5907-42c9-a097-3f973737e392",
+  "oracle_id": "646a2371-54c0-4492-ac2f-20f109d6108c",
+  "multiverse_ids": [
+    629643
+  ],
+  "mtgo_id": 116610,
+  "arena_id": 86843,
+  "tcgplayer_id": 512529,
+  "cardmarket_id": 728373,
+  "name": "Monstrous Rage",
+  "lang": "en",
+  "released_at": "2023-09-08",
+  "uri": "https://api.scryfall.com/cards/eef5a0ae-5907-42c9-a097-3f973737e392",
+  "scryfall_uri": "https://scryfall.com/card/woe/142/monstrous-rage?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:58:11Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/e/e/eef5a0ae-5907-42c9-a097-3f973737e392.jpg?1783915091",
+    "normal": "https://cards.scryfall.io/normal/front/e/e/eef5a0ae-5907-42c9-a097-3f973737e392.jpg?1783915091",
+    "large": "https://cards.scryfall.io/large/front/e/e/eef5a0ae-5907-42c9-a097-3f973737e392.jpg?1783915091",
+    "png": "https://cards.scryfall.io/png/front/e/e/eef5a0ae-5907-42c9-a097-3f973737e392.png?1783915091",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/e/e/eef5a0ae-5907-42c9-a097-3f973737e392.jpg?1783915091",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/e/e/eef5a0ae-5907-42c9-a097-3f973737e392.jpg?1783915091",
+    "thumb": "https://cards.scryfall.io/thumb/front/e/e/eef5a0ae-5907-42c9-a097-3f973737e392.webp?1783915091",
+    "grid": "https://cards.scryfall.io/grid/front/e/e/eef5a0ae-5907-42c9-a097-3f973737e392.webp?1783915091",
+    "display": "https://cards.scryfall.io/display/front/e/e/eef5a0ae-5907-42c9-a097-3f973737e392.webp?1783915091",
+    "art": "https://cards.scryfall.io/art/front/e/e/eef5a0ae-5907-42c9-a097-3f973737e392.webp?1783915091",
+    "crop": "https://cards.scryfall.io/crop/front/e/e/eef5a0ae-5907-42c9-a097-3f973737e392.webp?1783915091"
+  },
+  "mana_cost": "{R}",
+  "cmc": 1.0,
+  "type_line": "Instant",
+  "oracle_text": "Target creature gets +2/+0 until end of turn. Create a Monster Role token attached to it. (If you control another Role on it, put that one into the graveyard. Enchanted creature gets +1/+1 and has trample.)",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Role token"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "eef5a0ae-5907-42c9-a097-3f973737e392",
+      "component": "combo_piece",
+      "name": "Monstrous Rage",
+      "type_line": "Instant",
+      "uri": "https://api.scryfall.com/cards/eef5a0ae-5907-42c9-a097-3f973737e392"
+    },
+    {
+      "object": "related_card",
+      "id": "6b8a810b-8538-41c3-a792-dbd1a1845faa",
+      "component": "token",
+      "name": "Monster // Sorcerer",
+      "type_line": "Token Enchantment \u2014 Aura Role // Token Enchantment \u2014 Aura Role",
+      "uri": "https://api.scryfall.com/cards/6b8a810b-8538-41c3-a792-dbd1a1845faa"
+    }
+  ],
+  "legalities": {
+    "standard": "banned",
+    "future": "banned",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "79139661-13ee-43c4-8bad-a8c069f1a1df",
+  "set": "woe",
+  "set_name": "Wilds of Eldraine",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/79139661-13ee-43c4-8bad-a8c069f1a1df",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Awoe&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/woe?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/eef5a0ae-5907-42c9-a097-3f973737e392/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A646a2371-54c0-4492-ac2f-20f109d6108c&unique=prints",
+  "collector_number": "142",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "\"My, what big paws y\u2014\"\n\u2014Thomas the woodsman, last words",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Borja Pindado",
+  "artist_ids": [
+    "1624a1a8-3492-4c0b-9abc-83dcf2653111"
+  ],
+  "illustration_id": "9dc2b5e8-176d-4e72-98cc-0dc6b7b89022",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 3473,
+  "penny_rank": 385,
+  "preview": {
+    "source": "RAPSOLO_",
+    "source_uri": "https://twitter.com/RapsoloM/status/1691540261594394624/photo/1",
+    "previewed_at": "2023-08-15"
+  },
+  "prices": {
+    "usd": "0.35",
+    "usd_foil": "0.45",
+    "usd_etched": null,
+    "eur": "0.52",
+    "eur_foil": "1.18",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=629643&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMonstrous%2BRage",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMonstrous%2BRage",
+    "edhrec": "https://edhrec.com/route/?cc=Monstrous+Rage"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F512529%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=728373&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/116610?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

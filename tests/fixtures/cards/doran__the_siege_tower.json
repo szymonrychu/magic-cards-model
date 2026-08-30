@@ -1,0 +1,146 @@
+{
+  "object": "card",
+  "id": "e0ad8e7f-cda0-4529-94fc-dd3709158a94",
+  "oracle_id": "a46d96d9-8e59-4777-8208-7730b9e33240",
+  "multiverse_ids": [
+    571534
+  ],
+  "mtgo_id": 101886,
+  "tcgplayer_id": 276823,
+  "cardmarket_id": 665170,
+  "name": "Doran, the Siege Tower",
+  "lang": "en",
+  "released_at": "2022-07-08",
+  "uri": "https://api.scryfall.com/cards/e0ad8e7f-cda0-4529-94fc-dd3709158a94",
+  "scryfall_uri": "https://scryfall.com/card/2x2/201/doran-the-siege-tower?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T05:50:40Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/e/0/e0ad8e7f-cda0-4529-94fc-dd3709158a94.jpg?1783921840",
+    "normal": "https://cards.scryfall.io/normal/front/e/0/e0ad8e7f-cda0-4529-94fc-dd3709158a94.jpg?1783921840",
+    "large": "https://cards.scryfall.io/large/front/e/0/e0ad8e7f-cda0-4529-94fc-dd3709158a94.jpg?1783921840",
+    "png": "https://cards.scryfall.io/png/front/e/0/e0ad8e7f-cda0-4529-94fc-dd3709158a94.png?1783921840",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/e/0/e0ad8e7f-cda0-4529-94fc-dd3709158a94.jpg?1783921840",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/e/0/e0ad8e7f-cda0-4529-94fc-dd3709158a94.jpg?1783921840",
+    "thumb": "https://cards.scryfall.io/thumb/front/e/0/e0ad8e7f-cda0-4529-94fc-dd3709158a94.webp?1783921840",
+    "grid": "https://cards.scryfall.io/grid/front/e/0/e0ad8e7f-cda0-4529-94fc-dd3709158a94.webp?1783921840",
+    "display": "https://cards.scryfall.io/display/front/e/0/e0ad8e7f-cda0-4529-94fc-dd3709158a94.webp?1783921840",
+    "art": "https://cards.scryfall.io/art/front/e/0/e0ad8e7f-cda0-4529-94fc-dd3709158a94.webp?1783921840",
+    "crop": "https://cards.scryfall.io/crop/front/e/0/e0ad8e7f-cda0-4529-94fc-dd3709158a94.webp?1783921840"
+  },
+  "mana_cost": "{W}{B}{G}",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Treefolk Shaman",
+  "oracle_text": "Each creature assigns combat damage equal to its toughness rather than its power.",
+  "power": "0",
+  "toughness": "5",
+  "colors": [
+    "B",
+    "G",
+    "W"
+  ],
+  "color_identity": [
+    "B",
+    "G",
+    "W"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "5a645837-b050-449f-ac90-1e7ccbf45031",
+  "set": "2x2",
+  "set_name": "Double Masters 2022",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/5a645837-b050-449f-ac90-1e7ccbf45031",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3A2x2&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/2x2?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/e0ad8e7f-cda0-4529-94fc-dd3709158a94/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aa46d96d9-8e59-4777-8208-7730b9e33240&unique=prints",
+  "collector_number": "201",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "\"Each year that passes rings you inwardly with memory and might. Wield your heart, and the world will tremble.\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Mark Zug",
+  "artist_ids": [
+    "48e2b98c-5467-4671-bd42-4c3746115117"
+  ],
+  "illustration_id": "bac2c9eb-e8d2-4624-a573-a8592a98b255",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 5274,
+  "penny_rank": 4149,
+  "preview": {
+    "source": "Judge Academy",
+    "source_uri": "https://twitter.com/JudgeAcademy/status/1539627463080378368",
+    "previewed_at": "2022-06-22"
+  },
+  "prices": {
+    "usd": "8.38",
+    "usd_foil": "12.06",
+    "usd_etched": null,
+    "eur": "3.87",
+    "eur_foil": "5.35",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=571534&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDoran%252C%2Bthe%2BSiege%2BTower",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDoran%252C%2Bthe%2BSiege%2BTower",
+    "edhrec": "https://edhrec.com/route/?cc=Doran%2C+the+Siege+Tower"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F276823%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=665170&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/101886?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

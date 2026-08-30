@@ -1,0 +1,132 @@
+{
+  "object": "card",
+  "id": "93a0d9ad-31bf-4561-a5b2-f44a12a2c2c2",
+  "oracle_id": "d5b9b75d-4bf0-4328-9bb3-7b260a0c46af",
+  "multiverse_ids": [
+    159404
+  ],
+  "mtgo_id": 29865,
+  "mtgo_foil_id": 29866,
+  "tcgplayer_id": 18779,
+  "cardmarket_id": 19064,
+  "name": "Savor the Moment",
+  "lang": "en",
+  "released_at": "2008-05-02",
+  "uri": "https://api.scryfall.com/cards/93a0d9ad-31bf-4561-a5b2-f44a12a2c2c2",
+  "scryfall_uri": "https://scryfall.com/card/shm/50/savor-the-moment?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T11:39:18Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/3/93a0d9ad-31bf-4561-a5b2-f44a12a2c2c2.jpg?1783942758",
+    "normal": "https://cards.scryfall.io/normal/front/9/3/93a0d9ad-31bf-4561-a5b2-f44a12a2c2c2.jpg?1783942758",
+    "large": "https://cards.scryfall.io/large/front/9/3/93a0d9ad-31bf-4561-a5b2-f44a12a2c2c2.jpg?1783942758",
+    "png": "https://cards.scryfall.io/png/front/9/3/93a0d9ad-31bf-4561-a5b2-f44a12a2c2c2.png?1783942758",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/3/93a0d9ad-31bf-4561-a5b2-f44a12a2c2c2.jpg?1783942758",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/3/93a0d9ad-31bf-4561-a5b2-f44a12a2c2c2.jpg?1783942758",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/3/93a0d9ad-31bf-4561-a5b2-f44a12a2c2c2.webp?1783942758",
+    "grid": "https://cards.scryfall.io/grid/front/9/3/93a0d9ad-31bf-4561-a5b2-f44a12a2c2c2.webp?1783942758",
+    "display": "https://cards.scryfall.io/display/front/9/3/93a0d9ad-31bf-4561-a5b2-f44a12a2c2c2.webp?1783942758",
+    "art": "https://cards.scryfall.io/art/front/9/3/93a0d9ad-31bf-4561-a5b2-f44a12a2c2c2.webp?1783942758",
+    "crop": "https://cards.scryfall.io/crop/front/9/3/93a0d9ad-31bf-4561-a5b2-f44a12a2c2c2.webp?1783942758"
+  },
+  "mana_cost": "{1}{U}{U}",
+  "cmc": 3.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Take an extra turn after this one. Skip the untap step of that turn.",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "c18c0ba1-2081-4808-9b2e-549bc3a666f3",
+  "set": "shm",
+  "set_name": "Shadowmoor",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/c18c0ba1-2081-4808-9b2e-549bc3a666f3",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ashm&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/shm?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/93a0d9ad-31bf-4561-a5b2-f44a12a2c2c2/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ad5b9b75d-4bf0-4328-9bb3-7b260a0c46af&unique=prints",
+  "collector_number": "50",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "The merrow took a moment for herself. She never gave it back.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Warren Mahy",
+  "artist_ids": [
+    "002c739e-aa1f-4c1d-921b-37cb2d1b1c5b"
+  ],
+  "illustration_id": "f5283984-7260-4af7-bd2b-9a238d4796a1",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 8981,
+  "penny_rank": 2960,
+  "prices": {
+    "usd": "9.46",
+    "usd_foil": "65.91",
+    "usd_etched": null,
+    "eur": "6.38",
+    "eur_foil": "17.71",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=159404&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSavor%2Bthe%2BMoment",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSavor%2Bthe%2BMoment",
+    "edhrec": "https://edhrec.com/route/?cc=Savor+the+Moment"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F18779%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=19064&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/29865?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

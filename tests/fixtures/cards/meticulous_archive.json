@@ -1,0 +1,137 @@
+{
+  "object": "card",
+  "id": "652236c2-84ef-45e4-b5fc-ed6170bc3d6c",
+  "oracle_id": "ccfb8b4d-651c-418a-aa19-cb23105b3f2f",
+  "multiverse_ids": [
+    646818
+  ],
+  "mtgo_id": 122020,
+  "arena_id": 89186,
+  "tcgplayer_id": 532907,
+  "cardmarket_id": 750913,
+  "name": "Meticulous Archive",
+  "lang": "en",
+  "released_at": "2024-02-09",
+  "uri": "https://api.scryfall.com/cards/652236c2-84ef-45e4-b5fc-ed6170bc3d6c",
+  "scryfall_uri": "https://scryfall.com/card/mkm/264/meticulous-archive?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:20:24Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/6/5/652236c2-84ef-45e4-b5fc-ed6170bc3d6c.jpg?1783912824",
+    "normal": "https://cards.scryfall.io/normal/front/6/5/652236c2-84ef-45e4-b5fc-ed6170bc3d6c.jpg?1783912824",
+    "large": "https://cards.scryfall.io/large/front/6/5/652236c2-84ef-45e4-b5fc-ed6170bc3d6c.jpg?1783912824",
+    "png": "https://cards.scryfall.io/png/front/6/5/652236c2-84ef-45e4-b5fc-ed6170bc3d6c.png?1783912824",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/6/5/652236c2-84ef-45e4-b5fc-ed6170bc3d6c.jpg?1783912824",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/6/5/652236c2-84ef-45e4-b5fc-ed6170bc3d6c.jpg?1783912824",
+    "thumb": "https://cards.scryfall.io/thumb/front/6/5/652236c2-84ef-45e4-b5fc-ed6170bc3d6c.webp?1783912824",
+    "grid": "https://cards.scryfall.io/grid/front/6/5/652236c2-84ef-45e4-b5fc-ed6170bc3d6c.webp?1783912824",
+    "display": "https://cards.scryfall.io/display/front/6/5/652236c2-84ef-45e4-b5fc-ed6170bc3d6c.webp?1783912824",
+    "art": "https://cards.scryfall.io/art/front/6/5/652236c2-84ef-45e4-b5fc-ed6170bc3d6c.webp?1783912824",
+    "crop": "https://cards.scryfall.io/crop/front/6/5/652236c2-84ef-45e4-b5fc-ed6170bc3d6c.webp?1783912824"
+  },
+  "mana_cost": "",
+  "cmc": 0.0,
+  "type_line": "Land \u2014 Plains Island",
+  "oracle_text": "({T}: Add {W} or {U}.)\nThis land enters tapped.\nWhen this land enters, surveil 1. (Look at the top card of your library. You may put it into your graveyard.)",
+  "colors": [],
+  "color_identity": [
+    "U",
+    "W"
+  ],
+  "keywords": [
+    "Surveil"
+  ],
+  "produced_mana": [
+    "U",
+    "W"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "2b17794b-15c3-4796-ad6f-0887a0eceeca",
+  "set": "mkm",
+  "set_name": "Murders at Karlov Manor",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/2b17794b-15c3-4796-ad6f-0887a0eceeca",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amkm&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mkm?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/652236c2-84ef-45e4-b5fc-ed6170bc3d6c/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Accfb8b4d-651c-418a-aa19-cb23105b3f2f&unique=prints",
+  "collector_number": "264",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Sam Burley",
+  "artist_ids": [
+    "f89f4b78-cefb-41f7-b7cb-4f4d28de0c4f"
+  ],
+  "illustration_id": "afa0bc85-6e70-4db1-b72a-71a10ad75ac3",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 692,
+  "prices": {
+    "usd": "12.34",
+    "usd_foil": "13.50",
+    "usd_etched": null,
+    "eur": "13.41",
+    "eur_foil": "15.14",
+    "tix": "4.97"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=646818&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMeticulous%2BArchive",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMeticulous%2BArchive",
+    "edhrec": "https://edhrec.com/route/?cc=Meticulous+Archive"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F532907%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=750913&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/122020?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

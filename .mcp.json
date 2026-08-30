@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "spellslinger": {
+      "type": "http",
+      "url": "https://mcp.szymonrichert.pl/mcp"
+    },
+    "mtg": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "/Users/szymonri/Documents/magic-cards-model-api",
+        "run",
+        "python",
+        "-m",
+        "magic_cards_model_api.mcp"
+      ]
+    }
+  }
+}

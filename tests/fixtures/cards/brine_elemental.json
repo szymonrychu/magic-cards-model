@@ -1,0 +1,158 @@
+{
+  "object": "card",
+  "id": "eb038efc-2cb2-4635-a183-42b6e0b6b5f8",
+  "oracle_id": "0e7b02fd-f2a3-493c-939b-ff9bca337774",
+  "multiverse_ids": [
+    509420
+  ],
+  "mtgo_id": 86473,
+  "tcgplayer_id": 233780,
+  "cardmarket_id": 542926,
+  "name": "Brine Elemental",
+  "lang": "en",
+  "released_at": "2021-03-19",
+  "uri": "https://api.scryfall.com/cards/eb038efc-2cb2-4635-a183-42b6e0b6b5f8",
+  "scryfall_uri": "https://scryfall.com/card/tsr/55/brine-elemental?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:30:54Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/e/b/eb038efc-2cb2-4635-a183-42b6e0b6b5f8.jpg?1783927854",
+    "normal": "https://cards.scryfall.io/normal/front/e/b/eb038efc-2cb2-4635-a183-42b6e0b6b5f8.jpg?1783927854",
+    "large": "https://cards.scryfall.io/large/front/e/b/eb038efc-2cb2-4635-a183-42b6e0b6b5f8.jpg?1783927854",
+    "png": "https://cards.scryfall.io/png/front/e/b/eb038efc-2cb2-4635-a183-42b6e0b6b5f8.png?1783927854",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/e/b/eb038efc-2cb2-4635-a183-42b6e0b6b5f8.jpg?1783927854",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/e/b/eb038efc-2cb2-4635-a183-42b6e0b6b5f8.jpg?1783927854",
+    "thumb": "https://cards.scryfall.io/thumb/front/e/b/eb038efc-2cb2-4635-a183-42b6e0b6b5f8.webp?1783927854",
+    "grid": "https://cards.scryfall.io/grid/front/e/b/eb038efc-2cb2-4635-a183-42b6e0b6b5f8.webp?1783927854",
+    "display": "https://cards.scryfall.io/display/front/e/b/eb038efc-2cb2-4635-a183-42b6e0b6b5f8.webp?1783927854",
+    "art": "https://cards.scryfall.io/art/front/e/b/eb038efc-2cb2-4635-a183-42b6e0b6b5f8.webp?1783927854",
+    "crop": "https://cards.scryfall.io/crop/front/e/b/eb038efc-2cb2-4635-a183-42b6e0b6b5f8.webp?1783927854"
+  },
+  "mana_cost": "{4}{U}{U}",
+  "cmc": 6.0,
+  "type_line": "Creature \u2014 Elemental",
+  "oracle_text": "Morph {5}{U}{U} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)\nWhen this creature is turned face up, each opponent skips their next untap step.",
+  "power": "5",
+  "toughness": "4",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Morph"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "eb038efc-2cb2-4635-a183-42b6e0b6b5f8",
+      "component": "combo_piece",
+      "name": "Brine Elemental",
+      "type_line": "Creature \u2014 Elemental",
+      "uri": "https://api.scryfall.com/cards/eb038efc-2cb2-4635-a183-42b6e0b6b5f8"
+    },
+    {
+      "object": "related_card",
+      "id": "5430da88-b72e-4d64-bd3c-b21062cac1c2",
+      "component": "combo_piece",
+      "name": "Morph",
+      "type_line": "Creature",
+      "uri": "https://api.scryfall.com/cards/5430da88-b72e-4d64-bd3c-b21062cac1c2"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "11e90d1b-0502-43e6-b056-e24836523c13",
+  "set": "tsr",
+  "set_name": "Time Spiral Remastered",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/11e90d1b-0502-43e6-b056-e24836523c13",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atsr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/tsr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/eb038efc-2cb2-4635-a183-42b6e0b6b5f8/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A0e7b02fd-f2a3-493c-939b-ff9bca337774&unique=prints",
+  "collector_number": "55",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "Water calls to water, and the world is left exhausted and withered in its wake.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Stephen Tappin",
+  "artist_ids": [
+    "bb596c13-9c39-4b11-8a7b-c88944826e70"
+  ],
+  "illustration_id": "212f2425-08c4-4df8-8038-4f70ed8b0b1d",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 10181,
+  "penny_rank": 5827,
+  "preview": {
+    "source": "Luis Scott-Vargas",
+    "source_uri": "https://twitter.com/lsv/status/1365321673038176257",
+    "previewed_at": "2021-02-26"
+  },
+  "prices": {
+    "usd": "0.13",
+    "usd_foil": "0.76",
+    "usd_etched": null,
+    "eur": "0.09",
+    "eur_foil": "0.56",
+    "tix": "0.04"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=509420&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBrine%2BElemental",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBrine%2BElemental",
+    "edhrec": "https://edhrec.com/route/?cc=Brine+Elemental"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F233780%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=542926&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/86473?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

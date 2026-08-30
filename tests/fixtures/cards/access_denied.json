@@ -1,0 +1,148 @@
+{
+  "object": "card",
+  "id": "1642df77-6fe8-47cf-b750-ca4dd9b331ba",
+  "oracle_id": "353dd446-2ea6-41c9-a10f-5a03e4de19b4",
+  "multiverse_ids": [
+    553908
+  ],
+  "mtgo_id": 97770,
+  "tcgplayer_id": 263103,
+  "cardmarket_id": 608603,
+  "name": "Access Denied",
+  "lang": "en",
+  "released_at": "2022-02-18",
+  "uri": "https://api.scryfall.com/cards/1642df77-6fe8-47cf-b750-ca4dd9b331ba",
+  "scryfall_uri": "https://scryfall.com/card/nec/11/access-denied?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:26:36Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/1/6/1642df77-6fe8-47cf-b750-ca4dd9b331ba.jpg?1783923996",
+    "normal": "https://cards.scryfall.io/normal/front/1/6/1642df77-6fe8-47cf-b750-ca4dd9b331ba.jpg?1783923996",
+    "large": "https://cards.scryfall.io/large/front/1/6/1642df77-6fe8-47cf-b750-ca4dd9b331ba.jpg?1783923996",
+    "png": "https://cards.scryfall.io/png/front/1/6/1642df77-6fe8-47cf-b750-ca4dd9b331ba.png?1783923996",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/1/6/1642df77-6fe8-47cf-b750-ca4dd9b331ba.jpg?1783923996",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/1/6/1642df77-6fe8-47cf-b750-ca4dd9b331ba.jpg?1783923996",
+    "thumb": "https://cards.scryfall.io/thumb/front/1/6/1642df77-6fe8-47cf-b750-ca4dd9b331ba.webp?1783923996",
+    "grid": "https://cards.scryfall.io/grid/front/1/6/1642df77-6fe8-47cf-b750-ca4dd9b331ba.webp?1783923996",
+    "display": "https://cards.scryfall.io/display/front/1/6/1642df77-6fe8-47cf-b750-ca4dd9b331ba.webp?1783923996",
+    "art": "https://cards.scryfall.io/art/front/1/6/1642df77-6fe8-47cf-b750-ca4dd9b331ba.webp?1783923996",
+    "crop": "https://cards.scryfall.io/crop/front/1/6/1642df77-6fe8-47cf-b750-ca4dd9b331ba.webp?1783923996"
+  },
+  "mana_cost": "{3}{U}{U}",
+  "cmc": 5.0,
+  "type_line": "Instant",
+  "oracle_text": "Counter target spell. Create X 1/1 colorless Thopter artifact creature tokens with flying, where X is that spell's mana value.",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "fa019966-96e5-430d-976e-aed09c8a69e3",
+      "component": "combo_piece",
+      "name": "Access Denied",
+      "type_line": "Instant",
+      "uri": "https://api.scryfall.com/cards/fa019966-96e5-430d-976e-aed09c8a69e3"
+    },
+    {
+      "object": "related_card",
+      "id": "65dd4252-09d0-4666-8d80-10432265ae4a",
+      "component": "token",
+      "name": "Thopter",
+      "type_line": "Token Artifact Creature \u2014 Thopter",
+      "uri": "https://api.scryfall.com/cards/65dd4252-09d0-4666-8d80-10432265ae4a"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "5b4d929d-bdf9-4bbf-858e-e248f53325ad",
+  "set": "nec",
+  "set_name": "Neon Dynasty Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/5b4d929d-bdf9-4bbf-858e-e248f53325ad",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Anec&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/nec?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/1642df77-6fe8-47cf-b750-ca4dd9b331ba/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A353dd446-2ea6-41c9-a10f-5a03e4de19b4&unique=prints",
+  "collector_number": "11",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "The Saiba Futurists guard their secret experiments with ever-evolving networks of cutting-edge defensive technology.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Johan Grenier",
+  "artist_ids": [
+    "465e38b8-7eed-4d22-a6d2-d3603ee0c00b"
+  ],
+  "illustration_id": "7ab89310-3dda-4c70-8647-eabe335fb7ce",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 3689,
+  "prices": {
+    "usd": "2.75",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "1.72",
+    "eur_foil": null,
+    "tix": "1.26"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=553908&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAccess%2BDenied",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAccess%2BDenied",
+    "edhrec": "https://edhrec.com/route/?cc=Access+Denied"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F263103%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=608603&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/97770?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

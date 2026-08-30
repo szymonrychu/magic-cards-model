@@ -1,0 +1,162 @@
+{
+  "object": "card",
+  "id": "85d22d5d-3875-42ff-b51e-c6e21db201f5",
+  "oracle_id": "b6859c7a-4c4d-4652-938f-ecedce29d506",
+  "multiverse_ids": [
+    616999
+  ],
+  "mtgo_id": 112248,
+  "arena_id": 84861,
+  "tcgplayer_id": 498328,
+  "cardmarket_id": 715942,
+  "name": "Generous Ent",
+  "lang": "en",
+  "released_at": "2023-06-23",
+  "uri": "https://api.scryfall.com/cards/85d22d5d-3875-42ff-b51e-c6e21db201f5",
+  "scryfall_uri": "https://scryfall.com/card/ltr/169/generous-ent?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T04:17:46Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/8/5/85d22d5d-3875-42ff-b51e-c6e21db201f5.jpg?1783916266",
+    "normal": "https://cards.scryfall.io/normal/front/8/5/85d22d5d-3875-42ff-b51e-c6e21db201f5.jpg?1783916266",
+    "large": "https://cards.scryfall.io/large/front/8/5/85d22d5d-3875-42ff-b51e-c6e21db201f5.jpg?1783916266",
+    "png": "https://cards.scryfall.io/png/front/8/5/85d22d5d-3875-42ff-b51e-c6e21db201f5.png?1783916266",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/8/5/85d22d5d-3875-42ff-b51e-c6e21db201f5.jpg?1783916266",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/8/5/85d22d5d-3875-42ff-b51e-c6e21db201f5.jpg?1783916266",
+    "thumb": "https://cards.scryfall.io/thumb/front/8/5/85d22d5d-3875-42ff-b51e-c6e21db201f5.webp?1783916266",
+    "grid": "https://cards.scryfall.io/grid/front/8/5/85d22d5d-3875-42ff-b51e-c6e21db201f5.webp?1783916266",
+    "display": "https://cards.scryfall.io/display/front/8/5/85d22d5d-3875-42ff-b51e-c6e21db201f5.webp?1783916266",
+    "art": "https://cards.scryfall.io/art/front/8/5/85d22d5d-3875-42ff-b51e-c6e21db201f5.webp?1783916266",
+    "crop": "https://cards.scryfall.io/crop/front/8/5/85d22d5d-3875-42ff-b51e-c6e21db201f5.webp?1783916266"
+  },
+  "mana_cost": "{5}{G}",
+  "cmc": 6.0,
+  "type_line": "Creature \u2014 Treefolk",
+  "oracle_text": "Reach\nWhen this creature enters, create a Food token. (It's an artifact with \"{2}, {T}, Sacrifice this token: You gain 3 life.\")\nForestcycling {1} ({1}, Discard this card: Search your library for a Forest card, reveal it, put it into your hand, then shuffle.)",
+  "power": "5",
+  "toughness": "7",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Reach",
+    "Landcycling",
+    "Food",
+    "Forestcycling",
+    "Typecycling",
+    "Cycling"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "4a029bdc-92e3-4d85-8af5-e33429a5f017",
+      "component": "token",
+      "name": "Food",
+      "type_line": "Token Artifact \u2014 Food",
+      "uri": "https://api.scryfall.com/cards/4a029bdc-92e3-4d85-8af5-e33429a5f017"
+    },
+    {
+      "object": "related_card",
+      "id": "ffabb307-87f0-428b-a4dc-a147c6c926a8",
+      "component": "combo_piece",
+      "name": "Generous Ent",
+      "type_line": "Creature \u2014 Treefolk",
+      "uri": "https://api.scryfall.com/cards/ffabb307-87f0-428b-a4dc-a147c6c926a8"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "08078706-ac5d-439b-8f01-894d38751367",
+  "set": "ltr",
+  "set_name": "The Lord of the Rings: Tales of Middle-earth",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/08078706-ac5d-439b-8f01-894d38751367",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Altr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ltr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/85d22d5d-3875-42ff-b51e-c6e21db201f5/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ab6859c7a-4c4d-4652-938f-ecedce29d506&unique=prints",
+  "collector_number": "169",
+  "digital": false,
+  "rarity": "common",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Simon Dominic",
+  "artist_ids": [
+    "b0e80135-db5a-4b88-a0bc-815a0e94faa1"
+  ],
+  "illustration_id": "d0c226a3-ac56-4c3b-832d-d11d8de07e78",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "triangle",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 5067,
+  "prices": {
+    "usd": "2.75",
+    "usd_foil": "3.94",
+    "usd_etched": null,
+    "eur": "2.02",
+    "eur_foil": "3.17",
+    "tix": "0.24"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=616999&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DGenerous%2BEnt",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DGenerous%2BEnt",
+    "edhrec": "https://edhrec.com/route/?cc=Generous+Ent"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F498328%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=715942&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/112248?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

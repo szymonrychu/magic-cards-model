@@ -1,0 +1,148 @@
+{
+  "object": "card",
+  "id": "69402ba7-5dac-43f6-bba4-429fac35a96b",
+  "oracle_id": "ed47dd31-f7cd-4ecb-960f-470cb8f4ed3c",
+  "multiverse_ids": [
+    386300
+  ],
+  "tcgplayer_id": 92855,
+  "cardmarket_id": 268788,
+  "name": "Aquamorph Entity",
+  "lang": "en",
+  "released_at": "2014-09-05",
+  "uri": "https://api.scryfall.com/cards/69402ba7-5dac-43f6-bba4-429fac35a96b",
+  "scryfall_uri": "https://scryfall.com/card/ddn/54/aquamorph-entity?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T10:38:31Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/6/9/69402ba7-5dac-43f6-bba4-429fac35a96b.jpg?1783939111",
+    "normal": "https://cards.scryfall.io/normal/front/6/9/69402ba7-5dac-43f6-bba4-429fac35a96b.jpg?1783939111",
+    "large": "https://cards.scryfall.io/large/front/6/9/69402ba7-5dac-43f6-bba4-429fac35a96b.jpg?1783939111",
+    "png": "https://cards.scryfall.io/png/front/6/9/69402ba7-5dac-43f6-bba4-429fac35a96b.png?1783939111",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/6/9/69402ba7-5dac-43f6-bba4-429fac35a96b.jpg?1783939111",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/6/9/69402ba7-5dac-43f6-bba4-429fac35a96b.jpg?1783939111",
+    "thumb": "https://cards.scryfall.io/thumb/front/6/9/69402ba7-5dac-43f6-bba4-429fac35a96b.webp?1783939111",
+    "grid": "https://cards.scryfall.io/grid/front/6/9/69402ba7-5dac-43f6-bba4-429fac35a96b.webp?1783939111",
+    "display": "https://cards.scryfall.io/display/front/6/9/69402ba7-5dac-43f6-bba4-429fac35a96b.webp?1783939111",
+    "art": "https://cards.scryfall.io/art/front/6/9/69402ba7-5dac-43f6-bba4-429fac35a96b.webp?1783939111",
+    "crop": "https://cards.scryfall.io/crop/front/6/9/69402ba7-5dac-43f6-bba4-429fac35a96b.webp?1783939111"
+  },
+  "mana_cost": "{2}{U}{U}",
+  "cmc": 4.0,
+  "type_line": "Creature \u2014 Shapeshifter",
+  "oracle_text": "As this creature enters or is turned face up, it becomes your choice of 5/1 or 1/5.\nMorph {2}{U} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+  "power": "*",
+  "toughness": "*",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Morph"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "5430da88-b72e-4d64-bd3c-b21062cac1c2",
+      "component": "combo_piece",
+      "name": "Morph",
+      "type_line": "Creature",
+      "uri": "https://api.scryfall.com/cards/5430da88-b72e-4d64-bd3c-b21062cac1c2"
+    },
+    {
+      "object": "related_card",
+      "id": "69402ba7-5dac-43f6-bba4-429fac35a96b",
+      "component": "combo_piece",
+      "name": "Aquamorph Entity",
+      "type_line": "Creature \u2014 Shapeshifter",
+      "uri": "https://api.scryfall.com/cards/69402ba7-5dac-43f6-bba4-429fac35a96b"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "163844e5-077e-4e2c-a0f0-fa33fbc7bb3b",
+  "set": "ddn",
+  "set_name": "Duel Decks: Speed vs. Cunning",
+  "set_type": "duel_deck",
+  "set_uri": "https://api.scryfall.com/sets/163844e5-077e-4e2c-a0f0-fa33fbc7bb3b",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Addn&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ddn?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/69402ba7-5dac-43f6-bba4-429fac35a96b/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aed47dd31-f7cd-4ecb-960f-470cb8f4ed3c&unique=prints",
+  "collector_number": "54",
+  "digital": false,
+  "rarity": "common",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Brian Despain",
+  "artist_ids": [
+    "b4733d20-d538-4dd6-81fe-408c958ca54b"
+  ],
+  "illustration_id": "d811572e-467d-48b3-8677-a7c3de2a6669",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 28034,
+  "prices": {
+    "usd": "0.16",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.06",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=386300&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAquamorph%2BEntity",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAquamorph%2BEntity",
+    "edhrec": "https://edhrec.com/route/?cc=Aquamorph+Entity"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F92855%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=268788&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Aquamorph+Entity&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
