@@ -18,9 +18,10 @@ the session that wrote this file:
   a cost is" - so `auto_tap` stops as soon as the pool can pay and never taps
   a source it does not need.
 - **CR 106.6** - some mana carries a spend restriction ("Spend this mana only
-  to..."); this engine does not model restrictions once mana is in the pool
-  (see `docs/engine-coverage.md`), so `auto_tap` never produces mana this way
-  - `free_tap_mana_ability` skips a restricted ability entirely.
+  to..."). The restriction travels with the mana in the pool, so `auto_tap`
+  offers a restricted ability exactly when the restriction permits what is
+  being paid for and withholds it otherwise - see
+  `tests/scenarios/test_mana_spend_restrictions.py` for the mechanic itself.
 - **CR 118.13a** - the choice of how a mana symbol payable in multiple ways is
   covered belongs to the payer; picking which colour a dual makes to reach a
   fixed, already-known cost is bookkeeping downstream of that choice, not a
@@ -146,15 +147,16 @@ def test_unpayable_cost_is_refused_with_a_clear_reason():
 
 
 # --------------------------------------------------------------------------
-# Spend restrictions (CR 106.6) - not modelled, so never spent automatically
+# Spend restrictions (CR 106.6) - offered only when the restriction permits
 # --------------------------------------------------------------------------
 
 
 def test_eldrazi_temple_restricted_ability_is_not_auto_tapped():
-    """Eldrazi Temple's `{T}: Add {C}{C}.` carries a spend restriction this
-    engine cannot verify once the mana is in the pool, so `auto_tap` may only
-    use its unrestricted `{T}: Add {C}.` - one mana, not two - and a {2} cost
-    is refused rather than silently paid with restricted mana."""
+    """Eldrazi Temple's `{T}: Add {C}{C}.` may only be spent to cast colorless
+    Eldrazi spells or activate abilities of colorless Eldrazi (CR 106.6). Mind
+    Stone is a colorless artifact and neither, so `auto_tap` is left with the
+    unrestricted `{T}: Add {C}.` - one mana, not two - and the {2} cost is
+    refused rather than silently paid with mana that cannot pay it."""
     scenario = (
         Scenario().player("alice", hand=["Mind Stone"], battlefield=["Eldrazi Temple"]).build()
     )
@@ -186,9 +188,10 @@ def test_eldrazi_temple_unrestricted_ability_still_pays_what_it_can():
 
 
 def test_cavern_of_souls_restricted_colour_choice_is_not_auto_tapped():
-    """Cavern of Souls's any-colour ability is restricted to a chosen creature
-    type; only its unrestricted `{T}: Add {C}.` is safe to spend
-    automatically, which cannot pay a coloured cost."""
+    """Cavern of Souls's any-colour ability is restricted to casting a creature
+    spell of the chosen type (CR 106.6). Shock is an instant, so that ability
+    is not offered and only the unrestricted `{T}: Add {C}.` remains, which
+    cannot pay a coloured cost."""
     scenario = Scenario().player("alice", hand=["Shock"], battlefield=["Cavern of Souls"]).build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     (cavern,) = scenario.untapped_sources("Cavern of Souls")

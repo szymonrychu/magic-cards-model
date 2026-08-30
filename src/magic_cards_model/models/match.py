@@ -21,6 +21,18 @@ class Match(BaseModel):
 
     Sideboarding between games is why `Player.sideboard` exists, though nothing
     here enforces that the deck returns to its registered list afterwards.
+
+    Setting the sideboard aside (CR 103.2a) is what puts it *outside the game*
+    (CR 400.11a), which is the state Karn, the Great Creator's `−2` reaches
+    into. CR 400.11b bounds how long a card brought in that way stays: "Those
+    cards remain in the game until the game ends, their owner leaves the game,
+    or a rule or effect removes them from the game, whichever comes first." The
+    game ending is the bound that applies here, and `_fresh` is what honours it
+    - every game of a match starts from players with empty zones and reloads
+    the registered decklist, so a card fetched out of the sideboard in game one
+    is back in the sideboard for game two with no special case, and the
+    registered `Deck` - which is what `check_legality` counts (CR 100.2a,
+    CR 100.4a) - was never touched by the fetch at all.
     """
 
     players: list[Player] = Field(min_length=2)

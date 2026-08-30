@@ -268,12 +268,15 @@ def test_blood_artist_gains_no_life_because_its_other_clause_is_targeted():
     assert scenario.player("bob").life == 20
 
 
-def test_thoughtseize_loses_no_life_because_its_earlier_clauses_are_not_this_waves_shape():
+def test_thoughtseize_reveals_chooses_discards_and_loses_life():
     """Thoughtseize: "Target player reveals their hand. You choose a nonland
-    card from it. That player discards that card. You lose 2 life." The last
-    clause alone is exactly "You lose N life.", but it is preceded by a
-    target, a choice, and a reference to "that player" - none of which this
-    wave resolves - so the whole spell, all four clauses, must do nothing.
+    card from it. That player discards that card. You lose 2 life." A
+    non-owner choosing from a revealed hand (CR 701.20a, CR 701.9b) is now
+    read as one anaphoric run of clauses by
+    `_merge_reveal_hand_choose_discard_clauses` in `machines/effects.py` -
+    see `test_reveal_hand_and_choose.py` for the full corner-case coverage of
+    this shape; this test only needs to prove the gap this docstring used to
+    describe is closed.
     """
     scenario = (
         Scenario()
@@ -283,11 +286,14 @@ def test_thoughtseize_loses_no_life_because_its_earlier_clauses_are_not_this_wav
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
     (swamp,) = scenario.untapped_sources("Swamp")
+    bolt = scenario.find("Lightning Bolt", Zone.HAND, "bob")
+    scenario.will_discard(bolt, username="alice")
 
     scenario.cast_and_resolve("Thoughtseize", swamp, targets=["bob"])
 
-    assert scenario.player("alice").life == 20
-    assert "Lightning Bolt" in [state.card.name for state in scenario.player("bob").hand]
+    assert scenario.player("alice").life == 18
+    assert bolt.zone is Zone.GRAVEYARD
+    assert "Lightning Bolt" not in [state.card.name for state in scenario.player("bob").hand]
 
 
 def test_galvanic_discharge_grants_energy_even_when_its_unscripted_payment_declines():

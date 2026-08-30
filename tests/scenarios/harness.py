@@ -93,17 +93,24 @@ class Scenario:
         battlefield: list[str] | None = None,
         graveyard: list[str] | None = None,
         exile: list[str] | None = None,
+        sideboard: list[str] | None = None,
     ) -> "Scenario":
         """Add a player, with the cards they start the scenario holding.
 
         Library order is top-first, so `library=["Questing Beast", "Forest"]`
         draws Questing Beast first.
+
+        `sideboard` is the group of cards this player has **outside the game**
+        (CR 400.11a) - the cards CR 103.2a set aside before the game began, and
+        the only place a "from outside the game" ability may reach. See
+        `models/zone.py` for why that is not an eighth zone.
         """
         player = Player(username=username, life=life)
         for zone, names in (
             (Zone.LIBRARY, library),
             (Zone.HAND, hand),
             (Zone.GRAVEYARD, graveyard),
+            (Zone.SIDEBOARD, sideboard),
         ):
             for name in names or []:
                 # CR 108.3's owner is stamped by `Player.add` now, which is
@@ -426,6 +433,24 @@ class PlayedScenario:
         not in the zone gets `Game.ask`'s `ValueError`, not a silent mismatch.
         """
         self._queue(DecisionKind.CHOOSE_CARDS, tuple(c.id for c in cards), username, None, times)
+
+    def will_choose_cards(
+        self,
+        *cards: CardState,
+        username: str | None = None,
+        source: str | None = None,
+        times: int | None = 1,
+    ) -> None:
+        """Answer the next `CHOOSE_CARDS` question with exactly these cards.
+
+        `will_discard` is the same question asked by the cleanup step; this is
+        the general one, for a "choose N of these cards" put by a card's own
+        text - Karn, the Great Creator's `−2` choosing among the artifact cards
+        its controller owns outside the game and face up in exile. `source`
+        narrows the answer to the card asking, the way `will_take_the_may`
+        already does.
+        """
+        self._queue(DecisionKind.CHOOSE_CARDS, tuple(c.id for c in cards), username, source, times)
 
     def scry_keeping_everything_on_top(
         self, *, username: str | None = None, times: int | None = 1
