@@ -61,6 +61,11 @@ def main() -> None:
         action="store_true",
         help="include each gap's note, not just its name",
     )
+    parser.add_argument(
+        "--silent",
+        action="store_true",
+        help="also list the cards sweep_pool.py already knows resolve to nothing",
+    )
     args = parser.parse_args()
 
     rows = not_modelled_rows(DOC.read_text())
@@ -75,6 +80,45 @@ def main() -> None:
             print(f"    {_plain(note)}")
     print()
     print(f"{len(rows)} known gaps.")
+
+    if args.silent:
+        print()
+        print(silent_card_section())
+
+
+def silent_card_section() -> str:
+    """The sweeper's silent list, which players also must not re-report.
+
+    A card that resolves to nothing is already enumerated by
+    `scripts/sweep_pool.py` and sits on the work queue. A player rediscovering
+    one spends its single report on something already counted. What a game
+    uniquely finds - and the sweeper never can - is a card that does the
+    *wrong* thing rather than nothing at all.
+    """
+    import sys
+
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from sweep_pool import (  # type: ignore[import-not-found]
+        SILENT,
+        card,
+        classify_card,
+        has_rules_text,
+        pool,
+    )
+
+    names = sorted(
+        name
+        for name in pool()
+        if has_rules_text(printing := card(name)) and classify_card(printing)[0] == SILENT
+    )
+    header = (
+        "Cards already known to resolve to nothing - do NOT report these either.\n"
+        "Source: scripts/sweep_pool.py. They are on the work queue already.\n"
+        "A card that does the WRONG thing is still very much reportable.\n"
+    )
+    return (
+        header + "\n" + "\n".join(f"- {name}" for name in names) + f"\n\n{len(names)} silent cards."
+    )
 
 
 if __name__ == "__main__":
