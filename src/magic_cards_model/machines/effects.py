@@ -88,12 +88,17 @@ from .layers import (
     Duration,
     Layer,
     LayerContext,
+    LayerNotice,
     Sublayer,
     add_type,
     count_card_types,
+    creatures_controlled_by,
+    creatures_controlled_by_opponents_of,
     grant_ability,
     is_resolution_layer_effect_text,
     only_this_incarnation,
+    other_creatures_controlled_by,
+    parsed_layer_effects,
     set_power_toughness,
 )
 from .modes import Mode, is_modal_text, modal_profile, substitute_x
@@ -281,6 +286,265 @@ def create_continuous_effect_of_ability(game: "Game", ability: AbilityOnStack) -
         targets=targets,
         context=layer_context_for(game, game.controller_of(ability)),
     )
+
+
+# --------------------------------------------------------------------------
+# A shared count expression: "the number of <type> you control" / "... cards
+# in your graveyard" (CR 205.2a's card types)
+# --------------------------------------------------------------------------
+#
+# Several cards define a variable magnitude this way - Craterhoof Behemoth's
+# own pump ("where X is the number of creatures you control") and Grist, the
+# Hunger Tide's -5 ("equal to the number of creature cards in your
+# graveyard") are the two in this wave's pool - and each used to need its own
+# one-off reader (`_read_referent_power_expression`'s "its power",
+# `_parse_mass_mv_rhs`'s counters-on-self, `LayerContext.graveyard_of`'s own
+# graveyard slice). `count_expression` is the shared one: given the phrase
+# after "the number of", it returns a function of `(game, controller)` - not
+# a value - because CR 611.2c only fixes the *result* at the moment a caller
+# actually evaluates it, not the expression itself; Craterhoof's own
+# docstring on `_run_mass_pump` is where that one evaluation happens.
+_COUNT_YOU_CONTROL_RE = re.compile(
+    r"^(?:the )?number of (?P<qualifier>[a-z]+) you control$", re.IGNORECASE
+)
+_COUNT_CARDS_IN_YOUR_GRAVEYARD_RE = re.compile(
+    r"^(?:the )?number of (?P<qualifier>[a-z]+) cards? in your graveyard$", re.IGNORECASE
+)
+
+
+def _singular_card_type(word: str) -> Type | None:
+    """ "creatures" / "creature" -> `Type.CREATURE` (CR 205.2a), or `None` for
+    anything not one of the fifteen printed card types - a coloured, named, or
+    compound qualifier ("green creatures", "Human creatures") is deliberately
+    left unread rather than guessed at.
+    """
+    singular = word[:-1] if word.lower().endswith("s") else word
+    try:
+        return Type(singular.lower())
+    except ValueError:
+        return None
+
+
+def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
+    """Parse "the number of <type>[s] you control" or "... card(s) in your
+    graveyard" into `(game, controller) -> int`, or `None` if `phrase` is not
+    one of those two shapes.
+
+    "You control" is read off the *computed* board (CR 613.5) - a creature
+    that only became one through a continuous effect still counts, the same
+    correction this wave's Ajani/Leyline reading of "each Cat you control"
+    needs (CR 613.4, CR 205.3). "In your graveyard" is a zone question, not a
+    layers one, so it reads `CardState.types` directly (CR 205.2a) - already
+    the front-face-safe read `Card.types` gives a double-faced card outside
+    the battlefield, per `models/card_state.py`'s `types` property.
+
+    The returned function re-reads the board or graveyard every time it is
+    called; it is the caller's job to call it exactly once, at the moment
+    CR 611.2c fixes the magnitude, and keep the resulting `int` rather than
+    the function itself.
+    """
+    stripped = phrase.strip().rstrip(".")
+    if match := _COUNT_YOU_CONTROL_RE.fullmatch(stripped):
+        card_type = _singular_card_type(match.group("qualifier"))
+        if card_type is None:
+            return None
+
+        def count_on_board(game: "Game", controller: str) -> int:
+            board = game.computed_board()
+            return sum(
+                1
+                for permanent in game.battlefield
+                if board.of(permanent).controller == controller
+                and card_type in board.of(permanent).types
+            )
+
+        return count_on_board
+
+    if match := _COUNT_CARDS_IN_YOUR_GRAVEYARD_RE.fullmatch(stripped):
+        card_type = _singular_card_type(match.group("qualifier"))
+        if card_type is None:
+            return None
+
+        def count_in_graveyard(game: "Game", controller: str) -> int:
+            return sum(1 for state in game.player(controller).graveyard if card_type in state.types)
+
+        return count_in_graveyard
+
+    return None
+
+
+# --------------------------------------------------------------------------
+# P5: a duration-bearing team-wide pump with no target, magnitude fixed at
+# resolution (CR 611.2, CR 611.2c)
+# --------------------------------------------------------------------------
+#
+# `create_continuous_effect`/`create_continuous_effect_of_ability` above
+# default an untargeted ability's affected object to its own source ("this
+# creature gets +2/+2"), which is right for Basking Rootwalla and wrong for
+# "creatures you control get +N/+N until end of turn." - Violent Outburst's
+# own pump, and Craterhoof Behemoth's "creatures you control gain trample and
+# get +X/+X until end of turn, where X is the number of creatures you
+# control." `docs/engine-coverage.md` used to carry this row as a recorded
+# gap ("the actual continuous effect for a team-wide temporary pump is still
+# not built"); `machines/layers.py`'s `_MASS_PUMP_UNTIL_EOT_RE`/
+# `_mass_pump_until_eot_builder` build the effect once handed the concrete,
+# already-resolved group, and everything below computes that group and (when
+# the card prints one) the "where X is ..." magnitude.
+_MASS_SUBJECT_RE = re.compile(
+    r"^(?:other )?creatures (?:you control|your opponents control)\b", re.IGNORECASE
+)
+#: The trailing computed-magnitude clause - "..., where X is <expr>." - split
+#: off so the rest of the sentence can be handed to `machines/layers.py`'s
+#: parser once "X" is replaced by a literal number.
+_WHERE_X_IS_RE = re.compile(r",?\s*where x is (?P<expr>.+?)\.?$", re.IGNORECASE)
+
+
+def _mass_creature_group_targets(
+    game: "Game", controller: str, source_id: UUID, text: str
+) -> list[CardState] | None:
+    """The concrete creatures a mass, untargeted "creatures you control" /
+    "other creatures you control" / "creatures your opponents control"
+    resolution effect affects, fixed **now** (CR 611.2c: "the set of objects
+    it affects is determined when that continuous effect begins ... any
+    objects that come under [that] control later aren't affected") rather
+    than a live `Selector` that would keep re-including whoever is on the
+    battlefield the next time CR 613.5 recomputes it - which is exactly right
+    for a *static* ability's own anthem (`_anthem_builder`) and exactly wrong
+    here. `None` if `text`'s subject is none of the three - the caller's
+    ordinary target resolution stays in charge for everything else.
+    """
+    opening = text.strip().lower()
+    if opening.startswith("other creatures you control"):
+        selector = other_creatures_controlled_by(source_id, controller)
+    elif opening.startswith("creatures you control"):
+        selector = creatures_controlled_by(controller)
+    elif opening.startswith("creatures your opponents control"):
+        selector = creatures_controlled_by_opponents_of(controller)
+    else:
+        return None
+    board = game.computed_board()
+    return [
+        permanent
+        for permanent in game.battlefield
+        if selector(board.of(permanent), board.characteristics)
+    ]
+
+
+def _parse_mass_pump_clause(
+    effect_text: str,
+) -> tuple[str, Callable[["Game", str], int] | None] | None:
+    """The mass-pump sentence, as a template with a literal "+N/+N" already in
+    it (`magnitude_expr` is `None`) or with "+X/+X" still in it and a
+    `count_expression` to resolve it later (`magnitude_expr` is not `None`) -
+    or `None` if `effect_text` is not this shape at all, or names a "where X
+    is ..." expression `count_expression` cannot read.
+
+    Requires an explicit "until end of turn": without it, "Creatures you
+    control get +1/+1." is Glorious Anthem's own CR 611.3 anthem - a
+    permanent's forever-lasting static ability, not a CR 611.2 one-shot
+    effect - and `Game.resolve_top` calls `effect_for` for *every* resolving
+    spell, permanents included, so returning an effect here for that shape
+    would store a second, durational copy of the same anthem on top of the
+    one `effects_for`'s per-permanent battlefield sweep already reapplies on
+    its own every time the board is computed (CR 613.5), doubling the bonus -
+    exactly the trap `is_resolution_layer_effect_text`'s own docstring
+    documents for why it excludes the anthem shape.
+    """
+    text = effect_text.strip()
+    if _MASS_SUBJECT_RE.match(text) is None:
+        return None
+    if Duration.UNTIL_END_OF_TURN not in text.lower():
+        return None
+    where_match = _WHERE_X_IS_RE.search(text)
+    if where_match is None:
+        return text, None
+    magnitude_expr = count_expression(where_match.group("expr"))
+    if magnitude_expr is None:
+        return None
+    template = text[: where_match.start()].rstrip(", ").rstrip(".") + "."
+    if "+x/+x" not in template.lower():
+        return None
+    return template, magnitude_expr
+
+
+def _run_mass_pump(
+    game: "Game",
+    source: CardState,
+    controller: str,
+    template: str,
+    magnitude_expr: Callable[["Game", str], int] | None,
+) -> None:
+    """Resolve one mass-pump clause: substitute its magnitude (if it has one),
+    fix the group of creatures it affects, and hand the literal sentence to
+    `machines/layers.py`'s own parser - the same `parsed_layer_effects` every
+    other continuous effect in this file goes through, not a second
+    ContinuousEffect-building path (Craterhoof's trample grant still lives or
+    dies by `_KNOWN_KEYWORDS`'s whitelist there).
+
+    Trap: the magnitude is read **once**, right here, into a plain `int` -
+    never carried forward as `magnitude_expr` itself - so a creature that
+    enters after this resolves cannot retroactively grow Craterhoof's own
+    pump the way `set_power_toughness_to_mana_value`'s live re-read
+    deliberately does for Karn's ability (CR 611.2c fixes both the group and
+    the number the moment the effect begins).
+    """
+    literal = template
+    if magnitude_expr is not None:
+        magnitude = magnitude_expr(game, controller)
+        literal = re.sub(r"\+x/\+x", f"{magnitude:+d}/{magnitude:+d}", literal, flags=re.IGNORECASE)
+    targets = _mass_creature_group_targets(game, controller, source.id, literal)
+    if not targets:
+        return
+    builder = parsed_layer_effects(literal)
+    if builder is None:
+        # A keyword outside `_KNOWN_KEYWORDS`'s whitelist, or some other shape
+        # this wave's parser cannot read - fail closed rather than silently
+        # doing nothing (the same "unreadable is not the same as no effect"
+        # rule every other `LayerNotice` site in this file already keeps).
+        continuous_effects(game).layer_notices.append(
+            LayerNotice(source_id=source.id, source_name=source.name, text=literal)
+        )
+        return
+    store = continuous_effects(game)
+    timestamp = store.tick()
+    context = layer_context_for(game, game.player(controller))
+    for built in builder(source, timestamp, targets, context):
+        if built.holds:
+            store.add(built)
+
+
+def _mass_pump_ability_effect(effect_text: str) -> AbilityEffect | None:
+    """Craterhoof Behemoth's own ETB shape: a mass pump read whole off a
+    resolving *ability's* text, with `ability.controller` and its own source.
+    """
+    parsed = _parse_mass_pump_clause(effect_text)
+    if parsed is None:
+        return None
+    template, magnitude_expr = parsed
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None:
+            return
+        _run_mass_pump(game, source, ability.controller, template, magnitude_expr)
+
+    return effect
+
+
+def _mass_pump_spell_effect(effect_text: str) -> Effect | None:
+    """Violent Outburst's own pump line, the spell-side twin of
+    `_mass_pump_ability_effect` above - its cascade half is unaffected (CR
+    702.85a's exile-hit-free-cast pipeline reads no part of this sentence).
+    """
+    parsed = _parse_mass_pump_clause(effect_text)
+    if parsed is None:
+        return None
+    template, magnitude_expr = parsed
+
+    def effect(game: "Game", spell: CardState) -> None:
+        _run_mass_pump(game, spell, game.controller_of(spell).username, template, magnitude_expr)
+
+    return effect
 
 
 def delirium_damage(normal: int, with_delirium: int) -> Effect:
@@ -885,6 +1149,44 @@ def damage_each_opponent(amount: int) -> AbilityEffect:
         source = ability.source(game)
         for opponent in _opponents(game, ability.controller):
             game.deal_damage(opponent, amount, source=source)
+
+    return effect
+
+
+#: "Each opponent loses life equal to the number of creature cards in your
+#: graveyard." (Grist, the Hunger Tide's -5) - CR 119.3's life loss, dealt to
+#: CR 102.2's "each opponent" rather than a target, with the amount read
+#: through the shared `count_expression` (P6) below rather than a one-off
+#: reader of its own.
+_EACH_OPPONENT_LOSES_LIFE_EQUAL_TO_RE = re.compile(
+    r"^each opponent loses life equal to (?P<expr>.+?)\.?$", re.IGNORECASE
+)
+
+
+def _parse_each_opponent_loses_life_equal_to(text: str) -> AbilityEffect | None:
+    """Grist, the Hunger Tide's -5, see `_EACH_OPPONENT_LOSES_LIFE_EQUAL_TO_RE`.
+
+    `None` if `count_expression` cannot read the "equal to" phrase - there is
+    no fail-closed notice for this one shape specifically, matching this
+    file's existing convention that only a few clause shapes (conditional
+    sacrifice, mana adding, the reflexive/anaphoric/delayed/imprint families)
+    have a dedicated notice; everything else still silently returns `None`
+    from `_ability_effect_or_notice`, unchanged from before this wave.
+    """
+    match = _EACH_OPPONENT_LOSES_LIFE_EQUAL_TO_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    counter = count_expression(match.group("expr"))
+    if counter is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = ability.controller
+        amount = counter(game, controller)
+        if amount <= 0:
+            return
+        for opponent in _opponents(game, controller):
+            opponent.lose_life(amount)
 
     return effect
 
@@ -2087,6 +2389,82 @@ def put_counters_on_ability_targets(kind: Counter | str, amount: int) -> Targete
         for target in game.resolve_targets(stack_object):
             if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
                 game.add_counters(target, kind, amount)
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# P4: put N counters on each member of a group ("each Cat you control"),
+# rather than on something targeted (CR 122.1)
+# --------------------------------------------------------------------------
+#
+# "Put a +1/+1 counter on each Cat you control." (Ajani, Nacatl Pariah's
+# +2) and "... on each creature you control." (Leyline of Abundance) name no
+# target at all - CR 115.1 has nothing to check here, so `put_counters_on_
+# ability_targets`'s `game.resolve_targets` is the wrong tool. Ouroboroid's
+# own "put X +1/+1 counters on each creature you control, where X is this
+# creature's power" adds a magnitude read off the source itself - not
+# `count_expression`'s "the number of ..." shape, since this is a plain
+# characteristic read (CR 613.4, CR 613.5), not a count of anything.
+_COUNTER_EACH_GROUP_RE = re.compile(
+    rf"^put (?P<n>{_COUNT}|x) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on each "
+    r"(?P<group>[a-z]+) you control(?:,\s*where x is (?P<expr>.+))?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_put_counters_on_group_clause(text: str) -> AbilityEffect | None:
+    """ "Put N <kind> counter(s) on each <group> you control." - the group-wide
+    twin of `_COUNTER_TARGET_RE`'s "on target X" below.
+
+    `<group>` is read off the **computed** board (CR 613.5, CR 613.4): a
+    creature that gained the Cat type only through a continuous effect still
+    counts, and one that stops being a Cat before this resolves does not -
+    the same defect class this repo's own MDFC front-face bugs already
+    documented for a printed-type-line-only read. `<group>` "creature" is a
+    card type (CR 205.2a); anything else is read as a creature subtype
+    (CR 205.3) rather than a card type, since Ajani's own "Cat" is one.
+    """
+    match = _COUNTER_EACH_GROUP_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    kind = match.group("kind").lower()
+    group = match.group("group")
+    n_text = match.group("n").lower()
+    expr = match.group("expr")
+    fixed_amount: int | None
+    if n_text == "x":
+        if expr is None or expr.strip().rstrip(".").lower() != "this creature's power":
+            return None
+        fixed_amount = None
+    else:
+        fixed_amount = _count(n_text)
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None:
+            return
+        if fixed_amount is None:
+            amount = 0
+            if source.zone is Zone.BATTLEFIELD:
+                power = game.power_of(source)
+                amount = max(power, 0) if power is not None else 0
+        else:
+            amount = fixed_amount
+        if amount <= 0:
+            return
+        controller = ability.controller
+        board = game.computed_board()
+        for permanent in game.battlefield:
+            chars = board.of(permanent)
+            if chars.controller != controller:
+                continue
+            if group.lower() == "creature":
+                if not chars.is_creature:
+                    continue
+            elif group not in chars.subtypes:
+                continue
+            game.add_counters(permanent, kind, amount)
 
     return effect
 
@@ -3474,6 +3852,15 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     destroy_each = _parse_destroy_each_clause(_strip_non_effect_preamble(effect_text).strip())
     if destroy_each is not None:
         return destroy_each
+    put_counters_on_group = _parse_put_counters_on_group_clause(effect_text)
+    if put_counters_on_group is not None:
+        return put_counters_on_group
+    each_opponent_loses_life = _parse_each_opponent_loses_life_equal_to(effect_text)
+    if each_opponent_loses_life is not None:
+        return each_opponent_loses_life
+    mass_pump = _mass_pump_ability_effect(effect_text)
+    if mass_pump is not None:
+        return mass_pump
     parsed = parse_mixed_effect(effect_text)
     if parsed is not None:
         return parsed
@@ -4146,6 +4533,9 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     destroy_each_for_spell = _parse_destroy_each_clause(whole)
     if destroy_each_for_spell is not None:
         return destroy_each_for_spell
+    mass_pump_for_spell = _mass_pump_spell_effect(whole)
+    if mass_pump_for_spell is not None:
+        return mass_pump_for_spell
     parsed = parse_mixed_effect_for_spell(effect_text)
     if parsed is not None:
         return parsed
