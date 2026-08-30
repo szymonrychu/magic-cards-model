@@ -121,23 +121,26 @@ def test_gemstone_caverns_with_its_luck_counter_adds_any_colour_instead():
     assert scenario.stack_names() == []
 
 
-@pytest.mark.xfail(
-    reason=(
-        "Ugin's Labyrinth's condition is 'if a card is exiled with this land' - "
-        "tracking which permanent an exiled card was imprinted on is not modelled "
-        "(see docs/engine-coverage.md); the base amount is produced instead of "
-        "raising or silently doing nothing, which is at least not the reported bug."
-    )
-)
-def test_ugins_labyrinth_imprint_condition_is_not_modelled():
+def test_ugins_labyrinth_taps_for_its_base_amount_with_nothing_imprinted():
+    """Ugin's Labyrinth's condition is "if a card is exiled with this land" -
+    a permanent-to-exiled-card link (`Game.card_imprinted_on`,
+    `ExileMarker.IMPRINTED`), not a land type or a counter. With nothing
+    imprinted the condition is false, same as a lone Tron piece above.
+
+    The full imprint shape - the enters-the-battlefield choice that links a
+    card here in the first place, and the "return the exiled card" ability -
+    is `scenarios/test_imprint.py`'s job; this file only proves the
+    conditional mana clause itself is general enough to read a third kind of
+    condition alongside land types and counters.
+    """
     scenario = Scenario().player("alice", battlefield=["Ugin's Labyrinth"]).build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     (land,) = scenario.untapped_sources("Ugin's Labyrinth")
 
     scenario.activate(land)
 
-    # What CR 605.1a actually promises here, if imprint tracking existed:
-    assert scenario.player().mana_pool.floating == {Color.COLORLESS: 2}
+    assert scenario.player().mana_pool.floating == {Color.COLORLESS: 1}
+    assert scenario.stack_names() == []
 
 
 # --------------------------------------------------------------------------

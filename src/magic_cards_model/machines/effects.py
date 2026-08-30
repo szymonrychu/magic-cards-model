@@ -61,7 +61,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict
 
 from ..models.card import Color, Supertype, Type
-from ..models.card_state import CardState, Counter
+from ..models.card_state import CardState, Counter, ExileAnnotation, ExileMarker
 from ..models.player import Player
 from ..models.token import MONSTER_ROLE, PREDEFINED, TokenDefinition, create_tokens
 from ..models.zone import Zone
@@ -2919,6 +2919,30 @@ def _unreadable_anaphoric_clause(text: str, *, for_spell: bool) -> str | None:
     return None
 
 
+class ImprintNotice(BaseModel):
+    """One "you may exile a `<quality>` card ... from your hand" effect (CR
+    207.2c's "Imprint" ability word, and its plain-English relatives) whose
+    stated quality this wave could not read.
+
+    This is the shape Ugin's Labyrinth's own defect was found in: a card whose
+    ETB trigger offered no decision at all and simply resolved doing nothing,
+    with nothing anywhere recording that a choice had gone unoffered. Once the
+    shape itself is read (`_parse_imprint_clause`), the only way this can
+    still happen is a quality word this wave does not recognise - and that gap
+    gets this notice instead of the same silence, the same "unreadable is not
+    the same as no effect" record `TargetingNotice`, `InterveningIfNotice`,
+    `ModeNotice`, `AnaphoricClauseNotice`, `LayerNotice`, and
+    `CostModifierNotice` already keep for their own.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    source_id: UUID | None
+    source_name: str
+    text: str
+    """The unreadable clause itself, as printed."""
+
+
 def _is_layer_effect_text(text: str) -> bool:
     """True if `text` - a resolving ability's or spell's own effect text - is
     one of `machines.layers`'s one-shot resolution shapes (CR 611.2), or
@@ -2971,18 +2995,36 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
         return parsed
     if _is_layer_effect_text(effect_text):
         return create_continuous_effect_of_ability
-    unread = _unreadable_anaphoric_clause(effect_text, for_spell=False)
-    if unread is None:
-        return None
 
-    def notice_only(game: "Game", ability: AbilityOnStack) -> None:
-        game.anaphoric_clause_notices.append(
-            AnaphoricClauseNotice(
-                source_id=ability.source_id, source_name=ability.source_name, text=unread
+    unread_anaphoric = _unreadable_anaphoric_clause(effect_text, for_spell=False)
+    if unread_anaphoric is not None:
+
+        def anaphoric_notice_only(game: "Game", ability: AbilityOnStack) -> None:
+            game.anaphoric_clause_notices.append(
+                AnaphoricClauseNotice(
+                    source_id=ability.source_id,
+                    source_name=ability.source_name,
+                    text=unread_anaphoric,
+                )
             )
-        )
 
-    return notice_only
+        return anaphoric_notice_only
+
+    unread_imprint = _unreadable_imprint_quality(effect_text)
+    if unread_imprint is not None:
+
+        def imprint_notice_only(game: "Game", ability: AbilityOnStack) -> None:
+            game.imprint_notices.append(
+                ImprintNotice(
+                    source_id=ability.source_id,
+                    source_name=ability.source_name,
+                    text=unread_imprint,
+                )
+            )
+
+        return imprint_notice_only
+
+    return None
 
 
 def _spell_effect_or_notice(effect_text: str) -> Effect | None:
@@ -3105,11 +3147,219 @@ def _parse_anaphoric_clause_pair(
     return effect
 
 
+#: "Imprint" and its plain-English relatives - "you may exile a `<quality>`
+#: card [with mana value N or greater/less] from your hand" (Ugin's
+#: Labyrinth). CR 207.2c: "Imprint" is an ability word and "[has] no special
+#: rules meaning" of its own, so nothing here reads the word itself - only the
+#: sentence that follows it, the same CR 608.2d "you may" shape
+#: `_parse_optional_player_clause` reads for a plain player clause, with a
+#: quality restriction on top the way `_SEARCH_AND_PUT_RE` restricts a search.
+_HAND_EXILE_RE = re.compile(
+    r"you may exile (?:a|an) (?P<quality>.+?) card"
+    r"(?: with mana value (?P<mv>\d+) or (?P<cmp>greater|less))?"
+    r" from your hand",
+    re.IGNORECASE,
+)
+
+#: CR 105.2c: "A colorless object has no color" - colorless is not one of CR
+#: 105.1's five colours, so it is not `Color.COLORLESS` matched against
+#: `Card.colors` (never populated with it), it is the absence check itself.
+_HAND_EXILE_COLOR_WORDS: dict[str, Color | None] = {
+    "colorless": None,
+    "white": Color.WHITE,
+    "blue": Color.BLUE,
+    "black": Color.BLACK,
+    "red": Color.RED,
+    "green": Color.GREEN,
+}
+
+
+def _hand_exile_quality_matcher(quality: str) -> Callable[[CardState], bool] | None:
+    """A predicate for `_HAND_EXILE_RE`'s "a `<quality>` card", or `None` if
+    this wave cannot read it.
+
+    Fail-closed on purpose: an unrecognised quality refuses the whole clause
+    (`_parse_imprint_clause`) rather than asking "you may exile a card from
+    your hand" about the wrong cards - see `_unreadable_imprint_quality` for
+    what happens to a quality this refuses, which is not silence.
+    """
+    lowered = quality.strip().lower()
+    if lowered in _HAND_EXILE_COLOR_WORDS:
+        color = _HAND_EXILE_COLOR_WORDS[lowered]
+        if color is None:
+            return lambda state: not state.card.colors
+        return lambda state: color in (state.card.colors or [])
+    try:
+        card_type = Type(lowered)
+    except ValueError:
+        return None
+    return lambda state: card_type in state.card.types
+
+
+def _hand_exile_mv_matcher(mv: str | None, cmp: str | None) -> Callable[[CardState], bool]:
+    """CR 202.3's mana value, bounded by `_HAND_EXILE_RE`'s optional "with mana
+    value N or greater/less" - both directions, unlike `_bounded_quality_
+    matcher`'s search-only ceiling, because Ugin's Labyrinth's own restriction
+    is a floor ("or greater").
+    """
+    if mv is None:
+        return lambda state: True
+    bound = int(mv)
+    if cmp == "greater":
+        return lambda state: (state.card.cmc or 0) >= bound
+    return lambda state: (state.card.cmc or 0) <= bound
+
+
+def _hand_exile_description(match: re.Match[str]) -> str:
+    description = match.group("quality").strip()
+    if match.group("mv"):
+        description = f"{description} with mana value {match.group('mv')} or {match.group('cmp')}"
+    return description
+
+
+def _permanent_id_and_name(stack_object: "StackObject", *, for_spell: bool) -> tuple[UUID, str]:
+    """The id and display name of whatever ability this clause is printed on -
+    the spell's own id and name if it resolves as a permanent (a spell keeps
+    its `id` once it becomes the battlefield object, see `CardState.move_to`),
+    or the resolving ability's `source_id`/`source_name` (CR 113.7a: the
+    source may already be gone, which is why the name travels separately).
+    """
+    if for_spell:
+        assert isinstance(stack_object, CardState)
+        return stack_object.id, stack_object.card.name
+    assert isinstance(stack_object, AbilityOnStack)
+    source_id = stack_object.source_id
+    assert source_id is not None
+    return source_id, stack_object.source_name
+
+
+def _parse_imprint_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """ "Imprint — When this land enters, you may exile a colorless card with
+    mana value 7 or greater from your hand." (Ugin's Labyrinth), read off the
+    ability's own printed text so no registry row is needed.
+
+    CR 608.2d: nobody is *made* to exile anything, so this is a plain "you
+    may" - `DecisionKind.MAY` - with `affirmative_is_legal` set to whether a
+    legal card exists in hand at all: if none does, the choice is not merely a
+    bad idea, it is impossible, and CR 608.2d forbids choosing it (the same
+    `affirmative_is_legal` shape `may_pay_life` already uses for CR 119.4).
+    *Which* card, once "yes" is legal and chosen, is `DecisionKind.CHOOSE_
+    CARDS`, the same CR 608.2d machinery `seasoned_pyromancer`'s discard and
+    `malevolent_rumble`'s "put a permanent card into your hand" both use.
+
+    The exiled card is annotated `ExileMarker.IMPRINTED`, pointing back at the
+    resolving permanent's own id - the only thing a later "exiled with this
+    land" ability (`ManaCondition.imprinted`, `Game.card_imprinted_on`) can
+    mean, since "imprint" itself carries no rules meaning of its own
+    (CR 207.2c).
+    """
+    match = _HAND_EXILE_RE.fullmatch(clause.strip().rstrip("."))
+    if match is None:
+        return None
+    quality_matches = _hand_exile_quality_matcher(match.group("quality"))
+    if quality_matches is None:
+        return None
+    mv_matches = _hand_exile_mv_matcher(match.group("mv"), match.group("cmp"))
+    description = _hand_exile_description(match)
+
+    def matches(state: CardState) -> bool:
+        return quality_matches(state) and mv_matches(state)
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        player = game.controller_of(stack_object)
+        source_id, source_name = _permanent_id_and_name(stack_object, for_spell=for_spell)
+        candidates = [state for state in player.hand if matches(state)]
+        decision = Decision(
+            kind=DecisionKind.MAY,
+            player=player.username,
+            prompt=f"exile a {description} card from your hand",
+            source=source_name,
+            affirmative_is_legal=bool(candidates),
+        )
+        if not game.ask(decision):
+            return
+        chosen_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=player.username,
+                prompt=f"choose a {description} card to exile",
+                source=source_name,
+                amount=1,
+                cards=tuple(state.id for state in candidates),
+            )
+        )
+        assert isinstance(chosen_ids, tuple)
+        by_id = {state.id: state for state in candidates}
+        chosen = by_id[chosen_ids[0]]
+        player.cards_in(Zone.HAND).remove(chosen)
+        chosen.move_to(Zone.EXILE)
+        chosen.exile_annotation = ExileAnnotation(
+            marker=ExileMarker.IMPRINTED, owner=chosen.owner, linked_permanent_id=source_id
+        )
+        game.exile.append(chosen)
+
+    return effect
+
+
+def _unreadable_imprint_quality(text: str) -> str | None:
+    """The `_HAND_EXILE_RE` clause inside `text`, if it matches CR 608.2d's
+    "you may exile a `<quality>` card ... from your hand" shape but this
+    wave's `_hand_exile_quality_matcher` cannot read the stated quality -
+    used only to decide whether a parse failure deserves an `ImprintNotice`,
+    the same way `_unreadable_anaphoric_clause` decides for its own shape.
+    """
+    clauses = _prepare_effect_clauses(text)
+    if clauses is None:
+        return None
+    for clause in clauses:
+        match = _HAND_EXILE_RE.fullmatch(clause.strip().rstrip("."))
+        if match is None:
+            continue
+        if _hand_exile_quality_matcher(match.group("quality")) is None:
+            return clause
+    return None
+
+
+#: Ugin's Labyrinth's third ability: "{T}: Return the exiled card to its
+#: owner's hand." "The exiled card" is a definite reference to whichever card
+#: `_parse_imprint_clause` linked to this permanent, not a target - CR 601.2c
+#: never has this ability's activation choose one.
+_RETURN_IMPRINTED_RE = re.compile(
+    r"^return the exiled card to (?:its|their) owner's hand$", re.IGNORECASE
+)
+
+
+def _parse_return_imprinted_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """The other half of the imprint shape: giving the linked card back.
+
+    Found by `Game.card_imprinted_on` rather than kept as a pointer of its
+    own, so it survives however the card got there. CR 608.2b's "the effect
+    does as much as possible" covers the two ways there is nothing to
+    return - no card was ever exiled, or the link has gone stale (see
+    `ExileAnnotation.linked_permanent_id`'s own docstring) - both leave this a
+    no-op rather than an error.
+    """
+    if not _RETURN_IMPRINTED_RE.fullmatch(clause.strip().rstrip(".")):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source_id, _ = _permanent_id_and_name(stack_object, for_spell=for_spell)
+        card = game.card_imprinted_on(source_id)
+        if card is None:
+            return
+        owner_name = card.owner or game.controller_of(stack_object).username
+        game.exile.remove(card)
+        game.player(owner_name).add(card, Zone.HAND)
+
+    return effect
+
+
 def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """One clause of a mixed effect: the targeted shape first, then a token
-    creation, then a search, then the plain player shape (CR 608.2c does not
-    care which kind of instruction a card lists first, so no parser gets
-    priority for any reason beyond "try this one, then the next").
+    creation, then a search, then the imprint shape, then the plain player
+    shape (CR 608.2c does not care which kind of instruction a card lists
+    first, so no parser gets priority for any reason beyond "try this one,
+    then the next").
     """
     targeted = _parse_targeted_clause(clause, for_spell=for_spell)
     if targeted is not None:
@@ -3120,6 +3370,12 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     search = _parse_search_clause(clause, for_spell=for_spell)
     if search is not None:
         return search
+    imprint = _parse_imprint_clause(clause, for_spell=for_spell)
+    if imprint is not None:
+        return imprint
+    return_imprinted = _parse_return_imprinted_clause(clause, for_spell=for_spell)
+    if return_imprinted is not None:
+        return return_imprinted
     player_clause = _parse_optional_player_clause(clause)
     if player_clause is None:
         return None
