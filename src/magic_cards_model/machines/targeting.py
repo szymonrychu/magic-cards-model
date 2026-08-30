@@ -1008,6 +1008,16 @@ def profile_for_modes_with_owners(
 _EARTHBEND = re.compile(r"\bearthbend\b", re.IGNORECASE)
 _EARTHBEND_TARGET_TEXT = "target land you control"
 
+#: CR 603.12's own wording - "checked immediately after being created" - is
+#: what draws the line: everything from "when you do" onward is a *second*
+#: triggered ability's text, not the one being profiled. Cut before the
+#: ordinary scan sees it, so a reflexive clause's own "target creature or
+#: planeswalker" (Grist, the Hunger Tide's "-2") is never read as the outer
+#: ability's target. `re.IGNORECASE | re.DOTALL` matches `_REFLEXIVE_CLAUSE_RE`
+#: in `machines/effects.py`: the two have to agree on where the boundary is,
+#: or one module could see a target the other has already sliced away.
+_REFLEXIVE_CLAUSE_TAIL = re.compile(r"\bwhen you do,.*$", re.IGNORECASE | re.DOTALL)
+
 
 def profile_for_text(text: str) -> TargetingProfile:
     """What one piece of rules text may target, read on its own (CR 115.1).
@@ -1023,11 +1033,25 @@ def profile_for_text(text: str) -> TargetingProfile:
 
     Earthbend is special-cased ahead of the ordinary scan: every call site that
     needs a targeted ability's restriction - `Game._ask_trigger_targets` (CR
-    601.2c's announcement), `Game.why_cannot_target_with_trigger` and
-    `Game.resolve_target`'s CR 608.2b recheck - funnels through this one
-    function, so teaching it here is what makes "Earthbend N" targetable at
-    every one of those without three separate patches.
+    601.2c's announcement), `Game.why_cannot_target_with_trigger`,
+    `Game.resolve_target`'s CR 608.2b recheck, and `Game.activate_ability`'s
+    own CR 602.2b announcement - funnels through this one function, so
+    teaching it here is what makes "Earthbend N" targetable at every one of
+    those without three separate patches. The reflexive-clause cut just below
+    rides the same funnel: a card whose text reads "you may `<action>`. When
+    you do, `<consequence with a target>`." (CR 603.12, Grist, the Hunger
+    Tide's "-2") is announcing *no* target of its own at all - the target
+    belongs to the reflexive ability CR 603.12 creates only once the action
+    has happened, and CR 603.3d chooses it when *that* ability goes on the
+    stack, not now. Before this cut, Guide of Souls' "Whenever you attack, you
+    may pay {E}{E}{E}. When you do, put two +1/+1 counters ... on target
+    attacking creature" had its reflexive target harvested onto the outer
+    "Whenever you attack" trigger instead: CR 608.2b's recheck then applied to
+    the wrong ability, so the outer trigger could fizzle over a target it
+    never legitimately had, and the {E}{E}{E} offer it was gating would never
+    even be reached.
     """
+    text = _REFLEXIVE_CLAUSE_TAIL.sub("", text)
     if _EARTHBEND.search(text):
         return _parse(_EARTHBEND_TARGET_TEXT, spell_only=False)
     return _parse(_REMINDER.sub("", text), spell_only=False)

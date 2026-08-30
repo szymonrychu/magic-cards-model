@@ -105,8 +105,19 @@ class DelayedTrigger(BaseModel):
     name-keyed row. Checked ahead of `effect`/`DELAYED_EFFECTS` in
     `DelayedTriggers.effect_for`."""
 
-    event: TriggerEvent
-    """The event to watch for, in the vocabulary `Game.emit` already speaks."""
+    event: TriggerEvent | None = None
+    """The event to watch for, in the vocabulary `Game.emit` already speaks.
+
+    `None` only for a reflexive triggered ability (CR 603.12, see
+    `DelayedTriggers.create_reflexive`): CR 603.12 checks that ability
+    "immediately after being created" against whether its trigger event
+    "occurred earlier during the resolution of the spell or ability that
+    created it" - which by construction it already has, since the caller
+    only reaches `create_reflexive` once that action has actually happened.
+    There is nothing left to watch for, so the record is never appended to
+    `DelayedTriggers.triggers` and `matches`/`fire` never see it; `None` here
+    just satisfies this field rather than borrowing an unrelated
+    `TriggerEvent` member that would be misleading to read."""
 
     step: Step | None = None
     """For a `BEGINNING_OF_STEP` trigger, which step. None matches any step."""
@@ -377,6 +388,64 @@ class DelayedTriggers(BaseModel):
         """
         self.triggers.append(trigger)
         return trigger
+
+    def create_reflexive(
+        self,
+        *,
+        text: str,
+        controller: str,
+        source_id: UUID | None,
+        source_name: str,
+        callback: DelayedEffect,
+    ) -> AbilityOnStack:
+        """CR 603.12: create a reflexive triggered ability and hand back the
+        stack object it becomes - with no wait, unlike an ordinary delayed
+        trigger (CR 603.7).
+
+        "A resolving spell or ability may allow or instruct a player to take
+        an action and create a triggered ability that triggers 'when [a
+        player] [does or doesn't]' take that action ... These reflexive
+        triggered abilities follow the rules for delayed triggered abilities
+        (see rule 603.7), except that they're checked immediately after being
+        created and trigger based on whether the trigger event or events
+        occurred earlier during the resolution of the spell or ability that
+        created them." The caller (`machines/effects.py`'s "you may sacrifice
+        ... When you do, ..." clause, Grist, the Hunger Tide's shape) only
+        calls this *after* the action has actually happened, so "checked
+        immediately" and "occurred earlier" are both already true by
+        construction - there is no event left to wait for, so unlike `create`
+        this never touches `self.triggers`, and `fire`/`matches` never see it.
+
+        CR 603.7d/e give the source and controller as the creating spell or
+        ability's own, as it resolved - the caller's job, since only it knows
+        which ability created this one.
+
+        The resulting `AbilityOnStack` is not put on the stack here. CR 603.3
+        puts a triggered ability on the stack "the next time a player would
+        receive priority", which the caller reaches by handing the return
+        value to `Game.pending_triggers` - the same queue `put_triggers_on_
+        stack` already drains for every other triggered ability, which is
+        what makes this a *separate* stack object an opponent can respond to
+        (CR 405.6a) rather than part of the parent's own resolution - the
+        CR 118.12 "If you do" shape's whole distinction from this one.
+        """
+        trigger = DelayedTrigger(
+            text=text,
+            controller=controller,
+            source_id=source_id,
+            source_name=source_name,
+            callback=callback,
+            remaining=0,  # CR 603.7b/603.12: spent the moment it is created
+        )
+        ability = AbilityOnStack(
+            kind=AbilityKind.TRIGGERED,
+            ability=trigger.as_ability(),
+            source_id=source_id,
+            source_name=source_name,
+            controller=controller,
+        )
+        self.pending[ability.id] = trigger
+        return ability
 
     def fire(self, event: GameEvent) -> list[AbilityOnStack]:
         """Everything this event triggers, in creation order (CR 603.2, 603.7b).
