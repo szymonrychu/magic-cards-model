@@ -186,9 +186,9 @@ def has_effect_entry(printing: Card) -> bool:
     """Whether anything in the effect registries is keyed to this card."""
     if printing.name in EFFECTS:
         return True
-    if any(name == printing.name for name, _ in TRIGGER_EFFECTS):
+    if any(key[0] == printing.name for key in TRIGGER_EFFECTS):
         return True
-    return any(name == printing.name for name, _ in ACTIVATED_EFFECTS)
+    return any(key[0] == printing.name for key in ACTIVATED_EFFECTS)
 
 
 def has_rules_text(printing: Card) -> bool:

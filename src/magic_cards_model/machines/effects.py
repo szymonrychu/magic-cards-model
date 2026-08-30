@@ -573,6 +573,54 @@ def prevent_all_combat_damage(game: "Game", spell: CardState) -> None:
     )
 
 
+def each_player_exiles_sacrifices_and_returns_creatures(game: "Game", spell: CardState) -> None:
+    """Living End: "Each player exiles all creature cards from their graveyard,
+    then sacrifices all creatures they control, then puts all cards they
+    exiled this way onto the battlefield."
+
+    Three CR 608.2c instructions, each performed for every player before the
+    next one starts, rather than one player's whole sequence before the next
+    player's: CR 101.4's APNAP order only orders *choices*, and nothing here
+    is a choice, so there is no rules reason to interleave them by player
+    instead of by step - and doing it by step is what keeps "sacrifices all
+    creatures they control" from ever seeing a creature this same effect just
+    exiled from a graveyard onto nobody's battlefield yet.
+
+    - **CR 701.13a / 406.2** - exile is "move it to the exile zone from
+      wherever it is"; a graveyard is as good a wherever as any.
+      `Game.exile_permanent` takes any `CardState` regardless of its current
+      zone, so it exiles a graveyard card exactly the way it exiles a
+      permanent.
+    - **CR 701.21a** - "To sacrifice a permanent, its controller moves it from
+      the battlefield directly to its owner's graveyard" - `Game.sacrifice`.
+    - **CR 400.7, CR 110.2a** - a card put onto the battlefield this way is a
+      new object, not the graveyard card come back to life; `Game.
+      put_onto_battlefield` is the Tooth and Nail path this effect reuses.
+
+    Only *cards* were exiled, so a creature token that got sacrificed at the
+    second step is simply gone (CR 111.7) - it was never eligible for the
+    first step and has nothing to return at the third.
+    """
+    exiled_by_player: dict[str, list[CardState]] = {}
+    for player in game.players_in_game:
+        creatures = [state for state in list(player.graveyard) if state.card.is_creature]
+        exiled_by_player[player.username] = [game.exile_permanent(state) for state in creatures]
+
+    for player in game.players_in_game:
+        controlled = [
+            permanent
+            for permanent in list(game.battlefield)
+            if permanent.controller == player.username
+            and game.characteristics_of(permanent).is_creature
+        ]
+        for permanent in controlled:
+            game.sacrifice(permanent)
+
+    for player in game.players_in_game:
+        for state in exiled_by_player[player.username]:
+            game.put_onto_battlefield(state, player.username)
+
+
 def prevent_next_damage_to_target(amount: int) -> Effect:
     """Bandage: "Prevent the next 1 damage that would be dealt to any target this
     turn." Then "Draw a card", which the registry sequences separately.
@@ -1496,11 +1544,30 @@ _CANT_BE_COUNTERED_LINE_RE = re.compile(
 #: safe wherever it matches.
 _REMINDER_LINE_RE = re.compile(r"^[ \t]*\([^()]*\)[ \t]*\n+", re.MULTILINE)
 
+#: Suspend's own line (CR 702.62a: "Suspend is a keyword that represents three
+#: abilities" - none of them the spell's own CR 608.2c resolution instruction,
+#: which is why Living End's "Suspend 3—{2}{B}{B}" has to come off before its
+#: "Each player exiles ..." sentence is read as the whole effect. General to
+#: the keyword's printed shape (a name, a number, an em dash, a cost), not to
+#: this one card - any "Suspend N—[cost]" line strips the same way.
+_SUSPEND_LINE_RE = re.compile(r"^Suspend \d+—[^\n]+\n+", re.MULTILINE | re.IGNORECASE)
+
+#: Cascade's own line, reminder text and all (CR 702.85a). Printed as "Cascade
+#: (reminder...)" ahead of whatever the spell also does - Violent Outburst's
+#: "Creatures you control get +1/+0 until end of turn." - so without this, the
+#: periods inside the reminder text get read by `_CLAUSE_SEPARATOR` as
+#: sentence boundaries of their own and the real effect is lost along with the
+#: garbage around it. General to the keyword, not to Violent Outburst: any
+#: card pairing bare "Cascade" with its own resolution text hits the same bug.
+_CASCADE_LINE_RE = re.compile(r"^Cascade(?:\s*\([^()]*\))?[ \t]*\n+", re.MULTILINE | re.IGNORECASE)
+
 
 def _strip_non_effect_preamble(text: str) -> str:
     """Sentences that describe the spell but are not part of resolving it."""
     text = _ADDITIONAL_COST_LINE_RE.sub("", text)
     text = _CANT_BE_COUNTERED_LINE_RE.sub("", text)
+    text = _SUSPEND_LINE_RE.sub("", text)
+    text = _CASCADE_LINE_RE.sub("", text)
     text = _REMINDER_LINE_RE.sub("", text)
     return text
 
@@ -1867,6 +1934,19 @@ _PREVENT_ALL_COMBAT_DAMAGE_RE = re.compile(
 _PREVENT_NEXT_DAMAGE_TO_TARGET_RE = re.compile(
     rf"prevent the next (?P<n>{_COUNT}) damage that would be dealt to "
     r"(?P<phrase>any target|.*target.+) this turn\.?$",
+    re.IGNORECASE,
+)
+#: "Each player exiles all creature cards from their graveyard, then
+#: sacrifices all creatures they control, then puts all cards they exiled
+#: this way onto the battlefield." (Living End) - three CR 608.2c instructions
+#: joined by "then" inside one sentence, so `_spell_effect_or_notice` matches
+#: this against the whole (preamble-stripped) text before `_CLAUSE_SEPARATOR`
+#: ever gets to cut it into three fragments on its own "then"s; see
+#: `each_player_exiles_sacrifices_and_returns_creatures`.
+_EACH_PLAYER_EXILE_SACRIFICE_RETURN_RE = re.compile(
+    r"^each player exiles all creature cards from (?:their|his or her) graveyard, "
+    r"then sacrifices all creatures they control, then puts all cards they "
+    r"exiled this way onto the battlefield\.?$",
     re.IGNORECASE,
 )
 #: "The next time target creature would deal damage this turn, prevent that
@@ -2918,6 +2998,12 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     all ones `_KNOWN_KEYWORDS` and a single-keyword grant can read - records a
     `LayerNotice` rather than the card doing nothing with no trace.
     """
+    whole = _strip_non_effect_preamble(effect_text).strip()
+    if _EACH_PLAYER_EXILE_SACRIFICE_RETURN_RE.fullmatch(whole):
+        # Read whole, ahead of `parse_mixed_effect_for_spell`: the sentence's
+        # own ", then " joins are CR 608.2c instructions in one breath, not
+        # three clauses `_CLAUSE_SEPARATOR` may cut apart and fail separately.
+        return each_player_exiles_sacrifices_and_returns_creatures
     parsed = parse_mixed_effect_for_spell(effect_text)
     if parsed is not None:
         return parsed
