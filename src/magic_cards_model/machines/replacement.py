@@ -1077,6 +1077,25 @@ def _exile_instead(game: "Game", source: CardState, event: ReplaceableEvent) -> 
     event.destination = Zone.EXILE
 
 
+def _shuffle_into_library_instead(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
+    """ "Shuffle <name> into its owner's library" - the card goes to its
+    owner's library instead of a graveyard. `Game.put_into_graveyard` reads
+    this destination and does the actual move-and-shuffle (CR 701.24a/c).
+    """
+    event.destination = Zone.LIBRARY
+
+
+#: "Shuffle <card's own name> into its owner's library." (Green Sun's Zenith).
+#: Deliberately not one of `_parse_oracle_text`'s generic "instead" shapes:
+#: this sentence never says "instead", it is CR 304.2/307.2's own final
+#: graveyard step being pre-empted by an earlier one-shot effect that already
+#: moved the object - the same reason flashback/rebound/adventure below are
+#: hand-read here rather than through the generic replacement-effect parser.
+_SELF_SHUFFLE_INTO_LIBRARY_RE = re.compile(
+    r"shuffle (?P<name>.+?) into its owner'?s library", re.IGNORECASE
+)
+
+
 def _graveyard_replacer(label: str, whose: Callable[["Game", CardState, CardState], bool]):
     def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
         return _to_graveyard(event) and event.card is not None and whose(game, source, event.card)
@@ -1835,7 +1854,7 @@ def _choose_a_quality(kind: ChoiceKind, card_name: str) -> Apply:
     return apply
 
 
-def _self_enters_modifiers(card_state: CardState) -> list[tuple[str, Apply, str]]:
+def _self_enters_modifiers(game: "Game", card_state: CardState) -> list[tuple[str, Apply, str]]:
     """The card's own "enters ..." replacement effects, as things to apply.
 
     CR 614.12: "Some replacement effects modify how a permanent enters the
@@ -1858,8 +1877,22 @@ def _self_enters_modifiers(card_state: CardState) -> list[tuple[str, Apply, str]
       is a tapped flag or a counter count. See `_choose_a_quality`.
 
     A condition about the *board* rather than about a choice - Arena of Glory's
-    "unless you control a Mountain" - is still skipped, as is an amount that is
-    X. See `docs/engine-coverage.md`.
+    "unless you control a Mountain" - is still skipped.
+
+    "[This] enters with X `<kind>` counters" (Walking Ballista, Hangarback
+    Walker, Chalice of the Void, Engineered Explosives) is CR 107.3m's own
+    named case: "If an object's enters-the-battlefield ... replacement effect
+    refers to X, and the spell that became that object as it resolved had a
+    value of X chosen for any of its costs, the value of X for that ... effect
+    is that same value." `game.cast_records` still holds that record here -
+    `Game.resolve_top` calls `enter_the_battlefield` before it pops the record,
+    the same ordering `Wrath of the Skies`'s own X read relies on. A
+    `card_state.id` with **no** record at all (put onto the battlefield by
+    something other than its own resolution - Green Sun's Zenith finding a
+    Walking Ballista, say) leaves X undefined by 107.3m and is still skipped,
+    the same as before this fix; a real cast with X=0 is not skipped and
+    correctly places zero counters (CR 704.5f then kills a 0/0 the next state-
+    based check, which is the right outcome, not a bug to paper over).
     """
     parsed = parse_replacement_effects(card_state.card)
     performable: list[tuple[str, Apply, str]] = []
@@ -1906,13 +1939,29 @@ def _self_enters_modifiers(card_state: CardState) -> list[tuple[str, Apply, str]
 
         if effect.condition is not None:
             continue
+        amount = effect.amount
+        if (
+            effect.kind is ReplacementKind.ENTERS_WITH
+            and effect.counter_kind is not None
+            and amount is None
+            and effect.variable_amount
+        ):
+            # CR 107.3m: only a spell that actually resolved into this object
+            # defines X here - `game.cast_records` is popped once resolution
+            # finishes, so its presence here is exactly that fact, and an
+            # entry with no record at all (this object arrived some other
+            # way) leaves `amount` `None` and the effect skipped, unchanged
+            # from before.
+            record = game.cast_records.get(card_state.id)
+            if record is not None:
+                amount = record.x_value
         readable_counters = (
             effect.kind is ReplacementKind.ENTERS_WITH
             and effect.counter_kind is not None
-            and effect.amount is not None
+            and amount is not None
         )
         if effect.kind is ReplacementKind.ENTERS_TAPPED or readable_counters:
-            performable.append((f"self:{index}", _apply_self_enters(effect), effect.text))
+            performable.append((f"self:{index}", _apply_self_enters(effect, amount), effect.text))
     return performable
 
 
@@ -1991,17 +2040,45 @@ def _stack_replacements(game: "Game", event: ReplaceableEvent) -> list[Applicabl
                 apply=_exile_instead,
             )
         )
+    if event.resolving and event.destination is Zone.GRAVEYARD:
+        # CR 304.2/307.2: "the actions stated in its rules text are followed.
+        # Then it's put into its owner's graveyard" - a spell whose own text
+        # already shuffled itself into the library during that first part
+        # never reaches the second, the same "instead of graveyard, elsewhere"
+        # shape as rebound just above, gated the same way on `event.resolving`
+        # (CR 701.6a: a countered spell "doesn't resolve and none of its
+        # effects occur", so this must never fire for one - the whole reason
+        # this reads `event.resolving` rather than "leaving the stack" the way
+        # flashback's *any*-exit exile does).
+        match = _SELF_SHUFFLE_INTO_LIBRARY_RE.search(card.oracle_text)
+        if match is not None and _refers_to_self(match.group("name"), _names_of(card.card)):
+            found.append(
+                ApplicableEffect(
+                    key=f"{card.id}:self_shuffle",
+                    source=card,
+                    label=(
+                        "shuffled into its owner's library instead, as it "
+                        "resolves (CR 304.2/307.2, 701.24c)"
+                    ),
+                    apply=_shuffle_into_library_instead,
+                )
+            )
     return found
 
 
-def _apply_self_enters(effect: ReplacementEffect) -> Apply:
+def _apply_self_enters(effect: ReplacementEffect, amount: int | None) -> Apply:
+    """`amount` is `effect.amount` for a fixed count, or CR 107.3m's resolved
+    X for a variable one - `_self_enters_modifiers` has already worked out
+    which, so this only ever sees a real number by the time it is called.
+    """
+
     def apply(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
         if effect.kind is ReplacementKind.ENTERS_TAPPED:
             event.tapped = True
         else:
-            assert effect.counter_kind is not None and effect.amount is not None
+            assert effect.counter_kind is not None and amount is not None
             event.counters[effect.counter_kind] = (
-                event.counters.get(effect.counter_kind, 0) + effect.amount
+                event.counters.get(effect.counter_kind, 0) + amount
             )
 
     return apply
@@ -2090,7 +2167,7 @@ def applicable_effects(game: "Game", event: ReplaceableEvent) -> list[Applicable
 
     if event.kind is EventKind.ENTERS_BATTLEFIELD and event.card is not None:
         entering = event.card
-        for suffix, apply, label in _self_enters_modifiers(entering):
+        for suffix, apply, label in _self_enters_modifiers(game, entering):
             found.append(
                 ApplicableEffect(
                     key=f"{entering.id}:{suffix}",
