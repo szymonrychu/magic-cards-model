@@ -111,17 +111,15 @@ def test_vraskas_contempt_exiles_and_gains_life_off_its_own_text():
 # --------------------------------------------------------------------------
 
 
-def test_fatal_push_still_leaves_the_board_untouched():
+def test_fatal_push_destroys_a_cheap_creature():
     """Fatal Push: "Destroy target creature if it has mana value 2 or less.
     Revolt — Destroy that creature if it has mana value 4 or less instead if a
-    permanent left the battlefield under your control this turn." The first
-    clause names a comparison `machines/targeting.py` reads past without
-    enforcing (`_UNENFORCED_RESTRICTION_RE`), so `_targets_understood` refuses
-    it outright and the mixed dispatcher never even reaches the Revolt clause.
-
-    CR 608.2c gives no notion of running half an effect - this is the
-    board-level proof that "one clause fails" really means "nothing happens
-    at all", not "the part that would have worked, runs".
+    permanent left the battlefield under your control this turn." Wave W6's
+    own `_parse_revolt_destroy_or_exile_clause` reads the two-paragraph shape
+    as one instruction, with the mana-value threshold (2, or 4 under Revolt)
+    enforced by `machines/targeting.py`'s `TargetRequirement.comparison_value_
+    if_revolt` rather than dropped - see `scenarios/test_fatal_push_revolt.py`
+    for the full Revolt-aware board-level proof this file used to lack.
     """
     scenario = (
         Scenario()
@@ -134,8 +132,7 @@ def test_fatal_push_still_leaves_the_board_untouched():
 
     scenario.cast_and_resolve("Fatal Push", *scenario.untapped_sources("Swamp"), targets=[mystic])
 
-    assert mystic.zone is Zone.BATTLEFIELD, "one unreadable clause must run none of the effect"
-    assert mystic.damage == 0
+    assert mystic.zone is Zone.GRAVEYARD, "mana value 1 is within the base clause's own ceiling"
 
 
 # --------------------------------------------------------------------------

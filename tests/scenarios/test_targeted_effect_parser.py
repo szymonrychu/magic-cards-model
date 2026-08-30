@@ -543,17 +543,18 @@ def test_tormod_and_bojuka_now_exile_the_targeted_players_graveyard():
     assert bears.zone is Zone.EXILE, "targeting the player now reaches their graveyard"
 
 
-def test_prismatic_ending_resolves_without_exiling_a_legal_looking_target():
+def test_prismatic_ending_exiles_a_target_its_condition_actually_covers():
     """Prismatic Ending: "Exile target nonland permanent if its mana value is
     less than or equal to the number of colors of mana spent to cast this
-    spell." names a count `_extract_comparison` cannot pin down at all (no
-    digit, no X) - `profile_for_text` reports `understood=False` for the
-    whole clause, so `_targets_understood` refuses before its own "if" check
-    is even reached, retirement of the old blanket mana-value/power/toughness
-    guard notwithstanding. Elvish Mystic (mana value 1) would satisfy the
-    comparison in the best case, but the spell still resolves and does
-    nothing to it (CR 608.2c has to put the spell somewhere) - a wrong game
-    state that looks right would be worse than this silence.
+    spell." Converge names a count `_extract_comparison` still cannot pin
+    down as a targeting *restriction* (no digit, no X) - `targeting_profile`
+    correctly leaves "target nonland permanent" unrestricted rather than
+    guess - but wave W6's own `_parse_converge_exile_by_colors_spent` reads
+    the condition at resolution instead, off `CastRecord.mana_spent`, which
+    is exactly what `docs/scenario-tests.md` asks for: build it for real, or
+    leave the documented gap, never guess. See
+    `scenarios/test_prismatic_ending.py` for the full board-level suite this
+    fix earned.
     """
     scenario = (
         Scenario()
@@ -572,4 +573,4 @@ def test_prismatic_ending_resolves_without_exiling_a_legal_looking_target():
     scenario.put_on_stack(casting)
     scenario.resolve_top()
 
-    assert target.zone is Zone.BATTLEFIELD, "an unreadable comparison is refused, not widened"
+    assert target.zone is Zone.EXILE, "one color spent (white) covers mana value 1"

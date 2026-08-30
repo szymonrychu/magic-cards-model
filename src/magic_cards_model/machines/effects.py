@@ -79,6 +79,7 @@ from .decisions import Decision, DecisionKind
 from .delayed import (
     DelayedTrigger,
     draw_a_card_for_controller,
+    exile_subject_at_next_end_step,
     return_subject_to_battlefield_under_owner,
     return_subject_to_hand,
 )
@@ -95,6 +96,7 @@ from .layers import (
     count_card_types,
     creatures_controlled_by,
     creatures_controlled_by_opponents_of,
+    every_creature,
     grant_ability,
     is_resolution_layer_effect_text,
     only_this_incarnation,
@@ -446,6 +448,10 @@ def _mass_creature_group_targets(
         selector = creatures_controlled_by(controller)
     elif opening.startswith("creatures your opponents control"):
         selector = creatures_controlled_by_opponents_of(controller)
+    elif opening.startswith("all creatures"):
+        # Toxic Deluge's own "All creatures get -X/-X until end of turn." -
+        # no controller restriction at all, unlike the three shapes above.
+        selector = every_creature
     else:
         return None
     board = game.computed_board()
@@ -2177,6 +2183,17 @@ _SELF_COST_REDUCTION_LINE_RE = re.compile(
     r"^This spell costs \{\d+\} less to cast if [^.]+\.\s*", re.IGNORECASE | re.MULTILINE
 )
 
+#: Fuse's own line (CR 702.102a), reminder text and all - Wear // Tear prints
+#: "Fuse (You may cast one or both halves of this card from your hand.)"
+#: *after* each half's own resolution sentence, the same trailing position
+#: Rebound's and Cycling's lines already strip from. Fuse itself (CR 702.102d's
+#: "combined characteristics" when cast as one fused spell) is not modelled by
+#: this engine - `docs/engine-coverage.md` records the gap - so stripping this
+#: line only keeps it from being misread as a second, unreadable clause of
+#: whichever single half was actually cast, the same "reminder text is not a
+#: resolution instruction" reasoning as Suspend/Cascade/Replicate above.
+_FUSE_LINE_RE = re.compile(r"^[ \t]*Fuse(?:\s*\([^()]*\))?[ \t]*\n?", re.MULTILINE | re.IGNORECASE)
+
 
 def _strip_non_effect_preamble(text: str) -> str:
     """Sentences that describe the spell but are not part of resolving it."""
@@ -2189,6 +2206,7 @@ def _strip_non_effect_preamble(text: str) -> str:
     text = _PITCH_ALTERNATIVE_COST_LINE_RE.sub("", text)
     text = _SELF_COST_REDUCTION_LINE_RE.sub("", text)
     text = _REBOUND_LINE_RE.sub("", text)
+    text = _FUSE_LINE_RE.sub("", text)
     text = _REMINDER_LINE_RE.sub("", text)
     return text
 
@@ -4236,9 +4254,12 @@ def _parse_x_energy_pay_destroy_by_mana_value(text: str) -> Effect | None:
 # for its energy-payment right-hand side.
 # ---------------------------------------------------------------------------
 
-#: "destroy each <qualifier>[ without a <kind> counter on it][ with mana
+#: "destroy each/all <qualifier>[ without a <kind> counter on it][ with mana
 #: value <cmp>]." <qualifier> is `_parse_mass_type_qualifier`'s grammar.
-_DESTROY_EACH_RE = re.compile(r"^destroy each (?P<rest>.+?)\.?$", re.IGNORECASE | re.DOTALL)
+#: "all" reads exactly like "each" here - CR 205.2a's plural qualifier names
+#: no different a group than "each" does - and Brotherhood's End's "Destroy
+#: all artifacts with mana value 3 or less" is the wording that needs it.
+_DESTROY_EACH_RE = re.compile(r"^destroy (?:each|all) (?P<rest>.+?)\.?$", re.IGNORECASE | re.DOTALL)
 
 #: "<qualifier> without a <kind> counter on it" - Oblivion Stone's own
 #: absence-of-a-counter restriction (CR 122.1: a counter's presence or
@@ -4316,10 +4337,15 @@ def _parse_mass_type_qualifier(phrase: str) -> Callable[[Characteristics], bool]
         words = [word for word in _MASS_TYPE_JOIN_RE.sub(", ", bare).split(",") if word.strip()]
         types: list[Type] = []
         for word in words:
-            try:
-                types.append(Type(word.strip()))
-            except ValueError:
+            # Plural is read the same as singular here - "artifacts" (a bare
+            # plural type noun, Brotherhood's End's own "Destroy all
+            # artifacts with mana value 3 or less") names the same CR 205.2a
+            # type as "artifact"; Wrath of the Skies's own list never needs
+            # this since its own members are already singular.
+            card_type = _singular_card_type(word.strip())
+            if card_type is None:
                 return None
+            types.append(card_type)
         if not types:
             return None
         type_tuple = tuple(types)
@@ -4495,6 +4521,47 @@ def _parse_destroy_each_clause(sentence: str) -> TargetedClause | None:
     return effect
 
 
+#: "<Source> deals N damage to each <type>[ and each <type>]*." -
+#: Brotherhood's End's own first mode: "Brotherhood's End deals 3 damage to
+#: each creature and each planeswalker." Unlike `_DAMAGE_EACH_OPPONENT_RE`'s
+#: single implicit player, this names one or more of CR 300.1's card types,
+#: ORed together - a permanent counts once even if it is more than one of the
+#: named types. The leading `.*` reads past the card naming itself, the same
+#: way `_DAMAGE_EACH_OPPONENT_RE` does.
+_DAMAGE_EACH_GROUP_RE = re.compile(
+    r"^.*\bdeals? (?P<n>\d+) damage to each (?P<groups>[a-z]+(?:\s+and\s+each\s+[a-z]+)*)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_damage_each_group_clause(clause: str) -> TargetedClause | None:
+    """`_DAMAGE_EACH_GROUP_RE`'s shape: simultaneous, non-targeted damage
+    (CR 119.1) to every permanent presently on the battlefield matching one of
+    the named card types - no target at all, so CR 608.2b's legality recheck
+    never applies, only the board as it stands when this runs.
+    """
+    match = _DAMAGE_EACH_GROUP_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    amount = int(match.group("n"))
+    words = re.split(r"\s+and\s+each\s+", match.group("groups"))
+    types: set[Type] = set()
+    for word in words:
+        card_type = _singular_card_type(word)
+        if card_type is None:
+            return None
+        types.add(card_type)
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = stack_object if isinstance(stack_object, CardState) else stack_object.source(game)
+        board = game.computed_board()
+        for permanent in list(game.battlefield):
+            if types & set(board.of(permanent).types):
+                game.deal_damage(permanent, amount, source=source)
+
+    return effect
+
+
 #: Oblivion Stone's own second activated ability: "Destroy each nonland
 #: permanent without a fate counter on it, then remove all fate counters
 #: from all permanents." - one CR 608.2c instruction in two clauses joined
@@ -4645,6 +4712,17 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     `LayerNotice` rather than the card doing nothing with no trace.
     """
     whole = _strip_non_effect_preamble(effect_text).strip()
+    # -- Wave W6's own whole-text additions, contiguous block -------------
+    revolt_destroy = _parse_revolt_destroy_or_exile_clause(whole)
+    if revolt_destroy is not None:
+        return revolt_destroy
+    converge_exile = _parse_converge_exile_by_colors_spent(whole)
+    if converge_exile is not None:
+        return converge_exile
+    x_life_mass_debuff = _parse_x_life_mass_debuff(whole)
+    if x_life_mass_debuff is not None:
+        return x_life_mass_debuff
+    # -- end Wave W6 whole-text additions -----------------------------------
     if _EACH_PLAYER_EXILE_SACRIFICE_RETURN_RE.fullmatch(whole):
         # Read whole, ahead of `parse_mixed_effect_for_spell`: the sentence's
         # own ", then " joins are CR 608.2c instructions in one breath, not
@@ -4716,6 +4794,123 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
         )
 
     return delayed_notice_only
+
+
+# --------------------------------------------------------------------------
+# Wave W6: Fatal Push's Revolt line, Prismatic Ending's Converge, and Toxic
+# Deluge's "pay X life" additional cost feeding a mass -X/-X
+# --------------------------------------------------------------------------
+
+#: "<Destroy/Exile> target ... if it has mana value N or less.\nRevolt —
+#: <same verb> that ... if it has mana value M or less instead if a permanent
+#: left the battlefield under your control this turn." Read as one CR 608.2c
+#: instruction: the numbers themselves are not read here at all - Fatal
+#: Push's real work already happened in `machines/targeting.py`'s own
+#: `_read_revolt_mana_value_override`, which bakes both thresholds into the
+#: `TargetRequirement` that `Game.legal_target` re-checks on resolution
+#: (CR 608.2b) and consults live Revolt state for (an ability word, CR
+#: 207.2c). All this clause has to do is recognise the two-paragraph shape so
+#: the whole ability is not thrown away as an unreadable second sentence, and
+#: hand back the same unconditional destroy/exile verb every other "target
+#: ..." clause in this file already uses - the conditional part of "if it has
+#: mana value N or less" is enforced entirely by the targeting layer, not by
+#: this effect.
+_REVOLT_DESTROY_OR_EXILE_RE = re.compile(
+    r"^(?P<verb>destroy|exile) (?P<phrase>target .+?) if it has mana value \d+ or less\."
+    r"\s*revolt\s*[—-]\s*(?P=verb) that .+? if it has mana value \d+ or less instead if a "
+    r"permanent left the battlefield under your control this turn\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_revolt_destroy_or_exile_clause(effect_text: str) -> Effect | None:
+    """`_REVOLT_DESTROY_OR_EXILE_RE`'s shape, or `None` if this is not it."""
+    match = _REVOLT_DESTROY_OR_EXILE_RE.fullmatch(effect_text.strip())
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=True):
+        return None
+    return (
+        destroy_ability_targets
+        if match.group("verb").lower() == "destroy"
+        else exile_ability_targets
+    )
+
+
+#: Converge (an ability word - `knowledge_search` found no numbered CR rule
+#: for it this session, so none is cited): "Exile target nonland permanent if
+#: its mana value is less than or equal to the number of colors of mana
+#: spent to cast this spell." Deliberately its own parser rather than a
+#: `machines/targeting.py` comparison: that count is not fixed until the
+#: spell's cost is fully paid (CR 601.2g-i), which is *after* targets are
+#: announced (CR 601.2c) - unlike Fatal Push's mana-value threshold, there is
+#: no moment before resolution at which this count could restrict what may
+#: legally be targeted, so the target itself is read as the plain, unrestricted
+#: "target nonland permanent" `_targets_understood` already knows, and the
+#: whole condition is judged once, at resolution, off `CastRecord.mana_spent`
+#: (color keys only - `Color.COLORLESS` is generic mana, not one of CR 105.1's
+#: five colors).
+_CONVERGE_EXILE_RE = re.compile(
+    r"^(?:[a-z][a-z '-]* — )?exile target nonland permanent if its mana value is less than "
+    r"or equal to the number of colors of mana spent to cast this spell\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_converge_exile_by_colors_spent(effect_text: str) -> Effect | None:
+    """`_CONVERGE_EXILE_RE`'s shape, or `None` if this is not it."""
+    if _CONVERGE_EXILE_RE.fullmatch(effect_text.strip()) is None:
+        return None
+    if not _targets_understood("target nonland permanent", count_agnostic=False):
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        record = game.cast_record(spell)
+        colors_spent = len(
+            {color for color, amount in record.mana_spent.items() if amount > 0} - {Color.COLORLESS}
+        )
+        for target in game.resolve_targets(spell):
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
+                mana_value = game.characteristics_of(target).mana_value
+                if mana_value <= colors_spent:
+                    game.exile_permanent(target)
+
+    return effect
+
+
+#: Toxic Deluge: "As an additional cost to cast this spell, pay X life.\nAll
+#: creatures get -X/-X until end of turn." The additional-cost line is
+#: already stripped by `_strip_non_effect_preamble` (CR 118.8a: paid on the
+#: way to the stack, not part of resolving the spell) before this ever sees
+#: it, so only the second sentence is matched here, with its "X" still
+#: literal - `effect_for`'s own X substitution only fires for a spell with
+#: `{X}` in its *mana cost* (Green Sun's Zenith, Walking Ballista), and Toxic
+#: Deluge's X is announced by the additional cost instead (CR 107.3f), so
+#: this reads `Game.cast_record` for itself at resolution exactly the way
+#: `_parse_x_energy_pay_destroy_by_mana_value` already does for its own
+#: additional-cost X. `_run_mass_pump` and `_mass_creature_group_targets`'s
+#: "all creatures" branch (see `machines/layers.py`'s widened
+#: `_MASS_PUMP_UNTIL_EOT_RE`) are reused unchanged, with a negative magnitude
+#: and no controller restriction - the shared primitive this wave was told to
+#: build on rather than duplicate.
+_X_LIFE_MASS_DEBUFF_RE = re.compile(
+    r"^all creatures get -x/-x until end of turn\.?$", re.IGNORECASE
+)
+
+
+def _parse_x_life_mass_debuff(effect_text: str) -> Effect | None:
+    """`_X_LIFE_MASS_DEBUFF_RE`'s shape, or `None` if this is not it."""
+    if _X_LIFE_MASS_DEBUFF_RE.fullmatch(effect_text.strip()) is None:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        x_value = game.cast_record(spell).x_value
+        if x_value <= 0:
+            return
+        literal = f"All creatures get -{x_value}/-{x_value} until end of turn."
+        _run_mass_pump(game, spell, game.controller_of(spell).username, literal, None)
+
+    return effect
 
 
 def _parse_anaphoric_clause_pair(
@@ -6324,6 +6519,110 @@ def _parse_delayed_blink_clauses(
     return consumed, effect
 
 
+#: "Return target creature card [with mana value N or X] from your graveyard
+#: to the battlefield." - Postmortem Lunge's own reanimation clause, read
+#: generically off the shape (not off the card's name): any card printing
+#: this exact template gets the same treatment. A bare "X" is accepted here
+#: (unlike `_extract_comparison`'s own unbound-X refusal) because this clause
+#: never reads the number itself - the actual mana-value *legality* of the
+#: target is enforced entirely by `machines/targeting.py`'s `TargetRequirement.
+#: comparison_value`, fed by `Casting.targeting`'s own X substitution
+#: (CR 107.3a) once the caster announces X, which happens independently of
+#: this parser matching at all. Matching on the very first, unsubstituted
+#: pass also sidesteps `_unreadable_delayed_clause`'s own fallback: without
+#: this, `effect_for`'s first pass would read nothing here, fall through to
+#: that notice for the still-unmatched "exile it at the beginning of the next
+#: end step" clause, and return the notice before X substitution ever ran
+#: (its own docstring's "only if that first pass reads nothing" only helps a
+#: caller whose *first* pass reads `None`, not one that reads a competing
+#: notice instead).
+_RETURN_CREATURE_CARD_FROM_GRAVEYARD_TO_BATTLEFIELD_RE = re.compile(
+    r"^return (?P<phrase>target creature card(?: with mana value (?:\d+|x))? "
+    r"from your graveyard) to the battlefield$",
+    re.IGNORECASE,
+)
+
+
+def _parse_delayed_reanimate_haste_exile_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """ "Return target creature card [with mana value N] from your graveyard
+    to the battlefield. It gains haste. Exile it at the beginning of the next
+    end step." as one CR 608.2c instruction (Postmortem Lunge) - three
+    consecutive clauses starting at `index`, or `None` if `index` is not the
+    start of this shape.
+
+    The linkage is CR 400.7 anaphora twice over, the same reasoning
+    `_parse_delayed_blink_clauses` already documents for its own "that card":
+    "it" in clause two and clause three both mean whatever clause one's own
+    return just put onto the battlefield, discovered only as clause one
+    actually runs - so this closes over the entered `CardState` rather than
+    resolving either later sentence's target of its own.
+
+    Haste is granted with `Duration.INDEFINITE` (CR 611.2a's default: "if no
+    duration is stated, it lasts indefinitely") scoped to `only_this_
+    incarnation` - the object is about to be exiled by the delayed trigger
+    anyway, but a response that saves it from that exile should not also
+    strip the haste a literal reading of the card never granted with a time
+    limit.
+    """
+    return_match = _RETURN_CREATURE_CARD_FROM_GRAVEYARD_TO_BATTLEFIELD_RE.fullmatch(
+        clauses[index].strip().rstrip(".")
+    )
+    if return_match is None:
+        return None
+    if not _targets_understood(return_match.group("phrase"), battlefield_only=False):
+        return None
+    if index + 2 >= len(clauses):
+        return None
+    if clauses[index + 1].strip().rstrip(".").lower() != "it gains haste":
+        return None
+    timing = _parse_delayed_timing_clause(clauses[index + 2])
+    if timing is None:
+        return None
+    step, verb = timing
+    if verb.strip().lower() != "exile it":
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source_name = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        source_id = stack_object.id if for_spell else stack_object.source_id  # type: ignore[union-attr]
+        controller = game.controller_of(stack_object).username
+        for target in game.resolve_targets(stack_object):
+            if not isinstance(target, CardState) or target.zone is not Zone.GRAVEYARD:
+                continue
+            entered = game.put_onto_battlefield(target, controller, tapped=False)
+            if entered.zone is not Zone.BATTLEFIELD:
+                continue  # a replacement effect sent it elsewhere (CR 614.6)
+            store = continuous_effects(game)
+            timestamp = store.tick()
+            store.add(
+                ContinuousEffect(
+                    description=f"{source_name}: {entered.name} gains haste",
+                    layer=Layer.ABILITY,
+                    timestamp=timestamp,
+                    selector=only_this_incarnation(entered, entered.zone_change_stamp),
+                    modification=grant_ability("Haste"),
+                )
+            )
+            game.create_delayed_trigger(
+                DelayedTrigger(
+                    text=clauses[index + 2],
+                    event=TriggerEvent.BEGINNING_OF_STEP,
+                    step=step,
+                    controller=controller,
+                    source_id=source_id,
+                    source_name=source_name,
+                    subject_id=entered.id,
+                    expected_zone=Zone.BATTLEFIELD,
+                    expected_stamp=entered.zone_change_stamp,
+                    callback=exile_subject_at_next_end_step,
+                )
+            )
+
+    return 3, effect
+
+
 class DelayedClauseNotice(BaseModel):
     """One delayed-trigger clause (CR 603.7) whose timing this wave recognised
     - "at the beginning of the next end step", "at end of combat", "at the
@@ -7334,6 +7633,14 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     if add_mana is not None:
         return add_mana
     # -- end Wave W11 single-clause addition -------------------------------
+    # -- Wave W6's own single-clause additions (Brotherhood's End's modes) -
+    destroy_each = _parse_destroy_each_clause(clause)
+    if destroy_each is not None:
+        return destroy_each
+    damage_each_group = _parse_damage_each_group_clause(clause)
+    if damage_each_group is not None:
+        return damage_each_group
+    # -- end Wave W6 single-clause additions --------------------------------
     player_clause = _parse_optional_player_clause(clause)
     if player_clause is None:
         return None
@@ -7369,6 +7676,14 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     `_parse_targeted_clauses` and `_parse_player_clauses` already refuse it
     alone.
     """
+    # Wave W6: tried on the *whole*, unsplit text, ahead of `_prepare_effect_
+    # clauses` - "deals N damage to each creature and each planeswalker"
+    # (Brotherhood's End) is one CR 608.2c instruction that the generic "and"
+    # split would otherwise cut into "each creature" and a bare, unreadable
+    # "each planeswalker" fragment.
+    damage_each_group = _parse_damage_each_group_clause(_strip_non_effect_preamble(text).strip())
+    if damage_each_group is not None:
+        return [damage_each_group]
     clauses = _prepare_effect_clauses(text)
     if clauses is None:
         return None
@@ -7413,6 +7728,14 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             index += consumed
             continue
         # -- end Wave W1 multi-clause merges --------------------------------
+        # -- Wave W6's own multi-clause merge (Postmortem Lunge) ------------
+        merged = _parse_delayed_reanimate_haste_exile_clauses(clauses, index, for_spell=for_spell)
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        # -- end Wave W6 multi-clause merge ----------------------------------
         if index + 1 < len(clauses):
             paired = _parse_anaphoric_clause_pair(
                 clauses[index], clauses[index + 1], for_spell=for_spell

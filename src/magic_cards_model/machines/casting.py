@@ -24,7 +24,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ..models.card import Card, Type
+from ..models.card import Card, Layout, Type
 from ..models.card_state import CardState, ExileAnnotation, ExileMarker, TargetRef
 from ..models.mana import ManaCost, ManaSpend
 from ..models.zone import Zone
@@ -43,11 +43,12 @@ from .keywords import (
     face_down_characteristics,
     why_cannot_enchant,
 )
-from .modes import ModalProfile, Mode, modal_profile
+from .modes import ModalProfile, Mode, modal_profile, substitute_x
 from .targeting import (
     TargetingProfile,
     profile_for_modes,
     profile_for_modes_with_owners,
+    profile_for_text,
     targeting_profile,
 )
 from .triggers import GameEvent
@@ -777,6 +778,30 @@ class Casting(BaseModel):
         self.face = face.name
         return self.step
 
+    def cast_as_split_half(self, face_name: str) -> CastingStep:
+        """CR 709.3: choose which half of a split card to cast.
+
+        "A player chooses which half of a split card they are casting before
+        putting it onto the stack." Unlike `cast_as_adventure`, there is no
+        modal structure to enter first - CR 709 names no bulleted choice, just
+        the one face. `self.face` already drives `base_cost`/`chosen_face`
+        (shared with Adventure); what is new here is recording the choice onto
+        `self.spell` itself once cast (see `cast`), which `CardState.up_face`
+        then reads for the whole time the spell sits on the stack (CR 709.3b) -
+        Adventure's own equivalent gap is a separate, still-open limitation
+        (`docs/engine-coverage.md`).
+
+        Fuse (CR 702.102) - casting *both* halves as one spell - is not
+        offered here: this always names exactly one.
+        """
+        if self.spell.card.layout is not Layout.SPLIT:
+            raise ValueError(f"{self.spell.name} is not a split card (CR 709)")
+        for face in self.spell.card.card_faces or []:
+            if face.name == face_name:
+                self.face = face_name
+                return self.step
+        raise ValueError(f"{self.spell.name} has no half called {face_name}")
+
     @property
     def modal(self) -> ModalProfile | None:
         """This card's modal structure, or None if it is not modal (CR 700.2)."""
@@ -798,8 +823,32 @@ class Casting(BaseModel):
         which is why it can only be asked once the modes are announced. Before
         that, and for a modal card whose modes were never announced, it is the
         card-wide profile, which says `understood=False`.
+
+        A split card (CR 709) reads its *chosen* half's own text once
+        `cast_as_split_half` has named one - `targeting_profile(card)` always
+        reads the combined text (both halves) otherwise, which is CR 709.3b's
+        wrong answer for a spell that has "only the characteristics of the
+        half being cast". Scoped to `Layout.SPLIT` alone, the same boundary
+        `CardState.face_played` draws, so Adventure's own still-open gap is
+        untouched.
+
+        A **non-modal** card whose own mana cost has `{X}` (Postmortem
+        Lunge's own "target creature card with mana value X") reads its text
+        with X already substituted (CR 107.3a: X is announced before targets,
+        so it is always known here). `profile_for_modes` already does the
+        equivalent substitution for a *modal* card's chosen mode text; this is
+        the same idea for the plain, unmoded case, which had no substitution
+        at all before - `targeting_profile(card)` takes only the card, never
+        an X, so "mana value X" came back an unresolvable bare X forever, at
+        both announcement and `Game.legal_target`'s CR 608.2b recheck.
         """
         if self.modal is None or not self.chosen_mode_numbers:
+            if self.spell.card.layout is Layout.SPLIT and self.face is not None:
+                face = self.chosen_face
+                if face is not None:
+                    return profile_for_text(face.oracle_text or "")
+            if "{X}" in (self.spell.mana_cost or ""):
+                return profile_for_text(substitute_x(self.spell.oracle_text, self.x_value))
             return targeting_profile(self.spell.card)
         return profile_for_modes(self.spell.card, self.chosen_mode_objects, self.x_value)
 
@@ -1450,6 +1499,13 @@ class Casting(BaseModel):
         self.spell.move_to(Zone.STACK)
         # The spell carries its targets with it, so resolution knows what it hits.
         self.spell.targets = list(self.targets)
+        if self.face is not None and self.spell.card.layout is Layout.SPLIT:
+            # CR 709.3b: "While on the stack, only the characteristics of the
+            # half being cast exist." `CardState.face_played` is what
+            # `up_face` reads for the whole time this spell sits on the
+            # stack - see its own docstring for why this is scoped to split
+            # cards and does not also cover Adventure's `self.face`.
+            self.spell.face_played = self.face
         if self.game is not None:
             self._emit_becomes_target()
             # CR 601.2b announced the keyword, the face and the modes, and

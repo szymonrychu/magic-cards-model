@@ -100,7 +100,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
-from ..models.card import Card, Supertype, Type
+from ..models.card import Card, Color, Supertype, Type
 from ..models.card_state import CardState, TargetRef
 from ..models.zone import Zone
 from .abilities import keyword_abilities
@@ -190,6 +190,13 @@ class TargetRequirement(BaseModel):
     """Supertypes the target must *not* have: the "non-" of "target nonbasic
     land" (CR 205.4c: "any land that doesn't have this supertype is a
     nonbasic land, even if it has a basic land type")."""
+    required_colors: frozenset[Color] = frozenset()
+    """Which of the five colors would satisfy this (CR 105.1, 105.2b): "target
+    black or red permanent" (Celestial Purge) is a disjunction - either color
+    is enough, the same way `card_types` already is one for "target artifact
+    or enchantment". Empty means color is not restricted at all - not "target
+    colorless permanent", which this wave's cards never need and which would
+    mean something different (CR 105.2c: no color, not any color)."""
     must_be_token: bool | None = None
     """True for "target token", False for "target nontoken ..." (CR 111.1)."""
     combat_states: frozenset[CombatState] = frozenset()
@@ -228,6 +235,16 @@ class TargetRequirement(BaseModel):
     every target while this is `None` rather than skip the comparison, because
     an unevaluable restriction that quietly let everything through would be a
     wrong game state that looks right - worse than refusing a legal target."""
+    comparison_value_if_revolt: int | None = None
+    """Fatal Push's own "Revolt — ... mana value 4 or less instead if a
+    permanent left the battlefield under your control this turn": the wider
+    number to use in place of `comparison_value` when the caster's Revolt
+    condition holds *right now* (an ability word, CR 207.2c - no further
+    numbered rule for Revolt itself). Read directly off the card's printed
+    Revolt paragraph by `_parse` alongside the base comparison, and evaluated
+    fresh every time `rejects` is asked - at announcement (CR 601.2c) and
+    again at resolution (CR 608.2b) - rather than fixed once, since whether a
+    permanent left the battlefield this turn can change between the two."""
 
     @property
     def optional(self) -> bool:
@@ -333,6 +350,11 @@ class TargetRequirement(BaseModel):
         if self.excluded_supertypes and (set(target.card.supertypes) & self.excluded_supertypes):
             unwanted = " or ".join(sorted(kind.value for kind in self.excluded_supertypes))
             return f"{self.phrase} cannot target a {unwanted} permanent, and {target.name} is one"
+        if self.required_colors and not (
+            set(self._current_colors(target, game)) & self.required_colors
+        ):
+            wanted = " or ".join(sorted(color.name.lower() for color in self.required_colors))
+            return f"{self.phrase} needs a {wanted} permanent, and {target.name} is not one"
         if self.must_be_tapped is not None and target.tapped is not self.must_be_tapped:
             state = "tapped" if self.must_be_tapped else "untapped"
             return f"{self.phrase} needs a {state} permanent, and {target.name} is not"
@@ -342,7 +364,7 @@ class TargetRequirement(BaseModel):
         combat = self._rejects_combat_state(target, game)
         if combat is not None:
             return combat
-        comparison = self._rejects_comparison(target, game)
+        comparison = self._rejects_comparison(target, game, caster)
         if comparison is not None:
             return comparison
         return self._rejects_controller(target, caster)
@@ -401,7 +423,20 @@ class TargetRequirement(BaseModel):
             return characteristics_of(target).types
         return target.card.types
 
-    def _rejects_comparison(self, target: CardState, game: Any) -> str | None:
+    def _current_colors(self, target: CardState, game: Any) -> tuple[Color, ...]:
+        """This target's colors right now (CR 105.1), layers included (CR
+        613.1e's color-changing layer 5) - the same `characteristics_of`
+        reasoning `_current_types` already uses for a type-changing layer 4
+        effect, off the same computed board rather than the printed `Card`.
+        """
+        characteristics_of = getattr(game, "characteristics_of", None)
+        if target.zone is Zone.BATTLEFIELD and characteristics_of is not None:
+            return characteristics_of(target).colors
+        return target.card.colors
+
+    def _rejects_comparison(
+        self, target: CardState, game: Any, caster: str | None = None
+    ) -> str | None:
         """ "with mana value N or less" and its power/toughness relatives.
 
         CR 613.5: "the application of continuous effects ... is continually
@@ -431,7 +466,12 @@ class TargetRequirement(BaseModel):
         if self.comparison_attribute is None:
             return None
         label = self.comparison_attribute.value.replace("_", " ")
-        if self.comparison_value is None:
+        comparison_value = self.comparison_value
+        if self.comparison_value_if_revolt is not None and caster is not None:
+            revolt_active_for = getattr(game, "revolt_active_for", None)
+            if revolt_active_for is not None and revolt_active_for(caster):
+                comparison_value = self.comparison_value_if_revolt
+        if comparison_value is None:
             return f"{self.phrase} compares {label} to a value this engine cannot resolve right now"
         characteristics_of = getattr(game, "characteristics_of", None)
         if target.zone is Zone.BATTLEFIELD:
@@ -458,28 +498,28 @@ class TargetRequirement(BaseModel):
             values = [value for value in (power, toughness) if value is not None]
         if not values:
             return f"{self.phrase} needs a {label}, and {target.name} has none"
-        if any(self._comparison_holds(value) for value in values):
+        if any(self._comparison_holds(value, comparison_value) for value in values):
             return None
         return (
-            f"{self.phrase} needs {label} {self._comparison_words()}, "
+            f"{self.phrase} needs {label} {self._comparison_words(comparison_value)}, "
             f"and {target.name} does not have it"
         )
 
-    def _comparison_holds(self, value: float) -> bool:
-        assert self.comparison_value is not None and self.comparison_operator is not None
+    def _comparison_holds(self, value: float, comparison_value: int) -> bool:
+        assert self.comparison_operator is not None
         if self.comparison_operator is ComparisonOperator.LESS_OR_EQUAL:
-            return value <= self.comparison_value
+            return value <= comparison_value
         if self.comparison_operator is ComparisonOperator.GREATER_OR_EQUAL:
-            return value >= self.comparison_value
-        return value == self.comparison_value
+            return value >= comparison_value
+        return value == comparison_value
 
-    def _comparison_words(self) -> str:
+    def _comparison_words(self, comparison_value: int) -> str:
         suffix = {
             ComparisonOperator.LESS_OR_EQUAL: "or less",
             ComparisonOperator.GREATER_OR_EQUAL: "or greater",
             ComparisonOperator.EQUAL: "",
         }[self.comparison_operator]
-        return f"{self.comparison_value} {suffix}".strip()
+        return f"{comparison_value} {suffix}".strip()
 
     def _rejects_controller(self, target: CardState, caster: str) -> str | None:
         # CR 108.4a: "If anything asks for the controller of a card that doesn't
@@ -807,6 +847,19 @@ _TYPE_NOUNS = {
     "instant": Type.INSTANT,
     "sorcery": Type.SORCERY,
 }
+#: CR 105.1: "there are five colors in the Magic game: white, blue, black,
+#: red, and green." Read as a leading adjective, the same as a card type or
+#: supertype adjective - "target black or red permanent" (Celestial Purge).
+#: Deliberately five, not six: "colorless" is CR 105.2c's *absence* of color,
+#: not a sixth color to check for membership in a `colors` tuple the way the
+#: five real ones are, and no card in this wave's pool needs it read.
+_COLOR_WORDS = {
+    "white": Color.WHITE,
+    "blue": Color.BLUE,
+    "black": Color.BLACK,
+    "red": Color.RED,
+    "green": Color.GREEN,
+}
 #: CR 205.4a: "the supertypes are basic, legendary, ongoing, snow, and world" -
 #: verified this session (`knowledge_search`), closed at five. Read the same
 #: way as `_TYPE_NOUNS`: bare for "target basic land"
@@ -1073,6 +1126,28 @@ def _spell_text(oracle_text: str) -> str:
     return "\n".join(lines)
 
 
+#: Revolt (an ability word, CR 207.2c) printed as its own paragraph after the
+#: base clause - Fatal Push's "Revolt — Destroy that creature if it has mana
+#: value 4 or less instead if a permanent left the battlefield under your
+#: control this turn." Read generically off the text shape, not off this
+#: card's name: any card printing the same "Revolt — <verb> that <noun> if it
+#: has mana value N or less instead if a permanent left the battlefield under
+#: your control this turn." paragraph gets the same wider number substituted
+#: in when `TargetRequirement.comparison_value_if_revolt` fires.
+_REVOLT_MANA_VALUE_OVERRIDE_RE = re.compile(
+    r"revolt\s*[—-]\s*.*?mana value (?P<n>\d+) or less instead if a permanent "
+    r"left the battlefield under your control this turn\.?",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _read_revolt_mana_value_override(text: str) -> int | None:
+    """The wider mana-value number a card's own Revolt paragraph names, or
+    `None` if it prints no such paragraph at all."""
+    match = _REVOLT_MANA_VALUE_OVERRIDE_RE.search(text)
+    return None if match is None else int(match.group("n"))
+
+
 def _parse(oracle_text: str, spell_only: bool = True) -> TargetingProfile:
     text = _spell_text(oracle_text) if spell_only else oracle_text
     text = _RETARGETING.sub("", text)
@@ -1080,6 +1155,7 @@ def _parse(oracle_text: str, spell_only: bool = True) -> TargetingProfile:
     if not mentions:
         return TargetingProfile()
 
+    revolt_override = _read_revolt_mana_value_override(text)
     division = _read_division(text)
     requirements: list[TargetRequirement] = []
     any_targets = len(_ANY_TARGET.findall(text))
@@ -1099,6 +1175,14 @@ def _parse(oracle_text: str, spell_only: bool = True) -> TargetingProfile:
         requirement = _read_phrase(text[: match.start()], text[match.end() :])
         if requirement is None:
             return TargetingProfile(requirements=tuple(requirements), understood=False)
+        if (
+            revolt_override is not None
+            and requirement.comparison_attribute is ComparisonAttribute.MANA_VALUE
+            and requirement.comparison_operator is ComparisonOperator.LESS_OR_EQUAL
+        ):
+            requirement = requirement.model_copy(
+                update={"comparison_value_if_revolt": revolt_override}
+            )
         requirements.append(requirement)
 
     return TargetingProfile(requirements=tuple(requirements), division=division)
@@ -1374,6 +1458,7 @@ def _read_phrase(prefix: str, suffix: str) -> TargetRequirement | None:
         excluded_card_types=frozenset(adjectives.excluded_types),
         required_supertypes=frozenset(adjectives.required_supertypes),
         excluded_supertypes=frozenset(adjectives.excluded_supertypes),
+        required_colors=frozenset(adjectives.required_colors),
         allows_cards=allows_cards,
         allows_players=allows_players,
         opponent_only=opponent_only and not allows_cards,
@@ -1396,6 +1481,7 @@ class _Adjectives:
         self.excluded_types: set[Type] = set()
         self.required_supertypes: set[Supertype] = set()
         self.excluded_supertypes: set[Supertype] = set()
+        self.required_colors: set[Color] = set()
         self.combat_states: set[CombatState] = set()
         self.must_be_tapped: bool | None = None
         self.must_be_token: bool | None = None
@@ -1416,6 +1502,8 @@ class _Adjectives:
             self.excludes_source = True
         elif word in _SUPERTYPE_NOUNS:
             self.required_supertypes.add(_SUPERTYPE_NOUNS[word])
+        elif word in _COLOR_WORDS:
+            self.required_colors.add(_COLOR_WORDS[word])
         elif (excluded := _negated_type(word)) is not None:
             self.excluded_types.add(excluded)
         elif (excluded_super := _negated_supertype(word)) is not None:
@@ -1474,6 +1562,7 @@ def _is_adjective(word: str) -> bool:
         or word in _COMBAT_ADJECTIVES
         or word in {"token", "nontoken", "another", "other"}
         or word in _SUPERTYPE_NOUNS
+        or word in _COLOR_WORDS
         or _negated_type(word) is not None
         or _negated_supertype(word) is not None
     )

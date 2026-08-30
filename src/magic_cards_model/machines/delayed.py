@@ -300,6 +300,21 @@ def _sacrifice_subject(game: "Game", ability: AbilityOnStack, trigger: DelayedTr
         game.put_into_graveyard(permanent)
 
 
+def exile_subject_at_next_end_step(
+    game: "Game", ability: AbilityOnStack, trigger: DelayedTrigger
+) -> None:
+    """ "Exile it at the beginning of the next end step" - Postmortem Lunge's
+    own delayed exile of the creature it just returned to the battlefield
+    (CR 701.13a: "To exile an object, move it to the exile zone from wherever
+    it is"). CR 603.7c is what stops this reaching a permanent that already
+    left the battlefield some other way - destroyed in response, sacrificed,
+    or bounced - before the delayed step arrived.
+    """
+    permanent = trigger.still_affects(game)
+    if permanent is not None:
+        game.exile_permanent(permanent)
+
+
 def return_subject_to_battlefield_under_owner(
     game: "Game", ability: AbilityOnStack, trigger: DelayedTrigger
 ) -> None:

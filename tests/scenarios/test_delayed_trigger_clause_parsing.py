@@ -42,7 +42,7 @@ text dated 2026-02-27, one revision behind the CR this repo otherwise cites.
 """
 
 from magic_cards_model.machines import Step
-from magic_cards_model.machines.effects import DelayedClauseNotice, effect_for
+from magic_cards_model.machines.effects import effect_for
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card_state import Counter
 from magic_cards_model.models.token import TokenDefinition, create_tokens
@@ -385,28 +385,24 @@ def test_mishras_bauble_activated_during_an_upkeep_waits_for_the_next_turns_upke
 # --------------------------------------------------------------------------
 
 
-def test_postmortem_lunge_leaves_a_notice_instead_of_running_half_the_instruction():
+def test_postmortem_lunge_no_longer_needs_a_notice():
     """Postmortem Lunge: "Return target creature card with mana value X from
     your graveyard to the battlefield. It gains haste. Exile it at the
-    beginning of the next end step." The antecedent is a reanimation target
-    named by a variable mana value, not this wave's exile-then-return shape,
-    so the whole effect stays unread - but no longer silently.
-
-    Exercised directly against `effect_for`'s real resolution closure on the
-    card's own printed text (not through a full X-cost cast), since nothing
-    about the notice depends on the cast having happened - only on the text.
+    beginning of the next end step." Wave W6's own
+    `_parse_delayed_reanimate_haste_exile_clauses` reads this shape as a real
+    three-clause instruction (reanimate, grant haste, schedule the delayed
+    exile) rather than leaving a `DelayedClauseNotice` - see
+    `scenarios/test_postmortem_lunge.py` for the full board-level proof. This
+    is only the parser-level confirmation that the notice this file used to
+    assert is gone: `effect_for` now returns a real effect for this text
+    (with X substituted, the same way `effect_for`'s own docstring already
+    reads any other `{X}`-cost spell's rules text).
     """
     lunge = card_state("Postmortem Lunge", Zone.STACK, controller="alice", owner="alice")
-    effect = effect_for(lunge.card.name, lunge.card.oracle_text)
+    effect = effect_for(lunge.card.name, lunge.card.oracle_text, x_value=1)
     assert effect is not None
 
     scenario = Scenario().player("alice", library=["Forest"]).build()
     effect(scenario.game, lunge)
 
-    assert scenario.game.delayed_clause_notices == [
-        DelayedClauseNotice(
-            source_id=lunge.id,
-            source_name="Postmortem Lunge",
-            text="Exile it at the beginning of the next end step",
-        )
-    ]
+    assert scenario.game.delayed_clause_notices == []

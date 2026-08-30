@@ -95,6 +95,7 @@ from ..machines.layers import (
     LayerNotice,
     additional_land_plays,
 )
+from ..machines.modes import substitute_x
 from ..machines.priority import PriorityMachine, PriorityOutcome
 from ..machines.replacement import (
     EventKind,
@@ -794,6 +795,24 @@ class Game(BaseModel):
     Feeds Damping Sphere's per-spell cost increase and
     `_first_spell_this_turn_holds`'s "first [type] spell you've cast this
     turn" intervening *if* clauses. Cleared when a new turn begins."""
+
+    permanents_left_battlefield_this_turn: dict[str, int] = Field(default_factory=dict)
+    """How many permanents each player controlled at the moment those
+    permanents left the battlefield this turn, keyed by that controller.
+
+    Feeds Revolt (an ability word, CR 207.2c - `knowledge_search` found no
+    numbered rule for Revolt itself beyond that) and any other card whose text
+    reads "a permanent you controlled left the battlefield this turn": Fatal
+    Push's own "if a permanent left the battlefield under your control this
+    turn." Recorded at the moment of the move (`destroy`, `sacrifice`,
+    `exile_permanent`, `return_to_hand` all route through `_note_left_
+    battlefield`), by the controller the permanent had *while it was still on
+    the battlefield* - not the owner, since revolt asks who controlled it, and
+    not whoever controls the object now that it has moved to an uncontrolled
+    zone. A count, not a bare flag, so nothing here has to guess whether two
+    departures in the same turn matter to some future card; today only
+    "at least one" is ever asked. Cleared when a new turn begins, the same
+    reset `spells_cast_this_turn` already gets."""
 
     life_gained_this_turn: set[str] = Field(default_factory=set)
     """Which players have gained life this turn (CR 119.9 treats any source
@@ -2132,6 +2151,38 @@ class Game(BaseModel):
             if card_state in zone_cards:
                 zone_cards.remove(card_state)
 
+    def _note_left_battlefield(self, permanent: CardState) -> None:
+        """Record Revolt's own condition: a permanent left the battlefield
+        this turn (an ability word, CR 207.2c - Fatal Push's own printed
+        wording, "a permanent left the battlefield under your control this
+        turn", names no further numbered rule).
+
+        Called by every route a permanent takes off the battlefield -
+        `destroy`/`sacrifice` (through `put_into_graveyard`), `exile_permanent`,
+        `return_to_hand` - at the point each already knows the move started
+        there, before the move itself runs. Recorded regardless of where the
+        permanent ends up: a replacement effect that redirects the destination
+        (Rest in Peace) still moved it *off* the battlefield first, and Revolt
+        asks only about leaving, not about arriving anywhere in particular.
+        Controller, not owner - CR 108.4a's fallback is for a card with no
+        controller at all, which a battlefield permanent always has.
+        """
+        controller = permanent.controller
+        if controller is None:
+            return
+        self.permanents_left_battlefield_this_turn[controller] = (
+            self.permanents_left_battlefield_this_turn.get(controller, 0) + 1
+        )
+
+    def revolt_active_for(self, controller: str) -> bool:
+        """Whether Revolt's condition holds for `controller` right now: CR
+        207.2c's ability word, printed as "a permanent you controlled left
+        the battlefield this turn" (Fatal Push: "...under your control this
+        turn"). Checked at resolution, not at announcement - the same instant
+        `Game.legal_target`'s CR 608.2b recheck already reads other resolution-
+        time conditions from."""
+        return self.permanents_left_battlefield_this_turn.get(controller, 0) > 0
+
     def enter_the_battlefield(
         self,
         card_state: CardState,
@@ -3024,6 +3075,8 @@ class Game(BaseModel):
         """
         if move_refused(permanent, Zone.HAND) is not None:
             return permanent
+        if permanent in self.battlefield:
+            self._note_left_battlefield(permanent)
         self._take_out_of_every_zone(permanent)
         self.combat.remove(permanent.id)  # CR 506.4
         self._owner_of(permanent).add(permanent, Zone.HAND)
@@ -3172,6 +3225,15 @@ class Game(BaseModel):
         and `profile_for_modes` is asked instead. Without them the spell stays
         unchecked, which is the old behaviour and the honest one: a modal spell
         whose modes were never recorded cannot be judged.
+
+        A **non-modal** spell whose own mana cost has `{X}` (Postmortem
+        Lunge's "target creature card with mana value X") gets the same
+        substitution `machines/casting.Casting.targeting` already applies at
+        announcement - `targeting_profile(spell.card)` alone never resolves a
+        bare "X" (CR 107.3a's value is not part of the card's own printed
+        text), so without this the CR 608.2b recheck this method exists for
+        would refuse every target forever, on a card the caster legally
+        targeted moments earlier.
         """
         record = self.cast_records.get(spell.id)
         if record is not None and record.modes:
@@ -3180,6 +3242,8 @@ class Game(BaseModel):
             except ValueError:
                 # Not a modal card after all; fall through to its plain text.
                 pass
+        if record is not None and "{X}" in (spell.mana_cost or ""):
+            return profile_for_text(substitute_x(spell.oracle_text, record.x_value))
         return targeting_profile(spell.card)
 
     # -- protection (CR 702.16) --------------------------------------------
@@ -3692,6 +3756,8 @@ class Game(BaseModel):
 
         origin = card_state.zone
         was_on_battlefield = card_state in self.battlefield
+        if was_on_battlefield:
+            self._note_left_battlefield(card_state)
 
         event = ReplaceableEvent(
             kind=EventKind.ZONE_CHANGE,
@@ -3784,6 +3850,7 @@ class Game(BaseModel):
             return permanent
         was_on_battlefield = permanent in self.battlefield
         if was_on_battlefield:
+            self._note_left_battlefield(permanent)
             self._detach_dependents(permanent)
         self._take_out_of_every_zone(permanent)
         self.combat.remove(permanent.id)  # CR 506.4
@@ -5592,6 +5659,7 @@ class Game(BaseModel):
             self.activations = {}  # CR 602.5b restrictions are per turn
             self.loyalty_activations = {}  # CR 606.3's once-per-turn is per turn too
             self.spells_cast_this_turn = {}
+            self.permanents_left_battlefield_this_turn = {}
             self.life_gained_this_turn = set()
             # `play_permissions` is deliberately **not** cleared here. CR 514.2
             # ends an "until end of turn" effect in the cleanup step and

@@ -7,7 +7,7 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, RootModel, model_validator
 
-from .card import Card, Type, subtypes_of, types_of
+from .card import Card, Layout, Type, subtypes_of, types_of
 from .zone import Zone
 
 PERMANENT_TYPES = frozenset(
@@ -491,6 +491,24 @@ class CardState(BaseModel):
     choice is made once, when the card is played, and never changes after -
     an MDFC does not transform back and forth.
     """
+    face_played: str | None = None
+    """The name of the half chosen for a **split card** (CR 709.3) on the
+    stack - Wear // Tear's "Tear" when that half, not Wear, was cast.
+
+    Set only by `Casting.cast`, and only for a card whose `Card.layout` is
+    `Layout.SPLIT`: CR 709.3b, "While on the stack, only the characteristics
+    of the half being cast exist. The other half's characteristics are
+    treated as though they didn't exist" - so `up_face` below reads this
+    face, ahead of the front-face fallback every other layout still uses.
+    Deliberately scoped to split cards alone and not shared with Adventure's
+    own chosen face (`Casting.face`/`chosen_face`): CR 715.3b names the same
+    idea for an Adventure spell, but that gap is separately documented and
+    intentionally still open (`docs/engine-coverage.md`'s "Alternative
+    characteristics on the stack" row) - widening this field to cover it too
+    would silently change already-`xfail`ed behaviour this wave does not
+    touch. Fuse (CR 702.102) - casting *both* halves as one spell - is not
+    modelled: this only ever names one half.
+    """
     exerted: bool = False
     """True while this permanent will not untap during its controller's next
     untap step (CR 701.43a).
@@ -673,8 +691,10 @@ class CardState(BaseModel):
         The land face when this was an MDFC played for its land side, since
         CR 712.8f gives a modal double-faced permanent "only the
         characteristics of the face that's up" and `land_face_played` is how
-        that choice is recorded (CR 712.12). Otherwise the front face:
-        CR 712.8a makes it the only face this card has anywhere but the
+        that choice is recorded (CR 712.12). Next, a split card's own chosen
+        half (CR 709.3b) when `face_played` names one - see its own docstring
+        for why this is scoped to `Layout.SPLIT` alone. Otherwise the front
+        face: CR 712.8a makes it the only face this card has anywhere but the
         battlefield or stack, and CR 712.8d makes it the same on the
         battlefield while the front face is up - which, by this project's own
         documented boundary (`transformed`'s docstring), is every permanent
@@ -684,6 +704,19 @@ class CardState(BaseModel):
         land_face = self._land_face
         if land_face is not None:
             return land_face
+        if (
+            self.face_played is not None
+            and self.card.layout is Layout.SPLIT
+            and self.zone is Zone.STACK
+        ):
+            # CR 709.2: off the stack, a split card is "only one card" again -
+            # both halves, not the one that was last cast. Scoped to the
+            # stack the way CR 709.3b itself is worded ("while on the
+            # stack"), so a resolved and graveyard-bound Wear // Tear is read
+            # as the whole card once more, the same as before it was cast.
+            for face in self.card.card_faces or []:
+                if face.name == self.face_played:
+                    return face
         return self.card.front_face
 
     @property

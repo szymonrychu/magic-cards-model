@@ -167,17 +167,19 @@ def test_a_low_toughness_creature_satisfies_the_disjunction():
 def test_an_unbound_x_comparison_refuses_every_target_instead_of_widening():
     """March of Otherworldly Light: "target ... with mana value X or less".
 
-    X is part of the cost, so it is not known merely from the card's printed
-    text - and `Casting`'s non-modal path never re-parses the restriction with
-    X substituted in (a known, separate gap: fixing it needs `casting.py`).
-    Both together mean this restriction can never be evaluated yet, and the
-    fix for this defect is that an unevaluable restriction now refuses every
-    target instead of quietly accepting one, which is the fail-open bug this
-    file exists to close.
+    `Casting.targeting` now substitutes X for a non-modal spell whose own
+    mana cost carries `{X}` (CR 107.3a: X is fixed once announced, and here
+    it is announced by `Casting.x_value`'s own field default - CR 107.1a - of
+    0 before anything else sets it) - a wave W6 fix originally aimed at
+    Postmortem Lunge's "mana value X" reanimation target, which is the same
+    generic gap this card was reporting. `scenario.cast(..., targets=[bears])`
+    never calls `determine_cost`, so X stays 0 and "mana value 0 or less"
+    correctly refuses a mana value 2 Grizzly Bears - a real evaluated
+    rejection now, not the old "cannot resolve" fail-closed placeholder.
     """
     scenario = board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     bears = scenario.creature("Grizzly Bears", "bob")
 
-    with pytest.raises(ValueError, match="cannot resolve"):
+    with pytest.raises(ValueError, match="illegal target"):
         scenario.cast("March of Otherworldly Light", username="alice", targets=[bears])

@@ -1222,8 +1222,15 @@ _ANTHEM_RE = re.compile(
 #: shape). The row `docs/engine-coverage.md` used to carry for this - "the
 #: actual continuous effect for a team-wide temporary pump is still not built" -
 #: is closed by this shape plus `_mass_pump_until_eot_builder` below.
+#: "all creatures" (Toxic Deluge's own "-X/-X", X already substituted by the
+#: caller) is added as a third subject alongside the two controller-scoped
+#: ones - no `other`/`whose` group at all, since neither is read for this
+#: shape (`machines/effects.py`'s `_run_mass_pump` already resolved the
+#: concrete `targets` before this ever runs; see `_mass_creature_group_
+#: targets`'s own "all creatures" branch).
 _MASS_PUMP_UNTIL_EOT_RE = re.compile(
-    r"^(?P<other>other )?creatures (?P<whose>you control|your opponents control) "
+    r"^(?:(?P<other>other )?creatures (?P<whose>you control|your opponents control)|"
+    r"all creatures) "
     r"(?:gain (?P<keywords>[a-z]+(?: [a-z]+)?(?:,\s*[a-z]+(?: [a-z]+)?)*"
     r"(?:\s+and\s+[a-z]+(?: [a-z]+)?)?) and )?"
     r"get (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) until end of turn\.?$",
