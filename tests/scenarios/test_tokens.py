@@ -609,7 +609,7 @@ def test_a_cat_token_dying_flips_ajani():
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    ajani = scenario.creature("Ajani, Nacatl Pariah // Ajani, Nacatl Avenger", "alice")
+    ajani = scenario.creature("Ajani, Nacatl Pariah", "alice")
 
     cat = TokenDefinition(subtypes=("Cat", "Warrior"), colors=(Color.WHITE,), power=2, toughness=1)
     (token,) = create_tokens(scenario.game, cat, "alice")

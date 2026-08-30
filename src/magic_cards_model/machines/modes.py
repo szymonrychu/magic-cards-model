@@ -206,9 +206,13 @@ def modal_profile(card: Card) -> ModalProfile | None:
 
     Cached, since a printing's oracle text never changes.
     """
-    key = (card.name, card.oracle_text or "")
+    # `front_oracle_text`, not `oracle_text`: same DFC-null-field family as
+    # `targeting.targeting_profile`'s fix - without it, a modal-DFC/transform
+    # spell's front face never gets a modal reading either.
+    text = card.front_oracle_text
+    key = (card.name, text)
     if key not in _CACHE:
-        _CACHE[key] = _parse(card.oracle_text or "", card.keywords)
+        _CACHE[key] = _parse(text, card.keywords)
     return _CACHE[key]
 
 

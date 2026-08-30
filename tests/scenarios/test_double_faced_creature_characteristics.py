@@ -58,7 +58,7 @@ def test_duskwatch_recruiter_blocks_ocelot_pride_and_assigns_damage_back():
     scenario.start_at(Step.DECLARE_ATTACKERS)
 
     ocelot = scenario.creature("Ocelot Pride", "alice")
-    duskwatch = scenario.creature("Duskwatch Recruiter // Krallenhorde Howler", "bob")
+    duskwatch = scenario.creature("Duskwatch Recruiter", "bob")
     scenario.attack_with(ocelot)
     scenario.block(ocelot, duskwatch)
     scenario.combat_damage()
@@ -102,7 +102,7 @@ def test_delver_of_secrets_deals_its_printed_power_unblocked():
     scenario = Scenario().player("alice", battlefield=["Delver of Secrets"]).player("bob").build()
     scenario.start_at(Step.DECLARE_ATTACKERS)
 
-    delver = scenario.creature("Delver of Secrets // Insectile Aberration")
+    delver = scenario.creature("Delver of Secrets")
     scenario.attack_with(delver)
     scenario.no_blocks()
     scenario.combat_damage()
@@ -123,7 +123,7 @@ def test_ajani_nacatl_pariah_dies_to_lethal_damage_state_based_action():
     )
     scenario.start_at(Step.DECLARE_ATTACKERS)
 
-    ajani = scenario.creature("Ajani, Nacatl Pariah // Ajani, Nacatl Avenger", "alice")
+    ajani = scenario.creature("Ajani, Nacatl Pariah", "alice")
     bears = scenario.creature("Grizzly Bears", "bob")
     scenario.attack_with(ajani)
     scenario.block(ajani, bears)
@@ -139,7 +139,7 @@ def test_ajani_nacatl_pariah_reports_its_front_faces_type_line():
     Legendary Planeswalker printed on the back face.
     """
     scenario = Scenario().player("alice", battlefield=["Ajani, Nacatl Pariah"]).build()
-    ajani = scenario.creature("Ajani, Nacatl Pariah // Ajani, Nacatl Avenger")
+    ajani = scenario.creature("Ajani, Nacatl Pariah")
 
     assert ajani.types == (Type.CREATURE,)
     assert ajani.power == 1
@@ -158,7 +158,7 @@ def test_disciple_of_freyalise_cast_as_a_creature_deals_its_printed_power():
     )
     scenario.start_at(Step.DECLARE_ATTACKERS)
 
-    disciple = scenario.creature("Disciple of Freyalise // Garden of Freyalise")
+    disciple = scenario.creature("Disciple of Freyalise")
     scenario.attack_with(disciple)
     scenario.no_blocks()
     scenario.combat_damage()
@@ -180,7 +180,7 @@ def test_drowner_of_truth_survives_a_block_and_kills_its_blocker():
     )
     scenario.start_at(Step.DECLARE_ATTACKERS)
 
-    drowner = scenario.creature("Drowner of Truth // Drowned Jungle", "alice")
+    drowner = scenario.creature("Drowner of Truth", "alice")
     spider = scenario.creature("Giant Spider", "bob")
     scenario.attack_with(drowner)
     scenario.block(drowner, spider)

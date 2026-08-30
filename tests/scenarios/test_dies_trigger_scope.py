@@ -58,9 +58,7 @@ def test_another_cat_dying_triggers_ajanis_transform_ability():
     scenario.cast_and_resolve("Lightning Bolt", mountain, username="alice", targets=[lynx])
 
     assert lynx.zone is Zone.GRAVEYARD
-    assert scenario.stack_names() == [
-        "Ajani, Nacatl Pariah // Ajani, Nacatl Avenger's triggered ability"
-    ]
+    assert scenario.stack_names() == ["Ajani, Nacatl Pariah's triggered ability"]
 
 
 def test_ajanis_own_death_does_not_trigger_his_other_ability():
@@ -69,7 +67,7 @@ def test_ajanis_own_death_does_not_trigger_his_other_ability():
         Scenario().player("alice", battlefield=["Ajani, Nacatl Pariah"]).player("bob").build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    ajani = scenario.creature("Ajani, Nacatl Pariah // Ajani, Nacatl Avenger", "alice")
+    ajani = scenario.creature("Ajani, Nacatl Pariah", "alice")
 
     scenario.game.destroy(ajani)
     scenario.game.put_triggers_on_stack()

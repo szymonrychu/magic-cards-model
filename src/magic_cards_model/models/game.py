@@ -1176,7 +1176,15 @@ class Game(BaseModel):
             self._before_priority()
             return spell
 
-        effect = effect_for(spell.card.name, spell.card.oracle_text)
+        # CR 712.8c/712.8f: a double-faced spell on the stack has only the
+        # characteristics of the face that's up - `oracle_text` already reads
+        # that face, but `spell.card.oracle_text` is the raw Scryfall field,
+        # which Scryfall leaves null for `modal_dfc`/`transform` layouts (the
+        # text lives on `card_faces` instead). Reading it directly here made
+        # every modal-DFC spell side (Shatterskull Smashing, Valakut
+        # Awakening, Sink into Stupor, Turntimber Symbiosis) resolve to
+        # nothing, since `effect_text` came back empty.
+        effect = effect_for(spell.name, spell.oracle_text)
         if effect is not None:
             effect(self, spell)
 
@@ -3728,7 +3736,11 @@ class Game(BaseModel):
 
         A card whose reduction sentence this does not recognise reduces nothing.
         """
-        text = spell.card.oracle_text or ""
+        # Same DFC-family fix as `effect_for` above: a modal-DFC/transform
+        # spell's reduction clause lives on `card_faces`, not the raw
+        # top-level `oracle_text` field, so this has to read `oracle_text`
+        # (which already falls back to the up face) rather than `card.oracle_text`.
+        text = spell.oracle_text or ""
         match = _COSTS_LESS_PER_CARD_TYPE.search(text)
         if match is None:
             return ManaCost()
@@ -3775,7 +3787,10 @@ class Game(BaseModel):
         already_noticed = {notice.source_id for notice in self.cost_modifier_notices}
 
         for permanent in self.battlefield:
-            text = permanent.card.oracle_text or ""
+            # Same DFC-family fix as `effect_for`: `oracle_text` reads the up
+            # face, `card.oracle_text` is null for a modal-DFC/transform
+            # permanent and would silently skip its static ability.
+            text = permanent.oracle_text or ""
             if not text:
                 continue
             effect = cost_modifier_effect(text)
@@ -4007,7 +4022,11 @@ class Game(BaseModel):
             # No ability lines at all is either a vanilla permanent or one that
             # lost everything. Only the second is interesting, and it is told
             # apart by the card having printed one in the first place.
-            return not (permanent.card.oracle_text or "").strip()
+            # `oracle_text` reads the up face; `card.oracle_text` is null for
+            # a modal-DFC/transform permanent and would misreport it as
+            # having lost every ability when it never had raw text to begin
+            # with (same family as `effect_for` above).
+            return not (permanent.oracle_text or "").strip()
         return any(ability.text in line or line in ability.text for line in computed.abilities)
 
     def _activation_key(self, permanent: CardState, index: int) -> str:

@@ -880,13 +880,19 @@ def targeting_profile(card: Card) -> TargetingProfile:
     "target creature", which is what CR 702.5a means by "restricts what an Aura
     spell can target".
     """
-    key = (card.name, card.oracle_text or "")
+    # `front_oracle_text`, not `oracle_text`: Scryfall leaves the top-level
+    # field null for a `transform`/`modal_dfc` card, which left every such
+    # spell (Shatterskull Smashing, Valakut Awakening, Sink into Stupor,
+    # Turntimber Symbiosis) with no target requirement read from its text at
+    # all - same family as `effect_for`'s fix in `Game.resolve_top`.
+    text = card.front_oracle_text
+    key = (card.name, text)
     profile = _CACHE.get(key)
     if profile is None:
         if modal_profile(card):
             profile = TargetingProfile(understood=False)
         else:
-            profile = _parse(card.oracle_text or "")
+            profile = _parse(text)
             profile = _with_aura_target(card, profile)
         _CACHE[key] = profile
     return profile

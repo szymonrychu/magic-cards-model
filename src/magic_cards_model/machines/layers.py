@@ -2575,7 +2575,12 @@ def effects_for(
     rather than the card silently doing nothing.
     """
     builder = LAYER_EFFECTS.get(source.name)
-    text = source.card.oracle_text
+    # `oracle_text` reads the up face (CR 712.8d/712.8f); `card.oracle_text`
+    # is the raw Scryfall field, null for a modal-DFC/transform permanent -
+    # same family as `effect_for`'s fix in `Game.resolve_top`. Without this,
+    # every layer-computed static/pump/anthem ability on such a permanent's
+    # face-up side went unread.
+    text = source.oracle_text
     if builder is None:
         builder = parsed_layer_effects(text)
     if builder is None:
