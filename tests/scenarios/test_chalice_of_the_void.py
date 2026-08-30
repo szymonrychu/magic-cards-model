@@ -27,15 +27,22 @@ Two gaps kept this card silent before this file:
    Ballista cast for X=1 has mana value 2, not 1) - and carries it on the
    emitted `GameEvent.amount`, which the condition now reads in preference to
    the printed `subject_card.cmc`.
-2. **There was no effect at all.** `chalice_of_the_void_counter` in
-   `machines/effects.py` is the fix, the same shape as `vexing_bauble_counter`
-   right above it in that file: "that spell" is the trigger's own event
-   subject, not something CR 601.2c ever asked anyone to target, so it is
-   read off `ability.event.subject_id` rather than through
-   `Game.resolve_targets`. **CR 701.6a**: "A countered spell is put into its
-   owner's graveyard" - by way of `Game.counter`, which also honours a
-   rebound or flashback spell's own replaced destination rather than always
-   the graveyard.
+2. **There was no effect at all.** `_parse_counter_that_spell_clause` in
+   `machines/effects.py` is the fix: a generic clause parser, reached through
+   `trigger_effect_for`'s ordinary `parse_mixed_effect` fallback rather than a
+   `TRIGGER_EFFECTS` row keyed to Chalice's own name - a name row cannot
+   generalise to a future card printing the same clause, which is the whole
+   point of parsing by shape. "Counter that spell." is **CR 607.1** linked-
+   ability anaphora back to the trigger's own event subject, not something
+   CR 601.2c ever asked anyone to target, so it is read off
+   `ability.event.subject_id` rather than through `Game.resolve_targets` -
+   the same shape Vexing Bauble's identical clause needed, so
+   `vexing_bauble_counter`'s old hand-written `TRIGGER_EFFECTS` row is gone
+   too (`tests/scenarios/test_mana_spent_intervening_if.py`'s Vexing Bauble
+   test now runs off this same parser). **CR 701.6a**: "A countered spell is
+   put into its owner's graveyard" - by way of `Game.counter`, which also
+   honours a rebound or flashback spell's own replaced destination rather
+   than always the graveyard.
 
 The trigger fires on *casting* (**CR 601.2a**, **CR 603.2**), and CR 603.3
 puts the ability on the stack above the spell that caused it, so the spell is
