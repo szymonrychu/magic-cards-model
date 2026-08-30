@@ -51,7 +51,9 @@ every one leaves an `UnmodeledTriggerEffectNotice` instead of a partial board.
 """
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.targeting import profile_for_text
 from magic_cards_model.models import Zone
+from tests.cards import card
 from tests.scenarios.harness import Scenario
 
 
@@ -67,6 +69,69 @@ def resolve_all(scenario: Scenario) -> None:
     scenario.game.put_triggers_on_stack()
     while scenario.game.stack:
         scenario.resolve_top()
+
+
+# -- "that player" is an anaphor, never a target (CR 601.2c) -----------------
+
+
+def test_ragavans_that_player_is_never_a_targeting_requirement():
+    """ "That player" in "exile the top card of **that player's** library" is
+    CR 607.1's within-one-ability anaphora back to the trigger's own event -
+    the player the combat damage landed on - not a target CR 601.2c ever asks
+    the controller to announce. Getting this backwards (treating "that
+    player" as a target and asking who the exile should hit) would happen to
+    look correct in a two-player game, where "that player" and "an opponent"
+    pick out the same person by elimination - so this is checked directly
+    against the parser rather than only against a two-player board.
+
+    `profile_for_text` is what `Game.why_cannot_target_with_trigger` and
+    `Game._ask_trigger_targets` both read to decide whether an ability needs
+    an announced target at all (CR 603.3d); an empty `requirements` tuple
+    means neither of those paths is ever reached for this ability - not that
+    they were asked and found nothing to restrict.
+    """
+    ragavan_text = card("Ragavan, Nimble Pilferer").oracle_text
+    condition_and_effect = ragavan_text.split("\n")[0]
+    assert "that player" in condition_and_effect
+
+    profile = profile_for_text(condition_and_effect)
+    assert profile.understood is True
+    assert profile.requirements == ()
+
+
+def test_ragavans_trigger_goes_on_the_stack_with_no_targets_and_no_targeting_notice():
+    """The runtime half of the check above, in a three-player game so "that
+    player" (whoever combat damage lands on) cannot be silently confused with
+    "an opponent" (anyone but the controller) the way it could with only one
+    opponent to pick from.
+
+    Ragavan is alice's; carol takes the hit, not bob. Nothing on the stack
+    ever asks for a target (CR 603.3d never runs for this ability), and no
+    `TargetingNotice` is recorded either - that notice exists for an ability
+    that *does* need a target this wave could not work out, which is a
+    different gap from needing none at all.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Ragavan, Nimble Pilferer"])
+        .player("bob")
+        .player("carol", library=["Forest"])
+        .build()
+    )
+    ragavan = scenario.creature("Ragavan, Nimble Pilferer", "alice")
+
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(ragavan, defending="carol")
+    scenario.no_blocks()
+    scenario.combat_damage()
+
+    on_stack = scenario.game.put_triggers_on_stack()
+
+    assert len(on_stack) == 1
+    assert on_stack[0].targets == []
+    assert on_stack[0].event is not None
+    assert on_stack[0].event.player == "carol"
+    assert scenario.game.targeting_notices == []
 
 
 # -- Ragavan, Nimble Pilferer ------------------------------------------------

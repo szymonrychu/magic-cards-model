@@ -168,7 +168,7 @@ test you write should be `xfail` with a reason, not a test bent until it passes.
 | Surveil | CR 701.25a, 701.25c | `Game.surveil` | `scenarios/test_surveil.py` |
 | Shuffling a library | CR 701.24a, 701.24b, 701.24d, 701.24e | `Game.shuffle_library`, `Game.shuffle_seed` | `scenarios/test_shuffling.py` |
 | Searching a zone, and the shuffle after it | CR 701.23a, 701.23b, 701.23d, 701.23e, 701.23h, 400.2 | `Game.search_library` | `scenarios/test_shuffling.py` |
-| An enters replacement carrying a choice | CR 614.1c, 614.12, 614.12a, 119.4 | `_self_enters_modifiers`/`_pay_life_or_tapped` in `machines/replacement.py` | `scenarios/test_decisions_during_resolution.py` |
+| An enters replacement carrying a choice | CR 614.1c, 614.12, 614.12a, 119.4 | `_self_enters_modifiers`/`_pay_life_or_tapped` (the shockland's pay-life-or-tapped choice) and `_choose_a_quality` (the "as [this] enters, choose a color/card name/creature type" shape - Utopia Sprawl, Voice of All, Forsaken Crossroads, Runed Halo, Pithing Needle, Disruptor Flute, Cavern of Souls) in `machines/replacement.py`. The chosen value is recorded generically on `CardState.choice` (`ChoiceKind.COLOR`/`CARD_NAME`/`CREATURE_TYPE`), asked through `DecisionKind.CHOOSE_A_QUALITY`. Only one consumer of "the chosen ..." is wired end to end - the mana-adding trigger clause above; Voice of All's permanent-targeted protection grant already gets a `LayerNotice` for free from the static-ability sweep, and Runed Halo's player-targeted grant, Pithing Needle's and Disruptor Flute's activation/cost restrictions by name, and Cavern of Souls' restricted-mana grant each fail closed with an `UnwiredChoiceNotice` instead of silently doing nothing - see that model's docstring in `machines/replacement.py`. | `scenarios/test_decisions_during_resolution.py`, `scenarios/test_chosen_quality_on_entering.py`, `scenarios/test_mana_adding_triggers.py` |
 | The source of a damage event | CR 120.1, 120.7, 120.2b | `Game.deal_damage(..., source=...)`, `ReplaceableEvent.source` | `scenarios/test_prevention_effects.py` |
 | Prevention effects with a duration | CR 615.1, 615.3, 615.4, 615.6, 615.7, 615.8, 615.9, 609.7b, 514.2 | `PreventionShield`/`ShieldKind`, `Game.create_prevention_shield`, gathered by `machines/replacement.applicable_effects` | `scenarios/test_prevention_effects.py` |
 | Protection, the damage half | CR 702.16e, 702.16a | `Game.protection_from_damage`, `Game.source_has_quality` | `scenarios/test_prevention_effects.py` |
@@ -323,7 +323,7 @@ Roughly in the order they block other work.
 | Starting a game | CR 100-103 | `Match.start_game` does the work now - decklists registered by username with the sideboard set aside (CR 103.2a), seeded shuffles (CR 103.3), life 20 (CR 103.4), opening hands of seven (CR 103.5), and CR 103.1's first-player decision, with the loser of the previous game choosing after game one. Covered in the Modelled table. The London mulligan is orchestrated now: `Match.run_mulligans` collects each player's declaration in turn order (CR 103.5), takes every mulligan at once once all declarations are in, repeats until nobody mulligans, pays the bottoming cost at the keep, honours CR 103.5c and CR 800.6's free first mulligan in multiplayer games (CR 800.1), and enforces CR 103.5's zero-hand ceiling. What is left: CR 103.6's opening-hand actions are a separate sequence that begins once the process completes and are not modelled, nor are CR 103.5b's "any time [that player] could mulligan" effects. |
 | Turn-based actions outside untap, draw, and cleanup | CR 703.4 | The rest of the CR 703.4 list needs mechanics that do not exist: phasing (703.4a), day/night (703.4b), Saga and Attraction steps, and the combat entries above. Mana pools emptying (703.4q) is modelled - see the Modelled table. |
 | Trigger conditions the matcher cannot read | CR 603.1 | `machines/triggers.py` matches a fixed set of condition shapes and returns False for anything else, so an unreadable trigger silently never fires. **Now read**: a non-self-referential dies condition, singular or plural, optionally narrowed by "you control" and by a creature subtype ("Whenever another creature you control dies", "... one or more other Cats you control die" - Ajani, Nacatl Pariah); the spelled-out CR 700.4 form of dies ("is put into a graveyard from the battlefield" - Flagstones of Trokair); "Whenever you attack" (CR 508.3d, once per attacking player per combat, not once per attacker - `Game.declare_attackers` emits a second, subjectless event for it); and "is tapped for mana" (CR 106.12a), both "you tap a creature for mana" (Badgermole Cub, Leyline of Abundance) and "enchanted [land] is tapped for mana" (Utopia Sprawl, read off the Aura's own `attached_to`). Still not read: leaves-the-battlefield (CR 603.6c - broader than dies, and nothing in the pool's other examples justifies a new emit site yet), a permanent turning face up, a +1/+1 counter being put on a permanent, a Class leveling up (no Class mechanic exists at all), and state triggers (CR 603.8). Delayed triggers (CR 603.7) are modelled - see `machines/delayed.py` - but they are *created* by an effect rather than parsed, so a card whose printed text creates one still needs an entry in `machines/effects.py`. **Reflexive triggers (CR 603.12) are now modelled too**, for the one shape the pool needs: "You may sacrifice `<restriction>`. When you do, `<consequence>`." - `_parse_reflexive_sacrifice_clause` in `machines/effects.py`, `DelayedTriggers.create_reflexive` in `machines/delayed.py`. It reuses CR 118.12's own `MAY`/`CHOOSE_CARDS` machinery for the optional sacrifice, then - unlike CR 118.12 - creates a genuinely separate triggered ability that goes on the stack the next time a player would receive priority (CR 603.3), so an opponent gets a real object to respond to (CR 405.6a) and the consequence's own target is chosen when *it* is put on the stack (CR 603.3d), not earlier. See `tests/scenarios/test_reflexive_triggered_abilities.py`. A mandatory action ("Create a token. When you do, ...", Ajani, Nacatl Avenger's `0`) or an optional action that is not a sacrifice ("you may pay {E}{E}{E}", Guide of Souls' attack trigger) is not read - both record a `ReflexiveClauseNotice` instead of resolving silently. Caretaker's Talent's "Whenever one or more tokens you control enter, draw a card. This ability triggers only once each turn." is deliberately left unread even though ENTERS_THE_BATTLEFIELD plus a token-type check would be cheap: the engine has no "only once each turn" debounce for a *triggered* ability (only for activated abilities, CR 602.5b), and firing it without that limiter would draw extra cards, which is worse than never firing. |
-| Events nothing emits | CR 603.2 | Seventeen events now reach `Game.emit`: entering the battlefield, dying, attacking, blocking, a step beginning, casting a spell, a card being exiled, becoming a target, drawing a card (one event per card, CR 121.2), gaining life, losing life, dealing damage (combat and noncombat told apart by `GameEvent.combat`), being sacrificed, a spell being countered, becoming untapped, becoming tapped, and being tapped for mana (CR 106.12a) (`scenarios/test_trigger_events.py`). The tap sites are wired: the TAP cost component in `machines/cost.py`, attack declaration in `machines/combat.py` (not under vigilance), and cost sacrifices route through `Game.sacrifice`, so they fire the sacrifice event and the dies event both; spell-effect draws route through `Game.draw_cards`. `CostPayment.tap_for_mana` (tapping a permanent to pay a cost) and the mana-ability fast path in `Game.activate_ability` (CR 605.3b, a permanent tapping itself) both emit `TAPPED_FOR_MANA` through the shared `machines/triggers.tapped_for_mana_event` builder, so the two cannot drift apart on what the event looks like. One registry effect (`Seasoned Pyromancer`'s discard-then-draw) still calls `Player.draw` directly rather than through the emitting path. Sheoldred, Ragavan, Questing Beast, and Dragon Appeasement now trigger. Sheoldred's own "you gain 2 life" half now runs too, through `parse_player_effect`'s fallback (no `TRIGGER_EFFECTS` row needed); her other half - "an opponent draws a card, they lose 2 life" - still does nothing, because "they" is a pronoun this wave does not resolve to a player. Ragavan's, Nashi's, and Questing Beast's resolutions are all read generically off their own printed clauses now and all three fail closed on purpose with an `UnmodeledTriggerEffectNotice` - see the table rows below for why each. **Dragon Appeasement's now runs**: "you may draw a card" is read by `parse_player_effect`'s "you may" wrapper (CR 608.2d), asked through `Game.may` with the documented take-it default. A triggered mana ability (CR 605.1b - Utopia Sprawl's and Leyline of Abundance's "add an additional" bonus) is treated like an ordinary triggered ability and goes on the stack; CR 605.4a says a triggered mana ability "doesn't go on the stack" and resolves immediately after the mana ability that triggered it, which this does not model - a known simplification, not attempted here. Utopia Sprawl has a second gap ahead of that one: "As this Aura enters, choose a color" is a replacement effect (CR 614.12a, 614.1c), made *before* the Aura enters rather than a trigger (CR 603.6d), and nothing records the choice anywhere on the permanent - so even if the trigger above resolved for real, it has no chosen color to add. Both gaps are named together in `scenarios/test_aura_resolution.py`'s xfail rather than fixed, since fixing either alone would still add no mana. |
+| Events nothing emits | CR 603.2 | Seventeen events now reach `Game.emit`: entering the battlefield, dying, attacking, blocking, a step beginning, casting a spell, a card being exiled, becoming a target, drawing a card (one event per card, CR 121.2), gaining life, losing life, dealing damage (combat and noncombat told apart by `GameEvent.combat`), being sacrificed, a spell being countered, becoming untapped, becoming tapped, and being tapped for mana (CR 106.12a) (`scenarios/test_trigger_events.py`). The tap sites are wired: the TAP cost component in `machines/cost.py`, attack declaration in `machines/combat.py` (not under vigilance), and cost sacrifices route through `Game.sacrifice`, so they fire the sacrifice event and the dies event both; spell-effect draws route through `Game.draw_cards`. `CostPayment.tap_for_mana` (tapping a permanent to pay a cost) and the mana-ability fast path in `Game.activate_ability` (CR 605.3b, a permanent tapping itself) both emit `TAPPED_FOR_MANA` through the shared `machines/triggers.tapped_for_mana_event` builder, so the two cannot drift apart on what the event looks like. One registry effect (`Seasoned Pyromancer`'s discard-then-draw) still calls `Player.draw` directly rather than through the emitting path. Sheoldred, Ragavan, Questing Beast, and Dragon Appeasement now trigger. Sheoldred's own "you gain 2 life" half now runs too, through `parse_player_effect`'s fallback (no `TRIGGER_EFFECTS` row needed); her other half - "an opponent draws a card, they lose 2 life" - still does nothing, because "they" is a pronoun this wave does not resolve to a player. Ragavan's, Nashi's, and Questing Beast's resolutions are all read generically off their own printed clauses now and all three fail closed on purpose with an `UnmodeledTriggerEffectNotice` - see the table rows below for why each. **Dragon Appeasement's now runs**: "you may draw a card" is read by `parse_player_effect`'s "you may" wrapper (CR 608.2d), asked through `Game.may` with the documented take-it default. **Utopia Sprawl's, Leyline of Abundance's, and Badgermole Cub's "add an additional" bonus now resolves for real** - `_parse_mana_adding_trigger` in `machines/effects.py` reads "[its controller ]add[s] an additional <mana>" off the ability's own printed text (no `TRIGGER_EFFECTS` row, so the fix is one text template, not three per-card rows), and Utopia Sprawl's "As this Aura enters, choose a color" (CR 614.12a, 614.1c) is now a real choice too - see the next paragraph. "Its controller" is read as the *enchanted permanent's* controller (`attached_to`), not the ability's own, so an Aura enchanting an opponent's land credits the right player (CR 303.4e; `scenarios/test_mana_adding_triggers.py`). **What is still a known simplification**: a triggered mana ability (CR 605.1b) is treated like an ordinary triggered ability and goes on the stack; CR 605.4a says it "doesn't go on the stack" and resolves immediately after the mana ability that triggered it. Because of that, mana from tapping a permanent to help pay a spell's own cost cannot land in time to pay for that same cast - `CostPayment.tap_for_mana`'s payment pool is already settled before the trigger, sitting above the spell on the stack, gets a turn - so the bonus mana instead floats in `player.mana_pool` once the trigger resolves, available to a *later* payment that opens by copying the player's floating mana. Not attempted here; see `scenarios/test_mana_adding_triggers.py`'s docstrings. |
 | Ordering triggers a player controls | CR 603.3b | APNAP order between players is honoured; within one player's set the order they triggered in is used, because the rules leave the choice to the player and nothing here can ask. |
 | Missing a trigger, and optional triggers | CR 603.3, 603.5 | A trigger is never missed. Solemn Simulacrum's two "you may" clauses, Malevolent Rumble's, the fetch/search family (`_search_library`, `parse_search_and_put_effect`, `Game.search_library`), and now every "you may `<clause>`." the wave-1/wave-2 parsers otherwise read (`parse_player_effect`, `parse_targeted_effect`, and their spell twins - `tests/scenarios/test_optional_effect_clauses.py`) are wired through `Game.ask`. Measured against the fixture pool as it stood before that file's cards were added, this closes exactly **one** previously-broken card (Dragon Appeasement); the rest of the original ~47-clause survey needs a clause type neither parser reads yet - discard, pay-life, a variable X - and is still an `if True:` or simply absent. "`<A>`. If you do, `<B>`." (CR 118.12) is now implemented for the sacrifice shape - see the wave-1 note above and `_parse_conditional_sacrifice_clause`; the pay-life and variable-X cousins are still absent, needing a decision primitive this engine does not have. Its documented default is still to take it, so nothing wired here moves an existing test's behaviour. |
 | A trigger in the cleanup step | CR 514.3a | `Game.advance` does not put triggers on the stack in the untap or cleanup steps, where no player receives priority; a cleanup trigger should give players priority and repeat the step, and does not. |
@@ -827,9 +827,10 @@ anaphora (Access Denied, Force of Negation, Delay, Transcendent Dragon,
 Subtlety - "that spell" refers to an object on the stack, not a permanent).
 Phelia's own delayed-trigger anaphora is fixed - see "Delayed-trigger clauses"
 below; Ephemerate's "exile target creature you control, then return it" is a
-different shape (CR 400.7j, one resolution, not a delayed trigger) and is
-still unbuilt; Postmortem Lunge's antecedent (a reanimation target named by a
-variable mana value) is still unread.
+different shape (one resolution, CR 400.7's new object, not a delayed
+trigger) and is fixed too - see "Exile-then-return clauses" further down;
+Postmortem Lunge's antecedent (a reanimation target named by a variable mana
+value) is still unread.
 
 Scenario coverage: `tests/scenarios/test_anaphoric_referent_clauses.py`. Unit
 coverage for the parser and the notice: `tests/test_mixed_effects.py`.
@@ -1015,14 +1016,120 @@ blink is worse than the pre-existing no-op - an opponent's permanent exiled
 forever is a strictly worse board than the card doing nothing - so neither
 executes any part of its instruction. **Deliberately excluded:** Dalkovan
 Encampment and Voice of Victory take a *plural* token subject ("Sacrifice
-them"), a different shape this wave does not read; Ephemerate's "exile target
-creature you control, then return it" is CR 400.7j's one-resolution blink, not
-a delayed trigger, and is a different wave's work.
+them"), a different shape this wave does not read.
 
 Scenario coverage: `tests/scenarios/test_delayed_trigger_clause_parsing.py`.
 The pre-existing `tests/scenarios/test_delayed_triggered_abilities.py` and
 `tests/scenarios/test_dash.py` cover the generic `machines/delayed.py`
 mechanism this wave builds on.
+
+## Exile-then-return clauses: Ephemerate's own blink, and Rebound
+
+Two defects, fixed together because the same card exposed both. Every CR
+number below was looked up with `knowledge_search(type="rules")` in the
+session that fixed this.
+
+**Defect 1 - no reader for "return it to the battlefield".** Ephemerate's
+"Exile target creature you control, then return it to the battlefield under
+its owner's control." used to resolve and do nothing: clause 1 parsed alone
+as an ordinary exile (`_EXILE_TARGET_RE`), clause 2 had no reader anywhere -
+only `_RETURN_TARGET_RE`'s "return it to its owner's hand" existed - so
+`_parse_mixed_clauses`'s all-or-nothing fold correctly discarded the whole
+effect (CR 608.2c has no notion of running half an instruction), but
+*silently*: the sweeper listed Ephemerate as `silent`, not as a recorded
+notice. `_parse_exile_then_return_clause_pair` in `machines/effects.py` is the
+fix, wired into the same clause-pair dispatch `_parse_anaphoric_clause_pair`
+already uses: a parameterised reader for "exile target X, then return it to
+the battlefield[ tapped][ transformed][ under its owner's/your control]", not
+a card-name row. `_RETURN_TO_BATTLEFIELD_RE` reads the three optional groups;
+a card whose wording falls outside them (recognised by the looser
+`_LOOKS_LIKE_RETURN_TO_BATTLEFIELD_RE` prefix match) still takes the whole
+effect down through `_unreadable_anaphoric_clause`'s now-shared notice path,
+rather than silently keeping only the exile half - an exile with nothing to
+return it is a strictly worse board than doing nothing at all, so fail-closed
+had to stay fail-closed.
+
+Three rules this reader has to get right, none of them free from the existing
+`exile_ability_targets`/`Game.exile_permanent`/`Game.put_onto_battlefield`
+primitives it composes:
+
+- **CR 400.7** - the returned object is a new one. `CardState.move_to`
+  already implements this (fresh `zone_change_stamp`, `id` unchanged), so
+  reusing `Game.exile_permanent` then `Game.put_onto_battlefield` - the same
+  two calls `each_player_exiles_sacrifices_and_returns_creatures` already uses
+  for Living End - was enough; no parallel path was written.
+- **CR 110.2 / 110.2a** - the controller of the returned permanent is read off
+  the card's own words ("its owner's control" vs "your control"), never
+  defaulted to whoever controls the resolving spell. Owner and controller are
+  never collapsed into one question: a creature blinked out from under an
+  opponent's control returns to the *opponent* when the card says "its
+  owner's control".
+- **CR 122.2 / CR 302.6 / CR 508.1a** - counters and summoning sickness follow
+  automatically from `move_to`'s battlefield branch; this reader never
+  "restores" either.
+
+**A latent bug this reader's own test (`test_ephemerate_drops_an_aura_
+attached_to_the_blink_target`) surfaced and `Game._detach_dependents` fixes:**
+`CardState.move_to` already clears the *moved* card's own `attachment` as it
+leaves (CR 400.7), but nothing cleared an Aura or Equipment's `attached_to`
+pointing *at* it - stored by id, and this engine mutates a `CardState` in
+place rather than minting a fresh id on return, so a permanent exiled and
+returned **within one resolution** (no state-based-action check runs in
+between; CR 704.3 only checks before a player would next receive priority)
+had the same id both times and an Aura would silently "follow" the blink with
+nothing ever catching it. `Game.exile_permanent` now calls `_detach_dependents`
+the moment a permanent actually leaves the battlefield, `unattach()`-ing
+anything pointing at it; the ordinary `aura_state_based_actions`/`equipment_
+state_based_actions` sweep that runs once the whole spell finishes resolving
+then does its real CR 704.5m/704.5n job (an Aura pointing at nothing goes to
+its owner's graveyard, an Equipment pointing at nothing stays on the
+battlefield unattached) exactly as if a live check had run in between.
+
+**Defect 2 - Rebound was not implemented at all** (`grep -rn "rebound"` used
+to return zero hits). CR 702.88a: "If this spell was cast from your hand,
+instead of putting it into your graveyard as it resolves, exile it and, at
+the beginning of your next upkeep, you may cast this card from exile without
+paying its mana cost." Built as a keyword, in `machines/keywords.has_rebound`
+plus `machines/delayed.rebound_recast`, never a name row, even though
+Ephemerate is the only rebound card in the pool:
+
+- The exile-instead-of-graveyard half hangs off the same hook flashback and
+  Adventure already use - `Game.put_into_graveyard`'s own
+  `ReplaceableEvent(kind=ZONE_CHANGE, destination=GRAVEYARD)`, applied in
+  `machines/replacement._stack_replacements`. Unlike flashback (CR 702.34a's
+  "any time it would leave the stack", which deliberately also catches a
+  countered or fizzled spell), rebound's own CR 702.88a wording is narrower -
+  "as it resolves" - so a new `ReplaceableEvent.resolving` flag, set only by
+  `resolve_top`'s genuine CR 608 resolution path, gates it: a countered spell
+  (CR 701.6, never resolves) or a fizzled one (CR 608.2b, "doesn't resolve"
+  either) goes to the graveyard the ordinary way instead.
+- "If this spell was cast from your hand" is read off `Game.cast_records`
+  (`CastRecord.origin_zone`, new, copied from `Casting.origin_zone` as the
+  spell goes on the stack) - read *before* `resolve_top` pops the record, not
+  from the card's own printed text, which is what stops an Ephemerate cast
+  from a graveyard or from its own previous rebound recast rebounding again
+  (an infinite exile-and-recast loop otherwise).
+- The delayed trigger for "at the beginning of your next upkeep" is a
+  `DelayedTrigger` with `expected_zone=Zone.EXILE` plus `expected_stamp` (CR
+  603.7c) and, since CR 702.88a says "**your** next upkeep" and not "the next
+  upkeep", `only_when_active` set to the caster - the same scoping Emrakul,
+  the Promised End's extra-turn trigger already needed, and for the same
+  reason: without it, a one-shot trigger (CR 603.7b) created during erin's
+  turn would spend itself on the opponent's upkeep if that happens to come
+  first, and erin's own upkeep would never see it.
+- The recast itself (CR 702.88b: "follows the rules for paying alternative
+  costs") is `Game.cast_free_from_exile` - not the interactive `Casting`
+  state machine (there is no live announcement to drive from inside a
+  resolving ability's effect function), but the same "ask the controller"
+  pattern `Game._ask_trigger_targets` already uses for a triggered ability's
+  own CR 603.3d target announcement, then `Game.put_on_stack` plus
+  `Game.note_cast(..., origin_zone=Zone.EXILE)`.
+
+Scenario coverage: `tests/scenarios/test_ephemerate.py` (the blink, the Aura
+trap, owner vs. controller, counters, Guide of Souls not firing off itself)
+and `tests/scenarios/test_rebound.py` (exile instead of graveyard, the
+next-upkeep recast, declining it, and the countered/fizzled spells that must
+not be exiled at all).
 
 ## The Modern metagame sweep
 

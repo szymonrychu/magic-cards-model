@@ -107,13 +107,15 @@ from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import TYPE_CHECKING
+from uuid import UUID
 
 from pydantic import BaseModel
 
 from ..models.card import Card, Color, Type
-from ..models.card_state import CardState
+from ..models.card_state import CardState, Choice, ChoiceKind
 from ..models.token import is_token
 from ..models.zone import Zone
+from .decisions import Decision, DecisionKind
 
 if TYPE_CHECKING:
     from ..models.game import Game
@@ -959,6 +961,15 @@ class ReplaceableEvent:
     #: True for the draw an active player takes as the draw step's turn-based
     #: action (CR 504.1, 703.4d). Alhammarret's Archive excepts exactly that one.
     draw_step_draw: bool = False
+    #: True only for a spell's own successful CR 608 resolution reaching the
+    #: graveyard - not a countered spell (CR 701.6, which never resolves at
+    #: all) and not a fizzled one (CR 608.2b: "it doesn't resolve"), both of
+    #: which move a card off the stack through this same `ZONE_CHANGE` event.
+    #: CR 702.88a's rebound reads "instead of putting it into your graveyard
+    #: **as it resolves**" - narrower than flashback's "any time it would
+    #: leave the stack" (CR 702.34a), which is why flashback's own entry in
+    #: `_stack_replacements` does not gate on this at all and rebound's does.
+    resolving: bool = False
 
     #: The keys of the effects that have already applied (CR 614.5).
     applied: set[str] = field(default_factory=set)
@@ -1653,6 +1664,177 @@ def _pay_life_or_tapped(amount: int, card_name: str) -> Apply:
     return apply
 
 
+#: "As [this] enters, choose a color/card name/creature type." (CR 614.1c).
+#: Three fixed phrases, not a general "choose ..." reader - Kenrith's
+#: Transformation's "choose a creature type" (naming an existing permanent's
+#: new type, not a card carrying its own choice) is a *targeted* clause of a
+#: different shape entirely and is never routed through here.
+_CHOOSE_A_COLOR_RE = re.compile(r"^choose a color\.?$", re.IGNORECASE)
+_CHOOSE_A_CARD_NAME_RE = re.compile(r"^choose a card name\.?$", re.IGNORECASE)
+_CHOOSE_A_CREATURE_TYPE_RE = re.compile(r"^choose a creature type\.?$", re.IGNORECASE)
+
+#: The five colors' letter codes (CR 105.1), the closed universe
+#: `Game.ask` checks a color choice against. Card names and creature types
+#: have no such closed universe here, so their `Decision.options` stays empty.
+_COLOR_OPTIONS = tuple(
+    color.value for color in (Color.WHITE, Color.BLUE, Color.BLACK, Color.RED, Color.GREEN)
+)
+
+
+def _classify_choice(replacement_text: str) -> ChoiceKind | None:
+    """Which of the three "as [this] enters, choose ..." shapes this is, if any."""
+    text = replacement_text.strip()
+    if _CHOOSE_A_COLOR_RE.match(text):
+        return ChoiceKind.COLOR
+    if _CHOOSE_A_CARD_NAME_RE.match(text):
+        return ChoiceKind.CARD_NAME
+    if _CHOOSE_A_CREATURE_TYPE_RE.match(text):
+        return ChoiceKind.CREATURE_TYPE
+    return None
+
+
+class UnwiredChoiceNotice(BaseModel):
+    """A card's own sentence reads back "the chosen color/card name/creature
+    type" (CR 614.12a's choice, once made), but this wave only performs the
+    one shape that adds mana - `machines/effects.py`'s "adds an additional
+    ..." clause. Recorded instead of the card silently doing nothing, the
+    same shape `AnaphoricClauseNotice`/`ConditionalClauseNotice`/
+    `LayerNotice` already use elsewhere in this codebase for a clause this
+    read but did not perform.
+
+    Three of the pool's seven "as this enters, choose ..." cards land here:
+
+    - **Runed Halo** - "You have protection from the chosen card name." is a
+      layer 6 static ability (CR 613.1f) granted to a *player*, not a
+      permanent; nothing in `machines/layers.py` grants protection to a
+      player at all yet (its whole static-ability sweep is permanent-only).
+    - **Pithing Needle** / **Disruptor Flute** - "Activated abilities of
+      sources with the chosen name can't be activated unless they're mana
+      abilities." is a cost/legality restriction on *activating* an ability,
+      which has no representation anywhere the engine checks
+      `why_cannot_activate`. Disruptor Flute's other line, "Spells with the
+      chosen name cost {3} more to cast.", is the same gap on the casting
+      side (CR 601.2f's cost-increase step has no per-name lookup).
+    - **Cavern of Souls** - "Spend this mana only to cast a creature spell of
+      the chosen type, and that spell can't be countered." restricts what a
+      floating mana symbol may pay for and grants an uncounterable quality to
+      whatever it paid for; `models/mana.ManaPool` tracks color and snow-ness
+      only, nothing that could carry a spend restriction.
+
+    **Voice of All** is the fourth color-choosing card and is not listed
+    here: "This creature has protection from *the chosen color*" already
+    matches `machines/layers.py`'s generic `_LOOKS_LIKE_LAYER_EFFECT_RE`
+    (subject "this creature" + "has") and fails `_parse_layer_sentence` (no
+    shape reads a literal "the chosen color" as a quality), so
+    `effects_for` already records a `LayerNotice` for it with no new code -
+    proof the generic fail-closed net catches a permanent-targeted grant on
+    its own; only the player-targeted and cost/restriction shapes needed a
+    notice built here.
+
+    None of the four attempted consumers are wired this wave - CR 614.12a's
+    choice itself is (`CardState.choice`), and the one payoff this wave
+    performs end to end is the mana clause (Utopia Sprawl, Leyline of
+    Abundance, Badgermole Cub).
+    """
+
+    source_id: UUID
+    source_name: str
+    text: str
+
+
+#: A card's own line reads back the choice ("the chosen color/card name/
+#: creature type") outside of the "As [this] enters, choose ..." sentence
+#: that asked for it. `_UNWIRED_HINT_RE` tells such a line apart from the one
+#: shape this wave *does* perform - "adds an additional ..." - by exclusion:
+#: any other sentence naming the anaphora is an attempted consumer this wave
+#: does not build, and gets a notice instead of silence.
+#: "the chosen color/card name/creature type" and the shorter forms the same
+#: cards' own *other* lines use for the same antecedent - Pithing Needle and
+#: Disruptor Flute say "the chosen name" once they have already said "choose a
+#: card name", and Cavern of Souls says "the chosen type" having already said
+#: "choose a creature type". Same referent, shorter noun phrase the second
+#: time it is used - ordinary English anaphora, not a fourth kind of choice.
+_CHOSEN_QUALITY_ANAPHORA_RE = re.compile(
+    r"\bthe chosen (?:color|card name|name|creature type|type)\b", re.IGNORECASE
+)
+_WIRED_MANA_CLAUSE_HINT_RE = re.compile(r"adds? an additional\b", re.IGNORECASE)
+#: "This creature has/gets/gains ..." (Voice of All) - the shape
+#: `machines/layers.py`'s `_LOOKS_LIKE_LAYER_EFFECT_RE` already catches on its
+#: own, recording a `LayerNotice` with no help from here. Excluded so a
+#: permanent-targeted grant does not get *two* notices for the same gap, one
+#: on each of two separate lists.
+_LAYER_HANDLED_SUBJECT_RE = re.compile(
+    r"^(?:this \w+|target creature|another target creature(?: you control)?)\s+"
+    r"(?:has|have|gets?|gains?)\b",
+    re.IGNORECASE,
+)
+
+
+def _unwired_choice_notices(card: Card, source_id: UUID) -> list[UnwiredChoiceNotice]:
+    """Every sentence of `card`'s own text that reads back a CR 614.12a
+    choice this wave does not perform - see `UnwiredChoiceNotice`.
+
+    Read off the whole printed text rather than one line, since a card's
+    reference to its own choice is never on the same line as the "As [this]
+    enters, choose ..." sentence that asked for it.
+    """
+    found: list[UnwiredChoiceNotice] = []
+    for line in (card.oracle_text or "").splitlines():
+        sentence = line.strip()
+        if not sentence or not _CHOSEN_QUALITY_ANAPHORA_RE.search(sentence):
+            continue
+        if (
+            sentence.lower().startswith("as ")
+            or _WIRED_MANA_CLAUSE_HINT_RE.search(sentence)
+            or _LAYER_HANDLED_SUBJECT_RE.match(sentence)
+        ):
+            continue
+        found.append(UnwiredChoiceNotice(source_id=source_id, source_name=card.name, text=sentence))
+    return found
+
+
+def _choose_a_quality(kind: ChoiceKind, card_name: str) -> Apply:
+    """Ask CR 614.12a's choice and record it on the entering object itself.
+
+    "If a replacement effect that modifies how a permanent enters the
+    battlefield requires a choice, that choice is made before the permanent
+    enters the battlefield" - so this runs inside `apply_replacements`,
+    before `Game.enter_the_battlefield` ever puts the card on the
+    battlefield, exactly like the shockland's pay-life-or-tapped choice
+    above. Unlike that one, nothing about *this* choice changes the
+    `ReplaceableEvent` itself (no tapped flag, no counters) - the whole
+    effect is recording an answer for later clauses to read back
+    ("the chosen color"), which is why the only side effect is setting
+    `source.choice`.
+
+    The player asked is the entering permanent's own controller, who is set
+    on `card_state.controller` by `Game.enter_the_battlefield` just before
+    replacements are applied - not necessarily the same player who cast it
+    (an Aura enchanting an opponent's permanent still asks *its own*
+    controller, CR 303.4e), and there is no controller at all to ask if this
+    is reached some other way, in which case nothing is recorded rather than
+    guessing.
+    """
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        who = source.controller if source is not None else None
+        if who is None:
+            return
+        decision = Decision(
+            kind=DecisionKind.CHOOSE_A_QUALITY,
+            player=who,
+            prompt=f"choose a {kind.value.replace('_', ' ')}",
+            source=card_name,
+            options=_COLOR_OPTIONS if kind is ChoiceKind.COLOR else (),
+        )
+        value = game.ask(decision)
+        assert isinstance(value, str)
+        source.choice = Choice(kind=kind, value=value)
+        game.unwired_choice_notices.extend(_unwired_choice_notices(source.card, source.id))
+
+    return apply
+
+
 def _self_enters_modifiers(card_state: CardState) -> list[tuple[str, Apply, str]]:
     """The card's own "enters ..." replacement effects, as things to apply.
 
@@ -1661,7 +1843,7 @@ def _self_enters_modifiers(card_state: CardState) -> list[tuple[str, Apply, str]
     only that permanent." That is why these are read off the entering card while
     it is not yet on the battlefield, unlike every other entry in `REPLACEMENTS`.
 
-    Three shapes are performed:
+    Four shapes are performed:
 
     - "[This] enters tapped" and "[this] enters with N counters", unconditional
       (CR 614.1c).
@@ -1670,6 +1852,10 @@ def _self_enters_modifiers(card_state: CardState) -> list[tuple[str, Apply, str]
       an optional `AS_ENTERS` followed by an `ENTERS_TAPPED` whose condition is
       the back-reference "you don't". Joined back together here, because they
       are not two effects: CR 614.12a's choice is singular.
+    - "As [this] enters, choose a color/card name/creature type" - CR 614.12a's
+      choice recorded on the entering object itself (`CardState.choice`) rather
+      than changing the `ReplaceableEvent`, since nothing about *this* choice
+      is a tapped flag or a counter count. See `_choose_a_quality`.
 
     A condition about the *board* rather than about a choice - Arena of Glory's
     "unless you control a Mountain" - is still skipped, as is an amount that is
@@ -1702,6 +1888,18 @@ def _self_enters_modifiers(card_state: CardState) -> list[tuple[str, Apply, str]
                         f"self:{index}",
                         _pay_life_or_tapped(int(payment.group(1)), card_state.card.name),
                         f"{effect.text} {parsed[follower].text}",
+                    )
+                )
+                continue
+
+        if effect.kind is ReplacementKind.AS_ENTERS and effect.condition is None:
+            choice_kind = _classify_choice(effect.replacement or "")
+            if choice_kind is not None:
+                performable.append(
+                    (
+                        f"self:{index}",
+                        _choose_a_quality(choice_kind, card_state.card.name),
+                        effect.text,
                     )
                 )
                 continue
@@ -1759,6 +1957,24 @@ def _stack_replacements(game: "Game", event: ReplaceableEvent) -> list[Applicabl
                 key=f"{card.id}:flashback",
                 source=card,
                 label="if the flashback cost was paid, exile this card instead (CR 702.34a)",
+                apply=_exile_instead,
+            )
+        )
+    from .keywords import has_rebound  # imported here: casting imports this module's siblings
+
+    if has_rebound(card.card) and record.origin_zone is Zone.HAND and event.resolving:
+        # CR 702.88a: "If this spell was cast from your hand, instead of
+        # putting it into your graveyard as it resolves, exile it." A spell
+        # cast from anywhere else - most pointedly from exile by its own
+        # previous rebound recast - never triggers this a second time, which
+        # is what stops an infinite exile-and-recast loop; `record.origin_zone`
+        # is `Casting.origin_zone` as the spell was actually announced, not a
+        # fact about the card's printed text.
+        found.append(
+            ApplicableEffect(
+                key=f"{card.id}:rebound",
+                source=card,
+                label="cast from hand with rebound: exile this card instead (CR 702.88a)",
                 apply=_exile_instead,
             )
         )
