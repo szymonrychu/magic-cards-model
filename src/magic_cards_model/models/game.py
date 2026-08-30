@@ -72,6 +72,7 @@ from ..machines.effects import (
     trigger_effect_for,
 )
 from ..machines.keywords import (
+    ascend_state_based_actions,
     aura_state_based_actions,
     equipment_state_based_actions,
     has_rebound,
@@ -2036,6 +2037,11 @@ class Game(BaseModel):
         self._take_out_of_every_zone(card_state)
         card_state.move_to(Zone.BATTLEFIELD)
         card_state.tapped = event.tapped
+        # CR 702.131 (ascend): "entered this turn" needs a turn-number stamp,
+        # not just a boolean, the same way `ExileAnnotation.turn_exiled` is -
+        # see `CardState.turn_entered`. Stamped here, the one choke point
+        # every route onto the battlefield runs through.
+        card_state.turn_entered = self.turn.turn_number if self.turn is not None else None
         self.battlefield.append(card_state)
 
         if attach_to is not None:
@@ -3645,6 +3651,13 @@ class Game(BaseModel):
         # is already off the battlefield by the time it looks: `equipment_state_based_actions`
         # does not check that what it is unattaching is an Equipment.
         equipment_state_based_actions(self)
+        # CR 702.131b (ascend): "Any time you control ten or more permanents
+        # and you don't have the city's blessing, you get the city's blessing
+        # for the rest of the game." Not itself a triggered ability with a
+        # stack object (CR 603.8's state-trigger shape), so it is checked here
+        # alongside the equipment and Aura background checks rather than
+        # through `machines/triggers.py`.
+        ascend_state_based_actions(self)
         return leaving + gone_tokens
 
     def _roles_beyond_the_newest(self) -> list[CardState]:
