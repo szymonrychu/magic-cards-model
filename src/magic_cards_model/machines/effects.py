@@ -3571,6 +3571,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     without this the whole ability would fall through every check below and
     come back `None`, exactly the reported defect.
     """
+    outside_the_game = _parse_outside_the_game_fetch(effect_text)
+    if outside_the_game is not None:
+        return outside_the_game
     conditional_sacrifice = _parse_conditional_sacrifice_clause(effect_text, for_spell=False)
     if conditional_sacrifice is not None:
         return conditional_sacrifice
@@ -6736,3 +6739,171 @@ def activated_effect_for(
     if effect_text is None:
         return None
     return _ability_effect_or_notice(effect_text)
+
+
+# --------------------------------------------------------------------------
+# Bringing a card in from outside the game (CR 400.11b, CR 108.3b)
+# --------------------------------------------------------------------------
+
+#: Karn, the Great Creator's `−2`, read whole: "You may reveal an artifact card
+#: you own from outside the game or choose a face-up artifact card you own in
+#: exile. Put that card into your hand."
+#:
+#: One paragraph is one ability, so the two sentences are matched together and
+#: never half-run: the "put that card into your hand" is the whole point of the
+#: choice above it, and an engine that could read one sentence and not the other
+#: would have nothing sensible to do with either.
+#:
+#: The card type is a group, not a hard-coded "artifact", because the shape is
+#: general - the rules that make it work are CR 400.11c's narrow exception for
+#: "spells and abilities that allow those cards to be brought into the game",
+#: CR 108.3b's ownership gate, and CR 406.3's face-up requirement - and none of
+#: those is about artifacts.
+_OUTSIDE_THE_GAME_FETCH_RE = re.compile(
+    r"^you may reveal an? (?P<quality>[a-z]+) card you own from outside the game "
+    r"or choose a face-up (?P<exile_quality>[a-z]+) card you own in exile\.?\s*"
+    r"put that card into your hand\.?$",
+    re.IGNORECASE,
+)
+
+#: A sentence that reaches outside the game in some other shape. Matched only to
+#: fail closed with a notice, per the paragraph-atomic rule: an ability that
+#: mentions outside the game and cannot be read whole records that it went
+#: unread rather than resolving as silence.
+_LOOKS_LIKE_OUTSIDE_THE_GAME_RE = re.compile(r"\bfrom outside the game\b", re.IGNORECASE)
+
+
+def _parse_outside_the_game_fetch(effect_text: str) -> AbilityEffect | None:
+    """Karn's `−2` shape, or a notice for a near miss, or None.
+
+    Every rule this performs was looked up in the session that wrote it:
+
+    - **CR 400.11a** - "Cards in a player's sideboard are outside the game."
+    - **CR 400.11c** - cards outside the game "can't be affected by spells or
+      abilities, except ... spells and abilities that allow those cards to be
+      brought into the game", which is what this ability is.
+    - **CR 108.3b** - "Some spells and abilities allow a player to take cards
+      **they own** from outside the game and bring them into the game."
+    - **CR 400.11b** - a card brought in "remain[s] in the game until the game
+      ends".
+    - **CR 701.20a** - "To reveal a card, show that card to all players for a
+      brief time", and CR 701.20b: it does not move the card. The reveal is the
+      price of taking a card out of a group nobody may look at; the exile half
+      needs none, because CR 406.3 already makes a face-up exiled card one that
+      "may be examined by any player at any time".
+    - **CR 406.3** - "Cards 'exiled face down' can't be examined by any player
+      except when instructions allow it", so a face-down exiled card is not a
+      "face-up artifact card" and cannot be chosen. CR 406.3a: it "has no
+      characteristics" to be an artifact with in the first place.
+    - **CR 608.2d** - the "you may" and the choice are made as the ability
+      resolves, by its controller, and an option that is illegal or impossible
+      cannot be chosen.
+    """
+    match = _OUTSIDE_THE_GAME_FETCH_RE.match(" ".join(effect_text.split()))
+    if match is None:
+        if _LOOKS_LIKE_OUTSIDE_THE_GAME_RE.search(effect_text):
+
+            def outside_the_game_notice_only(game: "Game", ability: AbilityOnStack) -> None:
+                game.unmodeled_trigger_effect_notices.append(
+                    UnmodeledTriggerEffectNotice(
+                        source_id=ability.source_id,
+                        source_name=ability.source_name,
+                        text=effect_text,
+                    )
+                )
+
+            return outside_the_game_notice_only
+        return None
+
+    quality = _card_type_from_quality(match.group("quality"))
+    exile_quality = _card_type_from_quality(match.group("exile_quality"))
+    if quality is None or exile_quality is None:
+        return None
+
+    def fetch(game: "Game", ability: AbilityOnStack) -> None:
+        _bring_in_from_outside_the_game_or_exile(game, ability, quality, exile_quality)
+
+    return fetch
+
+
+def _card_type_from_quality(word: str) -> Type | None:
+    """ "artifact" -> `Type.ARTIFACT`; anything that is not a card type -> None."""
+    try:
+        return Type(word.strip().lower())
+    except ValueError:
+        return None
+
+
+def _bring_in_from_outside_the_game_or_exile(
+    game: "Game",
+    ability: AbilityOnStack,
+    quality: Type,
+    exile_quality: Type,
+) -> None:
+    """Perform the ability `_parse_outside_the_game_fetch` read (CR 608.2d).
+
+    The candidates are computed twice over, in the two places the sentence
+    names, and both are filtered by CR 108.3's **owner** - not the controller.
+    Exile is a shared zone, so an opponent's card sitting face up in it is
+    visible, choosable-looking, and not this player's to take.
+
+    A `DecisionKind.CHOOSE_CARDS` question puts the choice to the ability's
+    controller. That kind is deliberately reused rather than grown into a new
+    one - its own docstring in `machines/decisions.py` says so: "any 'choose N
+    of these cards' question (a search turning up more hits than needed,
+    choosing among revealed cards) is the same question with a different prompt
+    and a different source zone". The candidate ids therefore travel in the
+    same `Decision.cards` field a scry's do, and are subject to the same
+    per-player hidden-information filtering on the way out; the one card the
+    player ends up revealing is recorded publicly on `Game.reveals`, and
+    nothing else about the sideboard ever becomes public.
+
+    With nothing legal to choose, the ability resolves having done nothing:
+    CR 608.2d's "The player can't choose an option that's illegal or
+    impossible", and there is no "if you can't, ..." clause to fall through to.
+    """
+    controller = game.player(ability.controller)
+
+    def is_wanted(state: CardState, card_type: Type) -> bool:
+        return card_type in state.card.types
+
+    outside = controller.owned_outside_the_game(lambda state: is_wanted(state, quality))
+    in_exile = game.face_up_cards_in_exile(
+        owner=controller.username, matches=lambda state: is_wanted(state, exile_quality)
+    )
+    candidates = outside + in_exile
+    if not candidates:
+        return
+
+    # CR 608.2d's plain "you may": the whole instruction is optional.
+    if not game.may(
+        controller,
+        f"reveal a {quality.value} card you own from outside the game, or choose a "
+        f"face-up one you own in exile",
+        source=ability.source_name,
+    ):
+        return
+
+    chosen_ids = game.ask(
+        Decision(
+            kind=DecisionKind.CHOOSE_CARDS,
+            player=controller.username,
+            prompt=f"choose a {quality.value} card you own to put into your hand",
+            source=ability.source_name,
+            amount=1,
+            cards=tuple(state.id for state in candidates),
+        )
+    )
+    assert isinstance(chosen_ids, tuple)
+    by_id = {state.id: state for state in candidates}
+    for card_id in chosen_ids:
+        chosen = by_id[card_id]
+        if chosen.zone.is_outside_the_game:
+            # CR 701.20a: the reveal is what makes taking it from a group
+            # nobody may look at public information, and CR 701.20b leaves the
+            # card where it is - so it is revealed first, then brought in.
+            game.reveal(chosen, source=ability.source_name)
+            controller.bring_into_the_game(chosen, Zone.HAND)
+        else:
+            # Already face up in exile (CR 406.3), so nothing to reveal.
+            game.return_to_hand(chosen)

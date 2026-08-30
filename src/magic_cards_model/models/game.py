@@ -6,7 +6,7 @@ from enum import StrEnum
 from random import Random
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from ..machines import combat as combat_rules
 from ..machines.abilities import (
@@ -85,6 +85,7 @@ from ..machines.layers import (
     ComputedBoard,
     ContinuousEffects,
     LayerContext,
+    LayerNotice,
     additional_land_plays,
 )
 from ..machines.priority import PriorityMachine, PriorityOutcome
@@ -273,6 +274,127 @@ def _card_type_named(quality: str) -> Type | None:
         return Type(word)
     except ValueError:
         return None
+
+
+#: A static ability that stops other permanents' activated abilities from being
+#: activated at all - Karn, the Great Creator's "Activated abilities of artifacts
+#: your opponents control can't be activated."
+#:
+#: CR 611.1: "A continuous effect modifies characteristics of objects, modifies
+#: control of objects, or affects players or **the rules of the game**, for a
+#: fixed or indefinite period." This shape is the last of those three: it changes
+#: no characteristic, so `machines/layers.py` has nothing to write - CR 613's
+#: layers are for characteristics, control, and copiable values - and the effect
+#: is felt where the rules ask whether an activation is legal, which is CR 602.5:
+#: "A player can't begin to activate an ability that's prohibited from being
+#: activated." CR 604.2 and CR 611.3b bound it to while its source is on the
+#: battlefield, which is why `_activation_prohibition` reads the battlefield
+#: fresh every time rather than caching anything (CR 611.3a: not "locked in").
+#:
+#: The optional "unless they're mana abilities" tail is Pithing Needle's and
+#: Disruptor Flute's wording; those two name the ability's *source by chosen
+#: name* rather than by quality, so they do not match this shape and keep the
+#: `UnwiredChoiceNotice` they already get (`machines/replacement.py`).
+_ACTIVATION_PROHIBITION_RE = re.compile(
+    r"^activated abilities of (?P<subjects>[a-z, ]+?)"
+    r"(?P<opponents> your opponents control)?"
+    r" can't be activated(?P<mana_exempt> unless they're mana abilities)?\.?$",
+    re.IGNORECASE,
+)
+
+#: A sentence that prohibits activation but is not the shape above - matched
+#: only to fail closed with a notice rather than let it read as permission.
+_LOOKS_LIKE_ACTIVATION_PROHIBITION_RE = re.compile(
+    r"^activated abilities of .+ can't be activated", re.IGNORECASE
+)
+
+#: Pithing Needle's and Disruptor Flute's "sources with the chosen name", which
+#: name their subjects by a CR 614.12a choice rather than by a quality. Left
+#: alone here on purpose: `machines/replacement.py` already records an
+#: `UnwiredChoiceNotice` for exactly those two lines, and a second record on a
+#: second list would be the same gap counted twice.
+_CHOSEN_NAME_SUBJECT_RE = re.compile(r"\bthe chosen\b", re.IGNORECASE)
+
+
+class ActivationProhibition(BaseModel):
+    """One "activated abilities of ... can't be activated" static, read (CR 602.5).
+
+    `qualities` are the card types the sentence names its subjects by - Karn,
+    the Great Creator's "artifacts", Clarion Conqueror's "artifacts, creatures,
+    and planeswalkers" - or empty for "permanents", which names them all.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    qualities: tuple[Type, ...] = ()
+    opponents_only: bool = False
+    """True for Karn's "your opponents control", false for the symmetric
+    printings (Collector Ouphe, Clarion Conqueror) that catch their own
+    controller's permanents too."""
+    mana_abilities_exempt: bool = False
+    """CR 605.1a's mana abilities, spared by the "unless they're mana
+    abilities" tail some printings carry and Karn does not."""
+
+
+def _parse_activation_prohibition(text: str) -> ActivationProhibition | None:
+    """Read one static ability sentence as an activation prohibition, or None.
+
+    The subject list is a plain "A, B, and C" of card-type plurals; anything
+    else - a chosen name, a quality that is not a card type - comes back None
+    and is recorded rather than guessed at.
+    """
+    match = _ACTIVATION_PROHIBITION_RE.match(text.strip())
+    if match is None:
+        return None
+    subjects = match.group("subjects").lower().replace(" and ", ", ")
+    words = [word.strip() for word in subjects.split(",") if word.strip()]
+    if not words:
+        return None
+    if words == ["permanents"]:
+        qualities: tuple[Type, ...] = ()
+    else:
+        types = [_card_type_named(word) for word in words]
+        if any(card_type is None for card_type in types):
+            return None
+        qualities = tuple(card_type for card_type in types if card_type is not None)
+    return ActivationProhibition(
+        qualities=qualities,
+        opponents_only=match.group("opponents") is not None,
+        mana_abilities_exempt=match.group("mana_exempt") is not None,
+    )
+
+
+class Reveal(BaseModel):
+    """One card shown to all players (CR 701.20a).
+
+    "To reveal a card, show that card to all players for a brief time." That is
+    the whole of what revealing does to the game state, plus CR 701.20b's
+    "Revealing a card doesn't cause it to leave the zone it's in" - so this is a
+    *record*, not a move: the card stays exactly where it was and this says that
+    everyone got to see it.
+
+    It exists because revealing is the one way information leaves a hidden
+    group of cards without the cards moving. Karn, the Great Creator's `−2`
+    reveals **one** artifact card from a sideboard that nobody may otherwise
+    look at (CR 400.11c), and an engine that answered "what is public now?" by
+    handing over the sideboard would be leaking fourteen cards the reveal never
+    showed. One entry per card actually revealed is the whole public fact.
+
+    Frozen, and named by id as well as by name, because CR 701.20c allows the
+    same card to be revealed more than once and each showing is its own event.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    card_id: UUID
+    card_name: str
+    revealed_by: str
+    """The player who showed it - the one CR 701.20a's effect instructed."""
+    zone: Zone
+    """Where the card was while it was revealed (CR 701.20b: it did not move).
+    `Zone.SIDEBOARD` means it was outside the game (CR 400.11a)."""
+    source: str | None = None
+    """The card whose text asked for the reveal, by name."""
 
 
 class CastRecord(BaseModel):
@@ -642,6 +764,15 @@ class Game(BaseModel):
     three cases this wave found (Ragavan, Nashi, Questing Beast). The same
     unreadable-is-not-the-same-as-no-effect record every other notice list
     here keeps."""
+
+    reveals: list[Reveal] = Field(default_factory=list)
+    """Every card that has been revealed this game (CR 701.20a), in order.
+
+    Public information, and *only* what was actually shown: a reveal out of a
+    hidden group of cards - a hand, a library, a sideboard outside the game -
+    puts one entry here per card the effect named, never the group it came
+    from. Anything reading this to decide what an opponent may see gets the
+    reveal and nothing around it. See `Reveal`."""
 
     spells_cast_this_turn: dict[str, list[CardState]] = Field(default_factory=dict)
     """Every spell each player has cast this turn, keyed by controller
@@ -2616,6 +2747,61 @@ class Game(BaseModel):
             self.shuffle_library(player)
         return found
 
+    # -- revealing, and cards outside the game (CR 701.20, CR 400.11) --------
+
+    def reveal(self, card_state: CardState, source: str | None = None) -> CardState:
+        """Show one card to all players (CR 701.20a), and record that it was shown.
+
+        "To reveal a card, show that card to all players for a brief time."
+        CR 701.20b: "Revealing a card doesn't cause it to leave the zone it's
+        in" - so nothing moves here, and a caller that also moves the card does
+        that separately, in the order its own text states.
+
+        The reveal is credited to the card's owner, which is who is holding it
+        in every case the rules reach: a card revealed out of a hidden group is
+        revealed by the player whose group it is (their hand, their library,
+        their sideboard outside the game, CR 400.11a). `Reveal` explains why
+        exactly one entry is appended per card shown, and why that matters for
+        anything downstream deciding what an opponent may see.
+        """
+        self.reveals.append(
+            Reveal(
+                card_id=card_state.id,
+                card_name=card_state.name,
+                revealed_by=card_state.owner or "",
+                zone=card_state.zone,
+                source=source,
+            )
+        )
+        return card_state
+
+    def face_up_cards_in_exile(
+        self,
+        owner: str | None = None,
+        matches: Callable[[CardState], bool] | None = None,
+    ) -> list[CardState]:
+        """Exiled cards that are face up (CR 406.3), optionally narrowed.
+
+        CR 406.3: "Exiled cards are, by default, kept face up and may be
+        examined by any player at any time. Cards 'exiled face down' can't be
+        examined by any player except when instructions allow it." So a
+        face-down exiled card is not merely hidden - it is not a card an effect
+        that says "choose a face-up card in exile" may be pointed at, and
+        CR 406.3a adds that it "has no characteristics" at all, which means
+        asking whether it is an artifact has no answer to give.
+
+        `owner` filters by CR 108.3 ownership, which is what a "you own" clause
+        needs - deliberately not by controller: exile is a shared zone and the
+        object in it may be one an opponent put there.
+        """
+        return [
+            state
+            for state in self.exile
+            if not state.face_down
+            and (owner is None or state.owner == owner)
+            and (matches is None or matches(state))
+        ]
+
     # -- drawing, life, and counters, as replaceable events ------------------
 
     def draw_cards(self, player: Player | str, count: int = 1) -> list[CardState]:
@@ -4399,6 +4585,10 @@ class Game(BaseModel):
                 "continuous effect in layer 6 (CR 613.1f)"
             )
 
+        prohibited = self._activation_prohibition(permanent, ability)
+        if prohibited is not None:
+            return prohibited
+
         needs_tapping = any(piece.kind in {CostKind.TAP, CostKind.UNTAP} for piece in ability.costs)
         if needs_tapping and not self.can_activate_tap_ability(permanent):
             return (
@@ -4479,6 +4669,117 @@ class Game(BaseModel):
             )
 
         return True
+
+    def _activation_prohibition(
+        self, permanent: CardState, ability: ActivatedAbility
+    ) -> str | None:
+        """Why a static ability in play forbids this activation, or None (CR 602.5).
+
+        "A player can't begin to activate an ability that's prohibited from
+        being activated." The prohibitions read here are the ones a permanent's
+        own static ability creates - CR 604.2: "Static abilities create
+        continuous effects ... These effects are active as long as the permanent
+        with the ability remains on the battlefield" - which is why the whole
+        battlefield is re-read on every call rather than cached (CR 611.3a: a
+        continuous effect from a static ability "isn't 'locked in'; it applies
+        at any given moment to whatever its text indicates").
+
+        **Whose permanents.** Karn, the Great Creator says "your opponents
+        control", and "your" is the *source's* controller, not the activating
+        player's - so the artifact is checked against Karn's controller. A
+        permanent the source's own controller controls is never caught, which
+        is the half of this rule that a one-player scenario cannot see. The
+        symmetric printings of the same shape (Collector Ouphe, Clarion
+        Conqueror) omit that clause and catch every permanent, their
+        controller's included, which is what `opponents_only` distinguishes.
+
+        **Which permanents.** The quality is read off the *computed* board
+        (CR 613.5, `characteristics_of`), so an artifact Karn's own `+1`
+        animated is still an artifact and still prohibited, and a permanent an
+        effect turned into an artifact becomes prohibited the moment it does.
+
+        A sentence that prohibits activation in a shape `_parse_activation_
+        prohibition` cannot read is **not** silently treated as permission: it
+        records a `LayerNotice` - the record kept for a static ability whose
+        continuous effect this engine did not build - and the activation is
+        left alone. That is the one direction that fails safe here; refusing
+        every activation on an unreadable sentence would lock up boards the
+        sentence was never about.
+        """
+        for source in list(self.battlefield):
+            for line in parse_abilities(source.card):
+                if line.kind is not AbilityKind.STATIC:
+                    continue
+                text = (line.text or "").strip()
+                if not _LOOKS_LIKE_ACTIVATION_PROHIBITION_RE.match(text):
+                    continue
+                if _CHOSEN_NAME_SUBJECT_RE.search(text):
+                    continue
+                prohibition = _parse_activation_prohibition(text)
+                if prohibition is None:
+                    self._record_unread_prohibition(source, text)
+                    continue
+                if not self._still_has_static_line(source, text):
+                    continue
+                if prohibition.opponents_only and (
+                    self.controller_of(permanent).username == self.controller_of(source).username
+                ):
+                    # "your opponents control": the source's controller's own
+                    # permanents are untouched.
+                    continue
+                if prohibition.qualities and not any(
+                    self._has_computed_type(permanent, quality) for quality in prohibition.qualities
+                ):
+                    continue
+                if prohibition.mana_abilities_exempt and ability.mana is not None:
+                    # CR 605.1a: a mana ability the sentence spares.
+                    continue
+                return (
+                    f"{permanent.name}'s activated abilities can't be activated: "
+                    f"{source.name} says so (CR 602.5, CR 611.1)"
+                )
+        return None
+
+    def _record_unread_prohibition(self, source: CardState, text: str) -> None:
+        """Record a prohibition sentence this engine could not read (CR 611.1).
+
+        The static ability generates a continuous effect that affects the rules
+        of the game, and nothing here built it - which is exactly what
+        `LayerNotice` records for a static ability whose continuous effect went
+        unmade. One entry per source, not one per query: `why_cannot_activate`
+        is called constantly.
+        """
+        already = {
+            notice.source_id
+            for notice in self.continuous_effects.layer_notices
+            if notice.text == text
+        }
+        if source.id in already:
+            return
+        self.continuous_effects.layer_notices.append(
+            LayerNotice(source_id=source.id, source_name=source.name, text=text)
+        )
+
+    def _still_has_static_line(self, permanent: CardState, text: str) -> bool:
+        """Whether the computed board still shows this static line (CR 613.1f).
+
+        The static-ability twin of `_still_has_ability`: a permanent that lost
+        all abilities in layer 6 has no prohibition to enforce either.
+        """
+        try:
+            computed = self.characteristics_of(permanent)
+        except KeyError:
+            return True
+        if not computed.abilities:
+            return not (permanent.oracle_text or "").strip()
+        return any(text in line or line in text for line in computed.abilities)
+
+    def _has_computed_type(self, permanent: CardState, card_type: Type) -> bool:
+        """Whether the permanent has this card type right now (CR 613.5)."""
+        try:
+            return card_type in self.characteristics_of(permanent).types
+        except KeyError:
+            return card_type in permanent.card.types
 
     def _still_has_ability(self, permanent: CardState, ability: ActivatedAbility) -> bool:
         """Whether the computed board still shows this ability on the permanent.
