@@ -84,11 +84,13 @@ def test_vexing_bauble_triggers_from_the_battlefield_on_its_own_controllers_cast
 
     scenario.cast_onto_stack("Lightning Bolt", mountain, targets=[scenario.player("bob")])
 
-    # The zone gate lets it through - it reaches the (separately unreadable,
-    # see test_intervening_if.py) "no mana was spent" clause rather than being
-    # suppressed before it is even asked.
-    assert len(scenario.game.intervening_if_notices) == 1
-    assert scenario.game.intervening_if_notices[0].source_name == "Vexing Bauble"
+    # The zone gate lets it through - it reaches the "no mana was spent"
+    # clause rather than being suppressed before it is even asked, and that
+    # clause is read for real now (see test_mana_spent_intervening_if.py):
+    # real mana was spent on Lightning Bolt, so the condition is false and the
+    # ability does not trigger, with no engine-gap notice either.
+    assert scenario.game.intervening_if_notices == []
+    assert scenario.pending_triggers == []
 
 
 def test_vexing_bauble_does_not_trigger_off_an_unrelated_spell_while_still_a_spell_itself():

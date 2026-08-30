@@ -543,16 +543,27 @@ class Casting(BaseModel):
         CR 118.9c: an alternative cost does not change this. It only changes
         what the caster has to pay, which is `total_cost`.
 
-        A card with two halves prints both in one `mana_cost` string,
+        A split card prints both halves in one `mana_cost` string,
         `{2}{R} // {1}{R}`, so the face being cast decides which half applies.
         CR 715.3 puts that choice on the caster for an adventurer card and
         CR 715.3a evaluates only the chosen face's characteristics.
+
+        A transform or modal DFC is different again: Scryfall leaves the
+        top-level `mana_cost` blank for those and puts each face's own cost on
+        `card_faces` instead, because CR 712.8a only grants the card "the
+        characteristics of its front face" outside the battlefield or stack -
+        there is no combined cost to fall back to the way a split card has
+        one. No face is ever explicitly chosen for these (`Casting.cast_as_adventure`
+        is Adventure-only, CR 715.3), so the front face is the only one this
+        reaches for.
         """
         face = self.chosen_face
         if face is not None:
             return ManaCost.parse(face.mana_cost or "")
         printed = self.spell.card.mana_cost or ""
         if "//" in printed and self.spell.card.card_faces:
+            return ManaCost.parse(self.spell.card.card_faces[0].mana_cost or "")
+        if not printed and self.spell.card.card_faces:
             return ManaCost.parse(self.spell.card.card_faces[0].mana_cost or "")
         return ManaCost.parse(printed)
 
@@ -1146,14 +1157,16 @@ class Casting(BaseModel):
         self.spell.targets = list(self.targets)
         if self.game is not None:
             self._emit_becomes_target()
-            # CR 601.2b announced the keyword, the face and the modes, and the
-            # `CardState` that reaches the stack carries none of them. Four
-            # rules ask afterwards: flashback's "exile this card instead"
-            # (CR 702.34a), warp's delayed trigger, which exists only if the
-            # warp cost was paid (CR 702.185a), Adventure's exile on resolution
-            # (CR 715.3d), and which targets a modal spell has (CR 700.2c),
-            # which CR 608.2b rechecks. `Game.note_cast` is where the answer is
-            # kept.
+            # CR 601.2b announced the keyword, the face and the modes, and
+            # CR 601.2h paid the cost, and the `CardState` that reaches the
+            # stack carries none of it. Several rules ask afterwards:
+            # flashback's "exile this card instead" (CR 702.34a), warp's
+            # delayed trigger, which exists only if the warp cost was paid
+            # (CR 702.185a), Adventure's exile on resolution (CR 715.3d), which
+            # targets a modal spell has (CR 700.2c, rechecked by CR 608.2b),
+            # what mana was spent to pay the total cost (CR 601.2h), and
+            # whether a kicker cost was among the costs paid (CR 702.33d).
+            # `Game.note_cast` is where every answer is kept.
             self.game.note_cast(
                 self.spell,
                 keyword=self.keyword_used,
@@ -1161,6 +1174,12 @@ class Casting(BaseModel):
                 modes=list(self.chosen_mode_numbers),
                 mode_targets=[list(slice_) for slice_ in self.mode_target_slices],
                 x_value=self.x_value,
+                mana_spent=(
+                    dict(self.payment.mana_payment.spend)
+                    if self.payment is not None and self.payment.mana_payment is not None
+                    else {}
+                ),
+                kicked=self.kicked,
             )
         return self.spell
 

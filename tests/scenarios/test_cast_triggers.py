@@ -23,19 +23,19 @@ session that wrote this file.
 - **CR 701.13a / CR 406.2** - to exile an object is to move it to the exile zone.
 - **CR 701.23a** - the search action.
 - **CR 603.4** - the intervening *if*: Sowing Mycospawn's second trigger has
-  one ("if it was kicked"), and `machines/triggers.intervening_if_holds`
-  cannot evaluate it (kicker payment is not recorded past `CastingStep`), so
-  it fails closed and the ability never triggers at all.
-- **CR 702.33a / CR 702.33e** - kicker, and the abilities linked to it.
+  one ("if it was kicked"), read by `machines/triggers.intervening_if_holds`
+  off `Game.cast_record(spell).kicked` - CR 702.33d's "kicked" flag, recorded
+  by `Casting.pay_kicker` and carried onto the stack by `Game.note_cast`.
+- **CR 702.33a / CR 702.33d / CR 702.33e** - kicker, being kicked, and the
+  abilities linked to it.
 
 The effects are `exile_ability_targets` and `fetch_any_land_onto_the_battlefield`
 in `machines/effects.py`.
 """
 
 from magic_cards_model.machines import Step
-from magic_cards_model.machines.triggers import InterveningIfNotice
 from magic_cards_model.models import Zone
-from tests.scenarios.harness import Scenario
+from tests.scenarios.harness import Scenario, mana_from
 
 MOUNTAINS_FOR_ULAMOG = ["Mountain"] * 10
 MOUNTAINS_FOR_UGIN = ["Mountain"] * 7
@@ -309,30 +309,23 @@ def test_the_kicked_trigger_does_not_trigger_when_the_spell_was_not_kicked():
     """CR 603.4: an intervening *if* is checked when the ability would trigger,
     and the ability does not trigger at all if the condition is false.
 
-    Kicker (CR 702.33a) is paid on `CastingStep`, not recorded anywhere a
-    resolved spell on the stack can be asked about afterwards, so
-    "if it was kicked" cannot actually be evaluated - `intervening_if_holds`
-    now fails **closed** on a clause it cannot read (the reverse of the old
-    default, which read it as true), so the ability does not trigger at all,
-    audibly: `Game.intervening_if_notices` records the refusal. An unkicked
-    Sowing Mycospawn puts exactly one trigger on the stack - the unconditional
-    land fetch - and exiles nothing.
+    CR 702.33d's "kicked" flag is recorded by `Casting.pay_kicker` and carried
+    onto the stack by `Game.note_cast`, so "if it was kicked" is genuinely
+    evaluated (`Game.cast_record(spell).kicked`) rather than failing closed -
+    an unkicked cast reads it as false, the correct answer, not an unreadable
+    clause. An unkicked Sowing Mycospawn puts exactly one trigger on the
+    stack - the unconditional land fetch - and exiles nothing, and there is no
+    engine-gap notice, because this clause is read.
     """
     scenario = _mycospawn_board(["Eldrazi Temple", "Forest"]).build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     sources = scenario.untapped_sources("Forest", "Forest", "Forest", "Forest")
 
-    mycospawn = scenario.cast_onto_stack("Sowing Mycospawn", *sources)
+    scenario.cast_onto_stack("Sowing Mycospawn", *sources)
 
     triggers = [name for name in scenario.stack_names() if "triggered ability" in name]
     assert len(triggers) == 1
-    assert scenario.game.intervening_if_notices == [
-        InterveningIfNotice(
-            source_id=mycospawn.id,
-            source_name="Sowing Mycospawn",
-            clause="it was kicked",
-        )
-    ]
+    assert scenario.game.intervening_if_notices == []
 
     scenario.pass_until_resolved()  # the land-fetch trigger
     scenario.pass_until_resolved()  # Sowing Mycospawn itself
@@ -340,3 +333,53 @@ def test_the_kicked_trigger_does_not_trigger_when_the_spell_was_not_kicked():
     assert "Eldrazi Temple" in scenario.battlefield_names()
     assert scenario.game.exile == [], "nothing should have been exiled"
     assert scenario.battlefield_names().count("Forest") == 4, "no land left the battlefield"
+
+
+def test_the_kicked_trigger_fires_and_exiles_the_target_land():
+    """The positive branch: a kicked Sowing Mycospawn puts **both** triggers on
+    the stack, and the second one - "exile target land" - actually exiles the
+    land it targeted. This is the exact defect named in
+    `machines/triggers.InterveningIfNotice`'s docstring: an unkicked Mycospawn
+    used to exile a land anyway, because the old default read an unreadable
+    "if it was kicked" as true. Kicked now means kicked, read for real off
+    `Game.cast_record`, not assumed.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            library=["Eldrazi Temple", "Forest"],
+            hand=["Sowing Mycospawn"],
+            battlefield=["Forest"] * 5 + ["Wastes"],
+        )
+        .player("bob", library=["Forest"], battlefield=["Island"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    # {3}{G} plus kicker {1}{C} totals {4}{G}{C}, six mana - the Wastes is the
+    # only source that can pay the kicker's {C}, a Forest cannot.
+    sources = scenario.untapped_sources("Forest", "Forest", "Forest", "Forest", "Forest", "Wastes")
+    bob_island = scenario.find("Island", Zone.BATTLEFIELD)
+    # "Exile target land" is the *triggered ability's* target (CR 601.2c-d,
+    # 603.3d), not the creature spell's own - Sowing Mycospawn itself targets
+    # nothing, so this is staged for the trigger, not `casting.choose_targets`.
+    scenario.choose_trigger_targets("Sowing Mycospawn", [bob_island])
+
+    casting = scenario.cast("Sowing Mycospawn")
+    casting.pay_kicker()
+    payment = casting.begin_paying()
+    for source in sources:
+        payment.tap_for_mana(source, mana_from(source))
+    payment.pay()
+    scenario.put_on_stack(casting)
+
+    triggers = [name for name in scenario.stack_names() if "triggered ability" in name]
+    assert len(triggers) == 2
+    assert scenario.game.intervening_if_notices == []
+
+    scenario.pass_until_resolved()  # the exile trigger (CR 603.3b: kicked one)
+    scenario.pass_until_resolved()  # the land-fetch trigger
+    scenario.pass_until_resolved()  # Sowing Mycospawn itself
+
+    assert "Eldrazi Temple" in scenario.battlefield_names()
+    assert bob_island.zone is Zone.EXILE

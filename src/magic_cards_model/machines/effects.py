@@ -2557,6 +2557,31 @@ def emrakul_cast_trigger(game: "Game", ability: AbilityOnStack) -> None:
         )
 
 
+def vexing_bauble_counter(game: "Game", ability: AbilityOnStack) -> None:
+    """Vexing Bauble: "Whenever a player casts a spell, if no mana was spent to
+    cast it, counter that spell."
+
+    "That spell" is the trigger event's own subject - the spell whose casting
+    triggered this, not something chosen as a target - so it is read off
+    `ability.event` rather than through `Game.resolve_targets`. CR 608.2b's
+    ordinary "the target is gone" outcome covers a spell that has already left
+    the stack by the time this resolves (countered, or resolved first by
+    something else that responded to it): nothing to counter, so nothing
+    happens.
+
+    Not read by the targeted-clause fallback because "that spell" is not a
+    target at all - CR 601.2c never asks Vexing Bauble's controller to choose
+    one - it is the event's own subject, the same distinction
+    `tishanas_tidebinder` draws for "target activated or triggered ability"
+    versus a plain event reference.
+    """
+    if ability.event is None or ability.event.subject_id is None:
+        return
+    spell = game.find_by_id(ability.event.subject_id)
+    if spell is not None and spell in game.stack:
+        game.counter(spell)
+
+
 #: One triggered ability, identified: the card it is printed on, the event it
 #: watches, and a lowercase fragment of its own printed text. The fragment is
 #: empty for a card whose triggers on that event are all one entry's business.
@@ -2605,9 +2630,14 @@ TRIGGER_EFFECTS: dict[TriggerKey, AbilityEffect] = {
     # restriction is still not enforced either way. See
     # `tests/scenarios/test_registry_is_minimal.py`.
     # Sowing Mycospawn's "When you cast this spell, if it was kicked, exile
-    # target land" - deliberately has no entry: kicked-ness is not tracked
-    # (CR 702.33a), so it would fire when it should not have triggered at all
-    # (CR 603.4).
+    # target land" - deliberately has no entry: once its intervening *if*
+    # (CR 603.4, CR 702.33d - read off `Game.cast_record(spell).kicked` by
+    # `machines/triggers.intervening_if_holds`) lets it trigger at all, "exile
+    # target land" is one clause of `parse_targeted_effect`'s shape, read off
+    # the ability's own printed text, so `trigger_effect_for`'s fallback
+    # reaches it the same way Devourer of Destiny's does above.
+    #
+    ("Vexing Bauble", TriggerEvent.CAST_SPELL, ""): vexing_bauble_counter,
     #
     # Ranger-Captain of Eos's "you may search your library for a creature card
     # with mana value 1 or less, reveal it, put it into your hand, then
@@ -2625,12 +2655,11 @@ TRIGGER_EFFECTS: dict[TriggerKey, AbilityEffect] = {
     # Drowner of Truth's cast trigger - "create two 0/1 colorless Eldrazi
     # Spawn creature tokens with 'Sacrifice this token: Add {C}.'" - is not
     # entered here any more either: the same shape, quoted rules text
-    # included. It never actually resolves in a real game yet: its
-    # intervening *if* ("if {C} was spent to cast it") is not one of the
-    # shapes `intervening_if_holds` reads, so CR 603.4 fails it closed and the
-    # trigger never goes on the stack at all - true before this wave and true
-    # after it, since `drowner_of_truth_cast` was never reached either. See
-    # `docs/engine-coverage.md`.
+    # included. Its intervening *if* ("if {C} was spent to cast it") now reads
+    # `Game.cast_record(spell).mana_of_color_spent(Color.COLORLESS)` off
+    # CR 601.2h's payment (`machines/triggers.intervening_if_holds`), so the
+    # trigger only reaches the stack - and this fallback only runs - when
+    # colorless mana genuinely paid for it.
     #
     # Wurmcoil Engine's dies trigger - two tokens, "with deathtouch and a ...
     # token with lifelink" - is not entered here any more either: CR 608.2c's

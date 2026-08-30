@@ -104,13 +104,14 @@ def test_drowner_of_truth_quoted_rules_text_parses_into_two_working_spawn():
     ability works once it is on the battlefield.
 
     This is a direct check of the parsed function rather than a full game:
-    `Drowner of Truth`'s trigger never actually reaches the stack in this
-    engine, because its intervening *if* - "if {C} was spent to cast it" -
-    needs spent-mana tracking `intervening_if_holds` does not have, and CR
-    603.4 fails an unreadable condition closed rather than open (see
-    `docs/engine-coverage.md`). That gap predates this wave and is not this
-    parser's to fix; what this test proves is that *if* the trigger ever did
-    fire, the token half is read correctly off the card's own text.
+    it builds the `AbilityOnStack` by hand instead of casting the card and
+    letting its intervening *if* - "if {C} was spent to cast it" - decide
+    whether the trigger reaches the stack at all (`machines/triggers.
+    intervening_if_holds` now reads that off `Game.cast_record`; see
+    `tests/scenarios/test_intervening_if.py` for the full-game version, both
+    branches). What this test proves is narrower and still useful on its own:
+    the token half is read correctly off the card's own text, independent of
+    whether the trigger fires.
     """
     text = _triggered_effect_text("Drowner of Truth", TriggerEvent.CAST_SPELL)
     effect = parse_mixed_effect(text)

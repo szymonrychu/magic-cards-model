@@ -239,6 +239,13 @@ class CastRecord(BaseModel):
     - `mode_targets` - CR 700.2f: a modal spell may have "different targeting
       requirements for each mode", so each chosen mode keeps its own slice of
       what was targeted rather than sharing one flat list.
+    - `mana_spent` - CR 601.2h is where the total cost's mana is actually spent;
+      Vexing Bauble's "if no mana was spent to cast it" and Wistfulness's "if
+      {G}{G} was spent to cast it" both read this after the fact
+      (`machines/triggers.intervening_if_holds`).
+    - `kicked` - CR 702.33d: a spell is "kicked" once its controller declares
+      the intention to pay a kicker cost, which the linked ability's "if it
+      was kicked" (CR 702.33a) checks afterwards.
 
     Written by `Game.note_cast`, which `machines/casting.py` calls as the spell
     goes on the stack.
@@ -255,6 +262,26 @@ class CastRecord(BaseModel):
     `modes` - `mode_targets[i]` is what mode `modes[i]` targets."""
     x_value: int = 0
     """The value announced for X (CR 107.3a), which a mode's target count may use."""
+    mana_spent: dict[Color, int] = Field(default_factory=dict)
+    """How much mana of each colour was spent paying the total cost (CR 601.2h),
+    taken from `machines/cost.ManaPayment.spend`. Colourless mana spent on a
+    `{C}` symbol or on generic is `Color.COLORLESS`, same as everywhere else in
+    this engine. Empty means either no mana was spent, or the spell was cast
+    without going through `Casting` at all - the two are indistinguishable here,
+    which is why `any_mana_spent` is the question to ask rather than truthiness
+    of the dict alone when that distinction matters."""
+    kicked: int = 0
+    """How many times a kicker cost was paid (CR 702.33d), copied from
+    `Casting.kicked`."""
+
+    def mana_of_color_spent(self, color: Color) -> int:
+        """How much mana of this colour was spent paying the total cost (CR 601.2h)."""
+        return self.mana_spent.get(color, 0)
+
+    @property
+    def any_mana_spent(self) -> bool:
+        """CR 601.2h: whether any mana at all was spent paying the total cost."""
+        return sum(self.mana_spent.values()) > 0
 
 
 class ShieldKind(StrEnum):
@@ -942,6 +969,8 @@ class Game(BaseModel):
         modes: list[int] | None = None,
         mode_targets: list[list[TargetRef]] | None = None,
         x_value: int = 0,
+        mana_spent: dict[Color, int] | None = None,
+        kicked: int = 0,
     ) -> "CastRecord":
         """Record how a spell was cast, for the rules that ask afterwards.
 
@@ -962,6 +991,9 @@ class Game(BaseModel):
         - **CR 700.2f** - "Modal spells ... may have different targeting
           requirements for each mode", so each mode keeps its own slice of
           what was targeted rather than one flat list shared by all of them.
+        - **CR 601.2h / CR 702.33d** - what mana was spent paying the total
+          cost, and whether a kicker cost was among the costs paid; both are
+          read afterwards by `machines/triggers.intervening_if_holds`.
 
         `machines/casting.py` calls this as the spell goes on the stack. A spell
         cast without going through a `Casting` has no record and is treated as
@@ -973,6 +1005,8 @@ class Game(BaseModel):
             modes=list(modes or []),
             mode_targets=[list(slice_) for slice_ in mode_targets or []],
             x_value=x_value,
+            mana_spent=dict(mana_spent or {}),
+            kicked=kicked,
         )
         self.cast_records[spell.id] = record
         return record
@@ -1055,6 +1089,12 @@ class Game(BaseModel):
             # graveyard straight from the stack.
             self.fizzled.append(spell.id)
             self.put_into_graveyard(spell)
+            # Same cleanup as the successful path below: nothing further on
+            # this route will read what was announced for this spell, and
+            # `machines/triggers._cast_record_for_clause` now fails an
+            # intervening *if* closed rather than misreading a lingering
+            # record as "nothing was spent" once it is gone.
+            self.cast_records.pop(spell.id, None)
             self._before_priority()
             return spell
 
@@ -1217,6 +1257,13 @@ class Game(BaseModel):
         usually about the source and there is nothing left to read it against -
         and CR 113.7a says the ability resolves regardless of what happened to
         its source.
+
+        `ability.event` is threaded through here because a non-self-referential
+        "it" - Vexing Bauble's "Whenever a player casts a spell, if no mana was
+        spent to cast it" - means the *cast spell*, not Vexing Bauble. Without
+        the event, `_cast_record_for_clause` falls back to `game.cast_record`
+        of the ability's own source, which is the wrong object for exactly the
+        clause shape this recheck exists to handle.
         """
         printed = ability.ability
         if not isinstance(printed, TriggeredAbility) or not printed.intervening_if:
@@ -1224,7 +1271,7 @@ class Game(BaseModel):
         source = ability.source(self)
         if source is None:
             return True
-        return intervening_if_holds(self, printed, source)
+        return intervening_if_holds(self, printed, source, ability.event)
 
     # -- events and triggered abilities (CR 603) ---------------------------
 
@@ -2579,6 +2626,13 @@ class Game(BaseModel):
         self.stack.remove(spell)
         if isinstance(spell, CardState):
             self.put_into_graveyard(spell)
+            # Same cleanup `resolve_top` does on every other way off the
+            # stack: a countered spell will not be read again through the
+            # normal fast-forward paths, and a `CastRecord` this module can no
+            # longer answer for now fails an intervening *if* closed
+            # (`machines/triggers._cast_record_for_clause`) instead of a
+            # lingering record being misread as "nothing was spent".
+            self.cast_records.pop(spell.id, None)
         self.emit(
             GameEvent(
                 event=TriggerEvent.SPELL_IS_COUNTERED,
