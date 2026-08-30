@@ -59,6 +59,7 @@ from ..machines.effects import (
     DelayedClauseNotice,
     ImprintNotice,
     ModeNotice,
+    UnmodeledTriggerEffectNotice,
     activated_effect_for,
     effect_for,
     trigger_effect_for,
@@ -566,6 +567,18 @@ class Game(BaseModel):
     characteristic-defining ability the engine reads. `power or 0` used to
     fold that into a real 0 rather than record the gap; now the creature
     assigns no combat damage for the step and this is why, the same
+    unreadable-is-not-the-same-as-no-effect record every other notice list
+    here keeps."""
+
+    unmodeled_trigger_effect_notices: list[UnmodeledTriggerEffectNotice] = Field(
+        default_factory=list
+    )
+    """One entry per triggered ability whose condition fired for real but whose
+    resolution clause names a mechanism this engine has no primitive for at
+    all - a per-instance cast permission, an unbounded card-count choice, a
+    target restricted by the trigger event rather than the ability's own
+    printed text. See `UnmodeledTriggerEffectNotice`'s own docstring for the
+    three cases this wave found (Ragavan, Nashi, Questing Beast). The same
     unreadable-is-not-the-same-as-no-effect record every other notice list
     here keeps."""
 
@@ -2694,6 +2707,7 @@ class Game(BaseModel):
                 subject_card=source.card if source is not None else None,
                 player=target.username if isinstance(target, Player) else None,
                 combat=event.combat,
+                amount=event.amount,
             )
         )
         return event.amount

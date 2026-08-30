@@ -118,6 +118,16 @@ class GameEvent(BaseModel):
 
     step: Step | None = None
 
+    amount: int | None = None
+    """How much, for an event a later clause refers back to by number rather
+    than by object - "that much damage" (Questing Beast), "that many cards"
+    (Nashi, Searcher in the Dark) - which is CR 607.1's linked-ability shape
+    read within one ability rather than across two: the condition clause
+    establishes the quantity and the effect clause points back at it. Only a
+    damage event populates this today, with the amount CR 615.1's prevention
+    and CR 608.2b's legality checks already settled on (`Game.deal_damage`'s
+    own `event.amount` after replacement, not the raw amount requested)."""
+
 
 class TargetingNoticeKind(StrEnum):
     """Why a triggered ability went on the stack with no targets chosen."""

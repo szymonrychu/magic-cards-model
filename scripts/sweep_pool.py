@@ -268,15 +268,19 @@ def has_rules_text(printing: Card) -> bool:
 #: otherwise-unreadable clause, to one of these three inline stand-ins - see
 #: `_ability_effect_or_notice`/`_spell_effect_or_notice` in `machines/effects.py`.
 #: Each records a notice (`AnaphoricClauseNotice`, `DelayedClauseNotice`,
-#: `ImprintNotice`) and does nothing else, which is correct, fail-closed
-#: behaviour rather than a card silently doing nothing - so a dispatcher
-#: returning one of these by name is "notice", not "handled".
+#: `ImprintNotice`, `UnmodeledTriggerEffectNotice`) and does nothing else,
+#: which is correct, fail-closed behaviour rather than a card silently doing
+#: nothing - so a dispatcher returning one of these by name is "notice", not
+#: "handled".
 _NOTICE_STAND_IN_NAMES = frozenset(
     {
         "anaphoric_notice_only",
         "delayed_notice_only",
         "imprint_notice_only",
         "conditional_notice_only",
+        "cast_permission_notice_only",
+        "unbounded_hand_choice_notice_only",
+        "event_player_target_notice_only",
     }
 )
 
