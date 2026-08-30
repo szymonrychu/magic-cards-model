@@ -237,6 +237,26 @@ class Card(ScryfallModel):
         return Type.CREATURE in self.types
 
     @property
+    def front_face(self) -> "CardFace | None":
+        """This card's front face, or None for a single-faced card (CR 712.2a,
+        712.3a).
+
+        Scryfall leaves the top-level `power`, `toughness`, `oracle_text` and
+        `colors` null for a `transform` or `modal_dfc` card and puts each
+        face's own values on `card_faces` instead - the top-level fields exist
+        for split, adventure and (usually) meld cards, where the top-level
+        value is still meaningful. `front_face` is the fallback callers reach
+        for when a top-level field comes back empty on a card that has faces:
+        CR 712.8a makes the front face this card's only characteristics
+        outside the battlefield and stack, and CR 712.8d makes it the same
+        while a double-faced permanent has its front face up, so "the front
+        face when there is one" is the right default nearly everywhere -
+        `CardState` layers a land face or a flipped face on top of it where
+        CR 712.8f or CR 712.12 says otherwise.
+        """
+        return self.card_faces[0] if self.card_faces else None
+
+    @property
     def land_face(self) -> "CardFace | None":
         """This card's land face, or None (CR 712.12).
 

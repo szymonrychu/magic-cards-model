@@ -17,7 +17,14 @@ from ..machines.abilities import (
     TriggerEvent,
     parse_abilities,
 )
-from ..machines.combat import Attack, CombatMachine, EvasionNotice, Keyword, has_keyword
+from ..machines.combat import (
+    Attack,
+    CombatMachine,
+    EvasionNotice,
+    Keyword,
+    UndefinedPowerNotice,
+    has_keyword,
+)
 from ..machines.cost import (
     CostComponent,
     CostModifierKind,
@@ -542,6 +549,15 @@ class Game(BaseModel):
     fails closed here instead of a block silently going through unrestricted,
     the same unreadable-is-not-the-same-as-no-effect record every other
     notice list here keeps."""
+
+    undefined_power_notices: list[UndefinedPowerNotice] = Field(default_factory=list)
+    """One entry per creature `combat._power_of` was asked to assign combat
+    damage for but could not compute a power for - a printed `*` with no
+    characteristic-defining ability the engine reads. `power or 0` used to
+    fold that into a real 0 rather than record the gap; now the creature
+    assigns no combat damage for the step and this is why, the same
+    unreadable-is-not-the-same-as-no-effect record every other notice list
+    here keeps."""
 
     spells_cast_this_turn: dict[str, list[CardState]] = Field(default_factory=dict)
     """Every spell each player has cast this turn, keyed by controller
