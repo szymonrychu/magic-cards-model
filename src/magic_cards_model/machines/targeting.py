@@ -325,12 +325,10 @@ class TargetRequirement(BaseModel):
             if self.excluded_card_types and (current_types & self.excluded_card_types):
                 unwanted = " or ".join(sorted(kind.value for kind in self.excluded_card_types))
                 return f"{self.phrase} cannot target a {unwanted}, and {target.name} is one"
-        if self.required_supertypes and not (
-            set(target.card.supertypes) & self.required_supertypes
-        ):
+        if self.required_supertypes and not (set(target.supertypes) & self.required_supertypes):
             wanted = " or ".join(sorted(kind.value for kind in self.required_supertypes))
             return f"{self.phrase} needs a {wanted} permanent, and {target.name} is not one"
-        if self.excluded_supertypes and (set(target.card.supertypes) & self.excluded_supertypes):
+        if self.excluded_supertypes and (set(target.supertypes) & self.excluded_supertypes):
             unwanted = " or ".join(sorted(kind.value for kind in self.excluded_supertypes))
             return f"{self.phrase} cannot target a {unwanted} permanent, and {target.name} is one"
         if self.must_be_tapped is not None and target.tapped is not self.must_be_tapped:
@@ -399,7 +397,7 @@ class TargetRequirement(BaseModel):
         characteristics_of = getattr(game, "characteristics_of", None)
         if target.zone is Zone.BATTLEFIELD and characteristics_of is not None:
             return characteristics_of(target).types
-        return target.card.types
+        return target.types
 
     def _rejects_comparison(self, target: CardState, game: Any) -> str | None:
         """ "with mana value N or less" and its power/toughness relatives.
@@ -447,7 +445,7 @@ class TargetRequirement(BaseModel):
             # Off the battlefield, no layer applies, so the printed values are
             # the only ones there are to compare against (CR 613's layers are
             # all about permanents).
-            mana_value, power, toughness = target.card.cmc, target.power, target.toughness
+            mana_value, power, toughness = target.mana_value, target.power, target.toughness
         if self.comparison_attribute is ComparisonAttribute.MANA_VALUE:
             values: list[float] = [mana_value]
         elif self.comparison_attribute is ComparisonAttribute.POWER:

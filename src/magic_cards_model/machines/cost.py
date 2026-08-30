@@ -85,7 +85,7 @@ def is_snow_source(source: CardState) -> bool:
     Read off the printed type line, since nothing in this engine grants or
     removes a supertype yet.
     """
-    return Supertype.SNOW in source.card.supertypes
+    return Supertype.SNOW in source.supertypes
 
 
 # --------------------------------------------------------------------------

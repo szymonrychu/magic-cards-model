@@ -3,20 +3,17 @@
 here at all). Leyline of Abundance's activated ability and Ouroboroid's own
 variable-X triggered ability are the two cards in the pool with this shape;
 Ajani, Nacatl Pariah's own "+2: Put a +1/+1 counter on each Cat you control."
-prints the identical shape with a subtype instead of a card type, but that
-ability sits on his *back* face (Ajani, Nacatl Avenger), and this engine does
-not yet feed a transformed permanent's characteristics off anything but its
-front face (`docs/engine-coverage.md`'s "A double-faced creature's power,
-toughness, oracle text and colors" row, and `CardState.transformed`'s own
-docstring: "nothing reads `transformed` yet"). The subtype read is instead
-proven against Ocelot Pride, a real single-faced Cat creature, going through
-the exact same generalised parser Ajani's own text would reach.
+prints the identical shape with a subtype instead of a card type. That ability
+sits on his *back* face (Ajani, Nacatl Avenger), and is now reachable through a
+live game: CR 712.8e gives a transformed permanent only its back face's
+characteristics, abilities included (CR 109.3), which is what
+`test_ajanis_plus_two_puts_a_counter_on_each_cat_he_controls` below drives. The
+same subtype read is also proven against Ocelot Pride, a real single-faced Cat
+creature, going through the exact same generalised parser.
 
 Every CR number here was looked up with `knowledge_search(type="rules")` in
 the session that wrote this file.
 """
-
-import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.abilities import parse_abilities
@@ -156,12 +153,12 @@ def test_ouroboroids_own_x_is_zero_if_it_has_already_left_the_battlefield():
 
 
 def test_the_cat_subtype_shape_reads_the_computed_board_not_the_printed_type_line():
-    """Ajani's own template - "each Cat you control" - proven against Ocelot
-    Pride (a real, single-faced Cat creature) rather than Ajani himself: see
-    this file's module docstring for why Ajani's own +2 cannot be driven
-    through a real game yet. `_parse_put_counters_on_group_clause` is exactly
-    what his text would reach, so this exercises the same code path his +2
-    would (CR 613.4, CR 613.5, CR 205.3)."""
+    """Ajani's own template - "each Cat you control" - against Ocelot Pride, a
+    real single-faced Cat creature, with the clause called directly rather than
+    through an activation. The live-game half is
+    `test_ajanis_plus_two_puts_a_counter_on_each_cat_he_controls` below; this
+    one pins the parser's own subtype read against the *computed* board
+    (CR 613.4, CR 613.5, CR 205.3) with no transform in the way."""
     effect = _parse_put_counters_on_group_clause("Put a +1/+1 counter on each Cat you control.")
     assert effect is not None
 
@@ -184,26 +181,41 @@ def test_the_cat_subtype_shape_reads_the_computed_board_not_the_printed_type_lin
     assert bears.counter_count(Counter.PLUS_ONE) == 0
 
 
-@pytest.mark.xfail(
-    reason=(
-        "Ajani, Nacatl Pariah's +2 is printed on his back face (Ajani, Nacatl "
-        "Avenger); this engine's `CardState.transformed` does not yet feed "
-        "characteristics (docs/engine-coverage.md), so `activated_abilities_of` "
-        "still reads only his front face and never finds a loyalty ability to "
-        "activate at all. The counter-placement shape itself is proven working "
-        "in test_the_cat_subtype_shape_reads_the_computed_board_not_the_printed_"
-        "type_line above."
-    )
-)
 def test_ajanis_plus_two_puts_a_counter_on_each_cat_he_controls():
+    """Ajani, Nacatl Pariah's own printed shape, driven through a live game.
+
+    CR 701.27a turns him over; CR 712.8e then gives him "only the
+    characteristics of his back face", so Ajani, Nacatl Avenger's `+2` is an
+    ability he actually has (CR 109.3 counts abilities among an object's
+    characteristics) and CR 606.4's loyalty cost is payable against the loyalty
+    counters CR 306.5b put on as he entered transformed.
+
+    He is no longer a Cat himself once transformed (CR 205.3: the back face's
+    type line is "Legendary Planeswalker — Ajani"), so the counter lands on
+    Ocelot Pride alone - the group read is against the *computed* board
+    (CR 613.5), which is what makes that fall out rather than needing a check.
+    """
     scenario = (
         Scenario().player("alice", battlefield=["Ajani, Nacatl Pariah", "Ocelot Pride"]).build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
     ajani = scenario.creature("Ajani, Nacatl Pariah", "alice")
-    ajani.transform()
     cat = scenario.creature("Ocelot Pride", "alice")
 
+    # CR 712.14a's "return him to the battlefield transformed" is his own
+    # trigger's wording; entering transformed is what brings the loyalty
+    # counters with it (CR 306.5b), so it is the route used here too.
+    ajani = scenario.game.put_onto_battlefield(
+        scenario.game.exile_permanent(ajani), "alice", transformed=True
+    )
+    assert ajani.name == "Ajani, Nacatl Avenger"
+    assert ajani.loyalty == 3
+    plus_two = scenario.game.activated_abilities(ajani)[0]
+    assert plus_two.cost == "+2"
+
     scenario.activate(ajani, index=0)  # the +2
+    scenario.resolve_top()
 
     assert cat.counter_count(Counter.PLUS_ONE) == 1
+    assert ajani.counter_count(Counter.PLUS_ONE) == 0, "a transformed Ajani is not a Cat"
+    assert ajani.loyalty == 5, "CR 606.4: +2 puts two loyalty counters on as its cost"

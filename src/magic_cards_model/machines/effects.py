@@ -1606,7 +1606,7 @@ def has_land_type(*subtypes: str) -> Callable[[CardState], bool]:
     wanted = {subtype.lower() for subtype in subtypes}
 
     def matches(state: CardState) -> bool:
-        return bool(wanted & {subtype.lower() for subtype in state.card.subtypes})
+        return bool(wanted & {subtype.lower() for subtype in state.subtypes})
 
     return matches
 
@@ -1665,7 +1665,7 @@ def _named_type_matcher(word: str) -> Callable[[CardState], bool]:
             excluded = Type(word[3:].lower())
         except ValueError:
             return lambda state: False
-        return lambda state: excluded not in state.card.types
+        return lambda state: excluded not in state.types
     land_type = has_land_type(word)
     try:
         card_type: Type | None = Type(word.lower())
@@ -1673,7 +1673,7 @@ def _named_type_matcher(word: str) -> Callable[[CardState], bool]:
         card_type = None
 
     def matches(state: CardState) -> bool:
-        return land_type(state) or (card_type is not None and card_type in state.card.types)
+        return land_type(state) or (card_type is not None and card_type in state.types)
 
     return matches
 
@@ -1696,8 +1696,8 @@ def _quality_word_matcher(word: str) -> Callable[[CardState], bool]:
         color = _HAND_EXILE_COLOR_WORDS[parts[0]]
         type_matches = _named_type_matcher(parts[1])
         if color is None:
-            return lambda state: not state.card.colors and type_matches(state)
-        return lambda state: color in (state.card.colors or []) and type_matches(state)
+            return lambda state: not state.colors and type_matches(state)
+        return lambda state: color in state.colors and type_matches(state)
     return _named_type_matcher(word)
 
 
@@ -1715,7 +1715,7 @@ def _quality_matcher(quality: str) -> Callable[[CardState], bool]:
         rest = _quality_matcher(lowered.removeprefix("basic "))
 
         def basic_matches(state: CardState) -> bool:
-            return rest(state) and Supertype.BASIC in state.card.supertypes
+            return rest(state) and Supertype.BASIC in state.supertypes
 
         return basic_matches
     words = [word.strip() for word in re.split(r",\s*|\s+or\s+", lowered) if word.strip()]
@@ -1754,7 +1754,7 @@ def _bounded_quality_matcher(quality: str, max_mv: str | None) -> Callable[[Card
     ceiling = int(max_mv)
 
     def matches(state: CardState) -> bool:
-        return base(state) and (state.card.cmc or 0) <= ceiling
+        return base(state) and state.mana_value <= ceiling
 
     return matches
 
@@ -3926,6 +3926,124 @@ def _parse_sacrifice_unless_pay_energy(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "Transform this creature." / "Transform this permanent." - CR 701.27a's
+#: self-referential form, the only one the werewolves and their cousins print
+#: on the ability that does it. A clause naming some *other* permanent
+#: ("transform target creature") needs target resolution this template does not
+#: have and is deliberately not matched, the same restriction
+#: `_SACRIFICE_UNLESS_PAY_ENERGY_RE` above holds itself to.
+_TRANSFORM_SELF_RE = re.compile(
+    r"^transform this (?:creature|permanent|artifact|enchantment|planeswalker|land|token)\.?$",
+    re.IGNORECASE,
+)
+
+
+#: "you may exile <this object's name>, then return him/her/it/them to the
+#: battlefield[ tapped][ transformed] under his/her/its/their owner's control."
+#: - Ajani, Nacatl Pariah's Cats-die trigger, and the same self-referential
+#: blink idiom wherever else it is printed. The targeted twin is
+#: `_RETURN_TO_BATTLEFIELD_RE` above, which reads "exile *target* X, then
+#: return it ..."; this one names its own object instead (CR 201.5: "text that
+#: refers to the object it's on by name means just that particular object"), so
+#: there is no target and CR 608.2b's recheck has nothing to check.
+#:
+#: The control clause is required, exactly as it is for the targeted shape: a
+#: bare "return him to the battlefield" names no controller, and CR 110.2a
+#: leaves that to the effect, which one regex on one sentence cannot decide.
+_MAY_EXILE_SELF_THEN_RETURN_RE = re.compile(
+    r"^you may exile (?P<name>[^,]+), then return (?:it|him|her|them)"
+    r" to the battlefield"
+    r"(?P<tapped> tapped)?"
+    r"(?P<transformed> transformed)?"
+    r" under (?:its|his|her|their) owner's control\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_may_exile_self_then_return_clause(text: str) -> AbilityEffect | None:
+    """ "You may exile <this>, then return it to the battlefield transformed
+    under its owner's control." as one CR 608.2c instruction.
+
+    Ajani, Nacatl Pariah's "Whenever one or more other Cats you control die"
+    trigger, read off its own printed text with no registry row. Two rules make
+    it one instruction rather than two:
+
+    - CR 201.5 - the name is a reference to the very object the ability is on,
+      so the exile needs no target and no choice of what to exile.
+    - CR 712.14a - "transformed" describes how it *enters*, which is why the
+      return goes through `Game.put_onto_battlefield(transformed=True)` rather
+      than transforming the permanent afterwards: CR 306.5b's loyalty counters
+      are put on as it enters, and read off the face that is up.
+
+    The "you may" is `DecisionKind.MAY` (CR 608.2d), the same shape
+    `_parse_conditional_sacrifice_clause` uses. Declining does nothing at all;
+    accepting runs both halves or, if CR 111.8 refuses the exile for a token,
+    neither - never the exile alone, which would be strictly worse than doing
+    nothing (the trap `_LOOKS_LIKE_RETURN_TO_BATTLEFIELD_RE` exists for).
+    """
+    match = _MAY_EXILE_SELF_THEN_RETURN_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    named = match.group("name").strip()
+    tapped = match.group("tapped") is not None
+    transformed = match.group("transformed") is not None
+    prompt = f"exile {named}, then return {'it' if not transformed else 'it transformed'}"
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        # CR 201.5: the name means *this* object. A source whose name has
+        # nothing to do with the printed one is not what this sentence is
+        # about, so nothing happens rather than the wrong permanent blinking.
+        if named.lower() not in (source.name or "").lower():
+            return
+        decision = Decision(
+            kind=DecisionKind.MAY,
+            player=ability.controller,
+            prompt=prompt,
+            source=ability.source_name,
+            affirmative_is_legal=True,
+        )
+        if not game.ask(decision):
+            return
+        exiled = game.exile_permanent(source)
+        if exiled.zone is not Zone.EXILE:
+            return  # CR 111.8: a token refused the move; nothing to return.
+        owner = exiled.owner or ability.controller
+        game.put_onto_battlefield(exiled, owner, tapped=tapped, transformed=transformed)
+
+    return effect
+
+
+def _parse_transform_clause(text: str) -> AbilityEffect | None:
+    """CR 701.27a: "To transform a permanent, turn it over so that its other
+    face is up", read off the ability's own printed text.
+
+    Duskwatch Recruiter's "At the beginning of each upkeep, if no spells were
+    cast last turn, transform this creature." and Krallenhorde Howler's mirror
+    on the back face both reach this, with no per-card row: the CR 603.4
+    intervening *if* is checked by `machines/triggers.py` before the ability
+    ever triggers, so all this clause has to do is the turning over.
+
+    CR 712.9 limits transforming to a permanent represented by a double-faced
+    card or token, and `CardState.transform` enforces that itself - a
+    single-faced permanent told to transform does nothing (CR 701.28c's
+    wording for the sibling action). The source having left the battlefield is
+    the other no-op: CR 701.27a turns a *permanent* over.
+    """
+    if _TRANSFORM_SELF_RE.fullmatch(text.strip()) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        source.transform()
+
+    return effect
+
+
 def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     """`parse_mixed_effect` on `effect_text`, or - if that failed specifically
     on an unreadable anaphoric second clause - a stand-in effect that records
@@ -3977,6 +4095,12 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     mana_adding = _parse_mana_adding_trigger(effect_text)
     if mana_adding is not None:
         return mana_adding
+    transform_self = _parse_transform_clause(effect_text)
+    if transform_self is not None:
+        return transform_self
+    exile_self_then_return = _parse_may_exile_self_then_return_clause(effect_text)
+    if exile_self_then_return is not None:
+        return exile_self_then_return
     sacrifice_unless_energy = _parse_sacrifice_unless_pay_energy(effect_text)
     if sacrifice_unless_energy is not None:
         return sacrifice_unless_energy
@@ -4212,8 +4336,8 @@ def _parse_x_energy_pay_destroy_by_mana_value(text: str) -> Effect | None:
         candidates = [
             permanent
             for permanent in list(game.battlefield)
-            if set(permanent.card.types) & {Type.ARTIFACT, Type.CREATURE, Type.ENCHANTMENT}
-            and (permanent.card.cmc or 0) <= paid
+            if set(permanent.types) & {Type.ARTIFACT, Type.CREATURE, Type.ENCHANTMENT}
+            and permanent.mana_value <= paid
         ]
         for permanent in candidates:
             if permanent.zone is Zone.BATTLEFIELD:
@@ -4895,9 +5019,14 @@ def _parse_exile_then_return_clause_pair(
                 continue  # CR 111.8: a token refused the move; nothing to return.
             owner = exiled.owner or controller
             new_controller = owner if control == "its owner's" else controller
-            returned = game.put_onto_battlefield(exiled, new_controller, tapped=tapped)
-            if transformed and returned.zone is Zone.BATTLEFIELD:
-                returned.transform()
+            # CR 712.14a: "transformed" is how it *enters*, not something done
+            # to it afterwards - the difference is CR 306.5b's loyalty
+            # counters, which are put on as it enters and read off the face
+            # that is up. Transforming after the fact left a planeswalker back
+            # face on the battlefield at 0 loyalty, dead to CR 704.5i.
+            game.put_onto_battlefield(
+                exiled, new_controller, tapped=tapped, transformed=transformed
+            )
 
     return effect
 
@@ -5053,13 +5182,13 @@ def _hand_exile_quality_matcher(quality: str) -> Callable[[CardState], bool] | N
     if lowered in _HAND_EXILE_COLOR_WORDS:
         color = _HAND_EXILE_COLOR_WORDS[lowered]
         if color is None:
-            return lambda state: not state.card.colors
-        return lambda state: color in (state.card.colors or [])
+            return lambda state: not state.colors
+        return lambda state: color in state.colors
     try:
         card_type = Type(lowered)
     except ValueError:
         return None
-    return lambda state: card_type in state.card.types
+    return lambda state: card_type in state.types
 
 
 def _hand_exile_mv_matcher(mv: str | None, cmp: str | None) -> Callable[[CardState], bool]:
@@ -5072,8 +5201,8 @@ def _hand_exile_mv_matcher(mv: str | None, cmp: str | None) -> Callable[[CardSta
         return lambda state: True
     bound = int(mv)
     if cmp == "greater":
-        return lambda state: (state.card.cmc or 0) >= bound
-    return lambda state: (state.card.cmc or 0) <= bound
+        return lambda state: state.mana_value >= bound
+    return lambda state: state.mana_value <= bound
 
 
 def _hand_exile_description(match: re.Match[str]) -> str:
@@ -5340,7 +5469,7 @@ def _sacrifice_restriction(
                 for permanent in game.battlefield
                 if permanent.controller == player.username
                 and permanent.id != source_id
-                and card_type in permanent.card.types
+                and card_type in permanent.types
             ]
 
         return False, other_candidates
@@ -5359,7 +5488,7 @@ def _sacrifice_restriction(
             return [
                 permanent
                 for permanent in game.battlefield
-                if permanent.controller == player.username and card_type in permanent.card.types
+                if permanent.controller == player.username and card_type in permanent.types
             ]
 
         return False, any_candidates
@@ -6917,7 +7046,7 @@ def _nonland_or_typed_card_matcher(quality: str) -> Callable[[CardState], bool] 
             return None
 
         def not_matches(state: CardState) -> bool:
-            return excluded not in state.card.types
+            return excluded not in state.types
 
         return not_matches
     return _quality_matcher(quality)
@@ -7946,7 +8075,7 @@ def _bring_in_from_outside_the_game_or_exile(
     controller = game.player(ability.controller)
 
     def is_wanted(state: CardState, card_type: Type) -> bool:
-        return card_type in state.card.types
+        return card_type in state.types
 
     outside = controller.owned_outside_the_game(lambda state: is_wanted(state, quality))
     in_exile = game.face_up_cards_in_exile(
