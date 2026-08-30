@@ -1,5 +1,6 @@
 """A player: their name, their zones, and the cards in them."""
 
+from collections.abc import Callable
 from random import Random
 from typing import Any
 
@@ -118,6 +119,84 @@ class Player(BaseModel):
 
     def cards_in(self, zone: Zone) -> list[CardState]:
         return self.zones.setdefault(zone, [])
+
+    # -- outside the game (CR 400.11) --------------------------------------
+
+    @property
+    def outside_the_game(self) -> list[CardState]:
+        """The cards this player has outside the game (CR 400.11a).
+
+        "Cards in a player's sideboard are outside the game." The sideboard is
+        the only group of outside-the-game cards this model keeps, so this is
+        the sideboard read at the level the rules talk about it - and it is a
+        *reading*, not a second store: `models/zone.py` explains why outside
+        the game is not a zone and `Zone.SIDEBOARD` is where the objects live.
+
+        The distinction matters for what a card out here may do. CR 400.11c:
+        "Cards outside the game can't be affected by spells or abilities,
+        except for characteristic-defining abilities printed on them ... and
+        spells and abilities that allow those cards to be brought into the
+        game." Nothing in this engine iterates the sideboard as though it were
+        a zone of the game, and nothing should start.
+        """
+        return self.sideboard
+
+    def owned_outside_the_game(
+        self, matches: "Callable[[CardState], bool] | None" = None
+    ) -> list[CardState]:
+        """The outside-the-game cards this player *owns*, optionally filtered.
+
+        CR 108.3b: "Some spells and abilities allow a player to take cards they
+        own from outside the game and bring them into the game." Owning is the
+        gate - "you own", not "you control" - and CR 108.3b fixes the owner of
+        an outside-the-game card as "the player who started the game with it in
+        their sideboard", which `Player.add` stamps in `load_deck`.
+
+        A card sitting in this player's sideboard that somebody else owns is
+        therefore not theirs to bring in, and is filtered out here rather than
+        being caught later: `Player.add` only fills in a blank owner, so a
+        sideboard can hold an object stamped for another player.
+        """
+        return [
+            state
+            for state in self.outside_the_game
+            if state.owner == self.username and (matches is None or matches(state))
+        ]
+
+    def bring_into_the_game(self, card_state: CardState, zone: Zone = Zone.HAND) -> CardState:
+        """Take a card this player owns from outside the game into `zone`.
+
+        CR 400.11b: "Some effects bring cards into a game from outside the
+        game. Those cards remain in the game until the game ends, their owner
+        leaves the game, or a rule or effect removes them from the game,
+        whichever comes first." Nothing puts a card back out, so this is a
+        one-way move, and the card is an ordinary object of its new zone from
+        here on.
+
+        Refuses anything CR 108.3b does not allow: a card that is not outside
+        the game at all, and a card this player does not own. Both raise rather
+        than being quietly skipped - a fetch that silently found nothing is the
+        shape of bug this whole subsystem exists to make impossible.
+
+        Note what this does *not* touch: the registered `Deck`. Deck legality
+        (CR 100.2a, 100.4a) is a property of the decklist, checked by
+        `Deck.check_legality` against `Match.decks`, and a card moving out of
+        the physical sideboard mid-game changes neither board of that list.
+        """
+        if not card_state.zone.is_outside_the_game:
+            raise ValueError(
+                f"{card_state.name} is in {card_state.zone.value}, not outside the game "
+                f"(CR 400.11a)"
+            )
+        if card_state.owner != self.username:
+            raise ValueError(
+                f"{self.username} does not own {card_state.name}, so it cannot be brought "
+                f"in from outside the game (CR 108.3b)"
+            )
+        if card_state not in self.outside_the_game:
+            raise ValueError(f"{card_state.name} is not among {self.username}'s outside-game cards")
+        self.move(card_state, zone)
+        return card_state
 
     def add(self, card_state: CardState, zone: Zone) -> None:
         """Put a card into one of this player's zones, and record who owns it.

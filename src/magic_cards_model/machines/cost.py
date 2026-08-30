@@ -40,8 +40,16 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
 
 from ..models.card import Card, Color, Supertype, Type
-from ..models.card_state import CardState, Counter, CounterKind
-from ..models.mana import ManaCost, ManaPayment, ManaPool
+from ..models.card_state import CardState, ChoiceKind, Counter, CounterKind
+from ..models.mana import (
+    ManaCost,
+    ManaPayment,
+    ManaPool,
+    ManaRestriction,
+    ManaSpend,
+    SpendClause,
+    SpendPurpose,
+)
 from ..models.zone import Zone
 from .abilities import (
     ActivatedAbility,
@@ -87,54 +95,213 @@ def is_snow_source(source: CardState) -> bool:
 # --------------------------------------------------------------------------
 
 
-def _restricted_effect(effect: str) -> bool:
-    """True if a mana ability's own effect text restricts how the mana is
-    spent (CR 106.6: Eldrazi Temple, Cavern of Souls).
+# --------------------------------------------------------------------------
+# Reading a CR 106.6 spend restriction off a mana ability's effect text
+# --------------------------------------------------------------------------
+#
+# CR 106.6, looked up this session: "Some spells or abilities that produce mana
+# restrict how that mana can be spent, have an additional effect that affects
+# the spell or ability that mana is spent on, or create a delayed triggered
+# ability..." The restriction half is what this reads; the "additional effect"
+# half (Cavern of Souls's and Delighted Halfling's "and that spell can't be
+# countered", Arena of Glory's haste grant) is a separate clause of the same
+# sentence and remains unmodelled - see `docs/engine-coverage.md`.
+#
+# Four printings in `tests/fixtures/cards/` carry one:
+#
+#   Shang-Chi, Master of Kung Fu
+#     "Spend this mana only to activate abilities of creature sources."
+#   Eldrazi Temple
+#     "Spend this mana only to cast colorless Eldrazi spells or activate
+#      abilities of colorless Eldrazi."
+#   Cavern of Souls
+#     "Spend this mana only to cast a creature spell of the chosen type, and
+#      that spell can't be countered."
+#   Delighted Halfling
+#     "Spend this mana only to cast a legendary spell, and that spell can't be
+#      countered."
+#
+# Anything else that opens "Spend this mana only" and does not fit the grammar
+# below produces a restriction with **no** clauses, which permits nothing at
+# all (`ManaRestriction.allows`). That is the fail-closed direction on purpose:
+# mana that looks spendable and is not is worse than mana that refuses.
 
-    This engine does not model spend restrictions at all - `models/mana.py`'s
-    pool carries no restriction tag once mana is in it (see
-    `docs/engine-coverage.md`) - so there is no way to *check* the restriction
-    was honoured later. The only safe move for an automatic assignment is to
-    never produce mana this way in the first place; `free_tap_mana_ability`
-    is where that exclusion happens.
+_SPEND_RESTRICTION = re.compile(r"Spend this mana only to (?P<what>[^.]+)\.")
+#: Anything that talks about restricting this mana, whether or not the grammar
+#: below could read it - the signal a caller uses to fail closed rather than
+#: silently treat the sentence as absent.
+_SPEND_RESTRICTION_SIGNAL = re.compile(r"[Ss]pend this mana only")
+#: "cast a creature spell of the chosen type", "cast colorless Eldrazi spells".
+_SPEND_CAST_CLAUSE = re.compile(
+    r"^cast (?P<quality>.*?) ?spells?(?P<chosen> of the chosen type)?$", re.IGNORECASE
+)
+#: "activate abilities of creature sources", "activate abilities of colorless
+#: Eldrazi". The trailing "sources" is WOTC's own word for "the object the
+#: ability is on" and narrows nothing further.
+_SPEND_ACTIVATE_CLAUSE = re.compile(
+    r"^activate abilities of (?P<quality>.+?)(?: sources)?$", re.IGNORECASE
+)
+#: A rider joined onto the restriction sentence with ", and" - the
+#: can't-be-countered half of Cavern of Souls and Delighted Halfling. No
+#: printing joins two *alternatives* that way (they use "or"), so everything
+#: from the first ", and" onwards is a different clause of the ability and not
+#: part of what the mana may pay for.
+_SPEND_RIDER = ", and "
+
+_SUPERTYPE_WORDS = {supertype.value: supertype for supertype in Supertype}
+_TYPE_WORDS = {type_.value: type_ for type_ in Type}
+
+
+def _spend_clause(
+    phrase: str, purpose: SpendPurpose, chosen_type: str | None
+) -> SpendClause | None:
+    """Turn one quality phrase into a `SpendClause`, or None if unreadable.
+
+    The vocabulary is deliberately closed: an article, "colorless", a printed
+    supertype, a printed card type, or a capitalised noun read as a subtype
+    (CR 205.3 subtypes are always capitalised on a type line, which is what
+    tells "Eldrazi" apart from "colorless"). A word outside it fails the whole
+    clause rather than being dropped, because a dropped word is a restriction
+    that is quietly broader than the card.
     """
-    return "spend this mana only" in effect.lower()
+    types: set[Type] = set()
+    subtypes: set[str] = set()
+    supertypes: set[Supertype] = set()
+    colorless = False
+
+    for word in phrase.split():
+        stripped = word.strip(",")
+        lowered = stripped.lower()
+        if lowered in {"a", "an", "the"}:
+            continue
+        if lowered == "colorless":
+            colorless = True
+        elif lowered in _SUPERTYPE_WORDS:
+            supertypes.add(_SUPERTYPE_WORDS[lowered])
+        elif lowered.rstrip("s") in _TYPE_WORDS:
+            types.add(_TYPE_WORDS[lowered.rstrip("s")])
+        elif stripped[:1].isupper():
+            subtypes.add(lowered)
+        else:
+            return None
+
+    if chosen_type is not None:
+        subtypes.add(chosen_type.lower())
+
+    return SpendClause(
+        purpose=purpose,
+        types=frozenset(types),
+        subtypes=frozenset(subtypes),
+        supertypes=frozenset(supertypes),
+        colorless=colorless,
+    )
 
 
-def free_tap_mana_ability(card: Card) -> ManaAbility | None:
-    """The one mana ability this card may be tapped for **on the player's
-    behalf**, or None if it has none safe to choose for it.
+def _chosen_creature_type(source: CardState | None) -> str | None:
+    """The creature type recorded on `source` by an "as this enters, choose a
+    creature type" replacement effect (CR 614.12a) - Cavern of Souls's.
+
+    None when nothing was recorded, which makes the clause that needs it
+    unreadable and so fails the restriction closed.
+    """
+    choice = getattr(source, "choice", None) if source is not None else None
+    if choice is None or choice.kind is not ChoiceKind.CREATURE_TYPE:
+        return None
+    return choice.value or None
+
+
+def spend_restriction(effect: str, source: CardState | None = None) -> ManaRestriction | None:
+    """The CR 106.6 restriction this mana ability's effect text puts on the
+    mana it produces, or None if it puts none on.
+
+    `source` is the permanent whose ability this is, needed only for "the
+    chosen type" (CR 614.12a's answer lives on the object that was asked).
+
+    A sentence that opens "Spend this mana only" and cannot be read returns a
+    restriction with no clauses - present, quoting the card, and permitting
+    nothing - rather than None. The two are not the same thing and the caller
+    must not conflate them: None means "this mana is free to spend", an
+    unread restriction means "this engine cannot show the restriction was
+    honoured, so it refuses".
+    """
+    match = _SPEND_RESTRICTION.search(effect)
+    if match is None:
+        if _SPEND_RESTRICTION_SIGNAL.search(effect):
+            return ManaRestriction(text=effect.strip())
+        return None
+
+    text = match.group(0)
+    what = match.group("what").partition(_SPEND_RIDER)[0].strip()
+
+    clauses: list[SpendClause] = []
+    for alternative in what.split(" or "):
+        phrase = alternative.strip()
+        cast = _SPEND_CAST_CLAUSE.match(phrase)
+        activate = _SPEND_ACTIVATE_CLAUSE.match(phrase)
+        if cast is not None:
+            chosen = _chosen_creature_type(source) if cast.group("chosen") else None
+            if cast.group("chosen") and chosen is None:
+                return ManaRestriction(text=text)
+            clause = _spend_clause(cast.group("quality"), SpendPurpose.CAST_SPELL, chosen)
+        elif activate is not None:
+            clause = _spend_clause(activate.group("quality"), SpendPurpose.ACTIVATE_ABILITY, None)
+        else:
+            return ManaRestriction(text=text)
+        if clause is None:
+            return ManaRestriction(text=text)
+        clauses.append(clause)
+
+    return ManaRestriction(text=text, clauses=tuple(clauses))
+
+
+def free_tap_mana_abilities(card: Card) -> list[tuple[ManaAbility, ManaRestriction | None]]:
+    """Every mana ability this card may be tapped for **on the player's
+    behalf**, in printed order, each paired with the CR 106.6 restriction its
+    mana would carry (None if it carries none).
 
     Only an ability whose entire activation cost is a bare `{T}` qualifies.
     CR 601.2g lets a player activate mana abilities before paying a cost, and
     CR 118.3c makes doing so optional, but nothing there lets an *engine*
     spend a cost the player never agreed to - so a mana ability with anything
     else in its cost is skipped here even though `parse_mana_abilities` still
-    reports it:
+    reports it: an additional cost (Sunbaked Canyon's 1 life, Tinder Farm's
+    sacrifice, Arena of Glory's `{R}` and exert) is a real cost only the player
+    may choose to pay.
 
-    - an additional cost (Sunbaked Canyon's 1 life, Tinder Farm's sacrifice,
-      Arena of Glory's `{R}` and exert) is a real cost only the player may
-      choose to pay;
-    - an ability whose effect text carries a CR 106.6 spend restriction
-      (Eldrazi Temple's `{C}{C}`, Cavern of Souls's any-colour ability) is
-      skipped by `_restricted_effect`, because this engine cannot verify the
-      restriction is honoured once the mana is in the pool.
-
-    A card with more than one qualifying ability (none in this pool) uses the
-    first printed, same as `parse_mana_abilities`. A card whose only tap
-    ability is restricted or carries an extra cost (Eldrazi Temple's own
-    `{T}: Add {C}.` is the fallback that keeps it usable at all) returns
-    whichever earlier ability in printed order is both `{T}`-only and
-    unrestricted; if none is, this returns None and the source is left alone.
+    A **restricted** ability is no longer skipped. It was, before the pool
+    could carry a restriction - there was no way to check one later, so the
+    only safe move was never to produce that mana automatically. Now the
+    restriction travels with the mana and `auto_tap` can ask whether it permits
+    the cost being paid, so a restricted source is offered exactly when its own
+    text allows it and withheld otherwise.
     """
+    found: list[tuple[ManaAbility, ManaRestriction | None]] = []
     for ability in parse_abilities(card):
         if not isinstance(ability, ActivatedAbility) or ability.mana is None:
             continue
         if [piece.kind for piece in ability.costs] != [CostKind.TAP]:
             continue
-        if _restricted_effect(ability.effect):
-            continue
-        return ability.mana
+        found.append((ability.mana, spend_restriction(ability.effect)))
+    if found:
+        return found
+    intrinsic = intrinsic_land_ability(card)
+    if intrinsic is not None and intrinsic.mana is not None:
+        return [(intrinsic.mana, None)]
+    return []
+
+
+def free_tap_mana_ability(card: Card) -> ManaAbility | None:
+    """The one mana ability this card may be tapped for on the player's behalf
+    with **no** CR 106.6 restriction attached, or None if it has none.
+
+    Kept for callers that have no cost in hand to judge a restriction against
+    and so cannot safely be offered restricted mana. `auto_tap` uses
+    `free_tap_mana_abilities` instead, which offers restricted abilities too
+    and checks each restriction against what is actually being paid for.
+    """
+    for ability, restriction in free_tap_mana_abilities(card):
+        if restriction is None:
+            return ability
     intrinsic = intrinsic_land_ability(card)
     return intrinsic.mana if intrinsic is not None and intrinsic.mana is not None else None
 
@@ -185,13 +352,28 @@ def _mana_context(
     return payment.game._controlled_land_types(controller), own_counters, has_imprinted_card
 
 
-def _auto_tap_candidates(
-    payment: "CostPayment", sources: Iterable[CardState]
-) -> list[tuple[CardState, list[list[Color]]]]:
+#: One thing `auto_tap` may tap: the permanent, what its chosen ability would
+#: add right now, and the CR 106.6 restriction that mana would carry.
+_Candidate = tuple[CardState, list[list[Color]], ManaRestriction | None]
+
+
+def _auto_tap_candidates(payment: "CostPayment", sources: Iterable[CardState]) -> list[_Candidate]:
     """Every source `auto_tap` may consider, paired with what it would
     actually add right now (conditional clauses resolved against the board -
-    see `_mana_context`), least flexible first."""
-    candidates: list[tuple[CardState, list[list[Color]], bool]] = []
+    see `_mana_context`) and with the restriction that mana would carry, least
+    flexible first.
+
+    A source with both a restricted and an unrestricted `{T}`-only ability -
+    Eldrazi Temple, Cavern of Souls, Delighted Halfling all print exactly that
+    pair - appears twice, once per ability, so the solver can reach for the
+    restricted one when this payment is something the restriction permits and
+    fall back to the plain one when it is not. A restricted ability whose
+    restriction does not permit `payment.spend` is dropped here rather than
+    tried and rejected later, so it is never tapped for mana that could not be
+    spent (CR 118.3c: activating a mana ability is never mandatory, so
+    declining is always available).
+    """
+    candidates: list[tuple[CardState, list[list[Color]], ManaRestriction | None, bool]] = []
     for source in sources:
         if source.zone is not Zone.BATTLEFIELD or source.tapped:
             continue
@@ -199,22 +381,28 @@ def _auto_tap_candidates(
             continue
         if not can_tap_for_mana(source, payment.game):
             continue
-        ability = free_tap_mana_ability(source.card)
-        if ability is None:
-            continue
         land_types, own_counters, has_imprinted_card = _mana_context(payment, source)
-        options, any_color = ability.effective(land_types, own_counters, has_imprinted_card)
-        candidates.append((source, options, any_color))
-    candidates.sort(key=lambda item: _flexibility(item[1], item[2]))
-    return [(source, options) for source, options, _any_color in candidates]
+        for ability, printed in free_tap_mana_abilities(source.card):
+            restriction = spend_restriction(printed.text, source) if printed is not None else None
+            if restriction is not None and not restriction.allows(payment.spend):
+                continue
+            options, any_color = ability.effective(land_types, own_counters, has_imprinted_card)
+            candidates.append((source, options, restriction, any_color))
+    # A restricted ability first among a source's own abilities, so the mana
+    # that can do less is the mana spent - the same preference `ManaPool._buckets`
+    # applies inside the pool, applied here to which ability is activated.
+    candidates.sort(key=lambda item: (_flexibility(item[1], item[3]), item[2] is None))
+    return [(source, options, restriction) for source, options, restriction, _any in candidates]
 
 
 def _solve_colours(
-    combo: Sequence[tuple[CardState, list[list[Color]]]],
+    combo: Sequence[_Candidate],
     base_floating: dict[Color, int],
     base_snow: dict[Color, int],
     cost: ManaCost,
     life_available: int,
+    spend: ManaSpend | None = None,
+    base_restricted: list[Any] | None = None,
 ) -> list[tuple[CardState, list[Color]]] | None:
     """The first colour assignment for this exact set of sources that pays
     `cost`, or None if none of them do.
@@ -226,16 +414,25 @@ def _solve_colours(
     its unconditional `{T}: Add {C}.` alone - until the resulting pool can
     pay the cost (`ManaPool.can_pay`, which already knows generic, hybrid,
     Phyrexian, and snow symbols), or exhausts them.
+
+    The trial pool is seeded with the payment's existing restricted mana as
+    well as its plain floating mana, and each source's own CR 106.6 restriction
+    is carried onto what it adds, so "can this combination pay?" is asked of a
+    pool that already knows which of its mana may legally be spent on `spend`.
     """
-    option_lists = [options for _source, options in combo]
+    option_lists = [options for _source, options, _restriction in combo]
     for chosen in product(*option_lists):
-        trial = ManaPool(floating=dict(base_floating), snow=dict(base_snow))
-        for (source, _options), colors in zip(combo, chosen, strict=True):
-            trial.add_all(colors, snow=is_snow_source(source))
-        if trial.can_pay(cost, life_available=life_available):
+        trial = ManaPool(
+            floating=dict(base_floating),
+            snow=dict(base_snow),
+            restricted=[entry.model_copy(deep=True) for entry in base_restricted or []],
+        )
+        for (source, _options, restriction), colors in zip(combo, chosen, strict=True):
+            trial.add_all(colors, snow=is_snow_source(source), restriction=restriction)
+        if trial.can_pay(cost, life_available=life_available, spend=spend):
             return [
                 (source, list(colors))
-                for (source, _options), colors in zip(combo, chosen, strict=True)
+                for (source, _options, _restriction), colors in zip(combo, chosen, strict=True)
             ]
     return None
 
@@ -1431,6 +1628,61 @@ def _split_cost_phrase(phrase: str) -> list[str]:
 # --------------------------------------------------------------------------
 
 
+#: `tap_for_mana`'s default: work the restriction out from the card rather than
+#: from the caller. Distinct from `None`, which is a caller positively saying
+#: "this mana carries no restriction".
+INFER_RESTRICTION: Any = object()
+
+
+def restriction_for_production(
+    source: CardState, produces: Sequence[Color]
+) -> ManaRestriction | None:
+    """The CR 106.6 restriction on mana a manual `tap_for_mana(source, produces)`
+    just made, worked out from which of `source`'s `{T}`-only abilities could
+    have produced exactly that.
+
+    Every printing in this pool that carries a restriction prints an
+    unrestricted ability beside it, and the two always differ in what they add:
+    Eldrazi Temple's `{C}` against its `{C}{C}`, Cavern of Souls's and
+    Delighted Halfling's `{C}` against their one mana of any colour. So
+    matching on the actual production names one ability and there is nothing to
+    guess at.
+
+    When more than one ability could have produced it, the **unrestricted**
+    reading wins. A caller on this path named the mana itself, and narrowing
+    what it may pay for on a guess would refuse plays the rules allow - the
+    opposite failure from letting restricted mana pay for anything, and the
+    only one available here, since the caller has already been given the mana.
+    A caller that knows which ability it activated passes the restriction
+    explicitly and none of this runs.
+    """
+    wanted = sorted(produces)
+    matches = [
+        restriction
+        for ability, restriction in free_tap_mana_abilities(source.card)
+        for option in ability.effective()[0]
+        if sorted(option) == wanted
+    ]
+    if not matches or any(restriction is None for restriction in matches):
+        return None
+    return spend_restriction(matches[0].text, source)
+
+
+def _copy_pool(pool: ManaPool) -> ManaPool:
+    """A detached copy of a pool, restrictions included (CR 106.6).
+
+    A payment works on a copy so a cancellation throws away only what the
+    payment itself produced; the copy has to carry the CR 106.6 tags too, or
+    restricted mana the player already had would silently become spendable on
+    anything the moment a payment opened.
+    """
+    return ManaPool(
+        floating=dict(pool.floating),
+        snow=dict(pool.snow),
+        restricted=[entry.model_copy(deep=True) for entry in pool.restricted],
+    )
+
+
 class CostPayment(BaseModel):
     """Paying one total cost, from tapping sources through to the leftover mana."""
 
@@ -1453,13 +1705,28 @@ class CostPayment(BaseModel):
     mana_payment: ManaPayment | None = None
     """How the mana part was settled, once it has been (CR 118.13)."""
 
+    spend: ManaSpend | None = None
+    """What this cost belongs to - the spell being cast, or the source of the
+    ability being activated - so mana carrying a CR 106.6 spend restriction can
+    be judged against it.
+
+    `None` says the caller could not name it, and that refuses restricted mana
+    outright: the engine cannot show the restriction was honoured, so it does
+    not spend the mana. A payment left unnamed is therefore payable exactly
+    with the unrestricted mana available to it, which is what the engine did
+    everywhere before restrictions existed."""
+
     _preexisting: ManaPool | None = PrivateAttr(default=None)
     """The payer's floating mana as it stood when the payment opened, so a
     rewind (CR 733.1) can put it back after `pay` spent part of it."""
 
     @classmethod
     def for_total(
-        cls, total: TotalCost, game: Any = None, payer: str | None = None
+        cls,
+        total: TotalCost,
+        game: Any = None,
+        payer: str | None = None,
+        spend: ManaSpend | None = None,
     ) -> "CostPayment":
         """Open a payment for a composite cost.
 
@@ -1467,13 +1734,17 @@ class CostPayment(BaseModel):
         with life, since the life has to come from a real life total, and it
         falls back to whoever the components already name.
 
+        `spend` is what the cost is for (CR 106.6), so restricted mana already
+        floating in the payer's pool can be judged against it. Omitted, no
+        restricted mana is spendable by this payment.
+
         The payment's pool opens as a copy of that player's floating mana, so
         mana already in their pool can pay this cost (see `_seed_payer_pool`).
         """
         components = list(total.components)
         if payer is None:
             payer = next((c.payer for c in components if c.payer is not None), None)
-        payment = cls(cost=total.mana, components=components, game=game, payer=payer)
+        payment = cls(cost=total.mana, components=components, game=game, payer=payer, spend=spend)
         payment._seed_payer_pool()
         return payment
 
@@ -1503,7 +1774,9 @@ class CostPayment(BaseModel):
     @property
     def shortfall(self) -> bool:
         """True if the pool still cannot cover the mana part of the cost."""
-        return not self.pool.can_pay(self.cost, life_available=self.life_available)
+        return not self.pool.can_pay(
+            self.cost, life_available=self.life_available, spend=self.spend
+        )
 
     @property
     def unpayable(self) -> str | None:
@@ -1521,11 +1794,29 @@ class CostPayment(BaseModel):
         self.choices = list(choices)
         return self
 
-    def tap_for_mana(self, source: CardState, produces: list[Color]) -> ManaPool:
+    def tap_for_mana(
+        self,
+        source: CardState,
+        produces: list[Color],
+        restriction: ManaRestriction | None = INFER_RESTRICTION,
+    ) -> ManaPool:
         """Tap a permanent for mana and put what it makes into the pool.
 
         `produces` is what this activation makes, so a dual land is called with
         the single colour chosen, not with everything it could make.
+
+        `restriction` is the CR 106.6 tag the produced mana carries. Left at
+        its default it is worked out from `produces` by
+        `restriction_for_production`, so a caller that hand-picks its mana
+        sources - a scenario tapping a Cavern of Souls for a colour, the
+        harness's `pay_with` - gets the restriction enforced without having to
+        know it exists. Passing it explicitly (`None` included) overrides that;
+        `auto_tap` does, because it knows exactly which ability it chose.
+
+        The tag goes onto the mana, not onto `source`: once the mana ability
+        has resolved (CR 605.3b) the source has nothing more to do with it, and
+        the mana keeps the restriction after the source has left the
+        battlefield.
 
         A creature that has not been under its controller's control since their
         most recent turn began cannot be tapped for mana (CR 302.6, 602.5a)
@@ -1549,7 +1840,9 @@ class CostPayment(BaseModel):
 
         source.tap()
         self.tapped_for_mana.append(source)
-        self.pool.add_all(produces, snow=is_snow_source(source))
+        if restriction is INFER_RESTRICTION:
+            restriction = restriction_for_production(source, produces)
+        self.pool.add_all(produces, snow=is_snow_source(source), restriction=restriction)
         if self.game is not None:
             self.game.emit(tapped_for_mana_event(source))
         return self.pool
@@ -1571,10 +1864,18 @@ class CostPayment(BaseModel):
         and never taps more than that.
 
         What this will not choose on the player's behalf: a source with any
-        cost beyond `{T}` (life, a sacrifice, an exert, more mana), or a
-        source whose only free ability carries a CR 106.6 spend restriction
-        this engine cannot verify was honoured - both are filtered out before
-        the search even starts, by `free_tap_mana_ability`.
+        cost beyond `{T}` (life, a sacrifice, an exert, more mana), filtered
+        out before the search starts by `free_tap_mana_abilities`.
+
+        A CR 106.6 restricted ability **is** offered now, but only when its
+        restriction permits what this payment is for (`self.spend`) - a
+        payment that cannot name what it is for gets none of them. So Eldrazi
+        Temple's `{C}{C}` is auto-tapped for a colorless Eldrazi spell and
+        withheld from a Mind Stone, and Shang-Chi's mana is offered to an
+        activation of a creature's ability and to nothing else. When both a
+        restricted and an unrestricted ability of the same source would serve,
+        the restricted one is preferred, so the mana that can do less is the
+        mana spent.
 
         Prefers the fewest sources, and among equally-small choices prefers
         spending the least flexible ones (a basic over a dual, a dual over an
@@ -1589,16 +1890,31 @@ class CostPayment(BaseModel):
         candidates = _auto_tap_candidates(self, sources)
         base_floating = dict(self.pool.floating)
         base_snow = dict(self.pool.snow)
+        base_restricted = [entry.model_copy(deep=True) for entry in self.pool.restricted]
         max_size = min(len(candidates), max(1, self.cost.converted))
 
         for size in range(1, max_size + 1):
             for combo in combinations(candidates, size):
+                if len({id(source) for source, _o, _r in combo}) != len(combo):
+                    # A source with both a restricted and an unrestricted
+                    # ability appears once per ability; it still has only one
+                    # `{T}` to spend (CR 118.3: a permanent already tapped
+                    # cannot pay a cost that taps it), so a combination naming
+                    # it twice is not a legal plan.
+                    continue
                 plan = _solve_colours(
-                    combo, base_floating, base_snow, self.cost, self.life_available
+                    combo,
+                    base_floating,
+                    base_snow,
+                    self.cost,
+                    self.life_available,
+                    self.spend,
+                    base_restricted,
                 )
                 if plan is not None:
+                    chosen = {id(source): restriction for source, _o, restriction in combo}
                     for source, colors in plan:
-                        self.tap_for_mana(source, colors)
+                        self.tap_for_mana(source, colors, chosen[id(source)])
                     return [source for source, _ in plan]
 
         raise ValueError(f"no combination of the available mana sources can pay {self.cost}")
@@ -1623,11 +1939,32 @@ class CostPayment(BaseModel):
         with life through the engine (CR 107.4f).
         """
         payment = self.pool.payment_for(
-            self.cost, life_available=self.life_available, choices=self.choices
+            self.cost,
+            life_available=self.life_available,
+            choices=self.choices,
+            spend=self.spend,
         )
         if payment is None:
-            raise ValueError(f"pool {self.pool.floating} cannot pay {self.cost}")
+            raise ValueError(f"pool {self.pool.floating} cannot pay {self.cost}{self._blocked()}")
         return payment
+
+    def _blocked(self) -> str:
+        """The CR 106.6 half of the message when a payment is refused.
+
+        A pool that visibly holds enough mana and still cannot pay reads as a
+        bug unless the refusal says which mana was off limits and why, quoting
+        the card's own sentence.
+        """
+        offending = [
+            entry.restriction
+            for entry in self.pool.restricted
+            if entry.total and not entry.restriction.allows(self.spend)
+        ]
+        if not offending:
+            return ""
+        quoted = "; ".join(sorted({restriction.text for restriction in offending}))
+        for_what = self.spend.name if self.spend is not None else "this cost"
+        return f": {quoted} (CR 106.6), and this pays for {for_what}"
 
     def pay(self) -> ManaPool:
         """Pay the whole total cost and return the mana still floating after.
@@ -1672,6 +2009,7 @@ class CostPayment(BaseModel):
         # caller can tap another source and try again.
         floating = dict(self.pool.floating)
         snow = dict(self.pool.snow)
+        restricted = [entry.model_copy(deep=True) for entry in self.pool.restricted]
         self.pool.pay(self.cost, payment=mana_payment)
 
         paid: list[CostComponent] = []
@@ -1684,6 +2022,7 @@ class CostPayment(BaseModel):
                 component.unpay(self.game)
             self.pool.floating = floating
             self.pool.snow = snow
+            self.pool.restricted = restricted
             raise
 
         if life is not None:
@@ -1750,8 +2089,8 @@ class CostPayment(BaseModel):
             floating = self.game.player(self.payer).mana_pool
         except (KeyError, ValueError, AttributeError):
             return
-        self.pool = ManaPool(floating=dict(floating.floating), snow=dict(floating.snow))
-        self._preexisting = ManaPool(floating=dict(floating.floating), snow=dict(floating.snow))
+        self.pool = _copy_pool(floating)
+        self._preexisting = _copy_pool(floating)
 
     def _write_back_remainder(self) -> None:
         """Leave what the payment did not spend floating in the payer's pool.
@@ -1772,6 +2111,7 @@ class CostPayment(BaseModel):
             return
         pool.floating = dict(self.pool.floating)
         pool.snow = dict(self.pool.snow)
+        pool.restricted = [entry.model_copy(deep=True) for entry in self.pool.restricted]
 
     def _restore_payer_pool(self) -> None:
         """Put the payer's floating mana back the way it was before payment.
@@ -1788,6 +2128,7 @@ class CostPayment(BaseModel):
             return
         pool.floating = dict(self._preexisting.floating)
         pool.snow = dict(self._preexisting.snow)
+        pool.restricted = [entry.model_copy(deep=True) for entry in self._preexisting.restricted]
 
     def _undo_everything(self) -> None:
         for component in reversed(self.components):
