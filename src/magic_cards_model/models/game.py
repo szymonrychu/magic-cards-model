@@ -52,7 +52,12 @@ from ..machines.decisions import (
     default_answer,
     legal_options,
 )
-from ..machines.delayed import DelayedTrigger, DelayedTriggers, return_subject_to_hand
+from ..machines.delayed import (
+    DelayedTrigger,
+    DelayedTriggers,
+    rebound_recast,
+    return_subject_to_hand,
+)
 from ..machines.effects import (
     AnaphoricClauseNotice,
     ConditionalClauseNotice,
@@ -67,6 +72,7 @@ from ..machines.effects import (
 from ..machines.keywords import (
     aura_state_based_actions,
     equipment_state_based_actions,
+    has_rebound,
     is_indestructible,
     keyword_effect_for,
 )
@@ -294,6 +300,14 @@ class CastRecord(BaseModel):
 
     keyword: str | None = None
     """The keyword the spell was cast with, as printed: `Flashback`, `Warp`."""
+    origin_zone: Zone = Zone.HAND
+    """Where the spell was cast **from** (CR 601.2a), copied from `Casting.
+    origin_zone` as the spell goes on the stack. CR 702.88a's rebound applies
+    "if this spell was cast from your hand" - a card cast from the graveyard
+    (Flashback), from exile (Rebound's own recast), or anywhere else never
+    triggers it a second time, which is exactly what would build an infinite
+    exile-and-recast loop if this were read off anything but the announcement
+    itself."""
     face: str | None = None
     """The name of the face being cast, for a card with more than one (CR 715.3)."""
     modes: list[int] = Field(default_factory=list)
@@ -1083,6 +1097,7 @@ class Game(BaseModel):
         spell: CardState,
         *,
         keyword: str | None = None,
+        origin_zone: Zone = Zone.HAND,
         face: str | None = None,
         modes: list[int] | None = None,
         mode_targets: list[list[TargetRef]] | None = None,
@@ -1119,6 +1134,7 @@ class Game(BaseModel):
         """
         record = CastRecord(
             keyword=keyword,
+            origin_zone=origin_zone,
             face=face,
             modes=list(modes or []),
             mode_targets=[list(slice_) for slice_ in mode_targets or []],
@@ -1272,9 +1288,19 @@ class Game(BaseModel):
         else:
             # CR 614.1: the move to the graveyard is an event like any other, so
             # it goes through the replacement effects. That is the hook
-            # CR 702.34a's flashback exile and CR 715.3d's Adventure exile hang
-            # off - both replace where the card goes as it leaves the stack.
-            self.put_into_graveyard(spell)
+            # CR 702.34a's flashback exile, CR 715.3d's Adventure exile, and
+            # CR 702.88a's rebound exile all hang off - each replaces where the
+            # card goes as it leaves the stack.
+            #
+            # Rebound's own delayed trigger (CR 702.88a's "at the beginning of
+            # your next upkeep") is created here rather than inside the
+            # replacement effect itself: `_create_rebound_delayed_trigger`
+            # needs to know whether the spell was cast from hand, and that is
+            # `Game.cast_records[spell.id]` - which is popped two lines below,
+            # so it has to be read before `put_into_graveyard` runs, not after.
+            cast_from_hand = self.cast_record(spell).origin_zone is Zone.HAND
+            self.put_into_graveyard(spell, resolving=True)
+            self._create_rebound_delayed_trigger(spell, cast_from_hand)
 
         self.cast_records.pop(spell.id, None)
         self._before_priority()
@@ -1353,6 +1379,95 @@ class Game(BaseModel):
                     callback=return_subject_to_hand,
                 )
             )
+
+    def _create_rebound_delayed_trigger(self, spell: CardState, cast_from_hand: bool) -> None:
+        """CR 702.88a's own delayed trigger: "At the beginning of your next
+        upkeep, you may cast this card from exile without paying its mana
+        cost."
+
+        Created only once `put_into_graveyard` has already redirected this
+        exact spell into exile because of its own rebound replacement
+        (`machines/replacement._stack_replacements`) - not merely because the
+        card happens to print the keyword. A card cast from anywhere but hand
+        never gets that redirect (CR 702.88a's own "if this spell was cast
+        from your hand"), which `cast_from_hand` - read by the caller from
+        `Game.cast_records` *before* `resolve_top` pops it - is what decides;
+        checking `spell.zone` here as well catches the case where the card
+        has rebound printed but a *different* replacement effect sent it
+        somewhere other than exile first (CR 616.1: only one effect can
+        finally decide where an object goes).
+        """
+        if not cast_from_hand or not has_rebound(spell.card) or spell.zone is not Zone.EXILE:
+            return
+        controller = spell.controller or self.active_player.username
+        self.delayed_triggers.create(
+            DelayedTrigger(
+                text=(
+                    "At the beginning of your next upkeep, you may cast "
+                    "this card from exile without paying its mana cost."
+                ),
+                event=TriggerEvent.BEGINNING_OF_STEP,
+                step=Step.UPKEEP,
+                # CR 702.88a says "your next upkeep", not "the next upkeep" -
+                # Emrakul's own extra-turn trigger is the precedent for
+                # `only_when_active` scoping a delayed trigger to one
+                # player's turns. Without it, this one-shot trigger
+                # (CR 603.7b) would spend itself on the *other* player's
+                # upkeep if that happens to come first, and never fire again.
+                only_when_active=controller,
+                controller=controller,
+                source_id=spell.id,
+                source_name=spell.name,
+                subject_id=spell.id,
+                expected_zone=Zone.EXILE,  # CR 603.7c
+                expected_stamp=spell.zone_change_stamp,  # CR 603.7c parenthetical
+                callback=rebound_recast,
+            )
+        )
+
+    def cast_free_from_exile(self, card: CardState, controller: str) -> CardState | None:
+        """CR 702.88a/b: cast `card` straight out of exile, choosing new
+        targets (CR 601.2c) and paying no mana cost (CR 118.9's alternative
+        cost, via CR 702.88b's "follows the rules for paying alternative
+        costs").
+
+        This is not the interactive `machines/casting.Casting` state machine -
+        there is no live announcement to drive from inside a resolving
+        ability's effect function, only the same "ask the resolving object's
+        controller" pattern `_ask_trigger_targets` already uses for a
+        triggered ability's own CR 603.3d target announcement. If the card
+        needs a target and none is legal, CR 601.2c makes casting it illegal
+        in the first place, so nothing is put on the stack at all - `None` is
+        returned exactly the way `_ask_trigger_targets` returns no targets for
+        "nothing satisfies the restriction" rather than casting the spell
+        anyway with an empty target list.
+
+        `Game.note_cast` records `origin_zone=Zone.EXILE` so a card that
+        rebounds *again* by some other effect's rebound (there is only one in
+        the pool, but the record does not know that) is never mistaken for
+        one cast from hand a second time.
+        """
+        profile = profile_for_text(card.oracle_text or "")
+        targets: list[TargetRef] = []
+        if profile.requirements:
+            candidates = self._legal_target_candidates(profile, controller, card.id)
+            if not candidates:
+                return None  # CR 601.2c: no legal target, casting is illegal.
+            decision = Decision(
+                kind=DecisionKind.CHOOSE_TARGETS,
+                player=controller,
+                prompt=f"choose targets for {card.name}",
+                source=card.name,
+                targets=tuple(TargetRef.coerce(candidate) for candidate in candidates),
+                target_maximum=profile.max_targets,
+            )
+            chosen = self.ask(decision)
+            assert isinstance(chosen, (list, tuple))
+            targets = list(chosen)
+        card.targets = targets
+        self.put_on_stack(card, controller)
+        self.note_cast(card, keyword="Rebound", origin_zone=Zone.EXILE)
+        return card
 
     def _resolve_ability(self, ability: AbilityOnStack) -> AbilityOnStack:
         """Resolve an ability that was on the stack (CR 608.2).
@@ -3109,7 +3224,7 @@ class Game(BaseModel):
         )
         return self.put_into_graveyard(permanent)
 
-    def put_into_graveyard(self, card_state: CardState) -> CardState:
+    def put_into_graveyard(self, card_state: CardState, *, resolving: bool = False) -> CardState:
         """Move a card to its owner's graveyard, replacement effects included.
 
         Every route to a graveyard runs through here: a destroyed permanent, a
@@ -3117,6 +3232,13 @@ class Game(BaseModel):
         card would be put into a graveyard", which is the event Rest in Peace,
         Leyline of the Void, Necrodominance, and Sanctifier en-Vec all watch for
         (CR 400.6, 614.1a).
+
+        `resolving` is narrower than "this card is leaving the stack": it is
+        true only for a spell's own successful CR 608 resolution, never for a
+        countered spell (CR 701.6, which never resolves) or a fizzled one (CR
+        608.2b, which explicitly "doesn't resolve" either). CR 702.88a's
+        rebound reads "as it resolves" and needs exactly that distinction;
+        `resolve_top` is the only caller that ever passes it `True`.
 
         A token's *first* trip here is allowed and is the whole of CR 111.7's
         parenthesis - "if a token changes zones, applicable triggered abilities
@@ -3135,6 +3257,7 @@ class Game(BaseModel):
             card=card_state,
             origin=Zone.BATTLEFIELD if was_on_battlefield else origin,
             destination=Zone.GRAVEYARD,
+            resolving=resolving,
         )
         apply_replacements(self, event)
 
@@ -3202,6 +3325,8 @@ class Game(BaseModel):
         if move_refused(permanent, Zone.EXILE) is not None:
             return permanent
         was_on_battlefield = permanent in self.battlefield
+        if was_on_battlefield:
+            self._detach_dependents(permanent)
         self._take_out_of_every_zone(permanent)
         self.combat.remove(permanent.id)  # CR 506.4
         permanent.move_to(Zone.EXILE)
@@ -3218,6 +3343,39 @@ class Game(BaseModel):
                 )
             )
         return permanent
+
+    def _detach_dependents(self, permanent: CardState) -> None:
+        """Nothing stays attached to a permanent that just left (CR 704.5m, 704.5n).
+
+        `CardState.move_to` (CR 400.7) already clears `permanent`'s *own*
+        `attachment` as it leaves - what it cannot clear is every *other*
+        permanent's `attached_to`, which points at `permanent.id` rather than
+        at the object itself. This engine mutates a `CardState` in place
+        rather than minting a fresh id when it returns (`zone_change_stamp`
+        is the id-survives-the-round-trip marker instead - see
+        `DelayedTrigger.expected_stamp`), so a permanent exiled and put back
+        onto the battlefield **within the same resolution** - Ephemerate's
+        "exile ..., then return it" is one instruction, with no state-based
+        action check in between (CR 704.3 only runs before a player would
+        next receive priority) - would otherwise have the exact same id both
+        times, and an Aura or Equipment still holding that id would silently
+        "follow" the blink with nothing ever catching it: the ordinary
+        `aura_state_based_actions`/`equipment_state_based_actions` sweep in
+        `check_state_based_actions` never gets a turn to run against the
+        moment in between where the id was genuinely gone.
+
+        Clearing the pointer here, the instant the permanent actually leaves,
+        is what a live SBA sweep would have found anyway had one run right
+        then: the ordinary sweep that *does* run once the whole spell finishes
+        resolving is what turns this into the real CR 704.5m/n consequence -
+        an Aura pointing at nothing goes to its owner's graveyard, an
+        Equipment pointing at nothing simply stays on the battlefield
+        unattached - so this only ever moves that discovery earlier, never
+        replaces it.
+        """
+        for other in self.battlefield:
+            if other.id != permanent.id and other.attached_to == permanent.id:
+                other.unattach()
 
     def check_state_based_actions(self) -> list[CardState]:
         """Apply state-based actions, returning whatever left the battlefield (CR 704).

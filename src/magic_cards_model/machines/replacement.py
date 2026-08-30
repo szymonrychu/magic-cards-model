@@ -961,6 +961,15 @@ class ReplaceableEvent:
     #: True for the draw an active player takes as the draw step's turn-based
     #: action (CR 504.1, 703.4d). Alhammarret's Archive excepts exactly that one.
     draw_step_draw: bool = False
+    #: True only for a spell's own successful CR 608 resolution reaching the
+    #: graveyard - not a countered spell (CR 701.6, which never resolves at
+    #: all) and not a fizzled one (CR 608.2b: "it doesn't resolve"), both of
+    #: which move a card off the stack through this same `ZONE_CHANGE` event.
+    #: CR 702.88a's rebound reads "instead of putting it into your graveyard
+    #: **as it resolves**" - narrower than flashback's "any time it would
+    #: leave the stack" (CR 702.34a), which is why flashback's own entry in
+    #: `_stack_replacements` does not gate on this at all and rebound's does.
+    resolving: bool = False
 
     #: The keys of the effects that have already applied (CR 614.5).
     applied: set[str] = field(default_factory=set)
@@ -1948,6 +1957,24 @@ def _stack_replacements(game: "Game", event: ReplaceableEvent) -> list[Applicabl
                 key=f"{card.id}:flashback",
                 source=card,
                 label="if the flashback cost was paid, exile this card instead (CR 702.34a)",
+                apply=_exile_instead,
+            )
+        )
+    from .keywords import has_rebound  # imported here: casting imports this module's siblings
+
+    if has_rebound(card.card) and record.origin_zone is Zone.HAND and event.resolving:
+        # CR 702.88a: "If this spell was cast from your hand, instead of
+        # putting it into your graveyard as it resolves, exile it." A spell
+        # cast from anywhere else - most pointedly from exile by its own
+        # previous rebound recast - never triggers this a second time, which
+        # is what stops an infinite exile-and-recast loop; `record.origin_zone`
+        # is `Casting.origin_zone` as the spell was actually announced, not a
+        # fact about the card's printed text.
+        found.append(
+            ApplicableEffect(
+                key=f"{card.id}:rebound",
+                source=card,
+                label="cast from hand with rebound: exile this card instead (CR 702.88a)",
                 apply=_exile_instead,
             )
         )

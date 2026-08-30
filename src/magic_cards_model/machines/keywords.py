@@ -92,6 +92,7 @@ class KeywordRule(StrEnum):
     DISGUISE = "CR 702.168a"
     INDESTRUCTIBLE = "CR 702.12b"
     EXERT = "CR 701.43a"
+    REBOUND = "CR 702.88a"
 
 
 def executes(keyword: str) -> bool:
@@ -119,6 +120,7 @@ def executes(keyword: str) -> bool:
         "mobilize",
         "indestructible",
         "exert",
+        "rebound",
         # CR 701.66a. A CR 701 keyword *action* embedded in another ability's
         # effect text, not a CR 702 keyword ability printed on its own - so
         # its clause parser lives in `machines/effects.py`
@@ -1124,6 +1126,21 @@ def persist_return(game: Any, card: CardState) -> CardState | None:
     game.put_onto_battlefield(card, owner.username)
     game.add_counters(card, Counter.MINUS_ONE, 1)
     return card
+
+
+# --------------------------------------------------------------------------
+# Rebound (CR 702.88)
+# --------------------------------------------------------------------------
+
+
+def has_rebound(card: Card) -> bool:
+    """CR 702.88a: "Rebound appears on some instants and sorceries." Read the
+    same way `has_persist` reads a permanent keyword - off Scryfall's own
+    `keywords` list rather than a substring search of the oracle text, so a
+    card that merely *mentions* the word in reminder text elsewhere is never
+    mistaken for one that prints the ability.
+    """
+    return any(keyword.lower() == "rebound" for keyword in card.keywords)
 
 
 # --------------------------------------------------------------------------

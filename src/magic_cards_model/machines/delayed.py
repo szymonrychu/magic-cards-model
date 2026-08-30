@@ -329,6 +329,30 @@ def return_subject_to_hand(game: "Game", ability: AbilityOnStack, trigger: Delay
         game.return_to_hand(permanent)
 
 
+def rebound_recast(game: "Game", ability: AbilityOnStack, trigger: DelayedTrigger) -> None:
+    """CR 702.88a's own recast: "At the beginning of your next upkeep, you may
+    cast this card from exile without paying its mana cost."
+
+    Optional (`Game.may`), and only for the exact card this rebound sent to
+    exile: `still_affects` is CR 603.7c's check that it is still there,
+    unmoved by anything else, when this trigger finally resolves - a rebound
+    card someone managed to remove from exile in the meantime is not cast at
+    all, rather than this reaching for whatever else has `subject_id`'s id
+    now (CR 400.7 - once it moves again, it is a new object).
+
+    `Game.cast_free_from_exile` is where CR 702.88b's alternative-cost
+    casting actually happens, and where the card's own new targets (CR
+    601.2c) are chosen; this function only asks whether to do it at all.
+    """
+    card = trigger.still_affects(game)
+    if card is None:
+        return
+    prompt = f"cast {card.name} from exile without paying its mana cost"
+    if not game.may(trigger.controller, prompt, source=card.name):
+        return
+    game.cast_free_from_exile(card, trigger.controller)
+
+
 def draw_a_card_for_controller(
     game: "Game", ability: AbilityOnStack, trigger: DelayedTrigger
 ) -> None:
