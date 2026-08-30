@@ -126,34 +126,42 @@ def test_unreadable_anaphoric_clause_finds_the_second_sentence_of_a_synthetic_pa
     assert unread == "That creature's controller draws a card equal to its power"
 
 
-def test_boseijus_channel_search_clause_is_reported_not_silently_dropped():
-    """Boseiju, Who Endures' Channel ability still fails to parse as a whole,
-    for two separate reasons layered on top of each other: its search
-    sentence says "a land card with a basic land type" rather than the "a
-    basic land card" phrasing `_REFERENT_SEARCH_RE` reads (a pre-existing
-    search-quality gap, unrelated to anaphora and not something this fix
-    extends to cover), and its own destroy clause is followed by a third
-    sentence ("This ability costs {1} less ...") no clause parser reads
-    either way.
+def test_boseijus_channel_search_clause_now_parses():
+    """Boseiju, Who Endures' Channel ability used to fail to parse as a whole,
+    for two separate reasons layered on top of each other - both now fixed:
+
+    - its search sentence says "a land card with a basic land type" rather
+      than the "a basic land card" phrasing `_REFERENT_SEARCH_RE` used to
+      read alone; `_SEARCH_AND_PUT_RE`/`_REFERENT_SEARCH_RE` now carry a
+      `basic_land_type` group read by `_search_and_place_for` as CR 305.6's
+      own subtype question (not the "basic" *supertype* "a basic land card"
+      is - a shockland has a basic land type without being a basic land,
+      CR 305.8), so it is not folded into `_quality_matcher`'s narrower
+      "basic land" branch.
+    - its destroy clause used to be followed by a third sentence ("This
+      ability costs {1} less ...") no clause parser read; that sentence is
+      no longer part of this text at all by the time it gets here -
+      `machines/abilities._split_off_trailing_cost_reduction` reads it as
+      its own static ability (CR 604.1, CR 702.41a's Affinity is the CR's own
+      precedent for this "costs [N] less" shape) before `ActivatedAbility.
+      effect` is ever built, so the text below is exactly what a real
+      activation resolves - no cost-reduction tail to strip here by hand.
 
     What matters here is that `_unreadable_anaphoric_clause` correctly
     checks by actually trying to build the pair
     (`_parse_anaphoric_clause_pair`), not just matching the two shapes' own
-    regexes - the search sentence genuinely does not build, so it is the one
-    reported, not a false positive invented for a pair that would have
-    parsed fine.
+    regexes - both fixes are exercised together, since the search clause is
+    the second half of the anaphoric pair the destroy clause opens.
     """
     from magic_cards_model.machines.effects import _unreadable_anaphoric_clause
 
     text = (
         "Destroy target artifact, enchantment, or nonbasic land an opponent controls. "
         "That player may search their library for a land card with a basic land type, "
-        "put it onto the battlefield, then shuffle. "
-        "This ability costs {1} less to activate for each legendary creature you control."
+        "put it onto the battlefield, then shuffle."
     )
     unread = _unreadable_anaphoric_clause(text, for_spell=False)
-    assert unread is not None
-    assert unread.startswith("That player may search")
+    assert unread is None
 
 
 # --------------------------------------------------------------------------

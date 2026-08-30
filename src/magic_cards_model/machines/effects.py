@@ -1634,12 +1634,30 @@ _SEARCH_AND_PUT_RE = re.compile(
     # "subject" group (see that function and `_search_and_place_for`).
     r"(?P<subject>you may )?"
     r"search (?:your|their) library for (?:a|an) (?P<quality>.+?) card"
+    r"(?P<basic_land_type> with a basic land type)?"
     r"(?: with mana value (?P<max_mv>\d+) or less)?"
     r"(?:, reveal it)?"
     r", put (?:it|that card) (?P<dest>into your hand|onto the battlefield(?P<tapped> tapped)?)"
     r"(?:, then shuffle)?\.?",
     re.IGNORECASE,
 )
+
+#: CR 305.6: "The basic land types are Plains, Island, Swamp, Mountain, and
+#: Forest. If an object uses the words 'basic land type,' it's referring to
+#: one of these subtypes." A *subtype* question, independent of the "basic"
+#: supertype - CR 305.8: "Any land that doesn't have this supertype is a
+#: nonbasic land, even if it has a basic land type" - so a shockland or a
+#: Ravnica dual (Steam Vents, Breeding Pool: `Land — Island Mountain`,
+#: `Land — Forest Island`) genuinely qualifies for "a land card with a basic
+#: land type" even though it is not itself a basic land. Folding this
+#: wording into `_quality_matcher`'s existing "basic land" branch (which
+#: requires the *supertype*, for "a basic land card") would be the wrong,
+#: narrower rule.
+_BASIC_LAND_TYPE_NAMES = frozenset({"Plains", "Island", "Swamp", "Mountain", "Forest"})
+
+
+def _has_a_basic_land_type(state: CardState) -> bool:
+    return any(subtype in _BASIC_LAND_TYPE_NAMES for subtype in state.card.subtypes)
 
 
 def _named_type_matcher(word: str) -> Callable[[CardState], bool]:
@@ -1783,6 +1801,16 @@ def _search_and_place_for(
     max_mv = match.group("max_mv")
     matches = _bounded_quality_matcher(quality, max_mv)
     description = _quality_description(quality, max_mv)
+    if match.groupdict().get("basic_land_type"):
+        # CR 305.6/305.8: "a land card with a basic land type" is a *subtype*
+        # question, not the "basic" supertype `_quality_matcher`'s own "basic
+        # land" branch checks - see `_has_a_basic_land_type`'s own docstring.
+        base_matches = matches
+
+        def matches(state: CardState, _base: Callable[[CardState], bool] = base_matches) -> bool:
+            return _base(state) and _has_a_basic_land_type(state)
+
+        description = f"{description} with a basic land type"
     tapped = bool(match.group("tapped"))
     to_hand = match.group("dest").startswith("into your hand")
 
@@ -3578,6 +3606,7 @@ _ANAPHORIC_SUBJECT_RE = re.compile(
 #: this shape reaches prints it.
 _REFERENT_SEARCH_RE = re.compile(
     r"^may search (?:your|their) library for (?:a|an) (?P<quality>.+?) card"
+    r"(?P<basic_land_type> with a basic land type)?"
     r"(?: with mana value (?P<max_mv>\d+) or less)?"
     r"(?:, reveal it)?"
     r", put (?:it|that card) (?P<dest>into your hand|onto the battlefield(?P<tapped> tapped)?)"
@@ -7410,6 +7439,137 @@ def _merge_look_top_reveal_to_hand_clauses(
     return 4, effect
 
 
+#: "put one of them into your hand" - Waker of Waves' own second sentence,
+#: read plain rather than through `_MAY_REVEAL_FROM_AMONG_THEM_RE`'s "you may
+#: reveal a `<quality>` card": there is no quality restriction and no "you
+#: may" - the split is mandatory, and which of the two cards goes where is the
+#: controller's own unstated choice (CR 608.2d), the same free choice `scry`'s
+#: "any order" already is.
+_PUT_ONE_OF_THEM_INTO_YOUR_HAND_RE = re.compile(r"^put one of them into your hand$", re.IGNORECASE)
+#: "the other into your graveyard" - Waker of Waves' own third clause, split
+#: off the second sentence's "and" by `_CLAUSE_SEPARATOR` the same way
+#: Duskwatch Recruiter's own third/fourth clauses are. English ellipsis drops
+#: the repeated verb ("put"), so it is optional here, unlike
+#: `_PUT_REST_ON_BOTTOM_ANY_ORDER_RE`'s fully spelled-out sentence.
+_THE_OTHER_INTO_YOUR_GRAVEYARD_RE = re.compile(
+    r"^(?:put )?the other into your graveyard$", re.IGNORECASE
+)
+
+
+def _merge_look_top_split_hand_graveyard_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """Waker of Waves' whole `{1}{U}` ability: "Look at the top two cards of
+    your library. Put one of them into your hand and the other into your
+    graveyard." - the same anaphoric-run shape `_merge_look_top_reveal_to_
+    hand_clauses` reads for Duskwatch Recruiter, with a different pair of
+    destinations and no quality restriction or "you may": both halves of the
+    split are mandatory, one card each.
+
+    `Game.look_at_top_and_split` asks the identical CR 608.2d question either
+    way; what differs is only what this function does with the two answered
+    groups, and the shape it enforces on them - CR 608.2d: "The player can't
+    choose an option that's illegal or impossible", so an answer that does not
+    split the looked-at cards exactly one-and-the-rest is refused rather than
+    silently applied.
+    """
+    if index + 2 >= len(clauses):
+        return None
+    look_match = _LOOK_AT_TOP_N_CARDS_RE.fullmatch(clauses[index].strip())
+    if look_match is None:
+        return None
+    count_text = look_match.group("count").lower()
+    count = _NUMBER_WORDS.get(count_text)
+    if count is None:
+        try:
+            count = int(count_text)
+        except ValueError:
+            return None
+    if _PUT_ONE_OF_THEM_INTO_YOUR_HAND_RE.fullmatch(clauses[index + 1].strip()) is None:
+        return None
+    if _THE_OTHER_INTO_YOUR_GRAVEYARD_RE.fullmatch(clauses[index + 2].strip()) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        player = game.controller_of(stack_object)
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        moved, rest = game.look_at_top_and_split(
+            player,
+            count,
+            source=source,
+            prompt="put one into your hand, the other into your graveyard",
+        )
+        if len(moved) != 1 or len(rest) != count - 1:
+            raise ValueError(
+                f"{source}: exactly one of the {count} must go to hand, the rest to the "
+                "graveyard (CR 608.2d)"
+            )
+        for state in moved:
+            player.add(state, Zone.HAND)
+        for state in rest:
+            player.add(state, Zone.GRAVEYARD)
+
+    return 3, effect
+
+
+#: "Return this card from your graveyard to your hand." - World Breaker's
+#: whole graveyard-only ability (CR 113.6m, `machines/abilities.py`'s
+#: `zone`/`zone_rule` reads that half of it already). A self-reference, not a
+#: target: CR 115.1's "target" always names a chosen object, and this
+#: sentence names the very permanent whose ability is resolving instead, the
+#: same self-reference `_parse_destroy_each_clause`'s "Destroy each ..." and
+#: `machines/keywords`'s `discard_cost`/`sacrifice_cost` self-fill already
+#: read off "this card"/"this permanent". Zones beyond graveyard-to-hand are
+#: read too, generalized off the words rather than pinned to this one card -
+#: CR 400.7's zone-change vocabulary is the same whichever two zones a future
+#: card names this way.
+_RETURN_THIS_CARD_RE = re.compile(
+    r"^return this (?:card|permanent) from (?:your|its owner's) "
+    r"(?P<from_zone>graveyard|hand|exile|library|battlefield) "
+    r"to (?:your|its owner's) (?P<to_zone>hand|graveyard|battlefield|exile|library)\.?$",
+    re.IGNORECASE,
+)
+
+#: The zone names `_RETURN_THIS_CARD_RE` reads map straight onto `Zone`.
+_ZONE_BY_NAME: dict[str, Zone] = {
+    "hand": Zone.HAND,
+    "graveyard": Zone.GRAVEYARD,
+    "battlefield": Zone.BATTLEFIELD,
+    "exile": Zone.EXILE,
+    "library": Zone.LIBRARY,
+}
+
+
+def _parse_self_return_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """ "Return this card from your `<zone>` to your `<zone>`." - a plain
+    zone change of the ability's own source, read off the clause's own words
+    (CR 400.7a: putting a card into hand from anywhere but the stack or
+    battlefield is a new object with no memory of what it was).
+
+    CR 113.7a: the ability resolves independently of its source, so a source
+    that can no longer be found (already moved again, or gone) or one that
+    has already left the zone the clause names does nothing rather than
+    raising - the same "the target left" shape CR 608.2b already gives a
+    targeted effect, applied here to a plain self-reference instead.
+    """
+    match = _RETURN_THIS_CARD_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    from_zone = _ZONE_BY_NAME[match.group("from_zone").lower()]
+    to_zone = _ZONE_BY_NAME[match.group("to_zone").lower()]
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = stack_object if isinstance(stack_object, CardState) else stack_object.source(game)
+        if source is None or source.zone is not from_zone:
+            return
+        owner = game.find_owner(source) or game.player(
+            source.controller_or_owner or game.active_player.username
+        )
+        owner.move(source, to_zone)
+
+    return effect
+
+
 # --------------------------------------------------------------------------
 # Wave W1 (revisited): "choose a card name"/"the same name as that card",
 # then search a graveyard, a hand, and a library for cards with that name and
@@ -7673,6 +7833,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     return_imprinted = _parse_return_imprinted_clause(clause, for_spell=for_spell)
     if return_imprinted is not None:
         return return_imprinted
+    self_return = _parse_self_return_clause(clause, for_spell=for_spell)
+    if self_return is not None:
+        return self_return
     delayed = _parse_delayed_single_clause(clause, for_spell=for_spell)
     if delayed is not None:
         return delayed
@@ -7785,6 +7948,12 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             index += consumed
             continue
         merged = _merge_look_top_reveal_to_hand_clauses(clauses, index, for_spell=for_spell)
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_look_top_split_hand_graveyard_clauses(clauses, index, for_spell=for_spell)
         if merged is not None:
             consumed, effect = merged
             parsed.append(effect)
