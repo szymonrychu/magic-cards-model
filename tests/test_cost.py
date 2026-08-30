@@ -15,6 +15,7 @@ from magic_cards_model.machines.cost import (
     tap_cost,
 )
 from magic_cards_model.models import CardState, Color, ManaCost, Zone
+from magic_cards_model.models.card_state import Counter
 from tests.cards import card, card_state
 
 
@@ -163,15 +164,29 @@ def test_a_component_with_nothing_chosen_cannot_be_paid():
         payment.pay()
 
 
-def test_removing_counters_as_a_cost_is_refused_rather_than_faked():
-    """Counters are not modelled anywhere, so the cost cannot be paid at all."""
+def test_removing_counters_as_a_cost_is_refused_without_enough_of_them():
+    """CR 118.3: a cost removing counters that are not there cannot be paid -
+    refused outright, not silently skipped or paid for free."""
     creature = card_state("Grizzly Bears", Zone.BATTLEFIELD, controller="alice")
     payment = CostPayment.for_total(
         TotalCost.of("{0}", remove_counters_cost(creature, 1, payer="alice"))
     )
 
-    with pytest.raises(ValueError, match="counters are not modelled"):
+    with pytest.raises(ValueError, match="counter"):
         payment.pay()
+
+
+def test_removing_counters_as_a_cost_pays_when_they_are_there():
+    """CR 118.3, 122.1: the same cost pays in full once the counters exist."""
+    creature = card_state("Grizzly Bears", Zone.BATTLEFIELD, controller="alice")
+    creature.add_counters(Counter.PLUS_ONE, 1)
+    payment = CostPayment.for_total(
+        TotalCost.of("{0}", remove_counters_cost(creature, 1, payer="alice"))
+    )
+
+    payment.pay()
+
+    assert creature.counter_count(Counter.PLUS_ONE) == 0
 
 
 def test_paying_life_needs_a_player_to_pay_it():
