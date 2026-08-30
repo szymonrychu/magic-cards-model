@@ -1,0 +1,180 @@
+"""Scenario: protection *granted* by another permanent's static ability, as
+opposed to `test_protection.py`'s Emrakul, which has its own protection printed
+on itself.
+
+CR 613.1f: "Layer 6: Ability-adding effects ... are applied." CR 702.16a's
+protection is one such ability, and Akroma's Memorial grants it exactly the
+way `test_indefinite_keyword_grant.py`'s True Conviction grants double strike
+and lifelink: "Creatures you control have flying, first strike, vigilance,
+trample, haste, and protection from black and from red." (CR 611.3, a static
+ability's effect, so it lasts exactly as long as Akroma's Memorial does -
+CR 611.3b - and switches off the moment it leaves, CR 613.6, the same as
+`test_indefinite_keyword_grant.py`'s own grant does for its keywords).
+
+Before this file, `docs/engine-coverage.md` and `protection_qualities`'s own
+docstring said flatly that nothing grants protection - there were no layers
+for it. `machines/layers.py`'s `_INDEFINITE_KEYWORD_AND_PROTECTION_GRANT_RE`
+and `Game._effective_protection_qualities` are what changed that: a granted
+"Protection from <quality>" line is added to `Characteristics.abilities` the
+same way a granted keyword is, and `protection_refusal`/`protection_from_damage`
+now read it there in addition to a permanent's own printed text.
+
+The **damage half** (CR 702.16e) is what this file proves end to end, because
+`Game.deal_damage` now carries a source (`docs/engine-coverage.md`,
+`scenarios/test_prevention_effects.py`) and both combat and spell damage name
+one. The **targeting half** (CR 702.16b) is not proven the same way for a
+*colour* quality - see the xfail at the bottom - because `protection_refusal`
+only reads the card-type flavour of a quality, a gap `test_protection.py`
+already documents for printed protection and which is unchanged by this file.
+
+Every CR number here was looked up with `knowledge_search(type="rules")` in
+the session that wrote this file.
+"""
+
+import pytest
+
+from magic_cards_model.machines import Step
+from magic_cards_model.models import Zone
+
+from .harness import Scenario
+
+
+def computed(scenario: Scenario):
+    """The board with static abilities and stored durational effects applied."""
+    return scenario.game.continuous_effects.board(scenario.game.battlefield)
+
+
+def test_akromas_memorial_grants_both_protection_qualities():
+    """CR 702.16g: "protection from A and from B" is two abilities, and both
+    are read out of the one sentence, not just the first.
+
+    Compared as a set, not a list: the two grants share one timestamp (both
+    come from the same sentence), and `compute_board`'s tie-break among
+    same-timestamp effects sorts on each effect's randomly generated id, so
+    which one lands in `Characteristics.abilities` first is not guaranteed
+    run to run - only that both are there.
+    """
+    scenario = (
+        Scenario().player("alice", battlefield=["Akroma's Memorial", "Grizzly Bears"]).build()
+    )
+    bears = scenario.creature("Grizzly Bears", "alice")
+
+    board = computed(scenario)
+
+    assert board.of(bears).has_ability("Protection from black")
+    assert board.of(bears).has_ability("Protection from red")
+    assert set(scenario.game._effective_protection_qualities(bears)) == {"black", "red"}
+
+
+def test_a_creature_without_the_memorial_has_no_granted_protection():
+    """The grant only ever reaches creatures on a battlefield with the
+    Memorial on it - Grizzly Bears on its own has none of it.
+    """
+    scenario = Scenario().player("alice", battlefield=["Grizzly Bears"]).build()
+    bears = scenario.creature("Grizzly Bears", "alice")
+
+    assert scenario.game._effective_protection_qualities(bears) == []
+
+
+def test_the_granted_protection_prevents_combat_damage_from_a_red_source():
+    """CR 702.16e: "Any damage that would be dealt by sources that have the
+    stated quality ... is prevented." Hill Giant is red and deals no damage to
+    the protected Grizzly Bears; Grizzly Bears is green, so its own damage
+    back at Hill Giant is unaffected.
+    """
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("bob", battlefield=["Hill Giant"])
+        .player("alice", battlefield=["Akroma's Memorial", "Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    giant = scenario.creature("Hill Giant", "bob")
+    scenario.attack_with(giant, defending="alice")
+    scenario.advance()
+    scenario.block(giant, bears)
+    scenario.combat_damage()
+
+    assert bears.damage == 0, "protection from red prevented Hill Giant's damage"
+    assert giant.damage == 2, "Grizzly Bears is green, so its own damage was not prevented"
+
+
+def test_the_granted_protection_prevents_spell_damage_from_a_red_source():
+    """The damage half again, off a spell this time rather than a blocker -
+    Lightning Bolt is red, so it deals nothing to a protected target even
+    though `machines/targeting.py` still let it be announced (the known
+    targeting-side gap the xfail below documents)."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Lightning Bolt"], battlefield=["Mountain"])
+        .player("bob", battlefield=["Akroma's Memorial", "Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "bob")
+    (mountain,) = scenario.untapped_sources("Mountain", username="alice")
+
+    bolt = scenario.cast_onto_stack("Lightning Bolt", mountain, targets=[bears])
+    scenario.resolve_top()
+
+    assert bolt.zone is Zone.GRAVEYARD
+    assert bears.zone is Zone.BATTLEFIELD
+    assert bears.damage == 0
+
+
+def test_the_grant_switches_off_the_moment_the_memorial_leaves():
+    """CR 613.6: nothing here is a duration expiring - the effect is simply
+    not generated once its source is gone, the same as
+    `test_indefinite_keyword_grant.py`'s True Conviction.
+    """
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("bob", battlefield=["Hill Giant"])
+        .player("alice", battlefield=["Akroma's Memorial", "Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    giant = scenario.creature("Hill Giant", "bob")
+    memorial = scenario.creature("Akroma's Memorial", "alice")
+
+    scenario.game.destroy(memorial)
+    assert scenario.game._effective_protection_qualities(bears) == []
+
+    scenario.attack_with(giant, defending="alice")
+    scenario.advance()
+    scenario.block(giant, bears)
+    scenario.combat_damage()
+
+    assert bears.zone is Zone.GRAVEYARD, (
+        "no more protection, so Hill Giant's 3 damage lands in full on a 2-toughness Bears"
+    )
+
+
+@pytest.mark.xfail(
+    reason="machines/targeting.py reads the caster's own text, not the target's, and "
+    "Game.protection_refusal only checks the card-type flavour of a quality - a colour "
+    "is read on the damage side (Game.source_has_quality) but not the targeting side. "
+    "This is the same gap test_protection.py documents for printed protection "
+    "(test_a_sorcery_is_not_an_instant's neighbours); a granted colour quality inherits "
+    "it rather than introducing a new one.",
+    strict=True,
+)
+def test_granted_color_protection_still_stops_a_same_colored_spell_from_targeting():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Lightning Bolt"], battlefield=["Mountain"])
+        .player("bob", battlefield=["Akroma's Memorial", "Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "bob")
+    (mountain,) = scenario.untapped_sources("Mountain", username="alice")
+
+    with pytest.raises(ValueError, match="protection"):
+        scenario.cast("Lightning Bolt", username="alice", targets=[bears])

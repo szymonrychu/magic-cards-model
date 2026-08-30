@@ -1171,6 +1171,27 @@ _INDEFINITE_KEYWORD_GRANT_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: The same indefinite grant, with the list's last item being "protection from
+#: <quality>[ and from <quality>]" instead of another bare keyword (Akroma's
+#: Memorial: "Creatures you control have flying, first strike, vigilance,
+#: trample, haste, and protection from black and from red."). CR 702.16a's
+#: protection ability has no keyword name of its own - `_KNOWN_KEYWORDS` only
+#: lists `machines/combat.py`'s `Keyword` vocabulary - so `_INDEFINITE_
+#: KEYWORD_GRANT_RE`'s per-item cap of two words can never match the
+#: multi-word "protection from black and from red" tail, and this is a
+#: separate shape rather than a widening of that one. The leading keyword list
+#: is optional, so "Creatures you control have protection from red." alone
+#: also matches. CR 702.16g makes "protection from A and from B" two separate
+#: abilities, split the same way `models/game.py`'s `protection_qualities`
+#: splits an ordinary printed protection line.
+_INDEFINITE_KEYWORD_AND_PROTECTION_GRANT_RE = re.compile(
+    r"^(?P<other>other )?creatures (?P<whose>you control|your opponents control) "
+    r"(?:have|has) (?:(?P<keywords>[a-z]+(?: [a-z]+)?(?:,\s*[a-z]+(?: [a-z]+)?)*)"
+    r"(?:,)?\s+and\s+)?protection from (?P<qualities>[a-z]+(?: [a-z]+)?(?:\s+and from\s+"
+    r"[a-z]+(?: [a-z]+)?)*)\.?$",
+    re.IGNORECASE,
+)
+
 #: "[Subject] has/have base power and toughness N/N until end of turn."
 #: (Flexible Waterbender). Sublayer 7b (CR 613.4b: "Effects that refer to the
 #: base power and/or toughness of a creature apply in this layer") - a *set*,
@@ -1440,10 +1461,17 @@ def _creature_group(source: CardState, *, other: bool, whose: str) -> tuple[Sele
 
 
 def _indefinite_keyword_grant_builder(
-    keywords: list[str], *, other: bool, whose: str, line: str
+    abilities: list[str], *, other: bool, whose: str, line: str
 ) -> EffectBuilder:
     """ "[Other] creatures [you control|your opponents control] have <keyword(s)>."
-    (True Conviction) - layer 6 (CR 613.1f), one grant per keyword.
+    (True Conviction) - layer 6 (CR 613.1f), one grant per ability.
+
+    `abilities` is not only bare keywords: Akroma's Memorial's own "... and
+    protection from black and from red" reaches here too, as "Protection from
+    black" and "Protection from red" - CR 702.16a's protection ability is
+    still an ability-adding effect in layer 6, it just has no name of its own
+    in `_KNOWN_KEYWORDS`. Either way `grant_ability` only ever adds a line of
+    text to `Characteristics.abilities`; nothing here cares which kind it is.
 
     A static ability's effect (CR 611.3), so - like `_anthem_builder` - it is
     timestamped off the source permanent (CR 613.7a) and stops the moment the
@@ -1460,15 +1488,15 @@ def _indefinite_keyword_grant_builder(
         selector, subject = _creature_group(source, other=other, whose=whose)
         return [
             ContinuousEffect(
-                description=f"{source.name}: {subject} have {keyword}",
+                description=f"{source.name}: {subject} have {ability}",
                 layer=Layer.ABILITY,
                 timestamp=timestamp,
                 source_id=source.id,
                 source_ability=line,
                 selector=selector,
-                modification=grant_ability(keyword),
+                modification=grant_ability(ability),
             )
-            for keyword in keywords
+            for ability in abilities
         ]
 
     return builder
@@ -1589,6 +1617,17 @@ def _split_and_validate_keywords(raw: str) -> list[str] | None:
     return [part.capitalize() for part in parts]
 
 
+def _split_protection_qualities(raw: str) -> list[str]:
+    """ "black and from red" -> ["black", "red"] (CR 702.16g).
+
+    The same split `models/game.py`'s `protection_qualities` runs on an
+    ordinary printed "protection from A and from B" line - kept as its own
+    small copy here rather than imported, since `models/game.py` already
+    imports this module and a reverse import would cycle.
+    """
+    return [part.strip() for part in re.split(r"\s+and from\s+", raw, flags=re.IGNORECASE)]
+
+
 def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
     """One of the generalised shapes below, or `None` if this is not one of them.
 
@@ -1625,6 +1664,21 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
             return None
         return _indefinite_keyword_grant_builder(
             keywords,
+            other=match.group("other") is not None,
+            whose=match.group("whose").lower(),
+            line=sentence,
+        )
+    if match := _INDEFINITE_KEYWORD_AND_PROTECTION_GRANT_RE.fullmatch(sentence):
+        keywords: list[str] = []
+        if match.group("keywords") is not None:
+            validated = _split_and_validate_keywords(match.group("keywords"))
+            if validated is None:
+                return None
+            keywords = validated
+        qualities = _split_protection_qualities(match.group("qualities"))
+        abilities = keywords + [f"Protection from {quality}" for quality in qualities]
+        return _indefinite_keyword_grant_builder(
+            abilities,
             other=match.group("other") is not None,
             whose=match.group("whose").lower(),
             line=sentence,

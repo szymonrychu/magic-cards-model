@@ -51,14 +51,19 @@ def test_a_creature_that_takes_no_deathtouch_damage_survives():
     Fog Bank prevents all combat damage dealt to and by it (CR 615.1a), so the
     deathtouch damage event deals nothing - and a creature that was dealt no
     damage was not dealt damage by a source with deathtouch.
+
+    Sheoldred, the Apocalypse (not Questing Beast) is the attacker here: Questing
+    Beast can't be blocked by creatures with power 2 or less, and Fog Bank is a
+    0-power wall, so that block would be illegal. Sheoldred has deathtouch and no
+    blocking restriction, so Fog Bank may legally block it.
     """
-    scenario = duel("Questing Beast", "Fog Bank").build()
+    scenario = duel("Sheoldred, the Apocalypse", "Fog Bank").build()
     scenario.start_at(Step.DECLARE_ATTACKERS)
 
-    beast = scenario.creature("Questing Beast")
+    sheoldred = scenario.creature("Sheoldred, the Apocalypse")
     bank = scenario.creature("Fog Bank", "bob")
-    scenario.attack_with(beast)
-    scenario.block(beast, bank)
+    scenario.attack_with(sheoldred)
+    scenario.block(sheoldred, bank)
     scenario.combat_damage()
 
     assert bank.zone is Zone.BATTLEFIELD
@@ -90,15 +95,21 @@ def test_a_deathtoucher_assigns_only_one_to_each_blocker():
     each blocker only needs one before the next may be assigned any, so the
     first blocker takes one and the leftover falls on the last - which is where
     CR 510.1c puts damage that has nowhere else to go without trample.
+
+    Sheoldred, the Apocalypse (not Questing Beast) is the attacker: Questing
+    Beast can't be blocked by creatures with power 2 or less, and Grizzly Bears
+    is exactly power 2, so that block would be illegal. Sheoldred is power 4,
+    same as Questing Beast, with deathtouch and no blocking restriction, so the
+    arithmetic below is unchanged.
     """
-    scenario = duel("Questing Beast", "Grizzly Bears", "Watchwolf").build()
+    scenario = duel("Sheoldred, the Apocalypse", "Grizzly Bears", "Watchwolf").build()
     scenario.start_at(Step.DECLARE_ATTACKERS)
 
-    beast = scenario.creature("Questing Beast")
+    sheoldred = scenario.creature("Sheoldred, the Apocalypse")
     bears = scenario.creature("Grizzly Bears", "bob")
     wolf = scenario.creature("Watchwolf", "bob")
-    scenario.attack_with(beast)
-    scenario.block(beast, bears, wolf)
+    scenario.attack_with(sheoldred)
+    scenario.block(sheoldred, bears, wolf)
     assignment = scenario.combat_damage()
 
     assert (bears, 1) in assignment

@@ -27,16 +27,17 @@ creatures blocking it, so the order blockers were declared in is the order
 damage walks through here - `declare_blockers` takes them in that order.
 """
 
+import re
 from enum import StrEnum
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from ..models.card import Type
 from ..models.card_state import CardState, TargetRef
 from ..models.zone import Zone
-from .abilities import TriggerEvent, keywords_in_lines
+from .abilities import TriggerEvent, keywords_in_lines, layer_readable_sentences
 from .triggers import GameEvent
 
 #: What a creature may attack besides a player (CR 306.6, 310.5).
@@ -304,12 +305,117 @@ def declare_attacker(game: "Game", creature: CardState, defender: TargetRef) -> 
 # -- declaring blockers ----------------------------------------------------
 
 
+class EvasionNotice(BaseModel):
+    """One attacker whose own "can't be blocked" restriction text could not be
+    read into a block refusal (CR 509.1a).
+
+    Unlike flying (CR 702.9b), reach (CR 702.17b), or landwalk (CR 702.14c), a
+    plain "can't be blocked" restriction carries no keyword name of its own -
+    it is read straight off the attacker's oracle text by
+    `evasion_restriction_refusal`, and only the two shapes that function reads
+    are enforced. A sentence that opens the same way ("<subject> can't be
+    blocked ...") but is not one of them is not silently treated as no
+    restriction at all: `looks_like_unparsed_evasion_restriction` catches it
+    and `block_refusal` records one of these instead, the same "unreadable is
+    not the same as no effect" record `LayerNotice`, `TargetingNotice`,
+    `InterveningIfNotice`, `ModeNotice`, and `AnaphoricClauseNotice` already
+    keep for their own gaps.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    source_id: UUID | None
+    source_name: str
+    text: str
+    """The attacker's own oracle text, for whoever reads the notice later."""
+
+
+def _evasion_restriction_sentences(attacker: CardState) -> list[str]:
+    """Self-referential "can't be blocked" sentences off the attacker's own
+    oracle text: the subject must be "this creature" or the card's own name
+    (CR 509.1a's restriction is on the attacker itself; nothing in the pool
+    grants "can't be blocked" to *another* creature the way Akroma's Memorial
+    grants protection, so that shape is not read here - see
+    `docs/engine-coverage.md`).
+
+    A legendary permanent's own text names itself by its short name, the part
+    before the comma - "April O'Neil can't be blocked ..." on a card printed
+    "April O'Neil, Kunoichi Trainee" - the same self-reference
+    `machines/triggers.py`'s `_self_referential` already reads.
+    """
+    short_name = attacker.card.name.split("//")[0].strip().split(",")[0].strip()
+    subject = re.compile(
+        rf"^(?:this creature|{re.escape(short_name)})\b.*can't be blocked\b",
+        re.IGNORECASE,
+    )
+    return [
+        sentence
+        for sentence in layer_readable_sentences(attacker.card.oracle_text)
+        if subject.search(sentence)
+    ]
+
+
+#: The Mindskinner: "The Mindskinner can't be blocked." - unconditional.
+_CANT_BE_BLOCKED_RE = re.compile(r"can't be blocked\.?$", re.IGNORECASE)
+
+#: Questing Beast: "Questing Beast can't be blocked by creatures with power 2
+#: or less." - the one qualified shape read; other qualifiers (a colour, a
+#: keyword) are not in the pool and are not attempted.
+_CANT_BE_BLOCKED_BY_POWER_OR_LESS_RE = re.compile(
+    r"can't be blocked by creatures with power (?P<power>\d+) or less\.?$", re.IGNORECASE
+)
+
+
+def evasion_restriction_refusal(
+    game: "Game", attacker: CardState, blocker: CardState
+) -> str | None:
+    """Why the attacker's own "can't be blocked" text refuses this blocker, or
+    None (CR 509.1a).
+
+    Read straight off the attacker's own oracle text rather than off
+    `Keyword`: unlike flying or menace, this restriction has no keyword name of
+    its own, so nothing in this module's vocabulary can name it. Only the two
+    shapes above are read; a sentence that looks like an attempt at a third is
+    caught by `looks_like_unparsed_evasion_restriction` instead of silently
+    doing nothing.
+    """
+    for sentence in _evasion_restriction_sentences(attacker):
+        if match := _CANT_BE_BLOCKED_BY_POWER_OR_LESS_RE.search(sentence):
+            threshold = int(match.group("power"))
+            blocker_power = game.power_of(blocker)
+            if blocker_power is not None and blocker_power <= threshold:
+                return (
+                    f"{attacker.name} can't be blocked by creatures with power "
+                    f"{threshold} or less, and {blocker.name} has power {blocker_power} "
+                    "(CR 509.1a)"
+                )
+        elif _CANT_BE_BLOCKED_RE.search(sentence):
+            return f"{attacker.name} can't be blocked (CR 509.1a)"
+    return None
+
+
+def looks_like_unparsed_evasion_restriction(attacker: CardState) -> bool:
+    """True if some self-referential sentence of the attacker's own oracle text
+    reads like a "can't be blocked" restriction but is not one of the two
+    shapes `evasion_restriction_refusal` reads - the fail-closed signal
+    `block_refusal` turns into an `EvasionNotice` rather than a block that
+    silently goes through unrestricted.
+    """
+    return any(
+        _CANT_BE_BLOCKED_RE.search(sentence) is None
+        and _CANT_BE_BLOCKED_BY_POWER_OR_LESS_RE.search(sentence) is None
+        for sentence in _evasion_restriction_sentences(attacker)
+    )
+
+
 def block_refusal(game: "Game", blocker: CardState, attack: Attack) -> str | None:
     """Why this creature cannot block that attacker, or None (CR 509.1a-b).
 
     Covers the base requirements, who the attacker is attacking (CR 802.4a),
-    and the two evasion abilities that need nothing but the attacker and the
-    blocker to decide: flying (CR 702.9b) and reach (CR 702.17b).
+    and the evasion abilities that need nothing but the attacker and the
+    blocker to decide: flying (CR 702.9b), reach (CR 702.17b), and a plain
+    "can't be blocked" restriction read off the attacker's own text
+    (CR 509.1a).
     """
     attacker = game.find_by_id(attack.attacker_id)
     if attacker is None or attacker.zone is not Zone.BATTLEFIELD:
@@ -332,6 +438,20 @@ def block_refusal(game: "Game", blocker: CardState, attack: Attack) -> str | Non
         has_keyword(blocker, Keyword.FLYING, game) or has_keyword(blocker, Keyword.REACH, game)
     ):
         return f"{attacker.name} has flying and {blocker.name} has neither flying nor reach"
+
+    restriction = evasion_restriction_refusal(game, attacker, blocker)
+    if restriction is not None:
+        return restriction
+    if looks_like_unparsed_evasion_restriction(attacker) and not any(
+        notice.source_id == attacker.id for notice in game.evasion_notices
+    ):
+        game.evasion_notices.append(
+            EvasionNotice(
+                source_id=attacker.id,
+                source_name=attacker.name,
+                text=attacker.card.oracle_text or "",
+            )
+        )
 
     return landwalk_refusal(game, attacker, defending)
 

@@ -44,6 +44,7 @@ Existing files, as a guide to where a new case belongs:
 | `test_combat_damage.py` | CR 510: assignment, simultaneity, and winning by damage |
 | `test_first_strike.py` | CR 702.7, 702.4, 510.4: the extra combat damage step |
 | `test_evasion.py` | CR 702.9, 702.17, 702.111, 702.19: flying, reach, menace, trample |
+| `test_evasion_restrictions.py` | CR 509.1a: a plain "can't be blocked [by creatures with power N or less]" restriction, read off the attacker's own text rather than a keyword |
 | `test_turn_based_actions.py` | CR 703: what a step does by itself - untap, draw, cleanup |
 | `test_state_based_actions.py` | CR 704: 0 toughness, the empty library, the legend rule |
 | `test_triggered_abilities.py` | CR 603: what triggers, when it goes on the stack, APNAP order, the intervening *if* |
@@ -63,6 +64,7 @@ Existing files, as a guide to where a new case belongs:
 | `test_surveil.py` | CR 701.25: surveil, and the graveyard being a zone change |
 | `test_shuffling.py` | CR 701.23, 701.24: searching a hidden zone, and randomizing what is left |
 | `test_prevention_effects.py` | CR 615: prevention shields, the damage source, and protection's damage half |
+| `test_protection_grants.py` | CR 613.1f, 702.16a, 702.16e, 702.16g: protection *granted* by another permanent's static ability (Akroma's Memorial), as opposed to `test_protection.py`'s printed-on-itself Emrakul |
 | `test_tokens.py` | CR 111: what a token is, CR 111.8's refused move, CR 704.5d ceasing to exist |
 | `test_token_creation_replacement.py` | CR 701.7b: replacing a token *being created*, and Doubling Season's token half |
 | `test_role_tokens.py` | CR 111.10k, 303.7, 704.5z: Roles, and the two state-based actions that police them |

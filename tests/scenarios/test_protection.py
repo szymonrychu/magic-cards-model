@@ -10,12 +10,23 @@ organised around which of them this engine can express:
 - **CR 702.16c**, can't be *enchanted* by Auras with the quality - not
   expressible: `CardState` has no attachments.
 - **CR 702.16d**, can't be *equipped* by Equipment with the quality - the same.
-- **CR 702.16e**, *damage* from sources with the quality is prevented - not
-  expressible: `Game.deal_damage` carries no source.
+- **CR 702.16e**, *damage* from sources with the quality is prevented -
+  enforced end to end: `Game.deal_damage` carries a source, and both combat
+  (`machines/combat._deal_combat_damage`) and spell damage
+  (`machines/effects.py`) name theirs. The one test below that still xfails
+  calls `deal_damage` with no source at all, on purpose, which is a different
+  thing from the engine being unable to name one - see its own docstring, and
+  `scenarios/test_prevention_effects.py`/`scenarios/test_protection_grants.py`
+  for the cases with a real source.
 - **CR 702.16f**, an attacking creature with it can't be *blocked* by creatures
   with the quality - vacuous for "from instants", and unenforced in general.
-- **CR 702.16m**, multiple instances of one quality are redundant - nothing
-  grants protection, so there is no way to get two.
+- **CR 702.16m**, multiple instances of one quality are redundant - Emrakul's
+  own printed protection can never have two instances of the same quality on
+  itself, and nothing in the pool grants Emrakul *more* protection from
+  instants specifically, so this file still cannot exercise the redundancy.
+  Protection can be granted now (Akroma's Memorial - CR 613.1f, see
+  `scenarios/test_protection_grants.py`), so "nothing grants protection" is no
+  longer true in general, just for this file's own board.
 
 CR 702.16a also carries the rule that makes "protection from instants" work at
 all: "If the quality is a card type, subtype, or supertype, the ability applies
@@ -215,16 +226,29 @@ def test_announcing_a_protected_target_is_refused_as_the_spell_is_cast():
 
 
 @pytest.mark.xfail(
-    reason="CR 702.16e is implemented now - `Game.deal_damage` takes a `source` "
-    "and `Game.protection_from_damage` reads the target's protection against it, "
-    "covered in scenarios/test_prevention_effects.py. What is missing is a "
-    "*caller* that names the source: `machines/combat.py` and "
-    "`machines/effects.py` still deal damage anonymously, and this test deals it "
-    "anonymously too, so the quality has nothing to be checked against",
+    reason="CR 702.16e is implemented end to end now, not just possible: "
+    "`Game.deal_damage` takes a `source`, `Game.protection_from_damage` reads "
+    "the target's protection against it, and real callers actually pass one - "
+    "`machines/combat._deal_combat_damage` names the attacker or blocker, and "
+    "the damage entries in `machines/effects.py` name the spell or ability - "
+    "covered end to end in scenarios/test_prevention_effects.py and "
+    "scenarios/test_protection_grants.py. This test's own call below deals its "
+    "damage anonymously (`deal_damage(emrakul, 3)`, no `source=`), which is a "
+    "choice this test makes, not an engine gap: an anonymous source has no "
+    "quality for protection to check against, so this specific call is "
+    "correctly never prevented",
     strict=True,
 )
 def test_damage_from_an_instant_source_is_prevented():
-    """CR 702.16e: even damage that never targeted is prevented."""
+    """CR 702.16e: even damage that never targeted is prevented.
+
+    An *anonymous* call, on purpose - `deal_damage(emrakul, 3)` names no
+    source, so there is nothing here for protection to check a quality
+    against. `scenarios/test_protection_grants.py`'s Lightning Bolt and
+    combat tests are the ones that show a real, named source actually being
+    prevented; this one stays xfail to keep that distinction visible rather
+    than deleting the case that first exposed the gap.
+    """
     scenario = emrakul_on_bobs_board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     emrakul = scenario.creature("Emrakul, the Promised End", "bob")

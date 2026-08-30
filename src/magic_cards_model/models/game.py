@@ -17,7 +17,7 @@ from ..machines.abilities import (
     TriggerEvent,
     parse_abilities,
 )
-from ..machines.combat import Attack, CombatMachine, Keyword, has_keyword
+from ..machines.combat import Attack, CombatMachine, EvasionNotice, Keyword, has_keyword
 from ..machines.cost import (
     CostComponent,
     CostModifierKind,
@@ -121,6 +121,22 @@ _COSTS_LESS_PER_CARD_TYPE = re.compile(
 )
 
 
+def _qualities_from_text(text: str | None) -> list[str]:
+    """Every "protection from [quality]" this text carries, in order (CR 702.16a,
+    CR 702.16g). Shared by `protection_qualities`, which reads a printing's own
+    oracle text, and `Game._effective_protection_qualities`, which reads the
+    same phrase off a *granted* ability line (`machines/layers.py`'s indefinite
+    keyword-and-protection grant, Akroma's Memorial) the same way.
+    """
+    qualities: list[str] = []
+    for match in _PROTECTION.finditer(text or ""):
+        for part in match.group(1).split(" and from "):
+            quality = part.strip().rstrip(",").strip()
+            if quality and quality not in qualities:
+                qualities.append(quality)
+    return qualities
+
+
 def protection_qualities(card: Card) -> list[str]:
     """Every quality this printing has protection from, in printed order (CR 702.16a).
 
@@ -129,16 +145,12 @@ def protection_qualities(card: Card) -> list[str]:
     from what. CR 702.16g's "protection from [A] and from [B]" is two separate
     protection abilities, so the phrase is split on "and from".
 
-    Nothing grants or removes protection here, because there are no layers for
-    keywords - see `docs/engine-coverage.md`.
+    This is the printing's own protection only. A permanent can also have
+    protection *granted* to it by another static ability (Akroma's Memorial's
+    "creatures you control have ... protection from black and from red") -
+    `Game._effective_protection_qualities` is the one that reads both.
     """
-    qualities: list[str] = []
-    for match in _PROTECTION.finditer(card.oracle_text or ""):
-        for part in match.group(1).split(" and from "):
-            quality = part.strip().rstrip(",").strip()
-            if quality and quality not in qualities:
-                qualities.append(quality)
-    return qualities
+    return _qualities_from_text(card.oracle_text)
 
 
 #: CR 605.1a's fourth criterion, read off the printed text: a word that means a
@@ -501,6 +513,15 @@ class Game(BaseModel):
     at all, with nothing anywhere recording that the second sentence had gone
     unread. The same unreadable-is-not-the-same-as-no-effect record every
     other notice list here keeps."""
+
+    evasion_notices: list[EvasionNotice] = Field(default_factory=list)
+    """One entry per attacker whose own "can't be blocked" restriction text
+    (CR 509.1a) `combat.block_refusal` could read as an attempt at the shape
+    but not fully parse - a plain "can't be blocked" and "can't be blocked by
+    creatures with power N or less" are the only two read; anything else
+    fails closed here instead of a block silently going through unrestricted,
+    the same unreadable-is-not-the-same-as-no-effect record every other
+    notice list here keeps."""
 
     spells_cast_this_turn: dict[str, list[CardState]] = Field(default_factory=dict)
     """Every spell each player has cast this turn, keyed by controller
@@ -2349,7 +2370,7 @@ class Game(BaseModel):
         """
         if not isinstance(target, CardState):
             return None
-        for quality in protection_qualities(target.card):
+        for quality in self._effective_protection_qualities(target):
             card_type = _card_type_named(quality)
             if card_type is not None and card_type in source.types:
                 return (
@@ -2357,6 +2378,32 @@ class Game(BaseModel):
                     f"cannot target it (CR 702.16b)"
                 )
         return None
+
+    def _effective_protection_qualities(self, target: CardState) -> list[str]:
+        """Every quality `target` has protection from right now: its own printed
+        text plus anything granted to it by another static ability (CR 613.1f).
+
+        Akroma's Memorial's "creatures you control have ... protection from
+        black and from red" is layer 6, not the permanent's own printing, so
+        `protection_qualities(target.card)` alone misses it - it only reads
+        what `machines/layers.py` left in `Characteristics.abilities` as a
+        "Protection from <quality>" line, the same way `combat.has_keyword`
+        reads a granted keyword off the same list. A permanent not on the
+        battlefield (a spell on the stack, say) has no computed board to ask,
+        so only its own printed protection applies there.
+        """
+        qualities = list(protection_qualities(target.card))
+        if target.zone is Zone.BATTLEFIELD:
+            try:
+                characteristics = self.characteristics_of(target)
+            except KeyError:
+                characteristics = None
+            if characteristics is not None:
+                for line in characteristics.abilities:
+                    for quality in _qualities_from_text(line):
+                        if quality not in qualities:
+                            qualities.append(quality)
+        return qualities
 
     def why_cannot_target(self, spell: StackObject, target: Targetable) -> str | None:
         """Why this stack object may not target that, as far as protection goes.
@@ -2594,7 +2641,7 @@ class Game(BaseModel):
         """
         if event.kind is not EventKind.DAMAGE or event.card is None or event.source is None:
             return None
-        for quality in protection_qualities(event.card.card):
+        for quality in self._effective_protection_qualities(event.card):
             if self.source_has_quality(event.source, quality):
                 return (
                     f"{event.card.name} has protection from {quality}, so damage from "
