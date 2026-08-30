@@ -77,7 +77,12 @@ from ..machines.layers import (
     additional_land_plays,
 )
 from ..machines.priority import PriorityMachine, PriorityOutcome
-from ..machines.replacement import EventKind, ReplaceableEvent, apply_replacements
+from ..machines.replacement import (
+    EventKind,
+    ReplaceableEvent,
+    UnwiredChoiceNotice,
+    apply_replacements,
+)
 from ..machines.targeting import (
     TargetingProfile,
     profile_for_modes,
@@ -540,6 +545,18 @@ class Game(BaseModel):
     at all, with nothing anywhere recording that a choice had gone unoffered.
     The same unreadable-is-not-the-same-as-no-effect record every other
     notice list here keeps."""
+
+    unwired_choice_notices: list[UnwiredChoiceNotice] = Field(default_factory=list)
+    """One entry per sentence of a card that reads back its own CR 614.12a
+    "as [this] enters, choose ..." answer in a shape this wave does not
+    perform - Runed Halo's player-granted protection, Pithing Needle's and
+    Disruptor Flute's activation/casting restrictions by name, Cavern of
+    Souls' restricted-mana grant. See `UnwiredChoiceNotice` for why each of
+    the four is out of scope and what would be needed to wire it. The one
+    payoff this wave performs end to end - "adds an additional ..." mana - is
+    excluded from this list entirely, and Voice of All's permanent-targeted
+    protection grant already gets a `LayerNotice` for free from the existing
+    static-ability sweep, so it is not duplicated here either."""
 
     delayed_clause_notices: list[DelayedClauseNotice] = Field(default_factory=list)
     """One entry per delayed-trigger clause (CR 603.7) whose timing this wave
@@ -1940,6 +1957,16 @@ class Game(BaseModel):
                     f"{decision.target_maximum} (CR 115.6)"
                 )
             return chosen
+
+        if decision.kind is DecisionKind.CHOOSE_A_QUALITY:
+            if not isinstance(value, str) or not value:
+                raise ValueError(f"{decision.prompt}: needs a chosen value (CR 614.12a)")
+            if decision.options and value not in decision.options:
+                raise ValueError(
+                    f"{decision.prompt}: {value!r} is not among the legal choices "
+                    f"({', '.join(decision.options)})"
+                )
+            return value
 
         if not isinstance(value, CardSplit):
             raise ValueError(f"{decision.prompt}: needs a CardSplit answer")

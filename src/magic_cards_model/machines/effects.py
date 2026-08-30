@@ -61,7 +61,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict
 
 from ..models.card import Color, Supertype, Type
-from ..models.card_state import CardState, Counter, ExileAnnotation, ExileMarker
+from ..models.card_state import CardState, ChoiceKind, Counter, ExileAnnotation, ExileMarker
 from ..models.player import Player
 from ..models.token import MONSTER_ROLE, PREDEFINED, TokenDefinition, create_tokens
 from ..models.zone import Zone
@@ -3004,6 +3004,97 @@ def _is_layer_effect_text(text: str) -> bool:
     return is_resolution_layer_effect_text(text)
 
 
+#: "[its controller ]add[s] an additional <mana>." - the resolution half of
+#: CR 605.1b's triggered mana ability: "an ability that triggers whenever a
+#: permanent 'is tapped for mana' ... triggers whenever such a mana ability
+#: resolves and produces mana" (CR 106.12a), and this is what that trigger
+#: itself does when it resolves. Three pool cards share exactly this
+#: template - Utopia Sprawl's "its controller adds an additional one mana of
+#: the chosen color", Leyline of Abundance's and Badgermole Cub's "add an
+#: additional {G}" - and this is a text-template parser reached through
+#: `_ability_effect_or_notice`'s fallback, not a per-card row: keying this on
+#: card name would make Utopia Sprawl's own defect report pass while Leyline
+#: and Badgermole stayed silent, which is exactly the shadowing
+#: `test_registry_is_minimal.py` exists to catch elsewhere in this file.
+#:
+#: "its controller" is **not** this ability's own controller - it is the
+#: *enchanted permanent's* controller (CR 303.4e lets an Aura's controller and
+#: the enchanted permanent's controller differ), read off `attached_to` on the
+#: ability's source. An implicit subject ("add an additional {G}.") means the
+#: ability's own controller instead, which is what Leyline of Abundance and
+#: Badgermole Cub - creatures with no "enchanted" anything to point at - both
+#: rely on.
+_MANA_ADD_RE = re.compile(
+    r"^(?:(?P<subject>its controller)\s+)?adds? an additional (?P<mana>.+?)\.?$",
+    re.IGNORECASE,
+)
+#: "one mana of the chosen color" - CR 614.12a's choice, read back by name
+#: (Utopia Sprawl). Distinct from a literal mana symbol, which names its color
+#: outright and needs no choice recorded anywhere.
+_CHOSEN_COLOR_MANA_RE = re.compile(r"^one mana of the chosen color$", re.IGNORECASE)
+#: A literal mana symbol or run of them - "{G}" (Leyline of Abundance,
+#: Badgermole Cub). `findall` plus a round-trip check (rather than trusting
+#: `findall` alone) is what refuses "{G} or {U}" - a choice this template does
+#: not carry - instead of silently reading it as both colors at once.
+_MANA_SYMBOL_RE = re.compile(r"\{([WUBRGC])\}", re.IGNORECASE)
+
+
+def _parse_mana_adding_trigger(text: str) -> AbilityEffect | None:
+    """CR 605.1b's mana-adding trigger, read off its own printed text.
+
+    Returns `None` for anything that is not exactly this template, so a card
+    this does not cover (a variable amount, a choice of colors rather than one
+    chosen ahead of time) falls through to the ordinary clause parsers below
+    rather than being half-read.
+    """
+    match = _MANA_ADD_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    mana_spec = match.group("mana").strip()
+    from_enchanted = match.group("subject") is not None
+
+    chosen_color = bool(_CHOSEN_COLOR_MANA_RE.fullmatch(mana_spec))
+    literal_colors: list[Color] | None = None
+    if not chosen_color:
+        symbols = _MANA_SYMBOL_RE.findall(mana_spec)
+        round_trip = "".join(f"{{{symbol}}}" for symbol in symbols)
+        if not symbols or round_trip.lower() != mana_spec.lower().replace(" ", ""):
+            return None
+        literal_colors = [Color(symbol.upper()) for symbol in symbols]
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None:
+            return
+        if from_enchanted:
+            enchanted = (
+                game.find_by_id(source.attached_to) if source.attached_to is not None else None
+            )
+            controller = enchanted.controller if enchanted is not None else None
+        else:
+            controller = ability.controller
+        if controller is None:
+            return
+
+        if chosen_color:
+            choice = source.choice
+            if choice is None or choice.kind is not ChoiceKind.COLOR:
+                return
+            try:
+                produced = [Color(choice.value)]
+            except ValueError:
+                return
+        else:
+            assert literal_colors is not None
+            produced = literal_colors
+
+        pool = game.player(controller).mana_pool
+        for color in produced:
+            pool.add(color)
+
+    return effect
+
+
 def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     """`parse_mixed_effect` on `effect_text`, or - if that failed specifically
     on an unreadable anaphoric second clause - a stand-in effect that records
@@ -3035,10 +3126,20 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     is one CR 608.2c instruction that `split_effect_clauses`'s bare "and" cut
     would otherwise slice into fragments none of `parse_mixed_effect`'s
     per-clause parsers read.
+
+    Also tried ahead of everything else: `_parse_mana_adding_trigger`'s
+    "[its controller ]adds an additional <mana>" shape (CR 605.1b, CR
+    106.12a) - Utopia Sprawl, Leyline of Abundance, Badgermole Cub. None of
+    `parse_clause_effect`'s player-clause shapes read "add mana" at all, so
+    without this the whole ability would fall through every check below and
+    come back `None`, exactly the reported defect.
     """
     conditional_sacrifice = _parse_conditional_sacrifice_clause(effect_text, for_spell=False)
     if conditional_sacrifice is not None:
         return conditional_sacrifice
+    mana_adding = _parse_mana_adding_trigger(effect_text)
+    if mana_adding is not None:
+        return mana_adding
     parsed = parse_mixed_effect(effect_text)
     if parsed is not None:
         return parsed

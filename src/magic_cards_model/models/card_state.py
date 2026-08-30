@@ -318,6 +318,39 @@ class ExileMarker(StrEnum):
     for what "with this permanent" means once the permanent itself is gone."""
 
 
+class ChoiceKind(StrEnum):
+    """What kind of thing an "as [this] enters, choose ..." effect names.
+
+    CR 614.1c: "Effects that read '... As [this permanent] enters ...' are
+    replacement effects", and CR 614.12a: "If a replacement effect that
+    modifies how a permanent enters the battlefield requires a choice, that
+    choice is made before the permanent enters the battlefield." The pool has
+    three shapes of that choice - Utopia Sprawl/Voice of All/Forsaken
+    Crossroads choose a color, Runed Halo/Pithing Needle/Disruptor Flute
+    choose a card name, Cavern of Souls chooses a creature type - so a single
+    color-only field on `CardState` would silently miss two of the three.
+    `Choice` below is generic over which kind was asked for.
+    """
+
+    COLOR = "color"
+    CARD_NAME = "card_name"
+    CREATURE_TYPE = "creature_type"
+
+
+class Choice(BaseModel):
+    """One "as [this] enters, choose ..." answer, recorded on the object that
+    asked (CR 614.12a).
+
+    `value` is the chosen color's letter code (`Color.value`, e.g. `"G"`) for
+    `ChoiceKind.COLOR`, or the plain named string for the other two kinds - a
+    card name or a creature type. Read back later by whatever clause says "the
+    chosen color"/"the chosen card name"/"the chosen creature type".
+    """
+
+    kind: ChoiceKind
+    value: str
+
+
 class FaceDownCharacteristics(BaseModel):
     """What a face-down object *is*, in place of what its card says (CR 708.2).
 
@@ -556,6 +589,19 @@ class CardState(BaseModel):
     trigger look back in time at the object as it last existed. Persist's
     intervening *if* - "if it had no -1/-1 counters on it" (CR 702.79a) - is
     exactly that question, and there is nothing else left to ask.
+    """
+
+    choice: Choice | None = None
+    """An "as [this] enters, choose ..." answer, made before this object
+    entered the battlefield (CR 614.1c, CR 614.12a).
+
+    `None` until such a choice is made, and until then, until asked. Not
+    reset by `move_to` - CR 614.12a's choice is made once, as the permanent
+    that carries it enters, and nothing in the pool this generalizes for
+    (Utopia Sprawl's chosen color, Runed Halo's chosen card name, Cavern of
+    Souls' chosen creature type) ever asks again for the same object's
+    lifetime on the battlefield, so there is no rule that says it should be
+    dropped on some other zone change either.
     """
 
     zone_change_stamp: UUID = Field(default_factory=uuid4)

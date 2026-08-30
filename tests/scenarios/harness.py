@@ -340,6 +340,25 @@ class PlayedScenario:
         """
         self._queue(DecisionKind.PAY_LIFE, paid, username, source, times)
 
+    def will_choose(
+        self,
+        value: str,
+        *,
+        username: str | None = None,
+        source: str | None = None,
+        times: int | None = 1,
+    ) -> None:
+        """Answer the next "as [this] enters, choose a color/card name/creature
+        type" question (CR 614.1c, CR 614.12a) with `value`.
+
+        A color is its letter code (`Color.BLUE.value`, i.e. `"U"`); a card
+        name or creature type is the plain string. `source` is the card
+        asking, which is how a scenario with several such choices in flight
+        tells them apart - the same convention `will_take_the_may` and
+        `will_pay_the_life` already use.
+        """
+        self._queue(DecisionKind.CHOOSE_A_QUALITY, value, username, source, times)
+
     def will_discard(
         self,
         *cards: CardState,
