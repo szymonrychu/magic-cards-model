@@ -83,3 +83,26 @@ What surfaced it was a one-line disagreement: an agent explained a skip-count
 change one way, and I had measured it myself and knew the real cause. **Chase the
 small discrepancy in an agent's report** - the plausible explanation for an
 off-by-one is usually where the real defect is hiding.
+
+## Parallel waves: isolate everything, and pre-check merge order (2026-08-30)
+
+Two process rules learned the hard way while running five fix waves at once
+against one engine:
+
+1. **Never dispatch an agent to work directly on `main`.** Doing so blocks every
+   pending merge - `git merge` refuses on a dirty tree, and stashing is banned
+   here. Give every agent `isolation: "worktree"`, without exception, even for a
+   change that looks too small to bother.
+
+2. **Pre-check merges before queuing them**, with a command that changes nothing:
+
+       git merge-tree --write-tree --name-only HEAD <branch>
+
+   It reports conflicts without touching the working tree, so several finished
+   branches can be ordered cheapest-first (clean merges before ones needing
+   resolution) instead of discovering a conflict halfway through the queue.
+
+Waves that touch `models/game.py`, `machines/effects.py` or `machines/layers.py`
+conflict with each other routinely - those three files are where nearly every
+mechanic lands. Expect a resolution pass, and hand it to an agent with BOTH
+sides' tests named, since a merge here is a semantic decision, not a textual one.
