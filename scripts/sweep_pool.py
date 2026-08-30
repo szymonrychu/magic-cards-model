@@ -98,7 +98,16 @@ NEEDS_NO_CODE = frozenset(
 #: Ability words (CR 207.2c). They have no rules meaning at all, so a card
 #: carrying one is not carrying an unexecuted keyword.
 ABILITY_WORDS = frozenset(
-    {"delirium", "ferocious", "metalcraft", "landfall", "flurry", "channel", "ascend"}
+    {
+        "delirium",
+        "ferocious",
+        "metalcraft",
+        "landfall",
+        "flurry",
+        "channel",
+        "ascend",
+        "imprint",
+    }
 )
 
 

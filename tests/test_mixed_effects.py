@@ -157,6 +157,80 @@ def test_boseijus_channel_search_clause_is_reported_not_silently_dropped():
 
 
 # --------------------------------------------------------------------------
+# "Imprint" (CR 207.2c) - "you may exile a `<quality>` card ... from your
+# hand", and giving the linked card back. See
+# `tests/scenarios/test_imprint.py` for the end-to-end game-state coverage;
+# this is the text-level parser check, on Ugin's Labyrinth's real printed
+# text (the only card in the fixture pool carrying this shape).
+# --------------------------------------------------------------------------
+
+
+def test_ugins_labyrinths_imprint_trigger_now_parses_with_no_registry_row():
+    """ "Imprint — When this land enters, you may exile a colorless card with
+    mana value 7 or greater from your hand." - `TriggeredAbility.effect` holds
+    the text after the ability word and the trigger condition are stripped.
+    """
+    from magic_cards_model.machines import AbilityKind, abilities_of_kind
+    from magic_cards_model.machines.abilities import TriggerEvent
+    from magic_cards_model.machines.effects import TRIGGER_EFFECTS, trigger_effect_for
+
+    assert not any(key[0] == "Ugin's Labyrinth" for key in TRIGGER_EFFECTS)
+    (trigger,) = abilities_of_kind(card("Ugin's Labyrinth"), AbilityKind.TRIGGERED)
+    effect = trigger_effect_for(
+        "Ugin's Labyrinth", TriggerEvent.ENTERS_THE_BATTLEFIELD, trigger.effect
+    )
+    assert effect is not None
+
+
+def test_ugins_labyrinths_return_ability_now_parses_with_no_registry_row():
+    """ "{T}: Return the exiled card to its owner's hand." - the land's third
+    ability, index 1 among its activated abilities (index 0 is the mana
+    ability).
+    """
+    from magic_cards_model.machines.abilities import ActivatedAbility, parse_abilities
+    from magic_cards_model.machines.effects import ACTIVATED_EFFECTS, activated_effect_for
+
+    assert not any(key[0] == "Ugin's Labyrinth" for key in ACTIVATED_EFFECTS)
+    activated = [
+        ability
+        for ability in parse_abilities(card("Ugin's Labyrinth"))
+        if isinstance(ability, ActivatedAbility)
+    ]
+    assert len(activated) == 2
+    effect = activated_effect_for("Ugin's Labyrinth", 1, activated[1].effect)
+    assert effect is not None
+
+
+def test_ugins_labyrinths_mana_ability_carries_the_imprinted_condition():
+    """ "{T}: Add {C}. If a card is exiled with this land, add {C}{C}
+    instead." reads as a `ManaCondition` with `imprinted=True`, the same
+    conditional-mana shape as Urza's Tower's land-type check and Gemstone
+    Caverns' counter check, just a third kind of thing to check.
+    """
+    from magic_cards_model.machines.abilities import parse_mana_abilities
+
+    (ability,) = parse_mana_abilities(card("Ugin's Labyrinth"))
+    assert len(ability.conditional) == 1
+    assert ability.conditional[0].imprinted is True
+
+
+def test_an_unrecognised_imprint_quality_is_still_recognised_as_the_shape():
+    """`_unreadable_imprint_quality` is what feeds `ImprintNotice` - it has to
+    find the clause of a structurally-matching "you may exile a `<quality>`
+    card ... from your hand" sentence whose quality this wave cannot read (no
+    real card in the fixture pool has this gap - Ugin's Labyrinth's own
+    "colorless" and every "with mana value N or greater/less" bound both
+    parse fine - so this is a synthetic string, the same discipline
+    `test_unreadable_anaphoric_clause_finds_the_second_sentence_of_a_synthetic_pair`
+    uses above).
+    """
+    from magic_cards_model.machines.effects import _unreadable_imprint_quality
+
+    text = "you may exile an artifact or creature card from your hand"
+    assert _unreadable_imprint_quality(text) == text
+
+
+# --------------------------------------------------------------------------
 # The shared preamble strip + modal bail (`_prepare_effect_clauses`)
 # --------------------------------------------------------------------------
 

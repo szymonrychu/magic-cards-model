@@ -161,25 +161,28 @@ def _flexibility(options: list[list[Color]], any_color: bool) -> int:
 
 def _mana_context(
     payment: "CostPayment", source: CardState
-) -> tuple[frozenset[str], frozenset[str]]:
+) -> tuple[frozenset[str], frozenset[str], bool]:
     """The board state `source`'s mana ability needs to resolve a CR 605.1a
     conditional "add X instead" clause right now: the land types its
-    controller controls (Urza's Tower) and the counters on `source` itself
-    (Gemstone Caverns).
+    controller controls (Urza's Tower), the counters on `source` itself
+    (Gemstone Caverns), and whether a card is exiled with it (Ugin's
+    Labyrinth).
 
-    Tapping a source changes nothing about who controls what or what counters
-    are on a permanent, so this is safe to compute once per candidate before
-    any combination of sources is tried, rather than recomputed per
-    combination - `Game._controlled_land_types` only reads control, not
-    tapped status, and `source.counters` is unaffected by tapping anything.
+    Tapping a source changes nothing about who controls what, what counters
+    are on a permanent, or what is exiled with it, so this is safe to compute
+    once per candidate before any combination of sources is tried, rather than
+    recomputed per combination - `Game._controlled_land_types` only reads
+    control, not tapped status, and neither `source.counters` nor the exile
+    zone is affected by tapping anything.
     """
     own_counters = frozenset(source.counters.counts)
     if payment.game is None:
-        return frozenset(), own_counters
+        return frozenset(), own_counters, False
+    has_imprinted_card = payment.game.card_imprinted_on(source.id) is not None
     controller = source.controller or payment.payer
     if controller is None:
-        return frozenset(), own_counters
-    return payment.game._controlled_land_types(controller), own_counters
+        return frozenset(), own_counters, has_imprinted_card
+    return payment.game._controlled_land_types(controller), own_counters, has_imprinted_card
 
 
 def _auto_tap_candidates(
@@ -199,8 +202,8 @@ def _auto_tap_candidates(
         ability = free_tap_mana_ability(source.card)
         if ability is None:
             continue
-        land_types, own_counters = _mana_context(payment, source)
-        options, any_color = ability.effective(land_types, own_counters)
+        land_types, own_counters, has_imprinted_card = _mana_context(payment, source)
+        options, any_color = ability.effective(land_types, own_counters, has_imprinted_card)
         candidates.append((source, options, any_color))
     candidates.sort(key=lambda item: _flexibility(item[1], item[2]))
     return [(source, options) for source, options, _any_color in candidates]

@@ -306,6 +306,16 @@ class ExileMarker(StrEnum):
     player discards it, but exiles it instead of putting it into their
     graveyard." The card sits in its own pile of exile until the triggered
     ability that follows is resolved, and CR 702.35b casts it from there."""
+    IMPRINTED = "imprinted"
+    """"Imprint" is an ability word (CR 207.2c): it "has no special rules
+    meaning" of its own, so the rule is whatever the card's own sentence says -
+    Ugin's Labyrinth's "you may exile a colorless card with mana value 7 or
+    greater from your hand". What every printing sharing the word has in
+    common is the shape this marker exists for: the exiled card is not just in
+    exile, it is *exiled with* a specific permanent, and a later ability reads
+    that back ("If a card is exiled with this land, add {C}{C} instead.").
+    `ExileAnnotation.linked_permanent_id` is that link; see its own docstring
+    for what "with this permanent" means once the permanent itself is gone."""
 
 
 class FaceDownCharacteristics(BaseModel):
@@ -363,6 +373,25 @@ class ExileAnnotation(BaseModel):
     """Who may cast it. CR 702.170d says a plotted card's *owner*."""
     turn_exiled: int | None = None
     """The turn number it was exiled on, or None if nothing was counting."""
+    linked_permanent_id: UUID | None = None
+    """`ExileMarker.IMPRINTED` only: the id of the permanent this card was
+    exiled *with*, so a later ability printed on that permanent - Ugin's
+    Labyrinth's own mana ability, its own return-to-hand ability - can find
+    its card again without a name-keyed table.
+
+    Nothing clears this if the linked permanent later leaves the battlefield.
+    CR 406.1: exile is "a holding area" that some effects exile into "without
+    any way to return" a card from - there is no rule that unlinks the two, so
+    the exiled card is simply "exiled with" an id nothing on the battlefield
+    answers to any more, and every reader of this field (`Game.
+    card_imprinted_on`) is a lookup by id that then finds nothing rather than
+    a dangling reference to chase. The id is not reused: `CardState.move_to`
+    only clears an object's *own* `exile_annotation`, never another object's
+    pointer at it, and a card that changes zones keeps the same `id` in this
+    engine (see `move_to`'s own docstring) - so the one way this could go
+    stale is the same land leaving and returning to the battlefield while its
+    old exiled card is still sitting there unclaimed, which is the same
+    "same id, new object" approximation the rest of this model already makes."""
 
 
 class CardState(BaseModel):

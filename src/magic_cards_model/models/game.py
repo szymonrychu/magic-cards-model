@@ -48,6 +48,7 @@ from ..machines.decisions import (
 from ..machines.delayed import DelayedTrigger, DelayedTriggers
 from ..machines.effects import (
     AnaphoricClauseNotice,
+    ImprintNotice,
     ModeNotice,
     activated_effect_for,
     effect_for,
@@ -88,7 +89,7 @@ from ..machines.triggers import (
 )
 from ..machines.turn import MAIN_PHASES, NO_PRIORITY, TURN_ORDER, Step, TurnMachine
 from .card import Card, Color, Supertype, Type
-from .card_state import CardState, TargetRef, planeswalkers_with_zero_loyalty
+from .card_state import CardState, ExileMarker, TargetRef, planeswalkers_with_zero_loyalty
 from .mana import ManaCost
 from .player import Player
 from .token import move_refused, tokens_that_cease_to_exist
@@ -513,6 +514,14 @@ class Game(BaseModel):
     at all, with nothing anywhere recording that the second sentence had gone
     unread. The same unreadable-is-not-the-same-as-no-effect record every
     other notice list here keeps."""
+
+    imprint_notices: list[ImprintNotice] = Field(default_factory=list)
+    """One entry per "you may exile a `<quality>` card ... from your hand"
+    effect (CR 207.2c's "Imprint" ability word among them) whose stated
+    quality could not be read - Ugin's Labyrinth's own defect: its imprint
+    trigger used to resolve offering no decision at all, with nothing anywhere
+    recording that a choice had gone unoffered. The same unreadable-is-not-
+    the-same-as-no-effect record every other notice list here keeps."""
 
     evasion_notices: list[EvasionNotice] = Field(default_factory=list)
     """One entry per attacker whose own "can't be blocked" restriction text
@@ -2829,6 +2838,29 @@ class Game(BaseModel):
             )
         return card_state
 
+    def card_imprinted_on(self, permanent_id: UUID) -> CardState | None:
+        """The card exiled *with* `permanent_id`, if any (`ExileMarker.IMPRINTED`).
+
+        This is what "exiled with this land" means once it is read off the
+        card's own printed text (`machines/effects.py`'s `_parse_imprint_
+        clause`) rather than remembered from the plain-English sentence: a
+        linear scan of the shared exile zone for the annotation `_parse_
+        imprint_clause` left on the exiled card, matched by id rather than by
+        object identity so it survives a round trip through persistence.
+        Ugin's Labyrinth's own conditional mana ability (`ManaCondition.
+        imprinted`) and its "Return the exiled card to its owner's hand"
+        ability both call this rather than keeping their own pointer.
+        """
+        for card in self.exile:
+            annotation = card.exile_annotation
+            if (
+                annotation is not None
+                and annotation.marker is ExileMarker.IMPRINTED
+                and annotation.linked_permanent_id == permanent_id
+            ):
+                return card
+        return None
+
     def exile_permanent(self, permanent: CardState) -> CardState:
         """Move a permanent to the shared exile zone.
 
@@ -4015,7 +4047,11 @@ class Game(BaseModel):
             # in the pool immediately.
             land_types = self._controlled_land_types(controller)
             own_counters = frozenset(permanent.counters.counts)
-            for produced in ability.mana.resolve(land_types, own_counters, color):
+            has_imprinted_card = self.card_imprinted_on(permanent.id) is not None
+            produced_mana = ability.mana.resolve(
+                land_types, own_counters, color, has_imprinted_card
+            )
+            for produced in produced_mana:
                 self.player(controller).mana_pool.add(produced)
             # CR 106.12: "to 'tap [a permanent] for mana' is to activate a mana
             # ability of that permanent that includes the {T} symbol in its

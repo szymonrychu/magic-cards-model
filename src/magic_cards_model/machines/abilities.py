@@ -118,25 +118,39 @@ class ManaCondition(BaseModel):
       Power-Plant, ..." - land *types* (CR 205.3i), not card names.
     - ``counter``: "If Gemstone Caverns has a luck counter on it, ..." - a
       counter (CR 122.1) on the permanent itself.
+    - ``imprinted``: "If a card is exiled with this land, ..." (Ugin's
+      Labyrinth) - whether some card in exile is linked to this permanent by
+      `ExileMarker.IMPRINTED` (CR 207.2c: "Imprint" is an ability word with no
+      rules meaning of its own, so this is just CR 605.1a's ordinary
+      conditional templating with a third kind of thing to check).
 
-    Exactly one of the two is set. `ManaAbility.resolve` is the only thing
+    Exactly one of the three is set. `ManaAbility.resolve` is the only thing
     that reads this model; `models/game.py` supplies the live board state as
     plain data (a set of land types the controller controls, a set of counter
-    kinds this permanent carries) so this module never has to import `Game`.
+    kinds this permanent carries, whether a card is exiled with it) so this
+    module never has to import `Game`.
     """
 
     land_types: tuple[str, ...] | None = None
     counter: str | None = None
+    imprinted: bool = False
     #: What replaces the base effect's `options`/`any_color` when this
     #: condition holds.
     options: list[list[Color]]
     any_color: bool = False
 
-    def holds(self, controlled_land_types: frozenset[str], own_counters: frozenset[str]) -> bool:
+    def holds(
+        self,
+        controlled_land_types: frozenset[str],
+        own_counters: frozenset[str],
+        has_imprinted_card: bool = False,
+    ) -> bool:
         if self.land_types is not None:
             return all(land_type in controlled_land_types for land_type in self.land_types)
         if self.counter is not None:
             return self.counter in own_counters
+        if self.imprinted:
+            return has_imprinted_card
         return False
 
 
@@ -182,6 +196,7 @@ class ManaAbility(BaseModel):
         self,
         controlled_land_types: frozenset[str] = frozenset(),
         own_counters: frozenset[str] = frozenset(),
+        has_imprinted_card: bool = False,
     ) -> tuple[list[list[Color]], bool]:
         """Which `options`/`any_color` this ability effectively offers right
         now, after CR 605.1a's conditional "add X instead" clauses are
@@ -198,7 +213,7 @@ class ManaAbility(BaseModel):
         """
         options, any_color = self.options, self.any_color
         for condition in self.conditional:
-            if condition.holds(controlled_land_types, own_counters):
+            if condition.holds(controlled_land_types, own_counters, has_imprinted_card):
                 options, any_color = condition.options, condition.any_color
         return options, any_color
 
@@ -207,6 +222,7 @@ class ManaAbility(BaseModel):
         controlled_land_types: frozenset[str] = frozenset(),
         own_counters: frozenset[str] = frozenset(),
         color: Color | None = None,
+        has_imprinted_card: bool = False,
     ) -> list[Color]:
         """What this ability adds right now (CR 605.1a, CR 605.3b resolves it
         immediately, so "right now" is the only time that matters).
@@ -222,7 +238,7 @@ class ManaAbility(BaseModel):
         Raises when the winning clause offers a choice and none was made, so a
         caller cannot silently get the wrong colour.
         """
-        options, any_color = self.effective(controlled_land_types, own_counters)
+        options, any_color = self.effective(controlled_land_types, own_counters, has_imprinted_card)
 
         if any_color:
             if color is None:
@@ -299,6 +315,12 @@ _CONTROL_LAND_TYPES = re.compile(r"^you control\s+(?P<types>.+)$", re.IGNORECASE
 _HAS_COUNTER = re.compile(
     r"has an? (?P<counter>[\w+/-]+(?: [\w+/-]+)*) counter on it$", re.IGNORECASE
 )
+#: "a card is exiled with this land" (Ugin's Labyrinth). `ExileMarker.
+#: IMPRINTED` is what "with this <permanent>" is read into
+#: (`machines/effects.py`'s `_parse_imprint_clause`); the noun itself
+#: ("land", "artifact", "permanent") is not checked here - the ability is
+#: already printed on the one permanent it can possibly mean.
+_IS_IMPRINTED = re.compile(r"^an? card is exiled with this \w+$", re.IGNORECASE)
 
 
 def _parse_conditional_clauses(rest: str) -> list[ManaCondition]:
@@ -348,6 +370,12 @@ def _parse_conditional_clauses(rest: str) -> list[ManaCondition]:
                     options=effect.options,
                     any_color=effect.any_color,
                 )
+            )
+            continue
+
+        if _IS_IMPRINTED.match(condition_text):
+            conditions.append(
+                ManaCondition(imprinted=True, options=effect.options, any_color=effect.any_color)
             )
     return conditions
 
