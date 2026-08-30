@@ -343,14 +343,18 @@ def _evasion_restriction_sentences(attacker: CardState) -> list[str]:
     "April O'Neil, Kunoichi Trainee" - the same self-reference
     `machines/triggers.py`'s `_self_referential` already reads.
     """
-    short_name = attacker.card.name.split("//")[0].strip().split(",")[0].strip()
+    # `attacker.name`/`attacker.oracle_text` already read the up face (CR
+    # 712.8d/712.8f); `card.name`/`card.oracle_text` are the raw Scryfall
+    # fields, null (`oracle_text`) or combined "Front // Back" (`name`) for a
+    # modal-DFC/transform permanent - same family as `effect_for`'s fix.
+    short_name = attacker.name.split(",")[0].strip()
     subject = re.compile(
         rf"^(?:this creature|{re.escape(short_name)})\b.*can't be blocked\b",
         re.IGNORECASE,
     )
     return [
         sentence
-        for sentence in layer_readable_sentences(attacker.card.oracle_text)
+        for sentence in layer_readable_sentences(attacker.oracle_text)
         if subject.search(sentence)
     ]
 
@@ -449,7 +453,7 @@ def block_refusal(game: "Game", blocker: CardState, attack: Attack) -> str | Non
             EvasionNotice(
                 source_id=attacker.id,
                 source_name=attacker.name,
-                text=attacker.card.oracle_text or "",
+                text=attacker.oracle_text,
             )
         )
 

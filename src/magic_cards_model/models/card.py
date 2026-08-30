@@ -229,6 +229,29 @@ class Card(ScryfallModel):
         return subtypes_of(self.front_type_line)
 
     @property
+    def front_oracle_text(self) -> str:
+        """The front face's rules text - the top-level field when it is
+        populated, `front_face`'s own text otherwise.
+
+        Split and adventure cards keep a meaningful top-level `oracle_text`
+        (both halves, newline-joined); a `transform` or `modal_dfc` card
+        leaves it null and puts each face's text on `card_faces` instead
+        (`front_face`'s docstring), so this falls back the same way
+        `Casting.base_cost` already does for `mana_cost`. A spell defaults to
+        its front face up (CR 712.11) and stays there unless cast
+        "transformed"/"converted" or played as an MDFC's land face - neither
+        of which any caller here reaches, since both are read straight off
+        `CardState.oracle_text` instead once a `CardState` exists. This is the
+        `Card`-only fallback for `machines/targeting.py` and `machines/modes.py`,
+        which parse a spell's targets and modes before a `CardState` for it
+        exists.
+        """
+        printed = self.oracle_text or ""
+        if not printed and self.front_face is not None:
+            return self.front_face.oracle_text or ""
+        return printed
+
+    @property
     def is_land(self) -> bool:
         return Type.LAND in self.types
 

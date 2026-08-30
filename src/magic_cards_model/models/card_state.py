@@ -844,22 +844,28 @@ class CardState(BaseModel):
         legend rule and every "another creature named ..." depend on the
         difference.
 
-        Deliberately still `card.name` - Scryfall's "Front // Back" - rather
-        than `up_face`'s single-face name for anything but the land-face case:
-        CR 712.8a/712.8d say a double-faced permanent is named after whichever
-        face is up, but a wide swath of this project's existing scenario
-        tests already key lookups (`scenario.creature`, `scenario.find`) off
-        the combined Scryfall name for a double-faced card played on its front
-        face, and reading it as a single-face name here would silently change
-        what every one of those tests is asking for. Out of scope for the
-        power/toughness/oracle-text fix this docstring's neighbours make;
-        tracked rather than folded in unreviewed.
+        Reads `up_face` - the same face `oracle_text`, `power`, `toughness`
+        and `mana_cost` already read - rather than `card.name`, Scryfall's
+        combined "Front // Back" string. CR 201.1 puts a name on each face
+        individually, and CR 712.8a/712.8d/712.8f are unanimous that a
+        double-faced object - in every zone, not just the battlefield - has
+        only the characteristics of whichever face is up; the combined string
+        is a database convenience for referring to the physical card, never a
+        characteristic the rules hand out. An earlier pass at this exact fix
+        was reverted because it broke roughly a dozen scenario assertions that
+        had keyed lookups (`scenario.creature`, `scenario.find`,
+        `scenario.stack_names`) off the combined name for a double-faced card
+        sitting on its front face - those assertions were encoding the bug,
+        not the rule, and have been corrected to name the front face alone.
         """
         if self.face_down_characteristics is not None:
             return self.face_down_characteristics.name
         land_face = self._land_face
         if land_face is not None:
             return land_face.name
+        up_face = self.up_face
+        if up_face is not None:
+            return up_face.name
         return self.card.name
 
     @property

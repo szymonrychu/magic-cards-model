@@ -189,7 +189,7 @@ def test_ranger_captain_of_eos_finds_a_low_cost_creature_into_hand():
     scenario.cast_and_resolve("Ranger-Captain of Eos", *sources)
     scenario.pass_until_resolved()
 
-    found = scenario.find("Delver of Secrets // Insectile Aberration", Zone.HAND, "alice")
+    found = scenario.find("Delver of Secrets", Zone.HAND, "alice")
     assert found.zone is Zone.HAND
 
 

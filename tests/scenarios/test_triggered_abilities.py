@@ -510,13 +510,11 @@ def test_an_upkeep_trigger_fires_when_the_step_begins():
         .player("bob", library=["Forest"])
         .build()
     )
-    delver = scenario.creature("Delver of Secrets // Insectile Aberration", "alice")
+    delver = scenario.creature("Delver of Secrets", "alice")
 
     scenario.advance()  # untap -> upkeep
     assert scenario.step is Step.UPKEEP
-    assert scenario.stack_names() == [
-        "Delver of Secrets // Insectile Aberration's triggered ability"
-    ]
+    assert scenario.stack_names() == ["Delver of Secrets's triggered ability"]
 
     scenario.pass_until_resolved()
     assert delver.transformed
@@ -530,7 +528,7 @@ def test_the_upkeep_trigger_still_happens_when_the_reveal_misses():
         .player("bob", library=["Forest"])
         .build()
     )
-    delver = scenario.creature("Delver of Secrets // Insectile Aberration", "alice")
+    delver = scenario.creature("Delver of Secrets", "alice")
 
     scenario.advance()
     assert len(scenario.game.abilities_on_stack) == 1, "it triggered - the if is inside the effect"

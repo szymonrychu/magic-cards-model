@@ -990,7 +990,11 @@ class Casting(BaseModel):
             # CR 702.11b speaks of a permanent, and a permanent is on the
             # battlefield (CR 110.1).
             return None
-        if not any(keyword.lower() == "hexproof" for keyword in target.card.keywords):
+        # `target.keywords` (not `target.card.keywords`): a face-down
+        # permanent has no text (CR 702.37c) and CardState.keywords already
+        # knows that, so the raw printed field would wrongly grant hexproof
+        # to a face-down permanent whose printed side happens to have it.
+        if not any(keyword.lower() == "hexproof" for keyword in target.keywords):
             return None
         if self.game.controller_of(target).username == self.caster:
             return None

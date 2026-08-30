@@ -193,8 +193,8 @@ def test_drowner_of_truth_triggers_when_colorless_mana_paid_the_generic():
     assert record.mana_of_color_spent(Color.COLORLESS) == 3
     assert scenario.game.intervening_if_notices == []
     assert scenario.stack_names() == [
-        "Drowner of Truth // Drowned Jungle",
-        "Drowner of Truth // Drowned Jungle's triggered ability",
+        "Drowner of Truth",
+        "Drowner of Truth's triggered ability",
     ]
 
 
@@ -213,4 +213,4 @@ def test_drowner_of_truth_does_not_trigger_when_no_colorless_mana_was_spent():
     record = scenario.game.cast_record(drowner)
     assert record.mana_of_color_spent(Color.COLORLESS) == 0
     assert scenario.game.intervening_if_notices == []
-    assert scenario.stack_names() == ["Drowner of Truth // Drowned Jungle"]
+    assert scenario.stack_names() == ["Drowner of Truth"]
