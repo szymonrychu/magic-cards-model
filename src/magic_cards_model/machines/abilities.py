@@ -765,7 +765,7 @@ def layer_readable_sentences(
     list, in `keywords_in_lines`'s style, would be too, though no caller needs
     that yet).
 
-    Two kinds of line can hold a continuous effect and are read here:
+    Three kinds of line can hold a continuous effect and are read here:
 
     - A `StaticAbility` (CR 604.1) - its `text` verbatim, reminder and any
       ability word already stripped. This is also where a spell's own effect
@@ -780,13 +780,25 @@ def layer_readable_sentences(
       split off. Basking Rootwalla's `{1}{G}: This creature gets +2/+2 until
       end of turn.` reaches the pump shape this way, with no separate cost
       regex needed.
+    - A `TriggeredAbility` (CR 603.1) - its `effect`, i.e. everything after
+      the trigger condition (and any intervening *if*, CR 603.4) has already
+      been split off by this same classifier. Oliphaunt's "Whenever this
+      creature attacks, another target creature you control gets +2/+0 and
+      gains trample until end of turn." reaches the pump-and-keyword shape
+      this way, with the leading "Whenever this creature attacks," gone
+      before `machines/layers.py` ever sees the sentence - the trigger-side
+      twin of the activation-cost split above. `machines/layers.py`'s battlefield
+      sweep (`static_effects`) calls into the very same sentence for every
+      permanent every turn, but always with an empty `targets` sequence, so a
+      triggered ability's own effect body being readable here creates nothing
+      there (CR 611.2 vs. 611.3: this is never a static ability's effect,
+      only ever a resolving ability's) - it only produces a real effect when
+      `create_continuous_effect_of_ability` resolves the ability itself and
+      supplies its actual targets. See `machines/layers.py::_effect_sentences`
+      for the other half of this.
 
-    A `TriggeredAbility`, `KeywordAbility`, or `UnparsedAbility` line is
-    skipped: none of them is a continuous effect's own sentence (CR 603
-    abilities are `machines/triggers.py`'s job), and a shape that only exists
-    inside one - "Whenever ~ enters, target creature gets +1/+1 until end of
-    turn." - was never read by the sentence this parser strips reminder text
-    from either, so nothing here narrows what used to match.
+    A `KeywordAbility` or `UnparsedAbility` line is skipped: neither is a
+    continuous effect's own sentence.
 
     One line can hold more than one sentence (Violent Urge's pump and its
     *Delirium* clause are one `StaticAbility` line), so each classified line
@@ -798,7 +810,7 @@ def layer_readable_sentences(
             body: str | None = None
             if isinstance(ability, StaticAbility):
                 body = ability.text
-            elif isinstance(ability, ActivatedAbility):
+            elif isinstance(ability, (ActivatedAbility, TriggeredAbility)):
                 body = ability.effect
             if not body:
                 continue

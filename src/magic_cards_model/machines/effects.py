@@ -68,7 +68,12 @@ from ..models.zone import Zone
 from .abilities import TriggerEvent
 from .decisions import Decision, DecisionKind
 from .delayed import DelayedTrigger
-from .layers import ContinuousEffects, LayerContext, count_card_types
+from .layers import (
+    ContinuousEffects,
+    LayerContext,
+    count_card_types,
+    is_resolution_layer_effect_text,
+)
 from .modes import Mode, is_modal_text, modal_profile, substitute_x
 from .targeting import profile_for_text
 from .triggers import AbilityOnStack, is_ability
@@ -2691,6 +2696,30 @@ def _unreadable_anaphoric_clause(text: str, *, for_spell: bool) -> str | None:
     return None
 
 
+def _is_layer_effect_text(text: str) -> bool:
+    """True if `text` - a resolving ability's or spell's own effect text - is
+    one of `machines.layers`'s one-shot resolution shapes (CR 611.2), or
+    looks like one that did not fully parse. The static-only anthem shape (CR
+    611.3) never counts, however cleanly it parses:
+    `is_resolution_layer_effect_text` is the function that draws that line,
+    because a plain "Creatures you control get +N/+N." belongs to the
+    permanent's own static ability and never to a spell's or ability's
+    resolution - routing it here too would create a second, permanent copy
+    on top of what the battlefield sweep already reapplies (CR 613.5).
+
+    Checked on the **raw, unsplit** text rather than after `split_effect_
+    clauses` has cut it into clauses: that splitter cuts on every bare " and "
+    (`_CLAUSE_SEPARATOR`), which is right for "gets +N/+N and gains
+    <keyword>" but wrong for an "and" that is not a clause boundary at all -
+    "power **and** toughness each equal to its mana value" (Karn, the Great
+    Creator's +1) splits into two unreadable halves that way. `machines.
+    layers._effect_sentences` only splits on line breaks and ". ", so reading
+    the whole text through `is_resolution_layer_effect_text` keeps a sentence
+    like that one piece.
+    """
+    return is_resolution_layer_effect_text(text)
+
+
 def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     """`parse_mixed_effect` on `effect_text`, or - if that failed specifically
     on an unreadable anaphoric second clause - a stand-in effect that records
@@ -2699,10 +2728,26 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     any other kind of unreadable text - Fatal Push's Revolt line keeps its
     old, unrecorded silence; only this one specific shape has a notice built
     for it so far.
+
+    Tried only once the ordinary clause parser has already failed on the
+    whole text: `_is_layer_effect_text` is a fallback net for a continuous
+    effect `parse_mixed_effect`'s per-clause splitting cannot read as printed
+    (Karn, the Great Creator's +1; Oliphaunt's "another target creature you
+    control gets +2/+0 and gains trample until end of turn." attack trigger),
+    not a replacement for it - a card mixing a continuous-effect clause with
+    some other clause (a draw, a search) still needs the ordinary path to run
+    both, so this never overrides a parse that already succeeded.
+    `create_continuous_effect_of_ability` is what Basking Rootwalla's own
+    "{1}{G}: This creature gets +2/+2 until end of turn." (no target at all)
+    and Karn's targeted "+1" both route to - no `ACTIVATED_EFFECTS` row is
+    needed for either any more, and none is needed for a triggered ability
+    of the same shape either, which is what lights up Oliphaunt.
     """
     parsed = parse_mixed_effect(effect_text)
     if parsed is not None:
         return parsed
+    if _is_layer_effect_text(effect_text):
+        return create_continuous_effect_of_ability
     unread = _unreadable_anaphoric_clause(effect_text, for_spell=False)
     if unread is None:
         return None
@@ -2718,10 +2763,23 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
 
 
 def _spell_effect_or_notice(effect_text: str) -> Effect | None:
-    """The spell-side twin of `_ability_effect_or_notice`, for `effect_for`."""
+    """The spell-side twin of `_ability_effect_or_notice`, for `effect_for`.
+
+    The same `_is_layer_effect_text` fallback applies here: Tower Above's
+    "Until end of turn, target creature gets +4/+4 and gains trample, wither,
+    and ..." leads with its duration, which `split_effect_clauses`'s bare
+    "and" cuts (twice) into fragments none of this wave's clause shapes read.
+    Routing the whole text to `create_continuous_effect` instead reaches
+    `parsed_layer_effects`, which reads its sentence whole (normalising the
+    duration-first opening) and - since the granted keywords still are not
+    all ones `_KNOWN_KEYWORDS` and a single-keyword grant can read - records a
+    `LayerNotice` rather than the card doing nothing with no trace.
+    """
     parsed = parse_mixed_effect_for_spell(effect_text)
     if parsed is not None:
         return parsed
+    if _is_layer_effect_text(effect_text):
+        return create_continuous_effect
     unread = _unreadable_anaphoric_clause(effect_text, for_spell=True)
     if unread is None:
         return None
@@ -3130,22 +3188,23 @@ ACTIVATED_EFFECTS: dict[tuple[str, int], AbilityEffect] = {
     # Vampiric Rites' "You gain 1 life and draw a card." is not entered here
     # any more - two clauses `parse_player_effect` reads directly, in the
     # order printed (CR 608.2c).
-    # "{1}{G}: This creature gets +2/+2 until end of turn." A continuous effect
-    # from a resolving ability (CR 611.2), lasting until the cleanup step
-    # (CR 514.2). The pump itself is `machines/layers.py`'s `parsed_layer_effects`
-    # reading the card's own text - this row only routes to the generic
-    # ability-resolution effect, which index 0 always needs regardless.
-    ("Basking Rootwalla", 0): create_continuous_effect_of_ability,
-    # "+1: Until your next turn, up to one target noncreature artifact becomes
-    # an artifact creature with power and toughness each equal to its mana
-    # value." A continuous effect from a resolving *loyalty* ability
-    # (CR 611.2, CR 606) - the type change and the mana-value P/T are
-    # `machines/layers.py`'s `parsed_layer_effects` reading Karn's own oracle
-    # text (the "becomes a[n] <type> creature ..." shape); this row only
-    # routes the ability to that generic resolution effect, targets included.
-    # Index 0: Karn's static ability line has no cost, so it is not one of his
-    # activated abilities at all, and +1 is the first that is.
-    ("Karn, the Great Creator", 0): create_continuous_effect_of_ability,
+    # Basking Rootwalla's "{1}{G}: This creature gets +2/+2 until end of
+    # turn." (index 0) and Karn, the Great Creator's "+1: Until your next
+    # turn, up to one target noncreature artifact becomes an artifact
+    # creature with power and toughness each equal to its mana value." (index
+    # 0 - his static ability line has no cost, so +1 is the first ability
+    # that does) are not entered here any more either: both rows existed only
+    # to route the ability to `create_continuous_effect_of_ability`, the
+    # generic resolution effect that reads the card's own oracle text through
+    # `machines/layers.py`'s `parsed_layer_effects` - the actual pump, type
+    # change, and mana-value P/T were never this table's business. Routing is
+    # text-driven now: `_is_layer_effect_text` in `_ability_effect_or_notice`
+    # recognises the ability's own effect text as one of `parsed_layer_
+    # effects`'s shapes and reaches the same function with no row, which also
+    # lights up a triggered ability of the same shape that never had a row at
+    # all - Oliphaunt's "another target creature you control gets +2/+0 and
+    # gains trample until end of turn." attack trigger. See
+    # `tests/scenarios/test_registry_is_minimal.py`.
     # The Zendikar/Khans fetchlands - Arid Mesa, Flooded Strand, Bloodstained
     # Mire, Marsh Flats, Scalding Tarn, Windswept Heath, Wooded Foothills,
     # Misty Rainforest, Verdant Catacombs - are deliberately **not** entered

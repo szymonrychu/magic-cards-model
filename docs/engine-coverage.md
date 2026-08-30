@@ -448,6 +448,42 @@ resolving ability's text when a card has more than one. An empty marker means
 | Hangarback Walker | dies | Creates one 1/1 flying Thopter per +1/+1 counter it had, read off `last_known_counters` because CR 122.2 has already destroyed them and CR 603.10a lets the trigger look back. Keeps its `TRIGGER_EFFECTS` row: "for each +1/+1 counter on this creature" is not a fixed `_COUNT` word, so `_parse_token_clause` refuses the clause rather than guess a count of one. |
 | Soul Warden | enters | Gains 1 life whenever another creature enters, tokens included (CR 110.1). Whole ability. |
 
+**Ability-side routing to `create_continuous_effect_of_ability` is text-driven
+now, not a per-card row.** Basking Rootwalla's and Karn, the Great Creator's
+`ACTIVATED_EFFECTS` rows existed only to route the ability there - the actual
+pump/type-change/P-T-set was always `machines/layers.py`'s
+`parsed_layer_effects` reading the ability's own text - so
+`machines/effects.py`'s `_is_layer_effect_text` (tried after the ordinary
+clause parser fails) recognises the shape and reaches the same function with
+no row, and `ACTIVATED_EFFECTS` is now empty. The same recognition reaches a
+**triggered** ability of the same shape, which never had a row-based path at
+all: Oliphaunt's "Whenever this creature attacks, another target creature you
+control gets +2/+0 and gains trample until end of turn." used to fire and
+resolve to nothing; it now actually pumps and grants trample, proven in
+`scenarios/test_parsed_layer_effects.py` by a trampler dealing damage through
+a blocker it could not have without both halves applying. Getting a
+*triggered* ability's own effect text this far also exposed a shape
+`parsed_layer_effects` had never had to read before: its trigger condition
+("Whenever this creature attacks, ") shares the line with the effect and
+`_effect_sentences` did not strip it the way it already stripped an
+activated ability's cost - `_TRIGGER_CONDITION_PREFIX_RE` is the fix.
+`Tower Above`'s "Until end of turn, target creature gets +4/+4 and gains
+trample, wither, and \"...\"" is the spell-side twin of the same gap:
+duration-first phrasing failed even the loose "does this look like our
+territory" check (`_LOOKS_LIKE_LAYER_EFFECT_RE` anchored on the subject
+coming first) and did nothing with no `LayerNotice`.
+`_normalize_duration_first` reads the duration wherever it sits (CR 611.2a
+states it "as stated by the spell or ability", not pinned to one end of the
+sentence); Tower Above's granted keywords are still not one this wave reads
+(a bare word list, not a quoted extra ability), so it now fails closed with a
+notice instead of silently doing nothing. The anthem shape (CR 611.3) is
+deliberately excluded from this routing decision
+(`is_resolution_layer_effect_text`): a permanent spell whose only text is a
+"Creatures you control get +N/+N." (Glorious Anthem) must not also create a
+one-shot copy of its own static ability on cast, which is what a first,
+too-eager version of this routing did - the anthem is CR 611.3's own
+`effects_for` battlefield sweep and never a CR 611.2 resolution effect.
+
 **`ACTIVATED_EFFECTS`, what an activated ability does**, keyed by
 `(card name, index)`:
 
@@ -455,7 +491,7 @@ resolving ability's text when a card has more than one. An empty marker means
 |---|---|---|
 | Vampiric Rites | `{1}{B}, Sacrifice a creature:` | Gains 1 life and draws a card. Whole ability. |
 | Skirk Prospector | `Sacrifice a Goblin: Add {R}.` | No entry needed - it is a mana ability, so `Game.activate_ability` resolves it without the stack and puts `{R}` in the pool. |
-| Basking Rootwalla | `{1}{G}:` | Creates the +2/+2 until-end-of-turn continuous effect on itself (CR 611.2, 613.4c), and the once-each-turn restriction is enforced (CR 602.5b). Needs the game to hold a `ContinuousEffects`; without one it resolves and does nothing. |
+| Basking Rootwalla | `{1}{G}:` | Creates the +2/+2 until-end-of-turn continuous effect on itself (CR 611.2, 613.4c), and the once-each-turn restriction is enforced (CR 602.5b). Needs the game to hold a `ContinuousEffects`; without one it resolves and does nothing. Has no `ACTIVATED_EFFECTS` row any more, nor does Karn, the Great Creator's `+1` (see the row-count note above the table). |
 | Arid Mesa, Bloodstained Mire, Flooded Strand, Marsh Flats, Misty Rainforest, Scalding Tarn, Verdant Catacombs, Windswept Heath, Wooded Foothills | `{T}, Pay 1 life, Sacrifice this land:` | No per-card entry: `activated_effect_for` falls back to `parse_search_and_put_effect`, which reads "Search your library for a `<type>` or `<type>` card, put it onto the battlefield, then shuffle." straight off each card's own text. Searches for a card with one of the two printed **land types** (CR 305.6), puts it onto the battlefield untapped, **then shuffles** (CR 701.24a). The whole three-part cost is paid on activation (CR 602.1a). It is not a land drop (CR 305.1, CR 701.18a), so the land drop stays available. Misty Rainforest and Verdant Catacombs used to have no registry entry at all and silently did nothing; they now work for the same reason every fetchland does. |
 | Expedition Map | `{2}, {T}, Sacrifice this artifact:` | Same fallback, reading "Search your library for a land card, reveal it, put it into your hand, then shuffle." - any land (a broader quality than a land type), into hand instead of onto the battlefield. |
 | Fiery Islet, Sunbaked Canyon | `{1}, {T}, Sacrifice this land:` | Draws a card. Whole ability. |

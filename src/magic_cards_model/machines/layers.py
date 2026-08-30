@@ -1127,10 +1127,14 @@ def switch_power_toughness(chars: Characteristics, board: Board) -> Characterist
 # docstring already documents leaving that
 # line to nobody.
 
-#: The two subjects this wave's parser reads: a spell's own target, or an
-#: activated ability's own source (`create_continuous_effect_of_ability`
-#: always calls in with `targets=[source]` for exactly this shape).
-_SUBJECT = r"(?:target creature|this creature)"
+#: The subjects this wave's parser reads: a spell's own target, an activated
+#: or triggered ability's own source (`create_continuous_effect_of_ability`
+#: calls in with `targets=[source]` when the ability names no target of its
+#: own), or a triggered ability's own target - "another target creature you
+#: control" (Oliphaunt's attack trigger) - which reaches here the same way a
+#: spell's "target creature" does, through whatever `targets` the caller
+#: resolved.
+_SUBJECT = r"(?:target creature|this creature|another target creature(?: you control)?)"
 
 _PUMP_RE = re.compile(
     rf"^{_SUBJECT} gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)"
@@ -1212,15 +1216,72 @@ _BECOMES_CREATURE_WITH_MANA_VALUE_PT_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: The pump/keyword-grant/base-P/T-set/becomes-creature shapes' opening words
+#: - everything `_LOOKS_LIKE_LAYER_EFFECT_RE` matches **except** the anthem
+#: shape - so a caller can ask "does this look like a one-shot *resolution*
+#: effect (CR 611.2)" without the static-only anthem shape (CR 611.3)
+#: answering yes. `machines/effects.py`'s routing needs exactly that
+#: distinction: see `is_resolution_layer_effect_text`.
+_LOOKS_LIKE_RESOLUTION_LAYER_EFFECT_RE = re.compile(
+    rf"^{_SUBJECT} (?:gets?|gains?|has|have)\b|^Until your next turn, up to \S+ target\b",
+    re.IGNORECASE,
+)
+
+#: "[Other] creatures [you control|your opponents control] get +N/+N." /
+#: "... have/has <keyword>[, <keyword> ...]." - `_ANTHEM_RE`'s and
+#: `_INDEFINITE_KEYWORD_GRANT_RE`'s shared opening words, loosened the same
+#: way `_LOOKS_LIKE_RESOLUTION_LAYER_EFFECT_RE` loosens the other four
+#: shapes - Asceticism's "Creatures you control have hexproof." needs the
+#: "have" branch to be caught as a failed parse (hexproof is outside
+#: `_KNOWN_KEYWORDS`) rather than silently doing nothing. Kept apart from
+#: `_LOOKS_LIKE_RESOLUTION_LAYER_EFFECT_RE` (see `is_resolution_layer_effect_text`)
+#: because CR 611.3 makes both of these group shapes a permanent's own static
+#: ability, never a spell's or ability's one-shot resolution effect (CR
+#: 611.2) - Glorious Anthem's *cast* does not create a second, permanent copy
+#: of its own anthem, and the same is true of a keyword granted to a group
+#: this way.
+_LOOKS_LIKE_ANTHEM_RE = re.compile(
+    r"^(?:other )?creatures (?:you control|your opponents control) (?:get|have|has)\b",
+    re.IGNORECASE,
+)
+
 #: The same shapes, loosened to just their opening words, so a sentence that
 #: starts like one of them but does not fully match is caught instead of
 #: silently producing nothing (see `looks_like_unparsed_layer_effect`).
+#:
+#: Matched against the *normalised* sentence (`_normalize_duration_first`),
+#: so a card that leads with its duration - "Until end of turn, target
+#: creature gets ..." (Tower Above) - is read the same way as one that
+#: trails it, rather than falling outside every one of these patterns and
+#: producing neither an effect nor a notice (CR 611.2a: the duration is
+#: "as stated by the spell or ability", with no rule pinning it to one end
+#: of the sentence).
 _LOOKS_LIKE_LAYER_EFFECT_RE = re.compile(
-    rf"^{_SUBJECT} (?:gets?|gains?|has|have)\b"
-    r"|^(?:other )?creatures (?:you control|your opponents control) (?:get|have|has)\b"
-    r"|^Until your next turn, up to \S+ target\b",
+    _LOOKS_LIKE_RESOLUTION_LAYER_EFFECT_RE.pattern + "|" + _LOOKS_LIKE_ANTHEM_RE.pattern,
     re.IGNORECASE,
 )
+
+#: "Until end of turn, <rest>." - the duration named up front rather than
+#: trailing the sentence (Tower Above: "Until end of turn, target creature
+#: gets +4/+4 and gains trample, wither, and ..."). CR 611.2a states the
+#: duration "as stated by the spell or ability" with no rule that fixes its
+#: position in the sentence, so this is a phrasing this wave's shapes must
+#: read regardless of where "until end of turn" sits.
+_DURATION_FIRST_RE = re.compile(r"^until end of turn,\s*(?P<rest>.+)$", re.IGNORECASE)
+
+
+def _normalize_duration_first(sentence: str) -> str:
+    """Rewrite "Until end of turn, X" to "X until end of turn." so a
+    duration-first sentence reaches `_parse_layer_sentence` and
+    `_LOOKS_LIKE_LAYER_EFFECT_RE` the same way the ordinary trailing-duration
+    phrasing already does. A sentence that does not open this way is returned
+    unchanged.
+    """
+    match = _DURATION_FIRST_RE.match(sentence.strip())
+    if match is None:
+        return sentence
+    rest = match.group("rest").strip().rstrip(".")
+    return f"{rest} until end of turn."
 
 
 def _effect_sentences(oracle_text: str | None) -> list[str]:
@@ -1228,16 +1289,26 @@ def _effect_sentences(oracle_text: str | None) -> list[str]:
     printed text.
 
     This used to re-derive its sentences from raw oracle text: strip a line's
-    trailing reminder text, strip an activation cost ahead of a colon, then
-    split what is left on ". " boundaries. That duplicated
-    `machines/abilities.py`'s own line classifier - which already tells a
-    `StaticAbility` line from an `ActivatedAbility`'s cost-and-effect, and
+    trailing reminder text, strip an activation cost or a triggered ability's
+    own trigger condition ahead of it, then split what is left on ". "
+    boundaries. That duplicated `machines/abilities.py`'s own line classifier -
+    which already tells a `StaticAbility` line from an `ActivatedAbility`'s
+    cost-and-effect from a `TriggeredAbility`'s condition-and-effect, and
     already strips reminder text (CR 207.2a) anywhere in the line, not only at
     its end - without ever consulting it, so `StaticAbility` was parsed
     upstream and thrown away. `layer_readable_sentences` is that classifier,
-    read for exactly the two kinds of line a continuous effect's own sentence
-    can be (CR 604.1 static, or CR 602.1 activated with its cost split off);
-    see its docstring for why a triggered or keyword line is not one of them.
+    read for exactly the three kinds of line a continuous effect's own
+    sentence can be (CR 604.1 static, CR 602.1 activated with its cost split
+    off, or CR 603.1 triggered with its condition split off); see its
+    docstring for why a keyword or unparsed line is not one of them, and for
+    why reading a triggered ability's own effect body here is safe even
+    though this same function also feeds the battlefield sweep
+    (`static_effects`) for every permanent on the board, not only a resolving
+    ability's own effect (`create_continuous_effect_of_ability`) - Oliphaunt's
+    attack trigger among them: `static_effects` always calls with an empty
+    `targets` sequence, and every shape below produces nothing for an empty
+    target set, so the sentence being readable here only ever creates a real
+    effect when the ability actually resolves and supplies its targets.
     """
     return layer_readable_sentences(oracle_text)
 
@@ -1519,7 +1590,14 @@ def _split_and_validate_keywords(raw: str) -> list[str] | None:
 
 
 def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
-    """One of the generalised shapes below, or `None` if this is not one of them."""
+    """One of the generalised shapes below, or `None` if this is not one of them.
+
+    `sentence` is normalised for a duration-first opening
+    (`_normalize_duration_first`) before any shape is tried, so "Until end of
+    turn, target creature gets +4/+4" reads the same as "Target creature gets
+    +4/+4 until end of turn."
+    """
+    sentence = _normalize_duration_first(sentence)
     if match := _PUMP_RE.fullmatch(sentence):
         power, toughness = int(match.group("power")), int(match.group("toughness"))
         keyword = match.group("keyword")
@@ -1601,9 +1679,42 @@ def looks_like_unparsed_layer_effect(oracle_text: str | None) -> bool:
     (`machines/triggers.py`) already record for targets and intervening *if*.
     """
     return any(
-        _LOOKS_LIKE_LAYER_EFFECT_RE.match(sentence) and _parse_layer_sentence(sentence) is None
+        _LOOKS_LIKE_LAYER_EFFECT_RE.match(_normalize_duration_first(sentence))
+        and _parse_layer_sentence(sentence) is None
         for sentence in _effect_sentences(oracle_text)
     )
+
+
+def is_resolution_layer_effect_text(text: str | None) -> bool:
+    """True if some sentence of `text` is - or looks like a failed attempt at -
+    a one-shot **resolution** effect (CR 611.2) this wave reads: a pump, a
+    keyword grant, a base P/T set, or "becomes a[n] <type> creature ...".
+    The anthem shape is deliberately excluded (CR 611.3: "creatures you
+    control get +N/+N" is always a permanent's own static ability), even
+    when it fully parses.
+
+    `machines/effects.py` uses this - not `parsed_layer_effects` or
+    `looks_like_unparsed_layer_effect` directly - to decide whether an
+    ability's or spell's own effect text should route to
+    `create_continuous_effect`/`create_continuous_effect_of_ability` at all.
+    Reusing either of those for the routing decision would let a plain
+    "Creatures you control get +N/+N." (Glorious Anthem, a permanent spell
+    with no resolution effect at all) route there too, creating a *second*,
+    permanent copy of the same anthem the battlefield sweep (`effects_for`,
+    called for every permanent every time the board is computed, CR 613.5)
+    already reapplies on its own - doubling the bonus. `parsed_layer_effects`
+    itself is unchanged and still reads the anthem shape, because that sweep
+    is exactly where it belongs.
+    """
+    for sentence in _effect_sentences(text):
+        normalized = _normalize_duration_first(sentence)
+        if _LOOKS_LIKE_ANTHEM_RE.match(normalized):
+            continue
+        if _parse_layer_sentence(sentence) is not None:
+            return True
+        if _LOOKS_LIKE_RESOLUTION_LAYER_EFFECT_RE.match(normalized):
+            return True
+    return False
 
 
 class LayerNotice(BaseModel):
