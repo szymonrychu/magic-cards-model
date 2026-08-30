@@ -85,6 +85,78 @@ def test_lightning_helix_has_no_registry_row_any_more():
 
 
 # --------------------------------------------------------------------------
+# The anaphoric "<verb> target X. Its/that X's controller ..." pair
+# (Solitude's defect) - see `tests/scenarios/test_anaphoric_referent_clauses.py`
+# for the end-to-end scenario coverage; this is the text-level parser check.
+# --------------------------------------------------------------------------
+
+
+def test_solitude_now_parses_as_a_mixed_effect():
+    """Solitude's trigger text, exactly as `TriggeredAbility.effect` holds it
+    (the "When this creature enters," prefix already stripped): "exile up to
+    one other target creature. That creature's controller gains life equal
+    to its power." used to have no parser for its second sentence at all.
+    """
+    from magic_cards_model.machines.effects import parse_mixed_effect
+
+    text = (
+        "exile up to one other target creature. "
+        "That creature's controller gains life equal to its power."
+    )
+    assert parse_mixed_effect(text) is not None
+
+
+def test_swords_to_plowshares_now_parses_as_a_mixed_effect_with_no_row():
+    assert "Swords to Plowshares" not in EFFECTS
+    assert parse_mixed_effect_for_spell(card("Swords to Plowshares").oracle_text) is not None
+
+
+def test_unreadable_anaphoric_clause_finds_the_second_sentence_of_a_synthetic_pair():
+    """`_unreadable_anaphoric_clause` is what feeds `AnaphoricClauseNotice` -
+    it has to find the second sentence of a structurally-matching pair whose
+    tail this wave genuinely cannot read (no real card in the fixture pool
+    has this exact gap any more; a synthetic string, the same discipline
+    `test_a_variable_energy_amount_does_not_parse` uses for a shape with no
+    real-card example).
+    """
+    from magic_cards_model.machines.effects import _unreadable_anaphoric_clause
+
+    text = "exile target creature. That creature's controller draws a card equal to its power."
+    unread = _unreadable_anaphoric_clause(text, for_spell=True)
+    assert unread == "That creature's controller draws a card equal to its power"
+
+
+def test_boseijus_channel_search_clause_is_reported_not_silently_dropped():
+    """Boseiju, Who Endures' Channel ability still fails to parse as a whole,
+    for two separate reasons layered on top of each other: its search
+    sentence says "a land card with a basic land type" rather than the "a
+    basic land card" phrasing `_REFERENT_SEARCH_RE` reads (a pre-existing
+    search-quality gap, unrelated to anaphora and not something this fix
+    extends to cover), and its own destroy clause is followed by a third
+    sentence ("This ability costs {1} less ...") no clause parser reads
+    either way.
+
+    What matters here is that `_unreadable_anaphoric_clause` correctly
+    checks by actually trying to build the pair
+    (`_parse_anaphoric_clause_pair`), not just matching the two shapes' own
+    regexes - the search sentence genuinely does not build, so it is the one
+    reported, not a false positive invented for a pair that would have
+    parsed fine.
+    """
+    from magic_cards_model.machines.effects import _unreadable_anaphoric_clause
+
+    text = (
+        "Destroy target artifact, enchantment, or nonbasic land an opponent controls. "
+        "That player may search their library for a land card with a basic land type, "
+        "put it onto the battlefield, then shuffle. "
+        "This ability costs {1} less to activate for each legendary creature you control."
+    )
+    unread = _unreadable_anaphoric_clause(text, for_spell=False)
+    assert unread is not None
+    assert unread.startswith("That player may search")
+
+
+# --------------------------------------------------------------------------
 # The shared preamble strip + modal bail (`_prepare_effect_clauses`)
 # --------------------------------------------------------------------------
 

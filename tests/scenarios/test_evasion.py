@@ -242,4 +242,6 @@ def test_trample_goes_through_when_the_blocker_leaves_combat():
     assert bears.zone is Zone.EXILE
 
     scenario.combat_damage()
-    assert scenario.player("bob").life == 14
+    # 20 starting, +2 from Swords gaining bob life equal to the exiled Bears'
+    # power, -6 trample damage from the Dreadmaw going through unblocked.
+    assert scenario.player("bob").life == 16

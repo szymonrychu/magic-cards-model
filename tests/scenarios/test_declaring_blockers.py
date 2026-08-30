@@ -186,4 +186,7 @@ def test_an_attacker_stays_blocked_after_its_blocker_leaves_combat():
 
     assert scenario.game.is_blocked(bears), "removing the blocker does not unblock it"
     assert scenario.combat_damage() == []
-    assert scenario.player("bob").life == 20, "the Bears got through to nobody"
+    # Swords to Plowshares gains bob life equal to the Watchwolf's power (3)
+    # as part of exiling it - a real effect of the Swords, not of the Bears
+    # getting through, which is what this assertion is actually pinning down.
+    assert scenario.player("bob").life == 23, "the Bears got through to nobody"

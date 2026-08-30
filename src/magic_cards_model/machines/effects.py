@@ -170,12 +170,6 @@ def sequence(*effects: Effect) -> Effect:
     return effect
 
 
-def exile_targets(game: "Game", spell: CardState) -> None:
-    """Exile each target. Only cards can be exiled, so players are skipped."""
-    for target in game.resolve_card_targets(spell):
-        game.exile_permanent(target)
-
-
 def counter_targets(game: "Game", spell: CardState) -> None:
     """Counter each targeted spell, putting it into its owner's graveyard.
 
@@ -671,7 +665,12 @@ def prevent_the_next_damage_from_target(game: "Game", spell: CardState) -> None:
 # by `_parse_targeted_clause` off the card's own text with no row needed, so
 # `effect_for`'s fallback reaches it too. See `test_registry_is_minimal.py`.
 EFFECTS: dict[str, Effect] = {
-    "Swords to Plowshares": exile_targets,
+    # "Swords to Plowshares": "Exile target creature. Its controller gains
+    # life equal to its power." is not entered here any more (this wave):
+    # `_parse_anaphoric_clause_pair` reads both sentences as one CR 608.2c
+    # instruction off the card's own printed text, so `effect_for`'s fallback
+    # reaches it - and reads the life gain the old `exile_targets` row never
+    # did. See `test_registry_is_minimal.py`.
     "Electrolyze": sequence(deal_divided_damage(2), draw_cards(1)),
     # CR 608.2c: the switch first, then the draw, in the order printed.
     "Twisted Image": sequence(create_continuous_effect, draw_cards(1)),
@@ -740,7 +739,7 @@ def effect_for(card_name: str, effect_text: str | None = None) -> Effect | None:
         return None
     if is_modal_text(effect_text):
         return resolve_modal_spell
-    return parse_mixed_effect_for_spell(effect_text)
+    return _spell_effect_or_notice(effect_text)
 
 
 # --------------------------------------------------------------------------
@@ -1024,7 +1023,12 @@ def has_land_type(*subtypes: str) -> Callable[[CardState], bool]:
 #: reattached by `_rejoin_search_clauses` - the group still has to be
 #: *readable*, just not mandatory at the regex level.
 _SEARCH_AND_PUT_RE = re.compile(
-    r"(?P<subject>you may |its controller may )?"
+    # "Its controller may search ..." is deliberately not an alternative here
+    # any more - that subject names a different player than whoever controls
+    # the resolving spell or ability, and `_parse_anaphoric_clause_pair` reads
+    # it off the *previous* clause's target instead of off this one's own
+    # "subject" group (see that function and `_search_and_place_for`).
+    r"(?P<subject>you may )?"
     r"search (?:your|their) library for (?:a|an) (?P<quality>.+?) card"
     r"(?: with mana value (?P<max_mv>\d+) or less)?"
     r"(?:, reveal it)?"
@@ -1112,26 +1116,26 @@ def _bounded_quality_matcher(quality: str, max_mv: str | None) -> Callable[[Card
     return matches
 
 
-def _build_search_clause(match: re.Match[str], *, for_spell: bool) -> TargetedClause:
-    """The effect for one `_SEARCH_AND_PUT_RE` match, as a `TargetedClause` -
-    usable directly by `parse_search_and_put_effect`'s whole-text callers and
-    by `_parse_mixed_clause`'s per-clause dispatch alike.
+def _search_and_place_for(
+    match: re.Match[str], *, optional: bool
+) -> Callable[["Game", Player, str], None]:
+    """The core of one search-and-put match - search, then place the find -
+    as a function of **whichever player is doing it**, independent of who
+    controls the resolving spell or ability.
 
-    **Who searches** is read off the sentence's own subject, not assumed to be
-    the resolving spell or ability's controller: "you may search your
-    library" is CR 701.23g's choice put to the controller, but "Its controller
-    may search their library" (Ghost Quarter, White Orchid Phantom) is the
-    same choice put to the controller of whatever this ability's *target* is -
-    the player whose land was just destroyed, who is very often the
-    activator's opponent. That player is found by walking `stack_object`'s own
-    targets (the destroy clause's target reference is still there; nothing
-    about resolving the search clause clears it) and searching each target's
-    owner's library in turn - White Orchid Phantom only ever names one target,
-    but nothing here assumes that stays true forever.
+    Read off the match's own quality/mana-value/tapped/destination groups
+    once, the same way `_build_search_clause` always has; only *who* the
+    player is, and whether the search is optional, have moved out to the
+    caller. `_build_search_clause` supplies the resolving spell or ability's
+    own controller and reads "you may" off its own match for `optional`;
+    `_parse_referent_clause`'s search branch (`_REFERENT_SEARCH_RE`) matches
+    against text with no subject of its own left in it at all (the "its
+    controller"/"that player" was already consumed by
+    `_ANAPHORIC_SUBJECT_RE`) and is always the printed "may" - the resolution
+    of *which player* has moved out of the search parser entirely and into
+    `_parse_anaphoric_clause_pair`, which reads it off the previous clause's
+    target rather than off this one's own text.
     """
-    subject = (match.group("subject") or "").strip().lower()
-    other_controller = subject.startswith("its controller")
-    optional = bool(subject)
     quality = match.group("quality")
     max_mv = match.group("max_mv")
     matches = _bounded_quality_matcher(quality, max_mv)
@@ -1139,37 +1143,41 @@ def _build_search_clause(match: re.Match[str], *, for_spell: bool) -> TargetedCl
     tapped = bool(match.group("tapped"))
     to_hand = match.group("dest").startswith("into your hand")
 
-    def _do_search(game: "Game", player: Player, source: str) -> CardState | None:
+    def run(game: "Game", player: Player, source: str) -> None:
         if optional and not game.may(
             player, f"search your library for a {description} card", source=source
         ):
-            return None
-        return _search_library(game, player, matches, source=source)
-
-    def _place(player: Player, found: CardState, game: "Game") -> None:
+            return
+        found = _search_library(game, player, matches, source=source)
+        if found is None:
+            return
         if to_hand:
             player.add(found, Zone.HAND)
         else:
             game.put_onto_battlefield(found, player.username, tapped=tapped)
 
+    return run
+
+
+def _build_search_clause(match: re.Match[str], *, for_spell: bool) -> TargetedClause:
+    """The effect for one `_SEARCH_AND_PUT_RE` match, as a `TargetedClause` -
+    usable directly by `parse_search_and_put_effect`'s whole-text callers and
+    by `_parse_mixed_clause`'s per-clause dispatch alike.
+
+    Always the resolving spell or ability's own controller (CR 701.23g's "you
+    may" is that player's choice). "Its controller may search ..." - Ghost
+    Quarter's and White Orchid Phantom's own half of the deal - is a different
+    sentence naming a different player and is read by
+    `_parse_anaphoric_clause_pair` instead, paired with the destroy clause
+    ahead of it; `_SEARCH_AND_PUT_RE`'s subject group no longer offers that
+    alternative at all (see the regex's own comment).
+    """
+    optional = bool((match.group("subject") or "").strip())
+    run = _search_and_place_for(match, optional=optional)
+
     def effect(game: "Game", stack_object: "StackObject") -> None:
         source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
-        if other_controller:
-            for reference in stack_object.targets:
-                target = game.resolve_target(reference)
-                if not isinstance(target, CardState):
-                    continue
-                owner = game.find_owner(target)
-                if owner is None:
-                    continue
-                found = _do_search(game, owner, source)
-                if found is not None:
-                    _place(owner, found, game)
-            return
-        player = game.controller_of(stack_object)
-        found = _do_search(game, player, source)
-        if found is not None:
-            _place(player, found, game)
+        run(game, game.controller_of(stack_object), source)
 
     return effect
 
@@ -2412,6 +2420,317 @@ def resolve_modal_spell(game: "Game", spell: CardState) -> None:
 # different shapes with no table row.
 
 
+#: "Its controller ...", "That creature's controller ...", "That player ..." -
+#: CR 400.7's plain anaphoric back-reference to whatever `_DESTROY_TARGET_RE`/
+#: `_EXILE_TARGET_RE`'s clause just targeted, not a fresh target of this
+#: sentence's own. Solitude prints the first form ("That creature's
+#: controller gains life..."), Ghost Quarter and White Orchid Phantom the
+#: second ("Its controller may search..."), Boseiju the third ("That player
+#: may search...") - all three name the same thing: whoever controls the
+#: permanent the previous clause just destroyed or exiled.
+_ANAPHORIC_SUBJECT_RE = re.compile(
+    r"^(?:its controller|that [a-z]+'s controller|that player)\s+(?P<rest>.+)$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+#: "Its controller/that player may search ..." with the subject already
+#: stripped by `_ANAPHORIC_SUBJECT_RE` - the same tail `_SEARCH_AND_PUT_RE`
+#: reads, but with no subject group of its own to match against (there is
+#: nothing left in `rest` for one), because the "may" here is never optional
+#: in the way `_build_search_clause`'s own "you may" prefix is: every card
+#: this shape reaches prints it.
+_REFERENT_SEARCH_RE = re.compile(
+    r"^may search (?:your|their) library for (?:a|an) (?P<quality>.+?) card"
+    r"(?: with mana value (?P<max_mv>\d+) or less)?"
+    r"(?:, reveal it)?"
+    r", put (?:it|that card) (?P<dest>into your hand|onto the battlefield(?P<tapped> tapped)?)"
+    r"(?:, then shuffle)?\.?$",
+    re.IGNORECASE,
+)
+
+#: "creates a[n] [tapped] <token descriptor> token[s]" - the referent-subject
+#: twin of `_TOKEN_CLAUSE_RE`, for Cityscape Leveler's "Its controller creates
+#: a tapped Powerstone token." "Create"/"creates" is not optional here the way
+#: `_TOKEN_CLAUSE_RE`'s own leading "(?:create )?" is, because this text is
+#: always third-person ("creates"), never the imperative "create" a spell's
+#: own clause prints.
+_REFERENT_TOKEN_RE = re.compile(
+    rf"^creates? (?P<n>{_COUNT}) (?P<desc>.+?) \btokens?\b(?:\s+with\s+(?P<tail>.+))?\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+#: "gains life equal to its power" - Solitude's and Swords to Plowshares' own
+#: second sentence. `its power` is the only value expression this wave reads;
+#: anything else (toughness, a fixed number, a modified power) is refused,
+#: which is what `_read_referent_power_expression` enforces.
+_REFERENT_GAIN_LIFE_RE = re.compile(r"^gains? life equal to (?P<expr>.+)$", re.IGNORECASE)
+
+
+def _read_referent_power_expression(expr: str) -> bool:
+    """Whether `expr` is exactly "its power" - the only value expression this
+    wave reads off a referent (`its power` being the LKI snapshot
+    `_parse_anaphoric_clause_pair` already took before the antecedent's verb
+    moved the referent - CR 608.2i, a look-back effect uses information as it
+    was, not the current game state, and CR 400.7's new object has none of
+    its own left to read afterward)."""
+    return expr.strip().rstrip(".").strip().lower() == "its power"
+
+
+#: A second, anaphoric clause's effect, given the referent's controller and
+#: LKI power (`None` if it could not be read - a `*` power CDA the layers
+#: engine itself failed to resolve, not something this wave should crash or
+#: silently zero on).
+ReferentClause = Callable[["Game", Player, int | None, str], None]
+
+
+def _referent_gain_life(game: "Game", player: Player, power: int | None, source: str) -> None:
+    """ "<Referent's controller> gains life equal to its power" (CR 119.3).
+
+    CR 107.1b: "You can't ... gain negative life" - a negative last-known
+    power floors at zero rather than reducing the total. A `None` power (the
+    LKI snapshot could not be read) gains nothing, which is `Game.power_of`'s
+    existing "the layers engine could not answer" case, not a new one
+    invented here.
+    """
+    if power is None:
+        return
+    player.gain_life(max(power, 0))
+
+
+def _parse_referent_clause(rest: str) -> ReferentClause | None:
+    """ "<rest>" is the tail of "its controller"/"that player" with the
+    subject already stripped off by `_ANAPHORIC_SUBJECT_RE` - read as a life
+    gain, a search, or a token creation, in that order, or `None` if this wave
+    cannot read it (Craterous Stomp's "Each other creature that player
+    controls becomes a Coward..." is none of the three and is left unscripted
+    - see `docs/engine-coverage.md`).
+    """
+    rest = rest.strip()
+
+    if match := _REFERENT_GAIN_LIFE_RE.fullmatch(rest):
+        if not _read_referent_power_expression(match.group("expr")):
+            return None
+        return _referent_gain_life
+
+    if match := _REFERENT_SEARCH_RE.fullmatch(rest):
+        run = _search_and_place_for(match, optional=True)
+
+        def search_effect(game: "Game", player: Player, power: int | None, source: str) -> None:
+            run(game, player, source)
+
+        return search_effect
+
+    if match := _REFERENT_TOKEN_RE.fullmatch(rest):
+        count = _count(match.group("n"))
+        words = match.group("desc").strip().split()
+        tail = match.group("tail")
+        tapped = bool(words) and words[0].lower() == "tapped"
+        if tapped:
+            words = words[1:]
+        if not words:
+            return None
+        predefined_name = " ".join(words)
+        if tail is None and predefined_name in PREDEFINED:
+            definition = PREDEFINED[predefined_name]
+        else:
+            definition = _parse_generic_token_descriptor(words, tail)
+        if definition is None:
+            return None
+
+        def token_effect(game: "Game", player: Player, power: int | None, source: str) -> None:
+            create_tokens(game, definition, player.username, count, tapped=tapped)
+
+        return token_effect
+
+    return None
+
+
+class AnaphoricClauseNotice(BaseModel):
+    """One "<verb> target X. Its/that X's controller ..." effect whose second,
+    anaphoric clause (CR 400.7's back-reference to the first clause's own
+    target, not a target of its own) this wave could not read.
+
+    This is Solitude's own defect, recorded rather than repeated: "exile up to
+    one other target creature. That creature's controller gains life equal to
+    its power." used to have no registry row and nothing that could read its
+    second sentence, so `_parse_mixed_clauses` correctly refused the whole
+    effect (CR 608.2c has no notion of running half an instruction) - but
+    silently, with no record anywhere that anything had gone unread, which is
+    why a legally-targeted Solitude could exile nothing and gain no life with
+    no trace of why. The same "unreadable is not the same as no effect"
+    record `TargetingNotice`, `InterveningIfNotice`, `ModeNotice`,
+    `LayerNotice`, and `CostModifierNotice` already keep for their own gaps.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    source_id: UUID | None
+    source_name: str
+    text: str
+    """The unreadable second sentence itself, as printed."""
+
+
+def _unreadable_anaphoric_clause(text: str, *, for_spell: bool) -> str | None:
+    """The second sentence of `text`'s "<verb> target X. Its/that X's
+    controller ..." shape, if it has one **and this wave still cannot build
+    it** - used only to decide whether a parse failure deserves an
+    `AnaphoricClauseNotice`, not to parse the clause itself
+    (`_parse_mixed_clauses` already tried and failed by the time this runs).
+
+    Checking `_parse_anaphoric_clause_pair` itself, not just the two regexes'
+    shape, matters: Boseiju's Channel ability fails to parse as a whole for
+    two independent reasons, not one - `This ability costs {1} less to
+    activate ...` is a third sentence neither this nor any other clause
+    parser reads, *and* its own destroy-then-search pair does not read
+    either, because `_REFERENT_SEARCH_RE` cannot match "a land card with a
+    basic land type" (the "with a basic land type" tail falls into none of
+    the regex's optional groups). A shape-only check would blame whichever
+    sentence happens to fail the shape test first, which is the wrong
+    clause exactly as often as it is the right one; checking the actual
+    parse keeps the notice pointed at a sentence this wave really cannot
+    read, whichever one that turns out to be.
+    """
+    clauses = _prepare_effect_clauses(text)
+    if clauses is None:
+        return None
+    for first, second in zip(clauses, clauses[1:], strict=False):
+        verb_match = _DESTROY_TARGET_RE.fullmatch(first) or _EXILE_TARGET_RE.fullmatch(first)
+        if verb_match is None:
+            continue
+        if not _ANAPHORIC_SUBJECT_RE.fullmatch(second.strip()):
+            continue
+        if _parse_anaphoric_clause_pair(first, second, for_spell=for_spell) is None:
+            return second
+    return None
+
+
+def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
+    """`parse_mixed_effect` on `effect_text`, or - if that failed specifically
+    on an unreadable anaphoric second clause - a stand-in effect that records
+    an `AnaphoricClauseNotice` and otherwise does nothing (CR 608.2c: still no
+    partial run of the instruction). Returns `None`, exactly as before, for
+    any other kind of unreadable text - Fatal Push's Revolt line keeps its
+    old, unrecorded silence; only this one specific shape has a notice built
+    for it so far.
+    """
+    parsed = parse_mixed_effect(effect_text)
+    if parsed is not None:
+        return parsed
+    unread = _unreadable_anaphoric_clause(effect_text, for_spell=False)
+    if unread is None:
+        return None
+
+    def notice_only(game: "Game", ability: AbilityOnStack) -> None:
+        game.anaphoric_clause_notices.append(
+            AnaphoricClauseNotice(
+                source_id=ability.source_id, source_name=ability.source_name, text=unread
+            )
+        )
+
+    return notice_only
+
+
+def _spell_effect_or_notice(effect_text: str) -> Effect | None:
+    """The spell-side twin of `_ability_effect_or_notice`, for `effect_for`."""
+    parsed = parse_mixed_effect_for_spell(effect_text)
+    if parsed is not None:
+        return parsed
+    unread = _unreadable_anaphoric_clause(effect_text, for_spell=True)
+    if unread is None:
+        return None
+
+    def notice_only(game: "Game", spell: CardState) -> None:
+        game.anaphoric_clause_notices.append(
+            AnaphoricClauseNotice(source_id=spell.id, source_name=spell.card.name, text=unread)
+        )
+
+    return notice_only
+
+
+def _parse_anaphoric_clause_pair(
+    first: str, second: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """ "<Destroy/exile> target X. Its/that X's controller <player clause>."
+    as one combined clause, or `None` if this shape does not match or its
+    second sentence cannot be read.
+
+    CR 608.2b's target-legality recheck belongs only to the *first*
+    sentence's own target - the only thing this ability ever targets. The
+    second sentence's "its controller"/"that player" is CR 400.7's plain
+    anaphora back to whatever the first sentence found (see
+    `_ANAPHORIC_SUBJECT_RE`), not a second target of its own, so it is never
+    put through `Game.resolve_targets` again (that would apply CR 608.2b to
+    an object CR 400.7 says is not even the same one any more, and reproduce
+    Solitude's original bug of gaining no life whenever the exiled object
+    itself would obviously no longer be a legal target of anything).
+
+    This is the fix for Solitude's live defect: "exile up to one other target
+    creature. That creature's controller gains life equal to its power." used
+    to have no registry row and no clause parser that could read its second
+    sentence, so `_parse_mixed_clauses` correctly refused the *whole* effect
+    (CR 608.2c has no notion of running half an instruction) - but silently,
+    with no record anywhere that anything had gone unread. `trigger_effect_for`
+    now leaves an `AnaphoricClauseNotice` for exactly that failure mode.
+
+    The referent's controller and power are read from the battlefield
+    **before** the first sentence's verb runs it off the battlefield
+    (CR 608.2i): reading them afterward would see `CardState.move_to`'s empty
+    husk - counters cleared to `last_known_counters`, and
+    `machines/layers.py` only computing continuous effects for a permanent
+    still on the battlefield - so an anthemed, +1/+1-countered creature would
+    silently gain its printed power back rather than its real one.
+    """
+    verb_match = _DESTROY_TARGET_RE.fullmatch(first) or _EXILE_TARGET_RE.fullmatch(first)
+    if verb_match is None:
+        return None
+    is_destroy = first.strip().lower().startswith("destroy")
+    if not _targets_understood(
+        verb_match.group("phrase"), count_agnostic=True, battlefield_only=is_destroy
+    ):
+        return None
+    subject_match = _ANAPHORIC_SUBJECT_RE.fullmatch(second.strip())
+    if subject_match is None:
+        return None
+    second_clause = _parse_referent_clause(subject_match.group("rest"))
+    if second_clause is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        targets = [
+            target
+            for target in game.resolve_targets(stack_object)
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
+        ]
+        if not targets:
+            # CR 115.6: "up to one" chose zero, or CR 608.2b left nothing
+            # legal - either way the second sentence has nothing to refer
+            # back to and does not run either (CR 608.2c: one instruction,
+            # not two independent ones).
+            return
+        target = targets[0]
+        referent = game.controller_of(target)
+        power = game.power_of(target)
+        if is_destroy:
+            game.destroy(target)
+        else:
+            game.exile_permanent(target)
+        if target.zone is Zone.BATTLEFIELD:
+            # The move never happened, so the second sentence has nothing to
+            # refer back to (CR 608.2c: one instruction, not two independent
+            # ones). `target` was filtered to the battlefield above, and
+            # neither verb's replacement path (`put_into_graveyard`'s
+            # destination is always graveyard or exile) can land it back
+            # there, so still being on the battlefield here only happens
+            # when the move itself was refused outright: CR 702.12b's
+            # indestructible refuses `destroy`, and CR 111.8 refuses either
+            # verb for a token that has already left the battlefield once.
+            return
+        second_clause(game, referent, power, source)
+
+    return effect
+
+
 def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """One clause of a mixed effect: the targeted shape first, then a token
     creation, then a search, then the plain player shape (CR 608.2c does not
@@ -2440,22 +2759,44 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
 
 
 def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] | None:
-    """Every clause of `text`, each tried against both parsers, or `None` the
-    moment one clause matches neither.
+    """Every clause of `text`, or `None` the moment one clause (or one
+    anaphoric pair of clauses) matches nothing this wave reads.
 
-    Fail-closed **per clause, not per parser**: CR 608.2c has no notion of
-    running half an effect, so a card with one clause neither parser reads -
-    Fatal Push's Revolt line, Assassin's Trophy's compensation - still comes
-    back `None` for the whole thing, exactly as `_parse_targeted_clauses` and
-    `_parse_player_clauses` already refuse it alone.
+    A consecutive pair is tried first, through `_parse_anaphoric_clause_pair`
+    - "destroy/exile target X. Its/that X's controller ..." is two sentences
+    that are one CR 608.2c instruction with an anaphoric second half (CR
+    400.7), not two independent clauses, so it has to be read together or not
+    at all. Only when a clause does not open such a pair does it fall back to
+    `_parse_mixed_clause`'s ordinary one-clause-at-a-time dispatch - Fatal
+    Push's Revolt line is still read by neither and still takes the whole
+    effect down with it.
+
+    Fail-closed **per clause (or pair), not per parser**: CR 608.2c has no
+    notion of running half an effect, so a card with one clause nothing here
+    reads still comes back `None` for the whole thing, exactly as
+    `_parse_targeted_clauses` and `_parse_player_clauses` already refuse it
+    alone.
     """
     clauses = _prepare_effect_clauses(text)
     if clauses is None:
         return None
-    parsed = [_parse_mixed_clause(clause, for_spell=for_spell) for clause in clauses]
-    if any(effect is None for effect in parsed):
-        return None
-    return parsed  # type: ignore[return-value]
+    parsed: list[TargetedClause] = []
+    index = 0
+    while index < len(clauses):
+        if index + 1 < len(clauses):
+            paired = _parse_anaphoric_clause_pair(
+                clauses[index], clauses[index + 1], for_spell=for_spell
+            )
+            if paired is not None:
+                parsed.append(paired)
+                index += 2
+                continue
+        effect = _parse_mixed_clause(clauses[index], for_spell=for_spell)
+        if effect is None:
+            return None
+        parsed.append(effect)
+        index += 1
+    return parsed
 
 
 def parse_mixed_effect_for_spell(text: str) -> Effect | None:
@@ -2775,7 +3116,7 @@ def trigger_effect_for(
     if not entries:
         if effect_text is None:
             return None
-        return parse_mixed_effect(effect_text)
+        return _ability_effect_or_notice(effect_text)
     if len(entries) == 1 and not entries[0][0]:
         return entries[0][1]
     return _dispatch_by_printed_text(entries)
@@ -2822,4 +3163,4 @@ def activated_effect_for(
         return explicit
     if effect_text is None:
         return None
-    return parse_mixed_effect(effect_text)
+    return _ability_effect_or_notice(effect_text)
