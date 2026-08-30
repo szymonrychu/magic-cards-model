@@ -420,10 +420,17 @@ def test_activated_effect_for_covers_a_fetchland_added_to_the_pool_later():
 
 def test_a_card_with_no_search_ability_gets_no_effect_from_the_parser():
     """The fallback only fires for the one sentence shape it recognises.
-    Anything else - including a fetchland's own cost text, which is never
-    handed to it - returns `None`, the same silence an unscripted ability gets.
+    Anything else returns `None`, the same silence an unscripted ability gets.
+
+    `"Add {R}."` was the example here until the play-from-exile wave taught
+    `_parse_add_mana_clause` to read a resolving "Add ..." (CR 106.4) - the
+    resolution half of Ugin, Eye of the Storms' `0: Add {C}{C}{C}.`, which
+    CR 605.1a's "it's not a loyalty ability" keeps off the mana-ability fast
+    path. A fetchland's own `{T}: Add {R}.` never reaches this function anyway
+    (it is a real mana ability and CR 605.3b resolves it without the stack), so
+    the example is now a sentence nothing in the file reads.
     """
-    assert activated_effect_for("Arid Mesa", 0, "Add {R}.") is None
+    assert activated_effect_for("Arid Mesa", 0, "Untap each Desert you control.") is None
 
 
 def test_expedition_map_finds_any_land_and_puts_it_in_hand():

@@ -17,6 +17,12 @@ from ..machines.abilities import (
     TriggerEvent,
     parse_abilities,
 )
+from ..machines.casting import (
+    PlayAction,
+    PlayPermission,
+    play_permissions_on,
+    usable_play_permission,
+)
 from ..machines.combat import (
     Attack,
     CombatMachine,
@@ -34,6 +40,7 @@ from ..machines.cost import (
     cost_component_for_phrase,
     cost_modifier_effect,
     discard_cost,
+    exile_cost,
     increase,
     looks_like_unparsed_cost_modifier,
     loyalty_cost,
@@ -145,6 +152,23 @@ _PROTECTION = re.compile(r"protection from ([^.;\n]+)", re.IGNORECASE)
 #: ability's source is the object it is printed on, so "this" is that object and
 #: only the caller building the cost knows which it is.
 _SELF_REFERENCE = re.compile(r"\bthis\b", re.IGNORECASE)
+
+
+def _exiles_itself_by_name(text: str, permanent: "CardState") -> bool:
+    """Whether `text` is "Exile `<permanent's own printed name>`" - CR 201.5's
+    other self-reference form: "If an object's text uses the object's own
+    name, it's referring to that object, even if there are other objects with
+    the same name." The Stone Brain's own "Exile The Stone Brain" is the
+    pool's only example of this on a cost line; `_SELF_REFERENCE` only ever
+    catches the "this `<type>`" spelling (CR 700.7), not a bare printed name.
+
+    An exact match (case-insensitive) on "exile `<name>`" alone, not a
+    substring search - a cost line naming some *other* object by name (a
+    hypothetical "Exile a card named `<X>`") is a different shape entirely and
+    must not be waved through as if it referred to `permanent`.
+    """
+    return text.strip().rstrip(".").lower() == f"exile {permanent.name.lower()}"
+
 
 #: CR 601.2f cost reduction of the shape Emrakul, the Promised End prints.
 #: Narrow on purpose: the amount, and the thing being counted, are both read
@@ -597,6 +621,13 @@ class Game(BaseModel):
     priority: PriorityMachine | None = None
     combat: CombatMachine = Field(default_factory=CombatMachine)
     lands_played: dict[str, int] = Field(default_factory=dict)
+    play_permissions: list[PlayPermission] = Field(default_factory=list)
+    """CR 601.3's dynamic half: permissions a resolving effect handed out to
+    specific cards - Ugin, Eye of the Storms' −11, Ragavan, Nimble Pilferer's
+    combat-damage trigger. Granted through `grant_play_permission`, read
+    through `machines/casting.usable_play_permission`, and dropped in the
+    cleanup step (CR 514.2). Deliberately a list of per-object records rather
+    than a flag on the cards: see `PlayPermission`'s own docstring."""
     winner: str | None = None
     drawn: bool = False
     """Whether the game ended in a draw (CR 104.4a).
@@ -1216,6 +1247,11 @@ class Game(BaseModel):
             for shield in self.prevention_shields
             if not shield.spent and not shield.until_end_of_turn
         ]
+        # CR 514.2's same sentence: "all 'until end of turn' ... effects end".
+        # A card exiled by Ugin's −11 stays exiled and stops being castable.
+        self.play_permissions = [
+            permission for permission in self.play_permissions if not permission.until_end_of_turn
+        ]
         return discarded
 
     def remove_all_damage(self) -> None:
@@ -1337,6 +1373,22 @@ class Game(BaseModel):
 
         # CR 601.2a: the card is now a spell on the stack, so the casting event
         # has happened and anything watching for it triggers (CR 603.2).
+        # CR 202.3e: while this spell is on the stack, an {X} in its cost is
+        # the value actually chosen for X, not CR 107.3g's off-stack "X is 0"
+        # reading `card_state.card.cmc` gives - `Game.note_cast` (called by
+        # `Casting.cast` before this) already has that value on record, the
+        # same one CR 107.3m's own X-counters replacement in
+        # `machines/replacement.py` reads. Chalice of the Void's "mana value
+        # equal to the number of charge counters" needs this real number, not
+        # the printed one - see `GameEvent.amount`'s docstring.
+        # CR 107.3i: "all instances of X on an object have the same value at
+        # any given time" - Walking Ballista's `{X}{X}` is two symbols each
+        # worth the one chosen X, so the printed cmc (which already reads
+        # both as 0, CR 107.3g) gains `count * x_value`, not just `x_value`.
+        mana_value = card_state.card.cmc or 0
+        x_count = (card_state.mana_cost or "").count("{X}")
+        if x_count:
+            mana_value += x_count * self.cast_record(card_state).x_value
         self.emit(
             GameEvent(
                 event=TriggerEvent.CAST_SPELL,
@@ -1347,6 +1399,7 @@ class Game(BaseModel):
                 subject_types=card_state.types,
                 subject_subtypes=card_state.subtypes,
                 player=controller,
+                amount=int(mana_value),
             )
         )
         # CR 117.3c gives priority straight back to the caster, so this is the
@@ -4408,6 +4461,63 @@ class Game(BaseModel):
             )
         return None
 
+    # -- permission to play a card from somewhere else (CR 601.3) ----------
+
+    def grant_play_permission(
+        self,
+        card: CardState,
+        player: str,
+        *,
+        action: PlayAction = PlayAction.CAST,
+        pays_mana_cost: bool = True,
+        source_name: str = "",
+        rule: str = "CR 601.3",
+        zone: Zone = Zone.EXILE,
+        until_end_of_turn: bool = True,
+    ) -> PlayPermission:
+        """CR 601.3: let `player` play this one card out of `zone`, for a turn.
+
+        The primitive behind Ugin, Eye of the Storms' "−11: ... Until end of
+        turn, you may cast those cards without paying their mana costs." and
+        Ragavan, Nimble Pilferer's "... Until end of turn, you may cast that
+        card." Both are the same shape: a resolving ability names cards it has
+        just exiled and says who may play them and for how long.
+
+        The permission is stamped with the object's `zone_change_stamp`
+        (CR 400.7), so it dies the moment the card moves - it cannot be
+        re-earned by a card that leaves exile and returns, and it never leaks
+        to a different card in the same pile.
+
+        `player` is who may play it, which CR 108.3 leaves free to differ from
+        the owner: Ragavan exiles from the damaged player's library and hands
+        the permission to the Ragavan controller.
+
+        `pays_mana_cost=False` is CR 118.9's "without paying its mana cost".
+        `action=PlayAction.PLAY` is CR 601.1a's wider word, which reaches the
+        land drop; `PlayAction.CAST` never does.
+        """
+        turn = self.turn
+        permission = PlayPermission(
+            card_id=card.id,
+            zone_change_stamp=card.zone_change_stamp,
+            player=player,
+            zone=zone,
+            action=action,
+            pays_mana_cost=pays_mana_cost,
+            source_name=source_name,
+            rule=rule,
+            until_end_of_turn=until_end_of_turn,
+            granted_turns_taken=None if turn is None else int(turn.turns_taken),
+        )
+        self.play_permissions.append(permission)
+        return permission
+
+    def play_permission_for(
+        self, card: CardState, player: str, action: PlayAction = PlayAction.CAST
+    ) -> PlayPermission | None:
+        """The live permission letting `player` take `action` with `card`, or None."""
+        return usable_play_permission(self, card, player, action)
+
     def can_play_land(self, username: str) -> bool:
         """Whether `username` may play a land right now (CR 305.1-305.3).
 
@@ -4439,6 +4549,26 @@ class Game(BaseModel):
         refusal = self.why_cannot_play_land(username)
         if refusal is not None:
             raise ValueError(refusal)
+        if land.zone is not Zone.HAND:
+            # CR 305.1 plays a land "from their hand"; CR 701.18a's "from the
+            # zone it's in (usually the hand)" is the wider action, and only an
+            # effect can open one of those other zones (CR 601.3's twin for
+            # lands). A `PlayPermission` that says *cast* is not one of them -
+            # CR 601.1a keeps playing a land and casting a spell apart.
+            permission = self.play_permission_for(land, username, PlayAction.PLAY)
+            if permission is None:
+                granted = play_permissions_on(self, land)
+                if granted:
+                    # A permission names this object and does not stretch this
+                    # far - say which way it falls short (cast-not-play, wrong
+                    # player, expired) rather than "nothing allows this".
+                    raise ValueError(
+                        granted[0].why_not(land, username, self, action=PlayAction.PLAY)
+                    )
+                raise ValueError(
+                    f"nothing allows {username} to play {land.name} from the "
+                    f"{land.zone.value} (CR 305.1, CR 701.18a)"
+                )
 
         # CR 305.2a counts "lands played as special actions and lands played
         # during the resolution of spells and abilities", so any future effect
@@ -5013,9 +5143,31 @@ class Game(BaseModel):
                 # turns the sentence into something payable - "Exert this land"
                 # (CR 701.43a), "Exile a black card from your hand" (CR 118.9).
                 component = cost_component_for_phrase(piece.text, payer=controller)
+                if component is None and _exiles_itself_by_name(piece.text, permanent):
+                    # CR 201.5: "if an object's text uses its own name, it is
+                    # referring to that particular object" - the same
+                    # self-reference `_SELF_REFERENCE`'s bare "this" already
+                    # reads, spelled with the printed name instead. The Stone
+                    # Brain's own "Exile The Stone Brain" is the pool's only
+                    # example: `_PHRASE_EXILE` only reads "exile this card" or
+                    # a quality-and-count phrase, neither of which a bare
+                    # self-name is, so it comes back `None` and is built here
+                    # instead - straight from the battlefield (CR 113.6: an
+                    # activated ability's source is normally there), the same
+                    # empty-then-filled shape `_SELF_REFERENCE`'s branch below
+                    # uses for "this".
+                    component = exile_cost(
+                        payer=controller,
+                        required=1,
+                        description=piece.text,
+                        zone=Zone.BATTLEFIELD,
+                    )
                 if component is None:
                     raise ValueError(f"cannot build a cost for {piece.text!r}")
-                if not component.cards and _SELF_REFERENCE.search(piece.text):
+                if not component.cards and (
+                    _SELF_REFERENCE.search(piece.text)
+                    or _exiles_itself_by_name(piece.text, permanent)
+                ):
                     # "Exert **this** land": only the caller knows which
                     # permanent the ability is on, so the reader builds the
                     # component empty and it is filled in here (CR 602.1a - the
@@ -5554,6 +5706,14 @@ class Game(BaseModel):
             self.loyalty_activations = {}  # CR 606.3's once-per-turn is per turn too
             self.spells_cast_this_turn = {}
             self.life_gained_this_turn = set()
+            # `play_permissions` is deliberately **not** cleared here. CR 514.2
+            # ends an "until end of turn" effect in the cleanup step and
+            # `cleanup_step` does exactly that; a game driven step by step may
+            # never run one, and `PlayPermission.expired` - which compares
+            # `turns_taken` - is what answers correctly in that case. Purging
+            # here as well would replace that specific refusal ("that turn is
+            # over") with the generic "nothing allows this", which is a worse
+            # message for the same wrong move.
             self.end_of_combat()
             self.begin_turn_for(self.turn.active_player)
             self._sync_player_control()  # CR 723.1

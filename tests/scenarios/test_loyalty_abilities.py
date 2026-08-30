@@ -37,12 +37,13 @@ Entering with printed loyalty and the zero-loyalty state-based action are also
 covered from the counters' side in `test_counters.py`; here they are reached
 through the abilities themselves, which is what was missing.
 
-**The effect half resolves as nothing, on purpose.** None of the planeswalkers
-used here has an entry in `machines/effects.py`'s activated-ability registry,
-so every ability below resolves and does nothing beyond CR 608.2n's removal.
-These tests assert the rules about *activating* - legality, the cost landing,
-the stack - and say so rather than pretending Ugin gained life. Adding the
-effects would be the effect half's own task.
+**The effect half mostly resolves as nothing, on purpose.** These tests assert
+the rules about *activating* - legality, the cost landing, the stack - and say
+so rather than pretending Ugin gained life. The one exception is Ugin's `0:
+Add {C}{C}{C}.`, whose resolution is now read off its own printed text
+(CR 106.4, `machines/effects._parse_add_mana_clause`) precisely because this
+file's point is that it is *not* a mana ability: an ability asserted not to
+take CR 605.3b's shortcut has to be shown arriving the long way instead.
 """
 
 import pytest
@@ -50,6 +51,7 @@ import pytest
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.triggers import AbilityOnStack
 from magic_cards_model.models import Zone
+from magic_cards_model.models.card import Color
 from magic_cards_model.models.card_state import Counter, TargetRef
 from tests.scenarios.harness import Scenario
 
@@ -153,9 +155,9 @@ def test_a_zero_loyalty_cost_is_not_a_mana_ability():
 
     scenario.pass_until_resolved()
     assert scenario.game.stack_is_empty
-    assert not scenario.player("alice").mana_pool.floating, (
-        "no activated-ability registry entry, so the effect half resolves as "
-        "nothing - the honest boundary of this file"
+    assert scenario.player("alice").mana_pool.floating == {Color.COLORLESS: 3}, (
+        "CR 106.4: the mana goes into the pool when the ability resolves - one "
+        "whole round of priority later than a mana ability's would have"
     )
 
 

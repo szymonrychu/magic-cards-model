@@ -20,6 +20,7 @@ machine and the announcement side is another.
 from collections.abc import Iterable, Sequence
 from enum import StrEnum
 from typing import Any
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -355,21 +356,190 @@ def castable_from(card: Card, zone: Zone) -> list[KeywordCastOption]:
     return [option for option in keyword_cast_options(card) if option.zone is zone]
 
 
+# --------------------------------------------------------------------------
+# A permission handed out by a resolving effect (CR 601.3, CR 701.18b)
+# --------------------------------------------------------------------------
+
+
+class PlayAction(StrEnum):
+    """What an effect's permission actually allows.
+
+    CR 601.1a: "Some effects still refer to 'playing' a card. 'Playing a card'
+    means playing that card as a land or casting that card as a spell,
+    whichever is appropriate." CR 701.18b says the same thing as a keyword
+    action, and CR 701.5b: "To cast a card is to cast it as a spell."
+
+    So the two are **not** interchangeable, which is why they are two values
+    rather than one flag: `PLAY` covers CR 701.18a's land drop as well as a
+    cast, and `CAST` covers only the cast. Ugin, Eye of the Storms' −11 and
+    Ragavan, Nimble Pilferer's combat-damage trigger both print *cast*;
+    CR 715.3d's Adventure and CR 702.170's plot-adjacent wordings print
+    *play*, and a land found under one of those consumes the land drop
+    (CR 305.2a) while a card cast under the other never can.
+    """
+
+    CAST = "cast"
+    PLAY = "play"
+
+
+class PlayPermission(BaseModel):
+    """CR 601.3's "a rule or effect allows that player to [play] it", handed
+    out by a resolving effect to **one specific card**, for a bounded time.
+
+    "A player can begin to cast a spell only if a rule or effect allows that
+    player to cast it and no rule or effect prohibits that player from casting
+    it." `KeywordCastOption` above is the *static* half of that rule - a grant
+    read off a card's own printed keyword, true of every copy of that printing
+    forever. This is the other half: a grant a resolving ability creates, that
+    names particular objects and then stops.
+
+    Four things the rules keep separate, kept separate here:
+
+    - **which object**, by `card_id` *and* `zone_change_stamp`. CR 400.7: "an
+      object that moves from one zone to another becomes a new object", so a
+      card that leaves exile and comes back is not the card the permission was
+      granted to, and the stamp is what says so. This is also why the
+      permission is not a blanket "cards in exile are castable": it names
+      instances, so an opponent's card exiled by something else is untouched.
+    - **which player**, by `player`. Not the owner: Ragavan exiles the top card
+      of the *damaged player's* library, and CR 108.3 leaves that card owned by
+      that player while the Ragavan controller is the one permitted to cast it.
+    - **cast or play**, by `action` - see `PlayAction`.
+    - **what is paid**, by `pays_mana_cost`. False is CR 118.9's "without
+      paying its mana cost", which CR 107.3b keeps distinct from an
+      alternative cost of some other shape.
+
+    Nothing here loosens timing. CR 117.1a still decides *when* the spell may
+    be cast and CR 305.1 still decides when a land may be played, so a sorcery
+    under this permission is still a sorcery.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    card_id: UUID
+    zone_change_stamp: UUID
+    """CR 400.7's identity check: the value `CardState.zone_change_stamp` held
+    when the permission was granted. A new stamp means a new object."""
+    player: str
+    """Who may play it - CR 108.3's owner is a different question."""
+    zone: Zone = Zone.EXILE
+    action: PlayAction = PlayAction.CAST
+    pays_mana_cost: bool = True
+    """False is CR 118.9's "without paying its mana cost"."""
+    source_name: str = ""
+    """The card whose ability handed this out, for the error message."""
+    rule: str = "CR 601.3"
+    until_end_of_turn: bool = True
+    """CR 514.2: "all 'until end of turn' and 'this turn' effects end" in the
+    cleanup step. `Game.cleanup_step` drops these there."""
+    granted_turns_taken: int | None = None
+    """`TurnMachine.turns_taken` when it was granted, so the permission can
+    tell "this turn" from "a later turn" even in a game driven step by step
+    without ever reaching a cleanup step. CR 500.7's extra turn is why this is
+    `turns_taken` and not the turn number or the active seat."""
+
+    def names(self, card: CardState) -> bool:
+        """Whether this permission is about that exact object (CR 400.7)."""
+        return card.id == self.card_id and card.zone_change_stamp == self.zone_change_stamp
+
+    def expired(self, game: Any = None) -> bool:
+        """CR 514.2: whether the turn it was granted on is over."""
+        if not self.until_end_of_turn or self.granted_turns_taken is None:
+            return False
+        turn = getattr(game, "turn", None)
+        if turn is None:
+            return False
+        return int(turn.turns_taken) != self.granted_turns_taken
+
+    def why_not(
+        self,
+        card: CardState,
+        player: str,
+        game: Any = None,
+        *,
+        action: PlayAction = PlayAction.CAST,
+    ) -> str | None:
+        """Why this permission does not allow that player that action, or None.
+
+        Mirrors `KeywordCastOption.why_not`: CR 601.3's permission first,
+        everything else after. Timing is deliberately **not** asked here - a
+        permission to play is not a permission to ignore CR 117.1a - and is
+        left to `why_cannot_cast_now` and `Game.why_cannot_play_land`.
+        """
+        if not self.names(card):
+            return f"{self.source_name}'s permission is not about this copy of {card.name}"
+        if self.player != player:
+            return (
+                f"{self.source_name} let {self.player} {self.action.value} {card.name}, "
+                f"not {player} ({self.rule})"
+            )
+        if card.zone is not self.zone:
+            return (
+                f"{self.source_name} let {self.player} {self.action.value} {card.name} from "
+                f"the {self.zone.value}, but it is in the {card.zone.value} ({self.rule})"
+            )
+        if self.expired(game):
+            return (
+                f"{self.source_name}'s permission to {self.action.value} {card.name} lasted "
+                f"until end of turn and that turn is over (CR 514.2)"
+            )
+        if action is PlayAction.PLAY and self.action is PlayAction.CAST:
+            # CR 701.5b's "cast it as a spell" is narrower than CR 701.18b's
+            # "play that card as a land or cast that card as a spell": a
+            # permission that says *cast* never reaches the land drop.
+            return (
+                f"{self.source_name} let {self.player} cast {card.name}, which is not "
+                f"permission to play it as a land (CR 601.1a, CR 701.18b)"
+            )
+        return None
+
+
+def play_permissions_on(game: Any, card: CardState) -> list[PlayPermission]:
+    """Every permission recorded against that exact object (CR 400.7)."""
+    if game is None:
+        return []
+    return [
+        permission for permission in getattr(game, "play_permissions", []) if permission.names(card)
+    ]
+
+
+def usable_play_permission(
+    game: Any,
+    card: CardState,
+    player: str,
+    action: PlayAction = PlayAction.CAST,
+) -> PlayPermission | None:
+    """The first permission that lets `player` take `action` with `card`, or None."""
+    for permission in play_permissions_on(game, card):
+        if permission.why_not(card, player, game, action=action) is None:
+            return permission
+    return None
+
+
 def why_cannot_cast_from(spell: CardState, caster: str, zone: Zone, game: Any = None) -> str | None:
     """CR 601.3: why this card cannot be cast from where it is, or None.
 
     A card in hand needs no permission - that is where the rules cast from by
-    default (CR 302.1, 601.3). Anywhere else, some keyword has to allow it, and
-    the option's own conditions have to hold.
+    default (CR 302.1, 601.3). Anywhere else, some keyword has to allow it, or
+    some effect has to have handed out a `PlayPermission`, and that grant's own
+    conditions have to hold.
     """
     if zone is Zone.HAND:
         return None
+    if usable_play_permission(game, spell, caster) is not None:
+        return None
     options = castable_from(spell.card, zone)
-    if not options:
-        return f"nothing allows {caster} to cast {spell.name} from the {zone.value} (CR 601.3)"
     reasons = [option.why_not(spell, caster, game) for option in options]
     if any(reason is None for reason in reasons):
         return None
+    granted = play_permissions_on(game, spell)
+    if granted:
+        # A permission was handed out for this object and does not apply - say
+        # why it does not (expired, wrong player, cast-not-play) rather than
+        # the generic "nothing allows this", which would be a lie.
+        return granted[0].why_not(spell, caster, game)
+    if not options:
+        return f"nothing allows {caster} to cast {spell.name} from the {zone.value} (CR 601.3)"
     return next(reason for reason in reasons if reason is not None)
 
 
@@ -514,6 +684,13 @@ class Casting(BaseModel):
     (CR 702.185a) - and none of them can be applied without knowing the spell
     was cast that way.
     """
+    permission_used: PlayPermission | None = None
+    """The `PlayPermission` this spell is being cast under, if any (CR 601.3).
+
+    Set by `use_permission`. Kept for the same reason `keyword_used` is: it is
+    what `cast()` checks to know the CR 601.3 permission was actually claimed,
+    rather than inferred after the fact from the zone the card happened to be
+    in."""
     alternative_cost: TotalCost | None = None
     additional_costs: list[TotalCost] = Field(default_factory=list)
     cost_increases: list[ManaCost] = Field(default_factory=list)
@@ -772,6 +949,39 @@ class Casting(BaseModel):
                 component.cards = remaining[: component.required]
                 remaining = remaining[component.required :]
         self.choose_alternative_cost(cost)
+        return self.step
+
+    def use_permission(self) -> CastingStep:
+        """CR 601.2b: announce that this spell is being cast under a
+        `PlayPermission` some effect handed out (CR 601.3).
+
+        The twin of `use_keyword` for the dynamic half of CR 601.3: it settles
+        that the permission is what allows this cast, and - when the permission
+        says "without paying its mana cost" - announces the empty alternative
+        cost that replaces the printed one (CR 118.9, CR 107.3b).
+
+        Raises when no live permission covers this player, this object and this
+        zone, carrying the permission's own reason: the wrong player, a card
+        that has moved since (CR 400.7), a turn that has ended (CR 514.2), or a
+        permission that says *play* against a card being cast.
+        """
+        permission = usable_play_permission(self.game, self.spell, self.caster)
+        if permission is None:
+            granted = play_permissions_on(self.game, self.spell)
+            if granted:
+                raise ValueError(granted[0].why_not(self.spell, self.caster, self.game))
+            raise ValueError(
+                f"nothing allows {self.caster} to cast {self.spell.name} from the "
+                f"{self.spell.zone.value} (CR 601.3)"
+            )
+        self._enter_modes()
+        self.permission_used = permission
+        if not permission.pays_mana_cost:
+            # CR 118.9's alternative cost, with nothing in it - "without paying
+            # its mana cost" is not a discount on the printed cost (CR 118.9c),
+            # it is a different thing paid in its place, and CR 107.3b keeps
+            # "no cost at all" distinct from "some other cost".
+            self.choose_alternative_cost(TotalCost())
         return self.step
 
     def use_pitch_cost(self, *, choosing: list[CardState] | None = None) -> CastingStep:
@@ -1204,12 +1414,36 @@ class Casting(BaseModel):
             f"before choose_targets - and do not change it afterward."
         )
 
+    def _refuse_unless_allowed_from_its_zone(self) -> None:
+        """CR 601.3: a spell cast from anywhere but the hand needs permission.
+
+        "A player can begin to cast a spell only if a rule or effect allows
+        that player to cast it and no rule or effect prohibits that player from
+        casting it." The hand is where the rules cast from by default
+        (CR 302.1, CR 601.3); every other zone needs a keyword's static grant
+        or an effect's `PlayPermission`.
+
+        Checked here rather than at announcement because `Casting` is driven
+        step by step: a scenario legitimately constructs the machine for a card
+        in the graveyard and *then* discovers, through `use_keyword`, that
+        nothing allows it. This is the last point before the spell reaches the
+        stack, and CR 601.6 rewinds the whole thing anyway, so refusing here
+        refuses the same action - it just lets the earlier steps say their own,
+        more specific "no" first.
+        """
+        if self.origin_zone is Zone.HAND:
+            return
+        refusal = why_cannot_cast_from(self.spell, self.caster, self.origin_zone, self.game)
+        if refusal is not None:
+            raise ValueError(refusal)
+
     def cast(self) -> CardState:
         """Finish casting: the cost is paid and the spell is on the stack."""
         if self.payment is None or self.payment.step is not CostStep.PAID:
             raise ValueError("cannot finish casting before the cost is paid")
         self._refuse_unless_modes_satisfied()
         self._refuse_if_x_changed_since_targets()
+        self._refuse_unless_allowed_from_its_zone()
 
         self._advance_to(CastingStep.CAST)
         self._turn_face_down_if_cast_that_way()
