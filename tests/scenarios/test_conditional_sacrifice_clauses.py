@@ -60,29 +60,33 @@ from magic_cards_model.models import Zone
 
 from .harness import Scenario
 
-#: `CardState.name`/`AbilityOnStack.source_name` for a modal double-faced
-#: card is always the full "front // back" name (Disciple of Freyalise's own
-#: fixture is filed exactly this way), regardless of which face is the one
-#: actually on the battlefield - the name every `Decision.source` this
-#: creature's own ETB trigger asks carries, so every scripted answer below
-#: has to match it exactly, not the front face's name alone.
-DISCIPLE = "Disciple of Freyalise // Garden of Freyalise"
+#: `AbilityOnStack.source_name` for the ETB trigger is `CardState.name`
+#: (`machines/triggers.py`'s `triggers_for`), which since the CR 201.1 name
+#: fix is the up face's own name alone - "Disciple of Freyalise", not
+#: Scryfall's combined "Front // Back" string - because CR 712.8a/712.8d
+#: give a double-faced object only the characteristics of whichever face is
+#: up. Every `Decision.source` this creature's ETB trigger asks carries this
+#: face name, so every scripted answer about *that* trigger must match it.
+DISCIPLE = "Disciple of Freyalise"
 
-#: Discovered while writing this file, and out of scope for it: `machines/
-#: replacement.py`'s generic "As this land enters, you may pay N life. If
-#: you don't, it enters tapped" compiler (`_parse_oracle_text`) reads *both*
-#: faces of a modal double-faced card's printed text, not only the face that
-#: is actually entering - so Disciple of Freyalise's own ETB (the creature
-#: face) also offers Garden of Freyalise's "pay 3 life" replacement (the land
-#: face), which is a face-blind reading of one card as if it were two
-#: unrelated ones printed on top of each other. Every scenario below scripts
-#: this question closed (declining it, so nothing about it touches life or
-#: tapped-state) rather than asserting on it - it is a real, separate defect
+#: Discovered while writing the CR 118.12 wave, and out of scope for it:
+#: `machines/replacement.py`'s generic "As this land enters, you may pay N
+#: life. If you don't, it enters tapped" compiler still labels its `Decision`
+#: with `card_state.card.name` - Scryfall's raw, un-fixed combined name -
+#: rather than `CardState.name`, so it reads *both* faces of a modal
+#: double-faced card's printed text and offers Garden of Freyalise's "pay 3
+#: life" replacement even off Disciple of Freyalise's own creature-face ETB.
+#: That mismatch is also why this decision has to be scripted under the
+#: combined name, not `DISCIPLE` above, even though both questions come off
+#: the same physical card: one caller was fixed to the face-aware name, the
+#: other was not. Scripted closed (declining it, so nothing about it touches
+#: life or tapped-state) rather than asserted on - a real, separate defect
 #: this wave did not introduce and does not fix.
+_DISCIPLE_COMBINED_CARD_NAME = "Disciple of Freyalise // Garden of Freyalise"
 
 
 def _decline_the_unrelated_land_face_replacement(scenario: Scenario) -> None:
-    scenario.will_pay_the_life(False, source=DISCIPLE)
+    scenario.will_pay_the_life(False, source=_DISCIPLE_COMBINED_CARD_NAME)
 
 
 # --------------------------------------------------------------------------
