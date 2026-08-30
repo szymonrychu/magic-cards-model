@@ -290,14 +290,24 @@ def test_thoughtseize_loses_no_life_because_its_earlier_clauses_are_not_this_wav
     assert "Lightning Bolt" in [state.card.name for state in scenario.player("bob").hand]
 
 
-def test_galvanic_discharge_gets_no_energy_because_its_other_clauses_are_not_this_waves_shape():
+def test_galvanic_discharge_grants_energy_even_when_its_unscripted_payment_declines():
     """Galvanic Discharge: "Choose target creature or planeswalker. You get
     {E}{E}{E} (three energy counters), then you may pay any amount of {E}.
-    Galvanic Discharge deals that much damage to that permanent." The energy
-    grant alone is exactly this wave's shape, but "choose target" is not, and
-    fail-closed means the whole spell - including the energy - does nothing.
-    A regression that ran the energy clause anyway would show up as alice
-    having energy with no damage having been dealt.
+    Galvanic Discharge deals that much damage to that permanent."
+
+    This once read as this wave's blind spot - "choose target" and the
+    variable-amount payment were both outside a plain player-effect clause,
+    so the whole spell did nothing and even the energy grant was lost with
+    it. Energy-as-a-payable-cost (`_parse_target_get_energy_pay_damage` in
+    `machines/effects.py`) now reads the whole thing: the target was already
+    chosen at CR 601.2c announcement, the energy is granted regardless, and
+    CR 608.2d's "you may pay any amount" is asked for real. An unscripted
+    answer declines (CR 608.2d's own default is 0, not the maximum - see
+    `machines/decisions.py`), so alice keeps her granted energy and bears
+    takes no damage. `tests/scenarios/test_energy_payment.py` is where the
+    full range of that payment - paying some, paying all, paying too much -
+    is covered; this file only needs to prove the multi-clause shape is read
+    at all.
     """
     scenario = (
         Scenario()
@@ -311,8 +321,9 @@ def test_galvanic_discharge_gets_no_energy_because_its_other_clauses_are_not_thi
 
     scenario.cast_and_resolve("Galvanic Discharge", mountain, targets=[bears])
 
-    assert scenario.player("alice").energy == 0
+    assert scenario.player("alice").energy == 3
     assert bears.zone is Zone.BATTLEFIELD
+    assert bears.damage == 0
 
 
 def test_soul_warden_still_gains_life_now_that_its_table_row_is_gone():
