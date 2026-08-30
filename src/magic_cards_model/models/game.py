@@ -1662,6 +1662,25 @@ class Game(BaseModel):
         start = self.turn.active_index % len(players)
         return [players[(start + offset) % len(players)] for offset in range(len(players))]
 
+    def _check_state_based_actions_and_stack_triggers(self) -> list[CardState]:
+        """CR 704.3, then CR 603.3: the pair that precedes every "would receive
+        priority" moment, not only a fresh step.
+
+        CR 704.3: "Whenever a player would get priority ... the game checks for
+        any of the listed conditions for state-based actions ... then performs
+        all applicable state-based actions simultaneously ... This process
+        repeats". CR 117.3c is exactly such a moment for the player who just
+        cast a spell or activated an ability - they receive priority right back
+        - so `retain_priority` calls this too, not only a step change or a
+        resolution. A land drop uses no stack and never hands priority
+        anywhere (CR 116.2a), so nothing changes for the player who played it
+        until they next pass, which `pass_priority` covers by calling this
+        before `PriorityMachine` acts on the pass.
+        """
+        gone = self.check_state_based_actions()
+        self.put_triggers_on_stack()
+        return gone
+
     def _before_priority(self) -> None:
         """Everything that happens before a player would receive priority.
 
@@ -1669,8 +1688,7 @@ class Game(BaseModel):
         that has triggered onto the stack, and only then does `PriorityMachine`
         hand priority out.
         """
-        self.check_state_based_actions()
-        self.put_triggers_on_stack()
+        self._check_state_based_actions_and_stack_triggers()
         if self.priority is not None:
             self.priority.reset()
 
@@ -4235,9 +4253,14 @@ class Game(BaseModel):
         step's first priority round starts with its active player (CR 117.1).
         """
         assert self.priority is not None
-        # CR 603.3: anything that has triggered goes on the stack the next time a
-        # player would receive priority, which is now.
-        self.put_triggers_on_stack()
+        # CR 704.3, then CR 603.3: state-based actions, then anything that has
+        # triggered goes on the stack, before the pass is acted on - the next
+        # player (or nobody, if the stack resolves) is about to receive
+        # priority. This is also the check a special action like playing a
+        # land relies on: CR 116.2a hands out no priority of its own, so the
+        # legend rule or any other state-based action it caused is caught here,
+        # the next time anyone would receive priority.
+        self._check_state_based_actions_and_stack_triggers()
         outcome = self.priority.pass_priority(username, self.stack_is_empty)
         if outcome is PriorityOutcome.RESOLVE_TOP:
             self.resolve_top()
@@ -4246,8 +4269,22 @@ class Game(BaseModel):
         return outcome
 
     def retain_priority(self, username: str) -> str:
-        """The player who just cast or activated keeps priority (CR 117.3c)."""
+        """The player who just cast or activated keeps priority (CR 117.3c).
+
+        Keeping priority is still *receiving* it, so CR 704.3 applies here too:
+        a cost paid to cast or activate (a sacrifice, most often, but also life
+        paid down to 0) can leave two legendary permanents, a 0-toughness
+        creature, or even take the activator themselves out of the game before
+        their own ability ever resolves (CR 704.5a) - and that must be resolved
+        before this player would act again rather than waiting for the next
+        pass. If the check just removed `username`, CR 800.4j has already
+        moved priority on to whoever is next seated, so there is nobody left
+        to hand it back to.
+        """
         assert self.priority is not None
+        self._check_state_based_actions_and_stack_triggers()
+        if not self.is_in_game(username):
+            return self.priority.holder
         return self.priority.retain(username)
 
     # -- controlling another player (CR 723) -------------------------------
