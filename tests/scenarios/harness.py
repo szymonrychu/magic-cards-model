@@ -357,6 +357,23 @@ class PlayedScenario:
         """
         self._queue(DecisionKind.PAY_ENERGY, paid, username, source, times)
 
+    def will_pay_the_mana_cost(
+        self,
+        paid: bool = True,
+        *,
+        username: str | None = None,
+        source: str | None = None,
+        times: int | None = 1,
+    ) -> None:
+        """Answer the next "unless its controller pays {N}" (CR 118.12a, CR
+        608.2d) - Censor's and Mystical Dispute's shape.
+
+        Refusing is always legal; paying is not when the pool does not already
+        hold that much floating mana - see `DecisionKind.PAY_MANA`'s own
+        docstring for why only the floating pool counts.
+        """
+        self._queue(DecisionKind.PAY_MANA, paid, username, source, times)
+
     def will_pay_energy_amount(
         self,
         amount: int,

@@ -54,24 +54,25 @@ def test_captain_howlers_discard_trigger_parses_with_no_event():
     assert ability.event is None
 
 
-def test_mind_rots_own_discard_clause_has_no_scripted_effect_either():
-    """The other half of the setup: Mind Rot's "Target player discards two
-    cards" is not read by `effect_for` either - no explicit `EFFECTS` row, and
-    the fallback clause parsers (`parse_mixed_effect_for_spell`'s targeted and
-    player-clause shapes) do not recognize a discard instruction. Confirmed
-    directly against the card rather than assumed, since it is what makes the
-    full scenario below fail even before Captain Howler's trigger is asked to
-    do anything.
+def test_mind_rots_own_discard_clause_now_has_a_scripted_effect():
+    """The other half of the setup, now closed: Mind Rot's "Target player
+    discards two cards" is exactly `_parse_target_player_discards_clause`'s
+    shape in `machines/effects.py` (see `test_target_player_discards.py` for
+    the full corner-case coverage of that parser), so `effect_for` no longer
+    returns `None` for it. That does not resolve DDR#886 on its own -
+    Captain Howler's own "whenever you discard" trigger still parses with no
+    event (`test_captain_howlers_discard_trigger_parses_with_no_event`
+    above), which is why the scenario below still `xfail`s.
     """
-    assert effect_for("Mind Rot", card("Mind Rot").oracle_text) is None
+    assert effect_for("Mind Rot", card("Mind Rot").oracle_text) is not None
 
 
 @pytest.mark.xfail(
     strict=True,
-    reason="Mind Rot's own discard clause has no scripted effect (effect_for "
-    "returns None) and Captain Howler's discard trigger parses with event=None, "
-    "so neither half of DDR#886's setup does anything: bob's hand is unchanged, "
-    "no triggers ever go on the stack, and no creature is pumped.",
+    reason="Mind Rot's own discard now runs (bob's hand empties), but Captain "
+    "Howler's own 'whenever you discard' trigger still parses with event=None "
+    "(see test_captain_howlers_discard_trigger_parses_with_no_event above), so "
+    "no trigger ever goes on the stack and no creature is pumped.",
 )
 def test_mind_rot_causes_captain_howlers_discard_trigger_to_fire_once():
     """DDR#886: Mind Rot's single "discards two cards" instruction is one

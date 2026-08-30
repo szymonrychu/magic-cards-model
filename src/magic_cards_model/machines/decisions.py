@@ -124,6 +124,20 @@ class DecisionKind(StrEnum):
     #: remove, the same `affirmative_is_legal` shape `PAY_LIFE` already uses
     #: for CR 119.4's life-total floor.
     PAY_ENERGY = "pay_energy"
+    #: A fixed-amount "unless its controller pays {N}" (Censor, Mystical
+    #: Dispute). CR 118.12a: "[Do something] unless [a player does something
+    #: else]" means "[a player] may [do something else]. If [that player]
+    #: doesn't, [effect]." - so this is `MAY`'s shape read backwards, the same
+    #: way `PAY_ENERGY`'s docstring already reads Static Prison's "unless".
+    #: `Decision.player` is the *target spell's* controller, not the resolving
+    #: counterspell's - CR 608.2d's "the player" is whoever the effect names.
+    #:
+    #: Only mana already floating in that player's pool can pay it. CR 608.2g
+    #: lets a player activate mana abilities right here, but this engine has
+    #: no interactive "tap a land mid-resolution" step, so a controller who
+    #: would have to tap a source to make the payment is treated as unable to
+    #: pay - see `docs/engine-coverage.md`.
+    PAY_MANA = "pay_mana"
     #: "You may pay any amount of {E}" (Galvanic Discharge, Wrath of the
     #: Skies) - CR 107.14/118.3's variable-amount cousin of `PAY_ENERGY`. The
     #: answer is an `int` from 0 up to `Decision.amount` (the energy the
@@ -250,7 +264,12 @@ def legal_options(decision: Decision) -> tuple[bool, ...]:
     a subset of the cards and every subset is legal, so `SCRY` and `SURVEIL`
     return both booleans and are validated by `Game` instead.
     """
-    if decision.kind in (DecisionKind.MAY, DecisionKind.PAY_LIFE, DecisionKind.PAY_ENERGY):
+    if decision.kind in (
+        DecisionKind.MAY,
+        DecisionKind.PAY_LIFE,
+        DecisionKind.PAY_ENERGY,
+        DecisionKind.PAY_MANA,
+    ):
         return (True, False) if decision.affirmative_is_legal else (False,)
     return (True, False)
 
@@ -263,7 +282,12 @@ def default_answer(decision: Decision) -> object:
     """
     if decision.kind is DecisionKind.MULLIGAN:
         return False
-    if decision.kind in (DecisionKind.MAY, DecisionKind.PAY_LIFE, DecisionKind.PAY_ENERGY):
+    if decision.kind in (
+        DecisionKind.MAY,
+        DecisionKind.PAY_LIFE,
+        DecisionKind.PAY_ENERGY,
+        DecisionKind.PAY_MANA,
+    ):
         return decision.affirmative_is_legal
     if decision.kind is DecisionKind.PAY_ENERGY_AMOUNT:
         # Paying nothing is always legal (the variable-amount floor CR 118.3

@@ -282,6 +282,7 @@ _NOTICE_STAND_IN_NAMES = frozenset(
         "unbounded_hand_choice_notice_only",
         "event_player_target_notice_only",
         "reflexive_notice_only",
+        "suspend_redirect_notice_only",
     }
 )
 
