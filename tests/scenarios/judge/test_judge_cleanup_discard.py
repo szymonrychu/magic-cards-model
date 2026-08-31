@@ -143,3 +143,43 @@ def test_mayhem_offers_the_discarded_card_from_the_graveyard():
         game=scenario.game,
     )
     assert [str(cost.mana) for cost in casting.alternative_costs] == ["{B}"]
+
+
+# --------------------------------------------------------------------------
+# The cleanup discard is a discard like any other
+# --------------------------------------------------------------------------
+
+
+def test_the_cleanup_discard_is_counted_and_seen_like_every_other_discard():
+    """CR 701.9a does not have a quiet variant for the cleanup step.
+
+    `Player.discard_to_maximum_hand_size` used to move the cards itself, so
+    the CR 514.1 discard was the one discard in the engine that neither fed
+    `Game.cards_discarded_this_turn` (Hollow One's "for each card you've
+    cycled or discarded this turn") nor emitted `TriggerEvent.DISCARDS_A_CARD`
+    (Captain Howler's "Whenever you discard one or more cards"). It routes
+    through `Game.discard_cards` now, so both see it.
+
+    That this matters at all is CR 514.3a: "the game checks to see if any
+    state-based actions would be performed and/or any triggered abilities are
+    waiting to be put onto the stack ... those abilities are put onto the
+    stack and the active player gets priority" - a discard trigger fired
+    during cleanup is not the end of the turn swallowing it, it reopens the
+    step.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Swarm, Being of Bees", *FILLER],
+            battlefield=["Swamp", "Swamp", "Captain Howler, Sea Scourge"],
+        )
+        .player("bob")
+        .build()
+    )
+    _to_cleanup_discarding_the_swarm(scenario)
+
+    assert scenario.game.cards_discarded_this_turn["alice"] == 1
+
+    fired = scenario.stack_names() + [trigger.source_name for trigger in scenario.pending_triggers]
+    assert any("Captain Howler" in name for name in fired), fired

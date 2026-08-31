@@ -6,6 +6,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from .card import Card
 from .card_state import CardState, Counter, CounterKind, Counters
 from .deck import CardResolver, Deck
 from .mana import ManaPool
@@ -42,6 +43,50 @@ class Player(BaseModel):
     kind a card invents is just a name and a count.
     """
 
+    cannot_gain_life: bool = False
+    """Whether an effect says this player can't gain life.
+
+    CR 101.2: "When a rule or effect allows or directs something to happen, and
+    another effect states that it can't happen, the 'can't' effect takes
+    precedence." CR 614.17 puts these effects next to replacement effects
+    without making them replacement effects, and CR 614.17c closes the door
+    behind them: an event that can't happen "can only be replaced by a
+    self-replacement effect". So `gain_life` does not reduce the gain to zero
+    or prevent it - the gain simply does not occur, and nothing downstream
+    (CR 119.9's "whenever a player gains life", say) sees an event.
+
+    Two shapes of card set it, and neither can reach it yet: Screaming
+    Nemesis's "they can't gain life for the rest of the game" is a one-shot
+    effect with an unbounded duration, and Leyline of Punishment's "Players
+    can't gain life." is a static ability whose continuous effect would set it
+    on every player while the Leyline is on the battlefield. The first needs a
+    row in `machines/effects.py`, the second one in `machines/layers.py`; both
+    are `xfail`ed in `tests/scenarios/test_life_gain_prohibition.py`."""
+
+    cannot_lose_life: bool = False
+    """Whether an effect says this player can't lose life (CR 101.2, as above).
+
+    The mirror of `cannot_gain_life`, here because CR 119.8 is the mirror of
+    CR 119.7 and `exchange_life_totals` has to check both ends of the exchange
+    to answer CR 701.12a's "if the entire exchange can't happen, no part of the
+    exchange occurs" correctly. `lose_life` does not consult it: no card in the
+    pool imposes it, and a prohibition half-enforced across the engine's life
+    paths would be worse than one enforced in the single place that reads it."""
+
+    protection_from: list[str] = Field(default_factory=list)
+    """Every quality this *player* has protection from (CR 702.16a).
+
+    CR 702.16a: "Protection is a static ability, written 'Protection from
+    [quality].' This quality is usually a color ... but can be any
+    characteristic value or information." Runed Halo's "You have protection
+    from the chosen card name." is the card-name flavour, and CR 702.16b,
+    CR 702.16c and CR 702.16e each say "permanent **or player**" - the player
+    half had nowhere to live before this list.
+
+    A permanent's protection is read off its text by `Game.protection_qualities`
+    and `Game._effective_protection_qualities`; a player has no text, so a
+    grant is recorded here instead, by `gain_protection_from`."""
+
     mana_pool: ManaPool = Field(default_factory=ManaPool)
     zones: dict[Zone, list[CardState]] = Field(
         default_factory=lambda: {
@@ -73,6 +118,29 @@ class Player(BaseModel):
     CR 100.1b), so the match sets this for every player of such a game before
     the mulligan process runs; a two-player game leaves it off.
     """
+    life_lost_tally: int = 0
+    """Bookkeeping behind `life_lost_this_turn` - read that, not this.
+
+    Every life loss adds to it and nothing subtracts, because "the life you've
+    lost this turn" is gross: Children of Korlis gives back what was lost even
+    if the same turn gave some of it back already."""
+
+    life_lost_tally_turn: int | None = None
+    """Which turn `life_lost_tally` was counted during, as `TurnMachine.
+    turns_taken`.
+
+    The tally clears itself by comparing this stamp rather than by being
+    emptied at the turn boundary, because the turn boundary is `Game.advance`'s
+    and a `Player` has no hook there. `turns_taken` is the same signal
+    `Game.advance` and `PlayPermission.expired` already compare against, and it
+    is the right one: CR 500.7's extra turn ("Some effects can give a player
+    extra turns. They do this by adding the turns directly after the specified
+    turn") moves neither the active seat nor the turn number, so the same
+    player taking two turns in a row still gets two different stamps.
+
+    `None` is the stamp of a player with no game around them, which never
+    changes, so a `Player` built on its own accumulates and never clears."""
+
     tried_to_draw_from_empty_library: bool = False
     """Set when a draw found no cards. The player loses the next time state-based
     actions are checked (CR 104.3c, 704.5b) - which the game does, not the player."""
@@ -326,6 +394,22 @@ class Player(BaseModel):
         decision with no real choice in it - a live decision provider
         (`magic-cards-model-api`) would otherwise park a request for a whole
         decision timeout only to be answered "discard nothing".
+
+        The cards go out through `Game.discard_cards`, the one place that
+        counts a discard into `Game.cards_discarded_this_turn` and emits
+        `TriggerEvent.DISCARDS_A_CARD`. CR 701.9a has no quiet variant for the
+        cleanup step, and the trigger is not academic here: CR 514.3a has the
+        game check, immediately after this discard, whether "any triggered
+        abilities are waiting to be put onto the stack ... those abilities are
+        put onto the stack and the active player gets priority", followed by
+        another cleanup step. A discard trigger fired during cleanup reopens
+        the step rather than being swallowed by the turn ending, so routing it
+        anywhere else would lose a real play. It also goes out as **one**
+        instruction with a count, which is what CR 603.2c and Captain Howler's
+        "for each card discarded this way" want from a multi-card discard.
+
+        A player with no game still falls back to `discard` card by card;
+        there is no counter and no trigger to feed out there.
         """
         needed = self.cards_over_maximum_hand_size
         if chosen is None:
@@ -337,10 +421,18 @@ class Player(BaseModel):
                 chosen = self.hand[len(self.hand) - needed :]
         if len(chosen) != needed:
             raise ValueError(f"{self.username} must discard {needed} cards, not {len(chosen)}")
-        return [self.discard(card_state) for card_state in chosen]
+        for card_state in chosen:
+            if card_state not in self.hand:
+                raise ValueError(f"{card_state.name} is not in {self.username}'s hand")
+        if self.game is None:
+            return [self.discard(card_state) for card_state in chosen]
+        return self.game.discard_cards(self.username, list(chosen))
 
     def gain_life(self, amount: int) -> int:
-        """Gain life, returning the new total (CR 118.3).
+        """Gain life, returning the new total (CR 119.3).
+
+        CR 119.3: "If an effect causes a player to gain life or lose life, that
+        player's life total is adjusted accordingly."
 
         This is the one place a life total goes up. `Game.gain_life` applies
         replacement effects (CR 119.10, e.g. Alhammarret's Archive) and then
@@ -357,25 +449,202 @@ class Player(BaseModel):
         left the direct paths silently unrecorded: two Guide of Souls raising
         alice from 20 to 22 left `life_gained_this_turn` empty, and Ocelot
         Pride's end step trigger never went on the stack.
+
+        `cannot_gain_life` refuses the whole thing (CR 101.2): the life total
+        is left alone *and* nothing is recorded, because a gain that can't
+        happen is not a gain event for CR 119.9 to trigger on. The argument
+        check runs first regardless - a negative "gain" is a caller bug at any
+        life total, and a prohibited player is not somewhere to hide one.
         """
         if amount < 0:
             raise ValueError("cannot gain a negative amount of life")
+        if self.cannot_gain_life:
+            return self.life
         self.life += amount
         if self.game is not None:
             self.game.life_gained_this_turn.add(self.username)
         return self.life
 
     def lose_life(self, amount: int) -> int:
-        """Lose life, returning the new total (CR 118.2).
+        """Lose life, returning the new total (CR 119.3).
 
         Life goes below zero freely: losing the game for being at zero or less
         is a state-based action the game checks (CR 704.5a), not something
         that happens the instant the life is lost.
+
+        This is the one place a life total goes down other than by an exchange
+        (which comes back through here anyway, CR 701.12c), so it is where the
+        per-turn tally behind `life_lost_this_turn` is kept: damage routes here
+        via `Game.deal_damage` (CR 119.2, "damage dealt to a player normally
+        causes that player to lose that much life") and a life *cost* routes
+        here via `machines/cost.py` (CR 118.3b, "paying life is done by
+        subtracting the indicated amount of life"). Counting at the call sites
+        instead would miss whichever one a later card invents.
         """
         if amount < 0:
             raise ValueError("cannot lose a negative amount of life")
         self.life -= amount
+        if amount:
+            self._record_life_lost(amount)
         return self.life
+
+    # -- life lost this turn -----------------------------------------------
+
+    @property
+    def _current_turn_stamp(self) -> int | None:
+        """`TurnMachine.turns_taken`, or None for a player with no turn around
+        them - one built outside a game, or in a game whose turn machine has
+        not been made yet."""
+        game = self.game
+        if game is None or getattr(game, "turn", None) is None:
+            return None
+        return game.turn.turns_taken
+
+    def _record_life_lost(self, amount: int) -> None:
+        stamp = self._current_turn_stamp
+        if self.life_lost_tally_turn != stamp:
+            self.life_lost_tally = 0
+            self.life_lost_tally_turn = stamp
+        self.life_lost_tally += amount
+
+    @property
+    def life_lost_this_turn(self) -> int:
+        """How much life this player has lost so far this turn, gross.
+
+        Children of Korlis's "You gain life equal to the life you've lost this
+        turn. (Damage causes loss of life.)" is the question this answers, and
+        the reminder text is not the whole list: CR 119.2 makes damage a loss,
+        CR 118.3b makes a life payment a loss, CR 701.12c makes the losing half
+        of a life-total exchange a loss, and every one of them subtracts
+        through `lose_life`.
+
+        Gross rather than net - a player who loses 4 and gains 4 has still lost
+        4 - and it reads as zero once the turn has moved on, without anything
+        having to clear it (see `life_lost_tally_turn`)."""
+        return self.life_lost_tally if self.life_lost_tally_turn == self._current_turn_stamp else 0
+
+    # -- exchanging life totals (CR 701.12) --------------------------------
+
+    def why_cannot_exchange_life_totals(self, other: "Player") -> str | None:
+        """Why an exchange of life totals with `other` can't happen, or None.
+
+        CR 701.12c: "When life totals are exchanged, each player gains or loses
+        the amount of life necessary to equal the other player's previous life
+        total." Because the exchange *is* gains and losses, the prohibitions on
+        gaining and losing apply to it, and the rules say so directly:
+
+        - CR 119.7: "If an effect says that a player can't gain life, that
+          player can't make an exchange such that the player's life total would
+          become higher; in that case, the exchange won't happen."
+        - CR 119.8: the mirror, for a player who can't lose life and an
+          exchange that would lower them.
+
+        Only the direction each player actually moves is checked: a player who
+        can't gain life may exchange downwards freely, which is the branch of
+        the Screaming Nemesis episode where the exchange goes through.
+
+        Asked of either player, about either player - CR 701.12a's "the entire
+        exchange" is one event and has no near side."""
+        for player, opponent in ((self, other), (other, self)):
+            if opponent.life > player.life and player.cannot_gain_life:
+                return (
+                    f"{player.username} can't gain life, so the exchange that would raise "
+                    f"their life total from {player.life} to {opponent.life} won't happen "
+                    f"(CR 119.7)"
+                )
+            if opponent.life < player.life and player.cannot_lose_life:
+                return (
+                    f"{player.username} can't lose life, so the exchange that would lower "
+                    f"their life total from {player.life} to {opponent.life} won't happen "
+                    f"(CR 119.8)"
+                )
+        return None
+
+    def exchange_life_totals(self, other: "Player") -> int:
+        """Exchange life totals with `other`, returning the life *this* player
+        lost by it (CR 701.12a, CR 701.12c).
+
+        CR 701.12a: "When such a spell or ability resolves, if the entire
+        exchange can't happen, no part of the exchange occurs." So the refusal
+        is decided before anything moves - a refused exchange leaves both life
+        totals alone and records neither a gain nor a loss, rather than
+        applying the half that was legal. CR 701.12g says the same of an
+        exchange of two numerical values where one of them is a life total.
+
+        CR 701.12c makes the exchange itself gains and losses, so it goes
+        through `gain_life` and `lose_life` and is visible to everything that
+        watches them: `Game.life_gained_this_turn` for CR 119.9's triggers, and
+        `life_lost_this_turn` for Children of Korlis.
+
+        The return value is signed from this player's side because that is the
+        question the cards ask - Mister Negative's "If you lost life this way,
+        draw that many cards." A player who gained reports a negative loss, and
+        a refused or empty exchange reports 0; `why_cannot_exchange_life_totals`
+        is the one that distinguishes "refused" from "nothing to move"."""
+        if other is self or self.why_cannot_exchange_life_totals(other) is not None:
+            return 0
+
+        mine, theirs = self.life, other.life
+        for player, becomes in ((self, theirs), (other, mine)):
+            difference = becomes - player.life
+            if difference > 0:
+                player.gain_life(difference)
+            elif difference < 0:
+                player.lose_life(-difference)
+        return mine - theirs
+
+    # -- protection (CR 702.16) --------------------------------------------
+
+    def gain_protection_from(self, quality: str) -> None:
+        """Give this player protection from `quality` (CR 702.16a).
+
+        CR 702.16m: "Multiple instances of protection from the same quality on
+        the same permanent or player are redundant", so a quality already held
+        is not recorded twice - two Runed Halos naming the same card are one
+        protection, and the list stays the set of qualities it reads as."""
+        if quality not in self.protection_from:
+            self.protection_from.append(quality)
+
+    def lose_protection_from(self, quality: str) -> None:
+        """Take a protection away again, for when the effect granting it ends.
+
+        Silent about a quality this player never had: an effect ending is not
+        an error, and nothing in CR 702.16 makes removal conditional on the
+        grant having applied."""
+        if quality in self.protection_from:
+            self.protection_from.remove(quality)
+
+    def has_protection_from(self, quality: str) -> bool:
+        """Whether this player has protection from exactly this quality."""
+        return quality in self.protection_from
+
+    def protection_refusal(self, source: Card) -> str | None:
+        """Why this player's protection stops `source` touching them, or None.
+
+        CR 702.16b: "A permanent or player with protection can't be targeted by
+        spells with the stated quality and can't be targeted by abilities from
+        a source with the stated quality." CR 702.16e prevents that source's
+        damage as well.
+
+        Only the **card-name** flavour of the quality is decided here, and
+        deliberately: a name is matched against the printing alone (CR 702.16a
+        allows "any characteristic value or information" as a quality, and
+        Runed Halo's chosen card name is exactly that), so it needs no board
+        to answer, while a colour or card-type quality is matched the way
+        `Game.protection_refusal` already matches one for a permanent - with
+        the game's own reader, off `protection_from`. Wiring that reader to
+        players is `machines/targeting.py`'s side of the work; see
+        `tests/scenarios/test_player_protection.py`.
+
+        The match is exact. A substring match would refuse every source whose
+        name merely contains the chosen one."""
+        for quality in self.protection_from:
+            if quality == source.name:
+                return (
+                    f"{self.username} has protection from {quality}, so {source.name} "
+                    f"cannot target them (CR 702.16b)"
+                )
+        return None
 
     # -- starting the game -------------------------------------------------
 

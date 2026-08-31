@@ -1,0 +1,152 @@
+"""Protection on a *player*, not on a permanent.
+
+Runed Halo (verified with `resolve_cards`): "As this enchantment enters,
+choose a card name. You have protection from the chosen card name. (You can't
+be targeted, dealt damage, or enchanted by anything with that name.)"
+
+Every clause of CR 702.16 that this file leans on says "permanent **or
+player**", and the player half has had nowhere to live:
+
+- **CR 702.16a** - "Protection is a static ability, written 'Protection from
+  [quality].' This quality is usually a color ... but can be any
+  characteristic value or information." A card *name* is exactly that kind of
+  quality, which is why Runed Halo can ask for one.
+- **CR 702.16b** - "A permanent or player with protection can't be targeted by
+  spells with the stated quality and can't be targeted by abilities from a
+  source with the stated quality."
+- **CR 702.16e** - "Any damage that would be dealt by sources that have the
+  stated quality to a permanent or player with protection is prevented."
+- **CR 702.16m** - "Multiple instances of protection from the same quality on
+  the same permanent or player are redundant."
+
+What lives on `Player` is the list of qualities and the *name* flavour of the
+match, which is the one a player can be given and which needs no board to
+decide. The colour and card-type flavours are matched against a source by
+`Game.protection_refusal`, which reads a permanent's text today; pointing it
+at `Player.protection_from` is `machines/targeting.py`'s side of the work
+(Task 1.10) and is `xfail`ed at the bottom of this file, together with Runed
+Halo actually granting the thing when it enters.
+
+Every CR number in this file was verified with `knowledge_search(q="...",
+type="rules")` in the session that wrote it: CR 702.16a, CR 702.16b,
+CR 702.16e, CR 702.16m.
+"""
+
+import pytest
+
+from magic_cards_model.machines import Step
+from magic_cards_model.models.player import Player
+from tests.cards import card
+from tests.scenarios.harness import Scenario
+
+
+def test_a_player_starts_with_no_protection():
+    """The baseline: protection is granted, never printed on a player."""
+    assert Player(username="alice").protection_from == []
+
+
+def test_a_player_can_be_given_protection_from_a_card_name():
+    """CR 702.16a's "any characteristic value or information" - Runed Halo's
+    chosen card name is the quality."""
+    alice = Player(username="alice")
+
+    alice.gain_protection_from("Lightning Bolt")
+
+    assert alice.has_protection_from("Lightning Bolt")
+    assert alice.protection_from == ["Lightning Bolt"]
+
+
+def test_the_same_quality_twice_is_redundant():
+    """CR 702.16m: "Multiple instances of protection from the same quality on
+    the same permanent or player are redundant." Two Runed Halos naming
+    Lightning Bolt are one protection, not two."""
+    alice = Player(username="alice")
+
+    alice.gain_protection_from("Lightning Bolt")
+    alice.gain_protection_from("Lightning Bolt")
+
+    assert alice.protection_from == ["Lightning Bolt"]
+
+
+def test_protection_refuses_a_source_with_the_named_name():
+    """CR 702.16b, read off a real printing: Lightning Bolt cannot touch a
+    player protected from the name "Lightning Bolt"."""
+    alice = Player(username="alice")
+    alice.gain_protection_from("Lightning Bolt")
+
+    refusal = alice.protection_refusal(card("Lightning Bolt"))
+
+    assert refusal is not None
+    assert "Lightning Bolt" in refusal
+    assert "CR 702.16b" in refusal, refusal
+
+
+def test_protection_from_one_name_says_nothing_about_another():
+    """The control, and the whole point of naming a card: Runed Halo naming
+    Lightning Bolt does not stop a Path to Exile."""
+    alice = Player(username="alice")
+    alice.gain_protection_from("Lightning Bolt")
+
+    assert alice.protection_refusal(card("Path to Exile")) is None
+
+
+def test_an_unprotected_player_refuses_nothing():
+    scenario = Scenario().player("alice").player("bob").build()
+
+    assert scenario.player("alice").protection_refusal(card("Lightning Bolt")) is None
+
+
+def test_protection_can_be_taken_away_again():
+    """Runed Halo leaving the battlefield ends the continuous effect that
+    granted the protection, so the grant has to be reversible."""
+    alice = Player(username="alice")
+    alice.gain_protection_from("Lightning Bolt")
+
+    alice.lose_protection_from("Lightning Bolt")
+
+    assert not alice.has_protection_from("Lightning Bolt")
+    assert alice.protection_from == []
+
+
+def test_losing_a_protection_a_player_never_had_is_not_an_error():
+    """A continuous effect that ends twice, or one that never applied, must
+    not raise - nothing in CR 702.16 makes removal conditional."""
+    alice = Player(username="alice")
+
+    alice.lose_protection_from("Lightning Bolt")
+
+    assert alice.protection_from == []
+
+
+def test_a_qualitys_match_is_exact_rather_than_a_substring():
+    """ "Bolt" is not the name of a card in play here, and a player protected
+    from "Lightning Bolt" is not protected from every card whose name contains
+    it - a substring match would refuse the wrong sources."""
+    alice = Player(username="alice")
+    alice.gain_protection_from("Bolt")
+
+    assert alice.protection_refusal(card("Lightning Bolt")) is None
+
+
+@pytest.mark.xfail(
+    reason="Runed Halo's 'You have protection from the chosen card name.' is a "
+    "static ability granting a *player* protection; machines/layers.py sweeps "
+    "permanents only and records an UnwiredChoiceNotice instead, so nothing "
+    "puts the chosen name onto Player.protection_from",
+    strict=True,
+)
+def test_runed_halo_grants_its_controller_protection_from_the_chosen_name():
+    """The card the state is for, once the static ability is read."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Runed Halo"], battlefield=["Plains", "Plains"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Plains", "Plains", username="alice")
+    scenario.will_choose("Lightning Bolt", source="Runed Halo")
+
+    scenario.cast_and_resolve("Runed Halo", *sources)
+
+    assert scenario.player("alice").has_protection_from("Lightning Bolt")
