@@ -161,6 +161,91 @@ class ManaCondition(BaseModel):
         return False
 
 
+class ManaAbilityRider(BaseModel):
+    """CR 405.6c: "If a mana ability both produces mana and has another
+    effect, the mana is produced and the other effect happens immediately."
+
+    Talisman of Resilience's `{T}: Add {B} or {G}. This artifact deals 1
+    damage to you.` is one paragraph and one ability (CR 605.1a's four
+    criteria say nothing about a second sentence disqualifying it, and CR
+    605.5 only disqualifies an ability that fails one of them) - so the
+    damage is not a separate triggered ability and never uses the stack
+    (CR 605.3b applies to the whole ability, not just its "Add" half). This
+    is the immediate side effect read off that second sentence, applied by
+    `Game.activate_ability` at the same instant the mana lands in the pool.
+    """
+
+    kind: Literal["damage_to_controller", "lose_life", "gain_life"]
+    amount: int
+
+
+#: "This artifact/land/creature deals N damage to you." - the shape every
+#: rider in the current fixture pool (Talisman of Resilience, Karplusan
+#: Forest) uses. The noun is not checked against the card's own type line;
+#: WOTC always prints "this <the permanent's own type>", so the noun itself
+#: carries no information a caller needs.
+_RIDER_DAMAGE_TO_YOU = re.compile(r"^this \S+ deals (?P<n>\d+) damage to you\.?$", re.IGNORECASE)
+_RIDER_LOSE_LIFE = re.compile(r"^you lose (?P<n>\d+) life\.?$", re.IGNORECASE)
+_RIDER_GAIN_LIFE = re.compile(r"^you gain (?P<n>\d+) life\.?$", re.IGNORECASE)
+#: Arena of Glory's "If that mana is spent on a creature spell, it gains
+#: haste until end of turn." CR 106.6's *other* two things a mana-producing
+#: sentence can do beyond restricting spend: "have an additional effect that
+#: affects the spell or ability that mana is spent on, or create a delayed
+#: triggered ability". Neither is CR 405.6c's "another effect happens
+#: immediately" - both are conditional on what the mana is later spent on,
+#: which has not happened yet when the mana ability itself resolves - so
+#: this is a real, separately-documented gap (see the "mana spend
+#: restrictions" row in docs/engine-coverage.md), not an unreadable
+#: CR 405.6c rider, and must not make `Game.why_cannot_activate` refuse the
+#: whole ability the way a genuine unreadable rider does.
+_SPEND_EFFECT_ON_SPELL = re.compile(r"^if (?:that|this) mana is spent on\b", re.IGNORECASE)
+
+
+def _parse_mana_rider(rest: str) -> tuple[ManaAbilityRider | None, str | None]:
+    """Read the CR 405.6c immediate side effect off a mana ability's text
+    beyond its base "Add ..." sentence, if it printed one.
+
+    `rest` is the same trailing text `_parse_conditional_clauses` reads for
+    "If ..., add ... instead" clauses and `cost.spend_restriction` reads for
+    "Spend this mana only ..." - both are recognised and skipped here rather
+    than mistaken for an unreadable rider, since neither is a CR 405.6c
+    "other effect" (one only changes what the base effect produces, the
+    other only restricts how the mana already produced may be spent).
+
+    The first remaining sentence is checked against the known immediate-
+    effect shapes. A match becomes `(rider, None)` - the rider
+    `Game.activate_ability` applies alongside the mana. A remaining sentence
+    that matches none of them comes back as `(None, sentence)` instead: the
+    project's fail-closed rule means the caller must refuse the whole
+    activation rather than mint the mana and silently drop the sentence that
+    was supposed to come with it (CR 405.6c ties the two together as one
+    event, not two). `(None, None)` means there was nothing left to read at
+    all.
+    """
+    for sentence in re.split(r"(?<=\.)\s+", rest.strip()):
+        sentence = sentence.strip()
+        if not sentence:
+            continue
+        if _CONDITIONAL_CLAUSE.match(sentence):
+            continue
+        if "spend this mana only" in sentence.lower():
+            continue
+        if _SPEND_EFFECT_ON_SPELL.match(sentence):
+            continue
+        damage = _RIDER_DAMAGE_TO_YOU.match(sentence)
+        if damage:
+            rider = ManaAbilityRider(kind="damage_to_controller", amount=int(damage.group("n")))
+            return rider, None
+        lose = _RIDER_LOSE_LIFE.match(sentence)
+        if lose:
+            return ManaAbilityRider(kind="lose_life", amount=int(lose.group("n"))), None
+        gain = _RIDER_GAIN_LIFE.match(sentence)
+        if gain:
+            return ManaAbilityRider(kind="gain_life", amount=int(gain.group("n"))), None
+        return None, sentence
+    return None, None
+
+
 class ManaAbility(BaseModel):
     """One `{T}: Add ...` ability read off a card."""
 
@@ -183,6 +268,19 @@ class ManaAbility(BaseModel):
     #: when the ability resolves (CR 605.3b: it resolves immediately) - see
     #: `resolve`. Empty for every mana ability that has no such clause.
     conditional: list[ManaCondition] = Field(default_factory=list)
+    #: CR 405.6c's immediate side effect, read generically off the trailing
+    #: sentence of this ability's own printed text (Talisman of Resilience's
+    #: "This artifact deals 1 damage to you."). `None` when the ability has
+    #: no such sentence, or when it has one this parser could not read - see
+    #: `unparsed_rider`, which is exactly then set.
+    rider: ManaAbilityRider | None = None
+    #: The raw trailing sentence, when the ability's text has one beyond
+    #: "Add ..." and its own recognised conditional/spend-restriction
+    #: clauses, but this parser could not classify it as a known rider shape.
+    #: `Game.activate_ability` refuses to activate an ability with this set,
+    #: rather than producing the mana and silently dropping the sentence
+    #: that was meant to come with it.
+    unparsed_rider: str | None = None
 
     @property
     def is_choice(self) -> bool:
@@ -1381,6 +1479,7 @@ def _parse_activated(text: str, common: dict) -> ActivatedAbility | None:
         if mana is not None:
             mana.costs_mana = any(piece.kind is CostKind.MANA for piece in costs)
             mana.conditional = _parse_conditional_clauses(add.group("rest"))
+            mana.rider, mana.unparsed_rider = _parse_mana_rider(add.group("rest"))
 
     zone, zone_rule = _activated_ability_zone(costs, effect_text)
 

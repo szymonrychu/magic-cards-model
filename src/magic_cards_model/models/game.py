@@ -5042,6 +5042,20 @@ class Game(BaseModel):
         if prohibited is not None:
             return prohibited
 
+        if ability.mana is not None and ability.mana.unparsed_rider is not None:
+            # CR 405.6c: "If a mana ability both produces mana and has
+            # another effect, the mana is produced and the other effect
+            # happens immediately." An effect this parser cannot read is not
+            # one it can silently drop - the paragraph is one ability and it
+            # resolves whole or not at all (see the mana ability rider row
+            # in docs/engine-coverage.md), refused here, before any cost is
+            # paid, rather than after `{T}` is already spent.
+            return (
+                f"{permanent.name}'s mana ability has an effect this engine cannot read "
+                f"({ability.mana.unparsed_rider!r}), so it refuses to activate rather than "
+                "silently dropping it (CR 405.6c)"
+            )
+
         needs_tapping = any(piece.kind in {CostKind.TAP, CostKind.UNTAP} for piece in ability.costs)
         if needs_tapping and not self.can_activate_tap_ability(permanent):
             return (
@@ -5633,6 +5647,21 @@ class Game(BaseModel):
             restriction = spend_restriction(ability.effect, permanent)
             for produced in produced_mana:
                 self.player(controller).mana_pool.add(produced, restriction=restriction)
+            # CR 405.6c: "If a mana ability both produces mana and has
+            # another effect, the mana is produced and the other effect
+            # happens immediately." `why_cannot_activate` already refused
+            # this activation outright when the rider could not be read, so
+            # reaching here means it is either absent or a known shape -
+            # Talisman of Resilience's "This artifact deals 1 damage to
+            # you." is what taught this engine the shape existed at all.
+            if ability.mana.rider is not None:
+                rider = ability.mana.rider
+                if rider.kind == "damage_to_controller":
+                    self.deal_damage(self.player(controller), rider.amount, source=permanent)
+                elif rider.kind == "lose_life":
+                    self.player(controller).lose_life(rider.amount)
+                elif rider.kind == "gain_life":
+                    self.gain_life(controller, rider.amount)
             # CR 106.12: "to 'tap [a permanent] for mana' is to activate a mana
             # ability of that permanent that includes the {T} symbol in its
             # activation cost" - so only a `{T}: ...` ability counts, not
