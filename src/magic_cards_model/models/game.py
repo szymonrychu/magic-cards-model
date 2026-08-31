@@ -33,6 +33,7 @@ from ..machines.combat import (
     has_keyword,
 )
 from ..machines.cost import (
+    ComponentKind,
     CostComponent,
     CostModifierKind,
     CostModifierNotice,
@@ -308,6 +309,15 @@ _ACTIVATE_ONLY_IF_CONTROL = re.compile(
 #: with power 4 or greater."
 _ACTIVATE_ONLY_IF_POWER = re.compile(
     r"activate only if you control a creature with power (?P<power>\d+) or greater",
+    re.IGNORECASE,
+)
+#: Diamond City: "Activate only if two or more creatures entered the
+#: battlefield under your control this turn." Number words, matching the
+#: printed wording rather than digits, the same convention `_ACTIVATE_ONLY_IF_
+#: CONTROL` follows.
+_ACTIVATE_ONLY_IF_ENTERED_THIS_TURN = re.compile(
+    r"activate only if (?P<count>\w+) or more creatures entered the battlefield "
+    r"under your control this turn",
     re.IGNORECASE,
 )
 _CONDITION_COUNT_WORDS: dict[str, int] = {
@@ -5155,6 +5165,20 @@ class Game(BaseModel):
                 for state in controlled
             )
 
+        match = _ACTIVATE_ONLY_IF_ENTERED_THIS_TURN.search(instructions)
+        if match is not None:
+            needed = _CONDITION_COUNT_WORDS.get(match.group("count").lower())
+            if needed is not None:
+                turn_number = getattr(self.turn, "turn_number", None)
+                if turn_number is None:
+                    return False
+                entered = sum(
+                    1
+                    for state in controlled
+                    if state.is_creature and state.turn_entered == turn_number
+                )
+                return entered >= needed
+
         return True
 
     def _activation_prohibition(
@@ -5361,6 +5385,7 @@ class Game(BaseModel):
         *,
         sacrificing: list[CardState] | None = None,
         discarding: list[CardState] | None = None,
+        exiling: list[CardState] | None = None,
         x_value: int = 0,
     ) -> TotalCost:
         """The total cost of one activation (CR 602.1a, 601.2f).
@@ -5368,10 +5393,11 @@ class Game(BaseModel):
         CR 602.1a: "the activation cost is everything before the colon". Each
         comma-separated piece was classified by `machines/abilities.py`; this
         turns those pieces into the `TotalCost` that `machines/cost.py` knows how
-        to pay. A piece that asks for an object - sacrifice, discard - takes the
-        next card from `sacrificing` or `discarding`; leaving it empty builds a
-        cost that correctly refuses to be paid (CR 118.3) rather than one that
-        cannot be built.
+        to pay. A piece that asks for an object - sacrifice, discard, or the
+        "exile a creature card ... and pay its mana cost" shape Back from the
+        Brink prints - takes the next card from `sacrificing`, `discarding`,
+        or `exiling`; leaving it empty builds a cost that correctly refuses to
+        be paid (CR 118.3) rather than one that cannot be built.
 
         `x_value` is CR 107.3a's X, announced as this activation begins
         (CR 602.2b), the same moment `Casting.determine_cost` fixes X for a
@@ -5383,6 +5409,7 @@ class Game(BaseModel):
         controller = controller or self.controller_of(permanent).username
         sacrifices = list(sacrificing or [])
         discards = list(discarding or [])
+        exiles = list(exiling or [])
 
         mana = ManaCost()
         components = []
@@ -5458,6 +5485,24 @@ class Game(BaseModel):
                     # component empty and it is filled in here (CR 602.1a - the
                     # ability's source is the object it is printed on).
                     component = component.model_copy(update={"cards": [permanent]})
+                if not component.cards and exiles and component.kind is ComponentKind.EXILE:
+                    # Back from the Brink's own shape, the exile half chosen
+                    # from `exiling` the same way `_choice_cost` fills
+                    # `sacrificing`/`discarding` - this component was not
+                    # built through `_choice_cost` because its `CostKind` is
+                    # `OTHER`, not `SACRIFICE`/`DISCARD`.
+                    chosen: list[CardState] = []
+                    while exiles and len(chosen) < component.required:
+                        chosen.append(exiles.pop(0))
+                    component = component.model_copy(update={"cards": chosen})
+                if component.pay_mana_cost_of_chosen:
+                    # CR 118.9's own alternative-cost shape, aimed at the just
+                    # -chosen card's *own* printed mana cost rather than a
+                    # fixed one - only known now that a card was chosen.
+                    for card in component.cards:
+                        printed = card.card.mana_cost or ""
+                        if printed:
+                            mana = increase(mana, ManaCost.parse(printed))
                 components.append(component)
 
         if ability.cost_reduction is not None:
@@ -5543,6 +5588,7 @@ class Game(BaseModel):
         *,
         sacrificing: list[CardState] | None = None,
         discarding: list[CardState] | None = None,
+        exiling: list[CardState] | None = None,
         x_value: int = 0,
     ) -> CostPayment:
         """Announce an activation and open its payment (CR 602.2a, 602.2b).
@@ -5566,6 +5612,7 @@ class Game(BaseModel):
             controller,
             sacrificing=sacrificing,
             discarding=discarding,
+            exiling=exiling,
             x_value=x_value,
         )
         # CR 106.6: an activation is what Shang-Chi's and Eldrazi Temple's
@@ -5586,8 +5633,17 @@ class Game(BaseModel):
         targets: list[object] | None = None,
         color: Color | None = None,
         x_value: int = 0,
+        exiled_for_cost: CardState | None = None,
     ) -> AbilityOnStack | None:
         """Finish activating: put the ability on the stack (CR 602.2).
+
+        `exiled_for_cost` is the card chosen to pay a cost like Back from the
+        Brink's own "Exile a creature card from your graveyard and pay its
+        mana cost" (`machines/cost.exile_and_pay_mana_cost_cost`) - the same
+        card the caller already handed to `begin_activating`'s `exiling=`,
+        repeated here because `AbilityOnStack` is where the resolving effect
+        can find it again (CR 601.2b's choice, remembered past the moment it
+        was made). `None` for every other ability, which is most of them.
 
         "To activate an ability is to put it onto the stack and pay its costs, so
         that it will eventually resolve and have its effect." The cost is paid by
@@ -5624,7 +5680,7 @@ class Game(BaseModel):
         # text rather than the card's spell text (CR 113.1c).
         profile = profile_for_text(ability.text)
         if profile.understood and profile.requirements:
-            profile.check(list(targets or []), controller, self)
+            profile.check(list(targets or []), controller, self, source_id=permanent.id)
 
         key = self._activation_key(permanent, index)
         self.activations[key] = self.activations.get(key, 0) + 1
@@ -5704,6 +5760,7 @@ class Game(BaseModel):
             controller=controller,
             targets=[TargetRef.coerce(target) for target in targets or []],
             x_value=x_value,
+            cost_exiled_card_id=exiled_for_cost.id if exiled_for_cost is not None else None,
         )
         self.stack.append(on_stack)
         # CR 117.3c hands priority straight back, so anything that triggered

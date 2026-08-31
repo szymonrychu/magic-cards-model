@@ -61,6 +61,7 @@ from .abilities import (
 )
 from .combat import has_keyword
 from .cost import CostPayment, CostStep, TotalCost, discard_cost, total_cost_for_phrase
+from .decisions import Decision, DecisionKind
 from .layers import (
     ContinuousEffect,
     Duration,
@@ -93,6 +94,7 @@ class KeywordRule(StrEnum):
     INDESTRUCTIBLE = "CR 702.12b"
     EXERT = "CR 701.43a"
     REBOUND = "CR 702.88a"
+    HIDEAWAY = "CR 702.75a"
 
 
 def executes(keyword: str) -> bool:
@@ -121,6 +123,7 @@ def executes(keyword: str) -> bool:
         "indestructible",
         "exert",
         "rebound",
+        "hideaway",
         # CR 701.66a. A CR 701 keyword *action* embedded in another ability's
         # effect text, not a CR 702 keyword ability printed on its own - so
         # its clause parser lives in `machines/effects.py`
@@ -331,6 +334,31 @@ def _madness_ability(ability: KeywordAbility) -> TriggeredAbility:
     )
 
 
+def _hideaway_ability(ability: KeywordAbility) -> TriggeredAbility:
+    """CR 702.75a: "Hideaway N" means "When this permanent enters, look at the
+    top N cards of your library. Exile one of them face down and put the rest
+    on the bottom of your library in a random order.""
+
+    CR 702.75b: pre-rules-change printings fixed N at four and entered
+    tapped; the modern template prints both `N` and "This land enters
+    tapped." explicitly, so nothing here assumes either - `ability.count` is
+    read off the actual printed line, defaulting to four only if a printing
+    somehow omits it.
+    """
+    count = ability.count if ability.count is not None else 4
+    return _expansion(
+        ability,
+        keyword="hideaway",
+        word=TriggerWord.WHEN,
+        condition="this permanent enters",
+        effect=(
+            f"look at the top {count} cards of your library. Exile one of them face down "
+            "and put the rest on the bottom of your library in a random order"
+        ),
+        event=TriggerEvent.ENTERS_THE_BATTLEFIELD,
+    )
+
+
 #: The keyword lines this module can write out as triggered abilities, by the
 #: Scryfall spelling of the keyword. A keyword missing from here is a keyword
 #: `machines/triggers.py` still cannot produce.
@@ -341,6 +369,7 @@ _TRIGGER_EXPANSIONS: dict[str, Callable[[KeywordAbility], TriggeredAbility]] = {
     "persist": _persist_ability,
     "mobilize": _mobilize_ability,
     "madness": _madness_ability,
+    "hideaway": _hideaway_ability,
 }
 
 
@@ -1845,6 +1874,72 @@ def _madness_effect(game: Any, ability: AbilityOnStack) -> CardState | None:
     return source
 
 
+#: "the top N cards" inside `_hideaway_ability`'s own generated effect text,
+#: read back to recover N without threading a second copy of it through
+#: `AbilityOnStack`.
+_HIDEAWAY_COUNT_RE = re.compile(r"top (?P<n>\d+) cards")
+
+
+def _hideaway_effect(game: Any, ability: AbilityOnStack) -> None:
+    """CR 702.75a's effect: look, exile one face down, bottom the rest.
+
+    The exiled card is annotated `ExileMarker.IMPRINTED`, linked back to this
+    permanent's own id - the same "exiled with this permanent" shape
+    `machines/effects.py`'s `_parse_imprint_clause` already uses for Ugin's
+    Labyrinth (CR 207.2c: "imprint" itself has no rules meaning, so the link
+    is not specific to that ability word), so a later ability naming "the
+    exiled card"/"a card exiled with `<this>`" - Mosswort Bridge's own
+    `{G}, {T}` ability - can find it again.
+
+    "Exile one of them face down" is mandatory, unlike a "you may" choice, so
+    this always asks `DecisionKind.CHOOSE_CARDS` for exactly one rather than
+    offering a `MAY` first. The rest go to the bottom "in a random order"
+    (CR 702.75a's own wording, not the caster's choice the way scry's "in any
+    order" is) - the same seeded `random.Random` convention `machines/
+    effects.py`'s own top-N-then-bottom shapes already use, so a scenario
+    asserting on the resulting library order stays reproducible.
+    """
+    source = ability.source(game)
+    if source is None or source.zone is not Zone.BATTLEFIELD:
+        return
+    printed = ability.ability
+    text = printed.effect if isinstance(printed, TriggeredAbility) else ""
+    match = _HIDEAWAY_COUNT_RE.search(text or "")
+    count = int(match.group("n")) if match is not None else 4
+    controller = game.controller_of(ability)
+    looked = list(controller.library[:count])
+    if not looked:
+        return
+    decision = Decision(
+        kind=DecisionKind.CHOOSE_CARDS,
+        player=controller.username,
+        prompt=f"exile a card face down with {source.name} (hideaway)",
+        source=source.name,
+        amount=1,
+        cards=tuple(state.id for state in looked),
+    )
+    chosen_ids = game.ask(decision)
+    by_id = {state.id: state for state in looked}
+    chosen = by_id[chosen_ids[0]]
+    rest = [state for state in looked if state is not chosen]
+
+    controller.cards_in(Zone.LIBRARY).remove(chosen)
+    chosen.move_to(Zone.EXILE)
+    chosen.exile_annotation = ExileAnnotation(
+        marker=ExileMarker.IMPRINTED, owner=chosen.owner, linked_permanent_id=source.id
+    )
+    game.exile.append(chosen)
+
+    if rest:
+        rng = random.Random(  # noqa: S311
+            f"{game.shuffle_seed}:{game.shuffles_performed}:hideaway-{source.id}"
+        )
+        rng.shuffle(rest)
+        for state in rest:
+            controller.move(state, Zone.LIBRARY)
+        game.shuffles_performed += 1
+
+
 #: What one keyword's triggered ability does when it resolves, by keyword.
 #: `Game._effect_of` has to consult this before the card-name registry - see
 #: `docs/engine-coverage.md` for the hook.
@@ -1854,6 +1949,7 @@ KEYWORD_TRIGGER_EFFECTS: dict[str, Callable[[Any, AbilityOnStack], Any]] = {
     "cascade": _cascade_effect,
     "ward": _ward_effect,
     "madness": _madness_effect,
+    "hideaway": _hideaway_effect,
 }
 
 

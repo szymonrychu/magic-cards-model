@@ -311,6 +311,17 @@ class AbilityOnStack(BaseModel):
     because the activation holds a live `Game`.
     """
 
+    cost_exiled_card_id: UUID | None = None
+    """The id of the card exiled to pay this ability's own cost, when the
+    ability's *effect* refers back to it anaphorically - Back from the
+    Brink's "Exile a creature card from your graveyard and pay its mana
+    cost: Create a token that's a copy of **that card**." The choice is made
+    while the cost is paid (CR 601.2b/602.2b), before this object even
+    exists, so there is nowhere else on the ability itself to carry it -
+    unlike a target, which `machines/targeting.py` already tracks through
+    `targets`, this was never a target at all (CR 115.1 - Back from the
+    Brink's own sentence never says "target")."""
+
     unless_payment: Any = Field(default=None, exclude=True, repr=False)
     """The `machines/cost.CostPayment` made for an "unless that player pays" clause.
 
