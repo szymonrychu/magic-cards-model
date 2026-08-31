@@ -139,7 +139,11 @@ def test_every_player_is_asked_once_in_turn_order():
 
     series.run_mulligans()
 
-    assert [(d.player, d.kind) for d in game.decisions.asked] == [
+    # Narrowed to the declaration: CR 103.6's opening-hand actions follow this
+    # process on the same script, and this list plays a Gemstone Caverns.
+    assert [
+        (d.player, d.kind) for d in game.decisions.asked if d.kind is DecisionKind.MULLIGAN
+    ] == [
         ("alice", DecisionKind.MULLIGAN),
         ("bob", DecisionKind.MULLIGAN),
     ]
@@ -154,7 +158,10 @@ def test_the_declarations_follow_who_takes_the_first_turn():
 
     series.run_mulligans()
 
-    assert [d.player for d in game.decisions.asked] == ["bob", "alice"]
+    assert [d.player for d in game.decisions.asked if d.kind is DecisionKind.MULLIGAN] == [
+        "bob",
+        "alice",
+    ]
 
 
 # -- one and two mulligans (CR 103.5) ---------------------------------------
@@ -278,7 +285,13 @@ def test_a_player_at_the_ceiling_is_offered_no_declaration():
     # Round eight put no question at all: seven for alice, and bob's one
     # declaration was the first round, where the default keep answered him.
     assert len(asked_of(game, "alice")) == 7
-    assert len(game.decisions.asked) == 8
+    mulligan_questions = [
+        decision for decision in game.decisions.asked if decision.kind is DecisionKind.MULLIGAN
+    ]
+    # Counted by kind: CR 103.6's opening-hand actions run once this process is
+    # complete and put their own questions on the same script (this list plays
+    # a Gemstone Caverns), which is not what this test is about.
+    assert len(mulligan_questions) == 8
 
 
 # -- multiplayer: the free first mulligan (CR 103.5c, CR 800.6) --------------

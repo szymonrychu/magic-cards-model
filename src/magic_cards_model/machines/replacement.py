@@ -80,7 +80,9 @@ not a replacement effect and is not claimed as one.
   a prevention effect, not one. Questing Beast's line comes back `UNPARSED`.
 - **Opening-hand effects.** Leyline of the Void's "If this card is in your
   opening hand, you may begin the game with it on the battlefield" (CR 103.6a)
-  has neither "would" nor a prevention word and is not claimed.
+  has neither "would" nor a prevention word and is not claimed here. It is read
+  by `machines/opening_hand.py` instead, which owns CR 103.6's whole sequence -
+  it is a start-of-game action, not a replacement effect.
 - **Turning a parsed sentence into behaviour.** Parsing "exile it instead" tells
   you the shape, not what to do; the application path below is a hand-written
   registry for that reason. The two generic exceptions are `ENTERS_TAPPED` and

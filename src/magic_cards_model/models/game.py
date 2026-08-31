@@ -105,6 +105,13 @@ from ..machines.layers import (
     count_card_types,
 )
 from ..machines.modes import substitute_x
+from ..machines.opening_hand import (
+    RIDERS,
+    OpeningHandAction,
+    OpeningHandActionKind,
+    OpeningHandNotice,
+    read_opening_hand_actions,
+)
 from ..machines.priority import PriorityMachine, PriorityOutcome
 from ..machines.replacement import (
     EventKind,
@@ -957,6 +964,31 @@ class Game(BaseModel):
     temporary, spell-conjured replacement rule watching every future zone
     change the way `machines/replacement.py`'s `parse_replacement_effects`
     reads a permanent's own printed one. See `ControlReplacementNotice`."""
+
+    opening_hand_notices: list[OpeningHandNotice] = Field(default_factory=list)
+    """One entry per card paragraph that claims a CR 103.6 opening-hand action
+    the engine did not carry out - a paragraph that mentions an opening hand but
+    matches neither CR 103.6a's nor CR 103.6b's template, or one that matches but
+    carries a rider `machines/opening_hand.py`'s `RIDERS` has no entry for. The
+    action is then not offered at all, so nothing reads as permission while doing
+    less than the card says. The same unreadable-is-not-the-same-as-no-effect
+    record every other notice list here keeps."""
+
+    opening_hand_actions_taken: bool = False
+    """Whether CR 103.6's sequence has already run for this game.
+
+    CR 103.6b: "Each card may be revealed this way only on[ce]" - the excerpt
+    truncates, but running the sequence twice would break it, and CR 103.6 puts
+    the sequence between one completed mulligan process and one first turn.
+    `take_opening_hand_actions` is idempotent because of this flag."""
+
+    opening_hand_reveals: list[UUID] = Field(default_factory=list)
+    """Cards revealed from an opening hand under CR 103.6b, in the order shown.
+
+    "The card remains revealed until the first turn begins." A `Reveal` in
+    `reveals` is CR 701.20a's momentary showing and says nothing about how long
+    it lasts; this is the separate, longer-lived fact CR 103.6b creates, kept as
+    ids because the cards themselves stay in hand (CR 701.20b)."""
 
     reveals: list[Reveal] = Field(default_factory=list)
     """Every card that has been revealed this game (CR 701.20a), in order.
@@ -3074,6 +3106,109 @@ class Game(BaseModel):
             card_state, controller, tapped=tapped, transformed=transformed, was_cast=False
         )
 
+    # -- opening-hand actions (CR 103.6) --------------------------------------
+
+    def take_opening_hand_actions(self) -> list[Decision]:
+        """CR 103.6's sequence: after the mulligan, before the first turn.
+
+        "Some cards allow a player to take actions with them from their opening
+        hand. Once the mulligan process (see rule 103.5) is complete, the
+        starting player may take any such actions in any order. Then ea[ch other
+        player ...]" - the excerpt from `knowledge_search` truncates there, so
+        what is implemented is only what it states outright: the starting player
+        first, then the rest, each player's own actions in an order this engine
+        picks (hand order) because the rule leaves it free.
+
+        `self.players` is seated with the starting player first (CR 103.8,
+        `TurnMachine.starting_player`), so walking it *is* that order - the same
+        list and the same reasoning `Match.run_mulligans` already uses for
+        CR 103.5's declarations. CR 101.4's APNAP ordering is not what applies
+        here: no turn has begun, so there is no active player, and CR 103.6
+        states its own order.
+
+        Every action is optional - "may take any such actions" - so every one is
+        put to its player as a `DecisionKind.OPENING_HAND_ACTION` question and
+        an unscripted player declines (see `machines/decisions.py`). A player
+        holding no card that offers one is asked nothing at all, and a card
+        whose restriction is not met (Gemstone Caverns in the starting player's
+        hand) offers no action, so it is not asked either: the card does not
+        "allow a player to take" that action, which is CR 103.6's own condition
+        for there being a question.
+
+        Nothing in this sequence is random, so nothing here needs the match seed
+        that `Match.run_mulligans` derives for its reshuffles: given the same
+        declarations and the same scripted answers, a replay reproduces it
+        exactly.
+
+        Returns the questions that were put, in order. Idempotent: CR 103.6's
+        sequence happens once per game, and CR 103.6b's "each card may be
+        revealed this way only on[ce]" would be broken by a second run.
+        """
+        if self.opening_hand_actions_taken:
+            return []
+        self.opening_hand_actions_taken = True
+
+        asked: list[Decision] = []
+        starting_player = self.turn.starting_player if self.turn is not None else None
+
+        for player in list(self.players):
+            for card_state in list(player.hand):
+                actions, notices = read_opening_hand_actions(card_state.card)
+                seen = {(notice.card_name, notice.text) for notice in self.opening_hand_notices}
+                for notice in notices:
+                    if (notice.card_name, notice.text) not in seen:
+                        self.opening_hand_notices.append(notice)
+                for action in actions:
+                    if action.requires_not_starting_player and player.username == starting_player:
+                        continue
+                    if card_state.zone is not Zone.HAND:
+                        # An earlier action already moved it out of the opening
+                        # hand; CR 103.6a/103.6b both act on a card *in* the hand.
+                        continue
+                    decision = Decision(
+                        kind=DecisionKind.OPENING_HAND_ACTION,
+                        player=player.username,
+                        prompt=action.text,
+                        source=card_state.name,
+                    )
+                    asked.append(decision)
+                    answer = self.ask(decision)
+                    if answer is not True:
+                        continue
+                    self._perform_opening_hand_action(action, card_state, player)
+
+        return asked
+
+    def _perform_opening_hand_action(
+        self,
+        action: OpeningHandAction,
+        card_state: CardState,
+        player: Player,
+    ) -> None:
+        """Carry out one accepted CR 103.6 action, then its rider.
+
+        CR 103.6a puts the card onto the battlefield; CR 103.6b reveals it and
+        leaves it where it is (CR 701.20b). The rider - the card's own trailing
+        "If you do, ..." - runs afterwards, in the order the card prints it, and
+        is looked up by name in `machines/opening_hand.py`'s `RIDERS`. An action
+        with a rider and no entry there never reaches here: it is refused while
+        being read, with a notice.
+        """
+        if action.kind is OpeningHandActionKind.BEGIN_ON_BATTLEFIELD:
+            self.put_onto_battlefield(card_state, player.username)
+            if action.counter and card_state.zone is Zone.BATTLEFIELD:
+                # "with a luck counter on it" - part of how it begins the game
+                # there, so it is put on as soon as the permanent exists.
+                self.add_counters(card_state, action.counter)
+        else:
+            # CR 103.6b: revealed, and it stays in hand (CR 701.20b).
+            self.reveal(card_state, source=card_state.name)
+            self.opening_hand_reveals.append(card_state.id)
+
+        rider = RIDERS.get(card_state.card.name) if action.rider else None
+        if rider is not None:
+            rider(self, card_state, player)
+
     # -- decisions made during resolution (CR 608.2d) -------------------------
 
     def ask(self, decision: Decision) -> object:
@@ -3223,6 +3358,15 @@ class Game(BaseModel):
         if decision.kind is DecisionKind.PUT_ON_TOP_OR_BOTTOM:
             if not isinstance(value, bool):
                 raise ValueError(f"{decision.prompt}: needs a top-or-bottom bool answer")
+            return value
+
+        if decision.kind is DecisionKind.OPENING_HAND_ACTION:
+            # CR 103.6's "may take any such actions": a yes-or-no, both branches
+            # always legal - a restriction the card prints (Gemstone Caverns'
+            # "you're not the starting player") stops the question being asked
+            # at all rather than making one answer illegal.
+            if not isinstance(value, bool):
+                raise ValueError(f"{decision.prompt}: a yes-or-no question needs a bool answer")
             return value
 
         if not isinstance(value, CardSplit):
