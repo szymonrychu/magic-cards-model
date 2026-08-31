@@ -347,23 +347,41 @@ def layer_context_for(game: "Game", controller: Player) -> LayerContext:
 def create_continuous_effect_of_ability(game: "Game", ability: AbilityOnStack) -> None:
     """The same for a resolving ability (CR 611.2 covers spells and abilities alike).
 
-    Two shapes share this one function. When the ability names no target -
-    Basking Rootwalla's "{1}{G}: This creature gets +2/+2 until end of turn." -
-    the affected object is the ability's own source. When it does - Karn, the
-    Great Creator's "+1: ... up to one target noncreature artifact becomes an
-    artifact creature ..." - the affected object is whatever it targeted,
-    rechecked for legality now exactly as a spell's targets are (CR 608.2b):
-    `game.resolve_card_targets` is the same call `create_continuous_effect`
-    makes for a spell, so a loyalty ability reaches the layer engine through
-    the ordinary activated-ability path rather than a planeswalker-specific
-    one. "Up to one" legally choosing zero leaves `targets` empty and the
-    ability resolves doing nothing, which is CR 608.2's ordinary answer for a
-    modal/optional clause that picked nothing rather than a fizzle.
+    Two shapes share this one function, told apart by whether the ability's
+    *own printed text* names a target at all - not by whether `ability.targets`
+    happens to be empty, which is ambiguous between them. When the ability
+    names no target - Basking Rootwalla's "{1}{G}: This creature gets +2/+2
+    until end of turn." - the affected object is the ability's own source.
+    When it does - Karn, the Great Creator's "+1: ... up to one target
+    noncreature artifact becomes an artifact creature ..." - the affected
+    object is whatever it targeted, rechecked for legality now exactly as a
+    spell's targets are (CR 608.2b): `game.resolve_card_targets` is the same
+    call `create_continuous_effect` makes for a spell, so a loyalty ability
+    reaches the layer engine through the ordinary activated-ability path
+    rather than a planeswalker-specific one.
+
+    `profile_for_text(ability.ability.text)` (the same call `Game.
+    activate_ability` already made to check the announced targets' legality,
+    CR 601.2c/602.2b) is what answers "does this ability's text require a
+    target at all" - `ability.targets` being empty cannot answer that on its
+    own, because CR 115.6 makes "up to one target ..." legally choosing zero a
+    *different reason* for the same empty list. Reported defect: Karn's +1,
+    activated with zero targets chosen (CR 115.6), used to fall through to
+    `[source]` here and animate **Karn himself** into a 4/4 - wrong twice
+    over, since a legendary planeswalker was never a legal "target noncreature
+    artifact" to begin with (CR 601.2c) and CR 115.6's zero-targets case is
+    required to leave the ability targeted at nothing, not silently
+    redirected to its own source (CR 608.2, no target chosen affects nothing).
+    "Up to one" legally choosing zero, or every chosen target having since
+    become illegal (CR 608.2b), both leave `targets` empty and the ability
+    resolves doing nothing - never a fallback to `source`.
     """
     source = ability.source(game)
     if source is None or source.zone is not Zone.BATTLEFIELD:
         return
-    targets = game.resolve_card_targets(ability) if ability.targets else [source]
+    profile = profile_for_text(ability.ability.text)
+    requires_target = profile.understood and bool(profile.requirements)
+    targets = game.resolve_card_targets(ability) if requires_target else [source]
     if not targets:
         return
     continuous_effects(game).create(

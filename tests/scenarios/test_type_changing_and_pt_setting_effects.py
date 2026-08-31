@@ -46,6 +46,8 @@ Every CR number here was looked up with `knowledge_search(type="rules")` in the
 session that wrote this file.
 """
 
+import pytest
+
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.layers import (
     ContinuousEffect,
@@ -508,3 +510,68 @@ def test_an_unreadable_static_ability_records_a_layer_notice_on_the_board():
     assert store.layer_notices == [
         LayerNotice(source_id=waterbender.id, source_name="Flexible Waterbender", text=text)
     ]
+
+
+# --------------------------------------------------------------------------
+# Zero targets (CR 115.6), and an illegal one (CR 601.2c) - game
+# 433dff95eae24b04a780a960bd2445b7, seq 240-242
+#
+# Reported defect: alice activated Karn's +1 with an *empty* target list
+# (`targets: null` in the raw log). On resolution, Karn himself became a 4/4
+# artifact creature (4 = his own mana value) and was marked summoning sick.
+# Wrong twice over: CR 115.6 says a spell/ability that "requires targets" may
+# still legally choose zero, and one that does is "targeted only if one or
+# more targets were actually chosen" - zero chosen means the ability affects
+# nothing, never a fallback to its own source. Separately, Karn is a
+# Legendary Planeswalker (`resolve_cards`: type_line "Legendary Planeswalker
+# — Karn"), never a legal "target noncreature artifact" (CR 601.2c) even if
+# a target *had* been announced.
+#
+# Root cause: `machines/effects.py`'s `create_continuous_effect_of_ability`
+# used to test `if ability.targets else [source]` - `ability.targets` being
+# an empty list is exactly what CR 115.6's "chose zero" case looks like *and*
+# exactly what an untargeted ability like Basking Rootwalla's pump looks
+# like, so the two were indistinguishable and the zero-target case fell
+# through to `[source]`. Fixed by reading whether the ability's own printed
+# text requires a target at all (`profile_for_text(ability.ability.text)`,
+# the same check `Game.activate_ability` already runs at CR 601.2c
+# announcement) rather than inferring it from how many targets came back.
+# --------------------------------------------------------------------------
+
+
+def test_karns_plus_one_with_no_target_chosen_changes_nothing():
+    """The exact reported case: activate Karn's +1 with zero targets chosen
+    (CR 115.6). Karn must stay exactly as he was - not a creature, no P/T,
+    not summoning sick - never redirected onto his own source."""
+    scenario = _karn_and_artifact("Trinisphere")
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    karn = scenario.creature("Karn, the Great Creator", "alice")
+    trinisphere = scenario.creature("Trinisphere", "alice")
+    assert karn.loyalty == 5
+
+    scenario.activate(karn, index=0, targets=[])
+    assert karn.loyalty == 6, "CR 606.4: the +1 cost is paid on activation regardless"
+    scenario.pass_until_resolved()
+
+    computed_karn = scenario.game.computed_board().of(karn)
+    assert not computed_karn.is_creature, "the reported defect: Karn became a 4/4"
+    assert computed_karn.power is None and computed_karn.toughness is None
+    assert not karn.summoning_sick, "never animated, so never newly summoning sick either"
+
+    # Nothing else on the board moved either - the untargeted artifact stays
+    # exactly what it was.
+    computed_trinisphere = scenario.game.computed_board().of(trinisphere)
+    assert not computed_trinisphere.is_creature
+    assert computed_trinisphere.power is None and computed_trinisphere.toughness is None
+
+
+def test_karns_plus_one_refuses_karn_himself_as_an_illegal_target():
+    """Karn is a Legendary Planeswalker (`resolve_cards`), never a legal
+    "target noncreature artifact" (CR 601.2c) - the activation itself must be
+    refused, not merely a no-op on resolution."""
+    scenario = _karn_and_artifact("Trinisphere")
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    karn = scenario.creature("Karn, the Great Creator", "alice")
+
+    with pytest.raises(ValueError, match="illegal target"):
+        scenario.activate(karn, index=0, targets=[karn])
