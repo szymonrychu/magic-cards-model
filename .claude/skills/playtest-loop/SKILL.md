@@ -426,6 +426,14 @@ Each of these cost real time. They are not hypothetical.
   break every player command with `SyntaxError`, in every match at once.
 - **`lsof -ti :8000 -sTCP:LISTEN`** — without the flag you also kill clients
   holding a connection, which is how the MCP server kept dying on restart.
+- **Port 8000 is the match server's, and nothing else's.** An agent doing
+  unrelated API work (the play UI) booted its own server on 8000, took the port,
+  and killed a live match outright — the seats reported `ConnectionRefusedError`
+  and a real game with an 11-spell storm turn in progress was lost, because game
+  state is in memory only. Every brief that boots a server for any purpose other
+  than the matches must name a different port, or run while no match is live.
+  The player briefs assume `http://127.0.0.1:8000`, so it is the *other* server
+  that moves.
 - **Worktree venv:** inside a worktree `uv run` silently resolves to a sibling
   repo's stale venv. Use `unset VIRTUAL_ENV` then `./.venv/bin/python -m pytest`.
 - **Agents stop mid-task saying they will "wait for the background command".**
