@@ -114,6 +114,7 @@ from ..machines.targeting import (
 )
 from ..machines.triggers import (
     AbilityOnStack,
+    CastConditionNotice,
     GameEvent,
     InterveningIfNotice,
     TargetingNotice,
@@ -731,6 +732,14 @@ class Game(BaseModel):
     clause closed - the ability does not trigger - and records it here rather
     than leaving that indistinguishable from a clause that was read and found
     false."""
+
+    cast_condition_notices: list[CastConditionNotice] = Field(default_factory=list)
+    """One entry per "Whenever you cast a ... spell" condition (CR 601.2,
+    603.2) that named a mana-value restriction `condition_matches` recognised
+    but could not parse into a number and a direction. The condition fails
+    closed - the ability does not trigger - rather than being treated as
+    unrestricted, the same "recognised but unreadable is not the same as
+    absent" reasoning `intervening_if_notices` already applies."""
 
     mode_notices: list[ModeNotice] = Field(default_factory=list)
     """One entry per chosen mode of a resolving modal spell (CR 700.2a) whose
@@ -1495,6 +1504,7 @@ class Game(BaseModel):
                 subject_card=card_state.card,
                 subject_types=card_state.types,
                 subject_subtypes=card_state.subtypes,
+                subject_colors=card_state.colors,
                 player=controller,
                 amount=int(mana_value),
             )
