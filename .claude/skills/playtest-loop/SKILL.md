@@ -428,6 +428,17 @@ Each of these cost real time. They are not hypothetical.
   holding a connection, which is how the MCP server kept dying on restart.
 - **Worktree venv:** inside a worktree `uv run` silently resolves to a sibling
   repo's stale venv. Use `unset VIRTUAL_ENV` then `./.venv/bin/python -m pytest`.
+- **Agents stop mid-task saying they will "wait for the background command".**
+  Three did it in one session — two fix agents with their whole diff still
+  uncommitted, and a player seat that stalled its match. The tell is a final
+  answer that describes an intention rather than a result. Every brief must say:
+  run in the foreground, one command at a time, never wait on a monitor, and
+  never finish while anything is uncommitted. When it happens anyway, resume the
+  agent with `SendMessage` — the work is still in its worktree, and the cheap
+  recovery is to make it finish, not to redo the wave. **Always check
+  `git log --oneline -1` and `git status` in its worktree before believing a
+  completion report**; the suite counts an agent quotes are worthless if the
+  branch tip never moved.
 
 ### Judgement
 
