@@ -1648,6 +1648,15 @@ class CostModifierKind(StrEnum):
     """"Each spell a player casts costs {1} more to cast for each other spell
     that player has cast this turn." - Damping Sphere."""
 
+    NAMED_INCREASE = "named_increase"
+    """"Spells with the chosen name cost {3} more to cast." - Disruptor Flute.
+
+    A flat increase like `FLAT_INCREASE`, but scoped by a CR 614.12a choice
+    made as the source entered (`CardState.choice`, `ChoiceKind.CARD_NAME`)
+    rather than by a card type, so the amount alone cannot say who it taxes:
+    `Game.static_cost_modifiers_for` reads the chosen name off the permanent
+    and compares it to the spell's own name."""
+
     FLOOR = "floor"
     """"Each spell that would cost less than [N] mana to cast costs [N] mana
     to cast." - Trinisphere."""
@@ -1712,6 +1721,15 @@ _QUALIFIER_EXCLUDES: dict[str, Type] = {
 _FLAT_COST_INCREASE = re.compile(
     r"(?:(?P<qualifier>Noncreature|Nonartifact|Nonland|Noninstant|Nonsorcery|"
     r"Nonenchantment|Nonplaneswalker) )?[Ss]pells? cost \{(?P<amount>\d+)\} more to cast\."
+)
+#: Disruptor Flute's own tax, scoped by the card name it chose as it entered
+#: (CR 614.12a) rather than by a card type. Matched ahead of
+#: `_FLAT_COST_INCREASE` so the qualifier is never dropped: that pattern wants
+#: "spells cost {N} more" contiguously and so cannot read this line at all,
+#: which is precisely why the increase used to be recorded as an unparsed
+#: notice and applied to nothing.
+_NAMED_COST_INCREASE = re.compile(
+    r"[Ss]pells with the chosen name cost \{(?P<amount>\d+)\} more to cast\."
 )
 _PER_SPELL_COST_INCREASE = re.compile(
     r"Each spell a player casts costs \{(?P<amount>\d+)\} more to cast for each "
@@ -1793,6 +1811,11 @@ def cost_modifier_effect(text: str) -> CostModifierEffect | None:
     this engine cannot read (an out-of-range word, say) is reported rather
     than silently treated as "no effect here".
     """
+    match = _NAMED_COST_INCREASE.search(text)
+    if match is not None:
+        return CostModifierEffect(
+            kind=CostModifierKind.NAMED_INCREASE, amount=int(match.group("amount"))
+        )
     match = _FLAT_COST_INCREASE.search(text)
     if match is not None:
         qualifier = match.group("qualifier")

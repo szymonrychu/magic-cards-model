@@ -2481,9 +2481,12 @@ class UnwiredChoiceNotice(BaseModel):
       sources with the chosen name can't be activated unless they're mana
       abilities." is a cost/legality restriction on *activating* an ability,
       which has no representation anywhere the engine checks
-      `why_cannot_activate`. Disruptor Flute's other line, "Spells with the
-      chosen name cost {3} more to cast.", is the same gap on the casting
-      side (CR 601.2f's cost-increase step has no per-name lookup).
+      `why_cannot_activate`. Disruptor Flute's *other* line, "Spells with the
+      chosen name cost {3} more to cast.", is no longer here: CR 601.2f's
+      cost-increase step reads it as `CostModifierKind.NAMED_INCREASE` and
+      `Game.static_cost_modifiers_for` compares the chosen name against the
+      spell being cast, so only the activation line of that card still lands
+      on this list.
     - **Cavern of Souls** - "Spend this mana only to cast a creature spell of
       the chosen type, and that spell can't be countered." restricts what a
       floating mana symbol may pay for and grants an uncounterable quality to
@@ -2527,6 +2530,14 @@ _CHOSEN_QUALITY_ANAPHORA_RE = re.compile(
     r"\bthe chosen (?:color|card name|name|creature type|type)\b", re.IGNORECASE
 )
 _WIRED_MANA_CLAUSE_HINT_RE = re.compile(r"adds? an additional\b", re.IGNORECASE)
+#: The second shape this engine now performs end to end: Disruptor Flute's
+#: "Spells with the chosen name cost {3} more to cast.", read by
+#: `machines/cost.cost_modifier_effect` as `CostModifierKind.NAMED_INCREASE`
+#: and applied against `CardState.choice` in `Game.static_cost_modifiers_for`.
+#: Excluded here so a wired consumer stops being reported as an unwired one.
+_WIRED_NAMED_COST_INCREASE_HINT_RE = re.compile(
+    r"spells with the chosen name cost \{\d+\} more to cast", re.IGNORECASE
+)
 #: "This creature has/gets/gains ..." (Voice of All) - the shape
 #: `machines/layers.py`'s `_LOOKS_LIKE_LAYER_EFFECT_RE` already catches on its
 #: own, recording a `LayerNotice` with no help from here. Excluded so a
@@ -2555,6 +2566,7 @@ def _unwired_choice_notices(card: Card, source_id: UUID) -> list[UnwiredChoiceNo
         if (
             sentence.lower().startswith("as ")
             or _WIRED_MANA_CLAUSE_HINT_RE.search(sentence)
+            or _WIRED_NAMED_COST_INCREASE_HINT_RE.search(sentence)
             or _LAYER_HANDLED_SUBJECT_RE.match(sentence)
         ):
             continue

@@ -182,11 +182,18 @@ def test_pithing_needles_activation_restriction_is_not_silently_dropped():
     )
 
 
-def test_disruptor_flutes_two_restrictions_are_not_silently_dropped():
-    """Disruptor Flute prints *two* lines that read back the chosen name - a
-    cost increase on casting and the same activation restriction Pithing
-    Needle has - and both are unwired consumers this wave records rather than
-    silently drops. Two lines, so two notices.
+def test_disruptor_flutes_activation_restriction_is_not_silently_dropped():
+    """Disruptor Flute prints *two* lines that read back the chosen name, and
+    they are no longer in the same state.
+
+    Its cost increase - "Spells with the chosen name cost {3} more to cast." -
+    is wired now: `machines/cost.cost_modifier_effect` reads it as
+    `CostModifierKind.NAMED_INCREASE` and `Game.static_cost_modifiers_for`
+    applies it against the recorded choice, so it must *not* appear here any
+    more; a notice for a consumer that works is a false alarm, and
+    `scenarios/test_cost_increase_by_chosen_name.py` is where that line is
+    tested doing its job. The activation restriction is still unwired and
+    still recorded.
     """
     scenario = (
         Scenario()
@@ -205,8 +212,13 @@ def test_disruptor_flutes_two_restrictions_are_not_silently_dropped():
         for notice in scenario.game.unwired_choice_notices
         if notice.source_id == flute.id
     ]
-    assert any("cost" in text for text in texts)
     assert any("activated" in text for text in texts)
+    assert not any("more to cast" in text for text in texts)
+    # Nor does the wired line come back as an unreadable cost modifier on the
+    # other list (DDR#978's own fail-closed record).
+    assert not [
+        notice for notice in scenario.game.cost_modifier_notices if notice.source_id == flute.id
+    ]
 
 
 def test_cavern_of_souls_restricted_mana_grant_is_not_silently_dropped():
