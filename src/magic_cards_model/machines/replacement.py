@@ -1459,9 +1459,12 @@ def _exile_and_gain_two_life(game: "Game", source: CardState, event: Replaceable
     One replacement effect with two halves, so both happen as the event is
     replaced: the card goes to exile rather than a graveyard (CR 614.6 - the
     original event never happens, so it never died, CR 700.4), and the Crystal's
-    controller gains the 2. The gain is routed through `Game.gain_life` so it is
-    a CR 119.3 life-gain event of its own and an Alhammarret's Archive watching
-    still doubles it.
+    controller gains the 2. The gain is routed through `Game.gain_life` so it
+    is a life-gain event of its own, which is what CR 119.10 needs it to be -
+    "Some replacement effects are written, 'If [a player] would gain life,
+    . . . .' Such abilities are treated as though they are written, 'If a
+    source would cause [a player] to gain life, . . . .'" - and an Alhammarret's
+    Archive watching still doubles it.
     """
     _exile_instead(game, source, event)
     if source.controller is not None:
