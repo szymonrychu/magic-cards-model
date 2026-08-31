@@ -58,6 +58,7 @@ from .targeting import (
     targeting_profile,
 )
 from .triggers import GameEvent
+from .turn import Step
 
 
 class CastTiming(StrEnum):
@@ -444,6 +445,31 @@ class PlayPermission(BaseModel):
     tell "this turn" from "a later turn" even in a game driven step by step
     without ever reaching a cleanup step. CR 500.7's extra turn is why this is
     `turns_taken` and not the turn number or the active seat."""
+    immediate: bool = False
+    """Whether this grant is CR 117.2e's "instructed by a resolving ability"
+    shape rather than an explicit "until end of turn" duration printed on a
+    card.
+
+    CR 117.1's own preamble: "**Unless a spell or ability is instructing a
+    player to take an action**, which player can take actions at any given
+    time is determined by a system of priority." CR 117.2e: "Resolving spells
+    and abilities may instruct players to make choices or take actions...
+    Even if a player is doing so, no player has priority while a spell or
+    ability is resolving." Suspend's third ability (CR 702.62a) is exactly
+    that shape - "you may play it... If you don't, it remains exiled" is the
+    ability's own resolution instructing the cast, not a standing grant that
+    survives into the ordinary priority system afterward, unlike Ugin, Eye of
+    the Storms' "−11" and Ragavan, Nimble Pilferer's trigger, which both print
+    the words "**Until end of turn**" and so *do* hand out a permission good
+    for the rest of the priority-driven turn (CR 514.2 is what ends those).
+    An `immediate` grant is good only for the step it was granted in
+    (`granted_step`) - once the game has moved on to another step, whatever
+    priority the instructing ability's own resolution briefly stood in for
+    has already passed, and CR 702.62a's own "if you don't, it remains
+    exiled" has already taken effect."""
+    granted_step: Step | None = None
+    """The `TurnMachine.step` `immediate` is scoped to - meaningless unless
+    `immediate` is set."""
     bottom_if_unused: bool = False
     """Whether `Game.cleanup_step` must sweep this card to the bottom of its
     owner's library, rather than just dropping the permission, if it is still
@@ -474,10 +500,16 @@ class PlayPermission(BaseModel):
         return card.id == self.card_id and card.zone_change_stamp == self.zone_change_stamp
 
     def expired(self, game: Any = None) -> bool:
-        """CR 514.2: whether the turn it was granted on is over."""
+        """CR 514.2: whether the turn it was granted on is over, or - for an
+        `immediate` grant - whether CR 117.2e's own resolution-instructed
+        window (scoped to `granted_step`) has already closed."""
+        turn = getattr(game, "turn", None)
+        if self.immediate and self.granted_step is not None:
+            if turn is None:
+                return False
+            return turn.step is not self.granted_step
         if not self.until_end_of_turn or self.granted_turns_taken is None:
             return False
-        turn = getattr(game, "turn", None)
         if turn is None:
             return False
         return int(turn.turns_taken) != self.granted_turns_taken
@@ -510,6 +542,12 @@ class PlayPermission(BaseModel):
                 f"the {self.zone.value}, but it is in the {card.zone.value} ({self.rule})"
             )
         if self.expired(game):
+            if self.immediate:
+                return (
+                    f"{self.source_name}'s permission to {self.action.value} {card.name} was "
+                    f"CR 117.2e's own resolution-instructed window, not a standing grant, and "
+                    f"the game has since moved past the step it was granted in"
+                )
             return (
                 f"{self.source_name}'s permission to {self.action.value} {card.name} lasted "
                 f"until end of turn and that turn is over (CR 514.2)"
@@ -635,8 +673,27 @@ def why_cannot_cast_now(spell: CardState, caster: str, game: Any = None) -> str 
     opposite direction and touches only its own controller: a sorcery this
     caster could not otherwise cast at instant speed is let through the same
     way `has_flash` already lets an instant-speed creature through.
+
+    **An `immediate` `PlayPermission` (CR 702.62a's suspend, the third
+    ability) skips this whole rule rather than answering it.** CR 117.1's own
+    preamble: "**Unless a spell or ability is instructing a player to take an
+    action**, which player can take actions at any given time is determined
+    by a system of priority." CR 117.2e: "Resolving spells and abilities may
+    instruct players to make choices or take actions... Even if a player is
+    doing so, no player has priority while a spell or ability is resolving."
+    A card cast under a live `immediate` grant is being cast *as* the
+    resolving ability's own instruction, not through the priority system
+    CR 117.1a governs - which is why a suspended sorcery can be cast during
+    an upkeep step that is never anyone's main phase. This does not apply to
+    Ugin, Eye of the Storms' or Ragavan, Nimble Pilferer's grants: both print
+    "**Until end of turn**, you may cast", an explicit standing permission
+    used through the ordinary priority system afterward, where CR 117.1a
+    still applies in full - see `PlayPermission.immediate`'s own docstring.
     """
     if game is None:
+        return None
+    permission = usable_play_permission(game, spell, caster)
+    if permission is not None and permission.immediate:
         return None
     if game.can_cast_sorcery(caster):
         return None
@@ -2054,6 +2111,14 @@ def finish_suspend(game: Any, card: CardState) -> PlayPermission | None:
     cards... that weren't cast on the bottom" is the fallback, for every card
     that "weren't cast" - which is why only cascade's grant carries `bottom_
     if_unused=True`. See `PlayPermission.bottom_if_unused`'s own docstring.
+
+    `immediate=True`: unlike Ugin's and Ragavan's grants, CR 702.62a's third
+    ability never prints "until end of turn" - it is CR 117.2e's "resolving
+    spells and abilities may instruct players to take actions... no player has
+    priority while [it] is resolving" shape instead, so the "you may play it"
+    is only good for as long as that instruction is still being carried out,
+    not for the rest of the turn. See `PlayPermission.immediate`'s own
+    docstring.
     """
     if card.zone is not Zone.EXILE:
         return None
@@ -2069,6 +2134,7 @@ def finish_suspend(game: Any, card: CardState) -> PlayPermission | None:
         pays_mana_cost=False,
         source_name=f"{card.name}'s suspend",
         rule="CR 702.62a",
+        immediate=True,
     )
 
 

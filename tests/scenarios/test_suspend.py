@@ -81,6 +81,7 @@ from magic_cards_model.machines.casting import (
     finish_suspend,
     grant_suspend_haste,
     remove_suspend_time_counter,
+    usable_play_permission,
 )
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card import Color, Type
@@ -253,11 +254,14 @@ def test_time_counters_come_off_one_per_upkeep_and_the_free_cast_reanimates():
     permission = finish_suspend(scenario.game, living_end)
     assert permission is not None
     assert permission.pays_mana_cost is False
+    assert permission.immediate is True
 
-    # Living End is a sorcery with no flash (CR 117.1a): the free cast still
-    # needs alice's own main phase with the stack empty, same as any other
-    # cast - the permission removes the *cost*, not the *timing*.
-    scenario.start_at(Step.PRECOMBAT_MAIN)
+    # Living End is a sorcery with no flash, but CR 117.1a never applies here:
+    # CR 117.2e - "no player has priority while a spell or ability is
+    # resolving" - the cast happens as this triggered ability's own
+    # instruction, still during alice's upkeep, not through the ordinary
+    # priority system that would otherwise gate a sorcery to a main phase.
+    assert scenario.step is Step.UPKEEP
     casting = Casting(spell=living_end, caster="alice", origin_zone=Zone.EXILE, game=scenario.game)
     casting.use_permission()
     assert casting.total_cost.mana.converted == 0
@@ -323,6 +327,82 @@ def test_the_upkeep_trigger_does_nothing_once_the_card_has_already_left_exile():
     remaining = remove_suspend_time_counter(scenario.game, living_end)
     assert remaining == 0
     assert living_end.zone is Zone.HAND
+
+
+def test_the_free_cast_window_does_not_outlive_the_upkeep_trigger():
+    """CR 702.62a's third ability prints no "until end of turn" - unlike
+    Ugin, Eye of the Storms' "−11" or Ragavan, Nimble Pilferer's trigger,
+    which both do. Its "you may play it... If you don't, it remains exiled"
+    is CR 117.2e's own shape instead: "Resolving spells and abilities may
+    instruct players to make choices or take actions... Even if a player is
+    doing so, no player has priority while a spell or ability is resolving."
+    The chance to cast exists only for as long as that instruction is being
+    carried out - once the game has moved on to another step in the very
+    same turn, the window CR 117.2e stood in for has already closed and CR
+    702.62a's own fallback ("it remains exiled") has already taken effect.
+
+    This is the point that tells the correct window apart from the wrong
+    one: `until_end_of_turn=True` (the `grant_play_permission` default) would
+    keep the permission alive for every step of alice's turn, including her
+    precombat main phase reached here - which is exactly the bug a sibling
+    repo's tests were built against. `PlayPermission.immediate` closes the
+    window the moment the game leaves the upkeep step the trigger fired in,
+    regardless of how much of the turn is still left.
+    """
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Living End"], battlefield=["Swamp", "Swamp", "Swamp", "Swamp"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    _suspend_living_end(scenario)
+    living_end = scenario.find("Living End", Zone.EXILE)
+
+    for _ in range(3):
+        _advance_to_owners_next_upkeep(scenario, "alice")
+        remove_suspend_time_counter(scenario.game, living_end)
+
+    assert scenario.step is Step.UPKEEP
+    permission = finish_suspend(scenario.game, living_end)
+    assert permission is not None
+    assert permission.immediate is True
+
+    # Still in the same upkeep step the trigger fired in: the window is open.
+    # `usable_play_permission` is what `Casting.use_permission` itself checks
+    # first - read directly rather than through a `Casting` object, so
+    # nothing here exercises `Casting.cancel`'s own CR 733.1 "goes back where
+    # it came from" `move_to`, which would mint this object a new CR 400.7
+    # zone-change stamp of its own and invalidate the permission for an
+    # unrelated reason.
+    assert usable_play_permission(scenario.game, living_end, "alice") is permission
+    assert permission.why_not(living_end, "alice", scenario.game) is None
+
+    # Walk forward to alice's own precombat main, still the very same turn
+    # (Step.DRAW is next, then PRECOMBAT_MAIN) - no cleanup step has run, so
+    # `until_end_of_turn`'s own turns-taken check would still call this "this
+    # turn" and let it through. CR 702.62a's own instruction already closed,
+    # though: nobody used it while the ability was actually resolving.
+    scenario.advance()
+    assert scenario.step is Step.DRAW
+    scenario.advance()
+    assert scenario.step is Step.PRECOMBAT_MAIN
+    assert scenario.turn.active_player == "alice"  # still alice's own turn
+
+    assert usable_play_permission(scenario.game, living_end, "alice") is None
+    refusal = permission.why_not(living_end, "alice", scenario.game)
+    assert refusal is not None
+    assert "resolution-instructed window" in refusal
+
+    later_casting = Casting(
+        spell=living_end, caster="alice", origin_zone=Zone.EXILE, game=scenario.game
+    )
+    with pytest.raises(ValueError, match="resolution-instructed window"):
+        later_casting.use_permission()
+
+    # CR 702.62a's own fallback: the card just sits there, still exiled.
+    assert living_end.zone is Zone.EXILE
 
 
 def test_greater_gargadon_a_second_real_suspend_card_proves_the_parse_is_general():

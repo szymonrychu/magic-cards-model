@@ -5318,6 +5318,7 @@ class Game(BaseModel):
         zone: Zone = Zone.EXILE,
         until_end_of_turn: bool = True,
         bottom_if_unused: bool = False,
+        immediate: bool = False,
     ) -> PlayPermission:
         """CR 601.3: let `player` play this one card out of `zone`, for a turn.
 
@@ -5326,6 +5327,12 @@ class Game(BaseModel):
         Ragavan, Nimble Pilferer's "... Until end of turn, you may cast that
         card." Both are the same shape: a resolving ability names cards it has
         just exiled and says who may play them and for how long.
+
+        `immediate=True` is the other shape - CR 117.2e's own "resolving...
+        abilities may instruct players to take actions" grant, with no printed
+        "until end of turn" - Suspend's third ability (CR 702.62a) is the one
+        that uses it. See `PlayPermission.immediate`'s own docstring for why
+        that needs `granted_step` rather than `until_end_of_turn`.
 
         The permission is stamped with the object's `zone_change_stamp`
         (CR 400.7), so it dies the moment the card moves - it cannot be
@@ -5356,6 +5363,8 @@ class Game(BaseModel):
             until_end_of_turn=until_end_of_turn,
             granted_turns_taken=None if turn is None else int(turn.turns_taken),
             bottom_if_unused=bottom_if_unused,
+            immediate=immediate,
+            granted_step=None if turn is None else turn.step,
         )
         self.play_permissions.append(permission)
         return permission
