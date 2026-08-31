@@ -1,0 +1,140 @@
+{
+  "object": "card",
+  "id": "ee6d08be-a6fc-44a5-932d-b6a8705534c0",
+  "oracle_id": "c995bc01-f278-4088-9ae2-1b50f87b2a61",
+  "multiverse_ids": [
+    522213
+  ],
+  "mtgo_id": 90651,
+  "tcgplayer_id": 239804,
+  "cardmarket_id": 566368,
+  "name": "Obsidian Charmaw",
+  "lang": "en",
+  "released_at": "2021-06-18",
+  "uri": "https://api.scryfall.com/cards/ee6d08be-a6fc-44a5-932d-b6a8705534c0",
+  "scryfall_uri": "https://scryfall.com/card/mh2/137/obsidian-charmaw?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:14:00Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/e/e/ee6d08be-a6fc-44a5-932d-b6a8705534c0.jpg?1783926840",
+    "normal": "https://cards.scryfall.io/normal/front/e/e/ee6d08be-a6fc-44a5-932d-b6a8705534c0.jpg?1783926840",
+    "large": "https://cards.scryfall.io/large/front/e/e/ee6d08be-a6fc-44a5-932d-b6a8705534c0.jpg?1783926840",
+    "png": "https://cards.scryfall.io/png/front/e/e/ee6d08be-a6fc-44a5-932d-b6a8705534c0.png?1783926840",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/e/e/ee6d08be-a6fc-44a5-932d-b6a8705534c0.jpg?1783926840",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/e/e/ee6d08be-a6fc-44a5-932d-b6a8705534c0.jpg?1783926840",
+    "thumb": "https://cards.scryfall.io/thumb/front/e/e/ee6d08be-a6fc-44a5-932d-b6a8705534c0.webp?1783926840",
+    "grid": "https://cards.scryfall.io/grid/front/e/e/ee6d08be-a6fc-44a5-932d-b6a8705534c0.webp?1783926840",
+    "display": "https://cards.scryfall.io/display/front/e/e/ee6d08be-a6fc-44a5-932d-b6a8705534c0.webp?1783926840",
+    "art": "https://cards.scryfall.io/art/front/e/e/ee6d08be-a6fc-44a5-932d-b6a8705534c0.webp?1783926840",
+    "crop": "https://cards.scryfall.io/crop/front/e/e/ee6d08be-a6fc-44a5-932d-b6a8705534c0.webp?1783926840"
+  },
+  "mana_cost": "{3}{R}{R}",
+  "cmc": 5.0,
+  "type_line": "Creature \u2014 Dragon",
+  "oracle_text": "This spell costs {1} less to cast for each land your opponents control that could produce {C}.\nFlying\nWhen this creature enters, destroy target nonbasic land an opponent controls.",
+  "power": "4",
+  "toughness": "4",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Flying"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "c1c7eb8c-f205-40ab-a609-767cb296544e",
+  "set": "mh2",
+  "set_name": "Modern Horizons 2",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/c1c7eb8c-f205-40ab-a609-767cb296544e",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amh2&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mh2?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/ee6d08be-a6fc-44a5-932d-b6a8705534c0/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ac995bc01-f278-4088-9ae2-1b50f87b2a61&unique=prints",
+  "collector_number": "137",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Lucas Graciano",
+  "artist_ids": [
+    "ce98f39c-7cdd-47e6-a520-6c50443bb4c2"
+  ],
+  "illustration_id": "deca6a70-4c1d-4d04-9e0d-c211c6ccb79c",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 10853,
+  "penny_rank": 3998,
+  "preview": {
+    "source": "Kotaku",
+    "source_uri": "https://www.kotaku.com.au/2021/05/heres-2-new-dragons-from-magics-upcoming-set-modern-horizons-2/",
+    "previewed_at": "2021-05-27"
+  },
+  "prices": {
+    "usd": "1.19",
+    "usd_foil": "4.28",
+    "usd_etched": null,
+    "eur": "1.18",
+    "eur_foil": "6.71",
+    "tix": "1.62"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=522213&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DObsidian%2BCharmaw",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DObsidian%2BCharmaw",
+    "edhrec": "https://edhrec.com/route/?cc=Obsidian+Charmaw"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F239804%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=566368&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/90651?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
