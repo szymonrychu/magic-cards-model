@@ -76,9 +76,12 @@ Rules cited:
   graveyard (the Devoted Druid loop's own termination).
 """
 
+from uuid import uuid4
+
 import pytest
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.decisions import DecisionKind, ScriptedAnswer
 from magic_cards_model.machines.triggers import AbilityOnStack
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card_state import Counter
@@ -549,6 +552,59 @@ def test_tyvars_minus_two_may_return_a_creature_already_in_the_graveyard():
     scenario.pass_until_resolved()
 
     assert any(state.name == "Grizzly Bears" for state in scenario.game.battlefield)
+
+
+def test_an_illegal_choose_answer_still_leaves_the_mill_and_completes_resolution():
+    """CR 608.2c's printed order mills first, then offers the "you may return
+    a creature" question, then (once accepted) a `CHOOSE_CARDS` question
+    naming which one - three actions inside one ability, one paragraph (CR
+    113.3). If the last question can't be legally answered - `Game.ask`'s own
+    `CHOOSE_CARDS` branch refusing a card id that was never offered, the same
+    shape `test_an_illegal_discard_answer_is_refused_without_corrupting_the_
+    hand` already covers - CR 733.1 has nothing to reverse for the mill: it
+    already happened, in full, unconditionally, before either question was
+    ever asked.
+
+    What has to hold regardless is CR 608.2n: the ability comes off the stack
+    and CR 704.3's state-based actions run before anything else. Before
+    `Game._resolve_ability` grew its own try/except mirroring `Game.
+    resolve_top`'s, an exception here unwound past both of those unchecked.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=[TYVAR], library=["Grizzly Bears", "Mountain", "Mountain"])
+        .player("bob", library=["Island"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    tyvar = scenario.find(TYVAR, Zone.BATTLEFIELD, "alice")
+    alice = scenario.player("alice")
+
+    scenario.will_take_the_may(True, source=TYVAR)
+    scenario.game.decisions.add(
+        ScriptedAnswer(
+            kind=DecisionKind.CHOOSE_CARDS,
+            value=(uuid4(),),  # never among the offered candidates
+            player="alice",
+            source=TYVAR,
+        )
+    )
+
+    with pytest.raises(ValueError, match="cannot choose a card that was not offered"):
+        scenario.activate(tyvar, index=1)
+        scenario.pass_until_resolved()
+
+    # The mill already happened - CR 608.2c's first clause, unconditional:
+    # all three cards, Grizzly Bears included, since the return that would
+    # have taken it back out never got a legal answer.
+    assert len(alice.cards_in(Zone.GRAVEYARD)) == 3
+    assert any(state.name == "Grizzly Bears" for state in alice.cards_in(Zone.GRAVEYARD))
+    # The return never got a legal answer, so it never happened.
+    assert not any(state.name == "Grizzly Bears" for state in scenario.game.battlefield)
+    # CR 608.2n: the ability is off the stack either way.
+    assert scenario.game.stack == []
+    assert tyvar.loyalty == 1, "CR 606.4: the -2 cost was already paid to activate"
+    scenario.assert_in_exactly_one_zone(*scenario.all_card_states())
 
 
 # --------------------------------------------------------------------------
