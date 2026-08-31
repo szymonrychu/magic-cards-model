@@ -122,16 +122,6 @@ def test_the_reversal_puts_everything_back_including_the_mana_sources():
     assert scenario.priority_holder == "alice"
 
 
-@pytest.mark.xfail(
-    reason=(
-        "CR 601.2a puts the card on the stack as the *first* step of proposing "
-        "a cast, before costs are determined or paid. `Casting.cast` leaves it "
-        "in its origin zone until `put_on_stack`, so announcing a cast never "
-        "empties the zone the card came from - which is the whole mechanism "
-        "DDR#968's win rides on."
-    ),
-    strict=True,
-)
 def test_announcing_a_cast_moves_the_card_to_the_stack_immediately():
     """CR 601.2a, and CR 405.1: "When a spell is cast, the physical card is put
     on the stack".

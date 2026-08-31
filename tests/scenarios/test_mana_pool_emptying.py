@@ -56,6 +56,7 @@ def test_upkeep_mana_is_gone_by_the_precombat_main():
     payment = casting.begin_paying()
     with pytest.raises(ValueError, match="cannot pay"):
         payment.pay()
+    casting.cancel()  # CR 601.6 rewinds the proposal CR 601.2a had begun
     assert scenario.find("Grizzly Bears", Zone.HAND, "alice"), "the cast never happened"
 
 

@@ -120,6 +120,9 @@ def test_shang_chis_mana_cannot_pay_for_a_creature_spell():
 
     # CR 733.1: nothing was spent, so the mana is still there, still restricted.
     assert scenario.player().mana_pool.floating == {Color.GREEN: 2}
+    # CR 601.2a moved the Elves to the stack as the cast was proposed; CR 601.6
+    # is what puts it back once the cast turns out to be illegal.
+    casting.cancel()
     assert scenario.find("Llanowar Elves", Zone.HAND).zone is Zone.HAND
 
 
@@ -388,9 +391,11 @@ def test_cavern_of_souls_refuses_a_creature_of_a_different_type():
     cavern = scenario.play_land("Cavern of Souls")
     scenario.game.activate_ability(cavern, 1, "alice", color=Color.GREEN)
 
+    casting = scenario.cast("Llanowar Elves", "alice")
     with pytest.raises(ValueError, match="Spend this mana only to cast a creature spell"):
-        scenario.cast("Llanowar Elves", "alice").begin_paying().pay()
+        casting.begin_paying().pay()
 
+    casting.cancel()  # CR 601.6, undoing CR 601.2a's move
     assert scenario.find("Llanowar Elves", Zone.HAND).zone is Zone.HAND
 
 

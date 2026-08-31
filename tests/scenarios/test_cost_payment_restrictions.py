@@ -44,9 +44,14 @@ from tests.scenarios.harness import Scenario
 
 
 def _bolt_payment(scenario):
-    """Announce Lightning Bolt at bob and open its payment (CR 601.2f)."""
+    """Announce Lightning Bolt at bob and open its payment (CR 601.2f).
+
+    The casting is handed back alongside the payment because CR 601.2a has
+    already moved the Bolt to the stack by now - a refused payment is undone
+    by rewinding the whole proposal (CR 601.6), which is `Casting.cancel`.
+    """
     casting = scenario.cast("Lightning Bolt", targets=["bob"])
-    return casting.begin_paying()
+    return casting, casting.begin_paying()
 
 
 def test_auto_tap_refuses_mox_opal_without_metalcraft():
@@ -68,11 +73,12 @@ def test_auto_tap_refuses_mox_opal_without_metalcraft():
 
     assert scenario.why_cannot_activate(opal) is not None
 
-    payment = _bolt_payment(scenario)
+    casting, payment = _bolt_payment(scenario)
     with pytest.raises(ValueError):
         scenario.auto_pay(payment, "alice")
 
     assert not opal.tapped
+    casting.cancel()  # CR 601.6: the proposal is rewound, so the Bolt goes back
     assert scenario.find("Lightning Bolt", Zone.HAND) is not None
 
 
@@ -94,7 +100,7 @@ def test_auto_tap_taps_mox_opal_once_metalcraft_is_on():
 
     assert scenario.why_cannot_activate(opal) is None
 
-    payment = _bolt_payment(scenario)
+    _, payment = _bolt_payment(scenario)
     scenario.auto_pay(payment, "alice")
 
     assert opal.tapped
@@ -113,7 +119,7 @@ def test_hand_picked_tap_refuses_mox_opal_without_metalcraft():
     scenario.start_at(Step.PRECOMBAT_MAIN)
     opal = scenario.find("Mox Opal", Zone.BATTLEFIELD)
 
-    payment = _bolt_payment(scenario)
+    _, payment = _bolt_payment(scenario)
     with pytest.raises(ValueError):
         payment.tap_for_mana(opal, [Color.RED])
 
@@ -139,7 +145,7 @@ def test_mox_amber_produces_no_mana_without_a_legendary_creature():
     scenario.start_at(Step.PRECOMBAT_MAIN)
     amber = scenario.find("Mox Amber", Zone.BATTLEFIELD)
 
-    payment = _bolt_payment(scenario)
+    _, payment = _bolt_payment(scenario)
     with pytest.raises(ValueError):
         scenario.auto_pay(payment, "alice")
 
@@ -162,7 +168,7 @@ def test_mox_amber_makes_the_colour_of_the_legend_you_control():
     scenario.start_at(Step.PRECOMBAT_MAIN)
     amber = scenario.find("Mox Amber", Zone.BATTLEFIELD)
 
-    payment = _bolt_payment(scenario)
+    _, payment = _bolt_payment(scenario)
     scenario.auto_pay(payment, "alice")
 
     assert amber.tapped
@@ -184,7 +190,7 @@ def test_mox_amber_makes_only_the_colours_among_your_legends():
     scenario.start_at(Step.PRECOMBAT_MAIN)
     amber = scenario.find("Mox Amber", Zone.BATTLEFIELD)
 
-    payment = _bolt_payment(scenario)
+    _, payment = _bolt_payment(scenario)
     with pytest.raises(ValueError):
         scenario.auto_pay(payment, "alice")
 
@@ -207,7 +213,7 @@ def test_hand_picked_tap_refuses_a_colour_no_legend_defines():
     scenario.start_at(Step.PRECOMBAT_MAIN)
     amber = scenario.find("Mox Amber", Zone.BATTLEFIELD)
 
-    payment = _bolt_payment(scenario)
+    _, payment = _bolt_payment(scenario)
     with pytest.raises(ValueError):
         payment.tap_for_mana(amber, [Color.RED])
     payment.tap_for_mana(amber, [Color.WHITE])

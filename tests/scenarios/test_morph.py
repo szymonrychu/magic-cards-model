@@ -81,7 +81,9 @@ def test_the_printed_morph_cost_is_not_what_casting_it_face_down_costs():
 
     assert str(casting.total_cost.mana) == "{3}"
     # And the printed {5}{U}{U} is what CR 702.37e would charge instead.
-    cost = turn_face_up_cost(scenario.find("Brine Elemental", Zone.HAND, "alice"), "alice")
+    # The card itself is on the stack now (CR 601.2a), which is where the
+    # spell being cast face down lives - `casting.spell` is that same object.
+    cost = turn_face_up_cost(casting.spell, "alice")
     assert cost is not None
     assert str(cost.mana) == "{5}{U}{U}"
 

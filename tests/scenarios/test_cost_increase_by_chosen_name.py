@@ -197,6 +197,10 @@ def test_a_player_tapped_out_for_the_agent_cannot_pay_the_three():
         payment.pay()
 
     assert "{3}" in str(raised.value)
+    # CR 601.2a moved the card to the stack as the cast was proposed, so the
+    # rewind that puts it back in exile is CR 601.6's, asked for by hand.
+    assert hit.zone is Zone.STACK
+    casting.cancel()
     assert hit.zone is Zone.EXILE
     assert scenario.game.stack == []
 

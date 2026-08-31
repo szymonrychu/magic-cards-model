@@ -149,31 +149,45 @@ def test_the_printed_mana_value_is_four_however_it_was_paid_for():
     assert trap.card.mana_cost == "{2}{U}{U}"
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="CR 118.9's alternative cost is only read off a *keyword* "
-    "(`Casting.use_keyword`, scenarios/test_evoke.py). Mindbreak Trap prints its "
-    "alternative cost as a plain sentence - 'you may pay {0} rather than pay this "
-    "spell's mana cost' - which nothing parses, so `begin_paying` still asks for "
-    "the printed {2}{U}{U}.",
-)
 def test_the_trap_can_be_cast_for_zero_after_three_opposing_spells():
     """CR 118.9: an alternative cost is "a cost ... that its controller may pay
     rather than paying the spell's mana cost", and CR 601.2f applies it when the
     total cost is determined.
 
-    The condition the episode dwells on - one opponent, three spells - is not
-    reached here: the engine never offers the alternative cost at all.
+    The condition the episode dwells on is reached here: one opponent, three
+    spells this turn, the third still on the stack for the Trap to answer.
+    `Casting.alternative_costs` reads the offer straight off the printed
+    sentence now - no keyword names it - and `_condition_refusal` counts the
+    spells off `Game.spells_cast_this_turn`.
     """
-    scenario = _board().build()
+    scenario = (
+        Scenario()
+        .player(
+            "bob",
+            hand=["Lightning Bolt", "Lava Spike", "Grizzly Bears"],
+            battlefield=["Mountain", "Mountain", "Forest", "Forest"],
+        )
+        .player(
+            "alice",
+            hand=["Mindbreak Trap"],
+            battlefield=["Island", "Island", "Island", "Island"],
+        )
+        .build()
+    )
     scenario.start_at(Step.PRECOMBAT_MAIN)
+    for name, land in (("Lightning Bolt", "Mountain"), ("Lava Spike", "Mountain")):
+        (source,) = scenario.untapped_sources(land, username="bob")
+        scenario.cast_and_resolve(name, source, username="bob", targets=["alice"])
     bears = _bears_on_the_stack(scenario)
 
-    casting = scenario.cast("Mindbreak Trap", username="alice", targets=[bears])
+    casting = scenario.cast("Mindbreak Trap", username="alice")
+    casting.use_pitch_cost()  # CR 601.2b, ahead of CR 601.2c's targets
+    casting.choose_targets([bears])
     payment = casting.begin_paying()
     payment.pay()
     scenario.put_on_stack(casting)
 
+    assert str(payment.cost) == "{0}"
     assert scenario.stack_names() == ["Grizzly Bears", "Mindbreak Trap"]
 
 

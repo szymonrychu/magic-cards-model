@@ -948,9 +948,13 @@ def test_a_qualified_increase_only_taxes_the_right_spell_types():
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
     bolt = announce(scenario, "Lightning Bolt")
-    bears = announce(scenario, "Grizzly Bears")
-
     assert bolt.total_cost.mana == ManaCost.parse("{1}{R}")
+    # CR 601.2a put the Bolt on the stack, and CR 117.1a will not let a
+    # creature spell be announced over it, so the first proposal is rewound
+    # (CR 601.6) before the second is made.
+    bolt.cancel()
+
+    bears = announce(scenario, "Grizzly Bears")
     assert bears.total_cost.mana == ManaCost.parse("{1}{G}"), "a creature spell, untaxed"
 
 
@@ -974,6 +978,7 @@ def test_damping_sphere_taxes_the_second_spell_a_player_casts_this_turn():
 
     first_cast = announce(scenario, "Lightning Bolt")
     assert first_cast.total_cost.mana == ManaCost.parse("{R}"), "no prior spell this turn yet"
+    first_cast.cancel()  # CR 601.6, so the card is back in hand to be cast for real
     mountains = scenario.untapped_sources("Mountain", username="alice")
     scenario.cast_and_resolve(
         "Lightning Bolt", mountains[0], username="alice", targets=[first_bear]
@@ -983,6 +988,7 @@ def test_damping_sphere_taxes_the_second_spell_a_player_casts_this_turn():
     assert second_cast.total_cost.mana == ManaCost.parse("{1}{R}"), (
         "one Lightning Bolt already cast this turn"
     )
+    second_cast.cancel()
     mountains = scenario.untapped_sources("Mountain", "Mountain", username="alice")
     scenario.cast_and_resolve("Lightning Bolt", *mountains, username="alice", targets=[second_bear])
 

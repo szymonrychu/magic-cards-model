@@ -301,16 +301,6 @@ def _iroh_and_gran_gran(lessons: int) -> "Scenario":
     )
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Iroh's 'During your turn, each Lesson card in your graveyard has "
-    "flashback {1}' is a static ability granting a castability ability "
-    "(CR 400.7g), and nothing in the engine reads it: `effect_for('Iroh, Grand "
-    "Lotus', ...)` is None, 'Iroh, Grand Lotus' has no row in "
-    "`machines/layers.LAYER_EFFECTS`, and `Casting` does not gate casting from "
-    "the graveyard at all - so the card is castable for entirely the wrong "
-    "reason, and for its printed {1}{R} rather than the granted flashback {1}.",
-)
 def test_iroh_grants_a_lesson_in_the_graveyard_flashback_one():
     """DDR#996's setup: the flashback cost replaces the mana cost.
 
@@ -323,33 +313,24 @@ def test_iroh_grants_a_lesson_in_the_graveyard_flashback_one():
     spends its middle section on.
 
     So the total cost determined at CR 601.2f starts from {1}, not from
-    Combustion Technique's printed {1}{R}.
+    Combustion Technique's printed {1}{R} - and Gran-Gran, on the same
+    battlefield with four Lessons in the graveyard, then takes that {1} away
+    entirely (her own discount, the next test's subject).
     """
     scenario = _iroh_and_gran_gran(lessons=4).build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     bears = scenario.creature("Grizzly Bears", "bob")
 
-    casting = scenario.cast(_LESSON, from_zone=Zone.GRAVEYARD, targets=[bears])
+    casting = scenario.cast(_LESSON, from_zone=Zone.GRAVEYARD)
+    # CR 601.2b: the alternative cost is announced before CR 601.2c's targets.
+    # `Casting.granted_cast_options` is what finds the granted flashback.
+    casting.use_keyword("flashback")
+    casting.choose_targets([bears])
 
-    assert str(casting.begin_paying().cost) == "{1}"
+    assert str(casting.alternative_cost.mana) == "{1}", "the granted flashback cost"
+    assert str(casting.begin_paying().cost) == "", "and Gran-Gran's {1} off it"
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Gran-Gran's discount now reaches the cost - `Game.static_cost_"
-    "modifiers_for` reads the conditional 'as long as there are three or more "
-    "Lesson cards in your graveyard' shape - but two things still make both "
-    "halves of this assertion wrong, measured today. (1) Iroh's CR 400.7g "
-    "flashback grant is still unread (the xfail above), so the base cost is "
-    "Combustion Technique's printed {1}{R} rather than the granted {1}, and "
-    "the four-Lesson case lands on {R} rather than {0}. (2) `machines/"
-    "casting.py` has not performed CR 601.2a's move to the stack by the time "
-    "the cost is determined - `casting.spell.zone` is still the graveyard - so "
-    "the three-Lesson case counts the spell itself and wrongly gets the "
-    "discount, landing on {R} rather than {1}{R}. That second half is the "
-    "episode's actual question, and it is now posable: the count is taken on "
-    "the wrong side of CR 601.2a.",
-)
 def test_gran_grans_discount_counts_the_graveyard_after_the_spell_left_it():
     """DDR#996: casting the Lesson itself takes it out of the count.
 
@@ -367,16 +348,18 @@ def test_gran_grans_discount_counts_the_graveyard_after_the_spell_left_it():
     with_four = _iroh_and_gran_gran(lessons=4).build()
     with_four.start_at(Step.PRECOMBAT_MAIN)
     four_target = with_four.creature("Grizzly Bears", "bob")
-    four_cost = with_four.cast(
-        _LESSON, from_zone=Zone.GRAVEYARD, targets=[four_target]
-    ).begin_paying()
+    four_casting = with_four.cast(_LESSON, from_zone=Zone.GRAVEYARD)
+    four_casting.use_keyword("flashback")
+    four_casting.choose_targets([four_target])
+    four_cost = four_casting.begin_paying()
 
     with_three = _iroh_and_gran_gran(lessons=3).build()
     with_three.start_at(Step.PRECOMBAT_MAIN)
     three_target = with_three.creature("Grizzly Bears", "bob")
-    three_cost = with_three.cast(
-        _LESSON, from_zone=Zone.GRAVEYARD, targets=[three_target]
-    ).begin_paying()
+    three_casting = with_three.cast(_LESSON, from_zone=Zone.GRAVEYARD)
+    three_casting.use_keyword("flashback")
+    three_casting.choose_targets([three_target])
+    three_cost = three_casting.begin_paying()
 
-    assert str(four_cost.cost) == "{0}"
-    assert str(three_cost.cost) == "{1}"
+    assert str(four_cost.cost) == "", "the granted {1}, discounted away entirely"
+    assert str(three_cost.cost) == "{1}", "no discount: only two Lessons are left to count"

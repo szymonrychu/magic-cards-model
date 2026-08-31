@@ -111,7 +111,9 @@ def test_the_printed_mana_cost_is_untouched_by_the_alternative_cost():
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
     casting = scenario.cast("Grief")
-    fodder = scenario.player("alice").hand[1]
+    # CR 601.2a already moved the Grief being cast to the stack, so the hand
+    # holds only the other copy - which is the one being exiled to evoke it.
+    fodder = scenario.player("alice").hand[0]
     casting.use_keyword("Evoke", choosing=[fodder])
 
     assert casting.base_cost == ManaCost.parse("{2}{B}{B}")
@@ -240,7 +242,7 @@ def test_only_one_alternative_cost_may_be_applied():
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
     casting = scenario.cast("Grief")
-    casting.use_keyword("Evoke", choosing=[scenario.player("alice").hand[1]])
+    casting.use_keyword("Evoke", choosing=[scenario.player("alice").hand[0]])
 
     with pytest.raises(ValueError, match="only one alternative cost"):
         casting.use_keyword("Evoke")
@@ -301,7 +303,7 @@ def test_the_sacrifice_is_a_trigger_on_the_stack_not_part_of_entering():
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
     casting = scenario.cast("Grief")
-    casting.use_keyword("Evoke", choosing=[scenario.player("alice").hand[1]])
+    casting.use_keyword("Evoke", choosing=[scenario.player("alice").hand[0]])
     casting.begin_paying().pay()
     scenario.put_on_stack(casting)
     grief = scenario.resolve_top()
@@ -366,7 +368,7 @@ def test_the_evoked_creature_dies_so_death_triggers_see_it():
     scenario.choose_trigger_targets("Grief", ["bob"])
 
     casting = scenario.cast("Grief")
-    casting.use_keyword("Evoke", choosing=[scenario.player("alice").hand[1]])
+    casting.use_keyword("Evoke", choosing=[scenario.player("alice").hand[0]])
     casting.begin_paying().pay()
     scenario.put_on_stack(casting)
     grief = scenario.resolve_top()
