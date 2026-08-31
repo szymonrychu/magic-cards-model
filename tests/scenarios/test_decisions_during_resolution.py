@@ -416,6 +416,72 @@ def test_no_permanent_among_the_four_asks_nothing():
     assert [q for q in scenario.questions_asked() if q.kind is DecisionKind.MAY] == []
 
 
+def test_an_empty_choose_cards_answer_is_refused_without_losing_the_spell():
+    """Regression: game 535264e8458e461d874d0d38f4b1866e, seq 115-122.
+
+    carol accepted Malevolent Rumble's "you may put a permanent card into your
+    hand" (CR 608.2d), then answered the follow-up "choose a permanent card"
+    with an empty `card_ids: []` - not a legal answer, since that question's
+    `Decision.amount` is 1 and `exact` defaults `True`
+    (`machines/effects.py::malevolent_rumble`). `Game.ask`'s own `CHOOSE_CARDS`
+    branch already refuses that exact shape (`needs 1 card(s) chosen, 0
+    given`), which is CR 608.2d's "the player can't choose an option that's
+    illegal or impossible" enforced.
+
+    The bug was not that refusal - it is that `Game.resolve_top` pops the
+    spell off the stack *before* calling its effect, so the raised `ValueError`
+    unwound out of `resolve_top` with Malevolent Rumble already off the stack
+    and nowhere else: not the graveyard, not exiled, not anywhere
+    `Scenario.zones_containing` can find it. The reported game's decklist came
+    up 59 of 60 cards for exactly this reason.
+
+    CR 400.1: "A zone is a place where objects can be during a game" - normally
+    one of seven, and every object not outside the game (CR 400.11) is in
+    exactly one. CR 307.2 / CR 608.2n: a sorcery is put into its owner's
+    graveyard as the final part of its own resolution, not some other point,
+    and never nowhere. The fix (`Game.resolve_top`) catches the exception
+    `effect(self, spell)` raises, sends the spell to its owner's graveyard the
+    same way CR 608.2n already requires, and re-raises - so the caller still
+    sees the refusal at the moment it was given (assertion (a) below), the same
+    way `test_an_illegal_discard_answer_is_refused_without_corrupting_the_hand`
+    already expects for a different `CHOOSE_CARDS` question, and the spell is
+    never left in limbo while that exception unwinds (assertion (b)).
+    """
+    scenario = _malevolent_rumble_board(
+        ["Grizzly Bears", "Wall of Omens", "Forest", "Counterspell"]
+    ).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Forest", "Forest", username="alice")
+    alice = scenario.player("alice")
+    revealed = list(alice.library[:4])
+    before = list(scenario.all_card_states())
+
+    scenario.cast_onto_stack("Malevolent Rumble", *sources, username="alice")
+    rumble = scenario.find("Malevolent Rumble", Zone.STACK)
+    scenario.will_take_the_may(True, source="Malevolent Rumble")
+    scenario.will_choose_cards(source="Malevolent Rumble", username="alice")
+
+    with pytest.raises(ValueError, match="needs 1 card"):
+        scenario.resolve_top()
+
+    # (a) refused at the point it was given: the `pytest.raises` above is the
+    # assertion - `Game.ask` raised synchronously from inside `malevolent_
+    # rumble`'s own `game.ask(decision)` call, not from some later, unrelated
+    # action the way the reported game's opponent's `pass_priority` was.
+
+    # (b) after the dust settles, every card involved is in exactly one zone,
+    # and Malevolent Rumble specifically made it to alice's graveyard (CR
+    # 307.2, CR 608.2n) rather than vanishing.
+    scenario.assert_in_exactly_one_zone(rumble, *revealed, *before)
+    assert rumble.zone is Zone.GRAVEYARD
+    assert rumble in alice.graveyard
+    # The effect never got past the refused question, so nothing it would
+    # have done afterwards happened either - the revealed cards are still
+    # sitting exactly where they were, untouched, not half-moved.
+    assert all(state in alice.library for state in revealed)
+    assert alice.hand == []
+
+
 # -- optional triggers, the "you may" default (CR 608.2d) --------------------
 #
 # `default_answer` takes the affirmative for `MAY` whenever it is legal - the
