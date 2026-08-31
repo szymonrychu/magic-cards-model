@@ -16,9 +16,10 @@ oracle text rather than a per-card registry row:
   Negation)
 - a rider computed from the countered spell itself (Access Denied's token
   count; Force of Negation's own exile-instead-of-graveyard redirect)
-- a compound target this engine cannot fully read (Consign to Memory's
-  "target triggered ability or colorless spell") and a redirect this engine
-  refuses outright rather than half-apply (Delay's suspend redirect)
+- a compound target across two different noun *kinds* (Consign to Memory's
+  "target triggered ability or colorless spell" - an ability or a
+  colour-restricted spell) and a redirect this engine refuses outright
+  rather than half-apply (Delay's suspend redirect)
 
 Every CR number here was looked up with `knowledge_search(type="rules")` in
 this session.
@@ -190,6 +191,28 @@ def test_mystical_dispute_reads_its_own_higher_amount():
     assert opt.zone is Zone.GRAVEYARD, "two mana can't pay a {3} unless"
     (decision,) = [q for q in scenario.game.decisions.asked if q.source == "Mystical Dispute"]
     assert decision.amount == 3
+
+
+def test_mystical_disputes_own_target_spell_restriction_is_enforced():
+    """`targeting_profile` used to come back `understood=False` for the whole
+    card: the leading cost-reduction sentence's verb "it targets" was fed to
+    the same `_TARGET_WORD` scan as a real "target ..." noun phrase and
+    failed to parse, which took the second sentence's genuine "target spell"
+    requirement down with it - so *any* target, including a permanent, would
+    have been silently accepted. `_SELF_COST_REDUCTION_LINE` strips the cost
+    sentence before the scan now, so a permanent (not a spell on the stack at
+    all, CR 109.2b) is refused as an illegal target."""
+    scenario = board(
+        [], bob_hand=["Mystical Dispute"], bob_battlefield=["Island", "Island", "Island"]
+    ).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    # Alice's own battlefield already carries a land (see `board`'s own
+    # setup) - a permanent, not a spell on the stack, is exactly the illegal
+    # target this fix now catches.
+    island = scenario.find("Island", Zone.BATTLEFIELD, "alice")
+
+    with pytest.raises(ValueError):
+        scenario.cast("Mystical Dispute", username="bob", targets=[island])
 
 
 def test_censor_unless_pay_target_already_gone_does_nothing():
@@ -408,18 +431,28 @@ def test_access_denied_creates_nothing_when_the_target_is_already_gone():
 
 
 # --------------------------------------------------------------------------
-# A compound target this engine cannot fully read: Consign to Memory
+# A compound target across two noun kinds: Consign to Memory
+#
+# "Counter target triggered ability or colorless spell." used to come back
+# `understood=False` for the whole compound - or worse, before that fix, a
+# bare prefix match on the ability phrase silently claimed the entire target
+# was "an ability" and dropped "or colorless spell" on the floor
+# (`docs/engine-coverage.md`'s "A compound target this engine cannot fully
+# read fails open rather than wrongly enforced" row). `_ABILITY_OR_COLOR_
+# COUNT_SPELL_RE` now reads the genuine disjunction: one `TargetRequirement`
+# with `allows_abilities=True` and `allows_cards=True`/`color_count=
+# "colorless"` together, since `rejects` already dispatches an ability
+# target to `_rejects_ability` and a card target to `_rejects_card` before
+# either field is consulted, so the two halves never interfere.
 # --------------------------------------------------------------------------
 
 
 def test_consign_to_memory_counters_a_colorless_spell():
-    """ "Counter target triggered ability or colorless spell." - the counter
-    verb itself does not care which half of the "or" was targeted (see
-    `counter_targets`'s own docstring), so a colorless spell is still
-    countered even though the "colorless"/"ability" restriction is not
-    enforced at announcement (CR 115's own legality check) - see
-    `docs/engine-coverage.md` for that gap.
-    """
+    """ "Counter target triggered ability or colorless spell." - Sol Ring has
+    no colored mana symbols at all (CR 202.2b), so it is CR 105.2c's
+    colorless and a legal target; the counter verb itself does not care
+    which half of the "or" was targeted (see `counter_targets`'s own
+    docstring)."""
     scenario = board(
         ["Sol Ring"], bob_hand=["Consign to Memory"], bob_battlefield=["Island"]
     ).build()
@@ -433,18 +466,51 @@ def test_consign_to_memory_counters_a_colorless_spell():
     assert sol_ring.zone is Zone.GRAVEYARD
 
 
-@pytest.mark.xfail(
-    reason=(
-        "Consign to Memory's own targeting restriction ('triggered ability or "
-        "colorless spell') is not enforced: machines/targeting.py reports "
-        "understood=False for the compound rather than a wrong one (see the "
-        "fix to _ABILITY_PHRASE's matching), so CR 115 legality is simply not "
-        "checked, and a spell-side announcement has no path to choose an "
-        "ability as a target at all yet (docs/engine-coverage.md)."
-    )
-)
+def test_consign_to_memory_cannot_target_a_colored_spell():
+    """The other direction: Lightning Bolt is red, not colorless (CR 105.2c
+    is "no color at all"), so it is not a legal target for the "colorless
+    spell" half - the whole announcement is refused (CR 601.2c)."""
+    scenario = board(
+        ["Lightning Bolt"], bob_hand=["Consign to Memory"], bob_battlefield=["Island"]
+    ).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bolt = scenario.cast_onto_stack("Lightning Bolt", username="alice", auto=True, targets=["bob"])
+    scenario.pass_priority("alice")
+
+    (island,) = scenario.untapped_sources("Island", username="bob")
+    with pytest.raises(ValueError):
+        scenario.cast_and_resolve("Consign to Memory", island, username="bob", targets=[bolt])
+
+
 def test_consign_to_memory_can_target_a_triggered_ability():
-    raise NotImplementedError
+    """The other noun kind in the compound: a triggered ability on the stack
+    (CR 113.1c) is a legal target for the "triggered ability" half, the same
+    way Repudiate's "activated or triggered ability" already reaches one
+    (`test_countering_an_ability.py`)."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            library=["Forest"],
+            hand=["Solemn Simulacrum"],
+            battlefield=["Forest"] * 4,
+        )
+        .player("bob", hand=["Consign to Memory"], battlefield=["Island"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources(*["Forest"] * 4)
+    scenario.cast_onto_stack("Solemn Simulacrum", *sources, username="alice")
+    scenario.pass_until_resolved()
+    assert scenario.stack_names() == ["Solemn Simulacrum's triggered ability"]
+    trigger = scenario.game.stack[-1]
+    scenario.pass_priority("alice")
+
+    (island,) = scenario.untapped_sources("Island", username="bob")
+    scenario.cast_and_resolve("Consign to Memory", island, username="bob", targets=[trigger])
+
+    assert scenario.stack_names() == [], "the trigger was countered rather than resolving"
 
 
 # --------------------------------------------------------------------------

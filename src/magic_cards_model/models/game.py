@@ -1,7 +1,7 @@
 """A single game: the players, the shared zones, and where the turn is."""
 
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from enum import StrEnum
 from random import Random
 from uuid import UUID
@@ -213,6 +213,23 @@ def _exiles_itself_by_name(text: str, permanent: "CardState") -> bool:
 #: back out and anything else is left alone rather than guessed at.
 _COSTS_LESS_PER_CARD_TYPE = re.compile(
     r"costs \{(\d+)\} less to cast for each card type among cards in your graveyard",
+    re.IGNORECASE,
+)
+
+#: CR 601.2f's *other* self-referential reduction shape: "This spell costs
+#: `<N>` less to cast if it targets a `<color>` spell." (Mystical Dispute).
+#: Unlike Emrakul's row above, the condition is not a fact about the board -
+#: it is about *this spell's own announced target* (CR 601.2c), which is
+#: chosen before the cost is determined (CR 601.2f is a later step), so this
+#: is read against `Casting.targets` rather than the battlefield. Narrow on
+#: purpose, the same way as the row above: the amount and the one condition
+#: shape actually printed are read back out and nothing else is guessed at -
+#: a hypothetical "... if it targets a creature you control" is a different
+#: shape this regex does not match, and would leave the reduction at {0}
+#: rather than a wrong guess.
+_COSTS_LESS_IF_TARGETS_COLOR_SPELL_RE = re.compile(
+    r"costs \{(\d+)\} less to cast if it targets a "
+    r"(?P<color>white|blue|black|red|green) spell",
     re.IGNORECASE,
 )
 
@@ -5255,7 +5272,12 @@ class Game(BaseModel):
 
     # -- determining a spell's total cost (CR 601.2f) ----------------------
 
-    def cost_reduction_for(self, spell: CardState, caster: str | None = None) -> ManaCost:
+    def cost_reduction_for(
+        self,
+        spell: CardState,
+        caster: str | None = None,
+        targets: Sequence[TargetRef] | None = None,
+    ) -> ManaCost:
         """What this spell's own text takes off its cost right now (CR 601.2f).
 
         The reduction is *computed*, never stored: CR 601.2f is a step of casting
@@ -5271,6 +5293,16 @@ class Game(BaseModel):
         applies to any of their card types" - so one artifact creature in the
         graveyard is two card types, not one.
 
+        Mystical Dispute's own shape reads a different kind of "right now":
+        "This spell costs {2} less to cast if it targets a blue spell." is not
+        a fact about the board at all, it is about *this spell's own
+        announced target* (CR 601.2c), which is chosen before CR 601.2f
+        determines the cost - `targets` is `Casting.targets` at that moment,
+        the same `list[TargetRef]` `choose_targets` already populated.
+        Without `targets` (a caller that never passed any) this half simply
+        finds nothing to check, the same as any other condition this reads
+        finding no match.
+
         A card whose reduction sentence this does not recognise reduces nothing.
         """
         # Same DFC-family fix as `effect_for` above: a modal-DFC/transform
@@ -5279,13 +5311,30 @@ class Game(BaseModel):
         # (which already falls back to the up face) rather than `card.oracle_text`.
         text = spell.oracle_text or ""
         match = _COSTS_LESS_PER_CARD_TYPE.search(text)
-        if match is None:
+        if match is not None:
+            owner = caster or spell.controller or self.active_player.username
+            types = {card_type for card in self.player(owner).graveyard for card_type in card.types}
+            amount = int(match.group(1)) * len(types)
+            return ManaCost.parse(f"{{{amount}}}") if amount else ManaCost()
+
+        target_match = _COSTS_LESS_IF_TARGETS_COLOR_SPELL_RE.search(text)
+        if target_match is not None and targets:
+            color = _COLOR_WORDS[target_match.group("color").lower()]
+            for ref in targets:
+                if ref.is_player:
+                    continue
+                target = self.find_by_id(ref.card_id)
+                # CR 109.2b: "spell" means an object on the stack - a target
+                # that has already left the stack (countered, or already
+                # resolved by the time this is asked) is not a spell any
+                # more and cannot satisfy "if it targets a ... spell".
+                if target is None or target.zone is not Zone.STACK:
+                    continue
+                if color in target.colors:
+                    return ManaCost.parse(f"{{{int(target_match.group(1))}}}")
             return ManaCost()
 
-        owner = caster or spell.controller or self.active_player.username
-        types = {card_type for card in self.player(owner).graveyard for card_type in card.types}
-        amount = int(match.group(1)) * len(types)
-        return ManaCost.parse(f"{{{amount}}}") if amount else ManaCost()
+        return ManaCost()
 
     def static_cost_modifiers_for(
         self, spell: CardState, caster: str | None = None
@@ -5367,11 +5416,18 @@ class Game(BaseModel):
         does not.
 
         `Casting.determine_cost` does not consult the game for a self-reduction
-        on its own, so a scenario that wants Emrakul's discount calls this
-        instead of `casting.determine_cost()`. Routing it into
-        `machines/casting.py` is the tidier home - see `docs/engine-coverage.md`.
+        on its own, so a scenario that wants Emrakul's discount - or Mystical
+        Dispute's own "if it targets a blue spell" - calls this instead of
+        `casting.determine_cost()`. Routing it into `machines/casting.py` is
+        the tidier home - see `docs/engine-coverage.md`. `casting.targets`
+        (CR 601.2c's announcement, already made by the time CR 601.2f runs)
+        is what Mystical Dispute's own condition reads.
         """
-        reduction = self.cost_reduction_for(casting.spell, casting.caster)  # type: ignore[attr-defined]
+        reduction = self.cost_reduction_for(
+            casting.spell,  # type: ignore[attr-defined]
+            casting.caster,  # type: ignore[attr-defined]
+            targets=casting.targets,  # type: ignore[attr-defined]
+        )
         if reduction.symbols:
             # Appended straight onto the casting's reductions rather than through
             # `reduce_cost`, which belongs to CR 601.2b and refuses to run once

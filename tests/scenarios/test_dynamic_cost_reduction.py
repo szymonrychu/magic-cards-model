@@ -232,3 +232,53 @@ def test_a_spell_with_no_reduction_sentence_is_left_alone():
 
     bears = scenario.find("Grizzly Bears", Zone.HAND)
     assert str(scenario.game.cost_reduction_for(bears, "alice")) == ""
+
+
+# --------------------------------------------------------------------------
+# Mystical Dispute: "This spell costs {2} less to cast if it targets a blue
+# spell." A different flavour of self-reduction from Emrakul's own row above -
+# the condition is not a fact about the board, it is about *this spell's own
+# announced target* (CR 601.2c), chosen before CR 601.2f determines the cost.
+# `Game.cost_reduction_for` now reads `Casting.targets` for exactly this shape
+# via `_COSTS_LESS_IF_TARGETS_COLOR_SPELL_RE`, opted into the same way
+# Emrakul's discount is - `Game.determine_total_cost(casting)` instead of
+# `casting.determine_cost()`.
+# --------------------------------------------------------------------------
+
+
+def _board_with_mystical_dispute() -> Scenario:
+    return (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Opt", "Lightning Bolt"], battlefield=["Mountain", "Island"])
+        .player("bob", hand=["Mystical Dispute"], battlefield=["Island", "Island", "Island"])
+    )
+
+
+def test_targeting_a_blue_spell_reduces_the_cost_by_two():
+    """Opt is blue (CR 202.2, its own {U} mana cost) - the printed {2}{U}
+    becomes {U}."""
+    scenario = _board_with_mystical_dispute().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    opt = scenario.cast_onto_stack("Opt", username="alice", auto=True)
+    scenario.pass_priority("alice")
+
+    casting = scenario.cast("Mystical Dispute", username="bob", targets=[opt])
+    payment = scenario.game.determine_total_cost(casting)
+
+    assert str(payment.cost) == "{U}"
+
+
+def test_targeting_a_non_blue_spell_does_not_reduce_the_cost():
+    """The other direction: Lightning Bolt is red, not blue, so Mystical
+    Dispute's own condition is false and the printed {2}{U} stands."""
+    scenario = _board_with_mystical_dispute().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (mountain,) = scenario.untapped_sources("Mountain", username="alice")
+    bolt = scenario.cast_onto_stack("Lightning Bolt", mountain, username="alice", targets=["bob"])
+    scenario.pass_priority("alice")
+
+    casting = scenario.cast("Mystical Dispute", username="bob", targets=[bolt])
+    payment = scenario.game.determine_total_cost(casting)
+
+    assert str(payment.cost) == "{2}{U}"
