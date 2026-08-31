@@ -5247,6 +5247,106 @@ def _parse_look_top_n_may_battlefield_creature_bonus_clause(text: str) -> Effect
     return effect
 
 
+#: Atraxa, Grand Unifier's enters trigger: "reveal the top ten cards of your
+#: library. For each card type, you may put a card of that type from among the
+#: revealed cards into your hand. Put the rest on the bottom of your library
+#: in a random order."
+#:
+#: One CR 608.2c instruction in three sentences, and the middle one is the
+#: whole card: a *loop over card types* (CR 205.2a / CR 300.1), not a fixed
+#: number of picks. Nothing else in the pool prints that shape, which is why
+#: it needs its own reader rather than a wider quantity on an existing one.
+_REVEAL_TOP_N_ONE_PER_CARD_TYPE_RE = re.compile(
+    r"^reveal the top (?P<n>[\w-]+) cards? of your library\. "
+    r"for each card type, you may put a card of that type from among the "
+    r"revealed cards into your hand\. "
+    r"put the rest on the bottom of your library in a random order\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_reveal_top_n_one_per_card_type_clause(text: str) -> AbilityEffect | None:
+    """`_REVEAL_TOP_N_ONE_PER_CARD_TYPE_RE`'s shape - see above.
+
+    CR 701.20a's reveal changes no state this model tracks; what matters is
+    which of the revealed cards end up in hand and which go to the bottom.
+
+    **The loop is over the card types actually present among the revealed
+    cards**, not over CR 300.1's full list. That is the same set of
+    opportunities - a type nobody revealed offers no card to choose - and it
+    avoids hard-coding a list of types the rules keep adding to. A card with
+    two types (an artifact creature) is a candidate for either, and is taken
+    off the table for the rest of the loop once it has been chosen: it is no
+    longer "from among the revealed cards", so the artifact pick and the
+    creature pick cannot both be the same card.
+
+    Each pick is CR 608.2d's own "you may", asked once per type and only when
+    that type still has a candidate left, so a player is never asked a
+    question with no legal affirmative answer.
+
+    The leftovers go to the bottom "in a random order", which is deliberately
+    *not* CR 701.24a's shuffle - that verb is never printed here - so no
+    shuffle happens and nothing watching for one fires. The randomisation
+    reuses `Game.shuffle_library`'s reproducible seed, the same convention
+    `puts_graveyard_on_bottom_of_library` already keeps.
+    """
+    match = _REVEAL_TOP_N_ONE_PER_CARD_TYPE_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    n = _count(match.group("n"))
+    if n is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.player(ability.controller)
+        revealed = list(controller.library[:n])
+        if not revealed:
+            return
+        remaining = list(revealed)
+        kept: list[CardState] = []
+        # A stable order over the types present, so the questions are asked
+        # the same way twice. CR 205.2a's own printed order is what `Type`
+        # already enumerates.
+        present = [
+            card_type for card_type in Type if any(card_type in state.types for state in revealed)
+        ]
+        for card_type in present:
+            candidates = [state for state in remaining if card_type in state.types]
+            if not candidates:
+                continue
+            if not game.may(
+                controller.username,
+                f"put a {card_type.value} card from among the revealed cards into your hand",
+                source=ability.source_name,
+            ):
+                continue
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=controller.username,
+                    prompt=f"choose a {card_type.value} card to put into your hand",
+                    source=ability.source_name,
+                    amount=1,
+                    cards=tuple(state.id for state in candidates),
+                )
+            )
+            by_id = {state.id: state for state in candidates}
+            chosen = by_id[chosen_ids[0]]
+            remaining.remove(chosen)
+            kept.append(chosen)
+
+        for state in kept:
+            controller.move(state, Zone.HAND)
+        if remaining:
+            rng = Random(f"{game.shuffle_seed}:{game.shuffles_performed}:reveal-{n}-bottom")  # noqa: S311
+            rng.shuffle(remaining)
+            for state in remaining:
+                controller.move(state, Zone.LIBRARY)
+            game.shuffles_performed += 1
+
+    return effect
+
+
 #: "<Source> deals N damage to each opponent." (Guttersnipe) - CR 119.3, with
 #: no target at all: "each opponent" is CR 102.2's "the other player" (in a
 #: two-player game), not something chosen.
@@ -7572,6 +7672,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     draw_then_put_land_cave = _parse_draw_then_put_land_cave_bonus_clause(effect_text)
     if draw_then_put_land_cave is not None:
         return draw_then_put_land_cave
+    reveal_one_per_type = _parse_reveal_top_n_one_per_card_type_clause(effect_text)
+    if reveal_one_per_type is not None:
+        return reveal_one_per_type
     outside_the_game = _parse_outside_the_game_fetch(effect_text)
     if outside_the_game is not None:
         return outside_the_game
