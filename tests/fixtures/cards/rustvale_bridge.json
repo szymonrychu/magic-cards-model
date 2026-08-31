@@ -1,0 +1,138 @@
+{
+  "object": "card",
+  "id": "da54e458-1d4f-45f0-a225-99eb9c4049fb",
+  "oracle_id": "a3faf70d-c034-4692-9e92-1922029e3852",
+  "multiverse_ids": [],
+  "resource_id": "E9A4D96E1D727B87C58D8261200E16D1C5B056E4A0B49AF131C5754AF72B68E8",
+  "mtgo_id": 142487,
+  "tcgplayer_id": 642861,
+  "cardmarket_id": 834310,
+  "name": "Rustvale Bridge",
+  "lang": "en",
+  "released_at": "2025-08-01",
+  "uri": "https://api.scryfall.com/cards/da54e458-1d4f-45f0-a225-99eb9c4049fb",
+  "scryfall_uri": "https://scryfall.com/card/eoc/175/rustvale-bridge?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T01:26:47Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/d/a/da54e458-1d4f-45f0-a225-99eb9c4049fb.jpg?1783906007",
+    "normal": "https://cards.scryfall.io/normal/front/d/a/da54e458-1d4f-45f0-a225-99eb9c4049fb.jpg?1783906007",
+    "large": "https://cards.scryfall.io/large/front/d/a/da54e458-1d4f-45f0-a225-99eb9c4049fb.jpg?1783906007",
+    "png": "https://cards.scryfall.io/png/front/d/a/da54e458-1d4f-45f0-a225-99eb9c4049fb.png?1783906007",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/d/a/da54e458-1d4f-45f0-a225-99eb9c4049fb.jpg?1783906007",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/d/a/da54e458-1d4f-45f0-a225-99eb9c4049fb.jpg?1783906007",
+    "thumb": "https://cards.scryfall.io/thumb/front/d/a/da54e458-1d4f-45f0-a225-99eb9c4049fb.webp?1783906007",
+    "grid": "https://cards.scryfall.io/grid/front/d/a/da54e458-1d4f-45f0-a225-99eb9c4049fb.webp?1783906007",
+    "display": "https://cards.scryfall.io/display/front/d/a/da54e458-1d4f-45f0-a225-99eb9c4049fb.webp?1783906007",
+    "art": "https://cards.scryfall.io/art/front/d/a/da54e458-1d4f-45f0-a225-99eb9c4049fb.webp?1783906007",
+    "crop": "https://cards.scryfall.io/crop/front/d/a/da54e458-1d4f-45f0-a225-99eb9c4049fb.webp?1783906007"
+  },
+  "mana_cost": "",
+  "cmc": 0.0,
+  "type_line": "Artifact Land",
+  "oracle_text": "This land enters tapped.\nIndestructible\n{T}: Add {R} or {W}.",
+  "colors": [],
+  "color_identity": [
+    "R",
+    "W"
+  ],
+  "keywords": [
+    "Indestructible"
+  ],
+  "produced_mana": [
+    "R",
+    "W"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "b6ec8c6b-b4e6-4cb4-84d6-06234ace3b44",
+  "set": "eoc",
+  "set_name": "Edge of Eternities Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/b6ec8c6b-b4e6-4cb4-84d6-06234ace3b44",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aeoc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/eoc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/da54e458-1d4f-45f0-a225-99eb9c4049fb/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aa3faf70d-c034-4692-9e92-1922029e3852&unique=prints",
+  "collector_number": "175",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "The path to strength is forged in stability.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Craig J Spearing",
+  "artist_ids": [
+    "b0f15e74-0dd6-4156-959e-c5e30c5cdc52"
+  ],
+  "illustration_id": "8b857d7f-9124-4bc7-8ed3-a31f3c6dde0f",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 1232,
+  "penny_rank": 419,
+  "preview": {
+    "source": "EDHijinks",
+    "source_uri": "https://www.youtube.com/watch?v=Swjj0JGhFco",
+    "previewed_at": "2025-07-10"
+  },
+  "prices": {
+    "usd": "0.30",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.20",
+    "eur_foil": null,
+    "tix": "0.12"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRustvale%2BBridge",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DRustvale%2BBridge",
+    "edhrec": "https://edhrec.com/route/?cc=Rustvale+Bridge"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F642861%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=834310&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/142487?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
