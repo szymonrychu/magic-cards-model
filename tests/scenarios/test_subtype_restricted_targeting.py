@@ -181,3 +181,26 @@ def test_an_opponents_soldier_is_not_a_legal_target():
 
     reason = requirement.rejects(their_soldier, "alice")
     assert reason is not None
+
+
+FACTORY_TEXT = "Target Assembly-Worker creature gets +1/+1 until end of turn."
+
+
+def test_a_hyphenated_creature_type_is_read_as_one_subtype_word():
+    """Mishra's Factory's "Target Assembly-Worker creature" (CR 205.3m).
+
+    A creature type may be hyphenated, and `_SUBTYPE_WORD_RE` used to stop at
+    the hyphen - so this phrase came back unreadable and the whole ability was
+    `understood=False`, the pool's last unchecked targeting phrase. Both halves
+    are capitalized, which is still what tells a creature type apart from an
+    ordinary hyphenated English word.
+    """
+    scenario = Scenario().player("alice", battlefield=["Mishra's Factory", "Grizzly Bears"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    profile = profile_for_text(FACTORY_TEXT)
+    assert profile.understood
+    (requirement,) = profile.requirements
+    assert "assembly-worker" in requirement.required_subtypes
+
+    bears = scenario.creature("Grizzly Bears", "alice")
+    assert requirement.rejects(bears, "alice") is not None, "a Bear is not an Assembly-Worker"

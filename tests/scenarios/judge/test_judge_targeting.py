@@ -263,14 +263,6 @@ def test_run_away_together_still_bounces_the_target_that_is_left():
     assert bears.zone is Zone.HAND
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="machines/targeting.py does not read the 'controlled by different "
-    "players' restriction Run Away Together prints, so announcing two of "
-    "alice's own creatures is accepted at CR 601.2c and leaves no entry in "
-    "`Game.targeting_notices` either - the shape is unrecognised rather than "
-    "recognised and allowed.",
-)
 def test_run_away_together_refuses_two_creatures_the_same_player_controls():
     """DDR#995's card, read strictly: "creatures controlled by different players".
 
