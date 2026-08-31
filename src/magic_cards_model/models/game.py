@@ -757,6 +757,19 @@ class Game(BaseModel):
     so a scenario says in advance what a given card's trigger aims at.
     """
 
+    creatures_cant_attack_until_turns_taken: int | None = None
+    """CR 508.1c: "restrictions (effects that say a creature can't attack...)"
+    - Orim's Chant's kicked "creatures can't attack this turn" is a blanket
+    one, over every creature any player controls, not read off any single
+    permanent's own static text the way `combat.has_keyword`'s `Keyword.
+    DEFENDER` check is. Recorded as the `TurnMachine.turns_taken` value the
+    turn it was granted on, the same "this turn" comparison `PlayPermission.
+    expired` already makes for its own `granted_turns_taken` - simpler than a
+    `casting_rule_effects`-style list, since nothing in the pool prints this
+    restriction more than once at a time or needs to say who granted it.
+    `combat.attack_refusal` reads it directly; nothing needs to clear it
+    early, since the comparison itself goes stale the moment the turn ends."""
+
     players_skipping_next_untap: dict[str, int] = Field(default_factory=dict)
     """How many of a username's upcoming untap steps are replaced with
     nothing (CR 614.10: "skip [something]" is a replacement effect). Brine
@@ -1520,6 +1533,15 @@ class Game(BaseModel):
                 effect.duration is Duration.UNTIL_YOUR_NEXT_TURN
                 and effect.until_next_turn_of == username
             )
+        ]
+        # Hex Magic's own "Until the end of your next turn, you may play
+        # cards exiled this way" (CR 800.4m again) - `PlayPermission.
+        # until_next_turn_of` is that grant's own duration; dropped the same
+        # moment as the two stores above, not by `Game.cleanup_step`.
+        self.play_permissions = [
+            permission
+            for permission in self.play_permissions
+            if permission.until_next_turn_of != username
         ]
 
     def can_activate_tap_ability(self, permanent: CardState) -> bool:
@@ -5319,6 +5341,7 @@ class Game(BaseModel):
         until_end_of_turn: bool = True,
         bottom_if_unused: bool = False,
         immediate: bool = False,
+        until_next_turn_of: str | None = None,
     ) -> PlayPermission:
         """CR 601.3: let `player` play this one card out of `zone`, for a turn.
 
@@ -5349,6 +5372,13 @@ class Game(BaseModel):
 
         `bottom_if_unused` is `PlayPermission.bottom_if_unused` - see its own
         docstring for why cascade passes `True` here and nothing else does.
+
+        `until_next_turn_of` is CR 800.4m's "until the end of your next turn"
+        duration (Hex Magic) rather than a plain "until end of turn" - see
+        `PlayPermission.until_next_turn_of`'s own docstring. Passing it forces
+        `until_end_of_turn=False` regardless of the argument given, since the
+        two durations are mutually exclusive and `Game.begin_turn_for` (not
+        `Game.cleanup_step`) is what drops this one.
         """
         turn = self.turn
         permission = PlayPermission(
@@ -5360,11 +5390,12 @@ class Game(BaseModel):
             pays_mana_cost=pays_mana_cost,
             source_name=source_name,
             rule=rule,
-            until_end_of_turn=until_end_of_turn,
+            until_end_of_turn=until_end_of_turn and until_next_turn_of is None,
             granted_turns_taken=None if turn is None else int(turn.turns_taken),
             bottom_if_unused=bottom_if_unused,
             immediate=immediate,
             granted_step=None if turn is None else turn.step,
+            until_next_turn_of=until_next_turn_of,
         )
         self.play_permissions.append(permission)
         return permission

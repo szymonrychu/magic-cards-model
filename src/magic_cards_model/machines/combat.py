@@ -246,6 +246,12 @@ def attack_refusal(game: "Game", creature: CardState, defender: TargetRef) -> st
         # tapping and summoning sickness so a Wall that is also tapped still
         # reports the reason a scenario is most likely asking about.
         return f"{creature.name} has defender and cannot attack (CR 702.3b)"
+    restricted_until = getattr(game, "creatures_cant_attack_until_turns_taken", None)
+    if restricted_until is not None and int(game.turn.turns_taken) == restricted_until:
+        # CR 508.1c: a blanket "creatures can't attack this turn" restriction
+        # (Orim's Chant, kicked), not read off any one permanent's own static
+        # text the way the defender check above is.
+        return f"{creature.name} can't attack this turn (CR 508.1c)"
 
     return _defender_refusal(game, defender, active)
 
