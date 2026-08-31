@@ -626,6 +626,15 @@ _COUNT_YOU_CONTROL_RE = re.compile(
 _COUNT_CARDS_IN_YOUR_GRAVEYARD_RE = re.compile(
     r"^(?:the )?number of (?P<qualifier>[a-z]+) cards? in your graveyard$", re.IGNORECASE
 )
+#: "the greatest power among creatures you control" - Tyvar, the Pummeler's
+#: own X. Not a count of anything: an extremum over a characteristic, which
+#: is why it needs its own reader rather than a wider qualifier on the two
+#: counting shapes above.
+_GREATEST_CHARACTERISTIC_AMONG_RE = re.compile(
+    r"^(?:the )?greatest (?P<characteristic>power|toughness) among "
+    r"(?P<qualifier>[a-z]+) you control$",
+    re.IGNORECASE,
+)
 
 
 def _singular_card_type(word: str) -> Type | None:
@@ -685,6 +694,32 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
             return sum(1 for state in game.player(controller).graveyard if card_type in state.types)
 
         return count_in_graveyard
+
+    if match := _GREATEST_CHARACTERISTIC_AMONG_RE.fullmatch(stripped):
+        card_type = _singular_card_type(match.group("qualifier"))
+        if card_type is None:
+            return None
+        wants_power = match.group("characteristic").lower() == "power"
+
+        def greatest_among(game: "Game", controller: str) -> int:
+            board = game.computed_board()
+            values: list[int] = []
+            for permanent in game.battlefield:
+                chars = board.of(permanent)
+                if chars.controller != controller or card_type not in chars.types:
+                    continue
+                # CR 208.5: "If a creature somehow has no value for its power,
+                # its power is 0. The same is true for toughness." - a `*`
+                # printing whose characteristic-defining ability nothing has
+                # defined counts as 0, not as absent, which is exactly what
+                # `numeric_power`/`numeric_toughness` already answer.
+                values.append(chars.numeric_power if wants_power else chars.numeric_toughness)
+            # CR 107.2: "If anything needs to use a number that can't be
+            # determined, either as a result or in a calculation, it uses 0
+            # instead" - an empty group is not an error, it is X = 0.
+            return max(values) if values else 0
+
+        return greatest_among
 
     return None
 
