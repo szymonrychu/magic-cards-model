@@ -223,11 +223,22 @@ def test_put_on_stack_takes_a_card_out_of_exile_not_just_the_owners_hand():
 
 @pytest.mark.xfail(
     reason=(
-        "Lupine Harbingers enters with X +1/+1 counters, where X is the number "
-        "of turns begun since it was foretold. The count is available - "
-        "ExileAnnotation.turn_exiled records it - but a replacement effect on "
-        "entering the battlefield is needed to place the counters (CR 614), and "
-        "machines/replacement.py is not wired into Game.resolve_top."
+        "measured, and not what an earlier reason here claimed: "
+        "machines/replacement.py *is* wired in - Game.enter_the_battlefield "
+        "calls apply_replacements, _self_enters_modifiers reads the card's own "
+        "CR 614.12 line, and parse_replacement_effects already returns this one "
+        "as ENTERS_WITH with variable_amount set. What is missing is the value "
+        "of X. ExileAnnotation.turn_exiled does record the turn (turn_exiled=1 "
+        "in exile), but CR 400.7 makes the spell a new object: "
+        "CardState.move_to drops exile_annotation on the exile-to-stack move, "
+        "and machines/casting.py makes that move *before* it calls "
+        "Game.note_cast, so nothing captures the annotation on the way past. "
+        "CastRecord (models/game.py) has no field for it either, so "
+        "_self_enters_modifiers falls through to CR 107.3m's announced X, which "
+        "is 0 for a spell with no {X} in its cost. Three files: capture the "
+        "annotation before the move (machines/casting.py), carry it "
+        "(models/game.py's CastRecord), and read 'the number of turns you've "
+        "begun since it was foretold' off it (machines/replacement.py)."
     ),
     strict=True,
 )

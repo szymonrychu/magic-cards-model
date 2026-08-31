@@ -22,10 +22,9 @@ The rules the episode walks through:
   instant or sorcery face nothing happens." Flamescroll Celebrant // Revel in
   Silence is the episode's example.
 
-`CardState.transform` is the engine's primitive. It handles the first two and
-gets the third wrong, which is the `xfail`. Moonmist's own instruction has no
-entry in `machines/effects.py`, so driving the ruling through the card is a
-second `xfail`.
+`CardState.transform` is the engine's primitive, and it now handles all three.
+Moonmist's own instruction has no entry in `machines/effects.py`, so driving the
+ruling through the card is still an `xfail`.
 
 Every CR number in this file was verified with `knowledge_search(q="...",
 type="rules")` in the session that wrote it: CR 701.27c, CR 701.27d, CR 712.2,
@@ -92,16 +91,6 @@ def test_transforming_a_single_faced_creature_does_nothing():
     assert vanguard.name == "Grizzly Bears"
 
 
-@pytest.mark.xfail(
-    reason=(
-        "CR 701.27d / CR 712.10: a permanent whose back face is an instant or "
-        "sorcery face does not transform - 'nothing happens'. `CardState."
-        "transform` checks only that the card has two faces, so Flamescroll "
-        "Celebrant turns into Revel in Silence, an Instant sitting on the "
-        "battlefield."
-    ),
-    strict=True,
-)
 def test_a_permanent_whose_back_face_is_an_instant_does_not_transform():
     """CR 701.27d, with the episode's own example printing.
 
@@ -115,6 +104,43 @@ def test_a_permanent_whose_back_face_is_an_instant_does_not_transform():
 
     assert not celebrant.transformed
     assert celebrant.name == "Flamescroll Celebrant"
+
+
+def test_a_transformed_permanent_turns_back_over():
+    """The refusal is about the face it would turn *into*, not about the card.
+
+    CR 701.27a is "turn it over so that its other face is up", and while a
+    Blackbloom Rogue is a Blackbloom Bog the other face is the Human Rogue it
+    started as - a land face, not an instant one, so nothing stops it. The
+    check has to read `face_it_would_transform_into` rather than the back face
+    always, or a permanent could go over but never come back.
+    """
+    rogue = permanent("Blackbloom Rogue")
+    rogue.transform()
+    assert rogue.name == "Blackbloom Bog"
+
+    rogue.transform()
+
+    assert not rogue.transformed
+    assert rogue.name == "Blackbloom Rogue"
+
+
+def test_an_adventurer_card_is_not_a_double_faced_card_and_does_not_transform():
+    """CR 712.9: "Only permanents represented by double-faced tokens and
+    double-faced cards that are not meld cards can transform or convert."
+
+    Bonecrusher Giant // Stomp has two `card_faces` in the Scryfall printing
+    the way every multi-face layout does, so "does it have faces" is not the
+    question that answers this one. CR 701.27d's own check is - Stomp is an
+    Instant face - and it lands on the same "nothing happens".
+    """
+    giant = permanent("Bonecrusher Giant")
+    assert card("Bonecrusher Giant").card_faces[1].type_line == "Instant — Adventure"
+
+    giant.transform()
+
+    assert not giant.transformed
+    assert giant.name == "Bonecrusher Giant"
 
 
 @pytest.mark.xfail(

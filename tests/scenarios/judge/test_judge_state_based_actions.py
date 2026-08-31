@@ -99,10 +99,13 @@ def test_elesh_norn_kills_an_opponents_one_toughness_creature_on_sight():
 
 @pytest.mark.xfail(
     strict=True,
-    reason="CR 704.5g is judged against the computed board now, so the Goyf does die. The "
-    "first assertion is on CardState.toughness, which is still the printed '*' read as None "
-    "- the layer engine computes the CDA in 7a (CR 604.3, CR 613.4a) and models/card_state.py "
-    "does not ask it.",
+    reason="measured: CR 704.5g is judged against the computed board, so the Goyf does die. "
+    "The first assertion is on CardState.toughness. models/card_state.py can ask the layer "
+    "engine now - `CardState.bind_to_game` makes `.toughness` answer with "
+    "`Game.characteristics_of`, and a bound Goyf reads its 7a CDA (CR 604.3, CR 613.4a) as "
+    "3 - but models/game.py never binds one, so the unbound reading is still the printed "
+    "'*' as None. One `state.bind_to_game(self)` in Game's battlefield-entry path is the "
+    "remainder.",
 )
 def test_tarmogoyf_lives_or_dies_by_its_toughness_right_now():
     """DDR#20: lethal damage is checked against the current toughness, always.

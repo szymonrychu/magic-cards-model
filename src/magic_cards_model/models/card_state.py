@@ -5,7 +5,7 @@ from enum import StrEnum
 from typing import Any, Self
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, ConfigDict, Field, RootModel, model_validator
+from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, RootModel, model_validator
 
 from .card import Card, Color, Layout, Supertype, Type, subtypes_of, supertypes_of, types_of
 from .zone import Zone
@@ -544,22 +544,27 @@ class CardState(BaseModel):
     an MDFC does not transform back and forth.
     """
     face_played: str | None = None
-    """The name of the half chosen for a **split card** (CR 709.3) on the
-    stack - Wear // Tear's "Tear" when that half, not Wear, was cast.
+    """The name of the half chosen for a **split card** (CR 709.3) or an
+    **adventurer card** (CR 715) on the stack - Wear // Tear's "Tear" when that
+    half, not Wear, was cast; Bonecrusher Giant // Stomp's "Stomp" when the
+    Adventure was.
 
-    Set only by `Casting.cast`, and only for a card whose `Card.layout` is
-    `Layout.SPLIT`: CR 709.3b, "While on the stack, only the characteristics
-    of the half being cast exist. The other half's characteristics are
-    treated as though they didn't exist" - so `up_face` below reads this
-    face, ahead of the front-face fallback every other layout still uses.
-    Deliberately scoped to split cards alone and not shared with Adventure's
-    own chosen face (`Casting.face`/`chosen_face`): CR 715.3b names the same
-    idea for an Adventure spell, but that gap is separately documented and
-    intentionally still open (`docs/engine-coverage.md`'s "Alternative
-    characteristics on the stack" row) - widening this field to cover it too
-    would silently change already-`xfail`ed behaviour this wave does not
-    touch. Fuse (CR 702.102) - casting *both* halves as one spell - is not
-    modelled: this only ever names one half.
+    Two rules, one field, because they say the same thing about the same
+    moment. CR 709.3b: "While on the stack, only the characteristics of the
+    half being cast exist. The other half's characteristics are treated as
+    though they didn't exist." CR 715.3b: "While on the stack as an Adventure,
+    the spell has only its alternative characteristics." Both are undone in
+    every other zone - CR 709.2 makes a split card "only one card" again off
+    the stack, CR 715.4 says "in every zone except the stack, and while on the
+    stack not as an Adventure, an adventurer card has only its normal
+    characteristics" - which is why `up_face` reads this field only while
+    `zone is Zone.STACK`.
+
+    Set by `Casting.cast`, which knows which half was announced
+    (`Casting.face`/`chosen_face`). It sets it for `Layout.SPLIT` today and not
+    yet for `Layout.ADVENTURE`, which is the whole of what is left of CR 715.3b
+    - `up_face` below already reads either. Fuse (CR 702.102) - casting *both*
+    halves as one spell - is not modelled: this only ever names one half.
     """
     exerted: bool = False
     """True while this permanent will not untap during its controller's next
@@ -748,6 +753,86 @@ class CardState(BaseModel):
     simply never moved.
     """
 
+    _board_source: Any = PrivateAttr(default=None)
+    """The `Game` this object asks for its computed characteristics (CR 613.5).
+
+    A private attribute, so it is neither a field nor serialised: a board that
+    round-trips through `model_dump`/`model_validate` carries no reference to
+    the game it came from, and this one is re-established by whoever rebuilt
+    the game. `None` means "nothing to ask", and every characteristic that
+    consults it falls back to the printed value plus counters, which is
+    exactly what this model did before the hook existed.
+
+    Set by `bind_to_game`. CR 613.5 is why it is a live reference rather than
+    a cached answer: "The application of continuous effects as described by
+    the layer system is continually and automatically performed by the game.
+    All resulting changes to an object's characteristics are instantaneous" -
+    so the question has to be asked again every time, not answered once.
+    """
+
+    _asking_the_board: bool = PrivateAttr(default=False)
+    """Re-entrancy guard for `computed_characteristics`.
+
+    Computing the board reads the permanents on it, and one of those reads -
+    `Game`'s own "creature with power N or greater" sweep for a static
+    ability - goes back through `CardState.power`. Without this flag that is
+    an unbounded recursion; with it, the inner read takes the printed branch,
+    which is the value layer 7a itself starts from (CR 613.4a).
+    """
+
+    def bind_to_game(self, game: Any) -> None:
+        """Tell this object which game computes its characteristics (CR 613.5).
+
+        `power` and `toughness` are the two characteristics the rest of the
+        engine reads straight off a `CardState` - `machines/combat.py` for
+        CR 510.1a's combat damage assignment, `has_lethal_damage` for
+        CR 704.5g - and on their own they are only the printed value plus
+        counters (CR 122.1a). That is the wrong answer for anything a
+        continuous effect touches: a characteristic-defining ability in layer
+        7a (CR 604.3, CR 613.4a) gives Tarmogoyf a power at all, where the
+        printing has `*` and this model has `None`, and an anthem in layer 7d
+        makes a Grizzly Bears a 3/3.
+
+        Once bound, those two properties ask `Game.characteristics_of` for a
+        permanent on the battlefield and fall back to the printed value
+        everywhere else, so the answer a caller gets is the same one
+        `Game.power_of` and `Game.toughness_of` already give.
+
+        Binding is a pure addition: an unbound `CardState` behaves exactly as
+        it did before, which is what keeps this safe to call from one place
+        rather than needing every construction site to know about it.
+        """
+        self._board_source = game
+
+    @property
+    def computed_characteristics(self) -> Any:
+        """This permanent's characteristics with every layer applied, or None.
+
+        `None` - meaning "ask the printing instead" - in four cases, each of
+        which is a case where the layer engine has no answer to give:
+
+        - nothing has bound a game (`bind_to_game`), which is every
+          `CardState` built outside a game;
+        - this object is not on the battlefield, because CR 613.5's layer
+          system is applied to permanents and `Game.characteristics_of`
+          refuses anything else;
+        - the board is already being computed on this object, which the
+          `_asking_the_board` guard catches;
+        - the bound game does not have this object on its battlefield - a
+          stale binding, which raises `KeyError` out of `ComputedBoard.of`
+          rather than answering with another game's board.
+        """
+        game = self._board_source
+        if game is None or self.zone is not Zone.BATTLEFIELD or self._asking_the_board:
+            return None
+        self._asking_the_board = True
+        try:
+            return game.characteristics_of(self)
+        except KeyError:
+            return None
+        finally:
+            self._asking_the_board = False
+
     @property
     def controller_or_owner(self) -> str | None:
         """CR 108.4a's fallback: the controller, or the owner when there is none.
@@ -765,6 +850,46 @@ class CardState(BaseModel):
     # which case CR 708.2 says the listed characteristics are all it has. They
     # are *not* the whole of CR 613: `Game.characteristics_of` is the authority
     # once other continuous effects are in play.
+
+    @property
+    def has_no_characteristics(self) -> bool:
+        """CR 406.3a: a card exiled face down has no characteristics at all.
+
+        "A card exiled face down has no characteristics, but the spell or
+        ability that exiled it may allow it to be played from exile. Unless
+        that card is being cast face down (see rule 708.4), the card is turned
+        face up before the player announces they are playing it."
+
+        A stronger statement than CR 708.2, which lists a *replacement* set for
+        a face-down spell or permanent (a 2/2 with no name, CR 708.2a): a card
+        in exile is neither a spell nor a permanent, so nothing lists anything
+        for it and it is left with nothing. That is DDR#956's ruling - an
+        Emrakul, the Promised End exiled face down by Pyxis of Pandemonium has
+        no mana cost, so CR 202.3a gives it a mana value of 0 rather than 13,
+        and "the greatest mana value among cards in exile" gets nothing from
+        it even though the whole table watched it go there.
+
+        Scoped to a card in **no pile that grants permission to play it** -
+        `exile_annotation is None` - and that is an approximation the rule's
+        own second sentence is what would replace. CR 601.3f: "Some effects
+        allow a player to cast a spell with certain qualities from among
+        face-down cards in exile. A player may begin to cast such a spell only
+        if they can look at the face-down card in exile", and CR 406.3a then
+        turns that card face up *before* its controller announces they are
+        playing it. So a foretold (CR 702.143a), hideaway (CR 702.75a),
+        plotted, madness (CR 702.35a) or suspended card is one the engine still
+        has to be able to read a name, a type line and a cost off in order to
+        offer the cast at all, and it will be face up by the time the cast is
+        announced anyway. Turning it face up at announcement, which would let
+        this drop the annotation clause entirely, is a `machines/casting.py`
+        change - see `docs/engine-coverage.md`.
+
+        Nothing is undone by hand on the way out: `move_to` turns a card face
+        up as it leaves exile for anywhere but the stack-as-a-face-down-spell,
+        so a card exiled face down with no pile of its own has its
+        characteristics again the moment something moves it.
+        """
+        return self.zone is Zone.EXILE and self.face_down and self.exile_annotation is None
 
     @property
     def _land_face(self) -> Any:
@@ -795,9 +920,10 @@ class CardState(BaseModel):
           Unlike the modal case this changes during the game, in both
           directions, and it is a property of the permanent rather than of a
           choice made on the way in.
-        - A **split card's own chosen half** (CR 709.3b), while `face_played`
-          names one and the object is still on the stack - see `face_played`'s
-          own docstring for why this is scoped to `Layout.SPLIT` alone.
+        - A **split card's own chosen half** (CR 709.3b) or an **adventurer
+          card's Adventure half** (CR 715.3b), while `face_played` names one
+          and the object is still on the stack - see `face_played`'s own
+          docstring for why one field carries both.
         - The **front face** otherwise: CR 712.8a makes it the only face this
           card has anywhere but the battlefield or stack, and CR 712.8d makes
           it the same on the battlefield while the front face is up.
@@ -815,14 +941,18 @@ class CardState(BaseModel):
                 return back_face
         if (
             self.face_played is not None
-            and self.card.layout is Layout.SPLIT
+            and self.card.layout in (Layout.SPLIT, Layout.ADVENTURE)
             and self.zone is Zone.STACK
         ):
             # CR 709.2: off the stack, a split card is "only one card" again -
-            # both halves, not the one that was last cast. Scoped to the
-            # stack the way CR 709.3b itself is worded ("while on the
+            # both halves, not the one that was last cast. CR 715.4 says the
+            # same for an adventurer card: "in every zone except the stack,
+            # and while on the stack not as an Adventure, an adventurer card
+            # has only its normal characteristics." Scoped to the stack the
+            # way CR 709.3b and CR 715.3b are both worded ("while on the
             # stack"), so a resolved and graveyard-bound Wear // Tear is read
-            # as the whole card once more, the same as before it was cast.
+            # as the whole card once more, the same as before it was cast,
+            # and a Bonecrusher Giant that resolved as a creature is a Giant.
             for face in self.card.card_faces or []:
                 if face.name == self.face_played:
                     return face
@@ -855,6 +985,8 @@ class CardState(BaseModel):
         single-faced card and the wrong one for a permanent showing any other
         face.
         """
+        if self.has_no_characteristics:
+            return ()  # CR 406.3a
         if self.face_down_characteristics is not None:
             return self.face_down_characteristics.types
         up_face = self.up_face
@@ -871,6 +1003,8 @@ class CardState(BaseModel):
         face's "+1/+1 counter on each Cat you control" has to be counted
         against.
         """
+        if self.has_no_characteristics:
+            return ()  # CR 406.3a
         if self.face_down_characteristics is not None:
             return self.face_down_characteristics.subtypes
         up_face = self.up_face
@@ -889,6 +1023,8 @@ class CardState(BaseModel):
         legendary where the front is not (CR 712.8e), and the legend rule
         (CR 704.5j) has to see that.
         """
+        if self.has_no_characteristics:
+            return ()  # CR 406.3a
         if self.face_down_characteristics is not None:
             return ()
         up_face = self.up_face
@@ -906,6 +1042,8 @@ class CardState(BaseModel):
         Face down, CR 708.2 leaves it colorless along with everything else it
         does not list.
         """
+        if self.has_no_characteristics:
+            return ()  # CR 406.3a
         if self.face_down_characteristics is not None:
             return ()
         up_face = self.up_face
@@ -932,6 +1070,8 @@ class CardState(BaseModel):
         anywhere else, rather than a second spelling of it. A single-faced card
         has one face and is left exactly as the printing reports it.
         """
+        if self.has_no_characteristics:
+            return ()  # CR 406.3a
         if self.face_down_characteristics is not None:
             return self.face_down_characteristics.keywords
         if not self.card.card_faces:
@@ -946,6 +1086,8 @@ class CardState(BaseModel):
     @property
     def oracle_text(self) -> str:
         """This object's rules text (CR 708.2). Face down, it is empty."""
+        if self.has_no_characteristics:
+            return ""  # CR 406.3a
         if self.face_down_characteristics is not None:
             return self.face_down_characteristics.oracle_text
         up_face = self.up_face
@@ -956,6 +1098,8 @@ class CardState(BaseModel):
     @property
     def mana_cost(self) -> str | None:
         """This object's mana cost (CR 202.1, CR 708.2). Face down, there is none."""
+        if self.has_no_characteristics:
+            return None  # CR 406.3a
         if self.face_down_characteristics is not None:
             return self.face_down_characteristics.mana_cost
         up_face = self.up_face
@@ -981,7 +1125,8 @@ class CardState(BaseModel):
         what counts, giving 0 rather than the spell face's `cmc`. CR 708.2
         gives a face-down permanent no mana cost at all, so 0 by CR 202.3a.
         """
-        if self.face_down_characteristics is not None:
+        if self.has_no_characteristics or self.face_down_characteristics is not None:
+            # CR 406.3a / CR 708.2: no mana cost, so CR 202.3a says 0.
             return 0.0
         land_face = self._land_face
         if land_face is not None:
@@ -1073,7 +1218,17 @@ class CardState(BaseModel):
         `up_face` is read first (CR 712.8a, 712.8d, 712.8f) - without it, a
         double-faced creature would have no toughness at all rather than its
         printed one, and CR 704.5g's lethal-damage check would never fire.
+
+        Bound to a game (`bind_to_game`), a permanent on the battlefield
+        answers with the computed toughness instead - the whole of CR 613,
+        including the characteristic-defining ability in layer 7a that is the
+        only thing giving a printed `*` a number at all (CR 604.3, CR 613.4a).
         """
+        computed = self.computed_characteristics
+        if computed is not None and computed.toughness is not None:
+            return computed.toughness
+        if self.has_no_characteristics:
+            return None  # CR 406.3a
         if self.face_down_characteristics is not None:
             # CR 708.2: face down, 2 is what its toughness *is*; the counters
             # still apply on top, in sublayer 7c (CR 613.4c).
@@ -1092,9 +1247,16 @@ class CardState(BaseModel):
         is read first for the same reason as `toughness`.
 
         Printed power plus its counters (CR 122.1a), for the same reason as
-        `toughness`. Combat damage is assigned equal to power (CR 510.1a), so
-        this is what an attacking or blocking creature deals.
+        `toughness` - and the computed power (CR 613.5) instead, once
+        `bind_to_game` has given this object a board to ask. Combat damage is
+        assigned equal to power (CR 510.1a), so this is what an attacking or
+        blocking creature deals.
         """
+        computed = self.computed_characteristics
+        if computed is not None and computed.power is not None:
+            return computed.power
+        if self.has_no_characteristics:
+            return None  # CR 406.3a
         if self.face_down_characteristics is not None:
             base = self.face_down_characteristics.power
             return base + self.counters.power_toughness_modifier
@@ -1209,6 +1371,8 @@ class CardState(BaseModel):
         sitting on its front face - those assertions were encoding the bug,
         not the rule, and have been corrected to name the front face alone.
         """
+        if self.has_no_characteristics:
+            return ""  # CR 406.3a
         if self.face_down_characteristics is not None:
             return self.face_down_characteristics.name
         land_face = self._land_face
@@ -1252,14 +1416,51 @@ class CardState(BaseModel):
             return
         self.tapped = False
 
+    @property
+    def face_it_would_transform_into(self) -> Any:
+        """The face `transform` would turn this permanent onto, or None.
+
+        The back face while the front is up, the front face while
+        `transformed` is set - CR 701.27a is "turn it over so that its other
+        face is up", and "the other face" is the whole of the choice. `None`
+        for anything with fewer than two faces, which CR 701.27c and CR 712.9
+        both refuse for.
+        """
+        faces = self.card.card_faces or []
+        if len(faces) < 2:
+            return None
+        return faces[0] if self.transformed else faces[1]
+
     def transform(self) -> None:
         """Turn this permanent over so its other face is up (CR 701.27a).
 
-        Only a double-faced card can transform (CR 712.9); asking anything else
-        to does nothing, which is what CR 701.28c says for the sibling action.
+        Only a double-faced card can transform (CR 712.9: "Only permanents
+        represented by double-faced tokens and double-faced cards that are not
+        meld cards can transform or convert"); asking anything else to does
+        nothing, which is what CR 701.27c says - "If a spell or ability
+        instructs a player to transform a permanent that isn't represented by
+        a double-faced token or a double-faced card, nothing happens."
+
+        The second refusal is about the face on the *other* side.
+        CR 701.27d: "If a spell or ability instructs a player to transform a
+        permanent, and the face that permanent would transform into is an
+        instant or sorcery face nothing happens." CR 712.10 states the same
+        for transform and convert together. A modal double-faced permanent
+        whose back face is an instant - Flamescroll Celebrant // Revel in
+        Silence - is the shape that needs it: it has two faces, so the
+        card-faces check above lets it through, and without this it would end
+        up an Instant sitting on the battlefield.
+
+        Both are "nothing happens", not an error: that is what lets Moonmist
+        say "transform all Humans" and sweep a board of mixed permanents
+        without the caller having to filter it first.
         """
-        if not self.card.card_faces:
-            return
+        target = self.face_it_would_transform_into
+        if target is None:
+            return  # CR 701.27c, CR 712.9
+        target_types = types_of(target.type_line or "")
+        if Type.INSTANT in target_types or Type.SORCERY in target_types:
+            return  # CR 701.27d, CR 712.10
         self.transformed = not self.transformed
 
     def turn_face_up(self) -> None:
