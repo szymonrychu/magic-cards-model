@@ -143,7 +143,7 @@ def test_walking_ballista_enters_summoning_sick():
     scenario.put_on_stack(casting)
     ballista = scenario.resolve_top()
 
-    assert ballista.is_summoning_sick is True
+    assert ballista.is_summoning_sick() is True
 
 
 def test_hangarback_walker_also_scales_off_the_same_fix():
