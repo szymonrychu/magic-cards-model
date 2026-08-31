@@ -24,11 +24,16 @@ The rules:
   two numerical values. That is why Nick's life total is untouched too, rather
   than the exchange half-happening in Amy's favour.
 
-None of this is modelled. `Player` has `gain_life`/`lose_life` and no notion of
-being unable to gain life; neither Mister Negative nor Screaming Nemesis has an
-entry in `machines/effects.py`; and there is no exchange primitive anywhere. So
-this file is one passing test on what the engine *does* read off the printings,
-and `xfail`s for the ruling itself.
+The player-level half of this is modelled now: `Player.cannot_gain_life` is
+CR 119.7's prohibition, and `Player.exchange_life_totals` is the CR 701.12a/c
+primitive - refused as one event, applied as gains and losses (see
+`tests/scenarios/test_exchanging_life_totals.py` and
+`tests/scenarios/test_life_gain_prohibition.py` for its corner cases). What is
+still missing is everything that would let the two *cards* reach it: neither
+Mister Negative nor Screaming Nemesis has an entry in `machines/effects.py`,
+and `Game` has no wrapper to resolve an exchange as part of a spell. So this
+file is passing tests on what the engine reads off the printings and on the
+prohibition, and an `xfail` for the game-level exchange.
 
 Every CR number in this file was verified with `knowledge_search(q="...",
 type="rules")` in the session that wrote it: CR 119.3, CR 119.7, CR 603.1 is
@@ -93,26 +98,29 @@ def test_neither_ability_has_a_scripted_effect():
         assert effect_for(name, card(name).oracle_text) is None
 
 
-@pytest.mark.xfail(
-    reason=(
-        "Nothing in the engine can say a player can't gain life: `Player` has "
-        "`life`, `gain_life` and `lose_life` and no flag or continuous effect "
-        "for CR 119.7's prohibition, so Screaming Nemesis's clause has nowhere "
-        "to live."
-    ),
-    strict=True,
-)
 def test_a_player_who_cannot_gain_life_does_not_gain_life():
-    """CR 119.7's precondition, before any exchange is involved."""
+    """CR 119.7's precondition, before any exchange is involved.
+
+    `Player.cannot_gain_life` is the flag Screaming Nemesis's clause needs, and
+    `Player.gain_life` refuses outright when it is set - CR 101.2's "can't"
+    takes precedence over the rule that directs the gain. Nothing on the card
+    side reaches it yet; `tests/scenarios/test_life_gain_prohibition.py` covers
+    the prohibition itself and `xfail`s the card that would impose it.
+    """
     assert any("gain" in name and "life" in name for name in Player.model_fields)
 
+    amy = Player(username="amy", cannot_gain_life=True)
+
+    assert amy.gain_life(4) == 20
+    assert amy.life == 20
+
 
 @pytest.mark.xfail(
     reason=(
-        "There is no exchange primitive at all - no CR 701.12a 'if the entire "
-        "exchange can't happen, no part of it occurs', and no CR 701.12c "
-        "gain/lose implementation - so DDR#974's answer (neither life total "
-        "changes) cannot be asserted against the engine."
+        "The CR 701.12a/701.12c exchange primitive exists on `Player` now "
+        "(`Player.exchange_life_totals`), but `Game` has no wrapper for it, so "
+        "no resolving spell or ability can reach it. `Game.exchange_life_totals` "
+        "belongs to whoever owns models/game.py."
     ),
     strict=True,
 )
