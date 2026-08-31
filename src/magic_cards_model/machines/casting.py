@@ -375,6 +375,147 @@ def castable_from(card: Card, zone: Zone) -> list[KeywordCastOption]:
 
 
 # --------------------------------------------------------------------------
+# A keyword another permanent grants a spell as it is cast (CR 610.5)
+# --------------------------------------------------------------------------
+
+#: Ashling, the Limitless: "Elemental permanent spells you cast from your hand
+#: gain evoke {4} as you cast them." CR 610.5's own shape - "Some static
+#: abilities create one-shot effects that cause spells a player casts to gain
+#: an ability as that player casts them" - so the keyword is not on the card
+#: being cast and `keyword_cast_options` can never find it.
+_GRANTED_KEYWORD_AS_YOU_CAST = re.compile(
+    r"^(?P<what>[\w' -]+?) spells you cast from your (?P<zone>hand|graveyard) gain "
+    r"(?P<keyword>[A-Za-z]+)(?P<cost>[^.]*?) as you cast them\.",
+    re.IGNORECASE,
+)
+
+#: CR 110.4: "There are six permanent types: artifact, battle, creature,
+#: enchantment, land, and planeswalker." CR 110.4b's "permanent spell" is a
+#: spell with one of them, which is what "Elemental **permanent** spells"
+#: narrows Ashling's grant to.
+_PERMANENT_TYPES = frozenset(
+    {Type.ARTIFACT, Type.BATTLE, Type.CREATURE, Type.ENCHANTMENT, Type.LAND, Type.PLANESWALKER}
+)
+
+_ZONE_WORDS_FOR_GRANTS: dict[str, Zone] = {"hand": Zone.HAND, "graveyard": Zone.GRAVEYARD}
+
+
+class GrantedCastOption(BaseModel):
+    """One `KeywordCastOption` another permanent handed this spell (CR 610.5)."""
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    source_name: str
+    """The permanent whose static ability granted it."""
+    option: KeywordCastOption
+
+
+def _spell_matches_grant_filter(spell: CardState, what: str) -> bool:
+    """Whether this spell is one the grant's noun phrase names.
+
+    Every word has to be recognised and every word has to match: "Elemental
+    permanent" is a conjunction, not a list of alternatives. A word this
+    cannot place - a supertype it does not know, a noun nobody parsed - makes
+    the whole phrase unmatched rather than ignored, so an unread grant hands
+    out nothing instead of handing out too much.
+    """
+    types = set(spell.types)
+    subtypes = {subtype.lower() for subtype in spell.subtypes}
+    supertypes = {supertype.value.lower() for supertype in spell.supertypes}
+    type_words = {type_.value.lower(): type_ for type_ in Type}
+    for raw_word in what.split():
+        word = raw_word.strip(",").lower()
+        if not word:
+            continue
+        if word in {"permanent", "permanents"}:
+            if not types & _PERMANENT_TYPES:
+                return False
+        elif word.rstrip("s") in type_words:
+            if type_words[word.rstrip("s")] not in types:
+                return False
+        elif word in supertypes:
+            continue
+        elif word.rstrip("s") in subtypes:
+            continue
+        else:
+            return False
+    return True
+
+
+def granted_cast_options(
+    game: Any, spell: CardState, caster: str, origin_zone: Zone
+) -> list[GrantedCastOption]:
+    """Every cast option another permanent grants this spell right now
+    (CR 610.5).
+
+    "Some static abilities create one-shot effects that cause spells a player
+    casts to gain an ability as that player casts them. These effects begin to
+    apply to appropriate spells at the time the player proposes the casting of
+    that spell" - which is why this is asked at announcement, off the board as
+    it stands then, rather than read off the card being cast.
+
+    Only the caster's own permanents are read ("spells **you** cast"), only
+    genuine `AbilityKind.STATIC` lines (CR 604.1's "written as statements"),
+    and only when the zone the grant names is the zone this cast is coming
+    from. The keyword itself is then expanded by `_option_from_keyword`, the
+    same reader that expands a printed one, so a granted evoke costs and
+    behaves exactly like a printed evoke (CR 702.74a) instead of becoming a
+    second, parallel notion of the keyword.
+    """
+    if game is None:
+        return []
+    found: list[GrantedCastOption] = []
+    for permanent in getattr(game, "battlefield", []):
+        if permanent.controller != caster:
+            continue
+        up_face_name = permanent.up_face_name or permanent.card.name
+        for ability in parse_abilities(permanent.card):
+            if ability.kind is not AbilityKind.STATIC or ability.face != up_face_name:
+                continue
+            match = _GRANTED_KEYWORD_AS_YOU_CAST.match((ability.text or "").strip())
+            if match is None:
+                continue
+            zone = _ZONE_WORDS_FOR_GRANTS.get(match.group("zone").lower())
+            if zone is None or zone is not origin_zone:
+                continue
+            if not _spell_matches_grant_filter(spell, match.group("what")):
+                continue
+            printed = match.group("cost").strip() or None
+            keyword = match.group("keyword")
+            option = _option_from_keyword(
+                KeywordAbility(
+                    raw=ability.raw,
+                    text=ability.text,
+                    face=up_face_name,
+                    keyword=keyword,
+                    canonical=keyword.capitalize(),
+                    cost=printed,
+                    cost_is_mana=bool(printed) and _ONLY_MANA_SYMBOLS.match(printed) is not None,
+                )
+            )
+            if option is None or option.zone is not zone:
+                # A keyword whose own rule casts from somewhere else than the
+                # grant names is not this sentence's keyword; fail closed
+                # rather than invent a zone for it.
+                continue
+            found.append(
+                GrantedCastOption(
+                    source_name=permanent.name,
+                    # CR 610.5 is where the grant comes from; the keyword's own
+                    # rule still says what it does, and `_option_from_keyword`
+                    # already wrote that number onto the option.
+                    option=option.model_copy(update={"rule": f"CR 610.5, {option.rule}"}),
+                )
+            )
+    return found
+
+
+#: A printed cost that is nothing but mana symbols, the same test
+#: `machines/cost.py` makes before handing a phrase to `ManaCost.parse`.
+_ONLY_MANA_SYMBOLS = re.compile(r"^(?:\{[^{}]+\}|\s)+$")
+
+
+# --------------------------------------------------------------------------
 # A permission handed out by a resolving effect (CR 601.3, CR 701.18b)
 # --------------------------------------------------------------------------
 
@@ -1334,8 +1475,17 @@ class Casting(BaseModel):
 
     @property
     def cast_options(self) -> list[KeywordCastOption]:
-        """The keyword options that would cast this spell out of its origin zone."""
-        return castable_from(self.spell.card, self.origin_zone)
+        """The keyword options that would cast this spell out of its origin
+        zone - the card's own, and any another permanent grants it right now
+        (CR 610.5)."""
+        return castable_from(self.spell.card, self.origin_zone) + [
+            granted.option for granted in self.granted_cast_options
+        ]
+
+    @property
+    def granted_cast_options(self) -> list[GrantedCastOption]:
+        """CR 610.5's grants, as they stand at this announcement."""
+        return granted_cast_options(self.game, self.spell, self.caster, self.origin_zone)
 
     def use_keyword(self, keyword: str, *, choosing: list[CardState] | None = None) -> CastingStep:
         """CR 601.2b: announce that this spell is being cast using a keyword.
@@ -1349,14 +1499,23 @@ class Casting(BaseModel):
         CR 601.2b is where those are chosen and CR 601.2h is where they are
         spent. They are handed to the cost's components in order.
 
-        Raises when the keyword is not printed on the card, when the spell is in
-        the wrong zone for it, when the exile pile is wrong, or when the timing
-        is (CR 601.3). A keyword whose printed cost this engine could not read
-        also raises rather than being quietly charged nothing.
+        Raises when neither the card nor anybody's static ability offers the
+        keyword, when the spell is in the wrong zone for it, when the exile
+        pile is wrong, or when the timing is (CR 601.3). A keyword whose
+        printed cost this engine could not read also raises rather than being
+        quietly charged nothing.
+
+        A keyword *granted* by another permanent (CR 610.5, Ashling, the
+        Limitless's "Elemental permanent spells you cast from your hand gain
+        evoke {4} as you cast them") is offered here alongside the card's own,
+        because the two are the same announcement: CR 601.2b does not care
+        where the keyword came from.
         """
+        printed_options = keyword_cast_options(self.spell.card)
+        granted_options = [granted.option for granted in self.granted_cast_options]
         options = [
             option
-            for option in keyword_cast_options(self.spell.card)
+            for option in printed_options + granted_options
             if option.keyword.lower() == keyword.lower()
         ]
         if not options:
@@ -1526,7 +1685,16 @@ class Casting(BaseModel):
                 )
             )
 
-        for keyword_option in keyword_cast_options(self.spell.card):
+        keyword_options: list[tuple[str, KeywordCastOption]] = [
+            (self.spell.name, option) for option in keyword_cast_options(self.spell.card)
+        ]
+        # CR 610.5: a keyword another permanent grants as this spell is cast is
+        # an alternative cost like any other, and the option carries the
+        # *granting* card's name so a seat can see where it came from.
+        keyword_options.extend(
+            (granted.source_name, granted.option) for granted in self.granted_cast_options
+        )
+        for offering_card, keyword_option in keyword_options:
             if keyword_option.pays_mana_cost:
                 # Warp's second half and flashback's from-graveyard permission
                 # that still charges a cost are CR 601.3 permissions, not
@@ -1539,7 +1707,7 @@ class Casting(BaseModel):
                     index=len(options),
                     source=AlternativeCostSource.KEYWORD,
                     rule=keyword_option.rule,
-                    source_name=self.spell.name,
+                    source_name=offering_card,
                     keyword=keyword_option.keyword,
                     description=str(cost) if cost is not None else "nothing",
                     cost=cost,

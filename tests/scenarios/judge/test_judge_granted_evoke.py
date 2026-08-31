@@ -56,10 +56,16 @@ def test_the_hound_has_no_evoke_of_its_own():
     """The premise, and the reason Ashling is needed at all.
 
     Ashmouth Hound is an Elemental Dog with no evoke printed on it, so
-    `Casting.use_keyword("evoke")` has nothing of its own to find. Everything
-    below is about an evoke that came from somewhere else.
+    `Casting.use_keyword("evoke")` has nothing of its own to find with nobody
+    granting it - everything below is about an evoke that came from somewhere
+    else, and this is the board without that somewhere else.
     """
-    scenario = _board().build()
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Ashmouth Hound"], battlefield=["Mountain", "Mountain"])
+        .player("bob")
+        .build()
+    )
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
     casting = scenario.cast("Ashmouth Hound", username="alice")
@@ -68,13 +74,6 @@ def test_the_hound_has_no_evoke_of_its_own():
         casting.use_keyword("evoke")
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="A keyword *granted* to a spell by another permanent's static ability "
-    "is not read anywhere: `Casting.use_keyword` looks only at the card's own "
-    "printed keywords, so Ashling's 'gain evoke {4} as you cast them' never "
-    "reaches the Hound.",
-)
 def test_ashling_grants_evoke_to_an_elemental_being_cast():
     """CR 702.74a: "Evoke represents two abilities: a static ability that
     functions in any zone from which the card with evoke can be cast and a
@@ -89,14 +88,21 @@ def test_ashling_grants_evoke_to_an_elemental_being_cast():
     casting = scenario.cast("Ashmouth Hound", username="alice")
     casting.use_keyword("evoke")
 
-    assert casting.total_cost.mana == "{4}"
+    assert str(casting.total_cost.mana) == "{4}"
 
 
 @pytest.mark.xfail(
     strict=True,
-    reason="Same gap, one step further on: with no granted evoke there is no "
-    "evoke sacrifice trigger either, so nothing about killing Ashling in response "
-    "can be observed.",
+    reason="The cost half of the granted evoke now works (the test above): "
+    "`Casting.granted_cast_options` reads CR 610.5's grant and the Hound is "
+    "cast for {4}. The *trigger* half does not: CR 702.74a's second ability "
+    "reaches a permanent only through `machines/keywords."
+    "keyword_triggered_abilities`, which reads the printed `Card.keywords` of "
+    "the permanent that entered, and `machines/triggers.triggers_for` asks "
+    "`triggered_abilities_of(source.card)` alone - neither consults a grant. "
+    "So no evoke sacrifice trigger exists for the Hound and CR 400.7b's "
+    "point (killing Ashling changes nothing) cannot be observed. Both files "
+    "belong to other tasks in this wave.",
 )
 def test_killing_ashling_in_response_does_not_save_the_evoked_elemental():
     """The episode's actual question, and its answer.
