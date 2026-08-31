@@ -5,11 +5,17 @@ cast this spell."
 The count of colors spent is not fixed until the spell's cost is fully paid
 (CR 601.2g-i), which happens *after* targets are announced (CR 601.2c) - the
 opposite order from Fatal Push's own mana-value condition, which is why this
-is not built the same way. `machines/targeting.py` deliberately leaves this
-comparison unreadable (`_COMPARISON_UNREADABLE`) so the target itself stays
-the plain, unrestricted "target nonland permanent" - any nonland permanent
-may be targeted - and the whole condition is judged once, at resolution, off
+is not built the same way. `machines/targeting.py` reads the converge clause
+out of the way (`_COLORS_OF_MANA_SPENT_CONDITION`) rather than treating it as
+a comparison, so the target stays the plain "target nonland permanent" - any
+nonland permanent may be targeted, and a *land* is refused at CR 601.2c - and
+the whole mana-value condition is judged once, at resolution, off
 `CastRecord.mana_spent` (colour keys only).
+
+It used to be unreadable instead (`_COMPARISON_UNREADABLE`), which failed the
+whole phrase closed: `understood=False` meant no targeting check ran at all,
+so a land was an accepted announcement. See
+`test_prismatic_ending_refuses_a_land_at_announcement`.
 
 Every CR number here was looked up with `knowledge_search(q="...",
 type="rules")` in the session that wrote this file:
@@ -22,6 +28,8 @@ type="rules")` in the session that wrote this file:
 - Converge is an ability word (CR 207.2c); `knowledge_search` found no
   further numbered rule for it this session, so none is cited.
 """
+
+import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.casting import Casting
@@ -160,3 +168,31 @@ def test_prismatic_ending_can_target_a_land_free_artifact():
     scenario.resolve_top()
 
     assert ring.zone is Zone.EXILE
+
+
+def test_prismatic_ending_refuses_a_land_at_announcement():
+    """ "Target **nonland** permanent" - and now the announcement says so.
+
+    Measured before this test existed: `machines/targeting.py` read the
+    trailing "if its mana value is less than or equal to the number of colors
+    of mana spent to cast this spell" as the start of a mana-value comparison
+    it could not finish, failed the whole phrase closed, and so reported
+    `understood=False` for the card - which meant *no* targeting check at all,
+    and a land was an accepted announcement. The converge clause is now read
+    out of the way (it is a condition on the effect, not on the target - CR
+    601.2c announces targets before CR 601.2h pays the cost that decides how
+    many colors were spent), leaving the plain "target nonland permanent" this
+    refusal enforces at CR 601.2c.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Prismatic Ending"], battlefield=["Plains"])
+        .player("bob", battlefield=["Island"])
+        .build()
+    )
+    _to_main(scenario)
+    island = scenario.find("Island", Zone.BATTLEFIELD, "bob")
+
+    casting = scenario.cast("Prismatic Ending", username="alice")
+    with pytest.raises(ValueError, match="land"):
+        casting.choose_targets([island])

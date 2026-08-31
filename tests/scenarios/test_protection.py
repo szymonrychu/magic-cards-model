@@ -5,8 +5,15 @@ CR 702.16a: "Protection is a static ability, written 'Protection from
 organised around which of them this engine can express:
 
 - **CR 702.16b**, can't be *targeted* by spells with the quality or by
-  abilities from a source with it - enforced, at the CR 608.2b recheck, so such
-  a spell fizzles.
+  abilities from a source with it - enforced at **announcement** (CR 601.2c:
+  "the player announces their choice of an appropriate object or player for
+  each target the spell requires"), so the cast is refused outright rather than
+  proposed and then fizzled. `machines/targeting.py`'s `TargetingProfile.check`
+  asks `Game.protection_refusal` the same question `Game.legal_target` asks on
+  resolution, so the two can never disagree; the CR 608.2b recheck is still
+  there as the backstop for protection *gained* after the spell is already on
+  the stack, which is the only way a legally announced target can become a
+  protected one.
 - **CR 702.16c**, can't be *enchanted* by Auras with the quality - not
   expressible: `CardState` has no attachments.
 - **CR 702.16d**, can't be *equipped* by Equipment with the quality - the same.
@@ -89,28 +96,32 @@ def test_a_card_without_protection_has_no_qualities():
 
 
 def test_an_instant_that_targets_it_is_not_a_legal_target():
+    """CR 601.2c: an inappropriate target is not announced, so the cast stops."""
     scenario = emrakul_on_bobs_board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     emrakul = scenario.creature("Emrakul, the Promised End", "bob")
 
-    (mountain,) = scenario.untapped_sources("Mountain", username="alice")
-    bolt = scenario.cast_onto_stack("Lightning Bolt", mountain, targets=[emrakul])
-
-    assert scenario.game.spell_fizzles(bolt), "CR 702.16b makes the only target illegal"
+    with pytest.raises(ValueError, match="protection from instants"):
+        scenario.cast("Lightning Bolt", username="alice", targets=[emrakul])
 
 
-def test_the_instant_is_put_into_the_graveyard_without_resolving():
-    """CR 608.2b: none of its effects happen, not even the untargeted ones."""
+def test_the_instant_never_leaves_the_hand_and_nothing_is_dealt():
+    """The refused cast is undone whole: no mana spent, no damage, no spell.
+
+    CR 601.2c is where the announcement fails, which is before CR 601.2g's
+    mana abilities and CR 601.2h's payment - so the Mountain is still untapped
+    and the Bolt is still in hand.
+    """
     scenario = emrakul_on_bobs_board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     emrakul = scenario.creature("Emrakul, the Promised End", "bob")
-
     (mountain,) = scenario.untapped_sources("Mountain", username="alice")
-    bolt = scenario.cast_onto_stack("Lightning Bolt", mountain, targets=[emrakul])
-    scenario.resolve_top()
 
-    assert bolt.zone is Zone.GRAVEYARD
-    assert bolt.id in scenario.game.fizzled
+    with pytest.raises(ValueError, match="protection from instants"):
+        scenario.cast("Lightning Bolt", username="alice", targets=[emrakul])
+
+    assert scenario.find("Lightning Bolt", Zone.HAND, "alice").zone is Zone.HAND
+    assert mountain.tapped is False
     assert emrakul.zone is Zone.BATTLEFIELD
     assert emrakul.damage == 0, "no damage was dealt at all"
 
@@ -121,12 +132,27 @@ def test_an_exile_instant_fares_no_better():
     scenario.start_at(Step.PRECOMBAT_MAIN)
     emrakul = scenario.creature("Emrakul, the Promised End", "bob")
 
-    (plains,) = scenario.untapped_sources("Plains", username="alice")
-    swords = scenario.cast_onto_stack("Swords to Plowshares", plains, targets=[emrakul])
-    scenario.resolve_top()
+    with pytest.raises(ValueError, match="protection from instants"):
+        scenario.cast("Swords to Plowshares", username="alice", targets=[emrakul])
 
     assert emrakul.zone is Zone.BATTLEFIELD
-    assert swords.zone is Zone.GRAVEYARD
+
+
+def test_the_resolution_recheck_still_answers_the_same_way():
+    """CR 608.2b is the backstop for protection gained after announcement.
+
+    Nothing in this file's pool can grant protection from instants mid-stack,
+    so the recheck is asserted against the question it would ask rather than
+    through a board that cannot be built: `Game.why_cannot_target` is what
+    `Game.legal_target` consults on resolution, and it refuses this pairing
+    exactly as the announcement did.
+    """
+    scenario = emrakul_on_bobs_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    emrakul = scenario.creature("Emrakul, the Promised End", "bob")
+    bolt = scenario.find("Lightning Bolt", Zone.HAND, "alice")
+
+    assert scenario.game.why_cannot_target(bolt, emrakul) is not None
 
 
 def test_the_refusal_names_the_rule_and_the_quality():
@@ -209,12 +235,6 @@ def test_protection_from_instants_can_never_refuse_a_block():
 # -- what protection still cannot do here ----------------------------------
 
 
-@pytest.mark.xfail(
-    reason="machines/targeting.py reads the caster's text, not the target's, so "
-    "CR 601.2c does not refuse a protected target at announcement; only the "
-    "CR 608.2b recheck in Game.legal_target enforces CR 702.16b",
-    strict=True,
-)
 def test_announcing_a_protected_target_is_refused_as_the_spell_is_cast():
     """CR 601.2c: an illegal target is refused then, not left to fizzle later."""
     scenario = emrakul_on_bobs_board().build()

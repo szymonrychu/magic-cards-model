@@ -144,6 +144,33 @@ class ComparisonOperator(StrEnum):
     EQUAL = "eq"
 
 
+class ComparisonCount(StrEnum):
+    """A comparison bound the card *computes* instead of printing a number.
+
+    Drown in the Loch's "with mana value less than or equal to the number of
+    cards in its controller's graveyard" states a real restriction on what may
+    be targeted, but the number it compares against is not on the card - it is
+    read off the game when the question is asked. CR 404.1 makes a graveyard "a
+    player's discard pile" and CR 404.2 keeps it "a single face-up pile" every
+    player may examine at any time, so the count is public information both at
+    announcement (CR 601.2c) and at the CR 608.2b recheck, and it can move
+    between the two.
+
+    Only counts that are *knowable while targets are being announced* belong
+    here. Prismatic Ending's "the number of colors of mana spent to cast this
+    spell" deliberately does not: CR 601.2c announces targets and CR 601.2h
+    pays the total cost afterwards, so at the moment the target is chosen there
+    is no such number yet - that clause is a condition on what the spell does,
+    not on what it may target, and `_COLORS_OF_MANA_SPENT_CONDITION` reads it
+    out of the way rather than turning it into a restriction.
+    """
+
+    CONTROLLERS_GRAVEYARD_CARDS = "controllers_graveyard_cards"
+    """"the number of cards in its controller's graveyard" - counted in the
+    graveyard of the *target's* controller, which for a card with no
+    controller at all is its owner instead (CR 108.4a, CR 109.4)."""
+
+
 class CombatState(StrEnum):
     """Being in combat, which is a game state rather than a characteristic.
 
@@ -291,6 +318,22 @@ class TargetRequirement(BaseModel):
     every target while this is `None` rather than skip the comparison, because
     an unevaluable restriction that quietly let everything through would be a
     wrong game state that looks right - worse than refusing a legal target."""
+    comparison_count: ComparisonCount | None = None
+    """Where to *compute* `comparison_value` from when the card names a count
+    rather than printing a number - Drown in the Loch's "mana value less than
+    or equal to the number of cards in its controller's graveyard".
+
+    Evaluated fresh every time `rejects` is asked, at announcement (CR 601.2c)
+    and again at the CR 608.2b recheck, exactly like `comparison_value_if_revolt`
+    and for the same reason: the count can change in between (a fetchland
+    cracked in response makes a spell Drown could not touch a legal target, and
+    an exiled graveyard takes one away). `None` for every phrase that printed
+    its own number.
+
+    When this is set, `comparison_value` stays `None` on the requirement
+    itself; `_rejects_comparison` resolves it and, if it cannot (no game, or a
+    controller with no player object), fails closed the same way an unbound X
+    does."""
     comparison_value_if_revolt: int | None = None
     """Fatal Push's own "Revolt — ... mana value 4 or less instead if a
     permanent left the battlefield under your control this turn": the wider
@@ -316,6 +359,26 @@ class TargetRequirement(BaseModel):
     stack object's own `targets`; a target that carries no target list to
     count fails open, the same as every other restriction this parser cannot
     evaluate."""
+
+    distinct_controllers: bool = False
+    """"Choose two target creatures controlled by different players" (Run Away
+    Together) - a restriction *across* this requirement's targets rather than
+    on any one of them, so it cannot be answered by `rejects`, which only ever
+    sees one target at a time. `TargetingProfile._why_not` enforces it while it
+    fills this requirement's slots, next to CR 115.3's own across-targets rule
+    ("the same target can't be chosen multiple times for any one instance of
+    the word 'target'"), which lives there for the same reason.
+
+    `knowledge_search` found no numbered CR rule for the phrase "controlled by
+    different players" itself this session; it is read off the plain English,
+    the way `excludes_source` reads "another". What it hangs on is CR 601.2c:
+    the announcement has to be "an appropriate object or player for each
+    target the spell requires", and two creatures one player controls are not
+    an appropriate answer to a spell that asks for two players' creatures.
+
+    Fails open for a target whose controller cannot be read (a bare `UUID` or
+    a `TargetRef`), like every other restriction here that needs more than the
+    caller supplied."""
 
     required_keyword: str | None = None
     """"with flying" in "target creature you don't control with flying"
@@ -651,6 +714,8 @@ class TargetRequirement(BaseModel):
             return None
         label = self.comparison_attribute.value.replace("_", " ")
         comparison_value = self.comparison_value
+        if comparison_value is None and self.comparison_count is not None:
+            comparison_value = self._counted_bound(target, game)
         if self.comparison_value_if_revolt is not None and caster is not None:
             revolt_active_for = getattr(game, "revolt_active_for", None)
             if revolt_active_for is not None and revolt_active_for(caster):
@@ -688,6 +753,36 @@ class TargetRequirement(BaseModel):
             f"{self.phrase} needs {label} {self._comparison_words(comparison_value)}, "
             f"and {target.name} does not have it"
         )
+
+    def _counted_bound(self, target: CardState, game: Any) -> int | None:
+        """The number a `comparison_count` names, right now, or None if it
+        cannot be counted from what the caller supplied.
+
+        Drown in the Loch's "the number of cards in its controller's graveyard"
+        is the only shape so far. "Its controller" is the *target's* - CR 108.4a
+        sends the question to the owner instead only for a card that has no
+        controller at all (CR 109.4: "only objects on the stack or on the
+        battlefield have a controller"), which is what `controller_or_owner`
+        already answers for a card sitting in a graveyard or hand.
+
+        None here means the restriction is unevaluable, and `_rejects_comparison`
+        then refuses the target rather than waving it through - the same
+        fail-closed choice it already makes for an unbound X.
+        """
+        if self.comparison_count is not ComparisonCount.CONTROLLERS_GRAVEYARD_CARDS:
+            return None
+        controller = getattr(target, "controller_or_owner", None) or target.controller
+        if controller is None:
+            return None
+        player_of = getattr(game, "player", None)
+        if player_of is None:
+            return None
+        try:
+            player = player_of(str(controller))
+        except (KeyError, ValueError):
+            return None
+        graveyard = getattr(player, "graveyard", None)
+        return None if graveyard is None else len(graveyard)
 
     def _comparison_holds(self, value: float, comparison_value: int) -> bool:
         assert self.comparison_operator is not None
@@ -773,6 +868,21 @@ class TargetingProfile(BaseModel):
     """False when the text mentions a target the parser could not read."""
     division: Division | None = None
     """What the caster divides among these targets, if anything (CR 601.2d)."""
+    source_card: Card | None = None
+    """The card this profile was read off, when it was read off one at all.
+
+    Every restriction above this line is read from the *caster's* text. CR
+    702.16b is the one that is not: "a permanent or player with protection
+    can't be targeted by spells with the stated quality" is printed on the
+    **target**, and until this field existed nothing consulted it while targets
+    were being announced - only `Game.legal_target`'s CR 608.2b recheck did, so
+    a spell could be announced at a target it could never legally have chosen
+    and then fizzle on resolution instead of the cast being refused outright
+    (CR 601.2c).
+
+    `None` for a profile built from bare text (`profile_for_text`, which reads
+    a triggered or activated ability's own words and has no card behind them) -
+    protection is then left to the resolution recheck exactly as before."""
 
     @property
     def max_targets(self) -> int | None:
@@ -813,7 +923,14 @@ class TargetingProfile(BaseModel):
         attacking creature" cannot be settled without it (CR 508.1k). Pass
         `source_id` to have `excludes_source` checked - "target *other*
         creature" cannot be settled without knowing what "this" is.
+
+        CR 702.16b is checked first and separately, because it is the one
+        restriction here that is printed on the *target* rather than on the
+        spell: a protected target is refused whether or not this parser could
+        read the spell's own targeting text.
         """
+        self._check_protection(targets, game)
+
         if not self.understood:
             return
 
@@ -837,6 +954,29 @@ class TargetingProfile(BaseModel):
 
         self._fill_slots(targets, caster, game, source_id)
 
+    def _check_protection(self, targets: list[Any], game: Any) -> None:
+        """CR 702.16b, at announcement (CR 601.2c) rather than only at the
+        CR 608.2b recheck.
+
+        Asks the game the same question `Game.legal_target` already asks on
+        resolution (`protection_refusal`), so the two can never disagree about
+        what protection means - this file deliberately holds no protection
+        vocabulary of its own. Needs both a `game` to read the target's
+        *current* qualities from (Akroma's Memorial grants protection in
+        layer 6, so it is not on the printed card) and a `source_card` to
+        compare them against; without either, protection stays unchecked here
+        and the resolution recheck is still the backstop.
+        """
+        if game is None or self.source_card is None:
+            return
+        refusal_of = getattr(game, "protection_refusal", None)
+        if refusal_of is None:
+            return
+        for target in targets:
+            refusal = refusal_of(target, self.source_card)
+            if refusal is not None:
+                raise ValueError(refusal)
+
     def _fill_slots(
         self, targets: list[Any], caster: str, game: Any = None, source_id: UUID | None = None
     ) -> None:
@@ -849,18 +989,21 @@ class TargetingProfile(BaseModel):
         ]
         unbounded = [r for r in self.requirements if r.unbounded]
         taken: dict[int, set[TargetRef]] = {}
+        controllers: dict[int, set[str]] = {}
 
         for target in targets:
             reasons: list[str] = []
             for index, slot in enumerate(slots):
-                reason = self._why_not(slot, target, caster, taken, game, source_id)
+                reason = self._why_not(slot, target, caster, taken, game, source_id, controllers)
                 if reason is None:
                     slots.pop(index)
                     break
                 reasons.append(reason)
             else:
                 for requirement in unbounded:
-                    reason = self._why_not(requirement, target, caster, taken, game, source_id)
+                    reason = self._why_not(
+                        requirement, target, caster, taken, game, source_id, controllers
+                    )
                     if reason is None:
                         break
                     reasons.append(reason)
@@ -875,19 +1018,41 @@ class TargetingProfile(BaseModel):
         taken: dict[int, set[TargetRef]],
         game: Any = None,
         source_id: UUID | None = None,
+        controllers: dict[int, set[str]] | None = None,
     ) -> str | None:
-        """Why this requirement cannot take this target, CR 115.3 included."""
+        """Why this requirement cannot take this target, CR 115.3 included.
+
+        `controllers` carries the controllers already chosen for each
+        requirement, which is what "controlled by different players" needs and
+        `rejects` cannot see: it judges one target at a time. Left `None` by a
+        caller that is only re-matching an announcement `check` already
+        accepted (`assign_to_owners`), where re-refusing it would be wrong.
+        """
         reason = requirement.rejects(target, caster, game, source_id)
         if reason is not None:
             return reason
+        controller: str | None = None
+        if requirement.distinct_controllers and controllers is not None:
+            found = getattr(target, "controller_or_owner", None) or getattr(
+                target, "controller", None
+            )
+            controller = None if found is None else str(found)
+            if controller is not None and controller in controllers.get(id(requirement), set()):
+                return (
+                    f"{requirement.phrase} needs targets controlled by different players, "
+                    f"and {controller} already controls one of them (CR 601.2c)"
+                )
         try:
             reference = TargetRef.coerce(target)
         except TypeError:
-            return None
+            reference = None
         already = taken.setdefault(id(requirement), set())
-        if reference in already:
-            return f"{requirement.phrase} cannot choose {target} twice (CR 115.3)"
-        already.add(reference)
+        if reference is not None:
+            if reference in already:
+                return f"{requirement.phrase} cannot choose {target} twice (CR 115.3)"
+            already.add(reference)
+        if controller is not None and controllers is not None:
+            controllers.setdefault(id(requirement), set()).add(controller)
         return None
 
     def assign_to_owners(
@@ -1291,6 +1456,9 @@ def targeting_profile(card: Card) -> TargetingProfile:
         else:
             profile = _parse(text)
             profile = _with_aura_target(card, profile)
+        # Stamped last so every branch above carries it: this is the card whose
+        # qualities CR 702.16b compares against a protected target.
+        profile = profile.model_copy(update={"source_card": card})
         _CACHE[key] = profile
     return profile
 
@@ -1391,7 +1559,10 @@ def profile_for_modes_with_owners(
             # no card in the pool does it, so refuse rather than guess.
             division = parsed.division if division is None else None
     profile = TargetingProfile(
-        requirements=tuple(requirements), understood=understood, division=division
+        requirements=tuple(requirements),
+        understood=understood,
+        division=division,
+        source_card=card,
     )
     return profile, owners
 
@@ -1677,7 +1848,13 @@ def _excludes_source(prefix: str) -> bool:
 #: always capitalizes a subtype - never a plain English noun mid-sentence, so
 #: this is what tells "Vampire" apart from a word this parser already reads
 #: some other way.
-_SUBTYPE_WORD_RE = re.compile(r"^[A-Z][a-zA-Z]*$")
+#: The hyphen is not decoration: CR 205.3m's creature-type list is where
+#: "Assembly-Worker" lives, and Mishra's Factory's "Target Assembly-Worker
+#: creature gets +1/+1 until end of turn" was the pool's last unreadable
+#: targeting phrase because this pattern stopped at the hyphen. Each
+#: hyphenated part is capitalized the same way, which is what keeps an
+#: ordinary hyphenated English word out.
+_SUBTYPE_WORD_RE = re.compile(r"^[A-Z][a-zA-Z]*(?:-[A-Z][a-zA-Z]*)*$")
 
 
 def _is_bare_subtype_word(raw: str, lowered: str) -> bool:
@@ -1954,13 +2131,25 @@ def _read_phrase(prefix: str, suffix: str) -> TargetRequirement | None:
     rest = " ".join(words[noun_end:])
     controller = ControllerRestriction.ANY
 
+    # Read out of the way before the comparison scan sees it: this clause looks
+    # exactly like a mana-value bound and is not one (see
+    # `_COLORS_OF_MANA_SPENT_CONDITION`).
+    rest = _COLORS_OF_MANA_SPENT_CONDITION.sub("", rest).strip()
+
     comparison = _extract_comparison(rest)
     if comparison is _COMPARISON_UNREADABLE:
-        # A comparison was clearly attempted ("with mana value ... to the
-        # number of colors of mana spent") and this parser could not finish
+        # A comparison was clearly attempted and this parser could not finish
         # reading it - fail the whole phrase rather than target past it.
         return None
-    comparison_attribute, comparison_operator, comparison_value, rest = comparison
+    (
+        comparison_attribute,
+        comparison_operator,
+        comparison_value,
+        comparison_count,
+        rest,
+    ) = comparison
+
+    distinct_controllers, rest = _extract_distinct_controllers(rest)
 
     required_keyword, rest = _extract_required_keyword(rest)
 
@@ -2049,6 +2238,8 @@ def _read_phrase(prefix: str, suffix: str) -> TargetRequirement | None:
         comparison_attribute=comparison_attribute,
         comparison_operator=comparison_operator,
         comparison_value=comparison_value,
+        comparison_count=comparison_count,
+        distinct_controllers=distinct_controllers,
         required_keyword=required_keyword,
     )
 
@@ -2198,6 +2389,13 @@ _COMPARISON_ATTEMPT = re.compile(
     re.IGNORECASE,
 )
 
+#: Every count a comparison may name in place of a printed number, keyed by the
+#: named group `_COMPARISON_CLAUSE` captures it with. See `ComparisonCount` for
+#: why only counts knowable at CR 601.2c may live here.
+_COMPARISON_COUNTS = {
+    "controllers_graveyard": ComparisonCount.CONTROLLERS_GRAVEYARD_CARDS,
+}
+
 #: The comparison itself, once `_COMPARISON_ATTEMPT` says one is being made.
 #: Order inside the alternation matters: "N or less/greater" and the spelled-
 #: out "less/greater than or equal to N" are tried before the bare "N" so a
@@ -2207,6 +2405,8 @@ _COMPARISON_CLAUSE = re.compile(
     r"\s+(?:is\s+)?"
     r"(?:"
     r"(?P<num_or>x|\d+)\s+or\s+(?P<dir>less|greater)"
+    r"|(?P<count_dir>less|greater) than or equal to the number of cards in "
+    r"(?P<controllers_graveyard>its controller'?s? graveyard)\b"
     r"|less than or equal to\s+(?P<le_num>x|\d+)\b"
     r"|greater than or equal to\s+(?P<ge_num>x|\d+)\b"
     r"|equal to\s+(?P<eq_num>x|\d+)\b"
@@ -2223,31 +2423,57 @@ _COMPARISON_UNREADABLE = object()
 
 def _extract_comparison(
     rest: str,
-) -> tuple[ComparisonAttribute | None, ComparisonOperator | None, int | None, str] | object:
+) -> (
+    tuple[
+        ComparisonAttribute | None,
+        ComparisonOperator | None,
+        int | None,
+        ComparisonCount | None,
+        str,
+    ]
+    | object
+):
     """Read a trailing "with mana value N or less" clause out of `rest`.
 
-    Returns `(attribute, operator, value, remaining_rest)` - all three of the
-    first fields are `None` and `remaining_rest` is `rest` unchanged when there
+    Returns `(attribute, operator, value, count, remaining_rest)` - the first
+    four fields are `None` and `remaining_rest` is `rest` unchanged when there
     is no comparison at all. `value` is `None` on its own when the comparison
     is real but its number cannot be pinned down yet: an unbound X (CR 107.3 -
     "target creature with mana value X or less" read before X is announced) or
     a bare "with mana value X" (Tamiyo, Compleated Sage; Postmortem Lunge),
     which means "equal to X" (CR 107.1a's ordinary use of a variable).
 
+    `count` is set instead, with `value` left `None`, when the card names a
+    count in place of a number - Drown in the Loch's "less than or equal to the
+    number of cards in its controller's graveyard". That is a real targeting
+    restriction whose bound is only knowable from the game, so it is carried on
+    the requirement as a `ComparisonCount` and evaluated at every check rather
+    than fixed here.
+
     Returns the `_COMPARISON_UNREADABLE` sentinel when `_COMPARISON_ATTEMPT`
-    found the start of a comparison this function could not finish reading -
-    Prismatic Ending's "less than or equal to the number of colors of mana
-    spent to cast this spell" names a count with no digit or X in it at all.
+    found the start of a comparison this function could not finish reading.
     The caller has to fail the whole phrase in that case (`understood=False`)
-    rather than read past the clause, which is the fix for this defect: a
-    restriction the parser cannot evaluate must never be dropped silently.
+    rather than read past the clause: a restriction the parser cannot evaluate
+    must never be dropped silently.
     """
     if not _COMPARISON_ATTEMPT.search(rest):
-        return None, None, None, rest
+        return None, None, None, None, rest
     match = _COMPARISON_CLAUSE.search(rest)
     if match is None:
         return _COMPARISON_UNREADABLE
     attribute = _COMPARISON_ATTR[match.group("attr").lower()]
+    if match.group("count_dir") is not None:
+        operator = (
+            ComparisonOperator.LESS_OR_EQUAL
+            if match.group("count_dir").lower() == "less"
+            else ComparisonOperator.GREATER_OR_EQUAL
+        )
+        count = next(
+            kind
+            for group, kind in _COMPARISON_COUNTS.items()
+            if match.group(group) is not None  # noqa: B023 - `match` is not reassigned
+        )
+        return attribute, operator, None, count, rest[: match.start()] + rest[match.end() :]
     if match.group("num_or") is not None:
         operator = (
             ComparisonOperator.LESS_OR_EQUAL
@@ -2265,7 +2491,51 @@ def _extract_comparison(
         operator, token = ComparisonOperator.EQUAL, match.group("bare_num")
     value = None if token.lower() == "x" else int(token)
     remaining = rest[: match.start()] + rest[match.end() :]
-    return attribute, operator, value, remaining
+    return attribute, operator, value, None, remaining
+
+
+#: Prismatic Ending's converge clause: "Converge — Exile target nonland
+#: permanent **if its mana value is less than or equal to the number of colors
+#: of mana spent to cast this spell**." Read out of the way rather than turned
+#: into a comparison, because it is not one.
+#:
+#: CR 601.2c announces targets; CR 601.2f determines the total cost and
+#: CR 601.2h pays it, both afterwards. So at the moment this spell's target is
+#: chosen there is no "number of colors of mana spent" yet - the clause cannot
+#: restrict what may be targeted, and CR 115.10a's line is the same one from
+#: the other side: only what the word "target" marks is a target. The target
+#: here is the plain "target nonland permanent", which is exactly what this
+#: parser must report so that CR 601.2c refuses a *land*; the mana-value
+#: condition is judged once, at resolution, by `machines/effects.py`'s own
+#: converge parser off `CastRecord.mana_spent`.
+#:
+#: Before this, `_COMPARISON_ATTEMPT` saw "mana value ... less" here, found no
+#: digit for `_COMPARISON_CLAUSE`, and failed the whole phrase closed - which
+#: meant `understood=False` and *no* targeting check at all, so a land was a
+#: legal announcement. Converge is an ability word (CR 207.2c); the "Converge —"
+#: prefix itself needs no handling here, as nothing before the word "target" is
+#: read as part of the noun phrase.
+_COLORS_OF_MANA_SPENT_CONDITION = re.compile(
+    r"\bif its mana value is less than or equal to the number of colors of mana "
+    r"spent to cast this spell\b",
+    re.IGNORECASE,
+)
+
+
+#: "Choose two target creatures **controlled by different players**" (Run Away
+#: Together). Anchored at the start of what is left after the noun, where an
+#: ordinary "you control" clause would sit - the two are alternatives, and this
+#: one restricts the targets against each other rather than against the caster.
+_DIFFERENT_CONTROLLERS_RE = re.compile(r"^controlled by different players\b", re.IGNORECASE)
+
+
+def _extract_distinct_controllers(rest: str) -> tuple[bool, str]:
+    """Read a "controlled by different players" clause out of `rest`, or leave
+    it untouched when there is none - see `TargetRequirement.distinct_controllers`."""
+    match = _DIFFERENT_CONTROLLERS_RE.match(rest)
+    if match is None:
+        return False, rest
+    return True, rest[match.end() :].strip()
 
 
 #: A trailing "with `<keyword>`" clause - "target creature you don't control
