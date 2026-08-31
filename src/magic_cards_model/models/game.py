@@ -71,6 +71,7 @@ from ..machines.delayed import (
 from ..machines.effects import (
     AnaphoricClauseNotice,
     ConditionalClauseNotice,
+    ControlReplacementNotice,
     DelayedClauseNotice,
     ImprintNotice,
     ModeNotice,
@@ -125,7 +126,7 @@ from ..machines.triggers import (
     triggers_for,
 )
 from ..machines.turn import MAIN_PHASES, NO_PRIORITY, TURN_ORDER, Step, TurnMachine
-from .card import Card, Color, Supertype, Type
+from .card import Card, Color, Layout, Supertype, Type
 from .card_state import (
     CardState,
     Counter,
@@ -512,6 +513,16 @@ class CastRecord(BaseModel):
     kicked: int = 0
     """How many times a kicker cost was paid (CR 702.33d), copied from
     `Casting.kicked`."""
+    additional_cost_cards: list[UUID] = Field(default_factory=list)
+    """Every card consumed paying one of `Casting.additional_costs`'
+    components - Fling's "sacrifice a creature" (CR 118.8a), read here by
+    whatever the resolving spell's own text says about it ("deals damage
+    equal to the sacrificed creature's power"). Recorded by object identity
+    rather than by a snapshotted value because different cards ask different
+    questions of the same consumed card (a creature's power here, a
+    discarded card's own characteristics elsewhere) - the caller looks the
+    id up with `Game.find_by_id`, which still finds it wherever paying the
+    cost moved it (a sacrifice to the graveyard, an exile cost to exile)."""
 
     def mana_of_color_spent(self, color: Color) -> int:
         """How much mana of this colour was spent paying the total cost (CR 601.2h)."""
@@ -844,6 +855,17 @@ class Game(BaseModel):
     three cases this wave found (Ragavan, Nashi, Questing Beast). The same
     unreadable-is-not-the-same-as-no-effect record every other notice list
     here keeps."""
+
+    control_replacement_notices: list[ControlReplacementNotice] = Field(default_factory=list)
+    """One entry per resolving spell whose text reads as a CR 614.1a
+    "if [a permanent] would enter the battlefield under [a player]'s
+    control, it enters under [another player]'s control instead" -
+    Gather Specimens is the fixture pool's example. Recognised by shape but
+    not built: `ReplaceableEvent` has no field for a replacement to redirect
+    an entering permanent's controller into, and nothing here represents a
+    temporary, spell-conjured replacement rule watching every future zone
+    change the way `machines/replacement.py`'s `parse_replacement_effects`
+    reads a permanent's own printed one. See `ControlReplacementNotice`."""
 
     reveals: list[Reveal] = Field(default_factory=list)
     """Every card that has been revealed this game (CR 701.20a), in order.
@@ -1393,6 +1415,7 @@ class Game(BaseModel):
         x_value: int = 0,
         mana_spent: dict[Color, int] | None = None,
         kicked: int = 0,
+        additional_cost_cards: list[UUID] | None = None,
     ) -> "CastRecord":
         """Record how a spell was cast, for the rules that ask afterwards.
 
@@ -1430,6 +1453,7 @@ class Game(BaseModel):
             x_value=x_value,
             mana_spent=dict(mana_spent or {}),
             kicked=kicked,
+            additional_cost_cards=list(additional_cost_cards or []),
         )
         self.cast_records[spell.id] = record
         return record
@@ -3424,6 +3448,24 @@ class Game(BaseModel):
         text), so without this the CR 608.2b recheck this method exists for
         would refuse every target forever, on a card the caster legally
         targeted moments earlier.
+
+        A **split card's** (CR 709) chosen half reads its own text too, the
+        same case `Casting.targeting`'s own docstring explains -
+        `targeting_profile(spell.card)` always reads the combined printing's
+        *front* half (`Card.front_oracle_text`), never the half actually
+        cast. Left unfixed, this recheck refused every legal target on a
+        split card's back half forever - the CR 608.2b recheck this method
+        exists for judging the back half's own restriction against the
+        front half's - found auditing Repudiate // Replicate's Replicate
+        half ("Create a token that's a copy of target creature you
+        control.") against Wear // Tear's own front-face-only "target
+        artifact" requirement. `spell.oracle_text` already reads the chosen
+        half while the spell is on the stack (`CardState.up_face`), so this
+        only has to stop *discarding* that in favour of the combined
+        printing - `spell.card.layout is Layout.SPLIT` scopes it the same
+        way `CardState.face_played`'s own docstring does, so a modal-DFC or
+        Adventure spell (already read correctly through `spell.mana_cost`'s
+        `{X}` branch or the plain fallback) is untouched.
         """
         record = self.cast_records.get(spell.id)
         if record is not None and record.modes:
@@ -3432,6 +3474,8 @@ class Game(BaseModel):
             except ValueError:
                 # Not a modal card after all; fall through to its plain text.
                 pass
+        if spell.card.layout is Layout.SPLIT and spell.face_played is not None:
+            return profile_for_text(spell.oracle_text)
         if record is not None and "{X}" in (spell.mana_cost or ""):
             return profile_for_text(substitute_x(spell.oracle_text, record.x_value))
         return targeting_profile(spell.card)

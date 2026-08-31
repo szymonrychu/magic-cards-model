@@ -200,6 +200,14 @@ class TargetRequirement(BaseModel):
     mean something different (CR 105.2c: no color, not any color)."""
     must_be_token: bool | None = None
     """True for "target token", False for "target nontoken ..." (CR 111.1)."""
+    color_count: str | None = None
+    """CR 105.2's color-*count* categories - "multicolored" (two or more of
+    the five colors, CR 105.2b, Psychotic Fury), "monocolored" (exactly one,
+    CR 105.2a), or "colorless" (no color at all, CR 105.2c) - as opposed to
+    `required_colors`' membership check for a *specific* named color, which
+    cannot express any of the three (CR 105.4: "'Multicolored' is not a
+    color. Neither is 'colorless.'", so `_COLOR_WORDS` correctly does not
+    carry them). `None` means the phrase named no such category."""
     historic: bool = False
     """True for "target historic ..." (Abstergo Entertainment). CR 700.6:
     "The term historic refers to an object that has the legendary supertype,
@@ -373,6 +381,18 @@ class TargetRequirement(BaseModel):
         ):
             wanted = " or ".join(sorted(color.name.lower() for color in self.required_colors))
             return f"{self.phrase} needs a {wanted} permanent, and {target.name} is not one"
+        if self.color_count is not None:
+            count = len(set(self._current_colors(target, game)))
+            satisfied = (
+                (self.color_count == "multicolored" and count >= 2)
+                or (self.color_count == "monocolored" and count == 1)
+                or (self.color_count == "colorless" and count == 0)
+            )
+            if not satisfied:
+                return (
+                    f"{self.phrase} needs a {self.color_count} permanent, "
+                    f"and {target.name} is not one"
+                )
         historic = self._rejects_historic(target)
         if historic is not None:
             return historic
@@ -1650,6 +1670,7 @@ def _read_phrase(prefix: str, suffix: str) -> TargetRequirement | None:
         must_be_tapped=must_be_tapped,
         excludes_source=excludes_source or adjectives.excludes_source,
         must_be_token=adjectives.must_be_token,
+        color_count=adjectives.color_count,
         historic=adjectives.historic,
         combat_states=frozenset(adjectives.combat_states),
         comparison_attribute=comparison_attribute,
@@ -1670,6 +1691,7 @@ class _Adjectives:
         self.combat_states: set[CombatState] = set()
         self.must_be_tapped: bool | None = None
         self.must_be_token: bool | None = None
+        self.color_count: str | None = None
         self.historic = False
         self.excludes_source = False
         self.read = 0
@@ -1690,6 +1712,8 @@ class _Adjectives:
             self.required_supertypes.add(_SUPERTYPE_NOUNS[word])
         elif word in _COLOR_WORDS:
             self.required_colors.add(_COLOR_WORDS[word])
+        elif word in {"multicolored", "monocolored", "colorless"}:
+            self.color_count = word
         elif word == "historic":
             self.historic = True
         elif (excluded := _negated_type(word)) is not None:
@@ -1751,6 +1775,7 @@ def _is_adjective(word: str) -> bool:
         or word in {"token", "nontoken", "another", "other"}
         or word in _SUPERTYPE_NOUNS
         or word in _COLOR_WORDS
+        or word in {"multicolored", "monocolored", "colorless"}
         or _negated_type(word) is not None
         or _negated_supertype(word) is not None
     )

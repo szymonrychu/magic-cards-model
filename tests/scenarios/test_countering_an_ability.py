@@ -192,3 +192,63 @@ def test_the_tidebinder_enters_the_battlefield_either_way():
 
     assert tidebinder.zone is Zone.BATTLEFIELD
     assert scenario.creature("Tishana's Tidebinder", "bob") is tidebinder
+
+
+# --------------------------------------------------------------------------
+# Repudiate: a *spell* that counters an ability, not a triggered ability's
+# own side effect - "Counter target activated or triggered ability. (Mana
+# abilities can't be targeted.)" `_COUNTER_TARGET_ABILITY_RE` in
+# `machines/effects.py` is what reaches `counter_targets` for this exact
+# shape (Tishana's Tidebinder's own "... or spell" cousin was already read by
+# `_COUNTER_TARGET_ABILITY_OR_SPELL_RE`); `counter_targets`, `resolve_target`,
+# and `Game.counter` needed nothing new - `Game.find_ability_by_id` already
+# resolves a `TargetRef` against an ability on the stack (built for Tishana's
+# Tidebinder), and `Game.counter` already accepts either kind of
+# `StackObject` (CR 113.9, asserted directly on `Game.counter`'s own
+# docstring this session).
+# --------------------------------------------------------------------------
+
+
+def _board_with_repudiate() -> Scenario:
+    return (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            library=["Forest"],
+            battlefield=["Vampiric Rites", "Swamp", "Swamp", "Grizzly Bears"],
+        )
+        .player(
+            "bob",
+            hand=["Repudiate // Replicate"],
+            battlefield=["Island", "Island"],
+        )
+    )
+
+
+def test_repudiate_counters_the_activated_ability():
+    """CR 113.9: a spell that "specifically counter[s] abilities" reaches the
+    same ability Tishana's Tidebinder's trigger does, with no new mechanism."""
+    scenario = _board_with_repudiate().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    ability = activate_rites(scenario)
+    scenario.pass_priority("alice")
+
+    islands = scenario.untapped_sources("Island", "Island", username="bob")
+    scenario.cast_and_resolve("Repudiate", *islands, username="bob", targets=[ability])
+    scenario.pass_until_resolved()
+
+    assert scenario.player("alice").life == 20, "the ability never resolved"
+    assert scenario.player("alice").hand == []
+    assert scenario.stack_names() == []
+
+
+def test_repudiate_cannot_target_a_mana_ability():
+    """ "(Mana abilities can't be targeted.)" - CR 605.3b's own reason: a mana
+    ability never uses the stack at all, so there is nothing there to aim at."""
+    scenario = _board_with_repudiate().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    swamp = scenario.find("Swamp", Zone.BATTLEFIELD, "alice")
+
+    with pytest.raises(ValueError):
+        scenario.cast("Repudiate", username="bob", targets=[swamp])

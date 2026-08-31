@@ -283,6 +283,8 @@ _NOTICE_STAND_IN_NAMES = frozenset(
         "event_player_target_notice_only",
         "reflexive_notice_only",
         "suspend_redirect_notice_only",
+        "damage_then_group_grant_notice_only",
+        "control_replacement_notice_only",
     }
 )
 

@@ -13,9 +13,19 @@ reason kicker needs recording at all - CR 702.33e and CR 607.2i link it to the
 card's other ability, "If this spell was kicked, it deals 4 damage instead."
 
 CR 702.33c's multikicker may be paid any number of times; plain kicker may not,
-and refusing a second payment is the corner case here. What a kicked spell
-*does* differently is `machines/effects.py`'s business and is not modelled - see
-`docs/engine-coverage.md`.
+and refusing a second payment is the corner case here.
+
+What a kicked spell *does* differently is read at resolution off
+`Game.cast_record(spell).kicked` (`_parse_damage_target_kicked_instead_clause`
+in `machines/effects.py`), covered below by
+`test_an_unkicked_burst_lightning_deals_its_base_damage` and
+`test_a_kicked_burst_lightning_deals_the_kicked_amount_instead` - Burst
+Lightning used to have no `EFFECTS` row at all and resolved doing nothing,
+kicked or not, until its own two-sentence shape ("<Name> deals 2 damage to any
+target. If this spell was kicked, it deals 4 damage instead.") got a reader.
+Burst Lightning's own printed "Kicker {4} (...)" *line* used to poison the
+clause split of the sentence after it too (`_FLASHBACK_LINE_RE`'s own sibling
+bug, `_KICKER_LINE_RE` fixes it) - both are exercised end to end here.
 """
 
 import pytest
@@ -143,3 +153,29 @@ def test_rewinding_a_kicked_casting_returns_the_mana_sources():
 
     assert all(source.untapped for source in scenario.game.battlefield)
     assert scenario.find("Burst Lightning", Zone.HAND, "alice").zone is Zone.HAND
+
+
+def test_an_unkicked_burst_lightning_deals_its_base_damage():
+    """ "Burst Lightning deals 2 damage to any target." (CR 119.3), unkicked."""
+    scenario = board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bob = scenario.player("bob")
+
+    casting = cast_it(scenario, kicked=False)
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    assert bob.life == 18
+
+
+def test_a_kicked_burst_lightning_deals_the_kicked_amount_instead():
+    """ "If this spell was kicked, it deals 4 damage instead." - not 2 plus 4."""
+    scenario = board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bob = scenario.player("bob")
+
+    casting = cast_it(scenario, kicked=True)
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    assert bob.life == 16
