@@ -331,17 +331,6 @@ def test_iroh_grants_a_lesson_in_the_graveyard_flashback_one():
     assert str(casting.begin_paying().cost) == "", "and Gran-Gran's {1} off it"
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Iroh's CR 400.7g flashback grant is read now (the test above), so "
-    "the four-Lesson half is right: {1} granted, {1} discounted, {0} paid. The "
-    "three-Lesson half is still wrong, and it is the episode's actual "
-    "question: `machines/casting.py` has not performed CR 601.2a's move to the "
-    "stack by the time the cost is determined - `casting.spell.zone` is still "
-    "the graveyard - so the spell being cast is counted among the three "
-    "Lessons and wrongly earns Gran-Gran's discount, landing on {0} rather "
-    "than {1}.",
-)
 def test_gran_grans_discount_counts_the_graveyard_after_the_spell_left_it():
     """DDR#996: casting the Lesson itself takes it out of the count.
 
@@ -372,5 +361,5 @@ def test_gran_grans_discount_counts_the_graveyard_after_the_spell_left_it():
     three_casting.choose_targets([three_target])
     three_cost = three_casting.begin_paying()
 
-    assert str(four_cost.cost) == "{0}"
-    assert str(three_cost.cost) == "{1}"
+    assert str(four_cost.cost) == "", "the granted {1}, discounted away entirely"
+    assert str(three_cost.cost) == "{1}", "no discount: only two Lessons are left to count"
