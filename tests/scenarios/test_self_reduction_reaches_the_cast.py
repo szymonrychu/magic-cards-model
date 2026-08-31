@@ -207,6 +207,35 @@ def test_a_tax_and_a_self_discount_are_both_applied():
     assert str(casting.begin_paying().cost) == "{4}{W}"
 
 
+def test_the_announced_x_reaches_disrupting_shoals_pitch_cost():
+    """CR 107.3a: the X in an alternative cost is chosen as the spell is cast
+    (CR 601.2b), and CR 107.3i keeps every instance of X on the object equal.
+
+    `use_pitch_cost(x_value=...)` records it, and the printed phrase is read
+    with that value substituted in - which is as far as this file's engine can
+    take it, because `machines/cost.py`'s `CardRequirement` has no mana-value
+    predicate to express "with mana value 1" (the strict xfail below).
+    """
+    scenario = (
+        Scenario()
+        .player("bob", hand=["Lightning Bolt"], battlefield=["Mountain"])
+        .player("alice", hand=["Disrupting Shoal", "Ponder"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (mountain,) = scenario.untapped_sources("Mountain", username="bob")
+    scenario.cast_onto_stack("Lightning Bolt", mountain, username="bob", targets=["alice"])
+    scenario.pass_priority("bob")
+
+    casting = scenario.cast("Disrupting Shoal", username="alice")
+    with pytest.raises(ValueError, match="mana value 1"):
+        casting.use_pitch_cost(x_value=1)
+
+    assert casting.x_value == 1, "the announced X is on the casting either way"
+    (offer,) = casting.alternative_costs
+    assert offer.description == "exile a blue card with mana value 1 from your hand"
+
+
 @pytest.mark.xfail(
     strict=True,
     reason="`machines/cost.py` owns `CardRequirement`, which has no mana-value "

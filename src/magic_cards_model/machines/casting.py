@@ -1733,7 +1733,9 @@ class Casting(BaseModel):
             self.choose_alternative_cost(TotalCost())
         return self.step
 
-    def use_pitch_cost(self, *, choosing: list[CardState] | None = None) -> CastingStep:
+    def use_pitch_cost(
+        self, *, x_value: int | None = None, choosing: list[CardState] | None = None
+    ) -> CastingStep:
         """CR 118.9's alternative cost, read straight off the card's own
         printed text rather than a named keyword - Force of Will's "You may
         pay 1 life and exile a blue card from your hand rather than pay this
@@ -1744,10 +1746,24 @@ class Casting(BaseModel):
         exiled, here) is chosen now (CR 601.2b), and paying happens later
         through the ordinary `CostPayment` path once `begin_paying` opens.
 
+        `x_value` announces the X in an X-keyed pitch cost - Disrupting
+        Shoal's "You may exile a blue card with mana value X from your hand
+        rather than pay this spell's mana cost." CR 107.3a: "If a spell ... has
+        a mana cost, alternative cost, additional cost, and/or activation cost
+        with an {X}, [-X], or X in it, and the value of X isn't defined by the
+        text of that spell ..., the value ... is chosen" as it is cast
+        (CR 601.2b). It is recorded on the casting like any other announced X,
+        so the *same* value reaches the spell's other clause - CR 107.3i: "all
+        instances of X on an object have the same value at any given time" -
+        and it is substituted into the printed phrase before that phrase is
+        read into a payable cost.
+
         Raises when the card prints no such offer, when its printed cost
         could not be read, or - Force of Negation's and Force of Vigor's own
         gate - when it is only offered "if it's not your turn" and it is.
         """
+        if x_value is not None:
+            self.x_value = x_value
         printed = [
             option
             for option in self.alternative_costs
@@ -1780,10 +1796,16 @@ class Casting(BaseModel):
         options: list[AlternativeCostOption] = []
 
         for offer in alternative_cost_offers(self.spell.card):
-            cost = total_cost_for_phrase(offer.phrase, payer=self.caster)
+            # CR 107.3a's X, announced at CR 601.2b, substituted before the
+            # phrase is read: Disrupting Shoal's "exile a blue card with mana
+            # value X from your hand" only names a payable cost once X has a
+            # value. `machines/modes.substitute_x` is the same substitution a
+            # mode's own text gets, so the two agree by construction.
+            phrase = substitute_x(offer.phrase, self.x_value)
+            cost = _printed_alternative_total_cost(phrase, payer=self.caster)
             unavailable: str | None = None
             if cost is None:
-                unavailable = f"{self.spell.name}'s alternative cost could not be read"
+                unavailable = f"{self.spell.name}'s alternative cost {phrase!r} could not be read"
             elif offer.requires_not_your_turn and not self._is_not_my_turn():
                 unavailable = (
                     f"{self.spell.name}'s alternative cost can only be paid on an opponent's turn"
@@ -1799,7 +1821,7 @@ class Casting(BaseModel):
                     source=AlternativeCostSource.PRINTED,
                     rule="CR 118.9",
                     source_name=self.spell.name,
-                    description=offer.phrase,
+                    description=phrase,
                     cost=cost,
                     requires=sum(component.required for component in cost.components)
                     if cost
