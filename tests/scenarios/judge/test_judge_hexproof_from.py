@@ -12,17 +12,15 @@ way, so the rule that would split it into three separate hexproof abilities does
 not formally reach it. The intended reading - one hexproof ability per quality -
 is not in doubt; the wording that authorizes it is.
 
-This engine cannot express either reading yet, and lands on a third: the printed
-line comes back from `machines/abilities.parse_abilities` as an
-`UnparsedAbility`, but Scryfall's own `keywords` field on the card carries a
-bare "Hexproof" alongside "Hexproof from", and `Casting._hexproof_refusal` reads
-that - so in play Nevinyrral has *full* hexproof and refuses far more than the
-card does.
+The engine takes the intended reading. `machines/abilities.parse_abilities`
+still leaves the printed line an `UnparsedAbility` - it is no keyword shape that
+module knows - but `Casting._hexproof_refusal` now reads the permanent's own
+ability *text* rather than Scryfall's `keywords` field, which carries a bare
+"Hexproof" alongside "Hexproof from" and used to give Nevinyrral full CR 702.11b
+hexproof, refusing far more than the card does.
 Every CR number here was looked up with `knowledge_search(type="rules")` in the
-session that wrote the file.
+sessions that wrote and fixed the file.
 """
-
-import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.abilities import UnparsedAbility, parse_abilities
@@ -34,11 +32,11 @@ def test_the_hexproof_from_line_is_not_parsed_into_a_keyword_at_all():
     """The gap, stated as an assertion rather than left implicit.
 
     CR 702.11d makes "hexproof from [quality]" a variant of hexproof: "This
-    permanent can't be the target of [quality] spells your opponents control or
-    abilities your opponents control from [quality] sources." Nothing in this
-    engine reads that variant, so the printed line stays an `UnparsedAbility` -
-    which is the honest outcome, since the alternative would be silently
-    granting plain hexproof and refusing far more than the card does.
+    permanent can't be the target of [quality] spells your opponents control..."
+    `machines/abilities` has no keyword shape for that variant, so the printed
+    line stays an `UnparsedAbility` there - the targeting refusal reads the line
+    itself instead (`Casting._hexproof_refusal`), which is what the two casting
+    tests below assert.
     """
     (first, *_) = parse_abilities(card("Nevinyrral, Urborg Tyrant"))
 
@@ -46,13 +44,6 @@ def test_the_hexproof_from_line_is_not_parsed_into_a_keyword_at_all():
     assert first.text == "Hexproof from artifacts, creatures, and enchantments"
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Scryfall tags Nevinyrral's keywords as ['Hexproof from', 'Hexproof'], "
-    "and `Casting._hexproof_refusal` matches the bare 'hexproof' entry, so the "
-    "engine gives it *full* hexproof (CR 702.11b) and refuses every opposing "
-    "spell - including the instant CR 702.11d's quality-scoped version allows.",
-)
 def test_a_red_instant_may_still_target_nevinyrral():
     """Hexproof from artifacts, from creatures and from enchantments says
     nothing about an instant.
@@ -60,8 +51,9 @@ def test_a_red_instant_may_still_target_nevinyrral():
     CR 702.11d only refuses "[quality] spells your opponents control or
     abilities your opponents control from [quality] sources", and a Lightning
     Bolt is none of those qualities - so bob may aim one at Nevinyrral. This is
-    the assertion that shows the difference between the three abilities the card
-    is meant to have (CR 702.11f) and the one blanket ability the engine reads.
+    the assertion that separates the three abilities the card is meant to have
+    (CR 702.11f) from the one blanket ability Scryfall's `keywords` field would
+    hand it.
     """
     scenario = (
         Scenario()

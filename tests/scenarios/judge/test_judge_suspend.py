@@ -24,8 +24,6 @@ Every CR number here was looked up with `knowledge_search(type="rules")` in
 the session that wrote this file, and every card's text with `resolve_cards`.
 """
 
-import pytest
-
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.casting import (
     MarkedExile,
@@ -112,14 +110,6 @@ def test_the_owner_who_suspended_their_own_card_gets_the_free_cast():
     assert permission.pays_mana_cost is False
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="finish_suspend reads ExileAnnotation.owner - which annotate_exile fills with the "
-    "player who performed the exile, not the card's owner - so a Suspended Sentence that alice "
-    "exiled while nick owns it hands the CR 702.62a free cast to alice. CR 109.5 puts suspend's "
-    "'your upkeep'/'you may play it' on the card's owner, because a card in exile has no "
-    "controller at all, and CR 702.62a reads nothing about how the card became suspended.",
-)
 def test_the_owner_casts_a_card_someone_else_suspended():
     """DDR#979: Amy exiles it, Nick removes the counters and casts it.
 
@@ -164,3 +154,36 @@ def test_the_owner_casts_a_card_someone_else_suspended():
     permission = finish_suspend(scenario.game, sentence)
     assert permission is not None
     assert permission.player == "bob", "CR 109.5: the owner, not the player who exiled it"
+
+
+def test_the_answer_is_the_owner_whichever_side_of_the_table_exiled_it():
+    """The mirror of the episode, so "the owner" cannot regress into "whoever is
+    not the exiler", "the active player", or "the exiler" again.
+
+    Same shape with the roles swapped: alice owns the card (CR 108.3) and bob
+    performed the exile, so the CR 702.62a free cast is alice's. Together with
+    `test_the_owner_who_suspended_their_own_card_gets_the_free_cast` - the
+    ordinary CR 116.2f route, where the owner exiles their own card - the three
+    cases pin the answer to the owner in every arrangement the engine can be
+    handed.
+    """
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", exile=["Suspended Sentence"])
+        .player("bob", battlefield=["Swamp"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sentence = scenario.find("Suspended Sentence", Zone.EXILE, "alice")
+    assert sentence.owner == "alice"
+
+    annotate_exile(sentence, ExileMarker.SUSPENDED, "bob", scenario.game)
+    scenario.game.add_counters(sentence, Counter.TIME, 3)
+    for _ in range(3):
+        sentence.remove_counters(Counter.TIME, 1)
+
+    permission = finish_suspend(scenario.game, sentence)
+    assert permission is not None
+    assert permission.player == "alice", "CR 109.5: the owner, not the player who exiled it"
+    assert permission.pays_mana_cost is False

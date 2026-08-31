@@ -17,6 +17,7 @@ Paying is delegated to `CostPayment`, so the mana side of casting is one
 machine and the announcement side is another.
 """
 
+import re
 from collections.abc import Iterable, Sequence
 from enum import StrEnum
 from typing import Any
@@ -24,7 +25,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ..models.card import Card, Layout, Type
+from ..models.card import Card, Color, Layout, Type
 from ..models.card_state import CardState, Counter, ExileAnnotation, ExileMarker, TargetRef
 from ..models.mana import ManaCost, ManaSpend
 from ..models.zone import Zone
@@ -676,6 +677,35 @@ TIMING_KEYWORDS = frozenset({"flash"})
 #: Keywords that change whether a permanent may be *chosen* as a target
 #: (CR 601.2c). `Casting.choose_targets` refuses the announcement for these.
 TARGET_LEGALITY_KEYWORDS = frozenset({"hexproof"})
+
+#: One printed hexproof ability: plain (CR 702.11b) when it names no quality,
+#: or CR 702.11d's "hexproof from [quality]" when it does. The quality run stops
+#: at the end of the sentence, so a line that continues past it does not bleed
+#: into the list.
+_HEXPROOF_ABILITY = re.compile(r"\bhexproof\b(?:\s+from\s+(?P<qualities>[^.;\n]+))?", re.IGNORECASE)
+
+#: CR 207.2 reminder text, which restates the ability in words that would parse
+#: as a second copy of it.
+_REMINDER_TEXT = re.compile(r"\([^)]*\)")
+
+#: CR 702.11f's shorthand, in either printed spelling: "from A and from B", and
+#: the list form "from A, B, and C" that Nevinyrral, Urborg Tyrant prints.
+_QUALITY_SEPARATOR = re.compile(r",\s*|\s+and\s+from\s+|\s+and\s+|\s+or\s+", re.IGNORECASE)
+
+#: What is left at the front of a list item once the comma took the separator:
+#: "artifacts, creatures, and enchantments" splits on the commas, so the last
+#: item still carries its conjunction.
+_QUALITY_PREFIX = re.compile(r"^(?:and|or|from)\s+", re.IGNORECASE)
+
+#: The colour each quality word names (CR 105.1). Colorless is not a colour
+#: (CR 105.2c) and is deliberately absent.
+_COLOR_WORDS: dict[str, Color] = {
+    "white": Color.WHITE,
+    "blue": Color.BLUE,
+    "black": Color.BLACK,
+    "red": Color.RED,
+    "green": Color.GREEN,
+}
 
 #: Keywords that are an optional additional cost on a spell being cast
 #: (CR 118.8a). `Casting.pay_kicker` charges these.
@@ -1807,9 +1837,28 @@ class Casting(BaseModel):
         abilities your opponents control.'" So it is about *who* is casting,
         not about what: the controller's own spells target it happily.
 
-        CR 702.11d's "hexproof from [quality]" is not read - no card in the pool
-        has it, and guessing a quality would be worse than not checking. Nor is
-        hexproof on a player (CR 702.11c): `Player` has no text to read it off.
+        CR 702.11d's variant is read too: "'Hexproof from [quality]' on a
+        permanent means 'This permanent can't be the target of [quality] spells
+        your opponents control...'" - which refuses a spell of that quality and
+        leaves every other spell alone. CR 702.11f makes the printed list form
+        shorthand for several such abilities: "'Hexproof from [quality A] and
+        from [quality B]' is shorthand for 'hexproof from [quality A]' and
+        'hexproof from [quality B]'; it behaves as two separate hexproof
+        abilities."
+
+        The abilities are read off the permanent's own text, never off
+        Scryfall's flattened `keywords` array: that array lists a bare
+        "Hexproof" *alongside* "Hexproof from" on Nevinyrral, Urborg Tyrant,
+        whose only printed hexproof is "Hexproof from artifacts, creatures, and
+        enchantments". Trusting it granted CR 702.11b's full hexproof to a
+        permanent that never had it and refused a Lightning Bolt the card
+        plainly allows.
+
+        A quality this engine cannot read - anything that is not a card type,
+        subtype, supertype, or colour - is not enforced, the same fail-open
+        choice `Game.protection_refusal` makes for CR 702.16b; see
+        `docs/engine-coverage.md`. Nor is hexproof on a player (CR 702.11c):
+        `Player` has no text to read it off.
 
         A `Casting` without a game cannot say who controls the target, so
         nothing is checked there.
@@ -1820,18 +1869,84 @@ class Casting(BaseModel):
             # CR 702.11b speaks of a permanent, and a permanent is on the
             # battlefield (CR 110.1).
             return None
-        # `target.keywords` (not `target.card.keywords`): a face-down
-        # permanent has no text (CR 702.37c) and CardState.keywords already
-        # knows that, so the raw printed field would wrongly grant hexproof
-        # to a face-down permanent whose printed side happens to have it.
-        if not any(keyword.lower() == "hexproof" for keyword in target.keywords):
+        plain, qualities = self._hexproof_abilities(target)
+        if not plain and not qualities:
             return None
         if self.game.controller_of(target).username == self.caster:
             return None
-        return (
-            f"{target.name} has hexproof, so {self.caster} - an opponent of its "
-            f"controller - cannot target it (CR 702.11b)"
-        )
+        if plain:
+            return (
+                f"{target.name} has hexproof, so {self.caster} - an opponent of its "
+                f"controller - cannot target it (CR 702.11b)"
+            )
+        for quality in qualities:
+            if self._spell_has_quality(quality):
+                return (
+                    f"{target.name} has hexproof from {quality}, so {self.caster} - an "
+                    f"opponent of its controller - cannot target it with "
+                    f"{self.spell.name} (CR 702.11d)"
+                )
+        return None
+
+    def _hexproof_abilities(self, target: CardState) -> tuple[bool, list[str]]:
+        """Whether `target` has plain hexproof, and every quality it has
+        hexproof from (CR 702.11b, CR 702.11d, CR 702.11f).
+
+        Read off the permanent's ability *text*, the same way
+        `Game._effective_protection_qualities` reads protection's: the computed
+        board when there is one, so a hexproof granted in layer 6 counts and one
+        Humility took away does not (CR 613.5), and the object's own text
+        otherwise. Either way a face-down permanent has no text at all
+        (CR 702.37c, CR 708.2) and so has neither ability.
+        """
+        lines: list[str]
+        characteristics = None
+        try:
+            characteristics = self.game.characteristics_of(target)
+        except (AttributeError, KeyError):
+            characteristics = None
+        if characteristics is not None:
+            lines = list(characteristics.abilities)
+        else:
+            lines = target.oracle_text.splitlines()
+        plain = False
+        qualities: list[str] = []
+        for line in lines:
+            # Reminder text spells the ability out again in a form that would
+            # be parsed as a second, wrong copy of it (CR 207.2).
+            for match in _HEXPROOF_ABILITY.finditer(_REMINDER_TEXT.sub("", line)):
+                raw = match.group("qualities")
+                if raw is None:
+                    plain = True
+                    continue
+                for part in _QUALITY_SEPARATOR.split(raw):
+                    quality = _QUALITY_PREFIX.sub("", part.strip().strip(",.").strip()).strip()
+                    if quality and quality not in qualities:
+                        qualities.append(quality)
+        return plain, qualities
+
+    def _spell_has_quality(self, quality: str) -> bool:
+        """Whether this spell is of the stated quality (CR 702.11d).
+
+        A quality "is usually a color ... but can be any characteristic value or
+        information" (CR 702.16a, protection's own wording for the same idea).
+        Card types, subtypes, and supertypes are stated in the plural on the
+        card ("hexproof from creatures"), so the trailing "s" comes off first.
+        Anything else comes back False and is not enforced.
+        """
+        word = quality.strip().lower().removesuffix("s")
+        try:
+            card_type = Type(word)
+        except ValueError:
+            card_type = None
+        if card_type is not None:
+            return card_type in self.spell.types
+        color = _COLOR_WORDS.get(word)
+        if color is not None:
+            return color in self.spell.colors
+        if any(word == subtype.lower() for subtype in self.spell.subtypes):
+            return True
+        return any(word == supertype.lower() for supertype in self.spell.supertypes)
 
     # -- CR 601.2f-h: the total cost, and paying it ------------------------
 
@@ -2442,7 +2557,18 @@ def finish_suspend(game: Any, card: CardState) -> PlayPermission | None:
 
     "'When the last time counter is removed from this card, if it's exiled,
     you may play it without paying its mana cost if able. If you don't, it
-    remains exiled.'" The intervening *if* ("if it's exiled") is read against
+    remains exiled.'" The player that "you" names is the card's **owner**
+    (CR 108.3: "the player who started the game with it in their deck"), never
+    whoever performed the exile: CR 109.5 says "the words 'you' and 'your' on an
+    object refer to the object's controller, its would-be controller (if a
+    player is attempting to play, cast, or activate it), or its owner (if it has
+    no controller)", and a card in exile has no controller at all. So a card
+    another player exiled with time counters - Suspended Sentence's own last
+    line, cast by somebody else - still comes off suspend into its owner's
+    hands. `ExileAnnotation.owner` is the player who took the exiling action and
+    is only the fallback here, for a card whose owner nothing recorded.
+
+    The intervening *if* ("if it's exiled") is read against
     the card's *current* zone, not the zone it was in when the last counter
     came off - CR 603.10's ordinary "check now" shape for a triggered
     ability's own condition.
@@ -2484,7 +2610,7 @@ def finish_suspend(game: Any, card: CardState) -> PlayPermission | None:
         return None
     return game.grant_play_permission(
         card,
-        annotation.owner or card.controller or game.active_player.username,
+        card.owner or annotation.owner or game.active_player.username,
         action=PlayAction.CAST,
         pays_mana_cost=False,
         source_name=f"{card.name}'s suspend",
