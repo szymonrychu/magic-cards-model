@@ -105,6 +105,7 @@ from ..models.card_state import CardState, ExileMarker, TargetRef
 from ..models.zone import Zone
 from .abilities import keyword_abilities
 from .combat import has_keyword
+from .layers import BASIC_LAND_TYPES
 from .modes import Mode, modal_profile, mode_rules_text
 
 # --------------------------------------------------------------------------
@@ -1529,6 +1530,34 @@ def _excludes_source(prefix: str) -> bool:
 _SUBTYPE_WORD_RE = re.compile(r"^[A-Z][a-zA-Z]*$")
 
 
+def _is_bare_subtype_word(raw: str, lowered: str) -> bool:
+    """Whether one word, as originally capitalized, is a CR 205.3m creature
+    type standing in for the elided noun "creature" - the single-item case
+    `_read_subtype_list`'s own docstring says is deliberately left to the
+    caller below, now that Aeronaut Cavalry's "another target Soldier you
+    control" needs it. A real English noun is never capitalized mid-sentence,
+    so `_SUBTYPE_WORD_RE`'s shape plus absence from every noun/adjective
+    vocabulary this parser already reads (`_ALL_NOUNS`, `_SUPERTYPE_NOUNS`,
+    `_COLOR_WORDS`) is what tells a bare subtype apart from an ordinary noun.
+
+    CR 305.6's five basic land types are excluded on top - "target Forest"
+    (Utopia Sprawl's own enchant restriction, read as a target the same way
+    `_read_phrase` reads anything else) names a *land* subtype, not an elided
+    "creature", and reading it as one used to force `card_types={CREATURE}`
+    onto a land-only target and refuse the very Forest the Aura was meant to
+    enchant. CR 205.3m's actual creature-type list runs into the hundreds and
+    is deliberately not enumerated here the same way it never has been - this
+    one exclusion is the specific collision an in-pool card actually hit, not
+    a first step toward a maintained whitelist.
+    """
+    return bool(_SUBTYPE_WORD_RE.match(raw)) and not (
+        lowered in _ALL_NOUNS
+        or lowered in _SUPERTYPE_NOUNS
+        or lowered in _COLOR_WORDS
+        or raw in BASIC_LAND_TYPES
+    )
+
+
 def _read_subtype_list(noun_phrase: str) -> tuple[list[str], str] | None:
     """ "Vampire, Werewolf, or Zombie[.]" (Slayer of the Wicked): a bare CR
     205.3m creature-type list used as the target noun itself, Oracle
@@ -1557,10 +1586,7 @@ def _read_subtype_list(noun_phrase: str) -> tuple[list[str], str] | None:
     if len(raw_items) < 2:
         return None
     for item in raw_items:
-        if not _SUBTYPE_WORD_RE.match(item):
-            return None
-        lowered = item.lower()
-        if lowered in _ALL_NOUNS or lowered in _SUPERTYPE_NOUNS or lowered in _COLOR_WORDS:
+        if not _is_bare_subtype_word(item, item.lower()):
             return None
     display = ", ".join(raw_items[:-1] + [f"or {raw_items[-1]}"])
     return [item.lower() for item in raw_items], display
@@ -1626,6 +1652,13 @@ def _read_phrase(prefix: str, suffix: str) -> TargetRequirement | None:
     # Oxford-comma noun list - "target artifact, enchantment, or nonbasic
     # land" - can be told apart from an ordinary "target creature you
     # control": see the noun-reading loop below.
+    #
+    # `raw_words` keeps the original capitalization alongside `words`'
+    # lower-cased tokens, index for index - the noun-reading loop below needs
+    # it to tell Aeronaut Cavalry's bare "Soldier" (CR 205.3m, elided
+    # "creature") apart from an ordinary lower-case English noun the way
+    # `_read_subtype_list` already does for its own two-or-more-item list.
+    raw_words = re.findall(r"[\w'-]+|,", noun_phrase)
     words = re.findall(r"[\w'-]+|,", noun_phrase.lower())
     if not words:
         # CR 115.4: "any target," "another target," "two targets," "or similar
@@ -1643,6 +1676,7 @@ def _read_phrase(prefix: str, suffix: str) -> TargetRequirement | None:
         )
     adjectives, index = _read_adjectives(words)
     card_types: set[Type] = set()
+    required_subtypes: set[str] = set()
     allows_players = False
     opponent_only = False
     allows_cards = False
@@ -1695,6 +1729,17 @@ def _read_phrase(prefix: str, suffix: str) -> TargetRequirement | None:
                 excludes_source = True
             index += 1
             continue
+        elif nouns_read == 0 and _is_bare_subtype_word(raw_words[index], word):
+            # Aeronaut Cavalry's "another target Soldier you control" - CR
+            # 205.3m's creature-type word standing alone as the target noun,
+            # the elided-"creature" shape `_read_subtype_list` reads for two
+            # or more items; here it is exactly one, so it falls to this
+            # branch instead rather than the early-return special case, which
+            # is also how "you control" past it still reaches the ordinary
+            # `control_match` handling below.
+            required_subtypes.add(word)
+            card_types.add(Type.CREATURE)
+            allows_cards = True
         elif nouns_read == 0 and not adjectives.read:
             return None  # an adjective the parser does not know: fail open
         else:
@@ -1776,6 +1821,7 @@ def _read_phrase(prefix: str, suffix: str) -> TargetRequirement | None:
         unbounded=unbounded,
         variable_count=variable,
         card_types=frozenset(card_types),
+        required_subtypes=frozenset(required_subtypes),
         excluded_card_types=frozenset(adjectives.excluded_types) | extra_excluded_types,
         required_supertypes=frozenset(adjectives.required_supertypes),
         excluded_supertypes=frozenset(adjectives.excluded_supertypes) | extra_excluded_supertypes,

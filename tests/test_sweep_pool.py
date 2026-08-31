@@ -35,18 +35,24 @@ def test_a_card_that_works_classifies_as_handled():
 
 
 def test_a_card_with_a_genuine_gap_still_classifies_as_silent():
-    """History of Benalia is a Saga: its whole text is chapter abilities
-    (I, II - create a token; III - a team pump), which nothing in the engine
-    reads, so it genuinely does nothing when played. Fixing the classifier
-    must never make a genuinely-dead card look alive: this is the control
-    for that.
+    """Grand Arbiter Augustin IV's three static cost-modifier lines are a
+    still-open, documented gap (`docs/engine-coverage.md`'s own
+    `cost_modifier_notices` row names this exact card: "Spells your
+    opponents cast cost {1} more to cast" is controller-relative in a way
+    `cost_modifier_effect`'s shapes do not cover) - a static ability
+    `_layer_category` does not even recognise as an *attempted* pump/anthem
+    shape, so it never reaches a `CostModifierNotice` either and stays fully
+    silent. Fixing the classifier must never make a genuinely-dead card look
+    alive: this is the control for that.
 
-    (Two earlier examples of the identical kind have since been closed and
+    (Three earlier examples of the identical kind have since been closed and
     so stopped being valid controls here: March of Otherworldly Light's
-    two-sentence additional-cost preamble, and Blood Artist's back-to-back
-    "target player loses 1 life and you gain 1 life" clauses.)
+    two-sentence additional-cost preamble, Blood Artist's back-to-back
+    "target player loses 1 life and you gain 1 life" clauses, and History of
+    Benalia's Saga chapters - the last of those closed by the same wave that
+    added this replacement, `machines/abilities._parse_chapter_line`.)
     """
-    category, _ = classify_card(card("History of Benalia"))
+    category, _ = classify_card(card("Grand Arbiter Augustin IV"))
     assert category == SILENT
 
 

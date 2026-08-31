@@ -623,7 +623,7 @@ class TriggerWord(StrEnum):
 class TriggerEvent(StrEnum):
     """The common trigger shapes, recognised off the condition text.
 
-    Only these nineteen are recognised; every other condition leaves `event`
+    Only these twenty-two are recognised; every other condition leaves `event`
     None with `condition` still holding the printed text.
     """
 
@@ -741,6 +741,15 @@ class TriggerEvent(StrEnum):
     #: count on the event (`GameEvent.amount`), emitted by whichever call
     #: site discards more than one card at a time as a single batch.
     DISCARDS_A_CARD = "discards_a_card"
+    #: CR 107.15a: "'{rN}—[Effect]' means 'When one or more lore counters are
+    #: put onto this Saga, if the number of lore counters on it was less than
+    #: N and became at least N, [effect].'" Never printed as a line of
+    #: condition text at all - `_parse_chapter_line` synthesizes one
+    #: `TriggeredAbility` per chapter number straight off the card's own `I —`
+    #: / `I, II —` / `III —` markers, each carrying its own threshold on
+    #: `TriggeredAbility.chapter`, the same way a keyword ability's expansion
+    #: carries no printed condition either.
+    LORE_COUNTERS_ADDED = "lore_counters_added"
 
 
 class CostKind(StrEnum):
@@ -966,6 +975,15 @@ class TriggeredAbility(BaseAbility):
     #: Caretaker's Talent's own token-enters trigger is the only printing in
     #: the pool with this restriction.
     once_per_turn: bool = False
+    #: CR 107.15a's `N`: the lore-counter threshold one `{rN}—` chapter symbol
+    #: names, for a `TriggeredAbility` `_parse_chapter_line` synthesized off a
+    #: Saga's own `I —` / `I, II —` / `III —` marker rather than read off any
+    #: printed condition text (`event` is `TriggerEvent.LORE_COUNTERS_ADDED`
+    #: for every one of these, and `condition` holds CR 107.15a's own
+    #: paraphrase - "one or more lore counters are put onto this saga" - for a
+    #: human reading a `LayerNotice`/decision prompt, not for re-parsing).
+    #: `None` for every other `TriggeredAbility` - the ordinary, printed kind.
+    chapter: int | None = None
 
 
 class StaticAbility(BaseAbility):
@@ -1126,8 +1144,36 @@ def keyword_ability(card: Card, keyword: str) -> KeywordAbility | None:
     return None
 
 
+#: Some printings template a self-reference as the card's own name rather
+#: than CR 700.7's "this [something]" - The Filigree Sylex's "Put an oil
+#: counter on The Filigree Sylex.", Grist, the Hunger Tide's own "put a
+#: loyalty counter on Grist" (the short form before the comma), and Ruby,
+#: Daring Tracker's "Ruby gets +2/+2 until end of turn." CR 201.5: "Text that
+#: refers to the object it's on by name means just that particular object" -
+#: the same reference CR 700.7's "this [something]" makes, just spelled
+#: differently, so this rewrites either wording to "this permanent" once,
+#: ahead of every shape-specific parser in `machines/effects.py` and
+#: `machines/layers.py`, letting both read a self-named sentence the same way
+#: they already read "this creature"/"this permanent" rather than needing a
+#: second copy of every shape keyed on a literal name.
+def self_normalized_effect_text(card_name: str, effect_text: str) -> str:
+    front = card_name.split("//")[0].strip()
+    candidates = {card_name, front}
+    if "," in front:
+        candidates.add(front.split(",", 1)[0].strip())
+    normalized = effect_text
+    for name in candidates:
+        if name:
+            normalized = re.sub(rf"\b{re.escape(name)}\b", "this permanent", normalized)
+    return normalized
+
+
 def layer_readable_sentences(
-    text: str | None, known_keywords: list[str] | None = None, *, static_only: bool = False
+    text: str | None,
+    known_keywords: list[str] | None = None,
+    *,
+    static_only: bool = False,
+    card_name: str | None = None,
 ) -> list[str]:
     """Every sentence of `text` this module's own line classifier says a
     continuous effect (CR 611.2, CR 611.3) could plausibly come from.
@@ -1216,6 +1262,8 @@ def layer_readable_sentences(
             for sentence in re.split(r"(?<=\.)\s+", body.strip()):
                 sentence = sentence.strip()
                 if sentence:
+                    if card_name:
+                        sentence = self_normalized_effect_text(card_name, sentence)
                     sentences.append(sentence)
     return sentences
 
@@ -1224,8 +1272,74 @@ def layer_readable_sentences(
 # Line parsing
 # --------------------------------------------------------------------------
 
-#: CR 714 Saga chapter markers: `I —`, `I, II —`, `III —`.
-_CHAPTER = re.compile(r"^[IVXL]+(?:\s*,\s*[IVXL]+)*\s*—")
+#: CR 714 Saga chapter markers: `I —`, `I, II —`, `III —`. The whole line, not
+#: just the marker - `_parse_chapter_line` needs the effect text past the dash
+#: too, unlike every other line-classifying regex in this module, which
+#: matches only the leading words and leaves the rest to be split out
+#: afterwards.
+_CHAPTER_LINE = re.compile(
+    r"^(?P<numerals>[IVXL]+(?:\s*,\s*[IVXL]+)*)\s*—\s*(?P<effect>.+)$", re.DOTALL
+)
+
+#: CR 107.15's Roman numeral, restricted to the additive-only range Sagas
+#: print (I through V has covered every Saga to date; L is here only because
+#: `_CHAPTER_LINE` already admits it and a genuine subtractive numeral - "IV"
+#: - still has to read as 4, not 6, so the subtraction rule is implemented in
+#: full rather than assumed away).
+_ROMAN_VALUES = {"I": 1, "V": 5, "X": 10, "L": 50}
+
+
+def _roman_to_int(numeral: str) -> int | None:
+    """A CR 107.15 chapter numeral as a plain int, or `None` if it is not one."""
+    total = 0
+    previous = 0
+    for char in reversed(numeral.upper()):
+        value = _ROMAN_VALUES.get(char)
+        if value is None:
+            return None
+        total += value if value >= previous else -value
+        previous = max(previous, value)
+    return total if total > 0 else None
+
+
+def _parse_chapter_line(text: str, common: dict) -> list[TriggeredAbility] | None:
+    """CR 107.15a: "'{rN}—[Effect]' means 'When one or more lore counters are
+    put onto this Saga, if the number of lore counters on it was less than N
+    and became at least N, [effect].'"
+
+    `I, II —` (History of Benalia's own first line) names the *same* effect at
+    two different thresholds, not one ability that reads both numbers -
+    CR 107.15a's paraphrase is written for a single `N`, so this returns one
+    `TriggeredAbility` per numeral, each carrying its own `chapter` and the
+    identical effect text. `machines/triggers.condition_matches` reads
+    `chapter` against the lore count `Game.add_counters` reports on
+    `TriggerEvent.LORE_COUNTERS_ADDED`, so two abilities off one line fire
+    independently, exactly as two separately-numbered chapters would.
+    """
+    match = _CHAPTER_LINE.match(text)
+    if match is None:
+        return None
+    chapters: list[int] = []
+    for numeral in match.group("numerals").split(","):
+        value = _roman_to_int(numeral.strip())
+        if value is None:
+            return None
+        chapters.append(value)
+    effect = match.group("effect").strip()
+    if not effect:
+        return None
+    return [
+        TriggeredAbility(
+            **common,
+            word=TriggerWord.WHEN,
+            condition="one or more lore counters are put onto this saga",
+            effect=effect,
+            event=TriggerEvent.LORE_COUNTERS_ADDED,
+            chapter=chapter,
+        )
+        for chapter in chapters
+    ]
+
 
 #: CR 207.2c ability word: a short capitalised phrase, then an em dash.
 _ABILITY_WORD = re.compile(r"^([A-Z][A-Za-z'\- ]{2,30}?)\s+—\s+(?=\S)")
@@ -1304,8 +1418,9 @@ def _parse_line(raw: str, keywords: list[str], face: str) -> list[Ability]:
 
     common = {"raw": raw.strip(), "text": text, "reminder": reminder, "face": face}
 
-    if _CHAPTER.match(text):
-        return [UnparsedAbility(**common)]
+    chapter_abilities = _parse_chapter_line(text, common)
+    if chapter_abilities is not None:
+        return list(chapter_abilities)
 
     keyword_abilities = _parse_keywords(text, keywords, common)
     if keyword_abilities:
@@ -1457,6 +1572,21 @@ _ONCE_PER_TURN_TRAILER = re.compile(
 )
 
 
+#: Ruby, Daring Tracker's shape: "Whenever Ruby attacks **while** you control
+#: a creature with power 4 or greater, Ruby gets +2/+2 until end of turn." -
+#: CR 603.4's intervening *if* clause, worded with "while" in place of "if"
+#: and folded into the trigger condition itself rather than sitting after the
+#: comma the way Persist's "if it had no -1/-1 counters on it" does. Split off
+#: here, before the trigger-event words are ever read, so `condition` carries
+#: only "Ruby attacks" - `_trigger_event`/`condition_matches` never see the
+#: "while ..." tail - and `intervening_if` carries the clause itself, checked
+#: by the same `machines/triggers.intervening_if_holds` (CR 603.4, 608.2a)
+#: every other intervening *if* goes through. Matched only ahead of the first
+#: top-level comma, so an effect that happens to use the word "while" past
+#: that point (none in the pool) is left alone.
+_CONDITION_WHILE_CLAUSE = re.compile(r"\bwhile\b", re.IGNORECASE)
+
+
 def _parse_triggered(text: str, common: dict) -> TriggeredAbility | None:
     match = _TRIGGER.match(text)
     if match is None:
@@ -1473,7 +1603,12 @@ def _parse_triggered(text: str, common: dict) -> TriggeredAbility | None:
     condition, rest = parts[0], ", ".join(parts[1:])
 
     intervening_if: str | None = None
-    if rest.lower().startswith("if "):
+    while_match = _CONDITION_WHILE_CLAUSE.search(condition)
+    if while_match is not None:
+        intervening_if = condition[while_match.end() :].strip()
+        condition = condition[: while_match.start()].strip()
+
+    if intervening_if is None and rest.lower().startswith("if "):
         # `_FIRST_SPELL_THIS_TURN_WITH_BOUNDARY` first: Alania, Divergent
         # Storm's own intervening *if* is itself a comma-separated list -
         # "if it's the first instant spell, the first sorcery spell, or the

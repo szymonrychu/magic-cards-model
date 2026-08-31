@@ -118,6 +118,10 @@ class Counter(StrEnum):
       (CR 613.4c), and annihilate each other as a state-based action
       (CR 122.3, CR 704.5q).
     - `loyalty` is what a planeswalker's loyalty *is* (CR 122.1e, CR 306.5c).
+    - `lore` is what a Saga's progress *is* (CR 714.3): each one placed checks
+      every chapter ability's own threshold (CR 107.15a) for a fresh trigger,
+      and CR 714.4/704.5s sacrifice the Saga once its count reaches its final
+      chapter number.
     - `poison` is on a player, and ten of them lose the game (CR 122.1f,
       CR 704.5c).
     - `energy` is on a player and is what `{E}` pays with (CR 107.14).
@@ -132,6 +136,7 @@ class Counter(StrEnum):
     PLUS_ONE = "+1/+1"
     MINUS_ONE = "-1/-1"
     LOYALTY = "loyalty"
+    LORE = "lore"
     POISON = "poison"
     ENERGY = "energy"
     EXPERIENCE = "experience"
@@ -1271,6 +1276,7 @@ class CardState(BaseModel):
             # began (CR 302.6).
             self.summoning_sick = True
             self._enter_with_loyalty()
+            self._enter_with_lore_counter()
         else:
             self.tapped = False
             self.transformed = False
@@ -1324,6 +1330,70 @@ class CardState(BaseModel):
         return Type.PLANESWALKER in self.types
 
     @property
+    def is_saga(self) -> bool:
+        """CR 303.5: an enchantment with the Saga subtype."""
+        return "Saga" in self.subtypes
+
+    @property
+    def chapter_numbers(self) -> tuple[int, ...]:
+        """Every CR 107.15 threshold this Saga's own chapter symbols name,
+        lowest first - `(1, 2, 3)` for History of Benalia's `I, II —`/`III —`.
+
+        Late import, the same reason `keywords` reaches into
+        `machines/abilities.py` from here: `machines/` imports `models/`, so
+        the reverse import only resolves once this is actually called.  Empty
+        for anything that is not a Saga, or a Saga with no chapter line at
+        all - CR 714.3c's own gate, "one or more chapter abilities", reads
+        this the same way.
+        """
+        if not self.is_saga:
+            return ()
+        from ..machines.abilities import TriggeredAbility, TriggerEvent, parse_abilities
+
+        up_face_name = self.up_face_name or self.card.name
+        return tuple(
+            sorted(
+                ability.chapter
+                for ability in parse_abilities(self.card)
+                if ability.face == up_face_name
+                and isinstance(ability, TriggeredAbility)
+                and ability.event is TriggerEvent.LORE_COUNTERS_ADDED
+                and ability.chapter is not None
+            )
+        )
+
+    @property
+    def final_chapter_number(self) -> int | None:
+        """CR 714.2e: "A Saga's final chapter ability is the chapter ability
+        which has its final chapter number in its chapter symbol." `None` for
+        a non-Saga or one with no chapter line to read a number off.
+        """
+        numbers = self.chapter_numbers
+        return max(numbers) if numbers else None
+
+    @property
+    def lore_counters(self) -> int:
+        """How many lore counters (CR 714.3) are on this Saga right now."""
+        return self.counters[Counter.LORE]
+
+    @property
+    def lore_counters_exhausted(self) -> bool:
+        """CR 714.4, CR 704.5s: the lore-counter half of the state-based
+        action's condition - "greater than or equal to its final chapter
+        number" - minus the "and it isn't the source of a chapter ability
+        that has triggered but not yet left the stack" half. CR 704.5s does
+        not use the word "sacrifice" at all: it is a plain SBA move to the
+        graveyard, like CR 704.5f's zero-toughness creature, not CR 701.21's
+        player-chosen action. The caller (`Game._sagas_to_put_into_graveyard`)
+        is the one that knows what is still on the stack, so it checks that
+        half itself and only asks this for the lore-counter comparison.
+        """
+        if not self.is_saga or self.zone is not Zone.BATTLEFIELD:
+            return False
+        final = self.final_chapter_number
+        return final is not None and self.lore_counters >= final
+
+    @property
     def _printed_loyalty(self) -> str | None:
         """The loyalty number printed on the face that is up (CR 209.1).
 
@@ -1375,6 +1445,21 @@ class CardState(BaseModel):
         if printed is not None:
             self.counters.add(Counter.LOYALTY, printed)
 
+    def _enter_with_lore_counter(self) -> None:
+        """CR 714.3a: "Each Saga without read ahead has the intrinsic ability
+        'This Saga enters with a lore counter on it.'"
+
+        Read ahead (CR 702.155a) is not printed on anything in the pool, so
+        this is the whole of CR 714.3's own entry replacement - one lore
+        counter, always, for a Saga with at least one chapter ability
+        (`chapter_numbers`, CR 714.3c's own gate). A Saga built straight onto
+        the battlefield gets the identical treatment through
+        `_sagas_start_with_lore`, the same split `_enter_with_loyalty` and
+        `_planeswalkers_start_loyal` already draw for loyalty.
+        """
+        if self.is_saga and self.chapter_numbers:
+            self.counters.add(Counter.LORE, 1)
+
     @model_validator(mode="after")
     def _planeswalkers_start_loyal(self) -> Self:
         """A planeswalker built straight onto the battlefield has its loyalty.
@@ -1387,6 +1472,15 @@ class CardState(BaseModel):
         """
         if self.zone is Zone.BATTLEFIELD and self.is_planeswalker and not self.counters:
             self._enter_with_loyalty()
+        return self
+
+    @model_validator(mode="after")
+    def _sagas_start_with_lore(self) -> Self:
+        """A Saga built straight onto the battlefield has its lore counter
+        (CR 714.3a) - `_enter_with_lore_counter`'s own sibling to
+        `_planeswalkers_start_loyal`, guarded the same way."""
+        if self.zone is Zone.BATTLEFIELD and self.is_saga and not self.counters:
+            self._enter_with_lore_counter()
         return self
 
 

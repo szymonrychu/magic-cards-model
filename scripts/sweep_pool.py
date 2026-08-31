@@ -307,13 +307,19 @@ def _layer_category(printing: Card) -> str | None:
     those four shapes counts as a gap here.
     """
     text = printing.oracle_text
-    if printing.name in LAYER_EFFECTS or parsed_layer_effects(text) is not None:
+    # `card_name=` mirrors `machines/layers.effects_for`'s own call - Ruby,
+    # Daring Tracker's "Ruby gets +2/+2 until end of turn." is CR 201.5's
+    # self-reference by literal printed name rather than CR 700.7's "this
+    # creature"; without normalizing it the same way the real engine does,
+    # this sweep would misjudge a trigger that resolves correctly in a real
+    # game as an unrecognised shape.
+    if printing.name in LAYER_EFFECTS or parsed_layer_effects(text, card_name=printing.name):
         return HANDLED
     # `static_only=True` for the same reason the battlefield sweep passes it:
     # without it, a *triggered* ability's own effect sentence ("... gets +X/+X
     # until end of turn") is mistaken for an unparsed static pump and reported
     # as a gap on a card whose trigger works perfectly (Kraul Harpooner).
-    if looks_like_unparsed_layer_effect(text, static_only=True):
+    if looks_like_unparsed_layer_effect(text, static_only=True, card_name=printing.name):
         return NOTICE
     return None
 

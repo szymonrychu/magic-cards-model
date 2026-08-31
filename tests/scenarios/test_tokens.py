@@ -840,15 +840,6 @@ def test_ragavan_creates_a_treasure_on_combat_damage():
     assert scenario.find("Treasure Token", Zone.BATTLEFIELD)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Cori-Steel Cutter triggers on 'whenever you cast your second spell each turn'. "
-    "machines/triggers.py reads a CAST_SPELL condition as 'whoever cast it, and what type "
-    "of spell' and nothing counts spells cast this turn, so the trigger would fire on the "
-    "first spell as well as the second. It is deliberately left out of TRIGGER_EFFECTS "
-    "rather than registered wrong. The hook is a per-turn cast count on models/game.py "
-    "plus an ordinal clause in machines/triggers.condition_matches.",
-)
 def test_cori_steel_cutter_makes_a_monk_on_the_second_spell_only():
     """Cori-Steel Cutter: "Flurry - Whenever you cast your second spell each turn,
     create a 1/1 white Monk creature token with prowess."
