@@ -150,20 +150,14 @@ def test_the_jailer_leaves_the_library_alone():
     )
 
 
-# -- the enforcement that is not this task's file ---------------------------
+# -- the enforcement, wired into the announcement ---------------------------
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "the prohibition is read here but has no call site: "
-        "`machines/casting.py::why_cannot_cast_restriction` is what refuses a "
-        "cast at CR 601.3, and it takes no origin zone, so wiring "
-        "`zone_cast_prohibition_source` into it belongs to the task that owns "
-        "machines/casting.py"
-    ),
-)
 def test_flashback_out_of_a_graveyard_is_refused_under_the_cage():
+    """CR 601.3's second half, now wired: `why_cannot_cast_restriction` asks
+    `zone_cast_prohibition_source` about the zone the card is actually in, so
+    the announcement itself is refused - CR 101.2 makes the Cage's "can't"
+    beat flashback's "you may"."""
     scenario = _board(hate=["Grafdigger's Cage"])
     scenario.start_at(Step.PRECOMBAT_MAIN)
 

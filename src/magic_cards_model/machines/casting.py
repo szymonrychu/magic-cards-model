@@ -41,6 +41,7 @@ from .casting_restrictions import (
     restricted_from_noncreature_casting,
     sorcery_speed_restriction_source,
     targeted_cant_cast_restriction,
+    zone_cast_prohibition_source,
 )
 from .cost import (
     CostPayment,
@@ -964,6 +965,22 @@ def why_cannot_cast_restriction(spell: CardState, caster: str, game: Any = None)
     targeted = targeted_cant_cast_restriction(game, caster)
     if targeted is not None:
         return f"{targeted.source_name} says {caster} can't cast spells this turn (CR 611.1)"
+    prohibited_from = zone_cast_prohibition_source(game, spell.card, spell.zone)
+    if prohibited_from is not None:
+        # Grafdigger's Cage's "Players can't cast spells from graveyards or
+        # libraries." and Soulless Jailer's "Players can't cast noncreature
+        # spells from graveyards or exile." CR 601.3 needs both halves - "a
+        # rule or effect allows that player to cast it **and no rule or effect
+        # prohibits** that player from casting it" - and this is the second
+        # one: it beats the very permission that put the card in reach
+        # (flashback, an exile grant), because CR 101.2 makes "can't" win over
+        # "can". Asked of `spell.zone` rather than of a `Casting.origin_zone`
+        # this function never sees, which is the same zone: the card has not
+        # moved yet when the announcement is refused.
+        return (
+            f"{prohibited_from} prohibits casting {spell.name} from the "
+            f"{spell.zone.value} (CR 601.3, CR 101.2)"
+        )
     return None
 
 
