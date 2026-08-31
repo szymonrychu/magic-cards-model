@@ -2434,7 +2434,14 @@ _SEARCH_AND_PUT_RE = re.compile(
     # it off the *previous* clause's target instead of off this one's own
     # "subject" group (see that function and `_search_and_place_for`).
     r"(?P<subject>you may )?"
-    r"search (?:your|their) library for (?:a|an) (?P<quality>.+?) card"
+    # The quality is optional: CR 701.23d names "a card" as its own kind of
+    # search - "If a player is searching a hidden zone simply for a quantity of
+    # cards, such as 'a card' or 'three cards,' that player must find that many
+    # cards" - so Ayara's Oathsworn's "search your library for a card" is not a
+    # phrase with a missing restriction, it is a search with no restriction at
+    # all. `_search_and_place_for` reads a `None` quality as "every card
+    # qualifies".
+    r"search (?:your|their) library for (?:a|an) (?:(?P<quality>.+?) )?card"
     r"(?P<basic_land_type> with a basic land type)?"
     r"(?: with mana value (?P<max_mv>\d+) or less)?"
     # Urza's Saga chapter III's own phrasing: "an artifact card with mana
@@ -2590,16 +2597,23 @@ def _quality_matcher(quality: str) -> Callable[[CardState], bool]:
     return matches
 
 
-def _quality_description(quality: str, max_mv: str | None) -> str:
+def _quality_description(quality: str | None, max_mv: str | None) -> str:
     """The stated quality, for a `Game.may`/`Game.ask` prompt - "basic land",
     "creature with mana value 1 or less".
+
+    `None` is an unrestricted search ("search your library for a card", CR
+    701.23d), which has no quality word to name at all.
     """
+    if quality is None:
+        return "" if max_mv is None else f"card with mana value {max_mv} or less"
     if max_mv is None:
         return quality
     return f"{quality} with mana value {max_mv} or less"
 
 
-def _bounded_quality_matcher(quality: str, max_mv: str | None) -> Callable[[CardState], bool]:
+def _bounded_quality_matcher(
+    quality: str | None, max_mv: str | None
+) -> Callable[[CardState], bool]:
     """`_quality_matcher`, ANDed with a mana value ceiling when the sentence
     names one - Ranger-Captain of Eos's "with mana value 1 or less".
 
@@ -2611,7 +2625,9 @@ def _bounded_quality_matcher(quality: str, max_mv: str | None) -> Callable[[Card
     and failing closed here is that gap staying closed rather than silently
     treating X as unbounded or as zero.
     """
-    base = _quality_matcher(quality)
+    # CR 701.23d's bare "a card": no restriction to apply, so every card in
+    # the library qualifies.
+    base = (lambda _state: True) if quality is None else _quality_matcher(quality)
     if max_mv is None:
         return base
     ceiling = int(max_mv)
@@ -4280,6 +4296,88 @@ def _parse_put_counters_on_self_clause(text: str) -> AbilityEffect | None:
         source = ability.source(game)
         if source is not None and source.zone is Zone.BATTLEFIELD:
             game.add_counters(source, kind, amount)
+
+    return effect
+
+
+#: "Put a +1/+1 counter on it. Then if it has exactly four +1/+1 counters on
+#: it, `<instruction>`" - Ayara's Oathsworn's whole trigger effect, behind its
+#: own intervening *if* (which `machines/triggers.py` reads separately, CR
+#: 603.4).
+#:
+#: Read as one paragraph rather than as two independent clauses, and matched
+#: against the *whole*, unsplit effect text, for two reasons:
+#:
+#: - The leading "it" is CR 607.1's within-one-ability anaphora back to the
+#:   ability's own source, and there is nothing in a lone clause "put a +1/+1
+#:   counter on it" to say so. Reading "it" as the source is only safe when the
+#:   reflexive sentence beside it says "it has ... counters on it" of the same
+#:   object, which is exactly what this shape requires and a free-standing
+#:   clause parser could not check.
+#: - CR 608.2c - "The controller of the spell or ability follows its
+#:   instructions in the order written" - is what makes the condition true at
+#:   four: the counter from the first sentence is already on when the second
+#:   sentence's "exactly four" is evaluated. Splitting the paragraph would let
+#:   the two run in either order and quietly get this wrong.
+#:
+#: "Exactly", "at least" and "fewer than" are all read, because the shape is
+#: the reflexive check, not the one comparison this card happens to print.
+_PUT_COUNTER_ON_SELF_THEN_IF_COUNT_RE = re.compile(
+    rf"^put (?P<n>{_COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on (?:it|this \w+)\.\s*"
+    rf"then if it has (?P<comparison>exactly|at least|fewer than|more than) "
+    rf"(?P<threshold>{_COUNT}) (?P<other_kind>\+1/\+1|-1/-1|[a-z]+) counters? on it, "
+    r"(?P<rest>.+)$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+#: The comparisons `_PUT_COUNTER_ON_SELF_THEN_IF_COUNT_RE` reads, as plain
+#: arithmetic on the count CR 122.1's counters give the permanent right now.
+_COUNTER_COUNT_COMPARISONS: dict[str, Callable[[int, int], bool]] = {
+    "exactly": lambda have, want: have == want,
+    "at least": lambda have, want: have >= want,
+    "fewer than": lambda have, want: have < want,
+    "more than": lambda have, want: have > want,
+}
+
+
+def _parse_put_counter_on_self_then_if_count_clause(text: str) -> AbilityEffect | None:
+    """`_PUT_COUNTER_ON_SELF_THEN_IF_COUNT_RE`'s shape - Ayara's Oathsworn.
+
+    Fail-closed on the trailing instruction: if `parse_mixed_effect` cannot
+    read what follows the condition, the counter placement in front of it does
+    not run either. CR 608.2c has no notion of half an instruction, and a
+    counter placed with the search silently skipped is a wrong game state that
+    looks like a right one - the more so here, where the counter is what makes
+    the condition true.
+
+    A source that has left the battlefield receives nothing and the condition
+    is false: CR 122.1 marks a permanent, and a card that changed zones is a
+    new object with no counters (`CardState.move_to` clears them).
+    """
+    match = _PUT_COUNTER_ON_SELF_THEN_IF_COUNT_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    if match.group("kind").lower() != match.group("other_kind").lower():
+        # The condition asks about a different kind of counter than the one
+        # just placed. A real card could print that; nothing in the pool does,
+        # and reading it would need the two kinds tracked apart here, so it
+        # fails closed rather than being answered with the wrong count.
+        return None
+    amount = _count(match.group("n"))
+    threshold = _count(match.group("threshold"))
+    kind = _counter_kind(match.group("kind"))
+    compare = _COUNTER_COUNT_COMPARISONS[match.group("comparison").lower()]
+    rest = parse_mixed_effect(match.group("rest").strip())
+    if rest is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        game.add_counters(source, kind, amount)
+        if compare(source.counters[kind], threshold):
+            rest(game, ability)
 
     return effect
 
@@ -7921,6 +8019,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     put_counters_on_group = _parse_put_counters_on_group_clause(effect_text)
     if put_counters_on_group is not None:
         return put_counters_on_group
+    counter_then_if_count = _parse_put_counter_on_self_then_if_count_clause(effect_text)
+    if counter_then_if_count is not None:
+        return counter_then_if_count
     put_counters_on_self = _parse_put_counters_on_self_clause(effect_text)
     if put_counters_on_self is not None:
         return put_counters_on_self
