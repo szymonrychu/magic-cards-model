@@ -52,6 +52,7 @@ from scripts.sweep_pool import (  # noqa: E402
     HANDLED,
     NOTICE,
     SILENT,
+    STATIC_UNAUDITED,
     classify_card,
     has_rules_text,
     ignored_keywords,
@@ -211,9 +212,14 @@ def print_summary(results: list[SurveyResult]) -> None:
     total = len(results)
     print("-" * 62)
     print(f"  {total} card(s) surveyed")
-    for category in (HANDLED, NOTICE, SILENT, NO_RULES_TEXT, NOT_FOUND):
+    # STATIC_UNAUDITED belongs here or the summary silently undercounts:
+    # a card whose static line the classifier will not judge lands in that
+    # bucket, and leaving it out of this tuple meant it appeared in the table
+    # and the CSV but in no total, so three cards surveyed could report two.
+    # It is an explicit unknown, never coverage - see sweep_pool.
+    for category in (HANDLED, NOTICE, SILENT, STATIC_UNAUDITED, NO_RULES_TEXT, NOT_FOUND):
         if counts[category]:
-            print(f"    {category:<14} {counts[category]}")
+            print(f"    {category:<17} {counts[category]}")
     ignored_total = sum(len(r.ignored_keywords) for r in results)
     gaps_total = sum(len(r.targeting_gaps) for r in results)
     print(f"  {ignored_total} ignored-keyword occurrence(s)")

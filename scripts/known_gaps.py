@@ -112,9 +112,16 @@ def silent_card_section() -> str:
         if has_rules_text(printing := card(name)) and classify_card(printing)[0] == SILENT
     )
     header = (
-        "Cards already known to resolve to nothing - do NOT report these either.\n"
-        "Source: scripts/sweep_pool.py. They are on the work queue already.\n"
-        "A card that does the WRONG thing is still very much reportable.\n"
+        "Cards with at least one clause that does nothing - do NOT report\n"
+        "those clauses; they are on the work queue already.\n"
+        "Source: scripts/sweep_pool.py.\n"
+        "\n"
+        "Read that first line exactly: since `classify_card` began reporting\n"
+        "the WORST clause per card rather than the best, a card is listed here\n"
+        "if ANY of its clauses is silent. Most of these cards mostly work. If\n"
+        "one of them did the wrong thing, or a different clause of it did\n"
+        "nothing, that is a real finding and this list does not cover it.\n"
+        "A card that does the WRONG thing is always reportable.\n"
     )
     return (
         header + "\n" + "\n".join(f"- {name}" for name in names) + f"\n\n{len(names)} silent cards."
