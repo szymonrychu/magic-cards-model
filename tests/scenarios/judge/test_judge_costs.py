@@ -16,20 +16,21 @@ Sourced from the DDR judge transcripts. Episodes covered:
   what is in your graveyard, read after CR 601.2a has already moved the spell
   out of that graveyard)
 
-DDR#991 and DDR#997 are `xfail`: `machines/cost.cost_component_for_phrase` is
-the reader that turns a printed cost sentence `machines/abilities.py` could not
-classify into something payable (CR 118.3), and neither sentence below comes
-out of it as anything at all - confirmed directly:
+DDR#997 is no longer `xfail`, and its old reason was wrong twice over.
+`cost_component_for_phrase` **does** read "Exile a creature card from your
+graveyard and pay its mana cost" - `_PHRASE_EXILE_AND_PAY_MANA_COST` is the
+reader and `pay_mana_cost_of_chosen` is how the chosen card's own mana cost
+reaches `Game.activation_cost`. What failed was the test: it passed the chosen
+card as `sacrificing=` for an *exile* component, and asserted on
+`Player.battlefield`, an attribute that does not exist.
 
-    >>> cost_component_for_phrase("Waterbend {3}")
-    None
-    >>> cost_component_for_phrase("Exile a creature card from your graveyard and pay its mana cost")
-    None
-
-`Game.activation_cost` raises `ValueError` the moment it hits a `None` from
-that reader (CR 602.1a), so each of those two tests documents the gap by
-attempting the CR-correct activation and letting that `ValueError` be the
-failure - never by predicting a keyword the engine has never heard of.
+DDR#991 is still `xfail`, on a narrower and now-true reason. `machines/cost.py`
+reads `Waterbend {3}` as the `{3}` it names (CR 701.67a's "Pay [cost]"), and
+`machines/objects_as_costs.waterbend` already spends the taps - but a waterbend
+cost is *mana*, and `Game.activation_cost` routes an unclassified cost piece
+through `cost_component_for_phrase` alone, which can only return a
+`CostComponent` and so never sees it. That one branch in `models/game.py` is
+the whole of what is left.
 
 DDR#978's cost-increase half is no longer `xfail` - a concurrent engine wave
 landed static "spells cost more" abilities (Sphere of Resistance and its kin)
@@ -42,7 +43,8 @@ Every CR number here was looked up with `knowledge_search(type="rules")`.
 import pytest
 
 from magic_cards_model.machines import Step
-from magic_cards_model.models import Zone
+from magic_cards_model.machines.cost import TotalCost, total_cost_for_phrase, waterbend_mana_cost
+from magic_cards_model.models import ManaCost, Zone
 from tests.scenarios.harness import Scenario
 
 # --------------------------------------------------------------------------
@@ -50,14 +52,40 @@ from tests.scenarios.harness import Scenario
 # --------------------------------------------------------------------------
 
 
+def test_the_waterbend_cost_reads_as_the_mana_it_names():
+    """DDR#991's first half, and the part `machines/cost.py` owns.
+
+    CR 701.67a: "'Waterbend [cost]' means '**Pay [cost].** For each generic
+    mana in that cost, you may tap an untapped artifact or creature you control
+    rather than pay that mana.'" The first sentence is a plain mana cost, and
+    `total_cost_for_phrase` reads it as one - which is what a `Waterbend {3}`
+    activation owes before anybody taps anything.
+
+    The second sentence is not part of the cost. CR 701.67b calls it "the
+    alternate method to pay for mana described in rule 701.67a", and it works
+    on an already-open payment exactly the way convoke does (CR 702.51b: the
+    ability "isn't an additional or alternative cost and applies only after the
+    total cost ... is determined") - `machines/objects_as_costs.waterbend` is
+    that half, and it was already here.
+    """
+    assert total_cost_for_phrase("Waterbend {3}") == TotalCost(mana=ManaCost.parse("{3}"))
+    assert waterbend_mana_cost("Waterbend {3}") == ManaCost.parse("{3}")
+    assert waterbend_mana_cost("Exert this creature") is None
+
+
 @pytest.mark.xfail(
     strict=True,
-    reason="cost_component_for_phrase('Waterbend {3}') returns None, so "
-    "Game.activation_cost raises ValueError before any payment is attempted - the "
-    "'Waterbend N' cost shape (CR 701.67a: pay a cost, but for each generic mana in "
-    "it you may tap an untapped artifact or creature you control instead) has no "
-    "reader in machines/cost.py at all, not even one that falls back to charging "
-    "plain mana.",
+    reason="machines/cost.py now reads 'Waterbend {3}' - total_cost_for_phrase returns "
+    "{3} and machines/objects_as_costs.waterbend already spends the taps (CR 701.67a/b) "
+    "- but models/game.py's Game.activation_cost still routes a CostKind.OTHER piece "
+    "through cost_component_for_phrase ALONE, and a waterbend cost is mana, which a "
+    "CostComponent cannot carry. It comes back None and activation_cost raises 'cannot "
+    "build a cost for Waterbend {3}'. The fix is one branch in game.py's else-arm: try "
+    "total_cost_for_phrase(piece.text, controller) first and fold its .mana into `mana` "
+    "and its .components into `components`, falling through to the existing "
+    "cost_component_for_phrase path when it returns None. game.py is owned by another "
+    "agent, so it is not made here; the harness's own `tapping=` argument is wired and "
+    "waiting for it.",
 )
 def test_waterbend_lets_an_untapped_creature_pay_part_of_the_cost():
     """DDR#991: each untapped artifact or creature tapped this way pays for {1}.
@@ -66,20 +94,33 @@ def test_waterbend_lets_an_untapped_creature_pay_part_of_the_cost():
     that cost, you may tap an untapped artifact or creature you control rather
     than pay that mana.'" Flexible Waterbender's own ability is `Waterbend {3}:
     This creature has base power and toughness 5/2 until end of turn.` - three
-    generic mana, payable entirely by tapping three other permanents and
-    spending no mana at all.
+    generic mana, payable entirely by tapping three permanents and spending no
+    mana at all. CR 701.67a says "an untapped artifact or creature you control"
+    with no "other", so the Waterbender may tap itself; it has vigilance, which
+    is beside the point - vigilance is about attacking (nothing here attacks).
     """
     scenario = (
-        Scenario().player("alice", battlefield=["Flexible Waterbender", "Grizzly Bears"]).build()
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Flexible Waterbender", "Grizzly Bears", "Llanowar Elves", "Sol Ring"],
+        )
+        .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
     waterbender = scenario.creature("Flexible Waterbender", "alice")
+    fodder = [
+        scenario.creature("Grizzly Bears", "alice"),
+        scenario.creature("Llanowar Elves", "alice"),
+        scenario.find("Sol Ring", Zone.BATTLEFIELD, "alice"),
+    ]
 
-    # No mana sources at all - CR 701.67a says tapping Grizzly Bears (and two
-    # more permanents, omitted here since the ability already can't be reached)
-    # should stand in for the generic mana instead.
-    scenario.activate(waterbender)
+    # No mana sources tapped for mana at all - CR 701.67a's three taps are the
+    # whole payment.
+    scenario.activate(waterbender, tapping=fodder)
+    scenario.resolve_top()
 
+    assert all(permanent.tapped for permanent in fodder)
     assert waterbender.power == 5 and waterbender.toughness == 2
 
 
@@ -88,16 +129,6 @@ def test_waterbend_lets_an_untapped_creature_pay_part_of_the_cost():
 # --------------------------------------------------------------------------
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="cost_component_for_phrase cannot parse 'Exile a creature card from your "
-    "graveyard and pay its mana cost' at all - it is a single CostKind.OTHER phrase "
-    "spanning both an object cost (a card chosen from the graveyard) and a mana cost "
-    "that depends on *that chosen card's* printed mana cost, which nothing in "
-    "machines/cost.py resolves. Game.activation_cost raises ValueError before the "
-    "question this episode is actually about - whether Delraich's own alternative "
-    "cost could substitute - is ever reached.",
-)
 def test_back_from_the_brink_charges_delraichs_real_mana_cost_not_its_alternative():
     """DDR#997: an ability that names a card's mana cost sees the real one.
 
@@ -110,6 +141,15 @@ def test_back_from_the_brink_charges_delraichs_real_mana_cost_not_its_alternativ
     Brink's activation cost asks for Delraich's mana cost directly rather than
     casting it, so the correct behaviour is charging {6}{B} in mana and giving
     the alternative cost nothing to apply to.
+
+    This was `xfail` on a false diagnosis. `cost_component_for_phrase` does
+    read "Exile a creature card from your graveyard and pay its mana cost" -
+    `_PHRASE_EXILE_AND_PAY_MANA_COST` is that reader, and it sets
+    `pay_mana_cost_of_chosen` so `Game.activation_cost` folds the chosen
+    card's own printed `{6}{B}` in. Two bugs in the *test* hid it: the chosen
+    card was passed as `sacrificing=` where the component is an exile, and the
+    assertion read `Player.battlefield`, which does not exist - the
+    battlefield is shared, on `Game`.
     """
     scenario = (
         Scenario()
@@ -136,10 +176,11 @@ def test_back_from_the_brink_charges_delraichs_real_mana_cost_not_its_alternativ
         "Swamp", "Mountain", "Mountain", "Mountain", "Mountain", "Mountain", "Mountain"
     )
 
-    scenario.activate(back_from_the_brink, *sources, sacrificing=[delraich])
+    scenario.activate(back_from_the_brink, *sources, exiling=[delraich])
+    scenario.resolve_top()
 
     assert delraich.zone is Zone.EXILE
-    tokens = [state for state in scenario.player("alice").battlefield if state.name == "Delraich"]
+    tokens = [state for state in scenario.game.battlefield if state.name == "Delraich"]
     assert len(tokens) == 1, "a token copy of Delraich should have entered the battlefield"
 
 

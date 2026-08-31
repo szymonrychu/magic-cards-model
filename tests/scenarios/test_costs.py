@@ -19,20 +19,29 @@ from magic_cards_model.machines.cost import (
     TotalCost,
     additional_cost_phrases,
     alternative_cost_phrases,
-    discard_cost,
     exile_cost,
     pay_life_cost,
     sacrifice_cost,
-    tap_cost,
 )
-from magic_cards_model.models import Color, ManaCost, Zone
+from magic_cards_model.models import CardState, Color, ManaCost, Zone
 
 from .harness import PlayedScenario, Scenario, mana_from
 
 
-def announce(scenario: PlayedScenario, name: str, username: str = "alice") -> Casting:
-    """Begin casting, with the game attached so non-mana costs can be paid."""
-    casting = scenario.cast(name, username=username)
+def announce(
+    scenario: PlayedScenario,
+    name: str,
+    username: str = "alice",
+    **choosing: list[CardState],
+) -> Casting:
+    """Begin casting, with the game attached so non-mana costs can be paid.
+
+    `sacrificing`, `discarding`, `exiling` and `tapping` name the objects
+    chosen at CR 601.2b to pay the card's own printed additional cost. The
+    *cost* itself is never built here: `Casting` reads it off the card at
+    CR 601.2f, which is the whole point of these tests.
+    """
+    casting = scenario.cast(name, username=username, **choosing)
     casting.game = scenario.game
     return casting
 
@@ -66,8 +75,7 @@ def test_an_additional_cost_of_sacrificing_a_creature_is_paid_on_the_way_to_the_
     ]
 
     bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD)
-    casting = announce(scenario, "Fling")
-    casting.add_additional_cost(TotalCost.of(None, sacrifice_cost(bears)))
+    casting = announce(scenario, "Fling", sacrificing=[bears])
     casting.choose_targets(["bob"])
 
     payment = casting.begin_paying()
@@ -88,7 +96,6 @@ def test_an_additional_cost_with_nothing_to_pay_it_rewinds_the_whole_cast():
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
     casting = announce(scenario, "Fling")
-    casting.add_additional_cost(TotalCost.of(None, sacrifice_cost(required=1)))
     casting.choose_targets(["bob"])
 
     payment = casting.begin_paying()
@@ -111,8 +118,7 @@ def test_a_paid_sacrifice_comes_back_when_the_cast_is_rewound():
     bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD)
     mountains = scenario.untapped_sources("Mountain", "Mountain")
 
-    casting = announce(scenario, "Fling")
-    casting.add_additional_cost(TotalCost.of(None, sacrifice_cost(bears)))
+    casting = announce(scenario, "Fling", sacrificing=[bears])
     payment = casting.begin_paying()
     scenario.pay_with(payment, *mountains)
     assert bears.zone is Zone.GRAVEYARD
@@ -145,8 +151,7 @@ def test_discarding_as_an_additional_cost_puts_the_cards_in_the_graveyard():
         scenario.find("Grizzly Bears", Zone.HAND),
         scenario.find("Lightning Bolt", Zone.HAND),
     ]
-    casting = announce(scenario, "Cathartic Reunion")
-    casting.add_additional_cost(TotalCost.of(None, discard_cost(*fodder)))
+    casting = announce(scenario, "Cathartic Reunion", discarding=fodder)
     payment = casting.begin_paying()
     scenario.pay_with(payment, *scenario.untapped_sources("Mountain", "Mountain"))
     scenario.put_on_stack(casting)
@@ -175,7 +180,6 @@ def test_paying_life_as_an_additional_cost_comes_off_the_life_total():
     assert additional_cost_phrases(scenario.find("Fumarole", Zone.HAND).card) == ["pay 3 life"]
 
     casting = announce(scenario, "Fumarole")
-    casting.add_additional_cost(TotalCost.of(None, pay_life_cost(3)))
     payment = casting.begin_paying()
     scenario.pay_with(
         payment, *scenario.untapped_sources("Swamp", "Mountain", "Mountain", "Mountain", "Mountain")
@@ -191,7 +195,6 @@ def test_life_cannot_be_paid_below_zero():
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
     casting = announce(scenario, "Fumarole")
-    casting.add_additional_cost(TotalCost.of(None, pay_life_cost(3)))
     payment = casting.begin_paying()
     sources = scenario.untapped_sources("Swamp", "Mountain", "Mountain", "Mountain", "Mountain")
 
@@ -210,7 +213,6 @@ def test_paid_life_comes_back_when_the_cast_is_rewound():
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
     casting = announce(scenario, "Fumarole")
-    casting.add_additional_cost(TotalCost.of(None, pay_life_cost(3)))
     payment = casting.begin_paying()
     scenario.pay_with(
         payment, *scenario.untapped_sources("Swamp", "Mountain", "Mountain", "Mountain", "Mountain")
@@ -239,8 +241,7 @@ def test_tapping_a_creature_as_an_additional_cost():
     theirs = scenario.untapped_sources("Grizzly Bears", username="bob")[0]
     theirs.tap()  # Swallow Whole exiles a *tapped* creature
 
-    casting = announce(scenario, "Swallow Whole")
-    casting.add_additional_cost(TotalCost.of(None, tap_cost(mine)))
+    casting = announce(scenario, "Swallow Whole", tapping=[mine])
     casting.choose_targets([theirs])
     payment = casting.begin_paying()
     scenario.pay_with(payment, *scenario.untapped_sources("Plains"))
@@ -261,8 +262,7 @@ def test_a_creature_that_is_already_tapped_cannot_pay_a_tap_cost():
     mine = scenario.find("Grizzly Bears", Zone.BATTLEFIELD)
     mine.tap()
 
-    casting = announce(scenario, "Swallow Whole")
-    casting.add_additional_cost(TotalCost.of(None, tap_cost(mine)))
+    casting = announce(scenario, "Swallow Whole", tapping=[mine])
     payment = casting.begin_paying()
 
     with pytest.raises(ValueError, match="already tapped"):
@@ -402,7 +402,6 @@ def test_a_generic_reduction_leaves_the_coloured_pips_alone():
 
     casting = announce(scenario, "Fumarole")
     casting.reduce_cost("{4}")
-    casting.add_additional_cost(TotalCost.of(None, pay_life_cost(3)))
 
     assert casting.total_cost.mana == ManaCost.parse("{B}{R}")
 

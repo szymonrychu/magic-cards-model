@@ -28,17 +28,18 @@ type="rules")` in the session that wrote this file:
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.casting import Casting
-from magic_cards_model.machines.cost import TotalCost, discard_cost
-from magic_cards_model.models import Zone
+from magic_cards_model.models import CardState, Zone
 from tests.scenarios.harness import PlayedScenario, Scenario
 
 
-def _announce(scenario: PlayedScenario, name: str, username: str = "alice") -> Casting:
+def _announce(
+    scenario: PlayedScenario, name: str, username: str = "alice", **choosing: list[CardState]
+) -> Casting:
     """Begin casting, with the game attached so a non-mana additional cost can
     be paid - the same helper `test_costs.py` uses for Cathartic Reunion's own
-    discard cost.
+    discard cost. `discarding=` names the cards chosen at CR 601.2b to pay it.
     """
-    casting = scenario.cast(name, username=username)
+    casting = scenario.cast(name, username=username, **choosing)
     casting.game = scenario.game
     return casting
 
@@ -168,8 +169,7 @@ def test_cathartic_reunion_draws_three_cards_with_its_cost_line_stripped():
         scenario.find("Elvish Mystic", Zone.HAND, "alice"),
     ]
 
-    casting = _announce(scenario, "Cathartic Reunion")
-    casting.add_additional_cost(TotalCost.of(None, discard_cost(*fodder)))
+    casting = _announce(scenario, "Cathartic Reunion", discarding=fodder)
     payment = casting.begin_paying()
     scenario.pay_with(payment, *scenario.untapped_sources("Mountain", "Mountain"))
     scenario.put_on_stack(casting)

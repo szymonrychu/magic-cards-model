@@ -34,7 +34,6 @@ import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.casting import Casting
-from magic_cards_model.machines.cost import TotalCost, pay_life_cost
 from magic_cards_model.machines.modes import substitute_x
 from magic_cards_model.models import Zone
 from tests.scenarios.harness import PlayedScenario, Scenario
@@ -47,13 +46,14 @@ def _to_main(scenario) -> None:
 def _cast_paying_x_life(
     scenario: PlayedScenario, x_value: int, *sources, username: str = "alice"
 ) -> Casting:
-    """Announce Toxic Deluge for a chosen X, paying that much life as the
-    additional cost (CR 118.8a) - the same manual wiring `test_costs.py`
-    already uses for Fumarole's fixed "pay 3 life".
+    """Announce Toxic Deluge for a chosen X and pay that much life.
+
+    Nothing here builds the cost: the printed "pay X life" is read off the card
+    by `Casting` at CR 601.2f with CR 107.3a's announced X already substituted
+    in, so `determine_cost(x_value=...)` is the whole of the wiring.
     """
     casting = scenario.cast("Toxic Deluge", username=username)
     casting.game = scenario.game
-    casting.add_additional_cost(TotalCost.of(None, pay_life_cost(x_value)))
     casting.determine_cost(x_value=x_value)
     payment = casting.begin_paying()
     scenario.pay_with(payment, *sources)
@@ -148,7 +148,6 @@ def test_toxic_deluge_life_cannot_be_paid_below_the_amount_available():
 
     casting = scenario.cast("Toxic Deluge")
     casting.game = scenario.game
-    casting.add_additional_cost(TotalCost.of(None, pay_life_cost(5)))
     casting.determine_cost(x_value=5)
     payment = casting.begin_paying()
     sources = scenario.untapped_sources(*(["Swamp"] * 6))

@@ -45,10 +45,12 @@ from .casting_restrictions import (
     zone_cast_prohibition_source,
 )
 from .cost import (
+    ComponentKind,
     CostPayment,
     CostStep,
     StaticFreeCastGrant,
     TotalCost,
+    additional_cost_phrases,
     alternative_cost_offers,
     apply_modifications,
     static_free_cast_grant,
@@ -1283,6 +1285,14 @@ class AlternativeCostOption(BaseModel):
         return self.unavailable is None
 
 
+#: CR 118.8b: "Some additional costs are optional." An optional one is printed
+#: as a "you may ..." inside the additional-cost sentence - March of
+#: Otherworldly Light's "you may exile any number of white cards from your
+#: hand", Requiting Hex's "you may blight 1" - and declining it is a legal
+#: announcement (CR 601.2b), so it is skipped rather than charged or refused.
+_OPTIONAL_ADDITIONAL_COST = re.compile(r"^you may\b", re.IGNORECASE)
+
+
 class CastingStep(StrEnum):
     PROPOSED = "proposed"
     MODES = "modes"
@@ -1377,6 +1387,28 @@ class Casting(BaseModel):
     `keyword_used` is: an empty `alternative_cost` on its own cannot say
     whether it came from the spell's own text or from somebody's board."""
     additional_costs: list[TotalCost] = Field(default_factory=list)
+    sacrificing: list[CardState] = Field(default_factory=list)
+    """The permanents chosen to pay a printed "sacrifice ..." additional cost.
+
+    CR 601.2b is when they are chosen ("the player announces their intentions
+    to pay any or all of those costs", CR 118.8a) and CR 601.2h is when they
+    are actually sacrificed, so they sit here from announcement until
+    `determine_cost` folds them into `additional_costs`. Leaving the list short
+    builds a cost that correctly refuses to be paid (CR 118.3) rather than one
+    that cannot be built - the same shape `Game.activation_cost` already uses
+    for an activated ability's object costs, and the same vocabulary.
+    """
+    discarding: list[CardState] = Field(default_factory=list)
+    """The cards chosen to pay a printed "discard ..." additional cost."""
+    exiling: list[CardState] = Field(default_factory=list)
+    """The cards chosen to pay a printed "exile ..." additional cost."""
+    tapping: list[CardState] = Field(default_factory=list)
+    """The permanents chosen to pay a printed "tap ..." additional cost -
+    Swallow Whole's "tap an untapped creature you control"."""
+    printed_additional_costs_charged: bool = False
+    """Whether the card's own "As an additional cost to cast this spell, ..."
+    sentences have already been folded into `additional_costs` (CR 601.2f).
+    Once, and only once: `determine_cost` can be reached more than one way."""
     cost_increases: list[ManaCost] = Field(default_factory=list)
     cost_reductions: list[ManaCost] = Field(default_factory=list)
     self_reduction: ManaCost | None = None
@@ -2679,7 +2711,17 @@ class Casting(BaseModel):
         nothing to the spell already being paid for.
         """
         base = self.alternative_cost.mana if self.alternative_cost else self.base_cost
-        increases = [*self.cost_increases, *(extra.mana for extra in self.additional_costs)]
+        # CR 118.8a's printed additional costs are part of the total cost
+        # whether or not CR 601.2f has been reached yet, so a caller asking
+        # what a Fling would cost before `determine_cost` is told about the
+        # sacrifice too. `determine_cost` folds the very same objects into
+        # `additional_costs` for good; until it does, they are built here and
+        # thrown away, so reading this property changes nothing.
+        extras = [
+            *self.additional_costs,
+            *([] if self.printed_additional_costs_charged else self._printed_additional_costs()),
+        ]
+        increases = [*self.cost_increases, *(extra.mana for extra in extras)]
         reductions = list(self.cost_reductions)
         floor: int | None = None
         if self.game is not None:
@@ -2696,7 +2738,7 @@ class Casting(BaseModel):
         mana = apply_modifications(base.with_x(self.x_value), increases, reductions, floor=floor)
 
         components = list(self.alternative_cost.components) if self.alternative_cost else []
-        for extra in self.additional_costs:
+        for extra in extras:
             components.extend(extra.components)
         return TotalCost(mana=mana, components=components)
 
@@ -2712,6 +2754,79 @@ class Casting(BaseModel):
         if self.game is None:
             return ManaCost()
         return self.game.cost_reduction_for(self.spell, self.caster, targets=self.targets)
+
+    def _charge_printed_additional_costs(self) -> None:
+        """CR 601.2f: fold the card's own "As an additional cost to cast this
+        spell, ..." sentences into the total cost.
+
+        This is the step that makes a printed additional cost cost anything.
+        CR 118.8a: "Any number of additional costs may be applied to a spell as
+        it's being cast ... The controller of the spell or ability announces
+        their intentions to pay any or all of those costs as described in rule
+        601.2b", and CR 601.2f is where those announcements become the total
+        cost. Without it Fling was announced for `{1}{R}`, sacrificed nothing,
+        and dealt nothing - a card doing the wrong thing rather than a missing
+        feature.
+
+        The objects come from `sacrificing`/`discarding`/`exiling`/`tapping`,
+        announced at CR 601.2b, and are handed to the components in the order
+        the sentences print. An empty list is not an error: the component is
+        built asking for its count and refuses to be paid until the cards are
+        there (CR 118.3), which is what lets a Fling with no creature rewind
+        cleanly rather than fail at announcement.
+
+        Three shapes are deliberately left uncharged:
+
+        - An **optional** cost - "you may exile any number of white cards from
+          your hand" (March of Otherworldly Light) - because CR 118.8b says
+          "some additional costs are optional" and not paying one is a legal
+          announcement. It is skipped rather than refused.
+        - X, which is substituted first (CR 107.3a, via `substitute_x`), so
+          Toxic Deluge's "pay X life" is charged as the life the caster
+          announced.
+        - Nothing else. A mandatory sentence this engine cannot read raises,
+          because CR 118.3 does not let the spell be cast without paying it -
+          charging nothing would be the very bug this method exists to fix.
+        """
+        if self.printed_additional_costs_charged:
+            return
+        self.printed_additional_costs_charged = True
+        self.additional_costs.extend(self._printed_additional_costs())
+
+    def _printed_additional_costs(self) -> list[TotalCost]:
+        """The card's own additional costs as payable `TotalCost`s, built fresh
+        and charged to nothing - see `_charge_printed_additional_costs`, which
+        is the half that puts them on the casting.
+
+        Separate from that so `total_cost` can report them before CR 601.2f has
+        run: a caller asking what a Fling would cost before determining the
+        cost is asking about the sacrifice too.
+        """
+        built: list[TotalCost] = []
+        pools: dict[ComponentKind, list[CardState]] = {
+            ComponentKind.SACRIFICE: list(self.sacrificing),
+            ComponentKind.DISCARD: list(self.discarding),
+            ComponentKind.EXILE: list(self.exiling),
+            ComponentKind.TAP: list(self.tapping),
+        }
+        for printed in additional_cost_phrases(self.spell.card):
+            phrase = substitute_x(printed, self.x_value)
+            if _OPTIONAL_ADDITIONAL_COST.match(phrase):
+                continue
+            cost = total_cost_for_phrase(phrase, self.caster)
+            if cost is None:
+                raise ValueError(
+                    f"{self.spell.name}'s additional cost {phrase!r} could not be read, "
+                    f"so it cannot be paid (CR 118.3, 601.2f)"
+                )
+            for component in cost.components:
+                pool = pools.get(component.kind)
+                if pool is None or component.cards or not component.required:
+                    continue
+                component.cards = pool[: component.required]
+                del pool[: component.required]
+            built.append(cost.assign_payer(self.caster))
+        return built
 
     def _lock_in_own_reduction(self) -> None:
         """CR 601.2f: freeze the self-discount as the total cost is determined.
@@ -2763,6 +2878,7 @@ class Casting(BaseModel):
             self.x_value = x_value
         if additional is not None:
             self.additional_costs.append(TotalCost.of(additional).assign_payer(self.caster))
+        self._charge_printed_additional_costs()
         self._refuse_unless_mana_cost_payable()
         self._lock_in_own_reduction()
 

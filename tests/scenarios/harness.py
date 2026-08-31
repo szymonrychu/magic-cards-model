@@ -24,6 +24,7 @@ from magic_cards_model.machines.decisions import (
     DecisionKind,
     ScriptedAnswer,
 )
+from magic_cards_model.machines.objects_as_costs import waterbend
 from magic_cards_model.machines.triggers import AbilityOnStack
 from magic_cards_model.models import CardState, Color, Game, Player, Zone
 from magic_cards_model.models.card_state import TargetRef, counter_state_based_actions
@@ -331,7 +332,16 @@ class PlayedScenario:
         return self.game.advance(player)
 
     def draw(self, count: int = 1, username: str | None = None) -> list[CardState]:
-        return self.player(username).draw(count)
+        """Draw through the game, not straight off the `Player` (CR 121.2).
+
+        `Player.draw` moves the cards and nothing else: no draw replacement
+        gets a look (CR 121.6), no draw event is raised for anything watching,
+        and the per-turn draw record is never incremented. A scenario driving
+        the draw step by hand was therefore proving that nothing triggers on a
+        draw *because the draw never happened as an event* - which is a test
+        agreeing with itself. `Game.draw_cards` is the real door.
+        """
+        return self.game.draw_cards(self.player(username), count)
 
     def turn_based_actions(self) -> None:
         """Run the current step's turn-based actions by hand (CR 703.3).
@@ -810,6 +820,7 @@ class PlayedScenario:
         sacrificing: list[CardState] | None = None,
         discarding: list[CardState] | None = None,
         exiling: list[CardState] | None = None,
+        tapping: list[CardState] | None = None,
         targets: list[Target] | None = None,
         color: Color | None = None,
         auto: bool = False,
@@ -831,6 +842,13 @@ class PlayedScenario:
         once here and threaded through both `begin_activating` and
         `activate_ability` - the same value has to reach both, exactly the
         way a spell's `x_value` reaches both `determine_cost` and `cast`.
+
+        `tapping` is CR 701.67a's waterbend payment: each untapped artifact or
+        creature listed there is tapped to pay one generic mana of the cost
+        instead of mana being spent on it. Like convoke (CR 702.51b) it applies
+        only after the total cost has been determined, so it lands on the open
+        `CostPayment` rather than on the cost - which is why it is applied here
+        and not passed to `begin_activating`.
         """
         controller = username or self.game.controller_of(source).username
         payment = self.game.begin_activating(
@@ -842,6 +860,8 @@ class PlayedScenario:
             exiling=exiling,
             x_value=x_value,
         )
+        if tapping:
+            waterbend(payment, *tapping)
         if auto:
             payment.auto_tap(self.game.permanents_controlled_by(controller))
         else:
@@ -886,11 +906,25 @@ class PlayedScenario:
         username: str | None = None,
         from_zone: Zone = Zone.HAND,
         targets: list[Target] | None = None,
+        *,
+        sacrificing: list[CardState] | None = None,
+        discarding: list[CardState] | None = None,
+        exiling: list[CardState] | None = None,
+        tapping: list[CardState] | None = None,
     ) -> Casting:
         """Begin casting a card, returning the casting machine mid-announcement.
 
         Targets may be permanents, players, or usernames, mixed freely - a
         Bolt aimed at a face is `targets=["bob"]`.
+
+        `sacrificing`, `discarding`, `exiling` and `tapping` are the objects
+        chosen to pay the card's own printed "As an additional cost to cast
+        this spell, ..." sentence (CR 601.2b, CR 118.8a) - the creature Fling
+        throws, the two cards Cathartic Reunion discards, the creature Swallow
+        Whole taps. `Casting` reads the sentence itself at CR 601.2f and takes
+        the objects from these lists in the order the sentences print; the same
+        vocabulary `Game.activation_cost` uses for an activated ability's
+        object costs.
         """
         player = self.player(username)
         spell = self.find(name, from_zone, player.username)
@@ -899,6 +933,10 @@ class PlayedScenario:
             caster=player.username,
             origin_zone=from_zone,
             game=self.game,
+            sacrificing=list(sacrificing or []),
+            discarding=list(discarding or []),
+            exiling=list(exiling or []),
+            tapping=list(tapping or []),
         )
         if targets is not None:
             casting.choose_targets(targets)
@@ -911,6 +949,10 @@ class PlayedScenario:
         username: str | None = None,
         targets: list[Target] | None = None,
         auto: bool = False,
+        sacrificing: list[CardState] | None = None,
+        discarding: list[CardState] | None = None,
+        exiling: list[CardState] | None = None,
+        tapping: list[CardState] | None = None,
     ) -> CardState:
         """Cast a spell and leave it on the stack, unresolved.
 
@@ -919,8 +961,19 @@ class PlayedScenario:
 
         `auto=True` pays with `auto_pay` instead of `sources` - the same
         auto-tap path the API takes when a player gives no `--sources`.
+
+        `sacrificing`/`discarding`/`exiling`/`tapping` pay the card's printed
+        additional cost - see `cast`.
         """
-        casting = self.cast(name, username, targets=targets)
+        casting = self.cast(
+            name,
+            username,
+            targets=targets,
+            sacrificing=sacrificing,
+            discarding=discarding,
+            exiling=exiling,
+            tapping=tapping,
+        )
         payment = casting.begin_paying()
         if auto:
             self.auto_pay(payment, username=casting.caster)
@@ -954,6 +1007,10 @@ class PlayedScenario:
         username: str | None = None,
         targets: list[Target] | None = None,
         auto: bool = False,
+        sacrificing: list[CardState] | None = None,
+        discarding: list[CardState] | None = None,
+        exiling: list[CardState] | None = None,
+        tapping: list[CardState] | None = None,
     ) -> CardState:
         """The whole path for a spell nobody responds to.
 
@@ -961,6 +1018,19 @@ class PlayedScenario:
         Scenarios that care about a step in the middle should drive the parts
         themselves rather than call this. `auto=True` pays with `auto_pay`
         instead - see `cast_onto_stack`.
+
+        `sacrificing`/`discarding`/`exiling`/`tapping` pay the card's printed
+        additional cost - see `cast`.
         """
-        self.cast_onto_stack(name, *sources, username=username, targets=targets, auto=auto)
+        self.cast_onto_stack(
+            name,
+            *sources,
+            username=username,
+            targets=targets,
+            auto=auto,
+            sacrificing=sacrificing,
+            discarding=discarding,
+            exiling=exiling,
+            tapping=tapping,
+        )
         return self.resolve_top()

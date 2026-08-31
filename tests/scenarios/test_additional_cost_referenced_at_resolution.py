@@ -39,7 +39,6 @@ type="rules")` in the session that wrote this file:
 """
 
 from magic_cards_model.machines import Step
-from magic_cards_model.machines.cost import TotalCost, sacrifice_cost, tap_cost
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card_state import Counter
 from tests.scenarios.harness import Scenario
@@ -60,8 +59,7 @@ def test_fling_deals_damage_equal_to_the_sacrificed_creatures_power():
     bob = scenario.player("bob")
     bears = scenario.creature("Grizzly Bears", "alice")
 
-    casting = scenario.cast("Fling")
-    casting.add_additional_cost(TotalCost(components=[sacrifice_cost(bears, payer=casting.caster)]))
+    casting = scenario.cast("Fling", sacrificing=[bears])
     casting.choose_targets(["bob"])
     payment = casting.begin_paying()
     scenario.pay_with(payment, *scenario.untapped_sources("Mountain", "Mountain"))
@@ -88,8 +86,7 @@ def test_swallow_whole_exiles_a_tapped_creature_and_counters_the_tapper():
     bears = scenario.creature("Grizzly Bears", "bob")
     bears.tap()
 
-    casting = scenario.cast("Swallow Whole")
-    casting.add_additional_cost(TotalCost(components=[tap_cost(elves, payer=casting.caster)]))
+    casting = scenario.cast("Swallow Whole", tapping=[elves])
     casting.choose_targets([bears])
     payment = casting.begin_paying()
     scenario.pay_with(payment, *scenario.untapped_sources("Plains"))

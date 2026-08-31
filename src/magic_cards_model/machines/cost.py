@@ -801,6 +801,12 @@ class ComponentKind(StrEnum):
     #: your next untap step". Arena of Glory prints it inside an activation cost,
     #: `{R}, {T}, Exert this land:`.
     EXERT = "exert"
+    #: CR 701.17a, "for a player to mill a number of cards, that player puts
+    #: that many cards from the top of their library into their graveyard".
+    #: Millikin prints it inside an activation cost, `{T}, Mill a card:`. Not
+    #: in `_OBJECT_KINDS`: nothing is chosen, the cards are whichever ones are
+    #: on top, so the count lives in `amount` the way paying life does.
+    MILL = "mill"
 
 
 _OBJECT_KINDS = frozenset(
@@ -841,13 +847,26 @@ class CardRequirement(BaseModel):
     """Key to the Side-Door's "with the same name as a legendary permanent you
     control": the chosen card must share its name (CR 201.2a) with a permanent
     the payer controls that meets *this* requirement."""
+    mana_value: int | None = None
+    """Disrupting Shoal's "a blue card with mana value X from your hand": the
+    chosen card's mana value (CR 202.3) must be exactly this.
+
+    An exact number, not a ceiling - the printed phrase this reads is "with
+    mana value N", and the X-keyed printing is the same sentence with
+    CR 107.3a's announced X already substituted in. A "N or less" phrase is a
+    different demand and is deliberately not read as this one."""
     description: str = ""
     """The phrase this was read from, for the message when it is not met."""
 
     @property
     def is_empty(self) -> bool:
         return not (
-            self.colors or self.types or self.subtypes or self.supertypes or self.same_name_as
+            self.colors
+            or self.types
+            or self.subtypes
+            or self.supertypes
+            or self.same_name_as
+            or self.mana_value is not None
         )
 
     def why_not(self, card: CardState, game: Any = None, payer: str | None = None) -> str | None:
@@ -873,6 +892,14 @@ class CardRequirement(BaseModel):
             printed_subtypes = {subtype.lower() for subtype in printed.subtypes}
             if not printed_subtypes & self._wanted_subtypes():
                 return f"{card.name} is not a {'/'.join(self.subtypes)}"
+        if self.mana_value is not None and card.mana_value != self.mana_value:
+            # CR 202.3: the mana value is read off the object, not off the
+            # printed front face, so a face-down or transformed card answers
+            # for itself - `CardState.mana_value` is what knows that.
+            return (
+                f"{card.name} has mana value {card.mana_value:g}, not the "
+                f"{self.mana_value} this cost asks for"
+            )
         if self.same_name_as is not None and game is not None and payer is not None:
             # CR 201.2a: "Two or more objects have the same name if they have
             # at least one name in common." Compared on `CardState.name`, which
@@ -998,8 +1025,28 @@ class CostComponent(BaseModel):
             ComponentKind.PLACE_COUNTERS: self._why_not_place_counters,
             ComponentKind.LOYALTY: self._why_not_loyalty,
             ComponentKind.EXERT: self._why_not_exert,
+            ComponentKind.MILL: self._why_not_mill,
         }
         return checks[self.kind](game)
+
+    def _why_not_mill(self, game: Any) -> str | None:
+        """CR 701.17b: a player can't mill more cards than their library holds,
+        and "if given the choice to do so, they can't choose to take that
+        action" - choosing to pay a cost is such a choice, so a short library
+        refuses the payment outright rather than milling fewer (CR 118.3)."""
+        if self.amount < 0:
+            return "a cost cannot ask for a negative number of cards to be milled"
+        if self.amount == 0:
+            return None
+        if game is None or self.payer is None:
+            return "milling as a cost needs a game and a player to mill"
+        library = game.player(self.payer).cards_in(Zone.LIBRARY)
+        if len(library) < self.amount:
+            return (
+                f"{self.payer} cannot mill {self.amount} card(s) from a library of "
+                f"{len(library)} (CR 701.17b)"
+            )
+        return None
 
     def _why_not_remove_counters(self, _game: Any) -> str | None:
         """CR 118.3: the counters removed by a cost have to be there already.
@@ -1161,6 +1208,19 @@ class CostComponent(BaseModel):
         elif self.kind is ComponentKind.EXILE:
             for card in self.cards:
                 self._remember(card)
+            if self.cards:
+                # `Game.exile_cards`, not `exile_permanent` per card: one cost
+                # is one instruction, and CR 603.2c says "an ability triggers
+                # only once each time its trigger event occurs. However, it can
+                # trigger repeatedly if one event contains multiple
+                # occurrences." A delve payment (CR 702.66a: "For each generic
+                # mana in this spell's total cost, you may exile a card from
+                # your graveyard rather than pay that mana") that exiles five
+                # cards is one occurrence of "one or more cards leave your
+                # graveyard", so Hardened Academic triggers once with a count
+                # of five, not five times. Exiling card by card raised five
+                # events and triggered it five times.
+                #
                 # CR 406.2: exile moves an object "from whatever zone it's
                 # currently in" - not only a per-player zone the way the old
                 # `game.player(self.payer).cards_in(card.zone).remove(card)`
@@ -1173,11 +1233,20 @@ class CostComponent(BaseModel):
                 # that was never holding it and raised `ValueError:
                 # list.remove(x): x not in list` - Abstergo Entertainment's
                 # own "Exile Abstergo Entertainment" cost hits the same gap.
-                # `Game.exile_permanent` already handles every zone
-                # generically - battlefield departure events, token refusal
-                # (CR 111.8), combat clean-up - so this delegates outright
-                # rather than special-casing one more zone by hand.
-                game.exile_permanent(card)
+                # `Game.exile_cards` already handles every zone generically -
+                # battlefield departure events, token refusal (CR 111.8),
+                # combat clean-up - so this delegates outright rather than
+                # special-casing one more zone by hand.
+                game.exile_cards(list(self.cards))
+        elif self.kind is ComponentKind.MILL and self.amount:
+            # CR 701.17a's move, routed through `Game.put_into_graveyard` so a
+            # replacement effect watching a card enter a graveyard (Rest in
+            # Peace) still gets its say - the same route `machines/effects._mill`
+            # takes for a mill an *effect* performs.
+            library = game.player(self.payer).cards_in(Zone.LIBRARY)
+            for card in list(library[: self.amount]):
+                self._remember(card)
+                game.put_into_graveyard(card)
         elif self.kind is ComponentKind.PAY_LIFE and self.amount:
             game.player(self.payer).lose_life(self.amount)
         elif self.kind is ComponentKind.REMOVE_COUNTERS:
@@ -1222,10 +1291,20 @@ class CostComponent(BaseModel):
             # doing anything (CR 602.2). CR 107.7: `[+N]` puts N loyalty
             # counters on, `[−N]` removes N, and `[0]` puts zero, which is a
             # payment with no event at all.
+            #
+            # The plus half goes through `Game.add_counters`, the same door
+            # `PLACE_COUNTERS` uses, so a loyalty counter put on as a cost
+            # raises the counters-put event and can be replaced (CR 614.16,
+            # CR 118.11) exactly like any other counter a cost places. A
+            # component paid with no `game` behind it - a unit test - has
+            # nothing to ask and mutates the permanent directly.
             for card in self.cards:
                 self._remember_counters(card)
                 if self.amount > 0:
-                    card.counters.add(Counter.LOYALTY, self.amount)
+                    if game is not None:
+                        game.add_counters(card, Counter.LOYALTY, self.amount)
+                    else:
+                        card.counters.add(Counter.LOYALTY, self.amount)
                 elif self.amount < 0:
                     card.counters.remove(Counter.LOYALTY, -self.amount)
 
@@ -1248,6 +1327,17 @@ class CostComponent(BaseModel):
             # Tapping moves nothing, so untapping is the whole rewind.
             for card, _ in reversed(self._undo):
                 card.untap(exert_applies=False)
+        elif self.kind is ComponentKind.MILL:
+            # CR 733.1: the rewind has to put the cards back *on top*, in the
+            # order they were milled in - `_return` appends, which would leave
+            # them on the bottom of the library. Walking `self._undo` backwards
+            # and inserting each at index 0 restores the original order.
+            for card, snapshot in reversed(self._undo):
+                self._return(game, card, snapshot)
+                library = game.player(self.payer).cards_in(Zone.LIBRARY)
+                if library and library[-1] is card:
+                    library.pop()
+                library.insert(0, card)
         elif self.kind in (
             ComponentKind.LOYALTY,
             ComponentKind.REMOVE_COUNTERS,
@@ -1432,6 +1522,29 @@ def exile_and_pay_mana_cost_cost(
         zone=zone,
         requirement=requirement,
         pay_mana_cost_of_chosen=True,
+    )
+
+
+def mill_cost(amount: int, payer: str | None = None, description: str = "") -> CostComponent:
+    """Mill cards as a cost (CR 701.17a).
+
+    "For a player to mill a number of cards, that player puts that many cards
+    from the top of their library into their graveyard." Nothing is chosen, so
+    the count rides in `amount` exactly as paying life does.
+
+    CR 701.17b is what makes a short library refuse the payment rather than
+    mill fewer: "A player can't mill a number of cards greater than the number
+    of cards in their library. **If given the choice to do so, they can't
+    choose to take that action.**" Paying a cost is a choice, so CR 118.3's
+    "a player can't pay a cost without the resources to pay it fully" and
+    CR 701.17b agree - the second sentence's "if instructed to do so, they mill
+    as many as possible" is for an *effect* that mills, never for a cost.
+    """
+    return CostComponent(
+        kind=ComponentKind.MILL,
+        amount=amount,
+        payer=payer,
+        description=description,
     )
 
 
@@ -2014,7 +2127,20 @@ def static_free_cast_grant(text: str) -> StaticFreeCastGrant | None:
 # Reading a printed cost phrase into something payable
 # --------------------------------------------------------------------------
 
-_COUNT_WORDS = {"a": 1, "an": 1, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5}
+_COUNT_WORDS = {
+    "a": 1,
+    "an": 1,
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+    "ten": 10,
+}
 
 _COLOR_WORDS = {
     "white": Color.WHITE,
@@ -2031,9 +2157,15 @@ _PHRASE_PAY_LIFE = re.compile(r"^pay (?P<amount>\d+) life$", re.IGNORECASE)
 #: restricts exiling to the hand, so the zone is read off the sentence rather
 #: than assumed - `exile_cost`'s default is only ever a fallback for a
 #: sentence that names none.
+#: The optional "with mana value N" tail Disrupting Shoal's pitch cost prints
+#: ("exile a blue card with mana value X from your hand", CR 107.3a's X already
+#: substituted). It sits between the noun and the zone, so it is spelled once
+#: here and shared by every phrase that can carry it.
+_MANA_VALUE_TAIL = r"(?: with mana value (?P<mana_value>\d+))?"
 _PHRASE_EXILE = re.compile(
     r"^exile (?:this card|(?P<count>\w+) (?P<quality>[\w ]*?)cards?)"
-    r"(?: from (?:your|their) (?P<zone>hand|graveyard|library|battlefield))?$",
+    + _MANA_VALUE_TAIL
+    + r"(?: from (?:your|their) (?P<zone>hand|graveyard|library|battlefield))?$",
     re.IGNORECASE,
 )
 _ZONE_WORDS: dict[str, Zone] = {
@@ -2067,6 +2199,46 @@ _PHRASE_DISCARD = re.compile(
     r"(?: with the same name as (?:a|an) (?P<same_name>[\w ]+?) you control)?$",
     re.IGNORECASE,
 )
+#: `Tap an untapped creature you control` (Swallow Whole's printed additional
+#: cost, CR 118.8a). Distinct from the `{T}` symbol, which CR 107.5 defines as
+#: "Tap this permanent" and never needs a choice made: this sentence names a
+#: *quality*, so the permanent tapped is chosen at announcement (CR 601.2b) and
+#: tapped as the total cost is paid (CR 601.2h). "untapped" is optional in the
+#: wording because CR 107.5's "a permanent that's already tapped can't be
+#: tapped again to pay the cost" is true whether or not the sentence says so -
+#: `CostComponent._why_not_tap` enforces it either way.
+_PHRASE_TAP = re.compile(
+    r"^tap (?P<count>\w+) (?:untapped )?(?P<quality>[\w ,]+?) you control$", re.IGNORECASE
+)
+#: `Mill a card` (Millikin's `{T}, Mill a card: Add {C}.`) - CR 701.17a's
+#: keyword action used as a cost. Nothing is chosen: the cards come off the top
+#: of the payer's own library, so this carries a count and no requirement.
+_PHRASE_MILL = re.compile(r"^mill (?P<count>\w+) cards?$", re.IGNORECASE)
+#: `Waterbend {3}` (Flexible Waterbender) - CR 701.67a: "'Waterbend [cost]'
+#: means 'Pay [cost]. For each generic mana in that cost, you may tap an
+#: untapped artifact or creature you control rather than pay that mana.'" The
+#: cost half is plain mana and is read here; the tapping half is CR 701.67b's
+#: alternate payment method, which - like convoke (CR 702.51b) - applies only
+#: after the total cost is determined, and so lives on an already-open
+#: `CostPayment` in `machines/objects_as_costs.waterbend`, not here.
+_PHRASE_WATERBEND = re.compile(r"^waterbend (?P<cost>(?:\{[^{}]+\})+)$", re.IGNORECASE)
+
+
+def waterbend_mana_cost(phrase: str) -> ManaCost | None:
+    """The mana a `Waterbend [cost]` phrase asks for, or None if that is not
+    what this phrase is (CR 701.67a).
+
+    Separate from `cost_component_for_phrase` because a waterbend cost is
+    *mana*, and a `CostComponent` has nowhere to carry mana - `TotalCost` is
+    the shape that does, which is why `total_cost_for_phrase` is where this is
+    folded in.
+    """
+    match = _PHRASE_WATERBEND.match(phrase.strip().rstrip("."))
+    if match is None:
+        return None
+    return ManaCost.parse(match.group("cost"))
+
+
 #: `Exert this land`, `Exert this creature` (CR 701.43a). Only the self-
 #: referential form, which is the only one printed inside a cost.
 _PHRASE_EXERT_SELF = re.compile(
@@ -2218,6 +2390,13 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
     if life is not None:
         return pay_life_cost(int(life.group("amount")), payer, description=text)
 
+    mill = _PHRASE_MILL.match(text)
+    if mill is not None:
+        count = _count(mill.group("count"))
+        if count is None:
+            return None
+        return mill_cost(count, payer, description=text)
+
     if _PHRASE_EXERT_SELF.match(text):
         # The permanent exerted is the one whose ability this is, and only the
         # caller knows which that is, so the component is built empty and
@@ -2263,6 +2442,8 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
         requirement = _requirement(exile.group("quality"))
         if count is None or requirement is None:
             return None
+        if exile.group("mana_value") is not None:
+            requirement.mana_value = int(exile.group("mana_value"))
         component = exile_cost(payer=payer, required=count, description=text, zone=zone)
         component.requirement = requirement
         return component
@@ -2292,6 +2473,17 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
         component.requirement = requirement
         return component
 
+    tap = _PHRASE_TAP.match(text)
+    if tap is not None:
+        count = _count(tap.group("count"))
+        requirement = _requirement(tap.group("quality"))
+        if count is None or requirement is None:
+            return None
+        component = tap_cost(payer=payer, description=text)
+        component.required = count
+        component.requirement = requirement
+        return component
+
     return None
 
 
@@ -2300,12 +2492,23 @@ def total_cost_for_phrase(phrase: str, payer: str | None = None) -> TotalCost | 
 
     `Flashback {2}{R}` is mana; `Evoke—Exile a black card from your hand.` is a
     component; a comma-separated phrase can be both.
+
+    `Waterbend {3}` is mana too, spelled with an action word in front of it
+    (CR 701.67a: "'Waterbend [cost]' means 'Pay [cost]. ...'"). The permission
+    that word carries - tapping an untapped artifact or creature for each
+    generic mana - is CR 701.67b's alternate payment method and belongs to an
+    open `CostPayment`, not to the total cost, exactly as CR 702.51b puts
+    convoke after the cost is determined.
     """
     mana = ManaCost()
     components: list[CostComponent] = []
     for part in _split_cost_phrase(phrase):
         if _ONLY_MANA.match(part):
             mana = mana.plus(ManaCost.parse(part))
+            continue
+        waterbend = waterbend_mana_cost(part)
+        if waterbend is not None:
+            mana = mana.plus(waterbend)
             continue
         component = cost_component_for_phrase(part, payer)
         if component is None:
@@ -2498,6 +2701,23 @@ class CostPayment(BaseModel):
     each retried combination queued one more, and every one of them still
     resolved once payment finally succeeded, multiplying the bonus mana by
     however many attempts were cancelled along the way."""
+
+    components_before_mana: bool = False
+    """CR 601.2h: "The player pays the total cost. First, they pay all costs
+    that don't involve random elements or moving objects from the library to a
+    public zone, **in any order**."
+
+    The order is the payer's, and it is observable: Momentous Fall sacrificing
+    Omnath, Locus of Mana ("gets +1/+1 for each unspent green mana you have")
+    reads a 5/5 if the sacrifice is paid while the four green mana is still
+    floating and a 1/1 if the mana is spent first (DDR#955). This flag is that
+    choice. It defaults to False - mana first, the order this engine has always
+    used - so nothing that does not ask for it changes.
+
+    It does not reorder the *second* half of CR 601.2h. A mill component moves
+    objects from a library to a public zone, so it is paid after everything
+    else whichever way this flag is set.
+    """
 
     choices: list[int | None] | None = None
     """CR 118.13a: one pinned option per symbol of `cost`, or None to leave the
@@ -2927,6 +3147,13 @@ class CostPayment(BaseModel):
         That overflow does not vanish here. The remainder is written back into
         the payer's mana pool, where it stays until the current step or phase
         ends, and can pay for something else first (CR 106.4a).
+
+        CR 601.2h gives the payer the order: "First, they pay all costs that
+        don't involve random elements or moving objects from the library to a
+        public zone, in any order. Then they pay all remaining costs in any
+        order." `components_before_mana` is the first sentence's freedom - pay
+        the sacrifice before the mana, or after - and the mill components are
+        held back to the second sentence's pass regardless of it.
         """
         self._require_open()
         if self.step in {CostStep.PENDING, CostStep.TAPPING}:
@@ -2946,30 +3173,46 @@ class CostPayment(BaseModel):
             if mana_payment.life_paid
             else None
         )
+        self._merge_exile_components()
         components = [*self.components, *([life] if life is not None else [])]
         if life is not None:
             owed = life.why_not(self.game)
             if owed is not None:
                 raise ValueError(owed)
 
-        # Pay first: a pool that falls short leaves the machine untouched, so the
-        # caller can tap another source and try again.
+        # A pool that falls short leaves the machine untouched, so the caller
+        # can tap another source and try again.
         floating = dict(self.pool.floating)
         snow = dict(self.pool.snow)
         restricted = [entry.model_copy(deep=True) for entry in self.pool.restricted]
-        self.pool.pay(self.mana_owed, payment=mana_payment)
+
+        # CR 601.2h's two passes: everything else first, then the costs that
+        # move objects from a library to a public zone (a mill cost).
+        first_pass = [c for c in components if c.kind is not ComponentKind.MILL]
+        second_pass = [c for c in components if c.kind is ComponentKind.MILL]
 
         paid: list[CostComponent] = []
+        mana_spent = False
         try:
-            for component in components:
+            if not self.components_before_mana:
+                self.pool.pay(self.mana_owed, payment=mana_payment)
+                mana_spent = True
+            for component in first_pass:
+                component.pay(self.game)
+                paid.append(component)
+            if self.components_before_mana:
+                self.pool.pay(self.mana_owed, payment=mana_payment)
+                mana_spent = True
+            for component in second_pass:
                 component.pay(self.game)
                 paid.append(component)
         except Exception:
             for component in reversed(paid):
                 component.unpay(self.game)
-            self.pool.floating = floating
-            self.pool.snow = snow
-            self.pool.restricted = restricted
+            if mana_spent:
+                self.pool.floating = floating
+                self.pool.snow = snow
+                self.pool.restricted = restricted
             raise
 
         if life is not None:
@@ -2979,6 +3222,53 @@ class CostPayment(BaseModel):
         self._write_back_remainder()
         self.overflow = self.pool
         return self.overflow
+
+    def _merge_exile_components(self) -> None:
+        """Fold this payment's like exile components into one before paying.
+
+        CR 603.2c: "An ability triggers only once each time its trigger event
+        occurs. However, it can trigger repeatedly if one event contains
+        multiple occurrences." Paying one cost is one instruction, so a delve
+        payment (CR 702.66a) that exiles five cards out of a graveyard is one
+        occurrence of "one or more cards leave your graveyard" - Hardened
+        Academic triggers once with a count of five, not five times.
+
+        The shape that made that hard is CR 702.66a's own "**for each** generic
+        mana ... you may exile a card", which `machines/objects_as_costs.delve`
+        honours by building one component per symbol. Five components exiling
+        one card each are five calls to `Game.exile_cards` and five events, so
+        they are merged here - at CR 601.2h, the moment the cost is actually
+        paid - into one component holding all five cards, which makes one call.
+
+        Only components that differ in nothing but their cards are merged: same
+        zone, same payer, same requirement, same "pay its mana cost" flag. Two
+        genuinely different exile costs on one spell stay two instructions. The
+        merged component replaces its parts in `self.components`, so the
+        rewind (CR 733.1) undoes exactly what was paid.
+        """
+        merged: list[CostComponent] = []
+        by_key: dict[tuple[Any, ...], CostComponent] = {}
+        for component in self.components:
+            if component.kind is not ComponentKind.EXILE or component.paid:
+                merged.append(component)
+                continue
+            key = (
+                component.payer,
+                component.zone,
+                component.pay_mana_cost_of_chosen,
+                None if component.requirement is None else component.requirement.model_dump_json(),
+            )
+            existing = by_key.get(key)
+            if existing is None:
+                by_key[key] = component
+                merged.append(component)
+                continue
+            existing.cards = [*existing.cards, *component.cards]
+            existing.required += component.required
+            existing.description = "; ".join(
+                part for part in (existing.description, component.description) if part
+            )
+        self.components = merged
 
     def cancel(self) -> None:
         """Rewind: undo every component paid, untap the mana sources, empty the pool.
