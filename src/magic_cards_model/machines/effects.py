@@ -85,6 +85,7 @@ from . import combat as combat_rules
 from .abilities import ActivatedAbility, TriggerEvent, self_normalized_effect_text
 from .casting import PlayAction, finish_suspend, remove_suspend_time_counter
 from .casting_restrictions import create_targeted_cant_cast_restriction, parse_casting_rule_clause
+from .combat import has_keyword
 from .decisions import Decision, DecisionKind
 from .delayed import (
     ANAPHORIC_TIMING_STEPS,
@@ -8004,9 +8005,17 @@ def _parse_mass_type_qualifier(phrase: str) -> Callable[[Characteristics], bool]
     rather than silently matching everything or nothing.
     """
     lowered = phrase.strip().lower()
-    nonland = lowered.startswith("nonland ")
-    if nonland:
-        lowered = lowered.removeprefix("nonland ").strip()
+    #: CR 205.2a's negation prefix, read for *any* card type rather than only
+    #: "nonland": Whipflare's "each nonartifact creature" is the same grammar
+    #: "nonland permanent" is, and a word this cannot resolve to a real type
+    #: fails the whole qualifier rather than being dropped.
+    excluded: Type | None = None
+    negation = re.match(r"^non([a-z]+)\s+", lowered)
+    if negation is not None:
+        excluded = _singular_card_type(negation.group(1))
+        if excluded is None:
+            return None
+        lowered = lowered[negation.end() :].strip()
     bare = re.sub(r"(?:^|\s+)permanents?$", "", lowered).strip()
 
     type_predicate: Callable[[Characteristics], bool]
@@ -8046,7 +8055,7 @@ def _parse_mass_type_qualifier(phrase: str) -> Callable[[Characteristics], bool]
             return any(one_type in chars.types for one_type in types)
 
     def matches(chars: Characteristics) -> bool:
-        if nonland and Type.LAND in chars.types:
+        if excluded is not None and excluded in chars.types:
             return False
         return type_predicate(chars)
 
@@ -8228,7 +8237,7 @@ _DAMAGE_EACH_GROUP_RE = re.compile(
 
 def _parse_damage_each_group_clause(clause: str) -> TargetedClause | None:
     """`_DAMAGE_EACH_GROUP_RE`'s shape: simultaneous, non-targeted damage
-    (CR 119.1) to every permanent presently on the battlefield matching one of
+    (CR 120.1) to every permanent presently on the battlefield matching one of
     the named card types - no target at all, so CR 608.2b's legality recheck
     never applies, only the board as it stands when this runs.
     """
@@ -8252,6 +8261,212 @@ def _parse_damage_each_group_clause(clause: str) -> TargetedClause | None:
                 game.deal_damage(permanent, amount, source=source)
 
     return effect
+
+
+#: "<Source> deals N damage to each <filtered group>." - the same CR 120.1
+#: non-targeted damage `_DAMAGE_EACH_GROUP_RE` deals, but to a *subset* of a
+#: card type rather than the whole type. Three printed filters, all in the
+#: pool: a negated type ("each nonartifact creature", Whipflare), a keyword
+#: ("each creature without flying" / "each creature with flying", Rough //
+#: Tumble), and a controller group that also includes the players themselves
+#: ("each opponent and each creature and planeswalker they control", End the
+#: Festivities).
+#:
+#: Tried only after `_parse_damage_each_group_clause`, which owns the
+#: unfiltered shapes; anything neither reads stays unread rather than being
+#: guessed at, because a mass-damage filter read too widely wipes a board the
+#: card never touched.
+_DAMAGE_EACH_FILTERED_RE = re.compile(
+    rf"^.*\bdeals? (?P<n>{_COUNT}) damage to each (?P<filter>.+?)\.?$", re.IGNORECASE
+)
+
+#: "each opponent and each <types> they control" - End the Festivities. The
+#: players are damaged too (CR 119.2: "Damage dealt to a player normally
+#: causes that player to lose that much life"), which is what makes this
+#: different from every other filter here.
+_DAMAGE_EACH_OPPONENT_AND_THEIRS_RE = re.compile(
+    r"^opponent and each (?P<groups>[a-z]+(?:\s+and\s+(?:each\s+)?[a-z]+)*) they control$",
+    re.IGNORECASE,
+)
+
+#: "<type> with <keyword>" / "<type> without <keyword>" - CR 702's keyword
+#: abilities as a filter on an otherwise plain type group.
+_DAMAGE_GROUP_KEYWORD_RE = re.compile(
+    r"^(?P<group>[a-z]+) (?P<sense>with|without) (?P<keyword>[a-z]+)$", re.IGNORECASE
+)
+
+
+def _parse_damage_group_filter(
+    phrase: str,
+) -> Callable[["Game", CardState], bool] | None:
+    """A predicate over permanents for `_DAMAGE_EACH_FILTERED_RE`'s filter
+    half, read off the *computed* board (CR 613.5) so a type change in layer 4
+    or a keyword granted or removed in layer 6 is honoured.
+
+    Two grammars, both narrow on purpose:
+
+    - a keyword filter, "<type> with <keyword>" / "<type> without <keyword>";
+    - `_parse_mass_type_qualifier`'s own type grammar, which already reads a
+      "non<type>" negation prefix.
+
+    `None` for anything else.
+    """
+    text = phrase.strip().lower()
+
+    keyword_match = _DAMAGE_GROUP_KEYWORD_RE.fullmatch(text)
+    if keyword_match is not None:
+        group_type = _singular_card_type(keyword_match.group("group"))
+        if group_type is None:
+            return None
+        keyword = keyword_match.group("keyword").lower()
+        if keyword not in _DAMAGE_FILTER_KEYWORDS:
+            return None
+        wanted = keyword_match.group("sense").lower() == "with"
+
+        def keyword_predicate(game: "Game", permanent: CardState) -> bool:
+            chars = game.characteristics_of(permanent)
+            if group_type not in chars.types:
+                return False
+            return has_keyword(permanent, keyword, game) is wanted
+
+        return keyword_predicate
+
+    type_matches = _parse_mass_type_qualifier(text)
+    if type_matches is None:
+        return None
+
+    def type_predicate(game: "Game", permanent: CardState) -> bool:
+        return type_matches(game.characteristics_of(permanent))
+
+    return type_predicate
+
+
+#: The keywords a "with <keyword>" / "without <keyword>" damage filter is
+#: allowed to name. Deliberately a short list of evasion and combat keywords
+#: whose presence `machines/combat.has_keyword` genuinely answers off the
+#: computed board, rather than any word at all - an unknown word must fail the
+#: parse, not silently answer "no permanent has it" and sweep the whole type.
+_DAMAGE_FILTER_KEYWORDS = frozenset(
+    {
+        "flying",
+        "reach",
+        "trample",
+        "vigilance",
+        "haste",
+        "menace",
+        "defender",
+        "lifelink",
+        "deathtouch",
+        "first strike",
+        "double strike",
+        "indestructible",
+        "hexproof",
+        "shroud",
+    }
+)
+
+
+def _parse_damage_each_filtered_clause(clause: str) -> TargetedClause | None:
+    """`_DAMAGE_EACH_FILTERED_RE`'s shape: simultaneous, non-targeted damage
+    (CR 120.1, CR 608.2f) to every permanent on the battlefield matching the
+    filter - and, for the "each opponent and ..." wording, to those opponents
+    as well (CR 119.2).
+
+    The recipient set is snapshotted before any damage is dealt, for the same
+    CR 608.2f reason `_destroy_matching` documents: "in most cases, each such
+    action is processed simultaneously", so a creature dying to an earlier
+    step of this loop cannot change who the rest of it hits.
+    """
+    match = _DAMAGE_EACH_FILTERED_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    amount = _count(match.group("n"))
+    phrase = match.group("filter").strip()
+
+    opponents_match = _DAMAGE_EACH_OPPONENT_AND_THEIRS_RE.fullmatch(phrase)
+    if opponents_match is not None:
+        types: set[Type] = set()
+        for word in re.split(r"\s+and\s+(?:each\s+)?", opponents_match.group("groups")):
+            card_type = _singular_card_type(word.strip())
+            if card_type is None:
+                return None
+            types.add(card_type)
+
+        def opponents_effect(game: "Game", stack_object: "StackObject") -> None:
+            source = (
+                stack_object if isinstance(stack_object, CardState) else stack_object.source(game)
+            )
+            controller = game.controller_of(stack_object).username
+            opponents = _opponents(game, controller)
+            names = {opponent.username for opponent in opponents}
+            board = game.computed_board()
+            recipients = [
+                permanent
+                for permanent in list(game.battlefield)
+                if permanent.controller in names and types & set(board.of(permanent).types)
+            ]
+            for opponent in opponents:
+                game.deal_damage(opponent, amount, source=source)
+            for permanent in recipients:
+                if permanent.zone is Zone.BATTLEFIELD:
+                    game.deal_damage(permanent, amount, source=source)
+
+        return opponents_effect
+
+    predicate = _parse_damage_group_filter(phrase)
+    if predicate is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = stack_object if isinstance(stack_object, CardState) else stack_object.source(game)
+        recipients = [
+            permanent for permanent in list(game.battlefield) if predicate(game, permanent)
+        ]
+        for permanent in recipients:
+            if permanent.zone is Zone.BATTLEFIELD:
+                game.deal_damage(permanent, amount, source=source)
+
+    return effect
+
+
+def _merge_damage_each_filtered_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """Undo the generic "and" clause split for
+    `_parse_damage_each_filtered_clause`'s own sentence.
+
+    End the Festivities prints one CR 608.2c instruction - "deals 1 damage to
+    each opponent and each creature and planeswalker they control" - which
+    `_prepare_effect_clauses` cuts into three on its own "and"s. Rejoining is
+    the only way to see that "they control" belongs to the opponents named at
+    the front, and getting it wrong is not a small error: the first fragment
+    on its own reads as plain "damage to each opponent" and would silently
+    drop the board half of the card.
+
+    Longest match wins: the fragments are rejoined one at a time and the
+    longest recombination that `_parse_damage_each_filtered_clause` reads is
+    the one taken, so a genuinely separate following instruction is never
+    swallowed (it will not parse as part of this sentence).
+    """
+    head = clauses[index].strip()
+    if _DAMAGE_EACH_FILTERED_RE.fullmatch(head) is None:
+        return None  # this clause is not a damage sentence; nothing to extend
+    if _parse_damage_each_filtered_clause(head) is not None:
+        return None  # the single-clause path already reads this one whole
+    best: tuple[int, TargetedClause] | None = None
+    combined = head.rstrip(".")
+    for consumed in range(1, len(clauses) - index):
+        fragment = clauses[index + consumed].strip().rstrip(".")
+        # Only a *fragment* of the same sentence may be reattached. A clause
+        # that is a damage sentence in its own right is a separate CR 608.2c
+        # instruction, and swallowing it would silently drop it.
+        if _DAMAGE_EACH_FILTERED_RE.fullmatch(fragment) is not None:
+            break
+        combined = f"{combined} and {fragment}"
+        effect = _parse_damage_each_filtered_clause(combined)
+        if effect is not None:
+            best = (consumed + 1, effect)
+    return best
 
 
 #: A bare "each `<type>`[, each `<type>`]*" continuation, split off from
@@ -13774,6 +13989,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     damage_each_group = _parse_damage_each_group_clause(clause)
     if damage_each_group is not None:
         return damage_each_group
+    damage_each_filtered = _parse_damage_each_filtered_clause(clause)
+    if damage_each_filtered is not None:
+        return damage_each_filtered
     # -- end Wave W6 single-clause additions --------------------------------
     # -- draw-if-you-control clause (Ral, Monsoon Mage's -2) ---------------
     draw_if_control = _parse_draw_if_you_control_color_permanent_clause(clause)
@@ -13936,6 +14154,12 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             index += consumed
             continue
         merged = _merge_damage_each_group_clauses(clauses, index, for_spell=for_spell)
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_damage_each_filtered_clauses(clauses, index, for_spell=for_spell)
         if merged is not None:
             consumed, effect = merged
             parsed.append(effect)
