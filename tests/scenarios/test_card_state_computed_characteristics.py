@@ -2,8 +2,12 @@
 
 `CardState` is one physical card in a game, and on its own it can only report
 what is printed on the face that is up plus what its own counters do to it
-(CR 122.1a: "If a permanent has a +1/+1 counter on it, its power and toughness
-are each 1 greater"). That is not what the rules mean by a creature's power.
+(CR 122.1a: "A +X/+Y counter on a creature or on a creature card in a zone
+other than the battlefield, where X and Y are numbers, adds X to that object's
+power and Y to that object's toughness"). That is not what the rules mean by a
+creature's power - CR 302.4c is: "To determine a creature's power and
+toughness, start with the numbers printed in its lower right corner, then apply
+any applicable continuous effects."
 CR 613.5: "The application of continuous effects as described by the layer
 system is continually and automatically performed by the game. All resulting
 changes to an object's characteristics are instantaneous." The engine's layer
@@ -34,9 +38,9 @@ or_dies_by_its_toughness_right_now` - are one `bind_to_game` call in
 `Game`'s own battlefield-entry path away, and their reasons say so.
 
 Every CR number here was verified with `knowledge_search(q="...", type="rules")`
-in the session that wrote it: CR 122.1a, CR 202.3a, CR 208.2a, CR 400.7,
-CR 406.3a, CR 510.1a, CR 604.3, CR 613.4a, CR 613.5, CR 701.27c, CR 701.27d,
-CR 704.5g, CR 712.9, CR 712.10.
+in the session that wrote it: CR 122.1a, CR 202.3a, CR 208.2a, CR 300.1,
+CR 302.4c, CR 400.7, CR 406.3a, CR 510.1a, CR 604.3, CR 613.4a, CR 613.4c,
+CR 613.5, CR 701.27c, CR 701.27d, CR 704.5g, CR 708.2a, CR 712.9, CR 712.10.
 """
 
 from magic_cards_model.machines import Step
@@ -78,7 +82,7 @@ def test_a_bound_goyf_reads_its_own_characteristic_defining_ability():
     An instant and a land among the graveyards is two card types, so
     Tarmogoyf is a 2/3 - "Tarmogoyf's power is equal to the number of card
     types among cards in all graveyards and its toughness is equal to that
-    number plus 1", counted across every graveyard (CR 300.1).
+    number plus 1" - CR 300.1's card types, counted across every graveyard.
     """
     scenario = (
         Scenario()
