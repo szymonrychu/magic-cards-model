@@ -33,8 +33,6 @@ Every CR number in this file was looked up with `knowledge_search(type="rules")`
 in the session that wrote it.
 """
 
-import pytest
-
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.layers import ContinuousEffects, Duration, compute_board
 from magic_cards_model.models import Zone
@@ -268,16 +266,17 @@ def test_reaching_the_cleanup_step_ends_the_effect_by_itself():
 def test_two_durational_effects_apply_in_the_order_they_were_created():
     """CR 613.7b, and CR 613.7 for what the timestamps are for.
 
-    Giant Growth then Dismember, both sublayer 7c on the same Bear. Addition is
-    commutative so the arithmetic cannot tell you which went first; the journal
-    can, and it is the older one.
+    Giant Growth then Dismember, both sublayer 7c on the same creature. Addition
+    is commutative so the arithmetic cannot tell you which went first; the
+    journal can, and it is the older one.
 
-    A 2/2 with +3/+3 and -5/-5 is a 0/0, and now that `Game` consults the layer
-    engine, CR 704.5f puts it into its owner's graveyard as Dismember finishes
-    resolving (CR 704.3). So the board is computed against the creature itself
-    rather than against a battlefield it has already left - the arithmetic and
-    the ordering are the subject here, and the death is asserted alongside them
-    rather than worked around.
+    A Hill Giant rather than a Grizzly Bears, because the subject has to still
+    be on the battlefield for the board to be worth asking about. A 2/2 with
+    +3/+3 and -5/-5 is a 0/0 and CR 704.5f puts it into its owner's graveyard as
+    Dismember finishes resolving; CR 400.7 then makes the card in the graveyard
+    a new object, and both effects - fixed to the object they resolved on by
+    CR 611.2c - correctly stop applying to it. A 3/3 comes out of the same two
+    spells as a 1/1 and stays put, so the ordering is asked of a live permanent.
     """
     scenario = (
         Scenario()
@@ -286,29 +285,29 @@ def test_two_durational_effects_apply_in_the_order_they_were_created():
             "alice",
             hand=["Giant Growth", "Dismember"],
             library=["Forest"],
-            battlefield=["Grizzly Bears", "Forest", "Swamp", "Swamp", "Swamp"],
+            battlefield=["Hill Giant", "Forest", "Swamp", "Swamp", "Swamp"],
         )
         .build()
     )
     store = hold_effects(scenario)
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
-    bears = scenario.creature("Grizzly Bears", "alice")
+    giant = scenario.creature("Hill Giant", "alice")
     (forest,) = scenario.untapped_sources("Forest", username="alice")
-    scenario.cast_and_resolve("Giant Growth", forest, targets=[bears])
+    scenario.cast_and_resolve("Giant Growth", forest, targets=[giant])
     swamps = scenario.untapped_sources("Swamp", "Swamp", "Swamp", username="alice")
-    scenario.cast_and_resolve("Dismember", *swamps, targets=[bears])
+    scenario.cast_and_resolve("Dismember", *swamps, targets=[giant])
 
     growth, dismember = store.effects
     assert growth.timestamp < dismember.timestamp
 
-    assert bears.zone is Zone.GRAVEYARD, "a 0/0 does not survive CR 704.5f"
+    assert giant.zone is Zone.BATTLEFIELD, "3/3, then +3/+3, then -5/-5, is a 1/1"
 
-    board = compute_board([bears], store.active)
-    assert board.of(bears).power_toughness == (0, 0), "2/2, then +3/+3, then -5/-5"
+    board = compute_board([giant], store.active)
+    assert board.of(giant).power_toughness == (1, 1)
     assert board.journal.applied == [
-        "Giant Growth: Grizzly Bears gets +3/+3",
-        "Dismember: Grizzly Bears gets -5/-5",
+        "Giant Growth: Hill Giant gets +3/+3",
+        "Dismember: Hill Giant gets -5/-5",
     ]
 
 
@@ -537,23 +536,28 @@ def test_the_tidebinder_trigger_creates_the_effect_by_itself():
 # --------------------------------------------------------------------------
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="measured: models/card_state.py already models CR 400.7's new object - "
-    "`move_to` assigns a fresh `zone_change_stamp` on every zone change, and "
-    "`machines/layers.only_this_incarnation` is the selector that reads it back. What "
-    "still fails is that a resolving spell's target-fixed effect (CR 611.2c) is built "
-    "with `machines/layers._only(target.id)`, an id-only selector that cannot tell the "
-    "incarnations apart, so the Bear that came back is still the one Giant Growth pumped. "
-    "The change is in machines/layers.py, where the effect is created.",
-)
 def test_a_creature_that_died_and_returned_is_not_the_pumped_one():
     """CR 400.7: "An object that moves from one zone to another becomes a new
     object with no memory of, or relation to, its previous existence."
 
     The Bear the Giant Growth resolved on died. The Bear that came back is a
     different object, and CR 611.2c fixed the effect's set of objects when it
-    began, so the returning Bear is a plain 2/2 for the rest of the turn.
+    began ("the set of objects it affects is determined when that continuous
+    effect begins"), so the returning Bear is a plain 2/2 for the rest of the
+    turn.
+
+    Two things about *how* the Bear is killed are load-bearing, and both were
+    wrong when this test was first written as an xfail:
+
+    - **Priority.** CR 117.3b: "The active player receives priority after a
+      spell or ability (other than a mana ability) resolves." Alice is the
+      active player, so when her own Giant Growth resolves priority comes back
+      to *her*, not to Bob. Bob only gets to act after she passes.
+    - **Lethality.** After the pump the Bear is a 5/5, so three damage is not
+      lethal: CR 704.5g destroys a creature only when "the total damage marked
+      on it is greater than or equal to its toughness". Dismember's -5/-5 makes
+      it a 0/0 instead, and CR 704.5f puts a creature with "toughness 0 or
+      less" into its owner's graveyard whatever the pump says.
     """
     scenario = (
         Scenario()
@@ -564,7 +568,12 @@ def test_a_creature_that_died_and_returned_is_not_the_pumped_one():
             library=["Forest"],
             battlefield=["Grizzly Bears", "Forest"],
         )
-        .player("bob", hand=["Lightning Bolt"], library=["Island"], battlefield=["Mountain"])
+        .player(
+            "bob",
+            hand=["Dismember"],
+            library=["Island"],
+            battlefield=["Swamp", "Swamp", "Swamp"],
+        )
         .build()
     )
     store = hold_effects(scenario)
@@ -574,9 +583,13 @@ def test_a_creature_that_died_and_returned_is_not_the_pumped_one():
     (forest,) = scenario.untapped_sources("Forest", username="alice")
     scenario.cast_and_resolve("Giant Growth", forest, targets=[bears])
 
-    (mountain,) = scenario.untapped_sources("Mountain", username="bob")
-    scenario.cast_and_resolve("Lightning Bolt", mountain, username="bob", targets=[bears])
-    assert bears.zone is Zone.GRAVEYARD, "toughness 2 does not know about the pump"
+    assert scenario.priority_holder == "alice", "CR 117.3b: the active player, not the caster"
+    assert computed(scenario, store).of(bears).power_toughness == (5, 5)
+
+    scenario.pass_priority("alice")
+    swamps = scenario.untapped_sources("Swamp", "Swamp", "Swamp", username="bob")
+    scenario.cast_and_resolve("Dismember", *swamps, username="bob", targets=[bears])
+    assert bears.zone is Zone.GRAVEYARD, "5/5 with -5/-5 is a 0/0 (CR 704.5f)"
 
     returned = scenario.put_onto_battlefield("Grizzly Bears", "alice", from_zone=Zone.GRAVEYARD)
 

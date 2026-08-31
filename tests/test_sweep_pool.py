@@ -50,14 +50,17 @@ def test_a_card_that_works_classifies_as_handled():
 
 
 def test_a_card_with_a_genuine_gap_still_classifies_as_silent():
-    """Rancor's "Enchanted creature gets +2/+0 and has trample." is a
-    still-open, documented gap: `machines/layers.py`'s own `LAYER_EFFECTS`
-    comment says "'Enchanted creature' is a third subject
-    `parsed_layer_effects` does not read ... left for a later wave", and
-    `looks_like_unparsed_layer_effect` does not open on it either, so the
-    Aura's whole bonus happens nowhere and is logged nowhere. Fixing the
-    classifier must never make a genuinely-dead card look alive: this is the
-    control for that.
+    """Keen-Eyed Curator's "As long as there are four or more card types among
+    cards exiled with this creature, it gets +4/+4 and has trample." is a
+    still-open gap: `machines/layers._GRAVEYARD_CARD_TYPES_GATED_SELF_STATIC_RE`
+    reads the delirium-shaped twin of this sentence, but nothing in
+    `LayerContext` knows which cards were exiled *with a particular permanent*,
+    so the whole bonus happens nowhere. Fixing the classifier must never make a
+    genuinely-dead card look alive: this is the control for that.
+
+    (Rancor stood here while "Enchanted creature ..." was unreadable. It is
+    read now - see `tests/scenarios/test_attached_creature_statics.py` - so it
+    would be a control that controls nothing.)
 
     (Grand Arbiter Augustin IV used to be this control, on the reading that
     its cost-modifier statics reached no notice at all. Measured today, two of
@@ -70,7 +73,7 @@ def test_a_card_with_a_genuine_gap_still_classifies_as_silent():
     "target player loses 1 life and you gain 1 life" clauses, and History of
     Benalia's Saga chapters.)
     """
-    category, _ = classify_card(card("Rancor"))
+    category, _ = classify_card(card("Keen-Eyed Curator"))
     assert category == SILENT
 
 
@@ -205,7 +208,15 @@ def test_the_x_probes_are_the_one_place_the_best_answer_wins():
 @pytest.mark.parametrize(
     ("name", "phrase"),
     [
-        ("Angel of Jubilation", "Other nonblack creatures you control get +1/+1."),
+        # Angel of Jubilation used to stand here. Its "Other nonblack creatures
+        # you control get +1/+1." is read now - the colour negation is one of
+        # the qualifiers `_QUALIFIED_CREATURE_SUBJECT` learned - and
+        # `tests/scenarios/test_qualified_anthems.py` pins it.
+        (
+            "Keen-Eyed Curator",
+            "As long as there are four or more card types among cards exiled "
+            "with this creature, it gets +4/+4 and has trample.",
+        ),
         # Bloodghast used to stand here. Its landfall trigger ("you may return
         # this card from your graveyard to the battlefield") is read now, so
         # the card's worst clause is its unaudited static one and it reports
