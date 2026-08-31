@@ -1,0 +1,139 @@
+{
+  "object": "card",
+  "id": "74ca45a4-97ab-4255-9129-884e8b42b984",
+  "oracle_id": "82333385-631f-4abf-b159-bb367f1c6fd9",
+  "multiverse_ids": [],
+  "resource_id": "05DB6E3F63EC1EDA95583EBB01EA0C496D10497D94AB2AA642EA27FBCEA142FA",
+  "mtgo_id": 144900,
+  "arena_id": 97485,
+  "tcgplayer_id": 649367,
+  "cardmarket_id": 844433,
+  "name": "Abandon Attachments",
+  "lang": "en",
+  "released_at": "2025-11-21",
+  "uri": "https://api.scryfall.com/cards/74ca45a4-97ab-4255-9129-884e8b42b984",
+  "scryfall_uri": "https://scryfall.com/card/tla/205/abandon-attachments?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T01:08:53Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/7/4/74ca45a4-97ab-4255-9129-884e8b42b984.jpg?1783904933",
+    "normal": "https://cards.scryfall.io/normal/front/7/4/74ca45a4-97ab-4255-9129-884e8b42b984.jpg?1783904933",
+    "large": "https://cards.scryfall.io/large/front/7/4/74ca45a4-97ab-4255-9129-884e8b42b984.jpg?1783904933",
+    "png": "https://cards.scryfall.io/png/front/7/4/74ca45a4-97ab-4255-9129-884e8b42b984.png?1783904933",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/7/4/74ca45a4-97ab-4255-9129-884e8b42b984.jpg?1783904933",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/7/4/74ca45a4-97ab-4255-9129-884e8b42b984.jpg?1783904933",
+    "thumb": "https://cards.scryfall.io/thumb/front/7/4/74ca45a4-97ab-4255-9129-884e8b42b984.webp?1783904933",
+    "grid": "https://cards.scryfall.io/grid/front/7/4/74ca45a4-97ab-4255-9129-884e8b42b984.webp?1783904933",
+    "display": "https://cards.scryfall.io/display/front/7/4/74ca45a4-97ab-4255-9129-884e8b42b984.webp?1783904933",
+    "art": "https://cards.scryfall.io/art/front/7/4/74ca45a4-97ab-4255-9129-884e8b42b984.webp?1783904933",
+    "crop": "https://cards.scryfall.io/crop/front/7/4/74ca45a4-97ab-4255-9129-884e8b42b984.webp?1783904933"
+  },
+  "mana_cost": "{1}{U/R}",
+  "cmc": 2.0,
+  "type_line": "Instant \u2014 Lesson",
+  "oracle_text": "You may discard a card. If you do, draw two cards.",
+  "colors": [
+    "R",
+    "U"
+  ],
+  "color_identity": [
+    "R",
+    "U"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "118f7e64-5caa-4cb7-99a8-184f4d3a7422",
+  "set": "tla",
+  "set_name": "Avatar: The Last Airbender",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/118f7e64-5caa-4cb7-99a8-184f4d3a7422",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atla&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/tla?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/74ca45a4-97ab-4255-9129-884e8b42b984/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A82333385-631f-4abf-b159-bb367f1c6fd9&unique=prints",
+  "collector_number": "205",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "\"Learn to let her go, or you cannot let the pure cosmic energy flow in from the universe.\"\n\u2014Guru Pathik",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Shahab Alizadeh",
+  "artist_ids": [
+    "0bab3964-6224-4a02-acb3-f46d92dfc45d"
+  ],
+  "illustration_id": "d6b24cf2-4d62-4b72-8e01-6fdc92e5fcf5",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "lesson"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 3750,
+  "penny_rank": 379,
+  "prices": {
+    "usd": "0.32",
+    "usd_foil": "0.48",
+    "usd_etched": null,
+    "eur": "0.38",
+    "eur_foil": "0.93",
+    "tix": "0.04"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAbandon%2BAttachments",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAbandon%2BAttachments",
+    "edhrec": "https://edhrec.com/route/?cc=Abandon+Attachments"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F649367%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=844433&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/144900?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
