@@ -964,6 +964,29 @@ class CardState(BaseModel):
     def is_creature(self) -> bool:
         return Type.CREATURE in self.types
 
+    @property
+    def is_suspended(self) -> bool:
+        """CR 702.62b: "A card is 'suspended' if it's in the exile zone, has
+        suspend, and has a time counter on it."
+
+        Kept as one predicate on `CardState` itself, not the machine that
+        marks it (`machines.casting.MarkedExile.suspend`) or the one that
+        reads it back (`machines.keywords`), so both - and any future
+        ability that prints its own "Activate only if this card is
+        suspended" restriction (CR 602.5b), Greater Gargadon's own second
+        ability being the pool's example - ask the identical question rather
+        than re-deriving it. Not knowing the card prints suspend at all is
+        not asked here; a card can only carry `ExileMarker.SUSPENDED` by way
+        of `MarkedExile.suspend`, which already refused to mark one that has
+        no suspend ability.
+        """
+        if self.zone is not Zone.EXILE:
+            return False
+        annotation = self.exile_annotation
+        if annotation is None or annotation.marker is not ExileMarker.SUSPENDED:
+            return False
+        return self.counter_count(Counter.TIME) > 0
+
     def is_summoning_sick(self, game: Any = None) -> bool:
         """Whether the summoning-sickness restriction actually applies here.
 

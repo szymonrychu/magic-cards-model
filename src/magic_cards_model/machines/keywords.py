@@ -484,10 +484,35 @@ class KeywordActivation(BaseModel):
             )
         if self.zone is Zone.BATTLEFIELD and self.card.controller not in (None, self.player):
             return f"{self.player} does not control {self.card.name}"
-        if self.zone is not Zone.BATTLEFIELD:
-            owner = self.game.player(self.player) if self.game is not None else None
-            if owner is not None and self.card not in owner.cards_in(self.zone):
-                return f"{self.card.name} is not in {self.player}'s {self.zone.value}"
+        if self.zone is not Zone.BATTLEFIELD and self.game is not None:
+            if self.zone in self.game.shared_zones:
+                # CR 406 (via `Game.shared_zones`): exile is one shared pile,
+                # not a per-player list the way a hand or graveyard is - the
+                # `self.card.zone is self.zone` check above already proves the
+                # card is physically there, so what is left to check is *whose*
+                # ability this is (CR 109.4: an object with no controller is
+                # activated by its owner - the same player `annotate_exile`
+                # already records as a suspended card's `exile_annotation.
+                # owner`).
+                if self.card.owner is not None and self.card.owner != self.player:
+                    return (
+                        f"{self.player} does not own {self.card.name}, so cannot "
+                        f"activate its ability from the {self.zone.value}"
+                    )
+            else:
+                owner = self.game.player(self.player)
+                if self.card not in owner.cards_in(self.zone):
+                    return f"{self.card.name} is not in {self.player}'s {self.zone.value}"
+        if self.rule == "CR 702.62b" and not self.card.is_suspended:
+            # Greater Gargadon's own "Activate only if this card is
+            # suspended" (CR 602.5b): being in exile is necessary but not
+            # sufficient - CR 702.62b's "suspended" also asks for the suspend
+            # marker and at least one time counter, which `CardState.
+            # is_suspended` reads directly rather than re-deriving here.
+            return (
+                f"{self.card.name}'s {self.keyword} ability can only be activated while "
+                f"it is suspended (CR 702.62b, CR 602.5b)"
+            )
         if (
             self.sorcery_only
             and self.game is not None
