@@ -715,10 +715,14 @@ def test_all_three_graveyard_reading_cdas_coexist_on_one_board():
 
 @pytest.mark.xfail(
     strict=True,
-    reason="Game.power_of / Game.toughness_of ask machines/layers.py now, so the game can "
-    "see a Goyf's power. This asserts on CardState.power/.toughness, which are still the "
-    "printed value plus counters, and a printed `*` is not a number - models/card_state.py "
-    "is where that would change.",
+    reason="measured: models/card_state.py has the hook now - `CardState.bind_to_game` "
+    "makes `.power`/`.toughness` answer with `Game.characteristics_of` for a permanent on "
+    "the battlefield, and a bound Goyf reads 2/3 off layer 7a (see "
+    "tests/scenarios/test_card_state_computed_characteristics.py). Nothing calls it: "
+    "models/game.py never binds a CardState to the game it is in, so every object in a "
+    "real game is unbound and falls back to the printed value plus counters, and a "
+    "printed `*` is not a number. One `state.bind_to_game(self)` in Game's own "
+    "battlefield-entry path (`Game.enter_the_battlefield`) is the whole remainder.",
 )
 def test_the_game_agrees_with_the_layer_engine_about_a_goyfs_power():
     """The integration this file works around, stated as a test.

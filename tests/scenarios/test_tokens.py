@@ -803,22 +803,17 @@ def test_doubling_season_doubles_the_tokens_created():
     assert len(spirits) == 6
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Ragavan's trigger is 'Whenever Ragavan deals combat damage to a player', and "
-    "machines/abilities.TriggerEvent has no member for damage being dealt - the six it "
-    "recognises are enters, dies, attacks, blocks, beginning of step and cast. The trigger "
-    "is parsed with `event=None` and never fires, so the Treasure is never created. The "
-    "hook is a DEALS_COMBAT_DAMAGE event in machines/abilities.py and machines/triggers.py, "
-    "emitted from machines/combat.py.",
-)
 def test_ragavan_creates_a_treasure_on_combat_damage():
     """Ragavan, Nimble Pilferer: "Whenever Ragavan deals combat damage to a
     player, create a Treasure token and exile the top card of that player's
     library."
 
-    The Treasure is CR 111.10a's predefined token and this engine can create it.
-    What it cannot do is notice the trigger event.
+    The Treasure is CR 111.10a's predefined token. The whole path runs:
+    `Game.deal_damage` emits `TriggerEvent.DEALS_DAMAGE` with `combat=True`
+    (CR 120.1 makes the creature the source), the trigger matches it, and
+    CR 510.3a puts the ability on the stack before the active player would get
+    priority - which is what `machines/combat.combat_damage_step` does at the
+    end of the step.
     """
     scenario = (
         Scenario()

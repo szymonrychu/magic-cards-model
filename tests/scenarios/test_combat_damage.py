@@ -201,3 +201,66 @@ def test_marked_damage_is_gone_once_the_creature_changes_zones():
     assert spider.damage == 3
     scenario.game.destroy(spider)
     assert spider.damage == 0
+
+
+# -- CR 510.3a: what triggered on the damage reaches the stack ---------------
+
+
+def test_a_damage_trigger_is_on_the_stack_when_the_step_ends():
+    """CR 510.3a: "Any abilities that triggered on damage being dealt or while
+    state-based actions are performed afterward are put onto the stack before
+    the active player gets priority."
+
+    The combat damage step is the one place in combat that emits events, and
+    before this it left them sitting in `pending_triggers` (CR 603.3's queue)
+    with nothing in the step to move them - so a "whenever this deals combat
+    damage" ability only reached the stack if some later part of the engine
+    happened to flush the queue. `Game.declare_attackers` and
+    `Game.declare_blockers` already do the same thing for CR 508.2b and
+    CR 509.2a.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Ragavan, Nimble Pilferer"])
+        .player("bob", library=["Forest"])
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    ragavan = scenario.creature("Ragavan, Nimble Pilferer", "alice")
+    ragavan.summoning_sick = False
+
+    scenario.attack_with(ragavan, defending="bob")
+    scenario.no_blocks()
+    scenario.combat_damage()
+
+    assert scenario.stack_names() == ["Ragavan, Nimble Pilferer's triggered ability"]
+    assert scenario.pending_triggers == [], "nothing was left on the CR 603.3 queue"
+
+
+def test_a_death_from_the_damage_triggers_into_the_same_batch():
+    """CR 510.3a's second clause: "or while state-based actions are performed
+    afterward".
+
+    The state-based action is CR 704.5g - a creature with lethal damage marked
+    on it is destroyed - and the dies trigger it causes belongs to this batch,
+    not to some later one. Footlight Fiend's "When this creature dies, it deals
+    1 damage to any target" is the trigger; the step runs the state-based
+    actions first (CR 117.5) and only then puts what triggered on the stack, so
+    the death is already known by the time the batch is assembled.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Grizzly Bears"])
+        .player("bob", battlefield=["Footlight Fiend"])
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    fiend = scenario.creature("Footlight Fiend", "bob")
+
+    scenario.attack_with(bears)
+    scenario.block(bears, fiend)
+    scenario.combat_damage()
+
+    assert fiend.zone is Zone.GRAVEYARD, "CR 704.5g destroyed it in the step"
+    assert scenario.stack_names() == ["Footlight Fiend's triggered ability"]

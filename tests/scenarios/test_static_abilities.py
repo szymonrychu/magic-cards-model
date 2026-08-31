@@ -383,11 +383,15 @@ def test_an_anthem_stacks_with_the_rats_own_count():
 
 @pytest.mark.xfail(
     strict=True,
-    reason="Game.power_of / Game.toughness_of and check_state_based_actions consult "
-    "machines/layers.py now, so the anthem does reach CR 704.5f and CR 704.5g. This asserts "
-    "on CardState.power/.toughness themselves, which are still the printed values plus "
-    "counters (CR 122.1a) - models/card_state.py is where that would change, and "
-    "machines/combat.py still reads them for CR 510.1a.",
+    reason="measured: Game.power_of / Game.toughness_of and check_state_based_actions "
+    "consult machines/layers.py, so the anthem does reach CR 704.5f and CR 704.5g. This "
+    "asserts on CardState.power/.toughness themselves. models/card_state.py has the hook "
+    "now - `CardState.bind_to_game` makes both answer with the computed characteristics, "
+    "and a bound Grizzly Bears under this anthem reads 3/3 (see "
+    "tests/scenarios/test_card_state_computed_characteristics.py) - but models/game.py "
+    "never calls it, so every object in a real game is unbound and reports the printed "
+    "values plus counters (CR 122.1a), and machines/combat.py still reads them for "
+    "CR 510.1a.",
 )
 def test_the_game_sees_the_anthem_a_static_ability_generates():
     """The one integration this whole file works around.

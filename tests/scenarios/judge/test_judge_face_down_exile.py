@@ -12,9 +12,14 @@ characteristics". Mana cost is a characteristic, so the face-down Emrakul has
 none, and CR 202.3a then gives it a mana value of 0 - even though every player
 at the table watched it go there and knows exactly what it is.
 
-The engine models one half of CR 406.3 (a face-down exiled card is not a
-face-up one, so an effect that reaches for face-up cards cannot see it) and
-none of CR 406.3a (its characteristics are all still readable).
+The engine models both halves of CR 406.3 now: a face-down exiled card is not a
+face-up one, so an effect that reaches for face-up cards cannot see it
+(`Game.face_up_cards_in_exile`), and it has no characteristics either
+(`CardState.has_no_characteristics`). The one departure is a card in a pile
+that grants permission to play it - a foretold or plotted card - which stays
+readable, because this engine does not yet turn such a card face up at
+announcement the way CR 406.3a's second sentence and CR 601.3f do. Driving the
+whole DDR#956 scenario through Pyxis and Ulamog is a separate `xfail`.
 
 Card text verified with `resolve_cards`; every CR number here was looked up
 with `knowledge_search(type="rules")` in this session.
@@ -23,6 +28,7 @@ with `knowledge_search(type="rules")` in this session.
 import pytest
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.casting import MarkedExile
 from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario
 
@@ -51,13 +57,6 @@ def test_a_face_down_exiled_card_is_not_a_face_up_one():
     assert scenario.game.face_up_cards_in_exile() == []
 
 
-@pytest.mark.xfail(
-    reason="CR 406.3a is not modelled for exile: CardState only blanks its "
-    "characteristics through face_down_characteristics, which is set by "
-    "the morph/manifest path (CR 708.2). A card merely turned face down in "
-    "exile keeps its printed name, types, and mana value",
-    strict=True,
-)
 def test_a_face_down_exiled_card_has_a_mana_value_of_zero():
     """DDR#956's ruling: no characteristics means no mana cost means mana value
     0.
@@ -72,11 +71,13 @@ def test_a_face_down_exiled_card_has_a_mana_value_of_zero():
     Ulamog, the Defiler's "greatest mana value among cards in exile" gets
     nothing from it.
 
-    Not modelled. `CardState.mana_value` returns 0 only when
-    `face_down_characteristics` is set, which is CR 708.2's morph/manifest
-    machinery for objects on the battlefield or the stack. A card sitting in
-    exile with `face_up` cleared keeps everything: name, types, and a mana
-    value of 13.
+    Modelled by `CardState.has_no_characteristics`, which every characteristic
+    property on `CardState` consults: a card in exile with `face_up` cleared
+    has no name, no types, no colors, no text and no mana cost, so CR 202.3a
+    reads its mana value as 0 rather than the printed 13. Distinct from
+    CR 708.2's morph/manifest set (`face_down_characteristics`), which
+    *replaces* the printing with a listed 2/2 for a face-down spell or
+    permanent; a card in exile is neither, so nothing is listed for it.
     """
     scenario = Scenario().player("alice", exile=["Emrakul, the Promised End"]).player("bob").build()
     emrakul = scenario.find("Emrakul, the Promised End", Zone.EXILE, "alice")
@@ -137,3 +138,80 @@ def test_pyxis_exiles_face_down_and_ulamog_counts_it_as_zero():
     ulamog = scenario.cast_and_resolve("Ulamog, the Defiler", auto=True, username="alice")
 
     assert ulamog.counters["+1/+1"] == 0, "a face-down card's mana value is 0"
+
+
+def test_the_whole_characteristic_set_goes_not_just_the_mana_value():
+    """CR 406.3a says "no characteristics", and means all of them.
+
+    Name, types, subtypes, supertypes, colors, text, mana cost, power and
+    toughness are all characteristics (CR 109.3), so a face-down Emrakul in
+    exile answers with nothing for every one of them - which is what stops an
+    effect that reaches for "each legendary card in exile", "each colorless
+    card in exile" or "the greatest power among cards in exile" finding it
+    either.
+    """
+    scenario = Scenario().player("alice", exile=["Emrakul, the Promised End"]).player("bob").build()
+    emrakul = scenario.find("Emrakul, the Promised End", Zone.EXILE, "alice")
+    emrakul.face_up = False
+
+    assert emrakul.name == ""
+    assert emrakul.types == ()
+    assert emrakul.subtypes == ()
+    assert emrakul.supertypes == ()
+    assert emrakul.colors == ()
+    assert emrakul.keywords == ()
+    assert emrakul.oracle_text == ""
+    assert emrakul.mana_cost is None
+    assert (emrakul.power, emrakul.toughness) == (None, None)
+    assert not emrakul.is_creature
+
+
+def test_turning_it_back_face_up_gives_everything_back():
+    """CR 406.3a's own second sentence, and CR 400.6: the blanking is a fact
+    about the card being face down, not a change written into it. Nothing is
+    lost - `CardState.card` is still the printing throughout."""
+    scenario = Scenario().player("alice", exile=["Emrakul, the Promised End"]).player("bob").build()
+    emrakul = scenario.find("Emrakul, the Promised End", Zone.EXILE, "alice")
+
+    emrakul.face_up = False
+    assert emrakul.mana_value == 0
+
+    emrakul.face_up = True
+
+    assert emrakul.name == "Emrakul, the Promised End"
+    assert emrakul.mana_value == 13
+
+
+def test_a_card_in_a_pile_that_may_be_played_is_still_readable():
+    """The engine's documented departure from CR 406.3a, stated as a test.
+
+    CR 601.3f: "Some effects allow a player to cast a spell with certain
+    qualities from among face-down cards in exile. A player may begin to cast
+    such a spell only if they can look at the face-down card in exile", and
+    CR 406.3a then turns that card face up before its controller announces
+    they are playing it. This engine does not turn it face up at announcement
+    (that is a `machines/casting.py` change), so a card in a pile that grants
+    permission to play it - foretell's, CR 702.143c - keeps its characteristics
+    readable the whole time it sits there. `CardState.has_no_characteristics`
+    is scoped to a card with no `exile_annotation` for exactly that reason.
+    """
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Lupine Harbingers"], battlefield=["Forest"] * 3)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    harbingers = scenario.find("Lupine Harbingers", Zone.HAND, "alice")
+    action = MarkedExile.foretell(scenario.game, harbingers, "alice")
+    forests = scenario.untapped_sources("Forest", "Forest", username="alice")
+    scenario.pay_with(action.begin_paying(), *forests)
+    action.take()
+
+    foretold = scenario.find("Lupine Harbingers", Zone.EXILE, "alice")
+
+    assert foretold.face_down, "CR 702.143a exiles it face down"
+    assert foretold.exile_annotation is not None
+    assert not foretold.has_no_characteristics
+    assert foretold.name == "Lupine Harbingers"

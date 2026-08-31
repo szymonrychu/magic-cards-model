@@ -13,11 +13,23 @@ the stack:
 - **Combat damage** (CR 510). Everything assigns at once (CR 510.2), so the
   whole assignment is computed against the pre-damage board and only then dealt.
   First strike and double strike split this into two steps (CR 510.4).
+  CR 510.3a then puts what triggered onto the stack, which `combat_damage_step`
+  does at the end of the step - the same thing `Game.declare_attackers` and
+  `Game.declare_blockers` do for CR 508.2b and CR 509.2a.
 
-The engine has no layers yet, so a creature's keywords are read straight off the
-printing's Scryfall `keywords` field. That is real card data rather than a
-hand-written table, but it means a keyword granted by another permanent or a
-spell is invisible here.
+Everything combat asks about a permanent is asked of the computed board, not of
+the printing: CR 613.5 has the layer system applied "continually and
+automatically", so `has_keyword`, `_power_of`, `_toughness_of` and
+`_evasion_restriction_sentences` all take the `Game` and read
+`Game.characteristics_of`. A keyword or a "can't be blocked" sentence granted in
+layer 6 is there and one removed by Dress Down is gone. Each of those functions
+still answers off the printing when it is handed no game, which is all there is
+for a card outside the battlefield.
+
+Damage names its source (CR 120.1), so CR 615's prevention shields, CR 609.7b's
+recheck and CR 702.16e's protection all apply to combat damage - `deal_damage`
+consults them and returns what actually landed, which is what deathtouch
+(CR 702.2b) and lifelink (CR 702.15b) key off.
 
 There is no damage assignment order sub-step in the current rules: after
 CR 509.1 declares the blockers, CR 509.2a puts the triggers on the stack and
@@ -339,13 +351,26 @@ class EvasionNotice(BaseModel):
     """The attacker's own oracle text, for whoever reads the notice later."""
 
 
-def _evasion_restriction_sentences(attacker: CardState) -> list[str]:
-    """Self-referential "can't be blocked" sentences off the attacker's own
-    oracle text: the subject must be "this creature" or the card's own name
+def _evasion_restriction_sentences(attacker: CardState, game: "Game | None" = None) -> list[str]:
+    """Self-referential "can't be blocked" sentences the attacker has *now*
+    (CR 509.1a): the subject must be "this creature" or the card's own name
     (CR 509.1a's restriction is on the attacker itself; nothing in the pool
     grants "can't be blocked" to *another* creature the way Akroma's Memorial
     grants protection, so that shape is not read here - see
     `docs/engine-coverage.md`).
+
+    Which sentences those are is CR 613.5's question, the same one `has_keyword`
+    asks: "the application of continuous effects as described by the layer
+    system is continually and automatically performed by the game", so the
+    abilities the layer system leaves the permanent with are the answer and the
+    printed oracle text is not. Dress Down is the card in the pool that makes
+    the difference visible - "Creatures lose all abilities" is a layer 6
+    ability-removing effect (CR 613.1f), and a Mindskinner that has lost its
+    text can be blocked like anything else.
+
+    Without a game there is no board to compute (a card outside the
+    battlefield has only what is printed on it), so the printing's own text is
+    the answer - which is what every caller used before.
 
     A legendary permanent's own text names itself by its short name, the part
     before the comma - "April O'Neil can't be blocked ..." on a card printed
@@ -361,11 +386,26 @@ def _evasion_restriction_sentences(attacker: CardState) -> list[str]:
         rf"^(?:this creature|{re.escape(short_name)})\b.*can't be blocked\b",
         re.IGNORECASE,
     )
-    return [
-        sentence
-        for sentence in layer_readable_sentences(attacker.oracle_text)
-        if subject.search(sentence)
-    ]
+    sentences = _computed_ability_sentences(attacker, game)
+    return [sentence for sentence in sentences if subject.search(sentence)]
+
+
+def _computed_ability_sentences(state: CardState, game: "Game | None") -> list[str]:
+    """The permanent's abilities as sentences, off the computed board (CR 613.5).
+
+    Falls back to the printed text when there is nothing to compute against -
+    no game, or a card that is not on the battlefield, since CR 613 applies to
+    objects on the battlefield.
+    """
+    if game is not None and state.zone is Zone.BATTLEFIELD:
+        characteristics = game.characteristics_of(state)
+        if characteristics is not None:
+            return [
+                sentence
+                for ability in characteristics.abilities
+                for sentence in layer_readable_sentences(ability)
+            ]
+    return layer_readable_sentences(state.oracle_text)
 
 
 #: The Mindskinner: "The Mindskinner can't be blocked." - unconditional.
@@ -392,7 +432,7 @@ def evasion_restriction_refusal(
     caught by `looks_like_unparsed_evasion_restriction` instead of silently
     doing nothing.
     """
-    for sentence in _evasion_restriction_sentences(attacker):
+    for sentence in _evasion_restriction_sentences(attacker, game):
         if match := _CANT_BE_BLOCKED_BY_POWER_OR_LESS_RE.search(sentence):
             threshold = int(match.group("power"))
             blocker_power = game.power_of(blocker)
@@ -407,17 +447,23 @@ def evasion_restriction_refusal(
     return None
 
 
-def looks_like_unparsed_evasion_restriction(attacker: CardState) -> bool:
-    """True if some self-referential sentence of the attacker's own oracle text
-    reads like a "can't be blocked" restriction but is not one of the two
-    shapes `evasion_restriction_refusal` reads - the fail-closed signal
-    `block_refusal` turns into an `EvasionNotice` rather than a block that
-    silently goes through unrestricted.
+def looks_like_unparsed_evasion_restriction(
+    attacker: CardState, game: "Game | None" = None
+) -> bool:
+    """True if some self-referential sentence of the attacker's abilities reads
+    like a "can't be blocked" restriction but is not one of the two shapes
+    `evasion_restriction_refusal` reads - the fail-closed signal `block_refusal`
+    turns into an `EvasionNotice` rather than a block that silently goes through
+    unrestricted.
+
+    Reads the same computed sentences the refusal does (CR 613.5), so a
+    restriction the layer system has removed does not leave a notice behind
+    claiming something was missed.
     """
     return any(
         _CANT_BE_BLOCKED_RE.search(sentence) is None
         and _CANT_BE_BLOCKED_BY_POWER_OR_LESS_RE.search(sentence) is None
-        for sentence in _evasion_restriction_sentences(attacker)
+        for sentence in _evasion_restriction_sentences(attacker, game)
     )
 
 
@@ -455,7 +501,7 @@ def block_refusal(game: "Game", blocker: CardState, attack: Attack) -> str | Non
     restriction = evasion_restriction_refusal(game, attacker, blocker)
     if restriction is not None:
         return restriction
-    if looks_like_unparsed_evasion_restriction(attacker) and not any(
+    if looks_like_unparsed_evasion_restriction(attacker, game) and not any(
         notice.source_id == attacker.id for notice in game.evasion_notices
     ):
         game.evasion_notices.append(
@@ -668,6 +714,21 @@ def combat_damage_step(game: "Game") -> list[tuple["Targetable", int]]:
 
     combat.damage_steps_done += 1
     game.check_state_based_actions()
+    # CR 510.3a: "Any abilities that triggered on damage being dealt or while
+    # state-based actions are performed afterward are put onto the stack before
+    # the active player gets priority". Without this, `Game.emit` leaves them
+    # in `pending_triggers` (CR 603.3) with nothing in the step that would move
+    # them, and a "whenever this deals combat damage" ability - Ragavan - would
+    # only reach the stack the next time some *other* part of the engine
+    # happened to flush the queue. Ordering is CR 603.3b's, which
+    # `put_triggers_on_stack` owns; the state-based actions run first because
+    # CR 117.5 puts them first and the rule above has the deaths they cause
+    # trigger into this same batch.
+    #
+    # `Game.declare_attackers` and `Game.declare_blockers` already do exactly
+    # this for CR 508.2b and CR 509.2a - the combat damage step was the one
+    # place in combat that emitted events and never let them onto the stack.
+    game.put_triggers_on_stack()
     return [(target, amount) for _, target, amount in assignments]
 
 

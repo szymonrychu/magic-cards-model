@@ -14,8 +14,6 @@ moment damage is assigned*, not the board as it stood when blockers were
 declared. Every CR number here was looked up with `knowledge_search(type="rules")`.
 """
 
-import pytest
-
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario
@@ -167,19 +165,21 @@ def test_a_double_striker_assigns_nothing_the_second_time_if_it_killed_its_block
     assert scenario.player("bob").life == 20
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="prevention effects are not modelled (CR 615): machines/replacement.py parses "
-    "'prevent all combat damage' but Game.combat_damage deals it regardless",
-)
-def test_fog_bank_prevents_the_combat_damage_in_both_directions():
+def test_fog_bank_prevents_the_damage_it_is_dealt_but_not_the_trample_past_it():
     """DDR#410: prevention removes the damage event, not just its result.
 
     CR 615.1 makes a prevention effect a continuous effect that watches for the
-    damage event and stops it happening. Fog Bank prevents all combat damage
-    dealt to *and* by itself, so a 6/6 trampler bounces off it entirely - and
-    because the damage never happens, nothing that keys off damage happens
-    either (the episode's point about infect and poison counters).
+    damage event and stops it happening, so the 2 the Dreadmaw assigns to Fog
+    Bank is never dealt and the Wall takes no damage at all.
+
+    What prevention does *not* touch is the assignment. CR 510.1a has each
+    creature assign combat damage equal to its power as part of the combat
+    damage step, and CR 702.19b has trample send the excess past a blocker that
+    has been assigned lethal damage. Only afterwards, at CR 120.4b - "damage is
+    dealt, as modified by replacement and prevention effects that interact with
+    damage" - does the shield get to speak, and it speaks only for the damage
+    aimed at Fog Bank. The 4 that went past is dealt by the Dreadmaw to bob,
+    which Fog Bank's ability does not name, so bob takes it.
     """
     scenario = (
         Scenario()
@@ -193,8 +193,9 @@ def test_fog_bank_prevents_the_combat_damage_in_both_directions():
 
     scenario.attack_with(dreadmaw)
     scenario.block(dreadmaw, bank)
-    scenario.combat_damage()
+    assignment = scenario.combat_damage()
 
-    assert bank.damage == 0
+    assert [amount for _, amount in assignment] == [2, 4], "CR 510.1a assigned all six"
+    assert bank.damage == 0, "CR 120.4b prevented the two it was assigned"
     assert bank.zone is Zone.BATTLEFIELD
-    assert scenario.player("bob").life == 20, "trample cannot spill past prevented damage"
+    assert scenario.player("bob").life == 16, "the trample damage is dealt by the Dreadmaw"

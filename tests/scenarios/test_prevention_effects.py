@@ -102,7 +102,8 @@ def test_deal_damage_reports_how_much_actually_landed():
     was *dealt*, and prevented damage was not dealt.
 
     Reporting it is what lets a caller stop measuring a life-total delta to find
-    out - the workaround `machines/combat.py` still uses.
+    out: `machines/combat._deal_combat_damage` reads this return value and
+    applies deathtouch and lifelink only when it is above zero.
     """
     scenario = _board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
@@ -179,9 +180,11 @@ def test_protection_does_not_prevent_damage_from_an_unnamed_source():
     event has no source to ask about.
 
     Failing open here is the honest behaviour and it is a documented gap, not a
-    rule: `machines/combat.py` and `machines/effects.py` do not name their
-    sources yet, so their damage is not checked against protection. Written down
-    as a test so the gap is tracked rather than silent.
+    rule. `machines/combat._deal_combat_damage` does name its source now, so
+    combat damage *is* checked against protection; what remains anonymous is
+    damage from `machines/effects.py` and from a direct `deal_damage` call with
+    no `source=`, which is what this test makes. Written down as a test so the
+    gap is tracked rather than silent.
     """
     scenario = (
         Scenario()
