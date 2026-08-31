@@ -25,7 +25,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field
 
 from ..models.card import Card, Layout, Type
-from ..models.card_state import CardState, ExileAnnotation, ExileMarker, TargetRef
+from ..models.card_state import CardState, Counter, ExileAnnotation, ExileMarker, TargetRef
 from ..models.mana import ManaCost, ManaSpend
 from ..models.zone import Zone
 from .abilities import KeywordAbility, TriggerEvent, keyword_abilities
@@ -48,6 +48,7 @@ from .keywords import (
     face_down_characteristics,
     why_cannot_enchant,
 )
+from .layers import ContinuousEffect, Layer, grant_ability, only_this_incarnation
 from .modes import ModalProfile, Mode, modal_profile, substitute_x
 from .targeting import (
     TargetingProfile,
@@ -1464,6 +1465,7 @@ class Casting(BaseModel):
             self.x_value = x_value
         if additional is not None:
             self.additional_costs.append(TotalCost.of(additional).assign_payer(self.caster))
+        self._refuse_unless_mana_cost_payable()
 
         self.payment = CostPayment.for_total(
             self.total_cost.assign_payer(self.caster),
@@ -1549,6 +1551,39 @@ class Casting(BaseModel):
             f"chosen but is now {self.x_value} (CR 107.3a). Announce X once, before "
             f"choosing targets - via choose_modes's own x_value, or determine_cost "
             f"before choose_targets - and do not change it afterward."
+        )
+
+    def _refuse_unless_mana_cost_payable(self) -> None:
+        """CR 118.6: a card with no printed mana cost has an unpayable cost.
+
+        "Some objects have no mana cost. This represents an unpayable cost."
+        This is not the same thing as a printed {0}: CR 118.5a's "{0}" is a
+        real, if empty, cost that "must still be cast the same way as one with
+        a cost greater than zero", so it parses to one generic symbol worth
+        zero (`ManaCost.parse("{0}").symbols` is non-empty). A card with no
+        mana symbols at all - Living End's blank corner, `Card.mana_cost ==
+        ""` with no `card_faces` to fall back to - parses to no symbols at
+        all, and CR 118.6 says that cost cannot be paid, full stop.
+
+        CR 118.6a is the escape hatch: "If an alternative cost is applied to
+        an unpayable cost, including an effect that allows a player to cast a
+        spell without paying its mana cost, ... the cost becomes payable."
+        `self.alternative_cost` is set exactly when CR 118.9's alternative
+        cost machinery ran - `use_keyword` (Suspend's own free cast, once its
+        last time counter comes off), `use_permission` (Shardless Agent's
+        cascade hit), or `use_pitch_cost` - so this only refuses the *plain*
+        hardcast CR 601.2b never grants Living End on its own: no black
+        source on the battlefield, no alternative cost, no announcement.
+        """
+        if self.alternative_cost is not None:
+            return
+        if self.base_cost.symbols:
+            return
+        raise ValueError(
+            f"{self.spell.name} has no mana cost, which CR 118.6 makes an unpayable "
+            f"cost - it cannot be cast this way. Some alternative or additional cost "
+            f"permission (a keyword like Suspend, or a resolving effect's permission "
+            f"to cast it without paying its mana cost) must apply instead (CR 118.6a)."
         )
 
     def _refuse_unless_allowed_from_its_zone(self) -> None:
@@ -1768,9 +1803,10 @@ def annotate_exile(
 class MarkedExile(BaseModel):
     """One of CR 116.2's exile-it-now, cast-it-later special actions.
 
-    Two of them are modelled: plot (CR 116.2k, CR 702.170b) and foretell
-    (CR 116.2h, CR 702.143b). Both pay a cost, move a card from hand to exile,
-    and leave it in a named pile that a later `Casting` reads.
+    Three of them are modelled: plot (CR 116.2k, CR 702.170b), foretell
+    (CR 116.2h, CR 702.143b), and suspend (CR 116.2f, CR 702.62a). All three
+    pay a cost, move a card from hand to exile, and leave it in a named pile
+    that a later `Casting` reads.
 
     CR 116.1: special actions do not use the stack, so nothing here touches it
     and nobody gets priority in the middle. The cost is still a cost, so it is
@@ -1788,6 +1824,10 @@ class MarkedExile(BaseModel):
     game: Any = Field(default=None, exclude=True, repr=False)
     payment: CostPayment | None = None
     taken: bool = False
+    time_counters: int | None = None
+    """Suspend only (CR 702.62a): the N of "Suspend N-[cost]", put on the card
+    as `Counter.TIME` once it reaches exile. `None` for plot and foretell,
+    which exile a card with no counters at all."""
 
     @classmethod
     def plot(cls, game: Any, card: CardState, player: str) -> "MarkedExile":
@@ -1841,6 +1881,58 @@ class MarkedExile(BaseModel):
             game=game,
         )
 
+    @classmethod
+    def suspend(cls, game: Any, card: CardState, player: str) -> "MarkedExile":
+        """CR 116.2f: exile a card with suspend from hand, paying its suspend cost.
+
+        "'Suspend N-[cost]' means 'If you could begin to cast this card by
+        putting it onto the stack from your hand, you may pay [cost] and
+        exile it with N time counters on it. This action doesn't use the
+        stack.'" (CR 702.62a). Unlike plot and foretell, the suspend cost
+        *is* what is paid here - there is no separate cast-time cost the way
+        foretell's {2} is distinct from its own printed cost, because CR
+        702.62a's third ability later casts the card "without paying its mana
+        cost" outright.
+
+        CR 702.62c: "While determining if you could begin to cast a card with
+        suspend, take into consideration any effects that would prohibit that
+        card from being cast" - `why_cannot_cast_now`/`why_cannot_cast_
+        restriction` are exactly that question (CR 117.1a's timing, CR
+        611.1's flat prohibitions), and deliberately not CR 118.6's unpayable
+        cost: CR 118.6 itself says "attempting to cast a spell ... that has
+        an unpayable cost is a legal action" - only *paying* an unpayable
+        cost is illegal - so Living End's blank mana cost does not block
+        being suspended, which is the whole reason the special action exists
+        for a card like it at all.
+        """
+        ability = _keyword(card.card, "suspend")
+        if ability is None:
+            raise ValueError(f"{card.name} has no suspend ability (CR 702.62a)")
+        if card.zone is not Zone.HAND:
+            raise ValueError(f"{card.name} is in the {card.zone.value}, not in hand (CR 116.2f)")
+        refusal = why_cannot_cast_now(card, player, game) or why_cannot_cast_restriction(
+            card, player, game
+        )
+        if refusal is not None:
+            raise ValueError(
+                f"{card.name} could not begin to be cast right now, so it cannot be "
+                f"suspended: {refusal} (CR 116.2f, CR 702.62c)"
+            )
+        if ability.count is None:
+            raise ValueError(f"{card.name}'s suspend count could not be read (CR 702.62a)")
+        cost = total_cost_for_phrase(ability.cost or "") if ability.cost else TotalCost()
+        if cost is None:
+            raise ValueError(f"{card.name}'s suspend cost could not be read (CR 702.62a)")
+        return cls(
+            card=card,
+            player=player,
+            marker=ExileMarker.SUSPENDED,
+            cost=cost.assign_payer(player),
+            rule="CR 116.2f",
+            game=game,
+            time_counters=ability.count,
+        )
+
     def begin_paying(self) -> CostPayment:
         """Open the payment for the special action's cost (CR 601.2h shape)."""
         if self.payment is None:
@@ -1867,6 +1959,9 @@ class MarkedExile(BaseModel):
         if self.face_down:
             self.card.turn_face_down()
         annotate_exile(self.card, self.marker, self.player, self.game)
+        if self.time_counters is not None:
+            # CR 702.62a: "... exile it with N time counters on it."
+            self.game.add_counters(self.card, Counter.TIME, self.time_counters)
         self.taken = True
         return self.card
 
@@ -1874,6 +1969,109 @@ class MarkedExile(BaseModel):
         """Rewind the cost, leaving the card where it was (CR 733.1)."""
         if self.payment is not None:
             self.payment.rewind()
+
+
+def remove_suspend_time_counter(game: Any, card: CardState) -> int:
+    """CR 702.62a's second ability: "At the beginning of your upkeep, if this
+    card is suspended, remove a time counter from it."
+
+    CR 702.62b: "suspended" means "in the exile zone, has suspend, and has a
+    time counter on it" - the intervening *if*. A card that fails any part of
+    that (already cast, already left exile some other way, or already at
+    zero counters) is left untouched and this returns its current count
+    rather than raising, the same "the *if* was false, do nothing" shape
+    `persist_return` already returns `None` for.
+
+    Not driven automatically: like `exile_warped`'s delayed trigger, nothing
+    in this engine's turn machine dispatches a per-card upkeep trigger (the
+    CR 703.4 actions it does drive - untap, draw, discard, damage-wipe - are
+    listed in `docs/scenario-tests.md`), so a scenario calls this once per
+    upkeep it cares about, the same hand-driven shape combat's own
+    declarations take.
+    """
+    if card.zone is not Zone.EXILE:
+        return card.counter_count(Counter.TIME)
+    annotation = card.exile_annotation
+    if annotation is None or annotation.marker is not ExileMarker.SUSPENDED:
+        return card.counter_count(Counter.TIME)
+    if card.counter_count(Counter.TIME) <= 0:
+        return 0
+    card.remove_counters(Counter.TIME, 1)
+    return card.counter_count(Counter.TIME)
+
+
+def finish_suspend(game: Any, card: CardState) -> PlayPermission | None:
+    """CR 702.62a's third ability: once the last time counter comes off a
+    suspended card, its owner may cast it without paying its mana cost.
+
+    "'When the last time counter is removed from this card, if it's exiled,
+    you may play it without paying its mana cost if able. If you don't, it
+    remains exiled.'" The intervening *if* ("if it's exiled") is read against
+    the card's *current* zone, not the zone it was in when the last counter
+    came off - CR 603.10's ordinary "check now" shape for a triggered
+    ability's own condition.
+
+    Returns the granted `PlayPermission` (CR 601.3's dynamic half - the same
+    primitive Ugin, Eye of the Storms' -11 and Ragavan's trigger already use,
+    via `Game.grant_play_permission`), or `None` when the *if* is false or
+    the card still has a time counter on it (the ability has not actually
+    triggered). The "may" itself is left to the caller: nobody here to ask
+    (CR 608.2d), the same concession `cascade`'s own "you may cast it"
+    already makes for its hit - the caller's choice **is** whether it ever
+    calls `Casting.use_permission()` on the permission this hands back;
+    never calling it is CR 702.62a's own "if you don't, it remains exiled."
+    """
+    if card.zone is not Zone.EXILE:
+        return None
+    annotation = card.exile_annotation
+    if annotation is None or annotation.marker is not ExileMarker.SUSPENDED:
+        return None
+    if card.counter_count(Counter.TIME) > 0:
+        return None
+    return game.grant_play_permission(
+        card,
+        annotation.owner or card.controller or game.active_player.username,
+        action=PlayAction.CAST,
+        pays_mana_cost=False,
+        source_name=f"{card.name}'s suspend",
+        rule="CR 702.62a",
+    )
+
+
+def grant_suspend_haste(game: Any, permanent: CardState) -> None:
+    """The back half of CR 702.62a's third ability: "If you cast a creature
+    spell this way, it gains haste until you lose control of the spell or the
+    permanent it becomes."
+
+    Applied the same way Postmortem Lunge's own no-duration-stated haste is
+    (`machines/effects._parse_delayed_reanimate_haste_exile_clauses`):
+    `Duration.INDEFINITE` (CR 611.2a's default when no duration is printed),
+    scoped with `only_this_incarnation` to the exact object that just entered,
+    so a later object with the same id (returned again some other way) does
+    not inherit it. "Until you lose control" is not separately timed -
+    losing control ordinarily also means a zone change (CR 400.7 makes the
+    permanent that arrives under a new controller a new object), which
+    `only_this_incarnation`'s stamp check already ends the effect for.
+
+    Not driven automatically, for the same reason `remove_suspend_time_
+    counter` is not: nothing here knows a resolving spell "was cast this way"
+    except the caller who called `finish_suspend` and then
+    `Casting.use_permission()` - a scenario calls this once the resolved
+    spell's `CardState` reaches the battlefield, mirroring the hand-driven
+    shape every other delayed or off-stack trigger in this engine already
+    takes.
+    """
+    store = game.continuous_effects
+    timestamp = store.tick()
+    store.add(
+        ContinuousEffect(
+            description=f"{permanent.name}: suspend grants haste (CR 702.62a)",
+            layer=Layer.ABILITY,
+            timestamp=timestamp,
+            selector=only_this_incarnation(permanent, permanent.zone_change_stamp),
+            modification=grant_ability("Haste"),
+        )
+    )
 
 
 def exile_warped(game: Any, permanent: CardState) -> CardState:

@@ -123,6 +123,11 @@ class Counter(StrEnum):
     - `energy` is on a player and is what `{E}` pays with (CR 107.14).
     - `experience` is on a player.
     - `charge` is the common named counter with no rules of its own.
+    - `time` sits on a card in exile with suspend (CR 702.62a, 702.62b) or a
+      permanent with vanishing/fading (CR 702.63a, 702.32a); "at the beginning
+      of your upkeep, remove a time counter" and "when the last is removed"
+      are read directly off the count, the same way `power`/`toughness` read
+      `+1/+1`/`-1/-1` without a separate model of "how many are left".
 
     A keyword counter (CR 122.1b) is stored under the keyword's own name, so a
     flying counter is `counters["flying"]`. Nothing grants the keyword yet - it
@@ -135,6 +140,7 @@ class Counter(StrEnum):
     POISON = "poison"
     ENERGY = "energy"
     EXPERIENCE = "experience"
+    TIME = "time"
     CHARGE = "charge"
 
 
@@ -295,12 +301,19 @@ class ExileMarker(StrEnum):
       resolution. Not a keyword marker in the rules - the rule simply says its
       controller "may play it" for as long as it remains exiled - but it is the
       same pile-of-its-own shape, so it is tracked the same way.
+    - `SUSPENDED` - CR 702.62b, "a card ... is 'suspended' if it's in the
+      exile zone, has suspend, and has a time counter on it." The pile a card
+      lands in when CR 116.2f's special action exiles it; CR 702.62a's third
+      ability reads this marker (alongside a zero `Counter.TIME` count) to
+      know the free cast it grants is about this exact card and not merely
+      anything that ever had suspend.
     """
 
     PLOTTED = "plotted"
     FORETOLD = "foretold"
     WARPED = "warped"
     ADVENTURED = "adventured"
+    SUSPENDED = "suspended"
     MADNESS = "madness"
     """CR 702.35a's first ability: "If a player would discard this card, that
     player discards it, but exiles it instead of putting it into their

@@ -206,6 +206,18 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     if profile is not None and profile.entwine_cost is not None:
         found["entwine"] = "machines/casting.py (additional cost)"
 
+    # Suspend (CR 702.62a) is not a `KeywordCastOption`: unlike Flashback's
+    # static "from the graveyard, for this cost" grant, its free cast is a
+    # dynamic `PlayPermission` handed out only once a *specific suspended
+    # object* actually has zero time counters (`machines/casting.
+    # finish_suspend`), the same Ugin/Ragavan shape `keyword_cast_options`
+    # was never meant to cover. `MarkedExile.suspend` is CR 116.2f's special
+    # action and `remove_suspend_time_counter` is the upkeep trigger; none of
+    # them show up in `keyword_cast_options` output, so they are named here
+    # by hand instead of falling through to "ignored".
+    if any(k.lower() == "suspend" for k in printing.keywords):
+        found["suspend"] = "machines/casting.py (MarkedExile.suspend, finish_suspend)"
+
     return found
 
 
