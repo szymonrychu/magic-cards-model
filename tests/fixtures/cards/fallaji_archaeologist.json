@@ -1,0 +1,141 @@
+{
+  "object": "card",
+  "id": "b0eab397-25a6-4377-8e12-e8acef9675cf",
+  "oracle_id": "bf037457-82e3-45fd-bc17-5bc25e66c15e",
+  "multiverse_ids": [
+    583633
+  ],
+  "mtgo_id": 104714,
+  "arena_id": 82532,
+  "tcgplayer_id": 452078,
+  "cardmarket_id": 682539,
+  "name": "Fallaji Archaeologist",
+  "lang": "en",
+  "released_at": "2022-11-18",
+  "uri": "https://api.scryfall.com/cards/b0eab397-25a6-4377-8e12-e8acef9675cf",
+  "scryfall_uri": "https://scryfall.com/card/bro/48/fallaji-archaeologist?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T05:21:54Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/b/0/b0eab397-25a6-4377-8e12-e8acef9675cf.jpg?1783920114",
+    "normal": "https://cards.scryfall.io/normal/front/b/0/b0eab397-25a6-4377-8e12-e8acef9675cf.jpg?1783920114",
+    "large": "https://cards.scryfall.io/large/front/b/0/b0eab397-25a6-4377-8e12-e8acef9675cf.jpg?1783920114",
+    "png": "https://cards.scryfall.io/png/front/b/0/b0eab397-25a6-4377-8e12-e8acef9675cf.png?1783920114",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/b/0/b0eab397-25a6-4377-8e12-e8acef9675cf.jpg?1783920114",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/b/0/b0eab397-25a6-4377-8e12-e8acef9675cf.jpg?1783920114",
+    "thumb": "https://cards.scryfall.io/thumb/front/b/0/b0eab397-25a6-4377-8e12-e8acef9675cf.webp?1783920114",
+    "grid": "https://cards.scryfall.io/grid/front/b/0/b0eab397-25a6-4377-8e12-e8acef9675cf.webp?1783920114",
+    "display": "https://cards.scryfall.io/display/front/b/0/b0eab397-25a6-4377-8e12-e8acef9675cf.webp?1783920114",
+    "art": "https://cards.scryfall.io/art/front/b/0/b0eab397-25a6-4377-8e12-e8acef9675cf.webp?1783920114",
+    "crop": "https://cards.scryfall.io/crop/front/b/0/b0eab397-25a6-4377-8e12-e8acef9675cf.webp?1783920114"
+  },
+  "mana_cost": "{1}{U}",
+  "cmc": 2.0,
+  "type_line": "Creature \u2014 Human Scout",
+  "oracle_text": "When this creature enters, mill three cards. You may put a noncreature, nonland card from among the cards milled this way into your hand. If you don't, put a +1/+1 counter on this creature. (To mill a card, put the top card of your library into your graveyard.)",
+  "power": "0",
+  "toughness": "3",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Mill"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "4219a14e-6701-4ddd-a185-21dc054ab19b",
+  "set": "bro",
+  "set_name": "The Brothers' War",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/4219a14e-6701-4ddd-a185-21dc054ab19b",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Abro&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/bro?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/b0eab397-25a6-4377-8e12-e8acef9675cf/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Abf037457-82e3-45fd-bc17-5bc25e66c15e&unique=prints",
+  "collector_number": "48",
+  "digital": false,
+  "rarity": "common",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Caroline Gariba",
+  "artist_ids": [
+    "61a4c572-3d1b-4b71-aeb0-1a5a6b82c524"
+  ],
+  "illustration_id": "b8d5a23f-7561-42d8-9b02-193020e9728e",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 17600,
+  "penny_rank": 1308,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "",
+    "previewed_at": "2022-11-01"
+  },
+  "prices": {
+    "usd": "0.41",
+    "usd_foil": "1.63",
+    "usd_etched": null,
+    "eur": "0.45",
+    "eur_foil": "1.18",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=583633&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DFallaji%2BArchaeologist",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DFallaji%2BArchaeologist",
+    "edhrec": "https://edhrec.com/route/?cc=Fallaji+Archaeologist"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F452078%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=682539&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/104714?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
