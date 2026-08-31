@@ -33,6 +33,31 @@ Two shapes, told apart by whether they can be re-read off a live permanent:
       `Duration.UNTIL_YOUR_NEXT_TURN` (CR 800.4m) the same way
       `machines.layers.ContinuousEffect` already does for Karn's identically
       worded duration, and is dropped by `Game.begin_turn_for` the same way.
+
+Three further live statics joined the first kind, each narrowing the question
+along a different axis, and all three answered by a fresh battlefield scan for
+the CR 611.3a reason above:
+
+- **A turn window** - Voice of Victory's "Your opponents can't cast spells
+  during your turn." (CR 102.1: the active player is the player whose turn it
+  is.) `blanket_cant_cast_restriction`.
+- **A count** - High Noon's "Each player can't cast more than one spell each
+  turn.", counted off `Game.spells_cast_this_turn`.
+  `blanket_cant_cast_restriction`.
+- **An origin zone** - Grafdigger's Cage's "Players can't cast spells from
+  graveyards or libraries." and Soulless Jailer's noncreature-and-exile
+  variant. `zone_cast_prohibition_source`, which needs the spell and the zone
+  it would be cast from and so cannot ride the blanket reader.
+
+CR 601.3 is the rule all four express - "a player can begin to cast a spell
+only if a rule or effect allows that player to cast it and no rule or effect
+prohibits that player from casting it" - with CR 101.2 giving each "can't"
+precedence over whatever permission would otherwise apply.
+
+`cannot_be_countered` is the odd one out and deliberately kept here anyway:
+it is a prohibition read off a *spell on the stack* rather than off a player
+(CR 113.6g, CR 604.5), and it is what stops CR 701.6a's "counter" from doing
+anything to Supreme Verdict.
 """
 
 import re
@@ -42,6 +67,8 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ..models.card import Card, Type
+from ..models.zone import Zone
 from .abilities import AbilityKind, parse_abilities
 from .layers import Duration
 from .triggers import AbilityOnStack
@@ -72,6 +99,21 @@ class CastingRuleKind:
     any live permanent's text, the same reason Teferi's own +1 is recorded
     here rather than left to a battlefield scan: Ral may have transformed (or
     left the battlefield) since granting it, and the grant still applies."""
+    TURN_WINDOW_CANT_CAST = "turn_window_cant_cast"
+    """Voice of Victory: "Your opponents can't cast spells during your turn."
+    Never recorded on `Game.casting_rule_effects` - synthesised fresh by
+    `blanket_cant_cast_restriction` off the live battlefield, because the
+    prohibition has to appear and vanish both with the permanent (CR 604.2,
+    CR 611.3a) and with the turn boundary (CR 102.1: "the active player is the
+    player whose turn it is")."""
+    SPELL_COUNT_CANT_CAST = "spell_count_cant_cast"
+    """High Noon: "Each player can't cast more than one spell each turn."
+    Also synthesised live, counted off `Game.spells_cast_this_turn`."""
+    ZONE_CANT_CAST = "zone_cant_cast"
+    """Grafdigger's Cage and Soulless Jailer: "Players can't cast spells from
+    graveyards or libraries." Scoped to the zone a cast would come from, so it
+    is answered by `zone_cast_prohibition_source` - which takes the spell and
+    its origin zone - rather than by the blanket reader below."""
 
 
 class CastingRuleEffect(BaseModel):
@@ -156,20 +198,90 @@ def create_targeted_cant_cast_restriction(
     )
 
 
-def targeted_cant_cast_restriction(game: Any, caster: str) -> CastingRuleEffect | None:
-    """The recorded effect stopping `caster` from casting any spell at all
-    right now (Orim's Chant), or None.
+def blanket_cant_cast_restriction(game: Any, caster: str) -> CastingRuleEffect | None:
+    """Whatever stops `caster` from casting *any* spell at all right now, or
+    None (CR 601.3, CR 101.2).
 
-    Unlike `restricted_from_noncreature_casting`'s "your opponents" reading,
-    this one names the restricted player directly, so the caster's own spell
-    can restrict itself if it is somehow legally targeted at its own
-    controller.
+    CR 601.3: "A player can begin to cast a spell only if a rule or effect
+    allows that player to cast it and no rule or effect prohibits that player
+    from casting it", and CR 101.2 gives the "can't" precedence over any
+    permission that would otherwise let the cast through. Three sources, in
+    the order they are cheapest to answer:
+
+    - **Recorded** - Orim's Chant's "Target player can't cast spells this
+      turn", already on `Game.casting_rule_effects`. Unlike
+      `restricted_from_noncreature_casting`'s "your opponents" reading, this
+      one names the restricted player directly, so the caster's own spell can
+      restrict itself if it is somehow legally targeted at its own controller.
+    - **Live, turn-scoped** - Voice of Victory's "Your opponents can't cast
+      spells during your turn."
+    - **Live, count-scoped** - High Noon's "Each player can't cast more than
+      one spell each turn."
+
+    The two live shapes are re-read off the battlefield on every call and
+    never cached, per CR 611.3a: a continuous effect from a static ability
+    "isn't 'locked in'; it applies at any given moment to whatever its text
+    indicates". CR 611.1 is what makes both of them expressible at all - a
+    continuous effect may "affect players or the rules of the game" - and
+    CR 613.11 is why neither writes a layer.
     """
     for effect in getattr(game, "casting_rule_effects", []):
         if effect.kind != CastingRuleKind.TARGETED_CANT_CAST:
             continue
         if effect.restricted_player == caster:
             return effect
+    return _live_blanket_cant_cast(game, caster)
+
+
+def targeted_cant_cast_restriction(game: Any, caster: str) -> CastingRuleEffect | None:
+    """The name `machines.casting.why_cannot_cast_restriction` imports.
+
+    Kept as its own function rather than folded away because the *question*
+    it asks - "is this player barred from casting anything at all?" - outgrew
+    its Orim's-Chant-shaped name once Voice of Victory and High Noon joined
+    it. `blanket_cant_cast_restriction` is the honest name; this is the
+    call site's.
+    """
+    return blanket_cant_cast_restriction(game, caster)
+
+
+def _live_blanket_cant_cast(game: Any, caster: str) -> CastingRuleEffect | None:
+    """The battlefield half of `blanket_cant_cast_restriction`.
+
+    Both shapes here are statics on permanents, so CR 113.6's default applies
+    - "abilities of all other objects usually function only while that object
+    is on the battlefield" - and a scan of `game.battlefield` is the whole
+    lookup. Nothing is exempted by controller for High Noon ("*each* player"),
+    while Voice of Victory exempts its own controller twice over: "your
+    opponents", and only while it is that controller's turn.
+    """
+    for source in list(getattr(game, "battlefield", [])):
+        controller = game.controller_of(source).username
+        for line in parse_abilities(source.card):
+            if line.kind is not AbilityKind.STATIC:
+                continue
+            text = (line.text or "").strip()
+            if _OPPONENTS_CANT_CAST_DURING_YOUR_TURN_RE.match(text):
+                if caster == controller:
+                    continue
+                if getattr(getattr(game, "turn", None), "active_player", None) != controller:
+                    continue
+                return CastingRuleEffect(
+                    kind=CastingRuleKind.TURN_WINDOW_CANT_CAST,
+                    controller=controller,
+                    source_name=source.name,
+                    restricted_player=caster,
+                )
+            if _ONE_SPELL_EACH_TURN_RE.match(text):
+                already_cast = len(getattr(game, "spells_cast_this_turn", {}).get(caster, []))
+                if already_cast < 1:
+                    continue
+                return CastingRuleEffect(
+                    kind=CastingRuleKind.SPELL_COUNT_CANT_CAST,
+                    controller=controller,
+                    source_name=source.name,
+                    restricted_player=caster,
+                )
     return None
 
 
@@ -224,6 +336,56 @@ _SORCERY_SPEED_ONLY_RE = re.compile(
     re.IGNORECASE,
 )
 
+
+#: Voice of Victory's exact printed static, verified against the pool
+#: printing: "Your opponents can't cast spells during your turn." Two
+#: conditions in one sentence - who ("your opponents", so never the
+#: controller) and when ("during your turn", CR 102.1's active player) - both
+#: read live by `_live_blanket_cant_cast`.
+_OPPONENTS_CANT_CAST_DURING_YOUR_TURN_RE = re.compile(
+    r"^your opponents can't cast spells during your turn\.?$", re.IGNORECASE
+)
+
+#: High Noon's exact printed static, verified against the pool printing:
+#: "Each player can't cast more than one spell each turn." "Each player"
+#: includes its own controller, and "more than one" is a count over
+#: `Game.spells_cast_this_turn` - the running list that already excludes
+#: copies put onto the stack, which are never cast (CR 707.10: "a copy of a
+#: spell isn't cast").
+_ONE_SPELL_EACH_TURN_RE = re.compile(
+    r"^each player can't cast more than one spell each turn\.?$", re.IGNORECASE
+)
+
+#: Grafdigger's Cage's "Players can't cast spells from graveyards or
+#: libraries." and Soulless Jailer's "Players can't cast noncreature spells
+#: from graveyards or exile." - one shape, verified against both pool
+#: printings, differing only in the optional type filter and the zone list.
+_ZONE_CAST_PROHIBITION_RE = re.compile(
+    r"^players can't cast (?:(?P<filter>noncreature|creature|nonland|land) )?spells "
+    r"from (?P<zones>[a-z ,]+?)\.?$",
+    re.IGNORECASE,
+)
+
+#: The zone nouns those sentences use, in the plural they are printed in
+#: ("graveyards", one per player) or the singular of the one shared holding
+#: area ("exile", CR 406.1).
+_ZONE_WORDS: dict[str, Zone] = {
+    "graveyard": Zone.GRAVEYARD,
+    "graveyards": Zone.GRAVEYARD,
+    "library": Zone.LIBRARY,
+    "libraries": Zone.LIBRARY,
+    "exile": Zone.EXILE,
+    "hand": Zone.HAND,
+    "hands": Zone.HAND,
+}
+
+#: Supreme Verdict's exact printed first line. CR 113.6g: "An object's ability
+#: that states it can't be countered or can't be copied functions on the
+#: stack" - so unlike every other reader in this module, which asks about a
+#: player, this one asks about one object while it is on the stack, and
+#: CR 604.5 is what keeps it a live static there rather than an effect that
+#: resolved.
+_CANT_BE_COUNTERED_RE = re.compile(r"^this spell can't be countered\.?$", re.IGNORECASE)
 
 #: Ranger-Captain of Eos's exact printed sacrifice-ability effect (the cost,
 #: "Sacrifice this creature:", is a separate `CostKind.SACRIFICE` piece the
@@ -311,3 +473,111 @@ def sorcery_speed_restriction_source(game: Any, caster: str) -> str | None:
             if _SORCERY_SPEED_ONLY_RE.match((line.text or "").strip()):
                 return source.name
     return None
+
+
+def _matches_type_filter(card: Card, type_filter: str | None) -> bool:
+    """Whether `card` is caught by a zone prohibition's optional type word.
+
+    No word at all catches every spell (Grafdigger's Cage). "noncreature" is
+    Soulless Jailer's, and the negatives are read off `Card.types` (CR 205.2a)
+    rather than off the type line, because a card with several types - a
+    creature artifact, a land creature - has to answer for all of them.
+    """
+    if type_filter is None:
+        return True
+    word = type_filter.lower()
+    if word == "creature":
+        return Type.CREATURE in card.types
+    if word == "noncreature":
+        return Type.CREATURE not in card.types
+    if word == "land":
+        return Type.LAND in card.types
+    if word == "nonland":
+        return Type.LAND not in card.types
+    return False
+
+
+def _prohibited_zones(printed: str) -> frozenset[Zone]:
+    """The zones a "from ..." tail names, or an empty set if any word in it is
+    not one this module knows.
+
+    Fails closed on an unknown word rather than prohibiting the zones it did
+    recognise: a sentence this module cannot fully read is not one it may
+    half-enforce, and half a prohibition makes legal casts illegal.
+    """
+    words = [word for word in re.split(r",|\bor\b|\band\b", printed) if word.strip()]
+    zones: set[Zone] = set()
+    for word in words:
+        zone = _ZONE_WORDS.get(word.strip().lower())
+        if zone is None:
+            return frozenset()
+        zones.add(zone)
+    return frozenset(zones)
+
+
+def zone_cast_prohibition_source(game: Any, card: Card, origin: Zone) -> str | None:
+    """The name of a live permanent whose static text forbids casting `card`
+    from `origin`, or None (CR 601.3).
+
+    Grafdigger's Cage's "Players can't cast spells from graveyards or
+    libraries." and Soulless Jailer's "Players can't cast noncreature spells
+    from graveyards or exile." Both are ordinary battlefield statics
+    (CR 113.6, CR 604.1) whose continuous effect "affects players or the rules
+    of the game" (CR 611.1, CR 613.11) rather than any characteristic, and
+    CR 101.2 is why they beat the very permission that put the card in reach -
+    flashback, or Underworld Breach, or an "you may cast it" exile grant.
+
+    Note this is **not** CR 113.6f. That rule is about an ability restricting
+    "what zones **that particular object** can be played or cast from" -
+    flashback's own zone clause on the card that has it. The Cage restricts
+    every *other* object, from the battlefield, which is why it is read here
+    off a battlefield scan and not off the spell.
+
+    No player argument: "players" is every player, the Cage's own controller
+    included.
+    """
+    for source in list(getattr(game, "battlefield", [])):
+        for line in parse_abilities(source.card):
+            if line.kind is not AbilityKind.STATIC:
+                continue
+            match = _ZONE_CAST_PROHIBITION_RE.match((line.text or "").strip())
+            if match is None:
+                continue
+            if not _matches_type_filter(card, match.group("filter")):
+                continue
+            if origin in _prohibited_zones(match.group("zones")):
+                return source.name
+    return None
+
+
+def cannot_be_countered(spell: Any) -> bool:
+    """Whether this object on the stack says it can't be countered
+    (CR 113.6g).
+
+    "An object's ability that states it can't be countered or can't be copied
+    functions on the stack" - so unlike everything else in this module, which
+    reads a permanent on the battlefield, this reads the spell itself while it
+    is the thing being asked about. CR 604.5 is the general permission for a
+    static ability to apply while its own spell is on the stack: "Some static
+    abilities apply while a spell is on the stack. These are often abilities
+    that refer to countering the spell."
+
+    What this makes false is CR 701.6a's verb: "to counter a spell or ability
+    means to cancel it, removing it from the stack." A counterspell aimed at
+    an uncounterable spell is not refused at announcement and its target does
+    not become illegal - CR 608.2b's legality check knows nothing about
+    counterability - so it still resolves, still finds its target, and simply
+    fails to do the one thing it says.
+
+    An ability on the stack (`machines.triggers.AbilityOnStack`) has no card
+    behind it (CR 405.1) and answers False; CR 603.1a's "or state that it
+    can't be countered" tail on a triggered ability is a separate shape this
+    does not yet read.
+    """
+    card = getattr(spell, "card", None)
+    if card is None:
+        return False
+    return any(
+        line.kind is AbilityKind.STATIC and _CANT_BE_COUNTERED_RE.match((line.text or "").strip())
+        for line in parse_abilities(card)
+    )
