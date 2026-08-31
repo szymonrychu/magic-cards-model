@@ -773,6 +773,24 @@ class PreventionShield(BaseModel):
     stored as a word and matched against the source at damage time rather than
     resolved to a set of objects when the shield was made."""
 
+    excluded_source_subtypes: frozenset[str] = frozenset()
+    """CR 609.7b's recheck, stated as an exclusion instead of a match.
+
+    Moonmist's "Prevent all combat damage that would be dealt this turn **by
+    creatures other than Werewolves and Wolves**" names the sources it does
+    *not* cover, which `source_quality` cannot say: that field is one quality
+    the source must have, and it reads card types and colours, never subtypes.
+
+    Stored as words and rechecked at damage time for the same reason
+    `source_quality` is - CR 609.7b: "When the source would deal damage, the
+    'shield' rechecks the source's properties. If the properties no longer
+    match, the damage isn't prevented." A creature that becomes a Werewolf
+    after the shield was made is excluded when the damage lands, and a
+    creature that arrives later is covered without the shield having to know
+    about it. Resolving this to a set of objects at resolution would fail
+    open on both counts.
+    """
+
     combat_only: bool = False
     """CR 510.2: "prevent all *combat* damage"."""
 
@@ -5424,6 +5442,18 @@ class Game(BaseModel):
             event.source is None or event.source.id != shield.source_id
         ):
             return False
+        if shield.excluded_source_subtypes and event.source is not None:
+            # CR 609.7b's recheck, against the source's subtypes as they are
+            # now. An anonymous source is not excluded by name, so it stays
+            # covered - the opposite of `source_quality`'s rule below, and for
+            # the same reason: a shield that *names* what it covers cannot
+            # match an unknown source, and one that names what it does *not*
+            # cover cannot rule an unknown source out.
+            subtypes = {
+                subtype.lower() for subtype in self.characteristics_of(event.source).subtypes
+            }
+            if subtypes & {excluded.lower() for excluded in shield.excluded_source_subtypes}:
+                return False
         return not (
             shield.source_quality is not None
             and (

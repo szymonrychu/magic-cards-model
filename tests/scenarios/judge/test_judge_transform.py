@@ -23,17 +23,17 @@ The rules the episode walks through:
   Silence is the episode's example.
 
 `CardState.transform` is the engine's primitive, and it now handles all three.
-Moonmist's own "Transform all Humans." is read off its printed text now too;
-what still fails closed is the card's *second* sentence - see the `xfail` at
-the bottom for exactly which field `models/game.py` lacks.
+Moonmist reads whole now: "Transform all Humans." off its printed text, and
+its second sentence through `PreventionShield.excluded_source_subtypes`, a
+CR 609.7b recheck stated as an exclusion rather than as a quality the source
+must have.
 
 Every CR number in this file was verified with `knowledge_search(q="...",
 type="rules")` in the session that wrote it: CR 701.27c, CR 701.27d, CR 712.2,
 CR 712.3, CR 712.10.
 """
 
-import pytest
-
+from magic_cards_model.machines import Step
 from magic_cards_model.machines.effects import _parse_mixed_clause, effect_for
 from magic_cards_model.models import Zone
 from tests.cards import card, card_state
@@ -180,22 +180,47 @@ def test_the_transform_all_humans_clause_is_read_and_sweeps_the_battlefield():
     assert knight.name == "Youthful Knight", "CR 701.27c: a single-faced Human is a no-op"
 
 
-@pytest.mark.xfail(
-    reason=(
-        "Moonmist's *second* sentence is what fails closed now, and it is a gap "
-        "in `models/game.py`, not in the parser: 'Prevent all combat damage that "
-        "would be dealt this turn by creatures other than Werewolves and Wolves' "
-        "needs a prevention shield restricted by an *excluded* set of source "
-        "subtypes, and `PreventionShield` carries only `source_quality`, a "
-        "single quality the source must HAVE, matched by `Game.source_has_quality` "
-        "against card types and colors only - never subtypes, and never negated. "
-        "The first sentence parses (see the test above); CR 608.2c has no notion "
-        "of running half an effect, so `effect_for` still refuses the whole card."
-    ),
-    strict=True,
-)
 def test_moonmist_transforms_the_humans_when_it_resolves():
     """The episode's actual play: Amy casts Moonmist, the Rogue turns over."""
     moonmist = card("Moonmist")
 
     assert effect_for(moonmist.name, moonmist.oracle_text) is not None
+
+
+def test_moonmist_stops_the_bear_but_not_the_wolf():
+    """The exclusion is the whole point of Moonmist's second sentence.
+
+    CR 615.1a's prevention shield, stated as an exclusion: everything is
+    covered except the creature types it names. CR 609.7b is why the excluded
+    types travel to the shield as words and are rechecked when the damage
+    would be dealt - "when the source would deal damage, the 'shield' rechecks
+    the source's properties" - rather than being resolved to a set of
+    creatures when Moonmist resolves.
+
+    Watchwolf is a Wolf, so its 3 damage is not prevented. Grizzly Bears is a
+    Bear, so its 2 damage is. Asserting only that `effect_for` is not None
+    would pass for a shield that prevented everything or nothing.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Moonmist"],
+            battlefield=["Forest", "Forest", "Watchwolf", "Grizzly Bears"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Forest", "Forest", username="alice")
+    scenario.cast_and_resolve("Moonmist", *sources, username="alice")
+
+    wolf = scenario.creature("Watchwolf", "alice")
+    bear = scenario.creature("Grizzly Bears", "alice")
+    scenario.advance()  # begin combat
+    scenario.advance()  # declare attackers
+    scenario.attack_with(wolf, bear)
+    scenario.advance()  # declare blockers
+    scenario.advance()  # combat damage
+
+    assert scenario.player("bob").life == 17

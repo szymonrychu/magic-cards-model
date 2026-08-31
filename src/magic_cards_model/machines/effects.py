@@ -1453,6 +1453,60 @@ def prevent_all_combat_damage(game: "Game", spell: CardState) -> None:
     )
 
 
+def _subtypes_in(phrase: str) -> frozenset[str]:
+    """The creature types named in "Werewolves and Wolves", singularised.
+
+    Printed text names them in the plural; `Characteristics.subtypes` holds
+    them the way the type line does, so "Werewolves" has to come back as
+    "Werewolf". Only the two endings the pool actually uses are handled, and
+    an unrecognised word is kept as-is rather than mangled - a subtype that
+    matches nothing simply never excludes anything, which fails closed.
+    """
+    words = re.split(r",|\band\b", phrase)
+    found: set[str] = set()
+    for word in words:
+        cleaned = word.strip().rstrip(".")
+        if not cleaned:
+            continue
+        if cleaned.endswith("ves"):
+            cleaned = cleaned[:-3] + "f"
+        elif cleaned.endswith("s"):
+            cleaned = cleaned[:-1]
+        found.add(cleaned)
+    return frozenset(found)
+
+
+def prevent_all_combat_damage_except(excluded: frozenset[str]) -> Effect:
+    """Moonmist's second sentence: the Fog shield, minus the types it names.
+
+    CR 615.1a's prevention effect again, but stated as an exclusion. The
+    excluded types are handed to the shield as *words*, never resolved to a
+    set of creatures here, because CR 609.7b rechecks the source's properties
+    when the damage would be dealt: a Human that Moonmist has just transformed
+    into a Werewolf is excluded when combat damage lands, and a creature that
+    arrives after this resolves is still covered. Freezing a list of objects
+    at resolution would get both of those wrong, and would fail open.
+    """
+
+    def effect(game: "Game", spell: CardState) -> None:
+        from ..models.game import PreventionShield, ShieldKind
+
+        game.create_prevention_shield(
+            PreventionShield(
+                kind=ShieldKind.ALL,
+                label=(
+                    "prevent all combat damage that would be dealt this turn "
+                    f"by creatures other than {', '.join(sorted(excluded))}"
+                ),
+                controller=game.controller_of(spell).username,
+                combat_only=True,
+                excluded_source_subtypes=excluded,
+            )
+        )
+
+    return effect  # type: ignore[return-value]
+
+
 def each_player_exiles_sacrifices_and_returns_creatures(game: "Game", spell: CardState) -> None:
     """Living End: "Each player exiles all creature cards from their graveyard,
     then sacrifices all creatures they control, then puts all cards they
@@ -3425,6 +3479,12 @@ def _parse_comma_chained_player_clause(clause: str) -> ClauseEffect | None:
 #: Souls) and "Scry 2, then draw a card" (Preordain).
 _CLAUSE_SEPARATOR = re.compile(r"\.\s+|\n+|,?\s+\bthen\b\s+|\s+\band\b\s+", re.IGNORECASE)
 
+#: "other than Werewolves and Wolves" - an exclusion list, whose "and" joins
+#: two names inside one clause rather than two instructions. Bounded to the
+#: sentence so it cannot swallow a following instruction.
+_EXCLUSION_LIST_AND_RE = re.compile(r"other than [^.\n]+", re.IGNORECASE)
+_AND_SENTINEL = "\x00and\x00"
+
 
 def split_effect_clauses(text: str) -> list[str]:
     """Break an effect into the clauses CR 608.2c executes in order.
@@ -3444,7 +3504,17 @@ def split_effect_clauses(text: str) -> list[str]:
             break
         text = stripped
     text = text.rstrip(".")
-    return [clause.strip() for clause in _CLAUSE_SEPARATOR.split(text) if clause.strip()]
+    # "by creatures other than Werewolves and Wolves" is one exclusion list,
+    # not two instructions: the "and" joins two creature types inside a single
+    # clause, where everywhere else it joins two things CR 608.2c does in
+    # order. Masked across the split and restored after, so the separator
+    # stays the simple thing it is.
+    masked = _EXCLUSION_LIST_AND_RE.sub(lambda m: m.group(0).replace(" and ", _AND_SENTINEL), text)
+    return [
+        clause.strip().replace(_AND_SENTINEL, " and ")
+        for clause in _CLAUSE_SEPARATOR.split(masked)
+        if clause.strip()
+    ]
 
 
 #: A cost paid before the spell is cast (CR 118.8a) - never part of what the
@@ -5645,6 +5715,15 @@ _DAMAGE_EACH_CREATURE_RE = re.compile(
 _PREVENT_ALL_COMBAT_DAMAGE_RE = re.compile(
     r"^prevent all combat damage that would be dealt this turn\.?$", re.IGNORECASE
 )
+#: Moonmist's shape: the same shield, minus the creature types it names.
+#: CR 609.7b makes this a property rechecked when the damage would be dealt,
+#: so the excluded types travel to the shield as words - see
+#: `PreventionShield.excluded_source_subtypes`.
+_PREVENT_ALL_COMBAT_DAMAGE_EXCEPT_RE = re.compile(
+    r"^prevent all combat damage that would be dealt this turn by creatures "
+    r"other than (?P<except>.+?)\.?$",
+    re.IGNORECASE,
+)
 #: "Prevent the next N damage that would be dealt to any target this turn."
 #: (Bandage) - CR 615.7's counting shield around whichever kind of target CR
 #: 115.1 hands back; see `prevent_next_damage_to_target`.
@@ -6015,6 +6094,12 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
 
     if _PREVENT_ALL_COMBAT_DAMAGE_RE.fullmatch(clause):
         return prevent_all_combat_damage  # type: ignore[return-value]
+
+    if match := _PREVENT_ALL_COMBAT_DAMAGE_EXCEPT_RE.fullmatch(clause):
+        excluded = _subtypes_in(match.group("except"))
+        if not excluded:
+            return None
+        return prevent_all_combat_damage_except(excluded)  # type: ignore[return-value]
 
     if match := _PREVENT_NEXT_DAMAGE_TO_TARGET_RE.fullmatch(clause):
         if not _targets_understood(match.group("phrase"), allow_player_targets=True):
