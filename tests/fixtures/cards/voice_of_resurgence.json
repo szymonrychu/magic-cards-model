@@ -1,0 +1,157 @@
+{
+  "object": "card",
+  "id": "99d1e843-71c9-4a65-bc36-d23858ef5ead",
+  "oracle_id": "5cbbb3f3-63a4-4983-81ea-8c405b10e63f",
+  "multiverse_ids": [
+    489900
+  ],
+  "mtgo_id": 82488,
+  "tcgplayer_id": 218334,
+  "cardmarket_id": 482834,
+  "name": "Voice of Resurgence",
+  "lang": "en",
+  "released_at": "2020-08-07",
+  "uri": "https://api.scryfall.com/cards/99d1e843-71c9-4a65-bc36-d23858ef5ead",
+  "scryfall_uri": "https://scryfall.com/card/2xm/227/voice-of-resurgence?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T08:08:43Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/9/99d1e843-71c9-4a65-bc36-d23858ef5ead.jpg?1783930123",
+    "normal": "https://cards.scryfall.io/normal/front/9/9/99d1e843-71c9-4a65-bc36-d23858ef5ead.jpg?1783930123",
+    "large": "https://cards.scryfall.io/large/front/9/9/99d1e843-71c9-4a65-bc36-d23858ef5ead.jpg?1783930123",
+    "png": "https://cards.scryfall.io/png/front/9/9/99d1e843-71c9-4a65-bc36-d23858ef5ead.png?1783930123",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/9/99d1e843-71c9-4a65-bc36-d23858ef5ead.jpg?1783930123",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/9/99d1e843-71c9-4a65-bc36-d23858ef5ead.jpg?1783930123",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/9/99d1e843-71c9-4a65-bc36-d23858ef5ead.webp?1783930123",
+    "grid": "https://cards.scryfall.io/grid/front/9/9/99d1e843-71c9-4a65-bc36-d23858ef5ead.webp?1783930123",
+    "display": "https://cards.scryfall.io/display/front/9/9/99d1e843-71c9-4a65-bc36-d23858ef5ead.webp?1783930123",
+    "art": "https://cards.scryfall.io/art/front/9/9/99d1e843-71c9-4a65-bc36-d23858ef5ead.webp?1783930123",
+    "crop": "https://cards.scryfall.io/crop/front/9/9/99d1e843-71c9-4a65-bc36-d23858ef5ead.webp?1783930123"
+  },
+  "mana_cost": "{G}{W}",
+  "cmc": 2.0,
+  "type_line": "Creature \u2014 Elemental",
+  "oracle_text": "Whenever an opponent casts a spell during your turn and when this creature dies, create a green and white Elemental creature token with \"This token's power and toughness are each equal to the number of creatures you control.\"",
+  "power": "2",
+  "toughness": "2",
+  "colors": [
+    "G",
+    "W"
+  ],
+  "color_identity": [
+    "G",
+    "W"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "99d1e843-71c9-4a65-bc36-d23858ef5ead",
+      "component": "combo_piece",
+      "name": "Voice of Resurgence",
+      "type_line": "Creature \u2014 Elemental",
+      "uri": "https://api.scryfall.com/cards/99d1e843-71c9-4a65-bc36-d23858ef5ead"
+    },
+    {
+      "object": "related_card",
+      "id": "8676704a-419e-4a00-a052-bca2ad34ecae",
+      "component": "token",
+      "name": "Elemental",
+      "type_line": "Token Creature \u2014 Elemental",
+      "uri": "https://api.scryfall.com/cards/8676704a-419e-4a00-a052-bca2ad34ecae"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "372dafe8-b5d1-4b81-998f-3ae96b59498a",
+  "set": "2xm",
+  "set_name": "Double Masters",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/372dafe8-b5d1-4b81-998f-3ae96b59498a",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3A2xm&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/2xm?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/99d1e843-71c9-4a65-bc36-d23858ef5ead/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A5cbbb3f3-63a4-4983-81ea-8c405b10e63f&unique=prints",
+  "collector_number": "227",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Winona Nelson",
+  "artist_ids": [
+    "e45fe8d3-75d6-42c9-a2df-e945ad81ea27"
+  ],
+  "illustration_id": "a29db2ad-9e83-405c-9732-61c173623e94",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 10469,
+  "preview": {
+    "source": "Andrea Mengucci ",
+    "source_uri": "https://twitter.com/Mengu09/status/1285499578993737731",
+    "previewed_at": "2020-07-21"
+  },
+  "prices": {
+    "usd": "1.72",
+    "usd_foil": "1.97",
+    "usd_etched": null,
+    "eur": "1.59",
+    "eur_foil": "3.82",
+    "tix": "0.19"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=489900&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DVoice%2Bof%2BResurgence",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DVoice%2Bof%2BResurgence",
+    "edhrec": "https://edhrec.com/route/?cc=Voice+of+Resurgence"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F218334%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=482834&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/82488?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

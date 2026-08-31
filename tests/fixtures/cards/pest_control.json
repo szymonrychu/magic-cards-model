@@ -1,0 +1,137 @@
+{
+  "object": "card",
+  "id": "a4a01b92-dafb-4ea6-8eff-29f881f6be24",
+  "oracle_id": "072db429-3838-42ba-89b6-e26cbce22af9",
+  "multiverse_ids": [
+    660318
+  ],
+  "mtgo_id": 125405,
+  "arena_id": 90683,
+  "tcgplayer_id": 544938,
+  "cardmarket_id": 764296,
+  "name": "Pest Control",
+  "lang": "en",
+  "released_at": "2024-04-19",
+  "uri": "https://api.scryfall.com/cards/a4a01b92-dafb-4ea6-8eff-29f881f6be24",
+  "scryfall_uri": "https://scryfall.com/card/big/22/pest-control?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:06:36Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/a/4/a4a01b92-dafb-4ea6-8eff-29f881f6be24.jpg?1783911996",
+    "normal": "https://cards.scryfall.io/normal/front/a/4/a4a01b92-dafb-4ea6-8eff-29f881f6be24.jpg?1783911996",
+    "large": "https://cards.scryfall.io/large/front/a/4/a4a01b92-dafb-4ea6-8eff-29f881f6be24.jpg?1783911996",
+    "png": "https://cards.scryfall.io/png/front/a/4/a4a01b92-dafb-4ea6-8eff-29f881f6be24.png?1783911996",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/a/4/a4a01b92-dafb-4ea6-8eff-29f881f6be24.jpg?1783911996",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/a/4/a4a01b92-dafb-4ea6-8eff-29f881f6be24.jpg?1783911996",
+    "thumb": "https://cards.scryfall.io/thumb/front/a/4/a4a01b92-dafb-4ea6-8eff-29f881f6be24.webp?1783911996",
+    "grid": "https://cards.scryfall.io/grid/front/a/4/a4a01b92-dafb-4ea6-8eff-29f881f6be24.webp?1783911996",
+    "display": "https://cards.scryfall.io/display/front/a/4/a4a01b92-dafb-4ea6-8eff-29f881f6be24.webp?1783911996",
+    "art": "https://cards.scryfall.io/art/front/a/4/a4a01b92-dafb-4ea6-8eff-29f881f6be24.webp?1783911996",
+    "crop": "https://cards.scryfall.io/crop/front/a/4/a4a01b92-dafb-4ea6-8eff-29f881f6be24.webp?1783911996"
+  },
+  "mana_cost": "{W}{B}",
+  "cmc": 2.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Destroy all nonland permanents with mana value 1 or less.\nCycling {2} ({2}, Discard this card: Draw a card.)",
+  "colors": [
+    "B",
+    "W"
+  ],
+  "color_identity": [
+    "B",
+    "W"
+  ],
+  "keywords": [
+    "Cycling"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "14332d2c-ba93-4498-bf3f-9d601f88f783",
+  "set": "big",
+  "set_name": "The Big Score",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/14332d2c-ba93-4498-bf3f-9d601f88f783",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Abig&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/big?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/a4a01b92-dafb-4ea6-8eff-29f881f6be24/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A072db429-3838-42ba-89b6-e26cbce22af9&unique=prints",
+  "collector_number": "22",
+  "digital": false,
+  "rarity": "mythic",
+  "flavor_text": "\"How dare these varmints befoul the shining streets of Prosperity?\"\n\u2014Baron Bertram Graywater",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Jonas De Ro",
+  "artist_ids": [
+    "561ebf9e-8d93-4b57-8156-8826d0c19601"
+  ],
+  "illustration_id": "84f49b28-59d5-41c9-949c-ec45d9bf1818",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 15709,
+  "prices": {
+    "usd": "4.94",
+    "usd_foil": "6.71",
+    "usd_etched": null,
+    "eur": "5.98",
+    "eur_foil": "9.50",
+    "tix": "1.53"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=660318&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DPest%2BControl",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DPest%2BControl",
+    "edhrec": "https://edhrec.com/route/?cc=Pest+Control"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F544938%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=764296&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/125405?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
