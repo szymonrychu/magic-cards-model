@@ -1,0 +1,147 @@
+{
+  "object": "card",
+  "id": "e53115a4-8959-40fa-b763-931504a1c5a2",
+  "oracle_id": "a93a8edf-2879-4cae-b3b9-b46298270823",
+  "multiverse_ids": [],
+  "resource_id": "B907ECEB8704D17CA12D5D183C501CF73896C7C885EBA977EB718F4D5D971E86",
+  "mtgo_id": 153301,
+  "arena_id": 97848,
+  "tcgplayer_id": 651897,
+  "cardmarket_id": 846634,
+  "name": "Hydro-Man, Fluid Felon",
+  "lang": "en",
+  "released_at": "2025-09-26",
+  "uri": "https://api.scryfall.com/cards/e53115a4-8959-40fa-b763-931504a1c5a2",
+  "scryfall_uri": "https://scryfall.com/card/spm/33/hydro-man-fluid-felon?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T01:15:53Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/e/5/e53115a4-8959-40fa-b763-931504a1c5a2.jpg?1783905353",
+    "normal": "https://cards.scryfall.io/normal/front/e/5/e53115a4-8959-40fa-b763-931504a1c5a2.jpg?1783905353",
+    "large": "https://cards.scryfall.io/large/front/e/5/e53115a4-8959-40fa-b763-931504a1c5a2.jpg?1783905353",
+    "png": "https://cards.scryfall.io/png/front/e/5/e53115a4-8959-40fa-b763-931504a1c5a2.png?1783905353",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/e/5/e53115a4-8959-40fa-b763-931504a1c5a2.jpg?1783905353",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/e/5/e53115a4-8959-40fa-b763-931504a1c5a2.jpg?1783905353",
+    "thumb": "https://cards.scryfall.io/thumb/front/e/5/e53115a4-8959-40fa-b763-931504a1c5a2.webp?1783905353",
+    "grid": "https://cards.scryfall.io/grid/front/e/5/e53115a4-8959-40fa-b763-931504a1c5a2.webp?1783905353",
+    "display": "https://cards.scryfall.io/display/front/e/5/e53115a4-8959-40fa-b763-931504a1c5a2.webp?1783905353",
+    "art": "https://cards.scryfall.io/art/front/e/5/e53115a4-8959-40fa-b763-931504a1c5a2.webp?1783905353",
+    "crop": "https://cards.scryfall.io/crop/front/e/5/e53115a4-8959-40fa-b763-931504a1c5a2.webp?1783905353"
+  },
+  "mana_cost": "{U}{U}",
+  "cmc": 2.0,
+  "type_line": "Legendary Creature \u2014 Elemental Villain",
+  "oracle_text": "Whenever you cast a blue spell, if Hydro-Man is a creature, he gets +1/+1 until end of turn.\nAt the beginning of your end step, untap Hydro-Man. Until your next turn, he becomes a land and gains \"{T}: Add {U}.\" (He's not a creature during that time.)",
+  "power": "2",
+  "toughness": "2",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [],
+  "produced_mana": [
+    "U"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "a1c7b891-9e96-434c-9994-be58b62b27f1",
+  "set": "spm",
+  "set_name": "Marvel's Spider-Man",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/a1c7b891-9e96-434c-9994-be58b62b27f1",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aspm&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/spm?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/e53115a4-8959-40fa-b763-931504a1c5a2/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aa93a8edf-2879-4cae-b3b9-b46298270823&unique=prints",
+  "collector_number": "33",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "\"Well, I always wanted a waterfront view.\"\n\u2014Spider-Man",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Borja Pindado",
+  "artist_ids": [
+    "1624a1a8-3492-4c0b-9abc-83dcf2653111"
+  ],
+  "illustration_id": "42defbd3-7471-494b-a1ee-92e5784d0e3c",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 12003,
+  "preview": {
+    "source": "The Command Zone",
+    "source_uri": "https://youtu.be/aLNJ9JEWFaw",
+    "previewed_at": "2025-09-02"
+  },
+  "prices": {
+    "usd": "0.31",
+    "usd_foil": "0.45",
+    "usd_etched": null,
+    "eur": "0.37",
+    "eur_foil": "0.39",
+    "tix": "1.57"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DHydro-Man%252C%2BFluid%2BFelon",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DHydro-Man%252C%2BFluid%2BFelon",
+    "edhrec": "https://edhrec.com/route/?cc=Hydro-Man%2C+Fluid+Felon"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F651897%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=846634&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/153301?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
