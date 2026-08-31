@@ -95,11 +95,13 @@ def test_vexing_bauble_does_not_counter_a_spell_paid_with_mana():
 # --------------------------------------------------------------------------
 
 
-def _wistfulness_board(battlefield: list[str]) -> Scenario:
+def _wistfulness_board(
+    battlefield: list[str], bob_battlefield: list[str] | None = None
+) -> Scenario:
     return (
         Scenario()
         .player("alice", library=["Forest"], hand=["Wistfulness"], battlefield=battlefield)
-        .player("bob", library=["Forest"])
+        .player("bob", library=["Forest"], battlefield=bob_battlefield or [])
     )
 
 
@@ -107,8 +109,15 @@ def test_wistfulness_paid_with_double_green_triggers_only_the_green_ability():
     """{3}{G/U}{G/U} paid entirely with Forests spends five green mana - well
     past the "{G}{G}" the first ability asks for, and none of the blue the
     second one does.
+
+    The green half is "exile target artifact or enchantment an opponent
+    controls" (verified with `resolve_cards`) - a mandatory target (CR 601.2c),
+    so bob needs one on the battlefield or CR 603.3d removes the triggered
+    ability before it is ever placed on the stack, which would make this test
+    about targeting instead of about the intervening *if* it is meant to
+    cover.
     """
-    scenario = _wistfulness_board(["Forest"] * 5).build()
+    scenario = _wistfulness_board(["Forest"] * 5, bob_battlefield=["Ornithopter"]).build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     sources = scenario.untapped_sources(*(["Forest"] * 5))
 

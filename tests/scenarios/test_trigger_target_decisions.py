@@ -52,7 +52,7 @@ from magic_cards_model.machines.decisions import (
     DecisionKind,
 )
 from magic_cards_model.machines.delayed import DelayedTrigger
-from magic_cards_model.machines.triggers import GameEvent
+from magic_cards_model.machines.triggers import GameEvent, TargetingNoticeKind
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card_state import TargetRef
 from tests.scenarios.harness import Scenario
@@ -141,25 +141,165 @@ def test_choosing_a_different_legal_target_exiles_that_one_instead():
     assert bears.zone is Zone.BATTLEFIELD, "only the chosen target moved"
 
 
-def test_no_provider_present_targets_nothing_todays_behaviour_unchanged():
-    """Nobody scripted an answer and nobody is standing behind the seat.
+def test_no_provider_present_still_chooses_a_legal_target_now():
+    """Nobody scripted an answer and nobody is standing behind the seat -
+    but a legal target exists, so CR 601.2c still requires one to be named.
 
-    `default_answer` for `CHOOSE_TARGETS` is empty, byte-identical to what the
-    name-keyed dict produced when nothing had populated it - this is the
-    "nothing moves" guarantee the fix was built around.
+    This used to assert the opposite ("`default_answer` for `CHOOSE_TARGETS`
+    is empty ... this is the 'nothing moves' guarantee the fix was built
+    around"), which was itself the defect this file's own module,
+    `machines/decisions.py`, now documents: CR 601.2c reads "the player
+    announces their choice of an appropriate object or player for **each
+    target the spell requires**" - not a "you may" - so an unscripted answer
+    silently doing nothing while bears and Watchwolf both sit right there was
+    exactly the DDR-shaped bug (game `ee19ff19158f45e687a0d95fc335a8f1`) this
+    test now guards against instead of encoding. `default_answer` picks the
+    first offered candidate rather than leaving it empty; *which* one is not
+    this test's business (`machines/targeting.py`'s reading of Devourer's own
+    "that's one or more colors" restriction is a separate, still-open gap -
+    see `docs/engine-coverage.md`), only that the mandatory requirement is no
+    longer silently skipped.
     """
     scenario = _devourer_board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    bears = scenario.creature("Grizzly Bears", "bob")
 
     sources = scenario.untapped_sources("Sol Ring", *["Forest"] * 5)
     scenario.cast_onto_stack("Devourer of Destiny", *sources)
 
     (trigger,) = [item for item in scenario.game.stack if item is not scenario.game.stack[0]]
-    assert trigger.targets == []
+    assert trigger.targets != [], "a legal target exists, so CR 601.2c requires choosing one"
 
     scenario.pass_until_resolved()
-    assert bears.zone is Zone.BATTLEFIELD, "no target chosen, nothing exiled"
+    assert scenario.game.targeting_notices == [], "a legal target existed and was used"
+
+
+# -- the reported defect: an empty answer while a legal target exists -------
+
+
+def test_an_empty_answer_is_refused_while_a_legal_target_exists():
+    """The playtest bug verbatim (game `ee19ff19158f45e687a0d95fc335a8f1`, seq
+    470-471): Devourer of Destiny's cast trigger asked its controller for a
+    target, was answered with an *empty* list, and the engine accepted it -
+    while alice's own Grizzly Bears sat right there as a legal target the
+    whole time.
+
+    CR 601.2c: "the player announces their choice of an appropriate object or
+    player for **each target the spell requires**." "Target permanent" is not
+    "up to one target permanent" (CR 115.6) - there is no "decline" branch
+    once a legal target exists, so `Game.ask` now refuses an empty
+    `CHOOSE_TARGETS` answer the same way it already refused an illegal one,
+    citing CR 601.2c/603.3d rather than silently accepting it.
+
+    Answering properly afterwards - a second Devourer, same battlefield -
+    still exiles the chosen permanent, proving the refusal is not a general
+    lockout, only of the illegal (empty, target available) answer.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            library=["Forest"],
+            hand=["Devourer of Destiny", "Devourer of Destiny"],
+            battlefield=["Sol Ring", "Sol Ring"] + ["Forest"] * 10,
+        )
+        .player("bob", library=["Forest"], battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "bob")
+
+    (sol_ring_1, sol_ring_2) = scenario.untapped_sources("Sol Ring", "Sol Ring")
+
+    scenario.game.decisions.provider = QueueProvider(answers=[()])
+    with pytest.raises(ValueError, match="601.2c"):
+        sources = [sol_ring_1, *scenario.untapped_sources(*["Forest"] * 5)]
+        scenario.cast_onto_stack("Devourer of Destiny", *sources)
+    assert bears.zone is Zone.BATTLEFIELD, "the refused answer changed nothing"
+
+    # The first Devourer itself is still stuck on the stack (only its cast
+    # trigger's announcement was refused) - resolve it out of the way so the
+    # second cast below has an empty stack to be cast into (CR 117.1a).
+    scenario.resolve_top()
+
+    scenario.game.decisions.provider = QueueProvider(answers=[(bears,)])
+    sources = [sol_ring_2, *scenario.untapped_sources(*["Forest"] * 5)]
+    scenario.cast_onto_stack("Devourer of Destiny", *sources)
+    scenario.pass_until_resolved()
+
+    assert bears.zone is Zone.EXILE, "answering properly still works"
+
+
+def test_no_legal_target_removes_the_trigger_from_the_stack():
+    """CR 603.3d: "if a choice is required when the triggered ability goes on
+    the stack but no legal choices can be made for it, ... the ability is
+    simply removed from the stack."
+
+    Ravenous Chupacabra's own restriction ("a creature an opponent controls")
+    is fully enforced (`test_an_illegal_target_is_refused_without_corrupting_
+    state` below relies on the same check), unlike Devourer of Destiny's own
+    still-unchecked "that's one or more colors" (`docs/engine-coverage.md`) -
+    so it is the cleaner card for proving a *genuinely* empty candidate list:
+    bob controls no creature at all, so the ETB trigger is never placed on
+    the stack in the first place, not placed with an empty target list, which
+    is what CR 603.3d explicitly rules out.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Ravenous Chupacabra"], battlefield=["Swamp"] * 4)
+        .player("bob", battlefield=[])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    scenario.put_onto_battlefield("Ravenous Chupacabra")
+    scenario.game.put_triggers_on_stack()
+
+    assert scenario.game.stack == [], "the trigger never went on"
+    assert scenario.pending_triggers == [], "nor is it waiting to be placed later"
+
+    (notice,) = scenario.game.targeting_notices
+    assert notice.kind is TargetingNoticeKind.NO_LEGAL_TARGET
+    assert notice.source_name == "Ravenous Chupacabra"
+
+
+# -- regression: an "up to one target" trigger still accepts zero -----------
+
+
+def test_up_to_one_target_trigger_still_accepts_an_empty_answer():
+    """The shape this fix must not break: an "up to one" requirement (CR
+    115.6) is genuinely optional even with a legal target sitting right
+    there, unlike Devourer of Destiny's plain "target permanent" above.
+
+    White Orchid Phantom's ETB is "destroy up to one target nonbasic land"
+    (verified with `resolve_cards`) - `target_minimum` is 0 for it
+    (`profile.min_targets` is 0, CR 115.6), so `Game.ask` still accepts an
+    empty `CHOOSE_TARGETS` answer even though bob's Urza's Tower is a legal
+    target, and the land survives untouched - the same "up to one, chooses
+    zero, affects nothing" shape Karn, the Great Creator's own activated
+    ability already covers in
+    `tests/scenarios/test_type_changing_and_pt_setting_effects.py`, exercised
+    here through the triggered-ability path (`Game.ask`) instead of the
+    activated-ability one (`Casting.choose_targets`).
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["White Orchid Phantom"], battlefield=["Plains", "Plains"])
+        .player("bob", battlefield=["Urza's Tower"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    tower = scenario.find("Urza's Tower", Zone.BATTLEFIELD, "bob")
+    scenario.game.decisions.provider = QueueProvider(answers=[()])
+
+    scenario.cast_onto_stack("White Orchid Phantom", *scenario.untapped_sources("Plains", "Plains"))
+    scenario.resolve_top()  # the creature itself enters the battlefield, firing the ETB
+    scenario.game.put_triggers_on_stack()
+
+    (trigger,) = scenario.game.abilities_on_stack
+    assert trigger.targets == [], "declining is legal for an 'up to one' requirement"
+
+    scenario.pass_until_resolved()
+    assert tower.zone is Zone.BATTLEFIELD, "nothing chosen, nothing destroyed"
 
 
 def test_a_scripted_answer_still_beats_the_provider():
@@ -341,9 +481,17 @@ def test_a_delayed_trigger_does_not_inherit_an_earlier_triggers_targets():
     created by hand (the same way `test_delayed_triggered_abilities.py` builds
     one - no card in the pool prints a delayed trigger with a target yet), given
     the same source name on purpose, and fired. If it inherited the old dict
-    entry it would arrive with Watchwolf already targeted; instead it is asked
-    fresh and, with nothing scripted or provided this time, defaults to no
-    target at all.
+    entry it would arrive with Watchwolf already targeted for the *wrong*
+    reason (a stale, name-keyed lookup); a `QueueProvider` is staged fresh for
+    it instead, and Watchwolf being the only legal target left (Bears is
+    already exiled and gone) is what proves it was asked its own question
+    rather than handed the earlier trigger's answer.
+
+    "Target creature" is mandatory (CR 601.2c), so this can no longer default
+    to no target the way it did before the CR 601.2c/603.3d fix
+    (`machines/decisions.py`'s own `CHOOSE_TARGETS` default) - see
+    `test_no_provider_present_still_chooses_a_legal_target_now` above for that
+    same correction on the ordinary cast trigger.
     """
     scenario = (
         Scenario()
@@ -377,6 +525,8 @@ def test_a_delayed_trigger_does_not_inherit_an_earlier_triggers_targets():
             source_name="Devourer of Destiny",
         )
     )
+    provider = QueueProvider(answers=[(watchwolf,)])
+    scenario.game.decisions.provider = provider
     fired = scenario.game.delayed_triggers.fire(
         GameEvent(event=TriggerEvent.BEGINNING_OF_STEP, step=Step.END_STEP, player="alice")
     )
@@ -384,8 +534,9 @@ def test_a_delayed_trigger_does_not_inherit_an_earlier_triggers_targets():
     scenario.game.put_triggers_on_stack()
 
     (delayed_ability,) = scenario.game.abilities_on_stack
-    assert delayed_ability.targets == [], "it did not inherit Watchwolf, or anything else"
-    assert watchwolf.zone is Zone.BATTLEFIELD
+    assert len(provider.asked) == 1, "it was asked fresh, not answered from the earlier batch"
+    assert TargetRef.to_card(bears) not in provider.asked[0].targets, "bears is gone, not offered"
+    assert delayed_ability.targets == [TargetRef.to_card(watchwolf)], "it did not inherit Bears"
 
 
 # -- ETB, cast, and attack trigger shapes ------------------------------------
