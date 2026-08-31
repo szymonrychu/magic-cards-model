@@ -14,8 +14,6 @@ Monstrous Rage is the metagame card that prints one: "Target creature gets +2/+0
 until end of turn. Create a Monster Role token attached to it."
 """
 
-import pytest
-
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.combat import Keyword, has_keyword
 from magic_cards_model.models import Zone
@@ -476,14 +474,6 @@ def test_the_role_grants_trample_in_layer_six():
     assert "Trample" in scenario.game.characteristics_of(bears).abilities
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="machines/combat.has_keyword answers off state.card.keywords, the printed "
-    "Scryfall field, and never consults the computed board - so the trample the Role grants "
-    "in layer 6 is recorded and ignored, and a blocked 5/3 assigns all five to the 2/2 "
-    "instead of three to it and two to the player. This is gap 2 of the metagame sweep; the "
-    "hook is for machines/combat.py to read Game.characteristics_of.",
-)
 def test_the_granted_trample_reaches_combat_damage():
     """CR 702.19b: "The controller of an attacking creature with trample first
     assigns damage to the creature(s) blocking it. Once all those blocking
@@ -491,13 +481,20 @@ def test_the_granted_trample_reaches_combat_damage():
     controller chooses among those blocking creatures and the ... player."
 
     A 5/3 with trample blocked by a 2/2 assigns 2 to the blocker and 3 to bob.
+
+    `has_keyword` needs the game to answer: CR 613.5 has the layer system, not
+    the printing, decide which abilities a permanent has, and the Role's
+    trample exists only on the computed board. Asked without one there is no
+    board to compute and the printed Scryfall field is the honest answer -
+    which for a Grizzly Bears is no trample at all.
     """
     scenario = board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     bears = scenario.creature("Grizzly Bears", "alice")
     bears.summoning_sick = False
     _enrage(scenario, bears)
-    assert has_keyword(bears, Keyword.TRAMPLE)
+    assert not has_keyword(bears, Keyword.TRAMPLE), "the printing has none"
+    assert has_keyword(bears, Keyword.TRAMPLE, scenario.game)
 
     blocker = scenario.creature("Grizzly Bears", "bob")
     scenario.start_at(Step.DECLARE_ATTACKERS)
@@ -506,7 +503,10 @@ def test_the_granted_trample_reaches_combat_damage():
     assignment = scenario.combat_damage()
 
     assert ("bob", 3) in [
-        (target if isinstance(target, str) else getattr(target, "username", target.name), amount)
+        (
+            target if isinstance(target, str) else getattr(target, "username", None) or target.name,
+            amount,
+        )
         for target, amount in assignment
     ]
 

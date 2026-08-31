@@ -149,9 +149,10 @@ def test_ragavan_triggers_when_his_combat_damage_hits_a_player():
     """The whole path: declare, connect, trigger, go on the stack.
 
     "Whenever Ragavan deals combat damage to a player" (CR 120.2a) fires for
-    the unblocked one damage, and CR 603.3 puts the ability on the stack the
-    next time a player would receive priority. Its effect - the Treasure and
-    the exile - is the effects registry's business and does nothing here.
+    the unblocked one damage, and CR 510.3a puts the ability on the stack
+    before the active player gets priority - inside the combat damage step
+    itself, so nothing else has to flush the queue. Its effect - the Treasure
+    and the exile - is the effects registry's business and does nothing here.
     """
     scenario = board(["Ragavan, Nimble Pilferer"]).build()
     ragavan = scenario.creature("Ragavan, Nimble Pilferer", "alice")
@@ -161,9 +162,7 @@ def test_ragavan_triggers_when_his_combat_damage_hits_a_player():
     scenario.no_blocks()
     scenario.combat_damage()
 
-    assert conditions(scenario) == ["Ragavan deals combat damage to a player"]
-
-    scenario.game.put_triggers_on_stack()
+    assert conditions(scenario) == [], "CR 510.3a already moved it off the queue"
     assert scenario.stack_names() == ["Ragavan, Nimble Pilferer's triggered ability"]
     assert scenario.player("bob").life == 18, "Ragavan is a 2/1"
 
@@ -209,8 +208,9 @@ def test_questing_beast_triggers_on_combat_damage_to_an_opponent():
     The opponent clause is the part under test: bob is alice's opponent, and
     the trigger reads the damaged player against the Beast's controller. Its
     follow-up aims at "target planeswalker that player controls", and bob
-    controls none, so the ability stays pending here rather than being put on
-    the stack.
+    controls none, so when CR 510.3a puts the batch on the stack the ability
+    finds no legal target (CR 603.3d) and is removed - leaving the
+    `NO_LEGAL_TARGET` notice as the record that it did trigger.
     """
     scenario = board(["Questing Beast"]).build()
     beast = scenario.creature("Questing Beast", "alice")
@@ -220,7 +220,9 @@ def test_questing_beast_triggers_on_combat_damage_to_an_opponent():
     scenario.no_blocks()
     scenario.combat_damage()
 
-    assert conditions(scenario) == ["Questing Beast deals combat damage to an opponent"]
+    assert conditions(scenario) == []
+    assert scenario.stack_names() == []
+    assert [notice.source_name for notice in scenario.game.targeting_notices] == ["Questing Beast"]
 
 
 # -- life (CR 119.3, 119.9) -------------------------------------------------

@@ -180,3 +180,81 @@ def test_the_notice_is_recorded_once_even_after_several_legality_checks():
     scenario.block(april, wurm)
 
     assert len(scenario.game.evasion_notices) == 1
+
+
+# -- the restriction is read off the computed board, not the printing --------
+
+
+def test_dress_down_takes_the_restriction_away_and_the_block_is_legal():
+    """CR 613.5: "the application of continuous effects as described by the
+    layer system is continually and automatically performed by the game", so
+    which sentences an attacker has is the layer system's answer, not the
+    printing's.
+
+    Dress Down's "Creatures lose all abilities" is a layer 6 ability-removing
+    effect (CR 613.1f). A Mindskinner with no abilities has no "can't be
+    blocked" sentence, and CR 509.1a's declaration is legal again -
+    `combat._evasion_restriction_sentences` reads `Game.characteristics_of`
+    rather than `CardState.oracle_text` for exactly this.
+    """
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", battlefield=["The Mindskinner"])
+        .player(
+            "bob",
+            hand=["Dress Down"],
+            battlefield=["Island", "Island", "Wurmcoil Engine"],
+            library=["Island"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    skinner = scenario.creature("The Mindskinner")
+    wurm = scenario.creature("Wurmcoil Engine", "bob")
+    scenario.attack_with(skinner)
+
+    assert not scenario.game.can_block(wurm, skinner), "printed, the restriction is there"
+
+    scenario.pass_priority("alice")
+    first, second = scenario.untapped_sources("Island", "Island", username="bob")
+    scenario.cast_and_resolve("Dress Down", first, second, username="bob")
+
+    assert list(scenario.game.characteristics_of(skinner).abilities) == []
+    assert scenario.game.can_block(wurm, skinner)
+    scenario.block(skinner, wurm)
+    assert scenario.game.is_blocked(skinner)
+
+
+def test_dress_down_leaves_no_unparsed_evasion_notice_behind():
+    """The fail-closed notice reads the same computed sentences (CR 613.5).
+
+    April O'Neil's "can't be blocked by creatures with power 3 or greater" is
+    the shape `evasion_restriction_refusal` deliberately does not read, so it
+    normally records an `EvasionNotice`. With the ability removed there is no
+    sentence to fail on, and recording a notice would claim the engine missed
+    something that is not there.
+    """
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", battlefield=["April O'Neil, Kunoichi Trainee"])
+        .player(
+            "bob",
+            hand=["Dress Down"],
+            battlefield=["Island", "Island", "Grizzly Bears"],
+            library=["Island"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    april = scenario.creature("April O'Neil, Kunoichi Trainee")
+    bears = scenario.creature("Grizzly Bears", "bob")
+    scenario.attack_with(april)
+
+    scenario.pass_priority("alice")
+    first, second = scenario.untapped_sources("Island", "Island", username="bob")
+    scenario.cast_and_resolve("Dress Down", first, second, username="bob")
+
+    assert scenario.game.can_block(bears, april)
+    assert scenario.game.evasion_notices == []
