@@ -8422,6 +8422,23 @@ def _parse_sacrifice_consequence(consequence: str) -> _SacrificeConsequence | No
 
         return search_effect
 
+    draw_match = _DRAW_N_CARDS_RE.fullmatch(consequence)
+    if draw_match is not None:
+        count_text = draw_match.group("count")
+        if count_text is None:
+            count = 1
+        else:
+            count = _NUMBER_WORDS.get(count_text.lower())
+            if count is None and count_text.isdigit():
+                count = int(count_text)
+        if count is None:
+            return None
+
+        def draw_effect(game: "Game", player: Player, power: int | None, source: str) -> None:
+            game.draw_cards(player.username, count)
+
+        return draw_effect
+
     return None
 
 
@@ -9521,6 +9538,11 @@ _RETURN_TO_BATTLEFIELD_OWNER_RE = re.compile(
 
 #: "draw a card" - Mishra's Bauble's second half, with no object at all.
 _DRAW_A_CARD_RE = re.compile(r"^draw a card$", re.IGNORECASE)
+
+#: "draw a card"/"draw N cards" - `_DRAW_A_CARD_RE`'s own generalization,
+#: used where a count word may appear (Artist's Talent's "If you do, draw a
+#: card" as a `_parse_sacrifice_consequence` shape).
+_DRAW_N_CARDS_RE = re.compile(r"^draw (?:a|(?P<count>\w+)) cards?$", re.IGNORECASE)
 
 
 # --------------------------------------------------------------------------

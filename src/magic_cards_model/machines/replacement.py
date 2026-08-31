@@ -1453,6 +1453,49 @@ def _compile_damage_multiplier(effect: ReplacementEffect) -> CardReplacement | N
     return CardReplacement(label=effect.text, applies=applies, apply=apply)
 
 
+#: "If a source you control would deal noncombat damage to an opponent or a
+#: permanent an opponent controls, it deals that much damage plus [N]
+#: instead." - Artist's Talent's own level-3 (CR 716.2a), the Torbran-shaped
+#: template minus Torbran's own color qualifier. Read generically off the
+#: amount rather than pinned to this one printing.
+_DAMAGE_PLUS_AMOUNT_RE = re.compile(r"^it deals that much damage plus (?P<amount>\d+)$")
+
+_DAMAGE_PLUS_AMOUNT_EVENT = (
+    "a source you control would deal noncombat damage to an opponent or a "
+    "permanent an opponent controls"
+)
+
+
+def _compile_damage_plus_amount(effect: ReplacementEffect) -> CardReplacement | None:
+    if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD:
+        return None
+    if (effect.event or "").strip().lower() != _DAMAGE_PLUS_AMOUNT_EVENT:
+        return None
+    match = _DAMAGE_PLUS_AMOUNT_RE.match((effect.replacement or "").strip().rstrip("."))
+    if match is None:
+        return None
+    amount = int(match.group("amount"))
+
+    def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
+        if event.kind is not EventKind.DAMAGE or event.combat:
+            return False  # "noncombat damage" (CR 510.2 marks combat damage).
+        if event.source is None:
+            return False
+        source_controller = game.controller_of(source).username
+        if game.controller_of(event.source).username != source_controller:
+            return False  # "a source *you* control".
+        if event.player is not None:
+            return _is_opponent(game, source_controller, event.player.username)
+        if event.card is not None:
+            return _is_opponent(game, source_controller, game.controller_of(event.card).username)
+        return False
+
+    def apply(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
+        event.amount += amount
+
+    return CardReplacement(label=effect.text, applies=applies, apply=apply)
+
+
 # -- "if [damage event], prevent that damage and [someone] mill[s] [N] that many cards" --
 
 #: Two known event templates: a source's controller's own damage to an
@@ -1686,6 +1729,7 @@ _COMPILERS: tuple[Callable[[ReplacementEffect], CardReplacement | None], ...] = 
     _compile_graveyard_exile,
     _compile_enters_uncast_exile,
     _compile_damage_multiplier,
+    _compile_damage_plus_amount,
     _compile_prevent_damage_and_mill,
     _compile_self_prevent_combat_damage,
     _compile_life_gain_doubler,
@@ -1719,6 +1763,32 @@ def replacements_of(card: Card) -> list[CardReplacement]:
     if explicit is not None:
         return explicit
     return parsed_card_replacements(card)
+
+
+def replacements_of_state(permanent: CardState) -> list[CardReplacement]:
+    """Like `replacements_of`, but reads a *live permanent's* level-gated
+    text (CR 716.2a) rather than its printed card wholesale.
+
+    Only a Class needs this: `CardState.class_ability_text` is exactly
+    `oracle_text` for anything else, so this is a safe, behaviour-preserving
+    substitute for `replacements_of(permanent.card)` at every battlefield
+    scan - Artist's Talent's own level 3 must not double as a level 1's
+    damage-plus-2, before the Class has actually reached level 3.
+    """
+    explicit = REPLACEMENTS.get(permanent.card.name)
+    if explicit is not None:
+        return explicit
+    if not permanent.is_class:
+        return parsed_card_replacements(permanent.card)
+    names = _names_of(permanent.card)
+    found: list[CardReplacement] = []
+    for effect in _parse_oracle_text(permanent.class_ability_text, face=None, names=names):
+        for compiler in _COMPILERS:
+            compiled = compiler(effect)
+            if compiled is not None:
+                found.append(compiled)
+                break
+    return found
 
 
 # --------------------------------------------------------------------------
@@ -2272,7 +2342,7 @@ def applicable_effects(game: "Game", event: ReplaceableEvent) -> list[Applicable
     found.extend(_stack_replacements(game, event))
 
     for permanent in list(game.battlefield):
-        for index, printed in enumerate(replacements_of(permanent.card)):
+        for index, printed in enumerate(replacements_of_state(permanent)):
             if printed.applies(game, permanent, event):
                 found.append(
                     ApplicableEffect(

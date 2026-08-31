@@ -2269,6 +2269,18 @@ class Game(BaseModel):
                 ability.source_name, ability.ability.event, ability.ability.effect
             )
         if isinstance(ability.ability, ActivatedAbility):
+            if ability.ability.class_level_target is not None:
+                # CR 716.2a's own mechanical half - "This Class's level
+                # becomes N" - generalised off the level bar itself rather
+                # than a card-name-keyed row, so any Class works the same way.
+                target = ability.ability.class_level_target
+
+                def become_level(game: "Game", stack_object: "AbilityOnStack") -> None:
+                    permanent = stack_object.source(game)
+                    if permanent is not None:
+                        permanent.class_level = target
+
+                return become_level
             index = self._activated_index(ability)
             if index is not None:
                 # CR 107.3a's X, only when the printed cost actually carries
@@ -5842,6 +5854,27 @@ class Game(BaseModel):
                 return (
                     f"{permanent.name} has {permanent.loyalty} loyalty, not the {removes} "
                     f"its {ability.loyalty.printed} cost removes (CR 606.6)"
+                )
+
+        if ability.class_level_target is not None:
+            # CR 716.2a: "[Cost]: Level N" means "[Cost]: This Class's level
+            # becomes N. Activate only if this Class is level N-1 and only as
+            # a sorcery" - both halves of that sentence, checked the same way
+            # "Activate only as a sorcery" already is below for an ordinary
+            # printed instruction, since this one is never actually printed
+            # as words on the card.
+            if not self.can_cast_sorcery(controller):
+                return (
+                    f"{permanent.name}'s Level {ability.class_level_target} bar can only be "
+                    f"activated as a sorcery: {controller}'s main phase, with the stack empty "
+                    "(CR 716.2a, CR 307.5)"
+                )
+            required = ability.class_level_target - 1
+            if permanent.class_level != required:
+                return (
+                    f"{permanent.name} is level {permanent.class_level}, not level {required}, "
+                    f"so its Level {ability.class_level_target} bar cannot be activated "
+                    "(CR 716.2a)"
                 )
 
         instructions = (ability.instructions or "").lower()

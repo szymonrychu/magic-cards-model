@@ -1627,6 +1627,13 @@ def triggers_for(game: "Game", event: GameEvent, sources: list[CardState]) -> li
                 # Howler's upkeep trigger and not its own (CR 701.27g), and an
                 # untransformed one has the mirror.
                 continue
+            if ability.class_level is not None and source.class_level < ability.class_level:
+                # CR 716.2a: "As long as this Class is level N or greater, it
+                # has [Abilities]" - a level-gated trigger printed under a
+                # bar the Class has not reached yet is not "in effect", the
+                # same way `CardState.class_ability_text` already keeps a
+                # static ability quiet until then.
+                continue
             if not condition_matches(game, ability, source, controller, event):
                 continue
             if source.zone not in zones_ability_functions_in(ability, source):
