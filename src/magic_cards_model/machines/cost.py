@@ -60,7 +60,7 @@ from .abilities import (
     parse_abilities,
 )
 from .combat import Keyword, has_keyword
-from .triggers import GameEvent, tapped_for_mana_event
+from .triggers import GameEvent, is_ability, tapped_for_mana_event
 
 
 def can_tap_for_mana(source: CardState, game: Any = None) -> bool:
@@ -1779,6 +1779,23 @@ class CostPayment(BaseModel):
     tapped_for_mana: list[CardState] = Field(default_factory=list)
     overflow: ManaPool | None = None
 
+    triggers_caused: list[UUID] = Field(default_factory=list)
+    """CR 106.12a triggers this payment's own `tap_for_mana` calls have queued
+    on `Game.pending_triggers` (or, if a priority check already ran, pushed
+    onto `Game.stack`) - Utopia Sprawl, Leyline of Abundance, Badgermole Cub,
+    and anything else sharing that trigger shape.
+
+    CR 733.1: "If a player takes an illegal action or starts to take an
+    action but can't legally complete it, the entire action is reversed and
+    any payments already made are canceled. No abilities trigger and no
+    effects are applied due to any part of the illegal action." `cancel`/
+    `rewind` already untap `tapped_for_mana` and empty the pool - this is the
+    same reversal applied to what tapping those sources queued. Without it, a
+    payment tried, found unpayable, and cancelled left its trigger behind:
+    each retried combination queued one more, and every one of them still
+    resolved once payment finally succeeded, multiplying the bonus mana by
+    however many attempts were cancelled along the way."""
+
     choices: list[int | None] | None = None
     """CR 118.13a: one pinned option per symbol of `cost`, or None to leave the
     choice to the engine. Set it to insist that Dismember's `{B/P}` is paid
@@ -1926,7 +1943,8 @@ class CostPayment(BaseModel):
             restriction = restriction_for_production(source, produces)
         self.pool.add_all(produces, snow=is_snow_source(source), restriction=restriction)
         if self.game is not None:
-            self.game.emit(tapped_for_mana_event(source, self.game))
+            triggered = self.game.emit(tapped_for_mana_event(source, self.game))
+            self.triggers_caused.extend(ability.id for ability in triggered)
         return self.pool
 
     def auto_tap(self, sources: Iterable[CardState]) -> list[CardState]:
@@ -2226,6 +2244,27 @@ class CostPayment(BaseModel):
         self.tapped_for_mana = []
         self.pool.empty()
         self.mana_payment = None
+        self._discard_triggers_caused()
+
+    def _discard_triggers_caused(self) -> None:
+        """CR 733.1: undo the CR 106.12a triggers this payment's own taps
+        queued, the same reversal `_undo_everything`'s untapping already gives
+        the sources themselves.
+
+        Two places a queued trigger can still be waiting: `pending_triggers`,
+        if nobody has received priority since the tap, or `stack`, if a
+        `retain_priority`/`pass_priority` call already ran `put_triggers_on_
+        stack` in between - a cancelled or rewound payment has to check both.
+        """
+        if self.game is None or not self.triggers_caused:
+            return
+        caused = frozenset(self.triggers_caused)
+        self.game.pending_triggers = [
+            ability for ability in self.game.pending_triggers if ability.id not in caused
+        ]
+        stack = self.game.stack
+        stack[:] = [item for item in stack if not (is_ability(item) and item.id in caused)]
+        self.triggers_caused = []
 
     def _require_open(self) -> None:
         if self.is_settled:

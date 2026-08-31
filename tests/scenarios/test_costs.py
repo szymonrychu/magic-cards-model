@@ -15,6 +15,7 @@ import pytest
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.casting import Casting
 from magic_cards_model.machines.cost import (
+    CostPayment,
     TotalCost,
     additional_cost_phrases,
     alternative_cost_phrases,
@@ -692,6 +693,135 @@ def test_mana_tapped_for_a_cancelled_payment_does_not_stay_in_the_pool():
         "the Forest's green went into the payment's copy and died with it"
     )
     assert not forest.tapped
+
+
+def utopia_board() -> Scenario:
+    """Alice holds Utopia Sprawl and a Forest to enchant, plus a payer land."""
+    return (
+        Scenario()
+        .player("alice", hand=["Utopia Sprawl"], battlefield=["Forest", "Forest"])
+        .player("bob")
+    )
+
+
+def enchant_a_forest(scenario: PlayedScenario):
+    """Cast Utopia Sprawl for real, attached to a real Forest, choosing green.
+
+    Returns the enchanted Forest. `_parse_mana_adding_trigger` (machines/
+    effects.py) reads "its controller adds an additional one mana of the
+    chosen color" off Utopia Sprawl's own printed text (CR 605.1b, CR
+    106.12a); `CardState.choice` is what CR 614.12a's "as this Aura enters,
+    choose a color" recorded.
+    """
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    payer, forest = scenario.untapped_sources("Forest", "Forest")
+    scenario.will_choose(Color.GREEN.value, source="Utopia Sprawl")
+    sprawl = scenario.cast_and_resolve("Utopia Sprawl", payer, targets=[forest])
+    assert sprawl.attached_to == forest.id
+    return forest
+
+
+def test_tapping_the_enchanted_land_once_adds_exactly_one_bonus_mana():
+    """CR 106.12a: Utopia Sprawl's trigger fires once for the one real tap,
+    and resolving it is the only thing that adds its bonus mana - passing
+    priority afterwards, with nothing further tapped, adds nothing more.
+    """
+    scenario = utopia_board().build()
+    forest = enchant_a_forest(scenario)
+
+    scenario.activate(forest)
+    assert scenario.stack_names() == ["Utopia Sprawl's triggered ability"]
+    scenario.pass_priority("alice")
+    scenario.pass_priority("bob")
+
+    assert scenario.stack_names() == []
+    assert scenario.player("alice").mana_pool.floating == {Color.GREEN: 2}
+
+    # Further priority passes, with nothing new tapped, must never re-fire the
+    # trigger - even once the stack-empty step boundary (CR 500.4) empties the
+    # pool for an unrelated reason, what refills it is never more than {}.
+    for _ in range(6):
+        holder = scenario.priority_holder
+        scenario.pass_priority(holder)
+        assert scenario.stack_names() == []
+        pool = scenario.player("alice").mana_pool.floating
+        assert pool in ({Color.GREEN: 2}, {}), (
+            f"no further tap happened, so the pool can only still hold the "
+            f"original bonus mana or have emptied at a step boundary - not {pool}"
+        )
+
+
+def test_a_cancelled_payments_tap_does_not_leave_its_trigger_behind():
+    """CR 733.1: "the entire action is reversed and any payments already made
+    are canceled. No abilities trigger and no effects are applied due to any
+    part of the illegal action." `CostPayment.tap_for_mana` queues Utopia
+    Sprawl's CR 106.12a trigger the moment it taps the enchanted Forest
+    (`Game.emit`, straight onto `pending_triggers`); before this fix,
+    `cancel`/`rewind` untapped the Forest and emptied the payment's own pool
+    but never withdrew that queued trigger. A solver that tries a combination
+    including the enchanted land, finds it does not pay some other cost, and
+    cancels - then retries, tapping the same now-untapped land again - used to
+    leave one more stale trigger behind on every cancelled attempt, all of
+    which still resolved and added their bonus mana once a payment finally
+    went through: the reported symptom, mana funded far beyond what was
+    really tapped.
+    """
+    scenario = utopia_board().build()
+    forest = enchant_a_forest(scenario)
+
+    for _ in range(9):
+        payment = CostPayment(cost=ManaCost.parse("{7}"), game=scenario.game, payer="alice")
+        payment.tap_for_mana(forest, [Color.GREEN])
+        assert forest.tapped
+        payment.cancel()
+        assert not forest.tapped, "a cancelled payment must untap what it tapped"
+
+    assert scenario.pending_triggers == [], (
+        "nine cancelled attempts must leave nine fewer queued triggers, not nine more"
+    )
+    scenario.pass_priority("alice")
+    scenario.pass_priority("bob")
+    assert scenario.stack_names() == []
+    assert scenario.player("alice").mana_pool.floating == {}, (
+        "no real tap ever happened, so no bonus mana should exist"
+    )
+
+    # The land is still fully functional: a real, uncancelled tap still
+    # queues and resolves the trigger exactly once.
+    scenario.activate(forest)
+    scenario.pass_priority("alice")
+    scenario.pass_priority("bob")
+    assert scenario.player("alice").mana_pool.floating == {Color.GREEN: 2}
+
+
+def test_rewinding_a_completed_payment_also_withdraws_its_trigger():
+    """The `PAID` half of CR 733.1's reversal (`rewind`, not `cancel`): a cast
+    proposed with the enchanted Forest tapped, then found illegal and rewound
+    after payment finished, must withdraw the trigger the same way a payment
+    cancelled mid-tap does. Giant Growth is a plain {G} instant, so the one
+    tap on the enchanted Forest is enough to finish paying in full.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Utopia Sprawl", "Giant Growth"], battlefield=["Forest", "Forest"])
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    forest = enchant_a_forest(scenario)
+
+    casting = announce(scenario, "Giant Growth")
+    payment = casting.begin_paying()
+    payment.tap_for_mana(forest, [Color.GREEN])
+    payment.pay()
+    assert len(scenario.pending_triggers) == 1
+    casting.cancel()
+
+    assert scenario.pending_triggers == []
+    assert not forest.tapped
+    scenario.pass_priority("alice")
+    scenario.pass_priority("bob")
+    assert scenario.stack_names() == []
+    assert scenario.player("alice").mana_pool.floating == {}
 
 
 # -- static cost-increase effects (CR 601.2f, DDR#978) ----------------------
