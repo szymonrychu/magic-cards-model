@@ -7995,6 +7995,11 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     dalkovan_attack_tokens = _parse_attack_this_turn_create_tapped_attacking_tokens(effect_text)
     if dalkovan_attack_tokens is not None:
         return dalkovan_attack_tokens
+    attacking_tokens_then_sacrifice = _parse_create_tapped_attacking_tokens_then_sacrifice(
+        effect_text
+    )
+    if attacking_tokens_then_sacrifice is not None:
+        return attacking_tokens_then_sacrifice
     mana_adding = _parse_mana_adding_trigger(effect_text)
     if mana_adding is not None:
         return mana_adding
@@ -9312,6 +9317,63 @@ def _merge_each_player_clauses(
     return kept_fragments, effect
 
 
+#: "Choose two target creatures controlled by different players. Return those
+#: creatures to their owners' hands." - Run Away Together, and the "choose N
+#: target ... / do something to those ..." shape generally.
+#:
+#: Two sentences, one CR 608.2c instruction pair. The second sentence has no
+#: "target" word in it at all: "those creatures" is CR 400.7 anaphora back to
+#: whatever the first sentence chose, so neither half is readable alone -
+#: `machines/targeting.py` reads the restriction off the *first* sentence, and
+#: only the second says what happens. The first sentence's whole "N target ..."
+#: phrase is handed to `_targets_understood` exactly as it is printed, count
+#: words included, so the parser here never re-derives the restriction
+#: ("controlled by different players" is `TargetRequirement.distinct_
+#: controllers`, enforced at announcement by CR 601.2c and rechecked at
+#: resolution by CR 608.2b, both in `machines/targeting.py`).
+_CHOOSE_TARGETS_THEN_RETURN_TO_HAND_RE = re.compile(
+    r"^choose (?P<phrase>\w+ target .+?)\.\s*"
+    r"return those \w+ to their owners'? hands\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_choose_targets_then_return_to_hand_pair(text: str) -> Effect | None:
+    """`_CHOOSE_TARGETS_THEN_RETURN_TO_HAND_RE`'s shape - Run Away Together.
+
+    The point of the card, and the reason DDR#995 is about it, is what happens
+    when one of the two chosen creatures is gone by the time the spell
+    resolves. CR 608.2b: "If the spell or ability specifies targets, it checks
+    whether the targets are still legal. A target that's no longer in the zone
+    it was in when it was targeted is illegal ... If all its targets, for every
+    instance of the word 'target,' are now illegal, the spell or ability
+    doesn't resolve." One of two is not all of them, so the spell resolves and
+    the survivor is bounced; `Game.resolve_targets` performs exactly that
+    recheck and simply does not yield the target `legal_target` now rejects,
+    which is what makes the sacrificed creature silently dropped rather than
+    an error. CR 608.3b applies the identical check to an ability of this
+    shape.
+
+    CR 400.3 is why the destination is the *owner's* hand and not the
+    controller's: "If an object would go to any library, graveyard, or hand
+    other than its owner's, it goes to its owner's corresponding zone."
+    `Game.return_to_hand` already obeys it, so "their owners' hands" needs no
+    handling of its own here.
+    """
+    match = _CHOOSE_TARGETS_THEN_RETURN_TO_HAND_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=True):
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        for target in game.resolve_targets(spell):
+            if isinstance(target, CardState):
+                game.return_to_hand(target)
+
+    return effect
+
+
 def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     """The spell-side twin of `_ability_effect_or_notice`, for `effect_for`.
 
@@ -9326,6 +9388,9 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     `LayerNotice` rather than the card doing nothing with no trace.
     """
     whole = _strip_non_effect_preamble(effect_text).strip()
+    choose_then_return = _parse_choose_targets_then_return_to_hand_pair(whole)
+    if choose_then_return is not None:
+        return choose_then_return
     # -- Wave W6's own whole-text additions, contiguous block -------------
     revolt_destroy = _parse_revolt_destroy_or_exile_clause(whole)
     if revolt_destroy is not None:
@@ -11552,6 +11617,97 @@ def _parse_attack_this_turn_create_tapped_attacking_tokens(text: str) -> Ability
                 callback=create_attacking_tokens,
             )
         )
+
+    return effect
+
+
+#: Fire Navy Trebuchet's whole attack trigger, once `machines/abilities.py` has
+#: split the "Whenever you attack," condition off the front: "create a 2/1
+#: colorless Construct artifact creature token with flying named Ballistic
+#: Boulder that's tapped and attacking. Sacrifice that token at the beginning
+#: of the next end step."
+#:
+#: The singular sibling of `_ATTACK_THIS_TURN_TAPPED_ATTACKING_TOKENS_RE`
+#: above, and the differences are all grammar rather than rules:
+#:
+#: - The trigger is an ordinary one on `TriggerEvent.ATTACKS`, not mobilize's
+#:   activated ability that first *creates* a "whenever you attack this turn"
+#:   delayed trigger (CR 603.7a), so the outer `DelayedTrigger` that wrapper
+#:   builds has no counterpart here. Only the inner half - create the tokens,
+#:   then hang a one-shot sacrifice on each - is shared, and it is reused
+#:   verbatim.
+#: - Singular throughout: "a ... token", "that's tapped and attacking",
+#:   "Sacrifice that token". "That token" is CR 400.7 anaphora back to the
+#:   token the sentence before it just created, which is why the two sentences
+#:   are read as one paragraph - the second cannot name its subject alone.
+#: - `named <Name>` sets `TokenDefinition.name` (CR 111.9: a name the creating
+#:   effect states, rather than CR 111.4 deriving one from the subtypes).
+#:
+#: CR 603.7e is what makes the delayed sacrifice the Trebuchet's controller's:
+#: "If an activated or triggered ability creates a delayed triggered ability,
+#: the source of that delayed triggered ability is the same as the source of
+#: that other ability." CR 701.21a is the sacrifice itself - "its controller
+#: moves it from the battlefield directly to its owner's graveyard."
+_ATTACK_TAPPED_ATTACKING_TOKENS_THEN_SACRIFICE_RE = re.compile(
+    rf"^create (?P<n>{_COUNT}) (?P<desc>.+?) \btokens?\b"
+    r"(?:\s+with\s+(?P<tail>.+?))?"
+    r"(?:\s+named (?P<name>.+?))?"
+    r"\s+that(?:'s|’s| is| are) tapped and attacking\.\s*"
+    r"sacrifice (?:that token|them|those tokens) at the beginning of the next end step\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_create_tapped_attacking_tokens_then_sacrifice(text: str) -> AbilityEffect | None:
+    """`_ATTACK_TAPPED_ATTACKING_TOKENS_THEN_SACRIFICE_RE`'s shape - see it for
+    what this reads and why it is one paragraph rather than two clauses.
+
+    Fail-closed on the token descriptor, as every token clause in this file is:
+    a tail `_parse_token_tail` cannot read takes the whole ability down rather
+    than creating a token missing an ability it was printed with (CR 608.2c).
+    """
+    match = _ATTACK_TAPPED_ATTACKING_TOKENS_THEN_SACRIFICE_RE.fullmatch(
+        " ".join(_strip_non_effect_preamble(text).split())
+    )
+    if match is None:
+        return None
+    count = _count(match.group("n"))
+    definition = _parse_generic_token_descriptor(
+        match.group("desc").strip().split(), match.group("tail")
+    )
+    if definition is None:
+        return None
+    if name := match.group("name"):
+        # CR 111.9: the creating effect stated a name, so it is the token's
+        # name rather than CR 111.4's subtype-derived default.
+        definition = definition.model_copy(update={"name": name.strip()})
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.controller_of(ability)
+        source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
+        created = create_tokens(
+            game,
+            definition,
+            controller.username,
+            count,
+            tapped=True,
+            attacking=_defender_of_controllers_attack(game, controller.username),
+        )
+        for token in created:
+            game.create_delayed_trigger(
+                DelayedTrigger(
+                    text="Sacrifice that token at the beginning of the next end step.",
+                    effect="sacrifice",
+                    event=TriggerEvent.BEGINNING_OF_STEP,
+                    step=Step.END_STEP,
+                    controller=controller.username,
+                    source_id=source_id,
+                    source_name=source_name,
+                    subject_id=token.id,
+                    expected_zone=Zone.BATTLEFIELD,
+                    expected_stamp=token.zone_change_stamp,
+                )
+            )
 
     return effect
 
