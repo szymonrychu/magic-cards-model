@@ -35,13 +35,21 @@ def test_a_card_that_works_classifies_as_handled():
 
 
 def test_a_card_with_a_genuine_gap_still_classifies_as_silent():
-    """March of Otherworldly Light's "As an additional cost ..." preamble is
-    two sentences (the exile, then its own cost reduction), and
-    `_ADDITIONAL_COST_LINE_RE` only strips one - a real, currently-unmodeled
-    parser gap, not an X or face problem. Fixing the classifier must never
-    make a genuinely-dead card look alive: this is the control for that.
+    """Blood Artist's "target player loses 1 life and you gain 1 life" is a
+    targeted clause and a player clause back to back - `parse_mixed_effect`
+    still comes back `None` for it, a real, currently-unmodeled parser gap
+    ("target player loses N life" is not one of `_parse_targeted_clause`'s
+    shapes), not an X or face problem. Fixing the classifier must never make
+    a genuinely-dead card look alive: this is the control for that.
+
+    (March of Otherworldly Light used to be this test's example - its own
+    two-sentence additional-cost preamble, "As an additional cost to cast
+    this spell, you may exile ... hand." then "This spell costs {2} less to
+    cast for each card exiled this way.", was a real gap of the identical
+    kind, closed by `_PER_COUNT_COST_REDUCTION_LINE_RE`, so it moved to
+    `HANDLED` and stopped being a valid control for this test.)
     """
-    category, _ = classify_card(card("March of Otherworldly Light"))
+    category, _ = classify_card(card("Blood Artist"))
     assert category == SILENT
 
 

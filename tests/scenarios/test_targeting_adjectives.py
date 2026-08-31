@@ -448,3 +448,66 @@ def test_the_outer_attack_trigger_has_no_target_of_its_own():
     scenario.attack_with(bears)
 
     scenario.choose_trigger_targets("Guide of Souls", [giant])  # not attacking, and not refused
+
+
+# --------------------------------------------------------------------------
+# A colour-*count* adjective - CR 105.2's "multicolored"/"monocolored"/
+# "colorless" - as opposed to `required_colors`' membership check for a
+# specific named colour ("target black or red permanent"). Psychotic Fury's
+# "Target multicolored creature gains double strike until end of turn." used
+# to come back `understood=False` even for the bare "target multicolored
+# creature" phrase alone: `_COLOR_WORDS` correctly does not carry
+# "multicolored" (CR 105.4: "'Multicolored' is not a color"), and nothing
+# else in `machines/targeting.py` read it either, so the card's own
+# announcement could never legally choose a target at all. `TargetRequirement.
+# color_count` and `_Adjectives.color_count` fix this generally, for the
+# whole CR 105.2 family, not for Psychotic Fury by name.
+# --------------------------------------------------------------------------
+
+
+def test_multicolored_is_read_as_two_or_more_colors():
+    """CR 105.2b: "A multicolored object is two or more of the five colors" -
+    verified with `knowledge_search` this session."""
+    profile = profile_for_text("target multicolored creature")
+    assert profile.understood
+    (requirement,) = profile.requirements
+    assert requirement.color_count == "multicolored"
+
+
+def test_a_multicolored_creature_satisfies_psychotic_furys_own_target():
+    """Fiend Artisan is black *and* green - CR 105.2b's two-or-more."""
+    fiend_artisan = card_state("Fiend Artisan", Zone.BATTLEFIELD, controller="alice")
+    requirement = profile_for_text("target multicolored creature").requirements[0]
+    assert requirement.rejects(fiend_artisan, caster="alice") is None
+
+
+def test_a_monocolored_creature_does_not_satisfy_it():
+    """Grizzly Bears is green alone - CR 105.2a's exactly-one, not
+    CR 105.2b's two-or-more."""
+    bears = card_state("Grizzly Bears", Zone.BATTLEFIELD, controller="alice")
+    requirement = profile_for_text("target multicolored creature").requirements[0]
+    assert requirement.rejects(bears, caster="alice") is not None
+
+
+def test_psychotic_fury_grants_double_strike_and_draws_a_card():
+    """The card end to end: Fiend Artisan gains double strike, and Alice
+    draws the card the second sentence promises."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Psychotic Fury"],
+            library=["Forest"],
+            battlefield=["Fiend Artisan", "Mountain", "Mountain"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice = scenario.player("alice")
+    fiend_artisan = scenario.creature("Fiend Artisan", "alice")
+    sources = scenario.untapped_sources("Mountain", "Mountain")
+
+    scenario.cast_and_resolve("Psychotic Fury", *sources, targets=[fiend_artisan])
+
+    assert "Double strike" in scenario.game.characteristics_of(fiend_artisan).abilities
+    assert [state.name for state in alice.hand] == ["Forest"]

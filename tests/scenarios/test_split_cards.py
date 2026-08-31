@@ -72,15 +72,32 @@ def test_casting_the_back_half_destroys_an_enchantment_for_one_white():
     """CR 709.3: choosing Tear reads Tear's own {W} cost and Tear's own
     "target enchantment" restriction - not Wear's {1}{R} or Wear's
     "target artifact".
+
+    Bob needs a creature for Rancor to attach to (CR 303.4a, CR 704.5m: an
+    unattached Aura is put into its owner's graveyard by a state-based
+    action) - without one, Rancor never legally reaches the battlefield at
+    all, and a version of this test that gave bob no creature was passing
+    for the wrong reason: Rancor was already in the graveyard before Tear
+    was ever cast, so the assertion held whether or not Tear's own effect
+    ran. That masked a real bug - `Game._resolution_profile` always read
+    Wear's own front-face "target artifact" restriction at the CR 608.2b
+    recheck, never Tear's, so casting Tear at an enchantment fizzled it
+    (CR 608.2b: every target illegal) instead of destroying anything. Fixed
+    by having `_resolution_profile` read a split card's *chosen* half's own
+    text (`spell.oracle_text`, already face-aware) once `spell.face_played`
+    names one, the same case `Casting.targeting` already special-cases for
+    the announcement-time check.
     """
     scenario = (
         Scenario()
         .player("alice", hand=["Wear // Tear"], battlefield=["Plains"])
-        .player("bob", battlefield=["Rancor"])
+        .player("bob", battlefield=["Grizzly Bears", "Rancor"])
         .build()
     )
     _to_main(scenario)
     rancor = scenario.find("Rancor", Zone.BATTLEFIELD, "bob")
+    bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "bob")
+    rancor.attach_to(bears)
 
     casting = scenario.cast("Wear")
     casting.cast_as_split_half("Tear")
@@ -88,7 +105,8 @@ def test_casting_the_back_half_destroys_an_enchantment_for_one_white():
     payment = casting.begin_paying()
     assert str(payment.cost) == "{W}"
     scenario.pay_with(payment, *scenario.untapped_sources("Plains"))
-    scenario.put_on_stack(casting)
+    spell = scenario.put_on_stack(casting)
+    assert not scenario.game.spell_fizzles(spell), "Tear's own restriction, not Wear's"
     scenario.resolve_top()
 
     assert rancor.zone is Zone.GRAVEYARD

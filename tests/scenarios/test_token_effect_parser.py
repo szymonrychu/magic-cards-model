@@ -265,14 +265,55 @@ def test_hangarback_walkers_full_text_fails_closed_because_of_its_count():
 
 
 def test_repudiates_copy_clause_fails_closed():
-    """Repudiate // Replicate: "Create a token that's a copy of target
-    creature you control." The whole spell is this one sentence, and it names
-    a copy (CR 707.2) this parser explicitly refuses before even trying the
-    noun-phrase regex - not because "target" fails to match (the targeted
-    clause parser is tried first and also does not cover "create"), but
-    because `_parse_token_clause` bails out on "copy of" by name.
+    """`card("Repudiate")` resolves to the *combined* "Repudiate // Replicate"
+    printing (`tests/cards.pool`'s own front-face alias), whose top-level
+    `oracle_text` is blank for a split card (CR 709.3b: only the chosen
+    half's characteristics exist) - `.oracle_text or ""` is `""`, so this is
+    really asserting that empty text parses to nothing, not anything specific
+    about copying. See `test_replicate_creates_a_token_copy_of_the_target`
+    below for the real per-face text, which now reads
+    (`_parse_create_token_copy_of_target_clause`) - `_parse_token_clause`
+    still bails out on any "copy of" phrase by name, unchanged; the new
+    parser is a different function entirely, tried alongside it.
     """
     assert parse_mixed_effect_for_spell(card("Repudiate").oracle_text or "") is None
+
+
+def test_replicate_creates_a_token_copy_of_the_target():
+    """Replicate (the sorcery half): "Create a token that's a copy of target
+    creature you control." CR 707.2: the copy shares the original's copiable
+    values - same name, same power and toughness - but is a fresh object with
+    none of the original's counters or damage.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Repudiate // Replicate"],
+            battlefield=["Grizzly Bears", "Forest", "Forest", "Island"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+
+    casting = scenario.cast("Repudiate")
+    casting.cast_as_split_half("Replicate")
+    casting.choose_targets([bears])
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *scenario.untapped_sources("Forest", "Forest", "Island"))
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    copies = [
+        state
+        for state in scenario.game.permanents_controlled_by("alice")
+        if state.name == "Grizzly Bears" and state is not bears
+    ]
+    assert len(copies) == 1
+    assert copies[0].token
+    assert copies[0].power == 2
+    assert copies[0].toughness == 2
 
 
 # --------------------------------------------------------------------------

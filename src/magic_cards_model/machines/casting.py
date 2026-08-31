@@ -1625,6 +1625,12 @@ class Casting(BaseModel):
                     else {}
                 ),
                 kicked=self.kicked,
+                additional_cost_cards=[
+                    card.id
+                    for extra in self.additional_costs
+                    for component in extra.components
+                    for card in component.cards
+                ],
             )
         return self.spell
 

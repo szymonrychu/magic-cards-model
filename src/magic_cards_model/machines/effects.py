@@ -147,6 +147,29 @@ def deal_damage(amount: int) -> Effect:
     return effect
 
 
+def _deal_damage_equal_to_sacrificed_creature_power(game: "Game", spell: CardState) -> None:
+    """Fling: "deals damage equal to the sacrificed creature's power to any
+    target" (CR 119.3). The creature is long gone from the battlefield by
+    resolution (CR 118.8a's additional cost is paid before the spell is even
+    put on the stack), so its power has to be read off whichever card
+    `Game.cast_record(spell).additional_cost_cards` says paid the additional
+    cost, wherever paying it left that card - `Game.find_by_id` still finds
+    it in the graveyard. A `None`/absent power (no card recorded, or the
+    printed power is `*`, which this engine cannot resolve off a card no
+    longer on the battlefield to compute) deals zero rather than guessing;
+    CR 107.1b already floors damage at not-negative, so a negative printed
+    power (there is no such thing in practice) would floor the same way.
+    """
+    record = game.cast_record(spell)
+    power = 0
+    if record.additional_cost_cards:
+        sacrificed = game.find_by_id(record.additional_cost_cards[0])
+        if sacrificed is not None and sacrificed.power is not None:
+            power = max(sacrificed.power, 0)
+    for target in game.resolve_targets(spell):
+        game.deal_damage(target, power, source=spell)
+
+
 def gain_life(amount: int) -> Effect:
     """The spell's controller gains `amount` life (CR 118.3)."""
 
@@ -1924,6 +1947,47 @@ def _parse_search_clause(clause: str, *, for_spell: bool) -> TargetedClause | No
     return _build_search_clause(match, for_spell=for_spell)
 
 
+#: Beseech the Queen's own shape: "Search your library for a card with mana
+#: value less than or equal to <the number of lands you control>, reveal it,
+#: put it into your hand, then shuffle." `_SEARCH_AND_PUT_RE`'s own `max_mv`
+#: group is `\d+` only - a literal printed digit, Ranger-Captain of Eos's
+#: "mana value 1 or less" - so a search bounded by a live board count instead
+#: never matches it and the whole clause was falling through to nothing. CR
+#: 701.23a/701.23b: still a plain search with a stated quality (failing to
+#: find remains legal); CR 701.24a/701.24b: `_search_library` already folds
+#: the shuffle in. No quality beyond the mana-value ceiling is printed ("a
+#: card", not "a creature card"), so `_quality_matcher` plays no part here.
+_SEARCH_MV_LTE_COUNT_RE = re.compile(
+    r"^search (?:your|their) library for a card with mana value less than or "
+    r"equal to (?P<expr>.+?), reveal it, put it into your hand, then shuffle\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_search_mv_lte_count_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_SEARCH_MV_LTE_COUNT_RE`'s shape, or `None` if this is not it."""
+    match = _SEARCH_MV_LTE_COUNT_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    counter = count_expression(match.group("expr"))
+    if counter is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object)
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        ceiling = counter(game, controller.username)
+
+        def matches(state: CardState) -> bool:
+            return state.mana_value <= ceiling
+
+        found = _search_library(game, controller, matches, source=source)
+        if found is not None:
+            controller.add(found, Zone.HAND)
+
+    return effect
+
+
 def parse_search_and_put_effect(text: str) -> AbilityEffect | None:
     """Recognise a plain library search off the ability's own printed text,
     instead of a per-card table entry - see `_SEARCH_AND_PUT_RE`.
@@ -2235,6 +2299,20 @@ _CANT_BE_COUNTERED_LINE_RE = re.compile(
 #: safe wherever it matches.
 _REMINDER_LINE_RE = re.compile(r"^[ \t]*\([^()]*\)[ \t]*\n+", re.MULTILINE)
 
+#: Reminder text that sits mid-sentence rather than on its own line
+#: (`_REMINDER_LINE_RE`'s shape) or at the very end of the whole text
+#: (`split_effect_clauses`'s own trailing strip) - Opt's "Scry 1. (Look at
+#: the top card of your library. You may put that card on the bottom.)\nDraw
+#: a card." prints its reminder text right after the first clause's period,
+#: mid-line. Left alone, the periods *inside* the parenthetical get read by
+#: `_CLAUSE_SEPARATOR` as clause boundaries of their own, producing
+#: unparseable fragments ("(Look at the top card of your library", "You may
+#: put that card on the bottom.)") that took the whole spell down to no
+#: effect (CR 608.2c's fail-closed-per-clause-run has no notion of a clause
+#: that is really reminder text wearing a period). CR 207.2a: reminder text
+#: is never rules text wherever it sits, so stripping it anywhere is safe.
+_INLINE_REMINDER_RE = re.compile(r"[ \t]*\([^()]*\)")
+
 #: Suspend's own line (CR 702.62a: "Suspend is a keyword that represents three
 #: abilities" - none of them the spell's own CR 608.2c resolution instruction,
 #: which is why Living End's "Suspend 3—{2}{B}{B}" has to come off before its
@@ -2251,6 +2329,24 @@ _SUSPEND_LINE_RE = re.compile(r"^Suspend \d+—[^\n]+\n+", re.MULTILINE | re.IGN
 #: garbage around it. General to the keyword, not to Violent Outburst: any
 #: card pairing bare "Cascade" with its own resolution text hits the same bug.
 _CASCADE_LINE_RE = re.compile(r"^Cascade(?:\s*\([^()]*\))?[ \t]*\n+", re.MULTILINE | re.IGNORECASE)
+
+#: Kicker's own line (CR 702.33a: "a static ability that functions while the
+#: spell with kicker is on the stack", never itself a CR 608.2c resolution
+#: instruction), reminder text and all - Burst Lightning prints "Kicker {4}
+#: (...)" ahead of its own "deals 2 damage to any target. If this spell was
+#: kicked, it deals 4 damage instead.", the same leading shape
+#: `_SUSPEND_LINE_RE`/`_CASCADE_LINE_RE` already strip theirs from. Left
+#: unstripped, `split_effect_clauses` reads "Kicker {4}" as an unreadable
+#: clause of its own and `_parse_mixed_clauses`'s fail-closed-per-clause rule
+#: takes the whole damage sentence down with it - the same bug already fixed
+#: for Suspend, Cascade, Replicate, Cycling, Flashback, and Harmonize's own
+#: lines. Paying kicker (`Casting.pay_kicker`) and reading whether it was
+#: paid (`Game.cast_record(spell).kicked`, CR 702.33d) are both already built
+#: elsewhere; only this line's poisoning effect on an unrelated sentence is
+#: fixed here.
+_KICKER_LINE_RE = re.compile(
+    r"^Kicker [^\n(]+(?:\([^()]*\))?[ \t]*\n+", re.MULTILINE | re.IGNORECASE
+)
 
 #: Replicate's own line (CR 702.56a), reminder text and all - Consign to
 #: Memory prints "Replicate {1} (...)" ahead of its own "Counter target
@@ -2289,6 +2385,32 @@ _REBOUND_LINE_RE = re.compile(
 #: documents for those three lines.
 _CYCLING_LINE_RE = re.compile(
     r"[ \t]*\n?[ \t]*Cycling [^\n(]+(?:\([^()]*\))?[ \t]*\n?", re.MULTILINE | re.IGNORECASE
+)
+
+#: Flashback's own line (CR 702.34a - "two static abilities: one that
+#: functions while the card is in a player's graveyard and another that
+#: functions while the card is on the stack", neither a CR 608.2c resolution
+#: instruction), reminder text and all - Faithless Looting prints "Flashback
+#: {2}{R} (...)" on its own line *after* its one resolution sentence, exactly
+#: the trailing shape `_CYCLING_LINE_RE`'s own docstring already describes.
+#: Left unstripped, `split_effect_clauses` reads "Flashback {2}{R}" as a
+#: second, unreadable clause of the same effect and `_parse_mixed_clauses`'s
+#: fail-closed-per-clause rule takes "Draw two cards, then discard two
+#: cards." down with it - the same bug already fixed for Suspend, Cascade,
+#: Replicate, Cycling, and Harmonize's own lines. **Anchored on a mana cost
+#: immediately after the word**, unlike `_CYCLING_LINE_RE`'s bare `[^\n(]+`:
+#: the "Flashback" spell (distinct from the keyword) prints "... gains
+#: flashback until end of turn" as ordinary prose with no cost symbol
+#: following it, and an unanchored copy of `_CYCLING_LINE_RE`'s shape ate
+#: that whole sentence and everything after it as if it were this line -
+#: found and fixed in the same session this regex was added, by testing the
+#: "Flashback" spell itself. Flashback the *keyword* - actually casting the
+#: card from the graveyard - is built separately in `machines/casting.py`
+#: (`keyword_cast_options`/`ADDITIONAL_COST_KEYWORDS` territory); only this
+#: line's poisoning effect on an unrelated sentence is fixed here.
+_FLASHBACK_LINE_RE = re.compile(
+    r"[ \t]*\n?[ \t]*Flashback (?:\{[^{}]+\})+[ \t]*(?:\([^()]*\))?[ \t]*\n?",
+    re.MULTILINE | re.IGNORECASE,
 )
 
 #: Harmonize's own line (CR 702.180/702.180a - "three static abilities: one
@@ -2338,6 +2460,23 @@ _SELF_COST_REDUCTION_LINE_RE = re.compile(
     r"^This spell costs \{\d+\} less to cast if [^.]+\.\s*", re.IGNORECASE | re.MULTILINE
 )
 
+#: The other self-discount template, tied to an additional cost rather than a
+#: condition - March of Otherworldly Light's "This spell costs {2} less to
+#: cast for each card exiled this way." (following its own "As an additional
+#: cost to cast this spell, you may exile any number of white cards from your
+#: hand." sentence, which `_ADDITIONAL_COST_LINE_RE` already strips). Left
+#: unstripped, `split_effect_clauses` reads it as a clause of its own that no
+#: shape in this file matches, taking "Exile target artifact, creature, or
+#: enchantment with mana value X or less." down with it - the same
+#: preamble-poisoning bug `_SELF_COST_REDUCTION_LINE_RE` already fixes for
+#: the conditional discount shape. The discount itself is not computed
+#: anywhere in this engine (CR 118.8a's additional cost and CR 601.2f's cost
+#: reduction are both about *paying*, not resolving) - only this line's
+#: effect on an unrelated resolution sentence is fixed here.
+_PER_COUNT_COST_REDUCTION_LINE_RE = re.compile(
+    r"^This spell costs \{\d+\} less to cast for each [^.]+\.\s*", re.IGNORECASE | re.MULTILINE
+)
+
 #: Fuse's own line (CR 702.102a), reminder text and all - Wear // Tear prints
 #: "Fuse (You may cast one or both halves of this card from your hand.)"
 #: *after* each half's own resolution sentence, the same trailing position
@@ -2356,14 +2495,18 @@ def _strip_non_effect_preamble(text: str) -> str:
     text = _CANT_BE_COUNTERED_LINE_RE.sub("", text)
     text = _SUSPEND_LINE_RE.sub("", text)
     text = _CASCADE_LINE_RE.sub("", text)
+    text = _KICKER_LINE_RE.sub("", text)
     text = _REPLICATE_LINE_RE.sub("", text)
     text = _CYCLING_LINE_RE.sub("", text)
+    text = _FLASHBACK_LINE_RE.sub("", text)
     text = _HARMONIZE_LINE_RE.sub("", text)
     text = _PITCH_ALTERNATIVE_COST_LINE_RE.sub("", text)
     text = _SELF_COST_REDUCTION_LINE_RE.sub("", text)
+    text = _PER_COUNT_COST_REDUCTION_LINE_RE.sub("", text)
     text = _REBOUND_LINE_RE.sub("", text)
     text = _FUSE_LINE_RE.sub("", text)
     text = _REMINDER_LINE_RE.sub("", text)
+    text = _INLINE_REMINDER_RE.sub("", text)
     return text
 
 
@@ -2871,6 +3014,60 @@ def _parse_whole_text_token_clause(text: str) -> AbilityEffect | None:
 #: to the end of the clause, count words and all - `_targets_understood`
 #: needs the count word, if any, to see "up to two" and refuse it.
 _DESTROY_TARGET_RE = re.compile(r"destroy (?P<phrase>(?:any target|.*target.+))", re.IGNORECASE)
+#: "Destroy target X and target Y." (Fumarole's "Destroy target creature and
+#: target land.") - two independent, simultaneously-chosen targets in one
+#: sentence, not two clauses. `_CLAUSE_SEPARATOR`'s bare-"and" split cuts this
+#: into "Destroy target creature" and "target land" - a fragment with no verb
+#: nothing here reads - the same "and" trap `_parse_x_damage_divided_and_
+#: doubled_clause` and `_parse_look_top_n_may_battlefield_creature_bonus_
+#: clause` already route around by reading their own sentence whole, ahead of
+#: `split_effect_clauses`. `machines/targeting.py`'s own `profile_for_text`
+#: already reads "target creature and target land" as two `TargetRequirement`s
+#: (verified this session), so once the whole phrase reaches
+#: `_targets_understood` intact, `destroy_ability_targets` - already built to
+#: destroy *every* target a spell or ability still legally has, not just the
+#: first - needs nothing new.
+_DESTROY_TWO_TARGETS_RE = re.compile(
+    r"^destroy (?P<phrase>target [^.]+? and target [^.]+?)\.?$", re.IGNORECASE
+)
+
+
+def _parse_destroy_two_targets_clause(effect_text: str) -> Effect | None:
+    """`_DESTROY_TWO_TARGETS_RE`'s shape, or `None` if this is not it.
+
+    `_targets_understood` deliberately refuses a phrase with more than one
+    "target" requirement (its own docstring: "two 'target' words is two
+    requirements, not this shape") - right for every single-target verb
+    clause elsewhere in this file, wrong here, where two requirements is
+    exactly the point. This repeats `_targets_understood`'s own per-
+    requirement checks (understood, no unenforced "if", battlefield-only, a
+    plain mandatory single target, not a player) across *both*
+    requirements instead of refusing on sight of the second one.
+    """
+    whole = _strip_non_effect_preamble(effect_text).strip()
+    match = _DESTROY_TWO_TARGETS_RE.fullmatch(whole)
+    if match is None:
+        return None
+    phrase = match.group("phrase")
+    if _TRAILING_DURATION_RE.search(phrase):
+        return None
+    profile = profile_for_text(phrase)
+    if not profile.understood or len(profile.requirements) != 2:
+        return None
+    for requirement in profile.requirements:
+        if _UNENFORCED_CONDITIONAL_RE.search(requirement.phrase) and (
+            requirement.comparison_attribute is None
+        ):
+            return None
+        if requirement.zones != frozenset({Zone.BATTLEFIELD}):
+            return None
+        if requirement.allows_players or requirement.unbounded:
+            return None
+        if requirement.minimum != 1 or requirement.maximum != 1:
+            return None
+    return destroy_ability_targets  # type: ignore[return-value]
+
+
 #: "Exile target player's graveyard." (Bojuka Bog, Tormod's Crypt) - checked
 #: ahead of `_EXILE_TARGET_RE` below, which would otherwise match the same
 #: text (its `.*target.+` phrase is a superset), read `_targets_understood`
@@ -3079,6 +3276,21 @@ _COUNTER_TARGET_ABILITY_OR_SPELL_RE = re.compile(
     rf"(?:{_SPELL_QUALIFIER_WORD} )?spell\.?$",
     re.IGNORECASE,
 )
+#: "Counter target activated or triggered ability." (Repudiate) - CR 113.9's
+#: plain ability-only shape, with no "or spell" tail at all (unlike
+#: `_COUNTER_TARGET_ABILITY_OR_SPELL_RE`'s Consign to Memory/Cryptic Command
+#: compound). `resolve_target`/`legal_target` already resolve a `TargetRef`
+#: against an `AbilityOnStack` via `Game.find_ability_by_id` when
+#: `find_by_id` finds no card (Tishana's Tidebinder is what built that path),
+#: and `Game.counter` already accepts either kind of `StackObject`
+#: (CR 113.9) - so `counter_targets` needs nothing new, only this regex to
+#: reach it, the same way `_COUNTER_TARGET_ABILITY_OR_SPELL_RE` already does
+#: for the compound shape.
+_COUNTER_TARGET_ABILITY_RE = re.compile(
+    r"^counter target (?:activated or triggered |activated |triggered )?"
+    r"abilit(?:y|ies)\.?$",
+    re.IGNORECASE,
+)
 _RETURN_TARGET_RE = re.compile(
     r"return (?P<phrase>.*target.+?) to its owner'?s hand", re.IGNORECASE
 )
@@ -3113,6 +3325,51 @@ _TAP_UNTAP_TARGET_RE = re.compile(r"(?P<verb>tap|untap) (?P<phrase>.*target.+)",
 _DAMAGE_TARGET_RE = re.compile(
     rf".*\bdeals? (?P<n>{_COUNT}) damage to (?P<phrase>any target|.*target.+)", re.IGNORECASE
 )
+#: Fling: "<Source> deals damage equal to the sacrificed creature's power to
+#: any target." An additional-cost-bound amount, not `_DAMAGE_TARGET_RE`'s
+#: literal number - `_COUNT` never matches the word "equal", so this needs
+#: its own regex and its own resolution-time read of `Game.cast_record`'s
+#: `additional_cost_cards` (CR 118.8a's "sacrifice a creature" additional
+#: cost, CR 601.2h's payment already ran by the time this clause resolves).
+_DAMAGE_EQUAL_TO_SACRIFICED_CREATURE_POWER_RE = re.compile(
+    r"^.*\bdeals? damage equal to the sacrificed creature'?s power to "
+    r"(?P<phrase>any target|.*target.+)\.?$",
+    re.IGNORECASE,
+)
+#: Burst Lightning: "<Source> deals N damage to any target. If this spell was
+#: kicked, it deals M damage instead." CR 702.33a/d's kicker, read at
+#: resolution off `Game.cast_record(spell).kicked` the same way
+#: `_parse_x_life_mass_debuff` already reads its own additional-cost X - two
+#: sentences read whole (ahead of `parse_mixed_effect_for_spell`, which would
+#: otherwise split the second one off and find no clause shape for it,
+#: refusing the *first* sentence's plain damage along with it).
+_DAMAGE_TARGET_KICKED_INSTEAD_RE = re.compile(
+    r"^.*\bdeals? (?P<n>\d+) damage to (?P<phrase>any target|.*target.+?)\.\s*"
+    r"if this spell was kicked, it deals (?P<kicked_n>\d+) damage instead\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_damage_target_kicked_instead_clause(effect_text: str) -> Effect | None:
+    """`_DAMAGE_TARGET_KICKED_INSTEAD_RE`'s shape, or `None` if this is not it."""
+    whole = _strip_non_effect_preamble(effect_text).strip()
+    match = _DAMAGE_TARGET_KICKED_INSTEAD_RE.fullmatch(whole)
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), allow_player_targets=True):
+        return None
+    base = int(match.group("n"))
+    kicked_amount = int(match.group("kicked_n"))
+
+    def effect(game: "Game", spell: CardState) -> None:
+        record = game.cast_record(spell)
+        amount = kicked_amount if record.kicked > 0 else base
+        for target in game.resolve_targets(spell):
+            game.deal_damage(target, amount, source=spell)
+
+    return effect
+
+
 #: "Put N +1/+1 (or -1/-1) counters on target X." and Anafenza's "on
 #: *another* target tapped creature you control" - the same reasoning as
 #: `_TAP_UNTAP_TARGET_RE`. `kind` is any single lowercase word, not only the
@@ -3125,6 +3382,44 @@ _COUNTER_TARGET_RE = re.compile(
     rf"put (?P<n>{_COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on (?P<phrase>.*target.+)",
     re.IGNORECASE,
 )
+#: Swallow Whole: "Put a +1/+1 counter on the creature tapped to pay this
+#: spell's additional cost." Not a target of this sentence at all (CR 118.8a:
+#: the additional cost - "tap an untapped creature you control" - was chosen
+#: and paid before the spell was even put on the stack, CR 601.2h), so
+#: `_COUNTER_TARGET_RE`'s "target ..." shape does not match and should not:
+#: this reads the same `Game.cast_record(spell).additional_cost_cards`
+#: `_deal_damage_equal_to_sacrificed_creature_power` already reads for Fling.
+#: The creature stays on the battlefield (only tapped, not sacrificed), so
+#: `CardState.add_counters` reaches it directly with no zone lookup needed.
+_COUNTER_ON_ADDITIONAL_COST_CARD_RE = re.compile(
+    rf"^put (?P<n>{_COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on the "
+    r"(?:creature|permanent|card) (?:tapped|sacrificed|exiled|discarded) to pay "
+    r"this spell'?s additional cost\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_counter_on_additional_cost_card_clause(clause: str) -> TargetedClause | None:
+    """`_COUNTER_ON_ADDITIONAL_COST_CARD_RE`'s shape, or `None` if not it."""
+    match = _COUNTER_ON_ADDITIONAL_COST_CARD_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    amount = _count(match.group("n"))
+    if amount is None:
+        return None
+    kind = _counter_kind(match.group("kind"))
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        record = game.cast_record(stack_object)
+        if not record.additional_cost_cards:
+            return
+        card_state = game.find_by_id(record.additional_cost_cards[0])
+        if card_state is not None:
+            card_state.add_counters(kind, amount)
+
+    return effect
+
+
 #: "<Source> deals N damage divided as you choose among one or two targets."
 #: (Electrolyze) - CR 601.2d's division, read by `deal_divided_damage`, which
 #: already does its own count-agnostic split at resolution rather than
@@ -3380,8 +3675,18 @@ _GAIN_LIFE_EQUAL_TO_DAMAGE_PREVENTED_RE = re.compile(
 #: to `create_continuous_effect`, which reads the card's real text through
 #: `machines/layers.py`'s `parsed_layer_effects` rather than anything
 #: hard-coded to these two shapes.
+#: Psychotic Fury's own qualifier, "Target **multicolored** creature gains
+#: double strike until end of turn." - an adjective sitting between "target"
+#: and "creature" the way `_SPELL_QUALIFIER_WORD` already lets a counterspell
+#: qualify "spell". `machines/targeting.py`'s `profile_for_text` already
+#: reads "target multicolored creature" as a legal, colour-restricted
+#: requirement at announcement (CR 601.2c) - this regex only recognises which
+#: *shape* of resolution clause the text is, so widening it to admit one
+#: qualifying word costs nothing: `create_continuous_effect` still gets its
+#: targets from `Game.resolve_card_targets`, the already-validated
+#: announcement, never from this match.
 _CONTINUOUS_PUMP_OR_KEYWORD_RE = re.compile(
-    r"^target creature (?:gets [+-]\d+/[+-]\d+|gains [a-z ]+) until end of turn\.?$",
+    r"^target (?:[a-z]+ )?creature (?:gets [+-]\d+/[+-]\d+|gains [a-z ]+) until end of turn\.?$",
     re.IGNORECASE,
 )
 
@@ -3552,8 +3857,10 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
         # index rather than a clause shape.
         return create_continuous_effect  # type: ignore[return-value]
 
-    if _COUNTER_TARGET_SPELL_RE.fullmatch(clause) or _COUNTER_TARGET_ABILITY_OR_SPELL_RE.fullmatch(
-        clause
+    if (
+        _COUNTER_TARGET_SPELL_RE.fullmatch(clause)
+        or _COUNTER_TARGET_ABILITY_OR_SPELL_RE.fullmatch(clause)
+        or _COUNTER_TARGET_ABILITY_RE.fullmatch(clause)
     ):
         # `counter_targets` walks the stack for a targeted spell (CR 608.2b)
         # and is only meaningful for a resolving *spell* - an ability naming
@@ -3631,6 +3938,11 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
         amount = _count(match.group("n"))
         kind = _counter_kind(match.group("kind"))
         return put_counters_on_ability_targets(kind, amount)
+
+    if for_spell and (match := _DAMAGE_EQUAL_TO_SACRIFICED_CREATURE_POWER_RE.fullmatch(clause)):
+        if not _targets_understood(match.group("phrase"), allow_player_targets=True):
+            return None
+        return _deal_damage_equal_to_sacrificed_creature_power
 
     if match := _DAMAGE_TARGET_RE.fullmatch(clause):
         # Damage never goes count-agnostic: multiple targets divide a damage
@@ -4366,6 +4678,89 @@ class AnaphoricClauseNotice(BaseModel):
     source_name: str
     text: str
     """The unreadable second sentence itself, as printed."""
+
+
+#: Craterous Stomp's own shape: "<Name> deals N damage to target creature an
+#: opponent controls. Each other creature that player controls becomes a
+#: `<type>` in addition to its other types and gains \"`<ability text>`.\""
+#: `_ANAPHORIC_SUBJECT_RE`/`_unreadable_anaphoric_clause` only recognise "that
+#: player"/"its controller" as the *whole* subject of the second sentence
+#: (Solitude's "That creature's controller gains life...") - here the
+#: back-reference sits mid-clause ("each other creature *that player*
+#: controls"), CR 400.7's same anaphora in a shape neither regex reads, so
+#: the pair never even reached the notice path and the whole two-sentence
+#: instruction (damage included) was silently doing nothing. Read whole,
+#: ahead of `parse_mixed_effect_for_spell`: recognising the templated shape
+#: is enough to record a proper `AnaphoricClauseNotice` instead. Building the
+#: effect for real needs two things this engine does not have anywhere else -
+#: a *group* continuous type-and-ability grant fixed off an anaphoric
+#: referent's controller (CR 611.2c), and blocking-restriction enforcement
+#: for a granted "can't block `<creature type>`" ability
+#: (`machines/combat.py` only reads a printed attacker-side "can't be
+#: blocked by ..." restriction today, see `test_evasion_restrictions.py`) -
+#: so this fails the whole paragraph closed (CR 608.2c: no notion of running
+#: half an instruction; the damage does not fire either) rather than
+#: half-execute the damage alone. See `docs/engine-coverage.md`.
+_DAMAGE_THEN_GROUP_TYPE_ABILITY_GRANT_RE = re.compile(
+    r"^.*\bdeals? \d+ damage to target creature an opponent controls\.\s*"
+    r"each other creature that player controls becomes an? [a-z]+ in addition to its "
+    r'other types and gains "[^"]+\."\.?$',
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+#: "Flashback" (the spell, not the keyword): "Target instant or sorcery card
+#: in your graveyard gains flashback until end of turn. The flashback cost
+#: is equal to its mana cost." CR 702.34a's keyword is two static abilities
+#: this engine builds nothing for as a *granted* ability - `machines/casting.
+#: keyword_cast_options`/`_keyword` only ever read a keyword printed on the
+#: `Card` itself, never one a resolving spell handed out at runtime, and
+#: `Card` is deliberately immutable (see this module's own header comment on
+#: `docs/` conventions) so there is nowhere on the object to stamp a granted
+#: keyword even if `keyword_cast_options` did look for one.
+#:
+#: The *observable* effect is close enough to CR 601.3's ordinary "you may
+#: cast/play [that card] this turn" permission - which **is** built, as
+#: `machines/casting.PlayPermission`/`Game.grant_play_permission` - that this
+#: reuses it rather than the keyword machinery: `zone=Zone.GRAVEYARD` lets
+#: the permission reach a card that never left the graveyard,
+#: `pays_mana_cost=True` matches "the flashback cost is equal to its mana
+#: cost" exactly. **One real gap stays open**: CR 702.34a's "then exile it
+#: instead of putting it anywhere else" only fires off `CastRecord.keyword ==
+#: "flashback"` (`machines/casting.py`'s own exile-replacement check), which
+#: a `PlayPermission`-driven cast never sets - the card resolves and goes to
+#: its owner's graveyard the ordinary way rather than being exiled. Recorded
+#: here rather than silently guessed away; see `docs/engine-coverage.md`.
+_GRANT_FLASHBACK_RE = re.compile(
+    r"^(?P<phrase>target instant or sorcery card in your graveyard) gains flashback "
+    r"until end of turn\.\s*the flashback cost is equal to its mana cost\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_grant_flashback_clause(effect_text: str) -> Effect | None:
+    """`_GRANT_FLASHBACK_RE`'s shape, or `None` if this is not it."""
+    match = _GRANT_FLASHBACK_RE.fullmatch(effect_text.strip())
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), battlefield_only=False):
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell)
+        for target in game.resolve_targets(spell):
+            if isinstance(target, CardState) and target.zone is Zone.GRAVEYARD:
+                game.grant_play_permission(
+                    target,
+                    controller.username,
+                    action=PlayAction.CAST,
+                    pays_mana_cost=True,
+                    source_name=spell.name,
+                    zone=Zone.GRAVEYARD,
+                    rule="CR 601.3",
+                )
+
+    return effect
 
 
 def _unreadable_anaphoric_clause(text: str, *, for_spell: bool) -> str | None:
@@ -5799,6 +6194,22 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     x_divided_damage_doubled = _parse_x_damage_divided_and_doubled_clause(effect_text)
     if x_divided_damage_doubled is not None:
         return x_divided_damage_doubled
+    damage_target_kicked_instead = _parse_damage_target_kicked_instead_clause(effect_text)
+    if damage_target_kicked_instead is not None:
+        return damage_target_kicked_instead
+    destroy_two_targets = _parse_destroy_two_targets_clause(effect_text)
+    if destroy_two_targets is not None:
+        return destroy_two_targets
+    if _CONTROL_REPLACEMENT_RE.fullmatch(whole):
+
+        def control_replacement_notice_only(game: "Game", spell: CardState) -> None:
+            game.control_replacement_notices.append(
+                ControlReplacementNotice(
+                    source_id=spell.id, source_name=spell.card.name, text=whole
+                )
+            )
+
+        return control_replacement_notice_only
     bottom_hand_then_draw = _parse_bottom_hand_then_draw_plus_one_clause(effect_text)
     if bottom_hand_then_draw is not None:
         return bottom_hand_then_draw
@@ -5824,6 +6235,17 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
             )
 
         return suspend_redirect_notice_only
+    flashback_grant = _parse_grant_flashback_clause(whole)
+    if flashback_grant is not None:
+        return flashback_grant
+    if _DAMAGE_THEN_GROUP_TYPE_ABILITY_GRANT_RE.fullmatch(whole):
+
+        def damage_then_group_grant_notice_only(game: "Game", spell: CardState) -> None:
+            game.anaphoric_clause_notices.append(
+                AnaphoricClauseNotice(source_id=spell.id, source_name=spell.card.name, text=whole)
+            )
+
+        return damage_then_group_grant_notice_only
     parsed = parse_mixed_effect_for_spell(effect_text)
     if parsed is not None:
         return parsed
@@ -7714,6 +8136,21 @@ def _look_at_top_card(game: "Game", stack_object: "StackObject") -> None:
     game.resolve_targets(stack_object)
 
 
+#: "Look at target player's hand." (Gitaxian Probe) - the same CR 701.20e
+#: no-op as `_LOOK_AT_TOP_CARD_RE`, except the thing looked at is a player's
+#: hand rather than a library's top card, so `machines/targeting.py` reads
+#: "target player's hand" as targeting the *player* (its own module-level
+#: docstring lists this exact phrase as one it reads that way).
+_LOOK_AT_TARGET_HAND_RE = re.compile(r"^look at target player'?s hand$", re.IGNORECASE)
+
+
+def _look_at_target_hand(game: "Game", stack_object: "StackObject") -> None:
+    """No-op (CR 701.20e) - see `_look_at_top_card`. Still resolves the
+    target so a player who has left the game by resolution is refused the
+    ordinary way (CR 608.2b)."""
+    game.resolve_targets(stack_object)
+
+
 #: "return that card/it/that creature/that permanent to the battlefield under
 #: its/their owner's control" - the blink idiom (Phelia, Blizzard Strix, Angel
 #: of Condemnation, Astral Drift all print it verbatim).
@@ -8279,6 +8716,41 @@ class DelayedClauseNotice(BaseModel):
     text: str
 
 
+class ControlReplacementNotice(BaseModel):
+    """A resolving spell's own "if [a permanent] would enter the battlefield
+    under [a player]'s control [this turn], it enters under [another
+    player]'s control instead" (CR 614.1a's `IF_WOULD_INSTEAD` shape,
+    `machines/replacement.py`'s own `ReplacementKind.IF_WOULD_INSTEAD`) -
+    recognised by shape, but not built.
+
+    Two things this engine has nowhere to put, not one: `ReplaceableEvent`
+    (`machines/replacement.py`) has no field a replacement could set to
+    redirect an entering permanent's controller - `Game.put_onto_battlefield`
+    sets `card_state.controller` *before* `apply_replacements` runs and never
+    reconsiders it - and `machines/replacement.py`'s own `parse_replacement_
+    effects` only ever reads a *permanent's own printed* static ability text;
+    nothing here represents a temporary, "this turn"-scoped replacement rule
+    conjured by a resolving instant or sorcery and watching every future
+    zone change rather than one printed source. Gather Specimens needs both.
+    Recorded rather than silently dropped, the same "unreadable is not the
+    same as no effect" convention every other notice class here keeps.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    source_id: UUID | None
+    source_name: str
+    text: str
+
+
+#: Gather Specimens' own templated shape - see `ControlReplacementNotice`.
+_CONTROL_REPLACEMENT_RE = re.compile(
+    r"^if a? ?[a-z]+ would enter the battlefield under an? [a-z' ]+'?s control"
+    r"(?: this turn)?, it enters under [a-z' ]+ control instead\.?$",
+    re.IGNORECASE,
+)
+
+
 def _unreadable_delayed_clause(text: str, *, for_spell: bool) -> str | None:
     """The first clause of `text` that names one of `_DELAYED_TIMING_STEPS`'s
     phrases, if `_prepare_effect_clauses` can split it out at all - used only
@@ -8811,6 +9283,41 @@ def _parse_add_mana_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
     return effect
 
 
+#: Replicate (the sorcery half of Repudiate // Replicate): "Create a token
+#: that's a copy of target creature you control." (CR 707.2, CR 111.13's
+#: "created" token, not CR 111.13's exempt copy-of-a-spell). Deliberately not
+#: `_parse_token_clause`'s job - that parser bails out on any "copy of"
+#: phrase by name (see `test_repudiates_copy_clause_fails_closed`, which
+#: checks the *combined* split-card printing's blank top-level text and stays
+#: true either way) because it has no target-resolution step at all; this one
+#: does, reusing `token_copy_of` the same way `_parse_city_blessing_token_
+#: copy_clause` below reuses it for Ocelot Pride's anaphoric "it" instead of
+#: a real target.
+_CREATE_TOKEN_COPY_OF_TARGET_RE = re.compile(
+    r"^create a token that'?s a copy of (?P<phrase>target creature you control)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_create_token_copy_of_target_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_CREATE_TOKEN_COPY_OF_TARGET_RE`'s shape, or `None` if this is not it."""
+    match = _CREATE_TOKEN_COPY_OF_TARGET_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase")):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object)
+        for target in game.resolve_targets(stack_object):
+            if isinstance(target, CardState):
+                token_copy_of(game, target, controller.username)
+
+    return effect
+
+
 #: Ocelot Pride: "Then if you have the city's blessing, for each token you
 #: control that entered this turn, create a token that's a copy of it."
 #: Templated (CR 702.131 - *ascend* and the city's blessing are both reminder
@@ -9210,6 +9717,38 @@ def _parse_target_player_discards_clause(clause: str, *, for_spell: bool) -> Tar
     return effect
 
 
+#: "Target player draws N cards." (Ancestral Vision) - CR 121.1's plain draw,
+#: aimed at a chosen player rather than the caster (`_DRAW_RE`'s "you" or
+#: implicit-"you" shapes never reach a resolving *target*). The same
+#: sentence shape as `_TARGET_PLAYER_DISCARDS_RE`, one CR 701.9a verb swapped
+#: for CR 121.1's.
+_TARGET_PLAYER_DRAWS_RE = re.compile(
+    r"^target player draws "
+    r"(?P<count>a|an|one|two|three|four|five|six|seven|eight|nine|ten|\d+) cards?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_target_player_draws_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_TARGET_PLAYER_DRAWS_RE`'s shape, or `None` if this is not it."""
+    match = _TARGET_PLAYER_DRAWS_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    if not _targets_understood("target player", allow_player_targets=True):
+        return None
+    count_text = match.group("count").lower()
+    count = _NUMBER_WORDS.get(count_text)
+    if count is None:
+        count = int(count_text)
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        for target in game.resolve_targets(stack_object):
+            if isinstance(target, Player):
+                game.draw_cards(target.username, count)
+
+    return effect
+
+
 #: "then exile that player's graveyard" - Go Blank's own second clause,
 #: anaphoric to the same target its first clause (`_TARGET_PLAYER_DISCARDS_RE`)
 #: already discarded into that graveyard. Reuses `exile_target_players_
@@ -9460,6 +9999,103 @@ def _merge_look_top_split_hand_graveyard_clauses(
             player.add(state, Zone.GRAVEYARD)
 
     return 3, effect
+
+
+#: Expressive Iteration's own second sentence, split by `_CLAUSE_SEPARATOR`'s
+#: single "and" into two raw clauses rather than three (no "then"/"and"
+#: separates the first two destinations, only a comma) - "Put one of them
+#: into your hand, put one of them on the bottom of your library," is one
+#: fragment, "exile one of them" the other.
+_PUT_HAND_AND_BOTTOM_RE = re.compile(
+    r"^put one of them into your hand, put one of them on the bottom of your library,?$",
+    re.IGNORECASE,
+)
+_EXILE_ONE_OF_THEM_RE = re.compile(r"^exile one of them$", re.IGNORECASE)
+#: "You may play the exiled card this turn." - CR 601.3's time-boxed
+#: permission, the same primitive `_parse_exile_then_play_permission_pair`
+#: already uses for Ugin's -11 and Ragavan, but printed on a *spell* here
+#: rather than an ability - that pairing is ability-only (see its own
+#: docstring), so Expressive Iteration gets a dedicated merge instead.
+_YOU_MAY_PLAY_THE_EXILED_CARD_THIS_TURN_RE = re.compile(
+    r"^you may play the exiled cards? this turn$", re.IGNORECASE
+)
+
+
+def _merge_look_top_hand_bottom_exile_play_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """Expressive Iteration's whole text: "Look at the top three cards of
+    your library. Put one of them into your hand, put one of them on the
+    bottom of your library, and exile one of them. You may play the exiled
+    card this turn." - a three-way CR 608.2d split (`_merge_look_top_split_
+    hand_graveyard_clauses`'s own two-way sibling), the third destination
+    carrying a CR 601.3 play permission over whatever landed there.
+
+    Spell-only: the pool has no ability printing this exact shape, and CR
+    608.2b's "the resolving object's controller" is unambiguous for a spell
+    (`game.controller_of(spell)`) in a way `_parse_exile_then_play_
+    permission_pair`'s own docstring explains an `AbilityOnStack` is not.
+    """
+    if not for_spell or index + 3 >= len(clauses):
+        return None
+    look_match = _LOOK_AT_TOP_N_CARDS_RE.fullmatch(clauses[index].strip())
+    if look_match is None:
+        return None
+    count_text = look_match.group("count").lower()
+    count = _NUMBER_WORDS.get(count_text)
+    if count is None:
+        try:
+            count = int(count_text)
+        except ValueError:
+            return None
+    if _PUT_HAND_AND_BOTTOM_RE.fullmatch(clauses[index + 1].strip()) is None:
+        return None
+    if _EXILE_ONE_OF_THEM_RE.fullmatch(clauses[index + 2].strip()) is None:
+        return None
+    if _YOU_MAY_PLAY_THE_EXILED_CARD_THIS_TURN_RE.fullmatch(clauses[index + 3].strip()) is None:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        player = game.controller_of(spell)
+        looked = list(player.library[:count])
+        if not looked:
+            return
+
+        def choose_one(prompt: str, pool: list[CardState]) -> CardState:
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=player.username,
+                    prompt=prompt,
+                    source=spell.name,
+                    amount=1,
+                    cards=tuple(state.id for state in pool),
+                )
+            )
+            by_id = {state.id: state for state in pool}
+            return by_id[chosen_ids[0]]
+
+        to_hand = choose_one("put one of the looked-at cards into your hand", looked)
+        remaining = [state for state in looked if state is not to_hand]
+        to_bottom = choose_one(
+            "put one of the remaining looked-at cards on the bottom of your library", remaining
+        )
+        to_exile = [state for state in remaining if state is not to_bottom]
+
+        player.add(to_hand, Zone.HAND)
+        player.move(to_bottom, Zone.LIBRARY)
+        for state in to_exile:
+            exiled = game.exile_permanent(state)
+            game.grant_play_permission(
+                exiled,
+                player.username,
+                action=PlayAction.PLAY,
+                pays_mana_cost=True,
+                source_name=spell.name,
+                rule="CR 601.3",
+            )
+
+    return 4, effect
 
 
 #: "Return this card from your graveyard to your hand." - World Breaker's
@@ -9774,9 +10410,20 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     city_blessing_copy = _parse_city_blessing_token_copy_clause(clause, for_spell=for_spell)
     if city_blessing_copy is not None:
         return city_blessing_copy
+    create_token_copy_of_target = _parse_create_token_copy_of_target_clause(
+        clause, for_spell=for_spell
+    )
+    if create_token_copy_of_target is not None:
+        return create_token_copy_of_target
+    counter_on_additional_cost_card = _parse_counter_on_additional_cost_card_clause(clause)
+    if counter_on_additional_cost_card is not None:
+        return counter_on_additional_cost_card
     search = _parse_search_clause(clause, for_spell=for_spell)
     if search is not None:
         return search
+    search_mv_lte_count = _parse_search_mv_lte_count_clause(clause, for_spell=for_spell)
+    if search_mv_lte_count is not None:
+        return search_mv_lte_count
     imprint = _parse_imprint_clause(clause, for_spell=for_spell)
     if imprint is not None:
         return imprint
@@ -9807,10 +10454,15 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
         return defending_player_exiles
     if _LOOK_AT_TOP_CARD_RE.fullmatch(clause.strip()):
         return _look_at_top_card
+    if _LOOK_AT_TARGET_HAND_RE.fullmatch(clause.strip()):
+        return _look_at_target_hand
     # -- Wave W1's own single-clause additions, contiguous block ----------
     target_player_discards = _parse_target_player_discards_clause(clause, for_spell=for_spell)
     if target_player_discards is not None:
         return target_player_discards
+    target_player_draws = _parse_target_player_draws_clause(clause, for_spell=for_spell)
+    if target_player_draws is not None:
+        return target_player_draws
     if _THEN_EXILE_THAT_PLAYERS_GRAVEYARD_RE.fullmatch(clause.strip()):
         return exile_target_players_graveyard
     # -- end Wave W1 single-clause additions -------------------------------
@@ -9922,6 +10574,12 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             index += consumed
             continue
         merged = _merge_look_top_split_hand_graveyard_clauses(clauses, index, for_spell=for_spell)
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_look_top_hand_bottom_exile_play_clauses(clauses, index, for_spell=for_spell)
         if merged is not None:
             consumed, effect = merged
             parsed.append(effect)

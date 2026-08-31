@@ -1201,8 +1201,17 @@ def switch_power_toughness(chars: Characteristics, board: Board) -> Characterist
 #: own), or a triggered ability's own target - "another target creature you
 #: control" (Oliphaunt's attack trigger) - which reaches here the same way a
 #: spell's "target creature" does, through whatever `targets` the caller
-#: resolved.
-_SUBJECT = r"(?:target creature|this creature|another target creature(?: you control)?)"
+#: resolved. "target `<adjective>` creature" (Psychotic Fury's own "target
+#: **multicolored** creature") takes one optional qualifying word between
+#: "target" and "creature" the same way `machines/effects.py`'s own
+#: `_CONTINUOUS_PUMP_OR_KEYWORD_RE` does - this parser never re-derives who
+#: was legally targeted (that already happened at CR 601.2c announcement,
+#: `machines/targeting.py`'s job), it only has to recognise which *shape* of
+#: sentence this is, so admitting the adjective costs nothing.
+_SUBJECT = (
+    r"(?:target(?: [a-z]+)? creature|this creature|another target(?: [a-z]+)? creature"
+    r"(?: you control)?)"
+)
 
 _PUMP_RE = re.compile(
     rf"^{_SUBJECT} gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)"
