@@ -73,6 +73,62 @@ if TYPE_CHECKING:  # pragma: no cover - import cycle: Game builds on the machine
     from ..models.game import CastRecord, Game
 
 
+class ExtraTriggerEvent(StrEnum):
+    """Trigger events with no `machines/abilities.TriggerEvent` member.
+
+    `_trigger_event` (`machines/abilities.py`) reads a printed condition into a
+    `TriggerEvent` or leaves `event` unset; a condition it cannot read parses
+    with `event=None` and, until now, was dropped by `triggered_abilities_of`
+    and could never fire. These are the events those dropped conditions watch,
+    named here rather than there because this module owns the matching half.
+    `condition_matches` reads them off the printed condition itself (see
+    `_unread_trigger_events`), so a `TriggeredAbility` still carries
+    `event=None` and nothing about the parser's own output changes.
+
+    **Nothing in the engine emits any of these yet.** Every emitter lives in
+    `models/game.py` - the one place that puts counters on a permanent
+    (`Game.add_counters`), moves a card out of a graveyard, or puts a card into
+    a library - so the matchers here are complete and the events they watch are
+    not raised. Each is marked with the emit that is missing.
+    """
+
+    #: CR 122.6: "Some spells and abilities refer to counters being put on an
+    #: object. This refers to putting counters on that object while it's on the
+    #: battlefield and also to an object that's given counters as it enters the
+    #: battlefield." Basking Broodscale's and Emperor of Bones' "Whenever one
+    #: or more +1/+1 counters are put on this creature". `GameEvent.
+    #: counter_kind` is which kind, `GameEvent.amount` how many - CR 603.2c's
+    #: "one event contains multiple occurrences" is *not* what a "one or more
+    #: counters" condition asks for: that is one event with a count, so it
+    #: fires once however many counters arrived at the same time.
+    #: **Missing emit:** `Game.add_counters` (`models/game.py`), which today
+    #: emits only for lore counters (CR 107.15a).
+    COUNTERS_PUT = "counters_put"
+    #: CR 603.10a names "abilities that trigger when a card leaves a graveyard"
+    #: among the zone-change triggers that look back in time. Murktide Regent's
+    #: "Whenever an instant or sorcery card leaves your graveyard" and Hardened
+    #: Academic's "Whenever one or more cards leave your graveyard".
+    #: **Missing emit:** every graveyard departure in `models/game.py` - the
+    #: card exiled to pay delve, the card returned to hand, the card put onto
+    #: the battlefield from a graveyard.
+    LEAVES_GRAVEYARD = "leaves_graveyard"
+    #: CR 401.1's library, as a destination: Wan Shi Tong, All-Knowing's
+    #: "Whenever one or more cards are put into a library from anywhere". One
+    #: event per instruction that moves cards there, with `GameEvent.amount`
+    #: cards, since CR 603.2c makes several cards moved by one instruction one
+    #: occurrence rather than several.
+    #: **Missing emit:** the library moves in `models/game.py`/`machines/
+    #: effects.py` (Brainstorm's own put-back among them).
+    PUT_INTO_LIBRARY = "put_into_library"
+    #: CR 406.2: "To exile an object is to put it into the exile zone from
+    #: whatever zone it's currently in." Scoped to a *graveyard* as the origin,
+    #: which is the half of Ketramose, the New Dawn's condition that
+    #: `TriggerEvent.LEAVES_BATTLEFIELD_TO_EXILE` does not already cover.
+    #: **Missing emit:** the graveyard-to-exile moves in `models/game.py`
+    #: (delve, Rest in Peace's replacement, a graveyard-hate effect).
+    EXILED_FROM_GRAVEYARD = "exiled_from_graveyard"
+
+
 class GameEvent(BaseModel):
     """One thing that happened, in the shape a trigger condition is matched against.
 
@@ -81,7 +137,12 @@ class GameEvent(BaseModel):
     facts the conditions in `condition_matches` actually ask about.
     """
 
-    event: TriggerEvent
+    event: TriggerEvent | ExtraTriggerEvent
+    """Which event this is. `ExtraTriggerEvent` widens the field rather than
+    replacing it: the parser's own `TriggerEvent` stays the vocabulary every
+    existing emitter speaks, and the members this module had to name for
+    itself sit alongside them. The two enums' values are disjoint, so a
+    serialised event still round-trips to exactly the member it was."""
 
     subject_id: UUID | None = None
     """The object the event happened to: the permanent that entered, died,
@@ -155,6 +216,15 @@ class GameEvent(BaseModel):
     same creature taking a Lightning Bolt."""
 
     step: Step | None = None
+
+    counter_kind: str | None = None
+    """Which kind of counter was put on the subject, for an
+    `ExtraTriggerEvent.COUNTERS_PUT` event (CR 122.1: "any name at all is a
+    legal counter kind", which is why this is a plain string and not the
+    `Counter` enum). `GameEvent.amount` is how many. `None` for every other
+    event, and for a counters event whose emitter did not say - which a
+    condition naming a kind ("one or more **+1/+1** counters") refuses, since
+    a counter of unknown kind is not known to be the kind it asks for."""
 
     amount: int | None = None
     """How much, for an event a later clause refers back to by number rather
@@ -911,12 +981,32 @@ def condition_matches(
       attached to. Emitted by `machines/cost.CostPayment.tap_for_mana`, the
       only place the engine taps a permanent for mana.
 
+    - **becomes the target** (CR 115.1, 601.2c, 602.2b) - ward's and
+      Bonecrusher Giant's self-referential forms, and Loki, God of Mischief's
+      general "a player or permanent becomes the target of an ability you
+      control", which asks nothing about *what* was targeted and everything
+      about who controls the targeting object and whether it was a spell or an
+      ability (`_targeting_object_matches`).
+
+    An ability the parser left with `event=None` is matched from its printed
+    condition instead, by `_unread_condition_matches` - the counters-put,
+    leaves-a-graveyard, put-into-a-library, exiled-from-a-graveyard and
+    Nth-draw shapes.
+
     Anything else returns False. A condition this module cannot read never fires
     a trigger, which is the safe direction to be wrong in.
     """
     condition = ability.condition
     lowered = condition.lower()
     mine = _self_referential(condition, source.name)
+
+    if ability.event is None:
+        # A condition `machines/abilities._trigger_event` could not read at
+        # all. It still names a real trigger event (CR 603.1's "[trigger
+        # condition or event]"), and `_unread_condition_matches` reads the
+        # handful of those shapes this module knows - see
+        # `_unread_trigger_events`.
+        return _unread_condition_matches(game, ability, source, controller, event)
 
     if event.event is not ability.event:
         return False
@@ -1099,13 +1189,37 @@ def condition_matches(
         return mine and event.subject_id == source.id
 
     if ability.event is TriggerEvent.BECOMES_TARGET:
-        # CR 702.21a: "Whenever this permanent becomes the target of a spell or
-        # ability an opponent controls". Only the self-referential form is read,
-        # which is the only form ward prints.
-        if not mine or event.subject_id != source.id:
+        # CR 115.1: "Some spells and abilities require their controller to
+        # choose one or more targets for them ... These targets are declared as
+        # part of the process of putting the spell or ability on the stack"
+        # (CR 601.2c for a spell, imported wholesale for an ability by
+        # CR 602.2b). Two shapes are read:
+        #
+        # - the self-referential one, which is what ward prints (CR 702.21a,
+        #   "Whenever this permanent becomes the target of a spell or ability
+        #   an opponent controls") and what Bonecrusher Giant prints
+        #   ("Whenever this creature becomes the target of a spell");
+        # - the general one, which names no particular object: Loki, God of
+        #   Mischief's "Whenever a player or permanent becomes the target of
+        #   an ability you control". Nothing about *what* was targeted is
+        #   asked there - "a player or permanent" is every legal target of an
+        #   ability - so the whole question is who controls the targeting
+        #   object and whether it is a spell or an ability.
+        if mine:
+            if event.subject_id != source.id:
+                return False
+        elif not _target_subject_matches(condition):
+            return False
+        if not _targeting_object_matches(game, condition, event):
             return False
         if "an opponent controls" in lowered:
             return event.player is not None and event.player != controller
+        if "you control" in lowered:
+            # `GameEvent.player` on a becomes-target event is the controller
+            # of the spell or ability that did the targeting (that is what
+            # `machines/casting.Casting` puts there), which is exactly whose
+            # "you control" this asks about.
+            return event.player == controller
         return True
 
     if ability.event is TriggerEvent.DRAWS_A_CARD:
@@ -1190,6 +1304,204 @@ def condition_matches(
         new_total = source.lore_counters
         old_total = new_total - added
         return old_total < ability.chapter <= new_total
+
+    return False
+
+
+#: Loki, God of Mischief's own subject: "a **player or permanent** becomes the
+#: target of an ability you control". The only non-self-referential
+#: becomes-target subject read at all - anything else (a condition naming a
+#: type, a controller, or a subtype for the *target*) is left unread, because
+#: "you control" in such a condition can attach either to the target or to the
+#: targeting object and reading it wrong fires a trigger that should not fire.
+_ANY_TARGET_SUBJECT = re.compile(r"^(?:a player or permanent|a permanent or player)\b")
+
+
+def _target_subject_matches(condition: str) -> bool:
+    """Whether a non-self-referential becomes-target condition's *subject* is
+    one this module reads (CR 115.1's "object(s) and/or player(s) the spell or
+    ability will affect")."""
+    return _ANY_TARGET_SUBJECT.match(condition.lower().strip()) is not None
+
+
+def _targeting_object_matches(game: "Game", condition: str, event: GameEvent) -> bool:
+    """Whether the spell or ability that did the targeting is the kind this
+    condition names.
+
+    CR 115.1 lets either kind target, and the printed conditions distinguish
+    them: ward says "a spell or ability" (CR 702.21a), Bonecrusher Giant says
+    "a spell", Loki, God of Mischief says "an ability". `GameEvent.targeted_by`
+    is the id of whichever it was, and CR 113.1c makes an ability on the stack
+    an object with an id of its own, so the two are told apart by looking for
+    that id among the abilities on the stack.
+
+    An event with no `targeted_by` at all answers only a condition that names
+    neither kind, since an unknown kind is not known to be the named one.
+    """
+    lowered = condition.lower()
+    names_spell = "spell" in lowered
+    names_ability = "ability" in lowered
+    if not names_spell and not names_ability:
+        return True
+    if event.targeted_by is None:
+        return False
+    is_ability_object = any(item.id == event.targeted_by for item in game.abilities_on_stack)
+    if names_spell and names_ability:
+        return True
+    return is_ability_object if names_ability else not is_ability_object
+
+
+#: Basking Broodscale's and Emperor of Bones' condition: "one or more +1/+1
+#: counters are put on this creature" (CR 122.6). The kind is captured so a
+#: condition naming +1/+1 is not fired by a charge counter.
+_COUNTERS_PUT_CONDITION = re.compile(
+    r"^one or more (?P<kind>\S+) counters are put on (?P<subject>.+)$"
+)
+
+#: Hardened Academic's "one or more cards leave your graveyard" and Murktide
+#: Regent's "an instant or sorcery card leaves your graveyard" - one shape with
+#: an optional type restriction (CR 603.10a's own "abilities that trigger when
+#: a card leaves a graveyard").
+_LEAVES_GRAVEYARD_CONDITION = re.compile(
+    r"^(?:one or more cards leave|(?:an?|one) (?P<types>[a-z ]+?) card leaves) your graveyard$"
+)
+
+#: Wan Shi Tong, All-Knowing's "one or more cards are put into a library from
+#: anywhere" (CR 401.1's library as a destination). "From anywhere" is every
+#: other zone, so no origin is checked - and nothing that was already in the
+#: library was *put into* one, which is why a scry never matches (the event is
+#: simply never raised for a reorder).
+_PUT_INTO_LIBRARY_CONDITION = re.compile(
+    r"^one or more cards are put into a library from anywhere$"
+)
+
+#: Ketramose, the New Dawn's "one or more cards are put into exile from
+#: graveyards and/or the battlefield during your turn" - one condition naming
+#: two origins (CR 406.2's exile from "whatever zone it's currently in"),
+#: matched against either of the two events that carry them.
+_EXILE_FROM_GRAVEYARD_OR_BATTLEFIELD_CONDITION = re.compile(
+    r"^one or more cards are put into exile from graveyards and/or the battlefield"
+    r" during your turn$"
+)
+
+#: Tamiyo, Inquisitive Student's "you draw your third card in a turn" - an
+#: ordinal over CR 121.2's individual card draws, which are one event each.
+_NTH_DRAW_CONDITION = re.compile(r"^you draw your (?P<ordinal>[a-z]+) card in a turn$")
+
+
+def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTriggerEvent]:
+    """The events a condition `machines/abilities._trigger_event` left unread
+    watches, or an empty set when this module cannot read it either.
+
+    CR 603.1b: "A triggered ability may have more than one trigger condition" -
+    Ketramose, the New Dawn's single printed condition names two origins for
+    the same exile and so watches two events, which is why this returns a set
+    rather than one event.
+    """
+    lowered = condition.lower().strip()
+    if _COUNTERS_PUT_CONDITION.match(lowered):
+        return frozenset({ExtraTriggerEvent.COUNTERS_PUT})
+    if _LEAVES_GRAVEYARD_CONDITION.match(lowered):
+        return frozenset({ExtraTriggerEvent.LEAVES_GRAVEYARD})
+    if _PUT_INTO_LIBRARY_CONDITION.match(lowered):
+        return frozenset({ExtraTriggerEvent.PUT_INTO_LIBRARY})
+    if _EXILE_FROM_GRAVEYARD_OR_BATTLEFIELD_CONDITION.match(lowered):
+        return frozenset(
+            {
+                ExtraTriggerEvent.EXILED_FROM_GRAVEYARD,
+                TriggerEvent.LEAVES_BATTLEFIELD_TO_EXILE,
+            }
+        )
+    if _NTH_DRAW_CONDITION.match(lowered):
+        return frozenset({TriggerEvent.DRAWS_A_CARD})
+    return frozenset()
+
+
+def _unread_condition_matches(
+    game: "Game",
+    ability: TriggeredAbility,
+    source: CardState,
+    controller: str,
+    event: GameEvent,
+) -> bool:
+    """`condition_matches` for an ability the parser left with `event=None`.
+
+    The shapes read, and what each asks beyond the event itself:
+
+    - **counters put on this permanent** (CR 122.6) - self-referential only,
+      which is the only form printed in this pool, and the counter kind has to
+      be the kind named.
+    - **cards leave your graveyard** (CR 603.10a) - "your" is the ability's
+      controller, and an optional type restriction ("an instant or sorcery
+      card") is checked against what left.
+    - **cards put into a library** (CR 401.1) - "from anywhere", by anyone,
+      into any library: nothing further is asked.
+    - **cards put into exile from graveyards and/or the battlefield during
+      your turn** (CR 406.2) - either origin, and only while the ability's
+      controller is the active player.
+    - **you draw your Nth card in a turn** (CR 121.2) - the controller's own
+      draws, counted over the turn.
+
+    Anything else is False, the same safe direction `condition_matches` fails
+    in for a condition it cannot read.
+    """
+    condition = ability.condition.lower().strip()
+    mine = _self_referential(ability.condition, source.name)
+
+    match = _COUNTERS_PUT_CONDITION.match(condition)
+    if match is not None:
+        if event.event is not ExtraTriggerEvent.COUNTERS_PUT:
+            return False
+        if event.counter_kind != match.group("kind"):
+            return False
+        # CR 122.6 is about counters put on *an object*, and every printing in
+        # the pool names itself as that object ("on this creature"). A
+        # condition naming something else is not read at all.
+        return mine and event.subject_id == source.id
+
+    match = _LEAVES_GRAVEYARD_CONDITION.match(condition)
+    if match is not None:
+        if event.event is not ExtraTriggerEvent.LEAVES_GRAVEYARD:
+            return False
+        # "your graveyard": whose graveyard the card left, which the event
+        # carries as `player` (the graveyard's owner), not the controller of
+        # whatever effect moved it.
+        if event.player != controller:
+            return False
+        types = match.group("types")
+        return types is None or _types_match(event.subject_types, types)
+
+    if _PUT_INTO_LIBRARY_CONDITION.match(condition):
+        return event.event is ExtraTriggerEvent.PUT_INTO_LIBRARY
+
+    if _EXILE_FROM_GRAVEYARD_OR_BATTLEFIELD_CONDITION.match(condition):
+        if event.event not in (
+            ExtraTriggerEvent.EXILED_FROM_GRAVEYARD,
+            TriggerEvent.LEAVES_BATTLEFIELD_TO_EXILE,
+        ):
+            return False
+        # "during your turn" - read off the live turn machine, the same way
+        # the CAST_SPELL branch already reads Ral, Monsoon Mage's identical
+        # clause, since the condition is checked as the event fires.
+        turn = getattr(game, "turn", None)
+        return turn is not None and turn.active_player == controller
+
+    match = _NTH_DRAW_CONDITION.match(condition)
+    if match is not None:
+        if event.event is not TriggerEvent.DRAWS_A_CARD or event.player != controller:
+            return False
+        ordinal = _ORDINAL_WORDS.get(match.group("ordinal"))
+        if ordinal is None:
+            return False
+        # CR 121.2 makes each card its own draw, so the ordinal is a count of
+        # this player's draws so far this turn - a running total nothing in
+        # `models/game.py` keeps yet (`Game.draw_cards` emits one event per
+        # card and counts nothing). Without it the answer is not known, and an
+        # unknown answer does not trigger.
+        drawn = getattr(game, "cards_drawn_this_turn", None)
+        if not isinstance(drawn, dict):
+            return False
+        return drawn.get(controller, 0) == ordinal
 
     return False
 
@@ -1485,9 +1797,17 @@ def intervening_if_holds(
     Divergent Storm's "it's the first [type] spell ... you've cast this turn",
     kicker's "if it was kicked" (CR 702.33a, 702.33d), CR 601.2h's "if no
     mana was spent to cast it" / "if [mana symbols] was spent to cast it"
-    (Vexing Bauble, Wistfulness, Drowner of Truth), and Transcendent Dragon's
+    (Vexing Bauble, Wistfulness, Drowner of Truth), Transcendent Dragon's
     plain "if you cast it" (CR 601.2's cast, as opposed to any other way a
-    permanent reaches the battlefield). The mana/kicker/cast clauses all read
+    permanent reaches the battlefield), Ayara's Oathsworn's counter-count
+    comparison "it has fewer than four +1/+1 counters on it"
+    (`_counter_count_holds`, CR 122.1), Vengevine's ordinal "it's the second
+    creature spell you cast this turn" (`_ordinal_spell_cast_this_turn_holds`),
+    and Phoenix Fleet Airship's "you sacrificed a permanent this turn"
+    (`_sacrificed_this_turn_holds`, CR 701.21a - read, but unanswerable until
+    something records the sacrifices, so it still fails closed).
+
+    The mana/kicker/cast clauses all read
     `Game.cast_record` - see `_cast_record_for_clause` for whose record "it"
     means, and `machines/casting.Casting.cast`/`Game.note_cast` for where the
     record comes from: `CostPayment.mana_payment.spend` at the moment CR 601.2h
@@ -1589,7 +1909,137 @@ def intervening_if_holds(
     if self_tapped is not None:
         return self_tapped
 
+    counter_count = _counter_count_holds(clause, source)
+    if counter_count is not None:
+        return counter_count
+
+    ordinal_spell = _ordinal_spell_cast_this_turn_holds(game, clause, source, event)
+    if ordinal_spell is not None:
+        return ordinal_spell
+
+    sacrificed = _sacrificed_this_turn_holds(game, clause, source)
+    if sacrificed is not None:
+        return sacrificed
+
     return _fail_closed(game, ability, source)
+
+
+#: Ayara's Oathsworn's clause: "it has fewer than four +1/+1 counters on it".
+#: "It" is the source itself - the only subject this shape is printed with in
+#: this pool, and CR 603.4's clause is read about the ability's own source
+#: unless it plainly names something else.
+_COUNTER_COUNT_CLAUSE = re.compile(
+    r"^(?:it|this [a-z]+) has "
+    r"(?:(?P<comparison>fewer than|more than|at least|exactly) (?P<count>[a-z]+)|(?P<none>no))"
+    r" (?P<kind>\S+) counters? on it$"
+)
+
+#: How each comparison word answers, given the counters actually there and the
+#: number the clause names.
+_COUNTER_COMPARISONS = {
+    "fewer than": operator.lt,
+    "more than": operator.gt,
+    "at least": operator.ge,
+    "exactly": operator.eq,
+}
+
+
+def _counter_count_holds(clause: str, source: CardState) -> bool | None:
+    """CR 603.4's clause as a counter count on the source (CR 122.1's counters
+    as "a marker placed on an object ... that modifies its characteristics
+    and/or interacts with a rule, ability, or effect").
+
+    `None`, not False, when the clause is not this shape, so an unrelated
+    clause still reaches `_fail_closed`. A count word this does not know is
+    left unread the same way, rather than guessed at.
+    """
+    match = _COUNTER_COUNT_CLAUSE.match(clause)
+    if match is None:
+        return None
+    on_it = source.counter_count(match.group("kind"))
+    if match.group("none") is not None:
+        return on_it == 0
+    wanted = _NUMBER_WORDS.get(match.group("count"))
+    if wanted is None:
+        return None
+    return _COUNTER_COMPARISONS[match.group("comparison")](on_it, wanted)
+
+
+#: Vengevine's clause: "it's the second creature spell you cast this turn".
+#: The ordinal twin of `_FIRST_SPELL_THIS_TURN`, which reads only "first" and
+#: so left every other ordinal to fail closed.
+_ORDINAL_SPELL_CAST_THIS_TURN = re.compile(
+    r"^it'?s the (?P<ordinal>[a-z]+) (?P<word>[a-z]+) spell you(?:'ve| have)? cast this turn$"
+)
+
+
+def _ordinal_spell_cast_this_turn_holds(
+    game: "Game", clause: str, source: CardState, event: "GameEvent | None"
+) -> bool | None:
+    """Whether the spell this trigger is about is exactly the controller's Nth
+    spell of the named kind cast this turn (CR 603.4).
+
+    "It" is the cast spell the CAST_SPELL event carries, not the source - the
+    same reading `_first_spell_this_turn_holds` already gives its own "it".
+    Answered from `Game.spells_cast_this_turn`, which CR 601.2i's completed
+    cast has already appended this very spell to, so the spell's 1-indexed
+    position among that turn's spells of the named kind *is* the ordinal.
+
+    `None` when the clause is not this shape, or when there is no event to
+    identify the spell with, so the caller still fails closed.
+    """
+    match = _ORDINAL_SPELL_CAST_THIS_TURN.match(clause)
+    if match is None or event is None or event.subject_id is None:
+        return None
+    ordinal = _ORDINAL_WORDS.get(match.group("ordinal"))
+    card_type = _TYPE_WORDS.get(match.group("word"))
+    if ordinal is None or card_type is None:
+        return None
+    controller = source.controller or game.active_player.username
+    of_that_kind = [
+        state
+        for state in game.spells_cast_this_turn.get(controller, [])
+        if card_type in state.types
+    ]
+    position = next(
+        (
+            index
+            for index, state in enumerate(of_that_kind, start=1)
+            if state.id == event.subject_id
+        ),
+        None,
+    )
+    return position == ordinal
+
+
+#: Phoenix Fleet Airship's clause: "you sacrificed a permanent this turn"
+#: (CR 701.21a's sacrifice, asked about the turn rather than about one event).
+_SACRIFICED_THIS_TURN_CLAUSE = re.compile(r"^you sacrificed a permanent this turn$")
+
+
+def _sacrificed_this_turn_holds(game: "Game", clause: str, source: CardState) -> bool | None:
+    """CR 603.4's clause as "did this player sacrifice anything this turn".
+
+    CR 701.21a: "To sacrifice a permanent, its controller moves it from the
+    battlefield directly to its owner's graveyard" - a distinct action from
+    the death it causes, which is why `Game.permanents_left_battlefield_this_
+    turn` cannot answer this: a bounced or destroyed permanent left the
+    battlefield without ever being sacrificed, and reading that counter here
+    would fire the Airship on a turn nothing was sacrificed at all.
+
+    Nothing in `models/game.py` records the sacrifices themselves yet, so the
+    answer is unknown and this returns `None` - which sends the caller to
+    `_fail_closed`, recording the gap rather than guessing. `Game.sacrifice`
+    keeping a per-turn, per-controller record (the shape read here) is all
+    this needs to become a real answer.
+    """
+    if _SACRIFICED_THIS_TURN_CLAUSE.match(clause) is None:
+        return None
+    sacrificed = getattr(game, "permanents_sacrificed_this_turn", None)
+    if not isinstance(sacrificed, dict):
+        return None
+    controller = source.controller or game.active_player.username
+    return bool(sacrificed.get(controller))
 
 
 #: "if Kona is tapped" / "if this creature is untapped" - a clause about the
@@ -1781,12 +2231,20 @@ def triggered_abilities_of(card: Card) -> list[TriggeredAbility]:
     printed = [
         ability
         for ability in parse_abilities(card)
-        if isinstance(ability, TriggeredAbility) and ability.event is not None
+        if isinstance(ability, TriggeredAbility)
+        # An ability the parser could not file under a `TriggerEvent` is kept
+        # when this module can read its condition anyway (`_unread_trigger_
+        # events`) - it is matched from the printed condition rather than from
+        # `event`, which stays None. Everything else the parser left unread is
+        # dropped exactly as before: an ability nothing can match would only
+        # ever sit here waiting to fire on the wrong event.
+        and (ability.event is not None or _unread_trigger_events(ability.condition))
     ]
     expanded: list[TriggeredAbility] = []
     for ability in printed:
         for split in _expand_attacks_or_blocks(ability):
-            expanded.extend(_expand_enters_or_attacks(split))
+            for enters_split in _expand_enters_or_attacks(split):
+                expanded.extend(_expand_enters_or_leaves(enters_split))
     return expanded + keyword_triggered_abilities(card)
 
 
@@ -1855,6 +2313,49 @@ def _expand_enters_or_attacks(ability: TriggeredAbility) -> list[TriggeredAbilit
         ),
         ability.model_copy(
             update={"condition": "this creature attacks", "event": TriggerEvent.ATTACKS}
+        ),
+    ]
+
+
+#: "When this artifact enters or leaves the battlefield, ..." -
+#: Sewer-veillance Cam's own condition, the third compound shape of the same
+#: family as `_ATTACKS_OR_BLOCKS_RE` and `_ENTERS_OR_ATTACKS_RE`. CR 603.1b: "A
+#: triggered ability may have more than one trigger condition"; `_trigger_
+#: event` (`machines/abilities.py`) reads "enters" first and stops, so the
+#: departure half - CR 603.6c's leaves-the-battlefield ability, which is the
+#: half a deck actually uses when the Cam is sacrificed to its own draw
+#: ability - was silently dropped.
+_ENTERS_OR_LEAVES_RE = re.compile(
+    r"^this (?P<kind>[a-z]+) enters or leaves the battlefield$", re.IGNORECASE
+)
+
+
+def _expand_enters_or_leaves(ability: TriggeredAbility) -> list[TriggeredAbility]:
+    """One ability whose condition is `_ENTERS_OR_LEAVES_RE`'s shape becomes
+    two: CR 603.6a's enters-the-battlefield ability and CR 603.6c's
+    leaves-the-battlefield one, each self-referential and each a
+    `TriggeredAbility` in its own right - the same split
+    `_expand_attacks_or_blocks` and `_expand_enters_or_attacks` already
+    perform for their own compound conditions.
+
+    Every other printed ability passes through unchanged, singleton-wrapped.
+    """
+    match = _ENTERS_OR_LEAVES_RE.match(ability.condition.strip())
+    if match is None:
+        return [ability]
+    kind = match.group("kind").lower()
+    return [
+        ability.model_copy(
+            update={
+                "condition": f"this {kind} enters",
+                "event": TriggerEvent.ENTERS_THE_BATTLEFIELD,
+            }
+        ),
+        ability.model_copy(
+            update={
+                "condition": f"this {kind} leaves the battlefield",
+                "event": TriggerEvent.LEAVES_THE_BATTLEFIELD,
+            }
         ),
     ]
 
