@@ -28,7 +28,13 @@ from ..models.card import Card, Layout, Type
 from ..models.card_state import CardState, Counter, ExileAnnotation, ExileMarker, TargetRef
 from ..models.mana import ManaCost, ManaSpend
 from ..models.zone import Zone
-from .abilities import KeywordAbility, TriggerEvent, keyword_abilities
+from .abilities import (
+    AbilityKind,
+    KeywordAbility,
+    TriggerEvent,
+    keyword_abilities,
+    parse_abilities,
+)
 from .casting_restrictions import (
     has_sorcery_speed_flash_grant,
     restricted_from_noncreature_casting,
@@ -38,9 +44,11 @@ from .casting_restrictions import (
 from .cost import (
     CostPayment,
     CostStep,
+    StaticFreeCastGrant,
     TotalCost,
     alternative_cost_offers,
     apply_modifications,
+    static_free_cast_grant,
     total_cost_for_phrase,
 )
 from .keywords import (
@@ -788,6 +796,70 @@ def why_cannot_cast_restriction(spell: CardState, caster: str, game: Any = None)
     return None
 
 
+class AlternativeCostSource(StrEnum):
+    """Where a CR 118.9 alternative cost came from.
+
+    CR 118.9's own sentence names two origins - "a cost listed in a spell's
+    text, or applied to it from another effect" - and this engine already had
+    three separate announcement paths for them, so the enum is what lets one
+    listing describe all of them without flattening the difference.
+    """
+
+    PRINTED = "printed"
+    """The spell's own text, functioning from the zone it is cast from
+    (CR 604.6): Force of Will's and Force of Negation's pitch sentence."""
+    KEYWORD = "keyword"
+    """A keyword ability that replaces the mana cost - evoke, dash - reported
+    by `keyword_cast_options` with `pays_mana_cost` false."""
+    PERMISSION = "permission"
+    """A `PlayPermission` a resolving effect handed out "without paying its
+    mana cost" (CR 601.3): cascade's hit, Ugin's exiled card."""
+    STATIC = "static"
+    """Another permanent's static ability applying the cost (CR 604.2):
+    Omniscience."""
+
+
+class AlternativeCostOption(BaseModel):
+    """One CR 118.9 alternative cost a spell could be announced under, and
+    whether it can be announced right now.
+
+    This exists so a seat driving the engine can *find* an alternative cost
+    rather than having to know in advance that a particular card prints one.
+    Everything unavailable is still listed, carrying `unavailable` - a seat
+    that is shown only the legal options cannot tell "this card has no pitch
+    cost" from "it has one and it is not your turn" (CR 118.9b makes the
+    difference: an option that exists is one the player may decline, and an
+    option that does not exist is not a choice at all).
+    """
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    index: int
+    """Position in `Casting.alternative_costs`, and what
+    `use_alternative_cost` takes."""
+    source: AlternativeCostSource
+    rule: str
+    """The CR number this option is read from."""
+    source_name: str = ""
+    """The card offering it - the spell itself for `PRINTED`, the permanent
+    for `STATIC`, the granting card for `PERMISSION`."""
+    keyword: str | None = None
+    """The keyword, for `KEYWORD` options only."""
+    description: str
+    """What would be paid, in the card's own words. "nothing" is CR 107.3b's
+    "without paying its mana cost", which is not a cost of {0} (CR 118.5)."""
+    cost: TotalCost | None = None
+    """The payable cost, or None when nothing at all is paid."""
+    requires: int = 0
+    """How many objects `use_alternative_cost(choosing=...)` must supply."""
+    unavailable: str | None = None
+    """Why it cannot be announced right now, or None if it can."""
+
+    @property
+    def available(self) -> bool:
+        return self.unavailable is None
+
+
 class CastingStep(StrEnum):
     PROPOSED = "proposed"
     MODES = "modes"
@@ -875,6 +947,12 @@ class Casting(BaseModel):
     rather than inferred after the fact from the zone the card happened to be
     in."""
     alternative_cost: TotalCost | None = None
+    free_cast_source: str | None = None
+    """The permanent whose static ability applied CR 118.9's alternative cost
+    of nothing to this spell - Omniscience. Set by `use_alternative_cost` on
+    an `AlternativeCostSource.STATIC` option, and kept for the same reason
+    `keyword_used` is: an empty `alternative_cost` on its own cannot say
+    whether it came from the spell's own text or from somebody's board."""
     additional_costs: list[TotalCost] = Field(default_factory=list)
     cost_increases: list[ManaCost] = Field(default_factory=list)
     cost_reductions: list[ManaCost] = Field(default_factory=list)
@@ -1233,18 +1311,244 @@ class Casting(BaseModel):
         could not be read, or - Force of Negation's and Force of Vigor's own
         gate - when it is only offered "if it's not your turn" and it is.
         """
-        offers = alternative_cost_offers(self.spell.card)
-        if not offers:
+        printed = [
+            option
+            for option in self.alternative_costs
+            if option.source is AlternativeCostSource.PRINTED
+        ]
+        if not printed:
             raise ValueError(f"{self.spell.name} has no inline alternative cost to pay (CR 118.9)")
-        offer = offers[0]
-        if offer.requires_not_your_turn and not self._is_not_my_turn():
-            raise ValueError(
-                f"{self.spell.name}'s alternative cost can only be paid on an opponent's turn"
+        return self._announce_alternative(printed[0], choosing)
+
+    # -- CR 118.9: finding an alternative cost, and announcing it ----------
+
+    @property
+    def alternative_costs(self) -> list[AlternativeCostOption]:
+        """Every CR 118.9 alternative cost that could apply to this spell, in
+        a single list, whether or not it can be announced right now.
+
+        CR 118.9: "An alternative cost is a cost listed in a spell's text, or
+        applied to it from another effect, that its controller may pay rather
+        than paying the spell's mana cost." All four of this engine's origins
+        are gathered here - the spell's own printed offer (CR 604.6), a
+        keyword that replaces the mana cost, a `PlayPermission` granted
+        "without paying its mana cost", and another permanent's static
+        ability (Omniscience) - because a seat driving the engine has no other
+        way to *discover* that an alternative cost exists. Announcing one is
+        `use_alternative_cost`.
+
+        Only one of these may ever actually be paid (CR 118.9a); listing them
+        all is what makes that a choice rather than a guess.
+        """
+        options: list[AlternativeCostOption] = []
+
+        for offer in alternative_cost_offers(self.spell.card):
+            cost = total_cost_for_phrase(offer.phrase, payer=self.caster)
+            unavailable: str | None = None
+            if cost is None:
+                unavailable = f"{self.spell.name}'s alternative cost could not be read"
+            elif offer.requires_not_your_turn and not self._is_not_my_turn():
+                unavailable = (
+                    f"{self.spell.name}'s alternative cost can only be paid on an opponent's turn"
+                )
+            elif self.spell.zone is not self.origin_zone:
+                unavailable = (
+                    f"{self.spell.name} is in the {self.spell.zone.value}, not the "
+                    f"{self.origin_zone.value} it is being cast from (CR 604.6)"
+                )
+            options.append(
+                AlternativeCostOption(
+                    index=len(options),
+                    source=AlternativeCostSource.PRINTED,
+                    rule="CR 118.9",
+                    source_name=self.spell.name,
+                    description=offer.phrase,
+                    cost=cost,
+                    requires=sum(component.required for component in cost.components)
+                    if cost
+                    else 0,
+                    unavailable=unavailable,
+                )
             )
-        cost = total_cost_for_phrase(offer.phrase, payer=self.caster)
-        if cost is None:
-            raise ValueError(f"{self.spell.name}'s alternative cost could not be read")
+
+        for keyword_option in keyword_cast_options(self.spell.card):
+            if keyword_option.pays_mana_cost:
+                # Warp's second half and flashback's from-graveyard permission
+                # that still charges a cost are CR 601.3 permissions, not
+                # CR 118.9 alternative costs - only the ones that *replace*
+                # the mana cost belong in this listing.
+                continue
+            cost = keyword_option.cost
+            options.append(
+                AlternativeCostOption(
+                    index=len(options),
+                    source=AlternativeCostSource.KEYWORD,
+                    rule=keyword_option.rule,
+                    source_name=self.spell.name,
+                    keyword=keyword_option.keyword,
+                    description=str(cost) if cost is not None else "nothing",
+                    cost=cost,
+                    requires=sum(component.required for component in cost.components)
+                    if cost
+                    else 0,
+                    unavailable=keyword_option.why_not(self.spell, self.caster, self.game),
+                )
+            )
+
+        for permission in play_permissions_on(self.game, self.spell):
+            if permission.pays_mana_cost:
+                continue
+            options.append(
+                AlternativeCostOption(
+                    index=len(options),
+                    source=AlternativeCostSource.PERMISSION,
+                    rule=permission.rule,
+                    source_name=permission.source_name,
+                    # CR 107.3b keeps "no cost at all" apart from a cost of
+                    # {0}, so this says nothing rather than {0}.
+                    description="nothing",
+                    cost=None,
+                    unavailable=permission.why_not(self.spell, self.caster, self.game),
+                )
+            )
+
+        for source_name, grant in self._static_free_cast_grants():
+            unavailable = None
+            if self.spell.zone is not grant.zone:
+                unavailable = (
+                    f"{source_name} only applies to spells cast from your "
+                    f"{grant.zone.value} (CR 118.9)"
+                )
+            elif grant.type_word and not self._spell_is_type(grant.type_word):
+                unavailable = (
+                    f"{source_name} only applies to {grant.type_word} spells, and "
+                    f"{self.spell.name} is not one"
+                )
+            options.append(
+                AlternativeCostOption(
+                    index=len(options),
+                    source=AlternativeCostSource.STATIC,
+                    rule="CR 118.9",
+                    source_name=source_name,
+                    description="nothing",
+                    cost=None,
+                    unavailable=unavailable,
+                )
+            )
+
+        return options
+
+    def _static_free_cast_grants(self) -> list[tuple[str, StaticFreeCastGrant]]:
+        """Omniscience's shape: a permanent the caster controls whose static
+        ability applies CR 118.9's alternative cost of nothing to their spells.
+
+        Read line by line and only from a genuine `AbilityKind.STATIC` line
+        (CR 604.1), the same way `Game.static_cost_modifiers_for` reads a
+        board-wide cost modifier - a sentence inside an activated ability's
+        effect is gated on that ability being activated and is not a static
+        ability at all (CR 602.1).
+        """
+        if self.game is None:
+            return []
+        found: list[tuple[str, StaticFreeCastGrant]] = []
+        for permanent in getattr(self.game, "battlefield", []):
+            if permanent.controller != self.caster:
+                continue
+            up_face_name = permanent.up_face_name or permanent.card.name
+            static_lines = {
+                ability.raw.strip()
+                for ability in parse_abilities(permanent.card)
+                if ability.face == up_face_name and ability.kind is AbilityKind.STATIC
+            }
+            for line in static_lines:
+                grant = static_free_cast_grant(line)
+                if grant is not None:
+                    found.append((permanent.card.name, grant))
+        return found
+
+    def _spell_is_type(self, type_word: str) -> bool:
+        """Whether the spell has the card type a static grant names
+        (CR 205.2b: a card with more than one type has all of them)."""
+        return type_word.lower() in (self.spell.card.type_line or "").lower()
+
+    def use_alternative_cost(
+        self,
+        which: int | str | None = None,
+        *,
+        choosing: list[CardState] | None = None,
+    ) -> CastingStep:
+        """CR 601.2b: announce that this spell is being cast for an
+        alternative cost, chosen out of `alternative_costs`.
+
+        `which` is the option's `index`, or its `keyword`/`source_name` if
+        naming it reads better. Passing nothing takes the only *available*
+        option and refuses when there is more than one, because CR 118.9a
+        allows exactly one alternative cost per spell and guessing which one a
+        seat meant is the wrong kind of help.
+
+        `choosing` fills the objects the cost needs - the blue card Force of
+        Will exiles, the two Mountains Fireblast sacrifices - because CR 601.2b
+        is where they are chosen and CR 601.2h is where they are actually
+        spent.
+
+        Raises with the option's own reason when it cannot be announced: the
+        wrong turn, the wrong zone, a keyword's timing, an expired permission.
+        """
+        options = self.alternative_costs
+        if not options:
+            raise ValueError(
+                f"nothing offers {self.caster} an alternative cost for {self.spell.name} (CR 118.9)"
+            )
+
+        if which is None:
+            usable = [option for option in options if option.available]
+            if not usable:
+                raise ValueError(options[0].unavailable or "")
+            if len(usable) > 1:
+                names = ", ".join(f"{option.index}: {option.description}" for option in usable)
+                raise ValueError(
+                    f"{self.spell.name} has more than one alternative cost available and "
+                    f"only one may be paid (CR 118.9a) - name it: {names}"
+                )
+            chosen = usable[0]
+        elif isinstance(which, int):
+            if which < 0 or which >= len(options):
+                raise ValueError(
+                    f"{self.spell.name} has {len(options)} alternative cost(s), "
+                    f"so there is no option {which}"
+                )
+            chosen = options[which]
+        else:
+            wanted = which.lower()
+            matches = [
+                option
+                for option in options
+                if wanted in {(option.keyword or "").lower(), option.source_name.lower()}
+            ]
+            if not matches:
+                raise ValueError(
+                    f"{self.spell.name} has no alternative cost named {which!r} (CR 118.9)"
+                )
+            chosen = next((option for option in matches if option.available), matches[0])
+
+        return self._announce_alternative(chosen, choosing)
+
+    def _announce_alternative(
+        self, option: AlternativeCostOption, choosing: list[CardState] | None
+    ) -> CastingStep:
+        """Settle one `AlternativeCostOption` onto this casting (CR 601.2b)."""
+        if option.unavailable is not None:
+            raise ValueError(option.unavailable)
+
+        if option.source is AlternativeCostSource.KEYWORD and option.keyword is not None:
+            return self.use_keyword(option.keyword, choosing=choosing)
+        if option.source is AlternativeCostSource.PERMISSION:
+            return self.use_permission()
+
+        cost = option.cost.model_copy(deep=True) if option.cost is not None else TotalCost()
         self._enter_modes()
+        if option.source is AlternativeCostSource.STATIC:
+            self.free_cast_source = option.source_name
         remaining = list(choosing or [])
         for component in cost.components:
             if component.required and not component.cards:
