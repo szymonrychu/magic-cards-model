@@ -954,7 +954,10 @@ class CardState(BaseModel):
         can ask `characteristics_of`; without one, this falls back to the
         printed type line, matching `machines/cost.py`'s `can_tap_for_mana`.
         """
-        is_creature = game.characteristics_of(self).is_creature if game is not None else self.is_creature
+        if game is not None:
+            is_creature = game.characteristics_of(self).is_creature
+        else:
+            is_creature = self.is_creature
         return self.summoning_sick and is_creature
 
     @property
