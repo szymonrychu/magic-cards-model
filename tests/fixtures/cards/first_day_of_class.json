@@ -1,0 +1,139 @@
+{
+  "object": "card",
+  "id": "091eb13d-9318-4b12-9f94-6276b11981d1",
+  "oracle_id": "e0b5c772-e029-4b8d-be67-b1584700e377",
+  "multiverse_ids": [
+    513579
+  ],
+  "mtgo_id": 88681,
+  "arena_id": 76495,
+  "tcgplayer_id": 235196,
+  "cardmarket_id": 556428,
+  "name": "First Day of Class",
+  "lang": "en",
+  "released_at": "2021-04-23",
+  "uri": "https://api.scryfall.com/cards/091eb13d-9318-4b12-9f94-6276b11981d1",
+  "scryfall_uri": "https://scryfall.com/card/stx/102/first-day-of-class?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:22:36Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/0/9/091eb13d-9318-4b12-9f94-6276b11981d1.jpg?1783927356",
+    "normal": "https://cards.scryfall.io/normal/front/0/9/091eb13d-9318-4b12-9f94-6276b11981d1.jpg?1783927356",
+    "large": "https://cards.scryfall.io/large/front/0/9/091eb13d-9318-4b12-9f94-6276b11981d1.jpg?1783927356",
+    "png": "https://cards.scryfall.io/png/front/0/9/091eb13d-9318-4b12-9f94-6276b11981d1.png?1783927356",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/0/9/091eb13d-9318-4b12-9f94-6276b11981d1.jpg?1783927356",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/0/9/091eb13d-9318-4b12-9f94-6276b11981d1.jpg?1783927356",
+    "thumb": "https://cards.scryfall.io/thumb/front/0/9/091eb13d-9318-4b12-9f94-6276b11981d1.webp?1783927356",
+    "grid": "https://cards.scryfall.io/grid/front/0/9/091eb13d-9318-4b12-9f94-6276b11981d1.webp?1783927356",
+    "display": "https://cards.scryfall.io/display/front/0/9/091eb13d-9318-4b12-9f94-6276b11981d1.webp?1783927356",
+    "art": "https://cards.scryfall.io/art/front/0/9/091eb13d-9318-4b12-9f94-6276b11981d1.webp?1783927356",
+    "crop": "https://cards.scryfall.io/crop/front/0/9/091eb13d-9318-4b12-9f94-6276b11981d1.webp?1783927356"
+  },
+  "mana_cost": "{1}{R}",
+  "cmc": 2.0,
+  "type_line": "Instant",
+  "oracle_text": "Whenever a creature you control enters this turn, put a +1/+1 counter on it and it gains haste until end of turn.\nLearn. (You may reveal a Lesson card you own from outside the game and put it into your hand, or discard a card to draw a card.)",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Learn"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "541c3c28-8747-40e5-a231-8e8f33234859",
+  "set": "stx",
+  "set_name": "Strixhaven: School of Mages",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/541c3c28-8747-40e5-a231-8e8f33234859",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Astx&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/stx?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/091eb13d-9318-4b12-9f94-6276b11981d1/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ae0b5c772-e029-4b8d-be67-b1584700e377&unique=prints",
+  "collector_number": "102",
+  "digital": false,
+  "rarity": "common",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Paul Scott Canavan",
+  "artist_ids": [
+    "c19bfb77-5099-4f7c-8585-6eaf367712c9"
+  ],
+  "illustration_id": "ef1df61f-9d8e-43c2-8c8f-056f1e982136",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 10209,
+  "penny_rank": 1095,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://magic.wizards.com/en/articles/archive/feature/strixhaven-school-mages-mechanics-2021-03-25",
+    "previewed_at": "2021-03-26"
+  },
+  "prices": {
+    "usd": "0.26",
+    "usd_foil": "0.52",
+    "usd_etched": null,
+    "eur": "0.30",
+    "eur_foil": "0.44",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=513579&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DFirst%2BDay%2Bof%2BClass",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DFirst%2BDay%2Bof%2BClass",
+    "edhrec": "https://edhrec.com/route/?cc=First+Day+of+Class"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F235196%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=556428&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/88681?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
