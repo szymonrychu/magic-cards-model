@@ -46,10 +46,10 @@ def test_transcendent_dragons_replacement_clause_is_never_even_read():
 
 def test_transcendent_dragon_counters_and_exiles_the_target_spell():
     """DDR#944: flashing in Transcendent Dragon in response to a spell counters
-    it and exiles it instead of sending it to its owner's graveyard (CR 701.5,
+    it and exiles it instead of sending it to its owner's graveyard (CR 701.6,
     CR 701.13a), so its controller can cast it again for free.
 
-    CR 701.5a: "To counter a spell or ability means to cancel it, removing it
+    CR 701.6a: "To counter a spell or ability means to cancel it, removing it
     from the stack. It doesn't resolve." Countering alone would send the spell
     to its owner's graveyard by the normal rule for a spell leaving the stack
     without resolving; Transcendent Dragon's second sentence redirects that one

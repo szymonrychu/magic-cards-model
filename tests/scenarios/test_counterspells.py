@@ -1,4 +1,4 @@
-"""Counterspell shapes beyond the plain "Counter target spell." (CR 701.5a).
+"""Counterspell shapes beyond the plain "Counter target spell." (CR 701.6a).
 
 `test_stack.py` already covers the generic mechanics of countering - CR 608.2b's
 fizzle recheck, a countered spell's own graveyard, a counterspell countered in
@@ -59,7 +59,7 @@ def board(alice_hand: list[str], *, bob_hand: list[str], bob_battlefield: list[s
 
 
 def test_force_of_negation_counters_a_noncreature_spell():
-    """CR 701.5a's target restriction is read off the qualifier, not ignored.
+    """CR 701.6a's target restriction is read off the qualifier, not ignored.
 
     Force of Negation's own second sentence - "If that spell is countered
     this way, exile it instead of putting it into its owner's graveyard." -

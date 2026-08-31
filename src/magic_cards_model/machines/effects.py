@@ -4760,7 +4760,7 @@ def _parse_exile_until_leaves_battlefield_clause(
 
 
 _EXILE_TARGET_RE = re.compile(r"exile (?P<phrase>(?:any target|.*target.+))", re.IGNORECASE)
-#: "Counter target spell." - the unconditional shape (CR 701.5a) - and its
+#: "Counter target spell." - the unconditional shape (CR 701.6a) - and its
 #: qualified cousins, "Counter target `<qualifier>` spell." (Force of
 #: Negation's "noncreature", a colour word, a card type). The qualifier is
 #: read and thrown away: `counter_targets` walks whatever the caster actually
