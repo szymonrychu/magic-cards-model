@@ -383,7 +383,14 @@ def _layer_category(printing: Card) -> str | None:
     modifier is not `machines/layers.py`'s. Only a genuine near-miss on one of
     those four shapes counts as a gap here.
     """
-    text = printing.oracle_text
+    # `front_oracle_text`, not the top-level field: a `transform` or
+    # `modal_dfc` printing leaves `oracle_text` null and puts each face's text
+    # on `card_faces`, so reading the top-level field scored eleven
+    # double-faced cards SILENT whose layer text `parsed_layer_effects` reads
+    # perfectly well - Flamescroll Celebrant's "{1}{R}: This creature gets
+    # +2/+0" among them. That was a defect in this measurement, not in the
+    # engine, and it is the same fallback `_spell_faces` below already makes.
+    text = printing.front_oracle_text
     # `card_name=` mirrors `machines/layers.effects_for`'s own call - Ruby,
     # Daring Tracker's "Ruby gets +2/+2 until end of turn." is CR 201.5's
     # self-reference by literal printed name rather than CR 700.7's "this
@@ -766,6 +773,18 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
             index = activated_index
             activated_index += 1
             if ability.mana is not None and ability.loyalty is None:
+                continue
+            if ability.class_level_target is not None:
+                # CR 716.2a: "[Cost]: Level N" means "this Class's level
+                # becomes N", and that is the whole ability - the bar has no
+                # effect body for `activated_effect_for` to return, because
+                # the mechanic lives in `Game.activate_ability`
+                # (models/game.py:2543) and the level gating in
+                # `CardState`'s CR 716.2a reader. Asking the effect registry
+                # about it scored four Class cards SILENT for a mechanic that
+                # is fully implemented. The abilities the level unlocks are
+                # separate clauses and are judged on their own below.
+                clauses.append(ClauseOutcome(HANDLED, ability.text, "activated"))
                 continue
             categories = [
                 _dispatch_category(
