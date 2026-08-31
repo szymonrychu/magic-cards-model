@@ -80,6 +80,7 @@ from ..machines.effects import (
     SuspendRedirectNotice,
     UnmodeledTriggerEffectNotice,
     activated_effect_for,
+    devotion_to,
     effect_for,
     trigger_effect_for,
 )
@@ -1865,6 +1866,24 @@ class Game(BaseModel):
             # CR 608.3, 608.3a: a resolving permanent spell "becomes a permanent
             # and enters the battlefield under the control of the spell's
             # controller". It was cast, so Containment Priest does not catch it.
+            if spell.is_copy:
+                # CR 707.10f: "Some effects copy a permanent spell. As that
+                # copy resolves, it ceases being a copy of a spell and becomes
+                # a token permanent." CR 111.13 says the same from the token
+                # side - "A copy of a permanent spell becomes a token as it
+                # resolves. The token has the characteristics of the spell
+                # that became that token. The token is not 'created' for the
+                # purposes of any replacement effect" - and CR 608.3f is the
+                # resolution step itself. `CardState.token` is the flag
+                # `models/token.is_token` and CR 111.7's state-based action
+                # both read; setting it here, rather than at `copy_spell`, is
+                # what "as that copy resolves" means: while it is still a
+                # spell on the stack it is a copy of a spell, not a token.
+                # Nothing is "created", so no token-creation replacement
+                # effect (Doubling Season) applies - which is exactly why this
+                # sets the flag directly instead of routing through
+                # `models/token.create_tokens`.
+                spell.token = True
             if "Aura" in spell.subtypes:
                 attachment = self._aura_attachment(spell)
                 if attachment is None:
@@ -2445,6 +2464,18 @@ class Game(BaseModel):
         subjects have also moved by the time the trigger is worked out.
         """
         sources: list[CardState] = list(self.battlefield)
+        # CR 113.6m: "An ability whose cost or effect specifies that it moves
+        # the object it's on out of a particular zone functions only in that
+        # zone" - Arclight Phoenix's "At the beginning of combat on your turn,
+        # ... return this card from your graveyard to the battlefield" is one,
+        # and a graveyard card was never asked about any event at all, so it
+        # could not fire. Every card in every graveyard is offered here and
+        # `machines/triggers.triggers_for` filters on
+        # `zones_ability_functions_in`, which still answers "battlefield" for
+        # everything that has not earned otherwise - so this widens what is
+        # *asked*, never what triggers.
+        for player in self.players:
+            sources.extend(player.graveyard)
         if event.event is TriggerEvent.CAST_SPELL:
             sources = self.spells_on_stack + sources
         elif (
@@ -6700,8 +6731,17 @@ class Game(BaseModel):
         color: Color | None = None,
         x_value: int = 0,
         exiled_for_cost: CardState | None = None,
+        sacrificed_for_cost: list[CardState] | None = None,
     ) -> AbilityOnStack | None:
         """Finish activating: put the ability on the stack (CR 602.2).
+
+        `sacrificed_for_cost` is the sacrifice twin of `exiled_for_cost` -
+        the same permanents the caller already handed to `begin_activating`'s
+        `sacrificing=`, repeated here because `AbilityOnStack.
+        cost_sacrificed_card_ids` is where a resolving effect that asks about
+        them (Witch's Oven's "if the sacrificed creature's toughness was 4 or
+        greater") can find them again. CR 602.2b pays the cost before this
+        object exists, so nothing else on the ability remembers the choice.
 
         `exiled_for_cost` is the card chosen to pay a cost like Back from the
         Brink's own "Exile a creature card from your graveyard and pay its
@@ -6807,8 +6847,20 @@ class Game(BaseModel):
             land_types = self._controlled_land_types(controller)
             own_counters = frozenset(permanent.counters.counts)
             has_imprinted_card = self.card_imprinted_on(permanent.id) is not None
+            # CR 700.5's devotion, for Nykthos, Shrine to Nyx's own "Add an
+            # amount of mana of that color equal to your devotion to that
+            # color." Counted here rather than on the `ManaAbility` because
+            # only the game knows the board (`ManaAbility.
+            # amount_from_devotion`'s own docstring), and counted to the
+            # colour the activating player just chose, which is what "that
+            # color" points back at.
+            devotion = (
+                devotion_to(self, controller, color)
+                if ability.mana.amount_from_devotion and color is not None
+                else None
+            )
             produced_mana = ability.mana.resolve(
-                land_types, own_counters, color, has_imprinted_card
+                land_types, own_counters, color, has_imprinted_card, count=devotion
             )
             # CR 106.6: a "Spend this mana only to ..." sentence in this
             # ability's own effect text restricts the mana it just made. The
@@ -6858,6 +6910,7 @@ class Game(BaseModel):
             targets=[TargetRef.coerce(target) for target in targets or []],
             x_value=x_value,
             cost_exiled_card_id=exiled_for_cost.id if exiled_for_cost is not None else None,
+            cost_sacrificed_card_ids=tuple(state.id for state in (sacrificed_for_cost or [])),
         )
         self.stack.append(on_stack)
         # CR 117.3c hands priority straight back, so anything that triggered
