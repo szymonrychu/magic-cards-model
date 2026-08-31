@@ -17,8 +17,6 @@ one.
 Every CR number here was looked up with `knowledge_search(type="rules")`.
 """
 
-import pytest
-
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario
@@ -55,11 +53,6 @@ def test_a_creature_with_no_replacement_effect_around_reaches_the_graveyard():
     assert fiend in scenario.player("bob").graveyard
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="triggered abilities are not modelled (CR 603): nothing puts a dies trigger "
-    "on the stack, so machines/triggers.py is never consulted by Game.resolve_top",
-)
 def test_a_dies_trigger_goes_on_the_stack_when_the_death_actually_happens():
     """DDR#193: the Fiend's own trigger, with nothing interfering.
 
@@ -68,6 +61,13 @@ def test_a_dies_trigger_goes_on_the_stack_when_the_death_actually_happens():
     on the stack the next time a player would receive priority. Without this
     half working, the Rest in Peace case below cannot be told apart from the
     engine simply not having triggers.
+
+    This was `xfail` with the reason "triggered abilities are not modelled",
+    which was stale by the time it was measured again: the ability does go on
+    the stack. CR 405.1 is why it is not named "Footlight Fiend" there - "when
+    an ability is activated or triggers, it goes on top of the stack without
+    any card associated with it", so the object on the stack is the *ability*,
+    which `AbilityOnStack` names after its source.
     """
     scenario = bolt_board("Footlight Fiend").build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
@@ -75,9 +75,9 @@ def test_a_dies_trigger_goes_on_the_stack_when_the_death_actually_happens():
 
     bolt(scenario, fiend)
 
-    assert [state.name for state in scenario.game.stack] == ["Footlight Fiend"], (
-        "the dies trigger should be waiting on the stack"
-    )
+    assert [state.name for state in scenario.game.stack] == [
+        "Footlight Fiend's triggered ability"
+    ], "the dies trigger should be waiting on the stack"
 
 
 def test_rest_in_peace_exiles_the_dying_creature_instead():
