@@ -18,9 +18,10 @@ sentence, which strips the Calendar's abilities, only runs afterwards
 second trigger reaches the stack the Calendar has no abilities left, so nothing
 stops it.
 
-The engine models neither half of this: the Calendar's ability does not even
-parse as a trigger condition, and there is no state-trigger machinery for it to
-plug into if it did.
+The Calendar's ability now parses as a trigger condition (the comma inside
+"1,000" is no longer read as the CR 603.1 boundary), but there is still no
+state-trigger machinery for it to plug into, so the ruling itself remains out
+of reach.
 
 Card text verified with `resolve_cards`; every CR number here was looked up
 with `knowledge_search(type="rules")` in this session.
@@ -35,29 +36,32 @@ from tests.cards import card
 from tests.scenarios.harness import Scenario
 
 
-def test_the_calendars_state_trigger_condition_is_misread_at_the_comma():
-    """DDR#961's first obstacle, before any rules question can be asked.
+def test_the_calendars_state_trigger_condition_reads_past_the_number():
+    """DDR#961's first obstacle, now cleared.
 
     The Millennium Calendar (verified with `resolve_cards`): "When there are
     1,000 or more time counters on The Millennium Calendar, sacrifice it and
     each opponent loses 1,000 life."
 
     CR 603.1 templates the ability as "[When] [trigger condition], [effect]",
-    and `machines/abilities.py` splits on the first comma - which here falls
-    inside the number. The condition comes out as "there are 1" and the effect
-    as "000 or more time counters on The Millennium Calendar, sacrifice it and
-    each opponent loses 1, 000 life."
+    and `machines/abilities.py` cuts at the first top-level comma to find that
+    boundary. It used to cut inside the number, leaving the condition as
+    "there are 1"; a comma between two digits is no longer a boundary, so the
+    whole condition survives.
 
-    Asserted rather than described: a thousand-separator comma inside a trigger
-    condition is a parser defect this suite should notice if it is ever fixed.
+    What is still missing is CR 603.8's state-trigger machinery itself - the
+    condition parses, but nothing watches the game state for it, which is what
+    the `xfail` below is measured against.
     """
     abilities = parse_abilities(card("The Millennium Calendar"))
     triggered = [ability for ability in abilities if ability.kind is AbilityKind.TRIGGERED]
     state_trigger = triggered[-1]
 
-    assert state_trigger.condition == "there are 1"
-    assert state_trigger.effect.startswith("000 or more time counters")
-    assert state_trigger.event is None, "no TriggerEvent shape was matched either"
+    assert state_trigger.condition == (
+        "there are 1,000 or more time counters on The Millennium Calendar"
+    )
+    assert state_trigger.effect == "sacrifice it and each opponent loses 1,000 life."
+    assert state_trigger.event is None, "no TriggerEvent shape was matched for it"
 
 
 def test_a_thousand_time_counters_trigger_nothing():
@@ -88,9 +92,9 @@ def test_a_thousand_time_counters_trigger_nothing():
 
 
 @pytest.mark.xfail(
-    reason="CR 603.8 state triggers are not modelled at all, and The Millennium "
-    "Calendar's condition does not parse (the comma in '1,000' splits it), "
-    "so nothing ever triggers to be countered, re-trigger, or resolve",
+    reason="CR 603.8 state triggers are not modelled at all: the Calendar's "
+    "condition parses now, but nothing watches the game state for it, so "
+    "nothing ever triggers to be countered, re-trigger, or resolve",
     strict=True,
 )
 def test_countering_the_state_trigger_lets_it_trigger_again_before_the_abilities_go():

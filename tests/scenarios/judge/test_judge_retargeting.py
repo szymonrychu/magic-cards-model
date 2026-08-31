@@ -106,13 +106,6 @@ def test_deflecting_swat_resolving_leaves_a_targetless_spell_alone():
     assert bears.zone is Zone.BATTLEFIELD
 
 
-@pytest.mark.xfail(
-    reason="'with a single target' (CR 115.9a) is a property of the targeted "
-    "spell, but machines/targeting.py reads the trailing 'target' as a "
-    "second targeting requirement of Bolt Bend's own, so the spell asks "
-    "for two targets instead of one",
-    strict=True,
-)
 def test_bolt_bend_cannot_be_aimed_at_a_spell_with_no_targets():
     """DDR#959's contrast case: Bolt Bend is the one that refuses this play.
 
@@ -126,12 +119,14 @@ def test_bolt_bend_cannot_be_aimed_at_a_spell_with_no_targets():
     Bears was put on the stack with zero, so it is not a legal target for Bolt
     Bend, and announcing it should be refused for *that* reason (CR 601.2c).
 
-    The engine refuses it for the wrong reason. `targeting_profile(card("Bolt
-    Bend"))` comes back with **two** requirements: the intended "target spell",
-    plus a second any-target-shaped one read out of the tail "with a single
-    target". So the refusal message is "too few targets: 1 chosen where the
-    spell requires 2" - Bolt Bend cannot be legally cast at anything at all,
-    which is a strictly worse bug than the one the episode is about.
+    The engine used to refuse it for the wrong reason: `targeting_profile`
+    came back with **two** requirements - the intended "target spell", plus a
+    second any-target-shaped one read out of the tail "with a single target" -
+    so the message was "too few targets: 1 chosen where the spell requires 2"
+    and Bolt Bend was castable at nothing at all. The tail is now read as
+    `TargetRequirement.required_target_count`, and the refusal names the real
+    reason. `tests/scenarios/test_single_target_restriction.py` carries the
+    rest of the restriction's cases.
     """
     scenario = board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
