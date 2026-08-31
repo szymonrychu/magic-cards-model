@@ -61,10 +61,9 @@ def _explore(scenario) -> None:
     scenario.attack_with(scenario.creature("Griselbrand", "alice"))
     scenario.no_blocks()
     scenario.combat_damage()
-    assert [ability.source_name for ability in scenario.pending_triggers] == [
-        "Amalia Benavides Aguirre"
-    ]
-    scenario.pass_priority("alice")
+    # CR 510.3a: the combat damage step puts what triggered on the stack before
+    # the active player gets priority, so the trigger is already there.
+    assert scenario.stack_names() == ["Amalia Benavides Aguirre's triggered ability"]
     scenario.resolve_top()
 
 

@@ -130,9 +130,10 @@ def test_ragavans_trigger_goes_on_the_stack_with_no_targets_and_no_targeting_not
     scenario.start_at(Step.DECLARE_ATTACKERS)
     scenario.attack_with(ragavan, defending="carol")
     scenario.no_blocks()
+    # CR 510.3a puts it on the stack inside the damage step itself.
     scenario.combat_damage()
 
-    on_stack = scenario.game.put_triggers_on_stack()
+    on_stack = scenario.game.abilities_on_stack
 
     assert len(on_stack) == 1
     assert on_stack[0].targets == []
