@@ -1,0 +1,132 @@
+{
+  "object": "card",
+  "id": "40bafd2b-acd4-46f0-abb2-139e2918ae99",
+  "oracle_id": "be668c2d-71ea-4346-8980-1fbf5e4cbed3",
+  "multiverse_ids": [
+    675995
+  ],
+  "mtgo_id": 130867,
+  "tcgplayer_id": 578968,
+  "cardmarket_id": 788674,
+  "name": "Otherworldly Gaze",
+  "lang": "en",
+  "released_at": "2024-09-27",
+  "uri": "https://api.scryfall.com/cards/40bafd2b-acd4-46f0-abb2-139e2918ae99",
+  "scryfall_uri": "https://scryfall.com/card/dsc/122/otherworldly-gaze?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:27:05Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/4/0/40bafd2b-acd4-46f0-abb2-139e2918ae99.jpg?1783909625",
+    "normal": "https://cards.scryfall.io/normal/front/4/0/40bafd2b-acd4-46f0-abb2-139e2918ae99.jpg?1783909625",
+    "large": "https://cards.scryfall.io/large/front/4/0/40bafd2b-acd4-46f0-abb2-139e2918ae99.jpg?1783909625",
+    "png": "https://cards.scryfall.io/png/front/4/0/40bafd2b-acd4-46f0-abb2-139e2918ae99.png?1783909625",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/4/0/40bafd2b-acd4-46f0-abb2-139e2918ae99.jpg?1783909625",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/4/0/40bafd2b-acd4-46f0-abb2-139e2918ae99.jpg?1783909625",
+    "thumb": "https://cards.scryfall.io/thumb/front/4/0/40bafd2b-acd4-46f0-abb2-139e2918ae99.webp?1783909625",
+    "grid": "https://cards.scryfall.io/grid/front/4/0/40bafd2b-acd4-46f0-abb2-139e2918ae99.webp?1783909625",
+    "display": "https://cards.scryfall.io/display/front/4/0/40bafd2b-acd4-46f0-abb2-139e2918ae99.webp?1783909625",
+    "art": "https://cards.scryfall.io/art/front/4/0/40bafd2b-acd4-46f0-abb2-139e2918ae99.webp?1783909625",
+    "crop": "https://cards.scryfall.io/crop/front/4/0/40bafd2b-acd4-46f0-abb2-139e2918ae99.webp?1783909625"
+  },
+  "mana_cost": "{U}",
+  "cmc": 1.0,
+  "type_line": "Instant",
+  "oracle_text": "Surveil 3. (Look at the top three cards of your library, then put any number of them into your graveyard and the rest on top of your library in any order.)\nFlashback {1}{U} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Surveil",
+    "Flashback"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "4c822528-83c3-42c7-8708-dd1d37166819",
+  "set": "dsc",
+  "set_name": "Duskmourn: House of Horror Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/4c822528-83c3-42c7-8708-dd1d37166819",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Adsc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/dsc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/40bafd2b-acd4-46f0-abb2-139e2918ae99/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Abe668c2d-71ea-4346-8980-1fbf5e4cbed3&unique=prints",
+  "collector_number": "122",
+  "digital": false,
+  "rarity": "common",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Chris Cold",
+  "artist_ids": [
+    "2622d22b-3fd8-4831-9b2b-adc5fac01b85"
+  ],
+  "illustration_id": "a59f90c6-e808-4df2-971e-ed9c1b481f27",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 2522,
+  "penny_rank": 2737,
+  "prices": {
+    "usd": "0.30",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.41",
+    "eur_foil": null,
+    "tix": "0.29"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=675995&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DOtherworldly%2BGaze",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DOtherworldly%2BGaze",
+    "edhrec": "https://edhrec.com/route/?cc=Otherworldly+Gaze"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F578968%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=788674&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/130867?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
