@@ -9,6 +9,12 @@ Sourced from the DDR judge transcripts. Episodes covered:
   alternative cost)
 - **DDR#978** - Ancestral Vision + Sphere of Resistance (a generic "spells cost
   more" static ability, and Suspend on top of it)
+- **DDR#998** - Llanowar Elves + Umbral Mantle (CR 601.2f's total cost is
+  settled *before* CR 601.2g's mana abilities and CR 601.2h's payment, so no
+  untap-for-mana trick can reach back and change it)
+- **DDR#996** - Gran-Gran + Iroh, Grand Lotus (a cost reduction conditioned on
+  what is in your graveyard, read after CR 601.2a has already moved the spell
+  out of that graveyard)
 
 DDR#991 and DDR#997 are `xfail`: `machines/cost.cost_component_for_phrase` is
 the reader that turns a printed cost sentence `machines/abilities.py` could not
@@ -173,3 +179,198 @@ def test_sphere_of_resistance_taxes_every_spell_by_one_generic_mana():
 
     with pytest.raises(ValueError):
         scenario.cast_and_resolve("Lightning Bolt", mountain, username="alice", targets=[bears])
+
+
+# --------------------------------------------------------------------------
+# DDR#998 - the total cost is settled before mana abilities and before payment
+# --------------------------------------------------------------------------
+
+
+def test_a_cost_increaser_that_leaves_mid_payment_does_not_lower_the_locked_in_cost():
+    """DDR#998's second half: once CR 601.2f has determined the total cost, it
+    does not go back down.
+
+    The episode's Thalia/Village Rites example in engine-reachable form. CR
+    601.2f: "The player determines the total cost of the spell ... Once the
+    total cost is determined, any effects that directly affect the total cost
+    are applied." CR 601.2g then gives the chance to activate mana abilities,
+    and CR 601.2h is where the cost is actually paid - so *everything* a player
+    does from 601.2g onwards, sacrificing the tax permanent included, happens
+    after the number was fixed.
+
+    Sphere of Resistance ("Spells cost {1} more to cast", confirmed with
+    `resolve_cards`) stands in for Thalia here because it is the cost
+    increase this engine actually reads - see
+    `test_sphere_of_resistance_taxes_every_spell_by_one_generic_mana` above.
+    Killing it after `begin_paying` (CR 601.2f is already behind us) must leave
+    the Bolt costing {1}{R}, and it does.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Lightning Bolt"],
+            battlefield=["Sphere of Resistance", "Mountain", "Mountain"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sphere = scenario.find("Sphere of Resistance", Zone.BATTLEFIELD, "alice")
+
+    casting = scenario.cast("Lightning Bolt", targets=["bob"])
+    payment = casting.begin_paying()
+    assert str(payment.cost) == "{1}{R}"
+
+    # CR 601.2h has not happened yet, but CR 601.2f already has.
+    scenario.game.destroy(sphere)
+    assert sphere.zone is Zone.GRAVEYARD
+    assert str(payment.cost) == "{1}{R}"
+
+    scenario.pay_with(payment, *scenario.untapped_sources("Mountain", "Mountain"))
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    assert scenario.player("bob").life == 17
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason="Umbral Mantle grants its ability in quoted text on the equipped "
+    "creature, and neither half of that reaches the engine: "
+    "`triggers.activated_abilities_of(card('Umbral Mantle'))` is empty, so even "
+    "its own `Equip {0}` (CR 702.6a) is unparsed, and `cost_component_for_phrase"
+    "('{3}, {Q}')` returns None, so the untap symbol (CR 107.6) has no reader in "
+    "machines/cost.py either. `Game.activate_ability` raises ValueError - 'Umbral "
+    "Mantle has no activated ability number 0' - long before the sequencing "
+    "question this episode is about can be asked.",
+)
+def test_umbral_mantle_cannot_untap_llanowar_elves_for_a_third_mana():
+    """DDR#998: the untap trick does not work, and the engine cannot even try it.
+
+    Umbral Mantle (confirmed with `resolve_cards`): "Equipped creature has
+    '{3}, {Q}: This creature gets +2/+2 until end of turn.' Equip {0}". CR
+    107.6: "The untap symbol in an activation cost means 'Untap this
+    permanent.'" CR 602.2b makes activating an ability follow CR 601.2b-i, so
+    the {3} is a mana payment settled at CR 601.2f, the chance to make mana is
+    CR 601.2g, and untapping the Elves is part of CR 601.2h's payment - which
+    is *after* the last moment CR 605.3a lets a mana ability be activated for
+    this cost. The Elves therefore cannot be untapped and retapped to help pay
+    for the very ability doing the untapping.
+
+    The engine cannot express the refusal because it never gets that far: this
+    test attaches the Mantle the only way CR 702.6a offers and fails on the
+    activation itself.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Llanowar Elves", "Umbral Mantle", "Forest"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    elves = scenario.creature("Llanowar Elves", "alice")
+    mantle = scenario.find("Umbral Mantle", Zone.BATTLEFIELD, "alice")
+
+    scenario.activate(mantle, targets=[elves])  # Equip {0}, CR 702.6a
+
+    assert elves.power == 3
+
+
+# --------------------------------------------------------------------------
+# DDR#996 - a graveyard-counting discount, read after CR 601.2a emptied it
+# --------------------------------------------------------------------------
+
+#: A real Lesson card, so the graveyard the two static abilities below count is
+#: made of the card type they actually name (Instant - Lesson, confirmed with
+#: `resolve_cards`).
+_LESSON = "Combustion Technique"
+
+
+def _iroh_and_gran_gran(lessons: int) -> "Scenario":
+    """Iroh, Grand Lotus and Gran-Gran on the battlefield, `lessons` Lesson
+    cards in the graveyard, and a creature of bob's for the Lesson to target.
+    """
+    return (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Iroh, Grand Lotus", "Gran-Gran", "Mountain", "Mountain"],
+            graveyard=[_LESSON] * lessons,
+        )
+        .player("bob", battlefield=["Grizzly Bears"])
+    )
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason="Iroh's 'During your turn, each Lesson card in your graveyard has "
+    "flashback {1}' is a static ability granting a castability ability "
+    "(CR 400.7g), and nothing in the engine reads it: `effect_for('Iroh, Grand "
+    "Lotus', ...)` is None, 'Iroh, Grand Lotus' has no row in "
+    "`machines/layers.LAYER_EFFECTS`, and `Casting` does not gate casting from "
+    "the graveyard at all - so the card is castable for entirely the wrong "
+    "reason, and for its printed {1}{R} rather than the granted flashback {1}.",
+)
+def test_iroh_grants_a_lesson_in_the_graveyard_flashback_one():
+    """DDR#996's setup: the flashback cost replaces the mana cost.
+
+    Iroh, Grand Lotus (confirmed with `resolve_cards`): "During your turn, each
+    Lesson card in your graveyard has flashback {1}." CR 400.7g is what keeps
+    that grant alive once CR 601.2a moves the card to the stack: "If an effect
+    grants a nonland card an ability that allows it to be cast, that ability
+    will continue to apply to the new object that card became after it moved to
+    the stack as a result of being cast that way" - the point the episode
+    spends its middle section on.
+
+    So the total cost determined at CR 601.2f starts from {1}, not from
+    Combustion Technique's printed {1}{R}.
+    """
+    scenario = _iroh_and_gran_gran(lessons=4).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "bob")
+
+    casting = scenario.cast(_LESSON, from_zone=Zone.GRAVEYARD, targets=[bears])
+
+    assert str(casting.begin_paying().cost) == "{1}"
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason="Gran-Gran's 'Noncreature spells you cast cost {1} less to cast as "
+    "long as there are three or more Lesson cards in your graveyard' never "
+    "reaches the cost at all: the cast costs the same {1}{R} with three Lessons "
+    "in the graveyard, with four, and with none. `machines/cost.py` grew static "
+    "cost *increases* (DDR#978 above) but no conditional reduction keyed on a "
+    "zone count, so the episode's actual question - which side of CR 601.2a the "
+    "count is taken on - cannot even be posed.",
+)
+def test_gran_grans_discount_counts_the_graveyard_after_the_spell_left_it():
+    """DDR#996: casting the Lesson itself takes it out of the count.
+
+    Gran-Gran (confirmed with `resolve_cards`): "Noncreature spells you cast
+    cost {1} less to cast as long as there are three or more Lesson cards in
+    your graveyard." CR 601.2a is the first step of casting - "a player first
+    moves that card ... from where it is to the stack" - and CR 601.2f, where
+    the discount would apply, is five steps later. So a player flashing back
+    one of exactly three Lessons has two left when the cost is determined and
+    gets no discount; four is the number that makes the trick work.
+
+    Both halves are asserted here: four Lessons discounts Iroh's flashback {1}
+    down to nothing, three does not.
+    """
+    with_four = _iroh_and_gran_gran(lessons=4).build()
+    with_four.start_at(Step.PRECOMBAT_MAIN)
+    four_target = with_four.creature("Grizzly Bears", "bob")
+    four_cost = with_four.cast(
+        _LESSON, from_zone=Zone.GRAVEYARD, targets=[four_target]
+    ).begin_paying()
+
+    with_three = _iroh_and_gran_gran(lessons=3).build()
+    with_three.start_at(Step.PRECOMBAT_MAIN)
+    three_target = with_three.creature("Grizzly Bears", "bob")
+    three_cost = with_three.cast(
+        _LESSON, from_zone=Zone.GRAVEYARD, targets=[three_target]
+    ).begin_paying()
+
+    assert str(four_cost.cost) == "{0}"
+    assert str(three_cost.cost) == "{1}"
