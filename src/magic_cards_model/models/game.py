@@ -233,6 +233,20 @@ _COSTS_LESS_IF_TARGETS_COLOR_SPELL_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: Ral, Monsoon Mage's own back-face intrinsic (CR 306.5b's own "additional"
+#: shape, layered on top of the printed loyalty number rather than replacing
+#: it): "enters with an additional loyalty counter on him/her/it/them for
+#: each instant and sorcery spell you've cast this turn." Generalized on the
+#: pronoun; the spell-type qualifier is read narrowly (this is the one
+#: printing in the pool) but by the words "instant"/"sorcery" rather than by
+#: card name, so a future card naming a different type pairing the same way
+#: is not silently mismatched onto this one's amount.
+_ADDITIONAL_LOYALTY_PER_INSTANT_SORCERY_RE = re.compile(
+    r"enters with an additional loyalty counter on (?:it|him|her|them) for each "
+    r"instant and sorcery spell you'?ve cast this turn",
+    re.IGNORECASE,
+)
+
 
 def _qualities_from_text(text: str | None) -> list[str]:
     """Every "protection from [quality]" this text carries, in order (CR 702.16a,
@@ -1068,6 +1082,13 @@ class Game(BaseModel):
     simultaneous shuffles are two shuffles. Nothing triggers on a shuffle yet,
     so this is the only record that one occurred.
     """
+
+    coin_flips_performed: int = 0
+    """How many coin flips this game has done, counting up - `shuffles_performed`'s
+    own convention (see its docstring), applied to CR 705.1's own randomness
+    instead: `flip_coin` seeds each flip from `f"{shuffle_seed}:
+    {coin_flips_performed}:coin"`, so a scenario asserting on the result
+    stays reproducible and the second flip of a game differs from the first."""
 
     prevention_shields: list["PreventionShield"] = Field(default_factory=list)
     """Prevention effects created by a resolving spell or ability (CR 615.1).
@@ -2745,6 +2766,34 @@ class Game(BaseModel):
         time conditions from."""
         return self.permanents_left_battlefield_this_turn.get(controller, 0) > 0
 
+    def _additional_entering_loyalty(self, card_state: CardState) -> int:
+        """Ral, Monsoon Mage's back face: "Ral enters with an additional
+        loyalty counter on him for each instant and sorcery spell you've
+        cast this turn." CR 306.5b's intrinsic "enters with N loyalty
+        counters" (`CardState._enter_with_loyalty`, applied by `move_to`
+        before this is ever called) only ever reads the printed number - it
+        has no `Game` to ask a dynamic "for each ... this turn" question of,
+        so the additional half is read here instead, off whichever face is
+        now up, generalized on the spell types named rather than pinned to
+        this one printing.
+
+        Read from `card_state.oracle_text` - which already reads the back
+        face once `CardState.transform`/`move_to(transformed=True)` has
+        flipped it up - so this only ever finds Ral's own sentence on Ral,
+        and finds nothing on every other permanent, transformed or not.
+        """
+        if not card_state.is_planeswalker:
+            return 0
+        text = card_state.oracle_text or ""
+        match = _ADDITIONAL_LOYALTY_PER_INSTANT_SORCERY_RE.search(text)
+        if match is None:
+            return 0
+        controller = card_state.controller or self.active_player.username
+        cast = self.spells_cast_this_turn.get(controller, [])
+        return sum(
+            1 for spell in cast if Type.INSTANT in spell.types or Type.SORCERY in spell.types
+        )
+
     def enter_the_battlefield(
         self,
         card_state: CardState,
@@ -2863,6 +2912,10 @@ class Game(BaseModel):
 
         for kind, amount in event.counters.items():
             self.add_counters(card_state, kind, amount)
+
+        extra_loyalty = self._additional_entering_loyalty(card_state)
+        if extra_loyalty:
+            self.add_counters(card_state, Counter.LOYALTY, extra_loyalty)
 
         self.emit(self._enters_event(card_state))
         # CR 714.3a's own intrinsic lore counter (`CardState.move_to`, applied
@@ -3511,6 +3564,23 @@ class Game(BaseModel):
         rng.shuffle(rest)
         player.zones[Zone.LIBRARY] = held + rest
         self.shuffles_performed += 1
+
+    def flip_coin(self) -> bool:
+        """CR 705.1: flip a coin, "a two-sided object with ... equal likelihood
+        that either side lands face up." Returns `True` for a win (heads, by
+        this engine's own arbitrary but fixed convention - CR 705.1 leaves
+        which side is which to the players, and nothing here distinguishes
+        them further than win/lose the way `condition_matches`'s callers
+        already read "if you win/lose the flip").
+
+        Seeded from `shuffle_seed` and `coin_flips_performed`, the same
+        reproducibility convention `shuffle` uses for its own randomness (see
+        that method's own docstring) - a scenario asserting on the result of
+        a flip needs a fixed outcome, not a live coin.
+        """
+        rng = Random(f"{self.shuffle_seed}:{self.coin_flips_performed}:coin")  # noqa: S311
+        self.coin_flips_performed += 1
+        return rng.random() < 0.5
 
     def search_library(
         self,

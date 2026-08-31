@@ -311,6 +311,17 @@ class AbilityOnStack(BaseModel):
     because the activation holds a live `Game`.
     """
 
+    division: list[int] | None = None
+    """CR 601.2d's announced division, `Casting.division`'s own field mirrored
+    here so `machines/effects._deal_divided_damage_shares` reads the same
+    attribute off either kind of stack object - CR 602.2b: "the remainder of
+    the process for activating an ability is identical to the process for
+    casting a spell", which is what makes an ability's own "deals N damage
+    divided as you choose among one or two targets" (Ral, Monsoon Mage's −2)
+    the same CR 601.2d announcement a spell's identical wording already gets.
+    `None` here (no caller announces one yet for an ability) falls through to
+    `_divided_damage_shares`'s own even-split fallback, exactly as an
+    un-announced spell already does."""
     cost_exiled_card_id: UUID | None = None
     """The id of the card exiled to pay this ability's own cost, when the
     ability's *effect* refers back to it anaphorically - Back from the
@@ -914,6 +925,16 @@ def condition_matches(
             return event.subject_id == source.id
         if not _controller_clause_holds(condition, controller, event.player):
             return False
+        if "during your turn" in lowered or "during their turn" in lowered:
+            # Ral, Monsoon Mage's own condition: the cast has to have
+            # happened during *this ability's controller's* own turn, not
+            # merely by that controller - CR 500.1's turn structure is what
+            # "your turn" points at, read off the live `TurnMachine` rather
+            # than any snapshot, since the trigger is checked as the cast
+            # event fires, before anything else has moved the turn along.
+            turn = getattr(game, "turn", None)
+            if turn is None or turn.active_player != controller:
+                return False
         ordinal_match = _ordinal_spell_this_turn_matches(game, condition, controller, event)
         if ordinal_match is not None:
             return ordinal_match
