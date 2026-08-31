@@ -1926,7 +1926,7 @@ class CostPayment(BaseModel):
             restriction = restriction_for_production(source, produces)
         self.pool.add_all(produces, snow=is_snow_source(source), restriction=restriction)
         if self.game is not None:
-            self.game.emit(tapped_for_mana_event(source))
+            self.game.emit(tapped_for_mana_event(source, self.game))
         return self.pool
 
     def auto_tap(self, sources: Iterable[CardState]) -> list[CardState]:

@@ -5682,7 +5682,7 @@ class Game(BaseModel):
             # this: `CostPayment.tap_for_mana` emits the same event when a
             # source pays for a spell instead of being activated directly).
             if any(piece.kind is CostKind.TAP for piece in ability.costs):
-                self.emit(tapped_for_mana_event(permanent))
+                self.emit(tapped_for_mana_event(permanent, self))
             self.put_triggers_on_stack()
             return None
 
