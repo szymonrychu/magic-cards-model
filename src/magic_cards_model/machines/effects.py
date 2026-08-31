@@ -1569,18 +1569,15 @@ EFFECTS: dict[str, Effect] = {
     # card's own printed text (Dismember's Phyrexian-mana reminder line
     # stripped like any other), so `effect_for`'s fallback reaches them. See
     # `test_registry_is_minimal.py`.
-    # "Lava Dart deals 1 damage to any target." is exactly `_DAMAGE_TARGET_RE`'s
-    # shape (Lightning Bolt's own) - but unlike Lightning Bolt, `Card.oracle_text`
-    # here is two lines, the second being "Flashback-Sacrifice a Mountain."
-    # (CR 702.34). That second line is not a resolution instruction at all -
-    # it is a way to *cast* the card, `machines/casting.py`'s business - but
-    # `_prepare_effect_clauses` has no way to know that and refuses the whole
-    # text as one unreadable clause among the effect's own, so the fallback
-    # cannot reach the first line either. The row stays until a wave teaches
-    # the clause splitter to strip a flashback line the way it already strips
-    # an additional-cost line. See `tests/test_targeted_effects.py::
-    # test_a_flashback_line_takes_the_whole_effect_down`.
-    "Lava Dart": deal_damage(1),
+    # "Lava Dart" is not entered here any more: its first line is exactly
+    # `_DAMAGE_TARGET_RE`'s shape (Lightning Bolt's own), and its second -
+    # "Flashback—Sacrifice a Mountain." (CR 702.34a) - is now recognised as a
+    # keyword-ability line by shape rather than by keyword and stripped before
+    # the clause split (`_strip_keyword_ability_lines`), so the fallback
+    # reaches the damage. The row was only ever there because the em-dash cost
+    # form of a keyword line had no regex of its own. See
+    # `tests/test_targeted_effects.py::
+    # test_a_flashback_line_no_longer_takes_the_whole_effect_down`.
     "Unholy Heat": delirium_damage(2, 6),
     # -- tokens (CR 111, CR 701.7a) -------------------------------------
     # Spectral Procession's "Create three 1/1 white Spirit creature tokens
@@ -1630,7 +1627,7 @@ EFFECTS: dict[str, Effect] = {
 #: sentence (see its own docstring): the destination is not something a
 #: spell-resolution clause *runs*, it is what CR 608.2n/CR 304.2/CR 307.2's own
 #: final "put into its owner's graveyard" step is replaced by, the same split
-#: `_REBOUND_LINE_RE` already draws for CR 702.88a's rebound. Left in the text,
+#: `_strip_keyword_ability_lines` already draws for CR 702.88a's rebound line. Left in the text,
 #: this sentence matches no clause shape `_parse_mixed_clause` reads and fails
 #: the whole effect closed (CR 608.2c has no half-effect) - which is exactly
 #: the bug this exists to fix: Green Sun's Zenith's search never ran because
@@ -2475,6 +2472,21 @@ def _quality_word_matcher(word: str) -> Callable[[CardState], bool]:
     return _named_type_matcher(word)
 
 
+def _historic(state: CardState) -> bool:
+    """CR 700.6: "The term historic refers to an object that has the legendary
+    supertype, the artifact card type, or the Saga subtype."
+
+    Read off the computed characteristics on `CardState`, not off `Card`, so a
+    permanent that gained the artifact type or the legendary supertype from a
+    continuous effect counts, exactly as CR 700.6 describes an *object*.
+    """
+    return (
+        Supertype.LEGENDARY in state.supertypes
+        or Type.ARTIFACT in state.types
+        or any(subtype.lower() == "saga" for subtype in state.subtypes)
+    )
+
+
 def _quality_matcher(quality: str) -> Callable[[CardState], bool]:
     """A predicate for "a `<quality>` card" out of a search sentence.
 
@@ -2483,6 +2495,20 @@ def _quality_matcher(quality: str) -> Callable[[CardState], bool]:
     words (each optionally qualified by a color, see `_quality_word_matcher`)
     joined by "or" or a comma - fetchlands print two, Flagstones one - and
     matching any one of them is enough, the same "or" the card prints.
+
+    "Historic" is CR 700.6's own term - "The term historic refers to an object
+    that has the legendary supertype, the artifact card type, or the Saga
+    subtype" - one word standing for three unrelated checks, which is why it
+    cannot be spelled as a type word. Monumental Henge prints it, with the
+    rule paraphrased in its own reminder text.
+
+    **A list made entirely of negations is a conjunction, not a disjunction.**
+    Narset, Parter of Veils' "a noncreature, nonland card" means a card that
+    is neither, and reading its comma as "or" would qualify every card in the
+    game (a creature is nonland; a land is noncreature) - a fails-open answer,
+    not merely a missed one. That is De Morgan on the positive phrase the card
+    is negating ("creature or land"), so nothing about the "or" reading for
+    positive words changes.
     """
     lowered = quality.strip().lower()
     if lowered.startswith("basic "):
@@ -2492,8 +2518,16 @@ def _quality_matcher(quality: str) -> Callable[[CardState], bool]:
             return rest(state) and Supertype.BASIC in state.supertypes
 
         return basic_matches
+    if lowered == "historic":
+        return _historic
     words = [word.strip() for word in re.split(r",\s*|\s+or\s+", lowered) if word.strip()]
     matchers = [_quality_word_matcher(word) for word in words]
+    if len(words) > 1 and all(word.startswith("non") for word in words):
+
+        def matches_none_of(state: CardState) -> bool:
+            return all(matcher(state) for matcher in matchers)
+
+        return matches_none_of
 
     def matches(state: CardState) -> bool:
         return any(matcher(state) for matcher in matchers)
@@ -3312,136 +3346,6 @@ _REMINDER_LINE_RE = re.compile(r"^[ \t]*\([^()]*\)[ \t]*\n+", re.MULTILINE)
 #: is never rules text wherever it sits, so stripping it anywhere is safe.
 _INLINE_REMINDER_RE = re.compile(r"[ \t]*\([^()]*\)")
 
-#: Suspend's own line (CR 702.62a: "Suspend is a keyword that represents three
-#: abilities" - none of them the spell's own CR 608.2c resolution instruction,
-#: which is why Living End's "Suspend 3—{2}{B}{B}" has to come off before its
-#: "Each player exiles ..." sentence is read as the whole effect. General to
-#: the keyword's printed shape (a name, a number, an em dash, a cost), not to
-#: this one card - any "Suspend N—[cost]" line strips the same way.
-_SUSPEND_LINE_RE = re.compile(r"^Suspend \d+—[^\n]+\n+", re.MULTILINE | re.IGNORECASE)
-
-#: Cascade's own line, reminder text and all (CR 702.85a). Printed as "Cascade
-#: (reminder...)" ahead of whatever the spell also does - Violent Outburst's
-#: "Creatures you control get +1/+0 until end of turn." - so without this, the
-#: periods inside the reminder text get read by `_CLAUSE_SEPARATOR` as
-#: sentence boundaries of their own and the real effect is lost along with the
-#: garbage around it. General to the keyword, not to Violent Outburst: any
-#: card pairing bare "Cascade" with its own resolution text hits the same bug.
-_CASCADE_LINE_RE = re.compile(r"^Cascade(?:\s*\([^()]*\))?[ \t]*\n+", re.MULTILINE | re.IGNORECASE)
-
-#: Kicker's own line (CR 702.33a: "a static ability that functions while the
-#: spell with kicker is on the stack", never itself a CR 608.2c resolution
-#: instruction), reminder text and all - Burst Lightning prints "Kicker {4}
-#: (...)" ahead of its own "deals 2 damage to any target. If this spell was
-#: kicked, it deals 4 damage instead.", the same leading shape
-#: `_SUSPEND_LINE_RE`/`_CASCADE_LINE_RE` already strip theirs from. Left
-#: unstripped, `split_effect_clauses` reads "Kicker {4}" as an unreadable
-#: clause of its own and `_parse_mixed_clauses`'s fail-closed-per-clause rule
-#: takes the whole damage sentence down with it - the same bug already fixed
-#: for Suspend, Cascade, Replicate, Cycling, Flashback, and Harmonize's own
-#: lines. Paying kicker (`Casting.pay_kicker`) and reading whether it was
-#: paid (`Game.cast_record(spell).kicked`, CR 702.33d) are both already built
-#: elsewhere; only this line's poisoning effect on an unrelated sentence is
-#: fixed here.
-_KICKER_LINE_RE = re.compile(
-    r"^Kicker [^\n(]+(?:\([^()]*\))?[ \t]*\n+", re.MULTILINE | re.IGNORECASE
-)
-
-#: Replicate's own line (CR 702.56a), reminder text and all - Consign to
-#: Memory prints "Replicate {1} (...)" ahead of its own "Counter target
-#: triggered ability or colorless spell.", the same lead-in shape Suspend's
-#: line already strips. Replicate itself (an additional cost paid as the
-#: spell is cast, copying it once per time paid) is not read anywhere in this
-#: engine - `scripts/sweep_pool.py --keywords` reports it as ignored, and
-#: `docs/engine-coverage.md` records the gap - so a card printing it counters
-#: its one real target correctly and creates no copies, rather than losing
-#: its whole effect to a line nothing here executes.
-_REPLICATE_LINE_RE = re.compile(
-    r"^Replicate [^\n(]+(?:\([^()]*\))?[ \t]*\n+", re.MULTILINE | re.IGNORECASE
-)
-
-#: Rebound's own line (CR 702.88a), reminder text and all - Ephemerate prints
-#: it *after* its one resolution sentence ("Exile target creature you
-#: control, then return it to the battlefield under its owner's control.
-#: \nRebound (...)"), unlike Suspend/Cascade's own lines above, which lead.
-#: CR 702.88a is explicit that rebound "represents a static ability that
-#: functions while the spell is on the stack" - it is never itself a CR
-#: 608.2c resolution instruction, so leaving it in would hand `split_effect_
-#: clauses` a bare "Rebound" clause with nothing this wave reads, taking the
-#: real effect down with it (see `test_rebound.py`'s parser-level check).
-_REBOUND_LINE_RE = re.compile(
-    r"^[ \t]*Rebound(?:\s*\([^()]*\))?[ \t]*\n?", re.MULTILINE | re.IGNORECASE
-)
-
-#: Cycling's own line (CR 702.29a), reminder text and all - Censor prints
-#: "Cycling {U} (...)" *after* its own resolution sentence. Cycling is a
-#: separate activated ability (discard this card, draw a card), never an
-#: instruction the counter effect itself carries out, so without this strip
-#: `split_effect_clauses` reads "Cycling {U}" as a second, unreadable clause
-#: of the *same* effect and `_parse_mixed_clauses`'s fail-closed-per-clause
-#: rule takes the real "Counter target spell unless ..." sentence down with
-#: it - exactly the Suspend/Cascade/Replicate bug this file already
-#: documents for those three lines.
-_CYCLING_LINE_RE = re.compile(
-    r"[ \t]*\n?[ \t]*Cycling [^\n(]+(?:\([^()]*\))?[ \t]*\n?", re.MULTILINE | re.IGNORECASE
-)
-
-#: Flashback's own line (CR 702.34a - "two static abilities: one that
-#: functions while the card is in a player's graveyard and another that
-#: functions while the card is on the stack", neither a CR 608.2c resolution
-#: instruction), reminder text and all - Faithless Looting prints "Flashback
-#: {2}{R} (...)" on its own line *after* its one resolution sentence, exactly
-#: the trailing shape `_CYCLING_LINE_RE`'s own docstring already describes.
-#: Left unstripped, `split_effect_clauses` reads "Flashback {2}{R}" as a
-#: second, unreadable clause of the same effect and `_parse_mixed_clauses`'s
-#: fail-closed-per-clause rule takes "Draw two cards, then discard two
-#: cards." down with it - the same bug already fixed for Suspend, Cascade,
-#: Replicate, Cycling, and Harmonize's own lines. **Anchored on a mana cost
-#: immediately after the word**, unlike `_CYCLING_LINE_RE`'s bare `[^\n(]+`:
-#: the "Flashback" spell (distinct from the keyword) prints "... gains
-#: flashback until end of turn" as ordinary prose with no cost symbol
-#: following it, and an unanchored copy of `_CYCLING_LINE_RE`'s shape ate
-#: that whole sentence and everything after it as if it were this line -
-#: found and fixed in the same session this regex was added, by testing the
-#: "Flashback" spell itself. Flashback the *keyword* - actually casting the
-#: card from the graveyard - is built separately in `machines/casting.py`
-#: (`keyword_cast_options`/`ADDITIONAL_COST_KEYWORDS` territory); only this
-#: line's poisoning effect on an unrelated sentence is fixed here.
-_FLASHBACK_LINE_RE = re.compile(
-    r"[ \t]*\n?[ \t]*Flashback (?:\{[^{}]+\})+[ \t]*(?:\([^()]*\))?[ \t]*\n?",
-    re.MULTILINE | re.IGNORECASE,
-)
-
-#: Harmonize's own line (CR 702.180/702.180a - "three static abilities: one
-#: that functions while the card is in a player's graveyard and two that
-#: function while the spell with harmonize is on the stack", none of them a
-#: CR 608.2c resolution instruction, and none built by this engine), reminder
-#: text and all - Nature's
-#: Rhythm prints "Harmonize {X}{G}{G}{G}{G} (...)" on its own line *after* its
-#: one resolution sentence, the same trailing position `_REBOUND_LINE_RE` and
-#: `_CYCLING_LINE_RE` strip theirs from. Left unstripped, this line is not a
-#: CR 608.2c resolution instruction at all - it is a static permission to cast
-#: the card from the graveyard for an alternative cost - but `split_effect_
-#: clauses` cannot tell that from an ordinary second clause, so it poisons the
-#: whole effect (`_parse_mixed_clauses`'s fail-closed policy) the same way
-#: Suspend's, Cascade's, Replicate's, and Cycling's own lines used to before
-#: each got this exact treatment. Harmonize the *keyword* - casting from the
-#: graveyard, tapping a creature to discount it - is not built anywhere by
-#: this; only the line's poisoning effect on an unrelated sentence is fixed.
-_HARMONIZE_LINE_RE = re.compile(
-    r"[ \t]*\n?[ \t]*Harmonize [^\n(]+(?:\([^()]*\))?[ \t]*\n?", re.MULTILINE | re.IGNORECASE
-)
-
-#: Michelangelo's Technique's own "Sneak {3}{G}" line. CR 702.190a: "Sneak is
-#: a keyword that represents a static ability that functions while the spell
-#: with sneak is on the stack. 'Sneak [cost]' means 'Any time you could cast
-#: an instant during your declare blockers step, you may cast this spell ...'"
-#: - a way to *cast* the card, `machines/casting.py`'s business, and never
-#: part of what it does on resolution, so it is stripped here exactly the way
-#: `_HARMONIZE_LINE_RE` and `_FLASHBACK_LINE_RE` strip their own.
-_SNEAK_LINE_RE = re.compile(
-    r"[ \t]*\n?[ \t]*Sneak [^\n(]+(?:\([^()]*\))?[ \t]*\n?", re.MULTILINE | re.IGNORECASE
-)
 
 #: Force of Will's and Force of Negation's own CR 118.9 pitch line - "You may
 #: pay 1 life and exile a blue card from your hand rather than pay this
@@ -3491,107 +3395,93 @@ _PER_COUNT_COST_REDUCTION_LINE_RE = re.compile(
     r"^This spell costs \{\d+\} less to cast for each [^.]+\.\s*", re.IGNORECASE | re.MULTILINE
 )
 
-#: Fuse's own line (CR 702.102a), reminder text and all - Wear // Tear prints
-#: "Fuse (You may cast one or both halves of this card from your hand.)"
-#: *after* each half's own resolution sentence, the same trailing position
-#: Rebound's and Cycling's lines already strip from. Fuse itself (CR 702.102d's
-#: "combined characteristics" when cast as one fused spell) is not modelled by
-#: this engine - `docs/engine-coverage.md` records the gap - so stripping this
-#: line only keeps it from being misread as a second, unreadable clause of
-#: whichever single half was actually cast, the same "reminder text is not a
-#: resolution instruction" reasoning as Suspend/Cascade/Replicate above.
-_FUSE_LINE_RE = re.compile(r"^[ \t]*Fuse(?:\s*\([^()]*\))?[ \t]*\n?", re.MULTILINE | re.IGNORECASE)
 
-#: Storm's own line (CR 702.40a: "a triggered ability that functions on the
-#: stack", never itself a CR 608.2c resolution instruction of the spell it is
-#: printed on), reminder text and all - Grapeshot and Empty the Warrens both
-#: print "Storm (...)" *after* their own one resolution sentence, the same
-#: trailing position `_REBOUND_LINE_RE`, `_CYCLING_LINE_RE`, and
-#: `_FUSE_LINE_RE` already strip theirs from. Left unstripped, `split_effect_
-#: clauses` reads "Storm" as a second, unreadable clause and `_parse_mixed_
-#: clauses`'s fail-closed-per-clause rule takes the real sentence down with
-#: it - the same bug already fixed for every line above. Storm itself - the
-#: copying - is not read here: it is a keyword-generated triggered ability
-#: (`machines/keywords._storm_ability`/`_storm_effect`), resolved through
-#: `Game._effect_of`'s keyword lookup before this file is ever consulted, the
-#: same split `_cascade_ability`/`_cascade_effect` already draws for cascade.
-#: Only this line's poisoning effect on the spell's own printed sentence is
-#: fixed here.
-_STORM_LINE_RE = re.compile(
-    r"^[ \t]*Storm(?:\s*\([^()]*\))?[ \t]*\n?", re.MULTILINE | re.IGNORECASE
-)
-
-#: Splice's own line (CR 702.47a: "a static ability that functions while a
-#: card is in your hand", never a CR 608.2c resolution instruction of the
-#: spell it is spliced onto or printed on), reminder text and all - Desperate
-#: Ritual prints "Splice onto Arcane {1}{R} (...)" *after* its own "Add
-#: {R}{R}{R}." sentence, the same trailing position Cycling's and Flashback's
-#: own lines strip from. Splice itself (CR 702.47c's text-changing merge of
-#: the spliced card's rules text onto the spell actually being cast) is not
-#: built anywhere in this engine - `docs/engine-coverage.md` records the gap,
-#: the same "not modelled, only this line's poisoning effect is fixed" shape
-#: already used for Replicate, Cycling, and Harmonize above - so a card that
-#: could have been spliced onto simply never offers that choice, and its own
-#: printed effect (the ritual's own mana, here) still resolves in full.
-_SPLICE_LINE_RE = re.compile(
-    r"[ \t]*\n?[ \t]*Splice onto [^\n(]+(?:\([^()]*\))?[ \t]*\n?", re.MULTILINE | re.IGNORECASE
-)
+#: A keyword-ability line, recognised by its *shape* rather than by its
+#: keyword. CR 702.1: "Most abilities describe exactly what they do in the
+#: card's rules text. Some, though, are very common or would require too much
+#: space to define on the card. In these cases, the object lists only the name
+#: of the ability as a 'keyword'" - so a keyword line is the ability's *name*
+#: (plus its cost or parameter, if it has one) and nothing else. It is one of
+#: CR 113.3's ability categories in its own right, never one of the resolving
+#: spell's CR 608.2c instructions, which is why it has to come off before the
+#: text is split into clauses: left in, `split_effect_clauses` reads it as an
+#: unparseable clause and `_parse_mixed_clauses`'s fail-closed-per-clause rule
+#: takes the spell's real sentence down with it.
+#:
+#: This replaces what was a **whitelist** - one hand-written regex per keyword
+#: (`_REPLICATE_LINE_RE`, `_CYCLING_LINE_RE`, ...). The whitelist worked only
+#: for keywords somebody had already met: Consign to Memory read correctly
+#: because replicate had a row, while **Metallic Rebuke** ("Improvise\nCounter
+#: target spell unless its controller pays {3}.", CR 702.126a) and **Lórien
+#: Revealed** ("Draw three cards.\nIslandcycling {1}", CR 702.29e) returned
+#: `None` for the whole card, because improvise and typecycling did not. A
+#: shape rule has no such per-keyword hole.
+#:
+#: The shape, measured against every printing in `tests/fixtures/cards/`:
+#:
+#: - **bare form** - a line with no sentence-ending full stop and no colon:
+#:   `Flying`, `Flying, ward {2}`, `Improvise`, `Islandcycling {1}`,
+#:   `Suspend 3—{2}{B}{B}`, `Enchant creature`, `Hexproof from artifacts,
+#:   creatures, and enchantments`. Rules text is written in sentences, so a
+#:   line carrying neither is not an instruction; the same "no full stop, no
+#:   colon" test is what `machines/abilities._parse_keywords` already uses to
+#:   tell a keyword line from `Flying creatures you control get +1/+1.`
+#: - **em-dash cost form** - `Evoke—Exile a black card from your hand.`,
+#:   `Ward—Pay 3 life.` - which does end in a full stop, and is told apart by
+#:   the em dash carrying no space in front of it. That spacing is exactly the
+#:   distinction `machines/abilities._KEYWORD_COST` already draws between a
+#:   keyword cost and a CR 207.2c ability word (`Landfall — Whenever ...`).
+#:
+#: A line containing " —" is therefore never stripped: that covers CR 700.2's
+#: modal header (`Choose one —`) and every ability word, both of which do
+#: introduce real instructions.
+_KEYWORD_ABILITY_BARE_LINE_RE = re.compile(r"^[A-Za-z][^.:]*$")
+_KEYWORD_ABILITY_COST_LINE_RE = re.compile(r"^[A-Z][A-Za-z'’]*(?: [A-Za-z'’]+)*(?: \d+)?—\S[^:]*$")
 
 
-#: Convoke's and delve's own lines, reminder text and all. CR 702.51a and
-#: CR 702.66a both make these *static abilities that function while the spell
-#: is on the stack*, changing how one symbol of an already-determined total
-#: cost is paid (`machines/objects_as_costs.py`); neither is ever a CR 608.2c
-#: instruction the spell carries out on resolution. Treasure Cruise prints
-#: "Delve (...)" ahead of "Draw three cards." and Conclave Tribunal prints
-#: "Convoke (...)" ahead of its own enters-the-battlefield line, so without
-#: this strip the periods inside the reminder text are read by
-#: `_CLAUSE_SEPARATOR` as clause boundaries and `_parse_mixed_clauses`'s
-#: fail-closed-per-clause rule takes the real sentence down with them - the
-#: same bug already fixed above for cascade, suspend, cycling, storm and the
-#: rest.
-_CONVOKE_LINE_RE = re.compile(
-    r"^[ \t]*Convoke(?:\s*\([^()]*\))?[ \t]*\n?", re.MULTILINE | re.IGNORECASE
-)
-_DELVE_LINE_RE = re.compile(
-    r"^[ \t]*Delve(?:\s*\([^()]*\))?[ \t]*\n?", re.MULTILINE | re.IGNORECASE
-)
+def _is_keyword_ability_line(line: str) -> bool:
+    """Whether `line` is a keyword-ability line - see the two regexes above."""
+    line = line.strip()
+    if not line or " —" in line:
+        return False
+    return bool(
+        _KEYWORD_ABILITY_BARE_LINE_RE.fullmatch(line)
+        or _KEYWORD_ABILITY_COST_LINE_RE.fullmatch(line)
+    )
 
-#: Crew's own line (CR 702.122a: an *activated* ability of a Vehicle card,
-#: built by `machines/keywords.crew_activation` and never part of resolving
-#: anything the Vehicle card itself does). Same poisoning problem as the two
-#: above, and the same fix: Smuggler's Copter prints "Crew 1 (...)" after its
-#: own attack trigger, and Cultivator's Caravan after its mana ability.
-_CREW_LINE_RE = re.compile(
-    r"^[ \t]*Crew \d+(?:\s*\([^()]*\))?[ \t]*\n?", re.MULTILINE | re.IGNORECASE
-)
+
+def _strip_keyword_ability_lines(text: str) -> str:
+    """Drop every keyword-ability line from a multi-line block of rules text.
+
+    Multi-line only, and deliberately so. The bug being fixed is a keyword
+    line *poisoning a sentence printed beside it*, which cannot happen when
+    there is only one line; and a single line is also what every caller that
+    hands this function something other than a card's whole printed text
+    passes - one activated ability's effect ("draw a card", with the full stop
+    already trimmed off by `machines/abilities`), one mode of a modal spell,
+    one clause. Applying the shape rule to those would strip the instruction
+    itself, so it is not applied to them at all.
+    """
+    lines = text.split("\n")
+    if len(lines) < 2:
+        return text
+    return "\n".join(line for line in lines if not _is_keyword_ability_line(line))
 
 
 def _strip_non_effect_preamble(text: str) -> str:
     """Sentences that describe the spell but are not part of resolving it."""
     text = _ADDITIONAL_COST_LINE_RE.sub("", text)
-    text = _CONVOKE_LINE_RE.sub("", text)
-    text = _DELVE_LINE_RE.sub("", text)
-    text = _CREW_LINE_RE.sub("", text)
     text = _CANT_BE_COUNTERED_LINE_RE.sub("", text)
-    text = _SUSPEND_LINE_RE.sub("", text)
-    text = _CASCADE_LINE_RE.sub("", text)
-    text = _KICKER_LINE_RE.sub("", text)
-    text = _REPLICATE_LINE_RE.sub("", text)
-    text = _CYCLING_LINE_RE.sub("", text)
-    text = _FLASHBACK_LINE_RE.sub("", text)
-    text = _HARMONIZE_LINE_RE.sub("", text)
-    text = _SNEAK_LINE_RE.sub("", text)
     text = _PITCH_ALTERNATIVE_COST_LINE_RE.sub("", text)
     text = _SELF_COST_REDUCTION_LINE_RE.sub("", text)
     text = _PER_COUNT_COST_REDUCTION_LINE_RE.sub("", text)
-    text = _REBOUND_LINE_RE.sub("", text)
-    text = _FUSE_LINE_RE.sub("", text)
-    text = _STORM_LINE_RE.sub("", text)
-    text = _SPLICE_LINE_RE.sub("", text)
     text = _REMINDER_LINE_RE.sub("", text)
     text = _INLINE_REMINDER_RE.sub("", text)
-    return text
+    # Last, so the shape rule sees each line with its CR 207.2a reminder text
+    # already gone - "Improvise (Your artifacts can help cast this spell. ...)"
+    # carries two full stops inside the parenthetical and would fail the
+    # no-full-stop test with them still attached.
+    return _strip_keyword_ability_lines(text)
 
 
 #: A bare "shuffle" left over once `split_effect_clauses` has cut across the
@@ -4843,21 +4733,58 @@ _EXILE_TARGET_RE = re.compile(r"exile (?P<phrase>(?:any target|.*target.+))", re
 #: restriction at announcement, not this dispatcher. Still refused: Mystic
 #: Confluence's "Counter target spell unless its controller pays {3}." and
 #: Cryptic Command's own "Counter target spell or ability." - the trailing `$`
-#: refuses anything printed after "spell", rather than silently dropping a
-#: condition the card actually has. Those two shapes get their own regexes
-#: below (`_COUNTER_UNLESS_PAYS_RE`, `_COUNTER_TARGET_ABILITY_OR_SPELL_RE`)
-#: instead of being folded in here.
+#: refuses anything printed after "spell" *other than* the predicate below,
+#: rather than silently dropping a condition the card actually has. The
+#: ability-or-spell shape gets its own regex below
+#: (`_COUNTER_TARGET_ABILITY_OR_SPELL_RE`) instead of being folded in here.
 _SPELL_QUALIFIER_WORD = (
     r"(?:non)?(?:creature|artifact|enchantment|land|planeswalker|instant|sorcery|battle"
     r"|white|blue|black|red|green|colorless|multicolored|monocolored)"
 )
+#: The qualifier as *printed*, which is one or more of the words above joined
+#: by "or" - Flusterstorm's "instant or sorcery spell", against Force of
+#: Negation's single "noncreature". `machines/targeting.py` already reads the
+#: disjunction into `TargetRequirement.card_types`; this only has to accept
+#: the shape, since the restriction is enforced there and not here.
+_SPELL_QUALIFIER = rf"{_SPELL_QUALIFIER_WORD}(?: or {_SPELL_QUALIFIER_WORD})*"
+#: The predicate a counterspell may print *after* the noun - a bound on one of
+#: the spell's own characteristics rather than a word about its type:
+#:
+#: - "with mana value 2" (Spell Snare). CR 202.3e: "When calculating the mana
+#:   value of an object with an {X} in its mana cost, X is treated as 0 while
+#:   the object is not on the stack, and X is treated as the number chosen for
+#:   it while the object is on the stack" - so a spell's real, announced mana
+#:   value is what this compares against, which is `Game.legal_target`'s job
+#:   through `TargetRequirement.comparison_value`, not this dispatcher's.
+#: - "with power or toughness 2 or less" (Stern Scolding), a disjunction over
+#:   two printed characteristics of a creature spell.
+#:
+#: Read and thrown away here for exactly the reason the qualifier already is:
+#: `counter_targets` counters whatever the caster legally targeted, and
+#: CR 601.2c (announcement) plus CR 608.2b (the resolution recheck) are what
+#: enforce the restriction, both in `machines/targeting.py`. Accepting the
+#: tail is therefore not "dropping a condition" - it is letting the half of
+#: the card that already reads the condition actually be reached.
+_SPELL_PREDICATE = (
+    r"with (?:mana value \d+"
+    r"|(?:power|toughness|power or toughness) \d+ or (?:less|greater))"
+)
 _COUNTER_TARGET_SPELL_RE = re.compile(
-    rf"^counter target(?: {_SPELL_QUALIFIER_WORD})? spell\.?$", re.IGNORECASE
+    rf"^counter target(?: {_SPELL_QUALIFIER})? spell(?: {_SPELL_PREDICATE})?\.?$",
+    re.IGNORECASE,
 )
 #: "Counter target spell unless its controller pays {N}." (CR 118.12a) -
-#: Censor and Mystical Dispute. See `_counter_unless_pays_effect`.
+#: Censor and Mystical Dispute - with the same qualifier and predicate slots
+#: the plain shape above carries, which is what reaches **Spell Pierce**
+#: ("target noncreature spell") and **Flusterstorm** ("target instant or
+#: sorcery spell"). Flusterstorm is the case that shows why a silent parse is
+#: worse than a refused one: its storm ability (CR 702.40a) already worked, so
+#: N copies went on the stack and every one of them resolved doing nothing.
+#: See `_counter_unless_pays_effect`.
 _COUNTER_UNLESS_PAYS_RE = re.compile(
-    r"^counter target spell unless its controller pays \{(?P<n>\d+)\}\.?$", re.IGNORECASE
+    rf"^counter target(?: {_SPELL_QUALIFIER})? spell(?: {_SPELL_PREDICATE})? "
+    r"unless its controller pays \{(?P<n>\d+)\}\.?$",
+    re.IGNORECASE,
 )
 #: "Counter target triggered ability or colorless spell." (Consign to
 #: Memory) and the like - a compound target rather than a single qualified
@@ -5524,6 +5451,10 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
 
     if match := _COUNTER_UNLESS_PAYS_RE.fullmatch(clause):
         return _counter_unless_pays_effect(int(match.group("n"))) if for_spell else None
+
+    counter_if_mana_value = _parse_counter_if_mana_value_clause(clause, for_spell=for_spell)
+    if counter_if_mana_value is not None:
+        return counter_if_mana_value
 
     if match := _DESTROY_TARGET_RE.fullmatch(clause):
         if not _targets_understood(match.group("phrase"), count_agnostic=True):
@@ -9093,6 +9024,115 @@ def _parse_counter_then_exile_instead_of_graveyard_pair(
             target = next((item for item in game.stack if item.id == reference.card_id), None)
             if target is not None:
                 game.counter(target, to_exile=True)
+
+    return effect
+
+
+#: Stubborn Denial's second sentence: "Ferocious — If you control a creature
+#: with power 4 or greater, counter that spell instead." The leading word is
+#: an *ability word* (CR 207.2c: "Ability words appear in italics at the
+#: beginning of some abilities ... they have no special rules meaning"), so it
+#: is accepted and discarded rather than matched by name - any future card
+#: printing the same conditional upgrade under a different ability word reads
+#: the same way. "Instead" is what makes this one instruction with the
+#: sentence before it rather than a second counter: it replaces CR 118.12a's
+#: "unless its controller pays" outcome, it does not run after it.
+_COUNTER_INSTEAD_IF_POWER_RE = re.compile(
+    r"^(?:[A-Za-z' ]+ — )?if you control a creature with power (?P<power>\d+) or greater, "
+    r"counter that spell instead$",
+    re.IGNORECASE,
+)
+
+
+def _parse_counter_unless_pays_then_condition_upgrade_pair(
+    first: str, second: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """Stubborn Denial's whole card as one CR 608.2c instruction: "Counter
+    target noncreature spell unless its controller pays {1}. Ferocious — If
+    you control a creature with power 4 or greater, counter that spell
+    instead."
+
+    Read as a pair on purpose. Taken separately the second sentence would be a
+    second counter of the same spell, which is not what "instead" means: the
+    condition *replaces* the first sentence's CR 118.12a outcome, so when it
+    holds nobody is offered the payment at all.
+
+    The condition is checked as this spell resolves, not as it was cast
+    (CR 608.2: "the spell's instructions are followed in the order written"),
+    and it reads the *computed* power off `Game.power_of` (CR 613.4, CR 613.5)
+    rather than the printed one, so a pumped creature counts.
+    """
+    if not for_spell:
+        return None
+    unless = _COUNTER_UNLESS_PAYS_RE.fullmatch(first.strip())
+    upgrade = _COUNTER_INSTEAD_IF_POWER_RE.fullmatch(second.strip())
+    if unless is None or upgrade is None:
+        return None
+    amount = int(unless.group("n"))
+    threshold = int(upgrade.group("power"))
+    unless_effect = _counter_unless_pays_effect(amount)
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell)
+        big = any(
+            state.is_creature and (power := game.power_of(state)) is not None and power >= threshold
+            for state in game.permanents_controlled_by(controller.username)
+        )
+        if not big:
+            unless_effect(game, spell)
+            return
+        for reference in spell.targets:
+            if not reference.is_card:
+                continue
+            target = next((item for item in game.stack if item.id == reference.card_id), None)
+            if target is not None:
+                game.counter(target)
+
+    return effect
+
+
+#: Disrupting Shoal: "Counter target spell if its mana value is X." The "if"
+#: is a condition on the counter itself rather than a target restriction
+#: (CR 601.2c would have to read it at announcement for that, and the card
+#: does not print it as part of the target's noun phrase), so a target whose
+#: mana value turns out not to match is simply not countered.
+#:
+#: `X` never reaches here as a literal: CR 107.3a's X is announced as the
+#: spell is cast, and `effect_for` substitutes the announced value into the
+#: text before this is read (`substitute_x`) - the same path Syncopate's
+#: "{X}" already takes. With no announced X the clause does not match and the
+#: card fails closed, which is the honest answer while Disrupting Shoal's own
+#: CR 118.9 pitch cost ("exile a blue card with mana value X from your hand
+#: rather than pay this spell's mana cost") is still unreadable by
+#: `machines/cost.py` and no X is ever recorded.
+_COUNTER_TARGET_SPELL_IF_MANA_VALUE_RE = re.compile(
+    r"^counter target spell if its mana value is (?P<n>\d+)\.?$", re.IGNORECASE
+)
+
+
+def _parse_counter_if_mana_value_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """Disrupting Shoal - see `_COUNTER_TARGET_SPELL_IF_MANA_VALUE_RE`.
+
+    CR 202.3e is what the comparison is against: "X is treated as 0 while the
+    object is not on the stack, and X is treated as the number chosen for it
+    while the object is on the stack" - the targeted spell is on the stack
+    while this resolves, so `CardState.mana_value` is its real, announced one.
+    """
+    if not for_spell:
+        return None
+    match = _COUNTER_TARGET_SPELL_IF_MANA_VALUE_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    wanted = int(match.group("n"))
+
+    def effect(game: "Game", spell: CardState) -> None:
+        for reference in spell.targets:
+            if not reference.is_card:
+                continue
+            target = next((item for item in game.stack if item.id == reference.card_id), None)
+            if target is None or target.mana_value != wanted:
+                continue
+            game.counter(target)
 
     return effect
 
@@ -12748,12 +12788,28 @@ _MAY_REVEAL_FROM_AMONG_THEM_RE = re.compile(
 #: second sentence's tail.
 _PUT_IT_INTO_YOUR_HAND_RE = re.compile(r"^put it into your hand$", re.IGNORECASE)
 #: "put the rest on the bottom of your library in any order" - Duskwatch
-#: Recruiter's own third sentence. "In any order" (not "a random order") is
-#: the same CR 608.2d free choice `scry`'s own "any order" already is, which
-#: is why `Game.look_at_top_and_split`'s `CardSplit.top_order` is read
-#: straight through rather than randomised here.
+#: Recruiter's own third sentence - **or** "... in a random order", which
+#: Monumental Henge, Narset, Parter of Veils and Thundertrap Trainer print for
+#: the identical run of four clauses. Only this one phrase differed, and the
+#: whole family was refused for it, so all three cards did nothing.
+#:
+#: The two tails are told apart by the `random` group, because they are not
+#: the same instruction. "In any order" is the controller's own free
+#: arrangement (CR 401.4: "If an effect puts two or more cards in a specific
+#: position in a library at the same time, the owner of those cards may
+#: arrange them in any order"), so `Game.look_at_top_and_split`'s answered
+#: order is used as given. "In a random order" is nobody's choice - and it is
+#: still not CR 701.24a's shuffle ("To shuffle a library or a face-down pile
+#: of cards, randomize the cards within it so that no player knows their
+#: order"): that verb is not printed here, so nothing that keys off a shuffle
+#: may fire. The randomisation is seeded off `Game.shuffle_seed` and the
+#: running `shuffles_performed` counter, exactly as
+#: `puts_graveyard_on_bottom_of_library` (Endurance) and
+#: `_parse_look_top_n_may_battlefield_creature_bonus_clause` (Turntimber
+#: Symbiosis) already do for their own "in a random order" tails.
 _PUT_REST_ON_BOTTOM_ANY_ORDER_RE = re.compile(
-    r"^put the rest on the bottom of your library in any order$", re.IGNORECASE
+    r"^put the rest on the bottom of your library in (?:(?P<random>a random)|any) order$",
+    re.IGNORECASE,
 )
 
 
@@ -12793,8 +12849,10 @@ def _merge_look_top_reveal_to_hand_clauses(
     matches = _quality_matcher(reveal_match.group("quality"))
     if _PUT_IT_INTO_YOUR_HAND_RE.fullmatch(clauses[index + 2].strip()) is None:
         return None
-    if _PUT_REST_ON_BOTTOM_ANY_ORDER_RE.fullmatch(clauses[index + 3].strip()) is None:
+    bottom_match = _PUT_REST_ON_BOTTOM_ANY_ORDER_RE.fullmatch(clauses[index + 3].strip())
+    if bottom_match is None:
         return None
+    randomised = bottom_match.group("random") is not None
     quality_description = reveal_match.group("quality").strip()
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
@@ -12812,6 +12870,11 @@ def _merge_look_top_reveal_to_hand_clauses(
             )
         for state in moved:
             player.add(state, Zone.HAND)
+        if randomised and rest:
+            # Not CR 701.24a's shuffle - see `_PUT_REST_ON_BOTTOM_ANY_ORDER_RE`.
+            rng = Random(f"{game.shuffle_seed}:{game.shuffles_performed}:top-{count}-bottom")  # noqa: S311
+            rng.shuffle(rest)
+            game.shuffles_performed += 1
         for state in rest:
             player.library.append(state)
 
@@ -13894,6 +13957,13 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
                 index += 2
                 continue
             paired = _parse_counter_then_exile_instead_of_graveyard_pair(
+                clauses[index], clauses[index + 1], for_spell=for_spell
+            )
+            if paired is not None:
+                parsed.append(paired)
+                index += 2
+                continue
+            paired = _parse_counter_unless_pays_then_condition_upgrade_pair(
                 clauses[index], clauses[index + 1], for_spell=for_spell
             )
             if paired is not None:

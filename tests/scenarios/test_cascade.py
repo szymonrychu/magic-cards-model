@@ -389,7 +389,7 @@ def test_violent_outbursts_own_pump_actually_pumps():
     is "Creatures you control get +1/+0 until end of turn." - a card whose own
     resolution has nothing to do with cascade, but which still has to survive
     being cast at all through a text pipeline that strips the Cascade line's
-    reminder text out of the way (see `_CASCADE_LINE_RE` in
+    reminder text out of the way (see `_strip_keyword_ability_lines` in
     `machines/effects.py`, so the periods inside that reminder stop being
     read as sentence boundaries around the real effect).
 

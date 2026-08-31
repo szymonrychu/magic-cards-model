@@ -329,16 +329,18 @@ def test_territorial_kavu_has_power_equal_to_its_domain():
     assert scenario.game.power_of(kavu) == 3
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "Stubborn Denial is silent end to end: neither its 'Counter target "
-        "noncreature spell unless its controller pays {1}' clause nor its ferocious "
-        "upgrade produces an effect from any dispatcher, so it resolves and does "
-        "nothing."
-    ),
-)
 def test_stubborn_denial_counters_a_noncreature_spell():
+    """Both of Stubborn Denial's sentences are read now.
+
+    "Counter target noncreature spell unless its controller pays {1}."
+    (CR 118.12a) reaches `_COUNTER_UNLESS_PAYS_RE` since that pattern grew a
+    qualifier slot, and the ferocious sentence (CR 207.2c: an ability word has
+    no rules meaning of its own) is paired onto it by
+    `_parse_counter_unless_pays_then_condition_upgrade_pair`, so a controller
+    with a creature of power 4 or greater counters outright instead of
+    offering the payment. `tests/scenarios/test_counterspells.py` exercises
+    both branches in a real game.
+    """
     from magic_cards_model.machines.effects import effect_for
 
     printing = card("Stubborn Denial")

@@ -24,7 +24,7 @@ the sentence whole, ahead of the ordinary per-clause split, and
   card come back to life; `Game.put_onto_battlefield` is the Tooth and Nail
   path this effect reuses.
 
-The Suspend line itself getting out of the way is `_SUSPEND_LINE_RE` in
+The Suspend line itself getting out of the way is `_strip_keyword_ability_lines` in
 `machines/effects.py` - general to the keyword's own "Suspend N—[cost]" shape
 (CR 702.62a), not to this one card, since any suspended card whose resolution
 also does something would have hit the identical bug.

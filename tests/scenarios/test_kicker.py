@@ -24,8 +24,8 @@ Lightning used to have no `EFFECTS` row at all and resolved doing nothing,
 kicked or not, until its own two-sentence shape ("<Name> deals 2 damage to any
 target. If this spell was kicked, it deals 4 damage instead.") got a reader.
 Burst Lightning's own printed "Kicker {4} (...)" *line* used to poison the
-clause split of the sentence after it too (`_FLASHBACK_LINE_RE`'s own sibling
-bug, `_KICKER_LINE_RE` fixes it) - both are exercised end to end here.
+clause split of the sentence after it too (the same bug flashback's own line
+caused; `_strip_keyword_ability_lines` fixes both) - both are exercised end to end here.
 """
 
 import pytest
