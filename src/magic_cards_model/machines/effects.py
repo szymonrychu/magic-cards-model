@@ -5183,7 +5183,7 @@ _COUNTER_TARGET_RE = re.compile(
 #: this reads the same `Game.cast_record(spell).additional_cost_cards`
 #: `_deal_damage_equal_to_sacrificed_creature_power` already reads for Fling.
 #: The creature stays on the battlefield (only tapped, not sacrificed), so
-#: `CardState.add_counters` reaches it directly with no zone lookup needed.
+#: `game.find_by_id` reaches it with no zone lookup needed.
 _COUNTER_ON_ADDITIONAL_COST_CARD_RE = re.compile(
     rf"^put (?P<n>{_COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on the "
     r"(?:creature|permanent|card) (?:tapped|sacrificed|exiled|discarded) to pay "
@@ -5208,7 +5208,15 @@ def _parse_counter_on_additional_cost_card_clause(clause: str) -> TargetedClause
             return
         card_state = game.find_by_id(record.additional_cost_cards[0])
         if card_state is not None:
-            card_state.add_counters(kind, amount)
+            # Through `Game.add_counters`, not `CardState.add_counters`: CR
+            # 122.6 - "Some spells and abilities refer to counters being put on
+            # an object" - and a counter placed straight onto the `CardState`
+            # raises no event, so every "whenever one or more counters are put
+            # on" ability was blind to this clause. CR 603.2c makes the whole
+            # instruction one occurrence ("An ability triggers only once each
+            # time its trigger event occurs"), which is what one call with the
+            # full `amount` gives.
+            game.add_counters(card_state, kind, amount)
 
     return effect
 
@@ -5352,7 +5360,9 @@ def _parse_look_top_n_may_battlefield_creature_bonus_clause(text: str) -> Effect
     Put onto the battlefield through `Game.put_onto_battlefield` (CR 110.2a:
     no casting, so no "when you cast" trigger fires), then, only for the kept
     card and only if its own mana value is at or under the printed threshold,
-    `CardState.add_counters(Counter.PLUS_ONE, bonus)` (CR 122.1a).
+    `Game.add_counters(put, Counter.PLUS_ONE, bonus)` (CR 122.1a, and CR 122.6
+    for the event that route raises and a bare `CardState.add_counters` does
+    not).
     """
     whole = _strip_non_effect_preamble(text).strip()
     match = _LOOK_TOP_N_MAY_BATTLEFIELD_CREATURE_BONUS_RE.fullmatch(whole)
@@ -5387,7 +5397,11 @@ def _parse_look_top_n_may_battlefield_creature_bonus_clause(text: str) -> Effect
         if chosen is not None:
             put = game.put_onto_battlefield(chosen, controller.username)
             if put.mana_value <= threshold:
-                put.add_counters(Counter.PLUS_ONE, bonus)
+                # `Game.add_counters`, for CR 122.6's event - see
+                # `_parse_counter_on_additional_cost_card_clause`. One call for
+                # the whole `bonus`, because CR 603.2c makes the instruction a
+                # single occurrence however many counters it places.
+                game.add_counters(put, Counter.PLUS_ONE, bonus)
         if rest:
             rng = Random(f"{game.shuffle_seed}:{game.shuffles_performed}:top-{n}-bottom")  # noqa: S311
             rng.shuffle(rest)
