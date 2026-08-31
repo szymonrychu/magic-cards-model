@@ -18,7 +18,8 @@ machine and the announcement side is another.
 """
 
 import re
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
+from contextlib import contextmanager
 from enum import StrEnum
 from typing import Any
 from uuid import UUID
@@ -126,17 +127,27 @@ class KeywordCastOption(BaseModel):
     """False when the keyword's printed cost could not be read into something
     payable. The option is still reported, so a sweep can see the gap."""
 
-    def why_not(self, spell: CardState, caster: str, game: Any = None) -> str | None:
+    def why_not(
+        self, spell: CardState, caster: str, game: Any = None, origin: Zone | None = None
+    ) -> str | None:
         """Why this option cannot be used right now, or None if it can.
 
         CR 601.3 is the rule: permission first, everything else after.
+
+        `origin` is the zone the cast is coming *from*, which is not always
+        the zone the card is in: CR 601.2a moves the card to the stack as the
+        first step of proposing the cast, so a `Casting` mid-announcement asks
+        about the zone it announced from rather than about where the card is
+        sitting now. Left out, the card's own zone is the answer, which is
+        what every caller outside an announcement wants.
         """
+        where = origin if origin is not None else spell.zone
         if not self.understood:
             return f"{spell.name}'s {self.keyword} cost could not be read, so it cannot be paid"
-        if spell.zone is not self.zone:
+        if where is not self.zone:
             return (
                 f"{self.keyword} casts {spell.name} from the {self.zone.value}, "
-                f"but it is in the {spell.zone.value} ({self.rule})"
+                f"but it is in the {where.value} ({self.rule})"
             )
 
         if self.marker is not None:
@@ -923,7 +934,7 @@ def why_cannot_cast_from(spell: CardState, caster: str, zone: Zone, game: Any = 
     options = castable_from(spell.card, zone) + [
         granted.option for granted in granted_cast_options(game, spell, caster, zone)
     ]
-    reasons = [option.why_not(spell, caster, game) for option in options]
+    reasons = [option.why_not(spell, caster, game, origin=zone) for option in options]
     if any(reason is None for reason in reasons):
         return None
     granted = play_permissions_on(game, spell)
@@ -1383,14 +1394,36 @@ class Casting(BaseModel):
     flag because CR 702.33c's multikicker may be paid any number of times.
     """
     payment: CostPayment | None = None
+    announced_zone: Zone | None = None
+    """The zone this cast was announced from, recorded as CR 601.2a moved the
+    card to the stack. None when no move was made (no game, or a card that was
+    not where the announcement said it was)."""
+    announced_stamp: UUID | None = None
+    """The card's CR 400.7 identity stamp before that move - what a
+    `PlayPermission` recorded against the object it granted still names
+    (CR 400.7h)."""
+    announced_exile_annotation: ExileAnnotation | None = None
+    """The exile pile the card was in before that move (CR 406.4): plot,
+    foretell, madness and warp all cast out of a *particular* pile, and the
+    move to the stack drops the annotation."""
 
     def model_post_init(self, _context: object) -> None:
-        """CR 601.3: the announcement is refused if the timing does not allow it.
+        """CR 601.3: the announcement is refused if the timing does not allow it,
+        and CR 601.2a: the card moves to the stack the moment it is not.
 
         "A player can begin to cast a spell only if a rule or effect allows that
         player to cast it and no rule or effect prohibits that player from
         casting it." The timing rules of CR 117.1a are such a prohibition, so
         they are checked here rather than after the cost has been paid.
+
+        Then CR 601.2a runs: "To propose the casting of a spell, a player first
+        moves that card (or that copy of a card) from where it is to the stack.
+        It becomes the topmost object on the stack." CR 112.1 says the same
+        thing from the object's side, and CR 405.1 from the stack's. It is the
+        *first* step, five steps ahead of CR 601.2f's cost determination, which
+        is why a spell counting its controller's graveyard does not count
+        itself - and why announcing a cast empties the zone the card came from
+        straight away.
         """
         refusal = why_cannot_cast_now(self.spell, self.caster, self.game)
         if refusal is not None:
@@ -1398,6 +1431,113 @@ class Casting(BaseModel):
         refusal = why_cannot_cast_restriction(self.spell, self.caster, self.game)
         if refusal is not None:
             raise ValueError(refusal)
+        self._move_to_the_stack()
+
+    # -- CR 601.2a: the card is on the stack from here on ------------------
+
+    def _move_to_the_stack(self) -> None:
+        """Put the card on the stack as the proposal begins (CR 601.2a).
+
+        Skipped without a game to hold a stack, and skipped when the card is
+        not where the announcement says it is coming from - that mismatch is
+        its own refusal further down (CR 604.6), and moving first would erase
+        the evidence for it.
+
+        What the card was when it was announced is kept in `announced_zone`,
+        `announced_stamp` and `announced_exile_annotation`, because CR 400.7
+        makes the object on the stack a *new* object and several of this
+        machine's own questions are about the old one: which zone the cast is
+        coming from (CR 604.6, a keyword's own zone clause), and whether an
+        effect's `PlayPermission` still names it. CR 400.7h is the rule that
+        keeps the second one true across the move - "If an effect allows a
+        nonland card to be cast, other parts of that effect can find the new
+        object that card becomes after it moves to the stack as a result of
+        being cast this way" - and CR 400.7g says the same for a granted
+        castability ability. `_as_announced` is the view every one of those
+        questions is asked of.
+        """
+        game = self.game
+        if game is None or self.spell.zone is not self.origin_zone:
+            return
+        self.announced_zone = self.spell.zone
+        self.announced_stamp = self.spell.zone_change_stamp
+        self.announced_exile_annotation = self.spell.exile_annotation
+        self._lift_out_of_every_zone()
+        self.spell.move_to(Zone.STACK)
+        game.stack.append(self.spell)
+
+    def _lift_out_of_every_zone(self) -> None:
+        """Take the card out of whatever list is holding it, shared zones
+        included - exile and the command zone are not any one player's."""
+        for player in getattr(self.game, "players", []):
+            for zone_cards in player.zones.values():
+                if self.spell in zone_cards:
+                    zone_cards.remove(self.spell)
+        for zone_cards in getattr(self.game, "shared_zones", {}).values():
+            if self.spell in zone_cards:
+                zone_cards.remove(self.spell)
+
+    def _refusing(self, run: "Callable[[], Any]") -> Any:
+        """Run one announcement step, rewinding the whole proposal if it is
+        refused (CR 601.6, CR 733.1).
+
+        "If a player can't legally cast the spell, the game returns to the
+        moment before the casting was proposed." That used to be free, because
+        nothing had moved yet; CR 601.2a has since put the card on the stack,
+        so a refusal has something to undo. `cancel` is the same rewind a
+        caller can ask for by hand, and it puts the card back where it came
+        from with the identity it had (CR 400.7).
+        """
+        try:
+            return run()
+        except ValueError:
+            if not self.is_settled:
+                self.cancel()
+            raise
+
+    @contextmanager
+    def _as_of_the_proposal(self) -> "Iterator[None]":
+        """Ask a timing question as of the moment the cast was proposed.
+
+        CR 117.1a and CR 307.5's "the stack is empty" are conditions on
+        *beginning* to cast (CR 601.3), which happens before CR 601.2a moves
+        the card onto the stack. With the card already there, asking
+        `Game.can_cast_sorcery` would find a non-empty stack and refuse every
+        sorcery-timing keyword - plot's "Plot only as a sorcery" (CR 702.170a)
+        - on the strength of the very spell being proposed. Inside this block
+        the spell is off the stack list again, which is the state the question
+        is really about.
+        """
+        stack = getattr(self.game, "stack", None)
+        present = stack is not None and self.spell in stack
+        if present:
+            index = stack.index(self.spell)
+            stack.remove(self.spell)
+        try:
+            yield
+        finally:
+            if present:
+                stack.insert(index, self.spell)
+
+    @property
+    def _as_announced(self) -> CardState:
+        """The spell as it was when the cast was proposed (CR 601.2a).
+
+        A copy carrying the zone, the CR 400.7 identity stamp and the exile
+        annotation the card had before CR 601.2a moved it, so every question
+        about *where this cast is coming from* keeps its answer once the card
+        is on the stack. The copy is read-only as far as this machine is
+        concerned: nothing is paid or moved through it.
+        """
+        if self.announced_zone is None:
+            return self.spell
+        return self.spell.model_copy(
+            update={
+                "zone": self.announced_zone,
+                "zone_change_stamp": self.announced_stamp,
+                "exile_annotation": self.announced_exile_annotation,
+            }
+        )
 
     @property
     def is_settled(self) -> bool:
@@ -1661,6 +1801,9 @@ class Casting(BaseModel):
         because the two are the same announcement: CR 601.2b does not care
         where the keyword came from.
         """
+        return self._refusing(lambda: self._use_keyword(keyword, choosing))
+
+    def _use_keyword(self, keyword: str, choosing: list[CardState] | None) -> CastingStep:
         printed_options = keyword_cast_options(self.spell.card)
         granted_options = [granted.option for granted in self.granted_cast_options]
         options = [
@@ -1671,14 +1814,18 @@ class Casting(BaseModel):
         if not options:
             raise ValueError(f"{self.spell.name} has no {keyword} ability that casts it")
 
-        reasons = [option.why_not(self.spell, self.caster, self.game) for option in options]
+        with self._as_of_the_proposal():
+            reasons = [
+                option.why_not(self._as_announced, self.caster, self.game, origin=self.origin_zone)
+                for option in options
+            ]
         usable = [option for option, reason in zip(options, reasons, strict=True) if reason is None]
         if not usable:
             # A keyword can hand out more than one option - warp casts from hand
             # and from exile - so report the one that was actually being tried,
             # which is the option for the zone the card is in.
             for option, reason in zip(options, reasons, strict=True):
-                if option.zone is self.spell.zone and reason is not None:
+                if option.zone is self.origin_zone and reason is not None:
                     raise ValueError(reason)
             raise ValueError(next(reason for reason in reasons if reason is not None))
 
@@ -1714,14 +1861,18 @@ class Casting(BaseModel):
         that has moved since (CR 400.7), a turn that has ended (CR 514.2), or a
         permission that says *play* against a card being cast.
         """
-        permission = usable_play_permission(self.game, self.spell, self.caster)
+        return self._refusing(self._use_permission)
+
+    def _use_permission(self) -> CastingStep:
+        announced = self._as_announced
+        permission = usable_play_permission(self.game, announced, self.caster)
         if permission is None:
-            granted = play_permissions_on(self.game, self.spell)
+            granted = play_permissions_on(self.game, announced)
             if granted:
-                raise ValueError(granted[0].why_not(self.spell, self.caster, self.game))
+                raise ValueError(granted[0].why_not(announced, self.caster, self.game))
             raise ValueError(
                 f"nothing allows {self.caster} to cast {self.spell.name} from the "
-                f"{self.spell.zone.value} (CR 601.3)"
+                f"{self.origin_zone.value} (CR 601.3)"
             )
         self._enter_modes()
         self.permission_used = permission
@@ -1762,6 +1913,9 @@ class Casting(BaseModel):
         could not be read, or - Force of Negation's and Force of Vigor's own
         gate - when it is only offered "if it's not your turn" and it is.
         """
+        return self._refusing(lambda: self._use_pitch_cost(x_value, choosing))
+
+    def _use_pitch_cost(self, x_value: int | None, choosing: list[CardState] | None) -> CastingStep:
         if x_value is not None:
             self.x_value = x_value
         printed = [
@@ -1810,9 +1964,9 @@ class Casting(BaseModel):
                 unavailable = (
                     f"{self.spell.name}'s alternative cost can only be paid on an opponent's turn"
                 )
-            elif self.spell.zone is not self.origin_zone:
+            elif self._as_announced.zone is not self.origin_zone:
                 unavailable = (
-                    f"{self.spell.name} is in the {self.spell.zone.value}, not the "
+                    f"{self.spell.name} is in the {self._as_announced.zone.value}, not the "
                     f"{self.origin_zone.value} it is being cast from (CR 604.6)"
                 )
             options.append(
@@ -1835,9 +1989,9 @@ class Casting(BaseModel):
             unavailable = None
             if cost is None:
                 unavailable = f"{self.spell.name}'s alternative cost could not be read"
-            elif self.spell.zone is not self.origin_zone:
+            elif self._as_announced.zone is not self.origin_zone:
                 unavailable = (
-                    f"{self.spell.name} is in the {self.spell.zone.value}, not the "
+                    f"{self.spell.name} is in the {self._as_announced.zone.value}, not the "
                     f"{self.origin_zone.value} it is being cast from (CR 604.6)"
                 )
             else:
@@ -1886,11 +2040,13 @@ class Casting(BaseModel):
                     requires=sum(component.required for component in cost.components)
                     if cost
                     else 0,
-                    unavailable=keyword_option.why_not(self.spell, self.caster, self.game),
+                    unavailable=keyword_option.why_not(
+                        self._as_announced, self.caster, self.game, origin=self.origin_zone
+                    ),
                 )
             )
 
-        for permission in play_permissions_on(self.game, self.spell):
+        for permission in play_permissions_on(self.game, self._as_announced):
             if permission.pays_mana_cost:
                 continue
             options.append(
@@ -1903,13 +2059,13 @@ class Casting(BaseModel):
                     # {0}, so this says nothing rather than {0}.
                     description="nothing",
                     cost=None,
-                    unavailable=permission.why_not(self.spell, self.caster, self.game),
+                    unavailable=permission.why_not(self._as_announced, self.caster, self.game),
                 )
             )
 
         for source_name, grant in self._static_free_cast_grants():
             unavailable = None
-            if self.spell.zone is not grant.zone:
+            if self.origin_zone is not grant.zone:
                 unavailable = (
                     f"{source_name} only applies to spells cast from your "
                     f"{grant.zone.value} (CR 118.9)"
@@ -2232,17 +2388,16 @@ class Casting(BaseModel):
             )
 
         chosen = list(targets)
-        # The game is handed over because some restrictions are not
-        # characteristics (CR 109.3) and cannot be read off the permanent -
-        # "target attacking creature" lives on `Game.combat` (CR 508.1k).
-        self.targeting.check(chosen, self.caster, game=self.game)
-        for target in chosen:
-            refusal = self._hexproof_refusal(target)
-            if refusal is not None:
-                raise ValueError(refusal)
-            refusal = self._enchant_refusal(target)
-            if refusal is not None:
-                raise ValueError(refusal)
+        try:
+            self._check_targets(chosen)
+        except ValueError:
+            # CR 601.6: "If a player can't legally cast the spell, the game
+            # returns to the moment before the casting was proposed" - which,
+            # now that CR 601.2a has already moved the card to the stack, means
+            # putting it back. Nothing else about the announcement is kept
+            # either: the proposal is over, not merely amended.
+            self.cancel()
+            raise
         self._advance_to(CastingStep.TARGETS)
         self.targets = [TargetRef.coerce(target) for target in chosen]
         if self.modal is not None and self.modal.understood and self.chosen_mode_numbers:
@@ -2255,6 +2410,32 @@ class Casting(BaseModel):
             self.x_value_at_targets = self.x_value
         self._slice_targets_by_mode(chosen)
         return self.step
+
+    def _check_targets(self, chosen: list[Any]) -> None:
+        """CR 601.2c's legality check on one announced set of targets.
+
+        The game is handed over because some restrictions are not
+        characteristics (CR 109.3) and cannot be read off the permanent -
+        "target attacking creature" lives on `Game.combat` (CR 508.1k).
+
+        CR 115.5 is checked here too - "A spell or ability on the stack is an
+        illegal target for itself" - and it has to be, now that CR 601.2a puts
+        the spell on the stack before its targets are chosen: without it, a
+        Counterspell would find itself among the legal spells on the stack.
+        """
+        for target in chosen:
+            if isinstance(target, CardState) and target.id == self.spell.id:
+                raise ValueError(f"{self.spell.name} is an illegal target for itself (CR 115.5)")
+            if isinstance(target, TargetRef) and target.card_id == self.spell.id:
+                raise ValueError(f"{self.spell.name} is an illegal target for itself (CR 115.5)")
+        self.targeting.check(chosen, self.caster, game=self.game)
+        for target in chosen:
+            refusal = self._hexproof_refusal(target)
+            if refusal is not None:
+                raise ValueError(refusal)
+            refusal = self._enchant_refusal(target)
+            if refusal is not None:
+                raise ValueError(refusal)
 
     def _slice_targets_by_mode(self, chosen: list[Any]) -> None:
         """CR 700.2f: bucket `chosen` by which chosen mode instance each entry
@@ -2568,6 +2749,14 @@ class Casting(BaseModel):
         cards" and CR 601.2c has to be able to count it. X is 0 if nobody ever
         said otherwise.
         """
+        return self._refusing(lambda: self._determine_cost(x_value, additional, choices))
+
+    def _determine_cost(
+        self,
+        x_value: int | None,
+        additional: ManaCost | None,
+        choices: list[int | None] | None,
+    ) -> CostPayment:
         self._advance_to(CastingStep.COST_DETERMINED)
         if x_value is not None:
             self.x_value = x_value
@@ -2714,7 +2903,14 @@ class Casting(BaseModel):
         """
         if self.origin_zone is Zone.HAND:
             return
-        refusal = why_cannot_cast_from(self.spell, self.caster, self.origin_zone, self.game)
+        with self._as_of_the_proposal():
+            # The permission and its timing are questions about the moment the
+            # cast was proposed (CR 601.3), which is before CR 601.2a's move -
+            # so the spell itself does not count against a keyword's own
+            # "with the stack empty" (CR 702.170a, CR 307.5).
+            refusal = why_cannot_cast_from(
+                self._as_announced, self.caster, self.origin_zone, self.game
+            )
         if refusal is not None:
             raise ValueError(refusal)
 
@@ -2728,7 +2924,11 @@ class Casting(BaseModel):
 
         self._advance_to(CastingStep.CAST)
         self._turn_face_down_if_cast_that_way()
-        self.spell.move_to(Zone.STACK)
+        if self.spell.zone is not Zone.STACK:
+            # CR 601.2a already moved it for every announcement that had a game
+            # to move it in; this is the no-game path, where `Casting` is driven
+            # as a pure announcement machine and the card is moved at the end.
+            self.spell.move_to(Zone.STACK)
         # The spell carries its targets with it, so resolution knows what it hits.
         self.spell.targets = list(self.targets)
         # CR 601.2d: the announced division, if any, travels with the spell
@@ -2845,7 +3045,29 @@ class Casting(BaseModel):
         if self.origin_zone is Zone.EXILE:
             # It never left, so its pile is still its pile (CR 406.4).
             self.spell.exile_annotation = annotation
+        self._undo_the_move_to_the_stack()
         self.step = CastingStep.CANCELLED
+
+    def _undo_the_move_to_the_stack(self) -> None:
+        """Put the card back where CR 601.2a took it from (CR 601.6, 733.1).
+
+        "The entire action is reversed" - which includes the move itself, so
+        the CR 400.7 identity stamp and the exile pile it had are restored
+        too: an announcement that was rewound never happened, and an effect's
+        `PlayPermission` (or a delayed trigger watching that exact object)
+        must still name the same card afterwards.
+        """
+        if self.announced_zone is None or self.game is None:
+            return
+        self._lift_out_of_every_zone()
+        self.spell.zone = self.announced_zone
+        self.spell.zone_change_stamp = self.announced_stamp
+        self.spell.exile_annotation = self.announced_exile_annotation
+        if self.announced_zone in getattr(self.game, "shared_zones", {}):
+            self.game.shared_zones[self.announced_zone].append(self.spell)
+        else:
+            self.game.player(self.spell.owner or self.caster).add(self.spell, self.announced_zone)
+        self.announced_zone = None
 
     def _enter_modes(self) -> None:
         """CR 601.2b happens once, before targets are chosen."""

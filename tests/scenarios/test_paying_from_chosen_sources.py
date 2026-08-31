@@ -119,6 +119,7 @@ def test_blue_alone_cannot_pay_the_green_pip():
 
     payment.rewind()
     assert tapped_names(scenario) == [], "the refused payment untapped the Island"
+    casting.cancel()  # CR 601.6 undoes CR 601.2a's move as well as the payment
     assert scenario.find("Grizzly Bears", Zone.HAND, "alice")
 
 
