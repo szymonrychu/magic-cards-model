@@ -67,6 +67,10 @@ answers instead, by a rule written down here rather than improvised per card:
 - `SURVEIL` - **keep every card on top**, by CR 701.25a and the same reasoning.
 - `MULLIGAN` - **keep**. A mulligan is a decision a scenario states; an
   unscripted player keeps the hand they were dealt (CR 103.5).
+- `OPENING_HAND_ACTION` - **decline**. CR 103.6's "may take any such actions" is
+  the same shape and gets the same treatment: an unscripted player does not
+  begin the game with a Leyline on the battlefield (CR 103.6a) or reveal a card
+  from their opening hand (CR 103.6b) unless somebody says so.
 
 A default is a documented deviation, not a decision. A scenario that cares says
 what it wants.
@@ -161,6 +165,19 @@ class DecisionKind(StrEnum):
     #: Asked by the starting-a-game process, not while an effect resolves, and
     #: never offered once CR 103.5's zero-hand ceiling has been reached.
     MULLIGAN = "mulligan"
+    #: Whether to take one of CR 103.6's opening-hand actions - beginning the
+    #: game with a card on the battlefield (CR 103.6a) or revealing it from the
+    #: opening hand (CR 103.6b). Asked once per offering card, in the sequence
+    #: that runs after the mulligan process completes and before the first turn
+    #: begins (CR 103.8), so like `MULLIGAN` it belongs to the rules rather than
+    #: to a resolving effect.
+    #:
+    #: A boolean like `MAY`, and deliberately **not** `MAY`: CR 103.6 says the
+    #: player "may take any such actions", and an unscripted player should not
+    #: silently start the game with a Leyline on the battlefield. The default is
+    #: therefore to decline, the same way `MULLIGAN`'s is to keep - see
+    #: `default_answer`.
+    OPENING_HAND_ACTION = "opening_hand_action"
     #: Which creatures attack, and at whom (CR 703.4i, 508.1). Asked of the
     #: active player when the declare attackers step begins. The value is
     #: `(creature, defender)` pairs, in declaration order.
@@ -333,7 +350,11 @@ def default_answer(decision: Decision) -> object:
     Never returns an illegal option: the affirmative is taken only when
     `affirmative_is_legal` says CR 608.2d allows it.
     """
-    if decision.kind is DecisionKind.MULLIGAN:
+    if decision.kind in (DecisionKind.MULLIGAN, DecisionKind.OPENING_HAND_ACTION):
+        # CR 103.5's mulligan and CR 103.6's opening-hand actions are both
+        # "may", and both are decisions a scenario states rather than ones an
+        # engine should take on a player's behalf: an unscripted player keeps
+        # the hand they were dealt and takes no opening-hand action.
         return False
     if decision.kind in (
         DecisionKind.MAY,

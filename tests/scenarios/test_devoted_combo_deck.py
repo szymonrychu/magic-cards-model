@@ -32,12 +32,12 @@ type="rules")` in the session that wrote this file:
 - **CR 401.1** - when a game begins, each player's deck becomes their library.
 - **CR 103.6 / CR 103.6a** - opening-hand actions, the sequence that begins once
   the mulligan process completes; CR 103.6a is the "begin the game with that
-  card on the battlefield" action Leyline of Abundance prints. Not modelled -
-  `docs/engine-coverage.md` says so, and the last test here is `xfail` for it.
+  card on the battlefield" action Leyline of Abundance prints. Modelled now;
+  the mechanic itself is `tests/scenarios/test_opening_hand_actions.py`, and
+  the last two tests here are this list's own four Leylines going through it.
 """
 
-import pytest
-
+from magic_cards_model.machines.decisions import DecisionKind, ScriptedAnswer
 from magic_cards_model.models import Deck, Match, Player, Zone
 from tests.cards import card
 
@@ -204,24 +204,39 @@ def test_the_shuffle_is_seeded_and_the_deal_is_reproducible():
     assert opener(first, "alice") != opener(other, "alice")
 
 
-# -- what the deck needs and the engine does not have ----------------------
+# -- the opening-hand action this list wants (CR 103.6, CR 103.6a) ---------
 
 
-@pytest.mark.xfail(
-    reason="CR 103.6/103.6a opening-hand actions are not modelled: "
-    "docs/engine-coverage.md lists them as the sequence that begins once the "
-    "mulligan process completes, and machines/replacement.py explicitly does "
-    "not claim Leyline's 'if this card is in your opening hand' sentence. "
-    "Four Leylines of Abundance in this list want it.",
-    strict=True,
-)
 def test_a_leyline_in_the_opening_hand_can_begin_the_game_on_the_battlefield():
     """CR 103.6a: the player taking this action puts that card onto the battlefield.
 
     Staged rather than hoped for: the library is rigged so a Leyline of
     Abundance is dealt, which is CR 103.3 staging, not a mock - every card is
-    the same real printing from the registered list.
+    the same real printing from the registered list. The action itself is
+    declared, because CR 103.6's "may" is declined by an unscripted player.
     """
+    series = match()
+    game = series.start_game(deal_opening_hands=False)
+    alice = game.player("alice")
+    leyline = next(state for state in alice.library if state.card.name == "Leyline of Abundance")
+    alice.library.remove(leyline)
+    alice.library.insert(0, leyline)
+    alice.draw_opening_hand()
+    game.decisions.add(
+        ScriptedAnswer(
+            kind=DecisionKind.OPENING_HAND_ACTION,
+            value=True,
+            player="alice",
+            source="Leyline of Abundance",
+        )
+    )
+    series.run_mulligans(game)
+
+    assert leyline.zone is Zone.BATTLEFIELD
+
+
+def test_an_undeclared_leyline_stays_in_hand():
+    """CR 103.6 is a "may": nothing starts on the battlefield by itself."""
     series = match()
     game = series.start_game(deal_opening_hands=False)
     alice = game.player("alice")
@@ -231,4 +246,4 @@ def test_a_leyline_in_the_opening_hand_can_begin_the_game_on_the_battlefield():
     alice.draw_opening_hand()
     series.run_mulligans(game)
 
-    assert leyline.zone is Zone.BATTLEFIELD
+    assert leyline.zone is Zone.HAND

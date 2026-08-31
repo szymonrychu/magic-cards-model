@@ -3,7 +3,10 @@
 Starting a game is CR 103, in order: decide who takes the first turn (103.1),
 set sideboards aside (103.2a), shuffle (103.3), set life totals (103.4), and
 draw opening hands (103.5). The hands are dealt by `start_game` and settled by
-`run_mulligans`, which runs the London mulligan of CR 103.5 to completion.
+`run_mulligans`, which runs the London mulligan of CR 103.5 to completion and
+then CR 103.6's opening-hand actions - the sequence that begins "once the
+mulligan process (see rule 103.5) is complete", read off cards and carried out
+by `machines/opening_hand.py` and `Game.take_opening_hand_actions`.
 """
 
 from random import Random
@@ -264,9 +267,13 @@ class Match(BaseModel):
 
         Each mulligan shuffles that player's library seeded off the match seed,
         like the opening shuffle of CR 103.3, so a match with the same seed and
-        the same declarations replays identically. CR 103.6's opening-hand
-        actions are a separate sequence that begins once this process is
-        complete, and are not modelled.
+        the same declarations replays identically.
+
+        CR 103.6's opening-hand actions are a separate sequence that begins
+        "once the mulligan process (see rule 103.5) is complete", so this method
+        runs them at the end, through `Game.take_opening_hand_actions`. They add
+        no randomness of their own - no shuffle, no random choice - so the
+        replay guarantee above still holds with them in.
         """
         if game is None:
             if not self.games:
@@ -312,6 +319,9 @@ class Match(BaseModel):
                 if not wants:
                     player.keep_hand()
 
+        # CR 103.6: "Once the mulligan process (see rule 103.5) is complete, the
+        # starting player may take any such actions in any order."
+        game.take_opening_hand_actions()
         return game
 
 

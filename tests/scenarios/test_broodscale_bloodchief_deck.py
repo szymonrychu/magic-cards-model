@@ -30,16 +30,17 @@ The rules this file asserts, each looked up with `knowledge_search`:
 - **CR 103.5** - each player draws a hand equal to their starting hand size,
   normally seven, which is what leaves 53 in the library.
 
-One thing this deck *should* do at the start of a game and cannot: Gemstone
-Caverns' and Devourer of Destiny's opening-hand actions (**CR 103.6**,
-**CR 103.6a**, **CR 103.6b**). The engine has no hook between the mulligan and
-the first turn, so that is an `xfail` at the bottom rather than a reshaped
-assertion.
+- **CR 103.6**, **CR 103.6a**, **CR 103.6b** - the opening-hand actions that run
+  once the mulligan process is complete. This deck has both shapes: Gemstone
+  Caverns begins the game on the battlefield (and only for the player who is
+  not the starting player), and Devourer of Destiny is revealed from the
+  opening hand. Modelled now - see `tests/scenarios/test_opening_hand_actions.py`
+  for the mechanic itself; the three tests at the bottom here are this deck's
+  own two cards going through it.
 """
 
-import pytest
-
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.decisions import DecisionKind, ScriptedAnswer
 from magic_cards_model.models import Deck, Game, Match, Player, Zone
 from tests.cards import card
 
@@ -269,25 +270,70 @@ def test_both_seats_are_dealt_from_their_own_deck():
     assert "Basking Broodscale" not in {state.name for state in bob.library + bob.hand}
 
 
-# -- what this deck needs and the engine has not got ----------------------
+# -- what this deck does at the start of a game (CR 103.6) ----------------
 
 
-@pytest.mark.xfail(
-    reason=(
-        "CR 103.6/103.6a/103.6b's opening-hand actions are not modelled: there is no "
-        "step between the mulligan (CR 103.5) and the first turn, so Gemstone Caverns "
-        "cannot begin the game on the battlefield with a luck counter and Devourer of "
-        "Destiny cannot be revealed from the opening hand. See "
-        "docs/deck-gaps/broodscale-bloodchief.md."
-    ),
-    strict=True,
-)
+def rigged_and_settled(top: str, *, on_the_play: str) -> Game:
+    """Deal alice a named card off the top, then run CR 103.5 and CR 103.6.
+
+    CR 103.3 staging - the sixty are the registered sixty, only the order is
+    chosen - which is what makes a one-of like Gemstone Caverns reachable at
+    all. The action itself is scripted rather than defaulted: CR 103.6's "may"
+    is declined by an unscripted player, by design.
+    """
+    series = match()
+    game = series.start_game(deal_opening_hands=False, on_the_play=on_the_play)
+    alice = game.player("alice")
+    state = next(s for s in alice.library if s.card.name == top)
+    alice.library.remove(state)
+    alice.library.insert(0, state)
+    for player in game.players:
+        player.draw_opening_hand()
+    game.decisions.add(
+        ScriptedAnswer(
+            kind=DecisionKind.OPENING_HAND_ACTION, value=True, player="alice", source=top
+        )
+    )
+    series.run_mulligans(game)
+    return game
+
+
 def test_gemstone_caverns_can_begin_the_game_on_the_battlefield():
     """CR 103.6a: a card that lets a player begin the game with it on the
-    battlefield is put there, by the non-starting player, after mulligans."""
-    game = started()
+    battlefield is put there, by the non-starting player, after mulligans.
+
+    "If this card is in your opening hand and you're not the starting player,
+    you may begin the game with Gemstone Caverns on the battlefield with a luck
+    counter on it. If you do, exile a card from your hand." - so bob is on the
+    play here, and alice pays the exile.
+    """
+    game = rigged_and_settled("Gemstone Caverns", on_the_play="bob")
     alice = game.player("alice")
 
-    caverns = next(s for s in alice.library + alice.hand if s.name == "Gemstone Caverns")
+    (caverns,) = [s for s in game.battlefield if s.name == "Gemstone Caverns"]
 
     assert caverns.zone is Zone.BATTLEFIELD
+    assert caverns.counter_count("luck") == 1
+    assert len(alice.cards_in(Zone.EXILE)) == 1
+
+
+def test_the_starting_player_is_never_offered_the_caverns():
+    """CR 103.8 names the starting player, and the card excludes them."""
+    game = rigged_and_settled("Gemstone Caverns", on_the_play="alice")
+
+    assert game.battlefield == []
+    assert [
+        d.source for d in game.decisions.asked if d.kind is DecisionKind.OPENING_HAND_ACTION
+    ] == []
+
+
+def test_devourer_of_destiny_can_be_revealed_from_the_opening_hand():
+    """CR 103.6b: the card is shown and stays where it is (CR 701.20b)."""
+    game = rigged_and_settled("Devourer of Destiny", on_the_play="alice")
+    alice = game.player("alice")
+
+    (devourer,) = [s for s in alice.hand if s.name == "Devourer of Destiny"]
+
+    assert devourer.zone is Zone.HAND
+    assert devourer.id in game.opening_hand_reveals
+    assert [reveal.card_name for reveal in game.reveals] == ["Devourer of Destiny"]
