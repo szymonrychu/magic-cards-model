@@ -293,7 +293,7 @@ def counter_targets(game: "Game", spell: CardState) -> None:
             game.counter(target)
 
 
-def _counter_unless_pays_effect(amount: int) -> Effect:
+def _counter_unless_pays_effect(amount: int, *, to_exile: bool = False) -> Effect:
     """ "Counter target spell unless its controller pays {N}." (CR 118.12a).
 
     Read as one CR 608.2c instruction, not two: the question is put to the
@@ -302,6 +302,18 @@ def _counter_unless_pays_effect(amount: int) -> Effect:
     something else]" names whoever the "unless" clause names. A target that
     has already left the stack (CR 608.2b: countered first, resolved, or
     otherwise gone) is simply skipped, the same as plain `counter_targets`.
+
+    `to_exile` overrides CR 701.6a's "a countered spell is put into its
+    owner's graveyard" - Syncopate's own second sentence, the same override
+    `_parse_counter_then_exile_instead_of_graveyard_pair` already gives Force
+    of Negation's plain counter.
+
+    `amount` is a number by the time this is built. An `{X}` in the printed
+    text never reaches here as a literal: CR 107.3a's X is announced as the
+    spell is cast and holds while it is on the stack, so `effect_for`
+    substitutes the announced value into the oracle text before the clause is
+    read (`substitute_x`), and this sees Syncopate's "{X}" as the "{2}" the
+    caster actually paid for.
     """
 
     def effect(game: "Game", spell: CardState) -> None:
@@ -313,7 +325,7 @@ def _counter_unless_pays_effect(amount: int) -> Effect:
                 continue
             paid = game.may_pay_mana(target.controller, amount, source=spell.name)
             if not paid:
-                game.counter(target)
+                game.counter(target, to_exile=to_exile)
 
     return effect
 
@@ -9056,12 +9068,22 @@ def _parse_counter_then_exile_instead_of_graveyard_pair(
     (CR 701.6a); `to_exile=True` is exactly this override. A target that
     already left the stack is simply not countered and nothing is exiled, the
     same as plain `counter_targets`.
+
+    The first sentence may also be CR 118.12a's conditional counter -
+    Syncopate's "Counter target spell unless its controller pays {X}." - in
+    which case the exile rider rides on the counter that clause performs,
+    and nothing at all happens when the payment is made. Without this second
+    shape Syncopate's whole effect failed closed: the counter half read fine
+    on its own, but the exile sentence matched no clause, and CR 608.2c has
+    no half-effect.
     """
     if not for_spell:
         return None
-    if not _COUNTER_TARGET_SPELL_RE.fullmatch(first.strip()):
-        return None
     if not _COUNTER_THEN_EXILE_INSTEAD_RE.fullmatch(second.strip()):
+        return None
+    if unless := _COUNTER_UNLESS_PAYS_RE.fullmatch(first.strip()):
+        return _counter_unless_pays_effect(int(unless.group("n")), to_exile=True)
+    if not _COUNTER_TARGET_SPELL_RE.fullmatch(first.strip()):
         return None
 
     def effect(game: "Game", spell: CardState) -> None:

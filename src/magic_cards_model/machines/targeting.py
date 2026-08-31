@@ -302,6 +302,21 @@ class TargetRequirement(BaseModel):
     again at resolution (CR 608.2b) - rather than fixed once, since whether a
     permanent left the battlefield this turn can change between the two."""
 
+    required_target_count: int | None = None
+    """"with a single target" in Bolt Bend's "target spell or ability with a
+    single target" - CR 115.9a: "An object that looks for a '[spell or
+    ability] with [a number of] targets' checks the number of times any
+    object or player was chosen as the target of that spell or ability when
+    it was put on the stack."
+
+    A restriction on the *one* target this requirement asks for, not a second
+    target of its own - which is exactly what the parser used to read it as,
+    leaving Bolt Bend asking for two targets and castable at nothing at all.
+    Enforced in `_rejects_card`/`_rejects_ability` by counting the targeted
+    stack object's own `targets`; a target that carries no target list to
+    count fails open, the same as every other restriction this parser cannot
+    evaluate."""
+
     required_keyword: str | None = None
     """"with flying" in "target creature you don't control with flying"
     (Kraul Harpooner) - a trailing keyword-ability clause, read off the same
@@ -375,6 +390,9 @@ class TargetRequirement(BaseModel):
         """
         if not self.allows_abilities:
             return f"{self.phrase} cannot target {target.name}, which is an ability on the stack"
+        target_count = self._rejects_target_count(target)
+        if target_count is not None:
+            return target_count
         controller = getattr(target, "controller", None)
         if self.controller is ControllerRestriction.ANY or controller is None:
             return None
@@ -468,7 +486,37 @@ class TargetRequirement(BaseModel):
         keyword = self._rejects_required_keyword(target, game)
         if keyword is not None:
             return keyword
+        target_count = self._rejects_target_count(target)
+        if target_count is not None:
+            return target_count
         return self._rejects_controller(target, caster)
+
+    def _rejects_target_count(self, target: Any) -> str | None:
+        """CR 115.9a: how many targets the *targeted* object itself has.
+
+        "The number of times any object or player was chosen as the target of
+        that spell or ability when it was put on the stack" - so a spell that
+        chose the same creature twice has two targets, which is why this
+        counts the entries of the target list rather than the distinct objects
+        in it (CR 115.9c's "targets only" is the distinct-object reading, and
+        no card in the pool uses it here).
+
+        Fails open for anything with no target list to count, the same way a
+        combat-state or comparison restriction is skipped when the caller
+        cannot supply what it needs.
+        """
+        if self.required_target_count is None:
+            return None
+        targets = getattr(target, "targets", None)
+        if targets is None:
+            return None
+        if len(targets) == self.required_target_count:
+            return None
+        name = getattr(target, "name", target)
+        return (
+            f"{self.phrase} needs a single target, "
+            f"and {name} was put on the stack with {len(targets)}"
+        )
 
     def _rejects_historic(self, target: CardState) -> str | None:
         """CR 700.6: legendary, artifact, or Saga - checked off the card's own
@@ -1013,6 +1061,21 @@ _TARGETS_ONLY_SINGLE_CREATURE_CONDITION_CLAUSE = re.compile(
     r"\bthat targets only a single creature you control\b", re.IGNORECASE
 )
 
+#: "... with a single target" (Bolt Bend's "Change the target of target spell
+#: or ability with a single target") - CR 115.9a's "[spell or ability] with [a
+#: number of] targets", a *property of the thing being targeted*, not a second
+#: "target `<noun>`" of the spell's own. The bare `_TARGET_WORD` scan cannot
+#: tell the two apart on sight, so this phrase is replaced by
+#: `_SINGLE_TARGET_PLACEHOLDER` before the scan runs - the same
+#: strip-before-reading trick `_RETARGETING` and
+#: `_TARGETS_ONLY_SINGLE_CREATURE_CONDITION_CLAUSE` already use - and `_parse`
+#: then hands the restriction to the requirement it was printed after, as
+#: `TargetRequirement.required_target_count`. Left in the text it read as a
+#: whole second requirement, and Bolt Bend asked for two targets, which no
+#: announcement could ever satisfy.
+_SINGLE_TARGET_RESTRICTION = re.compile(r"\bwith a single target\b", re.IGNORECASE)
+_SINGLE_TARGET_PLACEHOLDER = "\x01"
+
 #: CR 601.2d's two templates, the amount and what is being divided.
 _DIVIDED = re.compile(
     r"\b(?:deals?\s+(?P<damage>[\w]+)\s+damage\s+divided(?:\s+as\s+you\s+choose)?\s+among"
@@ -1445,6 +1508,7 @@ def _parse(oracle_text: str, spell_only: bool = True) -> TargetingProfile:
     text = _SELF_COST_REDUCTION_LINE.sub("", text)
     text = _COPY_TARGETS_DECLARATION.sub("", text)
     text = _TARGETS_ONLY_SINGLE_CREATURE_CONDITION_CLAUSE.sub("", text)
+    text = _SINGLE_TARGET_RESTRICTION.sub(_SINGLE_TARGET_PLACEHOLDER, text)
     mentions = len(_TARGET_WORD.findall(text))
     if not mentions:
         return TargetingProfile()
@@ -1463,12 +1527,22 @@ def _parse(oracle_text: str, spell_only: bool = True) -> TargetingProfile:
     )
     text = _ANY_TARGET.sub(_PLACEHOLDER, text)
 
-    for match in _TARGET_WORD.finditer(text):
+    scan = list(_TARGET_WORD.finditer(text))
+    for position, match in enumerate(scan):
         # Each "target" is read on its own, so "target creature and target
         # land" is two requirements rather than one confused one.
         requirement = _read_phrase(text[: match.start()], text[match.end() :])
         if requirement is None:
             return TargetingProfile(requirements=tuple(requirements), understood=False)
+        # CR 115.9a's "with a single target" belongs to the requirement it was
+        # printed after, and nothing further along: the span searched stops at
+        # the next "target" word and at the end of the sentence, so a second
+        # requirement in the same sentence never inherits the first one's
+        # restriction.
+        span_end = scan[position + 1].start() if position + 1 < len(scan) else len(text)
+        span = re.split(r"[.;]", text[match.end() : span_end])[0]
+        if _SINGLE_TARGET_PLACEHOLDER in span:
+            requirement = requirement.model_copy(update={"required_target_count": 1})
         if (
             revolt_override is not None
             and requirement.comparison_attribute is ComparisonAttribute.MANA_VALUE

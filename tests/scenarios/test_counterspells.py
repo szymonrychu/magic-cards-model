@@ -537,3 +537,102 @@ def test_delay_fails_closed_with_a_notice_instead_of_half_applying():
     (notice,) = scenario.game.suspend_redirect_notices
     assert isinstance(notice, SuspendRedirectNotice)
     assert notice.source_name == "Delay"
+
+
+# --------------------------------------------------------------------------
+# The amount is {X}: "Counter target spell unless its controller pays {X}."
+# --------------------------------------------------------------------------
+
+
+def syncopate_board() -> Scenario:
+    """Bob holds Syncopate and four Islands - enough for {X}{U} at X up to 3."""
+    return board(
+        ["Opt"],
+        bob_hand=["Syncopate"],
+        bob_battlefield=["Island", "Island", "Island", "Island"],
+    )
+
+
+def cast_syncopate(scenario, target, x_value: int):
+    """Announce Syncopate with X (CR 601.2b), pay {X}{U}, and resolve it.
+
+    CR 107.3a: X has no value until the caster announces one, and that value
+    holds "while that spell ... is on the stack" - so the amount the targeted
+    spell's controller is asked for on resolution is this X, not zero.
+    """
+    casting = scenario.cast("Syncopate", username="bob", targets=[target])
+    casting.determine_cost(x_value=x_value)
+    payment = casting.begin_paying()
+    islands = scenario.untapped_sources(*(["Island"] * (x_value + 1)), username="bob")
+    scenario.pay_with(payment, *islands)
+    scenario.put_on_stack(casting)
+    return scenario.resolve_top()
+
+
+def test_syncopate_counters_and_exiles_when_x_cannot_be_paid():
+    """CR 118.12a's "unless" question is put for the announced X, and
+    Syncopate's own second sentence replaces CR 701.6a's graveyard with
+    exile. Alice has no floating mana, so paying {2} is not a legal choice.
+    """
+    scenario = syncopate_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    opt = scenario.cast_onto_stack("Opt", username="alice", auto=True)
+    scenario.pass_priority("alice")
+
+    cast_syncopate(scenario, opt, 2)
+
+    assert opt.zone is Zone.EXILE, "Syncopate exiles instead of binning (CR 701.6a overridden)"
+    (decision,) = [q for q in scenario.game.decisions.asked if q.source == "Syncopate"]
+    assert decision.amount == 2, "the announced X, not the printed {X}"
+    assert decision.affirmative_is_legal is False
+
+
+def test_syncopate_does_not_counter_when_x_is_paid():
+    """The controller of the targeted spell pays the announced X and keeps it
+    (CR 118.12a's "[a player] may [do something else]").
+    """
+    scenario = syncopate_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice = scenario.player("alice")
+    alice.mana_pool.add(Color.COLORLESS, 2)
+    opt = scenario.cast_onto_stack("Opt", username="alice", auto=True)
+    scenario.pass_priority("alice")
+
+    scenario.will_pay_the_mana_cost(True, username="alice", source="Syncopate")
+    cast_syncopate(scenario, opt, 2)
+
+    assert opt.zone is Zone.STACK, "paid, so Syncopate never countered it"
+    assert alice.mana_pool.total == 0, "the {2} was actually spent"
+
+
+def test_syncopate_at_x_zero_asks_for_a_payment_anyone_can_make():
+    """CR 118.3a: "Players can always pay 0 mana." At X=0 the "unless" is a
+    question with a legal affirmative answer for a player with an empty pool,
+    so the spell survives - X=0 is not the same as no question at all.
+    """
+    scenario = syncopate_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    opt = scenario.cast_onto_stack("Opt", username="alice", auto=True)
+    scenario.pass_priority("alice")
+
+    cast_syncopate(scenario, opt, 0)
+
+    (decision,) = [q for q in scenario.game.decisions.asked if q.source == "Syncopate"]
+    assert decision.amount == 0
+    assert decision.affirmative_is_legal is True
+    assert opt.zone is Zone.STACK, "an empty pool still pays {0}"
+
+
+def test_syncopate_at_x_zero_still_exiles_a_controller_who_declines():
+    """Paying is optional even at {0} (CR 118.12a's "may"), and declining
+    takes Syncopate's own exile rider with it.
+    """
+    scenario = syncopate_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    opt = scenario.cast_onto_stack("Opt", username="alice", auto=True)
+    scenario.pass_priority("alice")
+
+    scenario.will_pay_the_mana_cost(False, username="alice", source="Syncopate")
+    cast_syncopate(scenario, opt, 0)
+
+    assert opt.zone is Zone.EXILE

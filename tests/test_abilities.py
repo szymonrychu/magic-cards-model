@@ -260,6 +260,40 @@ def test_the_condition_and_the_effect_are_split_at_the_first_comma():
     assert ability.intervening_if is None
 
 
+def test_a_thousands_separator_comma_is_not_a_clause_boundary():
+    """The Millennium Calendar (verified with `resolve_cards`): "When there
+    are 1,000 or more time counters on The Millennium Calendar, sacrifice it
+    and each opponent loses 1,000 life."
+
+    CR 603.1 templates a triggered ability as "[When/Whenever/At] [trigger
+    condition or event], [effect]", and the boundary is the comma after the
+    condition - not the one inside the number. Split on the number's comma,
+    the condition came out as "there are 1" and the whole state trigger
+    (CR 603.8) was unreadable.
+    """
+    triggers = abilities_of_kind(card("The Millennium Calendar"), AbilityKind.TRIGGERED)
+    state_trigger = triggers[-1]
+
+    assert state_trigger.condition == (
+        "there are 1,000 or more time counters on The Millennium Calendar"
+    )
+    assert state_trigger.effect == "sacrifice it and each opponent loses 1,000 life."
+
+
+def test_the_same_card_still_splits_on_its_real_commas():
+    """The other half of the fix: a comma that is a genuine boundary still
+    cuts. The Millennium Calendar's own first ability is CR 603.1's
+    "[condition], [effect]", and its activated ability's cost is CR 601.2's
+    comma-separated list "{2}, {T}" - two costs, not one.
+    """
+    (first, _state) = abilities_of_kind(card("The Millennium Calendar"), AbilityKind.TRIGGERED)
+    (activated,) = abilities_of_kind(card("The Millennium Calendar"), AbilityKind.ACTIVATED)
+
+    assert first.condition == "you untap one or more permanents during your untap step"
+    assert first.effect == "put that many time counters on The Millennium Calendar."
+    assert [cost.kind for cost in activated.costs] == [CostKind.MANA, CostKind.TAP]
+
+
 def test_enters_and_dies_triggers_on_one_card():
     """CR 603.6a enters-the-battlefield, and a dies trigger, both with `When`."""
     enters, dies = abilities_of_kind(card("Solemn Simulacrum"), AbilityKind.TRIGGERED)

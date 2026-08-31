@@ -1544,16 +1544,39 @@ def _blank_quotes(text: str) -> str:
 
 
 def _split_top_level(text: str, separator: str = ",") -> list[str]:
-    """Split on a separator, ignoring any inside quotes."""
+    """Split on a separator, ignoring any inside quotes or inside a number.
+
+    A comma between two digits is a thousands separator, not a boundary
+    between two things: The Millennium Calendar prints "When there are 1,000
+    or more time counters on The Millennium Calendar, sacrifice it and each
+    opponent loses 1,000 life." CR 603.1 templates a triggered ability as
+    "[When/Whenever/At] [trigger condition or event], [effect]", and
+    `_parse_triggered` cuts at the first top-level comma to find that
+    boundary - which, unguarded, fell inside the number and left the
+    condition as "there are 1".
+
+    Written as a property of the separator's *surroundings* rather than of any
+    card: any printed number carrying a group separator reads the same way.
+    """
     blanked = _blank_quotes(text)
     parts: list[str] = []
     start = 0
     for index, char in enumerate(blanked):
-        if char == separator:
-            parts.append(text[start:index])
-            start = index + 1
+        if char != separator:
+            continue
+        if separator == "," and _is_digit_group_separator(blanked, index):
+            continue
+        parts.append(text[start:index])
+        start = index + 1
     parts.append(text[start:])
     return [part.strip() for part in parts if part.strip()]
+
+
+def _is_digit_group_separator(text: str, index: int) -> bool:
+    """Whether the comma at `index` sits between two digits ("1,000")."""
+    before = text[index - 1] if index else ""
+    after = text[index + 1 : index + 2]
+    return before.isdigit() and after.isdigit()
 
 
 #: The cost keywords a genuinely new, top-level cost piece starts with, once
