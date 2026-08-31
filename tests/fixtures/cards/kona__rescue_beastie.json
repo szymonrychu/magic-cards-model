@@ -1,0 +1,164 @@
+{
+  "object": "card",
+  "id": "6f035294-2787-4719-8520-227bf03e84e7",
+  "oracle_id": "76372327-41ec-4516-abff-3b612e073629",
+  "multiverse_ids": [
+    673592
+  ],
+  "mtgo_id": 130505,
+  "arena_id": 92277,
+  "tcgplayer_id": 578149,
+  "cardmarket_id": 788245,
+  "name": "Kona, Rescue Beastie",
+  "lang": "en",
+  "released_at": "2024-09-27",
+  "uri": "https://api.scryfall.com/cards/6f035294-2787-4719-8520-227bf03e84e7",
+  "scryfall_uri": "https://scryfall.com/card/dsk/187/kona-rescue-beastie?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:24:13Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/6/f/6f035294-2787-4719-8520-227bf03e84e7.jpg?1783909453",
+    "normal": "https://cards.scryfall.io/normal/front/6/f/6f035294-2787-4719-8520-227bf03e84e7.jpg?1783909453",
+    "large": "https://cards.scryfall.io/large/front/6/f/6f035294-2787-4719-8520-227bf03e84e7.jpg?1783909453",
+    "png": "https://cards.scryfall.io/png/front/6/f/6f035294-2787-4719-8520-227bf03e84e7.png?1783909453",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/6/f/6f035294-2787-4719-8520-227bf03e84e7.jpg?1783909453",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/6/f/6f035294-2787-4719-8520-227bf03e84e7.jpg?1783909453",
+    "thumb": "https://cards.scryfall.io/thumb/front/6/f/6f035294-2787-4719-8520-227bf03e84e7.webp?1783909453",
+    "grid": "https://cards.scryfall.io/grid/front/6/f/6f035294-2787-4719-8520-227bf03e84e7.webp?1783909453",
+    "display": "https://cards.scryfall.io/display/front/6/f/6f035294-2787-4719-8520-227bf03e84e7.webp?1783909453",
+    "art": "https://cards.scryfall.io/art/front/6/f/6f035294-2787-4719-8520-227bf03e84e7.webp?1783909453",
+    "crop": "https://cards.scryfall.io/crop/front/6/f/6f035294-2787-4719-8520-227bf03e84e7.webp?1783909453"
+  },
+  "mana_cost": "{3}{G}",
+  "cmc": 4.0,
+  "type_line": "Legendary Creature \u2014 Beast Survivor",
+  "oracle_text": "Survival \u2014 At the beginning of your second main phase, if Kona is tapped, you may put a permanent card from your hand onto the battlefield.",
+  "power": "4",
+  "toughness": "3",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Survival"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "8314ab56-ccd9-4877-9309-8ede898be837",
+      "component": "combo_piece",
+      "name": "A-Kona, Rescue Beastie",
+      "type_line": "Legendary Creature \u2014 Beast Survivor",
+      "uri": "https://api.scryfall.com/cards/8314ab56-ccd9-4877-9309-8ede898be837"
+    },
+    {
+      "object": "related_card",
+      "id": "bf256f95-d184-4ea9-9039-fc64f461d9b3",
+      "component": "combo_piece",
+      "name": "Kona, Rescue Beastie",
+      "type_line": "Legendary Creature \u2014 Beast Survivor",
+      "uri": "https://api.scryfall.com/cards/bf256f95-d184-4ea9-9039-fc64f461d9b3"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "not_legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "a111d8a9-b647-48ec-afab-2b78f92173f5",
+  "set": "dsk",
+  "set_name": "Duskmourn: House of Horror",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/a111d8a9-b647-48ec-afab-2b78f92173f5",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Adsk&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/dsk?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/6f035294-2787-4719-8520-227bf03e84e7/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A76372327-41ec-4516-abff-3b612e073629&unique=prints",
+  "collector_number": "187",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "She's got a heart of gold, a nose for danger, and jaws that can pulverize a cellarspawn with a single snap.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Brian Valeza",
+  "artist_ids": [
+    "bb2a9339-bbe4-445f-9736-3c43379ee076"
+  ],
+  "illustration_id": "f17b34e1-0482-473f-8700-bee1509ca7ea",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 2382,
+  "penny_rank": 3155,
+  "preview": {
+    "source": "TheGamer",
+    "source_uri": "https://www.thegamer.com/magic-the-gathering-mtg-kona-rescue-beastie-duskmourn-house-of-horror-reveal-preview/",
+    "previewed_at": "2024-09-10"
+  },
+  "prices": {
+    "usd": "1.10",
+    "usd_foil": "1.28",
+    "usd_etched": null,
+    "eur": "0.74",
+    "eur_foil": "0.82",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=673592&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DKona%252C%2BRescue%2BBeastie",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DKona%252C%2BRescue%2BBeastie",
+    "edhrec": "https://edhrec.com/route/?cc=Kona%2C+Rescue+Beastie"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F578149%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=788245&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/130505?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

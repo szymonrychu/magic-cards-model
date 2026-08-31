@@ -1,0 +1,133 @@
+{
+  "object": "card",
+  "id": "2fa09104-acbe-4410-b101-2fe6ac28efde",
+  "oracle_id": "83161d59-2520-4741-9328-e2a4a8b5d5bc",
+  "multiverse_ids": [],
+  "resource_id": "4EEA11582013435CFF143F0BBB57F8F5714AA484373245422D6A0CF2EC068EC6",
+  "mtgo_id": 143119,
+  "arena_id": 96827,
+  "tcgplayer_id": 643049,
+  "cardmarket_id": 835045,
+  "name": "Evendo, Waking Haven",
+  "lang": "en",
+  "released_at": "2025-08-01",
+  "uri": "https://api.scryfall.com/cards/2fa09104-acbe-4410-b101-2fe6ac28efde",
+  "scryfall_uri": "https://scryfall.com/card/eoe/253/evendo-waking-haven?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T01:25:15Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/2/f/2fa09104-acbe-4410-b101-2fe6ac28efde.jpg?1783905915",
+    "normal": "https://cards.scryfall.io/normal/front/2/f/2fa09104-acbe-4410-b101-2fe6ac28efde.jpg?1783905915",
+    "large": "https://cards.scryfall.io/large/front/2/f/2fa09104-acbe-4410-b101-2fe6ac28efde.jpg?1783905915",
+    "png": "https://cards.scryfall.io/png/front/2/f/2fa09104-acbe-4410-b101-2fe6ac28efde.png?1783905915",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/2/f/2fa09104-acbe-4410-b101-2fe6ac28efde.jpg?1783905915",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/2/f/2fa09104-acbe-4410-b101-2fe6ac28efde.jpg?1783905915",
+    "thumb": "https://cards.scryfall.io/thumb/front/2/f/2fa09104-acbe-4410-b101-2fe6ac28efde.webp?1783905915",
+    "grid": "https://cards.scryfall.io/grid/front/2/f/2fa09104-acbe-4410-b101-2fe6ac28efde.webp?1783905915",
+    "display": "https://cards.scryfall.io/display/front/2/f/2fa09104-acbe-4410-b101-2fe6ac28efde.webp?1783905915",
+    "art": "https://cards.scryfall.io/art/front/2/f/2fa09104-acbe-4410-b101-2fe6ac28efde.webp?1783905915",
+    "crop": "https://cards.scryfall.io/crop/front/2/f/2fa09104-acbe-4410-b101-2fe6ac28efde.webp?1783905915"
+  },
+  "mana_cost": "",
+  "cmc": 0.0,
+  "type_line": "Land \u2014 Planet",
+  "oracle_text": "This land enters tapped.\n{T}: Add {G}.\nStation (Tap another creature you control: Put charge counters equal to its power on this Planet. Station only as a sorcery.)\n12+ | {G}, {T}: Add {G} for each creature you control.",
+  "colors": [],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Station"
+  ],
+  "produced_mana": [
+    "G"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "452951cf-378b-4472-b7fe-572fe2af2ac0",
+  "set": "eoe",
+  "set_name": "Edge of Eternities",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/452951cf-378b-4472-b7fe-572fe2af2ac0",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aeoe&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/eoe?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/2fa09104-acbe-4410-b101-2fe6ac28efde/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A83161d59-2520-4741-9328-e2a4a8b5d5bc&unique=prints",
+  "collector_number": "253",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Adam Paquette",
+  "artist_ids": [
+    "89023dad-e6c0-41e0-83fb-eb2bfbbdc3f2"
+  ],
+  "illustration_id": "4d122298-1156-424f-9769-67ca68c37640",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 984,
+  "prices": {
+    "usd": "19.10",
+    "usd_foil": "19.59",
+    "usd_etched": null,
+    "eur": "14.14",
+    "eur_foil": "16.10",
+    "tix": "0.40"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DEvendo%252C%2BWaking%2BHaven",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DEvendo%252C%2BWaking%2BHaven",
+    "edhrec": "https://edhrec.com/route/?cc=Evendo%2C+Waking+Haven"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F643049%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=835045&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/143119?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

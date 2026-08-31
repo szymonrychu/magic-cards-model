@@ -1,0 +1,159 @@
+{
+  "object": "card",
+  "id": "f890bdc7-32e6-4492-bac7-7cabf54a8bfd",
+  "oracle_id": "099b8d2c-b482-48dd-b6bc-dedf546d66c5",
+  "multiverse_ids": [
+    693531
+  ],
+  "mtgo_id": 139049,
+  "arena_id": 95568,
+  "tcgplayer_id": 623887,
+  "cardmarket_id": 818009,
+  "name": "Marang River Regent // Coil and Catch",
+  "lang": "en",
+  "released_at": "2025-04-11",
+  "uri": "https://api.scryfall.com/cards/f890bdc7-32e6-4492-bac7-7cabf54a8bfd",
+  "scryfall_uri": "https://scryfall.com/card/tdm/51/marang-river-regent-coil-and-catch?utm_source=api",
+  "layout": "adventure",
+  "highres_image": false,
+  "image_status": "lowres",
+  "image_updated_at": "2026-07-13T01:49:53Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/8/f890bdc7-32e6-4492-bac7-7cabf54a8bfd.jpg?1783907393",
+    "normal": "https://cards.scryfall.io/normal/front/f/8/f890bdc7-32e6-4492-bac7-7cabf54a8bfd.jpg?1783907393",
+    "large": "https://cards.scryfall.io/large/front/f/8/f890bdc7-32e6-4492-bac7-7cabf54a8bfd.jpg?1783907393",
+    "png": "https://cards.scryfall.io/png/front/f/8/f890bdc7-32e6-4492-bac7-7cabf54a8bfd.png?1783907393",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/8/f890bdc7-32e6-4492-bac7-7cabf54a8bfd.jpg?1783907393",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/8/f890bdc7-32e6-4492-bac7-7cabf54a8bfd.jpg?1783907393",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/8/f890bdc7-32e6-4492-bac7-7cabf54a8bfd.webp?1783907393",
+    "grid": "https://cards.scryfall.io/grid/front/f/8/f890bdc7-32e6-4492-bac7-7cabf54a8bfd.webp?1783907393",
+    "display": "https://cards.scryfall.io/display/front/f/8/f890bdc7-32e6-4492-bac7-7cabf54a8bfd.webp?1783907393",
+    "art": "https://cards.scryfall.io/art/front/f/8/f890bdc7-32e6-4492-bac7-7cabf54a8bfd.webp?1783907393",
+    "crop": "https://cards.scryfall.io/crop/front/f/8/f890bdc7-32e6-4492-bac7-7cabf54a8bfd.webp?1783907393"
+  },
+  "mana_cost": "{4}{U}{U} // {3}{U}",
+  "cmc": 6.0,
+  "type_line": "Creature \u2014 Dragon // Instant \u2014 Omen",
+  "power": "6",
+  "toughness": "7",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Flying"
+  ],
+  "card_faces": [
+    {
+      "object": "card_face",
+      "name": "Marang River Regent",
+      "mana_cost": "{4}{U}{U}",
+      "type_line": "Creature \u2014 Dragon",
+      "oracle_text": "Flying\nWhen this creature enters, return up to two other target nonland permanents to their owners' hands.",
+      "power": "6",
+      "toughness": "7",
+      "artist": "John Tedrick",
+      "artist_id": "4da667fd-a4ad-4aea-ba20-db542810e01b",
+      "illustration_id": "fbf61d3f-f98e-4dae-a3ed-b361a8bc625f"
+    },
+    {
+      "object": "card_face",
+      "name": "Coil and Catch",
+      "mana_cost": "{3}{U}",
+      "type_line": "Instant \u2014 Omen",
+      "oracle_text": "Draw three cards, then discard a card. (Then shuffle this card into its owner's library.)",
+      "artist": "John Tedrick",
+      "artist_id": "4da667fd-a4ad-4aea-ba20-db542810e01b"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "1361ca81-1304-49a8-b2e6-e76a4aa4a8c3",
+  "set": "tdm",
+  "set_name": "Tarkir: Dragonstorm",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/1361ca81-1304-49a8-b2e6-e76a4aa4a8c3",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atdm&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/tdm?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/f890bdc7-32e6-4492-bac7-7cabf54a8bfd/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A099b8d2c-b482-48dd-b6bc-dedf546d66c5&unique=prints",
+  "collector_number": "51",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "John Tedrick",
+  "artist_ids": [
+    "4da667fd-a4ad-4aea-ba20-db542810e01b"
+  ],
+  "illustration_id": "fbf61d3f-f98e-4dae-a3ed-b361a8bc625f",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 3295,
+  "penny_rank": 1916,
+  "prices": {
+    "usd": "1.28",
+    "usd_foil": "1.48",
+    "usd_etched": null,
+    "eur": "1.86",
+    "eur_foil": "2.26",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=693531&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMarang%2BRiver%2BRegent%2B%252F%252F%2BCoil%2Band%2BCatch",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMarang%2BRiver%2BRegent%2B%252F%252F%2BCoil%2Band%2BCatch",
+    "edhrec": "https://edhrec.com/route/?cc=Marang+River+Regent"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F623887%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=818009&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/139049?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

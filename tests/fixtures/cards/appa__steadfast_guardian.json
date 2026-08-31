@@ -1,0 +1,161 @@
+{
+  "object": "card",
+  "id": "829d91e9-4878-4e55-a262-ac0d55b65d4e",
+  "oracle_id": "03c141ca-11e4-4927-a6bd-980ee1203c73",
+  "multiverse_ids": [],
+  "resource_id": "25802D80CAC3545C95C9B220F4C3F521C43BC3BE51EFE08DD75241B01542AE64",
+  "mtgo_id": 144496,
+  "arena_id": 97283,
+  "tcgplayer_id": 648645,
+  "cardmarket_id": 842845,
+  "name": "Appa, Steadfast Guardian",
+  "lang": "en",
+  "released_at": "2025-11-21",
+  "uri": "https://api.scryfall.com/cards/829d91e9-4878-4e55-a262-ac0d55b65d4e",
+  "scryfall_uri": "https://scryfall.com/card/tla/10/appa-steadfast-guardian?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T01:10:05Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/8/2/829d91e9-4878-4e55-a262-ac0d55b65d4e.jpg?1783905005",
+    "normal": "https://cards.scryfall.io/normal/front/8/2/829d91e9-4878-4e55-a262-ac0d55b65d4e.jpg?1783905005",
+    "large": "https://cards.scryfall.io/large/front/8/2/829d91e9-4878-4e55-a262-ac0d55b65d4e.jpg?1783905005",
+    "png": "https://cards.scryfall.io/png/front/8/2/829d91e9-4878-4e55-a262-ac0d55b65d4e.png?1783905005",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/8/2/829d91e9-4878-4e55-a262-ac0d55b65d4e.jpg?1783905005",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/8/2/829d91e9-4878-4e55-a262-ac0d55b65d4e.jpg?1783905005",
+    "thumb": "https://cards.scryfall.io/thumb/front/8/2/829d91e9-4878-4e55-a262-ac0d55b65d4e.webp?1783905005",
+    "grid": "https://cards.scryfall.io/grid/front/8/2/829d91e9-4878-4e55-a262-ac0d55b65d4e.webp?1783905005",
+    "display": "https://cards.scryfall.io/display/front/8/2/829d91e9-4878-4e55-a262-ac0d55b65d4e.webp?1783905005",
+    "art": "https://cards.scryfall.io/art/front/8/2/829d91e9-4878-4e55-a262-ac0d55b65d4e.webp?1783905005",
+    "crop": "https://cards.scryfall.io/crop/front/8/2/829d91e9-4878-4e55-a262-ac0d55b65d4e.webp?1783905005"
+  },
+  "mana_cost": "{2}{W}{W}",
+  "cmc": 4.0,
+  "type_line": "Legendary Creature \u2014 Bison Ally",
+  "oracle_text": "Flash\nFlying\nWhen Appa enters, airbend any number of other target nonland permanents you control. (Exile them. While each one is exiled, its owner may cast it for {2} rather than its mana cost.)\nWhenever you cast a spell from exile, create a 1/1 white Ally creature token.",
+  "power": "3",
+  "toughness": "4",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Flying",
+    "Airbend",
+    "Flash"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "4d822fa1-70f9-4a63-841d-31c94e1e3dd4",
+      "component": "combo_piece",
+      "name": "Appa, Steadfast Guardian",
+      "type_line": "Legendary Creature \u2014 Bison Ally",
+      "uri": "https://api.scryfall.com/cards/4d822fa1-70f9-4a63-841d-31c94e1e3dd4"
+    },
+    {
+      "object": "related_card",
+      "id": "01439983-8394-4a0c-9e9e-92a3f1927fe3",
+      "component": "token",
+      "name": "Ally",
+      "type_line": "Token Creature \u2014 Ally",
+      "uri": "https://api.scryfall.com/cards/01439983-8394-4a0c-9e9e-92a3f1927fe3"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "118f7e64-5caa-4cb7-99a8-184f4d3a7422",
+  "set": "tla",
+  "set_name": "Avatar: The Last Airbender",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/118f7e64-5caa-4cb7-99a8-184f4d3a7422",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atla&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/tla?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/829d91e9-4878-4e55-a262-ac0d55b65d4e/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A03c141ca-11e4-4927-a6bd-980ee1203c73&unique=prints",
+  "collector_number": "10",
+  "digital": false,
+  "rarity": "mythic",
+  "watermark": "airnomads",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Ma\u00ebl Ollivier-Henry",
+  "artist_ids": [
+    "01d7a674-0768-4251-89bb-85ef02a70f4a"
+  ],
+  "illustration_id": "2c9ece5e-467d-4a2b-83b5-38e3ee4f44b6",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 3167,
+  "prices": {
+    "usd": "6.43",
+    "usd_foil": "8.14",
+    "usd_etched": null,
+    "eur": "7.26",
+    "eur_foil": "9.16",
+    "tix": "0.17"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAppa%252C%2BSteadfast%2BGuardian",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAppa%252C%2BSteadfast%2BGuardian",
+    "edhrec": "https://edhrec.com/route/?cc=Appa%2C+Steadfast+Guardian"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F648645%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=842845&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/144496?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

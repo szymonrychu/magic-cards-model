@@ -1,0 +1,139 @@
+{
+  "object": "card",
+  "id": "6c6be129-56da-4fe7-a6bd-6a1d402c09e1",
+  "oracle_id": "a69a24d0-ca58-4a44-8af1-a3bd1608d2f9",
+  "multiverse_ids": [
+    679099
+  ],
+  "mtgo_id": 133612,
+  "arena_id": 93735,
+  "tcgplayer_id": 591301,
+  "cardmarket_id": 797013,
+  "name": "Raise the Past",
+  "lang": "en",
+  "released_at": "2024-11-15",
+  "uri": "https://api.scryfall.com/cards/6c6be129-56da-4fe7-a6bd-6a1d402c09e1",
+  "scryfall_uri": "https://scryfall.com/card/fdn/22/raise-the-past?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:18:44Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/6/c/6c6be129-56da-4fe7-a6bd-6a1d402c09e1.jpg?1783909124",
+    "normal": "https://cards.scryfall.io/normal/front/6/c/6c6be129-56da-4fe7-a6bd-6a1d402c09e1.jpg?1783909124",
+    "large": "https://cards.scryfall.io/large/front/6/c/6c6be129-56da-4fe7-a6bd-6a1d402c09e1.jpg?1783909124",
+    "png": "https://cards.scryfall.io/png/front/6/c/6c6be129-56da-4fe7-a6bd-6a1d402c09e1.png?1783909124",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/6/c/6c6be129-56da-4fe7-a6bd-6a1d402c09e1.jpg?1783909124",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/6/c/6c6be129-56da-4fe7-a6bd-6a1d402c09e1.jpg?1783909124",
+    "thumb": "https://cards.scryfall.io/thumb/front/6/c/6c6be129-56da-4fe7-a6bd-6a1d402c09e1.webp?1783909124",
+    "grid": "https://cards.scryfall.io/grid/front/6/c/6c6be129-56da-4fe7-a6bd-6a1d402c09e1.webp?1783909124",
+    "display": "https://cards.scryfall.io/display/front/6/c/6c6be129-56da-4fe7-a6bd-6a1d402c09e1.webp?1783909124",
+    "art": "https://cards.scryfall.io/art/front/6/c/6c6be129-56da-4fe7-a6bd-6a1d402c09e1.webp?1783909124",
+    "crop": "https://cards.scryfall.io/crop/front/6/c/6c6be129-56da-4fe7-a6bd-6a1d402c09e1.webp?1783909124"
+  },
+  "mana_cost": "{2}{W}{W}",
+  "cmc": 4.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Return all creature cards with mana value 2 or less from your graveyard to the battlefield.",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "a7ecb771-d1b6-4dec-8cf5-8d45179f21e0",
+  "set": "fdn",
+  "set_name": "Foundations",
+  "set_type": "core",
+  "set_uri": "https://api.scryfall.com/sets/a7ecb771-d1b6-4dec-8cf5-8d45179f21e0",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afdn&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fdn?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/6c6be129-56da-4fe7-a6bd-6a1d402c09e1/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aa69a24d0-ca58-4a44-8af1-a3bd1608d2f9&unique=prints",
+  "collector_number": "22",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "At Strixhaven University, learning about the past means talking to those who were there.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Nathaniel Himawan",
+  "artist_ids": [
+    "ae1e4729-d4ec-4d0f-8c71-883fc7358005"
+  ],
+  "illustration_id": "917ce5bc-74c2-4bfe-a35e-f7ab5c93477f",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 2822,
+  "penny_rank": 4702,
+  "preview": {
+    "source": "Ify Nwadiwe",
+    "source_uri": "https://twitter.com/IfyNwadiwe/status/1851786827666989257",
+    "previewed_at": "2024-10-30"
+  },
+  "prices": {
+    "usd": "0.52",
+    "usd_foil": "0.64",
+    "usd_etched": null,
+    "eur": "1.08",
+    "eur_foil": "1.55",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=679099&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRaise%2Bthe%2BPast",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DRaise%2Bthe%2BPast",
+    "edhrec": "https://edhrec.com/route/?cc=Raise+the+Past"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F591301%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=797013&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/133612?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -1,0 +1,150 @@
+{
+  "object": "card",
+  "id": "cc3063ec-5ea6-46c1-8331-c740cbaf6c76",
+  "oracle_id": "79e69a91-d580-47fb-be76-1e32c50d2fa0",
+  "multiverse_ids": [],
+  "resource_id": "236F7DF9D3220EB40B7DAD6F2FE406197857E70410D0FAA0945A934249986B3D",
+  "mtgo_id": 144846,
+  "arena_id": 97458,
+  "tcgplayer_id": 662545,
+  "cardmarket_id": 857836,
+  "name": "Great Divide Guide",
+  "lang": "en",
+  "released_at": "2025-11-21",
+  "uri": "https://api.scryfall.com/cards/cc3063ec-5ea6-46c1-8331-c740cbaf6c76",
+  "scryfall_uri": "https://scryfall.com/card/tla/181/great-divide-guide?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T01:09:02Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/c/c/cc3063ec-5ea6-46c1-8331-c740cbaf6c76.jpg?1783904942",
+    "normal": "https://cards.scryfall.io/normal/front/c/c/cc3063ec-5ea6-46c1-8331-c740cbaf6c76.jpg?1783904942",
+    "large": "https://cards.scryfall.io/large/front/c/c/cc3063ec-5ea6-46c1-8331-c740cbaf6c76.jpg?1783904942",
+    "png": "https://cards.scryfall.io/png/front/c/c/cc3063ec-5ea6-46c1-8331-c740cbaf6c76.png?1783904942",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/c/c/cc3063ec-5ea6-46c1-8331-c740cbaf6c76.jpg?1783904942",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/c/c/cc3063ec-5ea6-46c1-8331-c740cbaf6c76.jpg?1783904942",
+    "thumb": "https://cards.scryfall.io/thumb/front/c/c/cc3063ec-5ea6-46c1-8331-c740cbaf6c76.webp?1783904942",
+    "grid": "https://cards.scryfall.io/grid/front/c/c/cc3063ec-5ea6-46c1-8331-c740cbaf6c76.webp?1783904942",
+    "display": "https://cards.scryfall.io/display/front/c/c/cc3063ec-5ea6-46c1-8331-c740cbaf6c76.webp?1783904942",
+    "art": "https://cards.scryfall.io/art/front/c/c/cc3063ec-5ea6-46c1-8331-c740cbaf6c76.webp?1783904942",
+    "crop": "https://cards.scryfall.io/crop/front/c/c/cc3063ec-5ea6-46c1-8331-c740cbaf6c76.webp?1783904942"
+  },
+  "mana_cost": "{1}{G}",
+  "cmc": 2.0,
+  "type_line": "Creature \u2014 Human Scout Ally",
+  "oracle_text": "Each land and Ally you control has \"{T}: Add one mana of any color.\"",
+  "power": "2",
+  "toughness": "3",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [],
+  "produced_mana": [
+    "B",
+    "G",
+    "R",
+    "U",
+    "W"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "118f7e64-5caa-4cb7-99a8-184f4d3a7422",
+  "set": "tla",
+  "set_name": "Avatar: The Last Airbender",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/118f7e64-5caa-4cb7-99a8-184f4d3a7422",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atla&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/tla?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/cc3063ec-5ea6-46c1-8331-c740cbaf6c76/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A79e69a91-d580-47fb-be76-1e32c50d2fa0&unique=prints",
+  "collector_number": "181",
+  "digital": false,
+  "rarity": "rare",
+  "watermark": "earthkingdom",
+  "flavor_text": "\"Who's ready to cross this here canyon?\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Song Qijin",
+  "artist_ids": [
+    "67750cc4-846d-40a2-8d1a-e8085544be07"
+  ],
+  "illustration_id": "571f732a-2691-46d6-9ee6-92e2a71fdd28",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 2860,
+  "penny_rank": 3862,
+  "preview": {
+    "source": "MTGGoldfish",
+    "source_uri": "https://www.mtggoldfish.com/articles/the-lore-of-avatar-the-last-airbender-an-episode-guide-featuring-exclusive-spoiler",
+    "previewed_at": "2025-11-05"
+  },
+  "prices": {
+    "usd": "1.02",
+    "usd_foil": "1.58",
+    "usd_etched": null,
+    "eur": "1.08",
+    "eur_foil": "1.21",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DGreat%2BDivide%2BGuide",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DGreat%2BDivide%2BGuide",
+    "edhrec": "https://edhrec.com/route/?cc=Great+Divide+Guide"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F662545%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=857836&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/144846?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

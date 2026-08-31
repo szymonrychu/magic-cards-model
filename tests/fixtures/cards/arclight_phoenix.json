@@ -1,0 +1,136 @@
+{
+  "object": "card",
+  "id": "def7f05b-6e63-4828-a92c-ce7921bbdf4e",
+  "oracle_id": "a80ea391-54d1-4b61-95a3-f8deb4cbe842",
+  "multiverse_ids": [
+    643107
+  ],
+  "mtgo_id": 120727,
+  "tcgplayer_id": 531078,
+  "cardmarket_id": 748448,
+  "name": "Arclight Phoenix",
+  "lang": "en",
+  "released_at": "2024-01-12",
+  "uri": "https://api.scryfall.com/cards/def7f05b-6e63-4828-a92c-ce7921bbdf4e",
+  "scryfall_uri": "https://scryfall.com/card/rvr/100/arclight-phoenix?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:28:38Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/d/e/def7f05b-6e63-4828-a92c-ce7921bbdf4e.jpg?1783913318",
+    "normal": "https://cards.scryfall.io/normal/front/d/e/def7f05b-6e63-4828-a92c-ce7921bbdf4e.jpg?1783913318",
+    "large": "https://cards.scryfall.io/large/front/d/e/def7f05b-6e63-4828-a92c-ce7921bbdf4e.jpg?1783913318",
+    "png": "https://cards.scryfall.io/png/front/d/e/def7f05b-6e63-4828-a92c-ce7921bbdf4e.png?1783913318",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/d/e/def7f05b-6e63-4828-a92c-ce7921bbdf4e.jpg?1783913318",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/d/e/def7f05b-6e63-4828-a92c-ce7921bbdf4e.jpg?1783913318",
+    "thumb": "https://cards.scryfall.io/thumb/front/d/e/def7f05b-6e63-4828-a92c-ce7921bbdf4e.webp?1783913318",
+    "grid": "https://cards.scryfall.io/grid/front/d/e/def7f05b-6e63-4828-a92c-ce7921bbdf4e.webp?1783913318",
+    "display": "https://cards.scryfall.io/display/front/d/e/def7f05b-6e63-4828-a92c-ce7921bbdf4e.webp?1783913318",
+    "art": "https://cards.scryfall.io/art/front/d/e/def7f05b-6e63-4828-a92c-ce7921bbdf4e.webp?1783913318",
+    "crop": "https://cards.scryfall.io/crop/front/d/e/def7f05b-6e63-4828-a92c-ce7921bbdf4e.webp?1783913318"
+  },
+  "mana_cost": "{3}{R}",
+  "cmc": 4.0,
+  "type_line": "Creature \u2014 Phoenix",
+  "oracle_text": "Flying, haste\nAt the beginning of combat on your turn, if you've cast three or more instant and sorcery spells this turn, return this card from your graveyard to the battlefield.",
+  "power": "3",
+  "toughness": "2",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Flying",
+    "Haste"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "fed2c8cd-ab92-44f6-808a-41e7809bcfe2",
+  "set": "rvr",
+  "set_name": "Ravnica Remastered",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/fed2c8cd-ab92-44f6-808a-41e7809bcfe2",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Arvr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/rvr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/def7f05b-6e63-4828-a92c-ce7921bbdf4e/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aa80ea391-54d1-4b61-95a3-f8deb4cbe842&unique=prints",
+  "collector_number": "100",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "Some storms never blow over.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Slawomir Maniak",
+  "artist_ids": [
+    "d887bc66-2779-416c-a1ff-d8720242063e"
+  ],
+  "illustration_id": "0aa75a78-f9fe-438a-b0a3-72c017e1d61d",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 19167,
+  "prices": {
+    "usd": "0.71",
+    "usd_foil": "0.92",
+    "usd_etched": null,
+    "eur": "1.43",
+    "eur_foil": "1.06",
+    "tix": "2.31"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=643107&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DArclight%2BPhoenix",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DArclight%2BPhoenix",
+    "edhrec": "https://edhrec.com/route/?cc=Arclight+Phoenix"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F531078%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=748448&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/120727?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
