@@ -37,8 +37,6 @@ wrote this file:
   causes that player to lose that much life.
 """
 
-import pytest
-
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.abilities import ActivatedAbility, parse_abilities
 from magic_cards_model.models import Card, Color, Deck, Match, Player, Zone
@@ -263,18 +261,6 @@ def test_lotus_bloom_adds_three_mana_of_one_colour():
     assert "Add three mana of any one color" in (printing.oracle_text or "")
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "Goblin Charbelcher's activated ability is silent: no dispatcher reads "
-        "'{3}, {T}: Reveal cards from the top of your library until you reveal a "
-        "land card. This artifact deals damage equal to the number of nonland "
-        "cards revealed this way to any target.' Activating it puts an ability on "
-        "the stack that resolves and does nothing, so no damage is dealt (CR "
-        "119.2, CR 120.3a) and this deck cannot execute its only win condition. "
-        "See docs/deck-gaps/belcher.md."
-    ),
-)
 def test_charbelcher_deals_damage_when_it_reveals_a_pile_of_nonlands():
     """CR 602.1, 602.1a, 119.2, 120.3a: the archetype's kill.
 

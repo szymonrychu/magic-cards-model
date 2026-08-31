@@ -386,3 +386,73 @@ def test_greenshell_with_an_empty_library_has_no_top_card_and_does_nothing():
         for decision in scenario.questions_asked()
         if decision.source == "Fecund Greenshell"
     ] == []
+
+
+# -- A negated kind, and the other wording for the same set -----------------
+#
+# Fallaji Archaeologist: "When this creature enters, mill three cards. You may
+# put a noncreature, nonland card from among the cards milled this way into
+# your hand. If you don't, put a +1/+1 counter on this creature."
+#
+# Two differences from Ostrich-Horse and no third: the kind is a run of
+# CR 205.2a negations rather than one positive type word, and the candidate
+# set is spelled "the cards milled this way" rather than "them" - the same set
+# either way (CR 701.17c). The comma between the negations is a conjunction,
+# not a disjunction: a card that is neither, which is the De Morgan reading
+# `_quality_matcher` already documents for Narset, Parter of Veils. Reading it
+# as "or" would qualify every card in the game, since a creature is nonland
+# and a land is noncreature.
+
+
+def _fallaji_board(library: list[str]) -> Scenario:
+    """Fallaji Archaeologist costs {1}{U}, so this board is Islands rather
+    than `enters`'s Forests."""
+    return (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Fallaji Archaeologist"],
+            battlefield=["Island", "Island"],
+            library=library,
+        )
+        .player("bob")
+    )
+
+
+def test_fallaji_keeps_a_card_that_is_neither_a_creature_nor_a_land():
+    """The negations are ANDed: only the Lightning Bolt qualifies."""
+    scenario = _fallaji_board(["Grizzly Bears", "Lightning Bolt", "Forest", "Island"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bolt = scenario.player("alice").library[1]
+    scenario.will_choose_cards(bolt, source="Fallaji Archaeologist")
+
+    scenario.cast_and_resolve(
+        "Fallaji Archaeologist", *scenario.untapped_sources("Island", "Island")
+    )
+    resolve_all(scenario)
+
+    assert bolt.zone is Zone.HAND
+    assert sorted(c.name for c in scenario.player("alice").graveyard) == [
+        "Forest",
+        "Grizzly Bears",
+    ]
+
+
+def test_fallaji_is_never_asked_when_every_milled_card_is_a_creature_or_a_land():
+    """No candidate means no question (CR 608.2d), and "if you don't" covers
+    that branch too - the counter goes on (CR 122.1a)."""
+    scenario = _fallaji_board(["Grizzly Bears", "Forest", "Island", "Lightning Bolt"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    archaeologist = scenario.cast_and_resolve(
+        "Fallaji Archaeologist", *scenario.untapped_sources("Island", "Island")
+    )
+    resolve_all(scenario)
+
+    assert [
+        decision
+        for decision in scenario.questions_asked()
+        if decision.source == "Fallaji Archaeologist"
+    ] == []
+    assert archaeologist.counters["+1/+1"] == 1
+    assert scenario.player("alice").hand == []

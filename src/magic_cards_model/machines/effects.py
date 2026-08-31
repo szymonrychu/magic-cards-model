@@ -5247,6 +5247,87 @@ def _parse_look_top_n_may_battlefield_creature_bonus_clause(text: str) -> Effect
     return effect
 
 
+#: Goblin Charbelcher: "Reveal cards from the top of your library until you
+#: reveal a land card. This artifact deals damage equal to the number of
+#: nonland cards revealed this way to any target. If the revealed land card
+#: was a Mountain, this artifact deals double that damage instead. Put the
+#: revealed cards on the bottom of your library in any order."
+#:
+#: An open-ended reveal - the count is not printed anywhere, it is however
+#: many cards it took to hit a land - feeding a targeted damage amount, with a
+#: conditional doubling read off the card that stopped the reveal. One
+#: CR 608.2c instruction across four sentences, none of which can be run
+#: without the others.
+_REVEAL_UNTIL_LAND_DAMAGE_RE = re.compile(
+    r"^reveal cards from the top of your library until you reveal a land card\. "
+    r"this (?P<noun>\w+) deals damage equal to the number of nonland cards "
+    r"revealed this way to any target\. "
+    r"if the revealed land card was a (?P<doubler>[A-Za-z]+), this (?P=noun) deals "
+    r"double that damage instead\. "
+    r"put the revealed cards on the bottom of your library in any order\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_reveal_until_land_damage_clause(text: str) -> AbilityEffect | None:
+    """`_REVEAL_UNTIL_LAND_DAMAGE_RE`'s shape - see above.
+
+    CR 701.20a's reveal moves nothing; the cards stay on top of the library
+    until the last sentence puts them on the bottom. A library with no land in
+    it at all reveals the whole library and stops - "until" has no more cards
+    to look at - and the damage is then the number of nonland cards seen,
+    which is the entire library.
+
+    The doubling is a property of *this* damage event, not a second one: the
+    card says "deals double that damage instead", so one CR 120.1 damage event
+    of twice the size happens, not two events. That matters to anything
+    watching for damage, and to CR 615's prevention shields, which see one
+    amount rather than two.
+
+    The reveal happens before the damage, so a card that stopped the reveal is
+    on the bottom of the library by the time state-based actions run - which
+    is why the whole sequence is one effect and the "put the revealed cards on
+    the bottom" sentence cannot be split off into a clause of its own.
+    """
+    match = _REVEAL_UNTIL_LAND_DAMAGE_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    doubler = match.group("doubler").lower()
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.player(ability.controller)
+        revealed: list[CardState] = []
+        stopper: CardState | None = None
+        for state in list(controller.library):
+            revealed.append(state)
+            if Type.LAND in state.types:
+                stopper = state
+                break
+        nonland = sum(1 for state in revealed if Type.LAND not in state.types)
+        amount = nonland
+        # CR 305.6's basic land types are subtypes, so "was a Mountain" is a
+        # subtype question about the card that stopped the reveal.
+        if stopper is not None and any(
+            subtype.lower() == doubler for subtype in stopper.card.subtypes
+        ):
+            amount *= 2
+
+        source = ability.source(game)
+        for target in game.resolve_targets(ability):
+            game.deal_damage(target, amount, source=source)
+
+        # "In any order" is the controller's own choice - CR 400.5: "The
+        # order of objects in a library ... can't be changed except when
+        # effects or rules allow it", and this effect allows it - not a
+        # randomisation, and the
+        # engine has nobody to ask about an order, so the revealed order is
+        # kept, which is one legal answer to "any order".
+        for state in revealed:
+            controller.move(state, Zone.LIBRARY)
+
+    return effect
+
+
 #: Atraxa, Grand Unifier's enters trigger: "reveal the top ten cards of your
 #: library. For each card type, you may put a card of that type from among the
 #: revealed cards into your hand. Put the rest on the bottom of your library
@@ -6527,6 +6608,17 @@ class AnaphoricClauseNotice(BaseModel):
     no trace of why. The same "unreadable is not the same as no effect"
     record `TargetingNotice`, `InterveningIfNotice`, `ModeNotice`,
     `LayerNotice`, and `CostModifierNotice` already keep for their own gaps.
+
+    It also covers the other direction of back-reference: a clause that names
+    an object the *cost* consumed rather than one an earlier clause moved.
+    Neoform and Eldritch Evolution both read "the sacrificed creature's mana
+    value", where the sacrificed creature was an additional cost (CR 118.8a)
+    paid during announcement. `AbilityOnStack` records what an activated
+    ability's cost sacrificed (`cost_sacrificed_card_ids`); a *spell* records
+    nothing of the kind - `machines/casting.py`'s `add_additional_cost` puts
+    the paid components on the `Casting`, which is gone by the time the spell
+    resolves - so the number simply cannot be read. Recorded here rather than
+    left silent, and named as the blocker it is.
     """
 
     model_config = ConfigDict(frozen=True)
@@ -6661,6 +6753,29 @@ def _parse_each_graveyard_instant_sorcery_gains_flashback_clause(effect_text: st
             )
 
     return effect
+
+
+#: "the sacrificed creature's mana value" - Neoform's and Eldritch
+#: Evolution's own right-hand side. See `AnaphoricClauseNotice` for why this
+#: is recorded rather than performed: the spell has no record of what its own
+#: CR 118.8a additional cost sacrificed.
+_SACRIFICED_COST_REFERENCE_RE = re.compile(
+    r"\bthe sacrificed (?:creature|permanent|artifact)'?s (?:mana value|power|toughness)\b",
+    re.IGNORECASE,
+)
+
+
+def _unreadable_cost_reference_clause(text: str) -> str | None:
+    """The clause of `text` that reads back a value off an object the spell's
+    own additional cost consumed, if there is one - see
+    `_SACRIFICED_COST_REFERENCE_RE`."""
+    clauses = _prepare_effect_clauses(text)
+    if clauses is None:
+        return None
+    for clause in clauses:
+        if _SACRIFICED_COST_REFERENCE_RE.search(clause):
+            return clause.strip()
+    return None
 
 
 def _unreadable_anaphoric_clause(text: str, *, for_spell: bool) -> str | None:
@@ -7091,8 +7206,15 @@ _SELECT_FROM_TOP_RE = re.compile(
     rf"(?:mill (?P<mill_n>{_COUNT}) cards?"
     rf"|look at the top (?P<look_n>{_COUNT}) cards? of your library)\.\s*"
     r"you may put (?:a|an|one) "
+    # Either one positive kind word, or a run of CR 205.2a negations -
+    # Fallaji Archaeologist's "a noncreature, nonland card", where the comma
+    # is a conjunction (a card that is neither), the same De Morgan reading
+    # `_quality_matcher` already documents for Narset, Parter of Veils.
     r"(?:(?P<kind>permanent|land|creature|artifact|enchantment|instant|sorcery|"
-    r"planeswalker) )?card from among them "
+    r"planeswalker) |(?P<negated>non[a-z]+(?:, ?non[a-z]+)*) )?"
+    # "from among them" and "from among the cards milled this way" name the
+    # same set - the cards this clause's own first sentence just saw.
+    r"card from among (?:them|the cards milled this way) "
     r"(?P<dest>into your hand|onto the battlefield tapped|onto the battlefield"
     r"|into your graveyard)\.\s*"
     r"(?P<decline_counter>if you don't, put a \+1/\+1 counter on this creature\.\s*)?"
@@ -7122,9 +7244,24 @@ def _select_from_top_runner(
     milling = match.group("mill_n") is not None
     count = _count(match.group("mill_n") if milling else match.group("look_n"))
     kind_word = (match.group("kind") or "").lower()
-    predicate = _SELECT_FROM_TOP_KINDS.get(kind_word)
-    if predicate is None:
-        return None
+    negated = (match.group("negated") or "").lower()
+    if negated:
+        excluded: list[Type] = []
+        for word in negated.split(","):
+            card_type = _singular_card_type(word.strip().removeprefix("non"))
+            if card_type is None:
+                return None
+            excluded.append(card_type)
+
+        def predicate(state: CardState, excluded: tuple[Type, ...] = tuple(excluded)) -> bool:
+            return not any(card_type in state.card.types for card_type in excluded)
+
+        kind_word = negated
+    else:
+        found = _SELECT_FROM_TOP_KINDS.get(kind_word)
+        if found is None:
+            return None
+        predicate = found
     destination = match.group("dest").lower()
     counter_when_declined = match.group("decline_counter") is not None
     life = _count(match.group("life")) if match.group("life") else 0
@@ -7672,6 +7809,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     draw_then_put_land_cave = _parse_draw_then_put_land_cave_bonus_clause(effect_text)
     if draw_then_put_land_cave is not None:
         return draw_then_put_land_cave
+    reveal_until_land = _parse_reveal_until_land_damage_clause(effect_text)
+    if reveal_until_land is not None:
+        return reveal_until_land
     reveal_one_per_type = _parse_reveal_top_n_one_per_card_type_clause(effect_text)
     if reveal_one_per_type is not None:
         return reveal_one_per_type
@@ -9166,7 +9306,9 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
 
         return conditional_notice_only
 
-    unread = _unreadable_anaphoric_clause(effect_text, for_spell=True)
+    unread = _unreadable_anaphoric_clause(
+        effect_text, for_spell=True
+    ) or _unreadable_cost_reference_clause(effect_text)
     if unread is not None:
 
         def anaphoric_notice_only(game: "Game", spell: CardState) -> None:
