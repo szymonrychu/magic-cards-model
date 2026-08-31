@@ -22,8 +22,6 @@ the session that wrote this file.
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.combat import Keyword, has_keyword
-from magic_cards_model.machines.layers import LayerNotice
-from tests.cards import card
 from tests.scenarios.harness import Scenario
 
 
@@ -90,27 +88,26 @@ def test_the_grant_switches_off_the_moment_true_conviction_leaves():
     assert not has_keyword(bears, Keyword.LIFELINK, scenario.game)
 
 
-def test_asceticisms_hexproof_grant_fails_closed_with_a_notice():
-    """Asceticism: "Creatures you control have hexproof." reads exactly like
-    True Conviction's shape but names a keyword `machines/combat.py`'s
-    `Keyword` does not model at all (CR 702.11b's hexproof is not part of this
-    engine's combat vocabulary the way CR 702.4's double strike is). Nothing
-    is granted - the printed board is untouched - and a `LayerNotice` records
-    that the text looked like this shape's territory and could not be read,
-    rather than the card silently doing nothing.
+def test_asceticisms_hexproof_grant_applies():
+    """Asceticism: "Creatures you control have hexproof." (verified with
+    `resolve_cards`) reads exactly like True Conviction's shape, and now grants
+    exactly like it too.
+
+    Hexproof (CR 702.11a: "Hexproof is a static ability"; CR 702.11b: "This
+    permanent can't be the target of spells or abilities your opponents
+    control") is not in `machines/combat.py`'s `Keyword` vocabulary, because no
+    combat rule reads it - but `machines/casting.py` reads it off the *computed*
+    board when it checks target legality, so a layer 6 grant (CR 613.1f) of it
+    is a real one. This used to fail closed with a `LayerNotice` purely because
+    `machines/layers.py`'s whitelist was the combat vocabulary verbatim.
+
+    The card's other line, the regeneration activated ability, is not a
+    continuous effect and records nothing either way.
     """
     scenario = Scenario().player("alice", battlefield=["Asceticism", "Grizzly Bears"]).build()
-    asceticism = scenario.creature("Asceticism", "alice")
     bears = scenario.creature("Grizzly Bears", "alice")
 
     board = computed(scenario)
 
-    assert not board.of(bears).has_ability("Hexproof")
-    notices = scenario.game.continuous_effects.layer_notices
-    assert notices == [
-        LayerNotice(
-            source_id=asceticism.id,
-            source_name="Asceticism",
-            text=card("Asceticism").oracle_text,
-        )
-    ]
+    assert board.of(bears).has_ability("Hexproof")
+    assert scenario.game.continuous_effects.layer_notices == []

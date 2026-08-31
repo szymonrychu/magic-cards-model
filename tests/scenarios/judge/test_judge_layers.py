@@ -25,8 +25,6 @@ that integration. The pure-layer cases call `compute_board` the way
 `knowledge_search(type="rules")`.
 """
 
-import pytest
-
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.layers import compute_board, effects_for, static_effects
 from magic_cards_model.models import Zone
@@ -298,19 +296,6 @@ def test_dress_down_still_strips_an_actual_creature_alongside_grist():
 # --------------------------------------------------------------------------
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Innkeeper's Talent's level-2 chapter ('Permanents you control with counters on them "
-    "have ward {1}') is a static ability granted from a class enchantment's own text, not a "
-    "printed keyword on the creature itself - it has no entry in machines/layers.LAYER_EFFECTS, "
-    "so compute_board never grants the ward in the first place, let alone twice over from two "
-    "copies. CR 702.21a defines ward as a triggered ability, and CR 113.10/613.6 say two "
-    "abilities granted by two different effects are two separate instances (the same pattern "
-    "CR 702.58b states for graft, CR 702.135b for afterlife, CR 702.112c for renown) - two "
-    "Innkeeper's Talents at level 2 should give a countered-with-counters creature two "
-    "independent ward triggers, each demanding its own {1}, not one. Nothing in CardState counts "
-    "'how many times' a permanent has ward at all.",
-)
 def test_two_innkeepers_talents_grant_two_separate_ward_instances():
     """DDR#982: multiple static grants of the same keyword do not merge into one.
 
@@ -319,21 +304,45 @@ def test_two_innkeepers_talents_grant_two_separate_ward_instances():
     A spell targeting such a creature should trigger ward twice (CR 702.21a
     fires "whenever this permanent becomes the target"), needing {1} paid
     twice or the spell is countered - not once.
+
+    The level is set explicitly: CR 716.2a makes a class level bar's abilities
+    read "As long as this Class is level N or greater, it has [Abilities]", so
+    a level-1 Talent does not have this ability at all and grants nothing -
+    which is what `machines/layers.py::effects_for` now enforces by reading
+    `CardState.class_ability_text` rather than raw `oracle_text`.
     """
     bear = permanent("Grizzly Bears")
     bear.add_counters("+1/+1", 1)
     talent_one = permanent("Innkeeper's Talent")
+    talent_one.class_level = 2
     talent_two = permanent("Innkeeper's Talent")
+    talent_two.class_level = 2
 
     board = compute_board(
         [bear, talent_one, talent_two],
         static_effects([talent_one, talent_two, bear]),
     )
 
-    # There is no per-instance count anywhere on Characteristics - "ward" is
-    # either present once or absent, so a second independent instance cannot
-    # be told apart from the first with anything the model exposes today.
+    # Ward is a triggered ability (CR 702.21a) with no redundancy clause of its
+    # own - compare CR 702.3c for defender - so two grants are two abilities
+    # (CR 113.2c), not one.
     assert board.of(bear).abilities.count("Ward {1}") == 2
+
+
+def test_a_level_one_innkeepers_talent_grants_no_ward():
+    """The control for the case above: CR 716.2a's level gate.
+
+    "[Cost]: Level N — [Abilities]" means, among other things, "As long as this
+    Class is level N or greater, it has [Abilities]" - so the ward paragraph is
+    printed on a level-1 Talent and is not one of its abilities.
+    """
+    bear = permanent("Grizzly Bears")
+    bear.add_counters("+1/+1", 1)
+    talent = permanent("Innkeeper's Talent")
+
+    board = compute_board([bear, talent], static_effects([talent, bear]))
+
+    assert board.of(bear).abilities.count("Ward {1}") == 0
 
 
 # --------------------------------------------------------------------------
@@ -363,16 +372,6 @@ def test_blood_moon_alone_leaves_an_artifact_alone():
     assert scenario.game.characteristics_of(sol_ring).subtypes == ()
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Toph, the First Metalbender's 'Nontoken artifacts you control are "
-    "lands in addition to their other types' has no row in "
-    "`machines/layers.LAYER_EFFECTS` and is not one of `parsed_layer_effects`' "
-    "shapes either, so it generates no continuous effect at all: Sol Ring's "
-    "characteristics are unchanged whether Toph is on the battlefield or not. "
-    "With one of the two layer 4 effects missing there is no dependency for "
-    "CR 613.8 to resolve, so this episode's ordering question cannot be reached.",
-)
 def test_toph_makes_artifacts_lands_and_blood_moon_then_makes_them_mountains():
     """DDR#994: Blood Moon depends on Toph, so it waits for it (CR 613.8).
 

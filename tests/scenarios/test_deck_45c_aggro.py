@@ -306,17 +306,6 @@ def test_a_land_from_this_deck_can_be_played_as_a_special_action():
 # -- the gaps this deck exposes (see docs/deck-gaps/45c-aggro.md) ---------
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "Leyline of the Guildpact's 'Lands you control are every basic land type "
-        "in addition to their other types' generates no CR 613.1d layer-4 effect. "
-        "The identical sentence is modelled for Dryad of the Ilysian Grove, but only "
-        "as a name-keyed LAYER_EFFECTS row, and `parsed_layer_effects` does not read "
-        "the shape off oracle text - so the Leyline is inert and CR 305.6's intrinsic "
-        "mana abilities are never granted."
-    ),
-)
 def test_leyline_of_the_guildpact_makes_every_land_every_basic_land_type():
     scenario = (
         Scenario().player("alice", battlefield=["Leyline of the Guildpact", "Mountain"]).build()
@@ -328,15 +317,6 @@ def test_leyline_of_the_guildpact_makes_every_land_every_basic_land_type():
     assert {"Plains", "Island", "Swamp", "Mountain", "Forest"} <= set(subtypes)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "Territorial Kavu's domain characteristic-defining ability (CR 604.3) - "
-        "'power and toughness are each equal to the number of basic land types among "
-        "lands you control' - is not one of `machines/layers.py`'s parsed shapes, so "
-        "the Kavu keeps its printed */* and has no power at all."
-    ),
-)
 def test_territorial_kavu_has_power_equal_to_its_domain():
     scenario = (
         Scenario()

@@ -23,10 +23,12 @@ not a bare sentence, resolves:
 - the pump and the keyword grant are one instruction, and both take (or both
   fail to take) together;
 - a shape this pool has real cards for but `parsed_layer_effects` cannot fully
-  read - more than one keyword (Aerial Maneuver), a keyword this engine does
-  not model at all (Adamant Will's indestructible) - reaches `create_
+  read - more than one keyword (Aerial Maneuver) - reaches `create_
   continuous_effect` exactly like the readable ones do, and comes back as a
-  `LayerNotice` instead of a card that quietly did nothing.
+  `LayerNotice` instead of a card that quietly did nothing. Adamant Will's
+  indestructible used to be the second example here and no longer is: the
+  keyword whitelist now covers the grantable abilities no *combat* rule reads
+  (CR 702.12a), so the card works.
 
 Every CR number in this file was looked up with `knowledge_search(type="rules")`
 in the session that wrote it.
@@ -34,6 +36,7 @@ in the session that wrote it.
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.combat import Keyword, has_keyword
+from magic_cards_model.machines.keywords import is_indestructible
 from magic_cards_model.machines.layers import LayerNotice
 from magic_cards_model.models import Zone
 from tests.cards import card
@@ -177,19 +180,19 @@ def test_angelic_blessing_grants_flying_that_actually_evades_a_ground_blocker():
 # --------------------------------------------------------------------------
 
 
-def test_a_keyword_this_engine_does_not_model_records_a_notice_and_applies_nothing():
+def test_a_keyword_outside_the_combat_vocabulary_is_still_granted():
     """Adamant Will: "Target creature gets +2/+2 and gains indestructible
-    until end of turn."
+    until end of turn." (verified with `resolve_cards`).
 
-    `machines/combat.py`'s `Keyword` is the combat vocabulary this engine
-    models; indestructible (CR 702.12a) is not in it, so
-    `parsed_layer_effects` refuses the *whole* sentence rather than granting
-    half of what it cannot fully back up (a pumped-but-not-actually-
-    indestructible creature would be a wrong game state that looks right).
-    That refusal reaches `create_continuous_effect` exactly like a readable
-    grant does, and comes back as a `LayerNotice` - the same "unreadable is
-    not the same as no effect" record `test_parsed_layer_effects.py`'s Fiend
-    Artisan test already holds a static ability to.
+    Indestructible (CR 702.12a: "Indestructible is a static ability") is not
+    part of `machines/combat.py`'s `Keyword` vocabulary, because no combat rule
+    reads it - but it is not unmodelled either: `machines/keywords.py`'s
+    `is_indestructible` asks `combat.has_keyword`, which reads the *computed*
+    board (CR 613.5), so a layer 6 grant (CR 613.1f) of it does exactly what
+    CR 702.12b says. This sentence used to fail closed with a `LayerNotice`
+    only because `machines/layers.py`'s keyword whitelist was the combat one
+    verbatim; it now names the grantable keywords no combat rule reads too, so
+    the pump and the grant both take, as one CR 608.2c instruction.
     """
     scenario = (
         Scenario()
@@ -203,16 +206,10 @@ def test_a_keyword_this_engine_does_not_model_records_a_notice_and_applies_nothi
 
     assert spell.zone is Zone.GRAVEYARD, "the spell still resolves and leaves the stack"
     board = computed(scenario)
-    assert board.of(bears).power_toughness == (2, 2), "the pump does not apply on its own either"
+    assert board.of(bears).power_toughness == (4, 4), "the +2/+2 half applies (CR 613.4c)"
+    assert is_indestructible(bears, scenario.game), "and so does the grant (CR 613.1f)"
 
-    notices = scenario.game.continuous_effects.layer_notices
-    assert notices == [
-        LayerNotice(
-            source_id=spell.id,
-            source_name="Adamant Will",
-            text=card("Adamant Will").oracle_text,
-        )
-    ]
+    assert scenario.game.continuous_effects.layer_notices == []
 
 
 def test_more_than_one_granted_keyword_records_a_notice_and_applies_nothing():
