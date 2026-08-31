@@ -446,6 +446,29 @@ class PlayPermission(BaseModel):
     tell "this turn" from "a later turn" even in a game driven step by step
     without ever reaching a cleanup step. CR 500.7's extra turn is why this is
     `turns_taken` and not the turn number or the active seat."""
+    expires_end_of_next_turn: bool = False
+    """"Until the end of your next turn" (Wrenn's Resolve, Reckless Impulse) -
+    a longer sibling of the plain `until_end_of_turn` above: the grant
+    survives the granting turn's own cleanup, survives every turn in between
+    that is not `player`'s, and only actually drops at the cleanup of the
+    *next* turn `player` is active for. When this is set, `until_end_of_turn`
+    is left `False` so `Game.cleanup_step`'s ordinary CR 514.2 sweep leaves
+    the permission alone; `Game.begin_turn_for` and `Game.cleanup_step` drop
+    it themselves, keyed off `owner_next_turn_started` below, rather than off
+    a precomputed `turns_taken` target - CR 500.7's extra turns and
+    multiplayer's uneven rotation both mean "two turns from now" is not a
+    fixed number of turns, but "the next time it is `player`'s turn" is
+    always answerable by watching whose turn is beginning.
+    `PlayPermission.expired` never reports this kind expired on its own
+    (list membership is what removes it); this is why `expired` below simply
+    returns `False` for it rather than trying to recompute the same answer
+    two ways."""
+    owner_next_turn_started: bool = False
+    """Set by `Game.begin_turn_for` the moment `player`'s own next turn
+    begins (CR 500.7-safe: watches for `player` becoming active again, not a
+    turn count) - `Game.cleanup_step` drops the permission once this is set
+    and `player` is active again at a *later* cleanup step, i.e. that same
+    turn's own cleanup. Meaningless unless `expires_end_of_next_turn` is."""
     immediate: bool = False
     """Whether this grant is CR 117.2e's "instructed by a resolving ability"
     shape rather than an explicit "until end of turn" duration printed on a
@@ -524,6 +547,11 @@ class PlayPermission(BaseModel):
             if turn is None:
                 return False
             return turn.step is not self.granted_step
+        if self.expires_end_of_next_turn:
+            # Never expired by this lazy check - removal is entirely
+            # `Game.begin_turn_for`/`Game.cleanup_step`'s job, per
+            # `expires_end_of_next_turn`'s own docstring.
+            return False
         if not self.until_end_of_turn or self.granted_turns_taken is None:
             return False
         if turn is None:
@@ -1511,11 +1539,13 @@ class Casting(BaseModel):
         announced, with every additional cost added and every increase and
         reduction applied.
 
-        When a game is attached, board-wide static cost increases (Sphere of
-        Resistance's "Spells cost {1} more to cast", Trinisphere's floor) are
-        folded in here too, via `Game.static_cost_modifiers_for` - this is the
-        step every ordinary cast reaches (`begin_paying` -> `determine_cost` ->
-        this property), so nothing extra has to be called for them to apply.
+        When a game is attached, board-wide static cost increases *and*
+        decreases (Sphere of Resistance's "Spells cost {1} more to cast",
+        Trinisphere's floor, the Medallion cycle's/Ral, Monsoon Mage's own
+        color- or type-scoped discount) are folded in here too, via
+        `Game.static_cost_modifiers_for` - this is the step every ordinary
+        cast reaches (`begin_paying` -> `determine_cost` -> this property), so
+        nothing extra has to be called for them to apply.
         That is unlike `cost_reduction_for`'s self-discount, which stays an
         opt-in `Game.determine_total_cost` call (see its own docstring) - a
         spell reducing its own cost from its own text is a different question
@@ -1524,13 +1554,15 @@ class Casting(BaseModel):
         """
         base = self.alternative_cost.mana if self.alternative_cost else self.base_cost
         increases = [*self.cost_increases, *(extra.mana for extra in self.additional_costs)]
+        reductions = list(self.cost_reductions)
         floor: int | None = None
         if self.game is not None:
-            board_increases, floor = self.game.static_cost_modifiers_for(self.spell, self.caster)
+            board_increases, board_reductions, floor = self.game.static_cost_modifiers_for(
+                self.spell, self.caster
+            )
             increases = increases + board_increases
-        mana = apply_modifications(
-            base.with_x(self.x_value), increases, self.cost_reductions, floor=floor
-        )
+            reductions = reductions + board_reductions
+        mana = apply_modifications(base.with_x(self.x_value), increases, reductions, floor=floor)
 
         components = list(self.alternative_cost.components) if self.alternative_cost else []
         for extra in self.additional_costs:

@@ -230,19 +230,28 @@ def _divided_damage_shares(total: int, chosen: int, announced: list[int] | None)
     return shares
 
 
-def _deal_divided_damage_shares(game: "Game", spell: CardState, total: int) -> None:
+def _deal_divided_damage_shares(game: "Game", spell: "StackObject", total: int) -> None:
     """Pay out `total` damage divided among `spell.targets` (CR 601.2d, CR
     608.2b). Shared by `deal_divided_damage` (a fixed printed amount) and
     Shatterskull Smashing's own X-based, conditionally doubled version.
+
+    `spell` is CR 602.2b's own "identical process" naming: a `CardState`
+    (an actual spell) or an `AbilityOnStack` (Ral, Monsoon Mage's own −2)
+    both carry `targets` and `division`, and CR 120.1's "an object that
+    deals damage is the source of that damage" means the *source passed to
+    `deal_damage`* has to be a real permanent either way - `spell` itself
+    for a spell, `spell.source(game)` for an ability, since an ability has
+    no card of its own (CR 405.1).
     """
     chosen = len(spell.targets)
     if chosen == 0 or total <= 0:
         return
+    source = spell if isinstance(spell, CardState) else spell.source(game)
     shares = _divided_damage_shares(total, chosen, spell.division)
     for reference, share in zip(spell.targets, shares, strict=True):
         target = game.legal_target(spell, reference)
         if target is not None and share > 0:
-            game.deal_damage(target, share, source=spell)
+            game.deal_damage(target, share, source=source)
 
 
 def draw_cards(count: int) -> Effect:
@@ -6973,6 +6982,88 @@ def _parse_transform_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: Ral, Monsoon Mage's own front-face trigger, as four clauses (CR 705.1's
+#: own coin flip, CR 118.12's "you may ... If you do ..."):
+#: "flip a coin. If you lose the flip, Ral deals 1 damage to you. If you win
+#: the flip, you may exile Ral. If you do, return him to the battlefield
+#: transformed under his owner's control." Read whole, ability-only, and not
+#: pinned to this one printing's amount: any future card sharing this exact
+#: four-sentence template - flip, a lose consequence naming a flat damage
+#: amount, a win consequence offering a self-exile, and the transform-return -
+#: reads the same way, whichever name and pronoun it prints.
+_FLIP_A_COIN_RE = re.compile(r"^flip a coin\.?$", re.IGNORECASE)
+_IF_YOU_LOSE_THE_FLIP_SELF_DAMAGE_RE = re.compile(
+    r"^if you lose the flip, (?P<name>.+?) deals (?P<amount>\d+) damage to you\.?$",
+    re.IGNORECASE,
+)
+_IF_YOU_WIN_THE_FLIP_MAY_EXILE_SELF_RE = re.compile(
+    r"^if you win the flip, you may exile (?P<name>.+?)\.?$", re.IGNORECASE
+)
+_IF_YOU_DO_RETURN_TRANSFORMED_RE = re.compile(
+    r"^if you do, return (?:it|him|her|them) to the battlefield"
+    r"(?P<tapped> tapped)?(?P<transformed> transformed)?"
+    r" under (?:its|his|her|their) owner'?s control\.?$",
+    re.IGNORECASE,
+)
+
+
+def _merge_flip_coin_damage_or_exile_transform_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """Ral, Monsoon Mage's whole front-face trigger as one CR 608.2c
+    instruction - the second, third and fourth sentences are meaningless
+    without knowing which side of the flip they answer for and, for the
+    fourth, without the third's own accepted "you may", so all four have to
+    resolve together or not at all (this project's paragraph-atomic rule).
+
+    Ability-only: no spell in the pool prints this shape. `Game.flip_coin`
+    is CR 705.1's own primitive - see its docstring for the reproducibility
+    convention it shares with `Game.shuffle`.
+    """
+    if for_spell or index + 3 >= len(clauses):
+        return None
+    if _FLIP_A_COIN_RE.fullmatch(clauses[index].strip()) is None:
+        return None
+    lose_match = _IF_YOU_LOSE_THE_FLIP_SELF_DAMAGE_RE.fullmatch(clauses[index + 1].strip())
+    if lose_match is None:
+        return None
+    win_match = _IF_YOU_WIN_THE_FLIP_MAY_EXILE_SELF_RE.fullmatch(clauses[index + 2].strip())
+    if win_match is None:
+        return None
+    do_match = _IF_YOU_DO_RETURN_TRANSFORMED_RE.fullmatch(clauses[index + 3].strip())
+    if do_match is None:
+        return None
+    lose_amount = int(lose_match.group("amount"))
+    tapped = do_match.group("tapped") is not None
+    transformed = do_match.group("transformed") is not None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        controller = ability.controller
+        if game.flip_coin():
+            decision = Decision(
+                kind=DecisionKind.MAY,
+                player=controller,
+                prompt=f"exile {source.name}, then return it to the battlefield"
+                + (" transformed" if transformed else ""),
+                source=ability.source_name,
+                affirmative_is_legal=True,
+            )
+            if not game.ask(decision):
+                return
+            exiled = game.exile_permanent(source)
+            if exiled.zone is not Zone.EXILE:
+                return  # CR 111.8: a token refused the move.
+            owner = exiled.owner or controller
+            game.put_onto_battlefield(exiled, owner, tapped=tapped, transformed=transformed)
+        else:
+            game.deal_damage(game.player(controller), lose_amount, source=source)
+
+    return 4, effect
+
+
 #: Ajani, Nacatl Avenger's `−4`: "Each opponent chooses an artifact, a
 #: creature, an enchantment, and a planeswalker from among the nonland
 #: permanents they control, then sacrifices the rest." A "choose one of each
@@ -9078,6 +9169,23 @@ def _parse_sacrifice_consequence(consequence: str) -> _SacrificeConsequence | No
 
         return search_effect
 
+    draw_match = _DRAW_N_CARDS_RE.fullmatch(consequence)
+    if draw_match is not None:
+        count_text = draw_match.group("count")
+        if count_text is None:
+            count = 1
+        else:
+            count = _NUMBER_WORDS.get(count_text.lower())
+            if count is None and count_text.isdigit():
+                count = int(count_text)
+        if count is None:
+            return None
+
+        def draw_effect(game: "Game", player: Player, power: int | None, source: str) -> None:
+            game.draw_cards(player.username, count)
+
+        return draw_effect
+
     return None
 
 
@@ -10255,6 +10363,11 @@ _RETURN_TO_BATTLEFIELD_OWNER_RE = re.compile(
 
 #: "draw a card" - Mishra's Bauble's second half, with no object at all.
 _DRAW_A_CARD_RE = re.compile(r"^draw a card$", re.IGNORECASE)
+
+#: "draw a card"/"draw N cards" - `_DRAW_A_CARD_RE`'s own generalization,
+#: used where a count word may appear (Artist's Talent's "If you do, draw a
+#: card" as a `_parse_sacrifice_consequence` shape).
+_DRAW_N_CARDS_RE = re.compile(r"^draw (?:a|(?P<count>\w+)) cards?$", re.IGNORECASE)
 
 
 # --------------------------------------------------------------------------
@@ -12449,6 +12562,152 @@ def _merge_look_top_hand_bottom_exile_play_clauses(
     return 4, effect
 
 
+#: "Exile the top two cards of your library. Until the end of your next turn,
+#: you may play those cards." - Wrenn's Resolve and Reckless Impulse print the
+#: identical sentence word for word (verified against both pool printings),
+#: so one parser, generalized on the count, covers both rather than a second
+#: name-keyed row. `PlayAction.PLAY` rather than `.CAST`: CR 601.1a's "playing
+#: a card" covers a land found among the exiled cards, which "you may play"
+#: (not "you may cast") is broad enough to reach.
+_EXILE_TOP_N_CARDS_RE = re.compile(
+    r"^exile the top (?P<count>\w+) cards? of your library\.?$", re.IGNORECASE
+)
+_UNTIL_END_OF_YOUR_NEXT_TURN_PLAY_RE = re.compile(
+    r"^until the end of your next turn, you may play (?:those cards|that card)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _merge_exile_top_then_play_until_next_turn_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """Wrenn's Resolve's/Reckless Impulse's whole text, as one CR 608.2c
+    instruction - the second sentence's "those cards" is CR 607.1 anaphora
+    back to whatever the first sentence just exiled, so splitting them would
+    either grant a permission over nothing or run the exile and drop the
+    permission, stranding cards in exile their controller could never
+    legally use.
+
+    Spell-only (both printings are sorceries). The permission is
+    `expires_end_of_next_turn=True` (see `PlayPermission`'s own docstring) -
+    a strictly longer window than the plain `until_end_of_turn` grant
+    `_parse_exile_then_play_permission_pair`'s ability-side "until end of
+    turn" shape uses. Nothing in either printing says what happens to a card
+    left unplayed once the permission lapses (unlike cascade's own "put the
+    exiled cards on the bottom" - `PlayPermission.bottom_if_unused`'s own
+    docstring), so it is left exactly where CR 514.2 leaves any other expired
+    grant: sitting in exile, forever.
+    """
+    if not for_spell or index + 1 >= len(clauses):
+        return None
+    exile_match = _EXILE_TOP_N_CARDS_RE.fullmatch(clauses[index].strip())
+    if exile_match is None:
+        return None
+    if not _UNTIL_END_OF_YOUR_NEXT_TURN_PLAY_RE.fullmatch(clauses[index + 1].strip()):
+        return None
+    count_text = exile_match.group("count").lower()
+    count = _NUMBER_WORDS.get(count_text)
+    if count is None:
+        try:
+            count = int(count_text)
+        except ValueError:
+            return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        player = game.controller_of(spell)
+        top = list(player.library[:count])
+        for card in top:
+            exiled = game.exile_permanent(card)
+            game.grant_play_permission(
+                exiled,
+                player.username,
+                action=PlayAction.PLAY,
+                pays_mana_cost=True,
+                source_name=spell.name,
+                rule="CR 601.3",
+                until_end_of_turn=False,
+                expires_end_of_next_turn=True,
+            )
+
+    return 2, effect
+
+
+#: "Exile the top eight cards of your library. You may cast instant and
+#: sorcery spells from among them this turn without paying their mana
+#: costs." - Ral, Monsoon Mage's own −8. Generalized on the count and on the
+#: type list the same way `_TYPE_COST_DECREASE` (`machines/cost.py`) reads
+#: "Instant and sorcery spells you cast cost {1} less to cast." - a card
+#: found among the exiled batch is only offered the grant if it carries one
+#: of the named types, unlike Ugin, Eye of the Storms' −11 (any colorless
+#: nonland card) or `_merge_exile_top_then_play_until_next_turn_clauses`
+#: (every card, no type filter at all).
+#:
+#: Matched against the *whole, unsplit* text (like `_parse_choose_name_
+#: search_and_exile_whole_text` above) rather than as a two-clause merge:
+#: `_prepare_effect_clauses`'s own "and"-splitting cuts "instant and sorcery
+#: spells" into two fragments before any clause-indexed parser ever sees the
+#: sentence whole, the same trap that function's own docstring names.
+_EXILE_TOP_THEN_CAST_TYPES_FREE_THIS_TURN_RE = re.compile(
+    r"^exile the top (?P<count>\w+) cards? of your library\. you may cast "
+    r"(?P<types>(?:creature|instant|sorcery|artifact|enchantment|planeswalker|land)"
+    r"(?: and (?:creature|instant|sorcery|artifact|enchantment|planeswalker|land))?) "
+    r"spells from among them this turn without paying their mana costs\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_exile_top_then_cast_types_free_this_turn_whole_text(
+    text: str, *, for_spell: bool
+) -> Effect | None:
+    """Ral, Monsoon Mage's whole −8, as one CR 608.2c instruction - "them" in
+    the second sentence is CR 607.1 anaphora back to the first sentence's own
+    exile, the same reason `_merge_exile_top_then_play_until_next_turn_
+    clauses` reads its own pair together rather than splitting them.
+
+    Ability-only (no spell in the pool prints this shape). CR 118.9's "without
+    paying their mana costs" is `pays_mana_cost=False`; the ordinary
+    `until_end_of_turn=True` grant (not the longer `expires_end_of_next_turn`
+    Wrenn's Resolve's own "your next turn" wording needs) matches "this turn"
+    exactly. Only the cards among the exiled batch that carry one of the
+    named types are ever granted a permission - the rest simply sit in exile,
+    unreachable by this ability's own words, same as an unused Ugin find.
+    """
+    if for_spell:
+        return None
+    match = _EXILE_TOP_THEN_CAST_TYPES_FREE_THIS_TURN_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    count_text = match.group("count").lower()
+    count = _NUMBER_WORDS.get(count_text)
+    if count is None:
+        try:
+            count = int(count_text)
+        except ValueError:
+            return None
+    words = [word.strip().lower() for word in match.group("types").split(" and ")]
+    try:
+        types = tuple(Type(word) for word in words)
+    except ValueError:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = game.controller_of(ability)
+        top = list(player.library[:count])
+        for card in top:
+            exiled = game.exile_permanent(card)
+            if any(t in exiled.types for t in types):
+                game.grant_play_permission(
+                    exiled,
+                    player.username,
+                    action=PlayAction.CAST,
+                    pays_mana_cost=False,
+                    source_name=ability.source_name,
+                    rule="CR 601.3",
+                )
+
+    return effect
+
+
 #: "Return this card from your graveyard to your hand." - World Breaker's
 #: whole graveyard-only ability (CR 113.6m, `machines/abilities.py`'s
 #: `zone`/`zone_rule` reads that half of it already). A self-reference, not a
@@ -12819,6 +13078,55 @@ def _parse_choose_name_search_and_exile_whole_text(
     return _parse_surgical_extraction_clause(text, for_spell=for_spell)
 
 
+#: "Draw a card if you control a `<color>` permanent[ other than `<self>`]."
+#: - Ral, Monsoon Mage's own −2, second sentence. A mandatory, board-state-
+#: gated draw (CR 121.1), not CR 608.2d's "you may" - the condition is
+#: checked once, as the ability resolves, not re-checked afterward.
+#: "permanent" is not one of CR 205.2a's card types (`_quality_matcher`'s
+#: own vocabulary is built for library-search qualities, which always name a
+#: *card* type), so this reads the color alone rather than trying to force
+#: "permanent" through that matcher.
+_DRAW_IF_YOU_CONTROL_COLOR_PERMANENT_RE = re.compile(
+    r"^draw (?:a card|(?P<count>\w+) cards) if you control (?:a|an) "
+    r"(?P<color>white|blue|black|red|green) permanent"
+    r"(?: other than (?P<exclude>.+))?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_draw_if_you_control_color_permanent_clause(clause: str) -> TargetedClause | None:
+    """`_DRAW_IF_YOU_CONTROL_COLOR_PERMANENT_RE`'s shape, or `None`."""
+    match = _DRAW_IF_YOU_CONTROL_COLOR_PERMANENT_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    color = _HAND_EXILE_COLOR_WORDS.get(match.group("color").lower())
+    if color is None:
+        return None
+    count_text = match.group("count")
+    if count_text is None:
+        count = 1
+    else:
+        count = _NUMBER_WORDS.get(count_text.lower())
+        if count is None:
+            return None
+    excludes_self = match.group("exclude") is not None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        assert isinstance(stack_object, AbilityOnStack)
+        player = game.controller_of(stack_object)
+        source = stack_object.source(game)
+        controlled = game.permanents_controlled_by(player.username)
+        qualifies = any(
+            color in state.colors
+            and not (excludes_self and source is not None and state.id == source.id)
+            for state in controlled
+        )
+        if qualifies:
+            game.draw_cards(player.username, count)
+
+    return effect
+
+
 def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """One clause of a mixed effect: the targeted shape first, then a token
     creation, then a search, then the imprint shape, then a delayed-trigger
@@ -12919,6 +13227,11 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     if damage_each_group is not None:
         return damage_each_group
     # -- end Wave W6 single-clause additions --------------------------------
+    # -- draw-if-you-control clause (Ral, Monsoon Mage's -2) ---------------
+    draw_if_control = _parse_draw_if_you_control_color_permanent_clause(clause)
+    if draw_if_control is not None:
+        return draw_if_control
+    # -- end draw-if-you-control clause --------------------------------------
     # -- Wave W5's own single-clause addition (CR 611.1) -------------------
     casting_rule = parse_casting_rule_clause(clause, for_spell=for_spell)
     if casting_rule is not None:
@@ -12970,6 +13283,11 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     whole_text_effect = _parse_choose_name_search_and_exile_whole_text(text, for_spell=for_spell)
     if whole_text_effect is not None:
         return [whole_text_effect]
+    exile_then_cast_types_effect = _parse_exile_top_then_cast_types_free_this_turn_whole_text(
+        text, for_spell=for_spell
+    )
+    if exile_then_cast_types_effect is not None:
+        return [exile_then_cast_types_effect]
     clauses = _prepare_effect_clauses(text)
     if clauses is None:
         return None
@@ -13020,6 +13338,22 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             index += consumed
             continue
         merged = _merge_look_top_hand_bottom_exile_play_clauses(clauses, index, for_spell=for_spell)
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_exile_top_then_play_until_next_turn_clauses(
+            clauses, index, for_spell=for_spell
+        )
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_flip_coin_damage_or_exile_transform_clauses(
+            clauses, index, for_spell=for_spell
+        )
         if merged is not None:
             consumed, effect = merged
             parsed.append(effect)

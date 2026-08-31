@@ -1372,6 +1372,20 @@ class CostModifierKind(StrEnum):
     """"Each spell that would cost less than [N] mana to cast costs [N] mana
     to cast." - Trinisphere."""
 
+    COLOR_DECREASE = "color_decrease"
+    """"`<Color>` spells you cast cost `{N}` less to cast." - the Medallion
+    cycle (Ruby Medallion, etc.). "You cast" makes this controller-scoped,
+    unlike the increase kinds above: `Game.static_cost_modifiers_for` only
+    applies it when the permanent's controller is the one casting."""
+
+    TYPE_DECREASE = "type_decrease"
+    """"`<Type[ and Type]>` spells you cast cost `{N}` less to cast." (Ral,
+    Monsoon Mage's front-face static, Goblin Electromancer) or its "Non-"
+    qualified opposite, "`<Nontype>` spells you cast cost `{N}` less to
+    cast." (Artist's Talent's level 2). Controller-scoped the same way as
+    `COLOR_DECREASE`. Exactly one of `applies_to_types`/`excludes_type` is
+    set, matching which of the two shapes was printed."""
+
 
 class CostModifierEffect(BaseModel):
     """One static cost-modifying ability, read off a permanent's oracle text."""
@@ -1380,18 +1394,29 @@ class CostModifierEffect(BaseModel):
 
     kind: CostModifierKind
     amount: int
-    """The flat/per-spell surcharge, or the floor's minimum mana value."""
+    """The flat/per-spell surcharge, the floor's minimum mana value, or the
+    decrease amount."""
 
     excludes_type: Type | None = None
-    """`FLAT_INCREASE` only: the printed type the qualifier excludes -
-    `Type.CREATURE` for "Noncreature spells", `Type.ARTIFACT` for "Nonartifact
-    spells". `None` means the increase is unconditional, like Sphere of
-    Resistance's own "Spells cost {1} more to cast."."""
+    """`FLAT_INCREASE`/`TYPE_DECREASE`: the printed type the qualifier
+    excludes - `Type.CREATURE` for "Noncreature spells", `Type.ARTIFACT` for
+    "Nonartifact spells". `None` on `FLAT_INCREASE` means the increase is
+    unconditional, like Sphere of Resistance's own "Spells cost {1} more to
+    cast."."""
 
     requires_untapped: bool = False
     """`FLOOR` only: Trinisphere's "As long as this artifact is untapped,"
     condition (CR 611.3b keeps a static ability live only while its source
     carries it, and being tapped turns this one off)."""
+
+    applies_to_color: Color | None = None
+    """`COLOR_DECREASE` only: the one color named."""
+
+    applies_to_types: tuple[Type, ...] | None = None
+    """`TYPE_DECREASE` only, when the printed shape names type(s) positively
+    ("Instant and sorcery spells...") rather than by exclusion - a spell
+    needs only one of these types to qualify (CR 205.2a: a multi-type card is
+    checked against all its types)."""
 
 
 _QUALIFIER_EXCLUDES: dict[str, Type] = {
@@ -1417,11 +1442,66 @@ _SPELL_COST_FLOOR = re.compile(
     r"[Ee]ach spell that would cost less than (?P<threshold>\w+) mana to cast "
     r"costs (?P<total>\w+) mana to cast\."
 )
+
+#: The Medallion cycle's own template - one color, one flat amount.
+_COLOR_WORDS: dict[str, Color] = {
+    "white": Color.WHITE,
+    "blue": Color.BLUE,
+    "black": Color.BLACK,
+    "red": Color.RED,
+    "green": Color.GREEN,
+}
+_COLOR_COST_DECREASE = re.compile(
+    r"(?P<color>White|Blue|Black|Red|Green) spells you cast cost \{(?P<amount>\d+)\} "
+    r"less to cast\.",
+    re.IGNORECASE,
+)
+
+#: The exclusion-qualified shape - Artist's Talent's own level-2 "Noncreature
+#: spells you cast cost {1} less to cast." - matched before the plain
+#: inclusion shape below so its "Non..." prefix is not mistaken for the bare
+#: type word inside it (though the two never actually collide: `\bcreature\b`
+#: cannot match inside the single unbroken token "Noncreature").
+_NONTYPE_COST_DECREASE = re.compile(
+    r"(?P<qualifier>Noncreature|Nonartifact|Nonland|Noninstant|Nonsorcery|"
+    r"Nonenchantment|Nonplaneswalker) spells you cast cost \{(?P<amount>\d+)\} "
+    r"less to cast\.",
+)
+
+#: The plain positive-inclusion shape - Ral, Monsoon Mage's own front-face
+#: static "Instant and sorcery spells you cast cost {1} less to cast.",
+#: Goblin Electromancer's identical wording. One or two type words, joined by
+#: "and" the way the templating always prints a two-type qualifier.
+_TYPE_WORDS: dict[str, Type] = {
+    "creature": Type.CREATURE,
+    "instant": Type.INSTANT,
+    "sorcery": Type.SORCERY,
+    "artifact": Type.ARTIFACT,
+    "enchantment": Type.ENCHANTMENT,
+    "planeswalker": Type.PLANESWALKER,
+    "land": Type.LAND,
+}
+_TYPE_COST_DECREASE = re.compile(
+    r"\b(?P<types>(?:Creature|Instant|Sorcery|Artifact|Enchantment|Planeswalker|Land)"
+    r"(?: and (?:Creature|Instant|Sorcery|Artifact|Enchantment|Planeswalker|Land))?) "
+    r"spells you cast cost \{(?P<amount>\d+)\} less to cast\.",
+    re.IGNORECASE,
+)
+
 #: Anything that talks about a spell costing more, or a floor on what a spell
 #: would cost, whether or not the shapes above could read it - Grand Arbiter
 #: Augustin IV's "Spells your opponents cast cost {1} more to cast" mentions
 #: an increase but is controller-relative, a shape none of the above parse.
 _COST_MODIFIER_SIGNAL = re.compile(r"more to cast|would cost .* mana to cast")
+
+#: The board-wide *decrease* signal, kept narrower and separate from
+#: `_COST_MODIFIER_SIGNAL`: it is anchored on "spells you cast", the
+#: Medallion/Electromancer grant's own grammatical subject, so it never fires
+#: on a spell's *own* self-reduction sentence (Emrakul's "This spell costs
+#: [N] less to cast for each card type...", already `Game.cost_reduction_for`'s
+#: job, not this one) even after that spell resolves onto the battlefield and
+#: its printed text is scanned here again.
+_COST_DECREASE_SIGNAL = re.compile(r"spells you cast cost \{\d+\} less to cast", re.IGNORECASE)
 
 
 def cost_modifier_effect(text: str) -> CostModifierEffect | None:
@@ -1457,6 +1537,30 @@ def cost_modifier_effect(text: str) -> CostModifierEffect | None:
             amount=total,
             requires_untapped=match.group("condition") is not None,
         )
+    match = _COLOR_COST_DECREASE.search(text)
+    if match is not None:
+        return CostModifierEffect(
+            kind=CostModifierKind.COLOR_DECREASE,
+            amount=int(match.group("amount")),
+            applies_to_color=_COLOR_WORDS[match.group("color").lower()],
+        )
+    match = _NONTYPE_COST_DECREASE.search(text)
+    if match is not None:
+        return CostModifierEffect(
+            kind=CostModifierKind.TYPE_DECREASE,
+            amount=int(match.group("amount")),
+            excludes_type=_QUALIFIER_EXCLUDES[match.group("qualifier")],
+        )
+    match = _TYPE_COST_DECREASE.search(text)
+    if match is not None:
+        words = [word.strip().lower() for word in match.group("types").split(" and ")]
+        types = tuple(_TYPE_WORDS[word] for word in words if word in _TYPE_WORDS)
+        if types:
+            return CostModifierEffect(
+                kind=CostModifierKind.TYPE_DECREASE,
+                amount=int(match.group("amount")),
+                applies_to_types=types,
+            )
     return None
 
 
@@ -1487,7 +1591,7 @@ def looks_like_unparsed_cost_modifier(text: str) -> bool:
     a cost increase that fails to apply looks identical to ordinary play)."""
     if cost_modifier_effect(text) is not None:
         return False
-    return bool(_COST_MODIFIER_SIGNAL.search(text))
+    return bool(_COST_MODIFIER_SIGNAL.search(text)) or bool(_COST_DECREASE_SIGNAL.search(text))
 
 
 # --------------------------------------------------------------------------

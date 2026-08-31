@@ -859,6 +859,16 @@ class BaseAbility(BaseModel):
     #: CR 207.2c ability word, as in `Landfall — Whenever ...`. No rules
     #: meaning; kept because it names the mechanic.
     ability_word: str | None = None
+    #: CR 716.2a's own class level bar: the paragraph this ability was printed
+    #: under is only "in effect" once a Class's `class_level` reaches this
+    #: number (`None` for level 1, and for anything not printed on a Class at
+    #: all - see `parse_abilities`'s own Class-detection pass). Set on every
+    #: kind of ability, not just `TriggeredAbility` (whose own `chapter` field
+    #: is the Saga-only sibling of this), because CR 716.2a's "As long as this
+    #: Class is level N or greater, it has [Abilities]" reaches a static
+    #: ability just as often as a triggered one - Artist's Talent's own level
+    #: 2 and 3 are both static.
+    class_level: int | None = None
 
 
 class ActivationCostReduction(BaseModel):
@@ -966,6 +976,13 @@ class ActivatedAbility(BaseAbility):
     #: `ActivationCostReduction`'s own docstring for why this is a separate
     #: ability rather than a clause of the one above it.
     cost_reduction: ActivationCostReduction | None = None
+    #: CR 716.2a: set when this ability *is* a class level bar itself -
+    #: "[Cost]: Level N" prints as an ordinary cost-colon-effect line whose
+    #: whole "effect" is the literal words "Level N", which `parse_abilities`
+    #: recognises and tags here rather than leaving as an effect sentence no
+    #: clause parser in `machines/effects.py` was ever meant to read. `None`
+    #: for every ordinary activated ability, Class or not.
+    class_level_target: int | None = None
 
 
 class TriggeredAbility(BaseAbility):
@@ -1057,17 +1074,54 @@ Ability = Annotated[
 ]
 
 
+#: CR 716.2a's own class level bar, once `_parse_line` has already turned it
+#: into an `ActivatedAbility`: the whole "effect" after the colon is nothing
+#: but the literal words "Level N" - no card in the pool has any other
+#: activated ability whose entire effect reads that way, so this is safe to
+#: recognise generically rather than pinned to one printing.
+_CLASS_LEVEL_BAR_EFFECT_RE = re.compile(r"^Level (?P<n>\d+)$")
+
+
 def parse_abilities(card: Card) -> list[Ability]:
     """Every ability printed on a card, front face and backs, in printed order.
 
     One entry per ability, not per line: a keyword list on one line yields one
     `KeywordAbility` per keyword. A line that is only reminder text yields
     nothing.
+
+    CR 716.2a: a Class's text box is one or more "[Cost]: Level N" bars, each
+    followed by the paragraph(s) that are only "in effect" once the Class has
+    reached that level - text before the first bar belongs to level 1
+    implicitly (CR 716.2d). Detected per face by the presence of at least one
+    `_CLASS_LEVEL_BAR_EFFECT_RE`-shaped `ActivatedAbility` among that face's
+    own lines - a face with none is left exactly as before, so this changes
+    nothing for the vast majority of cards that print no Class subtype at all.
     """
     abilities: list[Ability] = []
     for face_name, text in _faces(card):
+        face_abilities: list[Ability] = []
         for line in _merge_modal_bullet_lines(text.split("\n")):
-            abilities.extend(_parse_line(line, card.keywords, face_name))
+            face_abilities.extend(_parse_line(line, card.keywords, face_name))
+
+        is_class_face = any(
+            isinstance(ability, ActivatedAbility)
+            and _CLASS_LEVEL_BAR_EFFECT_RE.match(ability.effect.strip())
+            for ability in face_abilities
+        )
+        if is_class_face:
+            current_level = 1
+            for ability in face_abilities:
+                bar_match = None
+                if isinstance(ability, ActivatedAbility):
+                    bar_match = _CLASS_LEVEL_BAR_EFFECT_RE.match(ability.effect.strip())
+                if bar_match is not None:
+                    assert isinstance(ability, ActivatedAbility)
+                    ability.class_level_target = int(bar_match.group("n"))
+                    current_level = ability.class_level_target
+                    continue
+                ability.class_level = current_level
+
+        abilities.extend(face_abilities)
     return abilities
 
 

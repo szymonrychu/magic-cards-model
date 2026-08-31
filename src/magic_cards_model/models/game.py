@@ -23,7 +23,7 @@ from ..machines.casting import (
     play_permissions_on,
     usable_play_permission,
 )
-from ..machines.casting_restrictions import CastingRuleEffect
+from ..machines.casting_restrictions import CastingRuleEffect, CastingRuleKind
 from ..machines.combat import (
     Attack,
     CombatMachine,
@@ -232,6 +232,20 @@ _COSTS_LESS_PER_CARD_TYPE = re.compile(
 _COSTS_LESS_IF_TARGETS_COLOR_SPELL_RE = re.compile(
     r"costs \{(\d+)\} less to cast if it targets a "
     r"(?P<color>white|blue|black|red|green) spell",
+    re.IGNORECASE,
+)
+
+#: Ral, Monsoon Mage's own back-face intrinsic (CR 306.5b's own "additional"
+#: shape, layered on top of the printed loyalty number rather than replacing
+#: it): "enters with an additional loyalty counter on him/her/it/them for
+#: each instant and sorcery spell you've cast this turn." Generalized on the
+#: pronoun; the spell-type qualifier is read narrowly (this is the one
+#: printing in the pool) but by the words "instant"/"sorcery" rather than by
+#: card name, so a future card naming a different type pairing the same way
+#: is not silently mismatched onto this one's amount.
+_ADDITIONAL_LOYALTY_PER_INSTANT_SORCERY_RE = re.compile(
+    r"enters with an additional loyalty counter on (?:it|him|her|them) for each "
+    r"instant and sorcery spell you'?ve cast this turn",
     re.IGNORECASE,
 )
 
@@ -1095,6 +1109,13 @@ class Game(BaseModel):
     so this is the only record that one occurred.
     """
 
+    coin_flips_performed: int = 0
+    """How many coin flips this game has done, counting up - `shuffles_performed`'s
+    own convention (see its docstring), applied to CR 705.1's own randomness
+    instead: `flip_coin` seeds each flip from `f"{shuffle_seed}:
+    {coin_flips_performed}:coin"`, so a scenario asserting on the result
+    stays reproducible and the second flip of a game differs from the first."""
+
     prevention_shields: list["PreventionShield"] = Field(default_factory=list)
     """Prevention effects created by a resolving spell or ability (CR 615.1).
 
@@ -1472,8 +1493,20 @@ class Game(BaseModel):
         self._bottom_unused_cascade_permissions()
         # CR 514.2's same sentence: "all 'until end of turn' ... effects end".
         # A card exiled by Ugin's −11 stays exiled and stops being castable.
+        # A Wrenn's Resolve/Reckless Impulse grant (`expires_end_of_next_turn`)
+        # is dropped here too, but only once `Game.begin_turn_for` has already
+        # marked `owner_next_turn_started` for it (that player's own next turn
+        # has begun) *and* this cleanup belongs to that same turn - i.e. this
+        # is that turn's own end, not some later one.
         self.play_permissions = [
-            permission for permission in self.play_permissions if not permission.until_end_of_turn
+            permission
+            for permission in self.play_permissions
+            if not permission.until_end_of_turn
+            and not (
+                permission.expires_end_of_next_turn
+                and permission.owner_next_turn_started
+                and self.turn.active_player == permission.player
+            )
         ]
         # CR 514.2's same sentence, for CR 611.1's "affects the rules of the
         # game" effects: Ranger-Captain of Eos's "this turn" noncreature ban.
@@ -1547,12 +1580,27 @@ class Game(BaseModel):
                 and effect.until_next_turn_of == username
             )
         ]
-        # Hex Magic's own "Until the end of your next turn, you may play
-        # cards exiled this way" (CR 800.4m again) - `PlayPermission.
-        # until_next_turn_of` is that grant's own duration; dropped the same
-        # moment as the two stores above, not by `Game.cleanup_step`.
+        # Two different "next turn" permissions expire off this same hook, and
+        # they are not the same shape. Hex Magic's own "Until the end of your
+        # next turn, you may play cards exiled this way" (CR 800.4m again) is
+        # carried by `PlayPermission.until_next_turn_of` and is dropped here,
+        # the same moment as the two stores above. Wrenn's Resolve / Reckless
+        # Impulse's own "until the end of your next turn" is carried by
+        # `expires_end_of_next_turn` and is *not* dropped here: the moment this
+        # is `username`'s own turn beginning again, past the turn it was granted
+        # on, that permission's "next turn" has arrived, so it is only marked -
+        # `Game.cleanup_step` removes it at this turn's own cleanup, once
+        # `owner_next_turn_started` is set. Dropping happens first so a
+        # permission carrying both is not marked on its way out.
         self.play_permissions = [
-            permission
+            permission.model_copy(update={"owner_next_turn_started": True})
+            if (
+                permission.player == username
+                and permission.expires_end_of_next_turn
+                and not permission.owner_next_turn_started
+                and permission.granted_turns_taken != self.turn.turns_taken
+            )
+            else permission
             for permission in self.play_permissions
             if permission.until_next_turn_of != username
         ]
@@ -2275,6 +2323,18 @@ class Game(BaseModel):
                 ability.source_name, ability.ability.event, ability.ability.effect
             )
         if isinstance(ability.ability, ActivatedAbility):
+            if ability.ability.class_level_target is not None:
+                # CR 716.2a's own mechanical half - "This Class's level
+                # becomes N" - generalised off the level bar itself rather
+                # than a card-name-keyed row, so any Class works the same way.
+                target = ability.ability.class_level_target
+
+                def become_level(game: "Game", stack_object: "AbilityOnStack") -> None:
+                    permanent = stack_object.source(game)
+                    if permanent is not None:
+                        permanent.class_level = target
+
+                return become_level
             index = self._activated_index(ability)
             if index is not None:
                 # CR 107.3a's X, only when the printed cost actually carries
@@ -2743,6 +2803,34 @@ class Game(BaseModel):
         time conditions from."""
         return self.permanents_left_battlefield_this_turn.get(controller, 0) > 0
 
+    def _additional_entering_loyalty(self, card_state: CardState) -> int:
+        """Ral, Monsoon Mage's back face: "Ral enters with an additional
+        loyalty counter on him for each instant and sorcery spell you've
+        cast this turn." CR 306.5b's intrinsic "enters with N loyalty
+        counters" (`CardState._enter_with_loyalty`, applied by `move_to`
+        before this is ever called) only ever reads the printed number - it
+        has no `Game` to ask a dynamic "for each ... this turn" question of,
+        so the additional half is read here instead, off whichever face is
+        now up, generalized on the spell types named rather than pinned to
+        this one printing.
+
+        Read from `card_state.oracle_text` - which already reads the back
+        face once `CardState.transform`/`move_to(transformed=True)` has
+        flipped it up - so this only ever finds Ral's own sentence on Ral,
+        and finds nothing on every other permanent, transformed or not.
+        """
+        if not card_state.is_planeswalker:
+            return 0
+        text = card_state.oracle_text or ""
+        match = _ADDITIONAL_LOYALTY_PER_INSTANT_SORCERY_RE.search(text)
+        if match is None:
+            return 0
+        controller = card_state.controller or self.active_player.username
+        cast = self.spells_cast_this_turn.get(controller, [])
+        return sum(
+            1 for spell in cast if Type.INSTANT in spell.types or Type.SORCERY in spell.types
+        )
+
     def enter_the_battlefield(
         self,
         card_state: CardState,
@@ -2861,6 +2949,10 @@ class Game(BaseModel):
 
         for kind, amount in event.counters.items():
             self.add_counters(card_state, kind, amount)
+
+        extra_loyalty = self._additional_entering_loyalty(card_state)
+        if extra_loyalty:
+            self.add_counters(card_state, Counter.LOYALTY, extra_loyalty)
 
         self.emit(self._enters_event(card_state))
         # CR 714.3a's own intrinsic lore counter (`CardState.move_to`, applied
@@ -3543,6 +3635,23 @@ class Game(BaseModel):
         rng.shuffle(rest)
         player.zones[Zone.LIBRARY] = held + rest
         self.shuffles_performed += 1
+
+    def flip_coin(self) -> bool:
+        """CR 705.1: flip a coin, "a two-sided object with ... equal likelihood
+        that either side lands face up." Returns `True` for a win (heads, by
+        this engine's own arbitrary but fixed convention - CR 705.1 leaves
+        which side is which to the players, and nothing here distinguishes
+        them further than win/lose the way `condition_matches`'s callers
+        already read "if you win/lose the flip").
+
+        Seeded from `shuffle_seed` and `coin_flips_performed`, the same
+        reproducibility convention `shuffle` uses for its own randomness (see
+        that method's own docstring) - a scenario asserting on the result of
+        a flip needs a fixed outcome, not a live coin.
+        """
+        rng = Random(f"{self.shuffle_seed}:{self.coin_flips_performed}:coin")  # noqa: S311
+        self.coin_flips_performed += 1
+        return rng.random() < 0.5
 
     def search_library(
         self,
@@ -5406,6 +5515,7 @@ class Game(BaseModel):
         bottom_if_unused: bool = False,
         immediate: bool = False,
         until_next_turn_of: str | None = None,
+        expires_end_of_next_turn: bool = False,
     ) -> PlayPermission:
         """CR 601.3: let `player` play this one card out of `zone`, for a turn.
 
@@ -5443,6 +5553,11 @@ class Game(BaseModel):
         `until_end_of_turn=False` regardless of the argument given, since the
         two durations are mutually exclusive and `Game.begin_turn_for` (not
         `Game.cleanup_step`) is what drops this one.
+        `expires_end_of_next_turn=True` is Wrenn's Resolve's/Reckless
+        Impulse's longer "until the end of your next turn" grant - see
+        `PlayPermission.expires_end_of_next_turn`'s own docstring. A caller
+        passing this should also pass `until_end_of_turn=False`, so
+        `Game.cleanup_step`'s ordinary same-turn sweep leaves it alone.
         """
         turn = self.turn
         permission = PlayPermission(
@@ -5460,6 +5575,7 @@ class Game(BaseModel):
             immediate=immediate,
             granted_step=None if turn is None else turn.step,
             until_next_turn_of=until_next_turn_of,
+            expires_end_of_next_turn=expires_end_of_next_turn,
         )
         self.play_permissions.append(permission)
         return permission
@@ -5610,24 +5726,27 @@ class Game(BaseModel):
 
     def static_cost_modifiers_for(
         self, spell: CardState, caster: str | None = None
-    ) -> tuple[list[ManaCost], int | None]:
-        """Board-wide static cost increases and the floor in play right now
-        (CR 601.2f, 611.3).
+    ) -> tuple[list[ManaCost], list[ManaCost], int | None]:
+        """Board-wide static cost increases, decreases, and the floor in play
+        right now (CR 601.2f, 611.3).
 
         Unlike `cost_reduction_for`, which reads *this* spell's own text for a
         self-discount, this reads every *other* permanent's static ability for
-        a tax or a floor on spells in general: Sphere of Resistance and Thorn
-        of Amethyst's flat increases, Damping Sphere's per-spell-this-turn
-        increase, Trinisphere's floor. `Casting.total_cost` folds this in for
-        every ordinary cast, so nothing has to opt in the way
-        `determine_total_cost` does for a self-reduction.
+        a tax, a discount, or a floor on spells in general: Sphere of
+        Resistance and Thorn of Amethyst's flat increases, Damping Sphere's
+        per-spell-this-turn increase, Trinisphere's floor, the Medallion
+        cycle's/Ral, Monsoon Mage's own color- or type-scoped discount.
+        `Casting.total_cost` folds this in for every ordinary cast, so nothing
+        has to opt in the way `determine_total_cost` does for a self-reduction.
 
         A permanent whose text names a card-type qualifier ("Noncreature
         spells cost {1} more") only taxes a spell that lacks that type
         (CR 205.2b: a multi-type card is checked against all of them). A
         permanent whose ability requires being untapped (Trinisphere's own
         clause) is skipped while tapped (CR 611.3b: a static ability's effect
-        applies only while its source carries it).
+        applies only while its source carries it). `COLOR_DECREASE`/
+        `TYPE_DECREASE` are controller-scoped ("spells *you* cast"): only
+        counted when the permanent's controller is `caster`.
 
         Text that reads like a cost modifier but does not match one of
         `cost_modifier_effect`'s recognised shapes - Grand Arbiter Augustin
@@ -5636,9 +5755,19 @@ class Game(BaseModel):
         is appended to `cost_modifier_notices` instead (DDR#978 - an increase
         that fails to apply looks identical to ordinary play). Deduplicated by
         source, since this runs every time a cost is priced.
+
+        A loyalty-ability-granted, time-boxed discount - Ral, Monsoon Mage's
+        own "+1: Until your next turn, instant and sorcery spells you cast
+        cost {1} less to cast." - is not read off any live permanent's text
+        (Ral may have transformed away since granting it), so it is folded in
+        separately here from `casting_rule_effects`
+        (`CastingRuleKind.INSTANT_SORCERY_COST_REDUCTION_GRANT`), the same
+        `Duration.UNTIL_YOUR_NEXT_TURN` record Teferi, Time Raveler's own +1
+        already uses.
         """
         caster = caster or spell.controller or self.active_player.username
         increases: list[ManaCost] = []
+        decreases: list[ManaCost] = []
         floor: int | None = None
         already_noticed = {notice.source_id for notice in self.cost_modifier_notices}
 
@@ -5646,35 +5775,82 @@ class Game(BaseModel):
             # Same DFC-family fix as `effect_for`: `oracle_text` reads the up
             # face, `card.oracle_text` is null for a modal-DFC/transform
             # permanent and would silently skip its static ability.
-            text = permanent.oracle_text or ""
-            if not text:
-                continue
-            effect = cost_modifier_effect(text)
-            if effect is None:
-                if looks_like_unparsed_cost_modifier(text) and permanent.id not in already_noticed:
-                    already_noticed.add(permanent.id)
-                    self.cost_modifier_notices.append(
-                        CostModifierNotice(
-                            source_id=permanent.id, source_name=permanent.name, text=text
+            # `class_ability_text` narrows further for a Class permanent
+            # (CR 716.2a): a level-gated paragraph is not "in effect" yet.
+            #
+            # Read line by line, not as one blob: CR 604.1 makes each
+            # sentence-per-line its own static ability (Grand Arbiter
+            # Augustin IV prints three - two readable color discounts and one
+            # controller-relative tax this wave still cannot read), and
+            # `cost_modifier_effect` only ever answers for the *first* shape
+            # it recognises in whatever text it is given. Reading the whole
+            # card at once would either apply only the first ability and
+            # silently drop the rest, or (worse) let one recognised line's
+            # match suppress the fail-closed notice the *other*, unreadable
+            # line still needs - splitting first is what keeps each ability
+            # independent, matching this project's "one paragraph is one
+            # ability" rule instead of quietly merging every line on a card
+            # into a single verdict.
+            for line in (permanent.class_ability_text or "").split("\n"):
+                text = line.strip()
+                if not text:
+                    continue
+                effect = cost_modifier_effect(text)
+                if effect is None:
+                    if (
+                        looks_like_unparsed_cost_modifier(text)
+                        and permanent.id not in already_noticed
+                    ):
+                        already_noticed.add(permanent.id)
+                        self.cost_modifier_notices.append(
+                            CostModifierNotice(
+                                source_id=permanent.id, source_name=permanent.name, text=text
+                            )
                         )
-                    )
-                continue
-
-            if effect.kind is CostModifierKind.FLOOR:
-                if effect.requires_untapped and permanent.tapped:
                     continue
-                if floor is None or effect.amount > floor:
-                    floor = effect.amount
-            elif effect.kind is CostModifierKind.FLAT_INCREASE:
-                if effect.excludes_type is not None and effect.excludes_type in spell.card.types:
-                    continue
-                increases.append(ManaCost.parse(f"{{{effect.amount}}}"))
-            elif effect.kind is CostModifierKind.PER_SPELL_INCREASE:
-                prior = len(self.spells_cast_this_turn.get(caster, []))
-                if prior:
-                    increases.append(ManaCost.parse(f"{{{effect.amount * prior}}}"))
 
-        return increases, floor
+                if effect.kind is CostModifierKind.FLOOR:
+                    if effect.requires_untapped and permanent.tapped:
+                        continue
+                    if floor is None or effect.amount > floor:
+                        floor = effect.amount
+                elif effect.kind is CostModifierKind.FLAT_INCREASE:
+                    if (
+                        effect.excludes_type is not None
+                        and effect.excludes_type in spell.card.types
+                    ):
+                        continue
+                    increases.append(ManaCost.parse(f"{{{effect.amount}}}"))
+                elif effect.kind is CostModifierKind.PER_SPELL_INCREASE:
+                    prior = len(self.spells_cast_this_turn.get(caster, []))
+                    if prior:
+                        increases.append(ManaCost.parse(f"{{{effect.amount * prior}}}"))
+                elif effect.kind is CostModifierKind.COLOR_DECREASE:
+                    if permanent.controller != caster:
+                        continue
+                    if effect.applies_to_color in spell.colors:
+                        decreases.append(ManaCost.parse(f"{{{effect.amount}}}"))
+                elif effect.kind is CostModifierKind.TYPE_DECREASE:
+                    if permanent.controller != caster:
+                        continue
+                    if effect.excludes_type is not None:
+                        if effect.excludes_type not in spell.types:
+                            decreases.append(ManaCost.parse(f"{{{effect.amount}}}"))
+                    elif effect.applies_to_types is not None and any(
+                        t in spell.types for t in effect.applies_to_types
+                    ):
+                        decreases.append(ManaCost.parse(f"{{{effect.amount}}}"))
+
+        for grant in self.casting_rule_effects:
+            if (
+                grant.kind == CastingRuleKind.INSTANT_SORCERY_COST_REDUCTION_GRANT
+                and grant.controller == caster
+                and grant.amount is not None
+                and (Type.INSTANT in spell.types or Type.SORCERY in spell.types)
+            ):
+                decreases.append(ManaCost.parse(f"{{{grant.amount}}}"))
+
+        return increases, decreases, floor
 
     def determine_total_cost(self, casting: object) -> CostPayment:
         """CR 601.2f: work out the reduction now, then lock the total cost in.
@@ -5848,6 +6024,27 @@ class Game(BaseModel):
                 return (
                     f"{permanent.name} has {permanent.loyalty} loyalty, not the {removes} "
                     f"its {ability.loyalty.printed} cost removes (CR 606.6)"
+                )
+
+        if ability.class_level_target is not None:
+            # CR 716.2a: "[Cost]: Level N" means "[Cost]: This Class's level
+            # becomes N. Activate only if this Class is level N-1 and only as
+            # a sorcery" - both halves of that sentence, checked the same way
+            # "Activate only as a sorcery" already is below for an ordinary
+            # printed instruction, since this one is never actually printed
+            # as words on the card.
+            if not self.can_cast_sorcery(controller):
+                return (
+                    f"{permanent.name}'s Level {ability.class_level_target} bar can only be "
+                    f"activated as a sorcery: {controller}'s main phase, with the stack empty "
+                    "(CR 716.2a, CR 307.5)"
+                )
+            required = ability.class_level_target - 1
+            if permanent.class_level != required:
+                return (
+                    f"{permanent.name} is level {permanent.class_level}, not level {required}, "
+                    f"so its Level {ability.class_level_target} bar cannot be activated "
+                    "(CR 716.2a)"
                 )
 
         instructions = (ability.instructions or "").lower()

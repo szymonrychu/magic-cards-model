@@ -668,6 +668,14 @@ class CardState(BaseModel):
     are a planeswalker's loyalty (CR 306.5c).
     """
 
+    class_level: int = 1
+    """CR 716.2b's "level" - a Class enchantment's own progression, not a
+    counter: "Class levels do not interact with level counters" (CR 702.87c,
+    711.7), so this lives here instead of on `counters`. CR 716.2d: "If a
+    rule or effect refers to a permanent's level and that permanent doesn't
+    have a level, it is treated as though its level is 1" - which is also
+    every non-Class permanent's value, harmlessly unread."""
+
     face_down_characteristics: FaceDownCharacteristics | None = None
     """What this object is while it is face down (CR 708.2).
 
@@ -1396,6 +1404,44 @@ class CardState(BaseModel):
     def is_saga(self) -> bool:
         """CR 303.5: an enchantment with the Saga subtype."""
         return "Saga" in self.subtypes
+
+    @property
+    def is_class(self) -> bool:
+        """CR 303.6, 716: an enchantment with the Class subtype."""
+        return "Class" in self.subtypes
+
+    @property
+    def class_ability_text(self) -> str:
+        """CR 716.2a: only the abilities gated at or below `class_level` are
+        "in effect" right now - a level-3 paragraph on a level-1 Class is
+        printed, but not live. For anything that is not a Class, this is
+        exactly `oracle_text`, so it is a safe drop-in for any consumer that
+        currently reads `oracle_text` off a live permanent to find a static
+        ability (`Game.static_cost_modifiers_for`, `machines.replacement`'s
+        battlefield sweep).
+
+        Built from `machines.abilities.parse_abilities`, which already tags
+        each ability with the `BaseAbility.class_level` it belongs to - the
+        same single parse `machines.triggers` gates triggered abilities on,
+        so a Class's level structure is read once, off the printed level
+        bars, and every consumer of it agrees.
+        """
+        text = self.oracle_text
+        if not self.is_class:
+            return text
+        from ..machines.abilities import ActivatedAbility, parse_abilities
+
+        up_face_name = self.up_face_name or self.card.name
+        lines = [
+            ability.raw
+            for ability in parse_abilities(self.card)
+            if ability.face == up_face_name
+            and not (
+                isinstance(ability, ActivatedAbility) and ability.class_level_target is not None
+            )
+            and (ability.class_level is None or ability.class_level <= self.class_level)
+        ]
+        return "\n".join(lines)
 
     @property
     def chapter_numbers(self) -> tuple[int, ...]:

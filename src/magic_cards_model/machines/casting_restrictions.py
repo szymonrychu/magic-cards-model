@@ -65,6 +65,13 @@ class CastingRuleKind:
     TARGETED_CANT_CAST = "targeted_cant_cast"
     """Orim's Chant: `restricted_player` (a spell target, not "your
     opponents") can't cast spells at all this turn."""
+    INSTANT_SORCERY_COST_REDUCTION_GRANT = "instant_sorcery_cost_reduction_grant"
+    """Ral, Monsoon Mage's +1: "Until your next turn, instant and sorcery
+    spells you cast cost {1} less to cast." Read by `Game.
+    static_cost_modifiers_for` off `CastingRuleEffect.amount` rather than off
+    any live permanent's text, the same reason Teferi's own +1 is recorded
+    here rather than left to a battlefield scan: Ral may have transformed (or
+    left the battlefield) since granting it, and the grant still applies."""
 
 
 class CastingRuleEffect(BaseModel):
@@ -101,6 +108,8 @@ class CastingRuleEffect(BaseModel):
     names a specific player, who may be the caster's own opponent, teammate,
     or (if somehow legally targeted) the caster - the restriction follows the
     target, not a fixed relationship to whoever cast the spell."""
+    amount: int | None = None
+    """`INSTANT_SORCERY_COST_REDUCTION_GRANT` only: the flat discount."""
 
 
 def create_noncreature_cast_restriction(ability: AbilityOnStack) -> CastingRuleEffect:
@@ -164,6 +173,22 @@ def targeted_cant_cast_restriction(game: Any, caster: str) -> CastingRuleEffect 
     return None
 
 
+def create_instant_sorcery_cost_reduction_grant(
+    ability: AbilityOnStack, amount: int
+) -> CastingRuleEffect:
+    """Ral, Monsoon Mage's "+1: Until your next turn, instant and sorcery
+    spells you cast cost {1} less to cast." as a recorded effect - the same
+    shape as `create_sorcery_speed_flash_grant`, an amount added."""
+    return CastingRuleEffect(
+        kind=CastingRuleKind.INSTANT_SORCERY_COST_REDUCTION_GRANT,
+        controller=ability.controller,
+        source_name=ability.source_name,
+        duration=Duration.UNTIL_YOUR_NEXT_TURN,
+        until_next_turn_of=ability.controller,
+        amount=amount,
+    )
+
+
 def restricted_from_noncreature_casting(game: Any, caster: str) -> CastingRuleEffect | None:
     """The recorded effect stopping `caster` from casting noncreature spells
     right now, or None.
@@ -214,6 +239,15 @@ _SORCERY_FLASH_GRANT_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: Ral, Monsoon Mage's exact printed "+1" effect (verified against the pool
+#: printing): the same "Until your next turn" duration as Teferi's own +1
+#: above, an instant/sorcery cost discount in place of a flash grant.
+_INSTANT_SORCERY_COST_REDUCTION_GRANT_RE = re.compile(
+    r"^until your next turn, instant and sorcery spells you cast cost "
+    r"\{(?P<amount>\d+)\} less to cast\.?$",
+    re.IGNORECASE,
+)
+
 
 def parse_casting_rule_clause(
     clause: str, *, for_spell: bool
@@ -242,6 +276,17 @@ def parse_casting_rule_clause(
             game.casting_rule_effects.append(create_sorcery_speed_flash_grant(ability))
 
         return grant
+
+    cost_reduction_match = _INSTANT_SORCERY_COST_REDUCTION_GRANT_RE.match(stripped)
+    if cost_reduction_match is not None:
+        amount = int(cost_reduction_match.group("amount"))
+
+        def grant_reduction(game: Any, ability: AbilityOnStack) -> None:
+            game.casting_rule_effects.append(
+                create_instant_sorcery_cost_reduction_grant(ability, amount)
+            )
+
+        return grant_reduction
 
     return None
 
