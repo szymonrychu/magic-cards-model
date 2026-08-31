@@ -47,8 +47,11 @@ from ..models.mana import (
     ManaPool,
     ManaRestriction,
     ManaSpend,
+    ManaSymbol,
+    PaymentOption,
     SpendClause,
     SpendPurpose,
+    SymbolKind,
 )
 from ..models.zone import Zone
 from .abilities import (
@@ -470,7 +473,7 @@ def _unpayable_cost_message(payment: "CostPayment", sources: Iterable[CardState]
     unpayable cost - two Forests asked for {R}{W} - is never made to sound as
     though some source was passed over when none was.
     """
-    base = f"no combination of the available mana sources can pay {payment.cost}"
+    base = f"no combination of the available mana sources can pay {payment.mana_owed}"
     withheld = _withheld_mana_sources(payment, sources)
     if not withheld:
         return base
@@ -1991,6 +1994,84 @@ def _copy_pool(pool: ManaPool) -> ManaPool:
     )
 
 
+class CostSubstitution(BaseModel):
+    """One object standing in for one mana symbol of a total cost.
+
+    The shared shape behind convoke (CR 702.51a) and delve (CR 702.66a), and
+    the reason they are one subsystem rather than two special cases: both are
+    static abilities that function while the spell is on the stack, both apply
+    only *after* the total cost has been determined (CR 702.51b, CR 702.66b),
+    and both say the same thing about one symbol - "you may [do something to an
+    object] **rather than pay that mana**".
+
+    So a substitution is not mana, not a cost reduction, and not an alternative
+    cost. It is a symbol of the already-determined cost that will be paid by
+    `component` (a tap, an exile) instead of out of the pool. `option` is which
+    symbol it covers - `PaymentOption(generic=1)` for a generic one, or
+    `PaymentOption(color=...)` for a coloured one, which is exactly the split
+    CR 702.51a draws between "for each colored mana in this spell's total cost"
+    and its generic half.
+
+    `component` is an ordinary `CostComponent`, so the tapping or exiling is
+    paid by `CostPayment.pay` alongside every other component and is undone by
+    `cancel`/`rewind` through the same CR 733.1 reversal. Nothing about
+    substitution needs its own undo path.
+
+    Who may be substituted, and what they may cover, is not decided here -
+    `machines/objects_as_costs.py` holds the eligibility rules each keyword
+    prints. This module only knows that a symbol can be paid by an object.
+    """
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    keyword: str
+    """What offered it - "convoke", "delve" - for the refusal messages."""
+
+    rule: str
+    """The CR number that keyword expands to, quoted in refusals."""
+
+    card: CardState
+    option: PaymentOption
+    component: CostComponent
+
+    def __str__(self) -> str:
+        return f"{self.card.name} pays {self.option} ({self.keyword}, {self.rule})"
+
+
+def cost_less(cost: ManaCost, options: Iterable[PaymentOption]) -> ManaCost:
+    """`cost` with the symbols `options` cover taken out of it.
+
+    Not `ManaCost.minus`, which is a cost *reduction* - this is the arithmetic
+    of "that mana is not paid because an object paid it instead", and the
+    difference matters for the messages and for what `converted` a caller sees.
+    A generic option eats one point off a generic symbol (`{7}` becomes `{6}`,
+    and disappears at zero); a coloured option removes one symbol of that
+    colour.
+
+    Symbols nothing covers are left exactly where they were, in printed order,
+    so what remains still reads as a real cost.
+    """
+    generic = sum(option.generic for option in options)
+    colored: dict[Color, int] = {}
+    for option in options:
+        if option.color is not None:
+            colored[option.color] = colored.get(option.color, 0) + 1
+
+    remaining: list[ManaSymbol] = []
+    for symbol in cost.symbols:
+        if symbol.kind is SymbolKind.GENERIC and generic:
+            taken = min(generic, symbol.amount)
+            generic -= taken
+            if symbol.amount - taken:
+                remaining.append(ManaSymbol(kind=SymbolKind.GENERIC, amount=symbol.amount - taken))
+            continue
+        if symbol.kind is SymbolKind.COLORED and colored.get(symbol.colors[0], 0):
+            colored[symbol.colors[0]] -= 1
+            continue
+        remaining.append(symbol)
+    return ManaCost(symbols=tuple(remaining))
+
+
 class CostPayment(BaseModel):
     """Paying one total cost, from tapping sources through to the leftover mana."""
 
@@ -2026,6 +2107,13 @@ class CostPayment(BaseModel):
     """CR 118.13a: one pinned option per symbol of `cost`, or None to leave the
     choice to the engine. Set it to insist that Dismember's `{B/P}` is paid
     with black mana rather than with life."""
+
+    substitutions: list[CostSubstitution] = Field(default_factory=list)
+    """Symbols of `cost` that an object is paying instead of the pool.
+
+    Convoke's creatures (CR 702.51a) and delve's exiled cards (CR 702.66a) land
+    here. `mana_owed` is `cost` with them taken out, and that - not `cost` - is
+    what the pool is asked to cover."""
 
     mana_payment: ManaPayment | None = None
     """How the mana part was settled, once it has been (CR 118.13)."""
@@ -2078,6 +2166,67 @@ class CostPayment(BaseModel):
         return TotalCost(mana=self.cost, components=self.components)
 
     @property
+    def mana_owed(self) -> ManaCost:
+        """The part of `cost` the mana pool still has to cover.
+
+        `cost` stays the total cost CR 601.2f determined - convoke and delve
+        are explicitly *not* cost reductions (CR 702.51b, CR 702.66b), so
+        anything asking what this spell cost gets the real number. What each
+        substitution changes is only which resource pays one symbol, and that
+        is this property.
+        """
+        if not self.substitutions:
+            return self.cost
+        return cost_less(self.cost, [entry.option for entry in self.substitutions])
+
+    def substitute(
+        self,
+        *,
+        keyword: str,
+        rule: str,
+        card: CardState,
+        option: PaymentOption,
+        component: CostComponent,
+    ) -> CostSubstitution:
+        """Pay one symbol of `cost` with an object rather than with mana.
+
+        The general form of convoke (CR 702.51a) and delve (CR 702.66a). The
+        caller has already decided that `card` is eligible and which symbol it
+        covers; what is checked here is the arithmetic CR 702.51a and CR 702.66a
+        both bound themselves by - "for each [colored|generic] mana **in this
+        spell's total cost**". A symbol that is not there, or is already
+        covered by an earlier substitution, cannot be paid a second time, so an
+        offer beyond what the cost holds is refused rather than silently
+        wasted.
+
+        `component` joins `components`, so the tap or exile happens in
+        CR 601.2h's payment step with everything else and is reversed with it
+        (CR 733.1). Nothing is tapped or exiled at the moment this is called.
+        """
+        self._require_open()
+        if self.choices is not None:
+            # `choose` pins one option per symbol of the cost that is left to
+            # pay; a substitution changes that list underneath it. Rather than
+            # silently re-index someone's pinned hybrid choice, refuse.
+            raise ValueError(
+                "cannot substitute an object for a symbol after the payment's "
+                "symbol choices have been pinned (CR 118.13a) - substitute first"
+            )
+        owed = self.mana_owed
+        if cost_less(owed, [option]) == owed:
+            for_what = self.spend.name if self.spend is not None else "this cost"
+            raise ValueError(
+                f"{card.name} cannot pay {option} for {for_what}: {owed or '{0}'} "
+                f"has no {option} left to pay ({keyword}, {rule})"
+            )
+        entry = CostSubstitution(
+            keyword=keyword, rule=rule, card=card, option=option, component=component
+        )
+        self.substitutions.append(entry)
+        self.components.append(component)
+        return entry
+
+    @property
     def is_settled(self) -> bool:
         return self.step in {CostStep.PAID, CostStep.CANCELLED}
 
@@ -2100,7 +2249,7 @@ class CostPayment(BaseModel):
     def shortfall(self) -> bool:
         """True if the pool still cannot cover the mana part of the cost."""
         return not self.pool.can_pay(
-            self.cost, life_available=self.life_available, spend=self.spend
+            self.mana_owed, life_available=self.life_available, spend=self.spend
         )
 
     @property
@@ -2114,8 +2263,9 @@ class CostPayment(BaseModel):
 
     def choose(self, choices: list[int | None]) -> "CostPayment":
         """Pin how each symbol of the cost is paid (CR 118.13a)."""
-        if len(choices) != len(self.cost.symbols):
-            raise ValueError(f"expected {len(self.cost.symbols)} choices, got {len(choices)}")
+        owed = self.mana_owed
+        if len(choices) != len(owed.symbols):
+            raise ValueError(f"expected {len(owed.symbols)} choices, got {len(choices)}")
         self.choices = list(choices)
         return self
 
@@ -2257,7 +2407,8 @@ class CostPayment(BaseModel):
         base_floating = dict(self.pool.floating)
         base_snow = dict(self.pool.snow)
         base_restricted = [entry.model_copy(deep=True) for entry in self.pool.restricted]
-        max_size = min(len(candidates), max(1, self.cost.converted))
+        owed = self.mana_owed
+        max_size = min(len(candidates), max(1, owed.converted))
 
         for size in range(1, max_size + 1):
             for combo in combinations(candidates, size):
@@ -2272,7 +2423,7 @@ class CostPayment(BaseModel):
                     combo,
                     base_floating,
                     base_snow,
-                    self.cost,
+                    owed,
                     self.life_available,
                     self.spend,
                     base_restricted,
@@ -2304,14 +2455,15 @@ class CostPayment(BaseModel):
         joins it, which is the only thing that makes a Phyrexian symbol payable
         with life through the engine (CR 107.4f).
         """
+        owed = self.mana_owed
         payment = self.pool.payment_for(
-            self.cost,
+            owed,
             life_available=self.life_available,
             choices=self.choices,
             spend=self.spend,
         )
         if payment is None:
-            raise ValueError(f"pool {self.pool.floating} cannot pay {self.cost}{self._blocked()}")
+            raise ValueError(f"pool {self.pool.floating} cannot pay {owed}{self._blocked()}")
         return payment
 
     def _blocked(self) -> str:
@@ -2360,7 +2512,7 @@ class CostPayment(BaseModel):
             pay_life_cost(
                 mana_payment.life_paid,
                 self.payer,
-                description=f"pay {mana_payment.life_paid} life for {self.cost}",
+                description=f"pay {mana_payment.life_paid} life for {self.mana_owed}",
             )
             if mana_payment.life_paid
             else None
@@ -2376,7 +2528,7 @@ class CostPayment(BaseModel):
         floating = dict(self.pool.floating)
         snow = dict(self.pool.snow)
         restricted = [entry.model_copy(deep=True) for entry in self.pool.restricted]
-        self.pool.pay(self.cost, payment=mana_payment)
+        self.pool.pay(self.mana_owed, payment=mana_payment)
 
         paid: list[CostComponent] = []
         try:

@@ -71,6 +71,9 @@ Existing files, as a guide to where a new case belongs:
 | `test_role_tokens.py` | CR 111.10k, 303.7, 704.5z: Roles, and the two state-based actions that police them |
 | `test_aura_attachment.py` | CR 704.5m: an Aura on an illegal object or on nothing, against CR 704.5n's Equipment |
 | `test_mana_spend_restrictions.py` | CR 106.6: "Spend this mana only to ..." - the restriction carried by mana in the pool, what it refuses, and which mana pays when both would |
+| `test_crew.py` | CR 702.122, 301.7: a Vehicle becoming an artifact creature, the "total power N or greater" cost, and what crew's missing `{T}` symbol does and does not excuse |
+| `test_convoke.py` | CR 702.51: tapping creatures to pay a symbol, the colour half against the generic half, and why it is not a cost reduction |
+| `test_delve.py` | CR 702.66: exiling a graveyard to pay generic mana only, an empty graveyard, and X |
 
 ### Counters
 

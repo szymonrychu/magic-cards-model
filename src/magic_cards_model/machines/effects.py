@@ -3464,9 +3464,41 @@ _SPLICE_LINE_RE = re.compile(
 )
 
 
+#: Convoke's and delve's own lines, reminder text and all. CR 702.51a and
+#: CR 702.66a both make these *static abilities that function while the spell
+#: is on the stack*, changing how one symbol of an already-determined total
+#: cost is paid (`machines/objects_as_costs.py`); neither is ever a CR 608.2c
+#: instruction the spell carries out on resolution. Treasure Cruise prints
+#: "Delve (...)" ahead of "Draw three cards." and Conclave Tribunal prints
+#: "Convoke (...)" ahead of its own enters-the-battlefield line, so without
+#: this strip the periods inside the reminder text are read by
+#: `_CLAUSE_SEPARATOR` as clause boundaries and `_parse_mixed_clauses`'s
+#: fail-closed-per-clause rule takes the real sentence down with them - the
+#: same bug already fixed above for cascade, suspend, cycling, storm and the
+#: rest.
+_CONVOKE_LINE_RE = re.compile(
+    r"^[ \t]*Convoke(?:\s*\([^()]*\))?[ \t]*\n?", re.MULTILINE | re.IGNORECASE
+)
+_DELVE_LINE_RE = re.compile(
+    r"^[ \t]*Delve(?:\s*\([^()]*\))?[ \t]*\n?", re.MULTILINE | re.IGNORECASE
+)
+
+#: Crew's own line (CR 702.122a: an *activated* ability of a Vehicle card,
+#: built by `machines/keywords.crew_activation` and never part of resolving
+#: anything the Vehicle card itself does). Same poisoning problem as the two
+#: above, and the same fix: Smuggler's Copter prints "Crew 1 (...)" after its
+#: own attack trigger, and Cultivator's Caravan after its mana ability.
+_CREW_LINE_RE = re.compile(
+    r"^[ \t]*Crew \d+(?:\s*\([^()]*\))?[ \t]*\n?", re.MULTILINE | re.IGNORECASE
+)
+
+
 def _strip_non_effect_preamble(text: str) -> str:
     """Sentences that describe the spell but are not part of resolving it."""
     text = _ADDITIONAL_COST_LINE_RE.sub("", text)
+    text = _CONVOKE_LINE_RE.sub("", text)
+    text = _DELVE_LINE_RE.sub("", text)
+    text = _CREW_LINE_RE.sub("", text)
     text = _CANT_BE_COUNTERED_LINE_RE.sub("", text)
     text = _SUSPEND_LINE_RE.sub("", text)
     text = _CASCADE_LINE_RE.sub("", text)
