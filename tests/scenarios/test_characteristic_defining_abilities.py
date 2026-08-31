@@ -29,8 +29,6 @@ full graveyard still came back a static 0/1. Every CR number here was looked up
 with `knowledge_search(type="rules")`.
 """
 
-import pytest
-
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.layers import (
     LayerContext,
@@ -713,23 +711,17 @@ def test_all_three_graveyard_reading_cdas_coexist_on_one_board():
 # --------------------------------------------------------------------------
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="measured: models/card_state.py has the hook now - `CardState.bind_to_game` "
-    "makes `.power`/`.toughness` answer with `Game.characteristics_of` for a permanent on "
-    "the battlefield, and a bound Goyf reads 2/3 off layer 7a (see "
-    "tests/scenarios/test_card_state_computed_characteristics.py). Nothing calls it: "
-    "models/game.py never binds a CardState to the game it is in, so every object in a "
-    "real game is unbound and falls back to the printed value plus counters, and a "
-    "printed `*` is not a number. One `state.bind_to_game(self)` in Game's own "
-    "battlefield-entry path (`Game.enter_the_battlefield`) is the whole remainder.",
-)
 def test_the_game_agrees_with_the_layer_engine_about_a_goyfs_power():
-    """The integration this file works around, stated as a test.
+    """The integration this file used to work around, stated as a test.
 
     Combat and the state-based actions read `CardState.power`/`.toughness`,
-    which know about counters (CR 122.1a) and nothing else. Until `Game` asks
-    the layer engine, a Tarmogoyf on a real board has no power the game can see.
+    which on their own know about counters (CR 122.1a) and nothing else - and a
+    printed `*` (CR 208.2a) is not a number, so an unbound Goyf has no power at
+    all. A permanent is bound to its game as it enters the battlefield, so both
+    properties now answer through `Game.characteristics_of`, which runs the
+    layer system the game performs "continually and automatically" (CR 613.5)
+    and turns the characteristic-defining ability (CR 604.3) into a number in
+    layer 7a (CR 613.4a).
     """
     scenario = (
         Scenario()

@@ -171,15 +171,20 @@ def test_switching_power_and_toughness_is_computed_after_the_pump():
     assert board.of(spider).power_toughness == (4, 2)
 
 
-def test_twisted_image_draws_its_card_even_though_the_switch_does_not_reach_the_board():
-    """Half of Twisted Image resolves through `machines/effects.py` and half does not.
+def test_twisted_image_draws_its_card_and_the_switch_reaches_the_permanent_itself():
+    """Both halves of Twisted Image resolve, and both are visible on the board.
 
     "Switch target creature's power and toughness until end of turn. Draw a
-    card." The draw (CR 121.1) is an ordinary one-shot effect and happens; the
-    switch is a continuous effect in sublayer 7d (CR 613.4d) with a duration,
-    and there is nowhere on `Game` to record one. This test pins the half that
-    works so the other half's absence stays visible rather than being mistaken
-    for a card with no effect entry at all.
+    card." The draw is an ordinary one-shot effect (CR 121, drawing a card) and
+    happens. The switch is a continuous effect with a duration, applied in
+    sublayer 7d - CR 613.4d: "Effects that switch a creature's power and
+    toughness are applied. Such effects take the value of power and apply it to
+    the creature's toughness, and take the value of toughness and apply it to
+    the creature's power." `machines/effects.py` records it in
+    `Game.continuous_effects`, and because a permanent is bound to its game as
+    it enters the battlefield, `CardState.power`/`.toughness` read it back
+    through the layer engine (CR 613.5) rather than off the printing: a 2/4
+    Giant Spider reads 4/2 for the rest of the turn.
     """
     scenario = (
         Scenario()
@@ -195,7 +200,8 @@ def test_twisted_image_draws_its_card_even_though_the_switch_does_not_reach_the_
     scenario.cast_and_resolve("Twisted Image", island, username="alice", targets=[spider])
 
     assert [card.name for card in scenario.player("alice").hand] == ["Forest"]
-    assert spider.power == 2 and spider.toughness == 4, "the switch never reaches CardState"
+    assert (spider.card.power, spider.card.toughness) == ("2", "4"), "printed: a 2/4"
+    assert (spider.power, spider.toughness) == (4, 2), "the switch reaches CardState now"
 
 
 def test_damage_that_was_survivable_becomes_lethal_when_toughness_drops():

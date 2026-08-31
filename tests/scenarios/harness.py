@@ -142,6 +142,15 @@ class Scenario:
         for username, names in self._battlefield:
             for name in names:
                 state = card_state(name, Zone.BATTLEFIELD, controller=username, owner=username)
+                # A staged board skips `Game.enter_the_battlefield` - nothing here
+                # entered, it is just already there - so it has to do that method's
+                # binding itself. Without it a scenario permanent would be the one
+                # object in the engine reporting the printed value plus counters
+                # (CR 122.1a) where a played one reports the characteristics the
+                # layer system computes (CR 613.5), and every scenario asserting on
+                # `CardState.power`/`.toughness` would pass or fail for a reason no
+                # real game shares.
+                state.bind_to_game(game)
                 game.battlefield.append(state)
         for username, names in getattr(self, "_exiled", []):
             for name in names:

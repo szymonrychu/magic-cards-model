@@ -20,12 +20,13 @@ decides the answer:
 - **Sublayer 7c** (CR 613.4c), Elesh Norn and Relentless Rats, which modify
   power and toughness without setting it.
 
-`Game` does not consult `machines/layers.py`, so each test builds a real board
-and asks the layer engine what it computes. Every CR number here was looked up
-with `knowledge_search(type="rules")`.
+Most tests here build a real board and ask the layer engine directly what it
+computes, which is the sharpest way to pin a layer's behaviour. The last one
+asks the other end: `Game` binds a permanent as it enters the battlefield, so
+`CardState.power`/`.toughness` answer through the same engine (CR 613.5) and a
+static ability is visible to every caller that reads those two properties.
+Every CR number here was looked up with `knowledge_search(type="rules")`.
 """
-
-import pytest
 
 from magic_cards_model.machines.layers import compute_board, static_effects
 from tests.scenarios.harness import Scenario
@@ -377,30 +378,25 @@ def test_an_anthem_stacks_with_the_rats_own_count():
 
 
 # --------------------------------------------------------------------------
-# Gaps
+# The integration: a static ability the rest of the engine can see
 # --------------------------------------------------------------------------
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="measured: Game.power_of / Game.toughness_of and check_state_based_actions "
-    "consult machines/layers.py, so the anthem does reach CR 704.5f and CR 704.5g. This "
-    "asserts on CardState.power/.toughness themselves. models/card_state.py has the hook "
-    "now - `CardState.bind_to_game` makes both answer with the computed characteristics, "
-    "and a bound Grizzly Bears under this anthem reads 3/3 (see "
-    "tests/scenarios/test_card_state_computed_characteristics.py) - but models/game.py "
-    "never calls it, so every object in a real game is unbound and reports the printed "
-    "values plus counters (CR 122.1a), and machines/combat.py still reads them for "
-    "CR 510.1a.",
-)
 def test_the_game_sees_the_anthem_a_static_ability_generates():
-    """The one integration this whole file works around.
+    """The one integration this whole file used to work around, now closed.
 
-    Until `Game` asks `compute_board`, a static ability changes nothing the game
-    itself can see: an anthem does not make a creature bigger in combat, and
-    Elesh Norn does not kill anything by state-based action.
+    A permanent is bound to its game as it enters the battlefield, so
+    `CardState.power`/`.toughness` answer through `Game.characteristics_of` -
+    the layer system, which CR 613.5 says the game performs "continually and
+    automatically" - rather than the printed value plus counters (CR 122.1a).
+    Glorious Anthem's "Creatures you control get +1/+1" is an effect that
+    modifies power and toughness without setting them, applied in layer 7c
+    (CR 613.4c), so the two properties the rest of the engine reads directly -
+    machines/combat.py for CR 510.1a's damage assignment, `has_lethal_damage`
+    for CR 704.5g - now see the anthem too.
     """
     scenario = Scenario().player("alice", battlefield=["Glorious Anthem", "Grizzly Bears"]).build()
     bears = scenario.creature("Grizzly Bears", "alice")
 
+    assert (bears.card.power, bears.card.toughness) == ("2", "2"), "the printing is a 2/2"
     assert (bears.power, bears.toughness) == (3, 3)

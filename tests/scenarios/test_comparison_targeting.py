@@ -97,8 +97,8 @@ def test_a_creature_pumped_past_the_power_bound_by_a_continuous_effect_is_legal(
     own, as the test above shows. Glorious Anthem's "Creatures you control get
     +1/+1" is a continuous effect `machines/layers.py` applies, making Bears a
     3/3 right now. Only a check that asks the board for the *computed*
-    characteristics, rather than reading `CardState`/`Card` directly, can tell
-    the difference.
+    characteristics, rather than reading the printing off `Card` directly, can
+    tell the difference.
     """
     scenario = (
         Scenario()
@@ -112,7 +112,7 @@ def test_a_creature_pumped_past_the_power_bound_by_a_continuous_effect_is_legal(
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
     bears = scenario.creature("Grizzly Bears", "bob")
-    assert bears.power == 2, "printed power, to make sure the pump is what legalises the target"
+    assert bears.card.power == "2", "printed power: the pump is what legalises the target"
     assert scenario.game.power_of(bears) == 3, "the anthem is live before the cast is even tried"
 
     casting = scenario.cast("Abzan Charm", username="alice")

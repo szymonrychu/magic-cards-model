@@ -27,15 +27,12 @@ the battlefield answers with the computed characteristics; unbound, or in any
 other zone, it answers exactly as it did before. This file covers both sides of
 that switch, and the corner cases around it.
 
-**What is still missing, and where**: nothing in `models/game.py` calls
-`bind_to_game` yet, so every `CardState` in a real game is still unbound and
-`Game.power_of` / `Game.toughness_of` remain the only layer-aware readings.
-The three `xfail`s that turn on that - `test_characteristic_defining_
-abilities.py::test_the_game_agrees_with_the_layer_engine_about_a_goyfs_power`,
-`test_static_abilities.py::test_the_game_sees_the_anthem_a_static_ability_
-generates`, and `judge/test_judge_state_based_actions.py::test_tarmogoyf_lives_
-or_dies_by_its_toughness_right_now` - are one `bind_to_game` call in
-`Game`'s own battlefield-entry path away, and their reasons say so.
+**Who calls it**: `Game.enter_the_battlefield` binds a permanent as it enters,
+which is every route onto the battlefield in a real game, and `Scenario.build`
+binds a staged board the same way so a scenario is not the one place in the
+engine reading printed characteristics. A `CardState` is therefore unbound only
+when it was built outside a game, or rebuilt by `model_validate` - both of which
+this file still covers, because that fallback is half of the contract.
 
 Every CR number here was verified with `knowledge_search(q="...", type="rules")`
 in the session that wrote it: CR 122.1a, CR 202.3a, CR 208.2a, CR 300.1,
@@ -45,11 +42,18 @@ CR 613.5, CR 701.27c, CR 701.27d, CR 704.5g, CR 708.2a, CR 712.9, CR 712.10.
 
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
+from tests.cards import card_state
 from tests.scenarios.harness import Scenario
 
 
 def bound(scenario, permanent):
-    """Bind one permanent to the game it is actually on, and hand it back."""
+    """Bind one object to the game it is actually on, and hand it back.
+
+    A permanent staged onto the battlefield is bound already, so this is a
+    no-op there and stays only to say at each call site which game the reading
+    below is being taken against. It does real work for a card in another zone,
+    which nothing binds.
+    """
     permanent.bind_to_game(scenario.game)
     return permanent
 
@@ -62,17 +66,19 @@ def bound(scenario, permanent):
 def test_an_unbound_goyf_has_no_power_at_all():
     """The printed value is `*` (CR 208.2a), and `*` is not a number.
 
-    This is the state every `CardState` is in today, and it is why the
-    binding exists: without a board to ask, the honest answer to "what is
-    Tarmogoyf's power" is `None`, not zero and not two.
+    No permanent on a real board is in this state any more - `Game.
+    enter_the_battlefield` binds one as it enters, and `Scenario.build` binds a
+    staged board the same way - so this constructs the `CardState` directly
+    rather than through `Scenario`. It is still worth pinning, because it is
+    the fallback half of `bind_to_game`'s contract: the properties answer
+    `None` rather than guessing a number when there is no board to ask, and
+    that is the reading a card carries after `CardState.model_validate` drops
+    the binding (see the round-trip test at the foot of this file) and in every
+    zone where CR 613.5's layer system has nothing to say.
     """
-    scenario = (
-        Scenario()
-        .player("alice", battlefield=["Tarmogoyf"], graveyard=["Lightning Bolt", "Forest"])
-        .build()
-    )
-    goyf = scenario.creature("Tarmogoyf", "alice")
+    goyf = card_state("Tarmogoyf", Zone.BATTLEFIELD, controller="alice", owner="alice")
 
+    assert (goyf.card.power, goyf.card.toughness) == ("*", "1+*"), "the printing"
     assert (goyf.power, goyf.toughness) == (None, None)
 
 
@@ -134,17 +140,20 @@ def test_the_answer_moves_when_the_graveyard_does():
 
 
 def test_a_bound_creature_sees_the_anthem_over_it():
-    """Glorious Anthem's "Creatures you control get +1/+1" is layer 7d.
+    """Glorious Anthem's "Creatures you control get +1/+1" is layer 7c.
 
-    Unbound, the same Grizzly Bears is the 2/2 its printing says.
+    CR 613.4c is the sublayer for effects that modify power and/or toughness
+    without setting them to a specific number. Unbound - which is what the same
+    `CardState` is when it is built outside a game - the Bears is the 2/2 its
+    printing says; on a board with the anthem it is a 3/3.
     """
+    loose = card_state("Grizzly Bears", Zone.BATTLEFIELD, controller="alice", owner="alice")
+    assert (loose.power, loose.toughness) == (2, 2), "unbound: the printed value"
+
     scenario = Scenario().player("alice", battlefield=["Glorious Anthem", "Grizzly Bears"]).build()
     bears = scenario.creature("Grizzly Bears", "alice")
 
-    assert (bears.power, bears.toughness) == (2, 2), "unbound: the printed value"
-
-    bound(scenario, bears)
-
+    assert (bears.card.power, bears.card.toughness) == ("2", "2"), "the printing is still a 2/2"
     assert (bears.power, bears.toughness) == (3, 3)
 
 
