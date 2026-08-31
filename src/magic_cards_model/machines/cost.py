@@ -56,6 +56,7 @@ from .abilities import (
     CostKind,
     ManaAbility,
     TriggerEvent,
+    granted_mana_abilities,
     intrinsic_land_ability,
     parse_abilities,
     parse_mana_abilities,
@@ -2069,7 +2070,13 @@ class CostPayment(BaseModel):
                 "control since their most recent turn began, so its {T} ability "
                 "cannot be activated"
             )
-        abilities = parse_mana_abilities(source.card, source.up_face_name)
+        # Printed abilities plus `CardState.granted_ability_texts`'s own -
+        # Urza's Saga chapter I's own "This Saga gains '{T}: Add {C}.'" is
+        # what makes this second half necessary; see `granted_mana_
+        # abilities`'s own docstring.
+        abilities = parse_mana_abilities(source.card, source.up_face_name) + granted_mana_abilities(
+            source.granted_ability_texts
+        )
         if not abilities:
             raise ValueError(
                 f"{source.name} has no {{T}} mana ability on the face that is up "

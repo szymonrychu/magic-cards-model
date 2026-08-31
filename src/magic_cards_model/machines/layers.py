@@ -1118,6 +1118,24 @@ def count_lands_controlled_by(username: str | None) -> Count:
     return count
 
 
+def count_permanents_controlled_by(username: str | None, card_type: Type) -> Count:
+    """How many permanents of `card_type` a player controls (CR 205.2a).
+
+    The Urza's Saga Construct token's own "gets +1/+1 for each artifact you
+    control" is what this exists for - `count_lands_controlled_by`'s sibling,
+    generalised past lands to any of the fifteen card types.
+    """
+
+    def count(chars: Characteristics, board: Board) -> int:
+        return sum(
+            1
+            for other in board.values()
+            if card_type in other.types and other.controller == username
+        )
+
+    return count
+
+
 def count_card_types(cards: Iterable[CardState]) -> int:
     """How many distinct card types are among these cards (CR 300.1).
 
@@ -1296,6 +1314,156 @@ def _self_pump_per_graveyard_card_builder(
                 source_id=source.id,
                 selector=_only(source.id),
                 modification=modify_power_toughness(amount_power, amount_toughness),
+            )
+        ]
+
+    return builder
+
+
+#: The Construct token Urza's Saga's chapter II grants: "This token gets
+#: +1/+1 for each artifact you control." A live board count, not a
+#: graveyard one (`_SELF_PUMP_PER_GRAVEYARD_CARD_RE`'s own sibling) - the
+#: subject is "this token" rather than "this creature", since that is what
+#: `TokenDefinition.rules_text` prints verbatim (CR 111.3) onto the token's
+#: own synthesised `Card.oracle_text`, read by this module's ordinary static-
+#: ability sweep the same as any printed creature's would be.
+_SELF_PUMP_PER_CONTROLLED_PERMANENT_RE = re.compile(
+    r"^this (?:creature|token|permanent) gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) for each "
+    r"(?P<qualifier>[a-z]+) you control\.?$",
+    re.IGNORECASE,
+)
+
+
+def _self_pump_per_controlled_permanent_builder(
+    power: int, toughness: int, card_type: Type
+) -> EffectBuilder:
+    """`_SELF_PUMP_PER_CONTROLLED_PERMANENT_RE`'s shape - the Urza's Saga
+    Construct token's own pump.
+
+    Sublayer 7c (CR 613.4c), the same "modify, don't set" choice `_self_pump_
+    per_graveyard_card_builder` makes for its own graveyard count, just read
+    live off the board through `modify_power_toughness_per`/`count_
+    permanents_controlled_by` instead of baked in at build time - either
+    works for CR 613.5's "continually and automatically" recomputation, but
+    reusing the live-count `Modification` here needs no `LayerContext`
+    plumbing at all, since the count only ever needs the board the layer
+    engine is already threading through every other `Selector`/`Modification`
+    in this module.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            ContinuousEffect(
+                description=(
+                    f"{source.name}: {power:+d}/{toughness:+d} for each "
+                    f"{card_type.value} controlled"
+                ),
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.MODIFY,
+                timestamp=timestamp,
+                source_id=source.id,
+                selector=_only(source.id),
+                modification=modify_power_toughness_per(
+                    count_permanents_controlled_by(source.controller, card_type), power, toughness
+                ),
+            )
+        ]
+
+    return builder
+
+
+#: "This land becomes a copy of target nontoken artifact you control with
+#: mana value X." (The Mycosynth Gardens, indefinite) and "This land becomes
+#: a copy of target permanent card in your graveyard until end of turn."
+#: (Shifting Woodland) - CR 707.4: "Some effects cause a permanent that's
+#: copying a permanent to copy a different object while remaining on the
+#: battlefield" is exactly this shape, an already-on-the-battlefield object
+#: turning into a copy rather than one entering as one (CR 614.1c's
+#: `ENTERS_AS_COPY`, a different, still-unbuilt shape - see `docs/engine-
+#: coverage.md`). `quality` is read but not used to build the effect - the
+#: target has already been checked against it by `machines/targeting.py`
+#: before `create_continuous_effect_of_ability` ever calls this builder - so
+#: the group only has to be *present*, wide enough to swallow whatever
+#: restriction the card prints ("nontoken artifact you control with mana
+#: value X", "permanent card in your graveyard") without this shape needing
+#: to parse it a second time.
+_BECOME_A_COPY_RE = re.compile(
+    r"^this (?:land|permanent|artifact|creature) becomes a copy of target "
+    r"(?P<quality>.+?)(?P<until_eot> until end of turn)?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _become_a_copy_builder(*, until_eot: bool) -> EffectBuilder:
+    """`_BECOME_A_COPY_RE`'s shape.
+
+    CR 707.2: "the copy acquires the copiable values of the original
+    object's characteristics" - name, mana value, supertypes, card types,
+    subtypes, colors, abilities (CR 707.2a: color and abilities are
+    themselves derived from mana cost/color indicator and rules text, so
+    copying those is copying this), and power/toughness. Read once, off
+    `targets[0]` at the moment this builder runs (CR 613.7b: a resolution
+    effect is built once, when it is created) via `printed_characteristics` -
+    the same "printed, pre-layer-1" values that function already gives a
+    permanent's own layer 2 a starting point from, which is the ordinary
+    case's copiable values (CR 707.2b: once copied, a later change to the
+    *original* does not change the copy, so a frozen snapshot rather than a
+    live read is correct, not merely convenient). **Known gap**: a target
+    itself modified by a characteristic-defining ability or an earlier copy
+    effect would have copiable values `printed_characteristics` cannot
+    reconstruct (CR 707.2's own "as modified by ... any 613.5 continuous
+    effects that already changed its copiable values in some way" is not
+    read here) - nothing in the pool needs that yet, so it is left for a
+    future wave rather than guessed at; see `docs/engine-coverage.md`.
+
+    CR 707.4's own "remaining on the battlefield" clause is why this is not
+    routed through `ENTERS_AS_COPY`'s enters-the-battlefield machinery: the
+    copying object is already on the battlefield and stays there, so no
+    enters/leaves trigger fires from the change (a plain continuous effect
+    at layer 1 is the whole of it).
+
+    `card_id` is deliberately left off the replacement: it is the copying
+    permanent's own board identity (`CardState.id`), not one of CR 707.2's
+    copiable values, and every `Selector` in this module keys off it.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        if not targets:
+            return []
+        copied = printed_characteristics(targets[0])
+
+        def modification(chars: Characteristics, board: Board) -> Characteristics:
+            return chars.with_(
+                name=copied.name,
+                mana_value=copied.mana_value,
+                supertypes=copied.supertypes,
+                types=copied.types,
+                subtypes=copied.subtypes,
+                colors=copied.colors,
+                abilities=copied.abilities,
+                power=copied.power,
+                toughness=copied.toughness,
+            )
+
+        return [
+            ContinuousEffect(
+                description=f"{source.name} becomes a copy of {copied.name}",
+                layer=Layer.COPY,
+                timestamp=timestamp,
+                source_id=source.id,
+                selector=_only(source.id),
+                modification=modification,
+                duration=Duration.UNTIL_END_OF_TURN if until_eot else Duration.INDEFINITE,
             )
         ]
 
@@ -1951,6 +2119,15 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
         return _self_pump_per_graveyard_card_builder(
             int(match.group("power")), int(match.group("toughness")), card_type
         )
+    if match := _SELF_PUMP_PER_CONTROLLED_PERMANENT_RE.fullmatch(sentence):
+        card_type = _card_type_word(match.group("qualifier"))
+        if card_type is None:
+            return None
+        return _self_pump_per_controlled_permanent_builder(
+            int(match.group("power")), int(match.group("toughness")), card_type
+        )
+    if match := _BECOME_A_COPY_RE.fullmatch(sentence):
+        return _become_a_copy_builder(until_eot=bool(match.group("until_eot")))
     if match := _KEYWORD_GRANT_RE.fullmatch(sentence):
         keyword = match.group("keyword").strip()
         if keyword.lower() not in _KNOWN_KEYWORDS:

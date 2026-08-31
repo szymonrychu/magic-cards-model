@@ -89,6 +89,7 @@ Deliberate limits, all of them visible as tests:
 """
 
 import re
+from collections.abc import Sequence
 from enum import StrEnum
 from typing import Annotated, Literal
 
@@ -396,18 +397,40 @@ def parse_mana_abilities(card: Card, face: str | None = None) -> list[ManaAbilit
     `intrinsic_land_ability` (CR 305.6), the same fallback
     `activated_abilities_of` uses for in-game activation.
     """
-    printed = [
+    printed = _mana_abilities_from(parse_abilities(card), face)
+    if printed:
+        return printed
+    intrinsic = intrinsic_land_ability(card, face)
+    return [intrinsic.mana] if intrinsic is not None and intrinsic.mana is not None else []
+
+
+def _mana_abilities_from(abilities: "Sequence[Ability]", face: str | None) -> list[ManaAbility]:
+    """The `{T}: Add ...` filter `parse_mana_abilities` applies to a card's
+    own printed abilities, pulled out so `granted_mana_abilities` below can
+    apply the identical filter to a runtime-granted line instead."""
+    return [
         ability.mana
-        for ability in parse_abilities(card)
+        for ability in abilities
         if isinstance(ability, ActivatedAbility)
         and ability.mana is not None
         and any(piece.kind is CostKind.TAP for piece in ability.costs)
         and (face is None or ability.face == face)
     ]
-    if printed:
-        return printed
-    intrinsic = intrinsic_land_ability(card, face)
-    return [intrinsic.mana] if intrinsic is not None and intrinsic.mana is not None else []
+
+
+def granted_mana_abilities(texts: Sequence[str]) -> list[ManaAbility]:
+    """`CardState.granted_ability_texts`'s own `{T}: Add ...` lines, read the
+    same way `parse_mana_abilities` reads a card's printed ones - Urza's Saga
+    chapter I's "This Saga gains '{T}: Add {C}.'" is what this exists for.
+
+    Callers that tap a permanent for mana (`machines/cost.py`'s `tap_for_
+    mana`/`auto_tap`, `tests/scenarios/harness.mana_from`) add this to
+    `parse_mana_abilities(card, face)`'s own result rather than calling it
+    instead, so a granted ability is additional to whatever is printed, never
+    a replacement for it - no card in the pool grants a mana ability onto a
+    permanent that already prints one, but nothing here assumes that either.
+    """
+    return _mana_abilities_from(parse_granted_ability_lines(texts), face=None)
 
 
 def _parse_effect(effect: str) -> ManaAbility | None:
@@ -1045,6 +1068,34 @@ def parse_abilities(card: Card) -> list[Ability]:
     for face_name, text in _faces(card):
         for line in _merge_modal_bullet_lines(text.split("\n")):
             abilities.extend(_parse_line(line, card.keywords, face_name))
+    return abilities
+
+
+def parse_granted_ability_lines(texts: Sequence[str]) -> list[Ability]:
+    """`CardState.granted_ability_texts` read the same way `parse_abilities`
+    reads a `Card`'s own printed lines, one `Ability` per line.
+
+    CR 111.3's own licence for a token's stated text ("functionally
+    equivalent to the characteristic values that are printed on a card") is
+    the reason a token's granted line is *not* what this reads - a token's
+    whole rules text goes through `TokenDefinition.oracle_text` into a real
+    `Card`, so `parse_abilities` already covers it. This is for the other
+    shape: an ability a resolving effect hands to an *existing* object
+    without changing what card it is (CR 613.1f's own layer-6 "gains an
+    ability", generalised here to the whole ability rather than only a
+    keyword) - Urza's Saga's own chapter I/II grants, kept on `CardState.
+    granted_ability_texts` rather than on the immutable `Card` (CR 108.1: a
+    card's own printing never changes).
+
+    No keyword list and no face to filter by: a granted line is not part of
+    any card's own keyword-abbreviated line (`Card.keywords` is Scryfall's
+    per-*printing* summary, meaningless for a runtime-only grant) and is
+    never printed on a specific face, so both of `_parse_line`'s remaining
+    parameters are the same empty/blank value for every call.
+    """
+    abilities: list[Ability] = []
+    for text in texts:
+        abilities.extend(_parse_line(text, [], ""))
     return abilities
 
 
