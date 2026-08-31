@@ -36,11 +36,13 @@ trigger ends up with no targets are told apart and both are recorded on
   condition's "creature" as a "cast a creature spell" restriction either
   (see `scenarios/test_frontline_heroism.py`, which replaces this file's old
   hand-placed-trigger staging now that Frontline Heroism's trigger fires for
-  real). **No card left in the pool has an `UNPARSED`-shaped triggered
-  ability any more** - a real success, but it leaves this one notice kind
-  with no live fixture; the two tests below that used to exercise it are
-  marked `xfail` for that reason rather than deleted, so a future card that
-  reintroduces the shape has a test ready to catch it working.
+  real). The shape is *not* gone from the pool, though: a sweep of all 738
+  fixture cards finds three triggered abilities `profile_for_text` still
+  reports `understood=False` for - **Bonecrusher Giant**, **Loki, God of
+  Mischief** and **Stirring Hopesinger** - each one a "becomes the target
+  of ..." / "that targets ..." *condition* the parser mistakes for an
+  attempted targeting restriction of the ability's own. Bonecrusher Giant is
+  this file's live fixture for `UNPARSED`, played out for real.
 - `NO_LEGAL_TARGET` - the restriction parsed fine, but nothing on the
   battlefield satisfies it. A legitimate game state (CR 608.2d's own
   "nobody says otherwise" default), not a bug, and not CR 608.2b's fizzle -
@@ -54,28 +56,60 @@ does not change CR 603.3d's outcome, only makes it observable), so `targets ==
 different `TargetingNoticeKind` values.
 """
 
-import pytest
-
+from magic_cards_model.machines import Step
 from magic_cards_model.machines.triggers import TargetingNoticeKind
 from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario
 
 
-@pytest.mark.xfail(
-    reason=(
-        "No card in the pool prints a triggered ability with an unreadable "
-        "targeting restriction any more - Aeronaut Cavalry and Frontline "
-        "Heroism, this file's last two control cards, were both fixed for "
-        "real (scenarios/test_subtype_restricted_targeting.py, "
-        "scenarios/test_frontline_heroism.py). The TargetingNoticeKind.UNPARSED "
-        "machinery in Game._ask_trigger_targets is untouched and still "
-        "correct - see the module docstring - this xfail just records that "
-        "nothing currently exercises it with real card data, per the "
-        "project's no-mocks rule."
-    )
-)
 def test_an_unparsed_restriction_is_logged_not_silent():
-    raise NotImplementedError
+    """Bonecrusher Giant, bolted: the trigger fires with nothing to point at.
+
+    Its printed trigger (verified with `resolve_cards`) is "Whenever this
+    creature becomes the target of a spell, this creature deals 2 damage to
+    that spell's controller." `machines/targeting.py` cannot read "becomes the
+    target of a spell" - that phrase is the trigger's *condition*, describing
+    something that happened to this permanent, not a CR 601.2c target this
+    ability's own controller is asked to choose - so `profile_for_text` comes
+    back `understood=False` and CR 603.3d's "the remainder of the process for
+    putting a triggered ability on the stack is identical to the process for
+    casting a spell listed in rules 601.2c-d" is carried out with no target
+    chosen at all.
+
+    The assertion is deliberately about the *presence* of an engine gap: the
+    ability goes on the stack with `targets == []`, and
+    `Game.targeting_notices` says why, with `UNPARSED` rather than
+    `NO_LEGAL_TARGET`. A sweep of all 738 fixture cards found exactly three
+    triggered abilities still shaped this way - Bonecrusher Giant, Loki, God
+    of Mischief and Stirring Hopesinger - and every one of them is a
+    "becomes the target of" / "that targets" condition, not a real target.
+
+    **Rewrite this test if anyone teaches `machines/targeting.py` to read
+    "becomes the target of a spell".** The correct outcome then is that
+    Bonecrusher Giant's trigger is `understood=True` with no targeting
+    requirement of its own and *no notice at all* - and this test, asserting
+    the notice exists, would start failing for the right reason.
+    """
+    scenario = (
+        Scenario()
+        .player("bob", hand=["Lightning Bolt"], battlefield=["Mountain"])
+        .player("alice", battlefield=["Bonecrusher Giant"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    giant = scenario.creature("Bonecrusher Giant", "alice")
+
+    (mountain,) = scenario.untapped_sources("Mountain", username="bob")
+    scenario.cast_onto_stack("Lightning Bolt", mountain, username="bob", targets=[giant])
+    scenario.game.put_triggers_on_stack()
+
+    (ability,) = scenario.game.abilities_on_stack
+    assert ability.source_name == "Bonecrusher Giant"
+    assert ability.targets == []
+
+    (notice,) = scenario.game.targeting_notices
+    assert notice.kind is TargetingNoticeKind.UNPARSED
+    assert notice.source_name == "Bonecrusher Giant"
 
 
 def test_no_legal_target_is_logged_differently_from_unparsed():

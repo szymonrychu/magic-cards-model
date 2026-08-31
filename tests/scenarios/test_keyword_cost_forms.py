@@ -150,16 +150,72 @@ def test_a_card_with_cycling_can_be_cycled():
     assert scenario.player("alice").life == 18
 
 
-@pytest.mark.xfail(
-    reason=(
-        "Suspend is listed as not modelled in docs/engine-coverage.md. The cost "
-        "and the count are parsed off `Suspend 3—{2}{B}{B}`, but CR 702.62a "
-        "makes suspend a static ability plus two triggered abilities, and "
-        "CR 116.2f exiles the card with time counters through a special action. "
-        "The annotated exile would carry it; the upkeep triggers that count the "
-        "time counters down and then cast it do not exist."
-    ),
-    strict=True,
-)
 def test_a_card_with_suspend_offers_a_way_to_cast_it():
-    assert keyword_cast_options(card("Living End"))
+    """The parsed `Suspend 3—{2}{B}{B}` line becomes a real, payable offer.
+
+    Not through `keyword_cast_options`, which is empty for Living End on
+    purpose. CR 702.62a: "Suspend is a keyword that represents three
+    abilities. The first is a static ability that functions while the card
+    with suspend is in a player's hand. The second and third are triggered
+    abilities that function in the exile zone." Only the *first* of the three
+    is the hand-side offer, and it is not a permission to cast - it is
+    CR 116.2f's special action: "A player who has a card with suspend in their
+    hand may exile that card. This is a special action." The cast comes later,
+    out of the third ability, once the last time counter comes off a card
+    CR 702.62b calls suspended.
+
+    So the two things this file's parse actually feeds are
+    `MarkedExile.suspend` - which charges exactly the `{2}{B}{B}` read off the
+    line and hands out exactly the N=3 time counters read off it - and
+    `finish_suspend`, which is where the cast permission is minted when that
+    third ability fires. Putting suspend in the static `KeywordCastOption`
+    table instead would mint the permission twice and hold CR 702.62a's window
+    open far wider than the rule does; `docs/engine-coverage.md` records the
+    choice. `tests/scenarios/test_suspend.py` plays the whole keyword out.
+    """
+    from magic_cards_model.machines import Step
+    from magic_cards_model.machines.casting import (
+        MarkedExile,
+        finish_suspend,
+        remove_suspend_time_counter,
+    )
+    from magic_cards_model.models import Zone
+    from magic_cards_model.models.card_state import Counter, ExileMarker
+    from tests.scenarios.harness import Scenario
+
+    assert keyword_cast_options(card("Living End")) == []
+
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Living End"], battlefield=["Swamp", "Swamp", "Swamp", "Swamp"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    living_end = scenario.find("Living End", Zone.HAND)
+
+    action = MarkedExile.suspend(scenario.game, living_end, "alice")
+
+    # The count and the cost are the ones this file proved were read off the
+    # printed line, now carried into the special action itself (CR 116.2f).
+    assert action.time_counters == 3
+    assert str(action.cost) == "{2}{B}{B}"
+    assert action.marker is ExileMarker.SUSPENDED
+
+    payment = action.begin_paying()
+    scenario.pay_with(payment, *scenario.untapped_sources("Swamp", "Swamp", "Swamp", "Swamp"))
+    action.take()
+
+    suspended = scenario.find("Living End", Zone.EXILE)
+    assert suspended.counter_count(Counter.TIME) == 3
+
+    for _ in range(3):
+        remove_suspend_time_counter(scenario.game, suspended)
+
+    # CR 702.62a's third ability: "you may play it without paying its mana
+    # cost if able" - the offer this card has no other route to, since its
+    # printed mana cost is blank (CR 118.6's unpayable cost).
+    permission = finish_suspend(scenario.game, suspended)
+    assert permission is not None
+    assert permission.pays_mana_cost is False

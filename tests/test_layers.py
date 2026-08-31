@@ -484,25 +484,111 @@ def test_a_characteristic_defining_ability_never_depends_on_a_normal_effect():
 # --------------------------------------------------------------------------
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Layer 1 copy effects (CR 613.1a, CR 707) are not modelled; no card in the "
-    "registry copies anything, and the engine has no 1a/1b sublayers (CR 613.2).",
-)
 def test_a_copy_effect_replaces_the_copiable_values():
+    """CR 613.1a: "Layer 1: Rules and effects that modify copiable values are
+    applied." CR 613.2a puts copy effects in that layer's first sublayer:
+    "Layer 1a: Copiable effects are applied. This includes copy effects (see
+    rule 707, 'Copying Objects')".
+
+    What a copy effect replaces is CR 707.2's list: "the copy acquires the
+    copiable values of the original object's characteristics" - name, types,
+    subtypes, colors, abilities, mana value and printed power/toughness - and
+    *not* the copying permanent's own board identity, which is why `card_id`
+    is left alone here and every selector in `machines/layers.py` keeps
+    keying off it.
+
+    `printed_characteristics(beast)` is exactly where the real
+    `_become_a_copy_builder` reads those values from, so this is the same
+    substitution `test_becomes_a_copy.py` drives through real cards, stated
+    directly against `compute_board` to show layer 1 runs first and the
+    layers above it start from the copied values rather than the printed ones.
+    """
     bears = permanent("Grizzly Bears")
     beast = permanent("Questing Beast")
+    copied = printed_characteristics(beast)
 
     copy = ContinuousEffect(
         description="copy",
         layer=Layer.COPY,
         timestamp=1,
         selector=lambda chars, board: chars.card_id == bears.id,
-        modification=lambda chars, board: chars,
+        modification=lambda chars, board: chars.with_(
+            name=copied.name,
+            mana_value=copied.mana_value,
+            supertypes=copied.supertypes,
+            types=copied.types,
+            subtypes=copied.subtypes,
+            colors=copied.colors,
+            abilities=copied.abilities,
+            power=copied.power,
+            toughness=copied.toughness,
+        ),
     )
     board = compute_board([bears, beast], [copy])
 
+    assert board.journal.applied == ["copy"]
     assert board.of(bears).name == "Questing Beast"
+    assert board.of(bears).power_toughness == (4, 4)
+    assert board.of(bears).subtypes == ("Beast",)
+    # CR 707.2's copiable values stop short of board identity: this is still
+    # the same permanent, which is what every selector keys off.
+    assert board.of(bears).card_id == bears.id
+    # And the original is untouched (CR 707.2b works the other way too).
+    assert board.of(beast).name == "Questing Beast"
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason="CR 613.2 splits layer 1 into sublayers - CR 613.2a's 1a for copy effects and "
+    "CR 613.2b's 1b for face-down objects - and machines/layers.py does not: _SUBLAYERED is "
+    "(Layer.POWER_TOUGHNESS,) alone, so every layer 1 effect is ordered by timestamp against "
+    "every other one. A face-down modification with an earlier timestamp than a copy effect "
+    "therefore applies first, where CR 613.2a/613.2b put it strictly after.",
+)
+def test_layer_1_applies_copy_effects_before_face_down_ones():
+    """CR 613.2a then CR 613.2b, regardless of timestamp.
+
+    CR 613.2: "Within layer 1, apply effects in a series of sublayers in the
+    order described below. Within each sublayer, apply effects in timestamp
+    order." So the sublayer decides first and the timestamp only breaks ties
+    *inside* one sublayer. Here the 1b-shaped effect carries the earlier
+    timestamp and the 1a copy effect the later one; CR 613.2a still puts the
+    copy first, so the face-down 2/2 is what the board ends up reporting.
+
+    The engine has no sublayer for layer 1, so timestamp order alone wins and
+    the copy lands last instead.
+    """
+    bears = permanent("Grizzly Bears")
+    beast = permanent("Questing Beast")
+    copied = printed_characteristics(beast)
+
+    face_down = ContinuousEffect(
+        description="1b: face down",  # CR 613.2b / CR 708.2
+        layer=Layer.COPY,
+        timestamp=1,
+        selector=lambda chars, board: chars.card_id == bears.id,
+        modification=lambda chars, board: chars.with_(
+            name="", subtypes=(), abilities=(), power=2, toughness=2
+        ),
+    )
+    copy = ContinuousEffect(
+        description="1a: copy",  # CR 613.2a
+        layer=Layer.COPY,
+        timestamp=2,
+        selector=lambda chars, board: chars.card_id == bears.id,
+        modification=lambda chars, board: chars.with_(
+            name=copied.name,
+            types=copied.types,
+            subtypes=copied.subtypes,
+            power=copied.power,
+            toughness=copied.toughness,
+        ),
+    )
+
+    board = compute_board([bears, beast], [copy, face_down])
+
+    assert board.journal.applied == ["1a: copy", "1b: face down"]
+    assert board.of(bears).power_toughness == (2, 2)
 
 
 def test_a_star_power_is_defined_in_7a():

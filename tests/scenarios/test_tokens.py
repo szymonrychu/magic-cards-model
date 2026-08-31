@@ -868,26 +868,32 @@ def test_cori_steel_cutter_makes_a_monk_on_the_second_spell_only():
     assert "Monk Token" in scenario.battlefield_names()
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Kozilek's Command is modal with an X in its cost. machines/modes.py parses and "
-    "validates the modes but CardState records no chosen mode and EFFECTS is keyed by card "
-    "name alone (CR 700.2a), and nothing exposes the value chosen for {X} (CR 601.2b) to a "
-    "resolving effect. Both hooks are on models/card_state.py and models/game.py.",
-)
 def test_kozileks_command_creates_x_eldrazi_spawn():
     """Kozilek's Command, first mode: "Target player creates X 0/1 colorless
     Eldrazi Spawn creature tokens with 'Sacrifice this token: Add {C}.'"
 
-    Note whose tokens they are: CR 111.2 says "the player who creates a token is
-    its owner", and this mode makes the *targeted* player the creator, so the
-    Spawn are theirs and not the caster's.
+    Two rules meet here. CR 107.3a: "If a spell or activated ability has a mana
+    cost ... with an {X} ... in it, and the value of X isn't defined by the text
+    of that spell or ability, its controller chooses and announces the value of
+    that variable" - so the number of Spawn is whatever was announced during
+    CR 601.2b's announcement step, and announcing nothing means X is 0 and this
+    mode makes nothing at all. And CR 700.2a puts the mode choice in that same
+    step, which is what makes a modal card's two chosen bullets, and only those
+    two, the text that resolves.
+
+    The second chosen mode is "Target player scries X, then draws a card", so
+    alice needs a library: CR 704.5b - "If a player attempted to draw a card
+    from a library with no cards in it since the last time state-based actions
+    were checked, that player loses the game" - would otherwise take her out of
+    the game the instant this resolved, removing her whole battlefield with her
+    and hiding the Spawn this test is about behind an unrelated loss.
     """
     scenario = (
         Scenario()
         .player(
             "alice",
             hand=["Kozilek's Command"],
+            library=["Forest", "Forest", "Forest"],
             battlefield=["Eldrazi Temple", "Eldrazi Temple", "Forest", "Forest"],
         )
         .player("bob")
@@ -896,7 +902,7 @@ def test_kozileks_command_creates_x_eldrazi_spawn():
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
     casting = scenario.cast("Kozilek's Command", username="alice")
-    casting.choose_modes([1, 2])
+    casting.choose_modes([1, 2], x_value=2)
     casting.choose_targets(["alice", "alice"])
     payment = casting.begin_paying()
     scenario.pay_with(
@@ -910,6 +916,61 @@ def test_kozileks_command_creates_x_eldrazi_spawn():
 
     spawn = [state for state in scenario.game.battlefield if state.name == "Eldrazi Spawn Token"]
     assert len(spawn) == 2
+
+
+def test_kozileks_command_spawn_belong_to_the_targeted_player_not_the_caster():
+    """CR 111.2: "The player who creates a token is its owner. The token enters
+    the battlefield under that player's control."
+
+    The bullet reads "*Target player* creates X ... tokens", so the creator is
+    the targeted player, not the spell's controller. Alice casts it and points
+    the token mode at bob, and every Spawn is bob's - the case that tells a real
+    reading of "target player creates" apart from an effect that quietly makes
+    tokens for whoever cast the spell.
+
+    Both chosen modes are aimed at bob, so it is bob who draws off the second
+    bullet; he gets the library for that (CR 704.5b), and alice needs none.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Kozilek's Command"],
+            battlefield=["Eldrazi Temple", "Eldrazi Temple", "Forest", "Forest", "Forest"],
+        )
+        .player("bob", library=["Forest", "Forest", "Forest"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    casting = scenario.cast("Kozilek's Command", username="alice")
+    casting.choose_modes([1, 2], x_value=3)
+    casting.choose_targets(["bob", "bob"])
+    payment = casting.begin_paying()
+    scenario.pay_with(
+        payment,
+        *scenario.untapped_sources(
+            "Eldrazi Temple", "Eldrazi Temple", "Forest", "Forest", "Forest", username="alice"
+        ),
+    )
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    spawn = [state for state in scenario.game.battlefield if state.name == "Eldrazi Spawn Token"]
+    assert len(spawn) == 3
+    assert {state.controller for state in spawn} == {"bob"}
+    # CR 111.2's "enters the battlefield under that player's control", read
+    # the way `test_the_creating_player_controls_the_token` above reads it.
+    assert [
+        state.name
+        for state in scenario.game.permanents_controlled_by("bob")
+        if state.name == "Eldrazi Spawn Token"
+    ] == ["Eldrazi Spawn Token"] * 3
+    assert not [
+        state
+        for state in scenario.game.permanents_controlled_by("alice")
+        if state.name == "Eldrazi Spawn Token"
+    ]
 
 
 def test_dalkovan_encampment_creates_warriors_tapped_and_attacking():
