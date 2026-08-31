@@ -41,17 +41,24 @@ def test_a_card_that_works_classifies_as_handled(tmp_path):
 
 
 def test_a_genuinely_dead_card_classifies_as_silent(tmp_path):
-    """Grand Arbiter Augustin IV is `test_sweep_pool.py`'s own control for a
-    still-open gap: its cost-modifier static line is not a shape
-    `_layer_category` recognises as an attempted pump/anthem/keyword-grant/
-    base-P/T at all, so it never reaches `has_rules_text` either and the
-    survey reports it as `no_rules_text` - the same thing
-    `scripts/sweep_pool.report_effects` does, since it gates on the same
-    function before ever calling `classify_card`.
+    """Rancor is `test_sweep_pool.py`'s own control for a still-open gap: an
+    Aura's "Enchanted creature gets +2/+0 and has trample." is a subject
+    `machines/layers.py` deliberately does not read yet and does not flag
+    either, so the bonus happens nowhere and is logged nowhere.
+
+    This test used to name Grand Arbiter Augustin IV and assert
+    `no_rules_text`, on the reading that a permanent's static line was not
+    something the classifier judged at all. That is the defect
+    `scripts/sweep_pool.has_rules_text` no longer has: a permanent's static
+    ability (CR 604.2) is now judged, and lands in `silent`,
+    `static_unaudited`, `notice` or `handled` like anything else. Grand
+    Arbiter itself is a `notice` today (`machines/cost.py` reads two of its
+    three lines and records a `CostModifierNotice` for the third), which is
+    why it is no longer the dead-card control anywhere.
     """
-    result = survey_one("Grand Arbiter Augustin IV", tmp_path)
+    result = survey_one("Rancor", tmp_path)
     assert result.found
-    assert result.category == NO_RULES_TEXT
+    assert result.category == SILENT
 
 
 def test_a_vanilla_creature_has_no_rules_text(tmp_path):
@@ -185,3 +192,21 @@ def test_silent_category_is_reachable_through_the_survey_wrapper(tmp_path):
     not dead code left over from a refactor - `sweep_pool`'s own SILENT is
     re-exported by `survey_cards` for callers that want to filter on it."""
     assert SILENT == "silent"
+
+
+def test_a_permanents_unaudited_static_reaches_the_survey_as_its_own_category(tmp_path):
+    """`scripts/sweep_pool.py` grew a fourth bucket - `static_unaudited`, a
+    permanent's own static ability (CR 604.2) that no part of the sweep
+    audits - so that a card nobody looked at can never be counted as a card
+    with nothing to look at. It flows through the survey wrapper untouched:
+    Grafdigger's Cage used to report `no_rules_text` here.
+
+    `scripts/survey_cards.print_summary` still iterates a fixed tuple of
+    categories that does not include this one, so the *table* and the CSV/JSON
+    rows carry it but the human summary does not count it. That is a companion
+    change owed to `survey_cards.py`, which this task does not own.
+    """
+    result = survey_one("Grafdigger's Cage", tmp_path)
+    assert result.found
+    assert result.category == "static_unaudited"
+    assert result.category != NO_RULES_TEXT
