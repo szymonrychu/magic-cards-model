@@ -62,7 +62,14 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict
 
 from ..models.card import Color, Supertype, Type
-from ..models.card_state import CardState, ChoiceKind, Counter, ExileAnnotation, ExileMarker
+from ..models.card_state import (
+    CardState,
+    ChoiceKind,
+    Counter,
+    ExileAnnotation,
+    ExileMarker,
+    TargetRef,
+)
 from ..models.mana import ManaCost
 from ..models.player import Player
 from ..models.token import (
@@ -3060,11 +3067,15 @@ _PITCH_ALTERNATIVE_COST_LINE_RE = re.compile(
 #: static ability about *announcing* the spell (CR 601.2f), never part of
 #: what it does on resolution. This self-referential reduction (as opposed to
 #: `machines/cost.cost_modifier_effect`'s board-static "Spells cost {N} more
-#: to cast", read off a *different* permanent) is not computed anywhere in
-#: this engine - stripping it here only keeps it from being misread as an
-#: unparseable resolution clause and taking "Counter target spell unless its
-#: controller pays ..." down with it; the reduction itself is a separate,
-#: documented gap (`docs/engine-coverage.md`).
+#: to cast", read off a *different* permanent) is now computed by
+#: `Game.cost_reduction_for`/`_COSTS_LESS_IF_TARGETS_COLOR_SPELL_RE`, opted
+#: into by calling `Game.determine_total_cost(casting)` instead of
+#: `casting.determine_cost()` directly - the same opt-in shape Emrakul, the
+#: Promised End's own graveyard-count reduction already uses. Stripping the
+#: sentence here still matters regardless: it keeps this line from being
+#: misread as an unparseable resolution clause and taking "Counter target
+#: spell unless its controller pays ..." down with it, since this dispatcher
+#: only ever reads what a spell *does*, not what it costs.
 _SELF_COST_REDUCTION_LINE_RE = re.compile(
     r"^This spell costs \{\d+\} less to cast if [^.]+\.\s*", re.IGNORECASE | re.MULTILINE
 )
@@ -6591,6 +6602,11 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     )
     if target_opponent_draw_then_copy is not None:
         return target_opponent_draw_then_copy
+    create_token_then_copy_spell_retargeted = _parse_create_token_then_copy_spell_retargeted_clause(
+        effect_text
+    )
+    if create_token_then_copy_spell_retargeted is not None:
+        return create_token_then_copy_spell_retargeted
     pay_any_life_then_draw = _parse_pay_any_life_then_draw_that_many_clause(effect_text)
     if pay_any_life_then_draw is not None:
         return pay_any_life_then_draw
@@ -12407,6 +12423,67 @@ def _parse_target_opponent_draw_then_copy_that_spell_clause(text: str) -> Abilit
             return
         copy = game.copy_spell(spell, controller=ability.controller)
         game.offer_new_targets_for_copy(copy, ability.controller, source_name=ability.source_name)
+
+    return effect
+
+
+#: Frontline Heroism's own cast trigger effect: "create a `<token>`, then
+#: copy that spell. The copy targets that token." The token half is
+#: `_TOKEN_CLAUSE_RE`'s ordinary shape (any generic token descriptor - this
+#: is not hardcoded to "1/1 red Soldier ... with haste"), and the copy half
+#: is CR 707.10's `Game.copy_spell` the same way Alania, Divergent Storm's
+#: own clause above already reaches it - the difference is the retarget: "the
+#: copy targets that token" is not CR 707.10c's optional "you may choose new
+#: targets", it is a forced, specific new target, so `copy.targets` is set
+#: directly rather than through `offer_new_targets_for_copy`.
+_CREATE_TOKEN_THEN_COPY_SPELL_RETARGETED_RE = re.compile(
+    r"^(?P<token_clause>.+?tokens?(?:\s+with\s+.+?)?), then copy that spell\. "
+    r"the copy targets? that token\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_create_token_then_copy_spell_retargeted_clause(text: str) -> AbilityEffect | None:
+    """`_CREATE_TOKEN_THEN_COPY_SPELL_RETARGETED_RE`'s shape, or `None` if
+    this is not it, or if the token half is not `_TOKEN_CLAUSE_RE`'s own
+    readable shape.
+    """
+    match = _CREATE_TOKEN_THEN_COPY_SPELL_RETARGETED_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    token_text = match.group("token_clause").strip()
+    if not token_text.lower().startswith("create"):
+        token_text = "create " + token_text
+    token_match = _TOKEN_CLAUSE_RE.fullmatch(token_text)
+    if token_match is None:
+        return None
+    count = _count(token_match.group("n"))
+    words = token_match.group("desc").strip().split()
+    tapped = bool(words) and words[0].lower() == "tapped"
+    if tapped:
+        words = words[1:]
+    if not words:
+        return None
+    definition = _parse_generic_token_descriptor(words, token_match.group("tail"))
+    if definition is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = ability.controller
+        tokens = create_tokens(game, definition, controller, count, tapped=tapped)
+        event = ability.event
+        if event is None or event.subject_id is None or not tokens:
+            return
+        spell = game.find_by_id(event.subject_id)
+        if spell is None or spell not in game.stack:
+            return
+        copy = game.copy_spell(spell, controller=controller)
+        # CR 707.2's copiable "targets" is overwritten here rather than left
+        # to `offer_new_targets_for_copy`: "the copy targets that token" is a
+        # forced instruction, not CR 707.10c's optional permission, and it
+        # names a specific new target (the very token just created) rather
+        # than letting the controller choose freely among legal ones.
+        copy.targets = [TargetRef.coerce(tokens[0])]
 
     return effect
 

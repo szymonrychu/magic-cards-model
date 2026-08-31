@@ -528,6 +528,12 @@ def _types_match(types: tuple[Type, ...] | None, condition: str) -> bool:
 #: so "Cats" yields "Cat" rather than swallowing the trailing "s".
 _OTHER_SUBTYPE = re.compile(r"\bother ([A-Za-z]+?)s?\s+you control\b", re.IGNORECASE)
 
+#: Frontline Heroism's own clause - see `condition_matches`'s `CAST_SPELL`
+#: branch for why it has to be stripped before `_types_match` sees it.
+_TARGETS_ONLY_SINGLE_CREATURE_CLAUSE = re.compile(
+    r"that targets only a single creature you control", re.IGNORECASE
+)
+
 
 def _required_subtype(condition: str) -> str | None:
     match = _OTHER_SUBTYPE.search(condition)
@@ -911,13 +917,48 @@ def condition_matches(
         ordinal_match = _ordinal_spell_this_turn_matches(game, condition, controller, event)
         if ordinal_match is not None:
             return ordinal_match
-        if not _types_match(event.subject_types, condition):
+        # Frontline Heroism's own "that targets only a single creature you
+        # control" clause names a type word ("creature") that describes the
+        # *target*, not the cast spell itself - `_required_types`/
+        # `_types_match` cannot tell the two apart on sight (it just scans
+        # the whole condition for a known type word) and used to misread the
+        # clause as "cast a creature spell", which Lightning Bolt aimed at
+        # your own creature is not, wrongly refusing to fire at all. Stripped
+        # out of the copy handed to the type/colour/subtype checks below,
+        # which have nothing to do with what the spell targets.
+        type_condition = _TARGETS_ONLY_SINGLE_CREATURE_CLAUSE.sub("", condition)
+        if not _types_match(event.subject_types, type_condition):
             return False
-        if not _color_matches(event.subject_colors, condition):
+        if not _color_matches(event.subject_colors, type_condition):
             return False
-        subtype = _required_cast_subtype(condition)
+        subtype = _required_cast_subtype(type_condition)
         if not _subtype_matches(event.subject_subtypes, subtype):
             return False
+        if "targets only a single creature you control" in lowered:
+            # Frontline Heroism's own condition - not a fact about the cast
+            # spell's own printed characteristics at all (CR 105, CR 202.3),
+            # but about *what it targets* (CR 601.2c), read off the spell's
+            # own `CardState.targets` now that it sits on the stack. "only a
+            # single" is CR 115.3's exactly-one, "creature you control" is
+            # CR 109.4/608.2b's ordinary target-legality vocabulary read
+            # directly here rather than through `machines/targeting.py`,
+            # since this is a *condition on an already-legal announcement*,
+            # not a targeting requirement of Frontline Heroism's own.
+            if event.subject_id is None:
+                return False
+            spell = game.find_by_id(event.subject_id)
+            if spell is None or len(spell.targets) != 1:
+                return False
+            (only_target,) = spell.targets
+            if only_target.is_player:
+                return False
+            target = game.find_by_id(only_target.card_id)
+            if target is None or target.zone is not Zone.BATTLEFIELD:
+                return False
+            if Type.CREATURE not in target.types:
+                return False
+            if game.controller_of(target).username != controller:
+                return False
         if "mana value" in lowered:
             comparison = _mana_value_comparison(condition)
             if comparison is None:

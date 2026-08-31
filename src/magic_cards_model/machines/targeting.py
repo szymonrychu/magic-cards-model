@@ -204,11 +204,26 @@ class TargetRequirement(BaseModel):
     color_count: str | None = None
     """CR 105.2's color-*count* categories - "multicolored" (two or more of
     the five colors, CR 105.2b, Psychotic Fury), "monocolored" (exactly one,
-    CR 105.2a), or "colorless" (no color at all, CR 105.2c) - as opposed to
-    `required_colors`' membership check for a *specific* named color, which
-    cannot express any of the three (CR 105.4: "'Multicolored' is not a
-    color. Neither is 'colorless.'", so `_COLOR_WORDS` correctly does not
-    carry them). `None` means the phrase named no such category."""
+    CR 105.2a), "colorless" (no color at all, CR 105.2c), or "colored" (one
+    or more of the five colors, CR 105.2: "An object can be one or more of
+    the five colors, or it can be no color at all" - the logical negation of
+    "colorless", read off a trailing "that's one or more colors" clause
+    rather than a leading adjective - Devourer of Destiny's and Ugin, Eye of
+    the Storms' shared "target permanent that's one or more colors") - as
+    opposed to `required_colors`' membership check for a *specific* named
+    color, which cannot express any of the four (CR 105.4: "'Multicolored'
+    is not a color. Neither is 'colorless.'", so `_COLOR_WORDS` correctly
+    does not carry them). `None` means the phrase named no such category.
+
+    Devourer of Destiny's "exile target permanent that's one or more colors"
+    used to parse with no color restriction at all: `_read_phrase` read
+    "permanent" as the noun and had nothing that recognised the trailing
+    "that's one or more colors" clause, so it was silently dropped and a
+    colorless permanent was accepted as a legal target - an over-broad,
+    actively wrong targeting list (a live correctness bug found in a real
+    game), worse than refusing the target outright. `_read_phrase` now reads
+    that trailing clause via `_extract_color_presence` the same way it
+    already reads a trailing comparison or "with `<keyword>`" clause."""
     historic: bool = False
     """True for "target historic ..." (Abstergo Entertainment). CR 700.6:
     "The term historic refers to an object that has the legendary supertype,
@@ -428,6 +443,7 @@ class TargetRequirement(BaseModel):
                 (self.color_count == "multicolored" and count >= 2)
                 or (self.color_count == "monocolored" and count == 1)
                 or (self.color_count == "colorless" and count == 0)
+                or (self.color_count == "colored" and count >= 1)
             )
             if not satisfied:
                 return (
@@ -951,6 +967,52 @@ _RETARGETING = re.compile(
     r"\bchoose\s+new\s+targets?\b|\bchange\s+(?:a|any|the)\s+targets?\b", re.IGNORECASE
 )
 
+#: "This spell costs {N} less to cast if it targets a `<color>` spell."
+#: (Mystical Dispute) - CR 601.2f's self-referential cost reduction, read for
+#: real by `Game.cost_reduction_for`/`_COSTS_LESS_IF_TARGETS_COLOR_SPELL_RE`
+#: in `models/game.py`. The verb "targets" here names no targeting
+#: *requirement* of this ability's own (CR 115.1's "target" template is
+#: always a noun phrase, "target `<noun>`") - it is a condition on a target
+#: chosen elsewhere on the card - but `_TARGET_WORD` cannot tell the verb
+#: apart from the noun-phrase marker on sight, so this sentence used to be
+#: fed to `_read_phrase` anyway and fail the whole clause closed
+#: (`understood=False`), which wrongly stopped Mystical Dispute's own
+#: *second* sentence - "Counter target spell unless its controller pays
+#: {3}." - from being read at all. Dropped before the scan, the same way
+#: `machines/effects.py`'s own `_SELF_COST_REDUCTION_LINE_RE` drops it from
+#: resolution text; duplicated rather than imported to avoid a circular
+#: import (`machines/effects.py` already imports this module).
+_SELF_COST_REDUCTION_LINE = re.compile(
+    r"\bThis spell costs \{\d+\} less to cast if [^.]+\.\s*", re.IGNORECASE
+)
+
+#: "The copy targets that token." (Frontline Heroism, following its own
+#: "... then copy that spell.") - CR 707.10's forced retarget, stated as a
+#: declaration of what the copy now points at rather than a choice anyone
+#: makes. `_RETARGETING` already drops the *permission* shape ("You may
+#: choose new targets for the copy.", Alania, Divergent Storm); this is the
+#: sibling *declarative* shape, and it names no targeting requirement of its
+#: own for the same reason - the copy's target is decided by
+#: `machines/effects.py`'s own resolution code
+#: (`_parse_create_token_then_copy_spell_retargeted_clause`), not chosen by
+#: this ability's controller at announcement (CR 603.3d).
+_COPY_TARGETS_DECLARATION = re.compile(r"\bThe copy targets? [^.]+\.\s*", re.IGNORECASE)
+
+#: "... a spell that targets only a single creature you control ..."
+#: (Frontline Heroism's own trigger *condition*, CR 603.1's "[Whenever]
+#: [condition], [effect]"). This is a fact `machines/triggers.py`'s
+#: `condition_matches` checks about an *already-chosen* target elsewhere on
+#: the stack, not a "target `<noun>`" requirement of this ability's own
+#: CR 603.3d announcement - but `_TARGET_WORD` cannot tell a condition's
+#: "targets" apart from an effect's, so it used to be fed to `_read_phrase`
+#: and fail the whole ability closed. `machines/triggers.py` carries the
+#: identical regex (`_TARGETS_ONLY_SINGLE_CREATURE_CLAUSE`) for the same
+#: reason on the condition-matching side; duplicated here rather than shared
+#: to avoid a circular import between the two modules.
+_TARGETS_ONLY_SINGLE_CREATURE_CONDITION_CLAUSE = re.compile(
+    r"\bthat targets only a single creature you control\b", re.IGNORECASE
+)
+
 #: CR 601.2d's two templates, the amount and what is being divided.
 _DIVIDED = re.compile(
     r"\b(?:deals?\s+(?P<damage>[\w]+)\s+damage\s+divided(?:\s+as\s+you\s+choose)?\s+among"
@@ -963,6 +1025,17 @@ _DIVIDED = re.compile(
 _ABILITY_PHRASE = re.compile(
     r"^\s*(?:(?:activated|triggered|loyalty)\s+(?:or\s+|and\s+)?)*abilit(?:y|ies)\b",
     re.IGNORECASE,
+)
+
+#: "... or colorless spell" (Consign to Memory's "target triggered ability or
+#: colorless spell") - the tail left over once `_ABILITY_PHRASE` has consumed
+#: the ability half of the compound. Generalised across CR 105.2's whole
+#: color-*count* vocabulary (`_Adjectives.color_count`'s own set), not
+#: hardcoded to "colorless" alone, since the identical "ability or
+#: `<color-count>` spell" shape would read the same way for a hypothetical
+#: "... or monocolored spell".
+_ABILITY_OR_COLOR_COUNT_SPELL_RE = re.compile(
+    r"^or\s+(?P<color_count>multicolored|monocolored|colorless)\s+spell$", re.IGNORECASE
 )
 
 _NUMBERS = {
@@ -1369,6 +1442,9 @@ def _read_revolt_mana_value_override(text: str) -> int | None:
 def _parse(oracle_text: str, spell_only: bool = True) -> TargetingProfile:
     text = _spell_text(oracle_text) if spell_only else oracle_text
     text = _RETARGETING.sub("", text)
+    text = _SELF_COST_REDUCTION_LINE.sub("", text)
+    text = _COPY_TARGETS_DECLARATION.sub("", text)
+    text = _TARGETS_ONLY_SINGLE_CREATURE_CONDITION_CLAUSE.sub("", text)
     mentions = len(_TARGET_WORD.findall(text))
     if not mentions:
         return TargetingProfile()
@@ -1604,31 +1680,64 @@ def _read_phrase(prefix: str, suffix: str) -> TargetRequirement | None:
 
     noun_phrase = re.split(r"[.;]", suffix)[0]
 
-    # `.fullmatch`, not `.match`: "triggered ability or colorless spell"
-    # (Consign to Memory) starts with an ability phrase too, and a bare
-    # prefix match would silently read the whole target as "an ability" and
-    # drop the "or colorless spell" alternative on the floor - a restriction
-    # that then actively refuses a perfectly legal spell target, which is
-    # worse than not checking at all. Requiring the ability phrase to consume
-    # the entire noun phrase keeps Tishana's Tidebinder's plain "target
-    # activated or triggered ability" working exactly as before, while a
-    # genuine "ability or spell" compound now falls through unread
-    # (`understood=False`) instead of being wrongly enforced.
+    # A bare `.match` (not `.fullmatch`) used to silently misread "triggered
+    # ability or colorless spell" (Consign to Memory) as the whole target
+    # being "an ability", dropping "or colorless spell" on the floor -
+    # `understood=True` with a wrong, actively-enforced restriction, worse
+    # than not checking at all. The tail past the ability phrase is now
+    # inspected explicitly: empty (Tishana's Tidebinder's plain "target
+    # activated or triggered ability") keeps the old ability-only reading,
+    # `_ABILITY_OR_COLOR_COUNT_SPELL_RE`'s "or `<color-count>` spell" shape
+    # reads the genuine compound below, and anything else still fails the
+    # whole phrase closed (`understood=False`) rather than being guessed at.
     ability = _ABILITY_PHRASE.match(noun_phrase)
-    if ability is not None and ability.end() == len(noun_phrase.rstrip()):
-        # CR 115.2(b): an ability on the stack is an object that cannot exist on
-        # the battlefield, and a spell may target one when it says so.
-        return TargetRequirement(
-            phrase="target " + " ".join(ability.group(0).split()).lower(),
-            count=count,
-            minimum=minimum,
-            unbounded=unbounded,
-            variable_count=variable,
-            allows_cards=False,
-            allows_abilities=True,
-            zones=frozenset({Zone.STACK}),
-            excludes_source=excludes_source,
-        )
+    if ability is not None:
+        tail = noun_phrase[ability.end() :].strip()
+        if not tail:
+            # CR 115.2(b): an ability on the stack is an object that cannot
+            # exist on the battlefield, and a spell may target one when it
+            # says so.
+            return TargetRequirement(
+                phrase="target " + " ".join(ability.group(0).split()).lower(),
+                count=count,
+                minimum=minimum,
+                unbounded=unbounded,
+                variable_count=variable,
+                allows_cards=False,
+                allows_abilities=True,
+                zones=frozenset({Zone.STACK}),
+                excludes_source=excludes_source,
+            )
+        compound = _ABILITY_OR_COLOR_COUNT_SPELL_RE.match(tail)
+        if compound is not None:
+            # "target triggered ability or colorless spell" (Consign to
+            # Memory) - a disjunction across two different noun *kinds*, not
+            # just two nouns of the same kind ("target artifact or
+            # enchantment" stays inside `card_types`). One `allows_abilities
+            # and allows_cards` requirement covers both halves: `rejects`
+            # already dispatches an ability target to `_rejects_ability` and
+            # a card target to `_rejects_card` before either field is
+            # consulted, so an ability is judged only by
+            # `allows_abilities`/`controller` and a spell only by
+            # `allows_cards`/`zones`/`color_count` - the two halves never
+            # interfere with each other on the same requirement.
+            return TargetRequirement(
+                phrase="target "
+                + " ".join(ability.group(0).split()).lower()
+                + " or "
+                + compound.group("color_count").lower()
+                + " spell",
+                count=count,
+                minimum=minimum,
+                unbounded=unbounded,
+                variable_count=variable,
+                allows_cards=True,
+                allows_abilities=True,
+                zones=frozenset({Zone.STACK}),
+                color_count=compound.group("color_count").lower(),
+                excludes_source=excludes_source,
+            )
+        return None  # a compound this parser cannot finish reading: fail closed
 
     subtype_list = _read_subtype_list(noun_phrase)
     if subtype_list is not None:
@@ -1767,6 +1876,17 @@ def _read_phrase(prefix: str, suffix: str) -> TargetRequirement | None:
 
     required_keyword, rest = _extract_required_keyword(rest)
 
+    color_presence, rest = _extract_color_presence(rest)
+    color_count = adjectives.color_count
+    if color_presence:
+        if color_count is not None:
+            # A phrase naming two color-count categories at once ("target
+            # multicolored permanent that's one or more colors") is not a
+            # shape any printing in the pool uses - refuse rather than guess
+            # which one wins.
+            return None
+        color_count = "colored"
+
     if not nouns_read:
         # Nothing but adjectives: "target token you control". CR 111.1 makes a
         # token a permanent, so that is what is left once the adjectives are
@@ -1835,7 +1955,7 @@ def _read_phrase(prefix: str, suffix: str) -> TargetRequirement | None:
         excludes_source=excludes_source or adjectives.excludes_source,
         exiled_with_source=exiled_with_source,
         must_be_token=adjectives.must_be_token,
-        color_count=adjectives.color_count,
+        color_count=color_count,
         historic=adjectives.historic,
         combat_states=frozenset(adjectives.combat_states),
         comparison_attribute=comparison_attribute,
@@ -2081,6 +2201,27 @@ def _extract_required_keyword(rest: str) -> tuple[str | None, str]:
     if match is None:
         return None, rest
     return match.group("keyword").lower(), rest[: match.start()].strip()
+
+
+#: "target permanent that's one or more colors" (Devourer of Destiny, Ugin,
+#: Eye of the Storms) - CR 105.2's presence check, the negation of CR 105.2c's
+#: colorless, read as a trailing relative clause rather than a leading
+#: adjective (unlike "multicolored"/"monocolored"/"colorless", which always
+#: sit in front of the noun). "that's" is the only contraction the pool's
+#: printings use; a hypothetical plural "that are one or more colors" is a
+#: different noun ("permanents", All Is Dust's own dedicated parser in
+#: `machines/effects.py` already reads that shape) and is deliberately not
+#: matched here.
+_COLOR_PRESENCE_RE = re.compile(r"\bthat'?s\s+one\s+or\s+more\s+colors\b", re.IGNORECASE)
+
+
+def _extract_color_presence(rest: str) -> tuple[bool, str]:
+    """Read a trailing "that's one or more colors" clause out of `rest`
+    (CR 105.2), or leave it untouched when there is none."""
+    match = _COLOR_PRESENCE_RE.search(rest)
+    if match is None:
+        return False, rest
+    return True, (rest[: match.start()] + rest[match.end() :]).strip()
 
 
 _ALL_NOUNS = frozenset(_TYPE_NOUNS) | _PERMANENT_NOUNS | _PLAYER_NOUNS | _SPELL_NOUNS | _CARD_NOUNS

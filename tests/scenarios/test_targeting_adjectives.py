@@ -511,3 +511,82 @@ def test_psychotic_fury_grants_double_strike_and_draws_a_card():
 
     assert "Double strike" in scenario.game.characteristics_of(fiend_artisan).abilities
     assert [state.name for state in alice.hand] == ["Forest"]
+
+
+# --------------------------------------------------------------------------
+# A colour-*presence* restriction, as opposed to a colour-*count* one -
+# CR 105.2's "an object can be one or more of the five colors, or it can be
+# no color at all". Devourer of Destiny's "exile target permanent that's one
+# or more colors" is not "target multicolored permanent" (two or more,
+# CR 105.2b) or "target monocolored permanent" (exactly one, CR 105.2a): it
+# is the plain negation of CR 105.2c's colorless, sitting in a *trailing*
+# relative clause rather than a leading adjective. This used to parse with
+# no restriction at all - `_read_phrase` read "target permanent" as the
+# whole noun phrase and had nothing that recognised "that's one or more
+# colors" trailing it, so the clause was silently dropped and a colorless
+# permanent was accepted as a legal target. That is an over-broad, actively
+# wrong targeting list - a live correctness bug found in a real game, worse
+# than refusing every target outright. `TargetRequirement.color_count`'s new
+# "colored" value and `_extract_color_presence` fix it generally, for any
+# card printing the same "that's one or more colors" clause - Ugin, Eye of
+# the Storms prints the identical clause on both of its own cast triggers.
+# --------------------------------------------------------------------------
+
+
+def test_color_presence_is_read_as_the_negation_of_colorless():
+    """CR 105.2: "An object can be one or more of the five colors, or it can
+    be no color at all" - verified with `knowledge_search` this session."""
+    profile = profile_for_text("exile target permanent that's one or more colors.")
+    assert profile.understood
+    (requirement,) = profile.requirements
+    assert requirement.color_count == "colored"
+
+
+def test_a_colored_permanent_satisfies_devourer_of_destinys_own_target():
+    """Grizzly Bears is green - CR 105.2's "one or more" - so it is a legal
+    target."""
+    bears = card_state("Grizzly Bears", Zone.BATTLEFIELD, controller="bob")
+    requirement = profile_for_text(
+        "exile target permanent that's one or more colors."
+    ).requirements[0]
+    assert requirement.rejects(bears, caster="alice") is None
+
+
+def test_a_colorless_permanent_does_not_satisfy_it():
+    """Memnite has no colored mana symbols at all (CR 202.2b) and so is
+    CR 105.2c's colorless - the exact case the old, over-broad parse used to
+    wrongly accept."""
+    memnite = card_state("Memnite", Zone.BATTLEFIELD, controller="bob")
+    requirement = profile_for_text(
+        "exile target permanent that's one or more colors."
+    ).requirements[0]
+    assert requirement.rejects(memnite, caster="alice") is not None
+
+
+def test_devourer_of_destinys_cast_trigger_refuses_a_colorless_permanent():
+    """End to end: `choose_trigger_targets` (CR 603.3d, CR 601.2c) refuses a
+    colorless permanent for Devourer of Destiny's own cast trigger, the same
+    announcement-time check `test_triggered_abilities.py`'s Devourer tests
+    exercise for a legal, colored target.
+
+    The trigger's source has to already be findable on the stack
+    (`Game._trigger_source_named` only searches the battlefield and the
+    stack, CR 603.6a/603.2g), so the spell is cast onto the stack first
+    rather than choosing targets while it still sits in hand."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Devourer of Destiny"],
+            battlefield=["Sol Ring"] + ["Forest"] * 5,
+        )
+        .player("bob", battlefield=["Memnite"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    memnite = scenario.find("Memnite", Zone.BATTLEFIELD, "bob")
+    sources = scenario.untapped_sources("Sol Ring", *["Forest"] * 5)
+    scenario.cast_onto_stack("Devourer of Destiny", *sources)
+
+    with pytest.raises(ValueError, match="colored"):
+        scenario.game.choose_trigger_targets("Devourer of Destiny", [memnite])
