@@ -826,6 +826,96 @@ def why_cannot_cast_restriction(spell: CardState, caster: str, game: Any = None)
     return None
 
 
+#: Mindbreak Trap's shape of CR 118.9 offer: the same "rather than pay this
+#: spell's mana cost" sentence, with a condition on the game's own history
+#: printed ahead of it. `machines/cost.py`'s `_ALTERNATIVE` is anchored at
+#: "You may" and its `_ALTERNATIVE_IF_NOT_YOUR_TURN` reads the one *timing*
+#: condition (Force of Negation), so neither sees this one - the condition
+#: here is a question about what has already happened this turn, which only a
+#: machine holding the game can answer, which is why it is read here rather
+#: than there.
+_CONDITIONAL_ALTERNATIVE = re.compile(
+    r"^If (?P<condition>[^,.]+), you may (?P<what>[^.]+?) rather than pay "
+    r"this spell's mana cost\.",
+    re.MULTILINE,
+)
+
+#: The one condition this engine can answer: Mindbreak Trap's "an opponent cast
+#: three or more spells this turn", counted off `Game.spells_cast_this_turn`.
+#: Anything else the sentence could say is left unread, and the offer it gates
+#: is reported unavailable rather than quietly granted.
+_OPPONENT_SPELL_COUNT_CONDITION = re.compile(
+    r"^an opponent cast (?P<count>[\w-]+) or more spells this turn$", re.IGNORECASE
+)
+
+#: CR 107.1's numbers, spelled the way a card spells them.
+_NUMBER_WORDS: dict[str, int] = {
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+    "ten": 10,
+}
+
+#: A cost phrase that is nothing but mana, with or without the verb in front of
+#: it: Mindbreak Trap prints "pay {0}", and CR 118.5 makes that a real cost
+#: ("Some costs are represented by {0} ... Even though such a cost requires no
+#: resources, it's not automatically paid").
+_PAY_ONLY_MANA = re.compile(r"^(?:pay\s+)?(?P<mana>(?:\{[^{}]+\}\s*)+)$", re.IGNORECASE)
+
+
+class ConditionalAlternativeCostOffer(BaseModel):
+    """One CR 118.9 offer whose sentence prints a condition ahead of it."""
+
+    model_config = ConfigDict(frozen=True)
+
+    phrase: str
+    """What would be paid, in the card's own words."""
+    condition: str
+    """The clause between "If" and the comma, as printed."""
+
+
+def conditional_alternative_cost_offers(text: str) -> list[ConditionalAlternativeCostOffer]:
+    """Every conditional CR 118.9 offer in this text (CR 604.6).
+
+    Force of Negation's "If it's not your turn, ..." is deliberately skipped:
+    `machines/cost.py::alternative_cost_offers` already reads that one, and
+    reporting it twice would offer the same cost as two separate options,
+    which CR 118.9a's "only one alternative cost" makes a lie.
+    """
+    offers: list[ConditionalAlternativeCostOffer] = []
+    for match in _CONDITIONAL_ALTERNATIVE.finditer(text or ""):
+        condition = match.group("condition").strip()
+        if condition.lower() == "it's not your turn":
+            continue
+        offers.append(
+            ConditionalAlternativeCostOffer(phrase=match.group("what").strip(), condition=condition)
+        )
+    return offers
+
+
+def _printed_alternative_total_cost(phrase: str, payer: str | None) -> TotalCost | None:
+    """The `TotalCost` a printed CR 118.9 phrase asks for, or None if unread.
+
+    `machines/cost.py::total_cost_for_phrase` reads the component shapes
+    ("exile a blue card from your hand"), but its mana branch wants the phrase
+    to be *only* mana symbols, so the verb Mindbreak Trap prints in front of
+    its own - "pay {0}" - is not one it can read. The verb is stripped here
+    and the rest handed to `ManaCost.parse`; everything else is still
+    `total_cost_for_phrase`'s job, including its None for a phrase nobody
+    parsed.
+    """
+    mana_only = _PAY_ONLY_MANA.match(phrase.strip().rstrip("."))
+    if mana_only is not None:
+        return TotalCost.of(ManaCost.parse(mana_only.group("mana").strip()))
+    return total_cost_for_phrase(phrase, payer=payer)
+
+
 class AlternativeCostSource(StrEnum):
     """Where a CR 118.9 alternative cost came from.
 
@@ -1409,6 +1499,33 @@ class Casting(BaseModel):
                 )
             )
 
+        for conditional in conditional_alternative_cost_offers(self.spell.oracle_text or ""):
+            cost = _printed_alternative_total_cost(conditional.phrase, payer=self.caster)
+            unavailable = None
+            if cost is None:
+                unavailable = f"{self.spell.name}'s alternative cost could not be read"
+            elif self.spell.zone is not self.origin_zone:
+                unavailable = (
+                    f"{self.spell.name} is in the {self.spell.zone.value}, not the "
+                    f"{self.origin_zone.value} it is being cast from (CR 604.6)"
+                )
+            else:
+                unavailable = self._condition_refusal(conditional.condition)
+            options.append(
+                AlternativeCostOption(
+                    index=len(options),
+                    source=AlternativeCostSource.PRINTED,
+                    rule="CR 118.9",
+                    source_name=self.spell.name,
+                    description=f"{conditional.phrase} (if {conditional.condition})",
+                    cost=cost,
+                    requires=sum(component.required for component in cost.components)
+                    if cost
+                    else 0,
+                    unavailable=unavailable,
+                )
+            )
+
         for keyword_option in keyword_cast_options(self.spell.card):
             if keyword_option.pays_mana_cost:
                 # Warp's second half and flashback's from-graveyard permission
@@ -1594,6 +1711,42 @@ class Casting(BaseModel):
                 remaining = remaining[component.required :]
         self.choose_alternative_cost(cost)
         return self.step
+
+    def _condition_refusal(self, condition: str) -> str | None:
+        """Why a conditional CR 118.9 offer's printed condition does not hold
+        right now, or None if it does.
+
+        Fails closed twice over: a condition this cannot read refuses the
+        offer, and so does a condition it can read but that is not met. An
+        alternative cost silently granted by unparsed text is the worst of the
+        three outcomes - it makes a spell free for a reason nobody checked.
+        """
+        match = _OPPONENT_SPELL_COUNT_CONDITION.match(condition.strip())
+        if match is None:
+            return (
+                f"{self.spell.name}'s alternative cost is offered only 'if "
+                f"{condition}', which this engine cannot read (CR 118.9)"
+            )
+        needed = _NUMBER_WORDS.get(match.group("count").lower())
+        if needed is None:
+            return (
+                f"{self.spell.name}'s alternative cost asks for "
+                f"{match.group('count')} spells, a number this engine cannot read"
+            )
+        if self.game is None:
+            return f"{self.spell.name}'s alternative cost needs a game to count spells cast"
+        cast_this_turn = getattr(self.game, "spells_cast_this_turn", {})
+        # "An opponent" is one opponent, not the table between them: the
+        # counts are kept per player and each is compared on its own.
+        for player in getattr(self.game, "players", []):
+            if player.username == self.caster:
+                continue
+            if len(cast_this_turn.get(player.username, [])) >= needed:
+                return None
+        return (
+            f"{self.spell.name}'s alternative cost is offered only if an opponent has "
+            f"cast {match.group('count')} or more spells this turn, and none has"
+        )
 
     def _is_not_my_turn(self) -> bool:
         """Force of Negation's and Force of Vigor's own condition: whoever is
