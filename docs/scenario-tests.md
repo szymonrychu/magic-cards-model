@@ -76,6 +76,7 @@ Existing files, as a guide to where a new case belongs:
 | `test_crew.py` | CR 702.122, 301.7: a Vehicle becoming an artifact creature, the "total power N or greater" cost, and what crew's missing `{T}` symbol does and does not excuse |
 | `test_convoke.py` | CR 702.51: tapping creatures to pay a symbol, the colour half against the generic half, and why it is not a cost reduction |
 | `test_delve.py` | CR 702.66: exiling a graveyard to pay generic mana only, an empty graveyard, and X |
+| `test_cost_increase_by_chosen_name.py` | CR 601.2f, 118.9d, 118.6, 118.6a, 702.85a, 614.12a: Disruptor Flute's "Spells with the chosen name cost {3} more to cast" landing on a *free* cast - a cascaded Living End, whose only route out of CR 118.6's unpayable cost is cascade's alternative one, priced at exactly `{3}` and left unpayable by a player who tapped out for Shardless Agent |
 | `test_life_total_above_twenty.py` | CR 119.1, 119.3, 119.2, 120.3a: a life total raised past the starting 20 by Guide of Souls triggers, and one point of damage taken off *that* total - across a turn boundary, across an All Is Dust wipe that removes the source of the gain, and at exactly 20 and below it. Written from a live-game report that a Walking Ballista ping had reset a gained life total to 20; the engine was correct at every step, and this file is the regression that would catch a reset |
 
 ### Counters

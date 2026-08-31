@@ -146,6 +146,7 @@ from ..machines.turn import MAIN_PHASES, NO_PRIORITY, TURN_ORDER, Step, TurnMach
 from .card import Card, Color, Layout, Supertype, Type
 from .card_state import (
     CardState,
+    ChoiceKind,
     Counter,
     ExileMarker,
     TargetRef,
@@ -6358,6 +6359,25 @@ class Game(BaseModel):
                     ):
                         continue
                     increases.append(ManaCost.parse(f"{{{effect.amount}}}"))
+                elif effect.kind is CostModifierKind.NAMED_INCREASE:
+                    # Disruptor Flute: "Spells with the chosen name cost {3}
+                    # more to cast." The name is CR 614.12a's choice, made as
+                    # the permanent entered and recorded on `CardState.choice`;
+                    # nothing about the printed line says who it taxes, so a
+                    # Flute that somehow never made its choice taxes nothing
+                    # and says so rather than quietly applying to everything.
+                    chosen = permanent.choice
+                    if chosen is None or chosen.kind is not ChoiceKind.CARD_NAME:
+                        if permanent.id not in already_noticed:
+                            already_noticed.add(permanent.id)
+                            self.cost_modifier_notices.append(
+                                CostModifierNotice(
+                                    source_id=permanent.id, source_name=permanent.name, text=text
+                                )
+                            )
+                        continue
+                    if chosen.value == spell.name or chosen.value == spell.card.name:
+                        increases.append(ManaCost.parse(f"{{{effect.amount}}}"))
                 elif effect.kind is CostModifierKind.PER_SPELL_INCREASE:
                     prior = len(self.spells_cast_this_turn.get(caster, []))
                     if prior:
