@@ -10,11 +10,10 @@ back, all legal.
 This is a smoke test for the archetype, not for a mechanic: it asserts the deck
 is constructible (CR 100.2a, 100.4a) and that a game dealt from it has the sizes
 CR 103 requires (103.3 shuffle, 103.5 opening hand). The archetype's actual
-engine - Goryo's Vengeance reanimating Atraxa or Griselbrand - is not yet
-modelled; see `docs/deck-gaps/esper-goryo.md` and the xfail at the bottom.
+engine - Goryo's Vengeance reanimating Atraxa or Griselbrand - is exercised at
+the bottom; the card itself is played through a real board in
+`tests/scenarios/test_goryos_vengeance.py`.
 """
-
-import pytest
 
 from magic_cards_model.models import Deck, Game, Match, Player, Zone
 from tests.cards import card
@@ -155,20 +154,18 @@ def test_the_shuffle_is_seeded_and_two_seeds_deal_differently():
 # -- the archetype's actual engine ----------------------------------------
 
 
-@pytest.mark.xfail(
-    reason=(
-        "Goryo's Vengeance is not modelled. `effect_for` returns "
-        "`delayed_notice_only` for it: the paragraph's third sentence, "
-        "'Exile it at the beginning of the next end step', is a delayed "
-        "triggered ability (CR 603.7a) the engine cannot build, and an "
-        "ability resolves whole or fails closed, so the reanimation in the "
-        "first sentence never happens either. See docs/deck-gaps/esper-goryo.md."
-    ),
-    strict=True,
-)
 def test_goryos_vengeance_reanimates_a_legendary_creature():
     """The archetype's whole point: Goryo's Vengeance returns a legendary
-    creature card from the graveyard to the battlefield with haste."""
+    creature card from the graveyard to the battlefield with haste.
+
+    This was `xfail(strict=True)` for as long as the paragraph's third
+    sentence ("Exile it at the beginning of the next end step", a delayed
+    triggered ability - CR 603.7a) could not be built, which failed the whole
+    ability closed and took the reanimation in sentence one with it. The
+    clause is now built through `machines/delayed.py`'s anaphoric primitive;
+    `tests/scenarios/test_goryos_vengeance.py` plays the card through a real
+    board and a real end step.
+    """
     from magic_cards_model.machines.effects import effect_for
 
     vengeance = card("Goryo's Vengeance")
