@@ -14,6 +14,9 @@ Sourced from the DDR judge transcripts. Episodes covered:
   Dress Down anything to strip)
 - **DDR#982** - Double Innkeeper's Talent (two static abilities granting the
   same keyword make two independent instances of it - not modelled)
+- **DDR#994** - Toph, the First Metalbender + Blood Moon (two layer 4 effects
+  where one changes the set of objects the other applies to - CR 613.8's
+  dependency, which overrides timestamps)
 
 `Game` does not consult `machines/layers.py` at all, so the cases that need the
 board and the layer engine to agree are written through the harness and xfail on
@@ -27,6 +30,7 @@ import pytest
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.layers import compute_board, effects_for, static_effects
 from magic_cards_model.models import Zone
+from magic_cards_model.models.card import Type
 from tests.cards import card_state
 from tests.scenarios.harness import Scenario
 
@@ -330,3 +334,73 @@ def test_two_innkeepers_talents_grant_two_separate_ward_instances():
     # either present once or absent, so a second independent instance cannot
     # be told apart from the first with anything the model exposes today.
     assert board.of(bear).abilities.count("Ward {1}") == 2
+
+
+# --------------------------------------------------------------------------
+# DDR#994 - Toph + Blood Moon: a dependency inside layer 4
+# --------------------------------------------------------------------------
+
+
+def test_blood_moon_alone_leaves_an_artifact_alone():
+    """The control for the episode: without Toph, Sol Ring is not a land, so
+    Blood Moon has nothing to say about it.
+
+    Blood Moon ("Nonbasic lands are Mountains", confirmed with `resolve_cards`)
+    is one of the layer 4 effects (CR 613.1d: "Type-changing effects are
+    applied. These include effects that change an object's card type, subtype,
+    and/or supertype"), and it already works on a real nonbasic land. This test
+    pins the half that does work, so the xfail below is unambiguously about the
+    dependency and not about Blood Moon.
+    """
+    scenario = (
+        Scenario().player("alice", battlefield=["Blood Moon", "Urza's Tower", "Sol Ring"]).build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    tower = scenario.find("Urza's Tower", Zone.BATTLEFIELD, "alice")
+    sol_ring = scenario.find("Sol Ring", Zone.BATTLEFIELD, "alice")
+
+    assert scenario.game.characteristics_of(tower).subtypes == ("Mountain",)
+    assert scenario.game.characteristics_of(sol_ring).subtypes == ()
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason="Toph, the First Metalbender's 'Nontoken artifacts you control are "
+    "lands in addition to their other types' has no row in "
+    "`machines/layers.LAYER_EFFECTS` and is not one of `parsed_layer_effects`' "
+    "shapes either, so it generates no continuous effect at all: Sol Ring's "
+    "characteristics are unchanged whether Toph is on the battlefield or not. "
+    "With one of the two layer 4 effects missing there is no dependency for "
+    "CR 613.8 to resolve, so this episode's ordering question cannot be reached.",
+)
+def test_toph_makes_artifacts_lands_and_blood_moon_then_makes_them_mountains():
+    """DDR#994: Blood Moon depends on Toph, so it waits for it (CR 613.8).
+
+    Both effects are layer 4 (CR 613.1d). CR 613.8: "Within a layer or
+    sublayer, determining which order effects are applied in is sometimes done
+    using a dependency system. If a dependency exists, it will override the
+    timestamp system" - and CR 613.8b: "An effect dependent on one or more
+    other effects waits to apply until just after all of those effects have
+    been applied."
+
+    Applying Toph first turns Sol Ring into a land, which changes the set of
+    objects Blood Moon's effect applies to; applying Blood Moon first changes
+    nothing about what Toph applies to. So Blood Moon is the dependent one and
+    goes second, and Sol Ring ends up an artifact land named for the Mountain
+    subtype - keeping its artifact card type, since Toph's effect is worded "in
+    addition to their other types". The episode is explicit that this outcome
+    does not depend on who controls Blood Moon, whose turn it is, or the order
+    the permanents entered.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Toph, the First Metalbender", "Blood Moon", "Sol Ring"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sol_ring = scenario.find("Sol Ring", Zone.BATTLEFIELD, "alice")
+    characteristics = scenario.game.characteristics_of(sol_ring)
+
+    assert Type.ARTIFACT in characteristics.types
+    assert Type.LAND in characteristics.types
+    assert characteristics.subtypes == ("Mountain",)
