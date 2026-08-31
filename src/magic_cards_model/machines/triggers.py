@@ -48,6 +48,7 @@ never *wrongly* fired. The shapes understood are listed on `condition_matches`.
 
 import operator
 import re
+from collections.abc import Sequence
 from enum import StrEnum
 from typing import TYPE_CHECKING, Any
 from uuid import UUID, uuid4
@@ -64,6 +65,7 @@ from .abilities import (
     TriggerEvent,
     intrinsic_land_ability,
     parse_abilities,
+    parse_granted_ability_lines,
 )
 from .turn import Step
 
@@ -1641,6 +1643,26 @@ def activated_abilities_of(card: Card, face: str | None = None) -> list[Activate
         return printed
     intrinsic = intrinsic_land_ability(card, face)
     return [intrinsic] if intrinsic is not None else []
+
+
+def granted_activated_abilities_of(texts: Sequence[str]) -> list[ActivatedAbility]:
+    """`CardState.granted_ability_texts`'s own activated lines, read the same
+    way `activated_abilities_of` reads a card's printed ones.
+
+    Urza's Saga's chapter II - "This Saga gains '{2}, {T}: Create a 0/0
+    colorless Construct artifact creature token ...'" - is the reason this
+    exists: without it, a granted activated ability would sit on `CardState.
+    granted_ability_texts` fully parsed and completely unreachable, since
+    `Game.activate_ability` only ever indexes `activated_abilities_of`'s own
+    printed-card list. Callers append this to that list (never replace it),
+    the same "additional to what is printed" convention `granted_mana_
+    abilities` documents for the mana half.
+    """
+    return [
+        ability
+        for ability in parse_granted_ability_lines(texts)
+        if isinstance(ability, ActivatedAbility)
+    ]
 
 
 def triggers_for(game: "Game", event: GameEvent, sources: list[CardState]) -> list[AbilityOnStack]:

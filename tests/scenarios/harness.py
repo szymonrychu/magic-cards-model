@@ -17,7 +17,7 @@ card data, since the point of these tests is that they run against real cards.
 """
 
 from magic_cards_model.machines import Casting, CostPayment, PriorityOutcome, Step, TurnMachine
-from magic_cards_model.machines.abilities import parse_mana_abilities
+from magic_cards_model.machines.abilities import granted_mana_abilities, parse_mana_abilities
 from magic_cards_model.machines.decisions import (
     CardSplit,
     Decision,
@@ -45,7 +45,12 @@ def mana_from(source: CardState, color: Color | None = None) -> list[Color]:
     that's up, so Witch Enchanter sitting front face up (a creature) must not
     read Witch-Blessed Meadow's `{T}: Add {W}.` off the card's other half.
     """
-    abilities = parse_mana_abilities(source.card, source.up_face_name)
+    # Plus `CardState.granted_ability_texts`'s own `{T}: Add ...` lines - see
+    # `granted_mana_abilities`'s own docstring; Urza's Saga's chapter I grant
+    # is the pool's only source of these.
+    abilities = parse_mana_abilities(source.card, source.up_face_name) + granted_mana_abilities(
+        source.granted_ability_texts
+    )
     if not abilities:
         raise ValueError(f"{source.card.name} has no mana ability")
 

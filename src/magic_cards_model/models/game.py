@@ -101,6 +101,7 @@ from ..machines.layers import (
     LayerContext,
     LayerNotice,
     additional_land_plays,
+    count_card_types,
 )
 from ..machines.modes import substitute_x
 from ..machines.priority import PriorityMachine, PriorityOutcome
@@ -125,6 +126,7 @@ from ..machines.triggers import (
     TargetingNoticeKind,
     activated_abilities_of,
     apnap_order,
+    granted_activated_abilities_of,
     intervening_if_holds,
     tapped_for_mana_event,
     triggers_for,
@@ -338,6 +340,17 @@ _ACTIVATE_ONLY_IF_POWER = re.compile(
 _ACTIVATE_ONLY_IF_ENTERED_THIS_TURN = re.compile(
     r"activate only if (?P<count>\w+) or more creatures entered the battlefield "
     r"under your control this turn",
+    re.IGNORECASE,
+)
+#: Shifting Woodland's own *Delirium* activation gate: "Activate only if
+#: there are four or more card types among cards in your graveyard."
+#: CR 207.2c: *Delirium* is an ability word with no rules meaning of its
+#: own - the whole restriction is this one sentence, the activated-ability
+#: cousin of Unholy Heat's/Violent Urge's *delirium* clauses (which gate a
+#: resolution effect and a static ability instead of an activation).
+_ACTIVATE_ONLY_IF_DELIRIUM = re.compile(
+    r"activate only if there (?:is|are) (?P<count>\w+) or more card types "
+    r"among cards in your graveyard",
     re.IGNORECASE,
 )
 _CONDITION_COUNT_WORDS: dict[str, int] = {
@@ -2277,12 +2290,16 @@ class Game(BaseModel):
 
     def _activated_index(self, ability: AbilityOnStack) -> int | None:
         source = ability.source(self)
-        card = source.card if source is not None else None
-        if card is None or source is None:
+        if source is None or source.card is None:
             return None
-        # The same face `Game.activated_abilities` lists (CR 712.8d, 712.8e),
-        # or the indexes disagree the moment a permanent is transformed.
-        for index, printed in enumerate(activated_abilities_of(card, source.up_face_name)):
+        # `self.activated_abilities` now, not `activated_abilities_of` on the
+        # bare card directly - it is the one place printed and
+        # `CardState.granted_ability_texts` abilities are already combined
+        # (Urza's Saga chapter II's own granted token-making ability), and
+        # this index has to agree with that same combined, ordered list or a
+        # granted ability's index would disagree with the one `activate_
+        # ability` used to put it on the stack in the first place.
+        for index, printed in enumerate(self.activated_abilities(source)):
             if printed.text == ability.ability.text:
                 return index
         return None
@@ -3909,7 +3926,20 @@ class Game(BaseModel):
             return None
 
         if isinstance(spell, AbilityOnStack):
-            profile = profile_for_text(spell.ability.text)
+            # `x_value` substituted first, the same reason `activate_ability`
+            # and `create_continuous_effect_of_ability` both do it before
+            # building a profile off this ability's text - The Mycosynth
+            # Gardens' own "target nontoken artifact you control with mana
+            # value X" is a real restriction once X is known, not an
+            # unreadable one, and a re-check that used the literal "X" would
+            # judge every legal target illegal (`comparison_value=None`
+            # matches nothing) rather than treat the restriction as read.
+            ability_text = (
+                substitute_x(spell.ability.text, spell.x_value)
+                if isinstance(spell.ability, ActivatedAbility) and "{X}" in spell.ability.cost
+                else spell.ability.text
+            )
+            profile = profile_for_text(ability_text)
             if not profile.understood or not profile.requirements:
                 return thing
             caster = spell.controller
@@ -5680,7 +5710,7 @@ class Game(BaseModel):
     # -- activated abilities (CR 602) --------------------------------------
 
     def activated_abilities(self, permanent: CardState) -> list[ActivatedAbility]:
-        """Every activated ability printed on this permanent, in printed order.
+        """Every activated ability this permanent has, printed then granted.
 
         CR 602.1: an activated ability is written `[Cost]: [Effect.]
         [Activation instructions (if any).]`. The index into this list is what
@@ -5691,8 +5721,16 @@ class Game(BaseModel):
         `−4` and nothing else, and Duskwatch Recruiter loses its `{2}{G}` look
         the moment it becomes Krallenhorde Howler. `_activated_index` reads the
         same face, so an ability's index stays the index of this list.
+
+        Printed abilities come first, then `CardState.granted_ability_texts`'s
+        own - Urza's Saga's chapter II grant ("This Saga gains '{2}, {T}:
+        Create a 0/0 colorless Construct artifact creature token ...'") is the
+        only source of these in the pool. Appending rather than interleaving
+        keeps a printed ability's own index stable as more get granted.
         """
-        return activated_abilities_of(permanent.card, permanent.up_face_name)
+        return activated_abilities_of(
+            permanent.card, permanent.up_face_name
+        ) + granted_activated_abilities_of(permanent.granted_ability_texts)
 
     def why_cannot_activate(
         self, permanent: CardState, index: int = 0, controller: str | None = None
@@ -5870,6 +5908,12 @@ class Game(BaseModel):
                     if state.is_creature and state.turn_entered == turn_number
                 )
                 return entered >= needed
+
+        match = _ACTIVATE_ONLY_IF_DELIRIUM.search(instructions)
+        if match is not None:
+            needed = _CONDITION_COUNT_WORDS.get(match.group("count").lower())
+            if needed is not None:
+                return count_card_types(self.player(controller).graveyard) >= needed
 
         return True
 
@@ -6428,7 +6472,17 @@ class Game(BaseModel):
         # identical to the process for casting a spell", so CR 601.2c applies -
         # the targets are announced and checked here, against the ability's own
         # text rather than the card's spell text (CR 113.1c).
-        profile = profile_for_text(ability.text)
+        #
+        # `x_value` is substituted in first when the printed cost carries an
+        # {X} at all (CR 107.3a: X is announced as part of paying the cost,
+        # CR 601.2b/602.2b, a step already finished by the time targets are
+        # announced, CR 601.2c) - The Mycosynth Gardens' own "target nontoken
+        # artifact you control with mana value X" is unreadable by `machines/
+        # targeting.py` with a literal "X" still in it (nothing there resolves
+        # a bare letter to a number), so without this every such target would
+        # be refused outright rather than checked against the real, paid X.
+        text = substitute_x(ability.text, x_value) if "{X}" in ability.cost else ability.text
+        profile = profile_for_text(text)
         if profile.understood and profile.requirements:
             profile.check(list(targets or []), controller, self, source_id=permanent.id)
 

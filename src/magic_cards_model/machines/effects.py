@@ -82,7 +82,7 @@ from ..models.token import (
 )
 from ..models.zone import Zone
 from . import combat as combat_rules
-from .abilities import TriggerEvent, self_normalized_effect_text
+from .abilities import ActivatedAbility, TriggerEvent, self_normalized_effect_text
 from .casting import PlayAction, finish_suspend, remove_suspend_time_counter
 from .casting_restrictions import create_targeted_cant_cast_restriction, parse_casting_rule_clause
 from .decisions import Decision, DecisionKind
@@ -387,7 +387,19 @@ def create_continuous_effect_of_ability(game: "Game", ability: AbilityOnStack) -
     source = ability.source(game)
     if source is None or source.zone is not Zone.BATTLEFIELD:
         return
-    profile = profile_for_text(ability.ability.text)
+    # `x_value` substituted in first when the ability's own printed cost
+    # carries an {X} (CR 107.3a, announced before targets are chosen -
+    # CR 601.2b/602.2b then CR 601.2c) - The Mycosynth Gardens' own "target
+    # nontoken artifact you control with mana value X" is unreadable by
+    # `profile_for_text` with a literal "X" left in it, which without this
+    # would make `requires_target` false and silently fall back to `[source]`
+    # (the Gardens targeting itself) instead of the real, paid X.
+    ability_text = (
+        substitute_x(ability.ability.text, ability.x_value)
+        if isinstance(ability.ability, ActivatedAbility) and "{X}" in ability.ability.cost
+        else ability.ability.text
+    )
+    profile = profile_for_text(ability_text)
     requires_target = profile.understood and bool(profile.requirements)
     targets = game.resolve_card_targets(ability) if requires_target else [source]
     if not targets:
@@ -2336,6 +2348,13 @@ _SEARCH_AND_PUT_RE = re.compile(
     r"search (?:your|their) library for (?:a|an) (?P<quality>.+?) card"
     r"(?P<basic_land_type> with a basic land type)?"
     r"(?: with mana value (?P<max_mv>\d+) or less)?"
+    # Urza's Saga chapter III's own phrasing: "an artifact card with mana
+    # cost {0} or {1}". CR 202.3a makes mana value a non-negative integer, so
+    # naming the two literal costs a mana value can take is the identical set
+    # `_bounded_quality_matcher`'s own "N or less" already reads;
+    # `_search_and_place_for` folds this group into `max_mv` rather than
+    # growing a second bound-reading code path for it.
+    r"(?P<mana_cost_0_or_1> with mana cost \{0\} or \{1\})?"
     r"(?:, reveal it)?"
     r", put (?:it|that card) (?P<dest>into your hand|onto the battlefield(?P<tapped> tapped)?)"
     r"(?:, then shuffle)?\.?",
@@ -2499,6 +2518,11 @@ def _search_and_place_for(
     """
     quality = match.group("quality")
     max_mv = match.group("max_mv")
+    if max_mv is None and match.groupdict().get("mana_cost_0_or_1"):
+        # "with mana cost {0} or {1}" (Urza's Saga chapter III) - see
+        # `_SEARCH_AND_PUT_RE`'s own comment for why this is the same bound
+        # as "mana value 1 or less".
+        max_mv = "1"
     matches = _bounded_quality_matcher(quality, max_mv)
     description = _quality_description(quality, max_mv)
     if match.groupdict().get("basic_land_type"):
@@ -4189,6 +4213,147 @@ def _parse_untap_self_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "Whenever a permanent you control enters tapped, untap it." (Amulet of
+#: Vigor). CR 603.10's "it" points back at whatever the trigger's own
+#: condition named - the permanent `TriggerEvent.ENTERS_THE_BATTLEFIELD`
+#: recorded as `GameEvent.subject_id` - not a "target permanent" (CR 115.1):
+#: the ability's own printed text never says "target", so there is nothing
+#: for `machines/targeting.py` to check and nothing on `AbilityOnStack.
+#: targets` to read. This is the *general* shape ("it" naming the trigger's
+#: own subject with no target and no source-only "this"), not an Amulet of
+#: Vigor-only row, so any future "Whenever ..., untap it." prints on this
+#: same shape without a new entry.
+_UNTAP_TRIGGER_SUBJECT_RE = re.compile(r"^untap it\.?$", re.IGNORECASE)
+
+
+def _parse_untap_trigger_subject_clause(text: str) -> AbilityEffect | None:
+    """`_UNTAP_TRIGGER_SUBJECT_RE`'s shape - Amulet of Vigor's "Whenever a
+    permanent you control enters tapped, untap it."
+
+    Untapping here is CR 701.26b, unconditional: CR 701.43a's exert only
+    withholds *the untap step's own* untap (CR 701.43b), never one an effect
+    performs, so `exert_applies=False` is used - the same choice
+    `machines/effects.py` already makes for its other non-untap-step untaps.
+    Two copies of Amulet of Vigor each carry their own `TriggeredAbility` and
+    each independently matches the same entering-tapped event
+    (`machines/triggers.condition_matches`'s ordinary CR 603.3b handling), so
+    two Amulets untapping the same permanent twice falls out of the existing
+    multi-trigger machinery with no special case needed here.
+    """
+    if _UNTAP_TRIGGER_SUBJECT_RE.fullmatch(text.strip()) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        event = ability.event
+        if event is None or event.subject_id is None:
+            return
+        subject = game.find_by_id(event.subject_id)
+        if subject is not None and subject.zone is Zone.BATTLEFIELD:
+            subject.untap(exert_applies=False)
+
+    return effect
+
+
+#: "When this land enters, return a land you control to its owner's hand."
+#: (Gruul Turf, Simic Growth Chamber, and every other "Karoo"-cycle bounce
+#: land - the shape generalises past this batch's two prints). CR 608.2d: no
+#: "target" is named, so the controller picks any land they control,
+#: including this one, as the ability resolves.
+_RETURN_A_LAND_YOU_CONTROL_RE = re.compile(
+    r"^return a land you control to (?:its|their) owner'?s hand\.?$", re.IGNORECASE
+)
+
+
+def _parse_return_a_land_you_control_clause(text: str) -> AbilityEffect | None:
+    """`_RETURN_A_LAND_YOU_CONTROL_RE`'s shape - a Karoo-cycle bounce land's
+    own ETB trigger.
+
+    CR 608.2d's controller-chosen "a land you control" is `DecisionKind.
+    CHOOSE_CARDS` over `game.permanents_controlled_by(controller)` filtered to
+    `Type.LAND`, the same `MAY` + `CHOOSE_CARDS` shape `_parse_imprint_clause`
+    already uses for a hand card - here there is no `MAY` half, because the
+    instruction is mandatory and always has at least one legal answer: the
+    land that is resolving this very trigger is itself a land its controller
+    controls (CR 110.5) by the time this runs, so the candidate set is never
+    empty. `game.return_to_hand` is CR 701.19a's own "return", the same
+    primitive `machines/delayed.py`'s own return-to-hand callbacks use.
+    """
+    if _RETURN_A_LAND_YOU_CONTROL_RE.fullmatch(text.strip()) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = ability.controller
+        candidates = [
+            state for state in game.permanents_controlled_by(controller) if Type.LAND in state.types
+        ]
+        if not candidates:
+            return
+        source_name = ability.source_name
+        chosen_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=controller,
+                prompt="return a land you control to its owner's hand",
+                source=source_name,
+                amount=1,
+                cards=tuple(state.id for state in candidates),
+            )
+        )
+        assert isinstance(chosen_ids, tuple)
+        by_id = {state.id: state for state in candidates}
+        chosen = by_id[chosen_ids[0]]
+        game.return_to_hand(chosen)
+
+    return effect
+
+
+#: "This Saga gains "{T}: Add {C}."" (Urza's Saga, chapter I) and "This Saga
+#: gains "{2}, {T}: Create a 0/0 colorless Construct artifact creature token
+#: with 'This token gets +1/+1 for each artifact you control.'"" (chapter
+#: II) - CR 113.10's own "gains" wording for an added ability, self-
+#: referential ("this Saga") rather than Urza's Saga-only, so any future
+#: "This <noun> gains "<ability>"." grant reads through this same parser.
+#: The `[a-z]+` subject is deliberately unconstrained to a whitelist: CR
+#: 113.10 does not care what kind of object gains the ability, only that the
+#: quoted text is the whole of it.
+_GAINS_ABILITY_RE = re.compile(
+    r'^this [a-z]+ gains "(?P<ability>.+)"\.?$', re.IGNORECASE | re.DOTALL
+)
+
+
+def _parse_gains_ability_clause(text: str) -> AbilityEffect | None:
+    """`_GAINS_ABILITY_RE`'s shape.
+
+    CR 113.10a: "An effect that adds an activated ability may include
+    activation instructions for that ability. These instructions become part
+    of the ability that's added to the object" - the quoted text is stored
+    verbatim on `CardState.granted_ability_texts` and read back by
+    `machines/abilities.parse_granted_ability_lines` exactly as
+    `machines/abilities.parse_abilities` reads a card's own printed line, so
+    whatever shape that line is (a mana ability, an ordinary activated
+    ability) comes out the other side the same way a printed one would.
+
+    Idempotent - a repeat grant of text already present is not appended
+    twice - though nothing in the pool actually re-triggers this (a Saga's
+    own chapter abilities each fire once, CR 714.4/704.5s).
+    """
+    match = _GAINS_ABILITY_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    granted_text = match.group("ability").strip()
+    if not granted_text:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        if granted_text not in source.granted_ability_texts:
+            source.granted_ability_texts = (*source.granted_ability_texts, granted_text)
+
+    return effect
+
+
 #: "Remove a time counter from this card." - Greater Gargadon's own second
 #: ability, CR 702.62a's second ability spelled out on the card itself rather
 #: than left to suspend's own reminder text. Unlike `_COUNTER_ON_SELF_RE`
@@ -5529,9 +5694,18 @@ def _parse_token_tail(tail: str | None) -> tuple[tuple[str, ...], str | None] | 
 
     Two shapes: a single quoted ability, printed on the token as its
     `rules_text` exactly as the card prints it - Drowner of Truth's "with
-    'Sacrifice this token: Add {C}.'" - CR 111.3 makes that quoted sentence the
-    token's stated text and this is a faithful transcription of it, not a
-    hand-written ability. Or a comma/"and"-joined list of bare keywords from
+    \"Sacrifice this token: Add {C}.\"" - CR 111.3 makes that quoted sentence
+    the token's stated text and this is a faithful transcription of it, not a
+    hand-written ability. The quote mark itself may be either a straight or
+    curly double quote (Drowner's own printing) *or* a straight or curly
+    single quote - Urza's Saga chapter II's own "Create a 0/0 colorless
+    Construct artifact creature token with 'This token gets +1/+1 for each
+    artifact you control.'" is a token ability nested one quoting level
+    *inside* the whole chapter's own double-quoted grant (CR 113.10a), so its
+    own tail is printed with single quotes to avoid a double quote inside a
+    double quote - the identical convention Scryfall's own oracle text uses
+    everywhere else in the game (double at the outer level, single one level
+    deeper). Or a comma/"and"-joined list of bare keywords from
     `_TOKEN_KEYWORDS` - Spectral Procession's "with flying", Wurmcoil Engine's
     "with deathtouch"/"with lifelink". Nothing else is read: a tail that is
     neither, or that mixes a keyword with something else (Hangarback Walker's
@@ -5545,7 +5719,7 @@ def _parse_token_tail(tail: str | None) -> tuple[tuple[str, ...], str | None] | 
     if tail is None:
         return (), None
     tail = tail.strip()
-    if quote := re.fullmatch(r'["“](?P<text>.+)["”]', tail, re.DOTALL):
+    if quote := re.fullmatch(r"""["“'‘](?P<text>.+)["”'’]""", tail, re.DOTALL):
         return (), quote.group("text")
     parts = [part.strip() for part in re.split(r",\s*|\s+and\s+", tail) if part.strip()]
     if not parts:
@@ -6435,6 +6609,43 @@ def _parse_mana_adding_trigger(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "When this land enters, add one mana of any color." (Crumbling Vestige).
+#: **Not** a mana ability - CR 605.1b requires a mana-producing trigger to
+#: fire "from the activation or resolution of an activated mana ability", and
+#: an enters-the-battlefield trigger fires from neither, so CR 605.5's own
+#: catch-all ("abilities that don't meet the criteria ... aren't mana
+#: abilities") applies: this is an ordinary triggered ability, goes on the
+#: stack, and can be responded to, unlike the land's own separate "{T}: Add
+#: {C}." mana ability parsed off its printed text by `machines/abilities.py`.
+_ADD_ONE_MANA_OF_ANY_COLOR_TRIGGER_RE = re.compile(r"^add one mana of any color\.?$", re.IGNORECASE)
+
+
+def _parse_add_one_mana_of_any_color_trigger(text: str) -> AbilityEffect | None:
+    """`_ADD_ONE_MANA_OF_ANY_COLOR_TRIGGER_RE`'s shape - Crumbling Vestige's
+    ETB trigger, and the general "add one mana of any color" trigger shape
+    with it.
+
+    CR 105.1/105.4: "any color" is one of the five colors - "if a player is
+    asked to choose a color, they must choose one of the five colors ...
+    [n]either is 'colorless'" - distinct from CR 106.1b's six *types* of mana
+    (the five colors plus colorless), which is why this is never read as a
+    sixth option. The choice is CR 608.2d's own, made as the ability
+    resolves, through the same `_choose_a_color`/`DecisionKind.CHOOSE_A_
+    QUALITY` helper Wild Mongrel's and Culling Ritual's colour choices
+    already use.
+    """
+    if _ADD_ONE_MANA_OF_ANY_COLOR_TRIGGER_RE.fullmatch(text.strip()) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = ability.controller
+        player = game.player(controller)
+        color = _choose_a_color(game, player, ability.source_name, "add one mana of any color")
+        player.mana_pool.add(color)
+
+    return effect
+
+
 #: "Sacrifice this <type> unless you pay {E}[{E}...]." (Static Prison) - a
 #: fixed-amount CR 107.14/118.3 energy cost that averts the sacrifice rather
 #: than causing a bonus. Only the self-referential "this <type>" subject is
@@ -6939,6 +7150,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     mana_adding = _parse_mana_adding_trigger(effect_text)
     if mana_adding is not None:
         return mana_adding
+    add_one_mana_of_any_color = _parse_add_one_mana_of_any_color_trigger(effect_text)
+    if add_one_mana_of_any_color is not None:
+        return add_one_mana_of_any_color
     transform_self = _parse_transform_clause(effect_text)
     if transform_self is not None:
         return transform_self
@@ -6974,6 +7188,15 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     untap_self = _parse_untap_self_clause(effect_text)
     if untap_self is not None:
         return untap_self
+    untap_trigger_subject = _parse_untap_trigger_subject_clause(effect_text)
+    if untap_trigger_subject is not None:
+        return untap_trigger_subject
+    return_a_land_you_control = _parse_return_a_land_you_control_clause(effect_text)
+    if return_a_land_you_control is not None:
+        return return_a_land_you_control
+    gains_ability = _parse_gains_ability_clause(effect_text)
+    if gains_ability is not None:
+        return gains_ability
     remove_time_counter_self = _parse_remove_time_counter_from_self_clause(effect_text)
     if remove_time_counter_self is not None:
         return remove_time_counter_self

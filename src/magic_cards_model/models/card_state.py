@@ -704,6 +704,27 @@ class CardState(BaseModel):
     dropped on some other zone change either.
     """
 
+    granted_ability_texts: tuple[str, ...] = ()
+    """Ability lines given to *this object specifically*, printed exactly as
+    the granting effect's own quoted text - "This Saga gains '{T}: Add
+    {C}.'" (Urza's Saga, chapter I). CR 611.1: a continuous effect lasts "for
+    a fixed or indefinite period", and CR 611.2a's own default for a
+    resolution effect that states no duration is indefinite rather than
+    until end of turn - and since nothing else in the pool ever removes a
+    granted ability, that default is modelled by simply never clearing this
+    tuple, not by a continuous effect that has to be reapplied every board
+    computation.
+
+    Kept apart from `Card.oracle_text` (immutable, CR 108.1 - a game object's
+    printing never changes) and from the layer engine's own `Characteristics.
+    abilities` (a *computed*, per-recompute view for text-driven checks like
+    `has_ability`): this tuple is what `machines/abilities.granted_abilities_
+    of` parses back into real `Ability` objects, and what `Game.
+    activated_abilities`/`machines/cost.py`'s mana-source lookup both fold in
+    alongside a card's own printed abilities, so a granted ability is not
+    just visible but actually usable - activatable, tappable for mana - the
+    same as one printed on the card."""
+
     zone_change_stamp: UUID = Field(default_factory=uuid4)
     """Which incarnation of this object we are on (CR 400.7).
 
