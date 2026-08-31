@@ -1247,14 +1247,43 @@ def cascade(game: Any, spell: CardState, seed: int | None = None) -> CascadeResu
     costs less. You may cast it without paying its mana cost. Put the exiled
     cards on the bottom in a random order.""
 
-    This is the exiling half and the bottoming half. Casting the hit is left to
-    the caller, because "you may" and there is nobody here to ask - the same
-    concession every optional trigger in this engine makes.
+    This is the exiling half, the "you may cast it" half, and the bottoming
+    half - all three, because a hit stranded in exile with no route back to
+    any zone (never offered the choice, never bottomed when declined) is
+    exactly the defect a real game hit: the trigger resolved, the exile pile
+    showed the hit and nothing else, and there it stayed forever.
+
+    **The choice** is CR 608.2d's own "the player announces these while
+    applying the effect" - asked right here, synchronously, with
+    `DecisionKind.MAY` (`docs/scenario-tests.md`'s "the same concession every
+    optional trigger in this engine makes" is the *unscripted default*, not a
+    dodge of the question: `default_answer` takes the affirmative whenever it
+    is legal, so an unscripted scenario still gets offered the free cast and
+    still takes it, exactly as it did before this question existed). Only
+    `why_cannot_cast_restriction` (CR 611.1's flat prohibitions) gates whether
+    "yes" is even a legal answer - not `why_cannot_cast_now`'s CR 117.1a
+    timing, which is a question about *when* the caller later drives the
+    actual cast through `Casting.use_permission()`, the same deferred,
+    caller-driven shape `machines/casting.finish_suspend` already uses, not a
+    question about whether cascade may offer the choice at all while its own
+    spell is still beneath it on the stack.
+
+    - **"yes"** grants a `PlayPermission` (CR 601.3's dynamic half, the same
+      primitive `finish_suspend` already hands out) for the hit, annotated
+      `ExileMarker.CASCADE` so a caller can find it again; the hit stays in
+      exile until the caller actually casts it.
+    - **"no"**, or "yes" refused because `affirmative_is_legal` was False -
+      goes straight onto the bottom, in the very same random shuffle the
+      misses get, exactly as CR 702.85a's single sentence says: nothing here
+      leaves a hit dangling on the strength of a choice that was never really
+      offered.
 
     The cards go to the bottom in a random order, which is a real shuffle of a
     known set rather than the library shuffle the engine does not model; `seed`
     pins it so a scenario stays reproducible.
     """
+    from .casting import PlayAction, why_cannot_cast_restriction  # casting imports this module
+
     controller = spell.controller or game.active_player.username
     owner = game.player(controller)
     threshold = spell.card.cmc
@@ -1269,7 +1298,31 @@ def cascade(game: Any, spell: CardState, seed: int | None = None) -> CascadeResu
             result.hit = state
             break
 
-    bottomed = [state for state in result.exiled if state is not result.hit]
+    cast_hit = False
+    if result.hit is not None:
+        restriction = why_cannot_cast_restriction(result.hit, owner.username, game)
+        decision = Decision(
+            kind=DecisionKind.MAY,
+            player=owner.username,
+            prompt=f"cast {result.hit.name} without paying its mana cost (cascade)",
+            source=spell.name,
+            affirmative_is_legal=restriction is None,
+        )
+        cast_hit = bool(game.ask(decision))
+        if cast_hit:
+            result.hit.exile_annotation = ExileAnnotation(
+                marker=ExileMarker.CASCADE, owner=owner.username
+            )
+            game.grant_play_permission(
+                result.hit,
+                owner.username,
+                action=PlayAction.CAST,
+                pays_mana_cost=False,
+                source_name=f"{spell.name}'s cascade",
+                rule="CR 702.85a",
+            )
+
+    bottomed = [state for state in result.exiled if not (cast_hit and state is result.hit)]
     random.Random(seed).shuffle(bottomed)
     for state in bottomed:
         game.exile.remove(state)

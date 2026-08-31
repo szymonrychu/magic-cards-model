@@ -40,6 +40,8 @@ is the authority.
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.abilities import TriggerEvent
+from magic_cards_model.machines.casting import Casting
+from magic_cards_model.machines.decisions import DecisionKind
 from magic_cards_model.machines.keywords import cascade, has_cascade, keyword_triggered_abilities
 from magic_cards_model.models import Zone
 from tests.cards import card
@@ -170,6 +172,105 @@ def test_the_hit_may_be_cast_from_exile_without_paying_its_mana_cost():
 
     assert result.hit.zone is Zone.STACK
     assert all(source.tapped for source in scenario.game.battlefield)
+
+
+def test_accepting_the_cascade_permission_casts_the_hit_through_the_real_engine():
+    """The reported defect, end to end: a real game log
+    (09d1f97f605c4eada0021ed441306e81, seq 150-157) showed Shardless Agent
+    cascade into Living End - the trigger resolved, the exile zone showed
+    exactly `["Living End"]` afterward - and then nothing: no "you may cast it
+    without paying its mana cost" choice was ever offered, and no route back
+    to any zone existed either, so Living End sat exiled forever.
+
+    `cascade` now asks (`DecisionKind.MAY`, CR 608.2d, "the player announces
+    these while applying the effect") and, on "yes", hands out a
+    `PlayPermission` (CR 601.3) the same way `machines/casting.finish_suspend`
+    already does for suspend's own free cast. This test drives the permission
+    through the *real* `Casting` machinery - `use_permission()`, paying the
+    (empty) cost, casting, resolving - rather than the manual `put_on_stack`
+    every other cascade test in this file uses as a shortcut, so it actually
+    proves the offered choice is usable, not just that a flag got set.
+    """
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Shardless Agent"],
+            library=["Living End"],
+            graveyard=["Grizzly Bears"],
+            battlefield=["Forest", "Island", "Forest"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.will_take_the_may(True, source="Shardless Agent")
+    cast_the_agent(scenario)
+
+    # Both stack objects resolve through the real engine - the cascade
+    # trigger (which asks the question and grants the permission), then
+    # Shardless Agent itself, so the stack is genuinely empty before Living
+    # End - a sorcery with no flash - is cast under CR 117.1a's own timing.
+    scenario.resolve_top()
+    scenario.resolve_top()
+
+    living_end = scenario.find("Living End", Zone.EXILE)
+    assert living_end.zone is Zone.EXILE
+
+    # The choice really was offered, not silently skipped (CR 608.2d).
+    asked = scenario.questions_asked()
+    assert any(
+        question.kind is DecisionKind.MAY and question.source == "Shardless Agent"
+        for question in asked
+    )
+
+    casting = Casting(spell=living_end, caster="alice", origin_zone=Zone.EXILE, game=scenario.game)
+    casting.use_permission()
+    assert casting.total_cost.mana.converted == 0
+    payment = casting.begin_paying()
+    payment.pay()
+    spell = casting.cast()
+    scenario.game.put_on_stack(spell, "alice")
+    spell.targets = []
+
+    scenario.resolve_top()  # Living End resolves
+
+    assert scenario.game.exile == []
+    assert "Grizzly Bears" in [state.name for state in scenario.game.battlefield]
+    assert spell.zone is Zone.GRAVEYARD
+
+
+def test_declining_the_cascade_permission_bottoms_the_hit_and_empties_exile():
+    """CR 702.85a's other half of the same sentence: "Put the exiled cards on
+    the bottom in a random order" applies to a declined hit exactly as it
+    applies to the misses - it is one of "the exiled cards", not a permanent
+    exception. Before this fix, cascade never asked the question and never
+    bottomed the hit under any circumstance, which is exactly the real-game
+    defect this file is named for: declining (or never being asked at all)
+    left the card exiled with no way back to any zone.
+    """
+    scenario = board("Living End").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.will_take_the_may(False, source="Shardless Agent")
+    agent = cast_the_agent(scenario)
+
+    result = cascade(scenario.game, agent, seed=0)
+
+    assert result.hit is not None
+    assert result.hit.name == "Living End"
+
+    # The choice was offered and declined - and the card is not stranded.
+    asked = scenario.questions_asked()
+    assert any(
+        question.kind is DecisionKind.MAY and question.source == "Shardless Agent"
+        for question in asked
+    )
+    assert scenario.game.exile == []
+    assert result.hit.zone is Zone.LIBRARY
+    assert result.hit in scenario.player("alice").library
+    assert result.hit.exile_annotation is None
+    assert scenario.game.play_permissions == []
 
 
 def test_cascade_is_a_triggered_ability_the_engine_can_produce():
