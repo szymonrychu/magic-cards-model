@@ -144,6 +144,15 @@ class DecisionKind(StrEnum):
     #: player has when asked), not a bool: declining is paying 0, which is
     #: always legal, and paying more than is available is not (CR 118.3).
     PAY_ENERGY_AMOUNT = "pay_energy_amount"
+    #: "You may pay any amount of life" (Necrodominance) - CR 119.4's
+    #: variable-amount cousin of `PAY_LIFE`, the same relationship
+    #: `PAY_ENERGY_AMOUNT` already has to `PAY_ENERGY`. The answer is an
+    #: `int` from 0 up to `Decision.amount` (the payer's life total when
+    #: asked, CR 119.4's "only if their life total is greater than or equal
+    #: to the amount of the payment" - paying down to exactly 0 is legal,
+    #: only *below* 0 is not); declining is paying 0, always legal
+    #: (CR 119.4b: "Players can always pay 0 life").
+    PAY_LIFE_AMOUNT = "pay_life_amount"
     #: Scry N: which of the looked-at cards go to the bottom (CR 701.22a).
     SCRY = "scry"
     #: Surveil N: which of them go to the graveyard (CR 701.25a).
@@ -187,6 +196,15 @@ class DecisionKind(StrEnum):
     #: that asks already knows, from the card's own printed text, and records
     #: it on `CardState.choice`'s own `ChoiceKind` once the answer comes back.
     CHOOSE_A_QUALITY = "choose_a_quality"
+    #: CR 603.3c/700.2b: "The controller of a modal triggered ability chooses
+    #: the mode(s) as part of putting that ability on the stack." Elder
+    #: Gargaroth's "Whenever this creature attacks or blocks, choose one -"
+    #: is the only printing in the pool, and it is always exactly one mode
+    #: (a plain "choose one", never "choose one or more"), so the answer is
+    #: one of `Decision.options` - the mode's own printed text - rather than
+    #: an index; `Decision.source` is the ability's source, same as every
+    #: other kind here.
+    CHOOSE_A_MODE = "choose_a_mode"
     #: "[Its owner] puts it on their choice of the top or bottom of their
     #: library" (Subtlety) - CR 608.2d's own choice, made by whichever player
     #: the effect names (CR 401.2's order otherwise fixed), not by the
@@ -307,12 +325,12 @@ def default_answer(decision: Decision) -> object:
         DecisionKind.PAY_MANA,
     ):
         return decision.affirmative_is_legal
-    if decision.kind is DecisionKind.PAY_ENERGY_AMOUNT:
-        # Paying nothing is always legal (the variable-amount floor CR 118.3
-        # never forbids), and is the least-committal answer - the same
-        # "leave it as it was" convention `SCRY`/`SURVEIL`'s "keep everything
-        # on top" default follows, not a claim that 0 is somehow the right
-        # amount for an unscripted player to pay.
+    if decision.kind in (DecisionKind.PAY_ENERGY_AMOUNT, DecisionKind.PAY_LIFE_AMOUNT):
+        # Paying nothing is always legal (CR 118.3's energy floor, CR 119.4b's
+        # life floor never forbid it), and is the least-committal answer - the
+        # same "leave it as it was" convention `SCRY`/`SURVEIL`'s "keep
+        # everything on top" default follows, not a claim that 0 is somehow
+        # the right amount for an unscripted player to pay.
         return 0
     if decision.kind is DecisionKind.PUT_ON_TOP_OR_BOTTOM:
         return True
@@ -347,6 +365,11 @@ def default_answer(decision: Decision) -> object:
         # something. The first offered option for a color choice; an empty
         # string for the other two, which offer none: there is no rule-backed
         # "first card name" or "first creature type" to reach for.
+        return decision.options[0] if decision.options else ""
+    if decision.kind is DecisionKind.CHOOSE_A_MODE:
+        # CR 700.2a's choice is mandatory too, same reasoning as
+        # CHOOSE_A_QUALITY just above: the first printed mode, not a
+        # judgement about which mode is best.
         return decision.options[0] if decision.options else ""
     return CardSplit()
 

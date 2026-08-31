@@ -111,7 +111,7 @@ from .layers import (
     set_colors,
     set_power_toughness,
 )
-from .modes import Mode, is_modal_text, modal_profile, substitute_x
+from .modes import Mode, is_modal_text, modal_profile, modal_profile_from_text, substitute_x
 from .targeting import TargetRequirement, profile_for_text
 from .triggers import AbilityOnStack, is_ability
 from .turn import Step
@@ -1616,6 +1616,30 @@ def damage_each_opponent(amount: int) -> AbilityEffect:
     return effect
 
 
+#: "Each opponent skips their next untap step." - Brine Elemental's own
+#: "turned face up" trigger (CR 702.37e, CR 614.10, CR 502.3).
+_EACH_OPPONENT_SKIPS_NEXT_UNTAP_RE = re.compile(
+    r"^each opponent skips their next untap step\.?$", re.IGNORECASE
+)
+
+
+def _parse_each_opponent_skips_next_untap_clause(text: str) -> AbilityEffect | None:
+    """`_EACH_OPPONENT_SKIPS_NEXT_UNTAP_RE`'s shape - Brine Elemental's whole
+    trigger. `Game.untap_step` is what actually consumes
+    `players_skipping_next_untap` (CR 614.10a: the skip waits for the first
+    occurrence that isn't itself skipped)."""
+    if _EACH_OPPONENT_SKIPS_NEXT_UNTAP_RE.fullmatch(text.strip()) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        for opponent in _opponents(game, ability.controller):
+            game.players_skipping_next_untap[opponent.username] = (
+                game.players_skipping_next_untap.get(opponent.username, 0) + 1
+            )
+
+    return effect
+
+
 def damage_each_creature(amount: int) -> AbilityEffect:
     """Extinguisher Battleship: "this Spacecraft deals 4 damage to each
     creature" (CR 119.3) - CR 102.2 has nothing to say here, since "each
@@ -1929,6 +1953,166 @@ def puts_graveyard_on_bottom_of_library(game: "Game", stack_object: "StackObject
         for card_state in cards:
             target.move(card_state, Zone.LIBRARY)
         game.shuffles_performed += 1
+
+
+#: "Look at the top N cards of your library. Exile one of them face down
+#: and put the rest on the bottom of your library in a random order." -
+#: `machines/keywords._hideaway_ability`'s own expansion of "Hideaway N"
+#: (CR 702.75a), read here off that generated text with no per-card row -
+#: any future card printing hideaway is covered the same way.
+_HIDEAWAY_LOOK_EXILE_ONE_RE = re.compile(
+    r"^look at the top (?P<n>\d+) cards of your library\. "
+    r"exile one of them face down and put the rest on the bottom of your "
+    r"library in a random order\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_hideaway_clause(text: str) -> AbilityEffect | None:
+    """`_HIDEAWAY_LOOK_EXILE_ONE_RE`'s shape (CR 702.75a).
+
+    The exiled card is tagged `ExileMarker.HIDEAWAY`, linked back to this
+    permanent's own id (`ExileAnnotation.linked_permanent_id`), so a later
+    ability printed on the same card (Fight Rigging's own beginning-of-combat
+    trigger) can find it again by source rather than by name. Left face down
+    (`CardState.face_up = False`, CR 406.3) with no `FaceDownCharacteristics`
+    of its own - hideaway is not morph, and nothing in this pool casts a
+    hidden-away card face down the way CR 708 lets a morphed one be.
+    """
+    match = _HIDEAWAY_LOOK_EXILE_ONE_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    n = int(match.group("n"))
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = game.player(ability.controller)
+        looked = list(player.library[:n])
+        if not looked:
+            return
+        chosen_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=player.username,
+                prompt="choose a card to exile face down",
+                source=ability.source_name,
+                amount=1,
+                cards=tuple(state.id for state in looked),
+            )
+        )
+        assert isinstance(chosen_ids, tuple)
+        by_id = {state.id: state for state in looked}
+        chosen = by_id[chosen_ids[0]]
+        rest = [state for state in looked if state is not chosen]
+
+        player.cards_in(Zone.LIBRARY).remove(chosen)
+        chosen.move_to(Zone.EXILE)
+        chosen.face_up = False
+        chosen.exile_annotation = ExileAnnotation(
+            marker=ExileMarker.HIDEAWAY, owner=chosen.owner, linked_permanent_id=ability.source_id
+        )
+        game.exile.append(chosen)
+
+        rng = Random(f"{game.shuffle_seed}:{game.shuffles_performed}:hideaway")  # noqa: S311
+        rng.shuffle(rest)
+        for state in rest:
+            player.move(state, Zone.LIBRARY)
+        if rest:
+            game.shuffles_performed += 1
+
+    return effect
+
+
+#: "Put a +1/+1 counter on target creature you control. Then if you control
+#: a creature with power 7 or greater, you may play the exiled card without
+#: paying its mana cost." - Fight Rigging's own beginning-of-combat trigger,
+#: read as one CR 608.2c instruction: the counter always happens, and only
+#: then is the board rechecked (CR 608.2c's "then" orders the two parts, and
+#: CR 608.2b/608.2c evaluates a mid-effect condition against the game state
+#: as it exists at that point in resolution - after the counter was placed,
+#: not before) for whether the free-cast permission is on offer at all.
+_HIDEAWAY_COUNTER_THEN_CONDITIONAL_FREE_CAST_RE = re.compile(
+    r"^put a \+1/\+1 counter on target creature you control\. "
+    r"then if you control a creature with power (?P<threshold>\d+) or greater, "
+    r"you may play the exiled card without paying its mana cost\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_hideaway_counter_then_conditional_free_cast_clause(text: str) -> AbilityEffect | None:
+    """`_HIDEAWAY_COUNTER_THEN_CONDITIONAL_FREE_CAST_RE`'s shape - Fight
+    Rigging's whole beginning-of-combat trigger (CR 122.1a's counter;
+    CR 601.3's permission to play a specific card, granted here rather than
+    with `Game.grant_play_permission` because the text names no duration -
+    the permission exists only as this ability itself resolves).
+
+    "The exiled card" is CR 400.7 anaphora back to hideaway's own exile
+    (`ExileMarker.HIDEAWAY`, `ExileAnnotation.linked_permanent_id` pointing
+    at this same source) - the *only* card this permanent could mean, since
+    it is the one card hideaway ever hid.
+    """
+    match = _HIDEAWAY_COUNTER_THEN_CONDITIONAL_FREE_CAST_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    threshold = int(match.group("threshold"))
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        for target in game.resolve_targets(ability):
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
+                game.add_counters(target, Counter.PLUS_ONE, 1)
+
+        board = game.computed_board()
+        controls_big_creature = any(
+            Type.CREATURE in board.of(permanent).types
+            and (board.of(permanent).power or 0) >= threshold
+            for permanent in game.permanents_controlled_by(ability.controller)
+        )
+        if not controls_big_creature:
+            return
+
+        hidden = next(
+            (
+                card
+                for card in game.exile
+                if card.exile_annotation is not None
+                and card.exile_annotation.marker == ExileMarker.HIDEAWAY
+                and card.exile_annotation.linked_permanent_id == ability.source_id
+            ),
+            None,
+        )
+        if hidden is None:
+            return
+        if not game.may(
+            game.player(ability.controller),
+            "play the exiled card without paying its mana cost",
+            source=ability.source_name,
+        ):
+            return
+        game.cast_free_from_exile(hidden, ability.controller)
+
+    return effect
+
+
+#: "You may pay any amount of life. If you do, draw that many cards." -
+#: Necrodominance's own end-step trigger (CR 119.4, CR 118.12's "if you do").
+_PAY_ANY_LIFE_THEN_DRAW_THAT_MANY_RE = re.compile(
+    r"^you may pay any amount of life\. if you do, draw that many cards\.?$", re.IGNORECASE
+)
+
+
+def _parse_pay_any_life_then_draw_that_many_clause(text: str) -> AbilityEffect | None:
+    """`_PAY_ANY_LIFE_THEN_DRAW_THAT_MANY_RE`'s shape - Necrodominance's
+    whole end-step trigger, via `Game.pay_any_amount_of_life`
+    (`DecisionKind.PAY_LIFE_AMOUNT`, new this wave - see the report)."""
+    if _PAY_ANY_LIFE_THEN_DRAW_THAT_MANY_RE.fullmatch(text.strip()) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = game.player(ability.controller)
+        paid = game.pay_any_amount_of_life(player, source=ability.source_name)
+        if paid > 0:
+            game.draw_cards(player.username, paid)
+
+    return effect
 
 
 def tishanas_tidebinder(game: "Game", ability: AbilityOnStack) -> None:
@@ -2489,8 +2673,7 @@ def _discard_cards(game: "Game", player: Player, count: int, source: str) -> Non
     )
     assert isinstance(chosen_ids, tuple)
     by_id = {state.id: state for state in player.hand}
-    for card_id in chosen_ids:
-        player.discard(by_id[card_id])
+    game.discard_cards(player.username, [by_id[card_id] for card_id in chosen_ids], source=source)
 
 
 def _mill(game: "Game", player: Player, count: int) -> list[CardState]:
@@ -3616,6 +3799,60 @@ def _parse_untap_self_clause(text: str) -> AbilityEffect | None:
         source = ability.source(game)
         if source is not None and source.zone is Zone.BATTLEFIELD:
             source.untap()
+
+    return effect
+
+
+#: "double the number of `<kind>` counters on `<group>`" - Kalonian Hydra's
+#: own attack trigger doubles them on *every* creature its controller
+#: controls, not only itself, which is why this is a group shape
+#: (`_parse_put_counters_on_group_clause`'s own "each creature you control"
+#: vocabulary) rather than the self-only `_COUNTER_ON_SELF_RE` above. CR
+#: 701.10e: "To double the number of a kind of counters on a player or
+#: permanent, give that player or permanent as many of those counters as
+#: that player or permanent already has" - read here as one `add_counters`
+#: call per qualifying permanent, for however many it already carries (zero
+#: is a legal, silent no-op: doubling zero counters gives zero more).
+_DOUBLE_COUNTERS_ON_GROUP_RE = re.compile(
+    r"^double the number of (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters on "
+    r"(?:this \w+|each (?P<group>creature|artifact|permanent) you control)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_double_counters_on_group_clause(text: str) -> AbilityEffect | None:
+    """`_DOUBLE_COUNTERS_ON_GROUP_RE`'s shape - Kalonian Hydra's "double the
+    number of +1/+1 counters on each creature you control" (CR 701.10e).
+
+    Reads the group off the *computed* board (CR 613.5), the same
+    "you control" reading `_parse_put_counters_on_group_clause` already
+    applies, so a permanent turned into a creature this turn is doubled too
+    and one that stopped being one is not. "This `<noun>`" (no group named at
+    all) doubles only the source itself, since the regex's other branch
+    requires the "each ... you control" wording explicitly.
+    """
+    match = _DOUBLE_COUNTERS_ON_GROUP_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    kind = _counter_kind(match.group("kind"))
+    group_word = match.group("group")
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        if group_word is None:
+            source = ability.source(game)
+            targets = [source] if source is not None and source.zone is Zone.BATTLEFIELD else []
+        else:
+            board = game.computed_board()
+            targets = [
+                permanent
+                for permanent in game.permanents_controlled_by(ability.controller)
+                if Type.CREATURE in board.of(permanent).types
+            ]
+        for permanent in targets:
+            key = kind if isinstance(kind, str) else kind.value
+            current = permanent.counters[key]
+            if current:
+                game.add_counters(permanent, kind, current)
 
     return effect
 
@@ -5179,6 +5416,74 @@ def resolve_modal_spell(game: "Game", spell: CardState) -> None:
         spell.targets = original_targets
 
 
+def _resolve_modal_triggered_ability_clause(text: str) -> AbilityEffect | None:
+    """A modal *triggered* ability's own "choose one/two -" tail (CR 700.2,
+    603.3c) - Elder Gargaroth's "attacks or blocks, choose one -" is the only
+    printing in the pool.
+
+    Unlike `resolve_modal_spell`, there is no `Casting`/`CastRecord` here:
+    CR 603.3c puts the mode choice "as part of putting that ability on the
+    stack", a moment this project's engine does not yet have a hook for (see
+    `docs/engine-coverage.md`) - `Game.put_triggers_on_stack` chooses a
+    triggered ability's *targets* at that moment (CR 603.3d) but not its
+    modes. This reads the choice at **resolution** instead, one step later
+    than the rule places it, which only matters if something could observe
+    the ability sitting on the stack with its mode not yet chosen (nothing in
+    the pool does) - `DecisionKind.CHOOSE_A_MODE` is new this wave, so the
+    ability's controller may need to answer it live in a real game; see this
+    wave's report.
+
+    Only a plain "choose one" is read - `ModalProfile.allowed_range` other
+    than `(1, 1)` (Spree's per-mode costs, "choose one or more", pawprint)
+    leaves `profile.understood` False and this returns `None`, the same
+    fail-closed default every other unreadable modal shape gets.
+
+    `text` arrives whitespace-collapsed - `machines/abilities._strip_reminder`
+    runs `re.sub(r"\\s+", " ", ...)` on every printed line, `TriggeredAbility.
+    effect` included, which flattens the real newlines `_merge_modal_bullet_
+    lines` had just reassembled to keep the bullets attached to this ability
+    in the first place. `machines/modes._parse` reads bullets by
+    `splitlines()`, one `•` per line (CR 700.2's own printed shape), so those
+    newlines are put back here, right before each `•` marker, rather than
+    teaching two different modules two different bullet grammars.
+    """
+    text = re.sub(r"\s*•\s*", "\n• ", text).strip()
+    if not is_modal_text(text):
+        return None
+    profile = modal_profile_from_text(text)
+    if profile is None or not profile.understood or not profile.modes:
+        return None
+    if profile.allowed_range() != (1, 1):
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        options = tuple(mode.text for mode in profile.modes)
+        chosen_text = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_A_MODE,
+                player=ability.controller,
+                prompt="choose one",
+                source=ability.source_name,
+                options=options,
+            )
+        )
+        mode = next((m for m in profile.modes if m.text == chosen_text), profile.modes[0])
+        clause = parse_mixed_effect(mode.text)
+        if clause is None:
+            game.mode_notices.append(
+                ModeNotice(
+                    source_id=ability.source_id,
+                    source_name=ability.source_name,
+                    mode_number=mode.number,
+                    text=mode.text,
+                )
+            )
+            return
+        clause(game, ability)
+
+    return effect
+
+
 # --------------------------------------------------------------------------
 # Mixed targeted/player clauses in one effect
 # --------------------------------------------------------------------------
@@ -5764,6 +6069,59 @@ def _parse_mill_then_may_return_creature_clause(text: str) -> AbilityEffect | No
     return effect
 
 
+#: "Mill N cards. You may put a land card from among them into your hand." -
+#: Six's own attack trigger. "From among them" (CR 701.17c: a milled card is
+#: findable in the graveyard it moved to) narrows the candidate pool to the
+#: cards *this* mill just moved - not every land already in the graveyard -
+#: unlike `_MILL_THEN_MAY_RETURN_CREATURE_RE`'s "from your graveyard", which
+#: reads the whole pile.
+_MILL_THEN_MAY_PUT_LAND_IN_HAND_RE = re.compile(
+    rf"^mill (?P<n>{_COUNT}) cards?\.\s*"
+    r"you may put a land card from among them into your hand\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_mill_then_may_put_land_in_hand_clause(text: str) -> AbilityEffect | None:
+    """`_MILL_THEN_MAY_PUT_LAND_IN_HAND_RE`'s shape - Six's whole attack
+    trigger (CR 701.17a's mill, CR 701.17c's "among them", CR 608.2d's may).
+    """
+    match = _MILL_THEN_MAY_PUT_LAND_IN_HAND_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    count = _count(match.group("n"))
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = game.player(ability.controller)
+        milled = _mill(game, player, count)
+        candidates = [state for state in milled if Type.LAND in state.card.types]
+        if not candidates:
+            return
+        if not game.may(
+            player,
+            "put a land card from among them into your hand",
+            source=ability.source_name,
+        ):
+            return
+        chosen_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=player.username,
+                prompt="choose a land card to put into your hand",
+                source=ability.source_name,
+                amount=1,
+                cards=tuple(candidate.id for candidate in candidates),
+            )
+        )
+        assert isinstance(chosen_ids, tuple)
+        by_id = {candidate.id: candidate for candidate in candidates}
+        chosen = by_id[chosen_ids[0]]
+        if chosen.zone is Zone.GRAVEYARD:
+            player.move(chosen, Zone.HAND)
+
+    return effect
+
+
 #: "Transform this creature." / "Transform this permanent." - CR 701.27a's
 #: self-referential form, the only one the werewolves and their cousins print
 #: on the ability that does it. A clause naming some *other* permanent
@@ -6018,6 +6376,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     without this the whole ability would fall through every check below and
     come back `None`, exactly the reported defect.
     """
+    modal_triggered = _resolve_modal_triggered_ability_clause(effect_text)
+    if modal_triggered is not None:
+        return modal_triggered
     outside_the_game = _parse_outside_the_game_fetch(effect_text)
     if outside_the_game is not None:
         return outside_the_game
@@ -6071,6 +6432,14 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     adapt = _parse_adapt_clause(effect_text)
     if adapt is not None:
         return adapt
+    double_counters_on_group = _parse_double_counters_on_group_clause(effect_text)
+    if double_counters_on_group is not None:
+        return double_counters_on_group
+    defending_player_reveals_top_land = _parse_defending_player_reveals_top_conditional_land_clause(
+        effect_text
+    )
+    if defending_player_reveals_top_land is not None:
+        return defending_player_reveals_top_land
     untap_self = _parse_untap_self_clause(effect_text)
     if untap_self is not None:
         return untap_self
@@ -6088,6 +6457,36 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     mill_then_may_return_creature = _parse_mill_then_may_return_creature_clause(effect_text)
     if mill_then_may_return_creature is not None:
         return mill_then_may_return_creature
+    mill_then_may_put_land_in_hand = _parse_mill_then_may_put_land_in_hand_clause(effect_text)
+    if mill_then_may_put_land_in_hand is not None:
+        return mill_then_may_put_land_in_hand
+    damage_to_that_spells_controller = _parse_damage_to_that_spells_controller_clause(effect_text)
+    if damage_to_that_spells_controller is not None:
+        return damage_to_that_spells_controller
+    pump_per_discard_then_delayed_draw = _parse_pump_per_discard_then_delayed_draw_clause(
+        effect_text
+    )
+    if pump_per_discard_then_delayed_draw is not None:
+        return pump_per_discard_then_delayed_draw
+    each_opponent_skips_next_untap = _parse_each_opponent_skips_next_untap_clause(effect_text)
+    if each_opponent_skips_next_untap is not None:
+        return each_opponent_skips_next_untap
+    hideaway = _parse_hideaway_clause(effect_text)
+    if hideaway is not None:
+        return hideaway
+    hideaway_counter_then_free_cast = _parse_hideaway_counter_then_conditional_free_cast_clause(
+        effect_text
+    )
+    if hideaway_counter_then_free_cast is not None:
+        return hideaway_counter_then_free_cast
+    target_opponent_draw_then_copy = _parse_target_opponent_draw_then_copy_that_spell_clause(
+        effect_text
+    )
+    if target_opponent_draw_then_copy is not None:
+        return target_opponent_draw_then_copy
+    pay_any_life_then_draw = _parse_pay_any_life_then_draw_that_many_clause(effect_text)
+    if pay_any_life_then_draw is not None:
+        return pay_any_life_then_draw
     each_opponent_loses_life = _parse_each_opponent_loses_life_equal_to(effect_text)
     if each_opponent_loses_life is not None:
         return each_opponent_loses_life
@@ -9740,6 +10139,54 @@ def _parse_defending_player_exiles_top_n_clause(
     return effect
 
 
+#: "defending player reveals the top card of their library. If it's a land
+#: card, that player puts it into their hand." - Goblin Guide's own attack
+#: trigger. Read whole (CR 608.2c: one instruction, not two independent
+#: ones - the second sentence's "that player" is CR 400.7 anaphora back to
+#: the "defending player" the first sentence just resolved, so this has to
+#: stay one function the way `delver_upkeep`'s reveal-then-maybe-transform
+#: does, rather than being split into two clauses the way an ordinary
+#: "reveal ..., then ..." pair would be). "Defending player" is read exactly
+#: as `_parse_defending_player_exiles_top_n_clause` reads it, off
+#: `ability.event.defender` (CR 508.1a) through `machines.combat.
+#: defending_player` - **the withheld or granted party is the player
+#: Goblin Guide is attacking, never Goblin Guide's own controller**, which
+#: is the specific "wrong player" bug this shape exists to catch.
+_DEFENDING_PLAYER_REVEALS_TOP_CONDITIONAL_LAND_RE = re.compile(
+    r"^defending player reveals the top card of their library\.\s*"
+    r"if it'?s a land card, that player puts it into their hand\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_defending_player_reveals_top_conditional_land_clause(
+    text: str,
+) -> AbilityEffect | None:
+    """`_DEFENDING_PLAYER_REVEALS_TOP_CONDITIONAL_LAND_RE`'s shape - Goblin
+    Guide's whole attack trigger (CR 701.20a's reveal, CR 205.2a's land type
+    check, CR 401 for the library-to-hand move).
+    """
+    if _DEFENDING_PLAYER_REVEALS_TOP_CONDITIONAL_LAND_RE.fullmatch(text.strip()) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        event = ability.event
+        if event is None or event.defender is None:
+            return
+        username = combat_rules.defending_player(game, event.defender)
+        if username is None:
+            return
+        player = game.player(username)
+        if not player.library:
+            return
+        top = player.library[0]
+        game.reveal(top, source=ability.source_name)
+        if Type.LAND in top.card.types:
+            player.move(top, Zone.HAND)
+
+    return effect
+
+
 #: "Counter that spell." - Vexing Bauble's and Chalice of the Void's own
 #: templated effect clause, both times following a `TriggerEvent.CAST_SPELL`
 #: condition. "That spell" is **CR 607.1** linked-ability anaphora back to the
@@ -9781,6 +10228,140 @@ def _parse_counter_that_spell_clause(clause: str, *, for_spell: bool) -> Targete
         # outcome, even though this was never a target to begin with.
         if spell is not None and spell in game.stack:
             game.counter(spell)
+
+    return effect
+
+
+#: "This creature deals N damage to that spell's controller." - Bonecrusher
+#: Giant's own "becomes the target of a spell" trigger (CR 702.21a's own
+#: event, `TriggerEvent.BECOMES_TARGET`, generic and not ward-specific -
+#: `Casting._emit_becomes_target` raises it for *any* spell that targets a
+#: permanent). "That spell" here is `GameEvent.targeted_by` (CR 702.21a: "the
+#: spell ... that's targeting" the subject), not `event.subject_id` - the
+#: subject of a BECOMES_TARGET event is the permanent that got targeted
+#: (Bonecrusher Giant itself), and the spell that did the targeting is a
+#: second, separate object the event carries under its own field. Reading
+#: `event.subject_id` here, the way `_parse_counter_that_spell_clause` reads
+#: it for a *CAST_SPELL* condition's "that spell", would ask who controls
+#: Bonecrusher Giant instead of who cast the spell that targeted it.
+_DAMAGE_TO_THAT_SPELLS_CONTROLLER_RE = re.compile(
+    r"^this (?:creature|permanent) deals (?P<n>\d+) damage to that spell'?s controller\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_damage_to_that_spells_controller_clause(text: str) -> AbilityEffect | None:
+    """`_DAMAGE_TO_THAT_SPELLS_CONTROLLER_RE`'s shape - Bonecrusher Giant's
+    whole trigger (CR 120.1, 120.3a: damage to a player)."""
+    match = _DAMAGE_TO_THAT_SPELLS_CONTROLLER_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    amount = int(match.group("n"))
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        event = ability.event
+        if event is None or event.targeted_by is None:
+            return
+        spell = game.find_by_id(event.targeted_by)
+        if spell is None:
+            return
+        controller = game.controller_of(spell)
+        game.deal_damage(controller, amount, source=ability.source(game))
+
+    return effect
+
+
+#: "Target creature gets +2/+0 until end of turn for each card discarded
+#: this way. Whenever that creature deals combat damage to a player this
+#: turn, you draw a card." - Captain Howler, Sea Scourge's whole discard
+#: trigger, read as one CR 608.2c instruction: the pump's magnitude is "for
+#: each card discarded this way" (CR 607.1 anaphora back to this ability's
+#: own `TriggerEvent.DISCARDS_A_CARD` event, `GameEvent.amount` - see
+#: `Game.discard_cards`), and the second sentence creates a CR 603.7 delayed
+#: triggered ability watching "that creature" (CR 603.7c's `subject_id`) for
+#: the rest of the turn (`expires_end_of_turn=True`).
+_PUMP_PER_DISCARD_THEN_DELAYED_DRAW_RE = re.compile(
+    r"^target creature gets \+(?P<power>\d+)/\+(?P<toughness>\d+) until end of turn "
+    r"for each card discarded this way\.\s*"
+    r"whenever that creature deals combat damage to a player this turn, "
+    r"you draw a card\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_pump_per_discard_then_delayed_draw_clause(text: str) -> AbilityEffect | None:
+    """`_PUMP_PER_DISCARD_THEN_DELAYED_DRAW_RE`'s shape - Captain Howler,
+    Sea Scourge's whole trigger (CR 119.3's pump has no such rule number of
+    its own beyond CR 611.2's one-shot effect; CR 603.7 for the delayed half;
+    CR 120.2a for "deals combat damage to a player"; CR 121.1 for the draw).
+    """
+    match = _PUMP_PER_DISCARD_THEN_DELAYED_DRAW_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    if not _targets_understood("target creature"):
+        return None
+    per_power = int(match.group("power"))
+    per_toughness = int(match.group("toughness"))
+
+    def combat_damage_to_player_draw(
+        game: "Game", stacked: AbilityOnStack, trigger: "DelayedTrigger"
+    ) -> None:
+        # `matches()` only checks the event kind and the subject's id (CR
+        # 603.7c); "combat damage" and "to a player" are this delayed
+        # trigger's own narrower condition, the same two checks
+        # `machines/triggers.condition_matches`'s DEALS_DAMAGE branch makes
+        # for a printed version of this shape.
+        event = stacked.event
+        if event is None or not event.combat or event.player is None:
+            return
+        if not game.is_in_game(trigger.controller):
+            return
+        game.draw_cards(trigger.controller, 1)
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        event = ability.event
+        discard_count = event.amount if event is not None and event.amount is not None else 0
+        if discard_count <= 0:
+            return
+        targets = [
+            target for target in game.resolve_targets(ability) if isinstance(target, CardState)
+        ]
+        if not targets:
+            return
+        target = targets[0]
+        magnitude = discard_count * per_power
+        store = continuous_effects(game)
+        store.add(
+            ContinuousEffect(
+                description=(
+                    f"{target.name} gets +{magnitude}/+{discard_count * per_toughness} "
+                    "until end of turn"
+                ),
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.MODIFY,
+                timestamp=store.tick(),
+                duration=Duration.UNTIL_END_OF_TURN,
+                selector=lambda chars, board, tid=target.id: chars.card_id == tid,
+                modification=modify_power_toughness(magnitude, discard_count * per_toughness),
+            )
+        )
+        controller = game.controller_of(ability)
+        game.create_delayed_trigger(
+            DelayedTrigger(
+                text=(
+                    "Whenever that creature deals combat damage to a player "
+                    "this turn, you draw a card."
+                ),
+                controller=controller.username,
+                source_id=ability.source_id,
+                source_name=ability.source_name,
+                event=TriggerEvent.DEALS_DAMAGE,
+                subject_id=target.id,
+                remaining=None,
+                expires_end_of_turn=True,
+                callback=combat_damage_to_player_draw,
+            )
+        )
 
     return effect
 
@@ -10440,7 +11021,7 @@ def _merge_reveal_hand_choose_discard_clauses(
                 if to_exile:
                     game.exile_permanent(chosen)
                 else:
-                    revealer.discard(chosen)
+                    game.discard_cards(revealer.username, [chosen], source=source)
         if life_loss:
             controller.lose_life(life_loss)
 
@@ -10498,8 +11079,9 @@ def _parse_target_player_discards_clause(clause: str, *, for_spell: bool) -> Tar
             )
             assert isinstance(chosen_ids, tuple)
             by_id = {state.id: state for state in target.hand}
-            for card_id in chosen_ids:
-                target.discard(by_id[card_id])
+            game.discard_cards(
+                target.username, [by_id[card_id] for card_id in chosen_ids], source=source
+            )
 
     return effect
 
@@ -10613,7 +11195,7 @@ def _merge_may_discard_if_you_do_clauses(
         )
         assert isinstance(chosen_ids, tuple)
         by_id = {state.id: state for state in player.hand}
-        player.discard(by_id[chosen_ids[0]])
+        game.discard_cards(player.username, [by_id[chosen_ids[0]]], source=source)
         consequence(game, player, None, source)
 
     return 2, effect
@@ -11588,6 +12170,56 @@ def parse_mixed_effect(text: str) -> AbilityEffect | None:
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         for clause in clauses:
             clause(game, ability)
+
+    return effect
+
+
+#: "You may have target opponent draw a card. If you do, copy that spell.
+#: You may choose new targets for the copy." - Alania, Divergent Storm's own
+#: cast trigger, read as one CR 608.2c instruction chain: CR 707.1's copy is
+#: conditional (CR 118.12's "if you do") on the draw actually happening, and
+#: "that spell" is CR 607.1 anaphora back to the very spell this ability's
+#: own `TriggerEvent.CAST_SPELL` watched (`ability.event.subject_id`), not a
+#: target this ability announces itself.
+_TARGET_OPPONENT_DRAW_THEN_COPY_THAT_SPELL_RE = re.compile(
+    r"^you may have target opponent draw a card\. if you do, copy that spell\. "
+    r"you may choose new targets for the copy\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_target_opponent_draw_then_copy_that_spell_clause(text: str) -> AbilityEffect | None:
+    """`_TARGET_OPPONENT_DRAW_THEN_COPY_THAT_SPELL_RE`'s shape - Alania,
+    Divergent Storm's whole cast trigger (CR 121.1's draw; CR 707.10's copy,
+    via `Game.copy_spell`; CR 707.10c's retargeting, via `Game.
+    offer_new_targets_for_copy`).
+    """
+    if _TARGET_OPPONENT_DRAW_THEN_COPY_THAT_SPELL_RE.fullmatch(text.strip()) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        opponent = next(
+            (target for target in game.resolve_targets(ability) if isinstance(target, Player)),
+            None,
+        )
+        if opponent is None:
+            return
+        if not game.may(
+            game.player(ability.controller),
+            "have target opponent draw a card",
+            source=ability.source_name,
+        ):
+            return
+        game.draw_cards(opponent.username, 1)
+
+        event = ability.event
+        if event is None or event.subject_id is None:
+            return
+        spell = game.find_by_id(event.subject_id)
+        if spell is None or spell not in game.stack:
+            return
+        copy = game.copy_spell(spell, controller=ability.controller)
+        game.offer_new_targets_for_copy(copy, ability.controller, source_name=ability.source_name)
 
     return effect
 

@@ -9,10 +9,13 @@ Sourced from the DDR judge transcripts. Episode covered:
 Every CR number here was looked up with `knowledge_search(type="rules")`.
 """
 
-import pytest
-
 from magic_cards_model.machines import Step
-from magic_cards_model.machines.abilities import AbilityKind, TriggeredAbility, parse_abilities
+from magic_cards_model.machines.abilities import (
+    AbilityKind,
+    TriggeredAbility,
+    TriggerEvent,
+    parse_abilities,
+)
 from magic_cards_model.machines.effects import effect_for
 from tests.cards import card
 from tests.scenarios.harness import Scenario
@@ -22,9 +25,9 @@ from tests.scenarios.harness import Scenario
 # --------------------------------------------------------------------------
 
 
-def test_captain_howlers_discard_trigger_parses_with_no_event():
-    """DDR#886, the provable half: the condition is read as a trigger, but as
-    one that can never fire.
+def test_captain_howlers_discard_trigger_parses_with_a_discard_event():
+    """DDR#886, W14 fix: the condition is now read as `TriggerEvent.
+    DISCARDS_A_CARD`, so the trigger really can go on the stack.
 
     Captain Howler, Sea Scourge (confirmed with `resolve_cards`): "Whenever you
     discard one or more cards, target creature gets +2/+0 until end of turn for
@@ -33,16 +36,9 @@ def test_captain_howlers_discard_trigger_parses_with_no_event():
     episode turns on: a single instruction to discard several cards is one
     event with a count, the same way CR 121.2 makes multiple card draws
     individual events but discard has no such rule - Mind Rot's "discards two
-    cards" is one discard, not two.
-
-    `parse_abilities` correctly reads the first sentence as a `TriggeredAbility`
-    (CR 603.1's "[When/Whenever/At] [condition], [effect]" shape), but
-    `_trigger_event` has no branch for "discard" among the conditions it reads -
-    enters, dies, attacks, blocks, beginning-of-step, cast, draw, sacrifice,
-    gain life, deal damage, becomes tapped/untapped - so it returns `None` for
-    the condition here. An ability with `event=None` is never matched against
-    any `GameEvent` `condition_matches` is asked about, which means this
-    trigger can never go on the stack no matter how many cards anyone discards.
+    cards" is one discard, not two. `Game.discard_cards` is the one place that
+    now emits `TriggerEvent.DISCARDS_A_CARD`, once per discard *action* with
+    `GameEvent.amount` carrying the count, not once per card.
     """
     (ability,) = [
         found
@@ -51,7 +47,7 @@ def test_captain_howlers_discard_trigger_parses_with_no_event():
     ]
     assert isinstance(ability, TriggeredAbility)
     assert "discard" in ability.condition
-    assert ability.event is None
+    assert ability.event is TriggerEvent.DISCARDS_A_CARD
 
 
 def test_mind_rots_own_discard_clause_now_has_a_scripted_effect():
@@ -59,39 +55,42 @@ def test_mind_rots_own_discard_clause_now_has_a_scripted_effect():
     discards two cards" is exactly `_parse_target_player_discards_clause`'s
     shape in `machines/effects.py` (see `test_target_player_discards.py` for
     the full corner-case coverage of that parser), so `effect_for` no longer
-    returns `None` for it. That does not resolve DDR#886 on its own -
-    Captain Howler's own "whenever you discard" trigger still parses with no
-    event (`test_captain_howlers_discard_trigger_parses_with_no_event`
-    above), which is why the scenario below still `xfail`s.
+    returns `None` for it, and (W14) that discard now routes through `Game.
+    discard_cards`, so Captain Howler's own trigger sees it too.
     """
     assert effect_for("Mind Rot", card("Mind Rot").oracle_text) is not None
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Mind Rot's own discard now runs (bob's hand empties), but Captain "
-    "Howler's own 'whenever you discard' trigger still parses with event=None "
-    "(see test_captain_howlers_discard_trigger_parses_with_no_event above), so "
-    "no trigger ever goes on the stack and no creature is pumped.",
-)
 def test_mind_rot_causes_captain_howlers_discard_trigger_to_fire_once():
     """DDR#886: Mind Rot's single "discards two cards" instruction is one
     discard event carrying a count of two (CR 701.9), so Captain Howler's
     "Whenever you discard one or more cards" triggers exactly once and reads
     "for each card discarded this way" off that one event - a +4/+0 pump, not
     two separate +2/+0 triggers.
+
+    Mind Rot targets **alice**, not bob: CR 109.5's "you"/"your" on an
+    object's text refers to that object's controller - Captain Howler's own
+    "whenever you discard" is alice's own discards, since alice controls
+    Captain Howler. Aiming Mind Rot at bob instead would correctly leave
+    Captain Howler's trigger silent, which is not what this scenario is
+    testing.
     """
     scenario = (
         Scenario()
         .player(
             "alice",
-            hand=["Mind Rot"],
+            hand=["Mind Rot", "Mountain", "Mountain"],
             battlefield=["Swamp", "Swamp", "Swamp", "Captain Howler, Sea Scourge"],
         )
-        .player("bob", hand=["Mountain", "Mountain"], battlefield=[])
+        .player("bob", battlefield=[])
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    scenario.cast_and_resolve("Mind Rot", auto=True, username="alice", targets=["bob"])
-    assert len(scenario.player("bob").hand) == 0
-    assert len(scenario.pending_triggers) == 1
+    scenario.cast_and_resolve("Mind Rot", auto=True, username="alice", targets=["alice"])
+    assert len(scenario.player("alice").hand) == 0
+    # `Game.resolve_top` already promotes anything that triggered onto the
+    # stack before the caster would next receive priority (CR 704.3, 603.3),
+    # so the fired trigger is on `scenario.game.stack`, not still waiting in
+    # `pending_triggers` - one entry, not two, confirming the "one or more
+    # cards" count-carrying event fired once rather than once per card.
+    assert scenario.stack_names() == ["Captain Howler, Sea Scourge's triggered ability"]

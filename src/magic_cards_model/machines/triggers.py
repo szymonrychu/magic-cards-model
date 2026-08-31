@@ -774,9 +774,19 @@ def condition_matches(
             return event.subject_id == source.id
         if "another" in lowered and event.subject_id == source.id:
             return False
-        return _controller_clause_holds(
+        if not _controller_clause_holds(
             condition, controller, event.subject_controller
-        ) and _types_match(event.subject_types, condition)
+        ) or not _types_match(event.subject_types, condition):
+            return False
+        # "Whenever one or more tokens you control enter" (Caretaker's
+        # Talent) - CR 111.1's token, not a card type `_types_match` already
+        # reads, so it is checked separately: whatever just entered must be
+        # a token, not merely a permanent of some named type.
+        if "token" in lowered:
+            subject = game.find_by_id(event.subject_id) if event.subject_id else None
+            if not (subject is not None and getattr(subject, "token", False)):
+                return False
+        return True
 
     if ability.event is TriggerEvent.DIES:
         if event.subject_id == source.id:
@@ -950,6 +960,20 @@ def condition_matches(
         return _controller_clause_holds(
             condition, controller, event.subject_controller
         ) and _types_match(event.subject_types, condition)
+
+    if ability.event is TriggerEvent.TURNED_FACE_UP:
+        # CR 702.37e/708.8. Brine Elemental's own printing is the only one
+        # in the pool ("When this creature is turned face up, ..."), always
+        # self-referential.
+        return mine and event.subject_id == source.id
+
+    if ability.event is TriggerEvent.DISCARDS_A_CARD:
+        # CR 701.9a. "Whenever you discard one or more cards" (Captain
+        # Howler, Sea Scourge) asks about the controller's own discards -
+        # `event.player` is who did the discarding, `_controller_clause_
+        # holds`'s "you " prefix already reads "you discard" the same way
+        # every other "you [verb]" condition does.
+        return _controller_clause_holds(condition, controller, event.player)
 
     return False
 
@@ -1363,7 +1387,42 @@ def triggered_abilities_of(card: Card) -> list[TriggeredAbility]:
         for ability in parse_abilities(card)
         if isinstance(ability, TriggeredAbility) and ability.event is not None
     ]
-    return printed + keyword_triggered_abilities(card)
+    expanded: list[TriggeredAbility] = []
+    for ability in printed:
+        expanded.extend(_expand_attacks_or_blocks(ability))
+    return expanded + keyword_triggered_abilities(card)
+
+
+#: "Whenever this creature attacks or blocks, ..." - Elder Gargaroth's own
+#: condition, and the shape CR 508.1/509.1 have no single `TriggerEvent` for:
+#: `_trigger_event` (`machines/abilities.py`) reads the first event word it
+#: recognises in the condition and stops there, so a compound "attacks or
+#: blocks" condition is read as `TriggerEvent.ATTACKS` alone and the "or
+#: blocks" half is silently dropped - a real game where Elder Gargaroth
+#: blocks and never attacks would never see its own trigger.
+_ATTACKS_OR_BLOCKS_RE = re.compile(r"^this creature attacks or blocks$", re.IGNORECASE)
+
+
+def _expand_attacks_or_blocks(ability: TriggeredAbility) -> list[TriggeredAbility]:
+    """One ability whose condition is `_ATTACKS_OR_BLOCKS_RE`'s shape becomes
+    two: the same printed effect, once watching CR 508.1's attack and once
+    watching CR 509.1's block, each a `TriggeredAbility` in its own right so
+    `triggers_for`/`condition_matches` need no special case for a compound
+    condition - this is the only place that reads "attacks or blocks" as two
+    separate self-referential conditions rather than as raw text.
+
+    Every other printed ability passes through unchanged, singleton-wrapped.
+    """
+    if not _ATTACKS_OR_BLOCKS_RE.match(ability.condition.strip()):
+        return [ability]
+    return [
+        ability.model_copy(
+            update={"condition": "this creature attacks", "event": TriggerEvent.ATTACKS}
+        ),
+        ability.model_copy(
+            update={"condition": "this creature blocks", "event": TriggerEvent.BLOCKS}
+        ),
+    ]
 
 
 def activated_abilities_of(card: Card, face: str | None = None) -> list[ActivatedAbility]:
@@ -1424,6 +1483,19 @@ def triggers_for(game: "Game", event: GameEvent, sources: list[CardState]) -> li
                 continue  # CR 113.6: doesn't function from the zone it's in.
             if not intervening_if_holds(game, ability, source, event):
                 continue  # CR 603.4: it does not trigger at all.
+            if ability.once_per_turn:
+                # CR 603.2h: "the ability triggers only if its source's
+                # controller has not yet taken the indicated action that
+                # turn" - Caretaker's Talent's own "This ability triggers
+                # only once each turn." `key` pairs the source with the
+                # ability's own printed condition, so a permanent with more
+                # than one once-per-turn trigger is tracked separately for
+                # each.
+                key = f"{source.id}:{ability.condition}"
+                fired = game.once_per_turn_triggers.get(key, 0)
+                if fired > 0:
+                    continue
+                game.once_per_turn_triggers[key] = fired + 1
             triggered.append(
                 AbilityOnStack(
                     kind=AbilityKind.TRIGGERED,

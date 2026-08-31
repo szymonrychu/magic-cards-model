@@ -1883,7 +1883,7 @@ _HIDEAWAY_COUNT_RE = re.compile(r"top (?P<n>\d+) cards")
 def _hideaway_effect(game: Any, ability: AbilityOnStack) -> None:
     """CR 702.75a's effect: look, exile one face down, bottom the rest.
 
-    The exiled card is annotated `ExileMarker.IMPRINTED`, linked back to this
+    The exiled card is annotated `ExileMarker.HIDEAWAY`, linked back to this
     permanent's own id - the same "exiled with this permanent" shape
     `machines/effects.py`'s `_parse_imprint_clause` already uses for Ugin's
     Labyrinth (CR 207.2c: "imprint" itself has no rules meaning, so the link
@@ -1925,8 +1925,11 @@ def _hideaway_effect(game: Any, ability: AbilityOnStack) -> None:
 
     controller.cards_in(Zone.LIBRARY).remove(chosen)
     chosen.move_to(Zone.EXILE)
+    # CR 702.75a exiles it *face down*, so it stays hidden until the ability
+    # that hid it away lets its controller play it.
+    chosen.face_up = False
     chosen.exile_annotation = ExileAnnotation(
-        marker=ExileMarker.IMPRINTED, owner=chosen.owner, linked_permanent_id=source.id
+        marker=ExileMarker.HIDEAWAY, owner=chosen.owner, linked_permanent_id=source.id
     )
     game.exile.append(chosen)
 

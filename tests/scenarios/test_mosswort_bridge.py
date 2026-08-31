@@ -7,7 +7,7 @@ N cards of your library. Exile one of them face down and put the rest on the
 bottom of your library in a random order." `docs/engine-coverage.md` records
 hideaway as one of the keywords with no execution path before this session -
 `machines/keywords.py`'s `_hideaway_ability`/`_hideaway_effect` are the fix,
-reusing `ExileMarker.IMPRINTED` (the general "exiled with this permanent"
+reusing `ExileMarker.HIDEAWAY` (one of the two "exiled with this permanent"
 link, not specific to the ability word "Imprint") so the land's own later
 ability can find the card again through `Game.card_imprinted_on`.
 
@@ -69,7 +69,7 @@ def test_hideaway_exiles_one_of_the_top_four_face_down_and_bottoms_the_rest():
     goblin_guide = top_four[2]
     assert goblin_guide.zone is Zone.EXILE
     assert goblin_guide.exile_annotation is not None
-    assert goblin_guide.exile_annotation.marker is ExileMarker.IMPRINTED
+    assert goblin_guide.exile_annotation.marker is ExileMarker.HIDEAWAY
     assert goblin_guide.exile_annotation.linked_permanent_id == bridge.id
 
     library_names = [state.name for state in scenario.player("alice").library]
