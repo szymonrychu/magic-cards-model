@@ -450,13 +450,14 @@ def test_phoenix_fleet_airship_does_not_trigger_when_nothing_was_sacrificed_yet(
     when the Airship's condition is read - so the Airship never triggers, and
     the ordering question the episode raises is moot.
 
-    The engine reaches the same answer, but by the fail-closed route rather
-    than by evaluating the clause: "you sacrificed a permanent this turn" is a
-    shape `machines/triggers.intervening_if_holds` does not read, so it refuses
-    to trigger and records why. That notice is asserted here deliberately - it
-    is what separates this passing test from one that would keep passing for
-    the wrong reason once the clause *is* implemented (the xfail below is the
-    other side of that pair).
+    The engine reaches the same answer by evaluating the clause, not by
+    refusing it: `machines/triggers._sacrificed_this_turn_holds` reads
+    `Game.permanents_sacrificed_this_turn`, which `Game.sacrifice` fills in as
+    CR 701.21a's move happens, and finds nothing there. The empty
+    `intervening_if_notices` is asserted deliberately - a notice would mean the
+    clause was unreadable and the ability declined for that reason instead,
+    which is the same visible outcome for the wrong reason. The test below is
+    the other side of the pair: the same clause, on a turn where it is true.
     """
     scenario = _trebuchet_and_airship().build()
     scenario.start_at(Step.DECLARE_ATTACKERS)
@@ -464,19 +465,9 @@ def test_phoenix_fleet_airship_does_not_trigger_when_nothing_was_sacrificed_yet(
 
     assert scenario.stack_names() == []
     assert scenario.pending_triggers == []
-    assert [notice.source_name for notice in scenario.game.intervening_if_notices] == [
-        "Phoenix Fleet Airship"
-    ]
+    assert scenario.game.intervening_if_notices == []
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="'you sacrificed a permanent this turn' is not a clause shape "
-    "`machines/triggers.intervening_if_holds` reads, so CR 603.4 fails closed "
-    "and the ability never triggers - even on the turn where the condition is "
-    "genuinely true. Nothing tracks per-turn sacrifices for a trigger condition "
-    "to read; the refusal is recorded as an `InterveningIfNotice` instead.",
-)
 def test_the_airship_does_trigger_once_a_permanent_really_was_sacrificed():
     """DDR#993's other side: the clause is a real condition, not a blanket no.
 

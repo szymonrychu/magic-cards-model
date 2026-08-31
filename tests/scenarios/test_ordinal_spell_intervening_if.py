@@ -13,17 +13,16 @@ shapes are added here:
   which was the only ordinal read; every other one failed closed, so Vengevine
   never triggered even on the turn its own condition was plainly true.
 - **Phoenix Fleet Airship** - "if you sacrificed a permanent this turn". Read
-  now, but unanswerable: nothing records CR 701.21a's sacrifices per turn, so
-  it still fails closed with its notice, and the strict `xfail` names the file
-  that would have to record them.
+  and answered: `Game.permanents_sacrificed_this_turn` records CR 701.21a's
+  sacrifices as `Game.sacrifice` performs them, so the clause is now a real
+  condition in both directions - false on a turn with no sacrifice, true on a
+  turn with one - rather than a fail-closed refusal.
 
 Card text verified with `resolve_cards`. CR numbers looked up with
 `knowledge_search(type="rules")` in the session that wrote this file:
 CR 603.4, CR 608.2a, CR 701.21a ("To sacrifice a permanent, its controller
 moves it from the battlefield directly to its owner's graveyard"), CR 601.2c.
 """
-
-import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.models.zone import Zone
@@ -101,11 +100,16 @@ def airship_board() -> Scenario:
     )
 
 
-def test_the_airship_still_fails_closed_when_nothing_was_sacrificed():
-    """The clause is read but unanswerable, and CR 603.4 only lets an ability
-    trigger if the condition is *true*: on a turn with no sacrifice the answer
-    is no either way, and the refusal is recorded as an `InterveningIfNotice`
-    rather than passing silently for a legal reason."""
+def test_the_airship_does_not_trigger_when_nothing_was_sacrificed():
+    """CR 603.4's check, answered False: on a turn with no sacrifice the clause
+    is read, evaluated against `Game.permanents_sacrificed_this_turn` and found
+    untrue, so the ability does not trigger.
+
+    The empty `intervening_if_notices` is the load-bearing half. A notice means
+    `machines/triggers.intervening_if_holds` could not read the clause at all
+    and refused for that reason; an answered clause records nothing. Asserting
+    it stays empty is what separates "the engine evaluated this and said no"
+    from "the engine did not understand the question"."""
     scenario = airship_board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
@@ -113,19 +117,9 @@ def test_the_airship_still_fails_closed_when_nothing_was_sacrificed():
         scenario.advance()
 
     assert scenario.stack_names() == []
-    assert [notice.source_name for notice in scenario.game.intervening_if_notices] == [
-        "Phoenix Fleet Airship"
-    ]
+    assert scenario.game.intervening_if_notices == []
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="`machines/triggers._sacrificed_this_turn_holds` reads the clause now, but there is "
-    "nothing to read it *from*: no per-turn record of CR 701.21a's sacrifices exists. "
-    "`Game.sacrifice` in models/game.py - Task 1.5's file - is where one belongs "
-    "(`Game.permanents_left_battlefield_this_turn` cannot stand in: a bounced or destroyed "
-    "permanent left the battlefield without being sacrificed).",
-)
 def test_the_airship_triggers_once_a_permanent_really_was_sacrificed():
     """CR 603.4 on a turn where the condition is genuinely true: alice fed a
     Goblin to Skirk Prospector in her main phase, so "you sacrificed a
