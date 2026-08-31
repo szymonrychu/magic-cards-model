@@ -30,7 +30,7 @@ session that wrote it. What is *not* here is listed in
 
 import random
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from enum import StrEnum
 from typing import Any
 from uuid import UUID
@@ -67,8 +67,10 @@ from .layers import (
     Duration,
     Layer,
     Sublayer,
+    add_type,
     modify_power_toughness,
 )
+from .objects_as_costs import crew_number, crew_offer, power_of, total_power
 from .triggers import AbilityOnStack, GameEvent, activated_abilities_of, triggers_for
 
 
@@ -96,6 +98,7 @@ class KeywordRule(StrEnum):
     EXERT = "CR 701.43a"
     REBOUND = "CR 702.88a"
     HIDEAWAY = "CR 702.75a"
+    CREW = "CR 702.122a"
 
 
 def executes(keyword: str) -> bool:
@@ -126,6 +129,14 @@ def executes(keyword: str) -> bool:
         "exert",
         "rebound",
         "hideaway",
+        "crew",
+        # CR 702.51a and CR 702.66a. Static abilities that function while the
+        # spell is on the stack and change *how* one symbol of its already
+        # determined total cost is paid - executed by
+        # `machines/objects_as_costs.py` against an open `CostPayment`, not
+        # here, because neither is an ability this module can put on the stack.
+        "convoke",
+        "delve",
         # CR 701.66a. A CR 701 keyword *action* embedded in another ability's
         # effect text, not a CR 702 keyword ability printed on its own - so
         # its clause parser lives in `machines/effects.py`
@@ -850,6 +861,135 @@ def _equip_effect(activation: KeywordActivation) -> CardState | None:
         activation.card.attach_to(creature)
         return creature
     return None
+
+
+# --------------------------------------------------------------------------
+# Crew (CR 702.122) and Vehicles (CR 301.7)
+# --------------------------------------------------------------------------
+
+
+def crew_activation(
+    game: Any, vehicle: CardState, crewing: Sequence[CardState], player: str
+) -> KeywordActivation:
+    """Build the activation for a Vehicle's crew ability (CR 702.122a).
+
+    "Crew is an activated ability of Vehicle cards. 'Crew N' means 'Tap any
+    number of other untapped creatures you control with total power N or
+    greater: This permanent becomes an artifact creature until end of turn.'"
+
+    `crewing` is the set of creatures the player chose to tap. Three things are
+    checked before the cost exists at all, because all three make the
+    activation illegal rather than merely unpaid:
+
+    - each creature is eligible (CR 702.122a's "other untapped creatures you
+      control"), through the shared `crew_offer` in
+      `machines/objects_as_costs.py` - CR 702.122b's "a creature crews a
+      Vehicle when it's tapped to pay the cost" is what makes this a *cost*
+      and so what puts it there rather than in the effect;
+    - their total power reaches N, read off the computed board (CR 613.5), so a
+      pumped 1/1 crews a Crew 3;
+    - no creature is named twice, since it has only one untap to spend.
+
+    Crew has **no** `{T}` symbol in its cost - the Vehicle is not what taps -
+    so CR 302.6/CR 602.5a never apply to the Vehicle, and a Vehicle that
+    entered this turn can be crewed. A summoning-sick *creature* can crew for
+    the same reason: CR 302.6 restricts a creature's own `{T}` abilities, and
+    crew is the Vehicle's ability, not the creature's. What the crewed Vehicle
+    still cannot do is attack the turn it entered, because CR 508.1a asks about
+    continuous control of the permanent and not about how long it has been a
+    creature.
+    """
+    number = crew_number(vehicle.card)
+    if number is None:
+        raise ValueError(f"{vehicle.name} has no crew ability ({KeywordRule.CREW})")
+
+    chosen = list(crewing)
+    offer = crew_offer(vehicle)
+    seen: set[UUID] = set()
+    for creature in chosen:
+        refusal = offer.why_not(creature, player, game)
+        if refusal is not None:
+            raise ValueError(refusal)
+        if creature.id in seen:
+            raise ValueError(
+                f"{creature.name} was chosen twice to crew {vehicle.name}, but it has "
+                f"only one untap to spend ({KeywordRule.CREW}, CR 118.3)"
+            )
+        seen.add(creature.id)
+
+    have = total_power(chosen, game)
+    if have < number:
+        listing = ", ".join(f"{c.name} ({power_of(c, game)})" for c in chosen) or "nothing"
+        raise ValueError(
+            f"crewing {vehicle.name} needs total power {number} or greater, but "
+            f"{listing} totals {have} ({KeywordRule.CREW})"
+        )
+
+    ability = _keyword(vehicle.card, "crew")
+    assert ability is not None  # `crew_number` already found it
+    cost = TotalCost(components=[offer.component(creature, player) for creature in chosen])
+    return KeywordActivation(
+        card=vehicle,
+        player=player,
+        keyword="Crew",
+        rule=str(KeywordRule.CREW),
+        zone=Zone.BATTLEFIELD,
+        cost=cost,
+        ability=_synthetic_ability(
+            ability,
+            cost_text=(
+                f"Tap any number of other untapped creatures you control "
+                f"with total power {number} or greater"
+            ),
+            effect="This permanent becomes an artifact creature until end of turn.",
+        ),
+        game=game,
+    )
+
+
+def _crew_effect(activation: KeywordActivation) -> list[ContinuousEffect]:
+    """The Vehicle becomes an artifact creature until end of turn (CR 702.122a).
+
+    Two continuous effects, both in layer 4 (CR 613.1d) and both ending in the
+    cleanup step (CR 514.2, CR 703.4p, via `Duration.UNTIL_END_OF_TURN`):
+    artifact and creature, added rather than replacing, because a Vehicle is
+    already an artifact and the rule's own wording ("becomes an artifact
+    creature") keeps every other type it has - Parhelion II stays legendary.
+
+    No layer 7 effect is created, and that is CR 301.7a/CR 301.7b read
+    literally: "Each Vehicle has a printed power and toughness, but it has
+    these characteristics only if it's also a creature", and "If a Vehicle
+    becomes a creature, it immediately has its printed power and toughness."
+    The printed values are already on the printing, so the moment layer 4 makes
+    it a creature the board reports them; setting them again in layer 7b would
+    overwrite an anthem or a +1/+1 counter that CR 613.4c should stack on top.
+
+    CR 702.122e's "Whenever this Vehicle becomes crewed" is not modelled - see
+    `docs/engine-coverage.md`.
+    """
+    game = activation.game
+    vehicle = activation.card
+    if vehicle.zone is not Zone.BATTLEFIELD:
+        # CR 608.2: the ability resolves regardless, but a Vehicle that has
+        # left the battlefield is a different object (CR 400.7) and nothing
+        # here applies to it.
+        return []
+    timestamp = game.continuous_effects.tick()
+    created = [
+        game.continuous_effects.add(
+            ContinuousEffect(
+                description=f"{vehicle.name} becomes an artifact creature until end of turn",
+                layer=Layer.TYPE,
+                timestamp=timestamp,
+                duration=Duration.UNTIL_END_OF_TURN,
+                source_id=vehicle.id,
+                selector=_only_this(vehicle.id),
+                modification=add_type(added),
+            )
+        )
+        for added in (Type.ARTIFACT, Type.CREATURE)
+    ]
+    return created
 
 
 #: The subtypes CR 704.5n names, and the host each one may legally be on.
@@ -2186,6 +2326,7 @@ def keyword_effect_for(ability: AbilityOnStack) -> Callable[[Any, AbilityOnStack
 
 KEYWORD_EFFECTS: dict[str, Callable[[KeywordActivation], Any]] = {
     "equip": _equip_effect,
+    "crew": _crew_effect,
 }
 
 for _name in ("cycling", "landcycling", "typecycling"):

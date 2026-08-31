@@ -73,6 +73,9 @@ Existing files, as a guide to where a new case belongs:
 | `test_alternative_costs.py` | CR 118.9: finding an alternative cost with `Casting.alternative_costs` and announcing it with `use_alternative_cost` - the printed pitch offer, a static grant from Omniscience, what a cost increase does on top, and the printed mana cost still being payable instead |
 | `test_select_from_the_top_of_your_library.py` | CR 701.17a-c, 401.2, 608.2d, 609.3: the "mill or look at the top N, then optionally move one of them" family - one parsed shape across Ostrich-Horse, Ainok Wayfarer, Scout the City's mode and Fecund Greenshell, against `test_six.py`'s single card |
 | `test_mana_spend_restrictions.py` | CR 106.6: "Spend this mana only to ..." - the restriction carried by mana in the pool, what it refuses, and which mana pays when both would |
+| `test_crew.py` | CR 702.122, 301.7: a Vehicle becoming an artifact creature, the "total power N or greater" cost, and what crew's missing `{T}` symbol does and does not excuse |
+| `test_convoke.py` | CR 702.51: tapping creatures to pay a symbol, the colour half against the generic half, and why it is not a cost reduction |
+| `test_delve.py` | CR 702.66: exiling a graveyard to pay generic mana only, an empty graveyard, and X |
 
 ### Counters
 
