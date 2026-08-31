@@ -23,7 +23,7 @@ from ..machines.casting import (
     play_permissions_on,
     usable_play_permission,
 )
-from ..machines.casting_restrictions import CastingRuleEffect
+from ..machines.casting_restrictions import CastingRuleEffect, CastingRuleKind
 from ..machines.combat import (
     Attack,
     CombatMachine,
@@ -5552,24 +5552,27 @@ class Game(BaseModel):
 
     def static_cost_modifiers_for(
         self, spell: CardState, caster: str | None = None
-    ) -> tuple[list[ManaCost], int | None]:
-        """Board-wide static cost increases and the floor in play right now
-        (CR 601.2f, 611.3).
+    ) -> tuple[list[ManaCost], list[ManaCost], int | None]:
+        """Board-wide static cost increases, decreases, and the floor in play
+        right now (CR 601.2f, 611.3).
 
         Unlike `cost_reduction_for`, which reads *this* spell's own text for a
         self-discount, this reads every *other* permanent's static ability for
-        a tax or a floor on spells in general: Sphere of Resistance and Thorn
-        of Amethyst's flat increases, Damping Sphere's per-spell-this-turn
-        increase, Trinisphere's floor. `Casting.total_cost` folds this in for
-        every ordinary cast, so nothing has to opt in the way
-        `determine_total_cost` does for a self-reduction.
+        a tax, a discount, or a floor on spells in general: Sphere of
+        Resistance and Thorn of Amethyst's flat increases, Damping Sphere's
+        per-spell-this-turn increase, Trinisphere's floor, the Medallion
+        cycle's/Ral, Monsoon Mage's own color- or type-scoped discount.
+        `Casting.total_cost` folds this in for every ordinary cast, so nothing
+        has to opt in the way `determine_total_cost` does for a self-reduction.
 
         A permanent whose text names a card-type qualifier ("Noncreature
         spells cost {1} more") only taxes a spell that lacks that type
         (CR 205.2b: a multi-type card is checked against all of them). A
         permanent whose ability requires being untapped (Trinisphere's own
         clause) is skipped while tapped (CR 611.3b: a static ability's effect
-        applies only while its source carries it).
+        applies only while its source carries it). `COLOR_DECREASE`/
+        `TYPE_DECREASE` are controller-scoped ("spells *you* cast"): only
+        counted when the permanent's controller is `caster`.
 
         Text that reads like a cost modifier but does not match one of
         `cost_modifier_effect`'s recognised shapes - Grand Arbiter Augustin
@@ -5578,9 +5581,19 @@ class Game(BaseModel):
         is appended to `cost_modifier_notices` instead (DDR#978 - an increase
         that fails to apply looks identical to ordinary play). Deduplicated by
         source, since this runs every time a cost is priced.
+
+        A loyalty-ability-granted, time-boxed discount - Ral, Monsoon Mage's
+        own "+1: Until your next turn, instant and sorcery spells you cast
+        cost {1} less to cast." - is not read off any live permanent's text
+        (Ral may have transformed away since granting it), so it is folded in
+        separately here from `casting_rule_effects`
+        (`CastingRuleKind.INSTANT_SORCERY_COST_REDUCTION_GRANT`), the same
+        `Duration.UNTIL_YOUR_NEXT_TURN` record Teferi, Time Raveler's own +1
+        already uses.
         """
         caster = caster or spell.controller or self.active_player.username
         increases: list[ManaCost] = []
+        decreases: list[ManaCost] = []
         floor: int | None = None
         already_noticed = {notice.source_id for notice in self.cost_modifier_notices}
 
@@ -5588,35 +5601,82 @@ class Game(BaseModel):
             # Same DFC-family fix as `effect_for`: `oracle_text` reads the up
             # face, `card.oracle_text` is null for a modal-DFC/transform
             # permanent and would silently skip its static ability.
-            text = permanent.oracle_text or ""
-            if not text:
-                continue
-            effect = cost_modifier_effect(text)
-            if effect is None:
-                if looks_like_unparsed_cost_modifier(text) and permanent.id not in already_noticed:
-                    already_noticed.add(permanent.id)
-                    self.cost_modifier_notices.append(
-                        CostModifierNotice(
-                            source_id=permanent.id, source_name=permanent.name, text=text
+            # `class_ability_text` narrows further for a Class permanent
+            # (CR 716.2a): a level-gated paragraph is not "in effect" yet.
+            #
+            # Read line by line, not as one blob: CR 604.1 makes each
+            # sentence-per-line its own static ability (Grand Arbiter
+            # Augustin IV prints three - two readable color discounts and one
+            # controller-relative tax this wave still cannot read), and
+            # `cost_modifier_effect` only ever answers for the *first* shape
+            # it recognises in whatever text it is given. Reading the whole
+            # card at once would either apply only the first ability and
+            # silently drop the rest, or (worse) let one recognised line's
+            # match suppress the fail-closed notice the *other*, unreadable
+            # line still needs - splitting first is what keeps each ability
+            # independent, matching this project's "one paragraph is one
+            # ability" rule instead of quietly merging every line on a card
+            # into a single verdict.
+            for line in (permanent.class_ability_text or "").split("\n"):
+                text = line.strip()
+                if not text:
+                    continue
+                effect = cost_modifier_effect(text)
+                if effect is None:
+                    if (
+                        looks_like_unparsed_cost_modifier(text)
+                        and permanent.id not in already_noticed
+                    ):
+                        already_noticed.add(permanent.id)
+                        self.cost_modifier_notices.append(
+                            CostModifierNotice(
+                                source_id=permanent.id, source_name=permanent.name, text=text
+                            )
                         )
-                    )
-                continue
-
-            if effect.kind is CostModifierKind.FLOOR:
-                if effect.requires_untapped and permanent.tapped:
                     continue
-                if floor is None or effect.amount > floor:
-                    floor = effect.amount
-            elif effect.kind is CostModifierKind.FLAT_INCREASE:
-                if effect.excludes_type is not None and effect.excludes_type in spell.card.types:
-                    continue
-                increases.append(ManaCost.parse(f"{{{effect.amount}}}"))
-            elif effect.kind is CostModifierKind.PER_SPELL_INCREASE:
-                prior = len(self.spells_cast_this_turn.get(caster, []))
-                if prior:
-                    increases.append(ManaCost.parse(f"{{{effect.amount * prior}}}"))
 
-        return increases, floor
+                if effect.kind is CostModifierKind.FLOOR:
+                    if effect.requires_untapped and permanent.tapped:
+                        continue
+                    if floor is None or effect.amount > floor:
+                        floor = effect.amount
+                elif effect.kind is CostModifierKind.FLAT_INCREASE:
+                    if (
+                        effect.excludes_type is not None
+                        and effect.excludes_type in spell.card.types
+                    ):
+                        continue
+                    increases.append(ManaCost.parse(f"{{{effect.amount}}}"))
+                elif effect.kind is CostModifierKind.PER_SPELL_INCREASE:
+                    prior = len(self.spells_cast_this_turn.get(caster, []))
+                    if prior:
+                        increases.append(ManaCost.parse(f"{{{effect.amount * prior}}}"))
+                elif effect.kind is CostModifierKind.COLOR_DECREASE:
+                    if permanent.controller != caster:
+                        continue
+                    if effect.applies_to_color in spell.colors:
+                        decreases.append(ManaCost.parse(f"{{{effect.amount}}}"))
+                elif effect.kind is CostModifierKind.TYPE_DECREASE:
+                    if permanent.controller != caster:
+                        continue
+                    if effect.excludes_type is not None:
+                        if effect.excludes_type not in spell.types:
+                            decreases.append(ManaCost.parse(f"{{{effect.amount}}}"))
+                    elif effect.applies_to_types is not None and any(
+                        t in spell.types for t in effect.applies_to_types
+                    ):
+                        decreases.append(ManaCost.parse(f"{{{effect.amount}}}"))
+
+        for grant in self.casting_rule_effects:
+            if (
+                grant.kind == CastingRuleKind.INSTANT_SORCERY_COST_REDUCTION_GRANT
+                and grant.controller == caster
+                and grant.amount is not None
+                and (Type.INSTANT in spell.types or Type.SORCERY in spell.types)
+            ):
+                decreases.append(ManaCost.parse(f"{{{grant.amount}}}"))
+
+        return increases, decreases, floor
 
     def determine_total_cost(self, casting: object) -> CostPayment:
         """CR 601.2f: work out the reduction now, then lock the total cost in.

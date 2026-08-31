@@ -1520,11 +1520,13 @@ class Casting(BaseModel):
         announced, with every additional cost added and every increase and
         reduction applied.
 
-        When a game is attached, board-wide static cost increases (Sphere of
-        Resistance's "Spells cost {1} more to cast", Trinisphere's floor) are
-        folded in here too, via `Game.static_cost_modifiers_for` - this is the
-        step every ordinary cast reaches (`begin_paying` -> `determine_cost` ->
-        this property), so nothing extra has to be called for them to apply.
+        When a game is attached, board-wide static cost increases *and*
+        decreases (Sphere of Resistance's "Spells cost {1} more to cast",
+        Trinisphere's floor, the Medallion cycle's/Ral, Monsoon Mage's own
+        color- or type-scoped discount) are folded in here too, via
+        `Game.static_cost_modifiers_for` - this is the step every ordinary
+        cast reaches (`begin_paying` -> `determine_cost` -> this property), so
+        nothing extra has to be called for them to apply.
         That is unlike `cost_reduction_for`'s self-discount, which stays an
         opt-in `Game.determine_total_cost` call (see its own docstring) - a
         spell reducing its own cost from its own text is a different question
@@ -1533,13 +1535,15 @@ class Casting(BaseModel):
         """
         base = self.alternative_cost.mana if self.alternative_cost else self.base_cost
         increases = [*self.cost_increases, *(extra.mana for extra in self.additional_costs)]
+        reductions = list(self.cost_reductions)
         floor: int | None = None
         if self.game is not None:
-            board_increases, floor = self.game.static_cost_modifiers_for(self.spell, self.caster)
+            board_increases, board_reductions, floor = self.game.static_cost_modifiers_for(
+                self.spell, self.caster
+            )
             increases = increases + board_increases
-        mana = apply_modifications(
-            base.with_x(self.x_value), increases, self.cost_reductions, floor=floor
-        )
+            reductions = reductions + board_reductions
+        mana = apply_modifications(base.with_x(self.x_value), increases, reductions, floor=floor)
 
         components = list(self.alternative_cost.components) if self.alternative_cost else []
         for extra in self.additional_costs:

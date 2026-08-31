@@ -1,4 +1,4 @@
-""""Exile the top two cards of your library. Until the end of your next turn,
+""" "Exile the top two cards of your library. Until the end of your next turn,
 you may play those cards." - Wrenn's Resolve and Reckless Impulse print the
 identical sentence (verified with `resolve_cards` in this session, against
 `tests/fixtures/cards/wrenn_s_resolve.json` and `.../reckless_impulse.json`).
