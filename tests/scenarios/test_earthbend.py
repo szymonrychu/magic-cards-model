@@ -134,7 +134,7 @@ def test_a_freshly_played_land_can_attack_the_turn_it_is_earthbent():
 
     assert new_forest.summoning_sick is True
     # The documented trap: this property is misleading for an animated land.
-    assert new_forest.is_summoning_sick is False
+    assert new_forest.is_summoning_sick() is False
     assert scenario.can_attack(new_forest) is True
 
     scenario.attack_with(new_forest)

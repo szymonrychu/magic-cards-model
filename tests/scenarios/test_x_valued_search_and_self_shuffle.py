@@ -139,7 +139,7 @@ def test_the_found_creature_enters_summoning_sick():
     scenario.resolve_top()
 
     halfling = scenario.find("Delighted Halfling", Zone.BATTLEFIELD)
-    assert halfling.is_summoning_sick is True
+    assert halfling.is_summoning_sick() is True
 
 
 def test_a_different_x_scales_the_search_bound():

@@ -1375,11 +1375,21 @@ class Game(BaseModel):
         """Whether a `{T}` ability of this permanent may be activated (CR 302.6).
 
         Only creatures are affected: a land or an artifact taps the turn it
-        arrives. Haste turns the restriction off (CR 702.10c).
+        arrives. Read off the computed board (CR 613.5), not the printed type
+        line, so a permanent a continuous effect turned into a creature this
+        turn - The Filigree Sylex after Karn, the Great Creator's +1 - is
+        still held to the restriction: CR 302.6 asks how long the permanent
+        has been controlled, not how long it has been a creature, so an
+        artifact already on the battlefield before this turn began stays
+        exempt the moment it becomes a creature, while one that entered and
+        was animated in the same turn is held back. Haste turns the
+        restriction off (CR 702.10c) - `has_keyword` is passed this `Game` too,
+        so a haste granted by a continuous effect (layer 6) counts, not only
+        one printed on the card.
         """
-        if not permanent.is_creature:
+        if not self.characteristics_of(permanent).is_creature:
             return True
-        return not permanent.summoning_sick or has_keyword(permanent, Keyword.HASTE)
+        return not permanent.summoning_sick or has_keyword(permanent, Keyword.HASTE, self)
 
     def note_cast(
         self,

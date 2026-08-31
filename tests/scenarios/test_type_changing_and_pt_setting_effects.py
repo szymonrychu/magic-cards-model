@@ -260,6 +260,109 @@ def test_an_artifact_cast_this_turn_is_still_summoning_sick_once_animated():
 
 
 # --------------------------------------------------------------------------
+# The same rule, for a {T} activated ability rather than attacking
+#
+# Reported defect: The Filigree Sylex was cast and animated into a creature by
+# Karn's +1 the same turn. The board view then reported `summoning_sick: false`
+# for it and a dry run of its {T} ability came back `allowed: true`. CR 302.6 /
+# CR 602.5a hold a creature's {T}-ability back on the same "controlled
+# continuously since the turn began" clause CR 508.1a uses for attacking - the
+# two tests above already prove the attack half; these prove the ability half,
+# which took a different, still-broken path: `Game.can_activate_tap_ability`
+# read `CardState.is_creature` - the printed type line - instead of
+# `Game.characteristics_of`, so a permanent that is not a creature on its own
+# card never tripped the summoning-sickness check at all, animated or not.
+# --------------------------------------------------------------------------
+
+
+def test_an_artifact_cast_this_turn_cannot_activate_its_tap_ability_once_animated():
+    """The exact reported case: cast The Filigree Sylex, animate it the same
+    turn with Karn's +1, and its {T} ability must stay refused (CR 302.6,
+    602.5a) even though it is now a creature."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["The Filigree Sylex"],
+            battlefield=["Karn, the Great Creator", "Mountain", "Mountain"],
+            library=["Mountain"] * 5,
+        )
+        .player("bob", library=["Mountain"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Mountain", "Mountain")
+    sylex = scenario.cast_and_resolve("The Filigree Sylex", *sources)
+    assert sylex.summoning_sick, "it arrived this turn"
+
+    karn = scenario.creature("Karn, the Great Creator", "alice")
+    scenario.activate(karn, index=0, targets=[sylex])
+    scenario.pass_until_resolved()
+    assert scenario.game.characteristics_of(sylex).is_creature, "Karn's +1 landed"
+
+    refusal = scenario.why_cannot_activate(sylex, index=0)
+    assert refusal is not None, (
+        "not controlled since the turn began, so the {T} ability stays refused "
+        "however long it has been a creature"
+    )
+    assert not sylex.tapped, "the refused activation must not have gone through"
+
+
+def test_an_artifact_already_under_control_can_activate_its_tap_ability_once_animated():
+    """The converse: a Filigree Sylex present since before the game began has
+    been controlled continuously since alice's turn started, so animating it
+    mid-turn does not make its {T} ability newly restricted."""
+    scenario = _karn_and_artifact("The Filigree Sylex")
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sylex = _activate_karn(scenario, "The Filigree Sylex")
+    assert not sylex.summoning_sick, "controlled since before the game began"
+    assert scenario.game.characteristics_of(sylex).is_creature
+
+    assert scenario.why_cannot_activate(sylex, index=0) is None
+
+    scenario.activate(sylex, index=0)
+    scenario.pass_until_resolved()
+    assert sylex.counter_count("oil") == 1, "the activation actually went through"
+    assert sylex.tapped
+
+
+def test_haste_lets_an_animated_artifact_cast_this_turn_activate_its_tap_ability():
+    """CR 702.10c: haste lifts the restriction CR 302.6 would otherwise apply,
+    even for a permanent animated the same turn it was cast. Fires of
+    Yavimaya's "Creatures you control have haste" is a layer 6 grant, so this
+    also proves `Game.can_activate_tap_ability` reads haste off the computed
+    board rather than only the printed card - the grant is not on The Filigree
+    Sylex's own text."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["The Filigree Sylex"],
+            battlefield=["Karn, the Great Creator", "Fires of Yavimaya", "Mountain", "Mountain"],
+            library=["Mountain"] * 5,
+        )
+        .player("bob", library=["Mountain"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Mountain", "Mountain")
+    sylex = scenario.cast_and_resolve("The Filigree Sylex", *sources)
+    assert sylex.summoning_sick, "it arrived this turn"
+
+    karn = scenario.creature("Karn, the Great Creator", "alice")
+    scenario.activate(karn, index=0, targets=[sylex])
+    scenario.pass_until_resolved()
+    assert scenario.game.characteristics_of(sylex).is_creature
+
+    assert scenario.why_cannot_activate(sylex, index=0) is None, "Fires of Yavimaya grants haste"
+
+    scenario.activate(sylex, index=0)
+    scenario.pass_until_resolved()
+    assert sylex.counter_count("oil") == 1
+    assert sylex.tapped
+
+
+# --------------------------------------------------------------------------
 # Sublayer 7b (set) versus 7c (modify) - CR 613.4
 # --------------------------------------------------------------------------
 

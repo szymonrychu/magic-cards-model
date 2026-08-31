@@ -929,8 +929,7 @@ class CardState(BaseModel):
     def is_creature(self) -> bool:
         return Type.CREATURE in self.types
 
-    @property
-    def is_summoning_sick(self) -> bool:
+    def is_summoning_sick(self, game: Any = None) -> bool:
         """Whether the summoning-sickness restriction actually applies here.
 
         `summoning_sick` is the raw fact - this object has not been under its
@@ -943,9 +942,20 @@ class CardState(BaseModel):
         its {T}/{Q} abilities (haste lifts it, CR 702.10b). A land reports
         False here even the turn it arrives, but it keeps the raw flag, because
         a non-creature permanent that becomes a creature later in the turn is
-        restricted from the moment it entered.
+        restricted from the moment it entered - CR 302.6 asks how long the
+        permanent has been controlled, not how long it has been a creature.
+
+        Whether it *is* a creature right now has to be read off the computed
+        board (CR 613.5), not the printed type line - `self.is_creature` only
+        knows the card's own text, so an artifact a continuous effect turned
+        into a creature this turn (The Filigree Sylex after Karn, the Great
+        Creator's +1) would otherwise report `is_creature` False and this
+        property would wrongly clear the restriction. Pass the `Game` so this
+        can ask `characteristics_of`; without one, this falls back to the
+        printed type line, matching `machines/cost.py`'s `can_tap_for_mana`.
         """
-        return self.summoning_sick and self.is_creature
+        is_creature = game.characteristics_of(self).is_creature if game is not None else self.is_creature
+        return self.summoning_sick and is_creature
 
     @property
     def toughness(self) -> int | None:

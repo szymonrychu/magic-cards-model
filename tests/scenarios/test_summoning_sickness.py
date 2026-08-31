@@ -176,7 +176,7 @@ def test_a_land_is_not_summoning_sick_even_the_turn_it_arrives():
     forest = scenario.play_land("Forest")
 
     assert forest.summoning_sick, "it did arrive this turn"
-    assert not forest.is_summoning_sick
+    assert not forest.is_summoning_sick()
 
 
 def test_a_freshly_cast_creature_is_summoning_sick():
@@ -188,7 +188,7 @@ def test_a_freshly_cast_creature_is_summoning_sick():
     bears = scenario.cast_and_resolve("Grizzly Bears", *forests)
 
     assert bears.summoning_sick
-    assert bears.is_summoning_sick
+    assert bears.is_summoning_sick()
 
 
 def test_a_creature_stops_being_summoning_sick_once_its_turn_begins():
@@ -198,10 +198,10 @@ def test_a_creature_stops_being_summoning_sick_once_its_turn_begins():
     scenario.start_at(Step.PRECOMBAT_MAIN)
     forests = scenario.untapped_sources("Forest", "Forest")
     bears = scenario.cast_and_resolve("Grizzly Bears", *forests)
-    assert bears.is_summoning_sick
+    assert bears.is_summoning_sick()
 
     while not (scenario.turn.active_player == "alice" and scenario.turn.turn_number == 2):
         scenario.advance()
 
     assert not bears.summoning_sick
-    assert not bears.is_summoning_sick
+    assert not bears.is_summoning_sick()
