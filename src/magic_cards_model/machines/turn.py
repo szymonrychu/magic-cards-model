@@ -166,6 +166,15 @@ class TurnMachine(BaseModel):
         return self.players[self.active_index]
 
     @property
+    def starting_player(self) -> str:
+        """CR 103.8: "The starting player takes their first turn." - whoever
+        `self.players` seats first, since that ordering is fixed once the
+        game begins and turn 1 always belongs to seat 0 (Forsaken
+        Crossroads' own "if you weren't the starting player").
+        """
+        return self.players[0]
+
+    @property
     def seated(self) -> list[str]:
         """The players still in the game, in turn order."""
         return [player for player in self.players if player not in self.departed]

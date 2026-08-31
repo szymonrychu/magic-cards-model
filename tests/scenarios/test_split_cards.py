@@ -91,17 +91,15 @@ def test_casting_the_back_half_destroys_an_enchantment_for_one_white():
     scenario = (
         Scenario()
         .player("alice", hand=["Wear // Tear"], battlefield=["Plains"])
-        .player("bob", battlefield=["Grizzly Bears", "Rancor"])
+        .player("bob", battlefield=["Blood Moon"])
         .build()
     )
     _to_main(scenario)
-    rancor = scenario.find("Rancor", Zone.BATTLEFIELD, "bob")
-    bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "bob")
-    rancor.attach_to(bears)
+    moon = scenario.find("Blood Moon", Zone.BATTLEFIELD, "bob")
 
     casting = scenario.cast("Wear")
     casting.cast_as_split_half("Tear")
-    casting.choose_targets([rancor])
+    casting.choose_targets([moon])
     payment = casting.begin_paying()
     assert str(payment.cost) == "{W}"
     scenario.pay_with(payment, *scenario.untapped_sources("Plains"))
@@ -109,7 +107,7 @@ def test_casting_the_back_half_destroys_an_enchantment_for_one_white():
     assert not scenario.game.spell_fizzles(spell), "Tear's own restriction, not Wear's"
     scenario.resolve_top()
 
-    assert rancor.zone is Zone.GRAVEYARD
+    assert moon.zone is Zone.GRAVEYARD
 
 
 def test_the_back_half_cannot_target_an_artifact():
@@ -160,15 +158,15 @@ def test_a_resolved_split_card_is_read_as_the_whole_card_again_in_the_graveyard(
     scenario = (
         Scenario()
         .player("alice", hand=["Wear // Tear"], battlefield=["Plains"])
-        .player("bob", battlefield=["Rancor"])
+        .player("bob", battlefield=["Blood Moon"])
         .build()
     )
     _to_main(scenario)
-    rancor = scenario.find("Rancor", Zone.BATTLEFIELD, "bob")
+    moon = scenario.find("Blood Moon", Zone.BATTLEFIELD, "bob")
 
     casting = scenario.cast("Wear")
     casting.cast_as_split_half("Tear")
-    casting.choose_targets([rancor])
+    casting.choose_targets([moon])
     payment = casting.begin_paying()
     scenario.pay_with(payment, *scenario.untapped_sources("Plains"))
     spell = scenario.put_on_stack(casting)

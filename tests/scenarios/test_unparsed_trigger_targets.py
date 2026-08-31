@@ -14,12 +14,15 @@ trigger ends up with no targets are told apart and both are recorded on
 `machines/triggers.py`):
 
 - `UNPARSED` - the restriction itself could not be read (`understood=False`).
-  An engine gap. Slayer of the Wicked's "destroy target Vampire, Werewolf, or
-  Zombie" is the control card here: a subtype list, explicitly out of scope
-  for this wave (`docs/engine-coverage.md`), so it stays unparsed even after
-  the `another`/supertype/comma fixes elsewhere in this suite - which is
-  exactly why it is the right regression fixture for "the *next* unparsed
-  shape is still audible".
+  An engine gap. Aeronaut Cavalry's "put a +1/+1 counter on another target
+  Soldier you control" is the control card here: a *bare, single* CR 205.3m
+  creature-type word used as the target noun - `_read_subtype_list`
+  (`machines/targeting.py`) deliberately reads only a **two-or-more**-item
+  Oxford list this way (Slayer of the Wicked's own "target Vampire,
+  Werewolf, or Zombie" *is* read now, and used to be this file's own control
+  card before that fix), so the singular form stays unparsed on purpose and
+  is exactly the right regression fixture for "the *next* unparsed shape is
+  still audible".
 - `NO_LEGAL_TARGET` - the restriction parsed fine, but nothing on the
   battlefield satisfies it. A legitimate game state (CR 608.2d's own
   "nobody says otherwise" default), not a bug, and not CR 608.2b's fizzle -
@@ -35,20 +38,25 @@ different `TargetingNoticeKind` values.
 
 from magic_cards_model.machines.triggers import TargetingNoticeKind
 from magic_cards_model.models import Zone
+from magic_cards_model.models.card_state import Counter
 from tests.scenarios.harness import Scenario
 
 
 def test_an_unparsed_restriction_is_logged_not_silent():
-    """Slayer of the Wicked's subtype list cannot be read - and now says so."""
+    """Aeronaut Cavalry's bare single-subtype target cannot be read - and now
+    says so. A Soldier sits right there on alice's own battlefield (the
+    would-be legal target, if the restriction could be read at all), which
+    is what proves this is genuinely `UNPARSED` and not merely
+    `NO_LEGAL_TARGET` in disguise."""
     scenario = (
         Scenario()
-        .player("alice", hand=["Slayer of the Wicked"])
-        .player("bob", battlefield=["Grizzly Bears"])
+        .player("alice", hand=["Aeronaut Cavalry"], battlefield=["Slayer of the Wicked"])
+        .player("bob")
         .build()
     )
-    bears = scenario.creature("Grizzly Bears", "bob")
+    soldier = scenario.creature("Slayer of the Wicked", "alice")
 
-    scenario.put_onto_battlefield("Slayer of the Wicked")
+    scenario.put_onto_battlefield("Aeronaut Cavalry")
     scenario.game.put_triggers_on_stack()
 
     (ability,) = scenario.game.abilities_on_stack
@@ -56,11 +64,11 @@ def test_an_unparsed_restriction_is_logged_not_silent():
 
     (notice,) = scenario.game.targeting_notices
     assert notice.kind is TargetingNoticeKind.UNPARSED
-    assert notice.source_name == "Slayer of the Wicked"
+    assert notice.source_name == "Aeronaut Cavalry"
 
     while not scenario.game.stack_is_empty:
         scenario.resolve_top()
-    assert bears.zone is Zone.BATTLEFIELD, "nothing was destroyed - there was never a target"
+    assert soldier.counters[Counter.PLUS_ONE] == 0, "no counter placed - there was never a target"
 
 
 def test_a_regression_to_silent_no_op_would_fail_this():
@@ -70,11 +78,11 @@ def test_a_regression_to_silent_no_op_would_fail_this():
     """
     scenario = (
         Scenario()
-        .player("alice", hand=["Slayer of the Wicked"])
-        .player("bob", battlefield=["Grizzly Bears"])
+        .player("alice", hand=["Aeronaut Cavalry"], battlefield=["Slayer of the Wicked"])
+        .player("bob")
         .build()
     )
-    scenario.put_onto_battlefield("Slayer of the Wicked")
+    scenario.put_onto_battlefield("Aeronaut Cavalry")
     scenario.game.put_triggers_on_stack()
 
     assert scenario.game.targeting_notices, "an unparsed restriction must be logged, not silent"

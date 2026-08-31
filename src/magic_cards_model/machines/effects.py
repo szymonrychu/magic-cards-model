@@ -63,6 +63,7 @@ from pydantic import BaseModel, ConfigDict
 
 from ..models.card import Color, Supertype, Type
 from ..models.card_state import CardState, ChoiceKind, Counter, ExileAnnotation, ExileMarker
+from ..models.mana import ManaCost
 from ..models.player import Player
 from ..models.token import (
     MONSTER_ROLE,
@@ -643,6 +644,192 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
         return count_in_graveyard
 
     return None
+
+
+#: "your devotion to <color>" (CR 700.5) - Gray Merchant of Asphodel's own
+#: magnitude. Read separately from `count_expression`'s "number of <type>
+#: you control"/"<type> cards in your graveyard" family above: a genuinely
+#: different expression shape (a color, not a card type; every permanent's
+#: mana cost, not a filtered count of permanents), not a wider qualifier
+#: grammar bolted onto that one.
+_DEVOTION_RE = re.compile(
+    r"^your devotion to (?P<color>white|blue|black|red|green)$", re.IGNORECASE
+)
+#: CR 105.1's five colors, spelled the way "your devotion to `<color>`" prints
+#: them, to `Color`'s own single-letter enum value.
+_COLOR_WORD_TO_COLOR: dict[str, Color] = {
+    "white": Color.WHITE,
+    "blue": Color.BLUE,
+    "black": Color.BLACK,
+    "red": Color.RED,
+    "green": Color.GREEN,
+}
+
+
+def _devotion_count(phrase: str) -> Callable[["Game", str], int] | None:
+    """ "your devotion to `<color>`" -> `(game, controller) -> int` (CR 700.5):
+    the number of mana symbols of that color among the mana costs of
+    permanents `controller` controls.
+
+    CR 107.4e: "A hybrid mana symbol is also a colored mana symbol" of each
+    color it carries, and `ManaSymbol.colors` (`models/mana.py`) already
+    carries every symbol kind's colors uniformly - plain colored, hybrid,
+    monocolored hybrid, and Phyrexian alike - so this reads that field
+    directly rather than special-casing hybrid or Phyrexian mana itself.
+
+    CR 700.5a's "face-down spells and permanents are considered to lack a
+    mana cost" is not read here: nothing in the pool needs a face-down
+    permanent's devotion, and `CardState.mana_cost` (already up-face-aware,
+    per `models/card_state.py`) is what this reads instead.
+    """
+    match = _DEVOTION_RE.fullmatch(phrase.strip().rstrip("."))
+    if match is None:
+        return None
+    color = _COLOR_WORD_TO_COLOR[match.group("color").lower()]
+
+    def count_devotion(game: "Game", controller: str) -> int:
+        total = 0
+        for permanent in game.permanents_controlled_by(controller):
+            cost = permanent.mana_cost
+            if not cost:
+                continue
+            for symbol in ManaCost.parse(cost).symbols:
+                if color in symbol.colors:
+                    total += 1
+        return total
+
+    return count_devotion
+
+
+#: "each opponent loses X life, where X is your devotion to `<color>`." -
+#: Gray Merchant of Asphodel's and Erebos, God of the Dead's shared "devotion
+#: drain" template. Distinct from `_EACH_OPPONENT_LOSES_LIFE_EQUAL_TO_RE`'s
+#: "loses life equal to `<expr>`" shape just above (Grist's own, with no X in
+#: it at all) - this one names X explicitly and then defines it separately.
+_OPPONENT_LOSES_X_LIFE_WHERE_X_IS_RE = re.compile(
+    r"^each opponent loses x life, where x is (?P<expr>.+?)\.?$", re.IGNORECASE
+)
+#: "You gain life equal to the life lost this way." - the paired second
+#: sentence, CR 119.3's *actual* amount lost (after any floor or prevention),
+#: not a second evaluation of the first sentence's X.
+_GAIN_LIFE_EQUAL_TO_LIFE_LOST_RE = re.compile(
+    r"^you gain life equal to the life lost this way$", re.IGNORECASE
+)
+
+
+def _parse_devotion_drain_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """Gray Merchant of Asphodel's whole paragraph: "each opponent loses X
+    life, where X is your devotion to black. You gain life equal to the life
+    lost this way." Read as one CR 608.2c instruction pair - the life gained
+    is what each opponent's `Player.lose_life` actually took off, summed
+    across every opponent, not a recomputed devotion total, so this evaluates
+    devotion once and then measures the real life-total delta.
+    """
+    if index + 1 >= len(clauses):
+        return None
+    first_match = _OPPONENT_LOSES_X_LIFE_WHERE_X_IS_RE.fullmatch(clauses[index].strip())
+    if first_match is None:
+        return None
+    counter = _devotion_count(first_match.group("expr"))
+    if counter is None:
+        return None
+    if _GAIN_LIFE_EQUAL_TO_LIFE_LOST_RE.fullmatch(clauses[index + 1].strip()) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object)
+        amount = counter(game, controller.username)
+        if amount <= 0:
+            return
+        total_lost = 0
+        for opponent in _opponents(game, controller.username):
+            before = opponent.life
+            opponent.lose_life(amount)
+            total_lost += before - opponent.life
+        if total_lost > 0:
+            controller.gain_life(total_lost)
+
+    return 2, effect
+
+
+#: "Scry N." - the default half of Forsaken Crossroads' own paragraph, read
+#: with the same `_SCRY_RE` `parse_clause_effect` already uses for a plain
+#: "scry N" clause elsewhere, so a future card sharing this shape but a
+#: different N still reads.
+_SCRY_N_ONLY_RE = re.compile(r"^scry (?P<n>\d+)$", re.IGNORECASE)
+#: "If you weren't the starting player, you may untap `<name>` instead."
+#: (Forsaken Crossroads) - CR 103.8's starting player, and CR 608.2d's "you
+#: may" over what the previous clause would otherwise do.
+_IF_NOT_STARTING_PLAYER_MAY_UNTAP_INSTEAD_RE = re.compile(
+    r"^if you weren'?t the starting player, you may untap (?P<name>[^.]+) instead$",
+    re.IGNORECASE,
+)
+
+
+def _parse_scry_or_untap_if_not_starting_player_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """Forsaken Crossroads' whole trigger: "Scry 1. If you weren't the
+    starting player, you may untap Forsaken Crossroads instead." Read as one
+    CR 608.2c instruction, not two independent ones: "instead" makes the
+    second sentence's "you may untap" a substitute for the first sentence's
+    scry, not an addition to it, so whether the scry happens at all depends
+    on the answer to a question the first clause alone never asks.
+
+    CR 103.8: "The starting player takes their first turn" - `TurnMachine.
+    starting_player` is `players[0]`, fixed for the whole game. A player who
+    was not dealt that seat (CR 103.4's "on the draw") is who this offers the
+    substitution to; the starting player never sees the choice at all and
+    simply scries.
+
+    Ability-only (`for_spell=False`): nothing in the pool prints this shape
+    on a spell, and `AbilityOnStack.source` is what finds the land to untap.
+    """
+    if for_spell or index + 1 >= len(clauses):
+        return None
+    scry_match = _SCRY_N_ONLY_RE.fullmatch(clauses[index].strip())
+    if scry_match is None:
+        return None
+    count = int(scry_match.group("n"))
+    untap_match = _IF_NOT_STARTING_PLAYER_MAY_UNTAP_INSTEAD_RE.fullmatch(clauses[index + 1].strip())
+    if untap_match is None:
+        return None
+    named = untap_match.group("name").strip()
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        ability = stack_object
+        assert isinstance(ability, AbilityOnStack)
+        controller = game.controller_of(ability)
+        source = ability.source(game)
+        eligible = (
+            source is not None
+            and source.zone is Zone.BATTLEFIELD
+            and named.lower() in (source.name or "").lower()
+            and controller.username != game.turn.starting_player
+        )
+        if eligible:
+            assert source is not None
+            decision = game.ask(
+                Decision(
+                    kind=DecisionKind.MAY,
+                    player=controller.username,
+                    prompt=f"untap {source.name} instead of scrying",
+                    source=ability.source_name,
+                    affirmative_is_legal=True,
+                )
+            )
+            if decision:
+                # CR 701.43b's exert never applies to an effect's own untap,
+                # only to the untap step itself - `Player.untap` is the one
+                # normal turn-based-action caller that leaves `exert_applies`
+                # at its default `True`.
+                source.untap(exert_applies=False)
+                return
+        game.scry(controller, count, source=ability.source_name)
+
+    return 2, effect
 
 
 # --------------------------------------------------------------------------
@@ -4087,6 +4274,17 @@ _PREVENT_NEXT_DAMAGE_TO_TARGET_RE = re.compile(
     r"(?P<phrase>any target|.*target.+) this turn\.?$",
     re.IGNORECASE,
 )
+#: "target opponent draws a card" (Thought-Knot Seer's leaves-the-battlefield
+#: trigger), "target player <does something>" more generally - the plain
+#: player-clause vocabulary `parse_clause_effect` already reads (a life
+#: total, a draw, a mill, a scry, ...), run against whichever player this
+#: clause names rather than the resolving spell's/ability's own controller.
+#: Distinct from `_parse_target_player_mode`, which only ever runs for a
+#: modal spell's own mode text and never reaches a triggered ability's plain
+#: effect clause the way this one, wired into `_parse_targeted_clause`, does.
+_TARGET_PLAYER_OR_OPPONENT_VERB_RE = re.compile(
+    r"^target (?P<who>player|opponent) (?P<rest>.+)$", re.IGNORECASE
+)
 #: "Each player exiles all creature cards from their graveyard, then
 #: sacrifices all creatures they control, then puts all cards they exiled
 #: this way onto the battlefield." (Living End) - three CR 608.2c instructions
@@ -4440,6 +4638,22 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
             return None
         amount = _count(match.group("n"))
         return prevent_next_damage_to_target(amount)  # type: ignore[return-value]
+
+    if match := _TARGET_PLAYER_OR_OPPONENT_VERB_RE.fullmatch(clause):
+        if not _targets_understood(f"target {match.group('who')}", allow_player_targets=True):
+            return None
+        rest = match.group("rest").strip()
+        clause_effect = parse_clause_effect(rest) or parse_clause_effect(f"you {rest}")
+        if clause_effect is None:
+            return None
+
+        def player_verb_effect(game: "Game", stack_object: "StackObject") -> None:
+            source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+            for target in game.resolve_targets(stack_object):
+                if isinstance(target, Player):
+                    clause_effect(game, target, source)
+
+        return player_verb_effect
 
     return None
 
@@ -7183,6 +7397,69 @@ def _parse_counter_then_exile_instead_of_graveyard_pair(
     return effect
 
 
+#: "you may cast it without paying its mana cost" (Transcendent Dragon) - the
+#: tail end of its own counter-then-exile-then-cast paragraph, with no
+#: "until end of turn" the way Ragavan's and Ugin's own permission sentences
+#: print it (`_PLAY_PERMISSION_RE`).
+_CAST_IT_FREE_RE = re.compile(r"^you may cast it without paying its mana cost$", re.IGNORECASE)
+
+
+def _parse_counter_exile_then_cast_free_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """Transcendent Dragon's whole trigger: "counter target spell. If that
+    spell is countered this way, exile it instead of putting it into its
+    owner's graveyard, then you may cast it without paying its mana cost."
+    read as one CR 608.2c instruction, the ability-side counterpart of
+    `_parse_counter_then_exile_instead_of_graveyard_pair` (which only ever
+    fires `for_spell=True` - nothing in the pool prints the plain
+    counter-then-exile pair on a triggered ability until this card).
+
+    Three clauses, not two: `split_effect_clauses` cuts the second sentence's
+    trailing ", then you may cast it without paying its mana cost" away from
+    the exile clause in front of it, so this reads all three together.
+
+    CR 611.2a: a continuous effect with no stated duration lasts until the
+    end of the game, and this permission prints none - unlike Ragavan's and
+    Ugin's own "until end of turn" sentence (`_PLAY_PERMISSION_RE`) - so the
+    grant is made with `until_end_of_turn=False`.
+
+    A target that already left the stack (CR 608.2b) is neither countered nor
+    exiled, and no permission is granted - there is no spell left to grant one
+    over, the same as plain `counter_targets`.
+    """
+    if for_spell or index + 2 >= len(clauses):
+        return None
+    if not _COUNTER_TARGET_SPELL_RE.fullmatch(clauses[index].strip()):
+        return None
+    if not _COUNTER_THEN_EXILE_INSTEAD_RE.fullmatch(clauses[index + 1].strip()):
+        return None
+    if not _CAST_IT_FREE_RE.fullmatch(clauses[index + 2].strip()):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        ability = stack_object
+        assert isinstance(ability, AbilityOnStack)
+        controller = game.controller_of(ability).username
+        for reference in ability.targets:
+            if not reference.is_card:
+                continue
+            target = next((item for item in game.stack if item.id == reference.card_id), None)
+            if target is None:
+                continue
+            game.counter(target, to_exile=True)
+            game.grant_play_permission(
+                target,
+                controller,
+                pays_mana_cost=False,
+                source_name=ability.source_name,
+                rule="CR 611.2a",
+                until_end_of_turn=False,
+            )
+
+    return 3, effect
+
+
 #: "Imprint" and its plain-English relatives - "you may exile a `<quality>`
 #: card [with mana value N or greater/less] from your hand" (Ugin's
 #: Labyrinth). CR 207.2c: "Imprint" is an ability word and "[has] no special
@@ -9896,18 +10173,31 @@ def _parse_city_blessing_token_copy_clause(
 #   the resolving spell's controller rather than the revealing player.
 # --------------------------------------------------------------------------
 
-#: "target player reveals their hand" - Thoughtseize's own first sentence.
-_REVEAL_HAND_RE = re.compile(r"^target player reveals their hand$", re.IGNORECASE)
-#: "you choose a/an <quality> card from it" - Thoughtseize's own second
-#: sentence, the CR 701.9b override handing the choice to the resolving
-#: spell's controller instead of the revealed player.
+#: "target player reveals their hand" (Thoughtseize) / "target opponent
+#: reveals their hand" (Grief, Thought-Knot Seer) - the same CR 701.20a
+#: reveal, aimed at whichever player word the card prints; the actual target
+#: restriction (a plain player, or specifically an opponent) is still
+#: enforced by `machines/targeting.py` through `_targets_understood` below,
+#: not by this regex.
+_REVEAL_HAND_RE = re.compile(r"^target (?:player|opponent) reveals their hand$", re.IGNORECASE)
+#: "you choose a/an <quality> card from it" - Thoughtseize's, Grief's, and
+#: Thought-Knot Seer's shared second sentence, the CR 701.9b/CR 701.13a
+#: override handing the choice to the resolving spell's/ability's controller
+#: instead of the revealed player. Thought-Knot Seer prints its consequence
+#: in the same sentence ("... from it and exile that card"), but
+#: `split_effect_clauses` already cuts across that bare "and" the same way it
+#: does everywhere else, so this clause and its consequence clause
+#: (`_DISCARD_THAT_CARD_RE`/`_EXILE_THAT_CARD_RE`) always arrive separately.
 _CHOOSE_CARD_FROM_REVEALED_RE = re.compile(
     r"^you choose (?:a|an) (?P<quality>.+?) card from it$", re.IGNORECASE
 )
-#: "that player discards that card" - the anaphoric tail naming the same
-#: player `_REVEAL_HAND_RE` targeted and the same card
+#: "that player discards that card" (Thoughtseize, Grief) - the anaphoric
+#: tail naming the same player `_REVEAL_HAND_RE` targeted and the same card
 #: `_CHOOSE_CARD_FROM_REVEALED_RE` just chose.
 _DISCARD_THAT_CARD_RE = re.compile(r"^that player discards that card$", re.IGNORECASE)
+#: "exile that card" (Thought-Knot Seer, when not folded into the previous
+#: sentence) - CR 701.13a's move, straight from the revealed hand.
+_EXILE_THAT_CARD_RE = re.compile(r"^exile that card$", re.IGNORECASE)
 #: "you lose N life" - Thoughtseize's own optional fourth sentence.
 _YOU_LOSE_LIFE_RE = re.compile(r"^you lose (?P<life>\d+) life$", re.IGNORECASE)
 
@@ -10066,29 +10356,40 @@ def _parse_choose_up_to_one_target_spell_clauses(
 def _merge_reveal_hand_choose_discard_clauses(
     clauses: list[str], index: int, *, for_spell: bool
 ) -> tuple[int, TargetedClause] | None:
-    """Thoughtseize's whole paragraph, read as one anaphoric run of clauses
-    rather than four independent ones: "it" in the second sentence is the
-    hand `_REVEAL_HAND_RE` just revealed, and "that card" in the third is
-    whichever one `_CHOOSE_CARD_FROM_REVEALED_RE` just chose. Neither of
-    those can be resolved by a clause parsed alone, which is why this is a
-    multi-clause merge (see `_parse_mixed_clauses`'s own docstring) rather
-    than three entries in `_parse_mixed_clause`'s single-clause chain.
+    """Thoughtseize's, Grief's, and Thought-Knot Seer's shared paragraph,
+    read as one anaphoric run of clauses rather than several independent
+    ones: "it" in the second sentence is the hand `_REVEAL_HAND_RE` just
+    revealed, and "that card" in the third is whichever one
+    `_CHOOSE_CARD_FROM_REVEALED_RE` just chose. Neither of those can be
+    resolved by a clause parsed alone, which is why this is a multi-clause
+    merge (see `_parse_mixed_clauses`'s own docstring) rather than several
+    entries in `_parse_mixed_clause`'s single-clause chain.
+
+    Grief prints "target opponent" where Thoughtseize prints "target player";
+    `_REVEAL_HAND_RE` reads either, and the actual restriction is enforced
+    through `_targets_understood` on the clause's own matched text (not a
+    literal "target player") so the two are checked for what they actually
+    say. The consequence clause is either `_DISCARD_THAT_CARD_RE`'s CR 701.9a
+    discard (Thoughtseize, Grief) or `_EXILE_THAT_CARD_RE`'s CR 701.13a exile
+    (Thought-Knot Seer) - the same anaphoric "that card", moved a different
+    place.
 
     The trailing "you lose N life" is genuinely optional - Thoughtseize
-    prints it, a hypothetical zero-life-cost cousin would not - and is read
-    unconditionally regardless of whether a card was actually discarded
+    prints it, Grief and Thought-Knot Seer do not - and is read
+    unconditionally regardless of whether a card was actually taken
     (CR 608.2c's printed order has no "if you do" gate on it the way
     `_parse_conditional_sacrifice_clause`'s consequence does).
 
     A hand with no nonland (or otherwise qualifying) card is CR 608.2d's
     "impossible option": nothing is asked and the reveal simply shows an
-    all-land hand for nothing, exactly as the paper card does.
+    all-land hand for nothing, exactly as the paper cards do.
     """
     if index + 2 >= len(clauses):
         return None
-    if _REVEAL_HAND_RE.fullmatch(clauses[index].strip()) is None:
+    reveal_clause = clauses[index].strip()
+    if _REVEAL_HAND_RE.fullmatch(reveal_clause) is None:
         return None
-    if not _targets_understood("target player", allow_player_targets=True):
+    if not _targets_understood(reveal_clause.split(" reveals", 1)[0], allow_player_targets=True):
         return None
     choose_match = _CHOOSE_CARD_FROM_REVEALED_RE.fullmatch(clauses[index + 1].strip())
     if choose_match is None:
@@ -10096,7 +10397,9 @@ def _merge_reveal_hand_choose_discard_clauses(
     matches = _nonland_or_typed_card_matcher(choose_match.group("quality"))
     if matches is None:
         return None
-    if _DISCARD_THAT_CARD_RE.fullmatch(clauses[index + 2].strip()) is None:
+    consequence_clause = clauses[index + 2].strip()
+    to_exile = _EXILE_THAT_CARD_RE.fullmatch(consequence_clause) is not None
+    if not to_exile and _DISCARD_THAT_CARD_RE.fullmatch(consequence_clause) is None:
         return None
     consumed = 3
     life_loss = 0
@@ -10133,7 +10436,11 @@ def _merge_reveal_hand_choose_discard_clauses(
                 )
                 assert isinstance(chosen_ids, tuple)
                 by_id = {state.id: state for state in candidates}
-                revealer.discard(by_id[chosen_ids[0]])
+                chosen = by_id[chosen_ids[0]]
+                if to_exile:
+                    game.exile_permanent(chosen)
+                else:
+                    revealer.discard(chosen)
         if life_loss:
             controller.lose_life(life_loss)
 
@@ -10414,7 +10721,12 @@ def _merge_look_top_reveal_to_hand_clauses(
 #: may" - the split is mandatory, and which of the two cards goes where is the
 #: controller's own unstated choice (CR 608.2d), the same free choice `scry`'s
 #: "any order" already is.
-_PUT_ONE_OF_THEM_INTO_YOUR_HAND_RE = re.compile(r"^put one of them into your hand$", re.IGNORECASE)
+#: "of them" is optional: Codecracker Hound prints the shorter "Put one into
+#: your hand", Waker of Waves the fuller "Put one of them into your hand" -
+#: the same CR 608.2d split either way.
+_PUT_ONE_OF_THEM_INTO_YOUR_HAND_RE = re.compile(
+    r"^put one(?: of them)? into your hand$", re.IGNORECASE
+)
 #: "the other into your graveyard" - Waker of Waves' own third clause, split
 #: off the second sentence's "and" by `_CLAUSE_SEPARATOR` the same way
 #: Duskwatch Recruiter's own third/fourth clauses are. English ellipsis drops
@@ -10632,6 +10944,80 @@ def _parse_self_return_clause(clause: str, *, for_spell: bool) -> TargetedClause
             source.controller_or_owner or game.active_player.username
         )
         owner.move(source, to_zone)
+
+    return effect
+
+
+#: "Exile it" (Ancient Adamantoise's own dies trigger) - CR 603.10a's
+#: look-back "it", naming the ability's own source rather than a target.
+#: Distinct from `_EXILE_THAT_CARD_RE`, whose "that card" is a card an
+#: earlier clause in the *same* ability chose from a revealed hand, not the
+#: source itself.
+_EXILE_IT_RE = re.compile(r"^exile it$", re.IGNORECASE)
+
+
+def _parse_exile_dead_self_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """ "Exile it" - moves the ability's own source to exile from wherever
+    CR 700.4's move just put it (almost always the graveyard, since this only
+    ever prints on a dies trigger in the pool). CR 113.7a: the ability
+    resolves independently of its source, so a source that can no longer be
+    found does nothing rather than raising, the same fail-soft
+    `_parse_self_return_clause` already gives its own self-reference.
+
+    Ability-only (`for_spell=False`): nothing in the pool prints this on a
+    spell, and `AbilityOnStack.source` is what finds the departed object -
+    a resolving spell has no equivalent lookup for "itself" once its
+    resolution has already moved it elsewhere.
+    """
+    if for_spell:
+        return None
+    if not _EXILE_IT_RE.fullmatch(clause.strip()):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        ability = stack_object
+        assert isinstance(ability, AbilityOnStack)
+        source = ability.source(game)
+        if source is None or source.zone is Zone.BATTLEFIELD:
+            return
+        game.exile_permanent(source)
+
+    return effect
+
+
+#: "return it to its owner's hand" (Rancor's own dies trigger) - CR 603.10a's
+#: look-back "it", naming the ability's own source, the same self-reference
+#: `_EXILE_IT_RE` reads for a different destination.
+_RETURN_IT_TO_OWNERS_HAND_RE = re.compile(r"^return it to its owner'?s hand$", re.IGNORECASE)
+
+
+def _parse_return_dead_self_to_hand_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """ "Return it to its owner's hand." - Rancor's own dies trigger, moving
+    the ability's own source (CR 603.10a's look-back "it") from wherever it
+    now sits (almost always the graveyard, per CR 700.4 - an Aura's own dies
+    trigger fires the same way a creature's does, CR 700.4 naming "a
+    permanent", not only a creature) to its owner's hand (CR 108.3, CR 401).
+    CR 113.7a: a source that can no longer be found does nothing rather than
+    raising, the same fail-soft shape `_parse_exile_dead_self_clause` and
+    `_parse_self_return_clause` already give their own self-references.
+
+    Ability-only (`for_spell=False`): nothing in the pool prints this on a
+    spell, and `AbilityOnStack.source` is what finds the departed object.
+    """
+    if for_spell:
+        return None
+    if not _RETURN_IT_TO_OWNERS_HAND_RE.fullmatch(clause.strip()):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        ability = stack_object
+        assert isinstance(ability, AbilityOnStack)
+        source = ability.source(game)
+        if source is None or source.zone is Zone.BATTLEFIELD:
+            return
+        game.return_to_hand(source)
 
     return effect
 
@@ -10913,6 +11299,12 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     self_return = _parse_self_return_clause(clause, for_spell=for_spell)
     if self_return is not None:
         return self_return
+    exile_dead_self = _parse_exile_dead_self_clause(clause, for_spell=for_spell)
+    if exile_dead_self is not None:
+        return exile_dead_self
+    return_dead_self = _parse_return_dead_self_to_hand_clause(clause, for_spell=for_spell)
+    if return_dead_self is not None:
+        return return_dead_self
     delayed = _parse_delayed_single_clause(clause, for_spell=for_spell)
     if delayed is not None:
         return delayed
@@ -11066,6 +11458,26 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             index += consumed
             continue
         # -- end Wave W1 multi-clause merges --------------------------------
+        merged = _parse_counter_exile_then_cast_free_clauses(clauses, index, for_spell=for_spell)
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _parse_devotion_drain_clauses(clauses, index, for_spell=for_spell)
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _parse_scry_or_untap_if_not_starting_player_clauses(
+            clauses, index, for_spell=for_spell
+        )
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
         # -- Wave W6's own multi-clause merges, contiguous block ------------
         merged = _parse_delayed_reanimate_haste_exile_clauses(clauses, index, for_spell=for_spell)
         if merged is not None:

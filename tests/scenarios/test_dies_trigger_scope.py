@@ -140,6 +140,48 @@ def test_blood_artist_triggers_on_any_other_creature_dying_including_an_opponent
     assert scenario.stack_names() == ["Blood Artist's triggered ability"]
 
 
+def test_blood_artists_own_death_drains_a_life_to_its_controller():
+    """The effect itself, not only the trigger: "target player loses 1 life
+    and you gain 1 life" (CR 119.3), read off the resolved ability."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Blood Artist"], life=20)
+        .player("bob", life=20)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    artist = scenario.creature("Blood Artist", "alice")
+    scenario.choose_trigger_targets("Blood Artist", ["bob"])
+
+    scenario.game.destroy(artist)
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+
+    assert scenario.player("bob").life == 19
+    assert scenario.player("alice").life == 21
+
+
+def test_blood_artist_drains_a_life_for_an_opponents_creature_dying_too():
+    """The reach across the table (already proven by the trigger firing)
+    pays off the same way when someone else's creature dies."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Blood Artist"], life=20)
+        .player("bob", battlefield=["Grizzly Bears"], life=20)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "bob")
+    scenario.choose_trigger_targets("Blood Artist", ["bob"])
+
+    scenario.game.destroy(bears)
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+
+    assert scenario.player("bob").life == 19
+    assert scenario.player("alice").life == 21
+
+
 def test_a_source_that_only_reads_the_self_form_does_not_fire_for_another_creature():
     """Fail-closed check: a plain self-referential dies condition, with no
     "another"/"other" in it at all, must not widen to anyone else's death.
@@ -194,24 +236,28 @@ def test_flagstones_death_trigger_fires_and_fetches_a_plains():
 # -- fail-closed: a condition this module still cannot read ---------------
 
 
-def test_a_leaves_the_battlefield_condition_still_never_fires():
+def test_a_leaves_the_battlefield_condition_fires_on_death_too():
     """Thought-Knot Seer: "When this creature leaves the battlefield, ..."
 
     CR 603.6c: a leaves-the-battlefield ability is broader than "dies" - it
-    also covers exile, bounce, and sacrifice - and nothing in the pool forces
-    that broader event to exist yet (see `docs/engine-coverage.md`). Its
-    condition parses to no `TriggerEvent` at all, so dying - the one way to
-    leave the battlefield this test can drive without a bounce or exile
-    effect - must not fire it either. The safe direction to be wrong in.
+    also covers exile and bounce - and `TriggerEvent.LEAVES_THE_BATTLEFIELD`
+    is now emitted by every one of the three ways a permanent actually
+    leaves in this engine (`Game.put_into_graveyard`, `Game.exile_permanent`,
+    `Game.return_to_hand`), alongside whichever destination-specific event
+    also fired. Dying is one of those three, so it fires this condition too -
+    see `test_leaving_the_battlefield_to_exile_fires_the_generic_departure_
+    event` and its bounce sibling in `test_trigger_events.py` for the other
+    two destinations.
     """
     scenario = Scenario().player("alice", battlefield=["Thought-Knot Seer"]).player("bob").build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     seer = scenario.creature("Thought-Knot Seer", "alice")
+    scenario.choose_trigger_targets("Thought-Knot Seer", ["bob"])
 
     scenario.game.destroy(seer)
     scenario.game.put_triggers_on_stack()
 
-    assert scenario.stack_names() == []
+    assert scenario.stack_names() == ["Thought-Knot Seer's triggered ability"]
 
 
 def test_declining_flagstones_search_leaves_the_library_alone():
