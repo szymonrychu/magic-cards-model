@@ -400,6 +400,26 @@ _PERMANENT_TYPES = frozenset(
 
 _ZONE_WORDS_FOR_GRANTS: dict[str, Zone] = {"hand": Zone.HAND, "graveyard": Zone.GRAVEYARD}
 
+#: Iroh, Grand Lotus: "During your turn, each Lesson card in your graveyard has
+#: flashback {1}." and "During your turn, each non-Lesson instant and sorcery
+#: card in your graveyard has flashback. The flashback cost is equal to that
+#: card's mana cost." CR 611.3d's own shape - "Continuous effects from static
+#: abilities may allow a player to play a land or cast a permanent spell, or
+#: may grant an ability to a permanent spell or card that allows it to be
+#: cast" - and the granted keyword is what says which zone it may be cast from
+#: (CR 113.6f, CR 702.34a).
+_GRANTED_KEYWORD_ON_A_CARD_IN_A_ZONE = re.compile(
+    r"^(?P<during>During your turn, )?[Ee]ach (?P<what>[\w' -]+?) card in your "
+    r"(?P<zone>hand|graveyard) has (?P<keyword>[A-Za-z]+)(?P<cost>[^.]*)\.(?P<tail>.*)$",
+    re.DOTALL,
+)
+
+#: The second sentence Iroh prints under the first: the granted cost is the
+#: card's own mana cost rather than a printed one.
+_COST_IS_THE_CARDS_MANA_COST = re.compile(
+    r"The (?P<keyword>[A-Za-z]+) cost is equal to that card's mana cost\.", re.IGNORECASE
+)
+
 
 class GrantedCastOption(BaseModel):
     """One `KeywordCastOption` another permanent handed this spell (CR 610.5)."""
@@ -414,33 +434,59 @@ class GrantedCastOption(BaseModel):
 def _spell_matches_grant_filter(spell: CardState, what: str) -> bool:
     """Whether this spell is one the grant's noun phrase names.
 
-    Every word has to be recognised and every word has to match: "Elemental
-    permanent" is a conjunction, not a list of alternatives. A word this
-    cannot place - a supertype it does not know, a noun nobody parsed - makes
-    the whole phrase unmatched rather than ignored, so an unread grant hands
-    out nothing instead of handing out too much.
+    Every word has to be recognised, and a word this cannot place - a noun
+    nobody parsed - makes the whole phrase unmatched rather than ignored, so an
+    unread grant hands out nothing instead of handing out too much.
+
+    Two shapes of word, read the way the templating uses them:
+
+    - **card types are a disjunction.** "instant and sorcery card" is one card
+      that is either, never one card that is both - CR 205.1a puts the types on
+      one line and no card is an instant *and* a sorcery, so reading the "and"
+      as a conjunction would match nothing at all. They are collected and the
+      spell has to have at least one (CR 205.2b: an object with more than one
+      card type "satisf[ies] the criteria for any effect that applies to any of
+      their card types").
+    - **everything else is a conjunction.** "Elemental permanent spells" wants
+      both, and a subtype or supertype is simply had.
+
+    A `non-` prefix negates the word it is attached to ("non-Lesson instant and
+    sorcery card"): the spell must *not* match it.
     """
     types = set(spell.types)
     subtypes = {subtype.lower() for subtype in spell.subtypes}
     supertypes = {supertype.value.lower() for supertype in spell.supertypes}
     type_words = {type_.value.lower(): type_ for type_ in Type}
+    wanted_types: set[Type] = set()
     for raw_word in what.split():
         word = raw_word.strip(",").lower()
-        if not word:
+        if not word or word in {"and", "or"}:
             continue
+        negated = word.startswith("non-")
+        if negated:
+            word = word[len("non-") :]
+        singular = word.rstrip("s")
         if word in {"permanent", "permanents"}:
-            if not types & _PERMANENT_TYPES:
-                return False
-        elif word.rstrip("s") in type_words:
-            if type_words[word.rstrip("s")] not in types:
-                return False
-        elif word in supertypes or word.rstrip("s") in subtypes:
-            # CR 205.4a's supertypes and CR 205.3's subtypes, either of which
-            # the spell simply has ("**Elemental** permanent spells").
-            continue
+            matched = bool(types & _PERMANENT_TYPES)
+        elif singular in type_words:
+            if not negated:
+                # Held back and answered as a disjunction once the whole
+                # phrase has been read.
+                wanted_types.add(type_words[singular])
+                continue
+            matched = type_words[singular] in types
+        elif word in supertypes or singular in subtypes:
+            matched = True
+        elif negated:
+            # A negated word the spell plainly does not have: "non-Lesson"
+            # against a card with no subtypes at all is satisfied, and there
+            # is nothing to look up.
+            matched = False
         else:
             return False
-    return True
+        if matched is negated:
+            return False
+    return not (wanted_types and not types & wanted_types)
 
 
 def granted_cast_options(
@@ -455,13 +501,26 @@ def granted_cast_options(
     that spell" - which is why this is asked at announcement, off the board as
     it stands then, rather than read off the card being cast.
 
-    Only the caster's own permanents are read ("spells **you** cast"), only
-    genuine `AbilityKind.STATIC` lines (CR 604.1's "written as statements"),
-    and only when the zone the grant names is the zone this cast is coming
-    from. The keyword itself is then expanded by `_option_from_keyword`, the
-    same reader that expands a printed one, so a granted evoke costs and
-    behaves exactly like a printed evoke (CR 702.74a) instead of becoming a
-    second, parallel notion of the keyword.
+    Only the caster's own permanents are read ("spells **you** cast", "in
+    **your** graveyard"), only genuine `AbilityKind.STATIC` lines (CR 604.1's
+    "written as statements"), and only when the zone the grant names is the
+    zone this cast is coming from. The keyword itself is then expanded by
+    `_option_from_keyword`, the same reader that expands a printed one, so a
+    granted evoke costs and behaves exactly like a printed evoke (CR 702.74a)
+    instead of becoming a second, parallel notion of the keyword.
+
+    Two sentence shapes are read, and they are two different rules:
+
+    - **as you cast it** (CR 610.5) - Ashling, the Limitless's "Elemental
+      permanent spells you cast from your hand gain evoke {4} as you cast
+      them.";
+    - **while it sits in the zone** (CR 611.3d: "Continuous effects from static
+      abilities ... may grant an ability to a permanent spell or card that
+      allows it to be cast") - Iroh, Grand Lotus's "During your turn, each
+      Lesson card in your graveyard has flashback {1}." The granted keyword is
+      what names the zone it may be cast from (CR 113.6f), and CR 400.7g is
+      what keeps the grant applying once CR 601.2a has moved the card to the
+      stack.
     """
     if game is None:
         return []
@@ -473,42 +532,109 @@ def granted_cast_options(
         for ability in parse_abilities(permanent.card):
             if ability.kind is not AbilityKind.STATIC or ability.face != up_face_name:
                 continue
-            match = _GRANTED_KEYWORD_AS_YOU_CAST.match((ability.text or "").strip())
-            if match is None:
-                continue
-            zone = _ZONE_WORDS_FOR_GRANTS.get(match.group("zone").lower())
-            if zone is None or zone is not origin_zone:
-                continue
-            if not _spell_matches_grant_filter(spell, match.group("what")):
-                continue
-            printed = match.group("cost").strip() or None
-            keyword = match.group("keyword")
-            option = _option_from_keyword(
-                KeywordAbility(
-                    raw=ability.raw,
-                    text=ability.text,
-                    face=up_face_name,
-                    keyword=keyword,
-                    canonical=keyword.capitalize(),
-                    cost=printed,
-                    cost_is_mana=bool(printed) and _ONLY_MANA_SYMBOLS.match(printed) is not None,
+            text = (ability.text or "").strip()
+            option = _grant_as_you_cast(text, spell, origin_zone, up_face_name, ability.raw)
+            if option is None:
+                option = _grant_on_a_card_in_a_zone(
+                    text, game, spell, caster, origin_zone, up_face_name, ability.raw
                 )
-            )
-            if option is None or option.zone is not zone:
-                # A keyword whose own rule casts from somewhere else than the
-                # grant names is not this sentence's keyword; fail closed
-                # rather than invent a zone for it.
-                continue
-            found.append(
-                GrantedCastOption(
-                    source_name=permanent.name,
-                    # CR 610.5 is where the grant comes from; the keyword's own
-                    # rule still says what it does, and `_option_from_keyword`
-                    # already wrote that number onto the option.
-                    option=option.model_copy(update={"rule": f"CR 610.5, {option.rule}"}),
-                )
-            )
+            if option is not None:
+                found.append(GrantedCastOption(source_name=permanent.name, option=option))
     return found
+
+
+def _granted_option(
+    keyword: str, printed: str | None, zone: Zone, face: str, raw: str, rule: str
+) -> KeywordCastOption | None:
+    """One granted keyword, expanded by the reader that expands printed ones.
+
+    Returns None when the keyword is one `_option_from_keyword` does not hand
+    out a cast option for, or when the zone its own rule casts from is not the
+    zone the granting sentence named - either way the grant is dropped rather
+    than a zone or a cost invented for it.
+    """
+    option = _option_from_keyword(
+        KeywordAbility(
+            raw=raw,
+            text=raw,
+            face=face,
+            keyword=keyword,
+            canonical=keyword.capitalize(),
+            cost=printed,
+            cost_is_mana=bool(printed) and _ONLY_MANA_SYMBOLS.match(printed or "") is not None,
+        )
+    )
+    if option is None or option.zone is not zone:
+        return None
+    # The granting rule and the keyword's own rule, in that order: one says why
+    # this spell has the keyword at all, the other says what the keyword does.
+    return option.model_copy(update={"rule": f"{rule}, {option.rule}"})
+
+
+def _grant_as_you_cast(
+    text: str, spell: CardState, origin_zone: Zone, face: str, raw: str
+) -> KeywordCastOption | None:
+    """CR 610.5's shape: "... spells you cast from your hand gain evoke {4} as
+    you cast them.\""""
+    match = _GRANTED_KEYWORD_AS_YOU_CAST.match(text)
+    if match is None:
+        return None
+    zone = _ZONE_WORDS_FOR_GRANTS.get(match.group("zone").lower())
+    if zone is None or zone is not origin_zone:
+        return None
+    if not _spell_matches_grant_filter(spell, match.group("what")):
+        return None
+    return _granted_option(
+        match.group("keyword"),
+        match.group("cost").strip() or None,
+        zone,
+        face,
+        raw,
+        "CR 610.5",
+    )
+
+
+def _grant_on_a_card_in_a_zone(
+    text: str,
+    game: Any,
+    spell: CardState,
+    caster: str,
+    origin_zone: Zone,
+    face: str,
+    raw: str,
+) -> KeywordCastOption | None:
+    """CR 611.3d's shape: "During your turn, each Lesson card in your graveyard
+    has flashback {1}."
+
+    "During your turn" is a condition on the whole continuous effect, so it is
+    checked against the turn in progress; a sentence with no such prefix is
+    unconditional. A granted keyword printed with no cost of its own takes the
+    cost the next sentence names - Iroh's "The flashback cost is equal to that
+    card's mana cost." is the only such sentence in this pool, and anything
+    else leaves the keyword costless and therefore unread.
+    """
+    match = _GRANTED_KEYWORD_ON_A_CARD_IN_A_ZONE.match(text)
+    if match is None:
+        return None
+    zone = _ZONE_WORDS_FOR_GRANTS.get(match.group("zone").lower())
+    if zone is None or zone is not origin_zone:
+        return None
+    if match.group("during"):
+        turn = getattr(game, "turn", None)
+        if turn is None or turn.active_player != caster:
+            return None
+    if not _spell_matches_grant_filter(spell, match.group("what")):
+        return None
+    keyword = match.group("keyword")
+    printed = match.group("cost").strip() or None
+    if printed is None:
+        tail = _COST_IS_THE_CARDS_MANA_COST.search(match.group("tail") or "")
+        if tail is None or tail.group("keyword").lower() != keyword.lower():
+            return None
+        printed = spell.mana_cost or spell.card.mana_cost or None
+        if printed is None:
+            return None
+    return _granted_option(keyword, printed, zone, face, raw, "CR 611.3d, CR 400.7g")
 
 
 #: A printed cost that is nothing but mana symbols, the same test
@@ -784,15 +910,19 @@ def why_cannot_cast_from(spell: CardState, caster: str, zone: Zone, game: Any = 
     """CR 601.3: why this card cannot be cast from where it is, or None.
 
     A card in hand needs no permission - that is where the rules cast from by
-    default (CR 302.1, 601.3). Anywhere else, some keyword has to allow it, or
-    some effect has to have handed out a `PlayPermission`, and that grant's own
-    conditions have to hold.
+    default (CR 302.1, 601.3). Anywhere else, some keyword has to allow it -
+    printed on the card, or granted to it where it lies by somebody's static
+    ability (CR 611.3d, Iroh's flashback grant) - or some effect has to have
+    handed out a `PlayPermission`, and that grant's own conditions have to
+    hold.
     """
     if zone is Zone.HAND:
         return None
     if usable_play_permission(game, spell, caster) is not None:
         return None
-    options = castable_from(spell.card, zone)
+    options = castable_from(spell.card, zone) + [
+        granted.option for granted in granted_cast_options(game, spell, caster, zone)
+    ]
     reasons = [option.why_not(spell, caster, game) for option in options]
     if any(reason is None for reason in reasons):
         return None
@@ -933,7 +1063,10 @@ def why_cannot_cast_now(spell: CardState, caster: str, game: Any = None) -> str 
         return None  # CR 702.8a
     if Type.SORCERY in spell.card.types and has_sorcery_speed_flash_grant(game, caster):
         return None  # Teferi, Time Raveler's +1
-    if spell.zone is not Zone.HAND and castable_from(spell.card, spell.zone):
+    if spell.zone is not Zone.HAND and (
+        castable_from(spell.card, spell.zone)
+        or granted_cast_options(game, spell, caster, spell.zone)
+    ):
         # A keyword is what allows this cast at all (CR 601.3), and each one
         # carries its own timing - plot's "only as a sorcery" (CR 702.170a),
         # flashback's "any time you could cast a sorcery" (CR 702.34a). Let
