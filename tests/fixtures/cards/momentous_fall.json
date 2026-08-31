@@ -1,0 +1,136 @@
+{
+  "object": "card",
+  "id": "91a6f558-a754-4437-8328-00a6ca47f9b5",
+  "oracle_id": "6a5ce1b0-ac78-4a74-9eb7-4064e1687bf1",
+  "multiverse_ids": [
+    489394
+  ],
+  "arena_id": 72473,
+  "tcgplayer_id": 216126,
+  "cardmarket_id": 473319,
+  "name": "Momentous Fall",
+  "lang": "en",
+  "released_at": "2020-07-17",
+  "uri": "https://api.scryfall.com/cards/91a6f558-a754-4437-8328-00a6ca47f9b5",
+  "scryfall_uri": "https://scryfall.com/card/jmp/411/momentous-fall?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T08:12:39Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/1/91a6f558-a754-4437-8328-00a6ca47f9b5.jpg?1783930359",
+    "normal": "https://cards.scryfall.io/normal/front/9/1/91a6f558-a754-4437-8328-00a6ca47f9b5.jpg?1783930359",
+    "large": "https://cards.scryfall.io/large/front/9/1/91a6f558-a754-4437-8328-00a6ca47f9b5.jpg?1783930359",
+    "png": "https://cards.scryfall.io/png/front/9/1/91a6f558-a754-4437-8328-00a6ca47f9b5.png?1783930359",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/1/91a6f558-a754-4437-8328-00a6ca47f9b5.jpg?1783930359",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/1/91a6f558-a754-4437-8328-00a6ca47f9b5.jpg?1783930359",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/1/91a6f558-a754-4437-8328-00a6ca47f9b5.webp?1783930359",
+    "grid": "https://cards.scryfall.io/grid/front/9/1/91a6f558-a754-4437-8328-00a6ca47f9b5.webp?1783930359",
+    "display": "https://cards.scryfall.io/display/front/9/1/91a6f558-a754-4437-8328-00a6ca47f9b5.webp?1783930359",
+    "art": "https://cards.scryfall.io/art/front/9/1/91a6f558-a754-4437-8328-00a6ca47f9b5.webp?1783930359",
+    "crop": "https://cards.scryfall.io/crop/front/9/1/91a6f558-a754-4437-8328-00a6ca47f9b5.webp?1783930359"
+  },
+  "mana_cost": "{2}{G}{G}",
+  "cmc": 4.0,
+  "type_line": "Instant",
+  "oracle_text": "As an additional cost to cast this spell, sacrifice a creature.\nYou draw cards equal to the sacrificed creature's power, then you gain life equal to its toughness.",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "arena",
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "0f6ccf25-a627-4263-86df-5757137f1696",
+  "set": "jmp",
+  "set_name": "Jumpstart",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/0f6ccf25-a627-4263-86df-5757137f1696",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ajmp&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/jmp?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/91a6f558-a754-4437-8328-00a6ca47f9b5/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A6a5ce1b0-ac78-4a74-9eb7-4064e1687bf1&unique=prints",
+  "collector_number": "411",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "It wasn't long until the elves had developed a use for every part of the Eldrazi.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Tomasz Jedruszek",
+  "artist_ids": [
+    "bba69285-2445-4a4b-a847-59397be972ea"
+  ],
+  "illustration_id": "9796e873-31af-471a-9454-9c0be5b51f84",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 2568,
+  "penny_rank": 7956,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "",
+    "previewed_at": "2020-06-18"
+  },
+  "prices": {
+    "usd": "3.35",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "3.08",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=489394&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMomentous%2BFall",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMomentous%2BFall",
+    "edhrec": "https://edhrec.com/route/?cc=Momentous+Fall"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F216126%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=473319&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Momentous+Fall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
