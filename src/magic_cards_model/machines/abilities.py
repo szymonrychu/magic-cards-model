@@ -109,6 +109,21 @@ _SYMBOL = re.compile(r"\{([WUBRGC])\}")
 #: which is what "any **one** color" says; the count is kept so `resolve` adds
 #: that many rather than always one.
 _ANY_COLOR = re.compile(r"(?P<count>one|two|three|a) mana of any (?:one )?color", re.IGNORECASE)
+#: Nykthos, Shrine to Nyx: "Choose a color. Add an amount of mana of that
+#: color equal to your devotion to that color." Still a mana ability under
+#: every one of CR 605.1a's criteria - no target, it could add mana, it is
+#: not a loyalty ability - so it never uses the stack (CR 605.3b); the only
+#: thing it needs beyond `_ANY_COLOR`'s shape is that the *count* is
+#: CR 700.5's devotion rather than a printed number, which cannot be known
+#: until the ability is actually activated.
+_DEVOTION_AMOUNT = re.compile(
+    r"^an amount of mana of that color equal to your devotion to that color$", re.IGNORECASE
+)
+#: The sentence that precedes it. CR 605.1a says nothing about a mana
+#: ability having only one sentence, and this one is simply where the colour
+#: `Game.activate_ability` already takes for any `any_color` ability is
+#: chosen - so it is stripped before `_ADD` reads the rest.
+_CHOOSE_A_COLOR_PREAMBLE = re.compile(r"^Choose a color\.\s*", re.IGNORECASE)
 _ANY_COLOR_COUNTS = {"a": 1, "one": 1, "two": 2, "three": 3}
 _MANA_COST_IN_COST = re.compile(r"\{(\d+|[WUBRGCX])\}")
 
@@ -275,6 +290,16 @@ class ManaAbility(BaseModel):
     #: no such sentence, or when it has one this parser could not read - see
     #: `unparsed_rider`, which is exactly then set.
     rider: ManaAbilityRider | None = None
+    #: True when the count is CR 700.5's devotion rather than a printed
+    #: number - Nykthos, Shrine to Nyx's "Add an amount of mana of that color
+    #: equal to your devotion to that color." `any_color_count` stays at its
+    #: default 1 and is not the answer: the real count is only knowable from
+    #: the board at the moment of activation, so `resolve` takes it as an
+    #: argument and `Game.activate_ability` is what computes it
+    #: (`machines/effects.devotion_to`). A caller with no board to ask -
+    #: `produces`, `tests/scenarios/harness.mana_from` - gets one mana of the
+    #: chosen colour, which is the shape of the answer if not its size.
+    amount_from_devotion: bool = False
     #: The raw trailing sentence, when the ability's text has one beyond
     #: "Add ..." and its own recognised conditional/spend-restriction
     #: clauses, but this parser could not classify it as a known rider shape.
@@ -333,6 +358,7 @@ class ManaAbility(BaseModel):
         own_counters: frozenset[str] = frozenset(),
         color: Color | None = None,
         has_imprinted_card: bool = False,
+        count: int | None = None,
     ) -> list[Color]:
         """What this ability adds right now (CR 605.1a, CR 605.3b resolves it
         immediately, so "right now" is the only time that matters).
@@ -353,6 +379,15 @@ class ManaAbility(BaseModel):
         if any_color:
             if color is None:
                 raise ValueError("this ability adds any colour; pass the colour chosen")
+            # `count` is CR 700.5's devotion for `amount_from_devotion`, which
+            # nothing on this object can work out for itself - see that
+            # field's own docstring. Zero is a real answer (no permanent with
+            # a mana symbol of that colour) and produces no mana at all,
+            # which CR 605.2 already allows: "A mana ability remains a mana
+            # ability even if the game state doesn't allow it to produce
+            # mana."
+            if self.amount_from_devotion and count is not None:
+                return [color] * max(count, 0)
             return [color] * self.any_color_count
 
         if len(options) == 1:
@@ -434,6 +469,13 @@ def granted_mana_abilities(texts: Sequence[str]) -> list[ManaAbility]:
 
 
 def _parse_effect(effect: str) -> ManaAbility | None:
+    if _DEVOTION_AMOUNT.fullmatch(effect.strip().rstrip(".")):
+        return ManaAbility(
+            options=[[color] for color in _COLORS],
+            any_color=True,
+            any_color_count=1,
+            amount_from_devotion=True,
+        )
     any_color = _ANY_COLOR.search(effect)
     if any_color:
         count = _ANY_COLOR_COUNTS[any_color.group("count").lower()]
@@ -1984,7 +2026,14 @@ def _parse_activated(text: str, common: dict) -> ActivatedAbility | None:
     # sinking the whole paragraph under the project's own fail-closed rule.
     effect_text, cost_reduction = _split_off_trailing_cost_reduction(after)
 
-    add = _ADD.match(effect_text)
+    # Nykthos, Shrine to Nyx prints the colour choice as its own leading
+    # sentence ahead of the "Add ..." one. That choice is the same one
+    # `Game.activate_ability` already takes as `color` for any `any_color`
+    # ability, so it is stripped here rather than left to sink the whole
+    # paragraph - `_ADD` anchors at the start of the text and would otherwise
+    # never see the "Add" at all. `effect` on the returned ability keeps the
+    # full printed text, unchanged.
+    add = _ADD.match(_CHOOSE_A_COLOR_PREAMBLE.sub("", effect_text))
     cost_parts = _merge_disjunctive_sacrifice_cost(_split_top_level(cost))
     costs = [_classify_cost(part) for part in cost_parts]
     # CR 606.2 makes an ability a loyalty ability when a loyalty symbol is in

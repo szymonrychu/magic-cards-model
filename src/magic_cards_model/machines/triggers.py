@@ -335,6 +335,24 @@ class AbilityOnStack(BaseModel):
     `targets`, this was never a target at all (CR 115.1 - Back from the
     Brink's own sentence never says "target")."""
 
+    cost_sacrificed_card_ids: tuple[UUID, ...] = ()
+    """The ids of the permanents sacrificed to pay this ability's own cost,
+    when the ability's *effect* asks a question about them - Witch's Oven's
+    "Create a Food token. If **the sacrificed creature's** toughness was 4 or
+    greater, create two Food tokens instead."
+
+    The sacrifice twin of `cost_exiled_card_id`, and there for the identical
+    reason: CR 602.2b pays an activated ability's costs as it is activated,
+    so by the time this object exists the permanent is already in a graveyard
+    (CR 701.21a) and there is nothing on the battlefield to look at. It was
+    never a target either - CR 115.10a: "Just because an object or player is
+    being affected by a spell or ability doesn't make that object or player a
+    target of that spell or ability", and Witch's Oven's sentence never says
+    "target" - so `targets` is not where it can live.
+
+    A tuple rather than a single id because a printed cost may sacrifice more
+    than one permanent; every printing in the pool sacrifices exactly one."""
+
     unless_payment: Any = Field(default=None, exclude=True, repr=False)
     """The `machines/cost.CostPayment` made for an "unless that player pays" clause.
 
@@ -466,6 +484,15 @@ _STEP_PHRASES: tuple[tuple[str, Step], ...] = (
     # missing a mapping for.
     ("first main phase", Step.PRECOMBAT_MAIN),
     ("postcombat main phase", Step.POSTCOMBAT_MAIN),
+    # CR 505.1: "the first main phase (also known as the precombat main
+    # phase) and the second main phase (also known as the postcombat main
+    # phase)" - Kona, Rescue Beastie's own *survival* trigger says "your
+    # second main phase", which is the same phase under its other name.
+    # CR 505.1a's corner ("All other main phases are postcombat main phases.
+    # This includes the second main phase of a turn in which the combat phase
+    # has been skipped") does not arise here: this engine's turn machine has
+    # exactly the two main phases CR 500.1 lists.
+    ("second main phase", Step.POSTCOMBAT_MAIN),
     ("combat", Step.BEGINNING_OF_COMBAT),
 )
 
@@ -1250,6 +1277,26 @@ def zones_ability_functions_in(ability: TriggeredAbility, source: CardState) -> 
     if ability.event in _LOOK_BACK_EVENTS:
         return frozenset({Zone.BATTLEFIELD, source.zone})
 
+    # CR 113.6m: "An ability whose cost or effect specifies that it moves the
+    # object it's on out of a particular zone functions only in that zone,
+    # unless its trigger condition or a previous part of its cost or effect
+    # specifies that it moves the object it's on into that zone."
+    #
+    # Arclight Phoenix's "At the beginning of combat on your turn, if you've
+    # cast three or more instant and sorcery spells this turn, return this
+    # card from your graveyard to the battlefield" is exactly that: the
+    # *effect*, not the condition, names the zone. Checked after the branches
+    # above so the rule's own "unless" is honoured - a dies trigger whose
+    # effect returns the card from the graveyard puts it *into* that zone as
+    # its own trigger condition, and `_LOOK_BACK_EVENTS` has already answered
+    # for those. `machines/abilities._activated_ability_zone` applies the
+    # identical rule to an activated ability's effect text, which is why
+    # Cauldron Familiar's `Sacrifice a Food:` ability already worked from a
+    # graveyard and this triggered one did not.
+    effect = (ability.effect or "").lower()
+    if "from your graveyard" in effect and "this card" in effect:
+        return frozenset({Zone.GRAVEYARD})
+
     return frozenset({Zone.BATTLEFIELD})
 
 
@@ -1530,7 +1577,126 @@ def intervening_if_holds(
     if last_turn is not None:
         return last_turn
 
+    this_turn = _spells_cast_this_turn_holds(game, clause, source)
+    if this_turn is not None:
+        return this_turn
+
+    another_spell = _another_spell_cast_this_turn_holds(game, clause, source)
+    if another_spell is not None:
+        return another_spell
+
+    self_tapped = _source_tapped_holds(clause, source)
+    if self_tapped is not None:
+        return self_tapped
+
     return _fail_closed(game, ability, source)
+
+
+#: "if Kona is tapped" / "if this creature is untapped" - a clause about the
+#: source's own tap state. The subject is either CR 700.7's "this [something]"
+#: or CR 201.5's self-reference by printed name, which CR 201.5c lets a card
+#: shorten ("Kona" for "Kona, Rescue Beastie").
+_SOURCE_TAP_STATE = re.compile(r"^(?P<subject>.+?) is (?P<state>tapped|untapped)$")
+
+
+def _source_tapped_holds(clause: str, source: CardState) -> bool | None:
+    """`_SOURCE_TAP_STATE`'s shape - Kona, Rescue Beastie's *survival* trigger.
+
+    `None` when the clause is not this shape, or when its subject is some
+    other object than the source itself: this reads only the source's own tap
+    state, so a clause about anything else still reaches `_fail_closed`
+    rather than being answered from the wrong permanent.
+
+    CR 201.5 is what makes a printed name mean "just that particular object
+    and not any other objects with that name", and CR 201.5c is what lets the
+    card print only the first part of it.
+    """
+    match = _SOURCE_TAP_STATE.match(clause)
+    if match is None:
+        return None
+    subject = match.group("subject").strip().lower()
+    name = source.name.lower()
+    is_self = re.fullmatch(r"this \w+", subject) is not None or (
+        subject
+        and (name == subject or name.startswith(f"{subject},") or name.startswith(f"{subject} "))
+    )
+    if not is_self:
+        return None
+    return source.tapped if match.group("state") == "tapped" else not source.tapped
+
+
+#: "you've cast three or more instant and sorcery spells this turn" - Arclight
+#: Phoenix's own combat trigger. The type list is CR 205.2a's card types,
+#: joined with a bare "and"/"or"/comma; a spell matching *any* of them counts
+#: once, which is what the card means (an instant is not also a sorcery).
+_SPELLS_CAST_THIS_TURN = re.compile(
+    r"^you(?:'ve| have) cast (?P<count>\w+) or more (?P<types>[a-z, ]+?) spells this turn$"
+)
+#: "you've cast another spell this turn" - Sage of the Skies' own cast
+#: trigger. "Another" excludes the spell the trigger is printed on, which is
+#: itself already recorded in `Game.spells_cast_this_turn` by the time the
+#: trigger is checked (CR 601.2i puts the spell on the stack, and the cast
+#: trigger fires off that very event).
+_ANOTHER_SPELL_THIS_TURN = re.compile(r"^you(?:'ve| have) cast another spell this turn$")
+
+
+def _another_spell_cast_this_turn_holds(
+    game: "Game", clause: str, source: CardState
+) -> bool | None:
+    """`_ANOTHER_SPELL_THIS_TURN`'s shape, or `None` if the clause is not it.
+
+    Counted off `Game.spells_cast_this_turn`, with the source itself excluded
+    by id - CR 201.5's "just that particular object", not "any object with
+    that name", so a second copy of the same card cast earlier this turn does
+    satisfy the clause.
+    """
+    if _ANOTHER_SPELL_THIS_TURN.match(clause) is None:
+        return None
+    controller = source.controller or game.active_player.username
+    cast = game.spells_cast_this_turn.get(controller, [])
+    return any(state.id != source.id for state in cast)
+
+
+def _spells_cast_this_turn_holds(game: "Game", clause: str, source: CardState) -> bool | None:
+    """`_SPELLS_CAST_THIS_TURN`'s shape, or `None` if the clause is not it.
+
+    Answered from `Game.spells_cast_this_turn`, the running list this engine
+    already keeps for Alania, Divergent Storm's own "the first instant spell
+    ... you've cast this turn" - counted at the moment each spell was cast,
+    and emptied as a new turn begins.
+
+    "You" is the ability's own controller. Each recorded spell is measured by
+    its printed card types (CR 205.2a): the object it was as a spell is long
+    gone from the stack by the time this is asked, and CR 400.7 leaves
+    whatever it became with no memory of that existence, so the printing is
+    the only thing left to read - which is exact here, since no card in the
+    pool changes an instant into a sorcery or back.
+
+    Returns `None`, not `False`, for a count word this does not know, so the
+    caller still fails closed and records the gap rather than silently
+    answering "no".
+    """
+    match = _SPELLS_CAST_THIS_TURN.match(clause)
+    if match is None:
+        return None
+    wanted = _NUMBER_WORDS.get(match.group("count"))
+    if wanted is None:
+        return None
+    wanted_types: set[Type] = set()
+    for word in re.split(r",|\band\b|\bor\b", match.group("types")):
+        word = word.strip()
+        if not word:
+            continue
+        card_type = next((t for t in Type if t.value == word.rstrip("s")), None)
+        if card_type is None:
+            return None
+        wanted_types.add(card_type)
+    if not wanted_types:
+        return None
+    controller = source.controller or game.active_player.username
+    cast = game.spells_cast_this_turn.get(controller, [])
+    matching = sum(1 for state in cast if wanted_types & set(state.card.types))
+    return matching >= wanted
 
 
 #: "if no spells were cast last turn" - the werewolves' transform condition

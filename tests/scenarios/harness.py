@@ -847,6 +847,7 @@ class PlayedScenario:
             color=color,
             x_value=x_value,
             exiled_for_cost=exiling[0] if exiling else None,
+            sacrificed_for_cost=sacrificing,
         )
         self.game.retain_priority(controller)
         return ability

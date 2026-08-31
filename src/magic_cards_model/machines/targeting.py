@@ -1846,8 +1846,22 @@ def _read_phrase(prefix: str, suffix: str) -> TargetRequirement | None:
             # branch instead rather than the early-return special case, which
             # is also how "you control" past it still reaches the ordinary
             # `control_match` handling below.
+            #
+            # The elision only happens when nothing else is standing in for
+            # the noun. Greasefang, Okiba Boss's "target Vehicle card from
+            # your graveyard" prints the noun itself, and a Vehicle card is
+            # an *artifact* card (CR 205.3 lists Vehicle among the artifact
+            # subtypes, and CR 301.7 is what makes a Vehicle a creature only
+            # once it is crewed) - adding `Type.CREATURE` here would make
+            # every Vehicle in a graveyard an illegal target for the one card
+            # that names them. So a following noun ("card", "permanent",
+            # "spell", or a card type) is taken as the real noun and the
+            # subtype simply qualifies it.
             required_subtypes.add(word)
-            card_types.add(Type.CREATURE)
+            following = words[index + 1] if index + 1 < len(words) else ""
+            following_bare = following[:-1] if following.endswith("s") else following
+            if following_bare not in _ALL_NOUNS:
+                card_types.add(Type.CREATURE)
             allows_cards = True
         elif nouns_read == 0 and not adjectives.read:
             return None  # an adjective the parser does not know: fail open

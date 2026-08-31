@@ -1577,3 +1577,185 @@ A batch of previously-silent activated abilities, each reached only by building 
 Card-to-card exile linking (`ExileMarker.IMPRINTED`) turned out to generalise past "Imprint" itself: Hideaway (a different keyword) and The Darkness Crystal (no keyword at all, just "exiled with `<name>`" in plain text) both reuse the identical mechanism Ugin's Labyrinth introduced.
 
 No `DecisionKind` was added - `CHOOSE_A_QUALITY` (already used for CR 614.12a's "as [this] enters, choose a color") is reused for Wild Mongrel's and Mother of Runes' "of your choice", and `CHOOSE_CARDS` for Hideaway's mandatory one-of-four exile. No new zone, no new `TriggerEvent`. The API-facing `DecisionKind` enum is unchanged - nothing here requires the sibling API repo to answer a new question shape.
+
+
+## W15: the sweeper's last 25 silent cards
+
+`scripts/sweep_pool.py`'s "cards that would do nothing at all if played right
+now" bucket stood at **25 of 388**. It is now **0 of 387** (the denominator
+moved by one because Nykthos, Shrine to Nyx stopped having any non-mana rules
+text at all - see below). Nothing was closed with a card-name registry row:
+every fix is a parser reading the card's own printed text, so the next card
+with the same shape is covered for free.
+
+Grouped by the mechanic each one needed, not by card:
+
+- **Returning a card from a graveyard to the battlefield** (CR 110.2a's "put
+  onto the battlefield", never a cast) - three shapes.
+  `_parse_return_self_from_graveyard_to_battlefield_clause` reads "Return this
+  card from your graveyard to the battlefield." (CR 700.7's self-reference,
+  found by id wherever the card is, CR 113.7a) for **Arclight Phoenix**'s
+  combat trigger and **Cauldron Familiar**'s `Sacrifice a Food:` ability.
+  `_parse_mass_return_from_graveyard_to_battlefield_clause` reads **Raise the
+  Past**'s whole-group return, with the group described by the new
+  `_parse_card_group_qualifier` (below). `_parse_return_target_from_graveyard_
+  gains_then_bounce` reads **Greasefang, Okiba Boss**'s three sentences as one
+  CR 608.2c instruction - reanimate, grant a keyword with no stated duration
+  (CR 611.2a leaves it indefinite, layer 6 per CR 613.1f), and create
+  CR 603.7a's delayed trigger for the return at the controller's own next end
+  step. `_parse_each_player_sacrifices_then_mass_reanimate` reads **Bringer of
+  the Last Gift**'s pair, whose second sentence's candidate set is defined by
+  what the first did ("that weren't put there this way"), so each graveyard is
+  snapshotted before anything is sacrificed (CR 608.2f).
+- **Reading a *card's* description, as opposed to a permanent's.**
+  `_parse_card_group_qualifier` is the new counterpart to
+  `_parse_mass_type_qualifier`: a card in a graveyard, hand or library has only
+  its printed characteristics (CR 400.7), and no computed board to ask. It
+  reads CR 205.2a's card types, CR 110.4a's "permanent card" group, a negated
+  CR 205.3 subtype ("non-Avatar creature card"), and a CR 202.3 mana-value
+  bound. `_parse_card_group_alternatives` splits an "A or B" list of them.
+- **Mass return to hand.** `_parse_mass_return_to_hand_clause` for
+  **Sunderflock**, plus the printed plural "to their owners' hands" added to
+  `_RETURN_TARGET_RE`, which is all **Marang River Regent** was missing.
+- **A bounce that asks who controlled the permanent.**
+  `_parse_return_target_then_conditional_draw` for **Boomerang Basics**: the
+  controller check has to run before the return, because a card in a hand has
+  no controller at all (CR 108.4).
+- **Explore** (CR 701.44a, CR 701.44b) - a new primitive, `_explore`. The
+  reveal is CR 701.20a; the "back on top or into your graveyard" half reuses
+  `Game.look_at_top_and_split` rather than `Game.surveil`, since nothing here
+  is CR 701.25a's keyword action. `_parse_explores_then_conditional_mass_
+  destroy` is **Amalia Benavides Aguirre**'s whole trigger, with the power
+  compared *after* the +1/+1 counter the explore may have just added
+  (CR 122.1a, CR 613.4c).
+- **Recruit** (CR 701.70a) - `_parse_recruit_clause` for **Lake-town
+  Lookout**. The keyword's own definition names the 1/1 white Human Soldier
+  token, so it is built here rather than read off reminder text; the "if you
+  discarded a nonland card" branch reads what `_discard_cards` actually moved,
+  which is why that helper now returns its cards.
+- **Sacrificing N of a group** (CR 701.21a) - `_parse_sacrifice_n_of_a_group_
+  clause` for **Lotus Field**. Which permanents is CR 608.2d's choice among
+  the controller's own; fewer than N on the battlefield sacrifices all there
+  are rather than failing.
+- **Tokens created already attacking** (CR 508.4, CR 508.4c) -
+  `_parse_attacking_token_clause` for **Parhelion II**. Untapped, unlike
+  CR 508.1f's declared attacker; the defender is read off the attack the
+  trigger's own controller already declared, the same reading Dalkovan
+  Encampment's tokens already take.
+- **A count that depends on what paid the cost** - **Witch's Oven**'s "if the
+  sacrificed creature's toughness was 4 or greater". CR 602.2b pays an
+  activated ability's costs before the object on the stack exists, so a new
+  `AbilityOnStack.cost_sacrificed_card_ids` carries the choice through, the
+  sacrifice twin of the `cost_exiled_card_id` Back from the Brink needed for
+  the identical reason. `Game.activate_ability` gained a
+  `sacrificed_for_cost=` parameter alongside `exiled_for_cost=`, and the
+  scenario harness forwards its own `sacrificing=` into it.
+- **Copying your own spell** (CR 707.10, CR 707.10f, CR 608.3f, CR 111.13) -
+  `_parse_copy_this_spell_clause` for **Sage of the Skies**' cast trigger,
+  routed straight into the existing `Game.copy_spell`.
+- **Putting a permanent card from hand onto the battlefield** (CR 110.2a) -
+  `_parse_put_permanent_card_from_hand_clause` for **Kona, Rescue Beastie**.
+- **Looking at the top N and taking some** (CR 701.20e) -
+  `_parse_look_top_lands_take_to_hand` for **Consult the Star Charts** (X is
+  CR 107.3c's, defined by the card's own text, and the "if this spell was
+  kicked" branch reads the recorded announcement of CR 118.8b's optional
+  additional cost off `Game.cast_record`) and `_parse_look_top_n_put_total_mv_onto_battlefield`
+  for **Michelangelo's Technique**, whose two simultaneous bounds - at most
+  two cards, total mana value at most six - are *enforced*: an answer breaking
+  either raises rather than being silently trimmed, matching this repo's
+  standing rule that CR 608.2d's illegal option is refused, not corrected.
+  Both bottom the rest in a random order without calling CR 701.24a's shuffle,
+  since neither card prints that word.
+- **Milling into a choice** (CR 701.17a) - `_parse_mill_then_may_take_from_
+  milled` for **Rapid Rescue** (the candidate pool is the cards just milled,
+  not the whole graveyard), `_parse_mill_then_may_return_to_hand_clause` for
+  **Overlord of the Balemurk** (the hand-destination, multi-description twin
+  of Tyvar's existing battlefield one), and `_parse_mill_then_play_that_card`
+  for **Tablet of Discovery** (CR 601.3's permission over the graveyard).
+- **Exiling the top and being allowed to play it** -
+  `_parse_exile_top_then_play_until_next_turn` for **Interdimensional Web
+  Watch**, reusing `PlayPermission.expires_end_of_next_turn`.
+- **"Unless you discard a `<quality>` card"** (CR 118.12a) -
+  `_parse_draw_then_discard_unless` for **Winternight Stories**.
+- **Doubling a creature's power** (CR 701.10a, CR 701.10b, CR 701.10c) -
+  `_parse_double_power_target_clause` for **Mightform Harmonizer**. The value
+  is fixed as the ability resolves and the resulting layer 7c effect
+  (CR 613.4c) never recomputes.
+- **A mana ability whose amount is devotion** - **Nykthos, Shrine to Nyx**'s
+  second ability is now read as what CR 605.1a says it is: an activated mana
+  ability, which CR 605.3b keeps off the stack entirely. `machines/abilities.
+  py` gained `ManaAbility.amount_from_devotion` and `resolve(count=...)`; the
+  count itself is CR 700.5's devotion, computed by `Game.activate_ability`
+  through the newly-public `machines/effects.devotion_to` (the body lifted out
+  of `_devotion_count`'s closure, unchanged). Its leading "Choose a color."
+  sentence is stripped before the "Add ..." one is read, because that choice
+  is the same `color` argument every `any_color` ability already takes.
+- **`each opponent loses N life`** (CR 119.3, CR 102.2) added to
+  `parse_clause_effect`'s player clauses - **Cauldron Familiar**'s enters
+  trigger.
+- **A "Sneak `<cost>`" line** (CR 702.190a) stripped by
+  `_strip_non_effect_preamble`, alongside the flashback and harmonize lines it
+  already stripped. It is a way to cast the card, not part of resolving it,
+  and left in place it sank Michelangelo's Technique's whole paragraph.
+
+One targeting fix came out of the same batch: `machines/targeting.py` used to
+elide "creature" after any bare subtype word, so "target Vehicle card from your
+graveyard" (Greasefang's own) required `Type.CREATURE` and no Vehicle card in a
+graveyard could ever be a legal target. The elision now only happens when no
+explicit noun follows the subtype.
+
+### W15's second half: the gaps the scenario tests exposed
+
+Closing the effect side left five cards still doing nothing in a real game,
+because their *trigger* never fired or their copy never became anything. Each
+was found by writing the scenario, not by reading the sweeper:
+
+- **A triggered ability printed on a card in a graveyard never fired at all.**
+  `Game.emit` only ever offered the battlefield (plus the stack for a cast
+  trigger, plus the object that just left for CR 603.10a's look-back events) as
+  trigger sources, so Arclight Phoenix's combat trigger was unreachable.
+  Graveyard cards are offered now, and `machines/triggers.
+  zones_ability_functions_in` reads CR 113.6m - "An ability whose cost or
+  effect specifies that it moves the object it's on out of a particular zone
+  functions only in that zone" - off the ability's **effect** text, which is
+  where Arclight Phoenix names the zone. The zone filter in `triggers_for` is
+  what keeps this from widening anything else: every other ability still
+  answers "battlefield" and a graveyard card is dropped exactly as before.
+- **Three intervening *if* clauses failed closed** (CR 608.2a), which looks
+  identical to a card doing nothing: "you've cast three or more instant and
+  sorcery spells this turn" (Arclight Phoenix), "you've cast another spell this
+  turn" (Sage of the Skies), and "Kona is tapped" (Kona, Rescue Beastie). All
+  three are read now - the first two off `Game.spells_cast_this_turn`, the
+  third off the source's own tap state, with CR 201.5/201.5c's
+  self-reference-by-printed-name handled so "Kona" means Kona, Rescue Beastie.
+- **"At the beginning of your second main phase" matched no step.**
+  `_STEP_PHRASES` knew "postcombat main phase" and "first main phase" but not
+  the other name CR 505.1 gives the same phase.
+- **A copy of a permanent spell resolved into a second real card.**
+  `Game.copy_spell` set `CardState.is_copy` and nothing ever read it, so Sage
+  of the Skies' copy arrived as a card-backed permanent. CR 707.10f/CR 111.13/
+  CR 608.3f make it a token as it resolves, and `Game.resolve_top` now sets
+  `CardState.token` at exactly that moment - not at copy time, since while it
+  is on the stack it is still a copy of a spell. Nothing is "created", so no
+  token-creation replacement effect applies, which is why this sets the flag
+  rather than routing through `create_tokens`.
+- **A spell's own "you gain N life" emitted no life-gain event.** The parsed
+  clause called `Player.gain_life`, which adjusts the total (CR 119.3) but
+  skips `Game.gain_life`'s emit - so CR 119.9's "Whenever a source causes [a
+  player] to gain life" was blind to every spell in the pool, and only lifelink
+  ever triggered it. Amalia Benavides Aguirre is the card that exposed it; Soul
+  Warden, Guide of Souls and Ocelot Pride were equally affected.
+
+One targeting fix rides along: `machines/targeting.py` elided "creature" after
+any bare subtype word, so Greasefang's own "target Vehicle card from your
+graveyard" required `Type.CREATURE` and no Vehicle card in a graveyard could
+ever be legal. The elision now stops when an explicit noun follows the subtype.
+
+**Still not modelled, and named here rather than papered over:** crew
+(CR 702.122a) has no execution path, so a Vehicle never becomes a creature on
+its own - `tests/scenarios/test_tokens_created_attacking.py` animates Parhelion
+II with Karn, the Great Creator's `+1` to reach its attack trigger, and says so.
+And the toughness Witch's Oven reads off the sacrificed creature is the printed
+one: CR 400.7 leaves nothing else on a card in a graveyard for this engine to
+read, so a creature sacrificed while wearing a +1/+1 counter bakes by its
+printed toughness.
