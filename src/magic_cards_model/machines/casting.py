@@ -452,7 +452,7 @@ def _spell_matches_grant_filter(spell: CardState, what: str) -> bool:
     Two shapes of word, read the way the templating uses them:
 
     - **card types are a disjunction.** "instant and sorcery card" is one card
-      that is either, never one card that is both - CR 205.1a puts the types on
+      that is either, never one card that is both - CR 205.1 puts the types on
       one line and no card is an instant *and* a sorcery, so reading the "and"
       as a conjunction would match nothing at all. They are collected and the
       spell has to have at least one (CR 205.2b: an object with more than one
@@ -513,8 +513,8 @@ def granted_cast_options(
     it stands then, rather than read off the card being cast.
 
     Only the caster's own permanents are read ("spells **you** cast", "in
-    **your** graveyard"), only genuine `AbilityKind.STATIC` lines (CR 604.1's
-    "written as statements"), and only when the zone the grant names is the
+    **your** graveyard"), only genuine `AbilityKind.STATIC` lines (CR 113.3d's
+    "Static abilities are written as statements. They're simply true."), and only when the zone the grant names is the
     zone this cast is coming from. The keyword itself is then expanded by
     `_option_from_keyword`, the same reader that expands a printed one, so a
     granted evoke costs and behaves exactly like a printed evoke (CR 702.74a)
