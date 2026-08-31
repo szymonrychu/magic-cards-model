@@ -1,0 +1,155 @@
+{
+  "object": "card",
+  "id": "1da2a740-e4ff-4661-ba57-39b15c58e26e",
+  "oracle_id": "1972e0db-e595-4ec2-b97c-902561bb275b",
+  "multiverse_ids": [],
+  "resource_id": "C04BD4A43E5CAAE3668EDB341E1E0B3F28A3391B3F0E3228DC5DD680A35248F0",
+  "mtgo_id": 142891,
+  "arena_id": 96713,
+  "tcgplayer_id": 643498,
+  "cardmarket_id": 835031,
+  "name": "Kavaron Harrier",
+  "lang": "en",
+  "released_at": "2025-08-01",
+  "uri": "https://api.scryfall.com/cards/1da2a740-e4ff-4661-ba57-39b15c58e26e",
+  "scryfall_uri": "https://scryfall.com/card/eoe/139/kavaron-harrier?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T01:25:54Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/1/d/1da2a740-e4ff-4661-ba57-39b15c58e26e.jpg?1783905954",
+    "normal": "https://cards.scryfall.io/normal/front/1/d/1da2a740-e4ff-4661-ba57-39b15c58e26e.jpg?1783905954",
+    "large": "https://cards.scryfall.io/large/front/1/d/1da2a740-e4ff-4661-ba57-39b15c58e26e.jpg?1783905954",
+    "png": "https://cards.scryfall.io/png/front/1/d/1da2a740-e4ff-4661-ba57-39b15c58e26e.png?1783905954",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/1/d/1da2a740-e4ff-4661-ba57-39b15c58e26e.jpg?1783905954",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/1/d/1da2a740-e4ff-4661-ba57-39b15c58e26e.jpg?1783905954",
+    "thumb": "https://cards.scryfall.io/thumb/front/1/d/1da2a740-e4ff-4661-ba57-39b15c58e26e.webp?1783905954",
+    "grid": "https://cards.scryfall.io/grid/front/1/d/1da2a740-e4ff-4661-ba57-39b15c58e26e.webp?1783905954",
+    "display": "https://cards.scryfall.io/display/front/1/d/1da2a740-e4ff-4661-ba57-39b15c58e26e.webp?1783905954",
+    "art": "https://cards.scryfall.io/art/front/1/d/1da2a740-e4ff-4661-ba57-39b15c58e26e.webp?1783905954",
+    "crop": "https://cards.scryfall.io/crop/front/1/d/1da2a740-e4ff-4661-ba57-39b15c58e26e.webp?1783905954"
+  },
+  "mana_cost": "{R}",
+  "cmc": 1.0,
+  "type_line": "Artifact Creature \u2014 Robot Soldier",
+  "oracle_text": "Whenever this creature attacks, you may pay {2}. If you do, create a 2/2 colorless Robot artifact creature token that's tapped and attacking. Sacrifice that token at end of combat.",
+  "power": "2",
+  "toughness": "1",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "c46f9a07-005c-44b7-8057-b2f00b274dd6",
+      "component": "token",
+      "name": "Robot",
+      "type_line": "Token Artifact Creature \u2014 Robot",
+      "uri": "https://api.scryfall.com/cards/c46f9a07-005c-44b7-8057-b2f00b274dd6"
+    },
+    {
+      "object": "related_card",
+      "id": "57264a8e-764a-46e6-afea-747f1b3dbf23",
+      "component": "combo_piece",
+      "name": "Kavaron Harrier",
+      "type_line": "Artifact Creature \u2014 Robot Soldier",
+      "uri": "https://api.scryfall.com/cards/57264a8e-764a-46e6-afea-747f1b3dbf23"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "452951cf-378b-4472-b7fe-572fe2af2ac0",
+  "set": "eoe",
+  "set_name": "Edge of Eternities",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/452951cf-378b-4472-b7fe-572fe2af2ac0",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aeoe&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/eoe?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/1da2a740-e4ff-4661-ba57-39b15c58e26e/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A1972e0db-e595-4ec2-b97c-902561bb275b&unique=prints",
+  "collector_number": "139",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "Once the security for a moxite mine, now a ghost in a hollowed-out cavern.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Hardy Fowler",
+  "artist_ids": [
+    "b1c1098a-a144-4c8a-a256-0dbe66154880"
+  ],
+  "illustration_id": "04d62462-f525-4a2c-a528-10cb9902d8f3",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 16886,
+  "preview": {
+    "source": "Press Start",
+    "source_uri": "https://press-start.com.au/previews/2025/07/11/exclusive-card-reveal-kavaron-harrier-from-magic-the-gatherings-edge-of-eternities-set/",
+    "previewed_at": "2025-07-11"
+  },
+  "prices": {
+    "usd": "0.27",
+    "usd_foil": "0.30",
+    "usd_etched": null,
+    "eur": "0.13",
+    "eur_foil": "0.36",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DKavaron%2BHarrier",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DKavaron%2BHarrier",
+    "edhrec": "https://edhrec.com/route/?cc=Kavaron+Harrier"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F643498%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=835031&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/142891?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
