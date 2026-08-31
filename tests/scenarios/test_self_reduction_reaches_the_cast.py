@@ -207,19 +207,22 @@ def test_a_tax_and_a_self_discount_are_both_applied():
     assert str(casting.begin_paying().cost) == "{4}{W}"
 
 
-def test_the_announced_x_reaches_disrupting_shoals_pitch_cost():
+def test_the_announced_x_is_what_the_pitched_card_is_measured_against():
     """CR 107.3a: the X in an alternative cost is chosen as the spell is cast
     (CR 601.2b), and CR 107.3i keeps every instance of X on the object equal.
 
-    `use_pitch_cost(x_value=...)` records it, and the printed phrase is read
-    with that value substituted in - which is as far as this file's engine can
-    take it, because `machines/cost.py`'s `CardRequirement` has no mana-value
-    predicate to express "with mana value 1" (the strict xfail below).
+    `use_pitch_cost(x_value=...)` records it and the printed phrase is read
+    with that value substituted in, so "with mana value X" becomes a real
+    demand on the card exiled - CR 202.3's mana value, checked by
+    `CardRequirement.mana_value`. Announcing X=1 and then offering Counterspell
+    (mana value 2) is CR 118.3's "a player can't pay a cost without the
+    resources to pay it fully", and it is refused at payment, not silently
+    accepted the way an unreadable phrase would have been.
     """
     scenario = (
         Scenario()
         .player("bob", hand=["Lightning Bolt"], battlefield=["Mountain"])
-        .player("alice", hand=["Disrupting Shoal", "Ponder"])
+        .player("alice", hand=["Disrupting Shoal", "Ponder", "Counterspell"])
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
@@ -227,24 +230,20 @@ def test_the_announced_x_reaches_disrupting_shoals_pitch_cost():
     scenario.cast_onto_stack("Lightning Bolt", mountain, username="bob", targets=["alice"])
     scenario.pass_priority("bob")
 
+    counterspell = scenario.find("Counterspell", Zone.HAND, "alice")
     casting = scenario.cast("Disrupting Shoal", username="alice")
-    with pytest.raises(ValueError, match="mana value 1"):
-        casting.use_pitch_cost(x_value=1)
+    casting.use_pitch_cost(x_value=1, choosing=[counterspell])
 
-    assert casting.x_value == 1, "the announced X is on the casting either way"
+    assert casting.x_value == 1, "the announced X is on the casting"
     (offer,) = casting.alternative_costs
     assert offer.description == "exile a blue card with mana value 1 from your hand"
 
+    payment = casting.begin_paying()
+    with pytest.raises(ValueError, match="mana value 2, not the 1"):
+        payment.pay()
+    assert counterspell.zone is Zone.HAND
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="`machines/cost.py` owns `CardRequirement`, which has no mana-value "
-    "predicate, so `total_cost_for_phrase('exile a blue card with mana value X "
-    "from your hand')` returns None whatever X is announced. `Casting` now "
-    "records the announced X for an X-keyed pitch cost (CR 107.3a) and "
-    "substitutes it into the phrase, but the substituted phrase is still "
-    "unreadable until cost.py can express 'with mana value N'.",
-)
+
 def test_disrupting_shoals_x_keyed_pitch_cost_is_payable():
     """CR 107.3a: "If a spell ... has a mana cost, alternative cost, additional
     cost, and/or activation cost with an {X}, [-X], or X in it, and the value of
@@ -256,8 +255,8 @@ def test_disrupting_shoals_x_keyed_pitch_cost_is_payable():
     """
     scenario = (
         Scenario()
-        .player("alice", hand=["Disrupting Shoal", "Ponder"])
         .player("bob", hand=["Lightning Bolt"], battlefield=["Mountain"])
+        .player("alice", hand=["Disrupting Shoal", "Ponder"])
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
@@ -266,8 +265,13 @@ def test_disrupting_shoals_x_keyed_pitch_cost_is_payable():
     scenario.pass_priority("bob")
 
     ponder = scenario.find("Ponder", Zone.HAND, "alice")
-    casting = scenario.cast("Disrupting Shoal", username="alice", targets=[bolt])
+    casting = scenario.cast("Disrupting Shoal", username="alice")
+    # CR 601.2b is where X is announced and CR 601.2c is where targets are
+    # chosen, in that order - and it has to be that order here, because
+    # Disrupting Shoal's own "Counter target spell if its mana value is X"
+    # cannot judge a legal target until X has a value (CR 107.3a, 107.3i).
     casting.use_pitch_cost(x_value=1, choosing=[ponder])
+    casting.choose_targets([bolt])
     payment = casting.begin_paying()
     payment.pay()
 

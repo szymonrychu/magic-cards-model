@@ -19,7 +19,7 @@ with `knowledge_search(type="rules")` in this session.
 import pytest
 
 from magic_cards_model.machines import Step
-from magic_cards_model.machines.cost import TotalCost, additional_cost_phrases, sacrifice_cost
+from magic_cards_model.machines.cost import additional_cost_phrases
 from magic_cards_model.models import Zone
 from tests.cards import card
 from tests.scenarios.harness import Scenario
@@ -59,10 +59,9 @@ def test_the_sacrifice_is_an_additional_cost_alongside_the_mana():
     scenario.start_at(Step.PRECOMBAT_MAIN)
     omnath = scenario.creature("Omnath, Locus of Mana", "alice")
 
-    casting = scenario.cast("Momentous Fall")
-    casting.add_additional_cost(TotalCost.of(None, sacrifice_cost(omnath)))
+    casting = scenario.cast("Momentous Fall", sacrificing=[omnath])
 
-    assert str(casting.total_cost) == "{2}{G}{G}, sacrifice Omnath, Locus of Mana"
+    assert str(casting.total_cost) == "{2}{G}{G}, sacrifice a creature"
 
 
 def test_paying_the_whole_cost_sacrifices_the_creature_and_resolves_the_spell():
@@ -81,8 +80,7 @@ def test_paying_the_whole_cost_sacrifices_the_creature_and_resolves_the_spell():
     scenario.start_at(Step.PRECOMBAT_MAIN)
     omnath = scenario.creature("Omnath, Locus of Mana", "alice")
 
-    casting = scenario.cast("Momentous Fall")
-    casting.add_additional_cost(TotalCost.of(None, sacrifice_cost(omnath)))
+    casting = scenario.cast("Momentous Fall", sacrificing=[omnath])
     payment = casting.begin_paying()
     scenario.pay_with(payment, *scenario.untapped_sources(*["Forest"] * 4, username="alice"))
     fall = scenario.put_on_stack(casting)
@@ -113,11 +111,16 @@ def test_omnath_is_a_plain_one_one_with_no_mana_floating():
 
 
 @pytest.mark.xfail(
-    reason="two gaps at once: Omnath's 'gets +1/+1 for each unspent green mana' "
-    "has no row in machines/layers.LAYER_EFFECTS, and Momentous Fall's own "
-    "two-clause effect ('draw cards equal to the sacrificed creature's "
-    "power, then gain life equal to its toughness') is not read by "
-    "machines/effects.py at all - effect_for returns None",
+    reason="the payment order is no longer the gap - CostPayment.components_before_mana "
+    "now pays the sacrifice while the four green mana is still floating (CR 601.2h). "
+    "Two registry gaps remain, both outside machines/cost.py: Omnath's 'gets +1/+1 for "
+    "each unspent green mana you have' has no row in machines/layers.LAYER_EFFECTS, so "
+    "Omnath is a 1/1 however much mana is unspent; and Momentous Fall's own two-clause "
+    "effect ('You draw cards equal to the sacrificed creature's power, then you gain "
+    "life equal to its toughness') is not read by machines/effects.py at all - "
+    "effect_for returns None, so the spell resolves and does nothing. A last-known-"
+    "information snapshot of the sacrificed creature (CR 608.2h) is what would carry "
+    "the power and toughness to that effect once it exists.",
     strict=True,
 )
 def test_sacrificing_omnath_before_paying_the_mana_draws_five():
@@ -144,9 +147,12 @@ def test_sacrificing_omnath_before_paying_the_mana_draws_five():
     alice = scenario.player("alice")
     omnath = scenario.creature("Omnath, Locus of Mana", "alice")
 
-    casting = scenario.cast("Momentous Fall")
-    casting.add_additional_cost(TotalCost.of(None, sacrifice_cost(omnath)))
+    casting = scenario.cast("Momentous Fall", sacrificing=[omnath])
     payment = casting.begin_paying()
+    # CR 601.2h's "in any order", exercised: the sacrifice is paid while the
+    # four green mana is still in the pool, which is what makes Omnath a 5/5
+    # as it is sacrificed rather than the 1/1 it is once the mana is spent.
+    payment.components_before_mana = True
     scenario.pay_with(payment, *scenario.untapped_sources(*["Forest"] * 4, username="alice"))
     scenario.put_on_stack(casting)
     scenario.resolve_top()

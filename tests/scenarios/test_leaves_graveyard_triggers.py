@@ -34,8 +34,6 @@ Card text verified with `resolve_cards`. CR numbers looked up with
   refusal.
 """
 
-import pytest
-
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.objects_as_costs import delve
 from magic_cards_model.machines.triggers import ExtraTriggerEvent, GameEvent
@@ -138,16 +136,6 @@ def test_neither_watcher_fires_on_an_unrelated_event():
     assert scenario.pending_triggers == []
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="`Game.exile_permanent` raises the event now, and `Game.exile_cards` raises exactly "
-    "one for a whole instruction (CR 603.2c) - but nothing calls the batch door. "
-    "`machines/cost.py`'s `ComponentKind.EXILE` branch still loops `for card in self.cards: "
-    "game.exile_permanent(card)`, so this five-card delve payment is five separate events and "
-    "Hardened Academic's 'one or more cards leave your graveyard' triggers five times. The one "
-    "line that fixes it is replacing that loop's body with a single "
-    "`game.exile_cards(list(self.cards))`; cost.py is owned by another agent this pass.",
-)
 def test_delving_a_card_out_of_your_graveyard_triggers_the_academic():
     """The real path, played through the engine: casting Murktide Regent with
     delve exiles cards from alice's graveyard (CR 603.10a's "a card leaves a

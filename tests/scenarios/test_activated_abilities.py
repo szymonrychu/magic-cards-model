@@ -360,24 +360,18 @@ def test_a_mana_ability_whose_cost_mills_a_card_does_not_take_the_no_stack_path(
     assert not scenario.game.stack_is_empty
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Millikin's cost is `{T}, Mill a card`, and abilities.py classifies "
-    "'Mill a card' as CostKind.OTHER; game.py's activation_cost then calls "
-    "cost_component_for_phrase, which has no reader for a mill cost and raises "
-    "'cannot build a cost for Mill a card' - so the activation cannot be "
-    "announced, and the cost cannot be paid, until machines/cost.py grows a "
-    "mill reader. The parser gap is the owner of this xfail; the "
-    "classification itself is asserted by the test above.",
-)
 def test_activating_millikin_pays_its_mill_cost():
     """The whole path: announce `{T}, Mill a card: Add {C}.` and pay it (CR 602.2).
 
     Millikin's ability is an ordinary activated ability (CR 605.1a's fourth
     criterion - the test above), so activating it announces the ability, opens
-    payment, and pays a {T} component and a mill component (CR 601.2h). The
-    mill is CR 701's put-the-top-card-into-the-graveyard move, which this
-    model would have to name before the cost can be built at all.
+    payment, and pays a {T} component and a mill component (CR 601.2h).
+
+    CR 701.17a is the mill: "For a player to mill a number of cards, that
+    player puts that many cards from the top of their library into their
+    graveyard." CR 601.2h's second sentence is why it is the *last* part of the
+    cost paid - "Then they pay all remaining costs in any order", the remaining
+    ones being those that move objects from a library to a public zone.
     """
     scenario = (
         Scenario()
@@ -393,6 +387,33 @@ def test_activating_millikin_pays_its_mill_cost():
     assert ability is not None
     assert scenario.find("Forest", Zone.GRAVEYARD) is not None, "the mill cost moved a card"
     assert millikin.tapped
+
+
+def test_an_empty_library_refuses_millikins_mill_cost_rather_than_milling_fewer():
+    """CR 701.17b: "A player can't mill a number of cards greater than the
+    number of cards in their library. **If given the choice to do so, they
+    can't choose to take that action.** If instructed to do so, they mill as
+    many as possible."
+
+    Choosing to pay a cost is the first sentence's choice, not the second's
+    instruction, so an empty library does not mill zero and let the ability
+    through - it refuses the payment, and CR 118.3's whole-cost check means
+    nothing else is spent either: Millikin stays untapped.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Millikin"])
+        .player("bob", library=["Forest"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    millikin = scenario.find("Millikin", Zone.BATTLEFIELD)
+
+    with pytest.raises(ValueError, match="cannot mill 1 card"):
+        scenario.activate(millikin)
+
+    assert millikin.untapped
+    assert scenario.game.stack_is_empty
 
 
 def test_a_plain_tap_add_ability_still_takes_the_no_stack_path():

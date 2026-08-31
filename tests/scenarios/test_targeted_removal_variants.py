@@ -44,7 +44,6 @@ type="rules")` in the session that wrote this file:
 import pytest
 
 from magic_cards_model.machines import Step
-from magic_cards_model.machines.cost import TotalCost, pay_life_cost
 from magic_cards_model.machines.effects import AnaphoricClauseNotice
 from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario
@@ -129,7 +128,6 @@ def test_fumarole_destroys_both_the_creature_and_the_land():
     forest = scenario.find("Forest", Zone.BATTLEFIELD, "bob")
 
     casting = scenario.cast("Fumarole")
-    casting.add_additional_cost(TotalCost(components=[pay_life_cost(3, casting.caster)]))
     casting.choose_targets([bears, forest])
     payment = casting.begin_paying()
     scenario.pay_with(

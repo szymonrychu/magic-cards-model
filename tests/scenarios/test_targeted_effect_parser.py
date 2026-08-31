@@ -37,7 +37,7 @@ type="rules")` in the session that wrote this file:
 import pytest
 
 from magic_cards_model.machines import Step
-from magic_cards_model.machines.cost import CostPayment, TotalCost, sacrifice_cost
+from magic_cards_model.machines.cost import CostPayment
 from magic_cards_model.machines.targeting import profile_for_text
 from magic_cards_model.models import Zone
 from tests.cards import card
@@ -65,8 +65,7 @@ def test_bone_splinters_destroys_its_target_after_the_sacrifice_is_paid():
     fodder = scenario.creature("Grizzly Bears", "alice")
     target = scenario.creature("Elvish Mystic", "bob")
 
-    casting = scenario.cast("Bone Splinters")
-    casting.add_additional_cost(TotalCost.of(None, sacrifice_cost(fodder)))
+    casting = scenario.cast("Bone Splinters", sacrificing=[fodder])
     casting.choose_targets([target])
     payment = casting.begin_paying()
     scenario.pay_with(payment, *scenario.untapped_sources("Swamp"))
