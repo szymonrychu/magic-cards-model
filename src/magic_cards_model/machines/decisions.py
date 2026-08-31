@@ -183,9 +183,21 @@ class DecisionKind(StrEnum):
     #: Not `CHOOSE_CARDS`: a target may be a player (Footlight Fiend's "target
     #: player") or an ability on the stack (Tishana's Tidebinder), not only a
     #: card, and CR 115.6's "up to N" is optional rather than exact - `amount`
-    #: means exactly `amount`, which "up to" is not. The default answer is
-    #: empty, so an ability that is not answered targets nothing, exactly as it
-    #: did before this kind existed; see `Game.put_triggers_on_stack`.
+    #: means exactly `amount`, which "up to" is not.
+    #:
+    #: `target_minimum` carries the floor: CR 601.2c has the player "announce
+    #: their choice of an appropriate object or player for each target the
+    #: spell requires" - a plain "target permanent" is not a "you may", so an
+    #: answer choosing fewer than `target_minimum` legal targets is refused by
+    #: `Game.ask` exactly like an illegal target is, whenever enough legal
+    #: targets exist to meet it. `target_minimum` is 0 for an "up to N"/"any
+    #: number of" requirement (CR 115.6, CR 107.1c), which is genuinely
+    #: optional - Karn, the Great Creator's "up to one target artifact" may
+    #: choose zero and must then affect nothing; see
+    #: `tests/scenarios/test_type_changing_and_pt_setting_effects.py`. The
+    #: default answer is now the first `target_minimum` offered targets when
+    #: that floor is above zero, not empty; see `default_answer` and
+    #: `Game.put_triggers_on_stack`.
     CHOOSE_TARGETS = "choose_targets"
     #: "As [this] enters, choose a color/card name/creature type" (CR 614.1c,
     #: CR 614.12a). One kind for all three shapes: `Decision.options` narrows
@@ -276,10 +288,15 @@ class Decision:
     #: grow a second target grammar.
     targets: tuple[TargetRef, ...] = ()
     #: The most targets a `CHOOSE_TARGETS` answer may contain (CR 115.6's "up
-    #: to N"), or `None` for "any number of" (CR 107.1c). Never a minimum: step
-    #: 1 does not refuse an ability with too few targets chosen, only too many
-    #: or an illegal one.
+    #: to N"), or `None` for "any number of" (CR 107.1c).
     target_maximum: int | None = None
+    #: The fewest targets a `CHOOSE_TARGETS` answer may contain and still be
+    #: legal, capped at `len(targets)` by every caller that builds one - CR
+    #: 601.2c's "the player announces their choice ... for each target the
+    #: spell requires" is not optional once a legal target exists. 0 for a
+    #: "you may"-shaped requirement (CR 115.6's "up to N", CR 107.1c's "any
+    #: number of") or for an ability with no targeting requirement at all.
+    target_minimum: int = 0
     #: The legal answers to a `CHOOSE_A_QUALITY` question, or empty for "any
     #: string" (a card name, a creature type - too large a set to enumerate).
     #: Populated with the five colors' letter codes for a color choice.
@@ -355,9 +372,19 @@ def default_answer(decision: Decision) -> object:
             return ()
         return decision.cards[len(decision.cards) - decision.amount :]
     if decision.kind is DecisionKind.CHOOSE_TARGETS:
-        # Empty, always. This is the step-1 default: an ability with a
-        # targeting requirement and nobody to ask goes on the stack with no
-        # targets, byte-identical to the behaviour this kind replaced.
+        # CR 601.2c: "the player announces their choice ... for each target
+        # the spell requires" - a mandatory requirement (`target_minimum` > 0)
+        # is not a "decline" question, so an unscripted player still has to
+        # name enough legal targets when there are any; the first ones
+        # offered, not a judgement about which target is best. `target_minimum`
+        # is capped at `len(decision.targets)` by every caller, so this never
+        # asks for more than are actually legal.
+        #
+        # `target_minimum` is 0 for a genuinely optional "up to N"/"any number
+        # of" requirement (CR 115.6, CR 107.1c) - Karn, the Great Creator's own
+        # case - so this still returns empty there, exactly as it always did.
+        if decision.target_minimum > 0:
+            return decision.targets[: decision.target_minimum]
         return ()
     if decision.kind is DecisionKind.CHOOSE_A_QUALITY:
         # CR 614.12a's choice is mandatory - there is no "decline" branch the

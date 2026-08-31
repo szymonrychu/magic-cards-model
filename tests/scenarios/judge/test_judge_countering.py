@@ -8,8 +8,6 @@ Sourced from the DDR judge transcripts. Episode covered:
 Every CR number here was looked up with `knowledge_search(type="rules")`.
 """
 
-import pytest
-
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.replacement import parse_replacement_effects
 from magic_cards_model.models import Zone
@@ -46,16 +44,6 @@ def test_transcendent_dragons_replacement_clause_is_never_even_read():
     assert parse_replacement_effects(card("Transcendent Dragon")) == []
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Transcendent Dragon has no TRIGGER_EFFECTS row and its own text falls "
-    "outside every shape parse_mixed_effect reads (a targeted counter clause "
-    "immediately followed by a conditional zone-change-and-recast clause), so "
-    "Game never even puts the ability on the stack: pending_triggers stays empty "
-    "after the Dragon resolves. Lightning Bolt is never countered, exiled, or "
-    "recastable - it just resolves normally and deals its damage, which is the "
-    "opposite of DDR#944's ruling.",
-)
 def test_transcendent_dragon_counters_and_exiles_the_target_spell():
     """DDR#944: flashing in Transcendent Dragon in response to a spell counters
     it and exiles it instead of sending it to its owner's graveyard (CR 701.5,
@@ -66,6 +54,15 @@ def test_transcendent_dragon_counters_and_exiles_the_target_spell():
     to its owner's graveyard by the normal rule for a spell leaving the stack
     without resolving; Transcendent Dragon's second sentence redirects that one
     zone change to exile.
+
+    This was `xfail` (its trigger going on the stack with an empty target list,
+    so "counter target spell" had nothing to counter) until the CR 601.2c/
+    CR 603.3d fix for the mandatory-`CHOOSE_TARGETS` defect this suite is now
+    named for (see `tests/scenarios/test_trigger_target_decisions.py`): a
+    mandatory "target spell" now defaults to the one legal target on the stack
+    - Lightning Bolt - instead of to none, exactly as CR 601.2c requires, so
+    the trigger's own already-registered effect gets a target to act on and
+    this now passes for the right reason.
     """
     scenario = (
         Scenario()

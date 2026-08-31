@@ -1924,6 +1924,10 @@ class Game(BaseModel):
                 source=card.name,
                 targets=tuple(TargetRef.coerce(candidate) for candidate in candidates),
                 target_maximum=profile.max_targets,
+                # CR 601.2c: mandatory, capped at how many legal targets
+                # actually exist (`candidates` is truthy here, but may still
+                # be fewer than the printed requirement asks for).
+                target_minimum=min(profile.min_targets, len(candidates)),
             )
             chosen = self.ask(decision)
             assert isinstance(chosen, (list, tuple))
@@ -2012,6 +2016,13 @@ class Game(BaseModel):
             source=source_name,
             targets=tuple(TargetRef.coerce(candidate) for candidate in candidates),
             target_maximum=profile.max_targets,
+            # Deliberately 0, not `profile.min_targets`: CR 707.10c is "you may
+            # choose new targets for the copy. If you choose to change one or
+            # more of the targets, follow the rules ... in rule 601.2c-601.2d"
+            # - the mandatory floor only binds *after* a target is actually
+            # being changed. Choosing to change none, having already said
+            # `may` above, is still a legal outcome (the copy keeps CR 707.2's
+            # copied targets), not the `may`'s own decline read twice.
         )
         chosen = self.ask(decision)
         assert isinstance(chosen, (list, tuple))
@@ -2214,15 +2225,26 @@ class Game(BaseModel):
         waiting, self.pending_triggers = self.pending_triggers, []
         waiting = [item for item in waiting if self.is_in_game(item.controller)]  # CR 800.4d
         ordered = apnap_order(waiting, self._turn_order_from_active())
+        placed: list[AbilityOnStack] = []
         for ability in ordered:
-            ability.targets = list(self._targets_for_trigger(ability))
+            targets = self._targets_for_trigger(ability)
+            if targets is None:
+                # CR 603.3d: "if a choice is required when the triggered
+                # ability goes on the stack but no legal choices can be made
+                # for it, ... the ability is simply removed from the stack" -
+                # for a mandatory target (`target_minimum` > 0) with no legal
+                # candidate at all, that means it never goes on in the first
+                # place, not that it goes on choosing nothing.
+                continue
+            ability.targets = list(targets)
             self.stack.append(ability)
+            placed.append(ability)
         for ability in ordered:
             self.trigger_targets.pop(ability.source_name, None)
             self.trigger_targets.pop(ability.source_name.split("//")[0].strip(), None)
-        return ordered
+        return placed
 
-    def _targets_for_trigger(self, ability: AbilityOnStack) -> list[TargetRef]:
+    def _targets_for_trigger(self, ability: AbilityOnStack) -> list[TargetRef] | None:
         """What this triggered ability targets, as it goes on the stack (CR 603.3d).
 
         A scripted `choose_trigger_targets(card_name, ...)` answer wins outright
@@ -2231,6 +2253,9 @@ class Game(BaseModel):
         pair of "when you cast this spell" lines) both see it. Nothing
         scripted falls through to `_ask_trigger_targets`, which asks this
         ability *instance*, addressed to its own controller.
+
+        `None` (only ever from `_ask_trigger_targets`) means CR 603.3d removed
+        this ability from the stack before it was ever placed - see there.
         """
         front = ability.source_name.split("//")[0].strip()
         if ability.source_name in self.trigger_targets:
@@ -2239,7 +2264,7 @@ class Game(BaseModel):
             return self.trigger_targets[front]
         return self._ask_trigger_targets(ability)
 
-    def _ask_trigger_targets(self, ability: AbilityOnStack) -> list[TargetRef]:
+    def _ask_trigger_targets(self, ability: AbilityOnStack) -> list[TargetRef] | None:
         """Ask a triggered ability's own controller for its targets (CR 603.3d).
 
         "The remainder of the process for putting a triggered ability on the
@@ -2250,16 +2275,31 @@ class Game(BaseModel):
         `TargetRequirement.rejects` - the same checker `activate_ability` and
         `choose_trigger_targets` already use.
 
-        Two things can leave this with no targets and something to say about
-        why, recorded on `targeting_notices` rather than silently returned as
-        if nothing were amiss (the DDR#978-shaped defect: an ability that
-        does nothing looks identical to one with nothing to point at):
+        Three things can leave this with no targets, and something to say
+        about why, recorded on `targeting_notices` rather than silently
+        returned as if nothing were amiss (the DDR#978-shaped defect: an
+        ability that does nothing looks identical to one with nothing to
+        point at):
 
         - the restriction itself could not be read at all
-          (`TargetingProfile.understood` is False) - `TargetingNoticeKind.UNPARSED`;
-        - it was read fine, but nothing on the battlefield satisfies it right
-          now - `TargetingNoticeKind.NO_LEGAL_TARGET`, a legal game state
-          (CR 608.2d's own "nobody says otherwise" default), not a bug.
+          (`TargetingProfile.understood` is False) - `TargetingNoticeKind.UNPARSED`,
+          an engine gap this returns `[]` for, same as ever;
+        - nothing on the battlefield satisfies it right now, but the
+          requirement was optional anyway (CR 115.6's "up to N", CR 107.1c's
+          "any number of" - `profile.min_targets` is 0) -
+          `TargetingNoticeKind.NO_LEGAL_TARGET`, a legal game state
+          (CR 608.2d's own "nobody says otherwise" default), not a bug -
+          returns `[]`, and the ability still goes on the stack choosing
+          nothing;
+        - nothing satisfies it and the requirement was mandatory
+          (`profile.min_targets` > 0, a plain "target permanent" with no
+          "up to") - CR 603.3d: "if a choice is required when the triggered
+          ability goes on the stack but no legal choices can be made for it,
+          ... the ability is simply removed from the stack." Returns `None`
+          so the caller never places it, rather than the pre-fix behaviour of
+          putting it on the stack anyway with an empty target list, where it
+          would sit doing nothing while still occupying a stack slot CR
+          603.3d says it should never have taken.
 
         An ability with no targeting requirement at all is not asked anything
         and gets no notice either - there is nothing to be silent about.
@@ -2290,7 +2330,7 @@ class Game(BaseModel):
                     text=text,
                 )
             )
-            return []
+            return None if profile.min_targets > 0 else []
 
         decision = Decision(
             kind=DecisionKind.CHOOSE_TARGETS,
@@ -2299,6 +2339,7 @@ class Game(BaseModel):
             source=ability.source_name,
             targets=tuple(TargetRef.coerce(candidate) for candidate in candidates),
             target_maximum=profile.max_targets,
+            target_minimum=min(profile.min_targets, len(candidates)),
         )
         chosen = self.ask(decision)
         assert isinstance(chosen, (list, tuple))
@@ -2751,6 +2792,19 @@ class Game(BaseModel):
                 raise ValueError(
                     f"{decision.prompt}: too many targets chosen, at most "
                     f"{decision.target_maximum} (CR 115.6)"
+                )
+            if len(chosen) < decision.target_minimum:
+                # CR 601.2c: "the player announces their choice of an
+                # appropriate object or player for each target the spell
+                # requires" - a plain "target permanent" is mandatory, not a
+                # "you may", so declining while a legal target exists is
+                # refused the same way an illegal target already is. CR 603.3d
+                # extends this verbatim to a triggered ability's own
+                # announcement.
+                raise ValueError(
+                    f"{decision.prompt}: at least {decision.target_minimum} target(s) "
+                    f"must be chosen, {len(chosen)} given, while a legal target exists "
+                    f"(CR 601.2c, CR 603.3d)"
                 )
             return chosen
 
