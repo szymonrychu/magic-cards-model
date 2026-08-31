@@ -35,21 +35,18 @@ def test_a_card_that_works_classifies_as_handled():
 
 
 def test_a_card_with_a_genuine_gap_still_classifies_as_silent():
-    """Blood Artist's "target player loses 1 life and you gain 1 life" is a
-    targeted clause and a player clause back to back - `parse_mixed_effect`
-    still comes back `None` for it, a real, currently-unmodeled parser gap
-    ("target player loses N life" is not one of `_parse_targeted_clause`'s
-    shapes), not an X or face problem. Fixing the classifier must never make
-    a genuinely-dead card look alive: this is the control for that.
+    """History of Benalia is a Saga: its whole text is chapter abilities
+    (I, II - create a token; III - a team pump), which nothing in the engine
+    reads, so it genuinely does nothing when played. Fixing the classifier
+    must never make a genuinely-dead card look alive: this is the control
+    for that.
 
-    (March of Otherworldly Light used to be this test's example - its own
-    two-sentence additional-cost preamble, "As an additional cost to cast
-    this spell, you may exile ... hand." then "This spell costs {2} less to
-    cast for each card exiled this way.", was a real gap of the identical
-    kind, closed by `_PER_COUNT_COST_REDUCTION_LINE_RE`, so it moved to
-    `HANDLED` and stopped being a valid control for this test.)
+    (Two earlier examples of the identical kind have since been closed and
+    so stopped being valid controls here: March of Otherworldly Light's
+    two-sentence additional-cost preamble, and Blood Artist's back-to-back
+    "target player loses 1 life and you gain 1 life" clauses.)
     """
-    category, _ = classify_card(card("Blood Artist"))
+    category, _ = classify_card(card("History of Benalia"))
     assert category == SILENT
 
 
