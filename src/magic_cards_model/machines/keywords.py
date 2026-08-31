@@ -1268,9 +1268,19 @@ def cascade(game: Any, spell: CardState, seed: int | None = None) -> CascadeResu
 
     "Cascade is a triggered ability that functions only while the spell with
     cascade is on the stack. 'Cascade' means "When you cast this spell, exile
-    cards from the top of your library until you exile a nonland card that
-    costs less. You may cast it without paying its mana cost. Put the exiled
-    cards on the bottom in a random order.""
+    cards from the top of your library until you exile a nonland card whose
+    mana value is less than this spell's mana value. You may cast that card
+    without paying its mana cost if the resulting spell's mana value is less
+    than this spell's mana value. Then put all cards exiled this way that
+    weren't cast on the bottom of your library in a random order.""
+    (verified against the current CR release; Shardless Agent's own printed
+    reminder text still reads "that costs less" and has no "if the resulting
+    spell's mana value..." clause - the rule, not the reminder, is what this
+    reads). **Not modelled**: that added "if the resulting spell's mana value
+    is less..." condition on the free cast itself - nothing in this pool casts
+    the hit under a cost-altering effect that would change its mana value
+    between the exile and the cast, so this is recorded as a known gap rather
+    than guessed at; see `docs/engine-coverage.md`.
 
     This is the exiling half, the "you may cast it" half, and the bottoming
     half - all three, because a hit stranded in exile with no route back to
@@ -1286,17 +1296,34 @@ def cascade(game: Any, spell: CardState, seed: int | None = None) -> CascadeResu
     is legal, so an unscripted scenario still gets offered the free cast and
     still takes it, exactly as it did before this question existed). Only
     `why_cannot_cast_restriction` (CR 611.1's flat prohibitions) gates whether
-    "yes" is even a legal answer - not `why_cannot_cast_now`'s CR 117.1a
-    timing, which is a question about *when* the caller later drives the
-    actual cast through `Casting.use_permission()`, the same deferred,
-    caller-driven shape `machines/casting.finish_suspend` already uses, not a
-    question about whether cascade may offer the choice at all while its own
-    spell is still beneath it on the stack.
+    "yes" is even a legal answer.
 
-    - **"yes"** grants a `PlayPermission` (CR 601.3's dynamic half, the same
-      primitive `finish_suspend` already hands out) for the hit, annotated
-      `ExileMarker.CASCADE` so a caller can find it again; the hit stays in
-      exile until the caller actually casts it.
+    - **"yes"** grants a `PlayPermission` (CR 601.3's dynamic half) for the
+      hit, annotated `ExileMarker.CASCADE` so a caller can find it again, with
+      `bottom_if_unused=True` - the hit stays in exile only until the caller
+      actually casts it *or* until this permission would otherwise expire.
+
+      This is **not** the same shape `machines/casting.finish_suspend` uses,
+      on purpose, even though an earlier pass here justified it that way.
+      CR 702.85a's own sentence is one instruction, read as a whole
+      (CR 608.2c): "cast it... [or] put [it]... on the bottom" - there is no
+      textual gap between them the way Ugin, Eye of the Storms' "−11:
+      ...**Until end of turn**, you may cast..." or Ragavan, Nimble Pilferer's
+      "...**Until end of turn**, you may cast that card." print one, and
+      Suspend's own third ability (CR 702.62a) names its own fallback
+      outright - "if you don't, it remains exiled" - so leaving the card
+      sitting in exile is genuinely that rule's own terminal state. Cascade
+      prints neither an "until end of turn" grant nor an "it remains exiled"
+      fallback; its only named resting place for a card that "weren't cast"
+      is the bottom of the library. `Game._bottom_unused_cascade_permissions`,
+      run from `cleanup_step` the instant before an expiring `until_end_of_
+      turn` permission would otherwise just be dropped, is what keeps that
+      true even when a live caller answers "yes" and then never actually
+      drives `Casting.use_permission()` through to a real cast - the one hole
+      the earlier pass left open, because it deferred *only* to "the caller",
+      the same shape that is correct for Ugin/Ragavan/Suspend precisely
+      because their own rules name an "outlives the resolution" duration or
+      an explicit fallback and cascade's does not.
     - **"no"**, or "yes" refused because `affirmative_is_legal` was False -
       goes straight onto the bottom, in the very same random shuffle the
       misses get, exactly as CR 702.85a's single sentence says: nothing here
@@ -1345,6 +1372,7 @@ def cascade(game: Any, spell: CardState, seed: int | None = None) -> CascadeResu
                 pays_mana_cost=False,
                 source_name=f"{spell.name}'s cascade",
                 rule="CR 702.85a",
+                bottom_if_unused=True,
             )
 
     bottomed = [state for state in result.exiled if not (cast_hit and state is result.hit)]

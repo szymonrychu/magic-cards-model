@@ -273,6 +273,53 @@ def test_declining_the_cascade_permission_bottoms_the_hit_and_empties_exile():
     assert scenario.game.play_permissions == []
 
 
+def test_accepting_the_permission_but_never_using_it_still_bottoms_the_hit():
+    """The other half of the same real-game defect, arriving by a different
+    road: a live seat can answer "yes" to cascade's "you may cast it" - the
+    `PlayPermission` gets granted - and then simply never get around to
+    actually calling `Casting.use_permission()`. Priority moves on, the turn
+    ends, and nobody drove the cast through.
+
+    CR 702.85a's own sentence gives the exiled hit exactly two resting
+    places: cast, or "on the bottom... in a random order" - never "still in
+    exile because the permission that would have let it be cast simply
+    expired". That third outcome *is* legal for Ugin, Eye of the Storms'
+    "−11", Ragavan, Nimble Pilferer's trigger, and Suspend (CR 702.62a's own
+    "if you don't, it remains exiled") - each of those prints either an
+    "until end of turn" duration with no further instruction, or a named
+    "remains exiled" fallback. Cascade prints neither, so
+    `Game._bottom_unused_cascade_permissions` - run from `cleanup_step` right
+    before this same step drops the expiring permission (CR 514.2) - sweeps
+    the still-unclaimed hit to the bottom instead of letting it vanish along
+    with the dropped permission.
+    """
+    scenario = board("Living End").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.will_take_the_may(True, source="Shardless Agent")
+    agent = cast_the_agent(scenario)
+
+    result = cascade(scenario.game, agent, seed=0)
+
+    assert result.hit is not None
+    assert result.hit.name == "Living End"
+    assert result.hit.zone is Zone.EXILE
+    assert scenario.game.exile == [result.hit]
+    granted = scenario.game.play_permissions
+    assert len(granted) == 1
+    assert granted[0].source_name == "Shardless Agent's cascade"
+    assert granted[0].bottom_if_unused is True
+
+    # Run the game forward past the point the permission would expire
+    # (CR 514.2) - nothing in this test ever calls `Casting.use_permission()`.
+    scenario.game.cleanup_step()
+
+    assert scenario.game.exile == []
+    assert result.hit.zone is Zone.LIBRARY
+    assert result.hit in scenario.player("alice").library
+    assert result.hit.exile_annotation is None
+    assert scenario.game.play_permissions == []
+
+
 def test_cascade_is_a_triggered_ability_the_engine_can_produce():
     """CR 702.85a: "Cascade is a triggered ability", printed as one word."""
     (ability,) = keyword_triggered_abilities(card("Shardless Agent"))
