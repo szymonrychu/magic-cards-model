@@ -623,9 +623,27 @@ class CardRequirement(BaseModel):
             return f"{card.name} is not a {wanted}"
         if self.subtypes:
             printed_subtypes = {subtype.lower() for subtype in printed.subtypes}
-            if not printed_subtypes & {subtype.lower() for subtype in self.subtypes}:
+            if not printed_subtypes & self._wanted_subtypes():
                 return f"{card.name} is not a {'/'.join(self.subtypes)}"
         return None
+
+    def _wanted_subtypes(self) -> set[str]:
+        """The subtypes this accepts, lowercased, plural forms included.
+
+        A cost phrase names its subtype the way the sentence needs it, and
+        Fireblast's "Sacrifice two Mountains" is plural while CR 205.3 prints
+        the subtype itself as `Mountain`. Both spellings are accepted rather
+        than the plural being stripped off the requirement, because CR 205.3i's
+        own list of land types includes `Plains` and `Locus` - both genuinely
+        end in *s*, and blind singularising would break them.
+        """
+        wanted = set()
+        for subtype in self.subtypes:
+            lowered = subtype.lower()
+            wanted.add(lowered)
+            if lowered.endswith("s"):
+                wanted.add(lowered[:-1])
+        return wanted
 
 
 class CostComponent(BaseModel):
@@ -1654,6 +1672,57 @@ def alternative_cost_offers(card: Card) -> list[AlternativeCostOffer]:
         for match in _ALTERNATIVE_IF_NOT_YOUR_TURN.finditer(card.oracle_text or "")
     )
     return offers
+
+
+#: Omniscience: "You may cast spells from your hand without paying their mana
+#: costs." CR 118.9's *other* half - "a cost listed in a spell's text, **or
+#: applied to it from another effect**" - so this is read off a permanent on
+#: the battlefield rather than off the spell being cast, and the spell it
+#: applies to prints nothing about it at all.
+_STATIC_FREE_CAST = re.compile(
+    r"^You may cast (?P<what>[\w' -]*?spells?) from your (?P<zone>hand|graveyard) "
+    r"without paying (?:its|their) mana costs?\.$",
+    re.IGNORECASE,
+)
+
+
+class StaticFreeCastGrant(BaseModel):
+    """A permanent's static ability applying CR 118.9's alternative cost of
+    *nothing at all* to spells its controller casts - Omniscience.
+
+    Distinct from `AlternativeCostOffer` in where it is read from: that one is
+    the spell's own CR 604.6 static ability, functioning from the zone it is
+    cast from, and this one is CR 604.2's ordinary battlefield static ability
+    reaching out at somebody else's spell. Distinct from `PlayPermission` in
+    what it does: this grants no permission to cast anything that could not
+    already be cast (the card is in hand, where it was always castable), only
+    a different thing to pay (CR 118.9c).
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    zone: Zone
+    """Where the spell has to be cast from for the grant to apply."""
+    type_word: str | None = None
+    """The card type the grant is narrowed to, lowercased ("creature spells
+    from your hand"), or None for every spell."""
+
+
+def static_free_cast_grant(text: str) -> StaticFreeCastGrant | None:
+    """Read one static ability line into a `StaticFreeCastGrant`, or None.
+
+    Fails closed: a line this cannot read returns None rather than a guess, so
+    a spell is never quietly made free by text nobody parsed.
+    """
+    match = _STATIC_FREE_CAST.match(text.strip())
+    if match is None:
+        return None
+    zone = _ZONE_WORDS.get(match.group("zone").lower())
+    if zone is None:
+        return None
+    what = match.group("what").strip().lower()
+    qualifier = re.sub(r"spells?$", "", what).strip()
+    return StaticFreeCastGrant(zone=zone, type_word=qualifier or None)
 
 
 # --------------------------------------------------------------------------

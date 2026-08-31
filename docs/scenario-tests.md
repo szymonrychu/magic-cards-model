@@ -70,6 +70,7 @@ Existing files, as a guide to where a new case belongs:
 | `test_token_creation_replacement.py` | CR 701.7b: replacing a token *being created*, and Doubling Season's token half |
 | `test_role_tokens.py` | CR 111.10k, 303.7, 704.5z: Roles, and the two state-based actions that police them |
 | `test_aura_attachment.py` | CR 704.5m: an Aura on an illegal object or on nothing, against CR 704.5n's Equipment |
+| `test_alternative_costs.py` | CR 118.9: finding an alternative cost with `Casting.alternative_costs` and announcing it with `use_alternative_cost` - the printed pitch offer, a static grant from Omniscience, what a cost increase does on top, and the printed mana cost still being payable instead |
 | `test_mana_spend_restrictions.py` | CR 106.6: "Spend this mana only to ..." - the restriction carried by mana in the pool, what it refuses, and which mana pays when both would |
 
 ### Counters
