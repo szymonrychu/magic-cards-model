@@ -14,6 +14,7 @@ import csv
 import io
 import json
 
+import pytest
 from scripts.survey_cards import (
     FIXTURES_DIR,
     HANDLED,
@@ -70,7 +71,19 @@ def test_split_card_both_halves_are_read(tmp_path):
 
 
 def test_unknown_card_name_is_not_found_not_a_crash(tmp_path):
-    result = survey_one("Zzzznot A Real Magic Card Toobsche", tmp_path)
+    """A name Scryfall does not know reports `not_found` rather than raising.
+
+    This one genuinely needs the network - the whole point is a name that is
+    not in the fixture pool - so a transport failure is not the behaviour
+    under test and must not be reported as one. Skipping on `OSError` (which
+    covers the `ConnectionResetError` Scryfall throttling produced during a
+    parallel run) keeps the assertion honest: it only ever passes or fails on
+    what the tool did with a real answer.
+    """
+    try:
+        result = survey_one("Zzzznot A Real Magic Card Toobsche", tmp_path)
+    except OSError as exc:
+        pytest.skip(f"Scryfall unreachable, so the not-found path is untestable here: {exc}")
     assert not result.found
     assert result.category == NOT_FOUND
     assert result.error

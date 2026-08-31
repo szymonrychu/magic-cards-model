@@ -102,7 +102,11 @@ def test_every_copy_is_its_own_card_sharing_one_printing():
 
 
 def test_the_game_starts_at_untap_with_life_at_twenty():
-    """CR 103.4, 103.7: life totals, then the starting player's first turn."""
+    """CR 103.4, 103.8: life totals, then the starting player's first turn.
+
+    103.8 was written here as 103.7 from memory. Both numbers exist, so it
+    read plausibly; 103.7 is not this rule. Looked up, not remembered.
+    """
     game = match().start_game()
 
     assert game.turn is not None
