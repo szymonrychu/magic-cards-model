@@ -13,17 +13,16 @@ shuffled (CR 103.3), and each player draws a starting hand of seven (CR 103.5),
 leaving fifty-three cards behind. The sideboard is set aside rather than
 shuffled in (CR 103.2a).
 
-What this file deliberately does *not* claim is that the archetype's engine
-works. It does not, and `docs/deck-gaps/hollow-one.md` records why: Hollow
-One's own "costs {2} less to cast for each card you've cycled or discarded
-this turn" is not a cost-modification shape `Game.cost_reduction_for` reads
-(CR 601.2f), so the golem always costs its printed {5}, and the two discard
-payoffs - Marauding Mako's "whenever you discard one or more cards" and
-Vengevine's "whenever you cast a spell, if it's the second creature spell you
-cast this turn" (CR 603.4's intervening-if shape) - reach a dispatcher that
-returns nothing. The two `xfail`s at the bottom of this file are those gaps
-stated as the assertions they will pass once the primitives exist, per the
-project rule that a missing rule is an `xfail`, never a reshaped scenario.
+What this file deliberately does *not* claim is that the whole archetype's
+engine works. Hollow One's own "costs {2} less to cast for each card you've
+cycled or discarded this turn" now *is* a shape `Game.cost_reduction_for`
+reads (CR 601.2f), counted by `Game.cards_discarded_this_turn`, and the test
+at the bottom of this file asserts it. What is still missing is Vengevine's
+"whenever you cast a spell, if it's the second creature spell you cast this
+turn" (CR 603.4's intervening-if shape), which reaches a dispatcher that
+returns nothing - the remaining `xfail`, per the project rule that a missing
+rule is an `xfail`, never a reshaped scenario. `docs/deck-gaps/hollow-one.md`
+records the archetype's gaps.
 """
 
 import pytest
@@ -198,20 +197,11 @@ def test_the_game_starts_at_untap_on_twenty_life():
 # -- what the archetype cannot yet do -------------------------------------
 
 
-@pytest.mark.xfail(
-    reason=(
-        "Hollow One's 'costs {2} less to cast for each card you've cycled or "
-        "discarded this turn' is not a shape Game.cost_reduction_for reads "
-        "(CR 601.2f), and nothing counts cards discarded this turn, so the "
-        "golem's total cost never leaves its printed {5}."
-    ),
-    strict=True,
-)
 def test_hollow_one_is_cheaper_after_a_discard():
     """CR 601.2f: cost reductions apply when the total cost is determined.
 
-    One card discarded (CR 701.9a) should take {2} off the golem. Nothing in
-    the engine counts discards for this purpose, so the reduction stays empty.
+    One card discarded (CR 701.9a) takes {2} off the golem - the reduction
+    `Game.cards_discarded_this_turn` now counts for.
     """
     from magic_cards_model.models.mana import ManaCost
 
@@ -222,7 +212,7 @@ def test_hollow_one_is_cheaper_after_a_discard():
 
     reduction = game.cost_reduction_for(golem, "alice")
 
-    assert reduction != ManaCost()
+    assert reduction == ManaCost.parse("{2}")
 
 
 @pytest.mark.xfail(

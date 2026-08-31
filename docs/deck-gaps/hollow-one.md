@@ -36,25 +36,25 @@ and **Sacred Foundry** (a shockland's "as this land enters, you may pay 2
 life" replacement, owned by `machines/replacement.py`) are genuinely fine.
 The other five carry real, unmodelled text and are sectioned below.
 
-## Does the archetype's engine function? No.
+## Does the archetype's engine function? Partly.
 
-The deck is three interlocking mechanics. One of the three works.
+The deck is three interlocking mechanics. Two of the three work.
 
-### 1. Cost reduction from cards discarded this turn - **dead**
+### 1. Cost reduction from cards discarded this turn - **works**
 
 **Hollow One** `{5}` Artifact Creature - Golem
 "This spell costs {2} less to cast for each card you've cycled or discarded
 this turn. / Cycling {2}"
 
-`Game.cost_reduction_for` (CR 601.2f) reads exactly two shapes off a spell's
-own text: `_COSTS_LESS_PER_CARD_TYPE` ("...for each card type among cards in
-your graveyard") and `_COSTS_LESS_IF_TARGETS_COLOR_SPELL_RE`. Hollow One
-matches neither, and nothing anywhere in `src/` counts cards discarded or
-cycled this turn - there is no `discarded_this_turn` counter to read. The
-golem therefore always costs its printed `{5}`. Since the entire deck exists
-to cast a 4/4 for zero on turn one, this single gap kills the archetype.
-Missing primitive: **a per-turn discard/cycle counter, plus a cost-reduction
-shape keyed to it.**
+Both halves of the missing primitive now exist. `Game.cards_discarded_this_turn`
+is the per-turn counter, recorded in `Game.discard_cards` - the single place a
+discard is instructed, which a cycling activation's own CR 702.29a discard cost
+routes through as well, so a cycled card counts once (CR 702.29d) - and cleared
+when a new turn begins. `_COSTS_LESS_PER_CARD_DISCARDED_RE` is the shape keyed
+to it, read by `Game.cost_reduction_for` at CR 601.2f. Measured: no discards
+leaves the printed `{5}`, one discard makes it `{3}`, two `{1}`, and three take
+the mana component to nothing (CR 118.7). The archetype's central play - a 4/4
+for zero after a Burning Inquiry - is live.
 
 ### 2. Madness - **works**
 
