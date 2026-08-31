@@ -315,7 +315,7 @@ class AbilityOnStack(BaseModel):
         return game.find_by_id(self.source_id)
 
 
-def tapped_for_mana_event(source: CardState) -> GameEvent:
+def tapped_for_mana_event(source: CardState, game: "Game | None" = None) -> GameEvent:
     """CR 106.12a: this permanent's mana ability just resolved and produced mana.
 
     Built once and reused by every place the engine taps something for mana -
@@ -323,15 +323,39 @@ def tapped_for_mana_event(source: CardState) -> GameEvent:
     cost) and `Game.activate_ability`'s mana-ability fast path (CR 605.3b: the
     ability itself never reaches the stack, but the event still happens) -
     so the two call sites cannot drift apart on what the event looks like.
+
+    `game`, when given and `source` is still on the battlefield, reads
+    `subject_types`/`subject_subtypes` off `Game.characteristics_of`
+    (CR 613.5) rather than `CardState.types` - a land a continuous effect has
+    turned into a creature (Badgermole Cub's own earthbend, Karn's animation)
+    is only a Creature on the *computed* board; `CardState.types` is up-face
+    aware (CR 712.8f) but knows nothing about layers, and reading it here
+    would leave "whenever you tap a creature for mana" blind to exactly the
+    land its own controller just animated. Falling back to
+    `source.types`/`.subtypes` without a `game`, or once `source` has left the
+    battlefield, keeps every existing caller working: Tinder Farm's own
+    "{T}, Sacrifice this land: Add {R}{W}" pays its sacrifice before this event
+    is emitted (CR 601.2h/602.2's cost is paid in full before the ability
+    resolves and produces this event), so the computed board built from the
+    *current* battlefield never has it to ask - `computed_board()` only knows
+    about permanents still there (CR 613.5's "objects" are the ones on it).
     """
+    on_battlefield = game is not None and source.zone is Zone.BATTLEFIELD
+    if on_battlefield:
+        characteristics = game.characteristics_of(source)
+        types = characteristics.types
+        subtypes = characteristics.subtypes
+    else:
+        types = source.types
+        subtypes = source.subtypes
     return GameEvent(
         event=TriggerEvent.TAPPED_FOR_MANA,
         subject_id=source.id,
         subject_name=source.name,
         subject_controller=source.controller,
         subject_card=source.card,
-        subject_types=source.types,
-        subject_subtypes=source.subtypes,
+        subject_types=types,
+        subject_subtypes=subtypes,
     )
 
 

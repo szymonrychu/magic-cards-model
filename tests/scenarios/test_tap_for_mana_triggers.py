@@ -30,7 +30,8 @@ every assertion here is "the ability reached the stack", not what it produces.
 """
 
 from magic_cards_model.machines import Step
-from magic_cards_model.models import Zone
+from magic_cards_model.models import Color, Zone
+from magic_cards_model.models.card import Type
 from tests.scenarios.harness import Scenario
 
 
@@ -132,6 +133,77 @@ def test_the_enchanted_land_being_tapped_for_mana_triggers_utopia_sprawl():
     scenario.activate(forest)
 
     assert scenario.stack_names() == ["Utopia Sprawl's triggered ability"]
+
+
+def test_tapping_a_plain_noncreature_land_does_not_trigger_badgermole_cub():
+    """Real-game report (log seq 169-171): Nurturing Peatland's type line is
+    plain "Land", printing no creature type, and tapping it for mana still
+    queued a Badgermole Cub trigger copy alongside the two taps that actually
+    were creatures. "A creature" excludes an ordinary land even when a
+    creature-typed Badgermole Cub is watching every tap on the battlefield.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Badgermole Cub", "Nurturing Peatland"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (peatland,) = scenario.untapped_sources("Nurturing Peatland", username="alice")
+
+    scenario.activate(peatland, color=Color.GREEN)
+
+    assert scenario.stack_names() == []
+
+
+def test_tapping_a_mana_producing_creature_triggers_badgermole_cub():
+    """Delighted Halfling is an ordinary `Creature - Halfling Citizen` with a
+    `{T}: Add {C}.` ability - the plain case the false-positive report above
+    has to be told apart from.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Badgermole Cub", "Delighted Halfling"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    halfling = scenario.creature("Delighted Halfling", "alice")
+
+    scenario.activate(halfling)
+
+    assert scenario.stack_names() == ["Badgermole Cub's triggered ability"]
+
+
+def test_tapping_a_land_animated_into_a_creature_triggers_badgermole_cub():
+    """The sharp edge: a land earthbend turned into a creature is a Creature
+    only on the *computed* board (CR 613.5) - its own `CardState.types`, the
+    up-face-aware but layer-blind read `tapped_for_mana_event` used before this
+    fix, still reports plain `Land`. Badgermole Cub's own ETB earthbends one of
+    the Forests paying for it, so by the time that Forest is tapped for mana it
+    has already been a 0/0 land creature with haste for a full resolution.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Badgermole Cub"], battlefield=["Forest", "Forest", "Forest"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    pay1, pay2, target_forest = scenario.untapped_sources(
+        "Forest", "Forest", "Forest", username="alice"
+    )
+    scenario.choose_trigger_targets("Badgermole Cub", [target_forest])
+    scenario.cast_and_resolve("Badgermole Cub", pay1, pay2)
+    scenario.pass_until_resolved()
+
+    # Still plain `Land` on the printed/up-face read - only the computed board
+    # (Game.characteristics_of) knows earthbend made it a creature too.
+    assert Type.CREATURE not in target_forest.types
+
+    scenario.activate(target_forest)
+
+    assert scenario.stack_names() == ["Badgermole Cub's triggered ability"]
 
 
 def test_a_different_land_being_tapped_does_not_trigger_utopia_sprawl():
