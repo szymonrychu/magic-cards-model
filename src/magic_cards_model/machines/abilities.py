@@ -86,6 +86,25 @@ Deliberate limits, all of them visible as tests:
   enough to check whether it holds, which is why ``resolve`` takes the
   controlled land types and self counters as plain arguments rather than a
   `Game`.
+- **Three more board facts a mana ability's output can wait on**, all of them
+  read here and narrowed in ``ManaAbility.effective`` the same plain-data way:
+
+  - **CR 106.7's "could produce"** (Reflecting Pool, Exotic Orchard) -
+    ``ManaAbility.could_produce`` says whose lands to survey. A caller with a
+    real survey passes ``could_produce_colors``; without one, "a land you
+    control" falls back to ``colors_land_types_could_produce`` over the land
+    types the caller already supplies, and "a land an opponent controls" has
+    nothing to fall back on and produces no mana (CR 106.5).
+  - **CR 614.12a's chosen colour** (Sunken Citadel) -
+    ``ManaAbility.uses_chosen_color`` says the colour was fixed as the
+    permanent entered; ``effective`` takes it as ``chosen_color``, and
+    without it the type is undefined and CR 106.5 applies again.
+  - **CR 106.6's spend effect** (Arena of Glory's "If that mana is spent on a
+    creature spell, it gains haste until end of turn") - kept verbatim on
+    ``ManaAbility.spend_effect``. Nothing applies it; it is recorded so the
+    gap is queryable rather than a silently dropped sentence, and it is
+    deliberately *not* an ``unparsed_rider``, which would make
+    ``Game.why_cannot_activate`` refuse the whole ability.
 """
 
 import re
@@ -127,9 +146,64 @@ _CHOOSE_A_COLOR_PREAMBLE = re.compile(r"^Choose a color\.\s*", re.IGNORECASE)
 _ANY_COLOR_COUNTS = {"a": 1, "one": 1, "two": 2, "three": 3}
 _MANA_COST_IN_COST = re.compile(r"\{(\d+|[WUBRGCX])\}")
 
+#: CR 106.7: "Some abilities produce mana based on the type of mana another
+#: permanent or permanents 'could produce.' The type of mana a permanent could
+#: produce at any time includes any type of mana that an ability of that
+#: permanent would produce if it were to resolve at that time." Two printings
+#: in the pool ask it, from opposite sides of the table:
+#:
+#:   Reflecting Pool  "{T}: Add one mana of any **type** that a land **you
+#:                     control** could produce."
+#:   Exotic Orchard   "{T}: Add one mana of any **color** that a land **an
+#:                     opponent controls** could produce."
+#:
+#: Both texts confirmed with `resolve_cards` this session. The clause must be
+#: read *before* `_ANY_COLOR`, whose "one mana of any color" would otherwise
+#: swallow the Orchard's opening words and drop the whole survey - which is
+#: exactly the defect this replaces: the Orchard used to make red off an
+#: opponent whose only land was a Plains.
+#:
+#: "type" and "color" are different universes and the difference is printed:
+#: CR 106.1a has five colors of mana, CR 106.1b six *types*, colorless
+#: included. So Reflecting Pool can copy a Wastes and Exotic Orchard cannot.
+_COULD_PRODUCE = re.compile(
+    r"(?P<count>one|two|three|a) mana of any (?P<kind>type|color) that a land "
+    r"(?P<whose>you control|an opponent controls) could produce",
+    re.IGNORECASE,
+)
+#: "one mana of the chosen color" / "two mana of the chosen color" (Sunken
+#: Citadel, text confirmed with `resolve_cards`). The colour is CR 614.1c's
+#: "As it enters, choose a color", recorded on the permanent as it enters
+#: (CR 614.12a) and read back here by name; CR 105.4 limits it to one of the
+#: five colors, so colorless is never an answer. Until the choice is known
+#: the ability's type is undefined and CR 106.5 makes it produce no mana -
+#: see `ManaAbility.effective`.
+_CHOSEN_COLOR_MANA = re.compile(
+    r"(?P<count>one|two|three|a) mana of the chosen color", re.IGNORECASE
+)
+
 #: `Add {G}, {R}, or {W}` is a choice; `Add {C}{C}` is both at once. The comma
 #: is what separates them in WOTC templating.
 _CHOICE_SEPARATOR = re.compile(r",|\bor\b")
+
+
+class CouldProduce(StrEnum):
+    """Whose lands a CR 106.7 "could produce" survey looks at.
+
+    Which side is asked is the whole difference between the two printings
+    that ask it, so it is named rather than folded into one flag. It also
+    decides how much of the rule the engine currently reaches without help:
+    `ManaAbility.effective` already receives the land types its *controller*
+    controls (the same `Game._controlled_land_types` answer Urza's Tower's
+    conditional clause runs on), so `LANDS_YOU_CONTROL` has a fallback;
+    `LANDS_AN_OPPONENT_CONTROLS` has none and produces no mana until a
+    caller runs the survey and passes `could_produce_colors` - CR 106.5:
+    "If an ability would produce one or more mana of an undefined type, it
+    produces no mana instead."
+    """
+
+    LANDS_YOU_CONTROL = "lands_you_control"
+    LANDS_AN_OPPONENT_CONTROLS = "lands_an_opponent_controls"
 
 
 class ManaCondition(BaseModel):
@@ -217,7 +291,7 @@ _RIDER_GAIN_LIFE = re.compile(r"^you gain (?P<n>\d+) life\.?$", re.IGNORECASE)
 _SPEND_EFFECT_ON_SPELL = re.compile(r"^if (?:that|this) mana is spent on\b", re.IGNORECASE)
 
 
-def _parse_mana_rider(rest: str) -> tuple[ManaAbilityRider | None, str | None]:
+def _parse_mana_rider(rest: str) -> tuple[ManaAbilityRider | None, str | None, str | None]:
     """Read the CR 405.6c immediate side effect off a mana ability's text
     beyond its base "Add ..." sentence, if it printed one.
 
@@ -229,37 +303,58 @@ def _parse_mana_rider(rest: str) -> tuple[ManaAbilityRider | None, str | None]:
     other only restricts how the mana already produced may be spent).
 
     The first remaining sentence is checked against the known immediate-
-    effect shapes. A match becomes `(rider, None)` - the rider
+    effect shapes. A match becomes `(rider, None, spend_effect)` - the rider
     `Game.activate_ability` applies alongside the mana. A remaining sentence
-    that matches none of them comes back as `(None, sentence)` instead: the
-    project's fail-closed rule means the caller must refuse the whole
-    activation rather than mint the mana and silently drop the sentence that
-    was supposed to come with it (CR 405.6c ties the two together as one
-    event, not two). `(None, None)` means there was nothing left to read at
-    all.
+    that matches none of them comes back as `(None, sentence, spend_effect)`
+    instead: the project's fail-closed rule means the caller must refuse the
+    whole activation rather than mint the mana and silently drop the sentence
+    that was supposed to come with it (CR 405.6c ties the two together as one
+    event, not two).
+
+    The third element is CR 106.6's "additional effect that affects the spell
+    or ability that mana is spent on" - Arena of Glory's "If that mana is
+    spent on a creature spell, it gains haste until end of turn." It used to
+    be skipped and forgotten, which meant a card whose whole point is that
+    rider reported `rider=None, unparsed_rider=None` and looked, to every
+    caller, exactly like a land with nothing but `{T}: Add {R}{R}`. It is
+    returned now so `ManaAbility.spend_effect` can carry it: still unapplied,
+    but no longer invisible.
     """
+    spend_effect: str | None = None
+    rider: ManaAbilityRider | None = None
+    unparsed: str | None = None
     for sentence in re.split(r"(?<=\.)\s+", rest.strip()):
         sentence = sentence.strip()
         if not sentence:
+            continue
+        if rider is not None or unparsed is not None:
+            # The rider half is decided; keep walking only to find a
+            # CR 106.6 spend effect printed after it.
+            if _SPEND_EFFECT_ON_SPELL.match(sentence) and spend_effect is None:
+                spend_effect = sentence
             continue
         if _CONDITIONAL_CLAUSE.match(sentence):
             continue
         if "spend this mana only" in sentence.lower():
             continue
         if _SPEND_EFFECT_ON_SPELL.match(sentence):
+            if spend_effect is None:
+                spend_effect = sentence
             continue
         damage = _RIDER_DAMAGE_TO_YOU.match(sentence)
         if damage:
             rider = ManaAbilityRider(kind="damage_to_controller", amount=int(damage.group("n")))
-            return rider, None
+            continue
         lose = _RIDER_LOSE_LIFE.match(sentence)
         if lose:
-            return ManaAbilityRider(kind="lose_life", amount=int(lose.group("n"))), None
+            rider = ManaAbilityRider(kind="lose_life", amount=int(lose.group("n")))
+            continue
         gain = _RIDER_GAIN_LIFE.match(sentence)
         if gain:
-            return ManaAbilityRider(kind="gain_life", amount=int(gain.group("n"))), None
-        return None, sentence
-    return None, None
+            rider = ManaAbilityRider(kind="gain_life", amount=int(gain.group("n")))
+            continue
+        unparsed = sentence
+    return rider, unparsed, spend_effect
 
 
 class ManaAbility(BaseModel):
@@ -307,6 +402,32 @@ class ManaAbility(BaseModel):
     #: rather than producing the mana and silently dropping the sentence
     #: that was meant to come with it.
     unparsed_rider: str | None = None
+    #: Whose lands CR 106.7's "could produce" survey looks at, or None for
+    #: the overwhelming majority of abilities that print no such clause.
+    #: `options` still holds the whole universe the clause could ever offer
+    #: (five colors for "any color", six types for "any type"); `effective`
+    #: is what narrows it to what the surveyed lands actually could produce.
+    could_produce: CouldProduce | None = None
+    #: True when the ability's own printed text says "the chosen color" -
+    #: CR 614.1c's as-enters choice, read back by name (Sunken Citadel).
+    #: `options` again holds the universe (CR 105.4's five colors, one option
+    #: per colour, `any_color_count` mana of it); `effective` narrows it to
+    #: the one colour actually chosen, and to nothing at all until a caller
+    #: passes one.
+    uses_chosen_color: bool = False
+    #: CR 106.6's second and third clauses - "have an additional effect that
+    #: affects the spell or ability that mana is spent on, or create a
+    #: delayed triggered ability" - kept as the raw printed sentence. Arena
+    #: of Glory's "If that mana is spent on a creature spell, it gains haste
+    #: until end of turn." is the only one in the pool.
+    #:
+    #: Unlike `unparsed_rider` this does **not** make
+    #: `Game.why_cannot_activate` refuse the ability: the sentence is not
+    #: CR 405.6c's "another effect happens immediately", it is conditional on
+    #: a spend that has not happened yet, so the mana ability itself is
+    #: complete without it. It is recorded rather than dropped so the gap is
+    #: queryable instead of invisible - nothing applies it yet.
+    spend_effect: str | None = None
 
     @property
     def is_choice(self) -> bool:
@@ -315,7 +436,14 @@ class ManaAbility(BaseModel):
     @property
     def amount(self) -> int:
         """How much mana one activation adds, ignoring any conditional clause."""
-        return self.any_color_count if self.any_color else len(self.options[0])
+        if self.any_color:
+            return self.any_color_count
+        # An ability whose whole universe of options has been narrowed away -
+        # a CR 106.7 survey that came back empty, a "the chosen color" with no
+        # choice known - adds nothing (CR 106.5). `options` is never empty as
+        # parsed, only as narrowed by `effective`, so this is the answer for a
+        # narrowed copy rather than for anything the parser produces.
+        return len(self.options[0]) if self.options else 0
 
     def produces(self, color: Color | None = None) -> list[Color]:
         """What this ability adds, given a chosen colour where it has a choice.
@@ -332,6 +460,9 @@ class ManaAbility(BaseModel):
         controlled_land_types: frozenset[str] = frozenset(),
         own_counters: frozenset[str] = frozenset(),
         has_imprinted_card: bool = False,
+        *,
+        could_produce_colors: frozenset[Color] | None = None,
+        chosen_color: Color | None = None,
     ) -> tuple[list[list[Color]], bool]:
         """Which `options`/`any_color` this ability effectively offers right
         now, after CR 605.1a's conditional "add X instead" clauses are
@@ -345,11 +476,52 @@ class ManaAbility(BaseModel):
         board-dependent output has to be visible to the solver, not just to a
         real activation) - both need the same answer to "which clause wins",
         so there is exactly one place that decides it.
+
+        Two further narrowings run after the conditional clauses, both of
+        them CR 106.5's "an ability that would produce mana of an undefined
+        type produces no mana instead" applied to a universe the printed
+        text names but the board has to fill in:
+
+        - **`could_produce`** (CR 106.7) - narrowed to the colours the
+          surveyed lands could produce. A caller that has run the real survey
+          - asking each land's own mana abilities what they would add, which
+          is what `Game.could_produce_colorless` already does for one colour
+          and one permanent - passes it as `could_produce_colors` and that is
+          used verbatim, for either side of the table.
+
+          A caller that has not gets the fallback, and the fallback only
+          reaches half the rule: `LANDS_YOU_CONTROL` is answered from
+          `controlled_land_types`, which every caller already passes, so
+          Reflecting Pool works off basic land types (see
+          `colors_land_types_could_produce` for exactly how far that goes);
+          `LANDS_AN_OPPONENT_CONTROLS` has no such argument to fall back on,
+          so Exotic Orchard narrows to nothing and is not a mana source at
+          all. That is a loud, correct-shaped gap in place of the wrong
+          answer it replaces (any colour at all, off any opponent).
+        - **`uses_chosen_color`** (CR 614.12a) - narrowed to the one colour
+          recorded on the permanent as it entered, and to nothing until a
+          caller passes it.
+
+        Both surveys are **under-inclusive and never over-inclusive**: see
+        `colors_land_types_could_produce` for exactly what a land type does
+        and does not tell you.
         """
         options, any_color = self.options, self.any_color
         for condition in self.conditional:
             if condition.holds(controlled_land_types, own_counters, has_imprinted_card):
                 options, any_color = condition.options, condition.any_color
+
+        if self.could_produce is not None:
+            if could_produce_colors is None:
+                could_produce_colors = colors_land_types_could_produce(
+                    controlled_land_types
+                    if self.could_produce is CouldProduce.LANDS_YOU_CONTROL
+                    else frozenset()
+                )
+            options, any_color = _narrow(options, any_color, could_produce_colors)
+        if self.uses_chosen_color:
+            allowed = frozenset() if chosen_color is None else frozenset({chosen_color})
+            options, any_color = _narrow(options, any_color, allowed)
         return options, any_color
 
     def resolve(
@@ -359,6 +531,9 @@ class ManaAbility(BaseModel):
         color: Color | None = None,
         has_imprinted_card: bool = False,
         count: int | None = None,
+        *,
+        could_produce_colors: frozenset[Color] | None = None,
+        chosen_color: Color | None = None,
     ) -> list[Color]:
         """What this ability adds right now (CR 605.1a, CR 605.3b resolves it
         immediately, so "right now" is the only time that matters).
@@ -373,8 +548,26 @@ class ManaAbility(BaseModel):
 
         Raises when the winning clause offers a choice and none was made, so a
         caller cannot silently get the wrong colour.
+
+        An ability CR 106.5 leaves with no defined type at all - a CR 106.7
+        survey that came back empty, a "the chosen color" whose choice this
+        caller does not know - has no option to match and raises rather than
+        adding mana of a colour nothing licensed. `cost.py`'s auto-tap asks
+        `effective` first and drops such a source before it ever gets here.
         """
-        options, any_color = self.effective(controlled_land_types, own_counters, has_imprinted_card)
+        options, any_color = self.effective(
+            controlled_land_types,
+            own_counters,
+            has_imprinted_card,
+            could_produce_colors=could_produce_colors,
+            chosen_color=chosen_color,
+        )
+
+        if not any_color and not options:
+            raise ValueError(
+                "this ability's mana has no defined type right now, so it produces no mana "
+                "(CR 106.5)"
+            )
 
         if any_color:
             if color is None:
@@ -476,6 +669,45 @@ def _parse_effect(effect: str) -> ManaAbility | None:
             any_color_count=1,
             amount_from_devotion=True,
         )
+    # Before `_ANY_COLOR`: "one mana of any color that a land an opponent
+    # controls could produce" opens with `_ANY_COLOR`'s own words, and reading
+    # it as a plain any-colour ability is what made Exotic Orchard tap for red
+    # off a Plains. CR 106.7's survey is the whole meaning of the sentence.
+    could_produce = _COULD_PRODUCE.search(effect)
+    if could_produce:
+        count = _ANY_COLOR_COUNTS[could_produce.group("count").lower()]
+        # CR 106.1a: five colors of mana. CR 106.1b: six *types*, colorless
+        # included. Reflecting Pool says "type" and so can copy a colorless
+        # source; Exotic Orchard says "color" and cannot.
+        universe = (
+            (*_COLORS, Color.COLORLESS)
+            if could_produce.group("kind").lower() == "type"
+            else _COLORS
+        )
+        whose = (
+            CouldProduce.LANDS_YOU_CONTROL
+            if could_produce.group("whose").lower() == "you control"
+            else CouldProduce.LANDS_AN_OPPONENT_CONTROLS
+        )
+        return ManaAbility(
+            options=[[color] * count for color in universe],
+            any_color_count=count,
+            could_produce=whose,
+        )
+
+    # "one mana of the chosen color" (Sunken Citadel), CR 614.12a's recorded
+    # choice. Also before `_ANY_COLOR`, which does not match it, but keeping
+    # the two colour-universe clauses together is what stops a later edit to
+    # either regex from silently reordering them.
+    chosen = _CHOSEN_COLOR_MANA.search(effect)
+    if chosen:
+        count = _ANY_COLOR_COUNTS[chosen.group("count").lower()]
+        return ManaAbility(
+            options=[[color] * count for color in _COLORS],
+            any_color_count=count,
+            uses_chosen_color=True,
+        )
+
     any_color = _ANY_COLOR.search(effect)
     if any_color:
         count = _ANY_COLOR_COUNTS[any_color.group("count").lower()]
@@ -581,6 +813,64 @@ _BASIC_LAND_COLORS: dict[str, Color] = {
     "Mountain": Color.RED,
     "Forest": Color.GREEN,
 }
+
+
+def colors_land_types_could_produce(land_types: frozenset[str]) -> frozenset[Color]:
+    """CR 106.7's "could produce", answered from a set of land subtypes.
+
+    CR 106.7: "The type of mana a permanent could produce at any time includes
+    any type of mana that an ability of that permanent would produce if it were
+    to resolve at that time." CR 305.6 gives every object with a basic land
+    type the matching intrinsic mana ability, so a land that *has* the Island
+    subtype could produce {U} - always, whether it is tapped, whether its
+    controller could actually activate it, whether some other effect stops it
+    being activated. That direction of the rule is exact.
+
+    What this **cannot** see is the other direction: a land with no basic land
+    type that still produces mana. Ancient Tomb's {C}{C}, Wastes' {C}, Mana
+    Confluence's any colour, and every "Add one mana of any color" land are all
+    invisible here, because a subtype set is all `Game._controlled_land_types`
+    reports and it is the only board fact `ManaAbility.effective` is handed.
+
+    So the answer is **under-inclusive and never over-inclusive**: every colour
+    it names is genuinely one the surveyed lands could produce, and a colour it
+    omits may still be one. A Reflecting Pool next to an Island taps for blue;
+    a Reflecting Pool next to nothing but an Ancient Tomb taps for nothing,
+    which is a refusal rather than a wrong colour. This is a *fallback*, not
+    the rule: a caller holding the permanents can run the real survey - ask
+    each land's own mana abilities what they would add, which is exactly what
+    `Game.could_produce_colorless` already does for one colour and one
+    permanent - and hand the answer to `ManaAbility.effective` as
+    `could_produce_colors`, which is then used instead of this. The fallback
+    exists because this module is handed plain data and never a `Game` (see
+    the module docstring), so it can only work from what it is already given.
+
+    Layers are already accounted for by the caller: `Game._controlled_land_
+    types` reads `CardState.subtypes`, the computed value, so an Urborg,
+    Tomb of Yawgmoth making every land a Swamp shows up here as black, and a
+    Blood Moon stripping a nonbasic's types shows up as red.
+    """
+    return frozenset(
+        _BASIC_LAND_COLORS[land_type] for land_type in land_types if land_type in _BASIC_LAND_COLORS
+    )
+
+
+def _narrow(
+    options: list[list[Color]], any_color: bool, allowed: frozenset[Color]
+) -> tuple[list[list[Color]], bool]:
+    """`options`/`any_color` with every colour outside `allowed` dropped.
+
+    An option is kept only if every colour in it is allowed - an ability that
+    adds two mana of one chosen colour cannot half-add one - and `any_color`
+    survives only if nothing was dropped, since an ability narrowed to a
+    subset of the five no longer adds mana of *any* colour. The same shape as
+    `cost._narrow_to_defined_colors`, which applies CR 106.5 to the other
+    board-dependent colour clause in the pool ("of any color among legendary
+    creatures you control"); this one is inside `effective` because the
+    clauses it serves are read off the printed text here rather than there.
+    """
+    kept = [option for option in options if all(color in allowed for color in option)]
+    return kept, any_color and len(kept) == len(options)
 
 
 def _type_line_and_name_for_face(card: Card, face: str | None) -> tuple[str, str]:
@@ -2073,7 +2363,9 @@ def _parse_activated(text: str, common: dict) -> ActivatedAbility | None:
         if mana is not None:
             mana.costs_mana = any(piece.kind is CostKind.MANA for piece in costs)
             mana.conditional = _parse_conditional_clauses(add.group("rest"))
-            mana.rider, mana.unparsed_rider = _parse_mana_rider(add.group("rest"))
+            mana.rider, mana.unparsed_rider, mana.spend_effect = _parse_mana_rider(
+                add.group("rest")
+            )
 
     zone, zone_rule = _activated_ability_zone(costs, effect_text, instructions)
 
