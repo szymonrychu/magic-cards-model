@@ -2168,22 +2168,47 @@ class Game(BaseModel):
         resolution, the ability is removed from the stack and ceases to exist."
         An ability is not a card (CR 405.1), so it goes to no zone - not even a
         graveyard - and its source is irrelevant by now (CR 113.7a).
+
+        Some of `machines/effects.py`'s ability effects apply one clause of
+        their printed text unconditionally (Fight Rigging's own +1/+1 counter,
+        Cori-Steel Cutter's own token, Tyvar's and Six's own mill) and only
+        *then* ask a later CR 608.2d question about an optional clause that
+        follows it (the free cast, the attach, the return, the pick from among
+        the milled cards). That earlier mutation is not something to reverse
+        if the later question can't be legally answered and `Game.ask` raises
+        - CR 733.1's reversal is for an action that "can't legally complete",
+        and the first clause already did, in full, exactly as printed
+        (CR 608.2c's textual order). What was not guaranteed before this fix
+        is the bookkeeping below: `discard` and `_before_priority` never ran
+        if `effect` raised, the same gap `Game.resolve_top` had for a spell's
+        own final-resolution step before it started catching and re-raising.
+        Left alone here, an ability that got that far - counter or token or
+        milled cards already real - would leave the stack with CR 608.2n's own
+        "ceases to exist" bookkeeping undone and CR 704.3's state-based-action
+        check skipped before whatever comes next, which is its own kind of
+        half-applied state even though no zone placement needs reversing.
         """
-        if self.spell_fizzles(ability):
-            self.fizzled.append(ability.id)
-        elif self._intervening_if_still_true(ability):
-            delayed = self.delayed_triggers.trigger_for(ability)
-            if delayed is not None:
-                # CR 603.7: a delayed triggered ability's effect is not printed
-                # anywhere, so it comes from `machines/delayed.py` rather than
-                # from the registry keyed on the source card's text.
-                run = self.delayed_triggers.effect_for(ability)
-                if run is not None:
-                    run(self, ability, delayed)
-            else:
-                effect = self._effect_of(ability)
-                if effect is not None:
-                    effect(self, ability)
+        try:
+            if self.spell_fizzles(ability):
+                self.fizzled.append(ability.id)
+            elif self._intervening_if_still_true(ability):
+                delayed = self.delayed_triggers.trigger_for(ability)
+                if delayed is not None:
+                    # CR 603.7: a delayed triggered ability's effect is not
+                    # printed anywhere, so it comes from `machines/delayed.py`
+                    # rather than from the registry keyed on the source
+                    # card's text.
+                    run = self.delayed_triggers.effect_for(ability)
+                    if run is not None:
+                        run(self, ability, delayed)
+                else:
+                    effect = self._effect_of(ability)
+                    if effect is not None:
+                        effect(self, ability)
+        except Exception:
+            self.delayed_triggers.discard(ability)  # CR 608.2n: it ceases to exist
+            self._before_priority()
+            raise
 
         self.delayed_triggers.discard(ability)  # CR 608.2n: it ceases to exist
         self._before_priority()

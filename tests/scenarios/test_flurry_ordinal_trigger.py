@@ -28,7 +28,10 @@ rechecked at resolution the way CR 603.4's clause would be) and
 `machines/effects._parse_create_token_then_may_attach_clause`.
 """
 
+import pytest
+
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.decisions import DecisionKind, ScriptedAnswer
 from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario
 
@@ -146,3 +149,81 @@ def test_accepting_the_attach_actually_equips_the_monk():
     cutter = scenario.find("Cori-Steel Cutter", Zone.BATTLEFIELD)
     assert cutter.attached_to == monk.id
     assert cutter.is_attached
+
+
+def test_an_illegal_attach_answer_still_leaves_the_monk_created_and_completes_resolution():
+    """CR 603.12's token-creation half of Flurry's paragraph is unconditional
+    - "instruct", not "you may" - and already complete by the time the
+    attach half of the same one ability (CR 113.3) asks its own `MAY`
+    question. If that question can't be legally answered - `Game.ask`'s own
+    `MAY` branch refusing a non-bool answer - CR 733.1's reversal has nothing
+    to reverse: the token is real, the same way `Game.ask`'s docstring
+    already treats a shockland forced to "no" as a fact, not an undo.
+
+    What has to hold regardless is CR 608.2n: the ability comes off the stack
+    and CR 704.3's state-based actions run before anything else, whether or
+    not the effect that put it there finished cleanly. `Game._resolve_ability`
+    did not guarantee that before this fix - the same "ceases to exist"
+    bookkeeping `Game.resolve_top` already guarantees a resolving spell's own
+    final zone placement, just never extended to an ability's own resolution.
+
+    Impact Tremors is the instrument that makes the gap observable rather
+    than merely plausible: its own "whenever a creature you control enters"
+    trigger (`test_triggered_abilities.py::test_a_card_with_no_registry_row_
+    gets_the_each_opponent_damage_shape_too`) fires the instant the Monk
+    token enters and is recorded straight into `Game.pending_triggers` (CR
+    603.3) - independently of whether Flurry's own resolution later succeeds
+    or raises. CR 603.3's "the next time a player would receive priority"
+    is `Game._before_priority`'s job, via `put_triggers_on_stack`. Skip that
+    call - which is exactly what happened before this fix, on any exception -
+    and Impact Tremors' trigger is stuck in `pending_triggers` forever,
+    never reaching the stack at all, rather than merely resolving late.
+    """
+    scenario = _two_spells_in_hand("Impact Tremors").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bob_life_before = scenario.player("bob").life
+
+    first, second, _ = scenario.untapped_sources("Mountain", "Mountain", "Mountain")
+    scenario.cast_and_resolve("Lightning Bolt", first, targets=["bob"])
+    while scenario.game.stack:
+        scenario.resolve_top()
+
+    # The second cast puts Flurry's trigger on the stack above the spell
+    # (CR 601.2i) - drive it by hand instead of `cast_and_resolve`, whose own
+    # single `resolve_top()` call would otherwise be the one that hits the
+    # illegal answer.
+    scenario.cast_onto_stack("Lightning Bolt", second, targets=["bob"])
+    assert "Cori-Steel Cutter" in scenario.stack_names()[-1]
+    scenario.game.decisions.add(
+        ScriptedAnswer(
+            kind=DecisionKind.MAY,
+            value="yes",  # not a bool: Game.ask's own MAY branch refuses this
+            player="alice",
+            source="Cori-Steel Cutter",
+        )
+    )
+
+    with pytest.raises(ValueError, match="a yes-or-no question needs a bool answer"):
+        scenario.resolve_top()
+
+    # The token is real - CR 603.12's unconditional first clause already
+    # completed, and nothing reverses a legally-completed action.
+    monk = scenario.find("Monk Token", Zone.BATTLEFIELD)
+    cutter = scenario.find("Cori-Steel Cutter", Zone.BATTLEFIELD)
+    # The attach question never got an answer, so the attach itself never
+    # happened.
+    assert cutter.attached_to is None
+    # CR 608.2n: the ability is off the stack either way, and CR 603.3 has
+    # already moved Impact Tremors' own trigger from `pending_triggers` onto
+    # the stack above the second Lightning Bolt, which never got a chance to
+    # resolve.
+    assert scenario.pending_triggers == []
+    assert scenario.stack_names() == ["Lightning Bolt", "Impact Tremors's triggered ability"]
+    scenario.assert_in_exactly_one_zone(*scenario.all_card_states())
+    # Draining the rest of the stack still works - the game was not left in
+    # a broken state by the refusal, and Impact Tremors' trigger still
+    # resolves rather than having been dropped.
+    while scenario.game.stack:
+        scenario.resolve_top()
+    assert monk.zone is Zone.BATTLEFIELD
+    assert scenario.player("bob").life == bob_life_before - 6 - 1, "two Bolts and Impact Tremors"

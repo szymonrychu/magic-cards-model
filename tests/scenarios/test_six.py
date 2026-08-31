@@ -10,7 +10,12 @@ moved to, as long as it's public" - the "among them" candidate pool is the
 cards this mill just moved, not the whole graveyard).
 """
 
+from uuid import uuid4
+
+import pytest
+
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.decisions import DecisionKind, ScriptedAnswer
 from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario
 
@@ -79,3 +84,48 @@ def test_a_land_already_in_the_graveyard_before_this_mill_is_not_a_candidate():
     resolve_all(scenario)
 
     assert scenario.player("alice").hand == []
+
+
+def test_an_illegal_choose_answer_still_leaves_the_mill_and_completes_resolution():
+    """CR 608.2c's printed order mills first, then offers the "you may put a
+    land ... into your hand" question, then (once accepted, and
+    `default_answer`'s own deviation takes it by default) a `CHOOSE_CARDS`
+    question naming which land - one ability, one paragraph (CR 113.3). If
+    that last question can't be legally answered - `Game.ask`'s own
+    `CHOOSE_CARDS` branch refusing a card id that was never offered - CR
+    733.1 has nothing to reverse for the mill: it already happened, in full,
+    before either question was asked.
+
+    What has to hold regardless is CR 608.2n: the ability comes off the stack
+    and CR 704.3's state-based actions run before anything else - the
+    bookkeeping `Game._resolve_ability` did not guarantee before this fix.
+    """
+    scenario = board(["Forest", "Lava Dart", "Lava Dart", "Island"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    six = scenario.creature("Six", "alice")
+    alice = scenario.player("alice")
+
+    scenario.game.decisions.add(
+        ScriptedAnswer(
+            kind=DecisionKind.CHOOSE_CARDS,
+            value=(uuid4(),),  # never among the offered candidates
+            player="alice",
+            source="Six",
+        )
+    )
+
+    scenario.attack_with(six)
+    assert scenario.stack_names() != []
+    with pytest.raises(ValueError, match="cannot choose a card that was not offered"):
+        resolve_all(scenario)
+
+    # The mill already happened - CR 608.2c's first clause, unconditional:
+    # the Forest is still among the milled cards, since the pick that would
+    # have moved it to hand never got a legal answer.
+    graveyard_names = {c.name for c in alice.graveyard}
+    assert graveyard_names == {"Forest", "Lava Dart"}
+    assert len(alice.graveyard) == 3
+    assert alice.hand == []
+    # CR 608.2n: the ability is off the stack either way.
+    assert scenario.game.stack == []
+    scenario.assert_in_exactly_one_zone(*scenario.all_card_states())
