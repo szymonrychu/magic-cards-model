@@ -340,10 +340,13 @@ def test_a_targeted_loyalty_ability_announces_its_target():
 
     CR 602.2: "the remainder of the process for activating an ability is
     identical to the process for casting a spell", so the target is announced
-    and checked like any activated ability's. The tap her text describes is
-    the effect, and the effect half resolves as nothing here - no registry
-    entry - so the bears stay untapped: this test is about the announcement
-    and the cost.
+    and checked like any activated ability's. The tap and the "doesn't untap"
+    half are read together off the ability's own printed text by
+    `machines/effects.py`'s `_parse_tap_target_then_no_untap_clause` (added
+    alongside this test's own fix) - see `tests/scenarios/
+    test_tamiyo_compleated_sage.py` for the mechanic's own coverage; this
+    file is still about the announcement and the cost, so it only checks that
+    the tap actually happened, not the exert-like follow-up.
     """
     scenario = _tamiyo_board()
     scenario.start_at(Step.PRECOMBAT_MAIN)
@@ -358,7 +361,7 @@ def test_a_targeted_loyalty_ability_announces_its_target():
 
     scenario.pass_until_resolved()
     assert scenario.game.stack_is_empty
-    assert not bears.tapped, "the effect half resolved as nothing (no registry entry)"
+    assert bears.tapped, "the effect half now resolves for real (CR 701.26a)"
 
 
 def test_a_variable_loyalty_cost_is_refused_until_something_can_choose_x():

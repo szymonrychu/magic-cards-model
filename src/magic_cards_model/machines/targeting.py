@@ -101,7 +101,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict
 
 from ..models.card import Card, Color, Supertype, Type
-from ..models.card_state import CardState, TargetRef
+from ..models.card_state import CardState, ExileMarker, TargetRef
 from ..models.zone import Zone
 from .abilities import keyword_abilities
 from .combat import has_keyword
@@ -238,6 +238,18 @@ class TargetRequirement(BaseModel):
     found no single numbered CR rule defining "another"/"other" this session;
     this is read off the plain-English word, the same way `must_be_tapped` is
     read off "tapped" rather than off a rule number."""
+    exiled_with_source: bool = False
+    """True for "target ... card exiled with `<name>`" (The Darkness Crystal,
+    Mosswort Bridge's own hideaway-play permission does not use this - it
+    names no target at all). CR 201.5: an object's own printed name inside
+    its own text always means itself, so this is set whenever a "card
+    exiled with `<name>`" clause is read at all - the captured name is never
+    compared against anything, since the only object it could possibly name
+    is the one the ability is printed on (`source_id`). Enforced in
+    `_rejects_card` against `CardState.exile_annotation` - the same
+    `ExileMarker.IMPRINTED`/`linked_permanent_id` link `machines/effects.py`'s
+    own imprint clauses (Ugin's Labyrinth) already write when a permanent
+    exiles a card "with" itself."""
 
     comparison_attribute: ComparisonAttribute | None = None
     """"mana value"/"power"/"toughness" in "target creature with mana value 2
@@ -362,6 +374,19 @@ class TargetRequirement(BaseModel):
                 f"{self.phrase} needs a target in the {wanted}, "
                 f"but {target.name} is in the {target.zone.value}"
             )
+        if self.exiled_with_source:
+            annotation = target.exile_annotation
+            linked = (
+                annotation is not None
+                and annotation.marker is ExileMarker.IMPRINTED
+                and source_id is not None
+                and annotation.linked_permanent_id == source_id
+            )
+            if not linked:
+                return (
+                    f"{self.phrase} needs a card exiled with this permanent, "
+                    f"and {target.name} is not one"
+                )
         if self.card_types or self.excluded_card_types:
             current_types = set(self._current_types(target, game))
             if self.card_types and not (current_types & self.card_types):
@@ -1022,6 +1047,13 @@ _ZONES = {
     "exile": Zone.EXILE,
 }
 
+#: "target creature card exiled with The Darkness Crystal" - CR 201.5's
+#: self-reference by printed name, read generically: whatever name follows
+#: "exiled with" is never compared against anything, since a permanent's own
+#: text can only ever mean itself here (see `TargetRequirement.exiled_with_
+#: source`'s own docstring).
+_EXILED_WITH_RE = re.compile(r"^exiled with\b", re.IGNORECASE)
+
 #: "other than a/an <quality> card" - Surgical Extraction's own "other than a
 #: basic land card" on a bare "target card in a graveyard". `<quality>` is one
 #: or two words (a supertype, a card type, or both - "basic land" is both at
@@ -1625,27 +1657,36 @@ def _read_phrase(prefix: str, suffix: str) -> TargetRequirement | None:
 
     extra_excluded_supertypes: frozenset[Supertype] = frozenset()
     extra_excluded_types: frozenset[Type] = frozenset()
+    exiled_with_source = False
     if rest.startswith("card") or bare_card:
         # "target creature card in your graveyard" is a card, not a permanent,
         # and so is a bare "target card". Either way the zone has to be stated:
         # a card that is not a permanent is somewhere else (CR 115.2).
         zone_match = _ZONE_CLAUSE.search(rest)
         if zone_match is None:
-            return None
-        zones = {_ZONES[zone_match.group("zone").lower()]}
-        whose = zone_match.group("whose")
-        if whose is not None and whose.lower() == "your":
-            controller = ControllerRestriction.YOU
-        # "... other than a basic land card" (Surgical Extraction) - a
-        # compound-noun exclusion on the bare "target card" itself, past the
-        # zone clause. Read here rather than by `_Adjectives`, which only
-        # ever reads a leading adjective *before* the noun it excludes
-        # ("target nonbasic land"); this "other than" tail comes after the
-        # noun and the zone both.
-        exclusion = _read_other_than_exclusion(rest[zone_match.end() :])
-        if exclusion is None:
-            return None
-        extra_excluded_supertypes, extra_excluded_types = exclusion
+            if _EXILED_WITH_RE.search(rest) is not None:
+                # "exiled with `<name>`" (The Darkness Crystal) - the zone is
+                # exile, always, and the self-reference is the whole point of
+                # the clause (see `_EXILED_WITH_RE`'s own docstring).
+                zones = {Zone.EXILE}
+                exiled_with_source = True
+            else:
+                return None
+        else:
+            zones = {_ZONES[zone_match.group("zone").lower()]}
+            whose = zone_match.group("whose")
+            if whose is not None and whose.lower() == "your":
+                controller = ControllerRestriction.YOU
+            # "... other than a basic land card" (Surgical Extraction) - a
+            # compound-noun exclusion on the bare "target card" itself, past
+            # the zone clause. Read here rather than by `_Adjectives`, which
+            # only ever reads a leading adjective *before* the noun it
+            # excludes ("target nonbasic land"); this "other than" tail comes
+            # after the noun and the zone both.
+            exclusion = _read_other_than_exclusion(rest[zone_match.end() :])
+            if exclusion is None:
+                return None
+            extra_excluded_supertypes, extra_excluded_types = exclusion
     else:
         control_match = _CONTROL_CLAUSE.match(rest)
         if control_match is not None:
@@ -1669,6 +1710,7 @@ def _read_phrase(prefix: str, suffix: str) -> TargetRequirement | None:
         controller=controller,
         must_be_tapped=must_be_tapped,
         excludes_source=excludes_source or adjectives.excludes_source,
+        exiled_with_source=exiled_with_source,
         must_be_token=adjectives.must_be_token,
         color_count=adjectives.color_count,
         historic=adjectives.historic,

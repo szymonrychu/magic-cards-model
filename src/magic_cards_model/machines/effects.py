@@ -107,6 +107,7 @@ from .layers import (
     only_this_incarnation,
     other_creatures_controlled_by,
     parsed_layer_effects,
+    set_colors,
     set_power_toughness,
 )
 from .modes import Mode, is_modal_text, modal_profile, substitute_x
@@ -370,6 +371,175 @@ def create_continuous_effect_of_ability(game: "Game", ability: AbilityOnStack) -
         targets=targets,
         context=layer_context_for(game, game.controller_of(ability)),
     )
+
+
+#: "Discard a card: This creature gets +1/+1 and becomes the color of your
+#: choice until end of turn." (Wild Mongrel) and "{T}: Target creature you
+#: control gains protection from the color of your choice until end of turn."
+#: (Mother of Runes) both name a colour CR 608.2d leaves to the resolving
+#: ability's controller, not the printed text - `parsed_layer_effects`' own
+#: `LAYER_EFFECTS`/text-driven builders have no channel for a choice made at
+#: resolution, so these two are built by hand through `ContinuousEffects.add`
+#: (the escape hatch its own docstring names for "a caller that is not going
+#: through the registry") rather than routed through `create_continuous_
+#: effect_of_ability`.
+_PUMP_AND_BECOMES_CHOSEN_COLOR_RE = re.compile(
+    r"^this creature gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) and becomes the color of "
+    r"your choice until end of turn\.?$",
+    re.IGNORECASE,
+)
+_COLOR_LETTERS: tuple[str, ...] = ("W", "U", "B", "R", "G")
+
+
+def _choose_a_color(game: "Game", player: Player, source_name: str, prompt: str) -> Color:
+    """CR 608.2d's "of your choice", asked with `DecisionKind.CHOOSE_A_
+    QUALITY` narrowed to CR 105's five colours - the same kind and the same
+    narrowing `_parse_destroy_each_then_add_mana_per_destroyed` already uses
+    for Culling Ritual's own per-unit colour choice.
+    """
+    decision = Decision(
+        kind=DecisionKind.CHOOSE_A_QUALITY,
+        player=player.username,
+        prompt=prompt,
+        source=source_name,
+        options=_COLOR_LETTERS,
+    )
+    value = game.ask(decision)
+    assert isinstance(value, str)
+    return Color(value)
+
+
+def _parse_pump_and_becomes_chosen_color_clause(text: str) -> AbilityEffect | None:
+    """Wild Mongrel's own shape - see `_PUMP_AND_BECOMES_CHOSEN_COLOR_RE`.
+
+    CR 613.1e is layer 5, colour-changing; the pump is layer 7c (CR 613.4c).
+    Both are timestamped and stored as one "until end of turn" batch
+    (CR 611.2a), same as any other resolving ability's continuous effect,
+    just built directly rather than parsed a second time off printed text.
+    """
+    match = _PUMP_AND_BECOMES_CHOSEN_COLOR_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    power = int(match.group("power"))
+    toughness = int(match.group("toughness"))
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        controller = game.controller_of(ability)
+        color = _choose_a_color(game, controller, source.name, f"choose a color for {source.name}")
+        store = continuous_effects(game)
+        timestamp = store.tick()
+        store.add(
+            ContinuousEffect(
+                description=f"{source.name}: gets {power:+d}/{toughness:+d}",
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.MODIFY,
+                timestamp=timestamp,
+                duration=Duration.UNTIL_END_OF_TURN,
+                selector=_selects_id(source.id),
+                modification=modify_power_toughness(power, toughness),
+            )
+        )
+        store.add(
+            ContinuousEffect(
+                description=f"{source.name}: becomes {color.value}",
+                layer=Layer.COLOR,
+                timestamp=timestamp,
+                duration=Duration.UNTIL_END_OF_TURN,
+                selector=_selects_id(source.id),
+                modification=set_colors(color),
+            )
+        )
+
+    return effect
+
+
+#: "Target creature you control gains protection from the color of your
+#: choice until end of turn." (Mother of Runes). The phrase itself is checked
+#: through `_targets_understood` the same as every other targeted clause;
+#: `_MOTHER_OF_RUNES_PROTECTION_RE` only reads past "target creature you
+#: control" to confirm the rest is this exact chosen-colour protection shape.
+_PROTECTION_FROM_CHOSEN_COLOR_RE = re.compile(
+    r"^(?P<phrase>target .+) gains protection from the color of your choice "
+    r"until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def _selects_id(card_id: UUID) -> Callable[[Characteristics, object], bool]:
+    """One permanent, by id - the hand-built twin of `machines.layers`'s own
+    private `_only`, needed here because that helper is not exported and this
+    module builds `ContinuousEffect`s outside the text-driven registry.
+    """
+
+    def selector(chars: Characteristics, board: object) -> bool:
+        return chars.card_id == card_id
+
+    return selector
+
+
+def _parse_protection_from_chosen_color_clause(text: str) -> AbilityEffect | None:
+    """Mother of Runes' own shape - see `_PROTECTION_FROM_CHOSEN_COLOR_RE`.
+
+    CR 702.16a: "Protection is a static ability, written 'Protection from
+    [quality].'" Granting one line of that text in layer 6 (CR 613.1f) is
+    exactly what `machines/layers._indefinite_keyword_grant_builder` already
+    does for Akroma's Memorial's *un*-chosen "protection from black and from
+    red" - this is the same `grant_ability("Protection from <color>")` shape,
+    just aimed at whichever target was chosen and whichever colour the
+    activating player names, so it is built by hand rather than read off
+    static printed text a second time. `docs/engine-coverage.md` already
+    records that a *granted* colour quality is read on the damage side
+    (`Game._effective_protection_qualities`, consulted by both `protection_
+    from_damage` and `protection_refusal`) but not yet on the targeting side
+    for a card-type quality's own reason - unrelated to this card, and not
+    widened here.
+    """
+    match = _PROTECTION_FROM_CHOSEN_COLOR_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=False):
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        targets = [
+            target
+            for target in game.resolve_targets(ability)
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
+        ]
+        if not targets:
+            return
+        target = targets[0]
+        source = ability.source(game)
+        source_name = source.name if source is not None else ability.source_name
+        controller = game.controller_of(ability)
+        color = _choose_a_color(
+            game, controller, source_name, f"choose a color for {source_name}'s protection"
+        )
+        store = continuous_effects(game)
+        store.add(
+            ContinuousEffect(
+                description=f"{source_name}: {target.name} has protection from {color.value}",
+                layer=Layer.ABILITY,
+                timestamp=store.tick(),
+                duration=Duration.UNTIL_END_OF_TURN,
+                selector=_selects_id(target.id),
+                modification=grant_ability(f"Protection from {_COLOR_NAME[color]}"),
+            )
+        )
+
+    return effect
+
+
+_COLOR_NAME: dict[Color, str] = {
+    Color.WHITE: "white",
+    Color.BLUE: "blue",
+    Color.BLACK: "black",
+    Color.RED: "red",
+    Color.GREEN: "green",
+}
 
 
 # --------------------------------------------------------------------------
@@ -2797,6 +2967,237 @@ def untap_ability_targets(game: "Game", stack_object: "StackObject") -> None:
             target.untap()
 
 
+#: Tamiyo, Compleated Sage's `+1`: "Tap up to one target artifact or
+#: creature. It doesn't untap during its controller's next untap step." Two
+#: sentences, not one clause: the second's "it" is anaphoric (CR 400.7) for
+#: whatever the first named, so this is read whole rather than through
+#: `_parse_targeted_clauses`'s independent per-clause dispatch, the same
+#: reason `_X_DAMAGE_DIVIDED_DOUBLED_RE` reads Shatterskull Smashing's own
+#: two sentences together.
+_TAP_TARGET_THEN_NO_UNTAP_RE = re.compile(
+    r"^tap (?P<phrase>up to \S+ target .+?)\.\s*"
+    r"it doesn'?t untap during its controller'?s next untap step\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_tap_target_then_no_untap_clause(text: str) -> AbilityEffect | None:
+    """`_TAP_TARGET_THEN_NO_UNTAP_RE`'s shape.
+
+    CR 701.43a's exert wording - "you choose to have it not untap during your
+    controller's next untap step" - is exactly what this sentence asks for,
+    just imposed on a target by another permanent's ability rather than paid
+    as the target's own activation cost, so `CardState.exerted`/`.untap`'s
+    existing CR 701.43a-b machinery is reused rather than duplicated: setting
+    the flag directly skips only the *target's* controller's next untap step,
+    whoever that is, exactly as the printed "its controller's" reads.
+    """
+    whole = _strip_non_effect_preamble(text).strip()
+    match = _TAP_TARGET_THEN_NO_UNTAP_RE.fullmatch(whole)
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=True):
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        for target in game.resolve_targets(ability):
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
+                target.tap()
+                target.exerted = True
+
+    return effect
+
+
+#: Diamond City: "Move a shield counter from this land onto target creature."
+#: CR 122.5's "move" keyword action, self-referential source (`_COUNTER_
+#: SELF_SUBJECT`'s "this `<noun>`" shape, reused from `cost.py`'s own counter
+#: phrasing) and a target destination.
+_MOVE_COUNTER_RE = re.compile(
+    rf"^move (?P<n>{_COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? from this \w+ onto "
+    r"(?P<phrase>target .+)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_move_counter_clause(text: str) -> AbilityEffect | None:
+    """CR 122.5: "to 'move' a counter ... means to remove that counter from
+    the object it's currently on and put it onto a second object. If either
+    of these actions isn't possible, it's not done at all." Both halves are
+    checked before either happens - a source with too few counters, or a
+    target that is no longer legal, leaves the source's counters untouched
+    rather than removing them into nothing.
+    """
+    match = _MOVE_COUNTER_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=False):
+        return None
+    amount = _count(match.group("n"))
+    kind = _counter_kind(match.group("kind"))
+    if amount is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        if not source.can_remove_counters(kind, amount):
+            return
+        targets = [
+            target
+            for target in game.resolve_targets(ability)
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
+        ]
+        if not targets:
+            return
+        source.remove_counters(kind, amount)
+        game.add_counters(targets[0], kind, amount)
+
+    return effect
+
+
+#: The Darkness Crystal: "Put target creature card exiled with The Darkness
+#: Crystal onto the battlefield tapped under your control with two additional
+#: +1/+1 counters on it." `machines/targeting.py`'s `TargetRequirement.
+#: exiled_with_source` is what makes "target ... card exiled with `<name>`" a
+#: real, checked target (CR 115.1) rather than a definite reference like
+#: Ugin's Labyrinth's "the exiled card" - this parser only has to read what
+#: happens once a legal one is chosen.
+_PUT_EXILED_TARGET_ONTO_BATTLEFIELD_RE = re.compile(
+    r"^put (?P<phrase>target .+?) onto the battlefield(?P<tapped> tapped)? "
+    r"under your control(?: with (?P<n>\w+) additional (?P<kind>\+1/\+1|-1/-1|[a-z]+) "
+    r"counters? on it)?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_put_exiled_target_onto_battlefield_clause(text: str) -> AbilityEffect | None:
+    """`_PUT_EXILED_TARGET_ONTO_BATTLEFIELD_RE`'s shape.
+
+    CR 122.6: counters an effect adds once a permanent is already on the
+    battlefield are a distinct event from CR 614.12's "enters with N
+    counters" replacement - added here with `Game.add_counters` after `Game.
+    put_onto_battlefield` has already run, the same order `enter_the_
+    battlefield`'s own docstring describes for that different case.
+    """
+    match = _PUT_EXILED_TARGET_ONTO_BATTLEFIELD_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=False, battlefield_only=False):
+        return None
+    tapped = match.group("tapped") is not None
+    amount = _count(match.group("n")) if match.group("n") else None
+    kind = _counter_kind(match.group("kind")) if match.group("kind") else None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        targets = [
+            target for target in game.resolve_targets(ability) if isinstance(target, CardState)
+        ]
+        if not targets:
+            return
+        target = targets[0]
+        controller = game.controller_of(ability).username
+        game.put_onto_battlefield(target, controller, tapped=tapped)
+        if amount and kind is not None:
+            game.add_counters(target, kind, amount)
+
+    return effect
+
+
+#: Mosswort Bridge: "You may play the exiled card without paying its mana
+#: cost if creatures you control have total power 10 or greater." Not a
+#: target - "the exiled card" is CR 607.1's within-one-permanent anaphora for
+#: whatever `machines/keywords.py`'s own `_hideaway_effect` linked to this
+#: land with `ExileMarker.IMPRINTED`, the same definite reference Ugin's
+#: Labyrinth's "Return the exiled card to its owner's hand" already reads.
+_HIDEAWAY_PLAY_RE = re.compile(
+    r"^you may play the exiled card without paying its mana cost if creatures you control "
+    r"have total power (?P<threshold>\d+) or greater\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_hideaway_play_clause(text: str) -> AbilityEffect | None:
+    """`_HIDEAWAY_PLAY_RE`'s shape.
+
+    CR 608.2d: "the player can't choose an option that's illegal or
+    impossible" - so, like `_parse_reflexive_sacrifice_clause`'s own
+    "you may" shapes, the permission is only ever granted once the printed
+    condition already holds; there is nothing to grant otherwise, rather than
+    a permission that would refuse to be used. Total power is read off the
+    printed characteristic (`CardState.power`), the same simplification
+    `Game._activation_condition_holds`'s own "Activate only if you control a
+    creature with power N or greater" already makes, not the layer-computed
+    board - `docs/engine-coverage.md` records this as an activated ability's
+    own intervening condition rather than a layer-6 shape.
+    """
+    match = _HIDEAWAY_PLAY_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    threshold = int(match.group("threshold"))
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None:
+            return
+        controller = game.controller_of(ability)
+        total_power = sum(
+            state.power or 0
+            for state in game.permanents_controlled_by(controller.username)
+            if state.is_creature
+        )
+        if total_power < threshold:
+            return
+        card = game.card_imprinted_on(source.id)
+        if card is None:
+            return
+        game.grant_play_permission(
+            card,
+            controller.username,
+            action=PlayAction.PLAY,
+            pays_mana_cost=False,
+            source_name=source.name,
+            rule="CR 601.3",
+        )
+
+    return effect
+
+
+#: Back from the Brink: "Exile a creature card from your graveyard and pay
+#: its mana cost: Create a token that's a copy of that card." "That card" is
+#: not a target (CR 115.1 - the sentence never says "target") - it is CR
+#: 607.1's anaphora back to whatever `machines/cost.exile_and_pay_mana_cost_
+#: cost` chose while the cost was paid, carried onto the stack as `AbilityOn
+#: Stack.cost_exiled_card_id` (see that field's own docstring).
+_CREATE_TOKEN_COPY_OF_THAT_CARD_RE = re.compile(
+    r"^create a token that'?s a copy of that card\.?$", re.IGNORECASE
+)
+
+
+def _parse_create_token_copy_of_cost_exiled_card_clause(text: str) -> AbilityEffect | None:
+    """`_CREATE_TOKEN_COPY_OF_THAT_CARD_RE`'s shape.
+
+    CR 707.2's copiable values travel through `token_copy_of`, the same
+    primitive Ocelot Pride's own token-copy clause already uses. Nothing to
+    do if the cost was never actually paid with a card this ability
+    remembers - CR 113.7a lets the ability resolve regardless, it simply has
+    nothing left to copy.
+    """
+    if _CREATE_TOKEN_COPY_OF_THAT_CARD_RE.fullmatch(text.strip()) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        if ability.cost_exiled_card_id is None:
+            return
+        original = game.find_by_id(ability.cost_exiled_card_id)
+        if not isinstance(original, CardState):
+            return
+        controller = game.controller_of(ability).username
+        token_copy_of(game, original, controller)
+
+    return effect
+
+
 def put_counters_on_ability_targets(kind: Counter | str, amount: int) -> TargetedClause:
     """Put counters on each permanent this still legally targets (CR 122.1)."""
 
@@ -2950,6 +3351,39 @@ def _parse_put_counters_on_self_clause(text: str) -> AbilityEffect | None:
         source = ability.source(game)
         if source is not None and source.zone is Zone.BATTLEFIELD:
             game.add_counters(source, kind, amount)
+
+    return effect
+
+
+#: CR 701.46a: "'Adapt N' means 'If this permanent has no +1/+1 counters on
+#: it, put N +1/+1 counters on it.'" A keyword action (CR 701), not a keyword
+#: ability - the printed line is just "Adapt N.", the whole conditional
+#: sentence being the reminder text substituted in. Basking Broodscale's
+#: "{1}{G}: Adapt 1." is the pool's only printing.
+_ADAPT_RE = re.compile(r"^adapt (?P<n>\d+)\.?$", re.IGNORECASE)
+
+
+def _parse_adapt_clause(text: str) -> AbilityEffect | None:
+    """CR 701.46a's "Adapt N" - see `_ADAPT_RE`.
+
+    Read off the ability's own printed text with no per-card row: any future
+    "Adapt N" printing reaches this the same way. The condition is checked at
+    resolution - CR 701.46a's own "if this permanent has no +1/+1 counters on
+    it" - so a permanent that already carries a +1/+1 counter is untouched,
+    not merely reduced by the difference.
+    """
+    match = _ADAPT_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    amount = int(match.group("n"))
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        if source.counters[Counter.PLUS_ONE] > 0:
+            return
+        game.add_counters(source, Counter.PLUS_ONE, amount)
 
     return effect
 
@@ -5402,6 +5836,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     put_counters_on_self = _parse_put_counters_on_self_clause(effect_text)
     if put_counters_on_self is not None:
         return put_counters_on_self
+    adapt = _parse_adapt_clause(effect_text)
+    if adapt is not None:
+        return adapt
     untap_self = _parse_untap_self_clause(effect_text)
     if untap_self is not None:
         return untap_self
@@ -5425,6 +5862,31 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     mass_pump = _mass_pump_ability_effect(effect_text)
     if mass_pump is not None:
         return mass_pump
+    tap_then_no_untap = _parse_tap_target_then_no_untap_clause(effect_text)
+    if tap_then_no_untap is not None:
+        return tap_then_no_untap
+    move_counter = _parse_move_counter_clause(effect_text)
+    if move_counter is not None:
+        return move_counter
+    pump_and_becomes_chosen_color = _parse_pump_and_becomes_chosen_color_clause(effect_text)
+    if pump_and_becomes_chosen_color is not None:
+        return pump_and_becomes_chosen_color
+    protection_from_chosen_color = _parse_protection_from_chosen_color_clause(effect_text)
+    if protection_from_chosen_color is not None:
+        return protection_from_chosen_color
+    put_exiled_target_onto_battlefield = _parse_put_exiled_target_onto_battlefield_clause(
+        effect_text
+    )
+    if put_exiled_target_onto_battlefield is not None:
+        return put_exiled_target_onto_battlefield
+    hideaway_play = _parse_hideaway_play_clause(effect_text)
+    if hideaway_play is not None:
+        return hideaway_play
+    token_copy_of_cost_exiled_card = _parse_create_token_copy_of_cost_exiled_card_clause(
+        effect_text
+    )
+    if token_copy_of_cost_exiled_card is not None:
+        return token_copy_of_cost_exiled_card
     parsed = parse_mixed_effect(effect_text)
     if parsed is not None:
         return parsed

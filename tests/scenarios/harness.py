@@ -729,6 +729,7 @@ class PlayedScenario:
         username: str | None = None,
         sacrificing: list[CardState] | None = None,
         discarding: list[CardState] | None = None,
+        exiling: list[CardState] | None = None,
         targets: list[Target] | None = None,
         color: Color | None = None,
         auto: bool = False,
@@ -758,6 +759,7 @@ class PlayedScenario:
             controller,
             sacrificing=sacrificing,
             discarding=discarding,
+            exiling=exiling,
             x_value=x_value,
         )
         if auto:
@@ -767,7 +769,13 @@ class PlayedScenario:
                 payment.tap_for_mana(mana_source, mana_from(mana_source))
         payment.pay()
         ability = self.game.activate_ability(
-            source, index, controller, targets=targets, color=color, x_value=x_value
+            source,
+            index,
+            controller,
+            targets=targets,
+            color=color,
+            x_value=x_value,
+            exiled_for_cost=exiling[0] if exiling else None,
         )
         self.game.retain_priority(controller)
         return ability

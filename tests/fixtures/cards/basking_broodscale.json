@@ -135,18 +135,18 @@
   "textless": false,
   "booster": true,
   "story_spotlight": false,
-  "edhrec_rank": 2112,
+  "edhrec_rank": 2114,
   "preview": {
     "source": "Wizards of the Coast",
     "source_uri": "https://magic.wizards.com/en/news/magic-story/flames-2016-01-20",
     "previewed_at": "2024-05-17"
   },
   "prices": {
-    "usd": "0.26",
-    "usd_foil": "0.51",
+    "usd": "0.24",
+    "usd_foil": "0.47",
     "usd_etched": null,
-    "eur": "0.20",
-    "eur_foil": "0.43",
+    "eur": "0.21",
+    "eur_foil": "0.41",
     "tix": "0.03"
   },
   "related_uris": {

@@ -642,6 +642,17 @@ class CostComponent(BaseModel):
     requirement: CardRequirement | None = None
     """What the chosen cards have to be, when the cost says (CR 118.3)."""
 
+    pay_mana_cost_of_chosen: bool = False
+    """`ComponentKind.EXILE` only: Back from the Brink's own "... and pay its
+    mana cost" shape (CR 118.9's "rather than pay [an alternative cost]" is
+    not this - this is the *whole* cost, not an alternative to a printed
+    one). The mana amount depends on which card is chosen, which is not
+    known until the card is, so this only flags that the amount still needs
+    adding once it is - `Game.activation_cost` is what reads the flag and
+    folds `ManaCost.parse(card.mana_cost)` into the activation's mana cost
+    for each chosen card, since a bare `CostComponent` has nowhere else to
+    carry a mana requirement of its own."""
+
     zone: Zone = Zone.HAND
     """Where an `ComponentKind.EXILE` card must presently be (CR 406.2).
 
@@ -1097,6 +1108,33 @@ def exile_cost(
     )
 
 
+def exile_and_pay_mana_cost_cost(
+    *cards: CardState,
+    payer: str | None = None,
+    required: int | None = None,
+    description: str = "",
+    zone: Zone = Zone.GRAVEYARD,
+    requirement: CardRequirement | None = None,
+) -> CostComponent:
+    """Back from the Brink: "Exile a creature card from your graveyard and
+    pay its mana cost" (CR 406.2, CR 118.9's shape of naming a card's own
+    mana cost as a cost - Emerge and Delve's own "pay [a card's] mana cost"
+    templates read the identical way, just not in this pool). The mana
+    amount itself is not known here - only once a card is chosen - so
+    `pay_mana_cost_of_chosen` flags it for `Game.activation_cost` to add.
+    """
+    return CostComponent(
+        kind=ComponentKind.EXILE,
+        cards=list(cards),
+        required=len(cards) if required is None else required,
+        payer=payer,
+        description=description,
+        zone=zone,
+        requirement=requirement,
+        pay_mana_cost_of_chosen=True,
+    )
+
+
 def pay_life_cost(amount: int, payer: str | None = None, description: str = "") -> CostComponent:
     """Pay life as a cost (CR 118.3b, 119.4)."""
     return CostComponent(
@@ -1526,6 +1564,16 @@ _ZONE_WORDS: dict[str, Zone] = {
     "library": Zone.LIBRARY,
     "battlefield": Zone.BATTLEFIELD,
 }
+#: Back from the Brink: "Exile a creature card from your graveyard and pay
+#: its mana cost". Ahead of `_PHRASE_EXILE`, whose own trailing zone group is
+#: a strict subset of this one's start, so this is tried first rather than
+#: matching the exile half and silently dropping "and pay its mana cost".
+_PHRASE_EXILE_AND_PAY_MANA_COST = re.compile(
+    r"^exile (?:this card|(?P<count>\w+) (?P<quality>[\w ]*?)cards?)"
+    r"(?: from (?:your|their) (?P<zone>hand|graveyard|library|battlefield))? and pay "
+    r"(?:its|their) mana cost$",
+    re.IGNORECASE,
+)
 _PHRASE_SACRIFICE = re.compile(r"^sacrifice (?P<count>\w+) (?P<quality>[\w ]+)$", re.IGNORECASE)
 _PHRASE_DISCARD = re.compile(r"^discard (?P<count>\w+) (?P<quality>[\w ]*?)cards?$", re.IGNORECASE)
 #: `Exert this land`, `Exert this creature` (CR 701.43a). Only the self-
@@ -1649,6 +1697,17 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
             return None
         kind = _counter_kind_word(remove_counters.group("kind"))
         return remove_counters_cost(None, count, counter_kind=kind, payer=payer, description=text)
+
+    exile_and_pay = _PHRASE_EXILE_AND_PAY_MANA_COST.match(text)
+    if exile_and_pay is not None:
+        zone = _ZONE_WORDS.get((exile_and_pay.group("zone") or "graveyard").lower(), Zone.GRAVEYARD)
+        count = _count(exile_and_pay.group("count"))
+        requirement = _requirement(exile_and_pay.group("quality") or "")
+        if count is None or requirement is None:
+            return None
+        return exile_and_pay_mana_cost_cost(
+            payer=payer, required=count, description=text, zone=zone, requirement=requirement
+        )
 
     exile = _PHRASE_EXILE.match(text)
     if exile is not None:
