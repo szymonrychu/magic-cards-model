@@ -18,7 +18,8 @@ permission handed to it.
 
 The engine already models this distinction: `exile_warped` stamps
 `ExileMarker.WARPED` onto the card, and `Casting.use_keyword` refuses "Warp"
-from exile without it. What it cannot do is Syncopate itself - see the `xfail`.
+from exile without it. Syncopate drives the whole episode end to end, once its
+X is actually announced (CR 107.3a).
 
 Card text verified with `resolve_cards`; every CR number here was looked up
 with `knowledge_search(type="rules")` in this session.
@@ -115,32 +116,34 @@ def test_a_warp_permanent_exiled_by_solitude_carries_no_warp_permission():
         again.use_keyword("Warp")
 
 
-def test_syncopates_counter_clause_is_not_read_at_all():
-    """DDR#963's counterspell, and why the episode cannot be built around it.
+def test_syncopates_counter_clause_needs_the_announced_x_to_be_readable():
+    """DDR#963's counterspell, and the one thing its text needs before it reads.
 
     Syncopate (verified with `resolve_cards`): "Counter target spell unless its
     controller pays {X}. If that spell is countered this way, exile it instead
     of putting it into its owner's graveyard."
 
-    `machines/effects.py` has a regex for exactly the first sentence's shape -
-    `_COUNTER_UNLESS_PAYS_RE`, CR 118.12a's "unless" rider, which Censor and
-    Mystical Dispute go through - but it accepts a literal digit only, so
-    Syncopate's `{X}` never matches. Nothing else reaches the sentence either,
-    and `effect_for` fails closed on the whole card rather than guessing.
+    `_COUNTER_UNLESS_PAYS_RE` reads CR 118.12a's "unless" rider with a literal
+    digit, so the printed `{X}` matches nothing on its own - which is correct
+    and not a gap: CR 107.3a says that when a spell's cost has an `{X}` whose
+    value "isn't defined by the text of that spell", "the player casting the
+    spell ... chooses and announces its value", and CR 107.3h/202.3e both make
+    that announced value the one the spell has "while [it] is on the stack". So
+    there is no effect to build until an X exists. `effect_for` takes the
+    announced value as `x_value` and substitutes it, and `Game.resolve_top`
+    reads it off `Game.cast_record` - which is why the assertion below is a
+    pair, not a bare `is None`.
 
-    This is the same family of gap the ledger already records for DDR#984 and
-    DDR#940: an announced X never reaches the code that would need it.
-    Asserted directly, so the gap is a fact in the suite rather than a note.
+    This test used to assert only the `None`, and its docstring read it as a
+    gap. It was not one: the card resolves correctly and
+    `tests/scenarios/test_counterspells.py` has driven it through both branches
+    of the payment for as long as the row has existed.
     """
-    assert effect_for("Syncopate", card("Syncopate").oracle_text or "") is None
+    text = card("Syncopate").oracle_text or ""
+    assert effect_for("Syncopate", text) is None, "no X announced yet, nothing to read"
+    assert effect_for("Syncopate", text, x_value=2) is not None, "CR 107.3a's announced X"
 
 
-@pytest.mark.xfail(
-    reason="Syncopate has no effect_for row (its {X} counter-unless-pays clause "
-    "and its exile rider are both unread), so it resolves and counters "
-    "nothing - the warp spell resolves onto the battlefield instead",
-    strict=True,
-)
 def test_syncopate_exiles_the_countered_warp_spell_without_granting_a_recast():
     """DDR#963's actual question, written the way it would read if Syncopate
     worked.
@@ -156,8 +159,13 @@ def test_syncopate_exiles_the_countered_warp_spell_without_granting_a_recast():
     became a permanent, so nothing marks the card as warped. CR 601.3 then
     refuses the recast.
 
-    Not runnable: with no effect, Syncopate leaves the Colossus alone and it
-    resolves onto the battlefield, so the first assertion below fails.
+    Bob announces X = 1 himself (CR 107.3a) and pays `{X}{U}` with his two
+    Islands. The earlier version of this test cast Syncopate through the
+    harness's `auto=True` path, which never announces an X at all and so left
+    it at the CR 107.1a default of 0 - alice was then asked for `{0}`, which
+    she can always pay, and the Colossus was never countered. That was a test
+    that never announced the value its own docstring described, not an engine
+    gap.
     """
     scenario = (
         Scenario()
@@ -175,7 +183,12 @@ def test_syncopate_exiles_the_countered_warp_spell_without_granting_a_recast():
     colossus = scenario.put_on_stack(casting)
 
     scenario.pass_priority("alice")
-    scenario.cast_onto_stack("Syncopate", auto=True, username="bob", targets=[colossus])
+    syncopate = scenario.cast("Syncopate", username="bob", targets=[colossus])
+    syncopate.determine_cost(x_value=1)
+    scenario.pay_with(
+        syncopate.begin_paying(), *scenario.untapped_sources("Island", "Island", username="bob")
+    )
+    scenario.put_on_stack(syncopate)
     scenario.resolve_top()
 
     assert colossus.zone is Zone.EXILE, "countered, then exiled instead"

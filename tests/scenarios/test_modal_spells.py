@@ -422,10 +422,14 @@ def test_escalate_spell_still_casts_with_its_modes_chosen():
 def test_entwine_spell_still_casts_with_all_modes_entwined():
     """Tooth and Nail entwined chooses both modes at once (CR 702.42a).
 
-    Neither of Tooth and Nail's modes is a shape this wave's clause parsers
-    read (both are multi-card searches), so casting and resolving it must
-    still work without error - each unread mode is simply recorded as a
-    `ModeNotice` rather than crashing or silently mis-resolving.
+    Both modes are read now, so no `ModeNotice` is recorded: the first is a
+    search to hand and the second puts creature cards from hand onto the
+    battlefield. With an empty hand and a library of nothing but Forests
+    neither finds a creature, so the observable result is only that the cast
+    and the resolution complete - which is what this test is about. CR 701.23b
+    makes "find nothing" a legal answer, and CR 608.2d never asks a question
+    with no legal option, so the empty hand is silently skipped rather than
+    refused. `test_entwine.py` drives the version with creatures to find.
     """
     scenario = (
         Scenario()
@@ -446,8 +450,8 @@ def test_entwine_spell_still_casts_with_all_modes_entwined():
 
     scenario.resolve_top()
 
-    assert len(scenario.game.mode_notices) == 2
-    assert {notice.mode_number for notice in scenario.game.mode_notices} == {1, 2}
+    assert scenario.game.mode_notices == [], "both modes are read now"
+    assert on_stack.zone is Zone.GRAVEYARD
 
 
 # -- The reported defect: Kozilek's Command, modes 1 and 3, X=1 ------------

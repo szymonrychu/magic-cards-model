@@ -213,8 +213,8 @@ def test_the_queue_is_taken_from_the_end():
 def test_savor_the_moment_grants_its_extra_turn_when_it_resolves():
     """CR 500.7 through a real card: "Take an extra turn after this one".
 
-    The second sentence, "Skip the untap step of that turn", is a rules-modifying
-    continuous effect (CR 611.3) with nowhere to live yet - see the xfail below.
+    The second sentence, "Skip the untap step of that turn", is a replacement
+    effect (CR 614.10) and is covered by the test below.
     """
     scenario = (
         Scenario()
@@ -235,21 +235,53 @@ def test_savor_the_moment_grants_its_extra_turn_when_it_resolves():
     assert scenario.turn.extra_turns == ["alice"]
 
 
-@pytest.mark.xfail(
-    reason="skip effects are not modelled (CR 614.10): TurnMachine has no way to "
-    'skip a step, so Savor the Moment\'s "Skip the untap step of that turn" '
-    "cannot be expressed",
-    strict=True,
-)
 def test_an_extra_turn_can_come_with_its_untap_step_skipped():
-    scenario = two_players().build()
+    """Savor the Moment's second sentence, through the real card and the real
+    untap step.
+
+    CR 614.10: "An effect that causes a player to skip an event, step, phase,
+    or turn is a replacement effect. 'Skip [something]' is the same as 'Instead
+    of doing [something], do nothing.'" CR 500.11: "To skip a step, phase, or
+    turn is to proceed past it as though it didn't exist."
+
+    The earlier version of this test asserted `scenario.turn.skips_untap = True`,
+    an attribute nothing has ever written, and reached the next turn without
+    ever running an untap step - so it would have passed however the engine
+    behaved. `Game.players_skipping_next_untap` is the real API, and
+    `Game.untap_step` is what has to be called for the skip to mean anything.
+    """
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            library=["Forest"],
+            hand=["Savor the Moment"],
+            battlefield=["Forest", "Mountain", "Island", "Island", "Island"],
+        )
+        .player("bob", library=["Island"], battlefield=["Island"])
+        .build()
+    )
     scenario.start_at(Step.PRECOMBAT_MAIN)
+    islands = scenario.untapped_sources("Island", "Island", "Island", username="alice")
+    scenario.cast_and_resolve("Savor the Moment", *islands)
+
+    assert scenario.turn.extra_turns == ["alice"]
+    assert scenario.game.players_skipping_next_untap["alice"] == 1
+
     lands = scenario.untapped_sources("Forest", "Mountain", username="alice")
     for land in lands:
         land.tap()
 
-    scenario.game.grant_extra_turn("alice")
-    scenario.turn.skips_untap = True  # nothing like this exists
+    next_turn(scenario)  # alice's extra turn begins
+    assert scenario.turn.active_player == "alice"
+    scenario.game.untap_step()
 
-    next_turn(scenario)
-    assert all(land.tapped for land in lands)
+    assert all(land.tapped for land in lands), "CR 614.10: the untap step did nothing"
+    assert "alice" not in scenario.game.players_skipping_next_untap, "the skip was one turn only"
+
+    # And the turn after it untaps normally - CR 614.10a's skip is spent.
+    next_turn(scenario)  # bob's turn
+    next_turn(scenario)  # alice again, no skip pending
+    scenario.game.untap_step()
+    assert all(not land.tapped for land in lands)

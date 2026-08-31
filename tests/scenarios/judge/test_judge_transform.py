@@ -23,8 +23,9 @@ The rules the episode walks through:
   Silence is the episode's example.
 
 `CardState.transform` is the engine's primitive, and it now handles all three.
-Moonmist's own instruction has no entry in `machines/effects.py`, so driving the
-ruling through the card is still an `xfail`.
+Moonmist's own "Transform all Humans." is read off its printed text now too;
+what still fails closed is the card's *second* sentence - see the `xfail` at
+the bottom for exactly which field `models/game.py` lacks.
 
 Every CR number in this file was verified with `knowledge_search(q="...",
 type="rules")` in the session that wrote it: CR 701.27c, CR 701.27d, CR 712.2,
@@ -33,9 +34,10 @@ CR 712.3, CR 712.10.
 
 import pytest
 
-from magic_cards_model.machines.effects import effect_for
+from magic_cards_model.machines.effects import _parse_mixed_clause, effect_for
 from magic_cards_model.models import Zone
 from tests.cards import card, card_state
+from tests.scenarios.harness import Scenario
 
 
 def permanent(name: str):
@@ -143,12 +145,52 @@ def test_an_adventurer_card_is_not_a_double_faced_card_and_does_not_transform():
     assert giant.name == "Bonecrusher Giant"
 
 
+def test_the_transform_all_humans_clause_is_read_and_sweeps_the_battlefield():
+    """Moonmist's first sentence, now readable off its own printed text.
+
+    "Transform all Humans." is a board sweep, not a self-reference: every
+    permanent whose *computed* subtypes (CR 205.3, read off the up face per CR
+    712.8d) include Human is turned over, whoever controls it. CR 701.27a is
+    the turning; CR 701.27c is why the sweep is safe to run over everything -
+    "If a spell or ability instructs a player to transform a permanent that
+    isn't represented by a double-faced token or a double-faced card, nothing
+    happens", so the Youthful Knight beside the Rogue is a silent no-op rather
+    than an error.
+    """
+    clause = _parse_mixed_clause("Transform all Humans", for_spell=True)
+    assert clause is not None
+
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Moonmist"], battlefield=["Blackbloom Rogue", "Youthful Knight"])
+        .player("bob", battlefield=["Blackbloom Rogue"])
+        .build()
+    )
+    rogues = [
+        scenario.creature("Blackbloom Rogue", "alice"),
+        scenario.creature("Blackbloom Rogue", "bob"),
+    ]
+    knight = scenario.creature("Youthful Knight", "alice")
+
+    clause(scenario.game, scenario.find("Moonmist", Zone.HAND, "alice"))
+
+    assert [state.name for state in rogues] == ["Blackbloom Bog", "Blackbloom Bog"], (
+        "both players' Humans turn over - 'all Humans' names no controller"
+    )
+    assert knight.name == "Youthful Knight", "CR 701.27c: a single-faced Human is a no-op"
+
+
 @pytest.mark.xfail(
     reason=(
-        "Moonmist's 'Transform all Humans.' has no entry in "
-        "`machines/effects.py` and no generalised parse, so `effect_for` "
-        "returns None and the spell resolves doing nothing - the ruling cannot "
-        "be driven through the card that prompted it."
+        "Moonmist's *second* sentence is what fails closed now, and it is a gap "
+        "in `models/game.py`, not in the parser: 'Prevent all combat damage that "
+        "would be dealt this turn by creatures other than Werewolves and Wolves' "
+        "needs a prevention shield restricted by an *excluded* set of source "
+        "subtypes, and `PreventionShield` carries only `source_quality`, a "
+        "single quality the source must HAVE, matched by `Game.source_has_quality` "
+        "against card types and colors only - never subtypes, and never negated. "
+        "The first sentence parses (see the test above); CR 608.2c has no notion "
+        "of running half an effect, so `effect_for` still refuses the whole card."
     ),
     strict=True,
 )

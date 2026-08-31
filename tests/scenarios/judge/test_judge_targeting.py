@@ -230,21 +230,19 @@ def test_a_target_sacrificed_for_mana_mid_cast_does_not_counter_the_spell():
     assert spell.zone is Zone.GRAVEYARD
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Run Away Together has no scripted effect - `effect_for('Run Away "
-    "Together', ...)` is None - so the spell resolves and returns nothing to "
-    "anyone's hand. CR 608.2b's 'the spell resolves, doing as much as it can' "
-    "half is unobservable on this card until the bounce is written; only the "
-    "'is it removed from the stack' half above can be asserted today.",
-)
 def test_run_away_together_still_bounces_the_target_that_is_left():
     """DDR#995's actual payoff: bob's creature is returned to his hand.
 
     Run Away Together (confirmed with `resolve_cards`): "Choose two target
     creatures controlled by different players. Return those creatures to their
     owners' hands." With alice's own target already in the graveyard, CR 608.2b
-    leaves the spell resolving for the target that remains legal.
+    leaves the spell resolving for the target that remains legal - "If all its
+    targets, for every instance of the word 'target,' are now illegal, the
+    spell or ability doesn't resolve", and one of two is not all of them.
+
+    CR 400.3 puts the survivor in its *owner's* hand: "If an object would go to
+    any library, graveyard, or hand other than its owner's, it goes to its
+    owner's corresponding zone."
     """
     scenario = _run_away_together_board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)

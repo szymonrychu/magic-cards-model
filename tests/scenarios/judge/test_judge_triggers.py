@@ -458,12 +458,21 @@ def test_phoenix_fleet_airship_does_not_trigger_when_nothing_was_sacrificed_yet(
     clause was unreadable and the ability declined for that reason instead,
     which is the same visible outcome for the wrong reason. The test below is
     the other side of the pair: the same clause, on a turn where it is true.
+
+    The Trebuchet's *own* delayed sacrifice ability (CR 603.7a, CR 603.7e) is
+    on the stack at this point and is expected to be - it is the sacrifice the
+    Airship is waiting for and has not seen yet. This assertion used to read
+    `stack_names() == []`, which was only true while the Trebuchet's attack
+    trigger did nothing at all; asserting the Airship's absence by name is what
+    the test is actually about.
     """
     scenario = _trebuchet_and_airship().build()
     scenario.start_at(Step.DECLARE_ATTACKERS)
     _attack_and_reach_the_end_step(scenario)
 
-    assert scenario.stack_names() == []
+    assert scenario.stack_names() == ["Fire Navy Trebuchet's triggered ability"], (
+        "only the Trebuchet's own delayed sacrifice, never the Airship's copy trigger"
+    )
     assert scenario.pending_triggers == []
     assert scenario.game.intervening_if_notices == []
 
@@ -496,16 +505,6 @@ def test_the_airship_does_trigger_once_a_permanent_really_was_sacrificed():
     assert scenario.stack_names() == ["Phoenix Fleet Airship's triggered ability"]
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Fire Navy Trebuchet's attack trigger resolves to nothing: its "
-    "effect text is two sentences - create the token, then 'Sacrifice that "
-    "token at the beginning of the next end step' - and `effect_for('Fire Navy "
-    "Trebuchet', ...)` comes back as machines/effects.py's "
-    "`delayed_notice_only`, the fail-closed stand-in for a delayed-trigger "
-    "shape it cannot build. No Ballistic Boulder ever enters the battlefield, "
-    "so the sacrifice this episode is about never happens either.",
-)
 def test_fire_navy_trebuchet_creates_the_ballistic_boulder_it_will_sacrifice():
     """DDR#993's setup: the token the Trebuchet later sacrifices.
 

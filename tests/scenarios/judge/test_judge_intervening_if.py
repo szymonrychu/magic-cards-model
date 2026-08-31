@@ -17,8 +17,6 @@ Card text verified with `resolve_cards`; every CR number here was looked up
 with `knowledge_search(type="rules")` in this session.
 """
 
-import pytest
-
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.abilities import AbilityKind, parse_abilities
 from magic_cards_model.machines.triggers import intervening_if_holds
@@ -119,30 +117,21 @@ def test_four_counters_means_no_trigger_at_all():
     assert scenario.player("alice").hand == []
 
 
-@pytest.mark.xfail(
-    reason="the trigger itself now works - `machines/triggers.intervening_if_holds` reads the "
-    "counter-count comparison and the ability does go on the stack (measured: the "
-    "`len(on_stack) == 1` assertion below passes). What is missing is the *effect*: "
-    "`machines/effects.py` has no entry for Ayara's Oathsworn, so resolving the ability puts "
-    "no fourth counter on and searches no library. That file is Task 2.11's.",
-    strict=True,
-)
 def test_three_counters_still_triggers_and_puts_the_fourth_on():
     """DDR#960's other half: below four, the ability triggers and does both
     things.
 
     With three counters, "fewer than four" is true when the damage is dealt
     (CR 603.4's first check) and still true as the ability resolves (its
-    second), so the fourth counter goes on. CR 608.2c then has the controller
-    follow the instructions in the order written, and the "Then if it has
-    exactly four" clause is now satisfied by the counter just added - so the
-    search happens too.
+    second), so the fourth counter goes on. CR 608.2c - "The controller of the
+    spell or ability follows its instructions in the order written" - then has
+    the "Then if it has exactly four" clause evaluated *after* the counter it
+    depends on has been placed, so the search happens too.
 
-    The trigger half now runs: the clause is true at three counters, so the
-    ability triggers and goes on the stack. The resolution half does not -
-    there is no scripted effect for it - so the fourth counter never arrives
-    and the search that the "Then if ..." reflexive condition would allow
-    never happens either.
+    `machines/combat.py` flushes the trigger queue itself, so the ability is
+    already on the stack by the time `combat_damage()` returns - an earlier
+    version of this test called `put_triggers_on_stack()` here and asserted it
+    returned one ability, which it cannot: there is nothing left to put.
     """
     scenario = board(3).build()
     oathsworn = scenario.creature("Ayara's Oathsworn", "alice")
@@ -152,9 +141,10 @@ def test_three_counters_still_triggers_and_puts_the_fourth_on():
     scenario.attack_with(oathsworn)
     scenario.no_blocks()
     scenario.combat_damage()
-    on_stack = scenario.game.put_triggers_on_stack()
 
-    assert len(on_stack) == 1
+    assert scenario.stack_names() == ["Ayara's Oathsworn's triggered ability"], (
+        "CR 603.4: it triggered"
+    )
 
     while not scenario.game.stack_is_empty:
         scenario.resolve_top()
