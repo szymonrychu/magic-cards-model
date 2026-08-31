@@ -3176,6 +3176,40 @@ class Game(BaseModel):
             player.mana_pool.pay(ManaCost.parse(f"{{{amount}}}"))
         return True
 
+    def may_pay_mana_cost(
+        self, player: Player | str, cost: ManaCost, *, source: str | None = None
+    ) -> bool:
+        """ "Pay {cost}. If you don't, ..." with a real (possibly colored) mana
+        cost rather than `may_pay_mana`'s bare generic amount - the Pact
+        cycle's own delayed-trigger shape (CR 603.7, CR 118.12a's "unless"
+        read the other way round): "At the beginning of your next upkeep, pay
+        {2}{G}{G}. If you don't, you lose the game."
+
+        Same limitation as `may_pay_mana`: only mana already floating in the
+        pool counts (CR 608.2g's interactive tap step is not modelled
+        mid-resolution), so a player who could only pay by tapping a land is
+        refused exactly as if they had no mana at all.
+
+        Returns whether the cost was paid, and pays it.
+        """
+        if isinstance(player, str):
+            player = self.player(player)
+        payable = player.mana_pool.can_pay(cost)
+        answer = self.ask(
+            Decision(
+                kind=DecisionKind.PAY_MANA,
+                player=player.username,
+                prompt=f"pay {cost}",
+                source=source,
+                amount=cost.converted,
+                affirmative_is_legal=payable,
+            )
+        )
+        if not answer:
+            return False
+        player.mana_pool.pay(cost)
+        return True
+
     def pay_any_amount_of_energy(
         self,
         player: Player | str,
@@ -6664,6 +6698,26 @@ class Game(BaseModel):
         self.drawn = True
         for username in [player.username for player in self.players_in_game]:
             self._lose_the_game(username)
+
+    def player_loses_the_game(self, username: str) -> None:
+        """CR 104.3e: "An effect may state that a player loses the game."
+
+        Applied immediately as the stating effect resolves, not deferred to a
+        state-based-action sweep the way life-loss (CR 104.3b), an empty-library
+        draw (CR 104.3c), and ten-or-more poison counters (CR 104.3d) all are -
+        104.3e carries none of those three's "the next time a player would
+        receive priority" wording. `end_in_draw`'s own CR 104.4c loss is the
+        same shape: call `_lose_the_game` directly and check for a winner right
+        away, rather than only setting a flag for a later check.
+
+        A no-op for a player already gone - `_lose_the_game` is not idempotent
+        about `_player_left`'s cleanup, and CR 104.3a already makes "losing
+        stays gone" the rule (`check_state_based_actions`'s own docstring).
+        """
+        if not self.is_in_game(username):
+            return
+        self._lose_the_game(username)
+        self._check_for_a_winner()
 
     def advance(self, username: str | None = None) -> Step:
         """Move to the next step (CR 500.1), as `username`'s own decision.

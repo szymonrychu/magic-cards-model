@@ -2605,6 +2605,293 @@ def _parse_search_mv_lte_count_clause(clause: str, *, for_spell: bool) -> Target
     return effect
 
 
+#: "[you may ]put a land card from your hand onto the battlefield[ tapped]" -
+#: Arboreal Grazer's whole trigger (and the first half of Cultivator Colossus's
+#: longer, repeating one, read separately by `_PUT_LAND_FROM_HAND_REPEAT_RE`
+#: below rather than through this single-clause path, since "repeat this
+#: process" needs the loop that clause's own dedicated parser builds).
+_PUT_LAND_FROM_HAND_RE = re.compile(
+    r"(?P<subject>you may )?put a land card from your hand onto the battlefield"
+    r"(?P<tapped> tapped)?\.?",
+    re.IGNORECASE,
+)
+
+
+def _land_cards_in_hand(player: Player) -> list[CardState]:
+    return [state for state in player.hand if Type.LAND in state.types]
+
+
+def _choose_land_from_hand(game: "Game", player: Player, source: str) -> CardState | None:
+    """CR 601.2d-shaped choice among a player's own land cards already known
+    to be in hand ("a land card from your hand" is a choice of *which* land,
+    not merely whether to act). Callers check `_land_cards_in_hand` first, so
+    the "you may" this is nested under is never asked with nothing to choose.
+    """
+    lands = _land_cards_in_hand(player)
+    decision = Decision(
+        kind=DecisionKind.CHOOSE_CARDS,
+        player=player.username,
+        prompt="choose a land card to put onto the battlefield",
+        source=source,
+        amount=1,
+        cards=tuple(state.id for state in lands),
+    )
+    chosen_ids = game.ask(decision)
+    by_id = {state.id: state for state in lands}
+    return by_id[chosen_ids[0]]
+
+
+def _parse_put_land_from_hand_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_PUT_LAND_FROM_HAND_RE`'s shape - Arboreal Grazer's whole trigger.
+
+    CR 110.5b: the land arrives tapped only because the sentence says so, not
+    because this is a search (`_SEARCH_AND_PUT_RE`'s own default is the same,
+    for the same reason). No land in hand at all leaves nothing to choose, so
+    the "you may" is never even asked - CR 608.2d's choice has to be a real
+    one.
+    """
+    match = _PUT_LAND_FROM_HAND_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    tapped = bool(match.group("tapped"))
+    optional = bool((match.group("subject") or "").strip())
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        player = game.controller_of(stack_object)
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        if not _land_cards_in_hand(player):
+            return
+        if optional and not game.may(
+            player, "put a land card from your hand onto the battlefield", source=source
+        ):
+            return
+        chosen = _choose_land_from_hand(game, player, source)
+        game.put_onto_battlefield(chosen, player.username, tapped=tapped)
+
+    return effect
+
+
+#: Cultivator Colossus's own shape: "you may put a land card from your hand
+#: onto the battlefield tapped. If you do, draw a card and repeat this
+#: process." A reflexive "if you do" (CR 118.12) whose own consequence loops
+#: back to the start of the same instruction, so it needs the whole
+#: unsplit text, not `_parse_put_land_from_hand_clause`'s one-shot version.
+_PUT_LAND_FROM_HAND_REPEAT_RE = re.compile(
+    r"^you may put a land card from your hand onto the battlefield(?P<tapped> tapped)?\. "
+    r"if you do, draw a card and repeat this process\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_put_land_from_hand_repeat_clause(text: str) -> AbilityEffect | None:
+    """`_PUT_LAND_FROM_HAND_REPEAT_RE`'s shape.
+
+    "Repeat this process" loops CR 608.2d's choice: offer the "you may", and
+    for as long as the answer is yes and a land remains to choose, put it onto
+    the battlefield, draw a card, and ask again. The loop ends the moment
+    either runs out - a declined "may" or an empty hand of lands, whichever
+    comes first, matching CR 107.1a's floor of nothing to choose.
+    """
+    match = _PUT_LAND_FROM_HAND_REPEAT_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    tapped = bool(match.group("tapped"))
+
+    def effect(game: "Game", ability: "AbilityOnStack") -> None:
+        controller = game.controller_of(ability)
+        source = ability.source_name
+        while True:
+            if not _land_cards_in_hand(controller):
+                break
+            if not game.may(
+                controller,
+                "put a land card from your hand onto the battlefield",
+                source=source,
+            ):
+                break
+            chosen = _choose_land_from_hand(game, controller, source)
+            game.put_onto_battlefield(chosen, controller.username, tapped=tapped)
+            game.draw_cards(controller.username, 1)
+
+    return effect
+
+
+#: Spelunking's own first paragraph: "draw a card, then you may put a land
+#: card from your hand onto the battlefield. If you put a Cave onto the
+#: battlefield this way, you gain 4 life." Whole-text, ahead of the ordinary
+#: clause splitter, the same as `_PUT_LAND_FROM_HAND_REPEAT_RE`: the trailing
+#: "If you put a Cave ... this way" clause needs to know *which* land the
+#: previous clause actually placed, which only survives if one function runs
+#: both. No "tapped" is printed here at all - CR 110.5b's plain default
+#: applies to the land placed this way, and Spelunking's own second paragraph
+#: ("Lands you control enter untapped") is a separate static ability read by
+#: `machines/replacement.py`, not part of this trigger's own effect.
+_DRAW_THEN_PUT_LAND_CAVE_BONUS_RE = re.compile(
+    r"^draw a card, then you may put a land card from your hand onto the battlefield\.\s*"
+    r"if you put a cave onto the battlefield this way, you gain (?P<life>[\w-]+) life\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_draw_then_put_land_cave_bonus_clause(text: str) -> AbilityEffect | None:
+    """`_DRAW_THEN_PUT_LAND_CAVE_BONUS_RE`'s shape - Spelunking's whole enters
+    trigger. CR 305.6: "Cave" is a land subtype like any other, so `has_land_
+    type("Cave")` is the same check a search naming a land type would use.
+    """
+    whole = _strip_non_effect_preamble(text).strip()
+    match = _DRAW_THEN_PUT_LAND_CAVE_BONUS_RE.fullmatch(whole)
+    if match is None:
+        return None
+    try:
+        life = _count(match.group("life"))
+    except KeyError:
+        return None
+    is_cave = has_land_type("Cave")
+
+    def effect(game: "Game", ability: "AbilityOnStack") -> None:
+        controller = game.controller_of(ability)
+        source = ability.source_name
+        game.draw_cards(controller.username, 1)
+        if not _land_cards_in_hand(controller):
+            return
+        if not game.may(
+            controller, "put a land card from your hand onto the battlefield", source=source
+        ):
+            return
+        chosen = _choose_land_from_hand(game, controller, source)
+        game.put_onto_battlefield(chosen, controller.username, tapped=False)
+        if is_cave(chosen):
+            game.gain_life(controller, life)
+
+    return effect
+
+
+#: Scapeshift's own whole text: "Sacrifice any number of lands. Search your
+#: library for up to that many land cards, put them onto the battlefield
+#: tapped, then shuffle." A linked quantity (CR 608.2c) like Valakut
+#: Awakening's own "that many" (`_BOTTOM_HAND_THEN_DRAW_PLUS_ONE_RE`), so the
+#: two sentences have to run together rather than as two independent clauses -
+#: CR 107.1c's "any number" is the player's own real choice of how many lands
+#: to sacrifice, not a guess this engine could make for them.
+_SACRIFICE_LANDS_THEN_SEARCH_THAT_MANY_RE = re.compile(
+    r"^sacrifice any number of lands\.\s*"
+    r"search (?:your|their) library for up to that many land cards, "
+    r"put them onto the battlefield(?P<tapped> tapped)?(?:, then shuffle)?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_sacrifice_lands_then_search_that_many_clause(text: str) -> Effect | None:
+    """`_SACRIFICE_LANDS_THEN_SEARCH_THAT_MANY_RE`'s shape - Scapeshift.
+
+    CR 107.1c: "any number" runs zero upward, so sacrificing nothing is a
+    legal choice among the player's own lands - `CHOOSE_CARDS` with
+    `exact=False`, the same shape `_parse_bottom_hand_then_draw_plus_one_
+    clause` already uses for its own "any number". Sacrificing zero lands
+    then searches for up to zero, which finds nothing and never asks the
+    search's own "you may" (CR 701.23a has no quantity to look for). CR
+    701.21a: each chosen land is sacrificed - moved straight to its owner's
+    graveyard - before the search runs, matching the sentence's own order.
+    """
+    whole = _strip_non_effect_preamble(text).strip()
+    match = _SACRIFICE_LANDS_THEN_SEARCH_THAT_MANY_RE.fullmatch(whole)
+    if match is None:
+        return None
+    tapped = bool(match.group("tapped"))
+    matches = _quality_matcher("land")
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell)
+        lands = [
+            state
+            for state in game.permanents_controlled_by(controller.username)
+            if Type.LAND in state.types
+        ]
+        if not lands:
+            return
+        decision = Decision(
+            kind=DecisionKind.CHOOSE_CARDS,
+            player=controller.username,
+            prompt="sacrifice any number of lands",
+            source=spell.name,
+            amount=len(lands),
+            cards=tuple(state.id for state in lands),
+            exact=False,
+        )
+        chosen_ids = game.ask(decision)
+        by_id = {state.id: state for state in lands}
+        sacrificed = [by_id[card_id] for card_id in chosen_ids]
+        for land in sacrificed:
+            game.sacrifice(land)
+        if not sacrificed:
+            return
+        found = game.search_library(
+            controller, matches, count=len(sacrificed), optional=True, source=spell.name
+        )
+        for card in found:
+            game.put_onto_battlefield(card, controller.username, tapped=tapped)
+
+    return effect
+
+
+#: Primeval Titan's own shape: "search your library for up to two land cards,
+#: put them onto the battlefield tapped, then shuffle" - `_SEARCH_AND_PUT_RE`'s
+#: "a `<quality>` card"/"put it" is singular throughout and does not match a
+#: counted, plural "up to N `<quality>` cards"/"put them" search at all, so this
+#: whole clause fell through to nothing. CR 701.23b still makes each individual
+#: find optional (a stated-quality search never has to find everything there),
+#: and CR 115.6's "up to N" is CR 107.1c's "zero up to N" read onto a search
+#: rather than a target - `game.search_library`'s own `optional=True` already
+#: asks once per candidate up to `count`, the same shape `_search_and_place_for`
+#: uses for the singular case, just handed a `count` above one.
+_SEARCH_UP_TO_N_AND_PUT_RE = re.compile(
+    r"(?P<subject>you may )?"
+    r"search (?:your|their) library for up to (?P<count>[\w-]+) (?P<quality>.+?) cards?"
+    r", put (?:them|it) onto the battlefield(?P<tapped> tapped)?"
+    r"(?:, then shuffle)?\.?",
+    re.IGNORECASE,
+)
+
+
+def _parse_search_up_to_n_and_put_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_SEARCH_UP_TO_N_AND_PUT_RE`'s shape - Primeval Titan's whole trigger
+    once its "enters or attacks" condition has been split off.
+
+    The found cards arrive **untapped** unless the sentence says "tapped"
+    (CR 110.5b), same default `parse_search_and_put_effect` documents for the
+    singular case. Every found card is removed from the library before the
+    single CR 701.24a/701.24b shuffle `game.search_library` performs once,
+    not once per card.
+    """
+    match = _SEARCH_UP_TO_N_AND_PUT_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    try:
+        count = _count(match.group("count"))
+    except KeyError:
+        # "up to X land cards" (CR 107.3a's X, unresolved) or some other word
+        # `_NUMBER_WORDS` does not carry - fail closed rather than guess.
+        return None
+    matches = _quality_matcher(match.group("quality"))
+    tapped = bool(match.group("tapped"))
+    optional = bool((match.group("subject") or "").strip())
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        player = game.controller_of(stack_object)
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        if optional and not game.may(
+            player,
+            f"search your library for up to {count} {match.group('quality')} cards",
+            source=source,
+        ):
+            return
+        found = game.search_library(player, matches, count=count, optional=True, source=source)
+        for card in found:
+            game.put_onto_battlefield(card, player.username, tapped=tapped)
+
+    return effect
+
+
 def parse_search_and_put_effect(text: str) -> AbilityEffect | None:
     """Recognise a plain library search off the ability's own printed text,
     instead of a per-card table entry - see `_SEARCH_AND_PUT_RE`.
@@ -6491,6 +6778,12 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     modal_triggered = _resolve_modal_triggered_ability_clause(effect_text)
     if modal_triggered is not None:
         return modal_triggered
+    put_land_repeat = _parse_put_land_from_hand_repeat_clause(effect_text)
+    if put_land_repeat is not None:
+        return put_land_repeat
+    draw_then_put_land_cave = _parse_draw_then_put_land_cave_bonus_clause(effect_text)
+    if draw_then_put_land_cave is not None:
+        return draw_then_put_land_cave
     outside_the_game = _parse_outside_the_game_fetch(effect_text)
     if outside_the_game is not None:
         return outside_the_game
@@ -7429,6 +7722,9 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     bottom_hand_then_draw = _parse_bottom_hand_then_draw_plus_one_clause(effect_text)
     if bottom_hand_then_draw is not None:
         return bottom_hand_then_draw
+    sacrifice_lands_then_search = _parse_sacrifice_lands_then_search_that_many_clause(effect_text)
+    if sacrifice_lands_then_search is not None:
+        return sacrifice_lands_then_search
     look_top_n_battlefield = _parse_look_top_n_may_battlefield_creature_bonus_clause(effect_text)
     if look_top_n_battlefield is not None:
         return look_top_n_battlefield
@@ -9444,6 +9740,7 @@ def _parse_attack_this_turn_create_tapped_attacking_tokens(text: str) -> Ability
 _DELAYED_TIMING_STEPS: dict[str, Step] = {
     "the beginning of the next end step": Step.END_STEP,
     "the beginning of the next turn's upkeep": Step.UPKEEP,
+    "the beginning of your next upkeep": Step.UPKEEP,
     "end of combat": Step.END_OF_COMBAT,
 }
 
@@ -9474,6 +9771,83 @@ def _parse_delayed_timing_clause(clause: str) -> tuple[Step, str] | None:
     if step is None:
         return None
     return step, match.group("verb").strip()
+
+
+#: The Pact cycle's own shape: "At the beginning of your next upkeep, pay
+#: {2}{G}{G}. If you don't, you lose the game." Two clauses `_prepare_effect_
+#: clauses` cuts apart on the sentence's own period, read back together
+#: because the second is the consequence CR 118.12's "unless" already gives an
+#: unpaid cost, not an independent instruction.
+_PAY_COST_RE = re.compile(r"^pay (?P<cost>(?:\{[^}]+\})+)$", re.IGNORECASE)
+_PAY_OR_LOSE_SECOND_RE = re.compile(r"^if you don'?t, you lose the game$", re.IGNORECASE)
+
+
+def _pay_or_lose_the_game(cost: ManaCost) -> DelayedEffect:
+    """Summoner's Pact's own delayed half: pay `cost` from the pool already
+    floating, or lose the game (CR 104.3e) trying.
+
+    CR 603.7d/e: the controller who owes this is the one who created the
+    delayed trigger, taken as it resolved - `trigger.controller`, not whoever
+    controls anything now. A player already gone by the time this fires (a
+    concession, an earlier loss) owes nothing further; CR 800.4a already took
+    everything of theirs off the board.
+    """
+
+    def callback(game: "Game", ability: AbilityOnStack, trigger: DelayedTrigger) -> None:
+        if not game.is_in_game(trigger.controller):
+            return
+        if game.may_pay_mana_cost(trigger.controller, cost, source=trigger.source_name):
+            return
+        game.player_loses_the_game(trigger.controller)
+
+    return callback
+
+
+def _parse_delayed_pay_or_lose_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """`_PAY_COST_RE`/`_PAY_OR_LOSE_SECOND_RE`'s clause pair - the Pact cycle's
+    whole second paragraph, once `_prepare_effect_clauses` has cut it into two.
+    """
+    if index + 1 >= len(clauses):
+        return None
+    timing = _parse_delayed_timing_clause(clauses[index])
+    if timing is None:
+        return None
+    step, verb = timing
+    cost_match = _PAY_COST_RE.fullmatch(verb.strip())
+    if cost_match is None:
+        return None
+    if _PAY_OR_LOSE_SECOND_RE.fullmatch(clauses[index + 1].strip().rstrip(".")) is None:
+        return None
+    try:
+        cost = ManaCost.parse(cost_match.group("cost"))
+    except ValueError:
+        return None
+    text = f"{clauses[index]}. {clauses[index + 1]}."
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object)
+        source_id, source_name = _permanent_id_and_name(stack_object, for_spell=for_spell)
+        game.create_delayed_trigger(
+            DelayedTrigger(
+                text=text,
+                event=TriggerEvent.BEGINNING_OF_STEP,
+                step=step,
+                controller=controller.username,
+                source_id=source_id,
+                source_name=source_name,
+                # "your next upkeep" - only the player who owes the payment,
+                # not whoever's upkeep happens to come first (`DelayedTrigger.
+                # matches` compares this against `event.player`, the same way
+                # Dalkovan Encampment's own "whenever you attack" already
+                # scopes an attack-declaration event to one player).
+                only_when_active=controller.username,
+                callback=_pay_or_lose_the_game(cost),
+            )
+        )
+
+    return 2, effect
 
 
 #: "look at the top card of target player's/your/their library" - Mishra's
@@ -12072,6 +12446,12 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     search = _parse_search_clause(clause, for_spell=for_spell)
     if search is not None:
         return search
+    search_up_to_n = _parse_search_up_to_n_and_put_clause(clause, for_spell=for_spell)
+    if search_up_to_n is not None:
+        return search_up_to_n
+    put_land_from_hand = _parse_put_land_from_hand_clause(clause, for_spell=for_spell)
+    if put_land_from_hand is not None:
+        return put_land_from_hand
     search_mv_lte_count = _parse_search_mv_lte_count_clause(clause, for_spell=for_spell)
     if search_mv_lte_count is not None:
         return search_mv_lte_count
@@ -12286,6 +12666,12 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             continue
         # -- end Wave W7b multi-clause merge ---------------------------------
         if index + 1 < len(clauses):
+            merged = _parse_delayed_pay_or_lose_clauses(clauses, index, for_spell=for_spell)
+            if merged is not None:
+                consumed, effect = merged
+                parsed.append(effect)
+                index += consumed
+                continue
             paired = _parse_anaphoric_clause_pair(
                 clauses[index], clauses[index + 1], for_spell=for_spell
             )
