@@ -11,9 +11,11 @@ fields="legality")` and came back `legal`. The same list is written out as
 This is a smoke test, so it proves exactly one thing: the deck goes through the
 real construction and game-start path and comes out the other side with the
 zones CR 103 requires. It does *not* prove the deck plays correctly - six of its
-cards are still silent in `machines/effects.py` and the archetype's improvise
-engine (CR 702.126a) is unmodelled. `docs/deck-gaps/pinnacle-affinity.md` is the
-inventory, and the last test in this file is the `xfail` that pins it.
+cards are still silent in `machines/effects.py`.
+`docs/deck-gaps/pinnacle-affinity.md` is the inventory. The archetype's
+improvise engine (CR 702.126a) is now modelled in
+`machines/objects_as_costs.py`, and the last test in this file checks that
+Kappa Cannoneer makes the offer.
 
 Rules verified with `knowledge_search` for this file:
 
@@ -31,8 +33,6 @@ Rules verified with `knowledge_search` for this file:
 - CR 702.126a: improvise - "For each generic mana in this spell's total cost,
   you may tap an untapped artifact you control rather than pay that mana."
 """
-
-import pytest
 
 from magic_cards_model.models import Deck, Match, Player, Zone
 from tests.cards import card
@@ -228,28 +228,21 @@ def test_the_opponent_is_dealt_from_their_own_deck():
 # -- what the deck still cannot do ----------------------------------------
 
 
-@pytest.mark.xfail(
-    reason=(
-        "Improvise (CR 702.126a) is not modelled: `machines/cost.py` has no way to "
-        "tap an untapped artifact instead of paying a generic mana, so Kappa "
-        "Cannoneer's {5}{U} and Metallic Rebuke's {2}{U} can only ever be paid with "
-        "mana. This is the archetype's engine, and it is the headline entry in "
-        "docs/deck-gaps/pinnacle-affinity.md."
-    ),
-    strict=True,
-)
 def test_improvise_lets_artifacts_pay_the_generic_part_of_a_cost():
     """CR 702.126a: "For each generic mana in this spell's total cost, you may
     tap an untapped artifact you control rather than pay that mana."
 
     Kappa Cannoneer's printed text carries improvise, so the engine ought to
-    recognise it as an available cost-payment option on the spell.
+    recognise it as an available cost-payment option on the spell. It lives in
+    `machines/objects_as_costs.py` with the rest of the family that pays a cost
+    with objects (convoke, delve, crew); `tests/scenarios/test_improvise.py`
+    plays it out on a real board.
     """
     cannoneer = card("Kappa Cannoneer")
 
     assert "Improvise" in (cannoneer.oracle_text or "")
     assert "improvise" in {keyword.lower() for keyword in cannoneer.keywords}
 
-    from magic_cards_model.machines.cost import improvise_payment  # noqa: PLC0415
+    from magic_cards_model.machines.objects_as_costs import improvise_payment  # noqa: PLC0415
 
     assert improvise_payment(cannoneer) is not None

@@ -1,7 +1,7 @@
 """Paying a cost with objects instead of with mana.
 
-Three keywords in this pool ask a player to tap or exile things rather than
-spend mana, and they are one subsystem, not three:
+Five keywords in this pool ask a player to tap or exile things rather than
+spend mana, and they are one subsystem, not five:
 
 - **Convoke** (CR 702.51a) - "Convoke is a static ability that functions while
   the spell with convoke is on the stack. 'Convoke' means 'For each colored
@@ -13,6 +13,16 @@ spend mana, and they are one subsystem, not three:
   spell with delve is on the stack. 'Delve' means 'For each generic mana in
   this spell's total cost, you may exile a card from your graveyard rather than
   pay that mana.'"
+- **Improvise** (CR 702.126a) - "Improvise is a static ability that functions
+  while the spell with improvise is on the stack. 'Improvise' means 'For each
+  generic mana in this spell's total cost, you may tap an untapped artifact you
+  control rather than pay that mana.'" Word for word convoke's generic half
+  with a different type filter, which is exactly how it is built here.
+- **Waterbend** (CR 701.67a) - "'Waterbend [cost]' means 'Pay [cost]. For each
+  generic mana in that cost, you may tap an untapped artifact **or creature**
+  you control rather than pay that mana.'" One step wider than improvise, and
+  the only member of the family that is an action word on an *ability's* cost
+  rather than a static ability of a spell.
 - **Crew** (CR 702.122a) - "Crew is an activated ability of Vehicle cards.
   'Crew N' means 'Tap any number of other untapped creatures you control with
   total power N or greater: This permanent becomes an artifact creature until
@@ -22,15 +32,16 @@ What they share is the eligibility question - *which* objects may be spent this
 way, in which zone, and what happens to them - and that is what `ObjectOffer`
 is. What differs is only the accounting on the other side:
 
-- convoke and delve settle **per symbol**, through `CostPayment.substitute`;
+- convoke, delve, improvise and waterbend settle **per symbol**, through
+  `CostPayment.substitute`;
 - crew settles against **one aggregate threshold**, total power N, and produces
   an ordinary tapping cost with no mana in it at all.
 
-Two consumers, one eligibility model. Note that CR 702.51b and CR 702.66b both
-say the same thing in as many words - the ability "isn't an additional or
-alternative cost and applies only after the total cost ... is determined" -
-which is why neither of them touches `Casting.total_cost` and both act on an
-already-open `CostPayment`.
+Two consumers, one eligibility model. Note that CR 702.51b, CR 702.66b and
+CR 702.126b all say the same thing in as many words - the ability "isn't an
+additional or alternative cost and applies only after the total cost ... is
+determined" - which is why none of them touches `Casting.total_cost` and all of
+them act on an already-open `CostPayment`.
 
 Every CR number in this module was looked up with
 `knowledge_search(type="rules")` in the session that wrote it.
@@ -74,7 +85,16 @@ class ObjectOffer(BaseModel):
     """Where an eligible object has to be. CR 702.51a's creatures are on the
     battlefield; CR 702.66a's cards are in a graveyard."""
 
-    creatures_only: bool = False
+    permitted_types: frozenset[Type] = frozenset()
+    """The card types an object has to have one of, or empty for "any object".
+
+    Convoke and crew take "an untapped **creature**" (CR 702.51a, CR 702.122a),
+    improvise takes "an untapped **artifact** you control" (CR 702.126a), and
+    waterbend takes "an untapped **artifact or creature** you control"
+    (CR 701.67a). One field, because those are the same question asked of
+    different type lines - and the type line is read off the computed board
+    (CR 613.5), so a crewed Vehicle improvises *and* convokes."""
+
     untapped_only: bool = False
     yours_only: bool = True
     """"creature**s you control**" (CR 702.51a, CR 702.122a) and "**your**
@@ -106,16 +126,25 @@ class ObjectOffer(BaseModel):
                 f"{card.name} cannot crew itself: {self.rule} taps "
                 f"*other* untapped creatures you control"
             )
-        if self.creatures_only and not _is_creature(card, game):
+        if self.permitted_types and not (self.permitted_types & _types_of(card, game)):
             return (
-                f"{card.name} is not a creature, so it cannot pay for {self.keyword} ({self.rule})"
+                f"{card.name} is not {self.noun}, so it cannot pay for {self.keyword} ({self.rule})"
             )
         if self.untapped_only and card.tapped:
             return (
                 f"{card.name} is already tapped, and {self.rule} taps an "
-                f"untapped {'creature' if self.creatures_only else 'permanent'}"
+                f"untapped {self.noun.removeprefix('a ').removeprefix('an ')}"
             )
         return None
+
+    @property
+    def noun(self) -> str:
+        """What this offer calls an eligible object, for the refusal messages."""
+        if not self.permitted_types:
+            return "a permanent"
+        printed = [kind.value.lower() for kind in sorted(self.permitted_types)]
+        article = "an" if printed[0][0] in "aeiou" else "a"
+        return f"{article} {' or '.join(printed)}"
 
     def component(self, card: CardState, payer: str) -> CostComponent:
         """The cost component that spends `card` (CR 601.2h)."""
@@ -175,19 +204,21 @@ def _belongs_to(card: CardState, payer: str, game: Any = None) -> bool:
     return card.owner in (None, payer)
 
 
-def _is_creature(card: CardState, game: Any = None) -> bool:
-    """Creature-ness off the computed board when there is one (CR 613.5).
+def _types_of(card: CardState, game: Any = None) -> frozenset[Type]:
+    """An object's card types off the computed board when there is one.
 
-    A crewed Vehicle is a creature and can crew another Vehicle; a creature
-    that lost the type in layer 4 cannot. Neither is visible on the printed
-    type line, which is why this asks the layer engine when it can.
+    CR 613.5 puts type-changing effects in layer 4, so a crewed Vehicle is a
+    creature and can crew another Vehicle, a creature that lost the type in
+    layer 4 cannot, and an animated artifact is still an artifact and still
+    improvises (CR 702.126a). None of that is visible on the printed type line,
+    which is why this asks the layer engine when it can.
     """
     if game is not None and card.zone is Zone.BATTLEFIELD:
         try:
-            return game.characteristics_of(card).is_creature
+            return frozenset(game.characteristics_of(card).types)
         except (KeyError, AttributeError):
             pass
-    return card.is_creature
+    return frozenset(card.types)
 
 
 def _colors_of(card: CardState, game: Any = None) -> frozenset[Color]:
@@ -220,12 +251,14 @@ def total_power(cards: list[CardState], game: Any = None) -> int:
 
 
 # --------------------------------------------------------------------------
-# The three offers
+# The offers
 # --------------------------------------------------------------------------
 
 CONVOKE_RULE = "CR 702.51a"
 DELVE_RULE = "CR 702.66a"
 CREW_RULE = "CR 702.122a"
+IMPROVISE_RULE = "CR 702.126a"
+WATERBEND_RULE = "CR 701.67a"
 
 
 def convoke_offer() -> ObjectOffer:
@@ -236,7 +269,7 @@ def convoke_offer() -> ObjectOffer:
         rule=CONVOKE_RULE,
         action=ObjectAction.TAP,
         zone=Zone.BATTLEFIELD,
-        creatures_only=True,
+        permitted_types=frozenset({Type.CREATURE}),
         untapped_only=True,
         pays_generic=True,
         pays_own_colors=True,
@@ -254,6 +287,40 @@ def delve_offer() -> ObjectOffer:
     )
 
 
+def improvise_offer() -> ObjectOffer:
+    """CR 702.126a: tap an untapped artifact you control for one generic mana.
+
+    No `pays_own_colors`: unlike convoke, improvise says "for each **generic**
+    mana in this spell's total cost" and nothing else, so a blue artifact
+    offered against Metallic Rebuke's `{U}` is refused by the rule rather than
+    by the arithmetic. An artifact *creature* is an artifact and improvises;
+    a creature that is not an artifact does not.
+    """
+    return ObjectOffer(
+        keyword="improvise",
+        rule=IMPROVISE_RULE,
+        action=ObjectAction.TAP,
+        zone=Zone.BATTLEFIELD,
+        permitted_types=frozenset({Type.ARTIFACT}),
+        untapped_only=True,
+        pays_generic=True,
+    )
+
+
+def waterbend_offer() -> ObjectOffer:
+    """CR 701.67a: tap an untapped artifact *or creature* you control for one
+    generic mana of the cost the waterbend action word introduces."""
+    return ObjectOffer(
+        keyword="waterbend",
+        rule=WATERBEND_RULE,
+        action=ObjectAction.TAP,
+        zone=Zone.BATTLEFIELD,
+        permitted_types=frozenset({Type.ARTIFACT, Type.CREATURE}),
+        untapped_only=True,
+        pays_generic=True,
+    )
+
+
 def crew_offer(vehicle: CardState) -> ObjectOffer:
     """CR 702.122a: tap other untapped creatures you control, no mana involved."""
     return ObjectOffer(
@@ -261,7 +328,7 @@ def crew_offer(vehicle: CardState) -> ObjectOffer:
         rule=CREW_RULE,
         action=ObjectAction.TAP,
         zone=Zone.BATTLEFIELD,
-        creatures_only=True,
+        permitted_types=frozenset({Type.CREATURE}),
         untapped_only=True,
         excluding=vehicle.id,
     )
@@ -280,6 +347,22 @@ def has_convoke(card: Card) -> bool:
 def has_delve(card: Card) -> bool:
     """CR 702.66c: multiple instances of delve are redundant."""
     return _has(card, "delve")
+
+
+def has_improvise(card: Card) -> bool:
+    """CR 702.126c: multiple instances of improvise are redundant."""
+    return _has(card, "improvise")
+
+
+def improvise_payment(card: Card) -> ObjectOffer | None:
+    """The improvise offer `card` makes while it is on the stack, or None.
+
+    CR 702.126a's ability is static and "functions while the spell with
+    improvise is on the stack", so what a card *has* is an offer, not a
+    payment already made: this answers "may artifacts pay part of this spell's
+    cost, and which artifacts", and `improvise` spends one of them.
+    """
+    return improvise_offer() if has_improvise(card) else None
 
 
 def crew_number(card: Card) -> int | None:
@@ -343,6 +426,45 @@ def delve(payment: CostPayment, spell: CardState, *cards: CardState) -> list[Cos
         raise ValueError(f"{spell.name} does not have delve ({DELVE_RULE})")
     offer = delve_offer()
     return [_substitute(payment, offer, card, None) for card in cards]
+
+
+def improvise(
+    payment: CostPayment, spell: CardState, *artifacts: CardState
+) -> list[CostSubstitution]:
+    """Tap `artifacts` to pay one generic symbol each of `spell`'s total cost.
+
+    CR 702.126a: "For each generic mana in this spell's total cost, you may tap
+    an untapped artifact you control rather than pay that mana." CR 702.126b
+    says improvise "isn't an additional or alternative cost and applies only
+    after the total cost of the spell with improvise is determined", so - as
+    with convoke and delve - this takes an already-open `CostPayment` and never
+    reshapes the announcement: `payment.cost` still reads `{5}{U}` for a Kappa
+    Cannoneer that four artifacts helped cast.
+
+    Offering more artifacts than the cost has generic mana is refused by
+    `CostPayment.substitute` rather than quietly tapping one for nothing, and
+    the artifacts are tapped when the payment is paid, not now - so a cancelled
+    payment leaves them untapped (CR 733.1).
+    """
+    if not has_improvise(spell.card):
+        raise ValueError(f"{spell.name} does not have improvise ({IMPROVISE_RULE})")
+    offer = improvise_offer()
+    return [_substitute(payment, offer, artifact, None) for artifact in artifacts]
+
+
+def waterbend(payment: CostPayment, *permanents: CardState) -> list[CostSubstitution]:
+    """Tap `permanents` to pay one generic symbol each of a waterbend cost.
+
+    CR 701.67a: "'Waterbend [cost]' means 'Pay [cost]. For each generic mana in
+    that cost, you may tap an untapped artifact or creature you control rather
+    than pay that mana.'" Waterbend is an action word on an *ability's* cost,
+    not a static ability of a spell, so there is no keyword to check on a card
+    on the stack the way `improvise` checks `spell` - the caller has already
+    established that the cost being paid is the waterbend one, and what is left
+    is the same per-symbol substitution the rest of the family does.
+    """
+    offer = waterbend_offer()
+    return [_substitute(payment, offer, permanent, None) for permanent in permanents]
 
 
 def _substitute(
