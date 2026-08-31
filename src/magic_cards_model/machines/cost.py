@@ -837,16 +837,16 @@ class CostComponent(BaseModel):
                 # an indestructible permanent is sacrificed all the same.
                 game.sacrifice(card)
         elif self.kind is ComponentKind.DISCARD:
-            # CR 701.9a's discard, through the keyword machinery rather than
+            # CR 701.9a's discard, through `Game.discard_cards` rather than
             # straight to the graveyard: madness (CR 702.35a) replaces where a
-            # discarded card lands, and a cost is one of the ways a card gets
-            # discarded. Imported here because `machines/keywords.py` builds its
-            # costs out of this module.
-            from .keywords import discard as discard_one
-
+            # discarded card lands, and CR 603.2c's "whenever you discard one
+            # or more cards" (Captain Howler, Sea Scourge) has to see every
+            # card this one cost discarded as a single batch, cost-paid
+            # discards included.
             for card in self.cards:
                 self._remember(card)
-                discard_one(game, card, self.payer)
+            if self.cards:
+                game.discard_cards(self.payer, list(self.cards), source=None)
         elif self.kind is ComponentKind.EXILE:
             for card in self.cards:
                 self._remember(card)

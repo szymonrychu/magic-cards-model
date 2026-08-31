@@ -301,6 +301,12 @@ class ExileMarker(StrEnum):
     FORETOLD = "foretold"
     WARPED = "warped"
     ADVENTURED = "adventured"
+    HIDEAWAY = "hideaway"
+    """CR 702.75a: the one card a hideaway permanent exiled face down when it
+    entered. Its `linked_permanent_id` is that permanent, so a later ability
+    printed on the same object (Fight Rigging's own beginning-of-combat
+    trigger) can find its card back without a name-keyed table - the same
+    link `ExileMarker.IMPRINTED` already uses for the same reason."""
     MADNESS = "madness"
     """CR 702.35a's first ability: "If a player would discard this card, that
     player discards it, but exiles it instead of putting it into their
@@ -465,6 +471,17 @@ class CardState(BaseModel):
 
     A minimal hook, not a token system: a token's characteristics come from the
     effect that created it (CR 111.3), and nothing here provides them.
+    """
+    is_copy: bool = False
+    """CR 112.1a: "A copy of a spell is also a spell, even if it has no card
+    associated with it." Built around the same `Card` its original was (this
+    project's copy machinery, `Game.copy_spell`, does not yet extend to a
+    copy whose copiable values were themselves modified, CR 707.3), but not
+    cast (CR 707.10: "a copy of a spell isn't cast"), so nothing should ever
+    treat one as coming from a player's hand or library. CR 704.5e/707.10a:
+    "If a copy of a spell is in a zone other than the stack, it ceases to
+    exist" - the one other place this flag is read, by the state-based
+    action of the same name.
     """
     tapped: bool = False
     face_up: bool = True

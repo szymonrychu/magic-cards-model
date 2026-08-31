@@ -88,6 +88,8 @@ from ..machines.keywords import (
     has_rebound,
     is_indestructible,
     keyword_effect_for,
+    turn_face_up_cost,
+    why_cannot_turn_face_up,
 )
 from ..machines.layers import (
     Characteristics,
@@ -717,6 +719,18 @@ class Game(BaseModel):
     so a scenario says in advance what a given card's trigger aims at.
     """
 
+    players_skipping_next_untap: dict[str, int] = Field(default_factory=dict)
+    """How many of a username's upcoming untap steps are replaced with
+    nothing (CR 614.10: "skip [something]" is a replacement effect). Brine
+    Elemental's "each opponent skips their next untap step" is the only card
+    in the pool that grants this; `untap_step` decrements one entry per
+    skipped step and drops the key once it reaches zero. A count rather than
+    a flag on purpose, so two stacked grants (two Brine Elementals turned
+    face up against the same opponent) cost that opponent two untap steps,
+    matching CR 614.10a's "waits for the first occurrence that isn't
+    skipped" read once per grant.
+    """
+
     targeting_notices: list[TargetingNotice] = Field(default_factory=list)
     """One entry per triggered ability whose targets could not be worked out
     normally (`Game._ask_trigger_targets`) - either the restriction itself was
@@ -921,6 +935,18 @@ class Game(BaseModel):
     activated a loyalty ability of that permanent that turn". Any of a
     planeswalker's loyalty abilities having been activated refuses the next
     one. Cleared when a new turn begins."""
+
+    once_per_turn_triggers: dict[str, int] = Field(default_factory=dict)
+    """How often a "this ability triggers only once each turn" ability has
+    already triggered this turn, keyed `"<source id>:<printed condition>"` -
+    CR 603.2h: "A triggered ability may have an instruction ... This ability
+    triggers only if its source's controller has not yet taken the indicated
+    action that turn." Caretaker's Talent's own "Whenever one or more tokens
+    you control enter, draw a card. This ability triggers only once each
+    turn." is the only printing in the pool; `machines/triggers.triggers_for`
+    reads and increments this instead of putting a second copy of the same
+    trigger on the stack later in the same turn. Cleared when a new turn
+    begins, alongside `activations`/`loyalty_activations`."""
 
     blocks_triggered: list[str] = Field(default_factory=list)
     """The blocker/attacker pairs that have already fired their block triggers
@@ -1151,6 +1177,16 @@ class Game(BaseModel):
         """
         active = self.active_player
         self.begin_turn_for(active.username)
+        remaining = self.players_skipping_next_untap.get(active.username, 0)
+        if remaining > 0:
+            # CR 614.10: "skip [something]" replaces the step with nothing -
+            # nothing untaps and no BECOMES_UNTAPPED event fires, exactly as
+            # if the step never happened.
+            if remaining > 1:
+                self.players_skipping_next_untap[active.username] = remaining - 1
+            else:
+                del self.players_skipping_next_untap[active.username]
+            return
         controlled = self.permanents_controlled_by(active.username)
         tapped = [state for state in controlled if state.tapped]
         active.untap_all(controlled)
@@ -1863,6 +1899,91 @@ class Game(BaseModel):
         self.note_cast(card, keyword="Rebound", origin_zone=Zone.EXILE)
         return card
 
+    def copy_spell(self, spell: CardState, controller: str | None = None) -> CardState:
+        """CR 707.10: put a copy of `spell` onto the stack.
+
+        "To copy a spell ... means to put a copy of it onto the stack; a copy
+        of a spell isn't cast." Unlike `cast_free_from_exile`, this does not
+        go through `put_on_stack` at all - that method's own CAST_SPELL emit
+        is exactly the event CR 707.10 says does *not* happen for a copy, and
+        `spells_cast_this_turn` (Alania's own "the first instant spell ...
+        you've cast this turn" reads it) must not count a copy as a cast
+        either.
+
+        CR 707.2: the copy acquires the original's copiable values - built
+        around the same `Card`, since `machines/effects.py` has no
+        modification to apply here - "and, for an object on the stack,
+        choices made when casting or activating it (mode, targets, the value
+        of X, ...)"; `targets` is carried over verbatim, and a caller wanting
+        CR 707.10c's "new targets" permission chooses them afterward the same
+        way `cast_free_from_exile` lets a resolving ability choose targets
+        for what it casts. `division` (CR 601.2d's damage split) travels too,
+        being a simple scalar copiable value; `x_value` lives on `Game.
+        cast_record`, keyed by the *original* spell's own id, and `modes`/
+        `mode_targets` live on `CastRecord` too - neither is copied here, so
+        a copy of an `{X}` spell or a modal spell is not yet modelled (see
+        `docs/engine-coverage.md`). Nothing in the pool copies either.
+
+        The copy is controlled by `controller` if given, or by the original
+        spell's own controller otherwise - who controls a copy is CR 707.10b's
+        business and this wave could not confirm its exact wording in this
+        session (`docs/engine-coverage.md` records the gap), so the fallback
+        picked here is the one no card in the pool exercises differently:
+        Alania, Divergent Storm's own copy names no controller of its own.
+        """
+        controller = controller or spell.controller or self.controller_of(spell).username
+        copy = CardState(
+            card=spell.card,
+            zone=Zone.STACK,
+            controller=controller,
+            owner=spell.owner,
+            is_copy=True,
+            targets=list(spell.targets),
+            face_played=spell.face_played,
+            land_face_played=spell.land_face_played,
+            division=spell.division,
+        )
+        self.stack.append(copy)
+        return copy
+
+    def offer_new_targets_for_copy(
+        self, copy: CardState, controller: str, *, source_name: str = ""
+    ) -> None:
+        """CR 707.10c-shaped permission: "you may choose new targets for the
+        copy" (Alania, Divergent Storm being the only printing in the pool).
+
+        A plain `MAY` (CR 608.2d), then the same `CHOOSE_TARGETS` question
+        `cast_free_from_exile` asks - reusing `_legal_target_candidates`
+        rather than a second target-legality reader. Declining, or a
+        restriction this session's targeting reader cannot parse at all,
+        leaves the copy with whatever it already had (CR 707.2's copied
+        targets), never with none chosen instead - "new targets" is an
+        option to replace them, not a second, separate targeting event that
+        could come back empty.
+        """
+        profile = profile_for_text(copy.oracle_text or "")
+        if not profile.understood or not profile.requirements:
+            return
+        candidates = self._legal_target_candidates(profile, controller, copy.id)
+        if not candidates:
+            return
+        if not self.may(
+            self.player(controller), "choose new targets for the copy", source=source_name
+        ):
+            return
+        decision = Decision(
+            kind=DecisionKind.CHOOSE_TARGETS,
+            player=controller,
+            prompt=f"choose new targets for the copy of {copy.name}",
+            source=source_name,
+            targets=tuple(TargetRef.coerce(candidate) for candidate in candidates),
+            target_maximum=profile.max_targets,
+        )
+        chosen = self.ask(decision)
+        assert isinstance(chosen, (list, tuple))
+        if chosen:
+            copy.targets = list(chosen)
+
     def _resolve_ability(self, ability: AbilityOnStack) -> AbilityOnStack:
         """Resolve an ability that was on the stack (CR 608.2).
 
@@ -2547,6 +2668,16 @@ class Game(BaseModel):
                 )
             return value
 
+        if decision.kind is DecisionKind.PAY_LIFE_AMOUNT:
+            if not isinstance(value, int) or isinstance(value, bool):
+                raise ValueError(f"{decision.prompt}: needs an integer amount of life")
+            if value < 0 or value > decision.amount:
+                raise ValueError(
+                    f"{decision.prompt}: cannot pay {value} life, life total is only "
+                    f"{decision.amount} (CR 119.4)"
+                )
+            return value
+
         if decision.kind is DecisionKind.CHOOSE_CARDS:
             if not isinstance(value, tuple) or not all(isinstance(v, UUID) for v in value):
                 raise ValueError(f"{decision.prompt}: needs a tuple of chosen card ids")
@@ -2594,6 +2725,16 @@ class Game(BaseModel):
             if decision.options and value not in decision.options:
                 raise ValueError(
                     f"{decision.prompt}: {value!r} is not among the legal choices "
+                    f"({', '.join(decision.options)})"
+                )
+            return value
+
+        if decision.kind is DecisionKind.CHOOSE_A_MODE:
+            if not isinstance(value, str) or not value:
+                raise ValueError(f"{decision.prompt}: needs a chosen mode (CR 700.2a)")
+            if decision.options and value not in decision.options:
+                raise ValueError(
+                    f"{decision.prompt}: {value!r} is not among the printed modes "
                     f"({', '.join(decision.options)})"
                 )
             return value
@@ -2808,6 +2949,41 @@ class Game(BaseModel):
         assert isinstance(paid, int)
         if paid > 0:
             player.remove_counters(Counter.ENERGY, paid)
+        return paid
+
+    def pay_any_amount_of_life(
+        self,
+        player: Player | str,
+        *,
+        source: str | None = None,
+        prompt: str = "pay any amount of life",
+    ) -> int:
+        """ "You may pay any amount of life" (Necrodominance) - CR 119.4's
+        variable-amount cousin of `may_pay_life`, mirroring `pay_any_amount_
+        of_energy` exactly: a real choice from 0 up to the player's *current*
+        life total (CR 119.4: legal "only if their life total is greater
+        than or equal to the amount of the payment", which paying down to
+        exactly 0 satisfies), never defaulted upward for an unscripted
+        answer - Necrodominance's own "draw that many cards" would otherwise
+        silently draw the maximum every time.
+
+        Returns however much was actually paid (0 if declined), and pays
+        exactly that.
+        """
+        if isinstance(player, str):
+            player = self.player(player)
+        available = player.life
+        decision = Decision(
+            kind=DecisionKind.PAY_LIFE_AMOUNT,
+            player=player.username,
+            prompt=prompt,
+            source=source,
+            amount=available,
+        )
+        paid = self.ask(decision)
+        assert isinstance(paid, int)
+        if paid > 0:
+            player.lose_life(paid)
         return paid
 
     def _look_at_top(self, player: Player, count: int) -> list[CardState]:
@@ -3938,6 +4114,48 @@ class Game(BaseModel):
             )
         )
         return self.put_into_graveyard(permanent)
+
+    def discard_cards(
+        self, username: str | None, cards: list[CardState], source: str | None = None
+    ) -> list[CardState]:
+        """Discard `cards` together, as one CR 701.9a instruction, and fire
+        "whenever you discard one or more cards" once for the whole batch.
+
+        CR 603.2c: "An ability triggers only once each time its trigger event
+        occurs. However, it can trigger repeatedly if one event contains
+        multiple occurrences." A cost or an effect that discards several
+        cards at once ("discard two cards", a cleanup discard down to
+        maximum hand size, a `{Q}: Discard a card` cost) does so as a single
+        instruction with a count, which is exactly what Captain Howler, Sea
+        Scourge's own "for each card discarded this way" reads - so this
+        emits one `DISCARDS_A_CARD` event carrying `amount=len(cards)`
+        rather than one event per card. `machines.keywords.discard` still
+        does the actual move, card by card, so madness (CR 702.35a) keeps
+        replacing where each one lands.
+
+        This is the one place that emits `DISCARDS_A_CARD` - `machines/
+        cost.py`'s discard cost component and `machines/effects.py`'s
+        `_discard_cards` both call it instead of moving cards straight to
+        the graveyard, so a discard paid as a cost and a discard an effect
+        causes both fire the trigger; `Player.discard_to_maximum_hand_size`
+        (the cleanup step, CR 514.1) is the one remaining discard path that
+        does not yet route through here - see `docs/engine-coverage.md`.
+        """
+        from ..machines.keywords import discard as discard_one  # avoids an import cycle
+
+        discarded: list[CardState] = []
+        for card in cards:
+            discarded.append(discard_one(self, card, username))
+        if not discarded:
+            return discarded
+        self.emit(
+            GameEvent(
+                event=TriggerEvent.DISCARDS_A_CARD,
+                player=username,
+                amount=len(discarded),
+            )
+        )
+        return discarded
 
     def put_into_graveyard(self, card_state: CardState, *, resolving: bool = False) -> CardState:
         """Move a card to its owner's graveyard, replacement effects included.
@@ -5535,6 +5753,64 @@ class Game(BaseModel):
         amount = reduction.amount * count
         return ManaCost.parse(f"{{{amount}}}") if amount else ManaCost()
 
+    def begin_turning_face_up(
+        self, permanent: CardState, controller: str | None = None
+    ) -> CostPayment:
+        """Announce turning a face-down morph creature face up, and open its
+        payment (CR 702.37e).
+
+        "Any time you have priority, you may turn a face-down permanent you
+        control with a morph ability face up. This is a special action; it
+        doesn't use the stack. To do this, show all players what the
+        permanent's morph cost would be if it were face up, pay that cost,
+        then turn the permanent face up." Mirrors `begin_activating`'s own
+        two-call split (open the payment, then finish the action) for
+        exactly the same reason: paying can take more than one priority-free
+        moment (tapping several lands), and CR 116.1 lets a special action
+        be taken any time its controller could take one, not only once the
+        whole cost is already in hand.
+
+        Raises if the special action is unavailable at all (CR 702.37e's own
+        parenthetical, or a permanent that is not face down here), before
+        anything has been spent.
+        """
+        refusal = why_cannot_turn_face_up(permanent)
+        if refusal is not None:
+            raise ValueError(refusal)
+        controller = controller or self.controller_of(permanent).username
+        total = turn_face_up_cost(permanent, controller)
+        assert total is not None  # `why_cannot_turn_face_up` already checked this
+        return CostPayment.for_total(total, game=self, payer=controller)
+
+    def turn_face_up(self, permanent: CardState, controller: str | None = None) -> CardState:
+        """Finish turning a face-down permanent face up (CR 702.37e, 708.8).
+
+        The cost is paid by the caller through `begin_turning_face_up`; this
+        is the half that actually reveals the card and fires whatever
+        watches for it - Brine Elemental's own "When this creature is turned
+        face up, each opponent skips their next untap step" is the only
+        printing in the pool with such a trigger.
+
+        No stack, no priority pass (CR 116): the emitted `TURNED_FACE_UP`
+        event still queues an ordinary triggered ability the normal way
+        (CR 603.3, `put_triggers_on_stack` puts it on the stack the next time
+        a player would receive priority) - a special action skips the stack
+        for *itself*, not for what it triggers.
+        """
+        controller = controller or self.controller_of(permanent).username
+        permanent.turn_face_up()
+        self.emit(
+            GameEvent(
+                event=TriggerEvent.TURNED_FACE_UP,
+                subject_id=permanent.id,
+                subject_name=permanent.name,
+                subject_controller=permanent.controller,
+                subject_card=permanent.card,
+                player=controller,
+            )
+        )
+        return permanent
+
     def begin_activating(
         self,
         permanent: CardState,
@@ -6018,6 +6294,7 @@ class Game(BaseModel):
             self.lands_played = {}
             self.activations = {}  # CR 602.5b restrictions are per turn
             self.loyalty_activations = {}  # CR 606.3's once-per-turn is per turn too
+            self.once_per_turn_triggers = {}  # CR 603.2h restrictions are per turn too
             # Snapshotted, not dropped: "last turn" is a question the
             # werewolves ask every upkeep (CR 603.4) and nothing else can
             # answer once this is cleared.

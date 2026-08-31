@@ -236,6 +236,21 @@ def is_modal_text(oracle_text: str | None) -> bool:
     return _parse(oracle_text or "", ()) is not None
 
 
+def modal_profile_from_text(oracle_text: str | None) -> ModalProfile | None:
+    """`modal_profile`'s own reading, from raw text alone - no `Card` and no
+    cache, for a caller that only has text to hand.
+
+    Elder Gargaroth's own "attacks or blocks, choose one -" is not a modal
+    *spell* at all (CR 700.2's own kind of object is "a spell or ability");
+    it is a modal *triggered* ability, so there is no `Card` whose front
+    face is the modal text - the modal text is only the tail of one printed
+    line, everything after the trigger condition (`TriggeredAbility.effect`).
+    `machines/effects.py`'s `_resolve_modal_triggered_ability` is the one
+    caller.
+    """
+    return _parse(oracle_text or "", ())
+
+
 def substitute_x(text: str, x_value: int | None) -> str:
     """CR 107.3a/CR 107.3c: X has no value until the caster announces one for
     this spell or ability; given one, it applies "while that spell or ability

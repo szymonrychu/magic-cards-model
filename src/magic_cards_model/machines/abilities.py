@@ -666,6 +666,26 @@ class TriggerEvent(StrEnum):
     #: at all. Emitted by `Game.return_to_hand`, the only place that performs
     #: this move.
     LEAVES_BATTLEFIELD_TO_HAND = "leaves_battlefield_to_hand"
+    #: CR 702.37e, CR 708.8: "As a face-down permanent is turned face up, its
+    #: copiable values revert to its normal copiable values." Brine Elemental
+    #: is the only card in the pool that watches its own unmorph this way -
+    #: "When this creature is turned face up, ..." - so only the
+    #: self-referential form is read. Emitted by `Game.turn_face_up`, the
+    #: special action CR 702.37e describes, the only place the engine turns
+    #: a face-down permanent face up outside a test poking `CardState.
+    #: turn_face_up` directly.
+    TURNED_FACE_UP = "turned_face_up"
+    #: CR 701.9a: "To discard a card, move it from its owner's hand to that
+    #: player's graveyard." Captain Howler, Sea Scourge's "Whenever you
+    #: discard one or more cards, ..." is the only printing in the pool.
+    #: CR 603.2c: "An ability triggers only once each time its trigger event
+    #: occurs. However, it can trigger repeatedly if one event contains
+    #: multiple occurrences" - "one or more cards" is the discard *action*
+    #: itself named as the event (however many cards it moves at once), not a
+    #: per-card occurrence, so this fires once per discard action with a
+    #: count on the event (`GameEvent.amount`), emitted by whichever call
+    #: site discards more than one card at a time as a single batch.
+    DISCARDS_A_CARD = "discards_a_card"
 
 
 class CostKind(StrEnum):
@@ -885,6 +905,12 @@ class TriggeredAbility(BaseAbility):
     #: what lets the effect be found afterwards: `machines/effects.py` is keyed
     #: by card name, and a generic keyword has no card name to be keyed under.
     keyword: str | None = None
+    #: CR 603.2h: "This ability triggers only once each turn" (or the rule's
+    #: own "Do this only once each turn"), stripped out of `effect` and
+    #: recorded here so `machines/triggers.triggers_for` can gate on it -
+    #: Caretaker's Talent's own token-enters trigger is the only printing in
+    #: the pool with this restriction.
+    once_per_turn: bool = False
 
 
 class StaticAbility(BaseAbility):
@@ -944,9 +970,63 @@ def parse_abilities(card: Card) -> list[Ability]:
     """
     abilities: list[Ability] = []
     for face_name, text in _faces(card):
-        for line in text.split("\n"):
+        for line in _merge_modal_bullet_lines(text.split("\n")):
             abilities.extend(_parse_line(line, card.keywords, face_name))
     return abilities
+
+
+#: A line ending in CR 700.2's own instruction shape - "choose one —",
+#: "choose two —", "choose one or more —" - the header of a bulleted modal
+#: list. Anchored on the trailing em dash Scryfall prints, so an ordinary
+#: sentence that happens to contain the word "choose" ("Choose target
+#: creature.") never matches.
+_MODAL_INSTRUCTION_TAIL = re.compile(r"choose\b.*[-—]\s*$", re.IGNORECASE)
+
+
+def _merge_modal_bullet_lines(lines: list[str]) -> list[str]:
+    """Fold a modal instruction line and the bulleted lines under it back
+    into one line (CR 700.2's own "two or more options in a bulleted list").
+
+    Oracle text splits a card's rules text on Scryfall's own newlines, one
+    printed line per list entry - `["Whenever this creature attacks or
+    blocks, choose one —", "• Create a 3/3 ... token.", "• You gain 3
+    life.", "• Draw a card."]` for Elder Gargaroth. `text.split("\\n")` (the
+    only caller) hands each of those to `_parse_line` in isolation, so a
+    *triggered* ability's own modal tail - everything `_parse_triggered`
+    would read as `effect` - never includes its own bullets: each bullet line
+    parses instead as an orphaned, un-conditioned `StaticAbility` with no
+    link back to "choose one" at all, and Elder Gargaroth's attack/block
+    trigger goes on the stack and does nothing (`machines/modes.py`'s
+    bulleted-list reader is never even reached, since it is only ever handed
+    a *spell's* whole, already-multi-line `oracle_text` by `modal_profile`,
+    not a `parse_abilities` line). A modal *spell*'s own oracle text never
+    hits this problem, because `modal_profile(card)` reads `Card.
+    front_oracle_text` directly rather than going through this per-line
+    split at all.
+
+    This is the fix, ahead of the split: any line ending in CR 700.2's own
+    "choose N —" instruction absorbs every immediately following bulleted
+    line into itself (newline-joined, so `machines/modes.py`'s own
+    line-anchored bullet regex still finds each `•` at the start of a line),
+    stopping at the first line that is not itself a bullet. A card with no
+    modal triggered ability is untouched - no line ends this way, so nothing
+    merges and every line reaches `_parse_line` exactly as printed today.
+    """
+    merged: list[str] = []
+    index = 0
+    while index < len(lines):
+        line = lines[index]
+        if _MODAL_INSTRUCTION_TAIL.search(line):
+            block = [line]
+            index += 1
+            while index < len(lines) and lines[index].lstrip().startswith("•"):
+                block.append(lines[index])
+                index += 1
+            merged.append("\n".join(block))
+            continue
+        merged.append(line)
+        index += 1
+    return merged
 
 
 def abilities_of_kind(card: Card, kind: AbilityKind) -> list[Ability]:
@@ -1303,6 +1383,25 @@ def _match_keyword(token: str, known: list[str]) -> dict | None:
     return None
 
 
+#: The closing phrase of Alania, Divergent Storm's own intervening *if* shape
+#: - "if it's the first instant spell, the first sorcery spell, or the first
+#: Otter spell other than Alania you've cast this turn" - captured whole,
+#: comma-separated interior and all, up to and including the comma that
+#: follows "cast this turn". `machines/triggers._FIRST_SPELL_THIS_TURN` is
+#: what actually reads the captured clause; this only finds where it ends.
+_INTERVENING_IF_CAST_THIS_TURN_BOUNDARY = re.compile(
+    r"if\s(?P<clause>.+?\byou(?:'ve| have) cast this turn)\s*,\s*", re.IGNORECASE
+)
+
+#: CR 603.2h's own trailing restriction, in either the rule's own wording
+#: ("Do this only once each turn") or Caretaker's Talent's paraphrase ("This
+#: ability triggers only once each turn") - both always the ability's last
+#: sentence.
+_ONCE_PER_TURN_TRAILER = re.compile(
+    r"\.\s*(?:do this|this ability triggers) only once each turn\.?\s*$", re.IGNORECASE
+)
+
+
 def _parse_triggered(text: str, common: dict) -> TriggeredAbility | None:
     match = _TRIGGER.match(text)
     if match is None:
@@ -1320,11 +1419,34 @@ def _parse_triggered(text: str, common: dict) -> TriggeredAbility | None:
 
     intervening_if: str | None = None
     if rest.lower().startswith("if "):
-        clause_parts = _split_top_level(rest)
-        if len(clause_parts) < 2:
-            return None
-        intervening_if = clause_parts[0][len("if ") :].strip()
-        rest = ", ".join(clause_parts[1:])
+        # `_FIRST_SPELL_THIS_TURN_WITH_BOUNDARY` first: Alania, Divergent
+        # Storm's own intervening *if* is itself a comma-separated list -
+        # "if it's the first instant spell, the first sorcery spell, or the
+        # first Otter spell other than Alania you've cast this turn" - so
+        # cutting at the *first* top-level comma (the plain path below) would
+        # slice the clause in half and leave "the first sorcery spell, ..."
+        # sitting in front of the effect text instead. This shape's own
+        # closing phrase, "you('ve| have) cast this turn", is the boundary a
+        # bare comma-split cannot see, so it is matched for directly and only
+        # falls back to the plain single-segment reading when it is absent.
+        boundary = _INTERVENING_IF_CAST_THIS_TURN_BOUNDARY.match(rest)
+        if boundary is not None:
+            intervening_if = boundary.group("clause").strip()
+            rest = rest[boundary.end() :].strip()
+            if not rest:
+                return None
+        else:
+            clause_parts = _split_top_level(rest)
+            if len(clause_parts) < 2:
+                return None
+            intervening_if = clause_parts[0][len("if ") :].strip()
+            rest = ", ".join(clause_parts[1:])
+
+    once_per_turn = False
+    stripped = _ONCE_PER_TURN_TRAILER.sub("", rest).strip()
+    if stripped != rest.strip():
+        once_per_turn = True
+        rest = stripped
 
     return TriggeredAbility(
         **common,
@@ -1333,6 +1455,7 @@ def _parse_triggered(text: str, common: dict) -> TriggeredAbility | None:
         intervening_if=intervening_if,
         effect=rest,
         event=_trigger_event(condition),
+        once_per_turn=once_per_turn,
     )
 
 
@@ -1344,7 +1467,20 @@ def _trigger_event(condition: str) -> TriggerEvent | None:
     # "becomes the target of ..." for CR 509.
     if "becomes the target" in lowered:
         return TriggerEvent.BECOMES_TARGET
-    if re.search(r"\benters\b", lowered):
+    # CR 702.37e/708.8. Checked ahead of "enters" below only for grouping -
+    # "turned face up" contains no "enter" at all, so the two never compete.
+    if "turned face up" in lowered:
+        return TriggerEvent.TURNED_FACE_UP
+    # CR 701.9a. Checked ahead of "cast"/"sacrific" below, neither of which
+    # this phrase contains, again only for grouping with the other
+    # special-action-shaped conditions above.
+    if re.search(r"\bdiscards? (?:a card|one or more cards)\b", lowered):
+        return TriggerEvent.DISCARDS_A_CARD
+    # "enter" (no s) is the plural-subject form printed on "Whenever one or
+    # more tokens you control enter" (Caretaker's Talent) - the same
+    # singular/plural split `\battacks?\b` already reads for "attacks" versus
+    # "you attack".
+    if re.search(r"\benters?\b", lowered):
         return TriggerEvent.ENTERS_THE_BATTLEFIELD
     # CR 700.4: "dies" means "is put into a graveyard from the battlefield" -
     # Flagstones of Trokair spells that phrase out instead of saying "dies",

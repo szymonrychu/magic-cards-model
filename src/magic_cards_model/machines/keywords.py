@@ -121,6 +121,7 @@ def executes(keyword: str) -> bool:
         "indestructible",
         "exert",
         "rebound",
+        "hideaway",
         # CR 701.66a. A CR 701 keyword *action* embedded in another ability's
         # effect text, not a CR 702 keyword ability printed on its own - so
         # its clause parser lives in `machines/effects.py`
@@ -306,6 +307,25 @@ def _mobilize_ability(ability: KeywordAbility) -> TriggeredAbility:
     )
 
 
+def _hideaway_ability(ability: KeywordAbility) -> TriggeredAbility:
+    """CR 702.75a: "Hideaway N" means "When this permanent enters, look at the
+    top N cards of your library. Exile one of them face down and put the
+    rest on the bottom of your library in a random order.""
+    """
+    count = ability.count if ability.count is not None else 4
+    return _expansion(
+        ability,
+        keyword="hideaway",
+        word=TriggerWord.WHEN,
+        condition="this permanent enters",
+        effect=(
+            f"look at the top {count} cards of your library. Exile one of them face down "
+            "and put the rest on the bottom of your library in a random order"
+        ),
+        event=TriggerEvent.ENTERS_THE_BATTLEFIELD,
+    )
+
+
 def _madness_ability(ability: KeywordAbility) -> TriggeredAbility:
     """CR 702.35a's *second* ability. Madness is two abilities, not one.
 
@@ -341,6 +361,7 @@ _TRIGGER_EXPANSIONS: dict[str, Callable[[KeywordAbility], TriggeredAbility]] = {
     "persist": _persist_ability,
     "mobilize": _mobilize_ability,
     "madness": _madness_ability,
+    "hideaway": _hideaway_ability,
 }
 
 

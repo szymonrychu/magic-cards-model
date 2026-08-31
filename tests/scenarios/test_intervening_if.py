@@ -25,58 +25,20 @@ Of the pool's seven cards with an intervening *if*:
   `Game.life_gained_this_turn`), Thopter Assembly ("you control no Thopters
   other than this creature", already read before this fix), Sowing Mycospawn
   ("it was kicked", CR 702.33d, read off `Game.cast_record(spell).kicked`),
-  and Vexing Bauble and Wistfulness's two abilities ("[no] mana [of a color]
-  was spent to cast it", CR 601.2h, read off
+  Vexing Bauble and Wistfulness's two abilities ("[no] mana [of a color] was
+  spent to cast it", CR 601.2h, read off
   `Game.cast_record(spell).mana_spent` - see `test_mana_spent_intervening_if.py`
-  for these last two).
-- **fail closed, audibly**: Alania, Divergent Storm ("it's the first instant
-  spell, the first sorcery spell, or the first Otter spell other than Alania
-  you've cast this turn" - `_first_spell_this_turn_holds` reads this shape,
-  but `machines/abilities._parse_triggered` splits the intervening *if* on its
-  *own* internal commas and never hands it the whole clause; see the
-  pre-existing `xfail`,
-  `tests/test_abilities.py::test_an_intervening_if_with_internal_commas_splits_correctly`).
+  for these last two), and, as of W14, Alania, Divergent Storm ("it's the
+  first instant spell, the first sorcery spell, or the first Otter spell
+  other than Alania you've cast this turn" - `_first_spell_this_turn_holds`
+  reads this shape once `machines/abilities._INTERVENING_IF_CAST_THIS_TURN_
+  BOUNDARY` hands it the *whole* clause instead of truncating at the clause's
+  own first internal comma; see `tests/scenarios/test_alania_divergent_storm.py`
+  for the fixed trigger actually firing).
 """
 
 from magic_cards_model.machines import Step
 from tests.scenarios.harness import Scenario
-
-# -- fails closed, audibly ---------------------------------------------------
-
-
-def test_alania_fails_closed_because_the_clause_is_not_split_correctly():
-    """Alania, Divergent Storm's clause is a genuinely readable shape -
-    `machines/triggers._first_spell_this_turn_holds` reads "it's the first
-    [type] spell ... you've cast this turn" - but a separate, pre-existing
-    parser gap (`test_an_intervening_if_with_internal_commas_splits_correctly`
-    in `tests/test_abilities.py`) truncates the clause at its own first comma
-    before it ever reaches here, so what arrives is just "it's the first
-    instant spell" with no "you've cast this turn" to anchor it. Unreadable,
-    so it fails closed - the same safe outcome as the truly-untrackable
-    clauses above, for a different underlying reason.
-    """
-    scenario = (
-        Scenario()
-        .player(
-            "alice",
-            library=["Forest"],
-            hand=["Lightning Bolt"],
-            battlefield=["Alania, Divergent Storm"] + ["Mountain"] * 4,
-        )
-        .player("bob", library=["Forest"])
-        .build()
-    )
-    scenario.start_at(Step.PRECOMBAT_MAIN)
-    (mountain,) = scenario.untapped_sources("Mountain")
-    alania = scenario.creature("Alania, Divergent Storm", "alice")
-
-    scenario.cast_onto_stack("Lightning Bolt", mountain, targets=[scenario.player("bob")])
-
-    assert scenario.stack_names() == ["Lightning Bolt"]
-    assert scenario.pending_triggers == []
-    assert len(scenario.game.intervening_if_notices) == 1
-    assert scenario.game.intervening_if_notices[0].source_id == alania.id
-
 
 # -- evaluated for real -------------------------------------------------------
 

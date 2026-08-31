@@ -239,3 +239,68 @@ def test_the_layer_engine_sees_the_face_down_characteristics_too():
     assert scenario.game.power_of(permanent) == 2
     assert scenario.game.toughness_of(permanent) == 2
     assert scenario.game.characteristics_of(permanent).name == ""
+
+
+# --------------------------------------------------------------------------
+# Turned face up (CR 702.37e, 708.8): Brine Elemental's own trigger
+# --------------------------------------------------------------------------
+#
+# "When this creature is turned face up, each opponent skips their next
+# untap step." The special action itself (`Game.turn_face_up`) is new this
+# wave, built because nothing in the engine performed CR 702.37e's special
+# action outside a test poking `CardState.turn_face_up` directly - paying
+# the real morph cost, through the same `begin_activating`/`activate_
+# ability`-shaped two-call split every other cost payment uses, and
+# emitting `TriggerEvent.TURNED_FACE_UP` so the ability really fires.
+#
+# CR numbers looked up with `knowledge_search(type="rules")` in this
+# session: CR 702.37e, CR 708.8, CR 614.10 ("skip" is a replacement
+# effect), CR 502.3 (the untap step).
+
+
+def turn_face_up_board() -> Scenario:
+    return (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Brine Elemental"], battlefield=["Island"] * 11)
+        .player("bob", battlefield=["Grizzly Bears"])
+    )
+
+
+def test_turning_it_face_up_fires_its_own_trigger_and_bob_skips_his_untap():
+    scenario = turn_face_up_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    permanent = cast_face_down(scenario, "Brine Elemental")
+
+    mana_sources = scenario.untapped_sources(*["Island"] * 7)
+    scenario.turn_face_up(permanent, *mana_sources)
+    while scenario.game.stack:
+        scenario.resolve_top()
+
+    assert permanent.name == "Brine Elemental"
+    assert scenario.game.players_skipping_next_untap.get("bob") == 1
+
+    bears = scenario.creature("Grizzly Bears", "bob")
+    bears.tap()
+    # Jump the turn pointer to bob's own turn to exercise *his* untap step -
+    # `Game.untap_step` always untaps `Turn.active_player`.
+    scenario.game.turn.active_index = scenario.game.turn.players.index("bob")
+    scenario.game.untap_step()  # bob's next untap step: skipped (CR 614.10)
+
+    assert bears.tapped is True
+    assert "bob" not in scenario.game.players_skipping_next_untap
+
+
+def test_alices_own_untap_step_is_unaffected():
+    """ "Each opponent" - not alice's own untap step, since Brine Elemental
+    is hers."""
+    scenario = turn_face_up_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    permanent = cast_face_down(scenario, "Brine Elemental")
+
+    mana_sources = scenario.untapped_sources(*["Island"] * 7)
+    scenario.turn_face_up(permanent, *mana_sources)
+    while scenario.game.stack:
+        scenario.resolve_top()
+
+    assert "alice" not in scenario.game.players_skipping_next_untap

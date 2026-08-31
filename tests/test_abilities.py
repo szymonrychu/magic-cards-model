@@ -332,14 +332,19 @@ def test_a_combat_damage_trigger_parses_with_its_event():
     assert trigger.condition == "Ragavan deals combat damage to a player"
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="an intervening-if clause containing its own commas is split at the "
-    "first of them, so Alania's effect starts mid-clause",
-)
 def test_an_intervening_if_with_internal_commas_splits_correctly():
+    """W14 fix: `_INTERVENING_IF_CAST_THIS_TURN_BOUNDARY` reads Alania,
+    Divergent Storm's own "if it's the first instant spell, the first
+    sorcery spell, or the first Otter spell other than Alania you've cast
+    this turn" clause whole, by matching its "you('ve| have) cast this turn"
+    closing phrase, instead of cutting at the clause's own first internal
+    comma the way a plain `_split_top_level` cut would."""
     (ability,) = abilities_of_kind(card("Alania, Divergent Storm"), AbilityKind.TRIGGERED)
 
+    assert ability.intervening_if == (
+        "it's the first instant spell, the first sorcery spell, or the first "
+        "Otter spell other than Alania you've cast this turn"
+    )
     assert ability.effect.startswith("you may have target opponent draw a card.")
 
 

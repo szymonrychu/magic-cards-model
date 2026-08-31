@@ -347,6 +347,31 @@ class PlayedScenario:
         """
         self._queue(DecisionKind.PAY_LIFE, paid, username, source, times)
 
+    def will_pay_life_amount(
+        self,
+        amount: int,
+        *,
+        username: str | None = None,
+        source: str | None = None,
+        times: int | None = 1,
+    ) -> None:
+        """Answer the next "you may pay any amount of life" (CR 119.4,
+        CR 608.2d) - Necrodominance's own end-step trigger."""
+        self._queue(DecisionKind.PAY_LIFE_AMOUNT, amount, username, source, times)
+
+    def will_choose_mode(
+        self,
+        text: str,
+        *,
+        username: str | None = None,
+        source: str | None = None,
+        times: int | None = 1,
+    ) -> None:
+        """Answer the next modal *triggered* ability's "choose one" (CR
+        603.3c, 700.2a) by naming the mode's own printed text - Elder
+        Gargaroth's own attack/block trigger."""
+        self._queue(DecisionKind.CHOOSE_A_MODE, text, username, source, times)
+
     def will_choose_top(
         self,
         top: bool = True,
@@ -776,6 +801,20 @@ class PlayedScenario:
         self, source: CardState, index: int = 0, username: str | None = None
     ) -> str | None:
         return self.game.why_cannot_activate(source, index, username)
+
+    def turn_face_up(
+        self, permanent: CardState, *mana_sources: CardState, username: str | None = None
+    ) -> CardState:
+        """CR 702.37e: pay the morph cost and turn a face-down permanent
+        face up, paying with `mana_sources`."""
+        controller = username or self.game.controller_of(permanent).username
+        payment = self.game.begin_turning_face_up(permanent, controller)
+        for mana_source in mana_sources:
+            payment.tap_for_mana(mana_source, mana_from(mana_source))
+        payment.pay()
+        turned = self.game.turn_face_up(permanent, controller)
+        self.game.retain_priority(controller)
+        return turned
 
     def cast(
         self,
