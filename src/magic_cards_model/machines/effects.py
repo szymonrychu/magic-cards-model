@@ -7199,7 +7199,31 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     `parse_clause_effect`'s player-clause shapes read "add mana" at all, so
     without this the whole ability would fall through every check below and
     come back `None`, exactly the reported defect.
+
+    Tried ahead of everything else too: `parse_casting_rule_clause` against
+    the *whole*, unsplit `effect_text` - Ral, Monsoon Mage's own +1, "Until
+    your next turn, instant and sorcery spells you cast cost {1} less to
+    cast.", has to be read as one CR 608.2c instruction, but `_CLAUSE_SEPARATOR`
+    splits on any bare " and " (CR 608.2c has no notion of "and" inside a type
+    list), which cuts "instant and sorcery" into "instant" / "sorcery spells
+    you cast cost {1} less to cast." before `parse_casting_rule_clause` ever
+    sees the sentence whole - neither fragment matches anything, so
+    `parse_mixed_effect` used to fail closed on the entire ability and
+    activating the +1 did nothing at all: no `CastingRuleEffect`, no cost
+    reduction, ever - the real defect a wrongly-matching static line in
+    `Game.static_cost_modifiers_for` was masking (see that function's own
+    fix). Matching the whole text here first is exactly the same
+    "tried against the whole unsplit text before it can be cut apart"
+    treatment this docstring already gives `_parse_choose_name_search_and_
+    exile_whole_text` above it, and is safe for `parse_casting_rule_clause`'s
+    other two shapes (Ranger-Captain of Eos's sacrifice ability, Teferi, Time
+    Raveler's own +1) too: neither contains a bare " and ", so both already
+    matched by the per-clause path below and now simply match one step
+    earlier, for the identical effect.
     """
+    casting_rule_whole = parse_casting_rule_clause(effect_text, for_spell=False)
+    if casting_rule_whole is not None:
+        return casting_rule_whole
     modal_triggered = _resolve_modal_triggered_ability_clause(effect_text)
     if modal_triggered is not None:
         return modal_triggered
