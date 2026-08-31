@@ -436,6 +436,16 @@ Each of these cost real time. They are not hypothetical.
   that moves.
 - **Worktree venv:** inside a worktree `uv run` silently resolves to a sibling
   repo's stale venv. Use `unset VIRTUAL_ENV` then `./.venv/bin/python -m pytest`.
+- **A fresh worktree's `.venv` can have no pytest at all**, and then `mise run
+  test` silently runs against the **main repo's** source instead of the
+  worktree's. The agent's changes are never executed, and it reports a green
+  suite it did not actually test. One agent caught this itself and fixed it
+  with `mise run install`; the others would not have noticed. **Every fix
+  brief must say: run `mise run install` first, then confirm the suite is
+  running your own tree** (add a test that must fail before your fix, and see
+  it fail). The backstop that saved this session is the merger's own habit:
+  re-run the full suite on `main` after every single merge, never trusting an
+  agent's reported counts as verification of the merged result.
 - **Agents stop mid-task saying they will "wait for the background command".**
   Three did it in one session — two fix agents with their whole diff still
   uncommitted, and a player seat that stalled its match. The tell is a final
