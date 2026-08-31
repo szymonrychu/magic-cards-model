@@ -3216,6 +3216,15 @@ class Game(BaseModel):
         # see `CardState.turn_entered`. Stamped here, the one choke point
         # every route onto the battlefield runs through.
         card_state.turn_entered = self.turn.turn_number if self.turn is not None else None
+        # CR 613.5: from here on this permanent's power and toughness are
+        # whatever the layer engine says they are. A characteristic-defining
+        # ability (CR 604.3, 613.4a) gives Tarmogoyf a power the printing does
+        # not have, and an anthem in layer 7d makes a Grizzly Bears a 3/3.
+        # Unbound, `CardState.power` answers with the printed value plus
+        # counters (CR 122.1a), which is the wrong answer for anything a
+        # continuous effect touches - and combat's CR 510.1a assignment and
+        # CR 704.5g's lethal check both read it directly.
+        card_state.bind_to_game(self)
         self.battlefield.append(card_state)
 
         if attach_to is not None:

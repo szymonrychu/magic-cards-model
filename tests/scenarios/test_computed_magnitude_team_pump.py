@@ -52,11 +52,16 @@ def test_craterhoof_pumps_every_creature_alice_controls_by_the_number_she_contro
     _cast_and_resolve_craterhoof(scenario)
     hoof = scenario.creature("Craterhoof Behemoth", "alice")
 
+    # Printed values, spelled out. `creature.power` must NOT appear on this
+    # side: once a battlefield permanent is bound to its game (CR 613.5),
+    # `CardState.power` answers with the computed value - the very thing the
+    # left-hand side is asserting - so `creature.power + 3` would compare the
+    # computed answer against itself plus X and fail by exactly X. It passed
+    # only while power happened to be the printed value.
+    expected = {"Craterhoof Behemoth": (5 + 3, 5 + 3), "Grizzly Bears": (2 + 3, 2 + 3)}
+
     for creature in [hoof, *bears]:
-        assert scenario.game.characteristics_of(creature).power_toughness == (
-            creature.power + 3,
-            creature.toughness + 3,
-        )
+        assert scenario.game.characteristics_of(creature).power_toughness == expected[creature.name]
         assert has_keyword(creature, Keyword.TRAMPLE, scenario.game)
 
 
