@@ -433,9 +433,9 @@ def _spell_matches_grant_filter(spell: CardState, what: str) -> bool:
         elif word.rstrip("s") in type_words:
             if type_words[word.rstrip("s")] not in types:
                 return False
-        elif word in supertypes:
-            continue
-        elif word.rstrip("s") in subtypes:
+        elif word in supertypes or word.rstrip("s") in subtypes:
+            # CR 205.4a's supertypes and CR 205.3's subtypes, either of which
+            # the spell simply has ("**Elemental** permanent spells").
             continue
         else:
             return False
