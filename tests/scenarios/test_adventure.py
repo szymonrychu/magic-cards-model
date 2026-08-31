@@ -27,9 +27,10 @@ from magic_cards_model.machines.casting import (
     keyword_cast_options,
 )
 from magic_cards_model.models import Zone
+from magic_cards_model.models.card import Type
 from magic_cards_model.models.card_state import ExileMarker
 from magic_cards_model.models.mana import ManaCost
-from tests.cards import card
+from tests.cards import card, card_state
 from tests.scenarios.harness import Scenario
 
 
@@ -66,6 +67,42 @@ def test_an_adventurer_card_offers_a_cast_from_exile():
     assert option.zone is Zone.EXILE
     assert option.marker is ExileMarker.ADVENTURED
     assert option.pays_mana_cost is True
+
+
+def test_a_spell_on_the_stack_as_an_adventure_reads_the_adventure_face():
+    """CR 715.3b, the half of it that lives on `CardState`.
+
+    "While on the stack as an Adventure, the spell has only its alternative
+    characteristics." `CardState.face_played` is where the announced half is
+    recorded and `CardState.up_face` is what reads it - the same field and the
+    same read a split card's chosen half already goes through (CR 709.3b), now
+    that both are one mechanism. Set here directly, because the remaining gap
+    is that `machines/casting.py` records the choice on the `Casting` and not
+    on the `CardState`; everything downstream of the field works.
+    """
+    stomp = card_state("Bonecrusher Giant", zone=Zone.STACK, controller="alice")
+    stomp.face_played = "Stomp"
+
+    assert stomp.name == "Stomp"
+    assert stomp.types == (Type.INSTANT,)
+    assert stomp.is_permanent is False
+    assert stomp.mana_cost == "{1}{R}"
+    assert "deals 2 damage to any target" in stomp.oracle_text
+
+
+def test_off_the_stack_it_is_the_adventurer_card_again():
+    """CR 715.4: "In every zone except the stack, and while on the stack not as
+    an Adventure, an adventurer card has only its normal characteristics." The
+    Bonecrusher Giant in a graveyard is a Giant, whatever half was last cast.
+    """
+    stomp = card_state("Bonecrusher Giant", zone=Zone.STACK, controller="alice")
+    stomp.face_played = "Stomp"
+    assert stomp.name == "Stomp"
+
+    stomp.move_to(Zone.GRAVEYARD)
+
+    assert stomp.name == "Bonecrusher Giant"
+    assert stomp.types == (Type.CREATURE,)
 
 
 # -- casting the two halves -------------------------------------------------
@@ -215,11 +252,15 @@ def test_an_adventure_exiles_itself_on_resolution():
 
 @pytest.mark.xfail(
     reason=(
-        "CR 715.3b: while on the stack as an Adventure the spell has only its "
-        "alternative characteristics - Stomp is an Instant, not a Creature. "
-        "`Card` reports the front face's types everywhere (models/card.py), and "
-        "Casting.face records the choice without changing what the CardState is, "
-        "so the Adventure resolves as a permanent and lands on the battlefield."
+        "measured: models/card_state.py models CR 715.3b now - `face_played` "
+        "carries an Adventure's chosen half as well as a split card's, and "
+        "`up_face` reads it while the object is on the stack, so a CardState "
+        "with face_played='Stomp' is an Instant named Stomp with a {1}{R} cost "
+        "(see the two tests above). What is missing is one line in "
+        "machines/casting.py: `Casting.put_on_stack` copies `self.face` onto "
+        "`spell.face_played` only for `Layout.SPLIT`, so an Adventure's "
+        "announced face never reaches the object and the spell resolves as the "
+        "Creature its front face prints."
     ),
     strict=True,
 )

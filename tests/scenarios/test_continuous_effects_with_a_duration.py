@@ -539,10 +539,13 @@ def test_the_tidebinder_trigger_creates_the_effect_by_itself():
 
 @pytest.mark.xfail(
     strict=True,
-    reason="CR 400.7's new object is not modelled: CardState.move_to rebinds the same "
-    "object with the same UUID, so a creature that dies and returns is the same object to "
-    "the layer engine and the stored effect finds it again. Fixing it needs a new identity "
-    "on the way back onto the battlefield, in models/card_state.py or models/game.py.",
+    reason="measured: models/card_state.py already models CR 400.7's new object - "
+    "`move_to` assigns a fresh `zone_change_stamp` on every zone change, and "
+    "`machines/layers.only_this_incarnation` is the selector that reads it back. What "
+    "still fails is that a resolving spell's target-fixed effect (CR 611.2c) is built "
+    "with `machines/layers._only(target.id)`, an id-only selector that cannot tell the "
+    "incarnations apart, so the Bear that came back is still the one Giant Growth pumped. "
+    "The change is in machines/layers.py, where the effect is created.",
 )
 def test_a_creature_that_died_and_returned_is_not_the_pumped_one():
     """CR 400.7: "An object that moves from one zone to another becomes a new
