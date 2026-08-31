@@ -28,6 +28,14 @@ session that wrote this file.
   by `Casting.pay_kicker` and carried onto the stack by `Game.note_cast`.
 - **CR 702.33a / CR 702.33d / CR 702.33e** - kicker, being kicked, and the
   abilities linked to it.
+- **CR 105.2a / CR 105.2b / CR 105.2c / CR 202.2b** - monocolored, multicolored,
+  a colorless object, and an object with no colored mana symbols in its mana
+  cost being colorless - what Sanctum of Ugin's "a colorless spell" restricts
+  the cast event's own spell to, not the type words a plain "Whenever you cast
+  a[n] [type] spell" already reads.
+- **CR 202.3 / CR 202.3e** - mana value, and an {X} spell's mana value being
+  the value chosen for X while it is on the stack - what Sanctum of Ugin's
+  "mana value 7 or greater" compares against.
 
 The effects are `exile_ability_targets` and `fetch_any_land_onto_the_battlefield`
 in `machines/effects.py`.
@@ -226,6 +234,56 @@ def test_ugins_second_trigger_fires_off_a_later_colorless_spell():
     scenario.pass_until_resolved()
 
     assert bears.zone is Zone.EXILE
+
+
+def test_sanctums_trigger_ignores_a_cheap_colored_spell_but_fires_off_a_big_colorless_one():
+    """Sanctum of Ugin: "Whenever you cast a colorless spell with mana value 7
+    or greater, you may sacrifice this land. ..." (CR 601.2, 603.2).
+
+    `condition_matches` used to read this `TriggerEvent.CAST_SPELL` condition
+    by checking only its type words (`_types_match`), which "a colorless spell
+    with mana value 7 or greater" has none of - `required` and `forbidden`
+    both come back empty, and an empty requirement matches anything
+    (`_types_match`'s "no type word means anything matches" default, correct
+    for a plain "whenever you cast a spell" but wrong here). The condition's
+    actual restrictions - colorless (CR 105.2c, 202.2b) and mana value 7 or
+    greater (CR 202.3) - were never read at all, so the trigger fired for
+    Malevolent Rumble, a green {1}{G} sorcery of mana value 2, exactly as
+    reported. `_color_matches` and `_mana_value_comparison` now read both.
+
+    Malevolent Rumble does not queue the trigger; Ulamog, the Ceaseless
+    Hunger - colorless, mana value 10 - does.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            library=["Forest"] * 4,
+            hand=["Malevolent Rumble", "Ulamog, the Ceaseless Hunger"],
+            battlefield=["Sanctum of Ugin", "Forest", "Forest"] + list(MOUNTAINS_FOR_ULAMOG),
+        )
+        .player("bob", library=["Forest"], battlefield=["Grizzly Bears", "Watchwolf"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    forests = scenario.untapped_sources("Forest", "Forest")
+    scenario.cast_onto_stack("Malevolent Rumble", *forests)
+    assert scenario.stack_names() == ["Malevolent Rumble"], (
+        "a green mana value 2 spell must not queue Sanctum of Ugin's trigger"
+    )
+    scenario.pass_until_resolved()
+    assert scenario.stack_names() == []
+
+    bears = scenario.creature("Grizzly Bears", "bob")
+    wolf = scenario.creature("Watchwolf", "bob")
+    scenario.choose_trigger_targets("Ulamog, the Ceaseless Hunger", [bears, wolf])
+    mountains = scenario.untapped_sources(*MOUNTAINS_FOR_ULAMOG)
+    scenario.cast_onto_stack("Ulamog, the Ceaseless Hunger", *mountains)
+
+    assert "Sanctum of Ugin's triggered ability" in scenario.stack_names(), (
+        "a colorless mana value 10 spell must queue Sanctum of Ugin's trigger"
+    )
 
 
 # -- a cast trigger that searches -------------------------------------------

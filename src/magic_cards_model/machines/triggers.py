@@ -46,6 +46,7 @@ means a card whose trigger is not one of these shapes simply never fires - it is
 never *wrongly* fired. The shapes understood are listed on `condition_matches`.
 """
 
+import operator
 import re
 from enum import StrEnum
 from typing import TYPE_CHECKING, Any
@@ -116,6 +117,15 @@ class GameEvent(BaseModel):
     `subject_types` (CR 205.3a, 712.8f) - "whenever another Merfolk enters"
     needs the face that's actually up, not `Card.subtypes`'s front-face-only
     read."""
+
+    subject_colors: tuple[Color, ...] | None = None
+    """The subject's colors (CR 105.2), read the same up-face-aware way as
+    `subject_types` - `CardState.colors` rather than `Card.colors`, which is
+    front-face-only. A cast event populates this with the spell's colors as it
+    sits on the stack, which is what "Whenever you cast a colorless spell ..."
+    (Sanctum of Ugin, Ugin, Eye of the Storms) reads; `None` for an event with
+    no `CardState` subject to ask, the same fallback `subject_types` already
+    uses."""
 
     related_id: UUID | None = None
     """The other creature in a blocking pair (CR 509.1a)."""
@@ -226,6 +236,30 @@ class InterveningIfNotice(BaseModel):
     clause: str
     """The intervening *if* clause itself, as printed (without the leading
     "if")."""
+
+
+class CastConditionNotice(BaseModel):
+    """One "Whenever you cast a [restriction] spell" condition (CR 601.2,
+    603.2) whose restriction this module recognised as a mana-value
+    comparison but could not parse into a number and a direction, and so was
+    made to fail closed rather than fire on a spell nobody actually checked.
+
+    Sanctum of Ugin's "mana value 7 or greater" and its siblings ("... or
+    less", "greater than ...", "less than ...", a bare "mana value N") are
+    read by `condition_matches`; a mana-value clause shaped some other way is
+    not known to be true, so the ability does not trigger, and that refusal is
+    recorded here - the same "the engine could not read this" pattern
+    `InterveningIfNotice` and `TargetingNotice` already established, so a gap
+    stays visible instead of looking like a spell that legitimately did not
+    match."""
+
+    model_config = ConfigDict(frozen=True)
+
+    source_id: UUID | None
+    source_name: str
+    condition: str
+    """The trigger condition itself, as printed (without the leading "when",
+    "whenever", or "at")."""
 
 
 class AbilityOnStack(BaseModel):
@@ -499,6 +533,119 @@ def _subtype_matches(subtypes: tuple[str, ...] | None, subtype: str | None) -> b
     return any(word.lower() == subtype.lower() for word in subtypes)
 
 
+#: "a Dragon spell", "the first Otter spell" - a subtype named on a "cast a
+#: ... spell" condition (CR 205.3a). Templating always capitalizes a subtype
+#: the way Scryfall's Oracle text does, which is what tells this apart from
+#: the lowercase color and card-type words `_color_condition`/`_types_match`
+#: already read - "a colorless spell" and "a noncreature spell" never match
+#: here because "colorless" and "noncreature" are not capitalized.
+_CAST_SUBTYPE_WORD = re.compile(r"\b(?:a|an)\s+([A-Z][a-z]+)\s+spell\b")
+
+
+def _required_cast_subtype(condition: str) -> str | None:
+    match = _CAST_SUBTYPE_WORD.search(condition)
+    return match.group(1) if match else None
+
+
+#: CR 105.2's five colors, as the adjective a "cast a ... spell" condition
+#: names them with.
+_COLOR_WORDS: dict[str, Color] = {
+    "white": Color.WHITE,
+    "blue": Color.BLUE,
+    "black": Color.BLACK,
+    "red": Color.RED,
+    "green": Color.GREEN,
+}
+
+
+def _color_condition(condition: str) -> tuple[str, frozenset[Color]] | None:
+    """The color restriction a "cast a ... spell" condition names, or `None`
+    when it names none at all - which is what a plain "whenever you cast a
+    spell" means.
+
+    Reads CR 105.2's whole vocabulary for an object's color: "colorless"
+    (CR 105.2c, 202.2b - no colored mana symbols), "monocolored" (CR 105.2a -
+    exactly one color), "multicolored" (CR 105.2b - two or more), and one or
+    more of the five color adjectives named outright (Frontline Heroism's
+    "red" is not this shape - it colors a token the effect creates, not the
+    spell the condition restricts, so this is only ever consulted for the
+    condition clause itself, never the effect that follows it).
+    """
+    lowered = condition.lower()
+    if re.search(r"\bcolorless\b", lowered):
+        return "colorless", frozenset()
+    if re.search(r"\bmonocolored\b", lowered):
+        return "monocolored", frozenset()
+    if re.search(r"\bmulticolored\b", lowered):
+        return "multicolored", frozenset()
+    named = frozenset(
+        color for word, color in _COLOR_WORDS.items() if re.search(rf"\b{word}\b", lowered)
+    )
+    if named:
+        return "named", named
+    return None
+
+
+def _color_matches(colors: tuple[Color, ...] | None, condition: str) -> bool:
+    """Whether `colors` satisfies a "cast a ... spell" condition's color
+    restriction, if it has one (CR 105.2). No restriction named matches
+    anything, the same "nothing required" default `_types_match` uses.
+    """
+    requirement = _color_condition(condition)
+    if requirement is None:
+        return True
+    kind, named = requirement
+    color_set = set(colors or ())
+    if kind == "colorless":
+        return not color_set
+    if kind == "monocolored":
+        return len(color_set) == 1
+    if kind == "multicolored":
+        return len(color_set) >= 2
+    return bool(color_set & named)
+
+
+#: CR 202.3's ordinary mana-value comparisons, as a "cast a ... spell"
+#: condition phrases them. Order matters: the "or greater"/"or less"/
+#: "greater than"/"less than" forms are tried before the bare-number
+#: equality form, since a bare `\d+` would otherwise match the leading digit
+#: of "7 or greater" and read it as equality.
+_MANA_VALUE_OR_GREATER = re.compile(r"mana value (?:of )?(\d+) or greater")
+_MANA_VALUE_OR_LESS = re.compile(r"mana value (?:of )?(\d+) or less")
+_MANA_VALUE_GREATER_THAN = re.compile(r"mana value (?:of )?greater than (\d+)")
+_MANA_VALUE_LESS_THAN = re.compile(r"mana value (?:of )?less than (\d+)")
+_MANA_VALUE_EQUALS = re.compile(r"mana value (?:of )?(\d+)\b")
+
+
+def _mana_value_comparison(condition: str) -> tuple[int, str] | None:
+    """The `(threshold, comparator)` a "with mana value ..." clause names, or
+    `None` when the condition names no mana-value restriction at all.
+
+    `comparator` is one of `">="`, `"<="`, `">"`, `"<"`, `"=="`. Chalice of the
+    Void's "equal to the number of ... counters" shape is read earlier, by
+    `_MANA_VALUE_EQUALS_COUNTERS`, before this is ever reached - its threshold
+    is not a literal number in the condition text, so it cannot be one of
+    these five.
+    """
+    lowered = condition.lower()
+    or_greater = _MANA_VALUE_OR_GREATER.search(lowered)
+    if or_greater is not None:
+        return int(or_greater.group(1)), ">="
+    or_less = _MANA_VALUE_OR_LESS.search(lowered)
+    if or_less is not None:
+        return int(or_less.group(1)), "<="
+    greater_than = _MANA_VALUE_GREATER_THAN.search(lowered)
+    if greater_than is not None:
+        return int(greater_than.group(1)), ">"
+    less_than = _MANA_VALUE_LESS_THAN.search(lowered)
+    if less_than is not None:
+        return int(less_than.group(1)), "<"
+    equals = _MANA_VALUE_EQUALS.search(lowered)
+    if equals is not None:
+        return int(equals.group(1)), "=="
+    return None
+
+
 def _controller_clause_holds(
     condition: str, controller: str, subject_controller: str | None
 ) -> bool:
@@ -516,6 +663,7 @@ def _controller_clause_holds(
 
 
 def condition_matches(
+    game: "Game",
     ability: TriggeredAbility,
     source: CardState,
     controller: str,
@@ -553,7 +701,22 @@ def condition_matches(
       "... of each upkeep", end step, draw step, untap step, the two main
       phases, and "combat on your turn".
     - **cast** (CR 601.2) - "When you cast this spell" for the spell itself, and
-      "Whenever you cast a[n] [type] spell" for anything that player casts.
+      "Whenever you cast a[n] [restriction] spell" for anything that player
+      casts, where the restriction can name a card type/non-type
+      (`_types_match`), a subtype (`_required_cast_subtype`,
+      `_subtype_matches`), a color/colorless/monocolored/multicolored
+      restriction (CR 105.2, `_color_matches`), or a mana-value comparison
+      (CR 202.3, `_mana_value_comparison`) - Sanctum of Ugin's "a colorless
+      spell with mana value 7 or greater" is all three of the last kinds at
+      once. Chalice of the Void's "mana value equal to the number of ...
+      counters" is its own shape, read first and separately, since its
+      threshold is not a literal number in the condition text. A mana-value
+      clause that names one but whose comparison shape none of the five
+      regexes read fails closed and is recorded on
+      `game.cast_condition_notices` (`CastConditionNotice`) - a restriction
+      genuinely present but unrecognised must never be treated as satisfied,
+      the same reasoning `intervening_if_holds` already applies to an
+      unreadable intervening *if*.
     - **draws a card** (CR 121.2) - "Whenever you draw a card" for the
       controller's own draws and "Whenever an opponent draws a card" for the
       others. The subject is the card drawn; the player is the one who drew it.
@@ -656,9 +819,39 @@ def condition_matches(
             return mana_value == threshold
         if mine and "this spell" in lowered:
             return event.subject_id == source.id
-        return _controller_clause_holds(condition, controller, event.player) and _types_match(
-            event.subject_types, condition
-        )
+        if not _controller_clause_holds(condition, controller, event.player):
+            return False
+        if not _types_match(event.subject_types, condition):
+            return False
+        if not _color_matches(event.subject_colors, condition):
+            return False
+        subtype = _required_cast_subtype(condition)
+        if not _subtype_matches(event.subject_subtypes, subtype):
+            return False
+        if "mana value" in lowered:
+            comparison = _mana_value_comparison(condition)
+            if comparison is None:
+                game.cast_condition_notices.append(
+                    CastConditionNotice(
+                        source_id=source.id,
+                        source_name=source.name,
+                        condition=condition,
+                    )
+                )
+                return False
+            threshold, comparator = comparison
+            if event.amount is None:
+                return False
+            ops = {
+                ">=": operator.ge,
+                "<=": operator.le,
+                ">": operator.gt,
+                "<": operator.lt,
+                "==": operator.eq,
+            }
+            if not ops[comparator](event.amount, threshold):
+                return False
+        return True
 
     if ability.event is TriggerEvent.EXILED:
         # CR 702.35a: "When this card is exiled this way". Only the
@@ -1183,7 +1376,7 @@ def triggers_for(game: "Game", event: GameEvent, sources: list[CardState]) -> li
                 # Howler's upkeep trigger and not its own (CR 701.27g), and an
                 # untransformed one has the mirror.
                 continue
-            if not condition_matches(ability, source, controller, event):
+            if not condition_matches(game, ability, source, controller, event):
                 continue
             if source.zone not in zones_ability_functions_in(ability, source):
                 continue  # CR 113.6: doesn't function from the zone it's in.
