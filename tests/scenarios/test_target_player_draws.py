@@ -6,8 +6,8 @@ player rather than the caster - `_parse_target_player_draws_clause` in
 
 Ancestral Vision is the vehicle: "Suspend 4-{U} ... Target player draws three
 cards." Its own `Suspend 4-{U} (...)` line used to poison the clause split of
-the sentence after it (the same class of bug `_FLASHBACK_LINE_RE`/
-`_KICKER_LINE_RE` fix for their own keywords; `_SUSPEND_LINE_RE` already
+the sentence after it (the same class of bug flashback's and
+kicker's own lines cause; `_strip_keyword_ability_lines` already
 existed for this one), and once past that, nothing in `machines/effects.py`
 read "target player draws N cards" at all - only "you draw"/implicit-"you"
 shapes reached a resolving *target* rather than the caster.

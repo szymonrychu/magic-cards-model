@@ -12,7 +12,7 @@ readers.
 
 Desperate Ritual also prints "Splice onto Arcane {1}{R}" (CR 702.47a) - not
 built anywhere in this engine (`docs/engine-coverage.md` records the gap;
-`_SPLICE_LINE_RE` only keeps that line from poisoning the ritual's own
+`_strip_keyword_ability_lines` only keeps that line from poisoning the ritual's own
 "Add {R}{R}{R}." clause the way an unstripped Kicker/Flashback/Cycling line
 already used to poison other cards' effects). `test_desperate_ritual_...`
 below is the ritual's own mana working in full despite that gap, not a claim

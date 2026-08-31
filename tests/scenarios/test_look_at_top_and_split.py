@@ -193,3 +193,174 @@ def test_taking_a_non_creature_card_is_an_illegal_choice():
     scenario.activate(recruiter, *mana, index=0)
     with pytest.raises(ValueError, match="CR 608.2d"):
         scenario.resolve_top()
+
+
+# --------------------------------------------------------------------------
+# The same four-clause family with "in a random order" as its tail
+# --------------------------------------------------------------------------
+#
+# Duskwatch Recruiter prints "in any order"; Monumental Henge and Narset,
+# Parter of Veils print "in a random order" for the identical run of four
+# clauses. Until this was accepted, the whole run was rejected and both cards
+# did nothing at all.
+#
+# The two tails are not the same instruction and are not implemented the same
+# way. "In any order" is the controller's own free choice, so the answered
+# order is used as given. "In a random order" is not a choice at all - and it
+# is not CR 701.24a's shuffle either ("To shuffle a library or a face-down
+# pile of cards, randomize the cards within it so that no player knows their
+# order"): that verb is never printed here, so nothing that triggers on a
+# shuffle may fire. The randomisation reuses `Game.shuffle_seed` and the
+# running `shuffles_performed` counter the way `puts_graveyard_on_bottom_of_
+# library` (Endurance) and Turntimber Symbiosis already do, so a scenario
+# stays reproducible.
+#
+# CR numbers looked up with `knowledge_search(q="...", type="rules")` in the
+# session that added this section: CR 701.24a (shuffle), CR 608.2d (the split
+# question), CR 401.4 ("If an effect puts two or more cards in a specific
+# position in a library at the same time, the owner of those cards may arrange
+# them in any order").
+
+
+def henge_board(library: list[str]):
+    """Monumental Henge's own `{2}{W}{W}, {T}` ability, index 2 on the card
+    ({T}: Add {W} is index 1, the enters-tapped static is index 0).
+
+    Four Plains pay the activation and keep the Henge itself untapped as it
+    enters ("This land enters tapped unless you control a Plains.").
+    """
+    return (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Monumental Henge", "Plains", "Plains", "Plains", "Plains"],
+            library=library,
+        )
+        .build()
+    )
+
+
+def test_a_random_order_tail_is_read_as_the_same_four_clause_family():
+    """Monumental Henge takes the historic card and bottoms the rest."""
+    scenario = henge_board(
+        ["Mishra's Bauble", "Forest", "Mountain", "Swamp", "Island", "Grizzly Bears"]
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice = scenario.player("alice")
+    henge = scenario.find("Monumental Henge", Zone.BATTLEFIELD)
+    looked = scenario.top_of_library(5)
+    (bauble,) = [state for state in looked if state.card.name == "Mishra's Bauble"]
+    rest = [state for state in looked if state is not bauble]
+
+    _script_scry_split(scenario, username="alice", moved=[bauble.id])
+    mana = scenario.untapped_sources("Plains", "Plains", "Plains", "Plains")
+    scenario.activate(henge, *mana, index=1)
+    scenario.resolve_top()
+
+    assert bauble in alice.hand, "Mishra's Bauble is an artifact, so it is historic"
+    assert {state.id for state in alice.library[-4:]} == {state.id for state in rest}
+    assert len(alice.library) == 5
+
+
+def test_a_random_order_tail_actually_randomises_rather_than_appending():
+    """The distinction from "in any order": the four left over are put back in
+    an order nobody chose, which is why `shuffles_performed` moves even though
+    CR 701.24a's shuffle never happened.
+    """
+    scenario = henge_board(
+        ["Mishra's Bauble", "Forest", "Mountain", "Swamp", "Island", "Grizzly Bears"]
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    henge = scenario.find("Monumental Henge", Zone.BATTLEFIELD)
+    (bauble,) = [
+        state for state in scenario.top_of_library(5) if state.card.name == "Mishra's Bauble"
+    ]
+    before = scenario.game.shuffles_performed
+
+    _script_scry_split(scenario, username="alice", moved=[bauble.id])
+    mana = scenario.untapped_sources("Plains", "Plains", "Plains", "Plains")
+    scenario.activate(henge, *mana, index=1)
+    scenario.resolve_top()
+
+    assert scenario.game.shuffles_performed == before + 1
+
+
+def test_the_any_order_tail_still_keeps_the_answered_order():
+    """The control: Duskwatch Recruiter's "in any order" is CR 401.4's free
+    arrangement and must not be randomised by this change."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Duskwatch Recruiter", "Forest", "Forest", "Forest"],
+            library=["Forest", "Mountain", "Swamp", "Island"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice = scenario.player("alice")
+    recruiter = scenario.creature("Duskwatch Recruiter")
+    forest, mountain, swamp = scenario.top_of_library(3)
+    before = scenario.game.shuffles_performed
+
+    mana = scenario.untapped_sources("Forest", "Forest", "Forest")
+    scenario.activate(recruiter, *mana, index=0)
+    scenario.resolve_top()
+
+    assert alice.library[-3:] == [forest, mountain, swamp]
+    assert scenario.game.shuffles_performed == before
+
+
+def test_narsets_minus_two_reads_the_same_family_off_a_loyalty_ability():
+    """The same four clauses, on a planeswalker's own loyalty ability, with a
+    quality that is a *conjunction* of negations.
+
+    "You may reveal a noncreature, nonland card from among them" means a card
+    that is neither - reading its comma as the "or" a fetchland's "Forest or
+    Plains" prints would qualify every card in the game. Opt is an instant, so
+    it is the one legal choice among the top four here.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Narset, Parter of Veils", "Island"],
+            library=["Opt", "Forest", "Mountain", "Swamp", "Island"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice = scenario.player("alice")
+    narset = scenario.find("Narset, Parter of Veils", Zone.BATTLEFIELD)
+    opt, *rest = scenario.top_of_library(4)
+
+    _script_scry_split(scenario, username="alice", moved=[opt.id])
+    scenario.activate(narset, index=0)
+    scenario.resolve_top()
+
+    assert opt in alice.hand
+    assert {state.id for state in alice.library[-3:]} == {state.id for state in rest}
+    assert narset.counters["loyalty"] == 3, "CR 606.5: the -2 was paid"
+
+
+def test_narset_cannot_take_a_land_from_among_the_top_four():
+    """The fails-open case the conjunction fix closes: a Forest is nonland's
+    opposite, so choosing it is CR 608.2d's illegal option."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Narset, Parter of Veils", "Island"],
+            library=["Forest", "Mountain", "Swamp", "Island", "Plains"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    narset = scenario.find("Narset, Parter of Veils", Zone.BATTLEFIELD)
+    (forest, *_) = scenario.top_of_library(4)
+
+    _script_scry_split(scenario, username="alice", moved=[forest.id])
+    scenario.activate(narset, index=0)
+
+    with pytest.raises(ValueError):
+        scenario.resolve_top()

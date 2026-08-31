@@ -166,13 +166,19 @@ def test_a_mana_value_restriction_now_parses_since_targeting_enforces_it():
     assert parse_targeted_effect_for_spell(card("Abrupt Decay").oracle_text) is not None
 
 
-def test_a_flashback_line_takes_the_whole_effect_down():
+def test_a_flashback_line_no_longer_takes_the_whole_effect_down():
     """Lava Dart: the flashback keyword is printed as a second line of the
-    same oracle text this wave reads, and it is not one of this wave's
-    shapes - so nothing runs, and Lava Dart keeps its explicit `EFFECTS` row.
+    same oracle text this parser reads - "Flashback—Sacrifice a Mountain."
+
+    CR 702.34a makes that line two static abilities, one functioning in the
+    graveyard and one on the stack; it is a way to *cast* the card
+    (`machines/casting.py`'s business) and never a CR 608.2c instruction the
+    spell carries out. `_strip_keyword_ability_lines` now recognises it by the
+    shape of a keyword line rather than by the word "Flashback", so the damage
+    sentence parses and the explicit `EFFECTS` row is gone.
     """
-    assert parse_targeted_effect_for_spell(card("Lava Dart").oracle_text) is None
-    assert "Lava Dart" in EFFECTS
+    assert parse_targeted_effect_for_spell(card("Lava Dart").oracle_text) is not None
+    assert "Lava Dart" not in EFFECTS
 
 
 def test_tap_up_to_two_now_parses_count_agnostic():

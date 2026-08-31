@@ -330,7 +330,7 @@ def test_no_x_and_no_self_shuffle_row_shadows_the_dispatcher():
 # took the real search down with it - exactly the Suspend/Cascade/Replicate/
 # Cycling bug this file's own module docstring already describes, for a
 # keyword this engine still does not otherwise build (casting from the
-# graveyard, tapping a creature to discount the cost - `_HARMONIZE_LINE_RE`
+# graveyard, tapping a creature to discount the cost - `_strip_keyword_ability_lines`
 # only stops the line from poisoning an unrelated sentence, same as those).
 
 
@@ -394,7 +394,7 @@ def test_natures_rhythm_at_x_zero_finds_nothing_above_its_own_bound():
 
 def test_no_natures_rhythm_row_shadows_the_dispatcher():
     """The same guard as Green Sun's Zenith's own row check above: the fix is
-    the generic `_HARMONIZE_LINE_RE` strip, not a per-card `EFFECTS` entry."""
+    the generic `_strip_keyword_ability_lines` strip, not a per-card `EFFECTS` entry."""
     from magic_cards_model.machines.effects import EFFECTS
 
     assert "Nature's Rhythm" not in EFFECTS

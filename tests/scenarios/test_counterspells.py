@@ -20,6 +20,12 @@ oracle text rather than a per-card registry row:
   "target triggered ability or colorless spell" - an ability or a
   colour-restricted spell) and a redirect this engine refuses outright
   rather than half-apply (Delay's suspend redirect)
+- a **predicate** on the target rather than a type word ("with mana value 2" -
+  Spell Snare; "with power or toughness 2 or less" - Stern Scolding), and the
+  qualifier and predicate slots on the "unless" shape too (Spell Pierce's
+  "noncreature", Flusterstorm's "instant or sorcery")
+- a conditional upgrade that *replaces* the "unless" outcome rather than
+  running after it (Stubborn Denial's ferocious sentence)
 
 Every CR number here was looked up with `knowledge_search(type="rules")` in
 this session.
@@ -636,3 +642,235 @@ def test_syncopate_at_x_zero_still_exiles_a_controller_who_declines():
     cast_syncopate(scenario, opt, 0)
 
     assert opt.zone is Zone.EXILE
+
+
+# --------------------------------------------------------------------------
+# The counter-qualifier family: a predicate on the target, and a qualifier on
+# the "unless" shape
+# --------------------------------------------------------------------------
+#
+# `_COUNTER_TARGET_SPELL_RE` used to accept exactly one qualifier word from a
+# type/colour list and nothing after "spell", and `_COUNTER_UNLESS_PAYS_RE`
+# accepted no qualifier at all. Four printed counterspells fell outside both:
+#
+# - **Spell Snare** - "Counter target spell with mana value 2." A numeric
+#   predicate (CR 202.3e: "X is treated as 0 while the object is not on the
+#   stack, and X is treated as the number chosen for it while the object is on
+#   the stack"), not a type word.
+# - **Stern Scolding** - "Counter target creature spell with power or
+#   toughness 2 or less." A qualifier *and* a predicate.
+# - **Spell Pierce** - "Counter target noncreature spell unless its controller
+#   pays {2}." A qualifier on the "unless" shape.
+# - **Flusterstorm** - "Counter target instant or sorcery spell unless its
+#   controller pays {1}." A two-word disjunctive qualifier on the same shape.
+#   Its storm ability (CR 702.40a) already worked, which made this the worst
+#   of the four: N copies went on the stack and every one resolved doing
+#   nothing.
+#
+# The predicate is read and thrown away here for the same reason the qualifier
+# always has been - `machines/targeting.py` enforces it at announcement
+# (CR 601.2c) and rechecks it on resolution (CR 608.2b), so the tests below
+# assert both halves: the legal target is countered, and the illegal one is
+# refused.
+
+
+def test_spell_snare_counters_a_two_mana_spell():
+    """CR 701.6a, with `TargetRequirement.comparison_attribute` reading the
+    "with mana value 2" predicate off the same printed sentence this file's
+    effect parser now accepts."""
+    scenario = board(
+        ["Grizzly Bears"], bob_hand=["Spell Snare"], bob_battlefield=["Island"]
+    ).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.cast_onto_stack("Grizzly Bears", username="alice", auto=True)
+    scenario.pass_priority("alice")
+
+    (island,) = scenario.untapped_sources("Island", username="bob")
+    scenario.cast_and_resolve("Spell Snare", island, username="bob", targets=[bears])
+
+    assert bears.zone is Zone.GRAVEYARD
+    assert scenario.stack_names() == []
+
+
+def test_spell_snare_cannot_target_a_one_mana_spell():
+    """CR 601.2c: the predicate is a real restriction, not decoration."""
+    scenario = board(
+        ["Lightning Bolt"], bob_hand=["Spell Snare"], bob_battlefield=["Island"]
+    ).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bolt = scenario.cast_onto_stack("Lightning Bolt", username="alice", auto=True, targets=["bob"])
+    scenario.pass_priority("alice")
+
+    with pytest.raises(ValueError):
+        scenario.cast("Spell Snare", username="bob").choose_targets([bolt])
+
+
+def test_stern_scolding_counters_a_small_creature_spell():
+    """A qualifier ("creature") and a predicate ("with power or toughness 2 or
+    less") on the same sentence - Grizzly Bears is a 2/2."""
+    scenario = board(
+        ["Grizzly Bears"], bob_hand=["Stern Scolding"], bob_battlefield=["Island"]
+    ).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.cast_onto_stack("Grizzly Bears", username="alice", auto=True)
+    scenario.pass_priority("alice")
+
+    (island,) = scenario.untapped_sources("Island", username="bob")
+    scenario.cast_and_resolve("Stern Scolding", island, username="bob", targets=[bears])
+
+    assert bears.zone is Zone.GRAVEYARD
+
+
+def test_stern_scolding_cannot_target_a_bigger_creature_spell():
+    """Hill Giant is a 3/3: neither its power nor its toughness is 2 or less,
+    so CR 601.2c refuses the announcement."""
+    scenario = board(
+        ["Hill Giant"], bob_hand=["Stern Scolding"], bob_battlefield=["Island"]
+    ).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    beast = scenario.cast_onto_stack("Hill Giant", username="alice", auto=True)
+    scenario.pass_priority("alice")
+
+    with pytest.raises(ValueError):
+        scenario.cast("Stern Scolding", username="bob").choose_targets([beast])
+
+
+def test_spell_pierce_counters_a_noncreature_spell_that_is_not_paid_for():
+    """A qualifier on CR 118.12a's "unless" shape - the half
+    `_COUNTER_UNLESS_PAYS_RE` had no slot for at all."""
+    scenario = board(["Opt"], bob_hand=["Spell Pierce"], bob_battlefield=["Island"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    opt = scenario.cast_onto_stack("Opt", username="alice", auto=True)
+    scenario.pass_priority("alice")
+
+    (island,) = scenario.untapped_sources("Island", username="bob")
+    scenario.cast_and_resolve("Spell Pierce", island, username="bob", targets=[opt])
+
+    assert opt.zone is Zone.GRAVEYARD
+    (decision,) = [q for q in scenario.game.decisions.asked if q.source == "Spell Pierce"]
+    assert decision.amount == 2
+
+
+def test_spell_pierce_is_paid_off():
+    """The other side of CR 118.12a, proving the qualifier did not cost the
+    "unless" clause its own amount."""
+    scenario = board(["Opt"], bob_hand=["Spell Pierce"], bob_battlefield=["Island"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice = scenario.player("alice")
+    alice.mana_pool.add(Color.COLORLESS, 2)
+    opt = scenario.cast_onto_stack("Opt", username="alice", auto=True)
+    scenario.pass_priority("alice")
+
+    scenario.will_pay_the_mana_cost(True, username="alice", source="Spell Pierce")
+    (island,) = scenario.untapped_sources("Island", username="bob")
+    scenario.cast_and_resolve("Spell Pierce", island, username="bob", targets=[opt])
+
+    assert opt.zone is Zone.STACK
+    assert alice.mana_pool.total == 0
+
+
+def test_spell_pierce_cannot_target_a_creature_spell():
+    """CR 601.2c: "noncreature" is enforced, not read and dropped."""
+    scenario = board(
+        ["Grizzly Bears"], bob_hand=["Spell Pierce"], bob_battlefield=["Island"]
+    ).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.cast_onto_stack("Grizzly Bears", username="alice", auto=True)
+    scenario.pass_priority("alice")
+
+    with pytest.raises(ValueError):
+        scenario.cast("Spell Pierce", username="bob").choose_targets([bears])
+
+
+def test_flusterstorm_counters_an_instant():
+    """The disjunctive qualifier ("instant or sorcery") on the "unless" shape.
+
+    Flusterstorm's storm ability (CR 702.40a) already worked before this, so
+    the copies were the visible symptom: each one resolved doing nothing.
+    """
+    scenario = board(["Opt"], bob_hand=["Flusterstorm"], bob_battlefield=["Island"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    opt = scenario.cast_onto_stack("Opt", username="alice", auto=True)
+    scenario.pass_priority("alice")
+
+    (island,) = scenario.untapped_sources("Island", username="bob")
+    scenario.cast_onto_stack("Flusterstorm", island, username="bob", targets=[opt])
+    # Storm's own trigger (CR 702.40a) goes on the stack above Flusterstorm,
+    # and Opt was cast before it this turn, so a copy resolves here too.
+    while scenario.stack_names():
+        scenario.resolve_top()
+
+    assert opt.zone is Zone.GRAVEYARD
+    amounts = {
+        q.amount
+        for q in scenario.game.decisions.asked
+        if q.source == "Flusterstorm" and q.kind is DecisionKind.PAY_MANA
+    }
+    assert amounts == {1}, "CR 118.12a's own {1}, read off this card rather than Censor's"
+
+
+def test_flusterstorm_cannot_target_a_creature_spell():
+    """CR 601.2c again: Grizzly Bears is neither an instant nor a sorcery."""
+    scenario = board(
+        ["Grizzly Bears"], bob_hand=["Flusterstorm"], bob_battlefield=["Island"]
+    ).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.cast_onto_stack("Grizzly Bears", username="alice", auto=True)
+    scenario.pass_priority("alice")
+
+    with pytest.raises(ValueError):
+        scenario.cast("Flusterstorm", username="bob").choose_targets([bears])
+
+
+# --------------------------------------------------------------------------
+# A conditional upgrade replacing the "unless" outcome: Stubborn Denial
+# --------------------------------------------------------------------------
+#
+# "Counter target noncreature spell unless its controller pays {1}.
+#  Ferocious — If you control a creature with power 4 or greater, counter that
+#  spell instead."
+#
+# CR 207.2c: "Ferocious" is an ability word with no rules meaning of its own,
+# so the second sentence is an ordinary conditional. "Instead" is what binds
+# the two into one CR 608.2c instruction: when the condition holds, nobody is
+# offered CR 118.12a's payment at all.
+
+
+def test_stubborn_denial_offers_the_payment_without_a_big_creature():
+    scenario = board(
+        ["Opt"], bob_hand=["Stubborn Denial"], bob_battlefield=["Island", "Grizzly Bears"]
+    ).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice = scenario.player("alice")
+    alice.mana_pool.add(Color.COLORLESS, 1)
+    opt = scenario.cast_onto_stack("Opt", username="alice", auto=True)
+    scenario.pass_priority("alice")
+
+    scenario.will_pay_the_mana_cost(True, username="alice", source="Stubborn Denial")
+    (island,) = scenario.untapped_sources("Island", username="bob")
+    scenario.cast_and_resolve("Stubborn Denial", island, username="bob", targets=[opt])
+
+    assert opt.zone is Zone.STACK, "a 2/2 is not ferocious, so the {1} saved it"
+    assert alice.mana_pool.total == 0
+
+
+def test_stubborn_denial_counters_outright_with_a_big_creature():
+    """Hill Giant is a 3/3 pumped by nothing - too small - so the creature
+    that turns this on is Ilharg, the Raze-Boar, a 6/6."""
+    scenario = board(
+        ["Opt"],
+        bob_hand=["Stubborn Denial"],
+        bob_battlefield=["Island", "Ilharg, the Raze-Boar"],
+    ).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice = scenario.player("alice")
+    alice.mana_pool.add(Color.COLORLESS, 1)
+    opt = scenario.cast_onto_stack("Opt", username="alice", auto=True)
+    scenario.pass_priority("alice")
+
+    (island,) = scenario.untapped_sources("Island", username="bob")
+    scenario.cast_and_resolve("Stubborn Denial", island, username="bob", targets=[opt])
+
+    assert opt.zone is Zone.GRAVEYARD
+    assert alice.mana_pool.total == 1, "nobody was asked to pay: the upgrade replaced that outcome"
+    assert not [q for q in scenario.game.decisions.asked if q.source == "Stubborn Denial"]

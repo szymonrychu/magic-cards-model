@@ -22,7 +22,7 @@ peek.
 
 **Faithless Looting** - "Draw two cards, then discard two cards.\\nFlashback
 {2}{R} (...)" Its own printed Flashback line was never stripped before this
-wave - `_FLASHBACK_LINE_RE` fixes that (the same class of bug already fixed
+wave - `_strip_keyword_ability_lines` fixes that (the same class of bug already fixed
 for Suspend, Cascade, Replicate, Cycling, Harmonize's own lines) - and the
 draw-then-discard sentence was already generically readable once past it.
 
