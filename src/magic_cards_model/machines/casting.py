@@ -986,6 +986,14 @@ class Casting(BaseModel):
     additional_costs: list[TotalCost] = Field(default_factory=list)
     cost_increases: list[ManaCost] = Field(default_factory=list)
     cost_reductions: list[ManaCost] = Field(default_factory=list)
+    self_reduction: ManaCost | None = None
+    """The spell's own CR 601.2f discount, as it stood when the total cost was
+    determined - `Game.cost_reduction_for`'s answer, frozen by
+    `determine_cost`. None until then, and `total_cost` reads the live board
+    while it is None, because CR 601.2f is the moment the reduction is
+    computed and CR 601.2f is also the moment it stops moving ("Then the
+    resulting total cost becomes 'locked in.' If effects would change the
+    total cost after this time, they have no effect")."""
     kicked: int = 0
     """How many times this spell's kicker cost was paid (CR 702.33d).
 
@@ -1965,11 +1973,35 @@ class Casting(BaseModel):
         `Game.static_cost_modifiers_for` - this is the step every ordinary
         cast reaches (`begin_paying` -> `determine_cost` -> this property), so
         nothing extra has to be called for them to apply.
-        That is unlike `cost_reduction_for`'s self-discount, which stays an
-        opt-in `Game.determine_total_cost` call (see its own docstring) - a
-        spell reducing its own cost from its own text is a different question
-        from another permanent taxing every spell in the game, and only the
-        latter is this fix's job.
+
+        The spell's **own** discount - Leyline Binding's domain sentence,
+        Emrakul's card-type count, Mystical Dispute's "if it targets a blue
+        spell", affinity - is folded in here as well, from
+        `Game.cost_reduction_for`. It used to be reachable only through the
+        opt-in `Game.determine_total_cost`, which no ordinary cast calls: a
+        Leyline Binding with all five basic land types out was measured asking
+        for `{5}{W}` through `begin_paying()` while `determine_total_cost`
+        answered `{W}` on the same board. CR 601.2f makes no such distinction -
+        "Some effects may increase or reduce the cost to pay" is one step of
+        casting, and every effect that applies at it applies at it - so a
+        reduction the game can compute is charged on every cast, exactly like
+        the increases already were. CR 118.7a keeps a generic reduction off the
+        coloured pips (the `{W}` survives), and CR 118.9d applies it to an
+        alternative cost when one was announced, which is what
+        `apply_modifications` does with whatever `base` is.
+
+        `Game.determine_total_cost` still appends that same reduction to
+        `cost_reductions` before locking the cost in, so one entry equal to the
+        freshly computed self-reduction is dropped from the list before the
+        arithmetic: CR 601.2f determines *the* total cost once, and a discount
+        counted from both directions would be counted twice.
+
+        Read live only until `determine_cost` runs. From then on
+        `self_reduction` holds the value that was in force at CR 601.2f and
+        this reads that instead, because CR 601.2f locks the total cost in:
+        "If effects would change the total cost after this time, they have no
+        effect." A graveyard that grows after the cost was determined is worth
+        nothing to the spell already being paid for.
         """
         base = self.alternative_cost.mana if self.alternative_cost else self.base_cost
         increases = [*self.cost_increases, *(extra.mana for extra in self.additional_costs)]
@@ -1981,12 +2013,44 @@ class Casting(BaseModel):
             )
             increases = increases + board_increases
             reductions = reductions + board_reductions
+        own = self.self_reduction if self.self_reduction is not None else self._own_cost_reduction()
+        if own.symbols:
+            if own in reductions:
+                reductions.remove(own)
+            reductions = reductions + [own]
         mana = apply_modifications(base.with_x(self.x_value), increases, reductions, floor=floor)
 
         components = list(self.alternative_cost.components) if self.alternative_cost else []
         for extra in self.additional_costs:
             components.extend(extra.components)
         return TotalCost(mana=mana, components=components)
+
+    def _own_cost_reduction(self) -> ManaCost:
+        """What this spell's own text takes off its own cost right now
+        (CR 601.2f), or nothing at all without a game to ask.
+
+        `Game.cost_reduction_for` is the reader; `Casting.targets` is handed to
+        it because one of the shapes it reads - Mystical Dispute's "if it
+        targets a blue spell" - is a question about CR 601.2c's announcement
+        rather than about the board.
+        """
+        if self.game is None:
+            return ManaCost()
+        return self.game.cost_reduction_for(self.spell, self.caster, targets=self.targets)
+
+    def _lock_in_own_reduction(self) -> None:
+        """CR 601.2f: freeze the self-discount as the total cost is determined.
+
+        `Game.determine_total_cost` appends the very same reduction to
+        `cost_reductions` on its way here, so one entry equal to it is taken
+        back out - the two paths must agree on one discount, not stack into
+        two. Anything else in `cost_reductions` is somebody else's effect
+        (`reduce_cost`) and is left where it is.
+        """
+        own = self._own_cost_reduction()
+        if own.symbols and own in self.cost_reductions:
+            self.cost_reductions.remove(own)
+        self.self_reduction = own
 
     def determine_cost(
         self,
@@ -2017,6 +2081,7 @@ class Casting(BaseModel):
         if additional is not None:
             self.additional_costs.append(TotalCost.of(additional).assign_payer(self.caster))
         self._refuse_unless_mana_cost_payable()
+        self._lock_in_own_reduction()
 
         self.payment = CostPayment.for_total(
             self.total_cost.assign_payer(self.caster),
