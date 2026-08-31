@@ -49,7 +49,11 @@ its siblings.
 A caller that stands behind a *live* player - the API's per-game decision
 mailbox is the first one - sets `DecisionScript.provider` instead of, or on top
 of, scripting answers: `Game.ask` tries a scripted answer first (a test's
-staging always wins), then the provider, and only then `default_answer`. The
+staging always wins), then the provider, and only then `default_answer`.
+`ask_mulligan` follows that same order without going through `Game.ask`, so
+CR 103.5's declaration reaches a live seat too; `ask_attackers` and
+`ask_blockers` still do not, and are the last two questions here a provider
+cannot answer. The
 provider is not a resumable state machine and does not need to be one - it is
 a `Protocol` with one method that blocks the calling thread until a real
 answer arrives or it gives up, exactly the shape a synchronous call stack
@@ -194,6 +198,15 @@ class DecisionKind(StrEnum):
     #: turning up more hits than needed, choosing among revealed cards) is the
     #: same question with a different prompt and a different source zone, so it
     #: reuses this kind rather than growing a new one per card.
+    #:
+    #: CR 103.5's bottoming is one of those callers, and the one furthest from
+    #: a resolving effect: keeping a hand after a mulligan costs "the number of
+    #: cards that player will put on the bottom of their library" (CR 103.5c,
+    #: CR 800.6), and *which* cards those are is the keeper's choice. It is
+    #: asked here rather than as its own kind because the shape is identical -
+    #: exactly N, out of one zone, order significant - and because
+    #: `default_answer`'s "back of the offered cards" is already, to the card,
+    #: what `Player.keep_hand(None)` did before anyone was asked.
     CHOOSE_CARDS = "choose_cards"
     #: Choose up to `target_maximum` targets out of `targets` for a spell or
     #: ability that has already been put on the stack (CR 115.1, CR 603.3d).
@@ -468,7 +481,8 @@ NOT_ANSWERED = NotAnswered()
 class DecisionProvider(Protocol):
     """A live player standing behind a `Decision`, outside the engine.
 
-    One method, deliberately: `Game.ask` already does the asking, the
+    One method, deliberately: `Game.ask` (and `ask_mulligan`, for CR 103.5's
+    declaration) already does the asking, the
     recording (`DecisionScript.asked`), and the validation against
     `legal_options`. A provider's only job is to produce an answer or say it
     has none, so that whatever calls it - a human at a keyboard, a UI, a
@@ -497,7 +511,9 @@ class DecisionScript:
     #: can assert that a card asked at all - "scry 0 does not scry" (CR 701.22b)
     #: is only observable here.
     asked: list[Decision] = field(default_factory=list)
-    #: Consulted by `Game.ask` when nothing is scripted. `None` in every
+    #: Consulted by `Game.ask` - and by `ask_mulligan`, which puts CR 103.5's
+    #: declaration by the same rules without going through `Game.ask` - when
+    #: nothing is scripted. `None` in every
     #: scenario test, so a test's behaviour is unaffected by this existing at
     #: all - a caller that wants live answers (the API's per-game mailbox)
     #: sets this instead of scripting anything.
@@ -551,10 +567,27 @@ def ask_mulligan(script: DecisionScript, player: str, *, prompt: str = "take a m
     legal when the question is put; the caller offers it only while CR 103.5's
     "a player can take mulligans until their opening hand would be zero cards"
     still allows one.
+
+    Not going through `Game.ask` does not mean skipping the live player. The
+    order of consultation is `Game.ask`'s exactly: a scripted answer wins, then
+    `script.provider` - the same mailbox a `DecisionProvider` behind the API
+    fills in - is asked, and only when neither speaks (no provider, or
+    `NOT_ANSWERED`) does `default_answer` keep the dealt hand. That is what
+    makes CR 103.5's declaration answerable by a human at all; without it the
+    question was asked and recorded but never published anywhere a person could
+    see it.
+
+    Asking a provider does not disturb the replay: nothing random happens here,
+    and the reshuffle seed `Match.run_mulligans` derives is a function of the
+    declarations, not of who produced them.
     """
     decision = Decision(kind=DecisionKind.MULLIGAN, player=player, prompt=prompt)
     script.asked.append(decision)
     found, value = script.take(decision)
+    if not found and script.provider is not None:
+        provided = script.provider.decide(decision)
+        if provided is not NOT_ANSWERED:
+            found, value = True, provided
     if not found:
         return bool(default_answer(decision))
     if not isinstance(value, bool):

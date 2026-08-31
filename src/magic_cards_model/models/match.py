@@ -13,7 +13,8 @@ from random import Random
 
 from pydantic import BaseModel, Field
 
-from ..machines.decisions import ask_mulligan
+from ..machines.decisions import Decision, DecisionKind, ask_mulligan
+from .card_state import CardState
 from .deck import CardResolver, Deck
 from .game import Game
 from .player import Player
@@ -269,6 +270,13 @@ class Match(BaseModel):
         like the opening shuffle of CR 103.3, so a match with the same seed and
         the same declarations replays identically.
 
+        Both of CR 103.5's questions are the player's, and both are put through
+        the decision machinery rather than decided by the engine: the
+        declaration by `ask_mulligan`, and *which* cards go to the bottom by
+        `_bottom_for_keep` below. Either can be scripted, or answered live by a
+        `DecisionProvider` on `game.decisions`; with neither, the documented
+        defaults stand - keep the dealt hand, bottom from the back of it.
+
         CR 103.6's opening-hand actions are a separate sequence that begins
         "once the mulligan process (see rule 103.5) is complete", so this method
         runs them at the end, through `Game.take_opening_hand_actions`. They add
@@ -305,7 +313,7 @@ class Match(BaseModel):
 
             if not any(wants for _, wants in declarations):
                 for player, _ in declarations:
-                    player.keep_hand()
+                    player.keep_hand(_bottom_for_keep(game, player))
                 break
 
             # "all players who decided to take mulligans do so at the same
@@ -317,12 +325,62 @@ class Match(BaseModel):
                     )
             for player, wants in declarations:
                 if not wants:
-                    player.keep_hand()
+                    player.keep_hand(_bottom_for_keep(game, player))
 
         # CR 103.6: "Once the mulligan process (see rule 103.5) is complete, the
         # starting player may take any such actions in any order."
         game.take_opening_hand_actions()
         return game
+
+
+def _bottom_for_keep(game: Game, player: Player) -> list[CardState] | None:
+    """Which cards this player puts on the bottom when they keep (CR 103.5).
+
+    CR 103.5c and CR 800.6 both name the quantity - "the number of cards that
+    player will put on the bottom of their library" - and `cards_to_bottom`
+    computes it; *which* cards they are is the player's own choice, and until
+    this existed the engine made it for them by taking whatever sat at the back
+    of the hand. A player answering the declaration live through a
+    `DecisionProvider` would have been asked "mulligan?" and then had cards of
+    the engine's choosing thrown away.
+
+    Asked as a `CHOOSE_CARDS` question through `Game.ask`, the same CR 608.2d
+    machinery `Game.ask_cleanup_discard` uses for CR 701.9b's discard, and
+    deliberately **not** a new `DecisionKind`: "choose exactly N of these
+    cards, from one zone, in an order that matters" is precisely what that kind
+    already is, its `exact` validation already refuses a wrong-sized or
+    stray-card answer, and every client that can already render a
+    `CHOOSE_CARDS` question can render this one with no change.
+
+    Two properties the reuse buys for free:
+
+    - **The default is unchanged.** `default_answer` for an exact
+      `CHOOSE_CARDS` returns "the back of `cards`, in the order the caller
+      offered them", and the hand is offered here in hand order - byte for byte
+      the list `Player.keep_hand(None)` builds. An unscripted, unprovided game
+      bottoms exactly what it bottomed before, so every seeded replay holds.
+    - **Nothing random happens here**, so the reshuffle seeds `run_mulligans`
+      derives are untouched by asking.
+
+    `None` is returned when there is nothing to bottom, so the question is not
+    put at all - a choice among zero cards is not a choice.
+    """
+    needed = player.cards_to_bottom
+    if needed <= 0:
+        return None
+    hand = list(player.hand)
+    chosen = game.ask(
+        Decision(
+            kind=DecisionKind.CHOOSE_CARDS,
+            player=player.username,
+            prompt=f"put {needed} card(s) on the bottom of your library",
+            amount=needed,
+            cards=tuple(state.id for state in hand),
+        )
+    )
+    assert isinstance(chosen, tuple)
+    by_id = {state.id: state for state in hand}
+    return [by_id[card_id] for card_id in chosen]
 
 
 def _fresh(player: Player) -> Player:
