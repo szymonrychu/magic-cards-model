@@ -65,7 +65,13 @@ from .abilities import (
     parse_mana_abilities,
 )
 from .combat import Keyword, has_keyword
-from .triggers import GameEvent, is_ability, tapped_for_mana_event
+from .triggers import (
+    GameEvent,
+    activated_abilities_of,
+    granted_activated_abilities_of,
+    is_ability,
+    tapped_for_mana_event,
+)
 
 
 def can_tap_for_mana(source: CardState, game: Any = None) -> bool:
@@ -91,6 +97,201 @@ def is_snow_source(source: CardState) -> bool:
     removes a supertype yet.
     """
     return Supertype.SNOW in source.supertypes
+
+
+# --------------------------------------------------------------------------
+# CR 602.5: an activation's own restriction, asked on the payment path
+# --------------------------------------------------------------------------
+#
+# CR 602.5, looked up this session: "A player can't begin to activate an
+# ability that's prohibited from being activated." Tapping a permanent for
+# mana *is* activating its mana ability (CR 605.3a), so every restriction
+# `Game.why_cannot_activate` enforces on a deliberate activation binds this
+# path too - and CR 602.5b keeps the restriction attached to the object even
+# when its controller changes.
+#
+# This was a split brain: `why_cannot_activate` refused Mox Opal's metalcraft
+# ability ("Activate only if you control three or more artifacts") correctly,
+# while `auto_tap` and `tap_for_mana` never asked, so the payment path the API
+# and the UI take tapped it with one artifact on the battlefield. The board
+# state that came out was wrong, not missing, which is why no test caught it.
+
+
+def _activations_of(source: CardState) -> list[ActivatedAbility]:
+    """`Game.activated_abilities(source)`'s own list, rebuilt from the same two
+    functions in the same order - printed abilities of the up face first
+    (CR 712.8d/712.8e/712.8f), then `CardState.granted_ability_texts`'s.
+
+    Rebuilt rather than asked of the game because a `CostPayment` may have no
+    game behind it, and because an index into this list is what
+    `Game.why_cannot_activate` takes: same order, same index.
+    """
+    return activated_abilities_of(
+        source.card, source.up_face_name
+    ) + granted_activated_abilities_of(source.granted_ability_texts)
+
+
+def tappable_mana_activations(source: CardState) -> list[tuple[int, ActivatedAbility]]:
+    """Every mana ability of `source` whose whole cost is a bare `{T}`, each
+    with the index `Game.activated_abilities`/`Game.why_cannot_activate` know
+    it by.
+
+    The index matters as much as the ability: an activation restriction is
+    read off *one* ability's printed instructions, and the only way to ask
+    `why_cannot_activate` about it is by its position in `_activations_of`'s
+    list.
+
+    The `{T}`-only filter is `free_tap_mana_abilities`'s own, for the same
+    CR 118.3c reason: a cost beyond the tap is a cost only the player may
+    choose to pay.
+    """
+    return [
+        (index, ability)
+        for index, ability in enumerate(_activations_of(source))
+        if ability.mana is not None and [piece.kind for piece in ability.costs] == [CostKind.TAP]
+    ]
+
+
+def _activation_refused(payment: "CostPayment", source: CardState, index: int) -> str | None:
+    """Why CR 602.5 forbids activating `source`'s ability number `index` right
+    now, or None - `Game.why_cannot_activate`'s answer, asked from the payment.
+
+    Without a game there is no board to judge a restriction against, and
+    without a controller there is nobody whose board it would be, so both fall
+    through to None: this is the *same* answer those cases have always had
+    here, not a new permission.
+    """
+    game = payment.game
+    if game is None:
+        return None
+    controller = source.controller or payment.payer
+    if controller is None:
+        return None
+    return game.why_cannot_activate(source, index, controller)
+
+
+# --------------------------------------------------------------------------
+# CR 106.5: "of any color among [permanents] you control"
+# --------------------------------------------------------------------------
+#
+# CR 106.5, looked up this session: "If an ability would produce one or more
+# mana of an undefined type, it produces no mana instead." Its own example is
+# Meteor Crater, and Mox Amber prints the same shape - "{T}: Add one mana of
+# any color among legendary creatures and planeswalkers you control." With no
+# such permanent there is no colour to be chosen among, the type is undefined,
+# and the ability adds nothing at all. `machines/abilities.py` reads the line
+# as a plain any-colour ability and drops the qualifier, so the whole WUBRG
+# option set survived to here and an empty board made a Black Lotus of it.
+#
+# The narrowing is applied where the mana is actually produced - the two
+# entries into the pool, `auto_tap` and `tap_for_mana` - rather than at parse
+# time, because the answer is a board state and changes between one tap and
+# the next. CR 605.2 is why this narrows rather than deletes: "A mana ability
+# remains a mana ability even if the game state doesn't allow it to produce
+# mana", so the ability is still there and still `{T}`-activatable; it just
+# has no legal type to add.
+
+#: `among legendary creatures and planeswalkers you control` (Mox Amber). The
+#: quality is left as words for `_among_colors` to read, since the same
+#: sentence is printed with other qualities on cards outside this pool.
+_ANY_COLOR_AMONG = re.compile(r"\bamong (?P<quality>[a-z ,]+?) you control\b", re.IGNORECASE)
+
+
+def _among_colors(
+    effect: str, payment: "CostPayment", source: CardState
+) -> frozenset[Color] | None:
+    """The colours an "of any color among [quality] you control" clause leaves
+    defined right now, or None when the effect prints no such clause at all.
+
+    None and the empty set are different answers and the caller must not
+    conflate them: None is "this ability's type was never restricted by a
+    board state", the empty set is CR 106.5's undefined type, which produces
+    no mana.
+
+    A supertype anywhere in the quality applies to the whole list, so "legendary
+    creatures and planeswalkers" is read as legendary creatures plus legendary
+    planeswalkers (CR 205.4a lists the five supertypes; CR 306.3 makes every
+    planeswalker legendary in any case, so the pool cannot tell the two
+    readings apart). Colours come from `CardState.colors`, which already knows
+    which face is up (CR 712.8d) and that a face-down permanent is colorless
+    (CR 708.2).
+
+    A quality naming no card type at all is unreadable, and returns None -
+    the ability is left alone rather than silenced, the same fail-open choice
+    `Game._activation_condition_holds` makes for an "Activate only if" it
+    cannot parse: refusing every activation on a sentence this cannot read
+    would be a louder wrong answer than the narrow gap it replaces.
+    """
+    match = _ANY_COLOR_AMONG.search(effect)
+    if match is None:
+        return None
+    game = payment.game
+    controller = source.controller or payment.payer
+    if game is None or controller is None:
+        return None
+
+    supertypes: list[Supertype] = []
+    types: list[Type] = []
+    for raw_word in match.group("quality").replace(",", " ").split():
+        word = raw_word.lower().removesuffix("s")
+        if word in _QUALITY_CONNECTORS:
+            continue
+        try:
+            supertypes.append(Supertype(word))
+            continue
+        except ValueError:
+            pass
+        try:
+            types.append(Type(word))
+        except ValueError:
+            return None
+    if not types:
+        return None
+
+    colors: set[Color] = set()
+    for state in game.permanents_controlled_by(controller):
+        if not any(type_ in state.types for type_ in types):
+            continue
+        if not all(supertype in state.supertypes for supertype in supertypes):
+            continue
+        colors.update(color for color in state.colors if color is not Color.COLORLESS)
+    return frozenset(colors)
+
+
+def _activation_behind(
+    activations: Sequence[ActivatedAbility], ability: ManaAbility
+) -> tuple[int, ActivatedAbility] | None:
+    """The activated ability in `activations` that `ability` was read off,
+    with the index `Game.why_cannot_activate` knows it by, or None when it
+    came from somewhere with no printed ability behind it.
+
+    `ManaAbility` is what the payment path carries around, and it holds only
+    what the ability *adds* - not the instructions that restrict it, nor the
+    effect sentence that qualifies it. Matching it back to its
+    `ActivatedAbility` is what lets `tap_for_mana` ask CR 602.5 and CR 106.5
+    the same questions `_auto_tap_candidates` asks, on the path where the
+    player named the source themselves.
+    """
+    for index, activation in enumerate(activations):
+        if activation.mana == ability:
+            return index, activation
+    return None
+
+
+def _narrow_to_defined_colors(
+    options: list[list[Color]], any_color: bool, allowed: frozenset[Color] | None
+) -> tuple[list[list[Color]], bool]:
+    """`options`/`any_color` with every choice CR 106.5 leaves undefined
+    dropped, so what remains is what this ability can actually add.
+
+    `allowed` is `_among_colors`'s answer: None leaves the ability untouched.
+    An option is kept only if every colour in it is defined - an ability that
+    adds two mana of a chosen colour cannot half-add one.
+    """
+    if allowed is None:
+        return options, any_color
+    kept = [option for option in options if all(color in allowed for color in option)]
+    return kept, any_color and len(kept) == len(options)
 
 
 # --------------------------------------------------------------------------
@@ -392,6 +593,17 @@ def _auto_tap_candidates(payment: "CostPayment", sources: Iterable[CardState]) -
     tried and rejected later, so it is never tapped for mana that could not be
     spent (CR 118.3c: activating a mana ability is never mandatory, so
     declining is always available).
+
+    Two more things are asked of each ability before it is offered, both of
+    them the ability's own and neither of them visible to the solver
+    downstream:
+
+    - **CR 602.5** - an ability prohibited from being activated is dropped
+      (`_activation_refused`), so Mox Opal is not offered without metalcraft.
+    - **CR 106.5** - a choice of colour the board leaves undefined is dropped
+      (`_narrow_to_defined_colors`), and an ability left with no option at all
+      is not a mana source at present, so Mox Amber is not offered with no
+      legendary creature or planeswalker to name a colour among.
     """
     candidates: list[tuple[CardState, list[list[Color]], ManaRestriction | None, bool]] = []
     for source in sources:
@@ -402,11 +614,22 @@ def _auto_tap_candidates(payment: "CostPayment", sources: Iterable[CardState]) -
         if not can_tap_for_mana(source, payment.game):
             continue
         land_types, own_counters, has_imprinted_card = _mana_context(payment, source)
-        for ability, printed in free_tap_mana_abilities(source.card, source.up_face_name):
+        for index, activation in tappable_mana_activations(source):
+            ability = activation.mana
+            if ability is None:
+                continue
+            if _activation_refused(payment, source, index) is not None:
+                continue
+            printed = spend_restriction(activation.effect)
             restriction = spend_restriction(printed.text, source) if printed is not None else None
             if restriction is not None and not restriction.allows(payment.spend):
                 continue
             options, any_color = ability.effective(land_types, own_counters, has_imprinted_card)
+            options, any_color = _narrow_to_defined_colors(
+                options, any_color, _among_colors(activation.effect, payment, source)
+            )
+            if not options:
+                continue
             candidates.append((source, options, restriction, any_color))
     # A restricted ability first among a source's own abilities, so the mana
     # that can do less is the mana spent - the same preference `ManaPool._buckets`
@@ -608,18 +831,40 @@ class CardRequirement(BaseModel):
     """The card must have at least one of these card types."""
     subtypes: list[str] = Field(default_factory=list)
     """The card must have at least one of these subtypes, as printed."""
+    supertypes: list[Supertype] = Field(default_factory=list)
+    """The card must have **all** of these supertypes (CR 205.4a: "The
+    supertypes are basic, legendary, ongoing, snow, and world"). Unlike the
+    other three fields this is a conjunction, because a supertype in a cost
+    phrase qualifies the noun after it - "a legendary card" is one demand, not
+    a choice between several."""
+    same_name_as: "CardRequirement | None" = None
+    """Key to the Side-Door's "with the same name as a legendary permanent you
+    control": the chosen card must share its name (CR 201.2a) with a permanent
+    the payer controls that meets *this* requirement."""
     description: str = ""
     """The phrase this was read from, for the message when it is not met."""
 
     @property
     def is_empty(self) -> bool:
-        return not (self.colors or self.types or self.subtypes)
+        return not (
+            self.colors or self.types or self.subtypes or self.supertypes or self.same_name_as
+        )
 
-    def why_not(self, card: CardState) -> str | None:
-        """Why this card cannot pay, or None if it can."""
+    def why_not(self, card: CardState, game: Any = None, payer: str | None = None) -> str | None:
+        """Why this card cannot pay, or None if it can.
+
+        `game` and `payer` are needed only by `same_name_as`, which asks about
+        the board rather than about the card alone. Without either there is no
+        board to ask, and that half is skipped - a `CostPayment` with no game
+        behind it cannot check any board-dependent requirement, the same
+        limitation `_among_colors` documents on the mana side.
+        """
         printed = card.card
         if self.colors and not set(printed.colors or []) & set(self.colors):
             wanted = "/".join(color.value for color in self.colors)
+            return f"{card.name} is not {wanted}"
+        if self.supertypes and not set(self.supertypes) <= set(printed.supertypes):
+            wanted = " ".join(supertype.value for supertype in self.supertypes)
             return f"{card.name} is not {wanted}"
         if self.types and not set(printed.types) & set(self.types):
             wanted = "/".join(type_.value for type_ in self.types)
@@ -628,6 +873,20 @@ class CardRequirement(BaseModel):
             printed_subtypes = {subtype.lower() for subtype in printed.subtypes}
             if not printed_subtypes & self._wanted_subtypes():
                 return f"{card.name} is not a {'/'.join(self.subtypes)}"
+        if self.same_name_as is not None and game is not None and payer is not None:
+            # CR 201.2a: "Two or more objects have the same name if they have
+            # at least one name in common." Compared on `CardState.name`, which
+            # is the name of the face that is up (CR 712.8d), rather than on
+            # the printed front face.
+            match = any(
+                state.name == card.name and self.same_name_as.why_not(state) is None
+                for state in game.permanents_controlled_by(payer)
+            )
+            if not match:
+                return (
+                    f"{payer} controls no {self.same_name_as.description or 'permanent'} "
+                    f"named {card.name}"
+                )
         return None
 
     def _wanted_subtypes(self) -> set[str]:
@@ -725,7 +984,7 @@ class CostComponent(BaseModel):
 
         if self.requirement is not None:
             for card in self.cards:
-                mismatch = self.requirement.why_not(card)
+                mismatch = self.requirement.why_not(card, game, self.payer)
                 if mismatch is not None:
                     return mismatch
 
@@ -1775,7 +2034,16 @@ _PHRASE_EXILE_AND_PAY_MANA_COST = re.compile(
 #: one phrase rather than being split by `_split_cost_phrase`'s own comma cut;
 #: `_requirement` is what turns the list into a `CardRequirement` disjunction.
 _PHRASE_SACRIFICE = re.compile(r"^sacrifice (?P<count>\w+) (?P<quality>[\w ,]+)$", re.IGNORECASE)
-_PHRASE_DISCARD = re.compile(r"^discard (?P<count>\w+) (?P<quality>[\w ]*?)cards?$", re.IGNORECASE)
+#: `Discard a card`, `Discard a legendary card with the same name as a
+#: legendary permanent you control` (Key to the Side-Door). The same-name tail
+#: is a second demand on the *same* card - CR 201.2a's "at least one name in
+#: common" against something the payer controls - not a second card to choose,
+#: so it becomes a nested `CardRequirement` rather than another component.
+_PHRASE_DISCARD = re.compile(
+    r"^discard (?P<count>\w+) (?P<quality>[\w ]*?)cards?"
+    r"(?: with the same name as (?:a|an) (?P<same_name>[\w ]+?) you control)?$",
+    re.IGNORECASE,
+)
 #: `Exert this land`, `Exert this creature` (CR 701.43a). Only the self-
 #: referential form, which is the only one printed inside a cost.
 _PHRASE_EXERT_SELF = re.compile(
@@ -1847,6 +2115,7 @@ def _requirement(quality: str) -> CardRequirement | None:
     colors: list[Color] = []
     types: list[Type] = []
     subtypes: list[str] = []
+    supertypes: list[Supertype] = []
     for raw_word in words:
         word = raw_word.strip(",")
         if not word:
@@ -1856,6 +2125,11 @@ def _requirement(quality: str) -> CardRequirement | None:
             continue
         if lowered in _COLOR_WORDS:
             colors.append(_COLOR_WORDS[lowered])
+        elif lowered in {supertype.value for supertype in Supertype}:
+            # CR 205.4a's five supertypes. "A legendary card" is as much a
+            # demand on what may pay as "a black card" is, and was previously
+            # unread, which built no requirement at all and let anything pay.
+            supertypes.append(Supertype(lowered))
         elif lowered in {type_.value for type_ in Type}:
             types.append(Type(lowered))
         elif word[:1].isupper():
@@ -1865,8 +2139,33 @@ def _requirement(quality: str) -> CardRequirement | None:
         else:
             return None
     return CardRequirement(
-        colors=colors, types=types, subtypes=subtypes, description=quality.strip()
+        colors=colors,
+        types=types,
+        subtypes=subtypes,
+        supertypes=supertypes,
+        description=quality.strip(),
     )
+
+
+def _controlled_requirement(quality: str) -> CardRequirement | None:
+    """`_requirement` for the *other* side of a same-name comparison: what the
+    permanent on the battlefield has to be.
+
+    Only one word differs in practice, and it is the noun: "a legendary
+    permanent you control" says nothing about card types, because CR 110.1
+    makes every object on the battlefield a permanent already. So `permanent`
+    is read as "no type demand at all" here, where on the paying side - "a
+    permanent card" in a hand - it would be a real demand and is deliberately
+    not accepted.
+    """
+    words = [word for word in quality.split() if word.lower().rstrip("s") != "permanent"]
+    if not words:
+        return CardRequirement(description=quality.strip())
+    requirement = _requirement(" ".join(words))
+    if requirement is None:
+        return None
+    requirement.description = quality.strip()
+    return requirement
 
 
 def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComponent | None:
@@ -1951,6 +2250,11 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
         requirement = _requirement(discard.group("quality"))
         if count is None or requirement is None:
             return None
+        if discard.group("same_name") is not None:
+            same_name = _controlled_requirement(discard.group("same_name"))
+            if same_name is None:
+                return None
+            requirement.same_name_as = same_name
         component = discard_cost(payer=payer, required=count, description=text)
         component.requirement = requirement
         return component
@@ -2366,6 +2670,15 @@ class CostPayment(BaseModel):
         most recent turn began cannot be tapped for mana (CR 302.6, 602.5a)
         unless it has haste (CR 702.10c); see `can_tap_for_mana`.
 
+        The ability's own restrictions are checked here too, because a
+        hand-picked source is still an activation (CR 605.3a) and CR 602.5
+        does not care who chose it: an ability prohibited from being activated
+        - Mox Opal's metalcraft with two artifacts out - is refused, and so is
+        a colour CR 106.5 leaves undefined, Mox Amber's "among legendary
+        creatures and planeswalkers you control" with none of either. Both are
+        the same questions `_auto_tap_candidates` asks on the automatic path;
+        neither was asked on any path before.
+
         Mana from a snow permanent (CR 205.4g) is marked as such, because `{S}`
         can only be paid with mana produced by a snow source (CR 107.4h, 106.3).
 
@@ -2407,12 +2720,36 @@ class CostPayment(BaseModel):
             )
         land_types, own_counters, has_imprinted_card = _mana_context(self, source)
         wanted = sorted(produces)
-        if not any(
-            sorted(option) == wanted
-            for ability in abilities
-            for option in ability.effective(land_types, own_counters, has_imprinted_card)[0]
-        ):
+        refusals: list[str] = []
+        payable = False
+        activations = _activations_of(source)
+        for ability in abilities:
+            behind = _activation_behind(activations, ability)
+            effect = behind[1].effect if behind is not None else ""
+            if behind is not None and [piece.kind for piece in behind[1].costs] == [CostKind.TAP]:
+                # CR 602.5, asked of the ability actually being activated: a
+                # prohibited activation is refused however the source was
+                # chosen. Only a bare-`{T}` ability is asked, because that is
+                # the only shape this path claims to be activating in full -
+                # anything with a further cost was never paid for here.
+                refused = _activation_refused(self, source, behind[0])
+                if refused is not None:
+                    refusals.append(refused)
+                    continue
+            options, _any_color = _narrow_to_defined_colors(
+                ability.effective(land_types, own_counters, has_imprinted_card)[0],
+                False,
+                _among_colors(effect, self, source),
+            )
+            if any(sorted(option) == wanted for option in options):
+                payable = True
+                break
+        if not payable:
             made = "".join(f"{{{color.value}}}" for color in produces) or "no mana"
+            if refusals:
+                raise ValueError(
+                    f"{source.name} cannot be tapped to add {made}: {'; '.join(refusals)}"
+                )
             raise ValueError(f"{source.name} cannot be tapped to add {made}")
         self._transition(CostStep.TAPPING)
 
