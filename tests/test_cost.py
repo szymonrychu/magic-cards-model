@@ -37,7 +37,10 @@ def test_tapping_for_mana_fills_the_pool():
 
 def test_the_full_walk_from_tapping_to_overflow():
     payment = CostPayment(cost=ManaCost.parse("{1}{R}"))
-    sources = [land(), land(), land()]
+    # A real Forest for the green mana - `tap_for_mana` now checks the source
+    # can actually make what it is asked for, so a third Mountain cannot
+    # stand in for green the way it used to when nothing verified it.
+    sources = [land(), land(), land("Forest")]
 
     payment.tap_for_mana(sources[0], [Color.RED])
     payment.tap_for_mana(sources[1], [Color.RED])
@@ -54,7 +57,9 @@ def test_the_full_walk_from_tapping_to_overflow():
 
 def test_paying_without_enough_mana_leaves_the_machine_usable():
     payment = CostPayment(cost=ManaCost.parse("{2}{R}"))
-    first, second = land(), land()
+    # Three real Mountains, one mana each - a single `{T}: Add {R}.` cannot
+    # make two red at once, and `tap_for_mana` now checks that.
+    first, second, third = land(), land(), land()
     payment.tap_for_mana(first, [Color.RED])
 
     with pytest.raises(ValueError, match="cannot pay"):
@@ -63,8 +68,9 @@ def test_paying_without_enough_mana_leaves_the_machine_usable():
     assert payment.step is not CostStep.PAID
     assert payment.shortfall
 
-    # Still open, so tap another source and finish the payment.
-    payment.tap_for_mana(second, [Color.RED, Color.RED])
+    # Still open, so tap the rest and finish the payment.
+    payment.tap_for_mana(second, [Color.RED])
+    payment.tap_for_mana(third, [Color.RED])
     assert payment.pay().is_empty
     assert payment.step is CostStep.PAID
 
@@ -378,9 +384,15 @@ def test_haste_lets_a_creature_be_tapped_for_mana_at_once():
     with pytest.raises(ValueError, match="most recent turn began"):
         payment.tap_for_mana(prospector, [Color.RED])
 
-    goblin = card_state("Raging Goblin", Zone.BATTLEFIELD, controller="alice")
-    assert "Haste" in goblin.card.keywords
-    assert payment.tap_for_mana(goblin, [Color.RED]).floating == {Color.RED: 1}
+    # A real mana source, not just any hasty creature (`Raging Goblin` has no
+    # mana ability at all): `tap_for_mana` now validates that the source can
+    # actually produce what it is asked for (the same fix that keeps Witch
+    # Enchanter's creature face off the mana-payment path in the scenario
+    # suite), so the haste half of this test needs a card haste actually lets
+    # through, not merely a card haste is irrelevant to.
+    ruby = card_state("Ruby, Daring Tracker", Zone.BATTLEFIELD, controller="alice")
+    assert "Haste" in ruby.card.keywords
+    assert payment.tap_for_mana(ruby, [Color.RED]).floating == {Color.RED: 1}
 
 
 def test_a_land_taps_for_mana_the_turn_it_arrives():

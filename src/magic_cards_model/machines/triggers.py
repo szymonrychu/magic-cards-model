@@ -1361,7 +1361,7 @@ def activated_abilities_of(card: Card, face: str | None = None) -> list[Activate
     ]
     if printed:
         return printed
-    intrinsic = intrinsic_land_ability(card)
+    intrinsic = intrinsic_land_ability(card, face)
     return [intrinsic] if intrinsic is not None else []
 
 
