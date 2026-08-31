@@ -2016,6 +2016,7 @@ class Game(BaseModel):
                 TriggerEvent.IS_SACRIFICED,
                 TriggerEvent.SPELL_IS_COUNTERED,
                 TriggerEvent.LEAVES_BATTLEFIELD_TO_EXILE,
+                TriggerEvent.LEAVES_THE_BATTLEFIELD,
             )
             and event.subject_id is not None
         ):
@@ -3290,6 +3291,19 @@ class Game(BaseModel):
                     player=permanent.controller,
                 )
             )
+            # CR 603.6c: the generic departure, alongside the destination-
+            # specific event just above - see `Game.put_into_graveyard`'s
+            # matching emit for why both fire.
+            self.emit(
+                GameEvent(
+                    event=TriggerEvent.LEAVES_THE_BATTLEFIELD,
+                    subject_id=permanent.id,
+                    subject_name=permanent.name,
+                    subject_controller=permanent.controller,
+                    subject_card=permanent.card,
+                    player=permanent.controller,
+                )
+            )
         return permanent
 
     # -- targeting and effects --------------------------------------------
@@ -3968,6 +3982,21 @@ class Game(BaseModel):
         was_on_battlefield = card_state in self.battlefield
         if was_on_battlefield:
             self._note_left_battlefield(card_state)
+            # CR 603.6c: the generic departure fires regardless of where the
+            # card ends up - a replacement effect redirecting the destination
+            # below still means this permanent left the battlefield.
+            self.emit(
+                GameEvent(
+                    event=TriggerEvent.LEAVES_THE_BATTLEFIELD,
+                    subject_id=card_state.id,
+                    subject_name=card_state.name,
+                    subject_controller=card_state.controller,
+                    subject_card=card_state.card,
+                    subject_types=card_state.types,
+                    subject_subtypes=card_state.subtypes,
+                    player=card_state.controller,
+                )
+            )
 
         event = ReplaceableEvent(
             kind=EventKind.ZONE_CHANGE,
@@ -4070,6 +4099,19 @@ class Game(BaseModel):
             self.emit(
                 GameEvent(
                     event=TriggerEvent.LEAVES_BATTLEFIELD_TO_EXILE,
+                    subject_id=permanent.id,
+                    subject_name=permanent.name,
+                    subject_controller=permanent.controller,
+                    subject_card=permanent.card,
+                    player=permanent.controller,
+                )
+            )
+            # CR 603.6c: the generic departure, alongside the destination-
+            # specific event just above - see `Game.put_into_graveyard`'s
+            # matching emit for why both fire.
+            self.emit(
+                GameEvent(
+                    event=TriggerEvent.LEAVES_THE_BATTLEFIELD,
                     subject_id=permanent.id,
                     subject_name=permanent.name,
                     subject_controller=permanent.controller,

@@ -578,7 +578,7 @@ class TriggerWord(StrEnum):
 class TriggerEvent(StrEnum):
     """The common trigger shapes, recognised off the condition text.
 
-    Only these eighteen are recognised; every other condition leaves `event`
+    Only these nineteen are recognised; every other condition leaves `event`
     None with `condition` still holding the printed text.
     """
 
@@ -666,6 +666,16 @@ class TriggerEvent(StrEnum):
     #: at all. Emitted by `Game.return_to_hand`, the only place that performs
     #: this move.
     LEAVES_BATTLEFIELD_TO_HAND = "leaves_battlefield_to_hand"
+    #: CR 603.6c: "Leaves-the-battlefield abilities trigger when a permanent
+    #: moves from the battlefield to another zone" - a printed condition
+    #: naming the departure itself, with no destination ("When this creature
+    #: leaves the battlefield", Thought-Knot Seer), rather than one of the
+    #: three specific destinations above. Emitted alongside whichever of
+    #: `DIES`/`LEAVES_BATTLEFIELD_TO_EXILE`/`LEAVES_BATTLEFIELD_TO_HAND`
+    #: actually happened, by the same three move functions, so a card
+    #: watching only the generic departure and a card watching one specific
+    #: destination both see the event that matches what they printed.
+    LEAVES_THE_BATTLEFIELD = "leaves_the_battlefield"
 
 
 class CostKind(StrEnum):
@@ -1346,6 +1356,12 @@ def _trigger_event(condition: str) -> TriggerEvent | None:
         return TriggerEvent.BECOMES_TARGET
     if re.search(r"\benters\b", lowered):
         return TriggerEvent.ENTERS_THE_BATTLEFIELD
+    # CR 603.6c: the generic "leaves the battlefield" condition (Thought-Knot
+    # Seer), ahead of `dies`'s own narrower "put into a graveyard from the
+    # battlefield" phrasing below - a condition naming a graveyard
+    # specifically is `DIES`, not this.
+    if "leaves the battlefield" in lowered:
+        return TriggerEvent.LEAVES_THE_BATTLEFIELD
     # CR 700.4: "dies" means "is put into a graveyard from the battlefield" -
     # Flagstones of Trokair spells that phrase out instead of saying "dies",
     # and the two are the same event by definition. "die" (no s) is the

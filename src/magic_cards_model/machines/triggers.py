@@ -409,6 +409,7 @@ _SELF_PHRASES = (
     "this permanent",
     "this artifact",
     "this enchantment",
+    "this aura",
     "this land",
     "this planeswalker",
     "this spell",
@@ -688,6 +689,13 @@ def condition_matches(
       that matches rather than once per sweep the way CR 603.2c's "one event,
       multiple occurrences" reading of the printed plural would - untested
       beyond one creature dying at a time, which is what the pool exercises.
+    - **leaves the battlefield** (CR 603.6c) - "When this creature leaves the
+      battlefield" (Thought-Knot Seer), self-referential only in this pool:
+      the generic departure, distinct from `DIES`'s graveyard-specific one,
+      emitted by all three of `Game.put_into_graveyard`, `Game.exile_
+      permanent`, and `Game.return_to_hand` whenever the move actually
+      started on the battlefield, regardless of which of those three it
+      became.
     - **attacks** (CR 508.1, 508.3d) - "Whenever this creature attacks" for the
       source, "Whenever a creature you control attacks" for any attacker under
       the same control, and "Whenever you attack" for the controller once per
@@ -777,6 +785,13 @@ def condition_matches(
             and _types_match(event.subject_types, condition)
             and _subtype_matches(event.subject_subtypes, subtype)
         )
+
+    if ability.event is TriggerEvent.LEAVES_THE_BATTLEFIELD:
+        # CR 603.6c: only the self-referential form prints in this pool
+        # ("When this creature leaves the battlefield", Thought-Knot Seer) -
+        # a pure departure condition naming no destination at all, so nothing
+        # here reads an "another"/"other" widening the way `DIES` does.
+        return mine and event.subject_id == source.id
 
     if ability.event is TriggerEvent.ATTACKS:
         # CR 508.3d: "Whenever [a player] attacks, ..." triggers once when one
@@ -1160,9 +1175,11 @@ def intervening_if_holds(
     (CR 702.79a), Thopter Assembly's "you control no [subtype]s other than
     this creature", Ocelot Pride's "you gained life this turn", Alania,
     Divergent Storm's "it's the first [type] spell ... you've cast this turn",
-    kicker's "if it was kicked" (CR 702.33a, 702.33d), and CR 601.2h's "if no
+    kicker's "if it was kicked" (CR 702.33a, 702.33d), CR 601.2h's "if no
     mana was spent to cast it" / "if [mana symbols] was spent to cast it"
-    (Vexing Bauble, Wistfulness, Drowner of Truth). The last two read
+    (Vexing Bauble, Wistfulness, Drowner of Truth), and Transcendent Dragon's
+    plain "if you cast it" (CR 601.2's cast, as opposed to any other way a
+    permanent reaches the battlefield). The mana/kicker/cast clauses all read
     `Game.cast_record` - see `_cast_record_for_clause` for whose record "it"
     means, and `machines/casting.Casting.cast`/`Game.note_cast` for where the
     record comes from: `CostPayment.mana_payment.spend` at the moment CR 601.2h
@@ -1180,6 +1197,20 @@ def intervening_if_holds(
     clause = (ability.intervening_if or "").lower().strip()
     if not clause:
         return True
+
+    if clause == "you cast it":
+        # CR 601.2's cast is a defined action distinct from every other way a
+        # permanent can reach the battlefield (reanimation, a search-and-put
+        # effect, ...); `Game.note_cast` (CR 601.2h) only ever records a
+        # `CastRecord` when a card actually went through that process, so its
+        # mere presence for the self-referential source (see
+        # `_cast_record_for_clause`) already answers this clause. Unlike the
+        # mana-spent clauses above, a missing record here is not an unreadable
+        # shape to fail closed on - it is the legitimate, expected answer for
+        # a creature that entered some other way, so this returns `False`
+        # directly rather than through `_fail_closed`.
+        record = _cast_record_for_clause(game, ability, source, event)
+        return record is not None
 
     if _KICKED_CLAUSE.match(clause):
         record = _cast_record_for_clause(game, ability, source, event)

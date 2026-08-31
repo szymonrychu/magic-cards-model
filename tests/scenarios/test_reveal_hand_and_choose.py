@@ -150,3 +150,93 @@ def test_the_discard_routes_through_madness_not_a_bare_hand_removal():
     assert rootwalla.exile_annotation is not None
     assert rootwalla.exile_annotation.marker is ExileMarker.MADNESS
     assert rootwalla not in bob.hand
+
+
+# -- Grief: "target opponent", and a discard read off a triggered ability --
+
+
+def test_griefs_own_enters_the_battlefield_trigger_reads_target_opponent():
+    """Grief prints "target opponent" (Thoughtseize prints "target player"),
+    and the same template otherwise: "You choose a nonland card from it.
+    That player discards that card." - `_REVEAL_HAND_RE` widened to read
+    both spellings, exercised here as a triggered ability rather than a
+    resolving spell's own effect."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Grief"], battlefield=["Swamp"] * 4)
+        .player("bob", hand=["Lightning Bolt", "Forest", "Mountain"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bob = scenario.player("bob")
+    swamps = scenario.untapped_sources("Swamp", "Swamp", "Swamp", "Swamp")
+    bolt = scenario.find("Lightning Bolt", Zone.HAND, "bob")
+    scenario.choose_trigger_targets("Grief", ["bob"])
+    scenario.will_discard(bolt, username="alice")
+
+    scenario.cast_and_resolve("Grief", *swamps)
+    scenario.pass_until_resolved()
+
+    assert bolt.zone is Zone.GRAVEYARD
+    assert bolt not in bob.hand
+    assert len(bob.hand) == 2
+
+
+# -- Thought-Knot Seer: exile, not discard, and folded into one sentence ---
+
+
+def test_thought_knot_seer_exiles_the_chosen_card_instead_of_discarding_it():
+    """Thought-Knot Seer's own second sentence reads "You choose a nonland
+    card from it **and exile that card**" - the same anaphoric run, ending in
+    `_EXILE_THAT_CARD_RE`'s CR 701.13a exile rather than `_DISCARD_THAT_CARD_
+    RE`'s CR 701.9a discard. `split_effect_clauses` cuts the bare "and" the
+    same way it does everywhere else, so this reads as three clauses just
+    like Thoughtseize's three sentences do."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Thought-Knot Seer"], battlefield=["Wastes"] * 4)
+        .player("bob", hand=["Lightning Bolt", "Forest", "Mountain"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bob = scenario.player("bob")
+    sources = scenario.untapped_sources("Wastes", "Wastes", "Wastes", "Wastes")
+    bolt = scenario.find("Lightning Bolt", Zone.HAND, "bob")
+    scenario.choose_trigger_targets("Thought-Knot Seer", ["bob"])
+    scenario.will_discard(bolt, username="alice")
+
+    scenario.cast_and_resolve("Thought-Knot Seer", *sources)
+    scenario.pass_until_resolved()
+
+    assert bolt.zone is Zone.EXILE
+    assert bolt not in bob.hand
+    assert len(bob.hand) == 2
+
+
+def test_thought_knot_seer_leaving_gives_the_card_back_with_a_fresh_draw():
+    """The second trigger, "When this creature leaves the battlefield,
+    target opponent draws a card" - CR 121.2's plain draw, aimed at whichever
+    player this leaves-the-battlefield trigger targets, not the card Thought-
+    Knot Seer itself took (CR 108.3: a new card, not the returned one)."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Thought-Knot Seer"], battlefield=["Wastes"] * 4)
+        .player("bob", hand=["Forest"], library=["Mountain"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bob = scenario.player("bob")
+    sources = scenario.untapped_sources("Wastes", "Wastes", "Wastes", "Wastes")
+    scenario.choose_trigger_targets("Thought-Knot Seer", ["bob"])
+
+    scenario.cast_and_resolve("Thought-Knot Seer", *sources)
+    scenario.pass_until_resolved()
+
+    seer = scenario.creature("Thought-Knot Seer", "alice")
+    scenario.choose_trigger_targets("Thought-Knot Seer", ["bob"])
+
+    scenario.game.destroy(seer)
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+
+    assert [state.name for state in bob.hand] == ["Forest", "Mountain"]

@@ -345,6 +345,41 @@ def test_something_not_on_the_battlefield_cannot_be_sacrificed():
     assert scenario.find("Footlight Fiend", Zone.HAND) is not None
 
 
+# -- leaving the battlefield generically (CR 603.6c) ------------------------
+
+
+def test_leaving_the_battlefield_to_exile_fires_the_generic_departure_event():
+    """`TriggerEvent.LEAVES_THE_BATTLEFIELD` fires alongside the destination-
+    specific `LEAVES_BATTLEFIELD_TO_EXILE` - CR 603.6c's plain "leaves the
+    battlefield" condition (Thought-Knot Seer's own, tested through the real
+    card in `test_dies_trigger_scope.py`) is broader than any one
+    destination, so nothing in the pool needs this specific-plus-generic pair
+    watched together except through a bare delayed-trigger watcher."""
+    scenario = board(["Grizzly Bears"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    watcher(scenario, TriggerEvent.LEAVES_THE_BATTLEFIELD, "test watcher")
+
+    scenario.game.exile_permanent(bears)
+
+    assert bears.zone is Zone.EXILE
+    assert len(scenario.pending_triggers) == 1
+
+
+def test_leaving_the_battlefield_to_hand_fires_the_generic_departure_event():
+    """The third destination, `LEAVES_BATTLEFIELD_TO_HAND` (a bounce), pairs
+    with the same generic event the other two destinations do."""
+    scenario = board(["Grizzly Bears"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    watcher(scenario, TriggerEvent.LEAVES_THE_BATTLEFIELD, "test watcher")
+
+    scenario.game.return_to_hand(bears)
+
+    assert bears.zone is Zone.HAND
+    assert len(scenario.pending_triggers) == 1
+
+
 # -- untapping (CR 701.26b, 502.3) ------------------------------------------
 
 

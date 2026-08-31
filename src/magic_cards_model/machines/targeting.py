@@ -215,6 +215,16 @@ class TargetRequirement(BaseModel):
     Empty means the text asked for neither. More than one is a disjunction:
     "target attacking or blocking creature" takes either.
     """
+    required_subtypes: frozenset[str] = frozenset()
+    """A bare CR 205.3m creature-type list used as the target noun itself -
+    "target Vampire, Werewolf, or Zombie" (Slayer of the Wicked) - rather than
+    "target creature" narrowed by a "with"/"you control" clause. Oracle
+    templating elides the word "creature" here; `card_types` still carries
+    `{Type.CREATURE}` for the ordinary type check, and this is the
+    disjunction across which of the named types would satisfy it (any one is
+    enough, the same "or" reading `card_types` already gives "target artifact
+    or enchantment"). Lower-cased for a case-insensitive match against
+    `CardState.subtypes`."""
 
     allows_cards: bool = True
     allows_players: bool = False
@@ -368,6 +378,11 @@ class TargetRequirement(BaseModel):
         if self.excluded_supertypes and (set(target.supertypes) & self.excluded_supertypes):
             unwanted = " or ".join(sorted(kind.value for kind in self.excluded_supertypes))
             return f"{self.phrase} cannot target a {unwanted} permanent, and {target.name} is one"
+        if self.required_subtypes and not any(
+            word.lower() in self.required_subtypes for word in target.subtypes
+        ):
+            wanted = " or ".join(sorted(self.required_subtypes))
+            return f"{self.phrase} needs a {wanted}, and {target.name} is not one"
         if self.required_colors and not (
             set(self._current_colors(target, game)) & self.required_colors
         ):
@@ -1455,6 +1470,50 @@ def _excludes_source(prefix: str) -> bool:
     return bool(words) and words[-1] in _SOURCE_EXCLUDING
 
 
+#: A single CR 205.3m creature-type word, capitalized the way Oracle text
+#: always capitalizes a subtype - never a plain English noun mid-sentence, so
+#: this is what tells "Vampire" apart from a word this parser already reads
+#: some other way.
+_SUBTYPE_WORD_RE = re.compile(r"^[A-Z][a-zA-Z]*$")
+
+
+def _read_subtype_list(noun_phrase: str) -> tuple[list[str], str] | None:
+    """ "Vampire, Werewolf, or Zombie[.]" (Slayer of the Wicked): a bare CR
+    205.3m creature-type list used as the target noun itself, Oracle
+    templating eliding the word "creature" that would otherwise follow it
+    (CR 302.3's "Creature — Human Soldier" shows the same subtypes named on a
+    type line). Returns the lower-cased type words plus a display string for
+    `TargetRequirement.phrase`, or `None` if this is not that shape.
+
+    Read only when there are **two or more** items, every one of them a
+    single capitalized word absent from every noun/adjective vocabulary this
+    parser already knows (`_ALL_NOUNS`, `_SUPERTYPE_NOUNS`, `_COLOR_WORDS`) -
+    a real English noun is never capitalized mid-sentence, so this cannot be
+    confused with "target Aura" or any other card-type/supertype word. The
+    two-item floor is deliberate: a lone capitalized word is left to the
+    ordinary parser below (and so still fails open, `understood=False`) since
+    nothing in the pool needs the singular form and a wider reading risks
+    misreading a name or a compound type this wave has not seen.
+    """
+    stripped = re.split(r"[.;]", noun_phrase)[0].strip()
+    stripped = re.sub(r"\s+creatures?$", "", stripped, flags=re.IGNORECASE).strip().rstrip(".")
+    if not stripped:
+        return None
+    raw_items = [
+        item.strip() for item in re.split(r",\s*or\s+|,\s*|\s+or\s+", stripped) if item.strip()
+    ]
+    if len(raw_items) < 2:
+        return None
+    for item in raw_items:
+        if not _SUBTYPE_WORD_RE.match(item):
+            return None
+        lowered = item.lower()
+        if lowered in _ALL_NOUNS or lowered in _SUPERTYPE_NOUNS or lowered in _COLOR_WORDS:
+            return None
+    display = ", ".join(raw_items[:-1] + [f"or {raw_items[-1]}"])
+    return [item.lower() for item in raw_items], display
+
+
 def _read_phrase(prefix: str, suffix: str) -> TargetRequirement | None:
     """Turn one "target ..." phrase into a requirement, or None if unreadable."""
     excludes_source = _excludes_source(prefix)
@@ -1490,6 +1549,24 @@ def _read_phrase(prefix: str, suffix: str) -> TargetRequirement | None:
             allows_cards=False,
             allows_abilities=True,
             zones=frozenset({Zone.STACK}),
+            excludes_source=excludes_source,
+        )
+
+    subtype_list = _read_subtype_list(noun_phrase)
+    if subtype_list is not None:
+        subtypes, display = subtype_list
+        # CR 205.3m: a bare creature-type list used as the noun itself always
+        # means creatures of those types - "target Vampire, Werewolf, or
+        # Zombie" (Slayer of the Wicked) - so `card_types` still carries the
+        # ordinary CR 300.1 creature-type check on top of the disjunction.
+        return TargetRequirement(
+            phrase="target " + display,
+            count=count,
+            minimum=minimum,
+            unbounded=unbounded,
+            variable_count=variable,
+            card_types=frozenset({Type.CREATURE}),
+            required_subtypes=frozenset(subtypes),
             excludes_source=excludes_source,
         )
 

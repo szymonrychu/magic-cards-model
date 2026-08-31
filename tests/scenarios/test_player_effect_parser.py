@@ -246,26 +246,28 @@ def test_vampiric_rites_gains_life_and_draws_a_card_in_order():
 # --------------------------------------------------------------------------
 
 
-def test_blood_artist_gains_no_life_because_its_other_clause_is_targeted():
-    """Blood Artist: "target player loses 1 life and you gain 1 life." The
-    "you gain 1 life" half is exactly this wave's shape, but the "target
-    player loses 1 life" half names a target this wave does not resolve.
-    CR 608.2c has no notion of running half an effect, so the trigger still
-    goes on the stack and still resolves (CR 608.2n) - it just does nothing,
-    the same silence a card with no entry at all gets. A regression that ran
-    only the parseable half would show up here as alice's life changing.
+def test_blood_artist_runs_both_halves_once_the_targeted_clause_is_read():
+    """Blood Artist: "target player loses 1 life and you gain 1 life." Both
+    clauses now resolve - `_TARGET_PLAYER_OR_OPPONENT_VERB_RE` in
+    `machines/effects.py` reads the "target player `<verb>`" shape this
+    file's own targeted-clause gap used to leave silent. See
+    `test_dies_trigger_scope.py::test_blood_artists_own_death_drains_a_life_
+    to_its_controller` for the full-effect scenario coverage; this file's own
+    job is only proving both halves of one CR 608.2c instruction run
+    together, not skip-one-run-the-other.
     """
     scenario = Scenario().player("alice", battlefield=["Blood Artist"]).player("bob").build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     artist = scenario.creature("Blood Artist", "alice")
+    scenario.choose_trigger_targets("Blood Artist", ["bob"])
 
     scenario.game.destroy(artist)
     scenario.game.put_triggers_on_stack()
     assert scenario.stack_names() == ["Blood Artist's triggered ability"]
     scenario.pass_until_resolved()
 
-    assert scenario.player("alice").life == 20
-    assert scenario.player("bob").life == 20
+    assert scenario.player("alice").life == 21
+    assert scenario.player("bob").life == 19
 
 
 def test_thoughtseize_reveals_chooses_discards_and_loses_life():
