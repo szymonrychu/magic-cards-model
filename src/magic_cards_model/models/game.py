@@ -52,6 +52,7 @@ from ..machines.cost import (
     sacrifice_cost,
     spend_restriction,
     tap_cost,
+    total_cost_for_phrase,
 )
 from ..machines.decisions import (
     NOT_ANSWERED,
@@ -7888,6 +7889,21 @@ class Game(BaseModel):
                         description=piece.text,
                         zone=Zone.BATTLEFIELD,
                     )
+                if component is None:
+                    # A printed cost sentence that is *mana* wearing an action
+                    # word - "Waterbend {3}" is CR 701.67a's "Pay [cost]", and
+                    # the permission it carries (tap an untapped artifact or
+                    # creature for each generic mana) is CR 701.67b's alternate
+                    # payment method, which belongs to an open `CostPayment`
+                    # rather than to the total cost. `cost_component_for_phrase`
+                    # only ever builds non-mana components, so it cannot answer
+                    # for one; `total_cost_for_phrase` reads the whole sentence
+                    # and hands back both halves.
+                    whole = total_cost_for_phrase(piece.text, controller)
+                    if whole is not None and whole.mana.symbols:
+                        mana = increase(mana, whole.mana.with_x(x_value))
+                        components.extend(whole.components)
+                        continue
                 if component is None:
                     raise ValueError(f"cannot build a cost for {piece.text!r}")
                 if not component.cards and (

@@ -73,20 +73,6 @@ def test_the_waterbend_cost_reads_as_the_mana_it_names():
     assert waterbend_mana_cost("Exert this creature") is None
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="machines/cost.py now reads 'Waterbend {3}' - total_cost_for_phrase returns "
-    "{3} and machines/objects_as_costs.waterbend already spends the taps (CR 701.67a/b) "
-    "- but models/game.py's Game.activation_cost still routes a CostKind.OTHER piece "
-    "through cost_component_for_phrase ALONE, and a waterbend cost is mana, which a "
-    "CostComponent cannot carry. It comes back None and activation_cost raises 'cannot "
-    "build a cost for Waterbend {3}'. The fix is one branch in game.py's else-arm: try "
-    "total_cost_for_phrase(piece.text, controller) first and fold its .mana into `mana` "
-    "and its .components into `components`, falling through to the existing "
-    "cost_component_for_phrase path when it returns None. game.py is owned by another "
-    "agent, so it is not made here; the harness's own `tapping=` argument is wired and "
-    "waiting for it.",
-)
 def test_waterbend_lets_an_untapped_creature_pay_part_of_the_cost():
     """DDR#991: each untapped artifact or creature tapped this way pays for {1}.
 
