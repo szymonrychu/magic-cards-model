@@ -23,8 +23,9 @@ that wrote this file and quoted from what it returned:
   nothing else keeps a Counterspell off itself.
 - **CR 400.7** - a card that changes zones becomes a new object, which is why
   the rewind restores the identity it had as well as the zone.
-- **CR 406.4** - each set of exiled cards is kept separate, which is the pile a
-  plotted card has to go back to.
+- **CR 406.5** - "Exiled cards that might return to the battlefield or any other
+  zone should be kept in separate piles to keep track of their respective ways
+  of returning" - the pile a plotted card has to go back to.
 - **CR 601.2f** - the total cost, determined five steps after the move.
 
 Every printing is a real Scryfall fixture from `tests/fixtures/cards/`.
@@ -166,7 +167,7 @@ def test_the_spell_is_not_in_the_graveyard_it_counts_at_cost_time():
 
 
 def test_a_cancelled_cast_from_exile_goes_back_to_its_own_pile():
-    """CR 406.4: exile is not one heap. A plotted card whose cast is rewound is
+    """CR 406.5: exile is not one heap. A plotted card whose cast is rewound is
     plotted again, or it could never be cast at all afterwards
     (CR 702.170d)."""
     scenario = (

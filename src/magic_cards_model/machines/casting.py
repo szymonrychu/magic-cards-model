@@ -1403,7 +1403,7 @@ class Casting(BaseModel):
     `PlayPermission` recorded against the object it granted still names
     (CR 400.7h)."""
     announced_exile_annotation: ExileAnnotation | None = None
-    """The exile pile the card was in before that move (CR 406.4): plot,
+    """The exile pile the card was in before that move (CR 406.5): plot,
     foretell, madness and warp all cast out of a *particular* pile, and the
     move to the stack drops the annotation."""
 
