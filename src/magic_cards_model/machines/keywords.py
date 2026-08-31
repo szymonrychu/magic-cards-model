@@ -99,6 +99,7 @@ class KeywordRule(StrEnum):
     REBOUND = "CR 702.88a"
     HIDEAWAY = "CR 702.75a"
     CREW = "CR 702.122a"
+    EVOKE = "CR 702.74a"
 
 
 def executes(keyword: str) -> bool:
@@ -130,6 +131,12 @@ def executes(keyword: str) -> bool:
         "rebound",
         "hideaway",
         "crew",
+        # CR 702.74a. Two abilities, executed in two places: the static half is
+        # an alternative cost and belongs to `machines/casting.py`
+        # (`keyword_cast_options`), the triggered half - "When this permanent
+        # enters, if its evoke cost was paid, its controller sacrifices it" -
+        # is `_evoke_ability`/`_evoke_effect` here.
+        "evoke",
         # CR 702.51a and CR 702.66a. Static abilities that function while the
         # spell is on the stack and change *how* one symbol of its already
         # determined total cost is paid - executed by
@@ -321,6 +328,39 @@ def _persist_ability(ability: KeywordAbility) -> TriggeredAbility:
     )
 
 
+def _evoke_ability(ability: KeywordAbility) -> TriggeredAbility:
+    """CR 702.74a's second half: "Evoke [cost]" means "You may cast this card by
+    paying [cost] rather than paying its mana cost" *and* "When this permanent
+    enters, if its evoke cost was paid, its controller sacrifices it."
+
+    The first half is an alternative cost (CR 118.9) and is executed by
+    `machines/casting.py`; only the second half is an ability that goes on the
+    stack, so only the second half is expanded here.
+
+    "If its evoke cost was paid" is an intervening *if* (CR 603.4): a hardcast
+    incarnation's ability does not trigger at all, rather than triggering and
+    doing nothing. `machines/triggers.intervening_if_holds` answers it from
+    `CastRecord.keyword`, which `machines/casting.Casting.cast` records at
+    CR 601.2b announcement time - the only place that knows an alternative cost
+    was the one chosen.
+
+    The sacrifice is *not* a delayed triggered ability (CR 603.7): nothing
+    creates it during a resolution and it has no stated later timing. It is an
+    ordinary enters-the-battlefield trigger (CR 603.6a), which is why it can be
+    responded to - the evoked creature is on the battlefield with the trigger on
+    the stack, and an opposing player gets priority there.
+    """
+    return _expansion(
+        ability,
+        keyword="evoke",
+        word=TriggerWord.WHEN,
+        condition="this permanent enters",
+        intervening_if="its evoke cost was paid",
+        effect="its controller sacrifices it",
+        event=TriggerEvent.ENTERS_THE_BATTLEFIELD,
+    )
+
+
 def _mobilize_ability(ability: KeywordAbility) -> TriggeredAbility:
     """CR 702.181a: "Mobilize N" means "Whenever this creature attacks, create N
     1/1 red Warrior creature tokens. Those tokens enter tapped and attacking.
@@ -400,6 +440,7 @@ _TRIGGER_EXPANSIONS: dict[str, Callable[[KeywordAbility], TriggeredAbility]] = {
     "storm": _storm_ability,
     "persist": _persist_ability,
     "mobilize": _mobilize_ability,
+    "evoke": _evoke_ability,
     "madness": _madness_ability,
     "hideaway": _hideaway_ability,
 }
@@ -2074,6 +2115,26 @@ def _persist_effect(game: Any, ability: AbilityOnStack) -> CardState | None:
     return persist_return(game, source)
 
 
+def _evoke_effect(game: Any, ability: AbilityOnStack) -> CardState | None:
+    """CR 702.74a's effect: "its controller sacrifices it".
+
+    CR 701.21a's sacrifice, so `Game.sacrifice` and not a bare move: the
+    permanent goes from the battlefield to its owner's graveyard, and both the
+    sacrifice event and the dies event (CR 700.4) fire on the way, which is what
+    lets an evoked incarnation feed a "whenever a creature dies" trigger.
+
+    The intervening *if* has already been checked twice (CR 603.4 on the event,
+    CR 608.2a on resolution), so nothing is re-tested here. What is tested is
+    that the permanent is still on the battlefield: CR 608.2 resolves the
+    ability with whatever is left, and a creature already killed in response is
+    not a permanent to sacrifice.
+    """
+    source = ability.source(game)
+    if source is None or source.zone is not Zone.BATTLEFIELD:
+        return None
+    return game.sacrifice(source)
+
+
 def _cascade_effect(game: Any, ability: AbilityOnStack) -> CascadeResult | None:
     """CR 702.85a's exiling half.
 
@@ -2270,6 +2331,7 @@ KEYWORD_TRIGGER_EFFECTS: dict[str, Callable[[Any, AbilityOnStack], Any]] = {
     "ward": _ward_effect,
     "madness": _madness_effect,
     "hideaway": _hideaway_effect,
+    "evoke": _evoke_effect,
 }
 
 

@@ -1840,6 +1840,20 @@ def intervening_if_holds(
         record = _cast_record_for_clause(game, ability, source, event)
         return record is not None
 
+    if clause == "its evoke cost was paid":
+        # CR 702.74a's own intervening *if*, written out by
+        # `machines/keywords._evoke_ability`. What makes it answerable is
+        # `CastRecord.keyword`: CR 118.9a allows one alternative cost per spell
+        # and `machines/casting.Casting.cast` records which keyword's cost was
+        # announced, so "was it evoked" is a lookup rather than an inference
+        # from what was spent. A permanent that reached the battlefield without
+        # being cast at all has no record, and that is the legitimate answer -
+        # its evoke cost was not paid - not an unreadable clause, so this
+        # returns False directly rather than through `_fail_closed`, exactly as
+        # "you cast it" above does.
+        record = _cast_record_for_clause(game, ability, source, event)
+        return record is not None and (record.keyword or "").lower() == "evoke"
+
     if _KICKED_CLAUSE.match(clause):
         record = _cast_record_for_clause(game, ability, source, event)
         if record is None:
