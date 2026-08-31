@@ -7,11 +7,15 @@ with `event=None` and `triggered_abilities_of` dropped it. `machines/triggers.py
 now reads the condition itself (`_unread_trigger_events` ->
 `ExtraTriggerEvent.COUNTERS_PUT`) and matches it.
 
-The matcher is complete; the **emit is not**. `Game.add_counters`
-(`models/game.py`, Task 1.5's file) is the one place counters are put on a
-permanent, and it emits only for lore counters (CR 107.15a's Saga chapters), so
-adapting the Broodscale still fires nothing - see the strict `xfail` at the end,
-which is the whole remaining gap in one assertion.
+`Game.add_counters` (`models/game.py`) now raises the event too, through
+`Game._emit_counters_put`, alongside the lore-counter one it already raised for
+CR 107.15a's Saga chapters - so the last test in this file plays the whole loop
+for real: adapt the Broodscale, and its own ability triggers.
+
+Two call sites still put counters on without going through `Game.add_counters`
+and so raise nothing: `machines/effects.py`'s and `machines/cost.py`'s direct
+`CardState.add_counters` calls. They are named in this repo's gap notes rather
+than worked around here.
 
 Card text verified with `resolve_cards`. Every CR number here was looked up with
 `knowledge_search(type="rules")` in the session that wrote this file:
@@ -31,8 +35,6 @@ Card text verified with `resolve_cards`. Every CR number here was looked up with
   occurrences." "One or more counters" is one event with a count, so two
   counters arriving together are one trigger, not two.
 """
-
-import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.triggers import ExtraTriggerEvent, GameEvent
@@ -61,9 +63,10 @@ def broodscale_board() -> Scenario:
 def counters_put(scenario, permanent, kind: str = "+1/+1", amount: int = 1) -> GameEvent:
     """The CR 122.6 event, raised through `Game.emit` - the real dispatcher.
 
-    Staging the event rather than the action is deliberate and is the only
-    honest way to test the matcher today: nothing in `models/game.py` raises
-    it, which is exactly what the `xfail` at the bottom of this file records.
+    Staging the event rather than the action keeps each matcher case to one
+    variable - the kind, the subject, the count - without needing a card that
+    puts a charge counter on a creature to exist in the pool. The last test in
+    this file is the one that causes the event for real, through adapt.
     Everything downstream of the event - `Game.emit`'s source sweep,
     `triggers_for`, `condition_matches`, CR 603.3's stack - is the engine's own.
     """
@@ -178,13 +181,6 @@ def test_a_second_adapt_puts_no_counter_on_and_so_fires_nothing():
     assert scenario.pending_triggers == []
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="the matcher is here and works (every test above), but nothing emits the CR 122.6 "
-    "event: `Game.add_counters` in models/game.py - Task 1.5's file - is the single place "
-    "counters are put on a permanent and it emits only for lore counters (CR 107.15a). "
-    "Adapting the Broodscale therefore puts the counter on and triggers nothing.",
-)
 def test_adapting_the_broodscale_creates_an_eldrazi_spawn():
     """The plan's own scenario, end to end.
 
@@ -192,6 +188,12 @@ def test_adapting_the_broodscale_creates_an_eldrazi_spawn():
     122.6's event, which triggers "you may create a 0/1 colorless Eldrazi Spawn
     creature token with 'Sacrifice this token: Add {C}.'" - the loop the whole
     broodscale-bloodchief archetype is built out of.
+
+    The assertion is on the *stack*, not on `pending_triggers`: the adapt
+    ability's own resolution ends with a priority round, and CR 603.3 puts a
+    triggered ability on the stack "the next time a player would receive
+    priority", which is that moment. The staged-event tests above never reach
+    a priority round, which is why they read `pending_triggers` instead.
     """
     scenario = broodscale_board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
@@ -202,4 +204,4 @@ def test_adapting_the_broodscale_creates_an_eldrazi_spawn():
     scenario.resolve_top()
 
     assert broodscale.counter_count("+1/+1") == 1
-    assert [trigger.source_name for trigger in scenario.pending_triggers] == ["Basking Broodscale"]
+    assert scenario.stack_names() == ["Basking Broodscale's triggered ability"]

@@ -9,11 +9,14 @@ and tells a targeting *spell* from a targeting *ability* by looking for the
 targeting object among the abilities on the stack (CR 113.1c makes an ability
 on the stack an object with an id of its own).
 
-That is the matcher half. The **emit half is missing for abilities**:
-`machines/casting.Casting._emit_becomes_target` raises the event for a spell's
-targets, and `Game.activate_ability` (`models/game.py`, Task 1.5's file) - which
-announces an activated ability's targets under CR 602.2b - raises nothing. So
-Loki still draws no cards, and the strict `xfail` at the end says exactly that.
+The emit half now exists for abilities too. `machines/casting.Casting.
+_emit_becomes_target` raises the event for a spell's targets;
+`Game._emit_ability_becomes_target` is its twin for an ability's, called from
+`Game.activate_ability` once CR 602.2b's target announcement has settled and the
+ability is on the stack, and from `Game.put_triggers_on_stack` once CR 603.3d
+has chosen a triggered ability's targets. `targeted_by` carries the
+`AbilityOnStack` id either way, which is what lets the matcher tell an ability
+from a spell.
 
 Card text verified with `resolve_cards`. CR numbers looked up with
 `knowledge_search(type="rules")` in the session that wrote this file:
@@ -27,8 +30,6 @@ Card text verified with `resolve_cards`. CR numbers looked up with
 - **CR 702.21a** - ward, the self-referential form of the same condition.
 - **CR 603.2h** - "Do this only once each turn", which Loki's own line prints.
 """
-
-import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.abilities import TriggerEvent
@@ -127,13 +128,6 @@ def test_a_spell_targeting_a_permanent_does_not_fire_loki_for_the_opponent_eithe
     assert scenario.pending_triggers == []
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="the matcher reads Loki's condition now, but nothing emits a BECOMES_TARGET event "
-    "for an *ability's* targets: `Game.activate_ability` in models/game.py - Task 1.5's file - "
-    "announces them under CR 602.2b and raises no event, and machines/casting.py's emitter only "
-    "ever runs for a spell. So Loki sees no event and draws no card.",
-)
 def test_an_ability_that_targets_a_permanent_fires_loki():
     """The card as printed: an ability alice controls targets something, and
     Loki draws a card (once that turn, CR 603.2h).

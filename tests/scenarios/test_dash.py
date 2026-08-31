@@ -10,24 +10,24 @@ the next end step," and "As long as this permanent's dash cost was paid, it has
 haste." Casting a spell for its dash cost follows the rules for paying
 alternative costs in rules 601.2b and 601.2f-h."
 
-Three abilities, and this file covers the first. The second and third both hang
+Three abilities, and this file covers all three. The second and third both hang
 off "was the dash cost paid", which the engine records - `Game.note_cast` keeps
-the keyword on the cast record - and neither is acted on:
+the keyword on the cast record, and that record deliberately survives the
+permanent spell's resolution - so both are answered from
+`Game.was_cast_with(spell, "Dash")` as the permanent enters:
 
 - the delayed trigger has exactly the shape warp's does (CR 603.7, CR 608.3g),
-  and `Game._create_resolution_delayed_triggers` builds warp's and not dash's;
-- haste is a static ability granting a keyword in layer 6 (CR 613.1f), and what
-  a card generates is the hand-written `LAYER_EFFECTS` registry.
-
-Both are xfails at the bottom, and both are named in `docs/engine-coverage.md`.
+  and `Game._create_resolution_delayed_triggers` builds both;
+- haste is a static ability (CR 702.10a) granting a keyword in layer 6
+  (CR 613.1f), built there too as a plain `Layer.ABILITY` continuous effect
+  scoped to the exact permanent that just entered - so no `LAYER_EFFECTS`
+  registry entry, and no new fact on the layer context, was needed for it.
 
 Ragavan, Nimble Pilferer is the printing in this pool: `Dash {1}{R}` on a {R}
 creature, so the dash cost is *more* than the mana cost - which is exactly the
 point of it, and a good check that this is an alternative cost and not a
 discount (CR 118.9c).
 """
-
-import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.casting import keyword_cast_options
@@ -95,8 +95,9 @@ def test_a_dashed_creature_reaches_the_battlefield():
 def test_the_cast_record_remembers_the_dash_cost_was_paid():
     """CR 702.109a's other two abilities both read "was the dash cost paid".
 
-    Nothing acts on it yet, but the answer is kept, which is what makes the two
-    xfails below a wiring gap rather than a missing fact.
+    The record is what the two tests below are built on: it survives the
+    permanent spell's resolution, so "was the dash cost paid" is answerable at
+    the moment the permanent enters, which is when both abilities need it.
     """
     scenario = board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
@@ -132,15 +133,6 @@ def dash_it(scenario):
     return scenario.resolve_top()
 
 
-@pytest.mark.xfail(
-    reason=(
-        "CR 702.109a's third ability grants haste in layer 6 (CR 613.1f) for as long "
-        "as the dash cost was paid. What a card generates is the hand-written "
-        "LAYER_EFFECTS registry in machines/layers.py, which has no dash entry. "
-        "See docs/engine-coverage.md."
-    ),
-    strict=True,
-)
 def test_a_dashed_creature_has_haste():
     """CR 702.109a: "As long as this permanent's dash cost was paid, it has haste"."""
     scenario = board().build()

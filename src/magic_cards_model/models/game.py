@@ -101,12 +101,16 @@ from ..machines.layers import (
     BASIC_LAND_TYPES,
     Characteristics,
     ComputedBoard,
+    ContinuousEffect,
     ContinuousEffects,
     Duration,
+    Layer,
     LayerContext,
     LayerNotice,
     additional_land_plays,
     count_card_types,
+    grant_ability,
+    only_this_incarnation,
 )
 from ..machines.modes import substitute_x
 from ..machines.opening_hand import (
@@ -132,6 +136,7 @@ from ..machines.targeting import (
 from ..machines.triggers import (
     AbilityOnStack,
     CastConditionNotice,
+    ExtraTriggerEvent,
     GameEvent,
     InterveningIfNotice,
     TargetingNotice,
@@ -1147,6 +1152,47 @@ class Game(BaseModel):
     Feeds Damping Sphere's per-spell cost increase and
     `_first_spell_this_turn_holds`'s "first [type] spell you've cast this
     turn" intervening *if* clauses. Cleared when a new turn begins."""
+
+    cards_drawn_this_turn: dict[str, int] = Field(default_factory=dict)
+    """How many cards each player has actually drawn this turn, keyed by the
+    player who drew them.
+
+    CR 121.2: "Cards may only be drawn one at a time. If a player is instructed
+    to draw multiple cards, that player performs that many individual card
+    draws." So this counts individual draws, not instructions - which is what
+    makes an ordinal condition ("you draw your third card in a turn", Tamiyo,
+    Inquisitive Student) answerable at all.
+
+    Counted in `draw_cards`, inside the loop over the cards that were *really*
+    drawn, immediately before the `TriggerEvent.DRAWS_A_CARD` emit for that
+    same card. Before, because the matcher
+    (`machines/triggers._unread_condition_matches`) reads this counter while
+    the event is being dispatched and compares it for equality with the
+    ordinal - counting afterwards would leave the third draw reading two and
+    the ability would silently never fire. A draw that a replacement effect
+    reduced to nothing produced no card and is not counted (CR 603.2g: "An
+    ability triggers only if its trigger event actually occurs").
+
+    Cleared when a new turn begins, the same reset `spells_cast_this_turn`
+    already gets."""
+
+    permanents_sacrificed_this_turn: dict[str, int] = Field(default_factory=dict)
+    """How many permanents each player has sacrificed this turn, keyed by the
+    controller who sacrificed them.
+
+    CR 701.21a: "To sacrifice a permanent, its controller moves it from the
+    battlefield directly to its owner's graveyard." That is a distinct action
+    from the destruction or the bounce that also move a permanent off the
+    battlefield, which is why `permanents_left_battlefield_this_turn` cannot
+    answer "you sacrificed a permanent this turn" (Phoenix Fleet Airship's
+    intervening *if*, CR 603.4): a destroyed permanent left the battlefield
+    and was never sacrificed.
+
+    Recorded in `sacrifice`, next to the `TriggerEvent.IS_SACRIFICED` emit, by
+    the controller the permanent had while it was still on the battlefield -
+    the player CR 701.21a names as the one doing the sacrificing. A count
+    rather than a flag, so a future card asking "two or more" has the number;
+    today only "at least one" is ever asked. Cleared when a new turn begins."""
 
     permanents_left_battlefield_this_turn: dict[str, int] = Field(default_factory=dict)
     """How many permanents each player controlled at the moment those
@@ -2250,6 +2296,7 @@ class Game(BaseModel):
                 )
             )
         if self.was_cast_with(spell, "Dash"):
+            self._grant_dash_haste(spell)
             self.delayed_triggers.create(
                 DelayedTrigger(
                     text=(
@@ -2267,6 +2314,47 @@ class Game(BaseModel):
                     callback=return_subject_to_hand,
                 )
             )
+
+    def _grant_dash_haste(self, permanent: CardState) -> None:
+        """The third of CR 702.109a's three abilities: haste for a dashed permanent.
+
+        "Dash represents three abilities: two static abilities that function
+        while the card with dash is on the stack, one of which may create a
+        delayed triggered ability, and a static ability that functions while
+        the card with dash is on the battlefield" - the battlefield one is the
+        haste grant, and it holds for as long as the dash cost was paid, which
+        is for as long as this object is this object.
+
+        No new fact is needed to know that: `Game.cast_records` survives a
+        permanent spell's resolution (the record is deliberately not popped in
+        `resolve_top`'s permanent branch), so `was_cast_with(spell, "Dash")` -
+        which the delayed return-to-hand trigger beside this already asks - is
+        the whole condition.
+
+        Granting an ability is layer 6 (CR 613.1f: "Layer 6: Ability-adding
+        effects, keyword counters, ability-removing effects, and effects that
+        say an object can't have an ability are applied"), and haste is a
+        static ability (CR 702.10a), so this is a plain `Layer.ABILITY`
+        continuous effect - built the same way `machines/casting.
+        grant_suspend_haste` builds suspend's, with its own description rather
+        than through that function, since the description names the rule it
+        comes from and this one is CR 702.109a's, not CR 702.62a's.
+
+        `only_this_incarnation` scopes it to the exact object that just entered
+        (CR 400.7 makes a permanent that leaves and returns a new object), so a
+        Ragavan bounced by dash's own end-step trigger and recast for its mana
+        cost does not inherit haste from the turn it was dashed.
+        """
+        store = self.continuous_effects
+        store.add(
+            ContinuousEffect(
+                description=f"{permanent.name}: dash grants haste (CR 702.109a)",
+                layer=Layer.ABILITY,
+                timestamp=store.tick(),
+                selector=only_this_incarnation(permanent, permanent.zone_change_stamp),
+                modification=grant_ability("Haste"),
+            )
+        )
 
     def _create_rebound_delayed_trigger(self, spell: CardState, cast_from_hand: bool) -> None:
         """CR 702.88a's own delayed trigger: "At the beginning of your next
@@ -2718,7 +2806,23 @@ class Game(BaseModel):
         so a later, separate trigger sharing the same source name (a second
         cast of the same card, or an unrelated delayed trigger printed on the
         same card) is asked fresh rather than inheriting a stale answer.
+
+        Putting an ability on the stack can itself trigger something: CR 115.1c
+        makes a targeted ability's targets chosen as it goes on the stack, and
+        anything watching "becomes the target of ... an ability" (ward,
+        CR 702.21a; Loki, God of Mischief) triggers on that. CR 603.3 puts
+        *those* on the stack "the next time a player would receive priority" -
+        which has still not happened, since this whole batch runs before
+        anybody gets priority - so this drains repeatedly rather than leaving
+        them for a later call that a scenario may never make.
         """
+        placed: list[AbilityOnStack] = []
+        while self.pending_triggers:
+            placed.extend(self._put_pending_triggers_on_stack())
+        return placed
+
+    def _put_pending_triggers_on_stack(self) -> list[AbilityOnStack]:
+        """One CR 603.3b batch: everything waiting right now, in APNAP order."""
         if not self.pending_triggers:
             return []
         assert self.turn is not None
@@ -2739,11 +2843,58 @@ class Game(BaseModel):
                 continue
             ability.targets = list(targets)
             self.stack.append(ability)
+            self._emit_ability_becomes_target(ability)
             placed.append(ability)
         for ability in ordered:
             self.trigger_targets.pop(ability.source_name, None)
             self.trigger_targets.pop(ability.source_name.split("//")[0].strip(), None)
         return placed
+
+    def _emit_ability_becomes_target(self, ability: AbilityOnStack) -> None:
+        """The objects this ability targeted have become targets (CR 115.1).
+
+        "Some spells and abilities require their controller to choose one or
+        more targets for them ... These targets are declared as part of the
+        process of putting the spell or ability on the stack." CR 115.1c is the
+        activated half ("An activated ability is targeted if it identifies
+        something it will affect by using the phrase 'target [something]'") and
+        CR 603.3d the triggered half, and both land here: `machines/casting.
+        Casting._emit_becomes_target` is the spell-only twin of this, and
+        nothing raised the event for an ability's targets at all, so ward
+        (CR 702.21a) never saw an activated ability coming and Loki, God of
+        Mischief's "becomes the target of an ability you control" could not
+        fire.
+
+        Raised once the ability is already on the stack, for two reasons: the
+        targets are settled at that point (CR 602.2b imports CR 601.2c
+        wholesale for an activated ability), and `machines/triggers.
+        _becomes_target_names_ability` tells an ability apart from a spell by
+        looking `targeted_by` up among `Game.abilities_on_stack` - an id that
+        is not there yet reads as a spell.
+
+        Only permanents are asked. CR 110.1: "A permanent is a card or token on
+        the battlefield", so an object anywhere else is not one - the same
+        filter the spell twin applies, since every condition in this pool is
+        about a permanent (or a player, which carries no `card_id` to ask
+        about) becoming a target.
+        """
+        for target in ability.targets:
+            if not target.is_card or target.card_id is None:
+                continue
+            targeted = self.find_by_id(target.card_id)
+            if targeted is None or targeted.zone is not Zone.BATTLEFIELD:
+                continue
+            self.emit(
+                GameEvent(
+                    event=TriggerEvent.BECOMES_TARGET,
+                    subject_id=targeted.id,
+                    subject_name=targeted.name,
+                    subject_controller=targeted.controller,
+                    subject_card=targeted.card,
+                    targeted_by=ability.id,
+                    player=ability.controller,
+                )
+            )
 
     def _targets_for_trigger(self, ability: AbilityOnStack) -> list[TargetRef] | None:
         """What this triggered ability targets, as it goes on the stack (CR 603.3d).
@@ -4580,6 +4731,14 @@ class Game(BaseModel):
             # never happened, so it triggers nothing (CR 603.2g).
             for card in player.draw_up_to(event.amount) if event.amount > 0 else []:
                 drawn.append(card)
+                # CR 121.2's individual draw, counted before it is announced.
+                # `machines/triggers` answers "you draw your third card in a
+                # turn" by reading `cards_drawn_this_turn` *while* the event
+                # below is being dispatched, so the count has to already
+                # include this card or the ordinal would never match.
+                self.cards_drawn_this_turn[player.username] = (
+                    self.cards_drawn_this_turn.get(player.username, 0) + 1
+                )
                 self.emit(
                     GameEvent(
                         event=TriggerEvent.DRAWS_A_CARD,
@@ -4643,7 +4802,50 @@ class Game(BaseModel):
         new_total = permanent.add_counters(kind, event.amount)
         if str(kind) == str(Counter.LORE):
             self._emit_lore_counters_added(permanent, event.amount)
+        self._emit_counters_put(permanent, str(kind), event.amount)
         return new_total
+
+    def _emit_counters_put(self, permanent: CardState, kind: str, amount: int) -> None:
+        """CR 122.6's generic "counters are put on this object" event.
+
+        "Some spells and abilities refer to counters being put on an object.
+        This refers to putting counters on that object while it's on the
+        battlefield and also to an object that's given counters as it enters
+        the battlefield" - Basking Broodscale's and Emperor of Bones'
+        "Whenever one or more +1/+1 counters are put on this creature".
+
+        One event per instruction, carrying the whole amount. CR 603.2c: "An
+        ability triggers only once each time its trigger event occurs. However,
+        it can trigger repeatedly if one event contains multiple occurrences" -
+        and "one or more counters" is not several occurrences, it is one
+        occurrence with a count, so two counters arriving together fire the
+        ability once. The count travels on `GameEvent.amount` for any clause
+        that later refers back to how many.
+
+        The kind travels too (CR 122.1 leaves the set of counter kinds open, so
+        it is a plain string), which is what stops a charge counter firing a
+        condition that names +1/+1.
+
+        Only a permanent is asked: the conditions in this pool are all
+        self-referential ("this creature"), and CR 110.1 makes an object a
+        permanent only while it is on the battlefield.
+        """
+        if amount <= 0 or permanent.zone is not Zone.BATTLEFIELD:
+            return
+        self.emit(
+            GameEvent(
+                event=ExtraTriggerEvent.COUNTERS_PUT,
+                subject_id=permanent.id,
+                subject_name=permanent.name,
+                subject_controller=permanent.controller,
+                subject_card=permanent.card,
+                subject_types=permanent.types,
+                subject_subtypes=permanent.subtypes,
+                counter_kind=kind,
+                amount=amount,
+                player=permanent.controller,
+            )
+        )
 
     def return_to_hand(self, permanent: CardState) -> CardState:
         """Return a permanent to its owner's hand (CR 701.19a is "return").
@@ -4694,6 +4896,90 @@ class Game(BaseModel):
                 )
             )
         return permanent
+
+    def put_cards_into_library(
+        self, cards: Sequence[CardState], *, to_bottom: bool = False
+    ) -> list[CardState]:
+        """Move cards into their owners' libraries as one instruction (CR 401.1).
+
+        Each card goes into its own owner's library - CR 401.1's "when a game
+        begins, each player's deck becomes their library" is a per-player zone,
+        and a card put into a library goes into the library of the player who
+        owns it. `to_bottom` picks which end; the list order is kept either way,
+        so the first card named ends up nearest the top when going to the top.
+
+        One `ExtraTriggerEvent.PUT_INTO_LIBRARY` event is raised for the whole
+        instruction, carrying how many cards it moved. CR 603.2c: an ability
+        triggers once per event, and "whenever one or more cards are put into a
+        library from anywhere" (Wan Shi Tong, All-Knowing) is one event with a
+        count, not one event per card - so Brainstorm putting two cards back is
+        a single trigger.
+
+        **A card already in a library is not put into one.** Scry and surveil
+        (CR 701.22a, CR 701.25a) reorder cards that never left the zone, so
+        nothing was "put into" a library and no event is raised for them; such
+        a card is still moved to the requested end, but it does not count
+        towards the event and, if every card was already there, no event is
+        raised at all.
+
+        A card leaving the battlefield or a graveyard on its way raises those
+        departures too, the same events the single-card moves already raise:
+        CR 603.6c's `LEAVES_THE_BATTLEFIELD` per permanent, and CR 603.10a's
+        `LEAVES_GRAVEYARD` batched per graveyard alongside the library event.
+        """
+        moved: list[CardState] = []
+        newly_in_library: list[CardState] = []
+        left_battlefield: list[CardState] = []
+        by_graveyard: dict[str, list[CardState]] = {}
+        for card_state in cards:
+            if move_refused(card_state, Zone.LIBRARY) is not None:
+                continue
+            was_in_library = card_state.zone is Zone.LIBRARY
+            graveyard_owner = self._graveyard_owner_of(card_state)
+            if card_state in self.battlefield:
+                self._note_left_battlefield(card_state)
+                self._detach_dependents(card_state)
+                left_battlefield.append(card_state)
+            self._take_out_of_every_zone(card_state)
+            self.combat.remove(card_state.id)  # CR 506.4
+            owner = self._owner_of(card_state)
+            owner.add(card_state, Zone.LIBRARY)
+            moved.append(card_state)
+            if not was_in_library:
+                newly_in_library.append(card_state)
+            if graveyard_owner is not None:
+                by_graveyard.setdefault(graveyard_owner, []).append(card_state)
+        if not to_bottom:
+            # `Player.add` appends, which is the bottom (CR 401.2's single
+            # face-down pile, ordered top-first here). Lift this instruction's
+            # cards back out and put them on the front, keeping the order they
+            # were named in.
+            for card_state in reversed(moved):
+                library = self._owner_of(card_state).library
+                library.remove(card_state)
+                library.insert(0, card_state)
+        for gone in left_battlefield:
+            self.emit(
+                GameEvent(
+                    event=TriggerEvent.LEAVES_THE_BATTLEFIELD,
+                    subject_id=gone.id,
+                    subject_name=gone.name,
+                    subject_controller=gone.controller,
+                    subject_card=gone.card,
+                    player=gone.controller,
+                )
+            )
+        for owner_name, gone_cards in by_graveyard.items():
+            self._emit_left_graveyard(owner_name, gone_cards, exiled=False)
+        if newly_in_library:
+            self.emit(
+                GameEvent(
+                    event=ExtraTriggerEvent.PUT_INTO_LIBRARY,
+                    player=self._owner_of(newly_in_library[0]).username,
+                    amount=len(newly_in_library),
+                )
+            )
+        return moved
 
     # -- targeting and effects --------------------------------------------
 
@@ -5361,6 +5647,17 @@ class Game(BaseModel):
         """
         if permanent not in self.battlefield:
             raise ValueError(f"{permanent.name} is not a permanent on the battlefield")
+        # CR 701.21a names the permanent's controller as the player who
+        # sacrifices it, so the record is kept under the controller it still
+        # has here, before the move to the graveyard takes it away. Recorded
+        # alongside the event rather than instead of it: the event is what
+        # CR 603.10a's look-back triggers watch, and this is what CR 603.4's
+        # "you sacrificed a permanent this turn" clause reads afterwards.
+        sacrificer = permanent.controller
+        if sacrificer is not None:
+            self.permanents_sacrificed_this_turn[sacrificer] = (
+                self.permanents_sacrificed_this_turn.get(sacrificer, 0) + 1
+            )
         self.emit(
             GameEvent(
                 event=TriggerEvent.IS_SACRIFICED,
@@ -5562,7 +5859,26 @@ class Game(BaseModel):
         `machines/triggers.py` never had before: `DIES` already exists for the
         battlefield-to-graveyard half of the same idea, but nothing watched
         this one, so a delayed trigger waiting for it had nothing to fire on.
+
+        A card exiled *out of a graveyard* raises the graveyard pair as well -
+        `ExtraTriggerEvent.LEAVES_GRAVEYARD` (CR 603.10a names "abilities that
+        trigger when a card leaves a graveyard" outright) and
+        `ExtraTriggerEvent.EXILED_FROM_GRAVEYARD` (CR 406.2: "To exile an
+        object is to put it into the exile zone from whatever zone it's
+        currently in", read here for the graveyard as that zone). One card, so
+        `amount=1`; `exile_cards` is the batch door for an instruction that
+        moves several at once.
         """
+        origin_graveyard_owner = self._graveyard_owner_of(permanent)
+        self._exile_move(permanent)
+        if origin_graveyard_owner is not None and permanent.zone is Zone.EXILE:
+            self._emit_left_graveyard(origin_graveyard_owner, [permanent])
+        return permanent
+
+    def _exile_move(self, permanent: CardState) -> CardState:
+        """`exile_permanent`'s move and its battlefield events, with the
+        graveyard pair left to the caller - so `exile_cards` can raise one
+        event for a whole instruction (CR 603.2c)."""
         if move_refused(permanent, Zone.EXILE) is not None:
             return permanent
         was_on_battlefield = permanent in self.battlefield
@@ -5598,6 +5914,103 @@ class Game(BaseModel):
                 )
             )
         return permanent
+
+    def exile_cards(self, cards: Sequence[CardState]) -> list[CardState]:
+        """Exile several cards as one instruction (CR 406.2).
+
+        The batch door onto `exile_permanent`. Everything about the move itself
+        is identical - each card goes through the same path, keeping the
+        battlefield departure events, CR 111.8's token refusal and CR 506.4's
+        combat clean-up - but the graveyard pair is raised **once** for the
+        whole instruction rather than once per card.
+
+        That is CR 603.2c: "An ability triggers only once each time its trigger
+        event occurs. However, it can trigger repeatedly if one event contains
+        multiple occurrences." A condition written "whenever **one or more**
+        cards leave your graveyard" (Hardened Academic) is asking about the
+        event, not about each card in it, so a delve payment that exiles five
+        cards (CR 702.66a: "For each generic mana in this spell's total cost,
+        you may exile a card from your graveyard rather than pay that mana") is
+        one event with `amount=5`, and the ability triggers once.
+
+        Grouped by whose graveyard each card left, because "your graveyard" is
+        read off the owner of the zone: two graveyards emptied by one
+        instruction are two events, one per graveyard, each with its own count.
+        """
+        by_graveyard: dict[str, list[CardState]] = {}
+        exiled: list[CardState] = []
+        for card_state in cards:
+            owner = self._graveyard_owner_of(card_state)
+            self._exile_move(card_state)
+            exiled.append(card_state)
+            if owner is not None and card_state.zone is Zone.EXILE:
+                by_graveyard.setdefault(owner, []).append(card_state)
+        for owner, gone in by_graveyard.items():
+            self._emit_left_graveyard(owner, gone)
+        return exiled
+
+    def _graveyard_owner_of(self, card_state: CardState) -> str | None:
+        """Whose graveyard this card is in right now, if it is in one.
+
+        CR 404.1's graveyard is a per-player zone, and the "your" in "whenever
+        one or more cards leave **your** graveyard" is the player whose
+        graveyard it was - not whoever's effect moved the card - so this
+        answers by finding the zone the card is actually sitting in rather than
+        by reading `CardState.owner`.
+        """
+        if card_state.zone is not Zone.GRAVEYARD:
+            return None
+        for player in self.players:
+            if any(state is card_state for state in player.graveyard):
+                return player.username
+        return None
+
+    def _emit_left_graveyard(
+        self, owner: str, gone: list[CardState], *, exiled: bool = True
+    ) -> None:
+        """The events one batch of cards leaving a graveyard raises (CR 603.10a, 406.2).
+
+        `ExtraTriggerEvent.LEAVES_GRAVEYARD` is CR 603.10a's own category -
+        "abilities that trigger when a card leaves a graveyard" - and
+        `ExtraTriggerEvent.EXILED_FROM_GRAVEYARD` is the narrower one that also
+        names where the card went, which Ketramose, the New Dawn's "one or more
+        cards are put into exile from graveyards and/or the battlefield" reads.
+        Both are true of the same move, so both fire, the same way
+        `LEAVES_BATTLEFIELD_TO_EXILE` and `LEAVES_THE_BATTLEFIELD` already do -
+        but only when exile is where the cards actually went. `exiled=False` is
+        a graveyard departure to somewhere else (a library, a hand), which is
+        CR 603.10a's event and not CR 406.2's.
+
+        `player` is the owner of the graveyard, which is what the matcher
+        compares against the ability's controller for "your graveyard".
+
+        The subject is filled in only when exactly one card left: a condition
+        with a type restriction ("an instant or sorcery card leaves your
+        graveyard", Murktide Regent) reads `subject_types`, and a batch of
+        several cards has no single answer to give it. Left unset, that
+        condition simply does not match - the same direction every other
+        unanswerable question in this engine fails in, rather than picking one
+        card of the batch and pretending it was the whole event.
+        """
+        if not gone:
+            return
+        only = gone[0] if len(gone) == 1 else None
+        events = [ExtraTriggerEvent.LEAVES_GRAVEYARD]
+        if exiled:
+            events.append(ExtraTriggerEvent.EXILED_FROM_GRAVEYARD)
+        for event in events:
+            self.emit(
+                GameEvent(
+                    event=event,
+                    subject_id=only.id if only is not None else None,
+                    subject_name=only.name if only is not None else None,
+                    subject_card=only.card if only is not None else None,
+                    subject_types=only.types if only is not None else None,
+                    subject_subtypes=only.subtypes if only is not None else None,
+                    player=owner,
+                    amount=len(gone),
+                )
+            )
 
     def _detach_dependents(self, permanent: CardState) -> None:
         """Nothing stays attached to a permanent that just left (CR 704.5m, 704.5n).
@@ -7875,6 +8288,10 @@ class Game(BaseModel):
             cost_sacrificed_card_ids=tuple(state.id for state in (sacrificed_for_cost or [])),
         )
         self.stack.append(on_stack)
+        # CR 602.2b's target announcement has settled (CR 601.2c, imported
+        # wholesale), and the ability is on the stack, so anything watching
+        # "becomes the target of ... an ability" now has an event to see.
+        self._emit_ability_becomes_target(on_stack)
         # CR 117.3c hands priority straight back, so anything that triggered
         # while the cost was paid goes on the stack now - above the ability.
         self.put_triggers_on_stack()
@@ -8223,6 +8640,8 @@ class Game(BaseModel):
             self.spells_cast_last_turn = self.spells_cast_this_turn
             self.spells_cast_this_turn = {}
             self.permanents_left_battlefield_this_turn = {}
+            self.permanents_sacrificed_this_turn = {}
+            self.cards_drawn_this_turn = {}
             self.cards_discarded_this_turn = {}
             self.life_gained_this_turn = set()
             # `play_permissions` is deliberately **not** cleared here. CR 514.2

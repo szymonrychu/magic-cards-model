@@ -7,11 +7,16 @@ could not even be asked. `machines/triggers.py` now reads it and matches it
 against CR 121.2's individual card draws, which the engine already emits one at
 a time.
 
-What is missing is the **count**: `Game.draw_cards` (`models/game.py`, Task
-1.5's file) emits one `DRAWS_A_CARD` event per card and keeps no running
-per-turn total for any player, so "your third" cannot be answered. An unknown
-answer does not trigger (the same fail-closed direction CR 603.4 takes for an
-unreadable intervening *if*), which is what the strict `xfail` below measures.
+`Game.draw_cards` (`models/game.py`) now keeps the count as well as emitting
+the events: `Game.cards_drawn_this_turn` is incremented once per card that was
+really drawn, inside the same loop and immediately *before* the event is
+dispatched, because the matcher reads the running total while the event is
+being matched.
+
+Every draw here goes through `Game.draw_cards` rather than the harness's
+`scenario.draw`, which calls `Player.draw` directly and raises no CR 121.2
+event at all - so a test written against it would assert silence for the wrong
+reason.
 
 Card text verified with `resolve_cards`. CR numbers looked up with
 `knowledge_search(type="rules")` in the session that wrote this file:
@@ -24,8 +29,6 @@ Card text verified with `resolve_cards`. CR numbers looked up with
 - **CR 603.2g** - an ability triggers only if its trigger event actually
   occurs.
 """
-
-import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.triggers import triggered_abilities_of
@@ -61,7 +64,7 @@ def test_a_single_draw_does_not_trigger_tamiyo():
     scenario = tamiyo_board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
-    scenario.draw(1, username="alice")
+    scenario.game.draw_cards("alice", 1)
 
     assert scenario.pending_triggers == []
 
@@ -72,26 +75,19 @@ def test_an_opponents_draws_do_not_trigger_tamiyo():
     scenario = tamiyo_board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
-    scenario.draw(3, username="bob")
+    scenario.game.draw_cards("bob", 3)
 
     assert scenario.pending_triggers == []
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="the matcher reads 'you draw your third card in a turn' and is handed every "
-    "CR 121.2 draw event, but nothing counts them: `Game.draw_cards` in models/game.py - Task "
-    "1.5's file - keeps no per-turn, per-player draw total, so the ordinal cannot be answered "
-    "and the ability fails closed.",
-)
 def test_the_third_draw_of_a_turn_triggers_tamiyo():
     """CR 121.2's third individual draw of alice's turn is the event, and
     Tamiyo's ability triggers on it."""
     scenario = tamiyo_board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
-    scenario.draw(3, username="alice")
+    scenario.game.draw_cards("alice", 3)
 
     assert [trigger.source_name for trigger in scenario.pending_triggers] == [
-        "Tamiyo, Inquisitive Student // Tamiyo, Seasoned Scholar"
+        "Tamiyo, Inquisitive Student"
     ]

@@ -9,11 +9,16 @@ neither could ever fire. `machines/triggers.py` now reads the condition
 (`ExtraTriggerEvent.LEAVES_GRAVEYARD`) and matches it, with the "your" and the
 optional type restriction both checked.
 
-The **emit is missing**: no call site raises the event. Every graveyard
-departure the engine performs - delve's exile, a return-to-hand, a
-graveyard-to-battlefield reanimation - moves the card through `models/game.py`
-(Task 1.5's file), which is where the emit belongs. The strict `xfail` at the
-end measures that through the real delve path.
+`models/game.py` now raises it. `Game.exile_permanent` emits the pair
+(`LEAVES_GRAVEYARD` and `EXILED_FROM_GRAVEYARD`, CR 406.2) whenever the card it
+moves was sitting in a graveyard, and `Game.exile_cards` is the batch door that
+raises **one** event with `amount=N` for an instruction that empties several
+cards at once - CR 603.2c, which is what "one or more cards" asks for.
+
+The strict `xfail` at the end is now about one missing *call*, not a missing
+emit: `machines/cost.py`'s EXILE component still loops its cards through
+`Game.exile_permanent` one at a time, so a five-card delve payment raises five
+separate events and Hardened Academic triggers five times instead of once.
 
 Card text verified with `resolve_cards`. CR numbers looked up with
 `knowledge_search(type="rules")` in the session that wrote this file:
@@ -55,10 +60,10 @@ def board() -> Scenario:
 def leaves_graveyard(scenario, gone, owner: str) -> None:
     """CR 603.10a's event, raised through `Game.emit` - the real dispatcher.
 
-    The event is staged rather than caused, because nothing causes it yet;
-    everything downstream (`Game.emit`'s sweep, `triggers_for`,
-    `condition_matches`) is the engine's own, and the `xfail` below is what
-    records the missing cause.
+    Staged rather than caused, so each matcher case varies one thing - the
+    card's types, whose graveyard it was - without needing a card in the pool
+    that moves exactly that card out of exactly that graveyard. The test at the
+    bottom is the one that causes it for real, through delve.
     """
     scenario.game.emit(
         GameEvent(
@@ -135,18 +140,22 @@ def test_neither_watcher_fires_on_an_unrelated_event():
 
 @pytest.mark.xfail(
     strict=True,
-    reason="the matcher is here and works (every test above), but nothing emits the event: "
-    "the cards delve exiles out of the graveyard are moved by models/game.py - Task 1.5's file "
-    "- which raises no leaves-a-graveyard event, so Murktide's own delve does not feed its own "
-    "trigger.",
+    reason="`Game.exile_permanent` raises the event now, and `Game.exile_cards` raises exactly "
+    "one for a whole instruction (CR 603.2c) - but nothing calls the batch door. "
+    "`machines/cost.py`'s `ComponentKind.EXILE` branch still loops `for card in self.cards: "
+    "game.exile_permanent(card)`, so this five-card delve payment is five separate events and "
+    "Hardened Academic's 'one or more cards leave your graveyard' triggers five times. The one "
+    "line that fixes it is replacing that loop's body with a single "
+    "`game.exile_cards(list(self.cards))`; cost.py is owned by another agent this pass.",
 )
 def test_delving_a_card_out_of_your_graveyard_triggers_the_academic():
     """The real path, played through the engine: casting Murktide Regent with
     delve exiles cards from alice's graveyard (CR 603.10a's "a card leaves a
     graveyard"), which Hardened Academic watches.
 
-    The delve half genuinely happens - the assertions on the exiled cards below
-    pass - and the trigger still does not, because the move raises no event.
+    The delve half genuinely happens, and so does the trigger - five times,
+    once per card `machines/cost.py` exiles separately, where CR 603.2c wants
+    one event for the one instruction. The assertion below is on the count.
     """
     scenario = (
         Scenario()
@@ -170,4 +179,4 @@ def test_delving_a_card_out_of_your_graveyard_triggers_the_academic():
 
     assert scenario.player("alice").graveyard == []
     assert all(state.zone is Zone.EXILE for state in binned)
-    assert [trigger.source_name for trigger in scenario.pending_triggers] == ["Hardened Academic"]
+    assert scenario.stack_names() == ["Murktide Regent", "Hardened Academic's triggered ability"]
