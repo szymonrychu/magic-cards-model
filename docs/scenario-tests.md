@@ -46,6 +46,7 @@ Existing files, as a guide to where a new case belongs:
 | `test_evasion.py` | CR 702.9, 702.17, 702.111, 702.19: flying, reach, menace, trample |
 | `test_evasion_restrictions.py` | CR 509.1a: a plain "can't be blocked [by creatures with power N or less]" restriction, read off the attacker's own text rather than a keyword |
 | `test_turn_based_actions.py` | CR 703: what a step does by itself - untap, draw, cleanup |
+| `test_pregame_steps.py` | CR 103.5, 103.6, 103.8, 500.1: the two steps a dealt game *rests* in before its first turn - what they refuse to claim about the turn (no phase, no turn number, no priority), and how a seat declares and acts through them without the engine asking anybody anything |
 | `test_state_based_actions.py` | CR 704: 0 toughness, the empty library, the legend rule |
 | `test_triggered_abilities.py` | CR 603: what triggers, when it goes on the stack, APNAP order, the intervening *if* |
 | `test_activated_abilities.py` | CR 602: activating, paying the cost, restrictions, and the mana ability that skips the stack |

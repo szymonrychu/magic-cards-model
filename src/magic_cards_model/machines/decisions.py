@@ -303,6 +303,12 @@ class Decision:
     #: The card whose text is asking, by name. `None` for a question the rules
     #: ask rather than a card - the mulligan declaration (CR 103.5) is the one.
     source: str | None = None
+    #: The specific card this question is about, when a name is not enough to
+    #: identify it. Set for CR 103.6's opening-hand actions, where a hand can
+    #: hold two copies of the card offering the action and the answer has to say
+    #: which one; `None` everywhere else. Not part of `Answer.matches`, so a
+    #: script keyed to a kind, a player and a card name goes on matching.
+    card: UUID | None = None
     #: How much: the life to pay, the N of scry N / surveil N, or how many of
     #: `cards` a `CHOOSE_CARDS` answer must contain.
     amount: int = 0

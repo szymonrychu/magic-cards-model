@@ -2,19 +2,25 @@
 
 Starting a game is CR 103, in order: decide who takes the first turn (103.1),
 set sideboards aside (103.2a), shuffle (103.3), set life totals (103.4), and
-draw opening hands (103.5). The hands are dealt by `start_game` and settled by
-`run_mulligans`, which runs the London mulligan of CR 103.5 to completion and
-then CR 103.6's opening-hand actions - the sequence that begins "once the
-mulligan process (see rule 103.5) is complete", read off cards and carried out
-by `machines/opening_hand.py` and `Game.take_opening_hand_actions`.
+draw opening hands (103.5). `start_game` deals the hands and then leaves the
+game *resting* in `Step.MULLIGAN`, the first of the two pregame steps that model
+CR 103.5's mulligan process and CR 103.6's opening-hand actions. Neither is a
+CR 500 step of a turn - see `machines/turn.py`'s module docstring, which sets
+out what the representation does and does not claim.
+
+The game is progressed through them seat by seat, through `Game`:
+`Game.declare_mulligan` for CR 103.5's declaration and
+`Game.take_opening_hand_action` / `Game.finish_opening_hand_actions` for
+CR 103.6's actions. Nothing there asks anybody anything, so nothing there waits.
+`run_mulligans` here is the headless shortcut over the same machinery: it walks
+the whole pregame through the ordinary decision defaults in one call, which is
+what every unattended game and every scenario wants.
 """
 
 from random import Random
 
 from pydantic import BaseModel, Field
 
-from ..machines.decisions import Decision, DecisionKind, ask_mulligan
-from .card_state import CardState
 from .deck import CardResolver, Deck
 from .game import Game
 from .player import Player
@@ -206,8 +212,10 @@ class Match(BaseModel):
         zones, which is what an unconfigured scenario wants. The game's player
         order puts whoever takes the first turn first.
 
-        Mulligans are not taken here: the hands are dealt and `run_mulligans`
-        settles them, which is CR 103.5's own sequence.
+        Mulligans are not taken here. The hands are dealt and the game is left
+        resting in `Step.MULLIGAN`, before CR 103.8's first turn: every seat
+        declares through `Game.declare_mulligan`, and a caller with nobody live
+        to ask calls `run_mulligans` to settle the whole pregame at once.
         """
         if self.winner is not None:
             raise ValueError(f"{self.winner} has already won the match")
@@ -238,50 +246,58 @@ class Match(BaseModel):
         self.games.append(game)
         self.first_players.append(first_player)
         self.choosers.append(chooser)
+
+        if len(game.players) > 2:
+            # CR 800.1 makes that a multiplayer game; CR 103.5c and CR 800.6
+            # make the first mulligan free in one. Set before the game rests in
+            # the mulligan step, because `can_mulligan` reads it from the first
+            # declaration onwards.
+            for player in game.players:
+                player.first_mulligan_free = True
+
+        # The pregame seed prefix is `_game_seed`'s, evaluated here - after the
+        # append, exactly as it was when `run_mulligans` derived it on its own -
+        # so every seeded replay of a mulligan produces the shuffle it always did.
+        game.begin_pregame(f"{self.seed}:{len(self.games)}")
         return game
 
     def run_mulligans(self, game: Game | None = None) -> Game:
-        """Settle every opening hand of a game through the London mulligan (CR 103.5).
+        """Settle a game's whole pregame with nobody live to ask (CR 103.5, CR 103.6).
 
-        Defaults to the most recent game this match started. Every round asks
-        each player still deciding whether they will take a mulligan, then
-        repeats "until no player takes a mulligan" (CR 103.5).
+        Defaults to the most recent game this match started. The process itself
+        lives on `Game` now, as two steps the game rests in - `Step.MULLIGAN` and
+        `Step.PREGAME_ACTIONS` - and this is the headless driver over it:
+        `Game.settle_pregame` puts each declaration through `ask_mulligan` and
+        each CR 103.6 action through `Game.ask`, so a scripted answer wins, then
+        a live `decisions.provider`, and only when neither speaks does the
+        documented default stand - keep the dealt hand, bottom from the back of
+        it, decline every opening-hand action.
 
-        CR 103.5, in the order the rule states it: "First, the starting player
-        declares whether they will take a mulligan. Then each other player in
-        turn order does the same. Once each player has made a declaration, all
-        players who decided to take mulligans do so at the same time." So each
-        round collects every declaration before any mulligan is taken, walking
-        the game's player list - which puts whoever takes the first turn first,
-        which is that order. A player who declares against "may not take any
-        further mulligans": their opening hand is "the remaining cards" of the
-        hand they hold, `keep_hand` pays their bottoming cost, and later rounds
-        do not ask them again. A player at CR 103.5's ceiling - "a player can
-        take mulligans until their opening hand would be zero cards, after
-        which they may not take further mulligans" - is offered no declaration
-        at all; keeping a hand of nothing is what is left to them.
+        That preserves both halves of what this method meant before:
 
-        In a multiplayer game - one that begins with more than two players (CR
-        800.1) - CR 103.5c and CR 800.6 make each player's first mulligan free:
-        it counts neither toward the cards they put on the bottom nor toward
-        how many mulligans they may take.
+        - **the rules order.** CR 103.5: "First, the starting player declares
+          whether they will take a mulligan. Then each other player in turn order
+          does the same. Once each player has made a declaration, all players who
+          decided to take mulligans do so at the same time." Every declaration of
+          a round is collected before any mulligan is taken, in the game's player
+          order, which puts whoever takes the first turn first. A player at
+          CR 103.5's ceiling - "a player can take mulligans until their opening
+          hand would be zero cards, after which they may not take further
+          mulligans" - is offered no declaration at all. CR 103.6's actions
+          follow, because they begin "once the mulligan process (see rule 103.5)
+          is complete"; `Match.start_game` set CR 103.5c and CR 800.6's free
+          first mulligan for a multiplayer game before any of it began.
+        - **the seeded replay.** Each mulligan reshuffles off a seed derived from
+          the match seed, and the string is the one this method used to build
+          itself - `start_game` hands `Game.pregame_seed` the same prefix.
 
-        Each mulligan shuffles that player's library seeded off the match seed,
-        like the opening shuffle of CR 103.3, so a match with the same seed and
-        the same declarations replays identically.
+        Returns the game, settled: hands kept, opening-hand actions done, and the
+        turn pointer on `Step.UNTAP` of CR 103.8's first turn.
 
-        Both of CR 103.5's questions are the player's, and both are put through
-        the decision machinery rather than decided by the engine: the
-        declaration by `ask_mulligan`, and *which* cards go to the bottom by
-        `_bottom_for_keep` below. Either can be scripted, or answered live by a
-        `DecisionProvider` on `game.decisions`; with neither, the documented
-        defaults stand - keep the dealt hand, bottom from the back of it.
-
-        CR 103.6's opening-hand actions are a separate sequence that begins
-        "once the mulligan process (see rule 103.5) is complete", so this method
-        runs them at the end, through `Game.take_opening_hand_actions`. They add
-        no randomness of their own - no shuffle, no random choice - so the
-        replay guarantee above still holds with them in.
+        A caller with live seats does **not** use this. It leaves the game in the
+        pregame steps and lets each seat act through `Game.declare_mulligan` and
+        `Game.take_opening_hand_action` / `Game.finish_opening_hand_actions`,
+        none of which asks anybody anything and none of which waits.
         """
         if game is None:
             if not self.games:
@@ -290,97 +306,8 @@ class Match(BaseModel):
         elif not any(past is game for past in self.games):
             raise ValueError("that game is not one this match started")
 
-        if len(game.players) > 2:
-            # CR 800.1 makes that a multiplayer game; CR 103.5c and CR 800.6
-            # make the first mulligan free in one.
-            for player in game.players:
-                player.first_mulligan_free = True
-
-        while True:
-            deciding = [player for player in game.players if not player.hand_kept]
-            if not deciding:
-                break
-
-            declarations: list[tuple[Player, bool]] = []
-            for player in deciding:
-                # CR 103.5 puts the declaration in turn order, starting player
-                # first - which is the game's player list order. A player at
-                # the zero-hand ceiling is not offered a choice (CR 103.5).
-                wants = (
-                    ask_mulligan(game.decisions, player.username) if player.can_mulligan else False
-                )
-                declarations.append((player, wants))
-
-            if not any(wants for _, wants in declarations):
-                for player, _ in declarations:
-                    player.keep_hand(_bottom_for_keep(game, player))
-                break
-
-            # "all players who decided to take mulligans do so at the same
-            # time": every declaration above is in before any mulligan is taken.
-            for player, wants in declarations:
-                if wants:
-                    player.mulligan(
-                        self._game_seed(f"mulligan:{player.username}:{player.mulligans_taken}")
-                    )
-            for player, wants in declarations:
-                if not wants:
-                    player.keep_hand(_bottom_for_keep(game, player))
-
-        # CR 103.6: "Once the mulligan process (see rule 103.5) is complete, the
-        # starting player may take any such actions in any order."
-        game.take_opening_hand_actions()
+        game.settle_pregame()
         return game
-
-
-def _bottom_for_keep(game: Game, player: Player) -> list[CardState] | None:
-    """Which cards this player puts on the bottom when they keep (CR 103.5).
-
-    CR 103.5c and CR 800.6 both name the quantity - "the number of cards that
-    player will put on the bottom of their library" - and `cards_to_bottom`
-    computes it; *which* cards they are is the player's own choice, and until
-    this existed the engine made it for them by taking whatever sat at the back
-    of the hand. A player answering the declaration live through a
-    `DecisionProvider` would have been asked "mulligan?" and then had cards of
-    the engine's choosing thrown away.
-
-    Asked as a `CHOOSE_CARDS` question through `Game.ask`, the same CR 608.2d
-    machinery `Game.ask_cleanup_discard` uses for CR 701.9b's discard, and
-    deliberately **not** a new `DecisionKind`: "choose exactly N of these
-    cards, from one zone, in an order that matters" is precisely what that kind
-    already is, its `exact` validation already refuses a wrong-sized or
-    stray-card answer, and every client that can already render a
-    `CHOOSE_CARDS` question can render this one with no change.
-
-    Two properties the reuse buys for free:
-
-    - **The default is unchanged.** `default_answer` for an exact
-      `CHOOSE_CARDS` returns "the back of `cards`, in the order the caller
-      offered them", and the hand is offered here in hand order - byte for byte
-      the list `Player.keep_hand(None)` builds. An unscripted, unprovided game
-      bottoms exactly what it bottomed before, so every seeded replay holds.
-    - **Nothing random happens here**, so the reshuffle seeds `run_mulligans`
-      derives are untouched by asking.
-
-    `None` is returned when there is nothing to bottom, so the question is not
-    put at all - a choice among zero cards is not a choice.
-    """
-    needed = player.cards_to_bottom
-    if needed <= 0:
-        return None
-    hand = list(player.hand)
-    chosen = game.ask(
-        Decision(
-            kind=DecisionKind.CHOOSE_CARDS,
-            player=player.username,
-            prompt=f"put {needed} card(s) on the bottom of your library",
-            amount=needed,
-            cards=tuple(state.id for state in hand),
-        )
-    )
-    assert isinstance(chosen, tuple)
-    by_id = {state.id: state for state in hand}
-    return [by_id[card_id] for card_id in chosen]
 
 
 def _fresh(player: Player) -> Player:

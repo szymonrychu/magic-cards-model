@@ -238,9 +238,15 @@ def test_the_starting_player_skips_their_first_draw_step():
     their first turn, so their hand is still the seven of CR 103.5 when the
     first main phase arrives.
     """
-    game = match().start_game()
+    series = match()
+    game = series.start_game()
     starting = game.turn.active_player
     player = game.player(starting)
+
+    # CR 103.5 and CR 103.6 come first, and the first turn does not begin until
+    # they are done - so the game rests here rather than in turn 1's untap step.
+    assert game.turn.step is Step.MULLIGAN
+    series.run_mulligans(game)
 
     assert game.turn.step is Step.UNTAP
     assert len(player.hand) == 7

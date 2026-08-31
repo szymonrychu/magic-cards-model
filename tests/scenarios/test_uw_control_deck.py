@@ -224,6 +224,13 @@ def test_life_totals_and_the_first_step():
     game = start()
 
     assert game.turn is not None
+    # CR 103.5 first: a dealt game rests in the mulligan step, before any turn.
+    assert game.turn.step is Step.MULLIGAN
+    assert game.turn.turn_number == 0
+
+    game.settle_pregame()
+
+    # CR 103.8: the starting player takes their first turn, which begins at untap.
     assert game.turn.step is Step.UNTAP
     assert all(player.life == 20 for player in game.players)
 

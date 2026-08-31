@@ -190,6 +190,13 @@ def test_the_game_starts_at_untap_with_life_at_twenty():
 
     assert isinstance(game, Game)
     assert game.turn is not None
+    # CR 103.5 first: a dealt game rests in the mulligan step, before any turn.
+    assert game.turn.step is Step.MULLIGAN
+    assert game.turn.turn_number == 0
+
+    game.settle_pregame()
+
+    # CR 103.8: the starting player takes their first turn, which begins at untap.
     assert game.turn.step is Step.UNTAP
     assert all(player.life == 20 for player in game.players)
 
