@@ -5987,6 +5987,13 @@ def parse_mode_effect(mode: Mode, x_value: int) -> Effect | None:
     player_subject = _parse_target_player_mode(text)
     if player_subject is not None:
         return player_subject
+    # Read whole, ahead of the per-clause dispatcher: the family's three
+    # sentences are one CR 608.2c instruction and its follow-up, and
+    # `split_effect_clauses` would hand them over one at a time, losing the
+    # "from among them" link between the mill and the choice.
+    select_from_top = _parse_select_from_top_spell_clause(text)
+    if select_from_top is not None:
+        return select_from_top
     return parse_mixed_effect_for_spell(text)
 
 
@@ -6811,55 +6818,270 @@ def _parse_mill_then_may_return_creature_clause(text: str) -> AbilityEffect | No
     return effect
 
 
-#: "Mill N cards. You may put a land card from among them into your hand." -
-#: Six's own attack trigger. "From among them" (CR 701.17c: a milled card is
-#: findable in the graveyard it moved to) narrows the candidate pool to the
-#: cards *this* mill just moved - not every land already in the graveyard -
-#: unlike `_MILL_THEN_MAY_RETURN_CREATURE_RE`'s "from your graveyard", which
-#: reads the whole pile.
-_MILL_THEN_MAY_PUT_LAND_IN_HAND_RE = re.compile(
-    rf"^mill (?P<n>{_COUNT}) cards?\.\s*"
-    r"you may put a land card from among them into your hand\.?$",
+#: --- The "see the top N, then optionally move one of them" family ---------
+#:
+#: One printed shape, not one card. A player sees the top N cards of their own
+#: library - either by **milling** them (CR 701.17a: "that player puts that
+#: many cards from the top of their library into their graveyard", so the cards
+#: have already changed zones by the time the choice is offered) or by **looking
+#: at** them (CR 401.2 keeps a library face down and unlookable; an effect
+#: saying "look at" lifts that for itself alone and moves nothing) - and is then
+#: offered an optional follow-up: "you may put a <kind> card from among them"
+#: into the hand, onto the battlefield, or into the graveyard.
+#:
+#: Every part after the look is a choice the *resolving* effect asks its own
+#: controller for as it resolves (CR 608.2d), so both halves are asked rather
+#: than assumed: `Game.may` for whether to take the follow-up at all, and a
+#: `DecisionKind.CHOOSE_CARDS` question for *which* card - the same pair
+#: `malevolent_rumble` and `_parse_look_top_n_may_battlefield_creature_bonus_
+#: clause` already use. No new `DecisionKind` is needed: "choose 1 of these
+#: candidates" is exactly what `CHOOSE_CARDS` is documented to be general over.
+#:
+#: "From among them" is what keeps the candidate pool honest. For the mill arm
+#: it is the cards *this* mill just moved (CR 701.17c: an effect referring to a
+#: milled card finds it in the zone it moved to, as long as that zone is
+#: public) - not every card already sitting in the graveyard, which is what
+#: `_MILL_THEN_MAY_RETURN_CREATURE_RE`'s "from your graveyard" reads instead.
+#:
+#: Printings this reads, each verified with `resolve_cards` in the session that
+#: wrote it:
+#:   Six              "Mill three cards. You may put a land card from among
+#:                     them into your hand."
+#:   Ostrich-Horse    the same, plus "If you don't, put a +1/+1 counter on this
+#:                     creature." (CR 122.1a)
+#:   Ainok Wayfarer   the same text again, on a different creature - which is
+#:                     the point of templating the shape rather than the card.
+#:   Scout the City   "Mill three cards. You may put a permanent card from among
+#:                     them into your hand. You gain 3 life." (CR 110.4a's
+#:                     "permanent card"; CR 119.3's life gain)
+_SELECT_FROM_TOP_KINDS: dict[str, Callable[[CardState], bool]] = {
+    "": lambda state: True,
+    "permanent": lambda state: state.is_permanent,
+    "land": lambda state: Type.LAND in state.card.types,
+    "creature": lambda state: Type.CREATURE in state.card.types,
+    "artifact": lambda state: Type.ARTIFACT in state.card.types,
+    "enchantment": lambda state: Type.ENCHANTMENT in state.card.types,
+    "instant": lambda state: Type.INSTANT in state.card.types,
+    "sorcery": lambda state: Type.SORCERY in state.card.types,
+    "planeswalker": lambda state: Type.PLANESWALKER in state.card.types,
+}
+
+_SELECT_FROM_TOP_RE = re.compile(
+    # CR 207.2c/207.2d: an ability word or a flavor word ("Look Around —" on
+    # Scout the City's first mode) is italic flavour with no rules meaning, so
+    # it is stepped over rather than read.
+    r"^(?:[a-z][a-z '-]* — )?"
+    rf"(?:mill (?P<mill_n>{_COUNT}) cards?"
+    rf"|look at the top (?P<look_n>{_COUNT}) cards? of your library)\.\s*"
+    r"you may put (?:a|an|one) "
+    r"(?:(?P<kind>permanent|land|creature|artifact|enchantment|instant|sorcery|"
+    r"planeswalker) )?card from among them "
+    r"(?P<dest>into your hand|onto the battlefield tapped|onto the battlefield"
+    r"|into your graveyard)\.\s*"
+    r"(?P<decline_counter>if you don't, put a \+1/\+1 counter on this creature\.\s*)?"
+    rf"(?:you gain (?P<life>{_COUNT}) life\.\s*)?"
+    r"(?:put the rest (?P<rest>on the bottom of your library in a random order"
+    r"|on the bottom of your library in any order"
+    r"|on the bottom of your library"
+    r"|into your graveyard)\.\s*)?$",
     re.IGNORECASE,
 )
 
 
-def _parse_mill_then_may_put_land_in_hand_clause(text: str) -> AbilityEffect | None:
-    """`_MILL_THEN_MAY_PUT_LAND_IN_HAND_RE`'s shape - Six's whole attack
-    trigger (CR 701.17a's mill, CR 701.17c's "among them", CR 608.2d's may).
+def _select_from_top_runner(
+    text: str,
+) -> Callable[["Game", Player, str, CardState | None], None] | None:
+    """Compile `_SELECT_FROM_TOP_RE`'s shape into one runner both the spell
+    side and the ability side can call.
+
+    The runner takes the controller, the asking card's name (for the decision
+    prompts), and the source permanent if there is one - the last only so that
+    "If you don't, put a +1/+1 counter on this creature" has something to put a
+    counter on.
     """
-    match = _MILL_THEN_MAY_PUT_LAND_IN_HAND_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    match = _SELECT_FROM_TOP_RE.fullmatch(_strip_non_effect_preamble(text).strip())
     if match is None:
         return None
-    count = _count(match.group("n"))
+    milling = match.group("mill_n") is not None
+    count = _count(match.group("mill_n") if milling else match.group("look_n"))
+    kind_word = (match.group("kind") or "").lower()
+    predicate = _SELECT_FROM_TOP_KINDS.get(kind_word)
+    if predicate is None:
+        return None
+    destination = match.group("dest").lower()
+    counter_when_declined = match.group("decline_counter") is not None
+    life = _count(match.group("life")) if match.group("life") else 0
+    rest = (match.group("rest") or "").lower()
+    noun = f"{kind_word} card" if kind_word else "card"
+
+    def run(game: "Game", player: Player, source_name: str, source: CardState | None) -> None:
+        # Milling moves the cards (CR 701.17a); looking changes no zone at all -
+        # they stay where CR 401.2 keeps them, on top of the library, until
+        # this effect moves one of them.
+        seen = _mill(game, player, count) if milling else list(player.library[:count])
+
+        # A milled card whose graveyard trip was replaced (Rest in Peace) is
+        # not in the graveyard and so was never milled - CR 701.17a's mill is
+        # a move *into the graveyard*, and there is nothing "among them" to
+        # take. The look arm's own guard is the mirror image: a card is only a
+        # candidate while it is still in the library.
+        home = Zone.GRAVEYARD if milling else Zone.LIBRARY
+        candidates = [state for state in seen if state.zone is home and predicate(state)]
+
+        chosen: CardState | None = None
+        if candidates and game.may(
+            player, f"put a {noun} from among them {destination}", source=source_name
+        ):
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=player.username,
+                    prompt=f"choose a {noun} to put {destination}",
+                    source=source_name,
+                    amount=1,
+                    cards=tuple(candidate.id for candidate in candidates),
+                )
+            )
+            assert isinstance(chosen_ids, tuple)
+            by_id = {candidate.id: candidate for candidate in candidates}
+            chosen = by_id[chosen_ids[0]]
+
+        if chosen is not None and chosen.zone is home:
+            if destination == "into your hand":
+                player.move(chosen, Zone.HAND)
+            elif destination == "into your graveyard":
+                game.put_into_graveyard(chosen)
+            else:
+                # CR 110.4a's permanent card, put onto the battlefield without
+                # being cast (no spell, so no cast trigger); "tapped" is a
+                # property of how it enters, not a later action.
+                game.put_onto_battlefield(
+                    chosen, player.username, tapped=destination.endswith("tapped")
+                )
+
+        # "If you don't" covers both branches that leave the follow-up untaken:
+        # declining the may, and having no legal candidate to choose at all
+        # (CR 608.2d only offers a choice that exists).
+        if (
+            chosen is None
+            and counter_when_declined
+            and source is not None
+            and source.zone is Zone.BATTLEFIELD
+        ):
+            game.add_counters(source, Counter.PLUS_ONE, 1)
+
+        if life:
+            game.gain_life(player.username, life)
+
+        if rest and not milling:
+            # Only the look arm has a "rest": the mill arm already moved every
+            # card it saw into the graveyard.
+            remainder = [
+                state for state in seen if state is not chosen and state.zone is Zone.LIBRARY
+            ]
+            if rest == "into your graveyard":
+                for state in remainder:
+                    game.put_into_graveyard(state)
+            elif remainder:
+                if "random order" in rest:
+                    rng = Random(  # noqa: S311
+                        f"{game.shuffle_seed}:{game.shuffles_performed}:select-from-top"
+                    )
+                    rng.shuffle(remainder)
+                    game.shuffles_performed += 1
+                for state in remainder:
+                    player.move(state, Zone.LIBRARY)
+
+    return run
+
+
+def _parse_select_from_top_clause(text: str) -> AbilityEffect | None:
+    """The family above, on a triggered or activated ability (CR 603.3a,
+    CR 602.2a): the controller is the ability's, and "this creature" is the
+    permanent the ability is printed on."""
+    run = _select_from_top_runner(text)
+    if run is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        run(game, game.player(ability.controller), ability.source_name, ability.source(game))
+
+    return effect
+
+
+def _parse_select_from_top_spell_clause(text: str) -> Effect | None:
+    """The same family on a spell or a spell's mode (CR 608.2c) - Scout the
+    City's "Look Around". A spell is not on the battlefield, so the
+    "+1/+1 counter on this creature" tail has no subject and no printing in
+    the pool pairs the two; the runner is handed `None` and skips it."""
+    run = _select_from_top_runner(text)
+    if run is None:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        run(game, game.controller_of(spell), spell.name, None)
+
+    return effect
+
+
+#: "Look at the top card of your library. If it's a <kind> card, you may put it
+#: <somewhere>. Otherwise, put it <somewhere else>." - Fecund Greenshell, the
+#: family's one-card cousin: the same look (CR 401.2) and the same CR 608.2d
+#: "you may", but the branch is decided by the card that turns up rather than
+#: by choosing among several candidates, so there is nothing to `CHOOSE_CARDS`
+#: between. "Otherwise" is the *card* failing the condition, not the player
+#: declining the may - a declined may leaves the card on top of the library,
+#: which is why the two branches are kept apart here.
+_LOOK_TOP_CARD_CONDITIONAL_RE = re.compile(
+    r"^look at the top card of your library\. "
+    r"if it's an? (?P<kind>permanent|land|creature|artifact|enchantment|instant|sorcery"
+    r"|planeswalker) card, you may put it "
+    r"(?P<dest>onto the battlefield tapped|onto the battlefield|into your hand"
+    r"|into your graveyard)\. "
+    r"otherwise, put it (?P<other>into your hand|into your graveyard"
+    r"|on the bottom of your library)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_look_top_card_conditional_clause(text: str) -> AbilityEffect | None:
+    """`_LOOK_TOP_CARD_CONDITIONAL_RE`'s shape - Fecund Greenshell's own
+    enters trigger, verified with `resolve_cards`.
+
+    An empty library means there is no top card to look at, so every branch is
+    impossible and the whole instruction is ignored (CR 609.3's "does only as
+    much as possible", CR 101.3's ignored impossible part).
+    """
+    match = _LOOK_TOP_CARD_CONDITIONAL_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    predicate = _SELECT_FROM_TOP_KINDS.get(match.group("kind").lower())
+    if predicate is None:
+        return None
+    destination = match.group("dest").lower()
+    otherwise = match.group("other").lower()
+    noun = f"{match.group('kind').lower()} card"
+
+    def move(game: "Game", player: Player, state: CardState, where: str) -> None:
+        if where == "into your hand":
+            player.move(state, Zone.HAND)
+        elif where == "into your graveyard":
+            game.put_into_graveyard(state)
+        elif where == "on the bottom of your library":
+            player.move(state, Zone.LIBRARY)
+        else:
+            game.put_onto_battlefield(state, player.username, tapped=where.endswith("tapped"))
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         player = game.player(ability.controller)
-        milled = _mill(game, player, count)
-        candidates = [state for state in milled if Type.LAND in state.card.types]
-        if not candidates:
+        if not player.library:
             return
-        if not game.may(
-            player,
-            "put a land card from among them into your hand",
-            source=ability.source_name,
-        ):
+        top = player.library[0]
+        if predicate(top):
+            if game.may(player, f"put a {noun} {destination}", source=ability.source_name):
+                move(game, player, top, destination)
             return
-        chosen_ids = game.ask(
-            Decision(
-                kind=DecisionKind.CHOOSE_CARDS,
-                player=player.username,
-                prompt="choose a land card to put into your hand",
-                source=ability.source_name,
-                amount=1,
-                cards=tuple(candidate.id for candidate in candidates),
-            )
-        )
-        assert isinstance(chosen_ids, tuple)
-        by_id = {candidate.id: candidate for candidate in candidates}
-        chosen = by_id[chosen_ids[0]]
-        if chosen.zone is Zone.GRAVEYARD:
-            player.move(chosen, Zone.HAND)
+        move(game, player, top, otherwise)
 
     return effect
 
@@ -7329,9 +7551,12 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     mill_then_may_return_creature = _parse_mill_then_may_return_creature_clause(effect_text)
     if mill_then_may_return_creature is not None:
         return mill_then_may_return_creature
-    mill_then_may_put_land_in_hand = _parse_mill_then_may_put_land_in_hand_clause(effect_text)
-    if mill_then_may_put_land_in_hand is not None:
-        return mill_then_may_put_land_in_hand
+    select_from_top = _parse_select_from_top_clause(effect_text)
+    if select_from_top is not None:
+        return select_from_top
+    look_top_card_conditional = _parse_look_top_card_conditional_clause(effect_text)
+    if look_top_card_conditional is not None:
+        return look_top_card_conditional
     damage_to_that_spells_controller = _parse_damage_to_that_spells_controller_clause(effect_text)
     if damage_to_that_spells_controller is not None:
         return damage_to_that_spells_controller
@@ -8192,6 +8417,9 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     look_top_n_battlefield = _parse_look_top_n_may_battlefield_creature_bonus_clause(effect_text)
     if look_top_n_battlefield is not None:
         return look_top_n_battlefield
+    select_from_top_spell = _parse_select_from_top_spell_clause(effect_text)
+    if select_from_top_spell is not None:
+        return select_from_top_spell
     if _EACH_PLAYER_SACRIFICES_COLORED_RE.fullmatch(whole):
         return each_player_sacrifices_colored_permanents
     destroy_each_then_add_mana = _parse_destroy_each_then_add_mana_per_destroyed(effect_text)

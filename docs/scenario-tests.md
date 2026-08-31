@@ -70,6 +70,7 @@ Existing files, as a guide to where a new case belongs:
 | `test_token_creation_replacement.py` | CR 701.7b: replacing a token *being created*, and Doubling Season's token half |
 | `test_role_tokens.py` | CR 111.10k, 303.7, 704.5z: Roles, and the two state-based actions that police them |
 | `test_aura_attachment.py` | CR 704.5m: an Aura on an illegal object or on nothing, against CR 704.5n's Equipment |
+| `test_select_from_the_top_of_your_library.py` | CR 701.17a-c, 401.2, 608.2d, 609.3: the "mill or look at the top N, then optionally move one of them" family - one parsed shape across Ostrich-Horse, Ainok Wayfarer, Scout the City's mode and Fecund Greenshell, against `test_six.py`'s single card |
 | `test_mana_spend_restrictions.py` | CR 106.6: "Spend this mana only to ..." - the restriction carried by mana in the pool, what it refuses, and which mana pays when both would |
 
 ### Counters

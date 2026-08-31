@@ -1,0 +1,137 @@
+{
+  "object": "card",
+  "id": "3d4dfb11-1aa4-4be1-874b-19a9b02ad041",
+  "oracle_id": "ecb8e283-5cdb-4e6a-bdff-546c1617363c",
+  "multiverse_ids": [],
+  "resource_id": "2A5DA1AFFD53E2361D1BFD0E77055F906830E5B1E7DECA2B360F089F6D45ABCD",
+  "mtgo_id": 152059,
+  "arena_id": 105827,
+  "tcgplayer_id": 697406,
+  "cardmarket_id": 892205,
+  "name": "Scout the City",
+  "lang": "en",
+  "released_at": "2026-06-26",
+  "uri": "https://api.scryfall.com/cards/3d4dfb11-1aa4-4be1-874b-19a9b02ad041",
+  "scryfall_uri": "https://scryfall.com/card/msc/817/scout-the-city?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:36:45Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/d/3d4dfb11-1aa4-4be1-874b-19a9b02ad041.jpg?1783903005",
+    "normal": "https://cards.scryfall.io/normal/front/3/d/3d4dfb11-1aa4-4be1-874b-19a9b02ad041.jpg?1783903005",
+    "large": "https://cards.scryfall.io/large/front/3/d/3d4dfb11-1aa4-4be1-874b-19a9b02ad041.jpg?1783903005",
+    "png": "https://cards.scryfall.io/png/front/3/d/3d4dfb11-1aa4-4be1-874b-19a9b02ad041.png?1783903005",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/d/3d4dfb11-1aa4-4be1-874b-19a9b02ad041.jpg?1783903005",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/d/3d4dfb11-1aa4-4be1-874b-19a9b02ad041.jpg?1783903005",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/d/3d4dfb11-1aa4-4be1-874b-19a9b02ad041.webp?1783903005",
+    "grid": "https://cards.scryfall.io/grid/front/3/d/3d4dfb11-1aa4-4be1-874b-19a9b02ad041.webp?1783903005",
+    "display": "https://cards.scryfall.io/display/front/3/d/3d4dfb11-1aa4-4be1-874b-19a9b02ad041.webp?1783903005",
+    "art": "https://cards.scryfall.io/art/front/3/d/3d4dfb11-1aa4-4be1-874b-19a9b02ad041.webp?1783903005",
+    "crop": "https://cards.scryfall.io/crop/front/3/d/3d4dfb11-1aa4-4be1-874b-19a9b02ad041.webp?1783903005"
+  },
+  "mana_cost": "{1}{G}",
+  "cmc": 2.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Choose one \u2014\n\u2022 Look Around \u2014 Mill three cards. You may put a permanent card from among them into your hand. You gain 3 life. (To mill three cards, put the top three cards of your library into your graveyard.)\n\u2022 Bring Down \u2014 Destroy target creature with flying.",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Look Around",
+    "Bring Down",
+    "Mill"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "9d739461-c5ac-43a1-af41-3d5a585b5c8d",
+  "set": "msc",
+  "set_name": "Marvel Super Heroes Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/9d739461-c5ac-43a1-af41-3d5a585b5c8d",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amsc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/msc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/3d4dfb11-1aa4-4be1-874b-19a9b02ad041/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aecb8e283-5cdb-4e6a-bdff-546c1617363c&unique=prints",
+  "collector_number": "817",
+  "digital": false,
+  "rarity": "common",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Rafater",
+  "artist_ids": [
+    "5157b931-ac23-49b6-a2c4-c4cf4bbc2118"
+  ],
+  "illustration_id": "5b4ead75-f8e1-4023-9b59-fbc8811da3fd",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 12496,
+  "penny_rank": 5029,
+  "prices": {
+    "usd": "0.19",
+    "usd_foil": "0.25",
+    "usd_etched": null,
+    "eur": "0.05",
+    "eur_foil": "0.16",
+    "tix": "0.01"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DScout%2Bthe%2BCity",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DScout%2Bthe%2BCity",
+    "edhrec": "https://edhrec.com/route/?cc=Scout+the+City"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F697406%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=892205&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/152059?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
