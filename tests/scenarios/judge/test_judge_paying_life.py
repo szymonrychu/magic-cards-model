@@ -75,9 +75,11 @@ def test_a_life_payment_in_the_cost_must_actually_be_payable():
     receive priority and the state-based action in CR 704.5a is checked
     (CR 104.3b). She cannot pay the 1 life, so `CostPayment.pay` refuses.
 
-    Note the smaller gap this exposes: `Game.why_cannot_activate` returns None
-    here - it does not consult the life cost - so the refusal only arrives at
-    payment time. Asserted on the raise rather than on the advisory answer.
+    The refusal now arrives before anything is announced: `Game.
+    why_cannot_activate` consults the life cost too (CR 119.4, the section
+    below), and `begin_activating` raises its answer. `CostPayment.pay` still
+    refuses the same payment on its own, which is what an activation built by
+    hand runs into.
     """
     scenario = (
         Scenario().player("alice", life=0, battlefield=["Mana Confluence"]).player("bob").build()
@@ -247,3 +249,106 @@ def test_children_of_korlis_gives_back_the_life_paid_as_well_as_the_damage():
     scenario.resolve_top()
 
     assert alice.life == 20, "3 damage plus 1 paid is 4 life lost this turn"
+
+
+# --------------------------------------------------------------------------
+# DDR#964's smaller half - the advisory answer, not just the payment
+# --------------------------------------------------------------------------
+
+
+def test_why_cannot_activate_refuses_a_life_cost_the_player_cannot_afford():
+    """CR 119.4, checked *before* the activation is begun.
+
+    "If a cost or effect allows a player to pay an amount of life greater than
+    0, the player may do so only if their life total is greater than or equal
+    to the amount of the payment." CR 118.3 says the same from the resource
+    side, and CR 614.17b makes it a restriction on choosing to pay at all: an
+    event that can't happen is not one a player may choose to pay.
+
+    Nurturing Peatland (verified with `resolve_cards`): "{T}, Pay 1 life: Add
+    {B} or {G}." At 0 life alice cannot pay the 1, so the ability is not
+    activatable and `why_cannot_activate` has to say so - an engine that offers
+    it and only refuses once `{T}` is already announced is offering a play that
+    does not exist.
+    """
+    scenario = (
+        Scenario().player("alice", life=0, battlefield=["Nurturing Peatland"]).player("bob").build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    peatland = scenario.find("Nurturing Peatland", Zone.BATTLEFIELD, "alice")
+
+    reason = scenario.why_cannot_activate(peatland, index=0)
+
+    assert reason is not None
+    assert "cannot pay 1 life" in reason, reason
+    assert "CR 119.4" in reason, reason
+    assert peatland.untapped
+
+
+def test_the_same_ability_is_offered_at_a_life_total_that_can_pay_it():
+    """The control: nothing about a life cost is refused when it is affordable.
+
+    CR 119.4's condition is "greater than or equal to the amount", and 20 is
+    comfortably that. The refusal above must be about the life total and only
+    the life total.
+    """
+    scenario = Scenario().player("alice", battlefield=["Nurturing Peatland"]).player("bob").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    peatland = scenario.find("Nurturing Peatland", Zone.BATTLEFIELD, "alice")
+
+    assert scenario.why_cannot_activate(peatland, index=0) is None
+
+    scenario.activate(peatland, username="alice", color=Color.BLACK)
+
+    assert scenario.player("alice").life == 19
+    assert peatland.tapped
+    assert scenario.player("alice").mana_pool.total == 1
+
+
+def test_paying_life_down_to_exactly_zero_is_legal():
+    """The boundary, and it falls on the payable side.
+
+    CR 119.4 permits the payment when the life total is "greater than or equal
+    to the amount", so 1 life pays a cost of 1 life - the rule is not "must
+    survive it". CR 704.5a ("If a player has 0 or less life, that player loses
+    the game") is a *state-based action*, checked later, when a player would
+    receive priority; it is not a restriction on paying.
+
+    So the ability is activatable, the mana is produced, and alice sits at 0
+    life holding it until state-based actions are checked.
+    """
+    scenario = (
+        Scenario().player("alice", life=1, battlefield=["Nurturing Peatland"]).player("bob").build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    peatland = scenario.find("Nurturing Peatland", Zone.BATTLEFIELD, "alice")
+
+    assert scenario.why_cannot_activate(peatland, index=0) is None, "CR 119.4 allows paying to 0"
+
+    scenario.activate(peatland, username="alice", color=Color.GREEN)
+
+    assert scenario.player("alice").life == 0
+    assert scenario.player("alice").mana_pool.total == 1
+
+    scenario.state_based_actions()
+
+    assert "alice" in scenario.game.losers, "CR 704.5a, and only now"
+
+
+def test_the_refusal_names_the_life_cost_rather_than_some_other_reason():
+    """A wrong reason is its own defect: the second ability is unaffordable for
+    a different reason, and must not be described as a life problem.
+
+    Nurturing Peatland's other ability is "{1}, {T}, Sacrifice this land: Draw
+    a card." - no life in the cost at all - so at 0 life the life check has
+    nothing to say about it, and CR 119.4 must not be quoted at it.
+    """
+    scenario = (
+        Scenario().player("alice", life=0, battlefield=["Nurturing Peatland"]).player("bob").build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    peatland = scenario.find("Nurturing Peatland", Zone.BATTLEFIELD, "alice")
+
+    assert scenario.why_cannot_activate(peatland, index=1) is None, (
+        "no life is paid by the draw ability, so nothing here refuses it"
+    )

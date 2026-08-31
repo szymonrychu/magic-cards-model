@@ -25,9 +25,10 @@ rule rather than anything about timing:
   establishes that Gollum is the thing being put into a graveyard.
 
 `machines/abilities._activated_ability_zone` reads exactly this off the printed
-text, and `machines/keywords.off_battlefield_activation` refuses the wrong zone.
-The one gap is that `Game.activate_ability` - the battlefield path the harness's
-`activate()` uses - never consults it, which is the `xfail` at the bottom.
+text, `machines/keywords.off_battlefield_activation` refuses the wrong zone, and
+`Game.why_cannot_activate` - the battlefield path the harness's `activate()`
+uses - reads the same `ActivatedAbility.zone`, so both doors refuse it (the last
+test here; it was an `xfail` until `game.py` learned to consult the zone).
 
 Every CR number in this file was verified with `knowledge_search(q="...",
 type="rules")` in the session that wrote it: CR 113.6b, CR 113.6j, CR 113.6m,
@@ -122,21 +123,14 @@ def test_the_same_ability_works_once_gollum_is_already_in_the_graveyard():
     assert gollum.zone is Zone.HAND
 
 
-@pytest.mark.xfail(
-    reason=(
-        "`Game.activate_ability` - the battlefield activation path the harness's "
-        "`activate()` uses - never reads `ActivatedAbility.zone`, so the very play "
-        "DDR#970 rules out goes through: Gollum on the battlefield sacrifices "
-        "itself to its own graveyard-only ability. Only "
-        "`machines/keywords.off_battlefield_activation` enforces CR 113.6m."
-    ),
-    strict=True,
-)
 def test_the_battlefield_activation_path_also_refuses_the_wrong_zone():
     """CR 113.6m does not care which code path asked.
 
     An ability that functions only in a graveyard is not activatable from the
     battlefield, whichever door the activation comes through.
+    `Game.why_cannot_activate` reads `ActivatedAbility.zone` now, so the
+    battlefield path refuses the same play `off_battlefield_activation` does,
+    and names the same zone.
     """
     scenario = (
         Scenario()
@@ -148,5 +142,14 @@ def test_the_battlefield_activation_path_also_refuses_the_wrong_zone():
     gollum = scenario.creature("Gollum, Patient Plotter", "alice")
     (swamp,) = scenario.untapped_sources("Swamp")
 
-    with pytest.raises(ValueError):
+    assert scenario.why_cannot_activate(gollum) == (
+        "Gollum, Patient Plotter's ability functions in the graveyard, "
+        "but it is in the battlefield (CR 113.6m)"
+    )
+
+    with pytest.raises(ValueError, match="functions in the graveyard"):
         scenario.activate(gollum, swamp, sacrificing=[gollum])
+
+    assert gollum.zone is Zone.BATTLEFIELD
+    assert swamp.untapped
+    assert scenario.game.stack_is_empty

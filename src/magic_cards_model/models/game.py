@@ -6053,11 +6053,27 @@ class Game(BaseModel):
         already true of every activation here.
 
         CR 113.6's "abilities of all other objects usually function only while
-        that object is on the battlefield" is enforced as a flat rule, so an
-        ability that functions from another zone is refused. Cycling is the pool's
-        example and it goes through `machines/keywords.KeywordActivation`
-        instead, which carries the zone its rule names - see
-        `docs/engine-coverage.md`.
+        that object is on the battlefield" is the default, and an ability whose
+        printed text names a different zone is refused here too - the zone
+        `machines/abilities._activated_ability_zone` read off the text
+        (`ActivatedAbility.zone`, with `zone_rule` naming which CR 113.6
+        sub-rule put it there: CR 113.6b for "activate only from your
+        graveyard", CR 113.6j for a cost that cannot be paid on the
+        battlefield, CR 113.6m for an effect that moves the card out of a named
+        zone). Both directions are checked: Gollum, Patient Plotter's
+        graveyard-only ability is not activatable while Gollum is on the
+        battlefield, and an ordinary battlefield ability is not activatable
+        from anywhere else. Off-battlefield activation itself goes through
+        `machines/keywords.off_battlefield_activation`, which checks the same
+        zone - see `docs/engine-coverage.md`.
+
+        A life payment in the cost is checked as well: **CR 119.4** - "If a cost
+        or effect allows a player to pay an amount of life greater than 0, the
+        player may do so only if their life total is greater than or equal to
+        the amount of the payment" - with **CR 119.4b**'s "players can always
+        pay 0 life" as the exemption. Paying down to exactly 0 is legal; losing
+        the game at 0 life is a separate state-based action (CR 704.5a),
+        checked when a player would next receive priority.
         """
         abilities = self.activated_abilities(permanent)
         if index >= len(abilities):
@@ -6065,6 +6081,19 @@ class Game(BaseModel):
         ability = abilities[index]
         controller = controller or self.controller_of(permanent).username
 
+        if ability.zone is not None and permanent.zone is not ability.zone:
+            # CR 113.6b/113.6j/113.6m, whichever `machines/abilities.py` read
+            # off the printed text: an ability that functions in one named zone
+            # does not exist to be activated from any other. Checked before the
+            # flat battlefield rule below so the refusal names the real reason
+            # - "functions in the graveyard" rather than "not on the
+            # battlefield" - and so the battlefield itself is refused too,
+            # which is DDR#970's Gollum sacrificing itself to its own
+            # graveyard-only ability.
+            return (
+                f"{permanent.name}'s ability functions in the {ability.zone.value}, "
+                f"but it is in the {permanent.zone.value} ({ability.zone_rule})"
+            )
         if permanent.zone is not Zone.BATTLEFIELD:
             return f"{permanent.name} is in {permanent.zone.value}, not on the battlefield"
         if self.controller_of(permanent).username != controller:
@@ -6096,6 +6125,24 @@ class Game(BaseModel):
                 f"{permanent.name}'s mana ability has an effect this engine cannot read "
                 f"({ability.mana.unparsed_rider!r}), so it refuses to activate rather than "
                 "silently dropping it (CR 405.6c)"
+            )
+
+        life_owed = 0
+        for piece in ability.costs:
+            if piece.kind is CostKind.PAY_LIFE:
+                digits = re.search(r"\d+", piece.text)
+                life_owed += int(digits.group()) if digits else 0
+        if life_owed > 0 and self.player(controller).life < life_owed:
+            # CR 119.4: an amount of life greater than 0 may be paid "only if
+            # their life total is greater than or equal to the amount of the
+            # payment" - CR 119.4b's "players can always pay 0 life" is why
+            # only a positive amount is checked at all. Refused here, before
+            # anything is announced, rather than at `CostPayment.pay` time:
+            # an ability nobody can pay for is not one to offer.
+            return (
+                f"{controller} cannot pay {life_owed} life from a life total of "
+                f"{self.player(controller).life}, so {permanent.name}'s ability "
+                "cannot be activated (CR 119.4)"
             )
 
         needs_tapping = any(piece.kind in {CostKind.TAP, CostKind.UNTAP} for piece in ability.costs)
