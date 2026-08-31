@@ -21,18 +21,19 @@ to replace that draw. The episode's two rulings:
   Reflection off "draw a card", so the Riddler's is the one that has to go
   first - which is not the free choice the Torbran ruling would suggest.
 
-The engine has a real draw-replacement path (`ReplacementKind.DRAW`, exercised
-by Alhammarret's Archive), and it applies. What it does not have is any
-compiled replacement for either card the episode names, or the CR 614.5
-follow-up that lets a second copy apply to the already-modified event - so the
-two rulings are `xfail`.
+Both rulings hold now. `machines/replacement.py` compiles Thought Reflection's
+plain "if you would draw a card, draw two cards instead" and Quantum Riddler's
+"as long as you have one or fewer cards in hand, ... you draw that many cards
+plus one instead", and the CR 614.5 follow-up works because "draw two cards
+instead" is applied as an *increment* rather than as a flat two: a second
+permanent printing the same line gets its own opportunity against the modified
+event, replaces one of CR 121.2's individual draws with two, and the total goes
+to three rather than staying at two.
 
 Every CR number in this file was verified with `knowledge_search(q="...",
 type="rules")` in the session that wrote it: CR 121.2, CR 121.2a, CR 121.6b,
 CR 614.5, CR 616.1, CR 616.1e.
 """
-
-import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.replacement import replacements_of
@@ -66,16 +67,6 @@ def test_a_draw_replacement_really_applies():
     assert len(drawn) == 2
 
 
-@pytest.mark.xfail(
-    reason=(
-        "CR 614.5 gives *each* replacement effect one opportunity, so a second "
-        "identical permanent applies to the already-modified event. The engine "
-        "applies exactly one draw replacement per draw: two Alhammarret's "
-        "Archives draw two cards, not more, so DDR#975's 'the other Quantum "
-        "Riddler does though' has nothing to demonstrate it."
-    ),
-    strict=True,
-)
 def test_a_second_copy_applies_to_the_already_modified_draw():
     """CR 614.5 / CR 616.1e: one effect is chosen, then the check repeats.
 
@@ -92,17 +83,6 @@ def test_a_second_copy_applies_to_the_already_modified_draw():
     assert len(drawn) > 2
 
 
-@pytest.mark.xfail(
-    reason=(
-        "Neither card the episode is about compiles to a replacement: Thought "
-        "Reflection's plain 'If you would draw a card, draw two cards instead' "
-        "and Quantum Riddler's conditional 'As long as you have one or fewer "
-        "cards in hand, if you would draw one or more cards, you draw that many "
-        "cards plus one instead' both come back from `replacements_of` empty, "
-        "so CR 121.2a's forced ordering between them is not expressible."
-    ),
-    strict=True,
-)
 def test_both_of_the_episodes_cards_carry_a_draw_replacement():
     """CR 121.2a distinguishes them: one keys off "draw one or more cards", the
     other off "draw a card". Both have to exist before the order can matter.

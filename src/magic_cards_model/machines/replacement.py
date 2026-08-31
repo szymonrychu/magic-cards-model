@@ -23,7 +23,7 @@ WOTC templates these effects tightly, which is what makes them readable:
 | `... instead of ...` | CR 614.1a | `INSTEAD_OF` |
 | `... rather than ...` | CR 614.1a shape | `RATHER_THAN` |
 | `Skip ...` | CR 614.1b, 614.10 | `SKIP` |
-| `[This] enters tapped.` | CR 614.1c | `ENTERS_TAPPED` |
+| `[This] enters tapped.` | CR 614.1d | `ENTERS_TAPPED` |
 | `[This] enters with N counters on it.` | CR 614.1c | `ENTERS_WITH` |
 | `... enter as a copy of ...` | CR 614.1c, 616.1c | `ENTERS_AS_COPY` |
 | `As [this] enters, ...` | CR 614.1c | `AS_ENTERS` |
@@ -57,9 +57,12 @@ That rule is what keeps these apart:
   from anywhere, exile it instead." is a replacement effect. Only the second is
   returned.
 - Brine Elemental's "When this creature is turned face up, each opponent skips
-  their next untap step." is a trigger even though it contains "skips". Nothing
-  is returned for it. Contrast CR 614.1e's "As [this] is turned face up, ...",
-  which is a replacement effect.
+  their next untap step." is a trigger even though it contains "skips". Its
+  skip *is* a CR 614.1b replacement effect - but one that the trigger creates
+  when it resolves, not one the permanent generates while it sits there. It is
+  returned with `from_trigger=True` and is never compiled into behaviour, so no
+  battlefield scan can pick it up as a static ability. Contrast CR 614.1e's
+  "As [this] is turned face up, ...", which is a replacement effect outright.
 - Forsaken Crossroads' "When Forsaken Crossroads enters the battlefield, scry 1.
   If you weren't the starting player, you may untap Forsaken Crossroads
   instead." is one trigger across two sentences. The "instead" in the second
@@ -140,7 +143,15 @@ class ReplacementKind(StrEnum):
     RATHER_THAN = "rather_than"
     #: CR 614.1b, 614.10 - "Skip [something]".
     SKIP = "skip"
-    #: CR 614.1c - "[This permanent] enters tapped."
+    #: CR 614.1d - "[This permanent] enters tapped." Verified in this session:
+    #: CR 614.1d is "Continuous effects that read '[This permanent] enters . . .'
+    #: or '[Objects] enter [the battlefield] . . .' are replacement effects",
+    #: which is the bare form. CR 614.1c is the *other* three shapes -
+    #: "[This permanent] enters with . . . ," "As [this permanent] enters . . . ,"
+    #: and "[This permanent] enters as . . ." - so it is `ENTERS_WITH`,
+    #: `AS_ENTERS` and `ENTERS_AS_COPY`'s rule, not this one. This line cited
+    #: 614.1c until that was looked up; the wrong number is recorded here the
+    #: same way the parser docstring records the CR 113.3 correction.
     ENTERS_TAPPED = "enters_tapped"
     #: CR 614.1d - "[Objects] enter [the battlefield] untapped." A general
     #: effect watching a *class* of permanent, not the printing permanent's own
@@ -216,6 +227,20 @@ class ReplacementEffect(BaseModel):
     reminder: str | None = None
     #: Face name for a multifaced card, None for a single-faced one.
     face: str | None = None
+
+    #: True when this sentence is the *effect* of a triggered ability rather
+    #: than a static ability's own continuous effect (CR 603.1 vs CR 604.2).
+    #:
+    #: Brine Elemental's "When this creature is turned face up, each opponent
+    #: skips their next untap step" is the only shape read this way, and the
+    #: flag is what keeps reading it from being a lie: the skip does not exist
+    #: while the permanent sits on the battlefield, it comes into being when
+    #: the trigger resolves. `parsed_card_replacements` therefore never
+    #: compiles a `from_trigger` effect into a `CardReplacement`, so nothing
+    #: `applicable_effects` gathers off the battlefield can come from one.
+    #: Reporting the shape and refusing to perform it is the honest answer;
+    #: performing it as a static ability would be a wrong board state.
+    from_trigger: bool = False
 
     #: The event being replaced or prevented, as templated.
     event: str | None = None
@@ -344,7 +369,18 @@ _ENTERS = r"enters?(?: the battlefield)?"
 
 # CR 614.1a. The event clause must contain "would": that is what separates a
 # replacement effect from a conditional inside a resolving effect.
-_IF_WOULD = re.compile(r"^If (?P<event>.+?\bwould\b.+?),\s*(?P<rest>.+?)\.?$", re.IGNORECASE)
+#
+# The optional "As long as [condition]," prefix is CR 604.2's own wording for a
+# static ability whose continuous effect only exists while something is true -
+# Quantum Riddler's "As long as you have one or fewer cards in hand, if you
+# would draw one or more cards, ... instead". The condition is kept in
+# `condition` rather than folded into the event, because it is not part of the
+# event at all: it decides whether the replacement effect exists right now.
+_IF_WOULD = re.compile(
+    r"^(?:As long as (?P<condition>[^,]+),\s*)?"
+    r"If (?P<event>.+?\bwould\b.+?),\s*(?P<rest>.+?)\.?$",
+    re.IGNORECASE,
+)
 
 _INSTEAD_OF_LEADING = re.compile(
     r"^Instead of (?P<event>.+?),\s*(?P<replacement>.+?)\.?$", re.IGNORECASE
@@ -359,9 +395,23 @@ _RATHER_THAN = re.compile(
 
 # CR 614.1b / 614.10.
 _SKIP = re.compile(r"^Skip (?P<skipped>.+?)\.?$")
+#: The same rule, worded about a player rather than as an imperative - "each
+#: opponent skips their next untap step". Only the third-person "skips" is
+#: matched, which is what keeps the imperative "Skip your draw step" on
+#: `_SKIP` above, and the subject is kept short and comma-free so a longer
+#: sentence that merely contains the word does not get claimed. Tried after
+#: `_try_if_would`, so Plagiarize's "instead that player skips that draw and
+#: you draw a card" stays the `IF_WOULD_INSTEAD` it is.
+_PLAYER_SKIPS = re.compile(r"^(?P<who>[^,]{1,40}?) skips (?P<skipped>.+?)\.?$", re.IGNORECASE)
 
-# CR 614.1c. `condition` picks up the "If you don't, it enters tapped" form used
-# by the modal double-faced lands, and the "unless ..." form used by the duals.
+# CR 614.1d (the bare "[This permanent] enters ..." form; CR 614.1c is
+# "enters with"/"As ... enters"/"enters as"). `condition` picks up the "If you
+# don't, it enters tapped" form used by the modal double-faced lands, and
+# `unless` the "unless ..." form used by the duals. The two groups are kept
+# apart on purpose: they carry opposite polarity - a leading "If <cond>," taps
+# when the condition *holds*, a trailing "unless <cond>" taps when it does
+# *not* - and `_enters_tapped_condition` below reads that polarity back off the
+# retained "unless" word.
 _ENTERS_TAPPED = re.compile(
     rf"^(?:If (?P<condition>[^,]+),\s*)?(?P<subject>[^,]+?) {_ENTERS} tapped"
     r"(?:\s+(?P<unless>unless .+?))?\.?$",
@@ -475,8 +525,15 @@ def _parse_oracle_text(
 
         # CR 603.1: a triggered ability is "[When/Whenever/At] [condition],
         # [effect]. [Instructions (if any).]" - the trailing instructions are
-        # part of the trigger, so the whole paragraph belongs to it.
+        # part of the trigger, so the whole paragraph belongs to it. Nothing in
+        # it is claimed as a static ability's own effect; the one shape read
+        # out of it is flagged `from_trigger` and never compiled into
+        # behaviour - see `_parse_trigger_effect`.
         if _TRIGGER_OPENER.match(rules_text):
+            effects.extend(
+                effect.model_copy(update={"raw": paragraph, "reminder": reminder, "face": face})
+                for effect in _parse_trigger_effect(rules_text, names)
+            )
             continue
 
         body = _COST_PREFIX.sub("", rules_text)
@@ -489,6 +546,47 @@ def _parse_oracle_text(
                 for effect in _parse_sentence(sentence, names)
             )
     return effects
+
+
+#: A triggered ability's own "[When/Whenever/At] [condition]," opener, split
+#: off so what follows can be read as the ability's effect (CR 603.1).
+_TRIGGER_CONDITION = re.compile(r"^(?:When|Whenever|At)\b[^,]*,\s*(?P<effect>.+)$", re.IGNORECASE)
+
+
+def _parse_trigger_effect(rules_text: str, names: tuple[str, ...]) -> list[ReplacementEffect]:
+    """The one shape read out of a triggered ability's effect: "[player] skips ...".
+
+    CR 603.1 keeps the whole paragraph inside the trigger, and this does not
+    change that. What it acknowledges is that the trigger's *effect*, once it
+    resolves, can itself be a CR 614.1b skip - Brine Elemental's "each opponent
+    skips their next untap step" is a real replacement effect, it just does not
+    exist until the ability has resolved.
+
+    So exactly one template is tried, and every result is flagged
+    `from_trigger`. `parsed_card_replacements` refuses to compile a flagged
+    effect, so nothing here can be picked up off the battlefield as a static
+    ability - which is the behaviour the CR 603.1 boundary is really protecting.
+    Reporting the shape while refusing to perform it is this module's
+    honesty-over-coverage rule applied to a trigger.
+
+    Nothing that is *not* a bare "[player] skips ..." is claimed: no `UNPARSED`
+    is emitted from a trigger paragraph either, so Forsaken Crossroads' "you may
+    untap Forsaken Crossroads instead" and Rest in Peace's "exile all
+    graveyards" still come back with nothing, exactly as before.
+    """
+    match = _TRIGGER_CONDITION.match(rules_text)
+    if match is None:
+        return []
+    found: list[ReplacementEffect] = []
+    for sentence in _SENTENCE_SPLIT.split(match.group("effect")):
+        sentence = sentence.strip()
+        if not sentence:
+            continue
+        found.extend(
+            effect.model_copy(update={"from_trigger": True})
+            for effect in _try_player_skips(sentence, names)
+        )
+    return found
 
 
 # --------------------------------------------------------------------------
@@ -522,6 +620,7 @@ def _parse_sentence(sentence: str, names: tuple[str, ...]) -> list[ReplacementEf
         _try_enters_untapped,
         _try_enters_with,
         _try_skip,
+        _try_player_skips,
         _try_instead_of,
         _try_rather_than,
     ):
@@ -662,6 +761,7 @@ def _try_if_would(sentence: str, names: tuple[str, ...]) -> list[ReplacementEffe
             sentence,
             event=event,
             replacement=replacement or None,
+            condition=(match.group("condition") or "").strip() or None,
             optional=_is_optional(rest),
             self_replacement=_refers_to_self(event, names),
         )
@@ -815,6 +915,26 @@ def _try_skip(sentence: str, names: tuple[str, ...]) -> list[ReplacementEffect]:
     # CR 614.10: "Skip [something]" is "Instead of doing [something], do
     # nothing", so the skipped thing is the event and there is no replacement.
     return [_make(ReplacementKind.SKIP, sentence, event=skipped)]
+
+
+def _try_player_skips(sentence: str, names: tuple[str, ...]) -> list[ReplacementEffect]:
+    """ "[player] skips [something]" - CR 614.1b's other wording.
+
+    Same rule as the imperative form, said about a named player instead of at
+    one, so `subject` carries who is doing the skipping and `event` carries
+    what is skipped, exactly as `_try_skip` fills it.
+    """
+    match = _PLAYER_SKIPS.match(sentence)
+    if not match:
+        return []
+    return [
+        _make(
+            ReplacementKind.SKIP,
+            sentence,
+            subject=match.group("who").strip(),
+            event=match.group("skipped").strip(),
+        )
+    ]
 
 
 # --------------------------------------------------------------------------
@@ -1221,7 +1341,39 @@ def _archive_draw_applies(game: "Game", source: CardState, event: ReplaceableEve
 
 
 def _draw_two(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
-    event.amount = 2
+    """ "...draw two cards instead."
+
+    One draw becomes two - and on an event another permanent has *already*
+    modified, one more. CR 614.5: "A replacement effect doesn't invoke itself
+    repeatedly; it gets only one opportunity to affect an event **or any
+    modified events that may replace that event**." A second permanent with the
+    same printed line is a second effect, so it gets its own opportunity
+    against the modified event; CR 121.2 makes "draw two cards" two individual
+    draws, and this effect replaces exactly one of them with two. That is
+    `+= 1`, and on the unmodified single draw `+= 1` is plainly "draw a card"
+    becoming "draw two cards".
+
+    Written as an increment rather than `= 2` for exactly that reason: `= 2`
+    made a second Alhammarret's Archive a no-op, which is CR 614.5 read
+    backwards.
+    """
+    event.amount += 1
+
+
+def _draw_plus(amount: int) -> Apply:
+    """ "...you draw that many cards plus [N] instead." (Quantum Riddler.)
+
+    CR 121.2a: "An instruction to draw multiple cards can be modified by
+    replacement effects that refer to the number of cards drawn. This
+    modification occurs before considering any of the individual card draws."
+    This is one of those - it reads "that many" off the event - so it adds to
+    whatever count the event currently carries.
+    """
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        event.amount += amount
+
+    return apply
 
 
 def _doubling_season_applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
@@ -1301,6 +1453,71 @@ def _prevent_all(game: "Game", source: CardState, event: ReplaceableEvent) -> No
     event.amount = 0
 
 
+def _exile_and_gain_two_life(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
+    """The Darkness Crystal's "instead exile it and you gain 2 life".
+
+    One replacement effect with two halves, so both happen as the event is
+    replaced: the card goes to exile rather than a graveyard (CR 614.6 - the
+    original event never happens, so it never died, CR 700.4), and the Crystal's
+    controller gains the 2. The gain is routed through `Game.gain_life` so it is
+    a CR 119.3 life-gain event of its own and an Alhammarret's Archive watching
+    still doubles it.
+    """
+    _exile_instead(game, source, event)
+    if source.controller is not None:
+        game.gain_life(source.controller, 2)
+
+
+def _adamantoise_applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
+    """ "All damage that would be dealt to you and **other** permanents you
+    control is dealt to this creature instead."
+
+    CR 614.9: "Some effects replace damage dealt to one creature, planeswalker,
+    battle, or player with the same damage dealt to another ...; such effects
+    are called redirection effects." Both halves of the "and" are one clause
+    about who the damage was aimed at, so a player and a permanent are checked
+    the same way, against the source's controller.
+
+    "Other" excludes the Adamantoise itself, which is also what stops this
+    recursing: the redirected damage is aimed at the source, and the source is
+    never "other" than itself.
+    """
+    if event.kind is not EventKind.DAMAGE or event.amount <= 0:
+        return False
+    controller = source.controller
+    if controller is None:
+        return False
+    if event.player is not None:
+        return event.player.username == controller
+    if event.card is not None:
+        return event.card.controller == controller and event.card.id != source.id
+    return False
+
+
+def _redirect_damage_to_the_source(
+    game: "Game", source: CardState, event: ReplaceableEvent
+) -> None:
+    """Deal the damage to the redirecting permanent instead (CR 614.9).
+
+    **A stand-in, and worth saying so.** A true redirection rewrites *who* the
+    event affects, but `Game.deal_damage` reads its own `target` argument back
+    after `apply_replacements` returns rather than reading `event.card` /
+    `event.player`, so changing them here would be ignored. What this does
+    instead is zero the original event - CR 614.6's "the original event never
+    happens" - and deal the same damage to the source as its own event, which
+    reaches the same board state and keeps the redirected damage subject to the
+    Adamantoise's own protection, prevention shields and damage-dealt triggers.
+
+    The difference that remains is bookkeeping, not board state: the original
+    event's history reads as replaced-to-nothing rather than as retargeted.
+    Making `Game.deal_damage` read the event's target back is the real fix and
+    belongs in `models/game.py`.
+    """
+    amount = event.amount
+    event.amount = 0
+    game.deal_damage(source, amount, source=event.source)
+
+
 #: Every replacement or prevention effect the engine can actually perform,
 #: keyed by card name. A card may generate more than one.
 #
@@ -1339,6 +1556,26 @@ REPLACEMENTS: dict[str, list[CardReplacement]] = {
             label="if a nontoken creature an opponent controls would die",
             applies=_kalitas_applies,
             apply=_exile_instead,
+        )
+    ],
+    # Kalitas's shape plus a life gain the generic compilers deliberately
+    # refuse to half-read (see the fail-closed note below), so it is written
+    # out here in full instead.
+    "The Darkness Crystal": [
+        CardReplacement(
+            label="instead exile it and you gain 2 life",
+            applies=_kalitas_applies,
+            apply=_exile_and_gain_two_life,
+        )
+    ],
+    "Ancient Adamantoise": [
+        CardReplacement(
+            label=(
+                "all damage that would be dealt to you and other permanents "
+                "you control is dealt to this creature instead (CR 614.9)"
+            ),
+            applies=_adamantoise_applies,
+            apply=_redirect_damage_to_the_source,
         )
     ],
 }
@@ -1645,6 +1882,85 @@ def _compile_draw_doubler_except_draw_step(effect: ReplacementEffect) -> CardRep
     return CardReplacement(label=effect.text, applies=_archive_draw_applies, apply=_draw_two)
 
 
+# -- "if you would draw a card, draw two cards instead" (no exception clause) --
+
+
+def _controllers_draw(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
+    return (
+        event.kind is EventKind.DRAW
+        and event.player is not None
+        and event.player.username == source.controller
+    )
+
+
+def _compile_draw_doubler(effect: ReplacementEffect) -> CardReplacement | None:
+    """Thought Reflection's plain wording - every draw, the draw step included.
+
+    Alhammarret's Archive's own line is the same sentence with an "except the
+    first one you draw in each of your draw steps" carved out of the event, and
+    it has its own compiler above; the two never both claim a sentence, because
+    each matches the whole event clause exactly.
+    """
+    if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD:
+        return None
+    if (effect.event or "").strip().lower() != "you would draw a card":
+        return None
+    if (effect.replacement or "").strip().rstrip(".").lower() != "draw two cards":
+        return None
+    return CardReplacement(label=effect.text, applies=_controllers_draw, apply=_draw_two)
+
+
+# -- "[as long as ...,] if you would draw one or more cards, you draw that many
+#     cards plus [N] instead" --
+
+#: Quantum Riddler's event clause. CR 121.2a's "replacement effects that refer
+#: to the number of cards drawn" is exactly this wording, and it is what makes
+#: the Riddler's effect have to be applied before Thought Reflection's - see
+#: `tests/scenarios/judge/test_judge_draw_replacements.py`.
+_DRAW_ONE_OR_MORE_EVENT = "you would draw one or more cards"
+_DRAW_PLUS_RE = re.compile(r"^you draw that many cards plus (?P<amount>[\w-]+)$", re.IGNORECASE)
+
+#: "As long as you have one or fewer cards in hand" - the only "as long as"
+#: qualifier this module reads. Anything else leaves the effect uncompiled.
+_FEWER_CARDS_IN_HAND_RE = re.compile(
+    r"^you have (?P<count>[\w-]+) or fewer cards in hand$", re.IGNORECASE
+)
+
+
+def _compile_draw_plus(effect: ReplacementEffect) -> CardReplacement | None:
+    if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD:
+        return None
+    if (effect.event or "").strip().lower() != _DRAW_ONE_OR_MORE_EVENT:
+        return None
+    match = _DRAW_PLUS_RE.match((effect.replacement or "").strip().rstrip("."))
+    if match is None:
+        return None
+    amount, variable = _amount_of(match.group("amount"))
+    if amount is None or variable:
+        return None
+
+    hand_limit: int | None = None
+    if effect.condition is not None:
+        condition = _FEWER_CARDS_IN_HAND_RE.match(effect.condition.strip().rstrip(","))
+        if condition is None:
+            return None  # an "as long as" clause this cannot check - fail closed.
+        hand_limit, hand_variable = _amount_of(condition.group("count"))
+        if hand_limit is None or hand_variable:
+            return None
+
+    def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
+        if not _controllers_draw(game, source, event):
+            return False
+        if hand_limit is None:
+            return True
+        # CR 604.2: the continuous effect exists only while the "as long as"
+        # clause is true, and it is checked as the event happens.
+        assert event.player is not None
+        return len(event.player.hand) <= hand_limit
+
+    return CardReplacement(label=effect.text, applies=applies, apply=_draw_plus(amount))
+
+
 # -- "if an effect would create one or more tokens under your control, it
 #     creates twice that many of those tokens instead" --
 
@@ -1822,6 +2138,8 @@ _COMPILERS: tuple[Callable[[ReplacementEffect], CardReplacement | None], ...] = 
     _compile_self_prevent_combat_damage,
     _compile_life_gain_doubler,
     _compile_draw_doubler_except_draw_step,
+    _compile_draw_doubler,
+    _compile_draw_plus,
     _compile_token_doubler,
     _compile_counter_doubler,
     _compile_counter_reducer,
@@ -1829,15 +2147,38 @@ _COMPILERS: tuple[Callable[[ReplacementEffect], CardReplacement | None], ...] = 
 )
 
 
+#: The compilers that read `ReplacementEffect.condition` themselves. Every
+#: other compiler above is condition-blind, so an effect carrying an "as long
+#: as ..." qualifier is never offered to one: compiling it there would perform
+#: the replacement unconditionally and silently drop the clause, which is the
+#: exact failure the fail-closed rule at the top of this section forbids.
+_CONDITION_AWARE_COMPILERS = frozenset({_compile_draw_plus})
+
+
+def _compile(effect: ReplacementEffect) -> CardReplacement | None:
+    """The first generic shape above that claims this effect, if any."""
+    if effect.from_trigger:
+        # CR 603.1: the effect belongs to a triggered ability and does not
+        # exist until that ability resolves, so it is never a static ability's
+        # continuous effect for `applicable_effects` to find on the
+        # battlefield. See `_parse_trigger_effect`.
+        return None
+    for compiler in _COMPILERS:
+        if effect.condition is not None and compiler not in _CONDITION_AWARE_COMPILERS:
+            continue
+        compiled = compiler(effect)
+        if compiled is not None:
+            return compiled
+    return None
+
+
 def parsed_card_replacements(card: Card) -> list[CardReplacement]:
     """Every generic shape above that this card's own oracle text matches."""
     found: list[CardReplacement] = []
     for effect in parse_replacement_effects(card):
-        for compiler in _COMPILERS:
-            compiled = compiler(effect)
-            if compiled is not None:
-                found.append(compiled)
-                break
+        compiled = _compile(effect)
+        if compiled is not None:
+            found.append(compiled)
     return found
 
 
@@ -1872,11 +2213,9 @@ def replacements_of_state(permanent: CardState) -> list[CardReplacement]:
     names = _names_of(permanent.card)
     found: list[CardReplacement] = []
     for effect in _parse_oracle_text(permanent.class_ability_text, face=None, names=names):
-        for compiler in _COMPILERS:
-            compiled = compiler(effect)
-            if compiled is not None:
-                found.append(compiled)
-                break
+        compiled = _compile(effect)
+        if compiled is not None:
+            found.append(compiled)
     return found
 
 
@@ -1917,6 +2256,178 @@ def _pay_life_or_tapped(amount: int, card_name: str) -> Apply:
             event.tapped = True
 
     return apply
+
+
+# --------------------------------------------------------------------------
+# The condition on a self "enters tapped" line (CR 614.1d)
+# --------------------------------------------------------------------------
+#
+# CR 614.1d is the bare "[This permanent] enters . . ." wording, and most of
+# the pool's printings of it carry a condition about the board rather than
+# about a choice: "unless you control a Mountain", "if you control two or more
+# other lands", "unless a player has 13 or less life". The condition was parsed
+# and then dropped, so Arena of Glory entered *untapped* on an empty board -
+# a wrong board state, not a missing one.
+#
+# **Polarity.** A leading "If <cond>, this land enters tapped" taps when the
+# condition holds; a trailing "... enters tapped unless <cond>" taps when it
+# does not. `_ENTERS_TAPPED` keeps the literal word "unless" on the second
+# form, so the two are told apart by the text itself and no extra field is
+# needed on `ReplacementEffect`.
+#
+# **Fail closed.** A condition none of the readers below claims returns `None`
+# and the effect is skipped entirely, exactly as every conditional line was
+# before this - a land that is silently untapped is the same wrong answer it
+# already gave, and it is better than taxing an unread clause into a guess.
+# The shockland back-reference "you don't" is one of those: it is not about the
+# board at all, it is the other half of the CR 614.12a choice that
+# `_self_enters_modifiers` pairs up above, and no reader here matches it.
+
+#: "does this condition hold right now", for the entering permanent.
+EntersCondition = Callable[["Game", CardState], bool]
+
+#: "unless you control a Mountain", "unless you control a Plains or an Island".
+#: Land subtypes are proper nouns as printed (CR 205.3i, CR 305.5: "Land
+#: subtypes are always a single word"), so the capital letter is required -
+#: that is what keeps this from claiming an arbitrary "you control a ..."
+#: noun phrase it cannot actually check.
+_YOU_CONTROL_SUBTYPES_RE = re.compile(r"^you control (an? [A-Z][\w'-]*(?: or an? [A-Z][\w'-]*)*)$")
+_A_SUBTYPE_RE = re.compile(r"an? ([A-Z][\w'-]*)")
+
+#: "you control two or more other lands", "you control two or fewer other lands".
+_YOU_CONTROL_OTHER_LANDS_RE = re.compile(
+    r"^you control (?P<count>[\w-]+) or (?P<direction>more|fewer) other lands$", re.IGNORECASE
+)
+
+#: "a player has 13 or less life" - any player at the table, not only the
+#: entering permanent's controller (Lakeside Shack).
+_A_PLAYER_HAS_LIFE_RE = re.compile(
+    r"^a player has (?P<count>\d+) or (?P<direction>less|more) life$", re.IGNORECASE
+)
+
+#: "X is 2 or less" - Slumbering Trudge, whose tapped state is decided by the
+#: value chosen for X as it was cast (CR 601.2b records the choice;
+#: `Game.cast_records` is what holds it here, the same record CR 107.3m's
+#: enters-with-X counters already read a few lines below).
+_X_IS_RE = re.compile(r"^x is (?P<count>\d+) or (?P<direction>less|greater)$", re.IGNORECASE)
+
+
+def _controls_a_subtype(subtypes: frozenset[str]) -> EntersCondition:
+    def holds(game: "Game", entering: CardState) -> bool:
+        controller = entering.controller
+        if controller is None:
+            return False
+        return any(
+            subtype in subtypes
+            for permanent in game.battlefield
+            if permanent.controller == controller
+            for subtype in permanent.subtypes
+        )
+
+    return holds
+
+
+def _controls_other_lands(count: int, at_least: bool) -> EntersCondition:
+    """ "you control [N] or more/fewer **other** lands".
+
+    "Other" is why the entering permanent is excluded by id: CR 614.12's
+    effects are read while the permanent is still on its way in
+    (`Game.enter_the_battlefield` calls `apply_replacements` before putting it
+    onto the battlefield), so it is not in `game.battlefield` yet - the
+    exclusion is belt and braces against a caller that puts it there first.
+    """
+
+    def holds(game: "Game", entering: CardState) -> bool:
+        controller = entering.controller
+        if controller is None:
+            return False
+        lands = sum(
+            1
+            for permanent in game.battlefield
+            if permanent.controller == controller
+            and Type.LAND in permanent.types
+            and permanent.id != entering.id
+        )
+        return lands >= count if at_least else lands <= count
+
+    return holds
+
+
+def _a_player_has_life(count: int, at_most: bool) -> EntersCondition:
+    def holds(game: "Game", entering: CardState) -> bool:
+        return any(
+            (player.life <= count if at_most else player.life >= count)
+            for player in game.players_in_game
+        )
+
+    return holds
+
+
+def _x_is(count: int, at_most: bool) -> EntersCondition:
+    def holds(game: "Game", entering: CardState) -> bool:
+        record = game.cast_records.get(entering.id)
+        if record is None or record.x_value is None:
+            # No announcement to read X off (CR 601.2b) - the permanent got
+            # here some other way, X is undefined, and there is nothing to
+            # decide the tapped state with. Fail closed, as above.
+            return False
+        return record.x_value <= count if at_most else record.x_value >= count
+
+    return holds
+
+
+def _enters_tapped_condition(effect: ReplacementEffect) -> EntersCondition | None:
+    """Read an `ENTERS_TAPPED` condition into "does it enter tapped", or `None`.
+
+    The returned predicate already folds in the polarity, so its caller only
+    has to ask it.
+    """
+    condition = (effect.condition or "").strip().rstrip(".")
+    if not condition:
+        return None
+
+    negated = False
+    lowered = condition.lower()
+    if lowered.startswith("unless "):
+        negated = True
+        condition = condition[len("unless ") :].strip()
+
+    inner = _read_enters_condition(condition)
+    if inner is None:
+        return None
+    if not negated:
+        return inner
+
+    def tapped_unless(game: "Game", entering: CardState) -> bool:
+        return not inner(game, entering)
+
+    return tapped_unless
+
+
+def _read_enters_condition(condition: str) -> EntersCondition | None:
+    match = _YOU_CONTROL_SUBTYPES_RE.match(condition)
+    if match is not None:
+        subtypes = frozenset(_A_SUBTYPE_RE.findall(match.group(1)))
+        return _controls_a_subtype(subtypes) if subtypes else None
+
+    match = _YOU_CONTROL_OTHER_LANDS_RE.match(condition)
+    if match is not None:
+        count, variable = _amount_of(match.group("count"))
+        if count is None or variable:
+            return None
+        return _controls_other_lands(count, at_least=match.group("direction").lower() == "more")
+
+    match = _A_PLAYER_HAS_LIFE_RE.match(condition)
+    if match is not None:
+        return _a_player_has_life(
+            int(match.group("count")), at_most=match.group("direction").lower() == "less"
+        )
+
+    match = _X_IS_RE.match(condition)
+    if match is not None:
+        return _x_is(int(match.group("count")), at_most=match.group("direction").lower() == "less")
+
+    return None
 
 
 #: "As [this] enters, choose a color/card name/creature type." (CR 614.1c).
@@ -2100,8 +2611,12 @@ def _self_enters_modifiers(game: "Game", card_state: CardState) -> list[tuple[st
 
     Four shapes are performed:
 
-    - "[This] enters tapped" and "[this] enters with N counters", unconditional
-      (CR 614.1c).
+    - "[This] enters tapped" (CR 614.1d) and "[this] enters with N counters"
+      (CR 614.1c), unconditional.
+    - "[This] enters tapped unless you control a Mountain" / "If you control
+      two or more other lands, this land enters tapped" - the same shape with
+      a condition about the *board*, read by `_enters_tapped_condition` and
+      evaluated here. A condition no reader there claims is skipped.
     - "As this land enters, you may pay N life. If you don't, it enters tapped"
       - one choice spread over two printed sentences, which the parser reads as
       an optional `AS_ENTERS` followed by an `ENTERS_TAPPED` whose condition is
@@ -2111,9 +2626,6 @@ def _self_enters_modifiers(game: "Game", card_state: CardState) -> list[tuple[st
       choice recorded on the entering object itself (`CardState.choice`) rather
       than changing the `ReplaceableEvent`, since nothing about *this* choice
       is a tapped flag or a counter count. See `_choose_a_quality`.
-
-    A condition about the *board* rather than about a choice - Arena of Glory's
-    "unless you control a Mountain" - is still skipped.
 
     "[This] enters with X `<kind>` counters" (Walking Ballista, Hangarback
     Walker, Chalice of the Void, Engineered Explosives) is CR 107.3m's own
@@ -2189,7 +2701,15 @@ def _self_enters_modifiers(game: "Game", card_state: CardState) -> list[tuple[st
                 continue
 
         if effect.condition is not None:
-            continue
+            # CR 614.1d's conditional wordings - "unless you control a
+            # Mountain", "if you control two or more other lands". Read into a
+            # predicate and *evaluated* here, at gathering time, so an effect
+            # whose condition does not hold never reaches CR 616.1's list at
+            # all rather than being applied to no effect. A condition no reader
+            # claims returns `None` and the effect is skipped, unchanged.
+            holds = _enters_tapped_condition(effect)
+            if holds is None or not holds(game, card_state):
+                continue
         amount = effect.amount
         if (
             effect.kind is ReplacementKind.ENTERS_WITH

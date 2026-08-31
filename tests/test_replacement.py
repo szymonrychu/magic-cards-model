@@ -16,6 +16,7 @@ from magic_cards_model.machines.replacement import (
     effects_of_kind,
     parse_replacement_effects,
     prevention_effects,
+    replacements_of,
     strip_reminder_text,
     unparsed_effects,
 )
@@ -253,10 +254,21 @@ def test_as_enters_or_is_turned_face_up_is_two_effects():
 def test_when_turned_face_up_is_a_trigger_not_a_replacement():
     """CR 614.1e is "As ... is turned face up"; "When ..." is CR 603.1.
 
-    Brine Elemental's line contains "skips", which is a CR 614.1b keyword, but
-    the skip is the trigger's effect and belongs to whoever parses triggers.
+    Brine Elemental's line contains "skips", which is a CR 614.1b keyword. The
+    skip is the trigger's *effect*, so it is reported with `from_trigger` set
+    and compiles to nothing - `replacements_of` stays empty, and no battlefield
+    scan can mistake it for a static ability the permanent generates.
+
+    This asserted a flat empty parse before the "[player] skips ..." template
+    existed. The boundary that assertion was protecting is the behavioural one,
+    and it is asserted here directly instead of by proxy.
     """
-    assert parse_replacement_effects(card("Brine Elemental")) == []
+    (effect,) = parse_replacement_effects(card("Brine Elemental"))
+    assert effect.kind is ReplacementKind.SKIP
+    assert effect.from_trigger
+    assert effect.subject == "each opponent"
+    assert effect.event == "their next untap step"
+    assert replacements_of(card("Brine Elemental")) == []
 
 
 # --------------------------------------------------------------------------
@@ -562,14 +574,12 @@ def test_a_card_with_no_cue_words_reports_nothing():
         assert parse_replacement_effects(card(name)) == [], name
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "Skip effects worded as '[player] skips [something]' rather than the "
-        "imperative 'Skip [something]' are not parsed. Every card in the pool "
-        "with that wording (Brine Elemental) puts it inside a triggered "
-        "ability, so parsing it would need the trigger's effect parsed first."
-    ),
-)
 def test_a_player_skips_wording_is_parsed():
+    """CR 614.1b's other wording, read off the one card in the pool with it.
+
+    Brine Elemental puts it inside a triggered ability, so it comes back
+    flagged `from_trigger` and performs nothing - see
+    `test_when_turned_face_up_is_a_trigger_not_a_replacement` above. The shape
+    itself is parsed either way, which is what this asserts.
+    """
     assert effects_of_kind(card("Brine Elemental"), ReplacementKind.SKIP)
