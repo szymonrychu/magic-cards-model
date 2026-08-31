@@ -3060,13 +3060,16 @@ class Casting(BaseModel):
         if self.announced_zone is None or self.game is None:
             return
         self._lift_out_of_every_zone()
-        self.spell.zone = self.announced_zone
-        self.spell.zone_change_stamp = self.announced_stamp
-        self.spell.exile_annotation = self.announced_exile_annotation
         if self.announced_zone in getattr(self.game, "shared_zones", {}):
             self.game.shared_zones[self.announced_zone].append(self.spell)
         else:
             self.game.player(self.spell.owner or self.caster).add(self.spell, self.announced_zone)
+        # Written last, because `Player.add` moves the card itself and a move
+        # is a new object (CR 400.7) with a fresh stamp - and this rewind is
+        # precisely the claim that no move ever happened.
+        self.spell.zone = self.announced_zone
+        self.spell.zone_change_stamp = self.announced_stamp
+        self.spell.exile_annotation = self.announced_exile_annotation
         self.announced_zone = None
 
     def _enter_modes(self) -> None:
