@@ -85,6 +85,7 @@ class KeywordRule(StrEnum):
     WARD = "CR 702.21a"
     PROWESS = "CR 702.108a"
     CASCADE = "CR 702.85a"
+    STORM = "CR 702.40a"
     PERSIST = "CR 702.79a"
     DREDGE = "CR 702.52a"
     MOBILIZE = "CR 702.181a"
@@ -117,6 +118,7 @@ def executes(keyword: str) -> bool:
         "ward",
         "prowess",
         "cascade",
+        "storm",
         "persist",
         "dredge",
         "mobilize",
@@ -268,6 +270,24 @@ def _cascade_ability(ability: KeywordAbility) -> TriggeredAbility:
     )
 
 
+def _storm_ability(ability: KeywordAbility) -> TriggeredAbility:
+    """CR 702.40a: "Storm" means "When you cast this spell, copy it for each
+    other spell that was cast before it this turn. If the spell has any
+    targets, you may choose new targets for the copies.""
+    """
+    return _expansion(
+        ability,
+        keyword="storm",
+        word=TriggerWord.WHEN,
+        condition="you cast this spell",
+        effect=(
+            "copy it for each other spell that was cast before it this turn. If the spell "
+            "has any targets, you may choose new targets for the copies"
+        ),
+        event=TriggerEvent.CAST_SPELL,
+    )
+
+
 def _persist_ability(ability: KeywordAbility) -> TriggeredAbility:
     """CR 702.79a: "Persist" means "When this permanent is put into a graveyard
     from the battlefield, if it had no -1/-1 counters on it, return it to the
@@ -366,6 +386,7 @@ _TRIGGER_EXPANSIONS: dict[str, Callable[[KeywordAbility], TriggeredAbility]] = {
     "ward": _ward_ability,
     "prowess": _prowess_ability,
     "cascade": _cascade_ability,
+    "storm": _storm_ability,
     "persist": _persist_ability,
     "mobilize": _mobilize_ability,
     "madness": _madness_ability,
@@ -1921,6 +1942,50 @@ def _cascade_effect(game: Any, ability: AbilityOnStack) -> CascadeResult | None:
     return cascade(game, source)
 
 
+def _storm_effect(game: Any, ability: AbilityOnStack) -> list[CardState]:
+    """CR 702.40a's copy half.
+
+    Storm's own trigger goes on the stack directly above the spell that
+    caused it (CR 603.3b) and resolves before that spell does, so the spell
+    is still on the stack (`ability.source`) when this runs - the same shape
+    `_cascade_effect` already relies on. "For each other spell that was cast
+    before it this turn" counts every spell any player cast this turn, not
+    only the storm spell's own controller's - `Game.spells_cast_this_turn` is
+    keyed by controller, so the count is the total across every player's list.
+    Nothing can have been cast *between* the storm spell going on the stack
+    and this trigger resolving (only casting adds to that count, and no
+    priority is passed in between - CR 603.3b puts the trigger on the stack
+    "before any player would receive priority"), so the storm spell itself is
+    always the most recent entry and "total minus one" is exactly "how many
+    were cast before it".
+
+    CR 707.10: "To copy a spell ... means to put a copy of it onto the
+    stack; a copy of a spell isn't cast" - `Game.copy_spell` already keeps a
+    copy out of `spells_cast_this_turn`, so a copy's own storm trigger (it is
+    still the same printed card) never fires, which is what stops the count
+    from exploding.
+
+    "If the spell has any targets, you may choose new targets for the
+    copies" (CR 707.10c) is asked once per copy, reusing `Game.
+    offer_new_targets_for_copy` - the same primitive Alania, Divergent
+    Storm's own copy clause already uses - which is a no-op for a spell with
+    no targets (Empty the Warrens) and offers a real choice for one that has
+    them (Grapeshot).
+    """
+    source = ability.source(game)
+    if source is None or source not in game.stack:
+        return []
+    controller = ability.controller
+    total_cast_this_turn = sum(len(cast) for cast in game.spells_cast_this_turn.values())
+    count = total_cast_this_turn - 1
+    copies: list[CardState] = []
+    for _ in range(max(count, 0)):
+        copy = game.copy_spell(source, controller=controller)
+        game.offer_new_targets_for_copy(copy, controller, source_name=source.name)
+        copies.append(copy)
+    return copies
+
+
 def _ward_effect(game: Any, ability: AbilityOnStack) -> bool:
     """CR 702.21a's effect: "counter that spell or ability unless that player pays".
 
@@ -2056,6 +2121,7 @@ KEYWORD_TRIGGER_EFFECTS: dict[str, Callable[[Any, AbilityOnStack], Any]] = {
     "prowess": _prowess_effect,
     "persist": _persist_effect,
     "cascade": _cascade_effect,
+    "storm": _storm_effect,
     "ward": _ward_effect,
     "madness": _madness_effect,
     "hideaway": _hideaway_effect,

@@ -84,7 +84,7 @@ from ..models.zone import Zone
 from . import combat as combat_rules
 from .abilities import TriggerEvent, self_normalized_effect_text
 from .casting import PlayAction, finish_suspend, remove_suspend_time_counter
-from .casting_restrictions import parse_casting_rule_clause
+from .casting_restrictions import create_targeted_cant_cast_restriction, parse_casting_rule_clause
 from .decisions import Decision, DecisionKind
 from .delayed import (
     DelayedEffect,
@@ -3108,6 +3108,41 @@ _PER_COUNT_COST_REDUCTION_LINE_RE = re.compile(
 #: resolution instruction" reasoning as Suspend/Cascade/Replicate above.
 _FUSE_LINE_RE = re.compile(r"^[ \t]*Fuse(?:\s*\([^()]*\))?[ \t]*\n?", re.MULTILINE | re.IGNORECASE)
 
+#: Storm's own line (CR 702.40a: "a triggered ability that functions on the
+#: stack", never itself a CR 608.2c resolution instruction of the spell it is
+#: printed on), reminder text and all - Grapeshot and Empty the Warrens both
+#: print "Storm (...)" *after* their own one resolution sentence, the same
+#: trailing position `_REBOUND_LINE_RE`, `_CYCLING_LINE_RE`, and
+#: `_FUSE_LINE_RE` already strip theirs from. Left unstripped, `split_effect_
+#: clauses` reads "Storm" as a second, unreadable clause and `_parse_mixed_
+#: clauses`'s fail-closed-per-clause rule takes the real sentence down with
+#: it - the same bug already fixed for every line above. Storm itself - the
+#: copying - is not read here: it is a keyword-generated triggered ability
+#: (`machines/keywords._storm_ability`/`_storm_effect`), resolved through
+#: `Game._effect_of`'s keyword lookup before this file is ever consulted, the
+#: same split `_cascade_ability`/`_cascade_effect` already draws for cascade.
+#: Only this line's poisoning effect on the spell's own printed sentence is
+#: fixed here.
+_STORM_LINE_RE = re.compile(
+    r"^[ \t]*Storm(?:\s*\([^()]*\))?[ \t]*\n?", re.MULTILINE | re.IGNORECASE
+)
+
+#: Splice's own line (CR 702.47a: "a static ability that functions while a
+#: card is in your hand", never a CR 608.2c resolution instruction of the
+#: spell it is spliced onto or printed on), reminder text and all - Desperate
+#: Ritual prints "Splice onto Arcane {1}{R} (...)" *after* its own "Add
+#: {R}{R}{R}." sentence, the same trailing position Cycling's and Flashback's
+#: own lines strip from. Splice itself (CR 702.47c's text-changing merge of
+#: the spliced card's rules text onto the spell actually being cast) is not
+#: built anywhere in this engine - `docs/engine-coverage.md` records the gap,
+#: the same "not modelled, only this line's poisoning effect is fixed" shape
+#: already used for Replicate, Cycling, and Harmonize above - so a card that
+#: could have been spliced onto simply never offers that choice, and its own
+#: printed effect (the ritual's own mana, here) still resolves in full.
+_SPLICE_LINE_RE = re.compile(
+    r"[ \t]*\n?[ \t]*Splice onto [^\n(]+(?:\([^()]*\))?[ \t]*\n?", re.MULTILINE | re.IGNORECASE
+)
+
 
 def _strip_non_effect_preamble(text: str) -> str:
     """Sentences that describe the spell but are not part of resolving it."""
@@ -3125,6 +3160,8 @@ def _strip_non_effect_preamble(text: str) -> str:
     text = _PER_COUNT_COST_REDUCTION_LINE_RE.sub("", text)
     text = _REBOUND_LINE_RE.sub("", text)
     text = _FUSE_LINE_RE.sub("", text)
+    text = _STORM_LINE_RE.sub("", text)
+    text = _SPLICE_LINE_RE.sub("", text)
     text = _REMINDER_LINE_RE.sub("", text)
     text = _INLINE_REMINDER_RE.sub("", text)
     return text
@@ -4354,6 +4391,49 @@ def _parse_damage_target_kicked_instead_clause(effect_text: str) -> Effect | Non
         amount = kicked_amount if record.kicked > 0 else base
         for target in game.resolve_targets(spell):
             game.deal_damage(target, amount, source=spell)
+
+    return effect
+
+
+#: Orim's Chant: "Target player can't cast spells this turn. If this spell
+#: was kicked, creatures can't attack this turn." Read whole (ahead of
+#: `_parse_mixed_clauses`, which has no shape for either sentence on its
+#: own): the first is `machines.casting_restrictions.CastingRuleKind.
+#: TARGETED_CANT_CAST`, a targeted cousin of Ranger-Captain of Eos's own
+#: "your opponents can't cast noncreature spells" row (CR 611.1); the second
+#: is CR 702.33d/g's kicker-conditional clause, read off `Game.cast_record
+#: (spell).kicked` the same way `_parse_damage_target_kicked_instead_clause`
+#: already reads Burst Lightning's, and gated behind `Game.
+#: creatures_cant_attack_until_turns_taken` (CR 508.1c) rather than any
+#: per-permanent grant, since the restriction touches every creature any
+#: player controls, not one named object.
+_TARGET_PLAYER_CANT_CAST_KICKED_ATTACK_RE = re.compile(
+    r"^target player can'?t cast spells this turn\.\s*"
+    r"if this spell was kicked, creatures can'?t attack this turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_target_player_cant_cast_kicked_attack_clause(effect_text: str) -> Effect | None:
+    """`_TARGET_PLAYER_CANT_CAST_KICKED_ATTACK_RE`'s shape, or `None`."""
+    whole = _strip_non_effect_preamble(effect_text).strip()
+    if _TARGET_PLAYER_CANT_CAST_KICKED_ATTACK_RE.fullmatch(whole) is None:
+        return None
+    if not _targets_understood("target player", allow_player_targets=True):
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell)
+        for target in game.resolve_targets(spell):
+            if isinstance(target, Player):
+                game.casting_rule_effects.append(
+                    create_targeted_cant_cast_restriction(
+                        controller.username, target.username, spell.name
+                    )
+                )
+        record = game.cast_record(spell)
+        if record.kicked > 0 and game.turn is not None:
+            game.creatures_cant_attack_until_turns_taken = int(game.turn.turns_taken)
 
     return effect
 
@@ -5842,6 +5922,49 @@ def _parse_grant_flashback_clause(effect_text: str) -> Effect | None:
                     zone=Zone.GRAVEYARD,
                     rule="CR 601.3",
                 )
+
+    return effect
+
+
+#: Past in Flames: "Each instant and sorcery card in your graveyard gains
+#: flashback until end of turn. The flashback cost is equal to its mana
+#: cost." The same CR 601.3-shaped grant `_GRANT_FLASHBACK_RE` already reads
+#: for the "Flashback" spell above, generalised from one chosen target to
+#: every qualifying card in the graveyard - CR 608.2c runs the sentence over
+#: the whole set at once, not once per card with a fresh choice. The same
+#: documented gap applies here too: CR 702.34a's own "then exile it instead"
+#: half of flashback never fires for a `PlayPermission`-driven cast (see
+#: `_parse_grant_flashback_clause`'s docstring), so a card flashed back this
+#: way returns to the graveyard afterward rather than being exiled - recorded
+#: in `docs/engine-coverage.md`, not silently guessed away.
+_EACH_GRAVEYARD_INSTANT_SORCERY_GAINS_FLASHBACK_RE = re.compile(
+    r"^each instant and sorcery card in your graveyard gains flashback "
+    r"until end of turn\.\s*the flashback cost is equal to its mana cost\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_each_graveyard_instant_sorcery_gains_flashback_clause(effect_text: str) -> Effect | None:
+    """`_EACH_GRAVEYARD_INSTANT_SORCERY_GAINS_FLASHBACK_RE`'s shape, or `None`."""
+    if _EACH_GRAVEYARD_INSTANT_SORCERY_GAINS_FLASHBACK_RE.fullmatch(effect_text.strip()) is None:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell)
+        for card in list(controller.graveyard):
+            if card is spell:
+                continue
+            if Type.INSTANT not in card.types and Type.SORCERY not in card.types:
+                continue
+            game.grant_play_permission(
+                card,
+                controller.username,
+                action=PlayAction.CAST,
+                pays_mana_cost=True,
+                source_name=spell.name,
+                zone=Zone.GRAVEYARD,
+                rule="CR 601.3",
+            )
 
     return effect
 
@@ -7413,6 +7536,9 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     damage_target_kicked_instead = _parse_damage_target_kicked_instead_clause(effect_text)
     if damage_target_kicked_instead is not None:
         return damage_target_kicked_instead
+    cant_cast_kicked_attack = _parse_target_player_cant_cast_kicked_attack_clause(effect_text)
+    if cant_cast_kicked_attack is not None:
+        return cant_cast_kicked_attack
     destroy_two_targets = _parse_destroy_two_targets_clause(effect_text)
     if destroy_two_targets is not None:
         return destroy_two_targets
@@ -7454,6 +7580,17 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     flashback_grant = _parse_grant_flashback_clause(whole)
     if flashback_grant is not None:
         return flashback_grant
+    each_graveyard_flashback_grant = _parse_each_graveyard_instant_sorcery_gains_flashback_clause(
+        whole
+    )
+    if each_graveyard_flashback_grant is not None:
+        return each_graveyard_flashback_grant
+    outside_the_game_play = _parse_outside_the_game_play_clause(whole)
+    if outside_the_game_play is not None:
+        return outside_the_game_play
+    exile_hand_draw_then_play = _parse_exile_hand_draw_then_play_until_next_turn_clause(whole)
+    if exile_hand_draw_then_play is not None:
+        return exile_hand_draw_then_play
     if _DAMAGE_THEN_GROUP_TYPE_ABILITY_GRANT_RE.fullmatch(whole):
 
         def damage_then_group_grant_notice_only(game: "Game", spell: CardState) -> None:
@@ -10798,16 +10935,20 @@ _ADD_MANA_RE = re.compile(r"^add (?P<mana>(?:\{[wubrgc]\}\s*)+)$", re.IGNORECASE
 
 
 def _parse_add_mana_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
-    """ "Add {C}{C}{C}" on a resolving ability (CR 106.4, CR 605.1a).
+    """ "Add {C}{C}{C}" on a resolving ability or spell (CR 106.4).
 
-    Ability-only (`for_spell=False`): a *spell* cannot be a mana ability
-    (CR 605.5, "spells aren't mana abilities"), but no card in this pool prints
-    "Add ..." as a spell's whole effect either, and a spell has no
-    `AbilityOnStack` controller lookup to differ from the ability one - so this
-    stays where the pool's evidence is rather than being opened speculatively.
+    Opened to spells (Pyretic Ritual, Desperate Ritual): CR 605.5 says "spells
+    aren't mana abilities" - true, and irrelevant here, since this is the
+    resolution-time reading of a plain "Add ..." sentence, not a fast-path mana
+    ability (CR 605.1a already keeps a *spell* from ever qualifying as one,
+    the same way it keeps Ugin, Eye of the Storms' loyalty ability from
+    qualifying). CR 106.4's "when an effect instructs a player to add mana"
+    does not care whether the instructing object was a spell or an ability,
+    and `game.controller_of(stack_object)` already reads either kind
+    (`StackObject` covers both `CardState` and `AbilityOnStack`), so nothing
+    about the effect itself needed to change - only the early refusal that
+    was guarding against a shape the pool had no evidence for yet.
     """
-    if for_spell:
-        return None
     match = _ADD_MANA_RE.fullmatch(clause.strip().rstrip("."))
     if match is None:
         return None
@@ -10819,6 +10960,42 @@ def _parse_add_mana_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
         # goes into a player's mana pool."
         pool = game.controller_of(stack_object).mana_pool
         for color in colors:
+            pool.add(color)
+
+    return effect
+
+
+#: Manamorphose: "Add two mana in any combination of colors." CR 106.4's
+#: mana-to-the-pool instruction again, but with a colour chosen per unit
+#: (CR 107.4h: "any combination of" divides the total into individually
+#: chosen parts) rather than `_ADD_MANA_RE`'s literal run of printed symbols.
+#: `DecisionKind.CHOOSE_A_QUALITY` is the same kind `_parse_destroy_each_
+#: then_add_mana_per_destroyed` already asks through for Culling Ritual's own
+#: per-unit colour choice, unnarrowed here (all five colours, not two) since
+#: nothing about "any combination of colors" picks a subset the way Culling
+#: Ritual's own printed "{B} or {G}" does.
+_ADD_ANY_COMBINATION_MANA_RE = re.compile(
+    rf"^add (?P<n>{_COUNT}) mana in any combination of colors\.?$", re.IGNORECASE
+)
+
+
+def _parse_add_any_combination_mana_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_ADD_ANY_COMBINATION_MANA_RE`'s shape, or `None` if this is not it."""
+    match = _ADD_ANY_COMBINATION_MANA_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    count = _count(match.group("n"))
+    if count <= 0:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        player = game.controller_of(stack_object)
+        pool = player.mana_pool
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        for _ in range(count):
+            color = _choose_a_color(game, player, source, "choose a color for mana")
             pool.add(color)
 
     return effect
@@ -12127,6 +12304,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     add_mana = _parse_add_mana_clause(clause, for_spell=for_spell)
     if add_mana is not None:
         return add_mana
+    add_combination_mana = _parse_add_any_combination_mana_clause(clause, for_spell=for_spell)
+    if add_combination_mana is not None:
+        return add_combination_mana
     # -- end Wave W11 single-clause addition -------------------------------
     # -- Wave W6's own single-clause additions (Brotherhood's End's modes) -
     destroy_each = _parse_destroy_each_clause(clause)
@@ -13040,3 +13220,128 @@ def _bring_in_from_outside_the_game_or_exile(
         else:
             # Already face up in exile (CR 406.3), so nothing to reveal.
             game.return_to_hand(chosen)
+
+
+#: Wish: "You may play a card you own from outside the game this turn." A
+#: spell-side twin of `_parse_outside_the_game_fetch`, printed as a plain
+#: CR 601.3 grant rather than Karn's "reveal ... put into your hand": Wish
+#: never says the card goes to hand, and its printed "this turn" is a real
+#: expiring window - CR 601.3's "a rule or effect allows that player to
+#: [play] it" is exactly `machines.casting.PlayPermission`'s own shape
+#: (`until_end_of_turn=True`, the default), the same "exile it, then permit
+#: it until end of turn" idiom Ugin, Eye of the Storms' `−11` and Ragavan,
+#: Nimble Pilferer's trigger already use for a card that was not previously
+#: in the game at all. Bringing it straight into the hand instead (Karn's
+#: own shape) would be wrong here specifically: CR 400.11b leaves a
+#: brought-in card "in the game" indefinitely once it is an ordinary object
+#: of its new zone, and a card sitting in hand needs no permission at all
+#: (`why_cannot_cast_from`'s own `zone is Zone.HAND` fast path) - so the
+#: printed "this turn" would silently become "forever" the moment the turn
+#: ended. Exile is the zone this grant is anchored to instead: CR 406.3 makes
+#: a face-up exiled card visible to everyone the way a revealed card is, and
+#: once `until_end_of_turn` lapses (CR 514.2, `Game.cleanup_step`) the card is
+#: simply an unclaimed face-up exiled card forever after (CR 400.11b's own
+#: "remain[s] in the game" default) - a legitimate resting state Wish's own
+#: text names no other fate for, unlike cascade's own "put ... on the
+#: bottom" instruction (`PlayPermission.bottom_if_unused`), which is why
+#: nothing here sets that flag.
+_OUTSIDE_THE_GAME_PLAY_RE = re.compile(
+    r"^you may play a card you own from outside the game this turn\.?$", re.IGNORECASE
+)
+
+
+def _parse_outside_the_game_play_clause(effect_text: str) -> Effect | None:
+    """`_OUTSIDE_THE_GAME_PLAY_RE`'s shape, or `None` if this is not it."""
+    if _OUTSIDE_THE_GAME_PLAY_RE.fullmatch(effect_text.strip()) is None:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell)
+        candidates = controller.owned_outside_the_game()
+        if not candidates:
+            return
+        # CR 608.2d's plain "you may": the whole instruction is optional.
+        if not game.may(
+            controller,
+            "play a card you own from outside the game this turn",
+            source=spell.name,
+        ):
+            return
+        chosen_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=controller.username,
+                prompt="choose a card you own from outside the game to play this turn",
+                source=spell.name,
+                amount=1,
+                cards=tuple(state.id for state in candidates),
+            )
+        )
+        assert isinstance(chosen_ids, tuple)
+        if not chosen_ids:
+            return
+        by_id = {state.id: state for state in candidates}
+        chosen = by_id[chosen_ids[0]]
+        # CR 701.20a/b: reveal makes the pick public without moving it, the
+        # same order `_bring_in_from_outside_the_game_or_exile` already uses.
+        game.reveal(chosen, source=spell.name)
+        controller.bring_into_the_game(chosen, Zone.EXILE)
+        game.exile.append(chosen)
+        game.grant_play_permission(
+            chosen,
+            controller.username,
+            action=PlayAction.PLAY,
+            pays_mana_cost=True,
+            source_name=spell.name,
+            zone=Zone.EXILE,
+            rule="CR 601.3",
+        )
+
+    return effect
+
+
+#: Hex Magic: "Exile all the cards from your hand, then draw that many
+#: cards. Until the end of your next turn, you may play cards exiled this
+#: way." Read as one CR 608.2c instruction chain (the exile-and-draw
+#: sentence, then the grant that names what was just exiled), matched
+#: against the whole printed text rather than split into per-clause
+#: fragments the way `_parse_mixed_clauses` would otherwise cut the "then"
+#: and the second sentence apart with nothing here to read either half back
+#: together.
+#:
+#: The grant is `PlayPermission` again, one per card actually exiled, with
+#: `until_next_turn_of` set for CR 800.4m's "until the end of your next
+#: turn" - the same field `Wish`'s own grant leaves at its default
+#: `until_end_of_turn=True` because Wish's own window is only "this turn".
+_EXILE_HAND_DRAW_THEN_PLAY_UNTIL_NEXT_TURN_RE = re.compile(
+    r"^exile all(?: of)? the cards? from your hand, then draw that many cards\.\s*"
+    r"until the end of your next turn, you may play cards exiled this way\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_exile_hand_draw_then_play_until_next_turn_clause(effect_text: str) -> Effect | None:
+    """`_EXILE_HAND_DRAW_THEN_PLAY_UNTIL_NEXT_TURN_RE`'s shape, or `None`."""
+    if _EXILE_HAND_DRAW_THEN_PLAY_UNTIL_NEXT_TURN_RE.fullmatch(effect_text.strip()) is None:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell)
+        hand_cards = list(controller.hand)
+        for card in hand_cards:
+            controller.move(card, Zone.EXILE)
+            game.exile.append(card)
+        game.draw_cards(controller.username, len(hand_cards))
+        for card in hand_cards:
+            game.grant_play_permission(
+                card,
+                controller.username,
+                action=PlayAction.PLAY,
+                pays_mana_cost=True,
+                source_name=spell.name,
+                zone=Zone.EXILE,
+                rule="CR 601.3",
+                until_next_turn_of=controller.username,
+            )
+
+    return effect

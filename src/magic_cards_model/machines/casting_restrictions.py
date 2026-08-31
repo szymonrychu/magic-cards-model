@@ -62,6 +62,9 @@ class CastingRuleKind:
     SORCERY_SPEED_FLASH_GRANT = "sorcery_speed_flash_grant"
     """Teferi, Time Raveler's +1: `controller` may cast sorcery spells as
     though they had flash."""
+    TARGETED_CANT_CAST = "targeted_cant_cast"
+    """Orim's Chant: `restricted_player` (a spell target, not "your
+    opponents") can't cast spells at all this turn."""
 
 
 class CastingRuleEffect(BaseModel):
@@ -91,6 +94,13 @@ class CastingRuleEffect(BaseModel):
     ContinuousEffect.until_next_turn_of`: CR 800.4m ends the effect the
     moment this player's next turn would begin, which `Game.begin_turn_for`
     already calls for every player, every turn."""
+    restricted_player: str | None = None
+    """Set only for `CastingRuleKind.TARGETED_CANT_CAST`: the one player a
+    spell *targeted* (CR 115.1), as opposed to `controller`'s own "your
+    opponents" reading for `NONCREATURE_RESTRICTION` above. Orim's Chant
+    names a specific player, who may be the caster's own opponent, teammate,
+    or (if somehow legally targeted) the caster - the restriction follows the
+    target, not a fixed relationship to whoever cast the spell."""
 
 
 def create_noncreature_cast_restriction(ability: AbilityOnStack) -> CastingRuleEffect:
@@ -117,6 +127,41 @@ def create_sorcery_speed_flash_grant(ability: AbilityOnStack) -> CastingRuleEffe
         duration=Duration.UNTIL_YOUR_NEXT_TURN,
         until_next_turn_of=ability.controller,
     )
+
+
+def create_targeted_cant_cast_restriction(
+    controller: str, restricted_player: str, source_name: str
+) -> CastingRuleEffect:
+    """Orim's Chant's "Target player can't cast spells this turn." as a
+    recorded effect - `controller` is the caster of Orim's Chant (recorded
+    for parity with the other two rows, but unused by the reader below,
+    which cares only about `restricted_player`), and `restricted_player` is
+    the target itself.
+    """
+    return CastingRuleEffect(
+        kind=CastingRuleKind.TARGETED_CANT_CAST,
+        controller=controller,
+        source_name=source_name,
+        duration=Duration.UNTIL_END_OF_TURN,
+        restricted_player=restricted_player,
+    )
+
+
+def targeted_cant_cast_restriction(game: Any, caster: str) -> CastingRuleEffect | None:
+    """The recorded effect stopping `caster` from casting any spell at all
+    right now (Orim's Chant), or None.
+
+    Unlike `restricted_from_noncreature_casting`'s "your opponents" reading,
+    this one names the restricted player directly, so the caster's own spell
+    can restrict itself if it is somehow legally targeted at its own
+    controller.
+    """
+    for effect in getattr(game, "casting_rule_effects", []):
+        if effect.kind != CastingRuleKind.TARGETED_CANT_CAST:
+            continue
+        if effect.restricted_player == caster:
+            return effect
+    return None
 
 
 def restricted_from_noncreature_casting(game: Any, caster: str) -> CastingRuleEffect | None:
