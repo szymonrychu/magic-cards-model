@@ -953,8 +953,13 @@ class CardState(BaseModel):
         property would wrongly clear the restriction. Pass the `Game` so this
         can ask `characteristics_of`; without one, this falls back to the
         printed type line, matching `machines/cost.py`'s `can_tap_for_mana`.
+
+        Only a battlefield permanent has computed characteristics to ask about
+        (CR 613.5 applies to permanents), and `Game.characteristics_of` refuses
+        a card that is not on the board, so a card in any other zone takes the
+        printed-text branch even when a `Game` is passed.
         """
-        if game is not None:
+        if game is not None and self.zone is Zone.BATTLEFIELD:
             is_creature = game.characteristics_of(self).is_creature
         else:
             is_creature = self.is_creature
