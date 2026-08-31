@@ -1593,7 +1593,11 @@ _PHRASE_EXILE_AND_PAY_MANA_COST = re.compile(
     r"(?:its|their) mana cost$",
     re.IGNORECASE,
 )
-_PHRASE_SACRIFICE = re.compile(r"^sacrifice (?P<count>\w+) (?P<quality>[\w ]+)$", re.IGNORECASE)
+#: `quality`'s character class allows a comma so a disjunctive list -
+#: "Sacrifice an artifact, creature, or land" (Greater Gargadon) - matches as
+#: one phrase rather than being split by `_split_cost_phrase`'s own comma cut;
+#: `_requirement` is what turns the list into a `CardRequirement` disjunction.
+_PHRASE_SACRIFICE = re.compile(r"^sacrifice (?P<count>\w+) (?P<quality>[\w ,]+)$", re.IGNORECASE)
 _PHRASE_DISCARD = re.compile(r"^discard (?P<count>\w+) (?P<quality>[\w ]*?)cards?$", re.IGNORECASE)
 #: `Exert this land`, `Exert this creature` (CR 701.43a). Only the self-
 #: referential form, which is the only one printed inside a cost.
@@ -1637,8 +1641,23 @@ def _count(word: str) -> int | None:
     return _COUNT_WORDS.get(word.lower())
 
 
+#: Connector words a comma-and-"or" (or "and") list of card types leaves
+#: between its items - "an artifact, creature, or land" - that name nothing
+#: themselves and are skipped rather than treated as an unread word.
+_QUALITY_CONNECTORS = {"or", "and"}
+
+
 def _requirement(quality: str) -> CardRequirement | None:
-    """Turn `black`, `creature`, or `Mountain` into what the cards must be.
+    """Turn `black`, `creature`, `Mountain`, or `artifact, creature, or land`
+    into what the cards must be.
+
+    `CardRequirement.types` (like `.colors` and `.subtypes`) is already a
+    disjunction - "at least one of these" - so a comma-and-"or" list of card
+    types (Greater Gargadon's "Sacrifice an artifact, creature, or land") is
+    the same shape as a single type, just with more words: each word is
+    stripped of the punctuation the list leaves on it and matched the same
+    way, and a bare connector ("or", "and") names nothing and is skipped
+    rather than failing the whole phrase.
 
     Unrecognised wording returns None, which the caller reads as "this phrase
     was not understood" rather than as "anything will do" - a cost that silently
@@ -1651,8 +1670,13 @@ def _requirement(quality: str) -> CardRequirement | None:
     colors: list[Color] = []
     types: list[Type] = []
     subtypes: list[str] = []
-    for word in words:
+    for raw_word in words:
+        word = raw_word.strip(",")
+        if not word:
+            continue
         lowered = word.lower().rstrip("s")
+        if lowered in _QUALITY_CONNECTORS:
+            continue
         if lowered in _COLOR_WORDS:
             colors.append(_COLOR_WORDS[lowered])
         elif lowered in {type_.value for type_ in Type}:

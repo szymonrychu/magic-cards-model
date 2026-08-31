@@ -76,7 +76,7 @@ from ..models.token import (
 from ..models.zone import Zone
 from . import combat as combat_rules
 from .abilities import TriggerEvent, self_normalized_effect_text
-from .casting import PlayAction
+from .casting import PlayAction, finish_suspend, remove_suspend_time_counter
 from .casting_restrictions import parse_casting_rule_clause
 from .decisions import Decision, DecisionKind
 from .delayed import (
@@ -3854,6 +3854,56 @@ def _parse_untap_self_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "Remove a time counter from this card." - Greater Gargadon's own second
+#: ability, CR 702.62a's second ability spelled out on the card itself rather
+#: than left to suspend's own reminder text. Unlike `_COUNTER_ON_SELF_RE`
+#: above, this source is never on the battlefield when the ability resolves -
+#: `machines.abilities._activated_ability_zone` reads the card's own
+#: "Activate only if this card is suspended" restriction as CR 702.62b's
+#: proof the source functions from exile - so there is no battlefield gate
+#: to check here.
+_REMOVE_TIME_COUNTER_SELF_RE = re.compile(
+    r"^remove a time counter from this (?:card|permanent)\.?$", re.IGNORECASE
+)
+
+
+def _parse_remove_time_counter_from_self_clause(text: str) -> AbilityEffect | None:
+    """`_REMOVE_TIME_COUNTER_SELF_RE`'s shape - Greater Gargadon's suspend-
+    only sacrifice ability (CR 702.62a, CR 702.62b).
+
+    Reuses `machines.casting.remove_suspend_time_counter` rather than a
+    second counter-removal path, so a card whose own printed ability takes a
+    time counter off this way is read by the identical CR 702.62b "suspended"
+    check the upkeep trigger already uses - a card that is not actually
+    suspended (already cast, already left exile, already at zero counters) is
+    left untouched rather than erroring, the same "the *if* was false" shape.
+
+    Chains straight into `machines.casting.finish_suspend`: removing the
+    *last* time counter is CR 702.62a's third ability firing, and unlike the
+    upkeep route (which nothing in this engine's turn machine dispatches
+    automatically, so a scenario calls it by hand once per upkeep) this
+    ability's own resolution *is* the concrete event that just happened, so
+    there is no reason to leave the very next question - is this now the last
+    counter? - for a caller to re-ask. `finish_suspend` is a no-op (returns
+    `None`) whenever a counter remains, so this costs nothing on every
+    activation but the last, and on the last it hands the card's owner the
+    same `PlayPermission` (recorded on `Game.play_permissions`) the upkeep
+    path already grants - "you may cast it without paying its mana cost" is
+    still a choice the permission's own consumer makes, never forced here.
+    """
+    if _REMOVE_TIME_COUNTER_SELF_RE.fullmatch(text.strip()) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None:
+            return
+        remove_suspend_time_counter(game, source)
+        finish_suspend(game, source)
+
+    return effect
+
+
 #: "double the number of `<kind>` counters on `<group>`" - Kalonian Hydra's
 #: own attack trigger doubles them on *every* creature its controller
 #: controls, not only itself, which is why this is a group shape
@@ -6497,6 +6547,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     untap_self = _parse_untap_self_clause(effect_text)
     if untap_self is not None:
         return untap_self
+    remove_time_counter_self = _parse_remove_time_counter_from_self_clause(effect_text)
+    if remove_time_counter_self is not None:
+        return remove_time_counter_self
     whole_text_token = _parse_whole_text_token_clause(effect_text)
     if whole_text_token is not None:
         return whole_text_token

@@ -1409,6 +1409,71 @@ def _split_top_level(text: str, separator: str = ",") -> list[str]:
     return [part.strip() for part in parts if part.strip()]
 
 
+#: The cost keywords a genuinely new, top-level cost piece starts with, once
+#: `_split_top_level` has cut a printed cost on every comma - used by
+#: `_merge_disjunctive_sacrifice_cost` to tell "{1}, Sacrifice a creature"'s
+#: two real pieces apart from "Sacrifice an artifact, creature, or land"'s
+#: one piece that a comma-and-"or" type list also happens to contain a comma
+#: in.
+_COST_PIECE_START_WORDS = frozenset(
+    {"sacrifice", "discard", "exile", "pay", "tap", "untap", "put", "remove", "exert", "reveal"}
+)
+
+
+def _looks_like_new_cost_piece(part: str) -> bool:
+    stripped = part.strip()
+    if not stripped or stripped.startswith("{"):
+        return True
+    first_word = stripped.split(maxsplit=1)[0].lower().rstrip(":")
+    return first_word in _COST_PIECE_START_WORDS
+
+
+def _merge_disjunctive_sacrifice_cost(parts: list[str]) -> list[str]:
+    """Re-join `_split_top_level`'s comma cut where the comma was not between
+    two costs but inside one cost's own disjunctive type list (CR 602.1a).
+
+    "Sacrifice an artifact, creature, or land" (Greater Gargadon) is one cost,
+    read by `cost.cost_component_for_phrase`'s own comma-and-"or" handling -
+    but `_split_top_level` cuts on every top-level comma with no way to tell
+    that one apart from "{1}, Sacrifice a creature"'s two real pieces, so by
+    the time this runs it has already become three fragments: "Sacrifice an
+    artifact", "creature", "or land". This walks forward from any fragment
+    that opens with "sacrifice " (or "discard "/"exile "), swallowing
+    fragments that do not themselves look like the start of a new cost, until
+    one starts with "or " - the list's own final connective - and rejoins the
+    whole run with commas. A fragment sequence with no such "or " is left
+    exactly as split, so an ordinary multi-cost line is untouched.
+    """
+    merged: list[str] = []
+    index = 0
+    total = len(parts)
+    while index < total:
+        part = parts[index]
+        lowered = part.strip().lower()
+        if lowered.startswith(("sacrifice ", "discard ", "exile ")) and index + 1 < total:
+            group = [part]
+            cursor = index + 1
+            closed = False
+            while cursor < total:
+                candidate = parts[cursor]
+                if candidate.strip().lower().startswith("or "):
+                    group.append(candidate)
+                    cursor += 1
+                    closed = True
+                    break
+                if _looks_like_new_cost_piece(candidate):
+                    break
+                group.append(candidate)
+                cursor += 1
+            if closed:
+                merged.append(", ".join(group))
+                index = cursor
+                continue
+        merged.append(part)
+        index += 1
+    return merged
+
+
 def _parse_line(raw: str, keywords: list[str], face: str) -> list[Ability]:
     text, reminder = _strip_reminder(raw)
     if not text:
@@ -1746,16 +1811,33 @@ _RETURNS_ITSELF_FROM_GRAVEYARD = re.compile(
     re.IGNORECASE,
 )
 
+#: CR 702.62b: "A card is 'suspended' if it's in the exile zone, has suspend,
+#: and has a time counter on it." Greater Gargadon's own second ability -
+#: "Sacrifice an artifact, creature, or land: Remove a time counter from this
+#: card. Activate only if this card is suspended." - carries an "Activate
+#: only if" restriction (CR 602.5b) whose *only* way to be met is for the
+#: card to already be exiled with a time counter, so the restriction pins the
+#: ability to exile just as surely as `_RETURNS_ITSELF_FROM_GRAVEYARD` pins
+#: World Breaker's to a graveyard - it is read off the words alone, not this
+#: one card's name, so any future "Activate only if this card is suspended"
+#: printing reaches it the same way.
+_ACTIVATE_ONLY_IF_SUSPENDED = re.compile(
+    r"activate only if this (?:card|permanent) is suspended", re.IGNORECASE
+)
 
-def _activated_ability_zone(costs: list[Cost], effect: str) -> tuple[Zone | None, str | None]:
+
+def _activated_ability_zone(
+    costs: list[Cost], effect: str, instructions: str | None = None
+) -> tuple[Zone | None, str | None]:
     """Which zone this printed activated ability functions in, and the CR
     113.6 sub-rule that says so - `(None, None)` for the CR 113.6 default of
     "on the battlefield".
 
-    Read off the ability's own cost and effect text alone, the way CR 113.6
-    itself reads it, so nothing here is a per-card table: any future card
-    shaped the same way - discarding itself, or returning itself from its own
-    graveyard - is read correctly with no row added.
+    Read off the ability's own cost, effect, and activation-instruction text
+    alone, the way CR 113.6 itself reads it, so nothing here is a per-card
+    table: any future card shaped the same way - discarding itself, returning
+    itself from its own graveyard, or restricted to activating only while
+    suspended - is read correctly with no row added.
     """
     if any(
         piece.kind is CostKind.DISCARD and _DISCARDS_ITSELF.match(piece.text) for piece in costs
@@ -1763,6 +1845,8 @@ def _activated_ability_zone(costs: list[Cost], effect: str) -> tuple[Zone | None
         return Zone.HAND, "CR 113.6j"
     if _RETURNS_ITSELF_FROM_GRAVEYARD.search(effect):
         return Zone.GRAVEYARD, "CR 113.6m"
+    if instructions and _ACTIVATE_ONLY_IF_SUSPENDED.search(instructions):
+        return Zone.EXILE, "CR 702.62b"
     return None, None
 
 
@@ -1796,7 +1880,8 @@ def _parse_activated(text: str, common: dict) -> ActivatedAbility | None:
     effect_text, cost_reduction = _split_off_trailing_cost_reduction(after)
 
     add = _ADD.match(effect_text)
-    costs = [_classify_cost(part) for part in _split_top_level(cost)]
+    cost_parts = _merge_disjunctive_sacrifice_cost(_split_top_level(cost))
+    costs = [_classify_cost(part) for part in cost_parts]
     # CR 606.2 makes an ability a loyalty ability when a loyalty symbol is in
     # its cost, and CR 107.7 prints the symbol as the whole cost, so a single
     # LOYALTY piece is the ability's loyalty cost and anything else is left
@@ -1813,7 +1898,7 @@ def _parse_activated(text: str, common: dict) -> ActivatedAbility | None:
             mana.conditional = _parse_conditional_clauses(add.group("rest"))
             mana.rider, mana.unparsed_rider = _parse_mana_rider(add.group("rest"))
 
-    zone, zone_rule = _activated_ability_zone(costs, effect_text)
+    zone, zone_rule = _activated_ability_zone(costs, effect_text, instructions)
 
     return ActivatedAbility(
         **common,
