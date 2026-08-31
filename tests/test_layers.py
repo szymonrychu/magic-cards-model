@@ -372,7 +372,10 @@ def test_blood_moon_applies_before_urborg_however_the_timestamps_fall():
     board = compute_board([urborg, blood_moon, mountain], effects)
 
     assert board.journal.applied == ["Blood Moon: nonbasic lands are Mountains"]
-    assert board.journal.skipped == ["Urborg: each land is a Swamp"]
+    # The description names the source permanent in full: both effects are
+    # built from the printed sentence now rather than from a name-keyed row, so
+    # nothing abbreviates "Urborg, Tomb of Yawgmoth" to "Urborg" any more.
+    assert board.journal.skipped == ["Urborg, Tomb of Yawgmoth: each land is a Swamp"]
     assert board.journal.cycles == []
     assert board.of(urborg).subtypes == ("Mountain",)
     assert board.of(mountain).subtypes == ("Mountain",)

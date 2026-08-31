@@ -21,20 +21,18 @@ starts from the point it calls uncontroversial and builds up:
   applies to, so Blood Moon waits (CR 613.8b) even though it has the earlier
   timestamp.
 
-The engine has a real `LAYER_EFFECTS` row for Blood Moon and a real dependency
-system in `machines/layers.py`, so the first three are ordinary tests. The
-fourth needs Hydro-Man's *triggered* ability to create a continuous type-changing
-effect, which nothing in this engine builds - Hydro-Man has no `LAYER_EFFECTS`
-row and `parsed_layer_effects` reads none of its text - so it is `xfail`.
+Blood Moon's effect and Hydro-Man's are both read off their printed sentences
+by `machines/layers.py`'s parser now, so all four are ordinary tests. The
+fourth builds Hydro-Man's effect through `effects_for` with the trigger's own
+subject rather than through the battlefield sweep, because it is a *triggered*
+ability's effect (CR 603.1) and not a static one's (CR 604.1).
 
 Every CR number in this file was verified with `knowledge_search(q="...",
 type="rules")` in the session that wrote it: CR 613.3, CR 613.8, CR 613.8a,
 CR 613.8b, CR 613.8c.
 """
 
-import pytest
-
-from magic_cards_model.machines.layers import compute_board, static_effects
+from magic_cards_model.machines.layers import compute_board, effects_for, static_effects
 from magic_cards_model.models import Zone
 from tests.cards import card_state
 
@@ -115,17 +113,6 @@ def test_blood_moon_reaches_a_nonbasic_land_whatever_else_is_on_the_board():
     assert board.of(hydro).subtypes == ("Elemental", "Villain")
 
 
-@pytest.mark.xfail(
-    reason=(
-        "Hydro-Man's end-step trigger - 'Until your next turn, he becomes a land "
-        'and gains "{T}: Add {U}"\' - creates a continuous effect on resolution, '
-        "and nothing in this engine builds it: Hydro-Man has no `LAYER_EFFECTS` "
-        "row and `parsed_layer_effects` reads none of its shapes. Without the "
-        "layer-4 land-making effect there is no CR 613.8a dependency for Blood "
-        "Moon to wait on, which is the whole of DDR#966."
-    ),
-    strict=True,
-)
 def test_hydro_man_becomes_a_land_and_blood_moon_then_applies_to_it():
     """CR 613.8a/613.8b: Blood Moon depends on Hydro-Man's own effect.
 
@@ -134,13 +121,23 @@ def test_hydro_man_becomes_a_land_and_blood_moon_then_applies_to_it():
     its timestamp is. The end state the episode draws: a legendary land
     Mountain that also taps for blue, because Hydro-Man's layer 6 grant lands
     after Blood Moon's layer 4 ability removal.
+
+    Hydro-Man's own effect is a *triggered* ability's (CR 603.1), not a static
+    one's, so it does not come from `static_effects` - that sweep asks each
+    permanent for its CR 611.3 static contribution only. It is built the way
+    the resolving trigger builds it, with `effects_for` handed the trigger's
+    own subject, which is what `create_continuous_effect_of_ability` does.
     """
     hydro = permanent("Hydro-Man, Fluid Felon")
     moon = permanent("Blood Moon")
     cards = [moon, hydro]
-    board = compute_board(cards, static_effects([moon, hydro]))
+    effects = static_effects([moon, hydro]) + effects_for(hydro, 2, [hydro])
+    board = compute_board(cards, effects)
     characteristics = board.of(hydro)
 
     assert characteristics.is_land
     assert not characteristics.is_creature
     assert characteristics.subtypes == ("Mountain",)
+    assert "{T}: Add {U}." in characteristics.abilities, (
+        "the layer 6 grant is later than Blood Moon's layer 4 ability removal"
+    )

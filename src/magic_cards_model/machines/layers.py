@@ -75,7 +75,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from ..models.card import Color, Supertype, Type
 from ..models.card_state import CardState, Counter
 from ..models.zone import Zone
-from .abilities import layer_readable_sentences
+from .abilities import layer_readable_sentences, self_normalized_effect_text
 from .combat import Keyword
 
 # --------------------------------------------------------------------------
@@ -195,6 +195,13 @@ class Characteristics(BaseModel):
     #: Counters on the permanent. Not a characteristic - it is state the layer
     #: system reads (CR 613.4c) - but it has to travel with the object.
     counters: dict[str, int] = Field(default_factory=dict)
+    #: Whether this object is a token. Not a characteristic either - CR 205
+    #: lists none of it - but a `Selector` never sees the `CardState` it would
+    #: otherwise have to ask, and a real printed shape filters on exactly this:
+    #: Toph, the First Metalbender's "**Nontoken** artifacts you control are
+    #: lands in addition to their other types". Carried alongside `counters`,
+    #: which is here for the same reason.
+    is_token: bool = False
 
     @property
     def is_creature(self) -> bool:
@@ -312,6 +319,7 @@ def printed_characteristics(
             power=face_down.power,
             toughness=face_down.toughness,
             counters=on_the_permanent,
+            is_token=state.token,
         )
     # CR 712.8d/712.8e/712.8f: a double-faced permanent has only the
     # characteristics of the face that is up - the front face by default
@@ -348,6 +356,7 @@ def printed_characteristics(
         power=power,
         toughness=toughness,
         counters=on_the_permanent,
+        is_token=state.token,
     )
 
 
@@ -883,6 +892,77 @@ def other_non_aura_enchantments(source_id: UUID) -> Selector:
     return selector
 
 
+def permanents_controlled_by(
+    username: str | None, card_type: Type, *, nontoken: bool = False
+) -> Selector:
+    """ "[Nontoken] <card type>s you control" (CR 205.2a) - Toph, the First
+    Metalbender's board-wide layer 4 grant picks its subject this way.
+
+    `nontoken` reads `Characteristics.is_token`, which is why that field
+    travels on the board at all: CR 111.1's token/card distinction is not a
+    characteristic, and a `Selector` is handed nothing else.
+    """
+
+    def selector(chars: Characteristics, board: Board) -> bool:
+        if nontoken and chars.is_token:
+            return False
+        return card_type in chars.types and chars.controller == username
+
+    return selector
+
+
+def creatures_controlled_by_with_subtype(
+    username: str | None, subtypes: Sequence[str], *, other_than: UUID | None = None
+) -> Selector:
+    """ "[Other] <subtype>s you control" / "each other creature you control
+    that's a Cat, Elemental, ... " - an anthem over a filtered subset of the
+    team (CR 611.3's static ability, applied in whichever layer its own effect
+    belongs to).
+
+    Any one of `subtypes` is enough: Kaheera's five-way list is an "or", and a
+    single-subtype anthem (Stormscale Scion's Dragons) is the same shape with a
+    one-item list. Read against the subtypes on the *computed* board, so a
+    creature that gained the subtype in layer 4 is included (CR 613.5).
+    """
+    wanted = {subtype.lower() for subtype in subtypes}
+
+    def selector(chars: Characteristics, board: Board) -> bool:
+        return (
+            chars.is_creature
+            and chars.controller == username
+            and chars.card_id != other_than
+            and any(subtype.lower() in wanted for subtype in chars.subtypes)
+        )
+
+    return selector
+
+
+def creatures_controlled_by_with_color(username: str | None, color: Color) -> Selector:
+    """ "Each creature you control ... if it's <colour>" - Scion of Draco's
+    per-object condition, judged against the colours the board says the
+    creature has when layer 6 runs, which is after layer 5 (CR 613.1e, CR
+    613.1f) and so already includes any colour-changing effect.
+    """
+
+    def selector(chars: Characteristics, board: Board) -> bool:
+        return chars.is_creature and chars.controller == username and color in chars.colors
+
+    return selector
+
+
+def permanents_controlled_by_with_counters(username: str | None) -> Selector:
+    """ "Permanents you control with counters on them" (Innkeeper's Talent's
+    level-2 chapter). CR 122.1's counters are state, not characteristics, and
+    ride on `Characteristics.counters` for exactly this kind of read; a counter
+    recorded with a count of zero is no counter at all.
+    """
+
+    def selector(chars: Characteristics, board: Board) -> bool:
+        return chars.controller == username and any(count > 0 for count in chars.counters.values())
+
+    return selector
+
+
 def lose_all_abilities(chars: Characteristics, board: Board) -> Characteristics:
     """Layer 6 removal (CR 613.1f)."""
     return chars.with_(abilities=())
@@ -894,6 +974,24 @@ def grant_ability(text: str) -> Modification:
     def modification(chars: Characteristics, board: Board) -> Characteristics:
         if chars.has_ability(text):
             return chars
+        return chars.with_(abilities=chars.abilities + (text,))
+
+    return modification
+
+
+def grant_ability_instance(text: str) -> Modification:
+    """Layer 6 addition (CR 613.1f) that does *not* deduplicate.
+
+    `grant_ability`'s dedupe is right for the keywords whose rules say multiple
+    instances are redundant - CR 702.3c for defender, CR 702.18b for shroud -
+    and wrong for the ones whose rules say the opposite or say nothing at all.
+    Ward is the second kind: CR 702.21a makes it a triggered ability and prints
+    no redundancy clause, and CR 113.2c's "An object may have multiple
+    abilities" is then the whole of it, so two sources granting ward {1} give
+    the permanent two independent triggers rather than one.
+    """
+
+    def modification(chars: Characteristics, board: Board) -> Characteristics:
         return chars.with_(abilities=chars.abilities + (text,))
 
     return modification
@@ -1607,6 +1705,413 @@ _BECOMES_TYPE_IN_ADDITION_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "This land becomes a 2/2 Assembly-Worker artifact creature until end of
+#: turn." (Mishra's Factory, confirmed with `resolve_cards`) - a permanent
+#: animating itself. Layer 4 for the types and subtype (CR 613.1d) and sublayer
+#: 7b for the P/T (CR 613.4b), one ability in two layers (CR 613.6).
+#:
+#: CR 205.1a: "Some effects set an object's card type. In most such cases, the
+#: new card type(s) replaces any existing card types", so the land type is
+#: *not* kept by this sentence - the separate "It's still a land." sentence
+#: below is what keeps it (CR 205.1b), which is exactly why the card prints
+#: both.
+_SELF_ANIMATION_RE = re.compile(
+    r"^[Tt]his (?:land|permanent|artifact|creature|enchantment) becomes an? "
+    r"(?P<power>\d+)/(?P<toughness>\d+) (?P<subtype>[A-Z][A-Za-z'-]*(?: [A-Z][A-Za-z'-]*)? )?"
+    r"(?P<types>(?:artifact |enchantment |land )*creature) until end of turn\.?"
+    r"(?:\s+[Ii]t's still an? (?P<retained>[a-z]+)\.?)?$"
+)
+
+#: "Until your next turn, he becomes a land and gains "{T}: Add {U}"."
+#: (Hydro-Man, Fluid Felon's end step trigger, confirmed with `resolve_cards`).
+#: Layer 4 for the type (CR 613.1d) and layer 6 for the granted ability
+#: (CR 613.1f), one ability in two layers (CR 613.6), lasting CR 800.4m's
+#: "until that player's next turn".
+#:
+#: CR 205.1a - "the new card type(s) replaces any existing card types" - is
+#: what the card's own reminder text spells out as "He's not a creature during
+#: that time", and CR 205.3d ("An object can't gain a subtype that doesn't
+#: correspond to one of that object's types") is why the creature types go with
+#: it. The pronoun is read as a subject alongside "this permanent": the card
+#: prints "he", and `self_normalized_effect_text` only rewrites the literal
+#: printed name.
+_SELF_BECOMES_TYPE_UNTIL_NEXT_TURN_RE = re.compile(
+    r"^until your next turn, (?:he|she|it|they|this permanent|this creature) becomes an? "
+    r'(?P<extra_type>[a-z]+)(?: and gains "(?P<ability>[^"]+)")?\.?$',
+    re.IGNORECASE,
+)
+
+
+def _self_becomes_type_until_next_turn_builder(
+    extra_type: Type, ability: str | None
+) -> EffectBuilder:
+    """`_SELF_BECOMES_TYPE_UNTIL_NEXT_TURN_RE`'s shape.
+
+    The type change *replaces* (CR 205.1a), unlike `_becomes_type_in_addition_
+    builder`'s CR 205.1b form - which is the whole difference between "becomes
+    a land" and "becomes a land in addition to its other types", and the reason
+    Blood Moon can then see it as a nonbasic land at all (CR 613.8a's
+    dependency: making it a land changes the set of objects Blood Moon applies
+    to).
+
+    `until_next_turn_of` is the source's controller - the "your" of "until your
+    next turn" (CR 800.4m: continuous effects with that duration "will last
+    until that turn would have begun").
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        def become(chars: Characteristics, board: Board) -> Characteristics:
+            return chars.with_(types=(extra_type,), subtypes=())
+
+        effects: list[ContinuousEffect] = []
+        for target in targets:
+            effects.append(
+                ContinuousEffect(
+                    description=f"{source.name}: {target.name} becomes a {extra_type.value}",
+                    layer=Layer.TYPE,
+                    timestamp=timestamp,
+                    duration=Duration.UNTIL_YOUR_NEXT_TURN,
+                    until_next_turn_of=source.controller,
+                    selector=_only(target.id),
+                    modification=become,
+                )
+            )
+            if ability is not None:
+                effects.append(
+                    ContinuousEffect(
+                        description=f"{source.name}: {target.name} gains {ability}",
+                        layer=Layer.ABILITY,
+                        timestamp=timestamp,
+                        duration=Duration.UNTIL_YOUR_NEXT_TURN,
+                        until_next_turn_of=source.controller,
+                        selector=_only(target.id),
+                        modification=grant_ability(ability),
+                    )
+                )
+        return effects
+
+    return builder
+
+
+#: A retention clause on its own - "It's still a land." - which
+#: `_RETENTION_CLAUSE_RE` folds back into the sentence in front of it before
+#: any shape is tried, so an animation and its retention are read as the one
+#: ability they are (CR 205.1b: "Some effects change an object's card type ...
+#: but specify that the object retains a prior card type").
+#:
+#: Folded rather than parsed separately on purpose. Parsed on its own it would
+#: make *any* card carrying the clause look partly readable - Jolrael, Voice of
+#: Zhalfir's "becomes an X/X green and blue Bird creature with flying and haste
+#: ... where X is the number of cards in your hand. It's still a land." would
+#: have produced the retention and nothing else, which is half an ability
+#: (CR 608.2c has no notion of running half an instruction).
+_RETENTION_CLAUSE_RE = re.compile(r"^[Ii]t's still an? [a-z]+\.?$")
+
+
+def _fold_retention_clauses(sentences: list[str]) -> list[str]:
+    """Join every bare "It's still a `<type>`." onto the sentence before it.
+
+    The clause qualifies the type change in front of it (CR 205.1b) and is
+    never an ability of its own, so it has to reach a shape as one sentence or
+    the shape would read half of one.
+    """
+    folded: list[str] = []
+    for sentence in sentences:
+        if folded and _RETENTION_CLAUSE_RE.match(sentence.strip()):
+            folded[-1] = f"{folded[-1].rstrip()} {sentence.strip()}"
+            continue
+        folded.append(sentence)
+    return folded
+
+
+def _self_animation_builder(
+    power: int, toughness: int, subtype: str | None, types: list[Type]
+) -> EffectBuilder:
+    """`_SELF_ANIMATION_RE`'s shape - Mishra's Factory's own activated
+    animation.
+
+    Layer 4 (CR 613.1d) for the card types and the creature type, sublayer 7b
+    (CR 613.4b) for the P/T, one ability applying in two layers (CR 613.6).
+    The P/T is a *set*, not a modifier, so a pump on the same permanent lands
+    on top of it (CR 613.4c) rather than being overwritten.
+
+    The subject is `targets`, which `create_continuous_effect_of_ability` fills
+    with the ability's own source when it names no target - the same contract
+    every other resolution shape in this module relies on.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        def become(chars: Characteristics, board: Board) -> Characteristics:
+            # CR 205.1a: the new card types replace the old ones, and with them
+            # go the subtypes that belonged only to those types (CR 205.3d: "An
+            # object can't gain a subtype that doesn't correspond to one of
+            # that object's types").
+            return chars.with_(
+                types=tuple(types),
+                subtypes=(subtype,) if subtype is not None else (),
+            )
+
+        effects: list[ContinuousEffect] = []
+        for target in targets:
+            named = f"{subtype} " if subtype is not None else ""
+            effects.append(
+                ContinuousEffect(
+                    description=(
+                        f"{source.name}: {target.name} becomes a {power}/{toughness} "
+                        f"{named}{' '.join(card_type.value for card_type in types)}"
+                    ),
+                    layer=Layer.TYPE,
+                    timestamp=timestamp,
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=_only(target.id),
+                    modification=become,
+                )
+            )
+            effects.append(
+                ContinuousEffect(
+                    description=f"{source.name}: {target.name} has base P/T {power}/{toughness}",
+                    layer=Layer.POWER_TOUGHNESS,
+                    sublayer=Sublayer.SET,
+                    timestamp=timestamp,
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=_only(target.id),
+                    modification=set_power_toughness(power, toughness),
+                )
+            )
+        return effects
+
+    return builder
+
+
+# --------------------------------------------------------------------------
+# Board-wide static shapes, keyed by the printed sentence rather than the name
+# --------------------------------------------------------------------------
+#
+# CR 604.2: "Static abilities create continuous effects ... These effects are
+# active as long as the permanent with the ability remains on the battlefield",
+# and CR 611.3b: "The effect applies at all times that the permanent generating
+# it is on the battlefield". Neither rule mentions the card's name, and that is
+# the whole point of this section: a sentence, not a name, is what generates the
+# effect. Blood Moon and Harbinger of the Seas print the same sentence with a
+# different basic land type in it; Dryad of the Ilysian Grove and Leyline of the
+# Guildpact print the same sentence verbatim. Keyed by name, the second card of
+# each pair silently did nothing - not even a `LayerNotice`, since these shapes
+# do not open the way `_LOOKS_LIKE_LAYER_EFFECT_RE`'s pump/anthem ones do.
+
+#: "Nonbasic lands are Mountains." (Blood Moon, Magus of the Moon) / "Nonbasic
+#: lands are Islands." (Harbinger of the Seas, confirmed with `resolve_cards`).
+#: Layer 4 (CR 613.1d), and CR 305.7 is what makes it removal as much as a type
+#: change: "If an effect sets a land's subtype to one or more of the basic land
+#: types, the land no longer has its old land type. It loses all abilities
+#: generated from its rules text, its old land types, and any copy effects".
+#: Only the five basic land types (CR 305.6) are admitted, since CR 305.7 is
+#: written about exactly those.
+_NONBASIC_LANDS_ARE_RE = re.compile(
+    r"^nonbasic lands are (?P<subtype>plains|islands|swamps|mountains|forests)\.?$",
+    re.IGNORECASE,
+)
+
+#: "Lands you control are every basic land type in addition to their other
+#: types." (Dryad of the Ilysian Grove, Leyline of the Guildpact - both
+#: confirmed with `resolve_cards`). Layer 4 (CR 613.1d); "in addition to" is
+#: CR 205.1b's retaining form, not CR 305.7's setting one, so nothing is lost,
+#: and each basic type gained brings its intrinsic mana ability along
+#: (CR 305.6).
+_LANDS_ARE_EVERY_BASIC_TYPE_RE = re.compile(
+    r"^lands you control are every basic land type in addition to their other types\.?$",
+    re.IGNORECASE,
+)
+
+#: "Each land is a Swamp in addition to its other land types." (Urborg, Tomb of
+#: Yawgmoth) / "Each land is a Forest ..." (Yavimaya, Cradle of Growth). Layer 4
+#: (CR 613.1d), CR 205.1b again, CR 305.6 for the mana ability that comes with
+#: the type.
+_EACH_LAND_IS_RE = re.compile(
+    r"^each land is an? (?P<subtype>plains|island|swamp|mountain|forest) in addition to "
+    r"its other land types\.?$",
+    re.IGNORECASE,
+)
+
+#: "Nontoken artifacts you control are lands in addition to their other types."
+#: (Toph, the First Metalbender). Layer 4 (CR 613.1d) and CR 205.1b's "retains
+#: a prior card type" wording - the board-wide, card-type twin of the land-type
+#: grants above. Both nouns are read through `_card_type_word`, so anything
+#: outside CR 300.1's card types fails the match rather than granting a
+#: made-up type.
+_BOARD_WIDE_TYPE_GRANT_RE = re.compile(
+    r"^(?P<nontoken>nontoken )?(?P<subject>[a-z]+) you control are (?P<granted>[a-z]+) "
+    r"in addition to their other types\.?$",
+    re.IGNORECASE,
+)
+
+#: The five basic land types as a sentence spells them, singular or plural, to
+#: the stored subtype - `add_subtype`/`set_basic_land_type` both want "Island",
+#: never "Islands" (CR 205.3i's land types are stored singular).
+_BASIC_LAND_TYPE_WORDS: dict[str, str] = {
+    word: subtype
+    for subtype in BASIC_LAND_TYPES
+    for word in (subtype.lower(), f"{subtype.lower()}s")
+}
+
+
+def _nonbasic_lands_are_builder(subtype: str) -> EffectBuilder:
+    """`_NONBASIC_LANDS_ARE_RE`'s shape - Blood Moon's, and every printing that
+    says the same thing about a different basic land type.
+
+    Layer 4 (CR 613.1d). CR 305.7 makes this a *setting* effect rather than an
+    additive one, so `set_basic_land_type` replaces the land's subtypes and its
+    rules-text abilities with the one basic type and the intrinsic mana ability
+    that comes with it (CR 305.6). "Nonbasic" is the supertype question
+    (CR 205.4c, CR 305.8: "Any land that doesn't have this supertype is a
+    nonbasic land, even if it has a basic land type"), which is exactly what
+    `nonbasic_lands` asks.
+    """
+    # "Plains" is already plural (CR 205.3i spells the land type that way), so
+    # the printed sentence never doubles the "s".
+    plural = subtype if subtype == "Plains" else f"{subtype}s"
+    sentence = f"Nonbasic lands are {plural}."
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: nonbasic lands are {plural}",
+                layer=Layer.TYPE,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, sentence),
+                selector=nonbasic_lands,
+                modification=set_basic_land_type(subtype, BASIC_LAND_TYPES[subtype]),
+            )
+        ]
+
+    return builder
+
+
+def _lands_are_every_basic_type_builder(line: str) -> EffectBuilder:
+    """`_LANDS_ARE_EVERY_BASIC_TYPE_RE`'s shape - Dryad of the Ilysian Grove's
+    and Leyline of the Guildpact's identical sentence.
+
+    Layer 4 (CR 613.1d). "In addition to their other types" is CR 205.1b, so
+    nothing is stripped - this is not CR 305.7's setting form - and every basic
+    type gained carries its intrinsic "{T}: Add [mana symbol]" with it
+    (CR 305.6), which is why one of these turns every land into a five-colour
+    source.
+
+    Neither card's *other* lines are this shape's business: Dryad's extra land
+    drop is CR 611.3d's rule-modifying grant (`ADDITIONAL_LAND_PLAYS`), and
+    Leyline of the Guildpact's "Each nonland permanent you control is all
+    colors" is a layer 5 effect (CR 613.1e) no shape here reads yet.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: your lands are every basic land type",
+                layer=Layer.TYPE,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=lands_controlled_by(source.controller),
+                modification=add_basic_land_types,
+            )
+        ]
+
+    return builder
+
+
+def _each_land_is_builder(subtype: str, line: str) -> EffectBuilder:
+    """`_EACH_LAND_IS_RE`'s shape - Urborg, Tomb of Yawgmoth's and Yavimaya,
+    Cradle of Growth's. Layer 4 (CR 613.1d), additive (CR 205.1b), with the
+    intrinsic mana ability the type carries (CR 305.6).
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: each land is a {subtype}",
+                layer=Layer.TYPE,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=every_land,
+                modification=add_subtype(subtype, BASIC_LAND_TYPES[subtype]),
+            )
+        ]
+
+    return builder
+
+
+def _board_wide_type_grant_builder(
+    subject: Type, granted: Type, *, nontoken: bool, line: str
+) -> EffectBuilder:
+    """`_BOARD_WIDE_TYPE_GRANT_RE`'s shape - Toph, the First Metalbender's
+    "Nontoken artifacts you control are lands in addition to their other
+    types."
+
+    Layer 4 (CR 613.1d), additive by CR 205.1b: "Some effects change an
+    object's card type ... but specify that the object retains a prior card
+    type ... In such cases, all the object's prior card types ... are
+    retained." An artifact caught by this stays an artifact and becomes a land
+    as well, which is what makes it a legal subject for a "nonbasic lands are
+    ..." effect in the same layer - CR 613.8's dependency, since applying this
+    one changes the set of objects the other applies to.
+
+    The parenthetical Toph prints ("They don't gain the ability to {T} for
+    mana") is reminder text (CR 207.2a), already stripped before the sentence
+    reaches here, and states no rule of its own: CR 305.6 hands out an
+    intrinsic mana ability for a *basic land type*, and this grants the land
+    card type with no subtype at all.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            ContinuousEffect(
+                description=(
+                    f"{source.name}: {'nontoken ' if nontoken else ''}{subject.value}s you "
+                    f"control are {granted.value}s in addition to their other types"
+                ),
+                layer=Layer.TYPE,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=permanents_controlled_by(source.controller, subject, nontoken=nontoken),
+                modification=add_type(granted),
+            )
+        ]
+
+    return builder
+
+
 #: The pump/keyword-grant/base-P/T-set/becomes-creature shapes' opening words
 #: - everything `_LOOKS_LIKE_LAYER_EFFECT_RE` matches **except** the anthem
 #: shape - so a caller can ask "does this look like a one-shot *resolution*
@@ -1676,6 +2181,29 @@ def _normalize_duration_first(sentence: str) -> str:
     return f"{rest} until end of turn."
 
 
+#: An ability word and the em dash that follows it - "Domain — ", "Delirium — "
+#: - at the very start of a sentence. CR 207.2c: "An ability word appears in
+#: italics at the beginning of some abilities. Ability words are similar to
+#: keywords in that they tie together cards that have similar functionality,
+#: but they have no special rules meaning", so the words in front of the dash
+#: are decoration and the ability is everything after it. Capped at two words
+#: and required to start with a capital, which is how Oracle prints them.
+_ABILITY_WORD_RE = re.compile(r"^[A-Z][a-z']*(?: [A-Za-z][a-z']*)? — (?P<rest>.+)$")
+
+
+def _strip_ability_word(sentence: str) -> str:
+    """A sentence with any leading ability word (CR 207.2c) removed, or
+    unchanged if it has none.
+
+    Applied only on the parsing path, never to the notice question: a sentence
+    behind an ability word never opened the way `_LOOKS_LIKE_LAYER_EFFECT_RE`
+    watches for, so it never produced a notice, and stripping here can only
+    turn "silently nothing" into a real effect.
+    """
+    match = _ABILITY_WORD_RE.match(sentence.strip())
+    return match.group("rest").strip() if match else sentence
+
+
 def _effect_sentences(
     oracle_text: str | None, *, static_only: bool = False, card_name: str | None = None
 ) -> list[str]:
@@ -1712,7 +2240,9 @@ def _effect_sentences(
     never be treated as this permanent's *static* (CR 611.3) contribution,
     whether or not it happens to parse.
     """
-    return layer_readable_sentences(oracle_text, static_only=static_only, card_name=card_name)
+    return _fold_retention_clauses(
+        layer_readable_sentences(oracle_text, static_only=static_only, card_name=card_name)
+    )
 
 
 def _pump_and_keyword_builder(power: int, toughness: int, keyword: str | None) -> EffectBuilder:
@@ -2060,6 +2590,504 @@ def _becomes_creature_with_mana_value_pt_builder(extra_type: Type) -> EffectBuil
     return builder
 
 
+# --------------------------------------------------------------------------
+# Filtered subsets, per-object conditions, and gated self-statics
+# --------------------------------------------------------------------------
+#
+# Every shape below is CR 611.3's static ability again, differing only in who
+# it picks out: a creature subtype rather than the whole team, one colour at a
+# time, the equipped creature (CR 301.5a/301.5f), or the source itself behind a
+# condition. None of them was expressible before, so each of these cards
+# generated nothing at all.
+
+#: "Other Dragons you control get +1/+1." (Stormscale Scion) - CR 205.3m's
+#: bare creature-type plural standing in for "creatures", the static twin of
+#: `machines/effects.py`'s `_MASS_SUBTYPE_SUBJECT_RE`. Deliberately
+#: case-sensitive on the subtype: Oracle text only ever capitalizes a creature
+#: type, and `_ANTHEM_RE`'s literal "creatures" is tried first, so this never
+#: intercepts the plain anthem.
+_SUBTYPE_ANTHEM_RE = re.compile(
+    r"^(?P<other>[Oo]ther )?(?P<subtype>[A-Z][a-z]+)s you control get "
+    r"(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)\.?$"
+)
+
+#: "Each other creature you control that's a Cat, Elemental, Nightmare,
+#: Dinosaur, or Beast gets +1/+1 and has vigilance." (Kaheera, the Orphanguard,
+#: confirmed with `resolve_cards`) - the same filtered subset written out as a
+#: subtype list, with a keyword grant riding along. Sublayer 7c for the pump
+#: (CR 613.4c) and layer 6 for the keyword (CR 613.1f), one ability applying in
+#: two layers (CR 613.6).
+_FILTERED_CREATURE_ANTHEM_RE = re.compile(
+    r"^each (?P<other>other )?creature you control that's an? "
+    r"(?P<subtypes>[A-Za-z][A-Za-z, ]*?) gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)"
+    r"(?: and has (?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*))?\.?$",
+    re.IGNORECASE,
+)
+
+#: "This permanent's power and toughness are each equal to the number of basic
+#: land types among lands you control." - Territorial Kavu's *domain* ability,
+#: with its own name already rewritten to "this permanent" by
+#: `self_normalized_effect_text` and the ability word stripped (CR 207.2c:
+#: "Ability words ... have no special rules meaning").
+#:
+#: A characteristic-defining ability (CR 604.3a: "(1) It defines an object's
+#: colors, subtypes, power, or toughness; (2) it is printed on the card it
+#: affects"), which is why it lands in sublayer 7a (CR 613.4a) rather than 7c -
+#: CR 208.2a is the printed side of it, the `*` in the power box.
+_BASIC_LAND_TYPE_COUNT_CDA_RE = re.compile(
+    r"^this (?:creature|permanent|token)'s power and toughness are each equal to the "
+    r"number of basic land types among lands you control\.?$",
+    re.IGNORECASE,
+)
+
+#: "Equipped creature gets +1/+1 and has trample and haste." (Cori-Steel
+#: Cutter). CR 301.5a: "The creature an Equipment is attached to is called the
+#: 'equipped creature'", and CR 301.5f extends the phrase to any permanent that
+#: uses it. The subject is read off the source's own `attached_to` link rather
+#: than the board, since attachment is not a characteristic.
+_EQUIPPED_CREATURE_STATIC_RE = re.compile(
+    r"^equipped creature (?:gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)"
+    r"(?: and has (?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*))?"
+    r"|has (?P<only_keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*))\.?$",
+    re.IGNORECASE,
+)
+
+#: "As long as there are four or more card types among cards in your graveyard,
+#: this creature gets +2/+2, has flying, and attacks each combat if able."
+#: (Dragon's Rage Channeler's *delirium* ability, the ability word stripped -
+#: CR 207.2c). A static ability whose effect exists only while its condition
+#: holds (CR 604.2: "These effects are active as long as the permanent with the
+#: ability remains on the battlefield and has the ability"), rebuilt from the
+#: graveyard every time the board is computed (CR 613.5), so no stored
+#: `Duration` is involved at all: when the condition is false the sweep simply
+#: produces no effect.
+_GRAVEYARD_CARD_TYPES_GATED_SELF_STATIC_RE = re.compile(
+    r"^as long as there are (?P<count>[a-z]+) or more card types among cards in your "
+    r"graveyard, this (?:creature|permanent|token) gets (?P<power>[+-]\d+)/"
+    r"(?P<toughness>[+-]\d+)(?P<rest>.*?)\.?$",
+    re.IGNORECASE,
+)
+
+#: The number words a printed condition spells out. CR 107.1 is the general
+#: rule that a number in the rules text is a number; the words themselves are
+#: just English, and only the ones the pool actually prints are listed.
+_NUMBER_WORDS: dict[str, int] = {
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+    "ten": 10,
+}
+
+#: "Each creature you control has vigilance if it's white, hexproof if it's
+#: blue, lifelink if it's black, first strike if it's red, and trample if it's
+#: green." (Scion of Draco, confirmed with `resolve_cards`) - one layer 6 grant
+#: (CR 613.1f) per clause, each with its own per-object colour condition, which
+#: is a `Selector` question and not a `Duration` one. Colour is judged on the
+#: computed board, so layer 5 (CR 613.1e) has already run when layer 6 asks.
+_PER_COLOR_KEYWORD_GRANT_RE = re.compile(
+    r"^each creature you control has (?P<clauses>.+ if it's .+?)\.?$",
+    re.IGNORECASE,
+)
+
+_ONE_COLOR_KEYWORD_CLAUSE_RE = re.compile(
+    r"^(?P<keyword>[a-z]+(?: [a-z]+)?) if it's (?P<color>white|blue|black|red|green)$",
+    re.IGNORECASE,
+)
+
+#: The five colour words, as a printed condition spells them (CR 105.1).
+_COLOR_WORDS: dict[str, Color] = {
+    "white": Color.WHITE,
+    "blue": Color.BLUE,
+    "black": Color.BLACK,
+    "red": Color.RED,
+    "green": Color.GREEN,
+}
+
+#: "Permanents you control with counters on them have ward {1}." (Innkeeper's
+#: Talent's level-2 chapter). CR 702.21a: "Ward is a triggered ability. Ward
+#: [cost] means 'Whenever this permanent becomes the target of a spell or
+#: ability an opponent controls, counter that spell or ability unless that
+#: player pays [cost]'" - so this is an ability-adding effect in layer 6
+#: (CR 613.1f) like any other grant, and the cost travels in the granted text.
+#:
+#: Ward has no redundancy clause of its own - compare CR 702.3c for defender or
+#: CR 702.18b for shroud, both of which say multiple instances are redundant -
+#: so two of these grant two abilities (CR 113.2c: "An object may have multiple
+#: abilities"), which is why this one shape grants through
+#: `grant_ability_instance` rather than the deduplicating `grant_ability`.
+_PERMANENTS_WITH_COUNTERS_WARD_RE = re.compile(
+    r"^permanents you control with counters on them have ward (?P<cost>\{[^}]+\})\.?$",
+    re.IGNORECASE,
+)
+
+
+#: Reminder text, anywhere in a line (CR 207.2a: "Reminder text ... appears in
+#: italics within parentheses" and "has no game function"). Stripped only for
+#: the purpose of matching a parsed sentence back to the line it came from.
+_REMINDER_TEXT_RE = re.compile(r"\s*\([^)]*\)")
+
+
+def _source_line_for(source: CardState, sentence: str) -> str:
+    """The permanent's own printed oracle *line* that `sentence` was parsed
+    out of, or `sentence` unchanged if no line matches.
+
+    `ContinuousEffect.source_ability` is matched against
+    `Characteristics.abilities` - which is the card's lines verbatim - every
+    time `_still_exists` asks CR 613.6's question ("an effect that has already
+    started applying keeps applying even once the ability generating it is
+    gone"). A sentence that reached the parser through
+    `layer_readable_sentences` may have had its reminder text (CR 207.2a), its
+    ability word (CR 207.2c) or its own printed name (rewritten to "this
+    permanent") taken off it on the way, and none of those forms is what layer
+    6 removal will be matching on. Territorial Kavu is the card that makes this
+    visible: every one of the three happens to its *domain* line at once, and
+    without this the effect it generates would look, to `_still_exists`, like
+    an effect whose ability had already been removed.
+    """
+    for raw in (source.oracle_text or "").splitlines():
+        line = raw.strip()
+        if not line:
+            continue
+        if line == sentence:
+            return line
+        normalized = _strip_ability_word(
+            self_normalized_effect_text(source.name, _REMINDER_TEXT_RE.sub("", line).strip())
+        )
+        if normalized == sentence or normalized.startswith(sentence):
+            return line
+    return sentence
+
+
+def _subtype_word(word: str) -> str | None:
+    """ "Dragons" -> "Dragon" (CR 205.3m's plural), or `None` if the word names
+    one of CR 300.1's card types instead - "Artifacts you control are ..." is
+    the board-wide *type* shape's sentence, never a subtype anthem's.
+    """
+    singular = word[:-1] if word.lower().endswith("s") else word
+    if _card_type_word(singular) is not None:
+        return None
+    return singular.capitalize()
+
+
+def _filtered_anthem_builder(
+    subtypes: list[str],
+    power: int,
+    toughness: int,
+    keywords: list[str],
+    *,
+    other: bool,
+    line: str,
+) -> EffectBuilder:
+    """An anthem over a filtered subset of the team - Stormscale Scion's "Other
+    Dragons you control get +1/+1", Kaheera's five-subtype list with a keyword
+    riding along.
+
+    Sublayer 7c for the pump (CR 613.4c: effects that "modify power and/or
+    toughness (but don't set ...)") and layer 6 for each keyword (CR 613.1f),
+    one ability applying in more than one layer (CR 613.6). A static ability's
+    effect (CR 611.3), so it is timestamped off the source permanent
+    (CR 613.7a), its selector stays live rather than fixed at resolution
+    (CR 611.3a: "isn't 'locked in'; it applies at any given moment to whatever
+    its text indicates"), and `source_ability` is the printed sentence so layer
+    6 removal has something to match on.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        selector = creatures_controlled_by_with_subtype(
+            source.controller, subtypes, other_than=source.id if other else None
+        )
+        subject = f"{'other ' if other else ''}{'/'.join(subtypes)}s you control"
+        effects = [
+            ContinuousEffect(
+                description=f"{source.name}: {subject} get {power:+d}/{toughness:+d}",
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.MODIFY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=selector,
+                modification=modify_power_toughness(power, toughness),
+            )
+        ]
+        effects.extend(
+            ContinuousEffect(
+                description=f"{source.name}: {subject} have {keyword}",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=selector,
+                modification=grant_ability(keyword),
+            )
+            for keyword in keywords
+        )
+        return effects
+
+    return builder
+
+
+def count_basic_land_types_among_lands_controlled_by(username: str | None) -> Count:
+    """How many of the five basic land types (CR 305.6) are among the lands one
+    player controls - *domain*'s number (CR 207.2c: an ability word with no
+    rules meaning of its own, so the counting is spelled out on each card).
+
+    Counted off the board as it stands in the sublayer that asks, so a land
+    that gained a basic land type in layer 4 (CR 613.1d) counts - which is the
+    whole reason Territorial Kavu grows next to a Dryad of the Ilysian Grove.
+    """
+
+    def count(chars: Characteristics, board: Board) -> int:
+        found = {
+            subtype
+            for other in board.values()
+            if other.is_land and other.controller == username
+            for subtype in other.subtypes
+            if subtype in BASIC_LAND_TYPES
+        }
+        return len(found)
+
+    return count
+
+
+def _basic_land_type_count_cda_builder(line: str) -> EffectBuilder:
+    """`_BASIC_LAND_TYPE_COUNT_CDA_RE`'s shape - Territorial Kavu's *domain*
+    characteristic-defining ability.
+
+    Sublayer 7a (CR 613.4a: "Effects from characteristic-defining abilities
+    that define power and/or toughness are applied"), and `define_power_
+    toughness` *sets* both halves rather than adding to them, since a CDA
+    defines the value (CR 604.3). The printed box is `*`, which
+    `printed_characteristics` reads as no value at all until this runs
+    (CR 208.2a), and CR 208.5 covers the gap if layer 6 ever strips the ability.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: P/T equal to its controller's domain",
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.CHARACTERISTIC_DEFINING,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                characteristic_defining=True,
+                selector=_only(source.id),
+                modification=define_power_toughness(
+                    count_basic_land_types_among_lands_controlled_by(source.controller)
+                ),
+            )
+        ]
+
+    return builder
+
+
+def _equipped_creature_static_builder(
+    power: int, toughness: int, keywords: list[str], *, line: str
+) -> EffectBuilder:
+    """`_EQUIPPED_CREATURE_STATIC_RE`'s shape - Cori-Steel Cutter's "Equipped
+    creature gets +1/+1 and has trample and haste."
+
+    CR 301.5a: "The creature an Equipment is attached to is called the
+    'equipped creature'"; CR 301.5f extends the phrase to a permanent that is
+    not itself an Equipment. Attachment is not a characteristic and never
+    reaches the board, so the subject is read off the source's own
+    `attached_to` link - and an unattached Equipment produces no effect at all,
+    which is exactly what CR 301.5a leaves it with: no equipped creature to
+    talk about.
+
+    Sublayer 7c (CR 613.4c) for the pump, layer 6 (CR 613.1f) for each keyword,
+    one ability in two layers (CR 613.6).
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        equipped = source.attached_to
+        if equipped is None:
+            return []
+        effects: list[ContinuousEffect] = []
+        if power or toughness:
+            effects.append(
+                ContinuousEffect(
+                    description=(
+                        f"{source.name}: equipped creature gets {power:+d}/{toughness:+d}"
+                    ),
+                    layer=Layer.POWER_TOUGHNESS,
+                    sublayer=Sublayer.MODIFY,
+                    timestamp=timestamp,
+                    source_id=source.id,
+                    source_ability=_source_line_for(source, line),
+                    selector=_only(equipped),
+                    modification=modify_power_toughness(power, toughness),
+                )
+            )
+        effects.extend(
+            ContinuousEffect(
+                description=f"{source.name}: equipped creature has {keyword}",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=_only(equipped),
+                modification=grant_ability(keyword),
+            )
+            for keyword in keywords
+        )
+        return effects
+
+    return builder
+
+
+def _graveyard_card_types_gated_self_static_builder(
+    threshold: int, power: int, toughness: int, granted: list[str], *, line: str
+) -> EffectBuilder:
+    """`_GRAVEYARD_CARD_TYPES_GATED_SELF_STATIC_RE`'s shape - Dragon's Rage
+    Channeler's *delirium* ability.
+
+    The condition is counted over the controller's own graveyard through
+    `LayerContext.graveyard_of` (CR 300.1's card types, the same count
+    Tarmogoyf's row already uses), and it is checked here, at build time,
+    rather than stored: CR 604.2 has a static ability's effect active exactly
+    while the ability is there and its condition holds, and `effects_for` is
+    re-run every time the board is computed (CR 613.5), so a graveyard that
+    stops being delirious simply stops producing the effect on the next
+    computation.
+
+    Sublayer 7c for the pump (CR 613.4c) and layer 6 for everything granted
+    (CR 613.1f). "Attacks each combat if able" is granted as an ability line
+    like any other - `Characteristics.abilities` is ability *text*, and nothing
+    in this module needs to know which of the granted lines is a keyword.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        if count_card_types(context.graveyard_of(source.controller)) < threshold:
+            return []
+        effects: list[ContinuousEffect] = []
+        if power or toughness:
+            effects.append(
+                ContinuousEffect(
+                    description=f"{source.name}: {power:+d}/{toughness:+d} while delirious",
+                    layer=Layer.POWER_TOUGHNESS,
+                    sublayer=Sublayer.MODIFY,
+                    timestamp=timestamp,
+                    source_id=source.id,
+                    source_ability=_source_line_for(source, line),
+                    selector=_only(source.id),
+                    modification=modify_power_toughness(power, toughness),
+                )
+            )
+        effects.extend(
+            ContinuousEffect(
+                description=f"{source.name}: has {ability} while delirious",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=_only(source.id),
+                modification=grant_ability(ability),
+            )
+            for ability in granted
+        )
+        return effects
+
+    return builder
+
+
+def _per_color_keyword_grant_builder(
+    grants: list[tuple[str, Color]], *, line: str
+) -> EffectBuilder:
+    """`_PER_COLOR_KEYWORD_GRANT_RE`'s shape - Scion of Draco's five
+    colour-conditioned grants.
+
+    One layer 6 effect (CR 613.1f) per clause, each selecting only the
+    creatures of that colour. The condition is part of *what the effect applies
+    to*, not a duration: CR 611.3a says a static ability's effect "isn't
+    'locked in'; it applies at any given moment to whatever its text
+    indicates", so a creature that becomes blue later is warded by the hexproof
+    clause from that moment, with no new effect created.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: your {color.value} creatures have {keyword}",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=creatures_controlled_by_with_color(source.controller, color),
+                modification=grant_ability(keyword),
+            )
+            for keyword, color in grants
+        ]
+
+    return builder
+
+
+def _permanents_with_counters_ward_builder(cost: str, *, line: str) -> EffectBuilder:
+    """`_PERMANENTS_WITH_COUNTERS_WARD_RE`'s shape - Innkeeper's Talent at
+    level 2.
+
+    Layer 6 (CR 613.1f). Granted through `grant_ability_instance`, not
+    `grant_ability`: ward is a triggered ability (CR 702.21a) with no
+    redundancy clause of its own, so two sources granting it give the permanent
+    two of them (CR 113.2c), each triggering separately.
+
+    Whether this ability is live at all is the Class's own question, not this
+    shape's - `effects_for` reads `CardState.class_ability_text` (CR 716.2a),
+    so a level-1 Innkeeper's Talent never offers this sentence here.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: your permanents with counters have ward {cost}",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=permanents_controlled_by_with_counters(source.controller),
+                modification=grant_ability_instance(f"Ward {cost}"),
+            )
+        ]
+
+    return builder
+
+
 #: The keyword grant shapes only ever grant one bare keyword - `machines/
 #: combat.py`'s own vocabulary, since that is what a grant needs to be able to
 #: do anything (`combat.has_keyword` is the only reader). Aerial Maneuver's
@@ -2069,7 +3097,23 @@ def _becomes_creature_with_mana_value_pt_builder(extra_type: Type) -> EffectBuil
 #: keyword outside this set - or a conjunction the pool does not use single
 #: keywords with - fails the match and falls to `looks_like_unparsed_layer_effect`
 #: instead of silently granting the wrong thing.
-_KNOWN_KEYWORDS = frozenset(keyword.value for keyword in Keyword)
+_KNOWN_KEYWORDS = frozenset(keyword.value for keyword in Keyword) | {
+    # Keywords no combat rule reads, and so absent from `machines/combat.py`'s
+    # own `Keyword` vocabulary, that a grant still has to be able to name.
+    # `combat.has_keyword` takes the word it is asked about and adds it to the
+    # vocabulary it reads off the computed board, so a granted line is found by
+    # whoever asks for it - `machines/keywords.py::is_indestructible` is
+    # already written that way.
+    #
+    # CR 702.12a: "Indestructible is a static ability." Before this, "gains
+    # flying until end of turn" parsed and "gains indestructible until end of
+    # turn" did not, which made a real grant silently do nothing.
+    "indestructible",
+    # CR 702.11a: "Hexproof is a static ability", CR 702.11b for what it does.
+    # Scion of Draco's colour-conditioned grant names it, and no combat rule
+    # reads it either.
+    "hexproof",
+}
 
 
 def _split_and_validate_keywords(raw: str) -> list[str] | None:
@@ -2103,7 +3147,7 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
     turn, target creature gets +4/+4" reads the same as "Target creature gets
     +4/+4 until end of turn."
     """
-    sentence = _normalize_duration_first(sentence)
+    sentence = _strip_ability_word(_normalize_duration_first(sentence))
     if match := _PUMP_RE.fullmatch(sentence):
         power, toughness = int(match.group("power")), int(match.group("toughness"))
         keyword = match.group("keyword")
@@ -2188,7 +3232,182 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
         if extra_type is None:
             return None
         return _becomes_type_in_addition_builder(extra_type)
+    if match := _SELF_BECOMES_TYPE_UNTIL_NEXT_TURN_RE.fullmatch(sentence):
+        extra_type = _card_type_word(match.group("extra_type"))
+        if extra_type is None:
+            return None
+        return _self_becomes_type_until_next_turn_builder(extra_type, match.group("ability"))
+    if match := _SELF_ANIMATION_RE.fullmatch(sentence):
+        types = [_card_type_word(word) for word in match.group("types").split()]
+        if match.group("retained") is not None:
+            types.append(_card_type_word(match.group("retained")))
+        if any(card_type is None for card_type in types):
+            return None
+        subtype = match.group("subtype")
+        return _self_animation_builder(
+            int(match.group("power")),
+            int(match.group("toughness")),
+            subtype.strip() if subtype else None,
+            [card_type for card_type in types if card_type is not None],
+        )
+    return _parse_static_layer_sentence(sentence)
+
+
+def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
+    """The board-wide and filtered *static* shapes (CR 611.3), split out of
+    `_parse_layer_sentence` only to keep either function readable - the two are
+    one lookup, tried in this order.
+
+    Every shape here reads a permanent's own printed sentence rather than its
+    name, which is the whole of Blood Moon, Harbinger of the Seas, Dryad of the
+    Ilysian Grove, Leyline of the Guildpact, Urborg, Yavimaya and Toph.
+    """
+    if match := _NONBASIC_LANDS_ARE_RE.fullmatch(sentence):
+        subtype = _BASIC_LAND_TYPE_WORDS[match.group("subtype").lower()]
+        return _nonbasic_lands_are_builder(subtype)
+    if _LANDS_ARE_EVERY_BASIC_TYPE_RE.fullmatch(sentence):
+        return _lands_are_every_basic_type_builder(sentence)
+    if match := _EACH_LAND_IS_RE.fullmatch(sentence):
+        subtype = _BASIC_LAND_TYPE_WORDS[match.group("subtype").lower()]
+        return _each_land_is_builder(subtype, sentence)
+    if match := _BOARD_WIDE_TYPE_GRANT_RE.fullmatch(sentence):
+        subject = _card_type_word(match.group("subject"))
+        granted = _card_type_word(match.group("granted"))
+        if subject is None or granted is None:
+            return None
+        return _board_wide_type_grant_builder(
+            subject,
+            granted,
+            nontoken=match.group("nontoken") is not None,
+            line=sentence,
+        )
+    if match := _SUBTYPE_ANTHEM_RE.fullmatch(sentence):
+        subtype = _subtype_word(match.group("subtype"))
+        if subtype is None:
+            return None
+        return _filtered_anthem_builder(
+            [subtype],
+            int(match.group("power")),
+            int(match.group("toughness")),
+            [],
+            other=match.group("other") is not None,
+            line=sentence,
+        )
+    if match := _FILTERED_CREATURE_ANTHEM_RE.fullmatch(sentence):
+        subtypes = _split_subtype_list(match.group("subtypes"))
+        if subtypes is None:
+            return None
+        keywords: list[str] = []
+        if match.group("keywords") is not None:
+            validated = _split_and_validate_keywords(match.group("keywords"))
+            if validated is None:
+                return None
+            keywords = validated
+        return _filtered_anthem_builder(
+            subtypes,
+            int(match.group("power")),
+            int(match.group("toughness")),
+            keywords,
+            other=match.group("other") is not None,
+            line=sentence,
+        )
+    if _BASIC_LAND_TYPE_COUNT_CDA_RE.fullmatch(sentence):
+        return _basic_land_type_count_cda_builder(sentence)
+    if match := _EQUIPPED_CREATURE_STATIC_RE.fullmatch(sentence):
+        raw_keywords = match.group("keywords") or match.group("only_keywords")
+        keywords = []
+        if raw_keywords is not None:
+            validated = _split_and_validate_keywords(raw_keywords)
+            if validated is None:
+                return None
+            keywords = validated
+        return _equipped_creature_static_builder(
+            int(match.group("power") or 0),
+            int(match.group("toughness") or 0),
+            keywords,
+            line=sentence,
+        )
+    if match := _GRAVEYARD_CARD_TYPES_GATED_SELF_STATIC_RE.fullmatch(sentence):
+        threshold = _NUMBER_WORDS.get(match.group("count").lower())
+        if threshold is None:
+            return None
+        granted = _split_gated_grants(match.group("rest"))
+        if granted is None:
+            return None
+        return _graveyard_card_types_gated_self_static_builder(
+            threshold,
+            int(match.group("power")),
+            int(match.group("toughness")),
+            granted,
+            line=sentence,
+        )
+    if match := _PER_COLOR_KEYWORD_GRANT_RE.fullmatch(sentence):
+        grants = _split_per_color_grants(match.group("clauses"))
+        if grants is None:
+            return None
+        return _per_color_keyword_grant_builder(grants, line=sentence)
+    if match := _PERMANENTS_WITH_COUNTERS_WARD_RE.fullmatch(sentence):
+        return _permanents_with_counters_ward_builder(match.group("cost"), line=sentence)
     return None
+
+
+def _split_subtype_list(raw: str) -> list[str] | None:
+    """ "Cat, Elemental, Nightmare, Dinosaur, or Beast" -> each subtype,
+    capitalised (CR 205.3m), or `None` if any item names one of CR 300.1's card
+    types instead - a card type in this position is a different sentence
+    entirely, and guessing at it would grant the wrong group.
+    """
+    parts = [part.strip() for part in re.split(r",\s*|\s+or\s+", raw) if part.strip()]
+    subtypes = [_subtype_word(part) for part in parts]
+    if not subtypes or any(subtype is None for subtype in subtypes):
+        return None
+    return [subtype for subtype in subtypes if subtype is not None]
+
+
+def _split_gated_grants(rest: str) -> list[str] | None:
+    """The tail of a gated self-static - ", has flying, and attacks each combat
+    if able" - as the ability lines it grants.
+
+    A "has <keyword(s)>" clause is validated against `_KNOWN_KEYWORDS` the same
+    way every other grant here is; any other clause is granted verbatim, since
+    `Characteristics.abilities` is ability *text* (CR 613.1f adds the ability,
+    it does not say the reader must recognise it). An empty tail grants
+    nothing, which is a plain conditional pump.
+    """
+    tail = rest.strip().lstrip(",").strip()
+    if not tail:
+        return []
+    granted: list[str] = []
+    for clause in re.split(r",\s*(?:and\s+)?|\s+and\s+", tail):
+        clause = clause.strip()
+        if not clause:
+            continue
+        if clause.lower().startswith("has "):
+            validated = _split_and_validate_keywords(clause[4:])
+            if validated is None:
+                return None
+            granted.extend(validated)
+            continue
+        granted.append(clause[0].upper() + clause[1:])
+    return granted
+
+
+def _split_per_color_grants(clauses: str) -> list[tuple[str, Color]] | None:
+    """ "vigilance if it's white, hexproof if it's blue, ... and trample if
+    it's green" -> each (ability, colour) pair, or `None` if any clause is not
+    that shape or names a keyword outside `_KNOWN_KEYWORDS` - the same
+    fail-closed rule the other keyword shapes enforce.
+    """
+    grants: list[tuple[str, Color]] = []
+    for clause in re.split(r",\s*(?:and\s+)?", clauses):
+        match = _ONE_COLOR_KEYWORD_CLAUSE_RE.fullmatch(clause.strip())
+        if match is None:
+            return None
+        keyword = match.group("keyword").strip().lower()
+        if keyword not in _KNOWN_KEYWORDS:
+            return None
+        grants.append((keyword.capitalize(), _COLOR_WORDS[match.group("color").lower()]))
+    return grants or None
 
 
 def parsed_layer_effects(
@@ -2279,6 +3498,18 @@ def is_resolution_layer_effect_text(text: str | None) -> bool:
     """
     for sentence in _effect_sentences(text):
         normalized = _normalize_duration_first(sentence)
+        if _parse_static_layer_sentence(_strip_ability_word(normalized)) is not None:
+            # CR 611.3's static shapes, excluded for exactly the reason the
+            # anthem below is: "Nonbasic lands are Mountains", "Lands you
+            # control are every basic land type ...", "Other Dragons you
+            # control get +1/+1" and their siblings are a *permanent's* own
+            # static ability, and the battlefield sweep already reapplies each
+            # of them every time the board is computed (CR 613.5). Routing the
+            # permanent spell's resolution here as well would create a second,
+            # permanent copy of the same effect - doubling an anthem, and
+            # leaving a stored effect behind that CR 611.3b says should stop
+            # the moment its source leaves the battlefield.
+            continue
         anthem_opening = _LOOKS_LIKE_ANTHEM_RE.match(normalized)
         self_graveyard_pump_opening = _SELF_PUMP_PER_GRAVEYARD_CARD_RE.match(normalized)
         has_duration = Duration.UNTIL_END_OF_TURN in normalized
@@ -2469,49 +3700,13 @@ def _opalescence(
     ]
 
 
-def _blood_moon(
-    source: CardState,
-    timestamp: int,
-    targets: Sequence[CardState],
-    context: LayerContext,
-) -> list[ContinuousEffect]:
-    """ "Nonbasic lands are Mountains."
-
-    Layer 4 (CR 613.1d), and by CR 305.7 setting a land's subtype to a basic
-    land type strips its old land types and every ability from its rules text.
-    That is why this one line switches off half the lands in Modern.
-    """
-    return [
-        ContinuousEffect(
-            description="Blood Moon: nonbasic lands are Mountains",
-            layer=Layer.TYPE,
-            timestamp=timestamp,
-            source_id=source.id,
-            source_ability="Nonbasic lands are Mountains.",
-            selector=nonbasic_lands,
-            modification=set_basic_land_type("Mountain", "{T}: Add {R}."),
-        )
-    ]
-
-
-def _urborg(
-    source: CardState,
-    timestamp: int,
-    targets: Sequence[CardState],
-    context: LayerContext,
-) -> list[ContinuousEffect]:
-    """ "Each land is a Swamp in addition to its other land types." (CR 613.1d)"""
-    return [
-        ContinuousEffect(
-            description="Urborg: each land is a Swamp",
-            layer=Layer.TYPE,
-            timestamp=timestamp,
-            source_id=source.id,
-            source_ability="Each land is a Swamp in addition to its other land types.",
-            selector=every_land,
-            modification=add_subtype("Swamp", "{T}: Add {B}."),
-        )
-    ]
+#: "Nonbasic lands are Mountains." (Blood Moon) and "Each land is a Swamp in
+#: addition to its other land types." (Urborg, Tomb of Yawgmoth) are no longer
+#: hand-written here - both are `_parse_static_layer_sentence`'s generalised
+#: shapes now, read off whichever card prints them. Harbinger of the Seas
+#: ("Nonbasic lands are Islands.") and Yavimaya, Cradle of Growth ("Each land
+#: is a Forest ...") are the cards that were silently doing nothing while the
+#: shape was keyed by name.
 
 
 #: "Creatures you control get +1/+1." (Glorious Anthem) and "Target creature
@@ -2541,36 +3736,13 @@ def _twisted_image(
     ]
 
 
-def _dryad_of_the_ilysian_grove(
-    source: CardState,
-    timestamp: int,
-    targets: Sequence[CardState],
-    context: LayerContext,
-) -> list[ContinuousEffect]:
-    """ "Lands you control are every basic land type in addition to their other types."
-
-    Layer 4 (CR 613.1d), and "in addition to" means nothing is lost - this is
-    not CR 305.7's "sets a land's subtype", so a fetchland keeps its own text.
-    Each basic type gained brings its intrinsic mana ability with it (CR 305.6),
-    which is the reason a Dryad turns every land into a five-colour source.
-
-    The card's other line, "You may play an additional land on each of your
-    turns", is a static ability that modifies the rules rather than an object's
-    characteristics, so it generates no continuous effect in any of the seven
-    layers and is not modelled here.
-    """
-    text = "Lands you control are every basic land type in addition to their other types."
-    return [
-        ContinuousEffect(
-            description="Dryad of the Ilysian Grove: your lands are every basic land type",
-            layer=Layer.TYPE,
-            timestamp=timestamp,
-            source_id=source.id,
-            source_ability=text,
-            selector=lands_controlled_by(source.controller),
-            modification=add_basic_land_types,
-        )
-    ]
+#: "Lands you control are every basic land type in addition to their other
+#: types." (Dryad of the Ilysian Grove) is no longer hand-written here either -
+#: it is `_lands_are_every_basic_type_builder`'s shape, which is what lets
+#: Leyline of the Guildpact, printing the identical sentence, generate it too.
+#: The Dryad's other line, "You may play an additional land on each of your
+#: turns", is CR 611.3d's rule-modifying grant rather than a continuous effect
+#: in any of the seven layers, and lives in `ADDITIONAL_LAND_PLAYS`.
 
 
 def _dress_down(
@@ -3001,13 +4173,20 @@ def _remains_on_the_battlefield(permanent: CardState) -> Condition:
 #: more - each was exactly one of `parsed_layer_effects`'s four generalised
 #: shapes, read off the card's own oracle text instead. See
 #: `test_layer_effects_registry_is_minimal.py`.
+#:
+#: Blood Moon, Urborg, Tomb of Yawgmoth and Dryad of the Ilysian Grove are gone
+#: for the same reason and a sharper one: a *name* key is not what CR 604.2 or
+#: CR 611.3b says generates a static ability's continuous effect. Every one of
+#: those three sentences is printed on some other card too - Harbinger of the
+#: Seas, Yavimaya, Cradle of Growth, Leyline of the Guildpact - and each of
+#: those cards silently generated nothing, without even a `LayerNotice`,
+#: because a board-wide sentence does not open the way the pump and anthem
+#: shapes `_LOOKS_LIKE_LAYER_EFFECT_RE` watches for do. Keying by the sentence
+#: closes the class rather than the two cards.
 LAYER_EFFECTS: dict[str, EffectBuilder] = {
     "Humility": _humility,
     "Opalescence": _opalescence,
-    "Blood Moon": _blood_moon,
-    "Urborg, Tomb of Yawgmoth": _urborg,
     "Twisted Image": _twisted_image,
-    "Dryad of the Ilysian Grove": _dryad_of_the_ilysian_grove,
     "Dress Down": _dress_down,
     "Relentless Rats": _relentless_rats,
     "Tarmogoyf": _tarmogoyf,
@@ -3083,7 +4262,13 @@ def effects_for(
     # same family as `effect_for`'s fix in `Game.resolve_top`. Without this,
     # every layer-computed static/pump/anthem ability on such a permanent's
     # face-up side went unread.
-    text = source.oracle_text
+    #
+    # `class_ability_text` is `oracle_text` for everything that is not a Class
+    # (CR 303.6), and for a Class it drops the paragraphs above its current
+    # level - CR 716.2a's own gate. Without that, Innkeeper's Talent's level-2
+    # "Permanents you control with counters on them have ward {1}" would be
+    # read off a level-1 Class that does not have the ability yet.
+    text = source.class_ability_text
     if builder is None:
         builder = parsed_layer_effects(text, static_only=static_only, card_name=source.name)
     if builder is None:

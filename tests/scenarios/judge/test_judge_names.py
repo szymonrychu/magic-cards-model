@@ -97,16 +97,6 @@ def test_echoing_courage_buffs_only_the_permanents_sharing_the_targets_name():
     assert (scenario.game.power_of(token), scenario.game.toughness_of(token)) == (2, 2)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Mishra's Factory's '{1}: This land becomes a 2/2 Assembly-Worker "
-    "artifact creature until end of turn. It's still a land.' parses as an "
-    "activated ability but does nothing when it resolves: after activating it "
-    "the land's characteristics are still land-only, with no power or "
-    "toughness, so the interesting half of the assertion - that the *name* is "
-    "untouched while the types changed - has no animated permanent to make it "
-    "against.",
-)
 def test_animating_mishras_factory_changes_its_types_but_not_its_name():
     """DDR#249: the animation is a type change, so the name is not one.
 
