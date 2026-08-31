@@ -56,8 +56,8 @@ Run until **either**:
 
 1. **Goal reached** — ALL of:
    - three consecutive matchups complete with zero engine reports,
-   - those three use **three different deck pairings**, not the same pair three
-     times,
+   - those three use **three different deck pairings**, each drawn at random
+     (see "Randomize the matchups"), not the same pair three times,
    - each of the three ran to a **winner** (a game abandoned early does not
      count),
    - `scripts/sweep_pool.py` reports **zero silent cards**,
@@ -79,7 +79,13 @@ Each of these technically satisfies a clause while defeating the intent. They
 are forbidden:
 
 - **Replaying an easy pairing.** Three clean games with the two simplest decks
-  proves the engine handles two simple decks. Hence the distinct-pairings rule.
+  proves the engine handles two simple decks. Hence the distinct-pairings rule,
+  and hence the random draw: a pairing you chose is a pairing you are
+  comfortable with, and comfort is what stops the games finding anything.
+- **Redrawing until the matchup looks convenient.** The draw stands. Rerolling
+  because a mirror came up, or because a deck is awkward to pilot, is picking
+  by hand with extra steps. The only legitimate redraw is a pairing the API
+  genuinely cannot run yet — and that gets fixed and recorded, not skipped.
 - **Passive play.** A player that avoids ambiguous lines files no reports. Player
   prompts must require *actively exercising* the deck's mechanics — attack,
   block, use activated abilities, resolve triggers — not merely playing legally.
@@ -144,11 +150,37 @@ and why false reports are expensive even when they cost no fix.
 wall-clock. Spend it dispatching fix waves against the sweeper's silent list, in
 worktrees. Just do not *merge* any of them until every game is stopped.
 
-### 1. Ask which archetypes
+### 1. Randomize the matchups
+
+**Matchups are drawn at random, every boot.** The human may still name a pairing
+and that overrides the draw; absent an instruction, do not pick by taste, by
+what is easiest to pilot, or by what worked last time. Draw them.
+
+```sh
+ls ../magic-cards-model-api/decks/ | shuf | head -N     # N seats' worth
+```
+
+**Mirrors are in the pool and must actually come up.** Draw each seat's deck
+independently, with replacement, so a deck can face itself. A mirror is not a
+wasted game: both seats race the same clock, fight over the same stack
+interactions, and hit symmetric triggers and legend-rule collisions that no
+cross-archetype game reaches.
+
+The point of randomizing is that **different pairings walk different code
+paths**. A control deck against a combo deck exercises counterspells, stack
+depth, and end-step timing; two aggro decks exercise combat math, blocks, and
+first strike; a mirror exercises simultaneous identical triggers and the same
+card on both sides of a targeting decision. Hand-picked pairings quietly test
+the same subset of the engine over and over, and the games stop finding things.
+
+Record the draw (deck for each seat, and the seed) with the matchup, so a
+report can be re-run. If a drawn pairing is genuinely unplayable right now —
+a deck whose core mechanic the API cannot yet reach from a seat — say so, fix
+that, and redraw rather than substituting a convenient pairing silently.
 
 **Check what already exists first** — `ls ../magic-cards-model-api/decks/` — and
-offer those, rather than re-fetching lists that are already on disk. Open one to
-see the format before writing a new one.
+draw from those, rather than re-fetching lists that are already on disk. Open one
+to see the format before writing a new one.
 
 If the human names an archetype with no list on disk, pull a **real tournament
 list** with `statistics_decks(format="modern", date_from=..., include_cards="full")`.
@@ -157,9 +189,10 @@ across a window and can predate a ban. Verify legality with
 `resolve_cards(names=[...], format="modern", fields="legality")` and record the
 pilot and tournament date in the file.
 
-If the human is unavailable and you must proceed autonomously, pick the pairing
-that exercises the most **currently-silent** cards (`sweep_pool.py --effects`
-tells you which), and say which you chose and why.
+A random draw is the default even when running autonomously. The one allowed
+thumb on the scale: if several decks are still untried against each other, or a
+deck's mechanic has never been exercised in a game, weight the draw toward it
+and say so — that is broadening coverage, not picking a favourite.
 
 ### 2. Boot the matchups
 
@@ -302,6 +335,14 @@ Restart the server so it picks up the new engine code, and go to step 2.
 ## Player prompts — required elements
 
 Every one of these was added after a player failed without it.
+
+- **In a mirror, say so in both prompts.** Two seats on the same decklist will
+  otherwise each assume a card on the board is theirs. Tell each seat its own
+  name, that the opponent is on the identical list, and that it must read
+  `controller` on every board object rather than inferring ownership from the
+  card's name. Mirrors are also where the legend rule and identical
+  simultaneous triggers actually get exercised, so the prompts should push
+  toward those lines rather than around them.
 
 - **One uid and one `--game`, on every command.** With several games on one
   server, `seatkit` defaults to `games[0]` and other seats are rejected with
