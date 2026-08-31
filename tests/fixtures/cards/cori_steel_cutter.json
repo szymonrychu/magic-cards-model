@@ -139,19 +139,19 @@
   "textless": false,
   "booster": true,
   "story_spotlight": false,
-  "edhrec_rank": 4271,
+  "edhrec_rank": 4262,
   "preview": {
     "source": "SAYS",
     "source_uri": "https://says.com/my/entertainment/exclusive-preview-magic-the-gathering-tarkir-dragonstorm",
     "previewed_at": "2025-03-24"
   },
   "prices": {
-    "usd": "4.88",
-    "usd_foil": "5.84",
+    "usd": "5.79",
+    "usd_foil": "6.27",
     "usd_etched": null,
-    "eur": "7.24",
-    "eur_foil": "9.33",
-    "tix": "13.43"
+    "eur": "7.40",
+    "eur_foil": "9.22",
+    "tix": "15.37"
   },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=693583&printed=false",

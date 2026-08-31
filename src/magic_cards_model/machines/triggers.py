@@ -559,6 +559,57 @@ def _required_cast_subtype(condition: str) -> str | None:
     return match.group(1) if match else None
 
 
+#: Cori-Steel Cutter's own *Flurry* shape: "you cast your second spell each
+#: turn" (the ability word itself, CR 207.2c, carries no rules meaning and is
+#: stripped before this text is ever seen). Unlike Alania, Divergent Storm's
+#: "it's the first ... spell ... you've cast this turn" - an intervening *if*
+#: read by `_first_spell_this_turn_holds`, rechecked at resolution (CR 603.4,
+#: 608.2a) - this ordinal sits in the trigger condition itself (CR 603.2): the
+#: ability triggers (or doesn't) once, at the moment of casting, and is never
+#: revisited.
+_ORDINAL_SPELL_EACH_TURN = re.compile(r"your (?P<ordinal>[a-z]+) spells? each turn")
+
+#: The ordinals these clauses spell out. A word this doesn't know - "sixth"
+#: and up, not printed on any pool card - falls through to `condition_matches`'
+#: own "anything else returns False" default (see its docstring's closing
+#: line), the same safe direction every other unread CAST_SPELL restriction
+#: there already fails toward.
+_ORDINAL_WORDS = {"first": 1, "second": 2, "third": 3, "fourth": 4, "fifth": 5}
+
+
+def _ordinal_spell_this_turn_matches(
+    game: "Game", condition: str, controller: str, event: GameEvent
+) -> bool | None:
+    """Whether `event`'s spell is exactly the controller's Nth spell cast this
+    turn (CR 603.2), for "you cast your [ordinal] spell each turn". `None`,
+    not False, when `condition` isn't this shape at all, so the caller can
+    tell "read and false" from "not this pattern" the same way
+    `_first_spell_this_turn_holds` already does for its own clause.
+
+    `game.spells_cast_this_turn` (`Game.put_on_stack`) already holds this very
+    spell by the time the CAST_SPELL event reaches here - CR 601.2a's casting
+    event has already happened - so its 1-indexed position in that per-turn,
+    per-controller list *is* the ordinal this clause asks about, with no
+    separate counter to maintain.
+    """
+    match = _ORDINAL_SPELL_EACH_TURN.search(condition.lower())
+    if match is None:
+        return None
+    ordinal = _ORDINAL_WORDS.get(match.group("ordinal"))
+    if ordinal is None:
+        return False
+    cast_this_turn = game.spells_cast_this_turn.get(controller, [])
+    position = next(
+        (
+            index
+            for index, state in enumerate(cast_this_turn, start=1)
+            if state.id == event.subject_id
+        ),
+        None,
+    )
+    return position == ordinal
+
+
 #: CR 105.2's five colors, as the adjective a "cast a ... spell" condition
 #: names them with.
 _COLOR_WORDS: dict[str, Color] = {
@@ -857,6 +908,9 @@ def condition_matches(
             return event.subject_id == source.id
         if not _controller_clause_holds(condition, controller, event.player):
             return False
+        ordinal_match = _ordinal_spell_this_turn_matches(game, condition, controller, event)
+        if ordinal_match is not None:
+            return ordinal_match
         if not _types_match(event.subject_types, condition):
             return False
         if not _color_matches(event.subject_colors, condition):
@@ -974,6 +1028,20 @@ def condition_matches(
         # holds`'s "you " prefix already reads "you discard" the same way
         # every other "you [verb]" condition does.
         return _controller_clause_holds(condition, controller, event.player)
+
+    if ability.event is TriggerEvent.LORE_COUNTERS_ADDED:
+        # CR 107.15a: always self-referential (a chapter symbol is never
+        # printed any other way) and always about the Saga's own threshold,
+        # not the event's raw amount - `ability.chapter` is `N`, `source.
+        # lore_counters` is the total *after* `event.amount` were just put
+        # on, and CR 107.15a's own "was less than N and became at least N"
+        # is exactly the range `event.amount` spans.
+        if event.subject_id != source.id or ability.chapter is None:
+            return False
+        added = event.amount or 0
+        new_total = source.lore_counters
+        old_total = new_total - added
+        return old_total < ability.chapter <= new_total
 
     return False
 
@@ -1194,6 +1262,43 @@ def _cast_record_for_clause(
     return game.cast_records.get(source.id)
 
 
+#: Ruby, Daring Tracker's own clause, split off `condition` into
+#: `intervening_if` by `abilities._parse_triggered`'s "while" handling: "you
+#: control a creature with power 4 or greater". CR 208.1 is power; the
+#: three comparison shapes mirror `_mana_value_comparison`'s above, reused
+#: here for a different characteristic rather than duplicated wholesale since
+#: the vocabulary ("or greater"/"or less"/a bare number) is the same across
+#: both.
+_CONTROL_CREATURE_WITH_POWER = re.compile(
+    r"^you control a creature with power (?P<threshold>\d+)"
+    r"(?P<comparator> or greater| or less)?$"
+)
+
+
+def _control_creature_with_power_holds(game: "Game", clause: str, source: CardState) -> bool | None:
+    """CR 208.1's power, compared against every creature the controller has on
+    the battlefield right now (CR 613.5's `characteristics_of`, not the
+    printed `CardState.power`, so a pumped or shrunk creature is read
+    correctly). `None`, not False, when `clause` isn't this shape at all."""
+    match = _CONTROL_CREATURE_WITH_POWER.match(clause)
+    if match is None:
+        return None
+    threshold = int(match.group("threshold"))
+    comparator = (match.group("comparator") or "").strip()
+    ops = {
+        "or greater": operator.ge,
+        "or less": operator.le,
+        "": operator.eq,
+    }
+    op = ops[comparator]
+    controller = source.controller or game.active_player.username
+    for state in game.permanents_controlled_by(controller):
+        characteristics = game.characteristics_of(state)
+        if characteristics.is_creature and op(characteristics.power or 0, threshold):
+            return True
+    return False
+
+
 def intervening_if_holds(
     game: "Game",
     ability: TriggeredAbility,
@@ -1291,6 +1396,10 @@ def intervening_if_holds(
     if clause == "you gained life this turn":
         controller = source.controller or game.active_player.username
         return controller in game.life_gained_this_turn
+
+    power_control = _control_creature_with_power_holds(game, clause, source)
+    if power_control is not None:
+        return power_control
 
     first_spell = _first_spell_this_turn_holds(game, clause, source, event)
     if first_spell is not None:

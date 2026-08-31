@@ -1,8 +1,9 @@
-"""A bare CR 205.3m creature-type list used as the target noun itself -
-"target Vampire, Werewolf, or Zombie" (Slayer of the Wicked) - rather than
-"target creature" narrowed by a "with"/"you control" clause.
-`_read_subtype_list`/`TargetRequirement.required_subtypes` in
-`machines/targeting.py`.
+"""A bare CR 205.3m creature-type used as the target noun itself - "target
+Vampire, Werewolf, or Zombie" (Slayer of the Wicked, two-or-more items) and
+"another target Soldier you control" (Aeronaut Cavalry, exactly one) - rather
+than "target creature" narrowed by a "with"/"you control" clause.
+`_read_subtype_list`/`_is_bare_subtype_word`/`TargetRequirement.
+required_subtypes` in `machines/targeting.py`.
 
 Every CR number below was looked up with `knowledge_search(q="...",
 type="rules")` in the session that wrote this file:
@@ -17,14 +18,28 @@ type="rules")` in the session that wrote this file:
   the target is always a permanent).
 - **CR 608.2d** - "The player can't choose an option that's illegal or
   impossible" - Slayer of the Wicked's own "you may" over the destroy.
+- **CR 122.1a** - a +1/+1 counter's effect on power and toughness - Aeronaut
+  Cavalry's own trigger.
+
+Aeronaut Cavalry's singular case was originally left unread on purpose - see
+this module's own history in `docs/engine-coverage.md` - because a lone
+capitalized word cannot be told apart from a real English noun with the same
+confidence a multi-item Oxford list gives. It is read now: `_is_bare_subtype_
+word` is the shared predicate both the plural-list reader above and the
+singular noun-position reader below apply, so a genuine subtype ("Soldier")
+and an ordinary noun the parser already knows some other way never collide.
 """
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.targeting import profile_for_text
 from magic_cards_model.models import Zone
+from magic_cards_model.models.card_state import Counter
 from tests.scenarios.harness import Scenario
 
 SLAYER_TEXT = "When this creature enters, you may destroy target Vampire, Werewolf, or Zombie."
+AERONAUT_TEXT = (
+    "When this creature enters, put a +1/+1 counter on another target Soldier you control."
+)
 
 
 def test_a_named_subtype_is_a_legal_target():
@@ -94,3 +109,75 @@ def test_declining_the_may_leaves_the_target_alone():
     scenario.pass_until_resolved()
 
     assert zombie.zone is Zone.BATTLEFIELD
+
+
+def test_a_bare_singular_subtype_is_read():
+    profile = profile_for_text(AERONAUT_TEXT)
+    assert profile.understood
+    (requirement,) = profile.requirements
+    assert requirement.required_subtypes == frozenset({"soldier"})
+    assert requirement.excludes_source, '"another" must exclude Aeronaut Cavalry itself'
+
+
+def test_aeronaut_cavalry_puts_a_counter_on_another_soldier():
+    """Fencing Ace is a Human Soldier - the named subtype - so Aeronaut
+    Cavalry's ETB trigger can target it and does put the counter on."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Aeronaut Cavalry"],
+            battlefield=["Plains"] * 5 + ["Fencing Ace"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    soldier = scenario.creature("Fencing Ace", "alice")
+    sources = scenario.untapped_sources(*["Plains"] * 5)
+    scenario.choose_trigger_targets("Aeronaut Cavalry", [soldier])
+
+    scenario.cast_and_resolve("Aeronaut Cavalry", *sources)
+    scenario.pass_until_resolved()
+
+    assert soldier.counters[Counter.PLUS_ONE] == 1
+
+
+def test_aeronaut_cavalry_cannot_target_itself():
+    """CR 205.3m's own subtype word plus "another": Aeronaut Cavalry is
+    itself a Human Soldier, but the printed "another" (`excludes_source`)
+    refuses it as its own trigger's target even though it satisfies the bare
+    subtype restriction on its own."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Aeronaut Cavalry"], battlefield=["Plains"] * 5)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (requirement,) = profile_for_text(AERONAUT_TEXT).requirements
+    sources = scenario.untapped_sources(*["Plains"] * 5)
+
+    cavalry = scenario.cast_and_resolve("Aeronaut Cavalry", *sources)
+    scenario.pass_until_resolved()
+
+    reason = requirement.rejects(cavalry, "alice", source_id=cavalry.id)
+    assert reason is not None
+
+
+def test_an_opponents_soldier_is_not_a_legal_target():
+    """ "you control" narrows the bare subtype the same way it narrows an
+    ordinary "target creature you control" - a Soldier alice does not
+    control is not a legal target for her own trigger."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Aeronaut Cavalry"], battlefield=["Plains"] * 5)
+        .player("bob", battlefield=["Fencing Ace"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    their_soldier = scenario.creature("Fencing Ace", "bob")
+    (requirement,) = profile_for_text(AERONAUT_TEXT).requirements
+
+    reason = requirement.rejects(their_soldier, "alice")
+    assert reason is not None

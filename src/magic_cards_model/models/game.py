@@ -1263,6 +1263,9 @@ class Game(BaseModel):
         - **CR 703.4d / 504.1** - the draw step draws a card, unless this is the
           first turn of a two-player game and the active player played first
           (CR 103.8a).
+        - **CR 703.4f / 505.4 / 714.3c** - the precombat main phase puts a lore
+          counter on each Saga the active player controls with one or more
+          chapter abilities (`saga_lore_step`).
         - **CR 703.4i / 508.1** - the declare attackers step asks the active
           player which creatures attack, and at whom (`declare_attackers_step`).
         - **CR 703.4j / 509.1** - the declare blockers step asks each defending
@@ -1290,6 +1293,8 @@ class Game(BaseModel):
             self.untap_step()
         elif step is Step.DRAW:
             self.draw_step()
+        elif step is Step.PRECOMBAT_MAIN:
+            self.saga_lore_step()
         elif step is Step.DECLARE_ATTACKERS:
             self.declare_attackers_step()
         elif step is Step.DECLARE_BLOCKERS:
@@ -1375,6 +1380,24 @@ class Game(BaseModel):
         if self.turn.skips_draw():
             return []
         return self.draw_cards(self.active_player, 1)
+
+    def saga_lore_step(self) -> None:
+        """CR 703.4f, 505.4, 714.3c: a lore counter on each Saga the active
+        player controls with one or more chapter abilities, as their
+        precombat main phase begins.
+
+        "This turn-based action doesn't use the stack" (CR 714.3c) - straight
+        through `add_counters`, same as any other counter placed outside a
+        resolving effect, which is what lets `_emit_lore_counters_added` fire
+        CR 107.15a's chapter trigger for whichever threshold this crosses.
+        Every Saga controlled gets exactly one, all "simultaneously" the way
+        CR 703.4f's own wording has it - order between different Sagas is
+        never observable here since nothing this engine reads depends on it.
+        """
+        active = self.active_player
+        for permanent in self.permanents_controlled_by(active.username):
+            if permanent.is_saga and permanent.chapter_numbers:
+                self.add_counters(permanent, Counter.LORE, 1)
 
     def cleanup_step(self) -> list[CardState]:
         """The cleanup step's two turn-based actions, in order (CR 514.1, 514.2).
@@ -2146,6 +2169,30 @@ class Game(BaseModel):
             player=permanent.controller,
         )
 
+    def _emit_lore_counters_added(self, card_state: CardState, added: int) -> None:
+        """CR 107.15a: a chapter ability triggers "when one or more lore
+        counters are put onto this Saga" - CR 122.6 makes that true both for
+        counters put on while already on the battlefield (`add_counters`) and
+        for CR 714.3a's own intrinsic first one, put on as the Saga enters
+        (`enter_the_battlefield`). Both routes call this with `added` set to
+        how many just went on, and `machines/triggers.condition_matches`
+        works out which of the Saga's own `TriggeredAbility.chapter`
+        thresholds that crossed from the total already on it.
+        """
+        if added <= 0 or not card_state.is_saga or card_state.zone is not Zone.BATTLEFIELD:
+            return
+        self.emit(
+            GameEvent(
+                event=TriggerEvent.LORE_COUNTERS_ADDED,
+                subject_id=card_state.id,
+                subject_name=card_state.name,
+                subject_controller=card_state.controller,
+                subject_card=card_state.card,
+                player=card_state.controller,
+                amount=added,
+            )
+        )
+
     def emit(self, event: GameEvent) -> list[AbilityOnStack]:
         """Something happened; work out what it triggered (CR 603.2).
 
@@ -2610,6 +2657,12 @@ class Game(BaseModel):
             self.add_counters(card_state, kind, amount)
 
         self.emit(self._enters_event(card_state))
+        # CR 714.3a's own intrinsic lore counter (`CardState.move_to`, applied
+        # before this point) is not routed through `add_counters` - the same
+        # direct-write choice `_enter_with_loyalty` already makes for a
+        # planeswalker's own entering loyalty - so it needs its own emission
+        # for CR 107.15a's chapter I to trigger the moment the Saga arrives.
+        self._emit_lore_counters_added(card_state, card_state.lore_counters)
         return card_state
 
     def put_onto_battlefield(
@@ -3464,7 +3517,10 @@ class Game(BaseModel):
         apply_replacements(self, event)
         if event.amount <= 0:
             return permanent.counter_count(kind)
-        return permanent.add_counters(kind, event.amount)
+        new_total = permanent.add_counters(kind, event.amount)
+        if str(kind) == str(Counter.LORE):
+            self._emit_lore_counters_added(permanent, event.amount)
+        return new_total
 
     def return_to_hand(self, permanent: CardState) -> CardState:
         """Return a permanent to its owner's hand (CR 701.19a is "return").
@@ -4474,6 +4530,10 @@ class Game(BaseModel):
           permanent or player. It remains on the battlefield."
         - **CR 704.5z** - every Role but the newest on one permanent, controlled
           by one player, goes to its owner's graveyard.
+        - **CR 704.5s** - a Saga whose lore counters (CR 714.3) are at least its
+          final chapter number (CR 714.2e), and that is not the source of a
+          chapter ability that has triggered but not yet left the stack, goes
+          to its owner's graveyard.
 
         The rest of CR 704.5 needs a mechanic this model does not have: copies
         (704.5e) and battles (704.5v-704.5x). See `docs/engine-coverage.md`.
@@ -4617,6 +4677,9 @@ class Game(BaseModel):
             for state in planeswalkers_with_zero_loyalty(self.battlefield)
             if state not in leaving
         ]
+        # CR 704.5s, CR 714.4: a Saga whose lore counters reached its final
+        # chapter number, once nothing left to run off it is still triggered.
+        leaving += [state for state in self._sagas_to_put_into_graveyard() if state not in leaving]
         # `put_into_graveyard` rather than `destroy`, because CR 701.8b says only
         # CR 704.5g and CR 704.5h destroy: CR 704.5f, the legend rule (704.5j),
         # CR 704.5i, CR 704.5m and CR 704.5z all read "is put into its owner's
@@ -4679,6 +4742,27 @@ class Game(BaseModel):
             roles.sort(key=lambda role: stamps.get(role.id, 0))
             doomed.extend(roles[:-1])  # every one but the most recent timestamp
         return doomed
+
+    def _sagas_to_put_into_graveyard(self) -> list[CardState]:
+        """CR 704.5s, CR 714.4: every Saga whose lore counters have reached
+        its final chapter number, except one that is still the source of a
+        chapter ability that "has triggered but not yet left the stack" -
+        read here as either still `pending_triggers` (CR 603.3's window
+        between triggering and actually being put on the stack) or already an
+        `AbilityOnStack` in `self.stack` (CR 608.2n's window up to
+        resolution) - a chapter III still resolving must not have its own
+        Saga vanish out from under it mid-effect.
+        """
+        still_owed = {
+            item.source_id
+            for item in (*self.pending_triggers, *self.abilities_on_stack)
+            if isinstance(item.ability, TriggeredAbility) and item.ability.chapter is not None
+        }
+        return [
+            permanent
+            for permanent in self.battlefield
+            if permanent.lore_counters_exhausted and permanent.id not in still_owed
+        ]
 
     def _dies_to_state_based_action(self, state: CardState, board: ComputedBoard) -> bool:
         """CR 704.5f and CR 704.5g, judged against the computed toughness.

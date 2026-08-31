@@ -75,7 +75,7 @@ from ..models.token import (
 )
 from ..models.zone import Zone
 from . import combat as combat_rules
-from .abilities import TriggerEvent
+from .abilities import TriggerEvent, self_normalized_effect_text
 from .casting import PlayAction
 from .casting_restrictions import parse_casting_rule_clause
 from .decisions import Decision, DecisionKind
@@ -852,6 +852,20 @@ def _parse_scry_or_untap_if_not_starting_player_clauses(
 _MASS_SUBJECT_RE = re.compile(
     r"^(?:other )?creatures (?:you control|your opponents control)\b", re.IGNORECASE
 )
+#: History of Benalia's own chapter III: "Knights you control get +2/+1
+#: until end of turn." - CR 205.3m's bare creature-type word standing in for
+#: the elided "creatures", the mass-pump twin of `machines/targeting.
+#: _is_bare_subtype_word`'s reading of the same shape for a *target*.
+#: Deliberately case-sensitive (no `re.IGNORECASE`) rather than folded into
+#: `_MASS_SUBJECT_RE` above: Oracle text only ever capitalizes a subtype, so
+#: requiring the capital is what tells a genuine "Knights you control" apart
+#: from a sentence merely starting with some other lowercase-elsewhere noun -
+#: `_MASS_SUBJECT_RE`'s own literal "creatures" is tried first and always
+#: wins when it matches, so this never intercepts "Creatures you control ..."
+#: (Violent Outburst), capitalized only because it opens the sentence.
+_MASS_SUBTYPE_SUBJECT_RE = re.compile(
+    r"^(?![Cc]reatures?\b)(?P<subtype>[A-Z][a-z]+) (?P<whose>you control|your opponents control)\b"
+)
 #: The trailing computed-magnitude clause - "..., where X is <expr>." - split
 #: off so the rest of the sentence can be handed to `machines/layers.py`'s
 #: parser once "X" is replaced by a literal number.
@@ -872,6 +886,29 @@ def _mass_creature_group_targets(
     here. `None` if `text`'s subject is none of the three - the caller's
     ordinary target resolution stays in charge for everything else.
     """
+    subtype_match = _MASS_SUBTYPE_SUBJECT_RE.match(text.strip())
+    if subtype_match is not None:
+        # History of Benalia's "Knights you control" - CR 205.3m's subtype
+        # narrows the ordinary "creatures [you|opponents] control" selectors
+        # above by one more check, added on top rather than a fifth selector
+        # function in `machines/layers.py` since the subtype word is only
+        # known here, off the literal sentence text.
+        # "Knights" (CR 205.3m plurals with a bare "s") against the subtype as
+        # it is actually stored, singular - `board.of(...).subtypes` holds
+        # "Knight", never "Knights".
+        subtype = subtype_match.group("subtype").lower().removesuffix("s")
+        base_selector = (
+            creatures_controlled_by(controller)
+            if subtype_match.group("whose") == "you control"
+            else creatures_controlled_by_opponents_of(controller)
+        )
+        board = game.computed_board()
+        return [
+            permanent
+            for permanent in game.battlefield
+            if base_selector(board.of(permanent), board.characteristics)
+            and any(word.lower() == subtype for word in board.of(permanent).subtypes)
+        ]
     opening = text.strip().lower()
     if opening.startswith("other creatures you control"):
         selector = other_creatures_controlled_by(source_id, controller)
@@ -914,7 +951,7 @@ def _parse_mass_pump_clause(
     documents for why it excludes the anthem shape.
     """
     text = effect_text.strip()
-    if _MASS_SUBJECT_RE.match(text) is None:
+    if _MASS_SUBJECT_RE.match(text) is None and _MASS_SUBTYPE_SUBJECT_RE.match(text) is None:
         return None
     if Duration.UNTIL_END_OF_TURN not in text.lower():
         return None
@@ -958,7 +995,21 @@ def _run_mass_pump(
     targets = _mass_creature_group_targets(game, controller, source.id, literal)
     if not targets:
         return
-    builder = parsed_layer_effects(literal)
+    # `targets` is already the concrete, subtype-filtered group (CR 611.2c) -
+    # `machines/layers.py`'s own parser only needs to recognise the *shape*
+    # of what follows ("get +N/+N ... until end of turn"), which is templated
+    # on the literal "creatures" subject. A bare CR 205.3m subtype standing
+    # in for it (History of Benalia's "Knights you control") is rewritten to
+    # that literal subject here, once, rather than teaching `machines/
+    # layers.py` a second subject grammar it would then have to keep in step
+    # with `_MASS_SUBTYPE_SUBJECT_RE` above.
+    subtype_match = _MASS_SUBTYPE_SUBJECT_RE.match(literal.strip())
+    parseable = (
+        "creatures " + literal.strip()[subtype_match.start("whose") :]
+        if subtype_match is not None
+        else literal
+    )
+    builder = parsed_layer_effects(parseable)
     if builder is None:
         # A keyword outside `_KNOWN_KEYWORDS`'s whitelist, or some other shape
         # this wave's parser cannot read - fail closed rather than silently
@@ -6402,6 +6453,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     reflexive_mandatory_token = _parse_reflexive_mandatory_token_clause(effect_text)
     if reflexive_mandatory_token is not None:
         return reflexive_mandatory_token
+    create_token_then_may_attach = _parse_create_token_then_may_attach_clause(effect_text)
+    if create_token_then_may_attach is not None:
+        return create_token_then_may_attach
     dalkovan_attack_tokens = _parse_attack_this_turn_create_tapped_attacking_tokens(effect_text)
     if dalkovan_attack_tokens is not None:
         return dalkovan_attack_tokens
@@ -8987,6 +9041,86 @@ def _parse_reflexive_mandatory_token_clause(text: str) -> AbilityEffect | None:
             source_name=source_name,
             callback=resolve_reflexive,
         )
+
+    return effect
+
+
+#: Cori-Steel Cutter's *Flurry* trigger: "create a 1/1 white Monk creature
+#: token with prowess. You may attach this Equipment to it." CR 701.3a's
+#: "attach" is the general action - "take it from where it currently is and
+#: put it onto that object" - not one CR 702.6a's own Equip ability alone
+#: performs, so a resolving ability naming the attach directly is this same
+#: action reached a different way, offered as CR 608.2d's ordinary "you may"
+#: once the token exists to be attached to. Written as one shape
+#: ("...token[s]. You may attach this Equipment to it/them.") rather than
+#: keyed to this one card's name, so any future Equipment printed the same
+#: way reaches it too.
+_CREATE_TOKEN_THEN_MAY_ATTACH_RE = re.compile(
+    r"^(?P<action>create .+?)\.\s*"
+    r"you may attach this (?:equipment|permanent) to (?:it|them)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_create_token_then_may_attach_clause(text: str) -> AbilityEffect | None:
+    """`_CREATE_TOKEN_THEN_MAY_ATTACH_RE`'s shape.
+
+    The token is always created (CR 603.12's "instruct" half); only the
+    attachment is optional (`DecisionKind.MAY`, CR 608.2d), asked once the
+    token is real so a declined attachment leaves the Equipment right where
+    it was. Only the single-token case is handled - the only shape the pool
+    prints - since "it" has no well-defined referent once more than one token
+    was created (CR 407.4's "it" is singular).
+    """
+    match = _CREATE_TOKEN_THEN_MAY_ATTACH_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    # No trailing period appended, unlike the reflexive-mandatory-token
+    # sibling above: `_TOKEN_CLAUSE_RE`'s own `tail` group is greedy, so a
+    # period handed to it becomes part of the tail ("prowess.") and
+    # `_parse_token_tail` reads that as an unknown keyword - `split_effect_
+    # clauses`'s `text.rstrip(".")` is what keeps every *other* caller of
+    # this regex from ever presenting one.
+    action_text = match.group("action").strip()
+    token_match = _TOKEN_CLAUSE_RE.fullmatch(action_text)
+    if token_match is None:
+        return None
+    count = _count(token_match.group("n"))
+    if count != 1:
+        return None
+    words = token_match.group("desc").strip().split()
+    tail = token_match.group("tail")
+    if not words:
+        return None
+    predefined_name = " ".join(words)
+    definition = (
+        PREDEFINED[predefined_name]
+        if tail is None and predefined_name in PREDEFINED
+        else _parse_generic_token_descriptor(words, tail)
+    )
+    if definition is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.controller_of(ability)
+        created = create_tokens(game, definition, controller.username, count)
+        if not created:
+            return
+        token = created[0]
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        decision = game.ask(
+            Decision(
+                kind=DecisionKind.MAY,
+                player=controller.username,
+                prompt=f"attach {source.name} to {token.name}",
+                source=ability.source_name,
+                affirmative_is_legal=True,
+            )
+        )
+        if decision:
+            source.attach_to(token)
 
     return effect
 
@@ -12513,7 +12647,29 @@ def trigger_effect_for(
     if not entries:
         if effect_text is None:
             return None
-        return _ability_effect_or_notice(effect_text)
+        raw = _ability_effect_or_notice(effect_text)
+        if raw is not None:
+            # The literal printed name is what some parsers are *reading
+            # for* - `_parse_may_exile_self_then_return_clause`'s own CR
+            # 201.5 guard on Ajani, Nacatl Pariah's "you may exile Ajani,
+            # then return him ..." checks that the captured name is a
+            # substring of the actual source's name, and would refuse a
+            # normalized "this permanent" outright. Tried unnormalized
+            # first, always, so a shape already reading the literal name
+            # keeps doing so; only a miss falls through to the normalized
+            # attempt below.
+            return raw
+        # Ruby, Daring Tracker's own "Ruby gets +2/+2 until end of turn." -
+        # CR 201.5 self-reference by literal printed name (Grist and The
+        # Filigree Sylex's shape, `_self_normalized_effect_text`'s own
+        # docstring), on a *triggered* ability rather than the activated one
+        # that function was first written for. `activated_effect_for`
+        # already normalizes before parsing; a triggered ability's text
+        # reached `_ability_effect_or_notice` unnormalized until now, so a
+        # pump clause spelled with the card's own name instead of CR 700.7's
+        # "this creature" fell through every clause parser and resolved
+        # silently.
+        return _ability_effect_or_notice(_self_normalized_effect_text(card_name, effect_text))
     if len(entries) == 1 and not entries[0][0]:
         return entries[0][1]
     return _dispatch_by_printed_text(entries)
@@ -12540,28 +12696,15 @@ def _dispatch_by_printed_text(
     return dispatch
 
 
-#: Some printings template a self-reference as the card's own name rather
-#: than CR 700.7's "this [something]" - The Filigree Sylex's "Put an oil
-#: counter on The Filigree Sylex." and "... equal to the number of oil
-#: counters on The Filigree Sylex.", and Grist, the Hunger Tide's own "put a
-#: loyalty counter on Grist" (the short form before the comma, not the full
-#: printed name). CR 201.5: "Text that refers to the object it's on by name
-#: means just that particular object" - the same reference CR 700.7's "this
-#: [something]" makes, just spelled differently, so this rewrites either
-#: wording to "this permanent" once, ahead of every other parser, letting
-#: `_parse_put_counters_on_self_clause` and `_parse_destroy_each_clause` (via
-#: `_MASS_COUNTERS_ON_SELF_RE`'s "this <word>") read both the same way rather
-#: than needing a second copy of each shape keyed on a literal name.
-def _self_normalized_effect_text(card_name: str, effect_text: str) -> str:
-    front = card_name.split("//")[0].strip()
-    candidates = {card_name, front}
-    if "," in front:
-        candidates.add(front.split(",", 1)[0].strip())
-    normalized = effect_text
-    for name in candidates:
-        if name:
-            normalized = re.sub(rf"\b{re.escape(name)}\b", "this permanent", normalized)
-    return normalized
+#: Moved to `machines/abilities.self_normalized_effect_text` so
+#: `machines/layers.py` (which `machines/effects.py` itself imports from, so
+#: cannot be imported *by* it without a cycle) can share the same rewrite for
+#: the continuous-effect sentences it reads straight off `CardState.
+#: oracle_text` - Ruby, Daring Tracker's "Ruby gets +2/+2 until end of turn."
+#: needs the identical CR 201.5 self-reference handling there, not only on the
+#: `effect_text` this module's own parsers see. Aliased under the old private
+#: name so every existing call site below is unchanged.
+_self_normalized_effect_text = self_normalized_effect_text
 
 
 def activated_effect_for(

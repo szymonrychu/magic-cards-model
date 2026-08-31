@@ -474,7 +474,11 @@ def test_a_line_that_is_only_reminder_text_is_not_an_ability():
     abilities = parse_abilities(card("History of Benalia"))
 
     assert all("lore counter" not in a.raw for a in abilities)
-    assert len(abilities) == 2
+    # CR 107.15a: "I, II —" is one printed line but two chapter abilities
+    # (one per threshold, same effect), "III —" is the third - three
+    # `TriggeredAbility` in all, not two `UnparsedAbility` lines. See
+    # `test_saga_chapters_are_read_as_triggered_abilities` below.
+    assert len(abilities) == 3
 
 
 # --------------------------------------------------------------------------
@@ -498,16 +502,30 @@ def test_both_faces_of_a_transforming_card_are_parsed():
     assert back.keyword == "Flying"
 
 
-def test_saga_chapters_come_back_unparsed_rather_than_guessed_at():
-    """CR 714 chapter abilities are triggered abilities, but they are templated
-    `I, II — [effect]`, not with when/whenever/at. Admitting that beats
-    inventing a trigger condition."""
-    first, third = parse_abilities(card("History of Benalia"))
+def test_saga_chapters_are_read_as_triggered_abilities():
+    """CR 714.2's chapter symbol "is a keyword ability that represents a
+    triggered ability" (CR 714.2), and CR 107.15a spells out exactly which
+    one: "When one or more lore counters are put onto this Saga, if the
+    number of lore counters on it was less than N and became at least N,
+    [effect]." `_parse_chapter_line` (`machines/abilities.py`) reads the
+    printed `I, II —`/`III —` markers into that shape rather than leaving
+    them `UnparsedAbility` - one `TriggeredAbility` per chapter *number*,
+    `TriggeredAbility.chapter` carrying `N`, `TriggerEvent.LORE_COUNTERS_
+    ADDED` standing in for CR 107.15a's own paraphrase since no printed
+    condition text exists to read an ordinary event off.
+    """
+    first, second, third = parse_abilities(card("History of Benalia"))
 
-    assert first.kind is AbilityKind.UNPARSED
-    assert first.text.startswith("I, II —")
-    assert third.kind is AbilityKind.UNPARSED
-    assert third.text.startswith("III —")
+    assert first.kind is AbilityKind.TRIGGERED
+    assert first.chapter == 1
+    assert first.effect == "Create a 2/2 white Knight creature token with vigilance."
+    assert second.kind is AbilityKind.TRIGGERED
+    assert second.chapter == 2
+    assert second.effect == first.effect, "I, II share the identical effect text"
+    assert third.kind is AbilityKind.TRIGGERED
+    assert third.chapter == 3
+    assert third.effect == "Knights you control get +2/+1 until end of turn."
+    assert {a.event for a in (first, second, third)} == {TriggerEvent.LORE_COUNTERS_ADDED}
 
 
 def test_abilities_of_kind_filters():

@@ -34,10 +34,20 @@ Of the pool's seven cards with an intervening *if*:
   reads this shape once `machines/abilities._INTERVENING_IF_CAST_THIS_TURN_
   BOUNDARY` hands it the *whole* clause instead of truncating at the clause's
   own first internal comma; see `tests/scenarios/test_alania_divergent_storm.py`
-  for the fixed trigger actually firing).
+  for the fixed trigger actually firing), and Ruby, Daring Tracker
+  ("Whenever Ruby attacks **while** you control a creature with power 4 or
+  greater, Ruby gets +2/+2 until end of turn." - CR 603.4's clause spelled
+  with "while" in place of "if", and folded into the trigger condition
+  itself rather than sitting after a comma. `_CONDITION_WHILE_CLAUSE` in
+  `machines/abilities.py` splits it off the same way the "if" shape already
+  is, so it reaches the same `intervening_if_holds`; `_control_creature_
+  with_power_holds` in `machines/triggers.py` is the new clause shape
+  itself, CR 208.1's power compared against every creature the controller
+  has right now).
 """
 
 from magic_cards_model.machines import Step
+from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario
 
 # -- evaluated for real -------------------------------------------------------
@@ -199,3 +209,84 @@ def test_lifelink_damage_also_makes_the_condition_true():
 
     assert scenario.stack_names() == ["Ocelot Pride's triggered ability"]
     assert scenario.game.intervening_if_notices == []
+
+
+# -- Ruby, Daring Tracker: "while", not "if" ----------------------------------
+
+
+def test_ruby_gets_the_pump_while_controlling_a_big_creature():
+    """Batterhorn is a 4/4 - CR 208.1's power meets the printed "4 or
+    greater" - so Ruby's attack trigger both goes on the stack and, once it
+    resolves, actually applies its own +2/+2 (CR 122.1a's own layer, checked
+    through the computed board so a pumped Ruby genuinely reads 3/4)."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Ruby, Daring Tracker", "Batterhorn"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    ruby = scenario.creature("Ruby, Daring Tracker")
+
+    scenario.attack_with(ruby)
+    assert scenario.stack_names() == ["Ruby, Daring Tracker's triggered ability"]
+    assert scenario.game.intervening_if_notices == []
+
+    while scenario.game.stack:
+        scenario.resolve_top()
+
+    characteristics = scenario.game.characteristics_of(ruby)
+    assert (characteristics.power, characteristics.toughness) == (3, 4)
+
+
+def test_ruby_never_triggers_without_a_big_creature():
+    """Grizzly Bears is a 2/2 - CR 603.4's own condition check happens *as
+    the trigger event occurs*, so a false "while" clause never puts the
+    ability on the stack at all, the same way an ordinary false "if" clause
+    would not (CR 603.4: "The ability triggers only if it's true")."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Ruby, Daring Tracker", "Grizzly Bears"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    ruby = scenario.creature("Ruby, Daring Tracker")
+
+    scenario.attack_with(ruby)
+
+    assert scenario.stack_names() == []
+    assert scenario.game.intervening_if_notices == []
+
+
+def test_ruby_rechecks_the_condition_on_resolution():
+    """CR 608.2a rechecks the same clause a second time, as the ability
+    resolves: exiling Batterhorn between the trigger and the resolution
+    takes the board back under power 4, and the ability "is removed from
+    the stack and does nothing" - Ruby never gets bigger."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Swords to Plowshares"],
+            battlefield=["Ruby, Daring Tracker", "Batterhorn", "Plains"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    ruby = scenario.creature("Ruby, Daring Tracker")
+    batterhorn = scenario.creature("Batterhorn")
+
+    scenario.attack_with(ruby)
+    assert scenario.stack_names() == ["Ruby, Daring Tracker's triggered ability"]
+
+    scenario.start_at(Step.POSTCOMBAT_MAIN)
+    (plains,) = scenario.untapped_sources("Plains")
+    scenario.cast_and_resolve("Swords to Plowshares", plains, targets=[batterhorn])
+    assert batterhorn.zone is Zone.EXILE
+
+    scenario.resolve_top()  # Ruby's own attack trigger, rechecked and refused
+
+    characteristics = scenario.game.characteristics_of(ruby)
+    assert (characteristics.power, characteristics.toughness) == (1, 2)

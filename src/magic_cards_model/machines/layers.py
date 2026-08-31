@@ -1207,10 +1207,15 @@ def switch_power_toughness(chars: Characteristics, board: Board) -> Characterist
 #: `_CONTINUOUS_PUMP_OR_KEYWORD_RE` does - this parser never re-derives who
 #: was legally targeted (that already happened at CR 601.2c announcement,
 #: `machines/targeting.py`'s job), it only has to recognise which *shape* of
-#: sentence this is, so admitting the adjective costs nothing.
+#: sentence this is, so admitting the adjective costs nothing. "this
+#: permanent" (CR 700.7) is `effects._self_normalized_effect_text`'s own
+#: stand-in for a self-reference spelled out as the card's literal printed
+#: name - Ruby, Daring Tracker's "Ruby gets +2/+2 until end of turn." - which
+#: is why it is read here interchangeably with "this creature" rather than as
+#: a separate, narrower case.
 _SUBJECT = (
-    r"(?:target(?: [a-z]+)? creature|this creature|another target(?: [a-z]+)? creature"
-    r"(?: you control)?)"
+    r"(?:target(?: [a-z]+)? creature|this creature|this permanent"
+    r"|another target(?: [a-z]+)? creature(?: you control)?)"
 )
 
 _PUMP_RE = re.compile(
@@ -1503,7 +1508,9 @@ def _normalize_duration_first(sentence: str) -> str:
     return f"{rest} until end of turn."
 
 
-def _effect_sentences(oracle_text: str | None, *, static_only: bool = False) -> list[str]:
+def _effect_sentences(
+    oracle_text: str | None, *, static_only: bool = False, card_name: str | None = None
+) -> list[str]:
     """Every sentence a continuous effect could come from, off a card's own
     printed text.
 
@@ -1537,7 +1544,7 @@ def _effect_sentences(oracle_text: str | None, *, static_only: bool = False) -> 
     never be treated as this permanent's *static* (CR 611.3) contribution,
     whether or not it happens to parse.
     """
-    return layer_readable_sentences(oracle_text, static_only=static_only)
+    return layer_readable_sentences(oracle_text, static_only=static_only, card_name=card_name)
 
 
 def _pump_and_keyword_builder(power: int, toughness: int, keyword: str | None) -> EffectBuilder:
@@ -2008,7 +2015,7 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
 
 
 def parsed_layer_effects(
-    oracle_text: str | None, *, static_only: bool = False
+    oracle_text: str | None, *, static_only: bool = False, card_name: str | None = None
 ) -> EffectBuilder | None:
     """Every sentence of `oracle_text` that is one of the generalised shapes
     above, combined into one builder - or `None` if none of them matched at all.
@@ -2025,7 +2032,7 @@ def parsed_layer_effects(
     """
     builders = [
         builder
-        for sentence in _effect_sentences(oracle_text, static_only=static_only)
+        for sentence in _effect_sentences(oracle_text, static_only=static_only, card_name=card_name)
         if (builder := _parse_layer_sentence(sentence)) is not None
     ]
     if not builders:
@@ -2045,7 +2052,9 @@ def parsed_layer_effects(
     return combined
 
 
-def looks_like_unparsed_layer_effect(oracle_text: str | None, *, static_only: bool = False) -> bool:
+def looks_like_unparsed_layer_effect(
+    oracle_text: str | None, *, static_only: bool = False, card_name: str | None = None
+) -> bool:
     """True if some sentence of `oracle_text` reads like one of the
     pump/keyword-grant/anthem shapes above but did not fully match - the
     fail-closed signal a caller records as a `LayerNotice` instead of
@@ -2062,7 +2071,7 @@ def looks_like_unparsed_layer_effect(oracle_text: str | None, *, static_only: bo
     return any(
         _LOOKS_LIKE_LAYER_EFFECT_RE.match(_normalize_duration_first(sentence))
         and _parse_layer_sentence(sentence) is None
-        for sentence in _effect_sentences(oracle_text, static_only=static_only)
+        for sentence in _effect_sentences(oracle_text, static_only=static_only, card_name=card_name)
     )
 
 
@@ -2899,11 +2908,13 @@ def effects_for(
     # face-up side went unread.
     text = source.oracle_text
     if builder is None:
-        builder = parsed_layer_effects(text, static_only=static_only)
+        builder = parsed_layer_effects(text, static_only=static_only, card_name=source.name)
     if builder is None:
         if (
             notices is not None
-            and looks_like_unparsed_layer_effect(text, static_only=static_only)
+            and looks_like_unparsed_layer_effect(
+                text, static_only=static_only, card_name=source.name
+            )
             # The board is recomputed continually (CR 613.5), so the same
             # unreadable permanent is asked about over and over - record it
             # once, not once per computation.
