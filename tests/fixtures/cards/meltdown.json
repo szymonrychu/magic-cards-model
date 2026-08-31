@@ -1,0 +1,139 @@
+{
+  "object": "card",
+  "id": "173369d2-dc39-4bfe-a602-b47156570365",
+  "oracle_id": "8fd85a54-f0c7-4e9f-a4b4-b9b513b98d95",
+  "multiverse_ids": [
+    664061
+  ],
+  "mtgo_id": 125975,
+  "arena_id": 91108,
+  "tcgplayer_id": 548605,
+  "cardmarket_id": 768071,
+  "name": "Meltdown",
+  "lang": "en",
+  "released_at": "2024-06-14",
+  "uri": "https://api.scryfall.com/cards/173369d2-dc39-4bfe-a602-b47156570365",
+  "scryfall_uri": "https://scryfall.com/card/mh3/282/meltdown?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:53:33Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/1/7/173369d2-dc39-4bfe-a602-b47156570365.jpg?1783911213",
+    "normal": "https://cards.scryfall.io/normal/front/1/7/173369d2-dc39-4bfe-a602-b47156570365.jpg?1783911213",
+    "large": "https://cards.scryfall.io/large/front/1/7/173369d2-dc39-4bfe-a602-b47156570365.jpg?1783911213",
+    "png": "https://cards.scryfall.io/png/front/1/7/173369d2-dc39-4bfe-a602-b47156570365.png?1783911213",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/1/7/173369d2-dc39-4bfe-a602-b47156570365.jpg?1783911213",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/1/7/173369d2-dc39-4bfe-a602-b47156570365.jpg?1783911213",
+    "thumb": "https://cards.scryfall.io/thumb/front/1/7/173369d2-dc39-4bfe-a602-b47156570365.webp?1783911213",
+    "grid": "https://cards.scryfall.io/grid/front/1/7/173369d2-dc39-4bfe-a602-b47156570365.webp?1783911213",
+    "display": "https://cards.scryfall.io/display/front/1/7/173369d2-dc39-4bfe-a602-b47156570365.webp?1783911213",
+    "art": "https://cards.scryfall.io/art/front/1/7/173369d2-dc39-4bfe-a602-b47156570365.webp?1783911213",
+    "crop": "https://cards.scryfall.io/crop/front/1/7/173369d2-dc39-4bfe-a602-b47156570365.webp?1783911213"
+  },
+  "mana_cost": "{X}{R}",
+  "cmc": 1.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Destroy each artifact with mana value X or less.",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "3ed80bb6-77e8-4aa7-8262-95377a38aba1",
+  "set": "mh3",
+  "set_name": "Modern Horizons 3",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/3ed80bb6-77e8-4aa7-8262-95377a38aba1",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amh3&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mh3?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/173369d2-dc39-4bfe-a602-b47156570365/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A8fd85a54-f0c7-4e9f-a4b4-b9b513b98d95&unique=prints",
+  "collector_number": "282",
+  "digital": false,
+  "rarity": "uncommon",
+  "watermark": "set",
+  "flavor_text": "Catastrophes happened so often at the mana rig that the viashino language had a special word to describe them.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Donato Giancola",
+  "artist_ids": [
+    "90332db2-aecb-4d79-917b-95cbeb8d0cb6"
+  ],
+  "illustration_id": "a9fba222-0502-4126-b400-5fd290691b1c",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 7569,
+  "penny_rank": 1191,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://magic.wizards.com/en/news/announcements/the-modern-horizons-3-leaks-nulldrifters-and-you",
+    "previewed_at": "2024-04-30"
+  },
+  "prices": {
+    "usd": "0.32",
+    "usd_foil": "0.41",
+    "usd_etched": null,
+    "eur": "0.37",
+    "eur_foil": "0.33",
+    "tix": "0.30"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=664061&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMeltdown",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMeltdown",
+    "edhrec": "https://edhrec.com/route/?cc=Meltdown"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F548605%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=768071&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/125975?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
