@@ -242,6 +242,42 @@ def test_plus_one_grants_a_temporary_cost_reduction():
     assert casting.total_cost.mana == ManaCost.parse("{R}")
 
 
+def test_plus_one_discount_is_gone_by_the_controllers_own_next_turn():
+    """CR 800.4m: an "until your next turn" effect "will last until that turn
+    would have begun" - so by the time alice is back in her own precombat
+    main a full turn cycle later, the +1's discount must be gone and Wrenn's
+    Resolve (printed {1}{R}, verified with `resolve_cards`) costs its full
+    price again, with no other reducer on the board."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Wrenn's Resolve"],
+            battlefield=["Ral, Monsoon Mage", "Mountain", "Mountain"],
+            library=["Forest"],
+        )
+        .player("bob", battlefield=["Grizzly Bears"], library=["Forest"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    ral = _ral(scenario)
+    ral.transform()
+    ral.add_counters(Counter.LOYALTY, 2)  # printed 2, so this is a stand-in transform
+
+    scenario.activate(ral, index=0)
+    scenario.pass_until_resolved()
+
+    while scenario.turn.active_player != "bob":
+        scenario.advance()
+    while scenario.turn.active_player != "alice":
+        scenario.advance()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    casting = scenario.cast("Wrenn's Resolve")
+
+    assert casting.total_cost.mana == ManaCost.parse("{1}{R}")
+
+
 # -- back face -2: divided damage, plus a conditional draw -----------------
 
 

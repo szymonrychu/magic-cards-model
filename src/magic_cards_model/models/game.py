@@ -5842,9 +5842,33 @@ class Game(BaseModel):
             # independent, matching this project's "one paragraph is one
             # ability" rule instead of quietly merging every line on a card
             # into a single verdict.
+            #
+            # Only a genuine `AbilityKind.STATIC` line qualifies (CR 604.1's
+            # own "written as statements" versus CR 602.1's "[Cost]:
+            # [Effect]" for an activated ability). `class_ability_text` still
+            # prints an activated or triggered ability's line right alongside
+            # a static one, and `cost_modifier_effect`'s own shapes are
+            # unanchored substring matches - Ral, Leyline Prodigy's +1
+            # ("Until your next turn, instant and sorcery spells you cast
+            # cost {1} less to cast.") contains that exact discount sentence
+            # inside an activated ability's *effect*, gated on the loyalty
+            # cost being paid and on `Duration.UNTIL_YOUR_NEXT_TURN` (recorded
+            # separately as a `CastingRuleEffect` once actually activated -
+            # see `create_instant_sorcery_cost_reduction_grant`). Without this
+            # filter the mere printed line made the discount permanent and
+            # unconditional the instant Ral transformed, whether or not the
+            # +1 was ever activated: a real defect this wave closes.
+            up_face_name = permanent.up_face_name or permanent.card.name
+            static_lines = {
+                ability.raw.strip()
+                for ability in parse_abilities(permanent.card)
+                if ability.face == up_face_name
+                and ability.kind is AbilityKind.STATIC
+                and (ability.class_level is None or ability.class_level <= permanent.class_level)
+            }
             for line in (permanent.class_ability_text or "").split("\n"):
                 text = line.strip()
-                if not text:
+                if not text or text not in static_lines:
                     continue
                 effect = cost_modifier_effect(text)
                 if effect is None:
