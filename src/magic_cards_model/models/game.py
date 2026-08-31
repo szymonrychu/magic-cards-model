@@ -1443,6 +1443,7 @@ class Game(BaseModel):
             for shield in self.prevention_shields
             if not shield.spent and not shield.until_end_of_turn
         ]
+        self._bottom_unused_cascade_permissions()
         # CR 514.2's same sentence: "all 'until end of turn' ... effects end".
         # A card exiled by Ugin's −11 stays exiled and stops being castable.
         self.play_permissions = [
@@ -1456,6 +1457,39 @@ class Game(BaseModel):
             if effect.duration is not Duration.UNTIL_END_OF_TURN
         ]
         return discarded
+
+    def _bottom_unused_cascade_permissions(self) -> None:
+        """CR 702.85a's own sentence: "Put the exiled cards on the bottom in a
+        random order" reaches every card cascade exiled and did not cast, not
+        only the ones the choice was declined for. Called just before this
+        same step drops expired `PlayPermission`s (CR 514.2), so an
+        accepted-but-never-driven cascade cast is swept to the bottom here
+        instead of silently vanishing into a dropped permission with the card
+        still sitting in exile - see `PlayPermission.bottom_if_unused`'s own
+        docstring for why this only ever applies to cascade's grant and not
+        Ugin's, Ragavan's, or Suspend's.
+
+        Only a permission that is (a) marked `bottom_if_unused`, (b) about to
+        be dropped by this same step's `until_end_of_turn` filter just below
+        - `permission.expired(self)` is not the test here, because it compares
+        against `TurnMachine.turns_taken` and this runs *before* that counter
+        moves on to the next turn, the same reason the unconditional filter
+        below cannot use it either - and (c) still pointing at a card
+        genuinely sitting unclaimed in the zone it was granted from (CR
+        400.7's identity check, `PlayPermission.names`) qualifies. A card
+        already cast, or moved some other way, is left alone.
+        """
+        for permission in self.play_permissions:
+            if not permission.bottom_if_unused or not permission.until_end_of_turn:
+                continue
+            card = self.find_by_id(permission.card_id)
+            if card is None or not permission.names(card) or card.zone is not permission.zone:
+                continue
+            owner = self.player(card.owner or permission.player)
+            zone_cards = self.shared_zones.get(permission.zone)
+            if zone_cards is not None and card in zone_cards:
+                zone_cards.remove(card)
+            owner.add(card, Zone.LIBRARY)  # the bottom of the library
 
     def remove_all_damage(self) -> None:
         """Wipe damage marked on every permanent (CR 514.2, 703.4p)."""
@@ -5208,6 +5242,7 @@ class Game(BaseModel):
         rule: str = "CR 601.3",
         zone: Zone = Zone.EXILE,
         until_end_of_turn: bool = True,
+        bottom_if_unused: bool = False,
     ) -> PlayPermission:
         """CR 601.3: let `player` play this one card out of `zone`, for a turn.
 
@@ -5229,6 +5264,9 @@ class Game(BaseModel):
         `pays_mana_cost=False` is CR 118.9's "without paying its mana cost".
         `action=PlayAction.PLAY` is CR 601.1a's wider word, which reaches the
         land drop; `PlayAction.CAST` never does.
+
+        `bottom_if_unused` is `PlayPermission.bottom_if_unused` - see its own
+        docstring for why cascade passes `True` here and nothing else does.
         """
         turn = self.turn
         permission = PlayPermission(
@@ -5242,6 +5280,7 @@ class Game(BaseModel):
             rule=rule,
             until_end_of_turn=until_end_of_turn,
             granted_turns_taken=None if turn is None else int(turn.turns_taken),
+            bottom_if_unused=bottom_if_unused,
         )
         self.play_permissions.append(permission)
         return permission
