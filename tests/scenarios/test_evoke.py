@@ -15,8 +15,17 @@ exists: that line used to parse as a static ability and do nothing at all, so
 evoke silently cost nothing and exiled nothing. Wistfulness prints the ordinary
 `Evoke {G/U}{G/U}` form, so both are covered here.
 
-The triggered half - the sacrifice when it enters - is not modelled; the xfail
-at the bottom says so.
+The triggered half is the rest of CR 702.74a: "When this permanent enters, if
+its evoke cost was paid, its controller sacrifices it." It is an ordinary
+enters-the-battlefield trigger (CR 603.6a) with an intervening *if* (CR 603.4),
+not a replacement effect and not a delayed trigger - so the creature really
+arrives, its own enters triggers happen, and only then is it sacrificed
+(CR 701.21a). A live game had it stay on the battlefield for ever, because
+nothing wrote the keyword out as a trigger at all.
+
+Wistfulness is where all of it meets: its two enters triggers are gated on
+which mana was spent (CR 601.2h), its evoke cost is hybrid, and the colours
+chosen to pay it decide which of the two happens.
 """
 
 import pytest
@@ -25,6 +34,7 @@ from magic_cards_model.machines import Step
 from magic_cards_model.machines.abilities import keyword_ability
 from magic_cards_model.machines.casting import keyword_cast_options
 from magic_cards_model.models import Zone
+from magic_cards_model.models.card import Color
 from magic_cards_model.models.mana import ManaCost
 from tests.cards import card
 from tests.scenarios.harness import Scenario
@@ -246,31 +256,226 @@ def test_a_card_without_evoke_has_no_evoke_option():
         casting.use_keyword("Evoke")
 
 
-# -- the half that is not modelled ------------------------------------------
+# -- the sacrifice: CR 702.74a's triggered half ------------------------------
 
 
-@pytest.mark.xfail(
-    reason=(
-        "CR 702.74a's second half is a triggered ability - the permanent is "
-        "sacrificed when it enters if its evoke cost was paid. Nothing creates "
-        "that trigger: machines/triggers.py matches printed trigger text and the "
-        "sacrifice is not printed on the card, it comes from the keyword. "
-        "Registering it needs machines/triggers.py and machines/effects.py."
-    ),
-    strict=True,
-)
+def settle(scenario: Scenario) -> None:
+    """Put every waiting trigger on the stack and resolve the lot (CR 603.3)."""
+    scenario.game.put_triggers_on_stack()
+    while not scenario.game.stack_is_empty:
+        scenario.resolve_top()
+
+
 def test_an_evoked_creature_is_sacrificed_when_it_enters():
+    """CR 702.74a's second ability: "When this permanent enters, if its evoke
+    cost was paid, its controller sacrifices it."
+
+    The whole point of evoking a creature: it arrives, its enters trigger
+    happens, and then it is gone. A live game had it stay on the battlefield.
+    """
     scenario = board(hand=["Grief", "Grief"]).build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
-    cast, fodder = scenario.player("alice").hand
+    _, fodder = scenario.player("alice").hand
     casting = scenario.cast("Grief")
     casting.use_keyword("Evoke", choosing=[fodder])
     casting.begin_paying().pay()
     scenario.put_on_stack(casting)
     grief = scenario.resolve_top()
-    scenario.game.put_triggers_on_stack()
-    while not scenario.game.stack_is_empty:
-        scenario.resolve_top()
+
+    assert grief.zone is Zone.BATTLEFIELD  # it enters first (CR 603.6a)
+    settle(scenario)
 
     assert grief.zone is Zone.GRAVEYARD
+    assert grief in scenario.player("alice").cards_in(Zone.GRAVEYARD)
+
+
+def test_the_sacrifice_is_a_trigger_on_the_stack_not_part_of_entering():
+    """CR 603.6a's trigger goes on the stack, so the creature is really there.
+
+    This is what separates a trigger from a replacement effect (CR 614): an
+    evoked creature exists on the battlefield with its own trigger waiting, and
+    a player can respond to it.
+    """
+    scenario = board(hand=["Grief", "Grief"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    casting = scenario.cast("Grief")
+    casting.use_keyword("Evoke", choosing=[scenario.player("alice").hand[1]])
+    casting.begin_paying().pay()
+    scenario.put_on_stack(casting)
+    grief = scenario.resolve_top()
+    scenario.game.put_triggers_on_stack()
+
+    assert grief.zone is Zone.BATTLEFIELD
+    # Two: Grief's own printed enters trigger and CR 702.74a's sacrifice. Both
+    # are alice's, so CR 603.3b lets her order them - and either order ends the
+    # same way, because the sacrifice does not undo the discard.
+    assert scenario.stack_names().count("Grief's triggered ability") == 2
+
+
+def test_a_hardcast_incarnation_is_not_sacrificed():
+    """CR 603.4: the intervening *if* is false, so the ability never triggers.
+
+    Grief's evoke cost was not paid, so nothing about CR 702.74a's second half
+    applies - it is a 4/3 that stays.
+    """
+    scenario = board(hand=["Grief"], battlefield=["Swamp", "Swamp", "Swamp", "Swamp"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    swamps = scenario.untapped_sources("Swamp", "Swamp", "Swamp", "Swamp")
+    casting = scenario.cast("Grief")
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *swamps)
+    scenario.put_on_stack(casting)
+    grief = scenario.resolve_top()
+    settle(scenario)
+
+    assert grief.zone is Zone.BATTLEFIELD
+    assert not scenario.game.intervening_if_notices
+
+
+def test_a_creature_that_was_never_cast_is_not_sacrificed():
+    """No `CastRecord` at all means its evoke cost was not paid (CR 601.2h).
+
+    A reanimated or put-onto-the-battlefield incarnation has no evoke cost paid
+    for it, and the clause is answerable - False - rather than unreadable.
+    """
+    scenario = board(hand=["Grief"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    grief = scenario.put_onto_battlefield("Grief")
+    settle(scenario)
+
+    assert grief.zone is Zone.BATTLEFIELD
+
+
+def test_the_evoked_creature_dies_so_death_triggers_see_it():
+    """CR 701.21a sacrifices it to its owner's graveyard, and CR 700.4 calls
+    that dying - so a "whenever a creature dies" trigger fires off an evoke.
+    """
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Grief", "Grief"], battlefield=["Blood Artist"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.choose_trigger_targets("Blood Artist", ["bob"])
+    scenario.choose_trigger_targets("Grief", ["bob"])
+
+    casting = scenario.cast("Grief")
+    casting.use_keyword("Evoke", choosing=[scenario.player("alice").hand[1]])
+    casting.begin_paying().pay()
+    scenario.put_on_stack(casting)
+    grief = scenario.resolve_top()
+    settle(scenario)
+
+    assert grief.zone is Zone.GRAVEYARD
+    assert scenario.player("bob").life == 19
+    assert scenario.player("alice").life == 21
+
+
+# -- Wistfulness: which mana was spent decides which trigger ----------------
+#
+# The evoke cost is hybrid, `{G/U}{G/U}`, and CR 107.4e lets the payer choose
+# which half of each symbol to pay. That choice is what the two enters triggers
+# read, so the same cast produces three different boards.
+
+
+def wistfulness_board(*lands: str) -> Scenario:
+    return (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Wistfulness"],
+            battlefield=list(lands),
+            library=["Lightning Bolt", "Grizzly Bears", "Forest"],
+        )
+        .player("bob", battlefield=["Aether Spellbomb"])
+        .build()
+    )
+
+
+def evoke_wistfulness(scenario: Scenario, *lands) -> object:
+    casting = scenario.cast("Wistfulness")
+    casting.use_keyword("Evoke")
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *lands)
+    scenario.put_on_stack(casting)
+    return scenario.resolve_top()
+
+
+def test_evoking_wistfulness_for_two_green_exiles_and_then_sacrifices():
+    """All three of CR 702.74a's and the card's own abilities, in one cast.
+
+    CR 601.2h records green twice, so the {G}{G} intervening *if* holds and the
+    {U}{U} one does not; the evoke trigger fires regardless of which colours
+    paid it.
+    """
+    scenario = wistfulness_board("Forest", "Forest")
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    forests = scenario.untapped_sources("Forest", "Forest")
+
+    wistfulness = evoke_wistfulness(scenario, *forests)
+    spellbomb = scenario.find("Aether Spellbomb", Zone.BATTLEFIELD, "bob")
+    settle(scenario)
+
+    assert spellbomb.zone is Zone.EXILE
+    assert wistfulness.zone is Zone.GRAVEYARD
+    assert len(scenario.player("alice").hand) == 0
+
+
+def test_evoking_wistfulness_for_two_blue_draws_and_discards_instead():
+    """The other half of the same hybrid cost, and the other intervening *if*."""
+    scenario = wistfulness_board("Island", "Island")
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    islands = scenario.untapped_sources("Island", "Island")
+
+    wistfulness = evoke_wistfulness(scenario, *islands)
+    spellbomb = scenario.find("Aether Spellbomb", Zone.BATTLEFIELD, "bob")
+    drawn = scenario.top_of_library(2)
+    scenario.will_discard(drawn[0])
+    settle(scenario)
+
+    assert spellbomb.zone is Zone.BATTLEFIELD
+    assert drawn[0].zone is Zone.GRAVEYARD
+    assert drawn[1].zone is Zone.HAND
+    assert wistfulness.zone is Zone.GRAVEYARD
+
+
+def test_paying_one_of_each_colour_enables_neither_trigger():
+    """CR 603.4: neither {G}{G} nor {U}{U} was spent, so neither ability
+    triggers - but the evoke sacrifice still does.
+    """
+    scenario = wistfulness_board("Forest", "Island")
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    forest, island = scenario.untapped_sources("Forest", "Island")
+
+    wistfulness = evoke_wistfulness(scenario, forest, island)
+    spellbomb = scenario.find("Aether Spellbomb", Zone.BATTLEFIELD, "bob")
+    settle(scenario)
+
+    assert spellbomb.zone is Zone.BATTLEFIELD
+    assert len(scenario.player("alice").hand) == 0
+    assert wistfulness.zone is Zone.GRAVEYARD
+
+
+def test_the_mana_spent_is_recorded_against_the_evoke_cost_not_the_mana_cost():
+    """CR 601.2h pays the *total* cost, which an alternative cost replaced.
+
+    Wistfulness's printed cost is `{3}{G/U}{G/U}`; evoking it spends two mana,
+    and that is what the record holds - the generic {3} is not paid at all.
+    """
+    scenario = wistfulness_board("Forest", "Forest")
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    forests = scenario.untapped_sources("Forest", "Forest")
+
+    wistfulness = evoke_wistfulness(scenario, *forests)
+    record = scenario.game.cast_record(wistfulness)
+
+    assert record.keyword == "Evoke"
+    assert record.mana_of_color_spent(Color.GREEN) == 2
+    assert record.mana_of_color_spent(Color.BLUE) == 0
