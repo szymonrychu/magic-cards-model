@@ -1603,6 +1603,82 @@ def _compile_counter_doubler(effect: ReplacementEffect) -> CardReplacement | Non
     )
 
 
+# -- "if one or more <kind> counters would be put on a creature you control,
+#    that many <kind> counters minus one are put on it instead" --
+#
+# Vizier of Remedies: "If one or more -1/-1 counters would be put on a
+# creature you control, that many -1/-1 counters minus one are put on it
+# instead." CR 614.16 is the same clause `_compile_counter_doubler` already
+# leans on - "if an effect would put one or more counters on a permanent"
+# replacement effects apply whether the event came from a resolving effect
+# *or from a cost* ("even if the original event being modified wasn't itself
+# an effect") - so this compiler and `Game.add_counters` together are what
+# make Vizier stop Devoted Druid's own activation cost, not only a spell's.
+_COUNTER_REDUCER_EVENT_RE = re.compile(
+    r"^one or more (?P<kind>[+/\w-]+) counters would be put on a "
+    r"(?P<subject>creature|permanent) you control$",
+    re.IGNORECASE,
+)
+_COUNTER_REDUCER_REPLACEMENT_RE = re.compile(
+    r"^that many (?P<kind>[+/\w-]+) counters minus one are put on it$", re.IGNORECASE
+)
+
+
+def _counter_reducer_applies(
+    kind: str, creature_only: bool
+) -> Callable[["Game", CardState, ReplaceableEvent], bool]:
+    def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
+        if event.kind is not EventKind.ADD_COUNTERS or event.amount <= 0:
+            return False
+        if event.card is None or event.card.controller != source.controller:
+            return False
+        if creature_only and not event.card.is_creature:
+            return False
+        return (event.counter_kind or "").strip().lower() == kind
+
+    return applies
+
+
+def _reduce_counters(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
+    """ "...that many [counters] minus one are put on it instead."
+
+    CR 614.5 gives a replacement effect only one opportunity to affect an
+    event, so this is a flat minus one regardless of how many counters were
+    headed for the permanent - not a floor applied per counter. When only one
+    counter would have been placed, one minus one is zero: no counter is put
+    on at all, which `Game.add_counters` already treats as nothing to do for
+    a non-positive amount, the same way it already does for the doubler's
+    opposite case. There is no numbered CR clause for the zero floor itself -
+    it is what "one minus one" already equals; `max(..., 0)` only guards
+    against a `-1/-1 counters minus one` misreading a larger single removal as
+    negative, which no printed card's wording asks for.
+    """
+    event.amount = max(event.amount - 1, 0)
+
+
+def _compile_counter_reducer(effect: ReplacementEffect) -> CardReplacement | None:
+    if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD:
+        return None
+    event_match = _COUNTER_REDUCER_EVENT_RE.match((effect.event or "").strip())
+    if event_match is None:
+        return None
+    replacement_match = _COUNTER_REDUCER_REPLACEMENT_RE.match(
+        (effect.replacement or "").strip().rstrip(".")
+    )
+    if replacement_match is None:
+        return None
+    event_kind = event_match.group("kind").strip().lower()
+    replacement_kind = replacement_match.group("kind").strip().lower()
+    if event_kind != replacement_kind:
+        return None
+    creature_only = event_match.group("subject").strip().lower() == "creature"
+    return CardReplacement(
+        label=effect.text,
+        applies=_counter_reducer_applies(event_kind, creature_only),
+        apply=_reduce_counters,
+    )
+
+
 #: Tried in order against every parsed effect on a `REPLACEMENTS` miss. Order
 #: does not matter between them - each one's event/replacement match is
 #: specific enough that at most one ever claims a given `ReplacementEffect`.
@@ -1616,6 +1692,7 @@ _COMPILERS: tuple[Callable[[ReplacementEffect], CardReplacement | None], ...] = 
     _compile_draw_doubler_except_draw_step,
     _compile_token_doubler,
     _compile_counter_doubler,
+    _compile_counter_reducer,
 )
 
 

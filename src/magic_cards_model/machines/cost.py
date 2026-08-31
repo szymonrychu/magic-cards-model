@@ -883,9 +883,28 @@ class CostComponent(BaseModel):
             # counter lands on the permanent as the cost is paid, so a
             # toughness drop from a -1/-1 counter is visible immediately,
             # before the ability that untapped it has even resolved.
+            #
+            # CR 614.16: "if an effect would put one or more counters on a
+            # permanent" replacement effects (Vizier of Remedies) "apply if
+            # the effect of a resolving spell or ability ... [does so], and
+            # they also apply if another replacement or prevention effect
+            # does so, even if the original event being modified wasn't
+            # itself an effect" - that last clause is written for exactly
+            # this case, a cost's own counter (CR 118.1: a cost is an action,
+            # not an effect). CR 118.11 backs it from the cost side: "the
+            # actions performed when paying a cost may be modified by
+            # effects [and] the cost has still been paid" either way. So this
+            # routes through `Game.add_counters` - the same replacement path
+            # a resolving effect's counters already use - rather than
+            # mutating the permanent directly. A unit test that pays a
+            # component with no `game` has no replacement machinery to ask,
+            # so it falls back to placing the counters unmodified.
             for card in self.cards:
                 self._remember_counters(card)
-                card.add_counters(self.counter_kind, self.amount)
+                if game is not None:
+                    game.add_counters(card, self.counter_kind, self.amount)
+                else:
+                    card.add_counters(self.counter_kind, self.amount)
         elif self.kind is ComponentKind.LOYALTY:
             # CR 606.4: the counter change *is* the cost, so it happens at
             # payment time - on activation, before the ability is on the stack
