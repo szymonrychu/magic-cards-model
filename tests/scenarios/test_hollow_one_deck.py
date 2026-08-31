@@ -25,8 +25,6 @@ rule is an `xfail`, never a reshaped scenario. `docs/deck-gaps/hollow-one.md`
 records the archetype's gaps.
 """
 
-import pytest
-
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Deck, Game, Match, Player, Zone
 from tests.cards import card
@@ -222,19 +220,15 @@ def test_hollow_one_is_cheaper_after_a_discard():
     assert reduction == ManaCost.parse("{2}")
 
 
-@pytest.mark.xfail(
-    reason=(
-        "Vengevine's 'whenever you cast a spell, if it's the second creature "
-        "spell you cast this turn, you may return this card from your "
-        "graveyard to the battlefield' parses to the cast_spell event, but "
-        "trigger_effect_for returns None for it - CR 603.4's intervening-if "
-        "plus a graveyard-to-battlefield return is not a modelled shape."
-    ),
-    strict=True,
-)
 def test_vengevine_has_a_recursion_effect_to_run():
     """CR 603.4: the intervening-if clause is checked, then the effect runs -
-    but only if there is an effect to run at all."""
+    but only if there is an effect to run at all.
+
+    This was `xfail(strict=True)` while `trigger_effect_for` answered `None`.
+    The return itself was always readable; what was missing was a "you may"
+    over a *board* instruction (CR 608.2d) - the optional wrapper only ever
+    covered the plain-player vocabulary of life totals, draws and mills.
+    """
     from magic_cards_model.machines.abilities import TriggeredAbility, parse_abilities
     from magic_cards_model.machines.effects import trigger_effect_for
 

@@ -3266,7 +3266,41 @@ def _parse_optional_player_clause(clause: str) -> ClauseEffect | None:
         if inner is None:
             return None
         return _optional_clause(inner, inner_text)
-    return parse_clause_effect(clause)
+    return parse_clause_effect(clause) or _parse_comma_chained_player_clause(clause)
+
+
+def _parse_comma_chained_player_clause(clause: str) -> ClauseEffect | None:
+    """A run of plain player instructions joined by bare commas - Faithful
+    Mending's "You gain 2 life, draw two cards".
+
+    `split_effect_clauses` cuts on a period, a newline, "then" and "and", but
+    not on a bare comma, because a comma inside a single instruction is
+    common ("search your library for a creature card, put it onto the
+    battlefield"). So a comma-joined *list* of instructions arrives here
+    whole and matches nothing. CR 608.2c is the reading: the parts run in the
+    order written.
+
+    Fail-closed in the usual way - every part must be readable on its own, or
+    this returns `None` and the whole clause stays unread. The subject is
+    printed once, on the first part ("You gain 2 life, draw two cards"), so
+    later parts are retried with "you " restored the same way
+    `_parse_optional_player_clause` already retries a "you may" body.
+    """
+    parts = [part.strip() for part in clause.split(",") if part.strip()]
+    if len(parts) < 2:
+        return None
+    chain: list[ClauseEffect] = []
+    for part in parts:
+        parsed = parse_clause_effect(part) or parse_clause_effect(f"you {part}")
+        if parsed is None:
+            return None
+        chain.append(parsed)
+
+    def run(game: "Game", player: Player, source: str) -> None:
+        for step in chain:
+            step(game, player, source)
+
+    return run
 
 
 #: Sentence boundaries, and the two joining words CR 608.2c's "in the order
@@ -14084,6 +14118,40 @@ def _parse_draw_if_you_control_color_permanent_clause(clause: str) -> TargetedCl
     return effect
 
 
+def _parse_optional_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """ "You may <clause>", where `<clause>` is any shape `_parse_mixed_clause`
+    reads - Vengevine's "you may return this card from your graveyard to the
+    battlefield".
+
+    `_parse_optional_player_clause` already does this for the plain-player
+    vocabulary, but that vocabulary is only life totals, draws and mills; a
+    "you may" over a *board* instruction had nowhere to go, which is why
+    Vengevine's trigger reached the stack correctly and then resolved as
+    `None`.
+
+    CR 608.2d: "if a cost or effect allows a player to choose to do something
+    ... that player is not required to make that choice unless the effect
+    specifically says the player must." Fail-closed as everywhere else - a
+    body this engine cannot read is not turned into a question it could not
+    then carry out.
+    """
+    match = _YOU_MAY_RE.match(clause.strip())
+    if match is None:
+        return None
+    body = match.group("clause").strip().rstrip(".")
+    inner = _parse_mixed_clause(body, for_spell=for_spell)
+    if inner is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        player = game.controller_of(stack_object)
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        if game.may(player, body, source=source):
+            inner(game, stack_object)
+
+    return effect
+
+
 def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """One clause of a mixed effect: the targeted shape first, then a token
     creation, then a search, then the imprint shape, then a delayed-trigger
@@ -14231,7 +14299,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     # -- end Wave W5 single-clause addition ---------------------------------
     player_clause = _parse_optional_player_clause(clause)
     if player_clause is None:
-        return None
+        # Last resort: a "you may" over a board instruction rather than over
+        # the plain-player vocabulary `_parse_optional_player_clause` covers.
+        return _parse_optional_mixed_clause(clause, for_spell=for_spell)
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         player = game.controller_of(stack_object)

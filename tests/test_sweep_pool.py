@@ -206,7 +206,13 @@ def test_the_x_probes_are_the_one_place_the_best_answer_wins():
     ("name", "phrase"),
     [
         ("Angel of Jubilation", "Other nonblack creatures you control get +1/+1."),
-        ("Bloodghast", "This creature has haste as long as an opponent has 10 or less life."),
+        # Bloodghast used to stand here. Its landfall trigger ("you may return
+        # this card from your graveyard to the battlefield") is read now, so
+        # the card's worst clause is its unaudited static one and it reports
+        # `STATIC_UNAUDITED` rather than `SILENT` - which is the tool telling
+        # the truth, not a regression, but it no longer exercises this case.
+        # Caretaker's Talent has the same shape and is still silent outright.
+        ("Caretaker's Talent", "Creature tokens you control get +2/+2."),
         ("Caged Sun", "Creatures you control of the chosen color get +1/+1."),
     ],
 )
