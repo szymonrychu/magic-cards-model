@@ -31,7 +31,7 @@ the session that wrote this file:
 import pytest
 
 from magic_cards_model.machines import Step
-from magic_cards_model.models import Color
+from magic_cards_model.models import Color, Zone
 from tests.scenarios.harness import Scenario
 
 # --------------------------------------------------------------------------
@@ -619,25 +619,35 @@ def test_gemstone_caverns_with_its_luck_counter_auto_taps_for_the_needed_colour(
     assert scenario.player("alice").mana_pool.floating == {}
 
 
-@pytest.mark.xfail(
-    reason=(
-        "Ugin's Labyrinth's condition is 'if a card is exiled with this land' - "
-        "tracking which permanent an exiled card was imprinted on is not modelled "
-        "(see docs/engine-coverage.md and test_mana_abilities.py's "
-        "test_ugins_labyrinth_imprint_condition_is_not_modelled), so auto_tap sees "
-        "only the base {C} even with a card imprinted, and cannot solve a {2} cost "
-        "off it alone."
-    )
-)
 def test_ugins_labyrinth_auto_taps_for_its_imprint_bonus():
+    """CR 605.1a: the second mana is still one mana ability, not two.
+
+    The land has to be *played* for this to mean anything: its imprint is an
+    enters trigger, so a scenario that declares the Labyrinth straight onto the
+    battlefield has nothing exiled with it and correctly adds a single {C}.
+    Played from hand with Ulamog to exile, `Game.card_imprinted_on` sees the
+    `ExileMarker.IMPRINTED` card and the ability adds {C}{C} instead - which is
+    exactly the {2} that Mind Stone costs, so auto_tap solves it off this land
+    alone and floats nothing.
+    """
     scenario = (
-        Scenario().player("alice", hand=["Mind Stone"], battlefield=["Ugin's Labyrinth"]).build()
+        Scenario()
+        .player(
+            "alice",
+            hand=["Ugin's Labyrinth", "Ulamog, the Ceaseless Hunger", "Mind Stone"],
+        )
+        .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    (land,) = scenario.untapped_sources("Ugin's Labyrinth")
+    land = scenario.play_land("Ugin's Labyrinth", username="alice")
+    ulamog = scenario.find("Ulamog, the Ceaseless Hunger", Zone.HAND, "alice")
+    scenario.will_take_the_may(username="alice", source="Ugin's Labyrinth")
+    scenario.will_choose_cards(ulamog, username="alice", source="Ugin's Labyrinth")
+    scenario.resolve_top()
+
+    assert ulamog.zone is Zone.EXILE
 
     scenario.cast_onto_stack("Mind Stone", username="alice", auto=True)
 
-    # What CR 605.1a actually promises here, if imprint tracking existed:
     assert land.tapped is True
     assert scenario.player("alice").mana_pool.floating == {}

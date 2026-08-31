@@ -6,9 +6,10 @@ Sourced from the DDR judge transcripts. Episode covered:
 
 The episode walks the whole pregame procedure - who plays first, presenting,
 mulligans, then the opening-hand-effect step where Leylines, Chancellors and
-Gemstone Caverns are used. Almost none of that is modelled here: this engine
-starts from a board a scenario declares, with no pregame phase, no mulligans and
-no opening-hand effects.
+Gemstone Caverns are used. All of that is modelled: `machines/opening_hand.py`
+implements CR 103.6 and `Match.start_game` walks the rest. A scenario built
+board-first skips straight past it, so the last test here asks for the
+opening-hand-effect step explicitly.
 
 What *is* testable is the episode's most-quoted consequence: a creature that
 began the game on the battlefield can attack on turn one without haste, because
@@ -25,6 +26,7 @@ session that wrote the file.
 import pytest
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.decisions import DecisionKind, ScriptedAnswer
 from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario
 
@@ -97,23 +99,32 @@ def test_the_legend_rule_waits_for_the_first_state_based_action_check():
     assert second.zone is Zone.GRAVEYARD
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="There is no pregame procedure in this engine: `Scenario` declares a "
-    "board directly, with no starting-player step, no mulligans and no "
-    "opening-hand-effect step, so Gemstone Caverns' 'you may begin the game with "
-    "this on the battlefield' has nothing to hook into.",
-)
 def test_gemstone_caverns_can_start_the_game_on_the_battlefield():
-    """CR 103.1-103.3's pregame procedure, and the last of its steps.
+    """CR 103.6a: "If a card allows a player to begin the game with that card on
+    the battlefield, the player taking this action puts that card onto the
+    battlefield."
 
-    The episode's ruling is that a player on the draw whose only card is
-    Gemstone Caverns may still put it in - the instruction to exile a card is
-    not optional, but nothing says the Caverns stays in hand when it cannot be
-    performed. Nothing here models any of that; the Caverns simply starts in
-    hand and stays there.
+    CR 103.6 makes the action optional - "may take any such actions" - so an
+    unscripted player declines it (see `machines/decisions.py`). Scripting the
+    yes is what the episode's player does out loud, and the engine then performs
+    the whole of CR 103.6a: the Caverns leaves the opening hand for the
+    battlefield.
+
+    A board-first scenario has no pregame to walk, so the opening-hand-effect
+    step has to be asked for explicitly; `Game.take_opening_hand_actions` has a
+    branch for exactly that case.
     """
     scenario = Scenario().player("alice").player("bob", hand=["Gemstone Caverns"]).build()
     scenario.start_at(Step.UPKEEP)
+    scenario.game.decisions.add(
+        ScriptedAnswer(
+            kind=DecisionKind.OPENING_HAND_ACTION,
+            value=True,
+            player="bob",
+            source="Gemstone Caverns",
+        )
+    )
+
+    scenario.game.take_opening_hand_actions()
 
     assert scenario.find("Gemstone Caverns", Zone.BATTLEFIELD, "bob")
