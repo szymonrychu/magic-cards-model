@@ -204,6 +204,44 @@ class PlayedScenario:
                     found.append(f"{player.username}:{zone.value}")
         return found
 
+    def all_card_states(self) -> list[CardState]:
+        """Every `CardState` the game currently holds, in every zone, once each.
+
+        Deduplicated by object identity, not just id: `zones_containing`
+        already proves a single card is or isn't doubly listed, but a scenario
+        that wants to snapshot the whole game - "these are the cards that
+        exist right now" - and compare against a later snapshot needs the
+        whole set at once. `Scenario.assert_in_exactly_one_zone` is the
+        assertion that walks a snapshot like this one.
+        """
+        seen: dict[object, CardState] = {}
+        for cards in self.game.shared_zones.values():
+            for card in cards:
+                seen[id(card)] = card
+        for player in self.game.players:
+            for cards in player.zones.values():
+                for card in cards:
+                    seen[id(card)] = card
+        return list(seen.values())
+
+    def assert_in_exactly_one_zone(self, *cards: CardState) -> None:
+        """CR 400.1: every object is in a zone, and never in two at once.
+
+        The assertion form of `zones_containing` - for any card a test wants
+        to hold accountable, not just one at a time. Written so a scenario
+        that just resolved something with a mid-resolution decision (CR
+        608.2d) can assert the whole board is still consistent - no card
+        counted zero times (vanished, as Malevolent Rumble once did when an
+        illegal `choose_cards` answer unwound its resolution) or twice
+        (duplicated).
+        """
+        for card in cards:
+            found = self.zones_containing(card)
+            assert len(found) == 1, (
+                f"{card.name} ({card.id}) is in {len(found)} zone(s), expected "
+                f"exactly 1 (CR 400.1): {found}"
+            )
+
     def creature(self, name: str, username: str | None = None) -> CardState:
         """A creature on the battlefield by name, narrowed to one controller.
 

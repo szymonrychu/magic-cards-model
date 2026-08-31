@@ -1726,7 +1726,57 @@ class Game(BaseModel):
         x_value = self.cast_record(spell).x_value if "{X}" in (spell.mana_cost or "") else None
         effect = effect_for(spell.name, spell.oracle_text, x_value=x_value)
         if effect is not None:
-            effect(self, spell)
+            try:
+                effect(self, spell)
+            except Exception:
+                # CR 400.1: "a zone is a place where objects can be during a
+                # game" and every object not outside the game is in exactly
+                # one. `spell` was already popped off `self.stack` above, so
+                # once it is resolving it has no zone of its own until this
+                # function gives it one again - the graveyard placement a few
+                # lines down (non-permanent) or `enter_the_battlefield`
+                # (permanent). If `effect` raises before reaching either -
+                # which is exactly what `Game.ask` does when CR 608.2d refuses
+                # a mid-resolution answer, an empty `choose_cards` reply among
+                # them - the spell is left popped from the stack and
+                # nowhere else: this is the bug reported from game
+                # 535264e8458e461d874d0d38f4b1866e, where Malevolent Rumble
+                # vanished from every zone and the deck came up 59 of 60.
+                #
+                # CR 733.1 governs a player's illegal action: "the entire
+                # action is reversed and any payments already made are
+                # canceled" (already the model `machines/cost.py`'s own
+                # `unpay` follows for an aborted payment, citing the same
+                # rule). There is no way back onto the stack mid-resolution -
+                # CR 608.2 has no such step - so the closest legal landing
+                # spot is the one CR 608.2n/307.2/304.2 already mandate as the
+                # *last* step of every instant's and sorcery's resolution: its
+                # owner's graveyard. A permanent spell that could not finish
+                # entering is sent there too, the same place CR 608.3e already
+                # sends one whose controller "can't put it onto the
+                # battlefield" (Worms of the Earth's own example). Whatever
+                # the effect had not yet done when it raised - the revealed
+                # cards `malevolent_rumble` had not yet moved off the library,
+                # here - simply never happened, which is the fail-closed,
+                # nothing-half-applied posture this project's abilities keep
+                # everywhere else.
+                #
+                # The refusal itself is already on record: `Game.ask` appends
+                # every `Decision` to `self.decisions.asked` before it
+                # validates the answer, so the question that could not be
+                # legally answered is not lost even though its effect never
+                # ran. This re-raises afterwards rather than swallowing the
+                # error, matching the existing convention for every other
+                # illegal `Game.ask` answer (`Seasoned Pyromancer`'s own
+                # `test_an_illegal_discard_answer_is_refused_without_
+                # corrupting_the_hand`) - the caller still learns the answer
+                # was refused at the moment it was given; the difference this
+                # branch fixes is that the spell no longer disappears while
+                # that exception unwinds.
+                self.put_into_graveyard(spell, resolving=True)
+                self.cast_records.pop(spell.id, None)
+                self._before_priority()
+                raise
 
         if spell.is_permanent:
             # CR 608.3, 608.3a: a resolving permanent spell "becomes a permanent
