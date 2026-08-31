@@ -1,4 +1,4 @@
-"""Judge scenarios: copying a spell (CR 707), which this engine does not do at all.
+"""Judge scenarios: copying a spell and copying a permanent (CR 707).
 
 Sourced from the DDR judge transcripts. Episodes covered:
 
@@ -22,13 +22,19 @@ CR 707.10 is what "copy a spell" means: "put a copy of it onto the stack; a
 copy of a spell isn't cast". CR 707.2 is where the copy's values come from: "the
 copy acquires the copiable values of the original object's characteristics
 and, for an object on the stack, choices made when casting or activating it
-(mode, targets, ...)". Nothing in this engine builds that second stack object.
+(mode, targets, ...)".
+
+Copying is **partly** built, and each test below says which part it is
+standing on. DDR#951's own clause parses and runs for real
+(`machines/effects._parse_create_token_then_copy_spell_retargeted_clause`), so
+its Soldier token and its retargeted copy both happen; what it fails on is one
+rules question about the copy's target, recorded in that test's own xfail
+reason. The permanent-copying half is the one that is genuinely absent:
 `machines/effects._parse_token_clause` refuses outright the moment it sees
 "copy of" in a clause (`return None  # CR 707.2 copying needs copiable values
-this wave does not read`), and there is no equivalent clause parser for "copy
-that spell"/"copy target spell" anywhere in `machines/effects.py` at all - the
-whole vocabulary is simply not there, confirmed directly below rather than
-assumed from the absence of a grep hit. Every CR number here was looked up with
+this wave does not read`), and there is no `replacements_of` row for an "enter
+as a copy" clause - both confirmed directly below rather than assumed from the
+absence of a grep hit. Every CR number here was looked up with
 `knowledge_search(type="rules")`.
 """
 
@@ -46,54 +52,81 @@ from tests.cards import card
 from tests.scenarios.harness import Scenario
 
 
-def test_frontline_heroisms_copy_clause_produces_no_effect_at_all():
-    """DDR#951, the provable half: the trigger's own text never becomes behaviour.
+def test_frontline_heroisms_copy_clause_is_read_off_the_effect_half_of_the_line():
+    """DDR#951, the provable half: the copy clause *is* parsed - off the right text.
 
     Frontline Heroism's second ability is "Whenever you cast a spell that
     targets only a single creature you control, create a 1/1 red Soldier
     creature token with haste, then copy that spell. The copy targets that
-    token." `trigger_effect_for` is a fail-closed, whole-clause dispatcher the
-    same way `machines/effects.py`'s spell-effect parsers are (see
-    `docs/scenario-tests.md`'s note on `_parse_targeted_clauses`): a single
-    clause it cannot read - "then copy that spell" - throws away the whole
-    trigger, token creation included, rather than only the copy.
+    token." `_parse_create_token_then_copy_spell_retargeted_clause` in
+    `machines/effects.py` is written for exactly that clause and returns a
+    live effect for it.
+
+    What it is given matters: `trigger_effect_for` is a fail-closed,
+    whole-clause dispatcher, so handing it the *whole printed line* - the
+    "Whenever you cast a spell that targets ..." condition included - reads as
+    one unrecognised clause and comes back None. That is not the text the
+    engine passes at resolution; `Game` strips the condition and passes the
+    effect half, which parses. Both halves are asserted here because an
+    earlier version of this file read the None from the whole line as proof
+    that spell copying was absent from the engine entirely, which it is not.
     """
     heroism = card("Frontline Heroism")
     lines = heroism.oracle_text.split("\n")
     trigger_text = lines[1]
     assert trigger_text.startswith("Whenever you cast a spell")
 
-    effect = trigger_effect_for("Frontline Heroism", TriggerEvent.CAST_SPELL, trigger_text)
-    assert effect is None
+    condition, _, effect_text = trigger_text.partition("control, ")
+    assert condition.startswith("Whenever you cast a spell that targets")
+    assert effect_text.startswith("create a 1/1 red Soldier creature token")
+
+    assert trigger_effect_for("Frontline Heroism", TriggerEvent.CAST_SPELL, trigger_text) is None
+    assert trigger_effect_for("Frontline Heroism", TriggerEvent.CAST_SPELL, effect_text) is not None
 
 
 @pytest.mark.xfail(
     strict=True,
-    reason="trigger_effect_for('Frontline Heroism', CAST_SPELL, ...) returns None (proven "
-    "above), so casting Psychotic Fury with Frontline Heroism out creates no Soldier token "
-    "and casts no copy at all - CR 707.2/707.10 spell copying is not implemented anywhere in "
-    "machines/effects.py, so there is nothing to retarget the copy onto in the first place.",
+    reason="The trigger fires, the Soldier token is created, and a real second Psychotic Fury "
+    "(is_copy, retargeted at the token) does reach the stack - that much works. The copy is "
+    "then removed from the stack by CR 608.2b's on-resolution target check ('If the spell or "
+    "ability specifies targets, it checks whether the targets are still legal'), because a 1/1 "
+    "red Soldier is not the 'target multicolored creature' Psychotic Fury requires, so nothing "
+    "ever gains double strike. "
+    "Whether that is correct turns on the disposition clause of CR 707.10e ('Some effects copy "
+    "a spell or ability and specify a new target for the copy'), whose text this session could "
+    "not retrieve past its second sentence - knowledge_search truncates the excerpt before the "
+    "clause that says what happens when the specified object is an illegal target for the copy. "
+    "Exempting an effect-specified copy target from the CR 608.2b check would be a change to "
+    "src/machines, which this test does not own.",
 )
 def test_frontline_heroism_should_copy_psychotic_fury_onto_a_fresh_token():
     """DDR#951: the copy should hand double strike to a token Kitchen Finks never asked for.
 
     Psychotic Fury reads "Target multicolored creature gains double strike
-    until end of turn. Draw a card." - a legal single-creature target, so
-    Frontline Heroism's trigger should fire (CR 603.2), making a 1/1 Soldier
-    token and copying Psychotic Fury with its copy retargeted onto that token
-    (CR 707.10c: the copy's controller may choose new targets for it). A
-    multicolored creature is not itself required to be the *copy's* target,
-    since CR 707.10e only forces the copy's target to match the *original's*
-    target category when the effect does not specify a new one, and here it
-    does; the token receiving double strike despite not being multicolored is
+    until end of turn. Draw a card." (verified with `resolve_cards`) - a legal
+    single-creature target, so Frontline Heroism's trigger fires (CR 603.2),
+    making a 1/1 Soldier token and copying Psychotic Fury with the copy
+    retargeted onto that token. CR 707.10e is the rule for a copy whose target
+    the *effect* names: "Some effects copy a spell or ability and specify a new
+    target for the copy. If the spell or ability has more than one target, each
+    of the copy's targets must be that player or object." Frontline Heroism is
+    that shape - "The copy targets that token" - rather than CR 707.10c's "may
+    choose new targets".
+
+    The token receiving double strike despite not being multicolored is
     exactly what tells this apart from Psychotic Fury resolving once, plainly.
+    Two mana and a library are not decoration: Psychotic Fury costs {1}{R}, and
+    its second sentence is "Draw a card", which on an empty library would lose
+    alice the game to CR 704.5b's state-based action and take her whole
+    battlefield - the Soldier included - with her.
     """
     scenario = (
         Scenario()
         .player(
             "alice",
             hand=["Psychotic Fury"],
-            battlefield=["Frontline Heroism", "Kitchen Finks", "Mountain"],
+            library=["Forest", "Forest"],
+            battlefield=["Frontline Heroism", "Kitchen Finks", "Mountain", "Mountain"],
         )
         .player("bob")
         .build()
@@ -101,17 +134,32 @@ def test_frontline_heroism_should_copy_psychotic_fury_onto_a_fresh_token():
     scenario.start_at(Step.PRECOMBAT_MAIN)
     finks = scenario.creature("Kitchen Finks", "alice")
 
-    (mountain,) = scenario.untapped_sources("Mountain", username="alice")
-    scenario.cast_and_resolve("Psychotic Fury", mountain, username="alice", targets=[finks])
+    sources = scenario.untapped_sources("Mountain", "Mountain", username="alice")
+    scenario.cast_and_resolve("Psychotic Fury", *sources, username="alice", targets=[finks])
+
+    # The trigger resolved first (it went on the stack above the spell that
+    # caused it), so the original Psychotic Fury is still waiting underneath
+    # the copy Frontline Heroism just made - CR 112.1a: "A copy of a spell is
+    # also a spell, even if it has no card associated with it."
+    original, copy = scenario.game.stack
+    assert (original.name, original.is_copy) == ("Psychotic Fury", False)
+    assert (copy.name, copy.is_copy) == ("Psychotic Fury", True)
 
     soldiers = [
         state
-        for state in scenario.player("alice").battlefield
-        if state.name != "Kitchen Finks" and state.name != "Frontline Heroism"
+        for state in scenario.game.permanents_controlled_by("alice")
+        if isinstance(state, TokenState)
     ]
     assert len(soldiers) == 1, "the trigger should have made a 1/1 Soldier token"
     (token,) = soldiers
-    assert token.has_keyword("Double strike"), "the copy should have targeted the token"
+    # CR 707.10e's specified target: the copy points at the token, not at Finks.
+    assert copy.targets[0].card_id == token.id
+
+    while scenario.game.stack:
+        scenario.resolve_top()
+
+    abilities = scenario.game.characteristics_of(token).abilities
+    assert "Double strike" in abilities, "the copy should have targeted the token"
 
 
 # --------------------------------------------------------------------------
@@ -447,7 +495,9 @@ def test_countering_the_spell_drafnas_ability_targets_removes_that_ability():
     strict=True,
     reason="trigger_effect_for('Flamehold Grappler', ENTERS_THE_BATTLEFIELD, ...) is None "
     "(asserted in the test), so the delayed copy is never set up and CR 707.10's second stack "
-    "object is never built - the same whole-engine gap DDR#951 above documents.",
+    "object is never built. Unlike DDR#951 above, there is no clause parser for this shape at "
+    "all - 'copy the next spell you cast this turn when you cast it' is a delayed triggered "
+    "ability (CR 603.7) nothing in machines/effects.py reads.",
 )
 def test_flamehold_grapplers_untargeted_copy_still_copies_a_countered_spell():
     """DDR#977's contrast case: no target, so nothing to make illegal.
