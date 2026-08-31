@@ -53,12 +53,14 @@ which key each `AbilityOnStack` came from, because `AbilityOnStack` has no field
 for it and `machines/triggers.py` is not this file's to change.
 """
 
+import re
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
+from ..models.card import Type
 from ..models.card_state import CardState
 from ..models.zone import Zone
 from .abilities import AbilityKind, TriggeredAbility, TriggerEvent, TriggerWord
@@ -416,11 +418,337 @@ def draw_a_card_for_controller(
         game.draw_cards(trigger.controller, 1)
 
 
+def destroy_subject(game: "Game", ability: AbilityOnStack, trigger: DelayedTrigger) -> None:
+    """ "Destroy it at the beginning of the next end step" - CR 701.8a: "To
+    destroy a permanent, move it from the battlefield to its owner's
+    graveyard." Distinct from the sacrifice above (CR 701.21a) because
+    destruction can be regenerated or replaced and sacrifice cannot;
+    `Game.destroy` is where that difference lives. CR 603.7c is the usual
+    guard on the object still being where the ability expects it.
+    """
+    permanent = trigger.still_affects(game)
+    if permanent is not None:
+        game.destroy(permanent)
+
+
+def tap_subject(game: "Game", ability: AbilityOnStack, trigger: DelayedTrigger) -> None:
+    """ "Tap it at the beginning of the next turn's upkeep" - CR 701.26a: "To
+    tap a permanent, turn it sideways from an upright position. Only untapped
+    permanents can be tapped." `CardState.tap` is a no-op on a permanent that
+    is already tapped, which is that second sentence.
+    """
+    permanent = trigger.still_affects(game)
+    if permanent is not None:
+        permanent.tap()
+
+
 DELAYED_EFFECTS: dict[str, DelayedEffect] = {
     "warp:exile": _exile_warped,
     "grant_extra_turn": _grant_extra_turn,
     "sacrifice": _sacrifice_subject,
 }
+
+
+# ---------------------------------------------------------------------------
+# The anaphoric delayed triggered ability
+# ---------------------------------------------------------------------------
+#
+# Every delayed trigger above is *built by hand* at a call site that already
+# knows which object it is about. That covers the shapes whose object the
+# calling code chose itself - warp's own permanent, dash's own creature, the
+# Pact's own controller - but not the shape that is by far the most common in
+# print:
+#
+#     Return target legendary creature card from your graveyard to the
+#     battlefield. That creature gains haste. **Exile it** at the beginning of
+#     the next end step.
+#
+# The last sentence names no object at all. "It" is *anaphoric*: it means
+# whatever the paragraph's own first sentence just moved, and nothing in the
+# sentence's text can say which permanent that turned out to be - the target
+# was chosen on announcement (CR 601.2c) and the object that ends up on the
+# battlefield is a new one (CR 400.7), discovered only as the first sentence
+# actually runs.
+#
+# That is why the shape needs a primitive rather than another hand-written
+# row: the *text* is fully readable, and only the referent has to come from
+# the caller. `parse_anaphoric_delayed_clause` reads the text; the caller
+# supplies the referent to `AnaphoricDelayedClause.trigger_for` (or to the
+# one-call `anaphoric_delayed_trigger`) at the moment its own earlier sentence
+# produced it.
+#
+# CR 603.7c is what makes the referent more than an id: "A delayed triggered
+# ability that refers to a particular object still affects it even if the
+# object changes characteristics. However, if that object is no longer in the
+# zone it's expected to be in at the time the delayed triggered ability
+# resolves, the ability won't affect it." So the trigger records the zone the
+# *verb* implies as `expected_zone`, and `expected_stamp` for that rule's
+# parenthetical about an object that left and came back. Both are already
+# checked by `still_affects`; this just fills them in correctly, which a
+# hand-written call site regularly forgets to.
+#
+# CR 603.7d/e give the source and controller: the creating spell's own, taken
+# as it resolved. They are parameters here for the same reason - only the
+# caller knows what created this.
+
+#: Which step each printed timing phrase waits for, in the shape
+#: `TriggerEvent.BEGINNING_OF_STEP` and `DelayedTrigger.step` already speak.
+#:
+#: CR 500.6: "When a phase or step begins, any abilities that trigger 'at the
+#: beginning of' that phase or step trigger", and CR 511.2: "Abilities that
+#: trigger 'at end of combat' trigger as the end of combat step begins" - the
+#: same event, a different step, which is why "at end of combat" needs no
+#: separate machinery.
+#:
+#: CR 513.2 is why waiting for the *next* occurrence needs no bookkeeping at
+#: all: "If a permanent with an ability that triggers 'at the beginning of the
+#: end step' enters the battlefield during this step, that ability won't
+#: trigger until the next turn's end step. Likewise, if a delayed triggered
+#: ability that triggers 'at the beginning of the next end step' is created
+#: during an end step, that ability won't trigger until the next turn's end
+#: step." The event for the current occurrence of a step has already been
+#: emitted by the time a trigger created during it could see it, so `matches`
+#: never fires on the step it was born in.
+#:
+#: Deliberately a duplicate of `machines/effects.py`'s own private
+#: `_DELAYED_TIMING_STEPS` rather than an import: `effects.py` imports this
+#: module, so the dependency can only run one way. When Task 2.11 wires the
+#: call site, `effects.py`'s copy should be deleted in favour of this one.
+ANAPHORIC_TIMING_STEPS: dict[str, Step] = {
+    "the beginning of the next end step": Step.END_STEP,
+    "the beginning of the next turn's upkeep": Step.UPKEEP,
+    "the beginning of your next upkeep": Step.UPKEEP,
+    "end of combat": Step.END_OF_COMBAT,
+}
+
+_TIMING_PATTERN = "|".join(re.escape(phrase) for phrase in ANAPHORIC_TIMING_STEPS)
+
+#: "At <timing>, <instruction>." - Phelia, Exuberant Shepherd's word order.
+_TIMING_LEADING_RE = re.compile(
+    rf"^at (?P<timing>{_TIMING_PATTERN}),\s*(?P<instruction>.+)$", re.IGNORECASE
+)
+#: "<Instruction> at <timing>." - Goryo's Vengeance's, Postmortem Lunge's and
+#: Fire Navy Trebuchet's word order.
+_TIMING_TRAILING_RE = re.compile(
+    rf"^(?P<instruction>.+?)\s+at (?P<timing>{_TIMING_PATTERN})$", re.IGNORECASE
+)
+
+#: The pronouns a delayed clause uses for the object its own paragraph just
+#: acted on, mapped to what the referent must actually be for the pronoun to
+#: agree with it.
+#:
+#: A bare "it" constrains nothing. The demonstratives do: "that token" is Fire
+#: Navy Trebuchet naming the token it just created, and CR 108.2b ("Tokens
+#: aren't considered cards") is why the mirror matters too - a clause reading
+#: "that card" was never about a token, and CR 111.8 is the consequence if one
+#: is handed over anyway ("A token that has left the battlefield can't move to
+#: another zone or come back onto the battlefield"), a blink that would
+#: silently do nothing.
+#:
+#: The agreement is checked when the ability is *created*, not when it
+#: resolves. CR 603.7c is explicit that the object may change characteristics
+#: afterwards and still be affected, so re-checking "that creature" at
+#: resolution would be wrong.
+_ANAPHOR_AGREEMENT: dict[str, Callable[[CardState], bool]] = {
+    "it": lambda state: True,
+    "that permanent": lambda state: state.is_permanent,
+    "that card": lambda state: not state.token,  # CR 108.2b
+    "that token": lambda state: state.token,  # CR 111.1
+    "that creature": lambda state: state.is_creature,
+    "that creature token": lambda state: state.token and state.is_creature,
+    "that artifact": lambda state: Type.ARTIFACT in state.types,
+    "that land": lambda state: Type.LAND in state.types,
+    "that enchantment": lambda state: Type.ENCHANTMENT in state.types,
+}
+
+_ANAPHOR_PATTERN = "|".join(
+    re.escape(phrase) for phrase in sorted(_ANAPHOR_AGREEMENT, key=len, reverse=True)
+)
+
+#: "<verb> <anaphor>" for the verbs that take the object directly.
+_SIMPLE_VERB_RE = re.compile(
+    rf"^(?P<verb>exile|sacrifice|destroy|tap) (?P<anaphor>{_ANAPHOR_PATTERN})$",
+    re.IGNORECASE,
+)
+#: "return <anaphor> to <destination>" - the two destinations that recur.
+_RETURN_RE = re.compile(
+    rf"^return (?P<anaphor>{_ANAPHOR_PATTERN}) to "
+    r"(?P<destination>its owner's hand|the battlefield under its owner's control)$",
+    re.IGNORECASE,
+)
+
+#: What each verb does, and where CR 603.7c should expect to find the object
+#: when the ability resolves.
+#:
+#: The expected zone is a property of the *verb*, not a caller's choice: a
+#: sacrifice, a destruction, a tap and a return-to-hand all act on a permanent
+#: and so wait for the battlefield (CR 701.21a, 701.8a, 701.26a), while a
+#: return *to* the battlefield is waiting for a card in exile - the blink
+#: idiom, where the object was put there by the same paragraph's earlier
+#: sentence. Exile is the exception with no zone of its own: CR 701.13a is "To
+#: exile an object, move it to the exile zone from wherever it is", but every
+#: printed anaphoric use of it (Goryo's Vengeance, Postmortem Lunge) is
+#: exiling the permanent that sentence one put onto the battlefield, and the
+#: whole point of CR 603.7c is that one which has since died is *not* to be
+#: dug out of the graveyard.
+_ANAPHORIC_VERBS: dict[str, tuple[DelayedEffect, Zone]] = {
+    "exile": (exile_subject_at_next_end_step, Zone.BATTLEFIELD),
+    "sacrifice": (_sacrifice_subject, Zone.BATTLEFIELD),
+    "destroy": (destroy_subject, Zone.BATTLEFIELD),
+    "tap": (tap_subject, Zone.BATTLEFIELD),
+    "return_to_hand": (return_subject_to_hand, Zone.BATTLEFIELD),
+    "return_to_battlefield": (return_subject_to_battlefield_under_owner, Zone.EXILE),
+}
+
+
+class AnaphoricDelayedClause(BaseModel):
+    """One delayed-trigger clause (CR 603.7) whose subject is a pronoun,
+    read off the printed text but not yet attached to an object.
+
+    Everything here comes from the clause itself. The referent does not, and
+    cannot: see the module comment above `ANAPHORIC_TIMING_STEPS`. Call
+    `trigger_for` with the object the caller's own earlier sentence produced.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    text: str
+    """The clause as printed, for `DelayedTrigger.text` and the stack listing."""
+
+    step: Step
+    """The step CR 500.6 / CR 511.2 will trigger this at."""
+
+    anaphor: str
+    """The pronoun, lowercased - a key of `_ANAPHOR_AGREEMENT`."""
+
+    verb: str
+    """A key of `_ANAPHORIC_VERBS`: what this does when it resolves."""
+
+    def agrees_with(self, subject: CardState) -> bool:
+        """Whether `subject` is the kind of object this clause's pronoun names.
+
+        Checked at creation time only - CR 603.7c lets the object change
+        characteristics afterwards and still be affected.
+        """
+        return _ANAPHOR_AGREEMENT[self.anaphor](subject)
+
+    @property
+    def expected_zone(self) -> Zone:
+        """Where CR 603.7c will expect the object to be when this resolves."""
+        return _ANAPHORIC_VERBS[self.verb][1]
+
+    @property
+    def callback(self) -> DelayedEffect:
+        """What this does when it resolves."""
+        return _ANAPHORIC_VERBS[self.verb][0]
+
+    def trigger_for(
+        self,
+        subject: CardState,
+        *,
+        controller: str,
+        source_id: UUID | None,
+        source_name: str,
+    ) -> DelayedTrigger | None:
+        """The delayed triggered ability this clause creates about `subject`
+        (CR 603.7a: it exists from now, and not one moment earlier).
+
+        `None` when the pronoun does not agree with the object handed over -
+        the caller reached for the wrong thing, and refusing is the project's
+        fail-closed invariant rather than acting on a permanent the card never
+        named.
+
+        CR 603.7d/e: `controller`, `source_id` and `source_name` are the
+        creating spell or ability's own, taken as it resolved, which is why
+        they are the caller's to supply and not inferred from `subject`.
+        """
+        if not self.agrees_with(subject):
+            return None
+        return DelayedTrigger(
+            text=self.text,
+            event=TriggerEvent.BEGINNING_OF_STEP,
+            step=self.step,
+            controller=controller,
+            source_id=source_id,
+            source_name=source_name,
+            subject_id=subject.id,
+            expected_zone=self.expected_zone,
+            expected_stamp=subject.zone_change_stamp,
+            callback=self.callback,
+        )
+
+
+def parse_anaphoric_delayed_clause(clause: str) -> AnaphoricDelayedClause | None:
+    """Read one printed clause as an anaphoric delayed triggered ability, or
+    `None` if it is not one.
+
+    `None` covers three different refusals and deliberately does not
+    distinguish them, because the caller's response to all three is the same -
+    fail the whole paragraph closed:
+
+    - no timing phrase at all, so it is an ordinary instruction rather than a
+      delayed one (CR 603.7's "when"/"whenever"/"at" is absent);
+    - a timing phrase or verb outside what this reads;
+    - a subject that is *not* a pronoun ("exile that creature card"), which
+      names its own object and so is not this shape's problem to solve.
+    """
+    clause = clause.strip().rstrip(".")
+    match = _TIMING_LEADING_RE.fullmatch(clause) or _TIMING_TRAILING_RE.fullmatch(clause)
+    if match is None:
+        return None
+    step = ANAPHORIC_TIMING_STEPS.get(match.group("timing").lower())
+    if step is None:
+        return None
+    instruction = match.group("instruction").strip().rstrip(".")
+
+    simple = _SIMPLE_VERB_RE.fullmatch(instruction)
+    if simple is not None:
+        verb = simple.group("verb").lower()
+        anaphor = simple.group("anaphor").lower()
+    else:
+        returning = _RETURN_RE.fullmatch(instruction)
+        if returning is None:
+            return None
+        anaphor = returning.group("anaphor").lower()
+        verb = (
+            "return_to_hand"
+            if returning.group("destination").lower() == "its owner's hand"
+            else "return_to_battlefield"
+        )
+
+    return AnaphoricDelayedClause(text=clause, step=step, anaphor=anaphor, verb=verb)
+
+
+def anaphoric_delayed_trigger(
+    clause: str,
+    *,
+    subject: CardState,
+    controller: str,
+    source_id: UUID | None,
+    source_name: str,
+) -> DelayedTrigger | None:
+    """`parse_anaphoric_delayed_clause` and `trigger_for` in one call - the
+    whole primitive, for a caller that has just moved or created `subject` and
+    has the clause that talks about it.
+
+    The result is not registered anywhere: CR 603.7a's creation is
+    `Game.create_delayed_trigger`, which the caller does once it is satisfied
+    the rest of its paragraph succeeded.
+    """
+    parsed = parse_anaphoric_delayed_clause(clause)
+    if parsed is None:
+        return None
+    trigger = parsed.trigger_for(
+        subject,
+        controller=controller,
+        source_id=source_id,
+        source_name=source_name,
+    )
+    if trigger is None:
+        return None
+    # The stack listing should read as the card does, full stop and all; the
+    # parse strips it only to match.
+    return trigger.model_copy(update={"text": clause.strip()})
 
 
 class DelayedTriggers(BaseModel):
