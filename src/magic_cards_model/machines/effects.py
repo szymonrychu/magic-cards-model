@@ -11675,6 +11675,76 @@ def _merge_look_top_hand_bottom_exile_play_clauses(
     return 4, effect
 
 
+#: "Exile the top two cards of your library. Until the end of your next turn,
+#: you may play those cards." - Wrenn's Resolve and Reckless Impulse print the
+#: identical sentence word for word (verified against both pool printings),
+#: so one parser, generalized on the count, covers both rather than a second
+#: name-keyed row. `PlayAction.PLAY` rather than `.CAST`: CR 601.1a's "playing
+#: a card" covers a land found among the exiled cards, which "you may play"
+#: (not "you may cast") is broad enough to reach.
+_EXILE_TOP_N_CARDS_RE = re.compile(
+    r"^exile the top (?P<count>\w+) cards? of your library\.?$", re.IGNORECASE
+)
+_UNTIL_END_OF_YOUR_NEXT_TURN_PLAY_RE = re.compile(
+    r"^until the end of your next turn, you may play (?:those cards|that card)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _merge_exile_top_then_play_until_next_turn_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """Wrenn's Resolve's/Reckless Impulse's whole text, as one CR 608.2c
+    instruction - the second sentence's "those cards" is CR 607.1 anaphora
+    back to whatever the first sentence just exiled, so splitting them would
+    either grant a permission over nothing or run the exile and drop the
+    permission, stranding cards in exile their controller could never
+    legally use.
+
+    Spell-only (both printings are sorceries). The permission is
+    `expires_end_of_next_turn=True` (see `PlayPermission`'s own docstring) -
+    a strictly longer window than the plain `until_end_of_turn` grant
+    `_parse_exile_then_play_permission_pair`'s ability-side "until end of
+    turn" shape uses. Nothing in either printing says what happens to a card
+    left unplayed once the permission lapses (unlike cascade's own "put the
+    exiled cards on the bottom" - `PlayPermission.bottom_if_unused`'s own
+    docstring), so it is left exactly where CR 514.2 leaves any other expired
+    grant: sitting in exile, forever.
+    """
+    if not for_spell or index + 1 >= len(clauses):
+        return None
+    exile_match = _EXILE_TOP_N_CARDS_RE.fullmatch(clauses[index].strip())
+    if exile_match is None:
+        return None
+    if not _UNTIL_END_OF_YOUR_NEXT_TURN_PLAY_RE.fullmatch(clauses[index + 1].strip()):
+        return None
+    count_text = exile_match.group("count").lower()
+    count = _NUMBER_WORDS.get(count_text)
+    if count is None:
+        try:
+            count = int(count_text)
+        except ValueError:
+            return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        player = game.controller_of(spell)
+        top = list(player.library[:count])
+        for card in top:
+            exiled = game.exile_permanent(card)
+            game.grant_play_permission(
+                exiled,
+                player.username,
+                action=PlayAction.PLAY,
+                pays_mana_cost=True,
+                source_name=spell.name,
+                rule="CR 601.3",
+                until_end_of_turn=False,
+                expires_end_of_next_turn=True,
+            )
+
+    return 2, effect
+
+
 #: "Return this card from your graveyard to your hand." - World Breaker's
 #: whole graveyard-only ability (CR 113.6m, `machines/abilities.py`'s
 #: `zone`/`zone_rule` reads that half of it already). A self-reference, not a
@@ -12237,6 +12307,14 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             index += consumed
             continue
         merged = _merge_look_top_hand_bottom_exile_play_clauses(clauses, index, for_spell=for_spell)
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_exile_top_then_play_until_next_turn_clauses(
+            clauses, index, for_spell=for_spell
+        )
         if merged is not None:
             consumed, effect = merged
             parsed.append(effect)

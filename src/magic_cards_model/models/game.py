@@ -1446,8 +1446,20 @@ class Game(BaseModel):
         self._bottom_unused_cascade_permissions()
         # CR 514.2's same sentence: "all 'until end of turn' ... effects end".
         # A card exiled by Ugin's −11 stays exiled and stops being castable.
+        # A Wrenn's Resolve/Reckless Impulse grant (`expires_end_of_next_turn`)
+        # is dropped here too, but only once `Game.begin_turn_for` has already
+        # marked `owner_next_turn_started` for it (that player's own next turn
+        # has begun) *and* this cleanup belongs to that same turn - i.e. this
+        # is that turn's own end, not some later one.
         self.play_permissions = [
-            permission for permission in self.play_permissions if not permission.until_end_of_turn
+            permission
+            for permission in self.play_permissions
+            if not permission.until_end_of_turn
+            and not (
+                permission.expires_end_of_next_turn
+                and permission.owner_next_turn_started
+                and self.turn.active_player == permission.player
+            )
         ]
         # CR 514.2's same sentence, for CR 611.1's "affects the rules of the
         # game" effects: Ranger-Captain of Eos's "this turn" noncreature ban.
@@ -1520,6 +1532,23 @@ class Game(BaseModel):
                 effect.duration is Duration.UNTIL_YOUR_NEXT_TURN
                 and effect.until_next_turn_of == username
             )
+        ]
+        # Wrenn's Resolve / Reckless Impulse's "until the end of your next
+        # turn" `PlayPermission`s (`expires_end_of_next_turn`): the moment
+        # this is `username`'s own turn beginning again, past the turn it was
+        # granted on, that permission's "next turn" has arrived - it survives
+        # this whole turn regardless (`Game.cleanup_step` is what removes it,
+        # at *this* turn's own cleanup, once `owner_next_turn_started` is set).
+        self.play_permissions = [
+            permission.model_copy(update={"owner_next_turn_started": True})
+            if (
+                permission.player == username
+                and permission.expires_end_of_next_turn
+                and not permission.owner_next_turn_started
+                and permission.granted_turns_taken != self.turn.turns_taken
+            )
+            else permission
+            for permission in self.play_permissions
         ]
 
     def can_activate_tap_ability(self, permanent: CardState) -> bool:
@@ -5319,6 +5348,7 @@ class Game(BaseModel):
         until_end_of_turn: bool = True,
         bottom_if_unused: bool = False,
         immediate: bool = False,
+        expires_end_of_next_turn: bool = False,
     ) -> PlayPermission:
         """CR 601.3: let `player` play this one card out of `zone`, for a turn.
 
@@ -5349,6 +5379,12 @@ class Game(BaseModel):
 
         `bottom_if_unused` is `PlayPermission.bottom_if_unused` - see its own
         docstring for why cascade passes `True` here and nothing else does.
+
+        `expires_end_of_next_turn=True` is Wrenn's Resolve's/Reckless
+        Impulse's longer "until the end of your next turn" grant - see
+        `PlayPermission.expires_end_of_next_turn`'s own docstring. A caller
+        passing this should also pass `until_end_of_turn=False`, so
+        `Game.cleanup_step`'s ordinary same-turn sweep leaves it alone.
         """
         turn = self.turn
         permission = PlayPermission(
@@ -5365,6 +5401,7 @@ class Game(BaseModel):
             bottom_if_unused=bottom_if_unused,
             immediate=immediate,
             granted_step=None if turn is None else turn.step,
+            expires_end_of_next_turn=expires_end_of_next_turn,
         )
         self.play_permissions.append(permission)
         return permission
