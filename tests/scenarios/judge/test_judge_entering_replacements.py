@@ -24,17 +24,16 @@ than any ordering rule:
   Lakeside Shack's life check is made against the life total before Breeding
   Pool's payment.
 
-The engine models Breeding Pool exactly (both branches of its choice). It does
-not model Lakeside Shack's conditional "enters tapped unless a player has 13 or
-less life" at all - the land enters untapped at every life total - so the
-episode's actual question is `xfail`.
+Both halves are modelled now. Breeding Pool's choice was already exact; Lakeside
+Shack's conditional "enters tapped unless a player has 13 or less life" had its
+condition parsed and then dropped, so the land entered untapped at every life
+total. `machines/replacement.py` evaluates it, and the episode's own question
+resolves the way DDR#969 says it does.
 
 Every CR number in this file was verified with `knowledge_search(q="...",
 type="rules")` in the session that wrote it: CR 119.3, CR 614.1c, CR 614.1d,
 CR 614.12, CR 614.12a, CR 616.1.
 """
-
-import pytest
 
 from magic_cards_model.machines import Step
 from tests.scenarios.harness import Scenario
@@ -82,16 +81,6 @@ def test_declining_the_payment_taps_breeding_pool_instead():
     assert scenario.player("alice").life == 14
 
 
-@pytest.mark.xfail(
-    reason=(
-        "Lakeside Shack's 'This land enters tapped unless a player has 13 or "
-        "less life' is not modelled: nothing compiles it into a replacement "
-        "effect, so the land enters untapped at 14 life and at 10 life alike. "
-        "Without it there is nothing for DDR#969's simultaneous-entry question "
-        "to be about."
-    ),
-    strict=True,
-)
 def test_lakeside_shack_enters_tapped_when_nobody_is_low_enough():
     """CR 614.1d, on its own, before any second land is involved.
 
@@ -107,23 +96,15 @@ def test_lakeside_shack_enters_tapped_when_nobody_is_low_enough():
     assert shack.tapped
 
 
-@pytest.mark.xfail(
-    reason=(
-        "Same gap, stated as the episode's own question: Lakeside Shack has no "
-        "replacement effect, so it cannot be shown reading the life total from "
-        "before Breeding Pool's payment. Recorded separately because it is the "
-        "ruling, not the missing card behaviour."
-    ),
-    strict=True,
-)
 def test_the_shack_reads_the_life_total_from_before_the_pools_payment():
     """DDR#969's answer: both replacements apply at once (CR 616.1 does not
     engage), so 14 is what Lakeside Shack sees even though Amy ends on 12.
 
     Driven here as two separate entries rather than one simultaneous one - the
     engine has no way to put two permanents onto the battlefield as a single
-    event - which makes this test *weaker* than the episode, and it still
-    fails.
+    event - which makes this test *weaker* than the episode. Weaker or not, the
+    life total the Shack reads is the one from before the Pool's payment,
+    because the Shack is played first here and 14 is simply what was true then.
     """
     scenario = board(life=14).build()
     scenario.start_at(Step.PRECOMBAT_MAIN)

@@ -94,13 +94,6 @@ def test_ancient_adamantoises_own_redirect_text_is_unparsed():
     assert effect.kind is ReplacementKind.UNPARSED
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Ancient Adamantoise's redirect has no row in machines/replacement.py's "
-    "hand-written replacements_of registry (confirmed empty for this card), so "
-    "Game.deal_damage never reaches for it: alice takes the Lightning Bolt's damage on "
-    "her own life total instead of it landing on the Adamantoise she controls.",
-)
 def test_ancient_adamantoise_should_catch_damage_aimed_at_its_controller():
     """DDR#939: all damage to alice should be redirected to her Adamantoise.
 
@@ -109,21 +102,27 @@ def test_ancient_adamantoise_should_catch_damage_aimed_at_its_controller():
     the umbra armor xfail below), so Ancient Adamantoise - which redirects
     damage aimed at *itself*, no attachment needed - isolates the redirection
     gap on its own without also depending on the missing-attachment gap.
+
+    Driven from alice's side of the table so the Bolt is cast by the active
+    player during their own main phase (CR 117.3a). While this was an `xfail`
+    it was bob casting on alice's turn, which never got as far as the damage:
+    the priority machinery refused the cast, and a strict `xfail` cannot tell
+    the difference between failing for its own reason and failing early.
     """
     scenario = (
         Scenario()
-        .player("alice", battlefield=["Ancient Adamantoise", "Island"])
-        .player("bob", hand=["Lightning Bolt"], battlefield=["Mountain"])
+        .player("alice", hand=["Lightning Bolt"], battlefield=["Mountain"])
+        .player("bob", battlefield=["Ancient Adamantoise", "Island"])
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    adamantoise = scenario.creature("Ancient Adamantoise", "alice")
-    starting_life = scenario.player("alice").life
+    adamantoise = scenario.creature("Ancient Adamantoise", "bob")
+    starting_life = scenario.player("bob").life
 
-    (mountain,) = scenario.untapped_sources("Mountain", username="bob")
-    scenario.cast_and_resolve("Lightning Bolt", mountain, username="bob", targets=["alice"])
+    (mountain,) = scenario.untapped_sources("Mountain", username="alice")
+    scenario.cast_and_resolve("Lightning Bolt", mountain, username="alice", targets=["bob"])
 
-    assert scenario.player("alice").life == starting_life, "the damage should never reach alice"
+    assert scenario.player("bob").life == starting_life, "the damage should never reach bob"
     assert adamantoise.damage == 3, "it should land on the Adamantoise instead"
 
 
@@ -194,48 +193,44 @@ def test_furnace_of_rath_and_mindskinner_should_change_what_the_bolt_does():
 # --------------------------------------------------------------------------
 
 
-def test_lifelink_gains_life_off_combat_damage_the_darkness_crystal_should_have_exiled_around():
+def test_lifelink_gains_life_off_combat_damage_independently_of_the_crystal():
     """DDR#943: two separate mechanisms watch the same combat damage.
 
-    The Darkness Crystal reads "If a nontoken creature an opponent controls
-    would die, instead exile it and you gain 2 life" - the same `IF_WOULD_INSTEAD`
-    shape as Kalitas and Ancient Adamantoise above, and just as unregistered
-    (`replacements_of` has no row for it either). But lifelink is not a
-    replacement effect at all: `machines/combat.py`'s `_deal_combat_damage`
-    calls `has_keyword(source, Keyword.LIFELINK, game)` directly off the actual
-    damage dealt (CR 702.15b: "Damage dealt by a source with lifelink causes
-    that source's controller ... to gain that much life ... in addition to any
-    other results that damage causes"), independent of whatever replacement
-    machinery does or does not exist for what happens to the *creature* that
-    took the damage. Wurmcoil Engine's lifelink gain is provable end to end; the
-    Darkness Crystal's own bonus 2 life and the exile are not, since nothing
-    in `Game` consults its unregistered replacement.
+    Lifelink is not a replacement effect at all: `machines/combat.py`'s
+    `_deal_combat_damage` calls `has_keyword(source, Keyword.LIFELINK, game)`
+    directly off the actual damage dealt (CR 702.15b: "Damage dealt by a source
+    with lifelink causes that source's controller ... to gain that much life ...
+    in addition to any other results that damage causes"), independent of the
+    replacement machinery that decides what happens to the *creature* that took
+    the damage. Run the same combat with and without The Darkness Crystal and
+    the difference is exactly the Crystal's own 2 - lifelink's 6 does not move.
+
+    This test asserted a flat +6 while the Crystal had no row in
+    `replacements_of`; that number was recording the gap, not a rule, and it
+    moved to +8 the moment the row existed.
     """
-    scenario = (
-        Scenario()
-        .player("alice", battlefield=["Wurmcoil Engine", "The Darkness Crystal"])
-        .player("bob", battlefield=["Grizzly Bears"])
-        .build()
-    )
-    scenario.start_at(Step.DECLARE_ATTACKERS)
-    wurmcoil = scenario.creature("Wurmcoil Engine", "alice")
-    bears = scenario.creature("Grizzly Bears", "bob")
-    starting_life = scenario.player("alice").life
 
-    scenario.attack_with(wurmcoil)
-    scenario.block(wurmcoil, bears)
-    scenario.combat_damage()
+    def combat(*alices_permanents: str) -> int:
+        scenario = (
+            Scenario()
+            .player("alice", battlefield=list(alices_permanents))
+            .player("bob", battlefield=["Grizzly Bears"])
+            .build()
+        )
+        scenario.start_at(Step.DECLARE_ATTACKERS)
+        wurmcoil = scenario.creature("Wurmcoil Engine", "alice")
+        bears = scenario.creature("Grizzly Bears", "bob")
+        starting_life = scenario.player("alice").life
 
-    assert scenario.player("alice").life == starting_life + 6, "lifelink alone, off 6 damage"
+        scenario.attack_with(wurmcoil)
+        scenario.block(wurmcoil, bears)
+        scenario.combat_damage()
+        return scenario.player("alice").life - starting_life
+
+    assert combat("Wurmcoil Engine") == 6, "lifelink alone, off 6 damage"
+    assert combat("Wurmcoil Engine", "The Darkness Crystal") == 6 + 2, "plus the Crystal's own"
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="The Darkness Crystal's 'would die, instead exile it and you gain 2 life' has no "
-    "row in replacements_of (confirmed empty for this card), so Grizzly Bears simply dies "
-    "to lethal combat damage (CR 704.5g) rather than being exiled, and alice never sees the "
-    "extra 2 life on top of the lifelink she does get from Wurmcoil Engine's own combat damage.",
-)
 def test_the_darkness_crystal_should_exile_the_dying_blocker_and_add_two_more_life():
     """DDR#943: the redirect half of the same combat that the test above proves lifelink for."""
     scenario = (
