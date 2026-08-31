@@ -8647,6 +8647,205 @@ def each_player_sacrifices_colored_permanents(game: "Game", spell: CardState) ->
                 game.sacrifice(permanent)
 
 
+# --------------------------------------------------------------------------
+# "Each player <does something>[, then <does something else>]" - the symmetric
+# fan-out.
+#
+# CR 101.4 is the order: "If multiple players would make choices and/or take
+# actions at the same time, the active player ... makes any choices required,
+# then the next player in turn order ... and so on." CR 608.2e is why the
+# *steps* are walked outermost and the players innermost rather than running
+# one player's whole sentence before the next player starts: "Some spells and
+# abilities have multiple steps or actions, denoted by separate sentences or
+# clauses, that involve multiple players. In these cases, the choices for the
+# first action are made in APNAP order" - so every player draws, and only then
+# does every player discard. Burning Inquiry is the card where the difference
+# is visible: a player who discarded first would be discarding from a hand the
+# other player's draw had not yet been seen against.
+# --------------------------------------------------------------------------
+
+#: "Each player <rest>" - the head of the sentence, whatever `<rest>` is.
+_EACH_PLAYER_HEAD_RE = re.compile(r"^each player (?P<rest>.+)$", re.IGNORECASE)
+
+#: "discards N cards at random" - Burning Inquiry's own discard, which is not
+#: `_DISCARD_A_CARD_RE`'s default choice at all: CR 701.9b, "By default,
+#: effects that cause a player to discard a card allow the affected player to
+#: choose which card to discard. Some effects, however, require a random
+#: discard", so nobody is asked anything.
+_DISCARD_AT_RANDOM_RE = re.compile(
+    rf"^discards? (?:a card|(?P<n>{_COUNT}) cards?) at random$", re.IGNORECASE
+)
+
+#: "shuffles their hand and graveyard into their library" - Day's Undoing.
+_SHUFFLE_HAND_AND_GRAVEYARD_RE = re.compile(
+    r"^shuffles? (?:their|his or her) hand and graveyard into (?:their|his or her) library$",
+    re.IGNORECASE,
+)
+
+#: A bare "shuffles" left over at the end of a fan-out sentence - Field of
+#: Ruin's "..., then shuffles".
+_BARE_SHUFFLE_RE = re.compile(r"^shuffles?$", re.IGNORECASE)
+
+#: "searches their library for a <quality> card, puts it onto the battlefield"
+#: - Field of Ruin's own basic-land fetch, run for every player rather than
+#: for the resolving ability's controller, which is why it cannot go through
+#: `_SEARCH_AND_PUT_RE`'s controller-scoped clause builder.
+_EACH_PLAYER_SEARCH_RE = re.compile(
+    r"^searches? (?:their|his or her) library for (?:a|an) (?P<quality>.+?) card, "
+    r"puts? (?:it|that card) onto the battlefield(?P<tapped> tapped)?$",
+    re.IGNORECASE,
+)
+
+
+def _players_in_apnap_order(game: "Game") -> list[Player]:
+    """Everyone still in the game, active player first (CR 101.4).
+
+    Falls back to seating order before a turn exists at all, which is the only
+    state in which there is no active player to start from.
+    """
+    players = game.players_in_game
+    turn = game.turn
+    if turn is None:
+        return players
+    order = {username: index for index, username in enumerate(turn.players)}
+    start = order.get(turn.players[turn.active_index % len(turn.players)], 0)
+    return sorted(players, key=lambda p: (order.get(p.username, len(order)) - start) % len(order))
+
+
+def _discard_at_random(game: "Game", player: Player, count: int, source: str) -> None:
+    """CR 701.9b's random discard: `count` cards go, with no
+    decision asked of anybody.
+
+    A hand shorter than `count` discards the whole hand, the same floor
+    `_discard_cards` applies to a chosen discard. The randomness reuses
+    `Game.shuffle_library`'s reproducible seed rather than a bare `Random()`,
+    so a scenario asserting on which cards went stays deterministic.
+    """
+    hand = list(player.hand)
+    if not hand:
+        return
+    rng = Random(f"{game.shuffle_seed}:{game.shuffles_performed}:discard-at-random")  # noqa: S311
+    rng.shuffle(hand)
+    game.shuffles_performed += 1
+    game.discard_cards(player.username, hand[:count], source=source)
+
+
+def _parse_each_player_step(text: str) -> ClauseEffect | None:
+    """One step of an "each player ..." sentence, as something to run for a
+    single player - or `None` if this engine cannot read it, which fails the
+    whole sentence closed rather than running the readable half of a
+    symmetric effect (a half-run Burning Inquiry is strictly worse than an
+    unread one: it would empty a hand and refill nobody's).
+    """
+    clause = text.strip().rstrip(".")
+    if not clause:
+        return None
+
+    if match := _DISCARD_AT_RANDOM_RE.fullmatch(clause):
+        amount = _count(match.group("n")) if match.group("n") else 1
+        return lambda game, player, source: _discard_at_random(game, player, amount, source)
+
+    if _SHUFFLE_HAND_AND_GRAVEYARD_RE.fullmatch(clause):
+
+        def shuffle_hand_and_graveyard(game: "Game", player: Player, source: str) -> None:
+            for card_state in list(player.hand) + list(player.graveyard):
+                player.move(card_state, Zone.LIBRARY)
+            game.shuffle_library(player)
+
+        return shuffle_hand_and_graveyard
+
+    if _BARE_SHUFFLE_RE.fullmatch(clause):
+        return lambda game, player, source: game.shuffle_library(player)
+
+    if match := _EACH_PLAYER_SEARCH_RE.fullmatch(clause):
+        matcher = _quality_matcher(match.group("quality"))
+        tapped = match.group("tapped") is not None
+
+        def search_and_put(game: "Game", player: Player, source: str) -> None:
+            found = _search_library(game, player, matcher, source=source)
+            if found is not None:
+                game.put_onto_battlefield(found, player.username, tapped=tapped)
+
+        return search_and_put
+
+    plain = parse_clause_effect(clause)
+    if plain is not None:
+        return plain
+
+    # A chain the sentence splitter left whole because its own joiner is a
+    # comma rather than a period: Field of Ruin's "searches ..., puts it onto
+    # the battlefield, then shuffles". CR 608.2c runs the parts in the order
+    # written; every part must be readable or the whole step is refused.
+    parts = [part.strip() for part in re.split(r",\s*then\s+", clause) if part.strip()]
+    if len(parts) < 2:
+        return None
+    chain = [_parse_each_player_step(part) for part in parts]
+    if any(part is None for part in chain):
+        return None
+    ordered = [part for part in chain if part is not None]
+
+    def run_chain(game: "Game", player: Player, source: str) -> None:
+        for part in ordered:
+            part(game, player, source)
+
+    return run_chain
+
+
+def _merge_each_player_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """ "Each player <step>[, then <step>]*" as one CR 608.2c instruction,
+    however many fragments `_prepare_effect_clauses` cut it into.
+
+    The sentence's own subject is printed once and governs every following
+    step, so a fragment that lost it ("discards three cards at random",
+    "draws seven cards") is not an instruction for the *controller* - reading
+    it as one is how a symmetric effect turns into a one-sided one. Fragments
+    are therefore taken back one at a time and rejoined until they parse as a
+    step; the run stops at the last fragment that completed a step, leaving
+    anything after it for the caller (an unread leftover then fails the whole
+    ability closed, which is the point).
+    """
+    head = _EACH_PLAYER_HEAD_RE.fullmatch(clauses[index].strip().rstrip("."))
+    if head is None:
+        return None
+
+    steps: list[ClauseEffect] = []
+    settled: tuple[int, int] | None = None  # (fragments consumed, steps kept)
+    pending = head.group("rest").strip()
+    position = index + 1
+    consumed = 1
+    while True:
+        step = _parse_each_player_step(pending)
+        if step is not None:
+            steps.append(step)
+            pending = ""
+            settled = (consumed, len(steps))
+        if position >= len(clauses):
+            break
+        fragment = clauses[position].strip().rstrip(".")
+        if _EACH_PLAYER_HEAD_RE.fullmatch(fragment):
+            break  # a second "each player" sentence of its own
+        pending = f"{pending} and {fragment}" if pending else fragment
+        position += 1
+        consumed += 1
+
+    if settled is None:
+        return None
+    kept_fragments, kept_steps = settled
+    ordered = steps[:kept_steps]
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        for step in ordered:
+            # CR 608.2e / CR 101.4: the whole table completes one step before
+            # the next one starts, in APNAP order within each step.
+            for player in _players_in_apnap_order(game):
+                step(game, player, source)
+
+    return kept_fragments, effect
+
+
 def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     """The spell-side twin of `_ability_effect_or_notice`, for `effect_for`.
 
@@ -9950,11 +10149,38 @@ def _unreadable_conditional_clause(text: str, *, for_spell: bool) -> str | None:
     """
     whole = _strip_non_effect_preamble(text).strip()
     match = _MAY_SACRIFICE_IF_YOU_DO_RE.fullmatch(whole)
-    if match is None:
+    if match is not None:
+        if _parse_conditional_sacrifice_clause(text, for_spell=for_spell) is not None:
+            return None
+        return whole
+    return _unreadable_end_the_turn_clause(whole)
+
+
+#: "If it's your turn, end the turn." - Day's Undoing's second sentence.
+#: CR 724.1 ("Some cards end the turn. When an effect ends the turn, follow
+#: these steps in order, as they differ from the normal process for resolving
+#: spells and abilities") is a whole procedure of its own - exile the stack
+#: (CR 724.1b), skip the rest of the turn's steps and phases, then the
+#: cleanup-step actions of CR 514.1 and CR 514.2 - none of which this engine's
+#: turn machine can be told to do. Recorded as a `ConditionalClauseNotice`
+#: rather than left silent: the condition ("if it's your turn") is plainly a
+#: CR 118 conditional clause, and the point of the notice is that the card
+#: does nothing *and says so*, rather than quietly resolving only its first
+#: sentence - which for this card would be a strictly worse outcome, refilling
+#: an opponent's hand with no turn ended.
+_END_THE_TURN_RE = re.compile(r"^if it'?s your turn, end the turn$", re.IGNORECASE)
+
+
+def _unreadable_end_the_turn_clause(whole: str) -> str | None:
+    """The "end the turn" clause inside `whole`, if there is one - see
+    `_END_THE_TURN_RE`."""
+    clauses = _prepare_effect_clauses(whole)
+    if clauses is None:
         return None
-    if _parse_conditional_sacrifice_clause(text, for_spell=for_spell) is not None:
-        return None
-    return whole
+    for clause in clauses:
+        if _END_THE_TURN_RE.fullmatch(clause.strip().rstrip(".")):
+            return clause.strip()
+    return None
 
 
 def _parse_conditional_sacrifice_clause(text: str, *, for_spell: bool) -> TargetedClause | None:
@@ -14160,6 +14386,12 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             index += consumed
             continue
         merged = _merge_damage_each_filtered_clauses(clauses, index, for_spell=for_spell)
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_each_player_clauses(clauses, index, for_spell=for_spell)
         if merged is not None:
             consumed, effect = merged
             parsed.append(effect)
