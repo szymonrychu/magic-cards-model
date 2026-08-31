@@ -27,26 +27,42 @@ type="rules")` in the session that wrote this file:
   static one, none of which is the spell's own CR 608.2c resolution
   instruction, which is why its own printed line has to be stripped before
   "Target player draws three cards." is read as the whole effect.
+
+Ancestral Vision's `mana_cost` is the empty string - it has **no printed mana
+cost** (verified with `resolve_cards`), the same shape as Living End
+(`tests/scenarios/test_suspend.py`), and CR 118.6 makes that an unpayable
+cost. The two tests below used to hardcast it "plainly" through the ordinary
+`Casting` path anyway - the same defect `test_suspend.py`'s own reported-bug
+test now refuses - so they are staged with `Game.put_on_stack` instead, the
+same cost-free primitive `test_living_end.py` already uses to test a
+suspend-only card's *resolution* without re-proving its cast legality here.
+This file is about the "target player draws N" clause, not suspend or CR
+118.6 - both already have their own coverage.
 """
 
 from magic_cards_model.machines import Step
+from magic_cards_model.models import Zone
+from magic_cards_model.models.card_state import TargetRef
 from tests.scenarios.harness import Scenario
 
 
 def test_ancestral_vision_lets_its_target_draw_three():
-    """Cast plainly (not suspended) for its own alternative purposes here -
-    this file is about the resolution clause, not the suspend mechanic."""
+    """Resolution only - Ancestral Vision has no mana cost (CR 118.6) and its
+    only real route onto the stack is its own suspend ability
+    (`test_suspend.py`); this file is about the clause after it resolves."""
     scenario = (
         Scenario()
-        .player("alice", hand=["Ancestral Vision"], battlefield=["Island"])
+        .player("alice", hand=["Ancestral Vision"])
         .player("bob", library=["Forest", "Mountain", "Swamp", "Plains"])
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
     bob = scenario.player("bob")
-    sources = scenario.untapped_sources("Island")
+    vision = scenario.find("Ancestral Vision", Zone.HAND)
+    scenario.game.put_on_stack(vision, "alice")
+    vision.targets = [TargetRef.to_player("bob")]
 
-    scenario.cast_and_resolve("Ancestral Vision", *sources, targets=["bob"])
+    scenario.resolve_top()
 
     assert len(bob.hand) == 3
     assert len(bob.library) == 1
@@ -61,16 +77,17 @@ def test_the_caster_can_target_themselves():
             "alice",
             hand=["Ancestral Vision"],
             library=["Forest", "Mountain", "Swamp"],
-            battlefield=["Island"],
         )
         .player("bob")
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
     alice = scenario.player("alice")
-    sources = scenario.untapped_sources("Island")
+    vision = scenario.find("Ancestral Vision", Zone.HAND)
+    scenario.game.put_on_stack(vision, "alice")
+    vision.targets = [TargetRef.to_player("alice")]
 
-    scenario.cast_and_resolve("Ancestral Vision", *sources, targets=["alice"])
+    scenario.resolve_top()
 
     assert len(alice.hand) == 3
     assert len(alice.library) == 0
