@@ -13,6 +13,49 @@ Two things break the plain round-the-table order, and both live here:
 
 Emrakul, the Promised End needs both at once, which is why they are modelled
 together rather than as two unrelated flags.
+
+## The two pregame steps are not CR 500 steps. Read this before using them.
+
+`Step.MULLIGAN` and `Step.PREGAME_ACTIONS` are **an engineering representation,
+not a rules claim.** CR 500.1, looked up in full: "A turn consists of five
+phases, in this order: beginning, precombat main, combat, postcombat main, and
+ending. Each of these phases takes place every turn, even if nothing happens
+during the phase. Th[e ...]" - the excerpt truncates there, but the sentence
+that matters is complete: a phase, and therefore every step inside one, is
+**part of a turn**.
+
+The mulligan process (CR 103.5) and the opening-hand actions (CR 103.6) happen
+*before any turn exists*. CR 103.8, in full: "The starting player takes their
+first turn." CR 103.6, as far as the excerpt goes: "Some cards allow a player to
+take actions with them from their opening hand. Once the mulligan process (see
+rule 103.5) is complete, the starting player may take any such actions in any
+order. Then ea[ch ...]". So both of these sit between CR 103.5 and CR 103.8,
+which is *outside* CR 500 entirely.
+
+They are `Step` members anyway because the thing a client needs is a single
+"where is this game right now" pointer that it can rest on, poll, and act
+through - and that pointer is `TurnMachine.step`. To keep the representation
+from making a false claim, everything that would assert a turn is under way is
+withheld while the pointer is in one of them:
+
+- they are **not in `TURN_ORDER`** - that tuple is CR 500's turn and stays so.
+  They live in `PREGAME_ORDER`, a separate sequence that runs into `TURN_ORDER`
+  once and never again;
+- they are **not in `PHASE_OF`**, so `phase` returns None rather than naming a
+  CR 500 phase they are not in;
+- `turn_number` and `turns_taken` are **0** while the pointer is here, not 1: no
+  turn has begun, and CR 103.8's first turn begins only when the pointer leaves;
+- `grants_priority` is **False**. CR 117.1: "Unless a spell or ability is
+  instructing a player to take an action, which player can take actions at any
+  given time is determined by a system of priority." CR 103.6 is exactly the
+  first case - it instructs players to take actions and names its own order
+  ("the starting player ... Then ea[ch]") - and nothing found in CR 103.5 or
+  CR 103.6 grants priority to anybody before the first turn. So no CR 117
+  priority round is modelled here.
+
+Nothing untaps and nothing is drawn on the way through: `advance` moves the
+pointer and does no turn-based action, exactly as it does not for the untap step
+of a turn that a caller walks by hand.
 """
 
 from enum import StrEnum
@@ -29,6 +72,12 @@ class Phase(StrEnum):
 
 
 class Step(StrEnum):
+    # Pregame sequence (CR 103.5, CR 103.6). NOT steps of a turn - see the
+    # module docstring. They precede CR 103.8's first turn and belong to no
+    # CR 500 phase.
+    MULLIGAN = "mulligan"
+    PREGAME_ACTIONS = "pregame_actions"
+
     # Beginning phase
     UNTAP = "untap"
     UPKEEP = "upkeep"
@@ -66,6 +115,30 @@ TURN_ORDER: tuple[Step, ...] = (
     Step.CLEANUP,
 )
 
+PREGAME_ORDER: tuple[Step, ...] = (
+    Step.MULLIGAN,
+    Step.PREGAME_ACTIONS,
+)
+"""The pregame sequence, in order: CR 103.5's mulligans, then CR 103.6's actions.
+
+Deliberately a second tuple rather than a prefix of `TURN_ORDER`: CR 500.1 makes
+`TURN_ORDER` the contents of *a turn*, and these two are not in one. They run
+once, at the start of a game, and `advance` falls out of the end of this tuple
+into `TURN_ORDER`'s first entry - the untap step of CR 103.8's first turn.
+"""
+
+PREGAME_STEPS = frozenset(PREGAME_ORDER)
+
+STEP_SEQUENCE: tuple[Step, ...] = PREGAME_ORDER + TURN_ORDER
+"""Every step a game passes through, first to last, for ordering comparisons only.
+
+`advance_to` needs to say "that is behind us"; concatenating the two orders is
+how it answers that for a pointer sitting anywhere. It is **not** a claim that
+the pregame steps are part of the turn - `TURN_ORDER` remains the turn, and
+`begin_next_turn` restarts at `TURN_ORDER[0]`, so nothing ever re-enters the
+pregame.
+"""
+
 PHASE_OF: dict[Step, Phase] = {
     Step.UNTAP: Phase.BEGINNING,
     Step.UPKEEP: Phase.BEGINNING,
@@ -80,6 +153,13 @@ PHASE_OF: dict[Step, Phase] = {
     Step.END_STEP: Phase.ENDING,
     Step.CLEANUP: Phase.ENDING,
 }
+"""Which CR 500 phase each step of a turn belongs to.
+
+`Step.MULLIGAN` and `Step.PREGAME_ACTIONS` are deliberately absent, and no
+"pregame" `Phase` was invented to hold them: CR 500.1 lists the five phases a
+turn consists of and there is no sixth. `TurnMachine.phase` reads this with
+`.get`, so the honest answer for a pregame step is None.
+"""
 
 MAIN_PHASES = frozenset({Step.PRECOMBAT_MAIN, Step.POSTCOMBAT_MAIN})
 
@@ -204,12 +284,33 @@ class TurnMachine(BaseModel):
         }
 
     @property
-    def phase(self) -> Phase:
-        return PHASE_OF[self.step]
+    def phase(self) -> Phase | None:
+        """The CR 500 phase this step belongs to, or None during the pregame.
+
+        CR 500.1 gives a turn five phases and no more, and the pregame steps are
+        not in a turn at all, so there is no phase to name for them. None says
+        that; inventing a sixth `Phase` member would not.
+        """
+        return PHASE_OF.get(self.step)
+
+    @property
+    def in_pregame(self) -> bool:
+        """Whether the game is still before CR 103.8's first turn."""
+        return self.step in PREGAME_STEPS
 
     @property
     def grants_priority(self) -> bool:
-        return self.step not in NO_PRIORITY
+        """Whether a player receives priority in this step.
+
+        Two separate reasons for no, kept separate: `NO_PRIORITY` is CR 502.1
+        and CR 514.3 inside a turn, and the pregame steps are not a turn at all.
+        CR 117.1 makes priority the system that decides "which player can take
+        actions at any given time" *unless* a spell or ability is instructing a
+        player to take an action; CR 103.6 names its own order and nothing found
+        in CR 103.5 or CR 103.6 grants priority before the first turn, so none
+        is modelled.
+        """
+        return self.step not in NO_PRIORITY and self.step not in PREGAME_STEPS
 
     @property
     def is_first_turn(self) -> bool:
@@ -251,8 +352,53 @@ class TurnMachine(BaseModel):
             and self.active_index == 0
         )
 
+    # -- the pregame sequence (CR 103.5, CR 103.6) -------------------------
+
+    def begin_pregame(self) -> Step:
+        """Put the pointer before the first turn, in CR 103.5's mulligan step.
+
+        A `TurnMachine` is constructed at `Step.UNTAP` of turn 1, because a
+        scenario that builds a board directly wants a turn already under way and
+        never had a mulligan to run. A game dealt from decklists calls this
+        instead, and everything that would claim a turn had begun goes to zero:
+        CR 103.8's first turn has not started, so `turn_number` and `turns_taken`
+        must not say it has.
+        """
+        self.step = Step.MULLIGAN
+        self.turn_number = 0
+        self.turns_taken = 0
+        return self.step
+
+    def begin_first_turn(self) -> Step:
+        """Leave the pregame and begin CR 103.8's first turn at untap.
+
+        "The starting player takes their first turn." The active seat is already
+        theirs - seat 0, which is how a game orders its players - so this only
+        starts the counts that `begin_pregame` held at zero and puts the pointer
+        on `TURN_ORDER`'s first entry.
+
+        No turn-based action is performed here, by design: nothing untaps and
+        nobody draws because the *pointer* moved. A game runs the untap step's
+        own actions when it advances out of it, exactly as on every later turn.
+        """
+        self.step = Step.UNTAP
+        self.turn_number = 1
+        self.turns_taken = 1
+        return self.step
+
     def advance(self) -> Step:
-        """Move to the next step, rolling into the next player's turn after cleanup."""
+        """Move to the next step, rolling into the next player's turn after cleanup.
+
+        In the pregame the sequence is `PREGAME_ORDER`'s, and falling off its end
+        begins the first turn rather than passing one.
+        """
+        if self.step in PREGAME_STEPS:
+            index = PREGAME_ORDER.index(self.step)
+            if index + 1 < len(PREGAME_ORDER):
+                self.step = PREGAME_ORDER[index + 1]
+                return self.step
+            return self.begin_first_turn()
+
         index = TURN_ORDER.index(self.step)
         if index + 1 < len(TURN_ORDER):
             self.step = TURN_ORDER[index + 1]
@@ -363,8 +509,16 @@ class TurnMachine(BaseModel):
         return self.controller_of_player(username) != username
 
     def advance_to(self, step: Step) -> Step:
-        """Advance until `step` is reached. Raises if it has already passed."""
-        if TURN_ORDER.index(step) < TURN_ORDER.index(self.step):
+        """Advance until `step` is reached. Raises if it has already passed.
+
+        Ordering is read off `STEP_SEQUENCE`, so a pointer still in the pregame
+        can be walked into the first turn and a pregame step is correctly
+        "already passed" once a turn has begun. This moves the pointer only: it
+        is the `TurnMachine`, which knows nothing about hands, so a game that
+        wants CR 103.5 actually run drives it through `Game`, whose own
+        `advance`/`advance_to` refuse to step over an unfinished pregame.
+        """
+        if STEP_SEQUENCE.index(step) < STEP_SEQUENCE.index(self.step):
             raise ValueError(f"{step} already passed this turn, currently at {self.step}")
         while self.step is not step:
             self.advance()

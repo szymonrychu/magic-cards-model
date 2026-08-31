@@ -61,6 +61,7 @@ from ..machines.decisions import (
     DecisionScript,
     ask_attackers,
     ask_blockers,
+    ask_mulligan,
     default_answer,
     legal_options,
 )
@@ -142,7 +143,13 @@ from ..machines.triggers import (
     tapped_for_mana_event,
     triggers_for,
 )
-from ..machines.turn import MAIN_PHASES, NO_PRIORITY, TURN_ORDER, Step, TurnMachine
+from ..machines.turn import (
+    MAIN_PHASES,
+    NO_PRIORITY,
+    STEP_SEQUENCE,
+    Step,
+    TurnMachine,
+)
 from .card import Card, Color, Layout, Supertype, Type
 from .card_state import (
     CardState,
@@ -1083,6 +1090,39 @@ class Game(BaseModel):
     truncates, but running the sequence twice would break it, and CR 103.6 puts
     the sequence between one completed mulligan process and one first turn.
     `take_opening_hand_actions` is idempotent because of this flag."""
+
+    pregame_seed: str = ""
+    """Seed prefix for every reshuffle CR 103.5's mulligans cause in this game.
+
+    A mulligan shuffles (CR 103.5), so the pregame is the one part of starting a
+    game that consumes randomness, and it has to stay reproducible now that the
+    process is driven declaration by declaration rather than by one call. The
+    `Match` that dealt the hands sets this to the same prefix its own
+    `_game_seed` builds, so the per-mulligan seed string is byte for byte the one
+    the blocking loop derived and a replay with the same declarations is
+    identical. Empty for a game nobody dealt a deck to, which never mulligans.
+    """
+
+    mulligan_declarations: dict[str, bool] = Field(default_factory=dict)
+    """This round's CR 103.5 declarations, by username. True is "take a mulligan".
+
+    CR 103.5: "First, the starting player declares whether they will take a
+    mulligan. Then each other player in turn order does the same. Once each
+    player has made a declaration, all players who decided to take mulligans do
+    so at the same time." The declarations have to be *collected* before any of
+    them is acted on, and this is where they wait. Cleared as each round
+    resolves, so it always holds the round in progress and nothing else.
+    """
+
+    opening_hand_seat: int = 0
+    """Which seat is taking its CR 103.6 opening-hand actions, as an index into `players`.
+
+    CR 103.6: "the starting player may take any such actions in any order. Then
+    ea[ch ...]" - the excerpt truncates, but the starting player going first and
+    the other players following is stated outright, and `players` is seated with
+    the starting player first. So this walks that list, one seat at a time, and
+    a seat is done when it says so.
+    """
 
     opening_hand_reveals: list[UUID] = Field(default_factory=list)
     """Cards revealed from an opening hand under CR 103.6b, in the order shown.
@@ -3232,7 +3272,352 @@ class Game(BaseModel):
             card_state, controller, tapped=tapped, transformed=transformed, was_cast=False
         )
 
+    # -- the pregame sequence (CR 103.5, CR 103.6) ----------------------------
+    #
+    # A game dealt from decklists *rests* in `Step.MULLIGAN` and then in
+    # `Step.PREGAME_ACTIONS`, and every seat acts through the methods below.
+    # Neither step asks anybody anything: `declare_mulligan`,
+    # `take_opening_hand_action` and `finish_opening_hand_actions` are told an
+    # answer that has already been made, so nothing here ever waits on a person.
+    #
+    # That is the whole point of the restructure. The previous shape ran both
+    # sequences inside one call that put every question through `Game.ask`; with
+    # a live `DecisionProvider` behind an API that blocks until a human answers,
+    # starting a game took one full answer timeout *per question per seat* -
+    # measured at 1200 s (4 x 300 s) for two seats across both sequences - while
+    # holding the game lock. A step the game rests in has no wait to hold: the
+    # game sits there, publishes what it is waiting for, and moves the moment the
+    # last seat has spoken.
+    #
+    # `settle_pregame` is the headless path and keeps the old behaviour exactly:
+    # it asks each seat through the ordinary decision machinery, where an
+    # unanswered question falls through to `default_answer` immediately.
+
+    @property
+    def in_pregame(self) -> bool:
+        """Whether the game is still before CR 103.8's first turn."""
+        return self.turn is not None and self.turn.in_pregame
+
+    def begin_pregame(self, seed_prefix: str = "") -> Step:
+        """Put this game in CR 103.5's mulligan step, before any turn has begun.
+
+        Called by `Match.start_game` once the hands are dealt. `seed_prefix` is
+        where every mulligan reshuffle's seed comes from - see `pregame_seed`.
+        """
+        assert self.turn is not None
+        self.pregame_seed = seed_prefix
+        self.mulligan_declarations = {}
+        step = self.turn.begin_pregame()
+        self._resolve_mulligan_round_if_ready()
+        return self.turn.step if self.turn.in_pregame else step
+
+    # -- CR 103.5: the mulligan process ---------------------------------------
+
+    @property
+    def mulligan_seats(self) -> list[Player]:
+        """Players who have not yet kept a hand, in CR 103.5's declaration order.
+
+        "First, the starting player declares whether they will take a mulligan.
+        Then each other player in turn order does the same." `self.players` is
+        seated with the starting player first, so walking it is that order.
+        """
+        return [player for player in self.players if not player.hand_kept]
+
+    @property
+    def awaiting_mulligan_declarations(self) -> list[str]:
+        """Who still owes a declaration this round, in turn order.
+
+        A player at CR 103.5's ceiling - "a player can take mulligans until their
+        opening hand would be zero cards, after which they may not take further
+        mulligans" - is offered no declaration at all and so is never awaited;
+        keeping a hand of nothing is what is left to them.
+        """
+        if self.turn is None or self.turn.step is not Step.MULLIGAN:
+            return []
+        return [
+            player.username
+            for player in self.mulligan_seats
+            if player.can_mulligan and player.username not in self.mulligan_declarations
+        ]
+
+    def declare_mulligan(self, username: str, take: bool) -> Step:
+        """Record one seat's CR 103.5 declaration, resolving the round when it completes.
+
+        This is the live seat's whole move, and it blocks on nothing: the answer
+        is passed in, already made. When the last seat still owed a declaration
+        has spoken, the round resolves here - "once each player has made a
+        declaration, all players who decided to take mulligans do so at the same
+        time" - and either a fresh round opens or the process is over and the
+        game moves to `Step.PREGAME_ACTIONS`.
+
+        Returns the step the game is in afterwards, which is how a caller learns
+        that its declaration was the one that finished the round.
+        """
+        assert self.turn is not None
+        if self.turn.step is not Step.MULLIGAN:
+            raise ValueError(
+                f"CR 103.5's mulligan process is not under way - the game is at {self.turn.step}"
+            )
+        player = self.player(username)
+        if player.hand_kept:
+            raise ValueError(f"{username} has already kept a hand")
+        if username in self.mulligan_declarations:
+            raise ValueError(f"{username} has already declared this round")
+        if take and not player.can_mulligan:
+            raise ValueError(
+                f"{username} cannot mulligan past a hand of nothing "
+                f"({player.mulligans_taken} taken) (CR 103.5)"
+            )
+
+        self.mulligan_declarations[username] = take
+        self._resolve_mulligan_round_if_ready()
+        return self.turn.step
+
+    def _resolve_mulligan_round_if_ready(self) -> None:
+        """Carry out one round of CR 103.5 once every declaration is in.
+
+        Nothing happens while a seat still owes one. When they are all in:
+
+        - if nobody declared a mulligan, everybody keeps, paying CR 103.5's
+          bottoming cost, and the process is over;
+        - otherwise "all players who decided to take mulligans do so at the same
+          time" - every declaration was collected before any of this ran, which
+          is what makes them simultaneous - and the players who declared against
+          keep instead. A fresh round then opens for whoever mulliganed.
+
+        A seat with no legal mulligan left counts as a declaration to keep, which
+        is why the process always terminates: a player who keeps mulliganing runs
+        out of hand.
+        """
+        assert self.turn is not None
+        if self.turn.step is not Step.MULLIGAN:
+            return
+        if self.awaiting_mulligan_declarations:
+            return
+
+        deciding = self.mulligan_seats
+        declarations = [
+            (player, self.mulligan_declarations.get(player.username, False)) for player in deciding
+        ]
+        self.mulligan_declarations = {}
+
+        for player, take in declarations:
+            if take:
+                # The same seed string the blocking loop derived, component for
+                # component, so a replay with the same declarations is identical.
+                player.mulligan(
+                    f"{self.pregame_seed}:mulligan:{player.username}:{player.mulligans_taken}"
+                )
+        for player, take in declarations:
+            if not take:
+                player.keep_hand(self._bottom_for_keep(player))
+
+        if not self.mulligan_seats:
+            # CR 103.6 begins "once the mulligan process ... is complete".
+            self.turn.advance()
+
+    def _bottom_for_keep(self, player: Player) -> list[CardState] | None:
+        """Which cards this player puts on the bottom when they keep (CR 103.5).
+
+        CR 103.5c and CR 800.6 both name the quantity - "the number of cards that
+        player will put on the bottom of their library" - and `cards_to_bottom`
+        computes it; *which* cards they are is the player's own choice.
+
+        Asked as a `CHOOSE_CARDS` question through `Game.ask`, the same CR 608.2d
+        machinery `ask_cleanup_discard` uses for CR 701.9b's discard, and
+        deliberately **not** a new `DecisionKind`: "choose exactly N of these
+        cards, from one zone, in an order that matters" is precisely what that
+        kind already is, its `exact` validation already refuses a wrong-sized or
+        stray-card answer, and every client that can already render a
+        `CHOOSE_CARDS` question can render this one with no change.
+
+        This one *is* a `Game.ask`, and it is the one place in the pregame that
+        stays one: it is only reached for a player who has already mulliganed at
+        least once, it has a correct default (the back of the hand, which is what
+        `Player.keep_hand(None)` bottoms), and a client that wants a human to
+        choose can script or provide the answer before the declaration that
+        triggers it. Two properties that buys:
+
+        - **The default is unchanged.** `default_answer` for an exact
+          `CHOOSE_CARDS` returns "the back of `cards`, in the order the caller
+          offered them", and the hand is offered here in hand order - byte for
+          byte the list `Player.keep_hand(None)` builds. An unscripted,
+          unprovided game bottoms exactly what it bottomed before, so every
+          seeded replay holds.
+        - **Nothing random happens here**, so the reshuffle seeds are untouched
+          by asking.
+
+        `None` is returned when there is nothing to bottom, so the question is not
+        put at all - a choice among zero cards is not a choice.
+        """
+        needed = player.cards_to_bottom
+        if needed <= 0:
+            return None
+        hand = list(player.hand)
+        chosen = self.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=player.username,
+                prompt=f"put {needed} card(s) on the bottom of your library",
+                amount=needed,
+                cards=tuple(state.id for state in hand),
+            )
+        )
+        assert isinstance(chosen, tuple)
+        by_id = {state.id: state for state in hand}
+        return [by_id[card_id] for card_id in chosen]
+
+    # -- settling a pregame with nobody there to answer -----------------------
+
+    def settle_pregame(self) -> Step:
+        """Run the whole pregame through the ordinary decision machinery.
+
+        The headless path, and the one every scenario that just wants a game to
+        play uses. Each declaration goes through `ask_mulligan` and each CR 103.6
+        action through `Game.ask`, so a scripted answer wins, then a live
+        `decisions.provider`, and only when neither speaks does `default_answer`
+        stand - keep the dealt hand, decline every opening-hand action. With no
+        provider that is immediate and deterministic, which is exactly what it
+        was before this became a rested-in step.
+
+        Returns the step the game ends in: `Step.UNTAP` of CR 103.8's first turn,
+        unless the game was never in the pregame at all.
+        """
+        assert self.turn is not None
+        while self.turn.step is Step.MULLIGAN:
+            pending = self.awaiting_mulligan_declarations
+            for username in pending:
+                self.declare_mulligan(username, ask_mulligan(self.decisions, username))
+            if not pending:
+                # Every seat left is at CR 103.5's ceiling, so the round has no
+                # questions in it at all and nothing triggered its resolution.
+                # Resolving it keeps every remaining hand, which ends the process.
+                self._resolve_mulligan_round_if_ready()
+            # Anything else means a round resolved and a fresh one opened for
+            # whoever mulliganed, which is the loop going round again. It always
+            # terminates: a player who keeps mulliganing runs out of hand.
+
+        if self.turn.step is Step.PREGAME_ACTIONS:
+            self.take_opening_hand_actions()
+        return self.turn.step
+
     # -- opening-hand actions (CR 103.6) --------------------------------------
+
+    def opening_hand_options(self, username: str) -> list[Decision]:
+        """The CR 103.6 actions this seat may take right now, in hand order.
+
+        "Some cards allow a player to take actions with them from their opening
+        hand." A card that offers none, and a card whose restriction is not met
+        (Gemstone Caverns in the starting player's hand), produce nothing here:
+        the card does not "allow a player to take" that action, which is
+        CR 103.6's own condition for there being a question at all.
+
+        Read fresh off the hand every time, so an action already taken - the card
+        has left the hand under CR 103.6a - is gone from the list. The `source`
+        of each `Decision` names the card, and `Decision.card` its id, which is
+        what `take_opening_hand_action` is keyed by.
+        """
+        player = self.player(username)
+        return [decision for decision, _, _ in self._opening_hand_offers(player)]
+
+    def _opening_hand_offers(
+        self, player: Player
+    ) -> list[tuple[Decision, OpeningHandAction, CardState]]:
+        """Every CR 103.6 action on offer to this player, with what carries it."""
+        assert self.turn is not None
+        starting_player = self.turn.starting_player
+        offers: list[tuple[Decision, OpeningHandAction, CardState]] = []
+        for card_state in list(player.hand):
+            actions, notices = read_opening_hand_actions(card_state.card)
+            seen = {(notice.card_name, notice.text) for notice in self.opening_hand_notices}
+            for notice in notices:
+                if (notice.card_name, notice.text) not in seen:
+                    self.opening_hand_notices.append(notice)
+            for action in actions:
+                if action.requires_not_starting_player and player.username == starting_player:
+                    continue
+                offers.append(
+                    (
+                        Decision(
+                            kind=DecisionKind.OPENING_HAND_ACTION,
+                            player=player.username,
+                            prompt=action.text,
+                            source=card_state.name,
+                            card=card_state.id,
+                        ),
+                        action,
+                        card_state,
+                    )
+                )
+        return offers
+
+    def take_opening_hand_action(self, username: str, card: UUID) -> None:
+        """Take one CR 103.6 action with a card in this seat's opening hand.
+
+        The live seat's move, and it blocks on nothing: taking it *is* the
+        answer, and a seat that wants none calls `finish_opening_hand_actions`
+        instead. "The starting player may take any such actions in any order" -
+        so the order within a seat is the seat's, and this performs whichever
+        card it is handed.
+
+        Refused when it is not this seat's turn in CR 103.6's order, when the
+        game is not in the opening-hand step, and when the named card offers no
+        action - a card that does not allow the action is not permission to take
+        it.
+        """
+        assert self.turn is not None
+        if self.turn.step is not Step.PREGAME_ACTIONS:
+            raise ValueError(
+                f"CR 103.6's opening-hand actions are not under way - "
+                f"the game is at {self.turn.step}"
+            )
+        if username != self.opening_hand_actor:
+            raise ValueError(
+                f"it is {self.opening_hand_actor}'s turn to take opening-hand "
+                f"actions, not {username}'s (CR 103.6)"
+            )
+        player = self.player(username)
+        for _, action, card_state in self._opening_hand_offers(player):
+            if card_state.id == card:
+                self._perform_opening_hand_action(action, card_state, player)
+                return
+        raise ValueError(f"no card in {username}'s opening hand offers that action (CR 103.6)")
+
+    @property
+    def opening_hand_actor(self) -> str | None:
+        """Whose CR 103.6 actions the game is waiting on, or None if it is not waiting."""
+        if self.turn is None or self.turn.step is not Step.PREGAME_ACTIONS:
+            return None
+        if self.opening_hand_seat >= len(self.players):
+            return None
+        return self.players[self.opening_hand_seat].username
+
+    def finish_opening_hand_actions(self, username: str) -> Step:
+        """This seat is done taking CR 103.6 actions; pass to the next one.
+
+        When the last seat is done the pregame is over and CR 103.8's first turn
+        begins - `Step.UNTAP`, turn 1, with `turn_number` and `turns_taken`
+        moving off zero for the first time. Nothing untaps and nobody draws
+        because of this: it moves the pointer, and the untap step's own
+        turn-based actions happen when the game advances out of it, exactly as on
+        every later turn.
+        """
+        assert self.turn is not None
+        if self.turn.step is not Step.PREGAME_ACTIONS:
+            raise ValueError(
+                f"CR 103.6's opening-hand actions are not under way - "
+                f"the game is at {self.turn.step}"
+            )
+        if username != self.opening_hand_actor:
+            raise ValueError(
+                f"it is {self.opening_hand_actor}'s turn to take opening-hand "
+                f"actions, not {username}'s (CR 103.6)"
+            )
+        self.opening_hand_seat += 1
+        if self.opening_hand_seat >= len(self.players):
+            self.opening_hand_actions_taken = True
+            self.turn.advance()  # CR 103.8: the starting player takes their first turn
+        return self.turn.step
 
     def take_opening_hand_actions(self) -> list[Decision]:
         """CR 103.6's sequence: after the mulligan, before the first turn.
@@ -3266,43 +3651,58 @@ class Game(BaseModel):
         declarations and the same scripted answers, a replay reproduces it
         exactly.
 
+        This is the **ask-driven** whole-sequence path: it puts every action to
+        its player through `Game.ask`, which is what an unattended game wants and
+        what every scenario here uses. A live seat behind a blocking provider
+        should not be driven this way - it is one blocking wait per offer - and
+        uses `opening_hand_options`, `take_opening_hand_action` and
+        `finish_opening_hand_actions` instead, which ask nobody anything.
+
         Returns the questions that were put, in order. Idempotent: CR 103.6's
         sequence happens once per game, and CR 103.6b's "each card may be
-        revealed this way only on[ce]" would be broken by a second run.
+        revealed this way only on[ce]" would be broken by a second run. When the
+        game is resting in `Step.PREGAME_ACTIONS` this finishes every remaining
+        seat, so it leaves the game at `Step.UNTAP` of CR 103.8's first turn.
         """
         if self.opening_hand_actions_taken:
             return []
-        self.opening_hand_actions_taken = True
 
         asked: list[Decision] = []
-        starting_player = self.turn.starting_player if self.turn is not None else None
+        in_pregame = self.turn is not None and self.turn.step is Step.PREGAME_ACTIONS
 
-        for player in list(self.players):
-            for card_state in list(player.hand):
-                actions, notices = read_opening_hand_actions(card_state.card)
-                seen = {(notice.card_name, notice.text) for notice in self.opening_hand_notices}
-                for notice in notices:
-                    if (notice.card_name, notice.text) not in seen:
-                        self.opening_hand_notices.append(notice)
-                for action in actions:
-                    if action.requires_not_starting_player and player.username == starting_player:
-                        continue
-                    if card_state.zone is not Zone.HAND:
-                        # An earlier action already moved it out of the opening
-                        # hand; CR 103.6a/103.6b both act on a card *in* the hand.
-                        continue
-                    decision = Decision(
-                        kind=DecisionKind.OPENING_HAND_ACTION,
-                        player=player.username,
-                        prompt=action.text,
-                        source=card_state.name,
-                    )
-                    asked.append(decision)
-                    answer = self.ask(decision)
-                    if answer is not True:
-                        continue
-                    self._perform_opening_hand_action(action, card_state, player)
+        if not in_pregame:
+            # No pregame to walk - a game built board-first, which never entered
+            # `Step.MULLIGAN`. The seat-by-seat bookkeeping has nothing to track,
+            # so the sequence is run over the players directly and marked done.
+            self.opening_hand_actions_taken = True
+            for player in list(self.players):
+                asked.extend(self._ask_opening_hand_actions_of(player))
+            return asked
 
+        while (actor := self.opening_hand_actor) is not None:
+            asked.extend(self._ask_opening_hand_actions_of(self.player(actor)))
+            self.finish_opening_hand_actions(actor)
+
+        return asked
+
+    def _ask_opening_hand_actions_of(self, player: Player) -> list[Decision]:
+        """Put every CR 103.6 action on offer to one player, in hand order.
+
+        Every action is optional - "may take any such actions" - so every one is
+        a `DecisionKind.OPENING_HAND_ACTION` question and an unscripted player
+        declines (see `machines/decisions.py`). A player holding no card that
+        offers one is asked nothing at all.
+        """
+        asked: list[Decision] = []
+        for decision, action, card_state in self._opening_hand_offers(player):
+            if card_state.zone is not Zone.HAND:
+                # An earlier action already moved it out of the opening hand;
+                # CR 103.6a/103.6b both act on a card *in* the hand.
+                continue
+            asked.append(decision)
+            if self.ask(decision) is not True:
+                continue
+            self._perform_opening_hand_action(action, card_state, player)
         return asked
 
     def _perform_opening_hand_action(
@@ -7737,6 +8137,15 @@ class Game(BaseModel):
         assert self.turn is not None
         if self.is_over:
             raise ValueError("the game is over")
+        if self.turn.in_pregame:
+            # CR 500.1's steps are parts of a turn and no turn has begun yet, so
+            # there is no step to advance and no active player whose decision it
+            # would be. The pregame moves when its own sequence completes.
+            raise ValueError(
+                f"the game is still in its pregame ({self.turn.step}) - "
+                f"CR 103.8's first turn has not begun. Settle CR 103.5's "
+                f"mulligans and CR 103.6's opening-hand actions first"
+            )
 
         decider = self.controller_of_player(self.turn.active_player)
         if username is None:
@@ -7849,9 +8258,20 @@ class Game(BaseModel):
         them performs the step-end turn-based action CR 500.5 requires: mana
         pools empty as every crossed step ends. Raises if `step` has already
         passed this turn, exactly as `TurnMachine.advance_to` does.
+
+        Refuses while the game is still in its pregame, for `advance`'s reason:
+        the steps this walks are CR 500's, and CR 103.8's first turn has not
+        begun. `TurnMachine.advance_to` will move the raw pointer through the
+        pregame for a caller that genuinely wants only the pointer moved.
         """
         assert self.turn is not None
-        if TURN_ORDER.index(step) < TURN_ORDER.index(self.turn.step):
+        if self.turn.in_pregame:
+            raise ValueError(
+                f"the game is still in its pregame ({self.turn.step}) - "
+                f"CR 103.8's first turn has not begun. Settle CR 103.5's "
+                f"mulligans and CR 103.6's opening-hand actions first"
+            )
+        if STEP_SEQUENCE.index(step) < STEP_SEQUENCE.index(self.turn.step):
             raise ValueError(f"{step} already passed this turn, currently at {self.turn.step}")
         while self.turn.step is not step:
             self.turn.advance()

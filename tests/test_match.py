@@ -20,13 +20,29 @@ def test_a_match_runs_games_one_at_a_time():
         series.start_game()
 
 
-def test_a_new_game_starts_the_turn_at_untap():
-    game = match().start_game()
+def test_a_new_game_rests_in_the_mulligan_step_before_any_turn():
+    """CR 103.5 comes before CR 103.8's first turn, and the game says so.
+
+    It used to say `Step.UNTAP` here, which claimed turn 1 had begun while the
+    mulligan process was still running - and that claim was visible in the API's
+    audit log, which recorded both pregame phases against "turn 1 / untap".
+    """
+    series = match()
+    game = series.start_game()
 
     assert game.turn is not None
-    assert game.turn.step is Step.UNTAP
+    assert game.turn.step is Step.MULLIGAN
+    assert game.turn.phase is None  # CR 500.1 lists five phases; this is in none
+    assert game.turn.turn_number == 0
+    assert game.turn.turns_taken == 0
+    assert not game.turn.grants_priority
     assert game.turn.active_player == "alice"
     assert not game.is_over
+
+    series.run_mulligans(game)
+
+    assert game.turn.step is Step.UNTAP  # CR 103.8: the starting player's first turn
+    assert game.turn.turn_number == 1
 
 
 def test_a_game_owns_the_shared_zones_and_players_own_theirs():
