@@ -1,0 +1,143 @@
+{
+  "object": "card",
+  "id": "e9116aa0-1993-4f4a-9a1d-0561d0fbcba9",
+  "oracle_id": "3a59c882-8bb8-49ba-862f-125020dd5bec",
+  "multiverse_ids": [],
+  "name": "Empty the Warrens",
+  "lang": "en",
+  "released_at": "2026-11-09",
+  "uri": "https://api.scryfall.com/cards/e9116aa0-1993-4f4a-9a1d-0561d0fbcba9",
+  "scryfall_uri": "https://scryfall.com/card/plst/DMR-118/empty-the-warrens?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-08-25T17:41:59Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/e/9/e9116aa0-1993-4f4a-9a1d-0561d0fbcba9.jpg?1787679719",
+    "normal": "https://cards.scryfall.io/normal/front/e/9/e9116aa0-1993-4f4a-9a1d-0561d0fbcba9.jpg?1787679719",
+    "large": "https://cards.scryfall.io/large/front/e/9/e9116aa0-1993-4f4a-9a1d-0561d0fbcba9.jpg?1787679719",
+    "png": "https://cards.scryfall.io/png/front/e/9/e9116aa0-1993-4f4a-9a1d-0561d0fbcba9.png?1787679719",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/e/9/e9116aa0-1993-4f4a-9a1d-0561d0fbcba9.jpg?1787679719",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/e/9/e9116aa0-1993-4f4a-9a1d-0561d0fbcba9.jpg?1787679719",
+    "thumb": "https://cards.scryfall.io/thumb/front/e/9/e9116aa0-1993-4f4a-9a1d-0561d0fbcba9.webp?1787679719",
+    "grid": "https://cards.scryfall.io/grid/front/e/9/e9116aa0-1993-4f4a-9a1d-0561d0fbcba9.webp?1787679719",
+    "display": "https://cards.scryfall.io/display/front/e/9/e9116aa0-1993-4f4a-9a1d-0561d0fbcba9.webp?1787679719",
+    "art": "https://cards.scryfall.io/art/front/e/9/e9116aa0-1993-4f4a-9a1d-0561d0fbcba9.webp?1787679719",
+    "crop": "https://cards.scryfall.io/crop/front/e/9/e9116aa0-1993-4f4a-9a1d-0561d0fbcba9.webp?1787679719"
+  },
+  "mana_cost": "{3}{R}",
+  "cmc": 4.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Create two 1/1 red Goblin creature tokens.\nStorm (When you cast this spell, copy it for each spell cast before it this turn.)",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Storm"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "e9116aa0-1993-4f4a-9a1d-0561d0fbcba9",
+      "component": "combo_piece",
+      "name": "Empty the Warrens",
+      "type_line": "Sorcery",
+      "uri": "https://api.scryfall.com/cards/e9116aa0-1993-4f4a-9a1d-0561d0fbcba9"
+    },
+    {
+      "object": "related_card",
+      "id": "09faad62-42ff-4e37-b8a5-d8e8a0f6d096",
+      "component": "token",
+      "name": "Goblin",
+      "type_line": "Token Creature \u2014 Goblin",
+      "uri": "https://api.scryfall.com/cards/09faad62-42ff-4e37-b8a5-d8e8a0f6d096"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "banned",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "67e47ba2-b019-4181-9005-fe9fc021de44",
+  "set": "plst",
+  "set_name": "The List",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/67e47ba2-b019-4181-9005-fe9fc021de44",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aplst&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/plst?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/e9116aa0-1993-4f4a-9a1d-0561d0fbcba9/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A3a59c882-8bb8-49ba-862f-125020dd5bec&unique=prints",
+  "collector_number": "DMR-118",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "Kicking the warren\n\u2014Argivian expression meaning \"causing trouble\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Johan Grenier",
+  "artist_ids": [
+    "465e38b8-7eed-4d22-a6d2-d3603ee0c00b"
+  ],
+  "illustration_id": "b2af7bf3-ff5a-4b3e-978c-727c793d3442",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 2499,
+  "penny_rank": 1401,
+  "prices": {
+    "usd": null,
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": null,
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DEmpty%2Bthe%2BWarrens",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DEmpty%2Bthe%2BWarrens",
+    "edhrec": "https://edhrec.com/route/?cc=Empty+the+Warrens"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fmagic%2Fproduct%3FproductLineName%3Dmagic%26q%3DEmpty%2Bthe%2BWarrens%26view%3Dgrid",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products/Search?referrer=scryfall&searchString=Empty+the+Warrens&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Empty+the+Warrens&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

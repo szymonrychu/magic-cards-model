@@ -1,0 +1,134 @@
+{
+  "object": "card",
+  "id": "426ed66e-41b3-4e44-90a2-697aafaa8c5c",
+  "oracle_id": "4d8505d3-c8a1-4850-95d4-5ddb8ad49770",
+  "multiverse_ids": [
+    686031
+  ],
+  "mtgo_id": 135792,
+  "tcgplayer_id": 609842,
+  "cardmarket_id": 805817,
+  "name": "Cultivator Colossus",
+  "lang": "en",
+  "released_at": "2025-01-24",
+  "uri": "https://api.scryfall.com/cards/426ed66e-41b3-4e44-90a2-697aafaa8c5c",
+  "scryfall_uri": "https://scryfall.com/card/inr/190/cultivator-colossus?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:01:44Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/4/2/426ed66e-41b3-4e44-90a2-697aafaa8c5c.jpg?1783908104",
+    "normal": "https://cards.scryfall.io/normal/front/4/2/426ed66e-41b3-4e44-90a2-697aafaa8c5c.jpg?1783908104",
+    "large": "https://cards.scryfall.io/large/front/4/2/426ed66e-41b3-4e44-90a2-697aafaa8c5c.jpg?1783908104",
+    "png": "https://cards.scryfall.io/png/front/4/2/426ed66e-41b3-4e44-90a2-697aafaa8c5c.png?1783908104",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/4/2/426ed66e-41b3-4e44-90a2-697aafaa8c5c.jpg?1783908104",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/4/2/426ed66e-41b3-4e44-90a2-697aafaa8c5c.jpg?1783908104",
+    "thumb": "https://cards.scryfall.io/thumb/front/4/2/426ed66e-41b3-4e44-90a2-697aafaa8c5c.webp?1783908104",
+    "grid": "https://cards.scryfall.io/grid/front/4/2/426ed66e-41b3-4e44-90a2-697aafaa8c5c.webp?1783908104",
+    "display": "https://cards.scryfall.io/display/front/4/2/426ed66e-41b3-4e44-90a2-697aafaa8c5c.webp?1783908104",
+    "art": "https://cards.scryfall.io/art/front/4/2/426ed66e-41b3-4e44-90a2-697aafaa8c5c.webp?1783908104",
+    "crop": "https://cards.scryfall.io/crop/front/4/2/426ed66e-41b3-4e44-90a2-697aafaa8c5c.webp?1783908104"
+  },
+  "mana_cost": "{4}{G}{G}{G}",
+  "cmc": 7.0,
+  "type_line": "Creature \u2014 Plant Beast",
+  "oracle_text": "Trample\nCultivator Colossus's power and toughness are each equal to the number of lands you control.\nWhen this creature enters, you may put a land card from your hand onto the battlefield tapped. If you do, draw a card and repeat this process.",
+  "power": "*",
+  "toughness": "*",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Trample"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "b9618c8c-9f31-4b42-9798-2991893c27bf",
+  "set": "inr",
+  "set_name": "Innistrad Remastered",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/b9618c8c-9f31-4b42-9798-2991893c27bf",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ainr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/inr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/426ed66e-41b3-4e44-90a2-697aafaa8c5c/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A4d8505d3-c8a1-4850-95d4-5ddb8ad49770&unique=prints",
+  "collector_number": "190",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Antonio Jos\u00e9 Manzanedo",
+  "artist_ids": [
+    "74986d28-0001-4a78-827c-e490b325d0e3"
+  ],
+  "illustration_id": "9bf6afa5-78cb-4f85-a006-88a5d9f93703",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 1592,
+  "prices": {
+    "usd": "5.98",
+    "usd_foil": "6.28",
+    "usd_etched": null,
+    "eur": "4.66",
+    "eur_foil": "5.23",
+    "tix": "0.50"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=686031&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCultivator%2BColossus",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCultivator%2BColossus",
+    "edhrec": "https://edhrec.com/route/?cc=Cultivator+Colossus"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F609842%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=805817&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/135792?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

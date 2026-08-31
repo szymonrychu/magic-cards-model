@@ -108,19 +108,19 @@
   "textless": false,
   "booster": true,
   "story_spotlight": false,
-  "edhrec_rank": 1029,
+  "edhrec_rank": 1025,
   "preview": {
     "source": "CoolStuffInc",
     "source_uri": "https://www.coolstuffinc.com/a/jimdavis-05202019-a-force-to-be-reckoned-with",
     "previewed_at": "2019-05-20"
   },
   "prices": {
-    "usd": "8.64",
-    "usd_foil": "15.92",
+    "usd": "9.00",
+    "usd_foil": "16.20",
     "usd_etched": null,
-    "eur": "8.07",
+    "eur": "8.54",
     "eur_foil": "18.43",
-    "tix": "6.42"
+    "tix": "6.54"
   },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=464113&printed=false",

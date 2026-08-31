@@ -1,0 +1,146 @@
+{
+  "object": "card",
+  "id": "faf9070e-14be-4ce5-a19a-6addc79359c1",
+  "oracle_id": "89c83a6d-f6c8-4984-a888-0db62dfb93b1",
+  "multiverse_ids": [
+    489881
+  ],
+  "mtgo_id": 82450,
+  "arena_id": 78196,
+  "tcgplayer_id": 218810,
+  "cardmarket_id": 484409,
+  "name": "Manamorphose",
+  "lang": "en",
+  "released_at": "2020-08-07",
+  "uri": "https://api.scryfall.com/cards/faf9070e-14be-4ce5-a19a-6addc79359c1",
+  "scryfall_uri": "https://scryfall.com/card/2xm/208/manamorphose?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T08:08:49Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/a/faf9070e-14be-4ce5-a19a-6addc79359c1.jpg?1783930129",
+    "normal": "https://cards.scryfall.io/normal/front/f/a/faf9070e-14be-4ce5-a19a-6addc79359c1.jpg?1783930129",
+    "large": "https://cards.scryfall.io/large/front/f/a/faf9070e-14be-4ce5-a19a-6addc79359c1.jpg?1783930129",
+    "png": "https://cards.scryfall.io/png/front/f/a/faf9070e-14be-4ce5-a19a-6addc79359c1.png?1783930129",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/a/faf9070e-14be-4ce5-a19a-6addc79359c1.jpg?1783930129",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/a/faf9070e-14be-4ce5-a19a-6addc79359c1.jpg?1783930129",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/a/faf9070e-14be-4ce5-a19a-6addc79359c1.webp?1783930129",
+    "grid": "https://cards.scryfall.io/grid/front/f/a/faf9070e-14be-4ce5-a19a-6addc79359c1.webp?1783930129",
+    "display": "https://cards.scryfall.io/display/front/f/a/faf9070e-14be-4ce5-a19a-6addc79359c1.webp?1783930129",
+    "art": "https://cards.scryfall.io/art/front/f/a/faf9070e-14be-4ce5-a19a-6addc79359c1.webp?1783930129",
+    "crop": "https://cards.scryfall.io/crop/front/f/a/faf9070e-14be-4ce5-a19a-6addc79359c1.webp?1783930129"
+  },
+  "mana_cost": "{1}{R/G}",
+  "cmc": 2.0,
+  "type_line": "Instant",
+  "oracle_text": "Add two mana in any combination of colors.\nDraw a card.",
+  "colors": [
+    "G",
+    "R"
+  ],
+  "color_identity": [
+    "G",
+    "R"
+  ],
+  "keywords": [],
+  "produced_mana": [
+    "B",
+    "G",
+    "R",
+    "U",
+    "W"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "372dafe8-b5d1-4b81-998f-3ae96b59498a",
+  "set": "2xm",
+  "set_name": "Double Masters",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/372dafe8-b5d1-4b81-998f-3ae96b59498a",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3A2xm&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/2xm?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/faf9070e-14be-4ce5-a19a-6addc79359c1/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A89c83a6d-f6c8-4984-a888-0db62dfb93b1&unique=prints",
+  "collector_number": "208",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "\"Master the chaotic forces of nature, and you shall master magic.\"\n\u2014Yare-Tiva, warden of Gramur forest",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Adam Paquette",
+  "artist_ids": [
+    "89023dad-e6c0-41e0-83fb-eb2bfbbdc3f2"
+  ],
+  "illustration_id": "e462e9b8-2012-4731-b56e-987bf54885f3",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 2351,
+  "preview": {
+    "source": "RocketbeansTV",
+    "source_uri": "",
+    "previewed_at": "2020-07-24"
+  },
+  "prices": {
+    "usd": "4.55",
+    "usd_foil": "5.21",
+    "usd_etched": null,
+    "eur": "4.01",
+    "eur_foil": "4.32",
+    "tix": "3.54"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=489881&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DManamorphose",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DManamorphose",
+    "edhrec": "https://edhrec.com/route/?cc=Manamorphose"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F218810%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=484409&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/82450?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

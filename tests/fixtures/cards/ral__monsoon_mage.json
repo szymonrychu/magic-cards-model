@@ -1,0 +1,181 @@
+{
+  "object": "card",
+  "id": "438d8a26-ddc9-4829-8aff-22d6af6575cf",
+  "oracle_id": "16d40f56-691b-42a7-a5ab-157568921e03",
+  "multiverse_ids": [
+    661773,
+    661774
+  ],
+  "mtgo_id": 126533,
+  "arena_id": 90820,
+  "tcgplayer_id": 552330,
+  "cardmarket_id": 771208,
+  "name": "Ral, Monsoon Mage // Ral, Leyline Prodigy",
+  "lang": "en",
+  "released_at": "2024-06-14",
+  "uri": "https://api.scryfall.com/cards/438d8a26-ddc9-4829-8aff-22d6af6575cf",
+  "scryfall_uri": "https://scryfall.com/card/mh3/247/ral-monsoon-mage-ral-leyline-prodigy?utm_source=api",
+  "layout": "transform",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:53:48Z",
+  "cmc": 2.0,
+  "type_line": "Legendary Creature \u2014 Human Wizard // Legendary Planeswalker \u2014 Ral",
+  "color_identity": [
+    "R",
+    "U"
+  ],
+  "keywords": [
+    "Transform"
+  ],
+  "card_faces": [
+    {
+      "object": "card_face",
+      "name": "Ral, Monsoon Mage",
+      "mana_cost": "{1}{R}",
+      "type_line": "Legendary Creature \u2014 Human Wizard",
+      "oracle_text": "Instant and sorcery spells you cast cost {1} less to cast.\nWhenever you cast an instant or sorcery spell during your turn, flip a coin. If you lose the flip, Ral deals 1 damage to you. If you win the flip, you may exile Ral. If you do, return him to the battlefield transformed under his owner's control.",
+      "colors": [
+        "R"
+      ],
+      "power": "1",
+      "toughness": "3",
+      "artist": "Dmitry Burmak",
+      "artist_id": "9872f5c0-274a-48ce-a9ad-6f0d5654e29c",
+      "illustration_id": "019e46ae-f886-418a-b90c-7149c0e03ae1",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/front/4/3/438d8a26-ddc9-4829-8aff-22d6af6575cf.jpg?1783911228",
+        "normal": "https://cards.scryfall.io/normal/front/4/3/438d8a26-ddc9-4829-8aff-22d6af6575cf.jpg?1783911228",
+        "large": "https://cards.scryfall.io/large/front/4/3/438d8a26-ddc9-4829-8aff-22d6af6575cf.jpg?1783911228",
+        "png": "https://cards.scryfall.io/png/front/4/3/438d8a26-ddc9-4829-8aff-22d6af6575cf.png?1783911228",
+        "art_crop": "https://cards.scryfall.io/art_crop/front/4/3/438d8a26-ddc9-4829-8aff-22d6af6575cf.jpg?1783911228",
+        "border_crop": "https://cards.scryfall.io/border_crop/front/4/3/438d8a26-ddc9-4829-8aff-22d6af6575cf.jpg?1783911228",
+        "thumb": "https://cards.scryfall.io/thumb/front/4/3/438d8a26-ddc9-4829-8aff-22d6af6575cf.webp?1783911228",
+        "grid": "https://cards.scryfall.io/grid/front/4/3/438d8a26-ddc9-4829-8aff-22d6af6575cf.webp?1783911228",
+        "display": "https://cards.scryfall.io/display/front/4/3/438d8a26-ddc9-4829-8aff-22d6af6575cf.webp?1783911228",
+        "art": "https://cards.scryfall.io/art/front/4/3/438d8a26-ddc9-4829-8aff-22d6af6575cf.webp?1783911228",
+        "crop": "https://cards.scryfall.io/crop/front/4/3/438d8a26-ddc9-4829-8aff-22d6af6575cf.webp?1783911228"
+      }
+    },
+    {
+      "object": "card_face",
+      "name": "Ral, Leyline Prodigy",
+      "mana_cost": "",
+      "type_line": "Legendary Planeswalker \u2014 Ral",
+      "oracle_text": "Ral enters with an additional loyalty counter on him for each instant and sorcery spell you've cast this turn.\n+1: Until your next turn, instant and sorcery spells you cast cost {1} less to cast.\n\u22122: Ral deals 2 damage divided as you choose among one or two targets. Draw a card if you control a blue permanent other than Ral.\n\u22128: Exile the top eight cards of your library. You may cast instant and sorcery spells from among them this turn without paying their mana costs.",
+      "colors": [
+        "R",
+        "U"
+      ],
+      "color_indicator": [
+        "R",
+        "U"
+      ],
+      "loyalty": "2",
+      "artist": "Dmitry Burmak",
+      "artist_id": "9872f5c0-274a-48ce-a9ad-6f0d5654e29c",
+      "illustration_id": "e92d928c-0771-4868-9457-abb86072ad55",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/back/4/3/438d8a26-ddc9-4829-8aff-22d6af6575cf.jpg?1783911228",
+        "normal": "https://cards.scryfall.io/normal/back/4/3/438d8a26-ddc9-4829-8aff-22d6af6575cf.jpg?1783911228",
+        "large": "https://cards.scryfall.io/large/back/4/3/438d8a26-ddc9-4829-8aff-22d6af6575cf.jpg?1783911228",
+        "png": "https://cards.scryfall.io/png/back/4/3/438d8a26-ddc9-4829-8aff-22d6af6575cf.png?1783911228",
+        "art_crop": "https://cards.scryfall.io/art_crop/back/4/3/438d8a26-ddc9-4829-8aff-22d6af6575cf.jpg?1783911228",
+        "border_crop": "https://cards.scryfall.io/border_crop/back/4/3/438d8a26-ddc9-4829-8aff-22d6af6575cf.jpg?1783911228",
+        "thumb": "https://cards.scryfall.io/thumb/back/4/3/438d8a26-ddc9-4829-8aff-22d6af6575cf.webp?1783911228",
+        "grid": "https://cards.scryfall.io/grid/back/4/3/438d8a26-ddc9-4829-8aff-22d6af6575cf.webp?1783911228",
+        "display": "https://cards.scryfall.io/display/back/4/3/438d8a26-ddc9-4829-8aff-22d6af6575cf.webp?1783911228",
+        "art": "https://cards.scryfall.io/art/back/4/3/438d8a26-ddc9-4829-8aff-22d6af6575cf.webp?1783911228",
+        "crop": "https://cards.scryfall.io/crop/back/4/3/438d8a26-ddc9-4829-8aff-22d6af6575cf.webp?1783911228"
+      }
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "3ed80bb6-77e8-4aa7-8262-95377a38aba1",
+  "set": "mh3",
+  "set_name": "Modern Horizons 3",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/3ed80bb6-77e8-4aa7-8262-95377a38aba1",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amh3&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mh3?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/438d8a26-ddc9-4829-8aff-22d6af6575cf/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A16d40f56-691b-42a7-a5ab-157568921e03&unique=prints",
+  "collector_number": "247",
+  "digital": false,
+  "rarity": "mythic",
+  "artist": "Dmitry Burmak",
+  "artist_ids": [
+    "9872f5c0-274a-48ce-a9ad-6f0d5654e29c"
+  ],
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 3613,
+  "prices": {
+    "usd": "7.05",
+    "usd_foil": "8.69",
+    "usd_etched": null,
+    "eur": "4.58",
+    "eur_foil": "5.41",
+    "tix": "1.98"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=661773&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRal%252C%2BMonsoon%2BMage%2B%252F%252F%2BRal%252C%2BLeyline%2BProdigy",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DRal%252C%2BMonsoon%2BMage%2B%252F%252F%2BRal%252C%2BLeyline%2BProdigy",
+    "edhrec": "https://edhrec.com/route/?cc=Ral%2C+Monsoon+Mage"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F552330%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=771208&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/126533?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

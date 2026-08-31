@@ -1,0 +1,138 @@
+{
+  "object": "card",
+  "id": "e0c7f566-5351-44e3-a346-b84b0eb10209",
+  "oracle_id": "7f9a8845-d760-44a7-a4c9-8a20dba4e14a",
+  "multiverse_ids": [],
+  "resource_id": "D9FECF05E74F6987686CF4CE10AA4E695796EDD61990C16299452DF7B8DCB29F",
+  "mtgo_id": 152479,
+  "arena_id": 105041,
+  "tcgplayer_id": 696296,
+  "cardmarket_id": 890563,
+  "name": "Mj\u00f6lnir, Hammer of Thor",
+  "lang": "en",
+  "released_at": "2026-06-26",
+  "uri": "https://api.scryfall.com/cards/e0c7f566-5351-44e3-a346-b84b0eb10209",
+  "scryfall_uri": "https://scryfall.com/card/msh/146/mj%C3%B6lnir-hammer-of-thor?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:35:26Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/e/0/e0c7f566-5351-44e3-a346-b84b0eb10209.jpg?1783902926",
+    "normal": "https://cards.scryfall.io/normal/front/e/0/e0c7f566-5351-44e3-a346-b84b0eb10209.jpg?1783902926",
+    "large": "https://cards.scryfall.io/large/front/e/0/e0c7f566-5351-44e3-a346-b84b0eb10209.jpg?1783902926",
+    "png": "https://cards.scryfall.io/png/front/e/0/e0c7f566-5351-44e3-a346-b84b0eb10209.png?1783902926",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/e/0/e0c7f566-5351-44e3-a346-b84b0eb10209.jpg?1783902926",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/e/0/e0c7f566-5351-44e3-a346-b84b0eb10209.jpg?1783902926",
+    "thumb": "https://cards.scryfall.io/thumb/front/e/0/e0c7f566-5351-44e3-a346-b84b0eb10209.webp?1783902926",
+    "grid": "https://cards.scryfall.io/grid/front/e/0/e0c7f566-5351-44e3-a346-b84b0eb10209.webp?1783902926",
+    "display": "https://cards.scryfall.io/display/front/e/0/e0c7f566-5351-44e3-a346-b84b0eb10209.webp?1783902926",
+    "art": "https://cards.scryfall.io/art/front/e/0/e0c7f566-5351-44e3-a346-b84b0eb10209.webp?1783902926",
+    "crop": "https://cards.scryfall.io/crop/front/e/0/e0c7f566-5351-44e3-a346-b84b0eb10209.webp?1783902926"
+  },
+  "mana_cost": "{3}{R}",
+  "cmc": 4.0,
+  "type_line": "Legendary Artifact \u2014 Equipment",
+  "oracle_text": "When Mj\u00f6lnir enters, it deals 4 damage to up to one target creature.\nDouble all damage equipped creature would deal.\nEquip worthy {1} (A creature is worthy if it's a legendary non-Villain that's red and/or white.)\n{2}{R}, Discard this card: It deals 2 damage to each creature.",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Double"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set": "msh",
+  "set_name": "Marvel Super Heroes",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amsh&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/msh?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/e0c7f566-5351-44e3-a346-b84b0eb10209/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A7f9a8845-d760-44a7-a4c9-8a20dba4e14a&unique=prints",
+  "collector_number": "146",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Wayne Reynolds",
+  "artist_ids": [
+    "afc47cec-3ccc-404e-a8c6-4d83dd504271"
+  ],
+  "illustration_id": "f4c31698-e0ad-4682-968a-7e92b83773bf",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 4980,
+  "prices": {
+    "usd": "22.19",
+    "usd_foil": "26.48",
+    "usd_etched": null,
+    "eur": "16.71",
+    "eur_foil": "17.26",
+    "tix": "0.40"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMj%25C3%25B6lnir%252C%2BHammer%2Bof%2BThor",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMj%25C3%25B6lnir%252C%2BHammer%2Bof%2BThor",
+    "edhrec": "https://edhrec.com/route/?cc=Mj%C3%B6lnir%2C+Hammer+of+Thor"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F696296%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=890563&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/152479?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

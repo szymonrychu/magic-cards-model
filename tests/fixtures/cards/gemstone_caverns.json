@@ -114,19 +114,19 @@
   "textless": false,
   "booster": true,
   "story_spotlight": false,
-  "edhrec_rank": 180,
+  "edhrec_rank": 179,
   "preview": {
     "source": "TCGplayer",
     "source_uri": "https://infinite.tcgplayer.com/article/Time-Spiral-Remastered-Exclusive-Preview/1e45ac89-eb7a-43f3-9df8-28566cae0f44",
     "previewed_at": "2021-03-04"
   },
   "prices": {
-    "usd": "58.19",
-    "usd_foil": "107.23",
+    "usd": "59.96",
+    "usd_foil": "107.85",
     "usd_etched": null,
-    "eur": "38.96",
-    "eur_foil": "91.35",
-    "tix": "6.46"
+    "eur": "37.67",
+    "eur_foil": "132.73",
+    "tix": "7.45"
   },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=509645&printed=false",

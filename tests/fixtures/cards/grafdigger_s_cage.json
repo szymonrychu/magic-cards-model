@@ -106,19 +106,19 @@
   "textless": false,
   "booster": true,
   "story_spotlight": false,
-  "edhrec_rank": 2075,
+  "edhrec_rank": 2081,
   "preview": {
     "source": "ImpulsoGeek",
     "source_uri": "https://www.youtube.com/watch?v=Cf8dONOqdw8",
     "previewed_at": "2019-06-25"
   },
   "prices": {
-    "usd": "1.91",
-    "usd_foil": "7.82",
+    "usd": "2.13",
+    "usd_foil": "7.83",
     "usd_etched": null,
-    "eur": "2.21",
-    "eur_foil": "4.34",
-    "tix": "0.75"
+    "eur": "2.14",
+    "eur_foil": "4.45",
+    "tix": "1.09"
   },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=466981&printed=false",
