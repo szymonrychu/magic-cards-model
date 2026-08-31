@@ -196,12 +196,6 @@ def test_the_trap_can_be_cast_for_zero_after_three_opposing_spells():
 # --------------------------------------------------------------------------
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="'Exile any number of target spells' has no entry in "
-    "`machines/effects.py` and no generic parser reads a spell-exiling clause, so "
-    "the Trap resolves and does nothing - the targeted spell is left on the stack.",
-)
 def test_the_targeted_spell_is_moved_from_the_stack_to_exile():
     """The episode's central distinction: the Trap exiles, it does not counter.
 
@@ -209,6 +203,13 @@ def test_the_targeted_spell_is_moved_from_the_stack_to_exile():
     owner's graveyard. Exiling a spell moves it off the stack to exile instead,
     which is why nothing that watches for a spell being countered - and nothing
     that says it can't be countered - has anything to say about it.
+
+    CR 406.2: "To exile an object is to put it into the exile zone from
+    whatever zone it's currently in", and CR 701.13a says the same of the
+    keyword action - neither names an origin zone, so the stack is as reachable
+    as the battlefield. CR 107.1c is the quantifier: "If a rule or ability
+    instructs a player to choose 'any number,' that player may choose any
+    positive number or zero."
     """
     scenario = _board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)

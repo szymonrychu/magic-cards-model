@@ -1361,13 +1361,30 @@ def monstrous_rage(game: "Game", spell: CardState) -> None:
 
 def take_an_extra_turn(game: "Game", spell: CardState) -> None:
     """Savor the Moment: "Take an extra turn after this one. Skip the untap step
-    of that turn." (CR 500.7.)
+    of that turn." Both sentences.
 
-    Only the first sentence. Skipping a step is a rules-modifying continuous
-    effect (CR 611.3) with no home in this engine, so the extra turn untaps
-    normally - recorded in `docs/engine-coverage.md`.
+    CR 500.7: "Some effects can give a player extra turns. They do this by
+    adding the turns directly after the specified turn." So "that turn" in the
+    second sentence is the turn the first sentence just added, and since it is
+    the very next turn this player takes, its untap step is the next one they
+    would have - which is exactly what `Game.players_skipping_next_untap`
+    counts.
+
+    Skipping is a replacement effect, not a continuous one: CR 614.10 -
+    "An effect that causes a player to skip an event, step, phase, or turn is a
+    replacement effect. 'Skip [something]' is the same as 'Instead of doing
+    [something], do nothing.'" - and CR 614.1b says the same from the other
+    side. CR 500.11 is the step half: "To skip a step, phase, or turn is to
+    proceed past it as though it didn't exist." `Game.untap_step` honours the
+    counter by returning before anything untaps and before any
+    `BECOMES_UNTAPPED` event is emitted, which is CR 614.10a's "anything
+    scheduled for a skipped step ... won't happen".
     """
-    game.grant_extra_turn(game.controller_of(spell).username)
+    controller = game.controller_of(spell).username
+    game.grant_extra_turn(controller)
+    game.players_skipping_next_untap[controller] = (
+        game.players_skipping_next_untap.get(controller, 0) + 1
+    )
 
 
 # --------------------------------------------------------------------------
@@ -3135,6 +3152,20 @@ _SURVEIL_RE = re.compile(r"surveils? (?P<n>\d+)", re.IGNORECASE)
 #: "Scry N" (Preordain, most spells) and "Target player scries N" (Kozilek's
 #: Command's third-person mode) - `scr(?:y|ies)` reads both conjugations.
 _SCRY_RE = re.compile(r"scr(?:y|ies) (?P<n>\d+)", re.IGNORECASE)
+#: "You gain life equal to the life you've lost this turn." - Children of
+#: Korlis. The amount is read off `Player.life_lost_this_turn`, the gross
+#: per-turn ledger, not the net change in the life total: every route down
+#: counts, because CR 119.2 ("Damage dealt to a player normally causes that
+#: player to lose that much life") and CR 120.3a make damage a life loss, and
+#: CR 118.3b ("Paying life is done by subtracting the indicated amount of life
+#: from a player's life total") makes a cost paid in life one too. The
+#: reminder text the card prints - "(Damage causes loss of life.)" - names only
+#: the damage half and is not rules text (CR 207.2a); `parse_clause_effect`
+#: strips it before this ever runs.
+_GAIN_LIFE_EQUAL_TO_LIFE_LOST_THIS_TURN_RE = re.compile(
+    r"you gains? life equal to the life you'?(?:ve|’ve)? lost this turn",
+    re.IGNORECASE,
+)
 
 
 def _discard_cards(game: "Game", player: Player, count: int, source: str) -> list[CardState]:
@@ -3215,6 +3246,11 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
         # emitted nothing, so Amalia Benavides Aguirre and every other
         # "whenever you gain life" card was blind to every spell in the pool.
         return lambda game, player, source: game.gain_life(player, amount)
+
+    if _GAIN_LIFE_EQUAL_TO_LIFE_LOST_THIS_TURN_RE.fullmatch(clause):
+        # Through `Game.gain_life` for the same CR 119.9 reason the flat
+        # "you gain N life" above uses it.
+        return lambda game, player, source: game.gain_life(player, player.life_lost_this_turn)
 
     if match := _LOSE_LIFE_RE.fullmatch(clause):
         amount = _count(match.group("n"))
@@ -3429,7 +3465,16 @@ _INLINE_REMINDER_RE = re.compile(r"[ \t]*\([^()]*\)")
 #: resolution, so it is stripped here the same way `_ADDITIONAL_COST_LINE_RE`
 #: strips CR 118.8a's "As an additional cost to cast this spell, ...".
 _PITCH_ALTERNATIVE_COST_LINE_RE = re.compile(
-    r"^(?:If it's not your turn, )?You may [^.]+? rather than pay this spell's mana cost\.\s*",
+    # The leading condition is read generally, not as the one Force of Negation
+    # happens to print: every Trap gates its own alternative cost on a
+    # condition of its own ("If an opponent cast three or more spells this
+    # turn, you may pay {0} rather than pay this spell's mana cost." -
+    # Mindbreak Trap). CR 118.9 makes the whole sentence a cost, "a cost listed
+    # in a spell's text ... that its controller may pay rather than paying the
+    # spell's mana cost", so it is never part of what the spell does on
+    # resolution, whatever gates it. The `[^.]` guards keep the match inside
+    # one sentence.
+    r"^(?:If [^.]+?, )?You may [^.]+? rather than pay this spell's mana cost\.\s*",
     re.IGNORECASE | re.MULTILINE,
 )
 
@@ -3805,10 +3850,18 @@ def _targets_understood(
         # pass `allow_player_targets=True`, because CR 115.1's "any target"
         # genuinely includes a player and `Game.deal_damage` accepts one.
         return False
+    if count_agnostic:
+        # CR 107.1c: "If a rule or ability instructs a player to choose 'any
+        # number,' that player may choose any positive number or zero." An
+        # unbounded count is the same thing to a count-agnostic verb as "up to
+        # N" is - the verb repeats once per legal target and stops - so
+        # Mindbreak Trap's "Exile any number of target spells" is exactly as
+        # readable as "Exile up to one target spell". This used to be refused
+        # outright, one line above, which fails a card closed for a reason that
+        # applies only to a count-*sensitive* verb.
+        return True
     if requirement.unbounded:
         return False
-    if count_agnostic:
-        return True
     return requirement.minimum == 1 and requirement.maximum == 1
 
 

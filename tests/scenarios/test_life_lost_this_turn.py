@@ -189,14 +189,8 @@ def test_a_player_outside_a_game_still_counts_its_losses():
     assert player.life_lost_this_turn == 6
 
 
-@pytest.mark.xfail(
-    reason="Children of Korlis has no entry in machines/effects.py, so its "
-    "sacrifice ability resolves and gains nothing - the per-turn life-loss "
-    "ledger exists on Player and no card reads it yet",
-    strict=True,
-)
 def test_children_of_korlis_reads_the_ledger():
-    """DDR#958 end to end: 4 lost, 4 gained back, once the effect is wired."""
+    """DDR#958 end to end: 4 lost, 4 gained back."""
     scenario = (
         Scenario()
         .player("alice", battlefield=["Mana Confluence", "Children of Korlis"])

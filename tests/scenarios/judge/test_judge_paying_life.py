@@ -201,12 +201,6 @@ def test_paying_life_lowers_the_life_total_the_same_way_damage_does():
     assert alice.life == 16, "CR 118.3b: the payment was a loss of 1 more"
 
 
-@pytest.mark.xfail(
-    reason="nothing records how much life a player lost this turn - Game has "
-    "life_gained_this_turn (a set of usernames, CR 119.9) and no losing "
-    "counterpart at all - so Children of Korlis gains 0",
-    strict=True,
-)
 def test_children_of_korlis_gives_back_the_life_paid_as_well_as_the_damage():
     """DDR#958's ruling: paying life counts for Children of Korlis, and it
     counts *gross*, not net.
@@ -220,11 +214,9 @@ def test_children_of_korlis_gives_back_the_life_paid_as_well_as_the_damage():
     Alice takes 3 from a Bolt and pays 1 to Mana Confluence: 4 life lost this
     turn, so sacrificing Children of Korlis takes her from 16 back to 20.
 
-    The engine has no per-turn life-loss ledger. `Player.lose_life` and the
-    `pay_life` cost component both write straight to `Player.life` and record
-    nothing; `Game.life_gained_this_turn` is the only per-turn life fact that
-    exists, and it is a set of usernames for CR 119.9's "you gained life this
-    turn" triggers, not an amount. So the ability resolves and gains 0.
+    `Player.life_lost_this_turn` is the gross per-turn ledger both routes write
+    to, and `machines/effects.parse_clause_effect` now reads it for the printed
+    clause "You gain life equal to the life you've lost this turn."
     """
     scenario = (
         Scenario()

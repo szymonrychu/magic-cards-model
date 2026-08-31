@@ -232,11 +232,22 @@ def test_put_counters_on_one_or_two_now_parses_count_agnostic():
     assert parse_targeted_effect("Put a +1/+1 counter on one or two target creatures.") is not None
 
 
-def test_an_unbounded_target_count_still_does_not_parse():
-    """ "Any number of" (CR 107.1c) is unbounded, not merely count-agnostic -
-    `_targets_understood` refuses it the same as before wave 2, because there
-    is still no maximum to repeat the verb up to."""
-    assert parse_targeted_effect("Exile any number of target creatures.") is None
+def test_an_unbounded_target_count_now_parses_for_a_count_agnostic_verb():
+    """ "Any number of" (CR 107.1c: "that player may choose any positive number
+    or zero") used to be refused outright for want of a maximum. There was
+    never anything for a count-agnostic verb to do with a maximum: exile
+    repeats itself once per legal target and stops, so an unbounded count runs
+    exactly as "up to two" does. Mindbreak Trap's "Exile any number of target
+    spells" is the card the refusal was failing closed.
+    """
+    assert parse_targeted_effect("Exile any number of target creatures.") is not None
+
+
+def test_an_unbounded_target_count_is_still_refused_for_a_count_sensitive_verb():
+    """Damage is the exception `_targets_understood`'s `count_agnostic` names:
+    multiple damage targets divide a total at announcement (CR 601.2d) rather
+    than repeating the verb, so an unbounded count stays unread there."""
+    assert parse_targeted_effect("Bolt deals 3 damage to any number of target creatures.") is None
 
 
 def test_a_graveyard_targeting_exile_now_parses():
