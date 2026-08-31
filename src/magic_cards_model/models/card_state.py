@@ -325,6 +325,12 @@ class ExileMarker(StrEnum):
     trigger) can find its card back without a name-keyed table - the same
     link `ExileMarker.IMPRINTED` already uses for the same reason."""
     SUSPENDED = "suspended"
+    CASCADE = "cascade"
+    """CR 702.85a: the hit cascade found, once its controller has said "yes"
+    to casting it without paying its mana cost. `Game.grant_play_permission`
+    hands out the actual permission (`machines/keywords.cascade`); this marker
+    is what a caller reads back to confirm which pile a card in exile is in,
+    the same "which pile" question every other exile marker here answers."""
     MADNESS = "madness"
     """CR 702.35a's first ability: "If a player would discard this card, that
     player discards it, but exiles it instead of putting it into their
