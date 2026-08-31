@@ -7695,6 +7695,75 @@ def _parse_may_exile_self_then_return_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "Transform all Humans." (Moonmist) - a board sweep rather than the
+#: self-reference `_TRANSFORM_SELF_RE` reads. The subtype is a CR 205.3m
+#: creature type, written the way Oracle text always writes one: capitalized,
+#: and plural because the sentence names a group.
+_TRANSFORM_ALL_SUBTYPE_RE = re.compile(
+    # Case-sensitive on purpose, unlike almost every other pattern in this
+    # file: the capitalized subtype is what tells "Humans" apart from an
+    # ordinary English noun, exactly as `_is_bare_subtype_word` reads it. Only
+    # the leading verb is allowed either case, since a clause may arrive
+    # sentence-initial or mid-paragraph.
+    r"^[Tt]ransform all (?P<subtype>[A-Z][a-zA-Z]*(?:-[A-Z][a-zA-Z]*)*)\.?$"
+)
+
+#: The two plural forms Oracle text spells for a creature type: the ordinary
+#: "-s" (Humans, Zombies is "-es") and the "-ves" of Wolves, Elves, Dwarves,
+#: Werewolves. Anything else is left unread rather than guessed at - a type
+#: this cannot singularise would silently sweep nothing, which is the same
+#: silence as a card doing nothing at all.
+def _singular_subtype(plural: str) -> str | None:
+    if plural.endswith("ves"):
+        return f"{plural[:-3]}f"
+    if plural.endswith("ies"):
+        return f"{plural[:-3]}y"
+    if plural.endswith("es") and plural[-3:-2].lower() in {"s", "x", "z", "h"}:
+        return plural[:-2]
+    if plural.endswith("s"):
+        return plural[:-1]
+    return None
+
+
+def _parse_transform_all_subtype_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_TRANSFORM_ALL_SUBTYPE_RE`'s shape - Moonmist's "Transform all Humans."
+
+    CR 701.27a: "To transform a permanent, turn it over so that its other face
+    is up. Only permanents represented by double-faced tokens and double-faced
+    cards can transform." CR 701.27c is what makes the sweep safe to run over a
+    whole battlefield: "If a spell or ability instructs a player to transform a
+    permanent that isn't represented by a double-faced token or a double-faced
+    card, nothing happens" - a single-faced Human is a silent no-op, not an
+    error, and `CardState.transform` already enforces that itself (together
+    with CR 712.10's instant-or-sorcery back face).
+
+    The membership test is the permanent's *computed* subtypes
+    (`CardState.subtypes`, CR 205.3 read off the up face per CR 712.8d), so a
+    permanent showing a back face is judged by the face it is showing. Which
+    matters here in particular: CR 701.27b says transforming "uses the same
+    physical action as turning a permanent face up or face down" but is a
+    different game action, and the set of permanents to turn over is settled
+    before any of them is turned - otherwise a Human whose back face is also a
+    Human would be turned over twice by one instruction.
+
+    Every permanent on the battlefield is swept, not only the caster's: "all
+    Humans" names no controller (CR 109.5's "you" is absent).
+    """
+    match = _TRANSFORM_ALL_SUBTYPE_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    subtype = _singular_subtype(match.group("subtype"))
+    if subtype is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        turning = [state for state in game.battlefield if subtype in state.subtypes]
+        for state in turning:
+            state.transform()
+
+    return effect
+
+
 def _parse_transform_clause(text: str) -> AbilityEffect | None:
     """CR 701.27a: "To transform a permanent, turn it over so that its other
     face is up", read off the ability's own printed text.
@@ -14780,6 +14849,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     counter_on_additional_cost_card = _parse_counter_on_additional_cost_card_clause(clause)
     if counter_on_additional_cost_card is not None:
         return counter_on_additional_cost_card
+    transform_all = _parse_transform_all_subtype_clause(clause, for_spell=for_spell)
+    if transform_all is not None:
+        return transform_all
     search = _parse_search_clause(clause, for_spell=for_spell)
     if search is not None:
         return search
