@@ -30,8 +30,6 @@ type="rules")` in the session that wrote it: CR 118.3b, CR 119.2, CR 119.3,
 CR 500.7, CR 701.12c.
 """
 
-import pytest
-
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
 from magic_cards_model.models.mana import Color

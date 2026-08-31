@@ -14,8 +14,11 @@ turn, you may cast that card" permission (CR 601.3) that used to void the
 ability, now built as `machines/casting.PlayPermission` and granted by
 `Game.grant_play_permission`. The permission's own rules - who may cast it,
 when it stops, what it does not allow - are `test_play_from_exile.py`'s
-business, not this file's. **Nashi and Questing Beast still fail closed**, each
-for its own missing primitive, and the notice paragraphs below are about them.
+business, not this file's. **Nashi's whole paragraph runs too** - its mill,
+its "from among them" choice and the counter that depends on the outcome, read
+as one paragraph by `_parse_mill_that_many_then_take_from_among_them`.
+**Questing Beast still fails closed**, for its own missing primitive, and the
+notice paragraphs below are about it.
 
 Every rule cited here was looked up with `knowledge_search(type="rules")` in
 the session that wrote the file:
@@ -32,13 +35,13 @@ the session that wrote the file:
   instructions in the order written" - which this codebase already reads as
   giving no license to run *part* of a multi-clause ability and stop
   (`_parse_mixed_clauses`'s own docstring: "CR 608.2c has no notion of running
-  half an effect"). Nashi's and Questing Beast's abilities are still read that
-  way: each has a clause naming a primitive that does not exist, so the whole
-  ability leaves a notice rather than a half-built board - consistent with how
+  half an effect"). Questing Beast's ability is still read that way: it has a
+  clause naming a primitive that does not exist, so the whole ability leaves a
+  notice rather than a half-built board - consistent with how
   `AnaphoricClauseNotice`, `DelayedClauseNotice`, and `ConditionalClauseNotice`
   already treat an unreadable trailing clause on an otherwise-readable ability.
-  Ragavan was the third such card until the play-from-exile wave built the
-  primitive his third sentence names; his whole paragraph runs now.
+  Ragavan and Nashi were the other two such cards; both whole paragraphs run
+  now.
 - **CR 607.1** - the within-one-ability link that makes "that card" in
   Ragavan's third sentence mean whatever his second sentence just exiled, and
   "that player" in his second mean whoever his trigger's damage landed on.
@@ -52,8 +55,8 @@ the session that wrote the file:
   convention in this codebase for exactly that gap is the fail-closed notice,
   not a partial run.
 
-All three cards below fire for real and go on the stack. Ragavan's resolves in
-full; Nashi's and Questing Beast's each leave an `UnmodeledTriggerEffectNotice`
+All three cards below fire for real and go on the stack. Ragavan's and Nashi's
+resolve in full; Questing Beast's leaves an `UnmodeledTriggerEffectNotice`
 instead of a partial board.
 """
 
@@ -291,22 +294,25 @@ def test_ragavans_ability_still_resolves_once_ragavan_is_gone():
     assert scenario.game.unmodeled_trigger_effect_notices == []
 
 
-# -- Nashi, Searcher in the Dark and Questing Beast: fail-closed -------------
+# -- Nashi, Searcher in the Dark: runs; Questing Beast: fail-closed ---------
 
 
-def test_nashi_triggers_but_its_resolution_is_left_unmodelled():
+def test_nashi_mills_nothing_from_an_empty_library_and_takes_the_counter():
     """Nashi: "you mill that many cards. You may put any number of legendary
     and/or enchantment cards from among them into your hand. If you put no
     cards into your hand this way, put a +1/+1 counter on Nashi."
 
-    The trigger fires (proven generically in `test_trigger_events.py`), and
-    "you may put any number of ... into your hand" has no `DecisionKind.
-    CHOOSE_CARDS` shape to ask with - that decision only ever asks for an
-    exact count (`Game.ask`'s own check: "needs {amount} card(s) chosen"),
-    never "as many as you like". Running the mill alone and skipping the
-    choice (and the counter that depends on its outcome) would be a
-    half-executed instruction, so nothing runs and a notice is recorded
-    instead: the library is untouched and Nashi gets no counter.
+    Alice's library is empty, so the mill moves nothing - CR 701.17b: "A player
+    can't mill a number of cards greater than the number of cards in their
+    library ... If instructed to do so, they mill as many as possible." With
+    nothing among them, CR 608.2d puts no question ("the player can't choose an
+    option that's illegal or impossible") and no card is put into her hand, so
+    the third sentence's condition holds and the counter goes on.
+
+    This test used to assert the whole paragraph was refused and a notice
+    recorded, because "any number of" had no `DecisionKind.CHOOSE_CARDS` shape
+    to ask with. `Decision.exact=False` is that shape (CR 107.1c: "any positive
+    number or zero"), and the paragraph is read whole now.
     """
     scenario = (
         Scenario()
@@ -315,7 +321,6 @@ def test_nashi_triggers_but_its_resolution_is_left_unmodelled():
         .build()
     )
     nashi = scenario.creature("Nashi, Searcher in the Dark", "alice")
-    library_before = list(scenario.player("alice").library)
 
     scenario.start_at(Step.DECLARE_ATTACKERS)
     scenario.attack_with(nashi, defending="bob")
@@ -323,12 +328,10 @@ def test_nashi_triggers_but_its_resolution_is_left_unmodelled():
     scenario.combat_damage()
     resolve_all(scenario)
 
-    assert scenario.player("alice").library == library_before
-    assert nashi.counters["+1/+1"] == 0
-    notices = scenario.game.unmodeled_trigger_effect_notices
-    assert len(notices) == 1
-    assert notices[0].source_name == "Nashi, Searcher in the Dark"
-    assert "any number of" in notices[0].text
+    assert scenario.player("alice").library == []
+    assert scenario.player("alice").hand == []
+    assert nashi.counters["+1/+1"] == 1
+    assert scenario.game.unmodeled_trigger_effect_notices == []
 
 
 def test_questing_beast_triggers_but_its_resolution_is_left_unmodelled():

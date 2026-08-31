@@ -17,8 +17,6 @@ Card text verified with `resolve_cards`; every CR number here was looked up
 with `knowledge_search(type="rules")` in this session.
 """
 
-import pytest
-
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.abilities import AbilityKind, parse_abilities
 from magic_cards_model.machines.triggers import intervening_if_holds

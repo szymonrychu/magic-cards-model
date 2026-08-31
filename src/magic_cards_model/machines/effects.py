@@ -2504,9 +2504,26 @@ def _named_type_matcher(word: str) -> Callable[[CardState], bool]:
         card_type: Type | None = Type(word.lower())
     except ValueError:
         card_type = None
+    # CR 205.4a: "The supertypes are basic, legendary, ongoing, snow, and
+    # world." A supertype word stands beside a card type in exactly the same
+    # "or" list - Nashi, Searcher in the Dark's "legendary and/or enchantment
+    # cards" names one of each - and reading only the card type left
+    # "legendary" matching nothing at all, which is a fails-open answer (an
+    # effect that quietly offers fewer cards than it should), not a missed
+    # one. The "basic" branch in `_quality_matcher` above stays where it is:
+    # it is a *prefix* on a longer phrase ("a basic land card"), not a
+    # standalone alternative.
+    try:
+        supertype: Supertype | None = Supertype(word.lower())
+    except ValueError:
+        supertype = None
 
     def matches(state: CardState) -> bool:
-        return land_type(state) or (card_type is not None and card_type in state.types)
+        return (
+            land_type(state)
+            or (card_type is not None and card_type in state.types)
+            or (supertype is not None and supertype in state.supertypes)
+        )
 
     return matches
 
@@ -3010,10 +3027,19 @@ def _parse_sacrifice_lands_then_search_that_many_clause(text: str) -> Effect | N
 #: rather than a target - `game.search_library`'s own `optional=True` already
 #: asks once per candidate up to `count`, the same shape `_search_and_place_for`
 #: uses for the singular case, just handed a `count` above one.
+#: The destination is a choice of two, and the optional "reveal them" between
+#: the search and the move is read and discarded, exactly as the singular
+#: `_SEARCH_AND_PUT_RE` already reads and discards its "reveal it": CR 701.23e
+#: makes revealing a search's finds something an effect must print to do, and
+#: showing cards changes no state this model tracks. Tooth and Nail's first
+#: mode - "Search your library for up to two creature cards, reveal them, put
+#: them into your hand, then shuffle." - is the hand-bound twin of Primeval
+#: Titan's battlefield-bound one.
 _SEARCH_UP_TO_N_AND_PUT_RE = re.compile(
     r"(?P<subject>you may )?"
     r"search (?:your|their) library for up to (?P<count>[\w-]+) (?P<quality>.+?) cards?"
-    r", put (?:them|it) onto the battlefield(?P<tapped> tapped)?"
+    r"(?:, reveal (?:them|it))?"
+    r", put (?:them|it) (?P<dest>into your hand|onto the battlefield(?P<tapped> tapped)?)"
     r"(?:, then shuffle)?\.?",
     re.IGNORECASE,
 )
@@ -3040,6 +3066,7 @@ def _parse_search_up_to_n_and_put_clause(clause: str, *, for_spell: bool) -> Tar
         return None
     matches = _quality_matcher(match.group("quality"))
     tapped = bool(match.group("tapped"))
+    to_hand = match.group("dest").startswith("into your hand")
     optional = bool((match.group("subject") or "").strip())
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
@@ -3053,7 +3080,10 @@ def _parse_search_up_to_n_and_put_clause(clause: str, *, for_spell: bool) -> Tar
             return
         found = game.search_library(player, matches, count=count, optional=True, source=source)
         for card in found:
-            game.put_onto_battlefield(card, player.username, tapped=tapped)
+            if to_hand:
+                player.add(card, Zone.HAND)
+            else:
+                game.put_onto_battlefield(card, player.username, tapped=tapped)
 
     return effect
 
@@ -7708,6 +7738,7 @@ _TRANSFORM_ALL_SUBTYPE_RE = re.compile(
     r"^[Tt]ransform all (?P<subtype>[A-Z][a-zA-Z]*(?:-[A-Z][a-zA-Z]*)*)\.?$"
 )
 
+
 #: The two plural forms Oracle text spells for a creature type: the ordinary
 #: "-s" (Humans, Zombies is "-es") and the "-ves" of Wolves, Elves, Dwarves,
 #: Werewolves. Anything else is left unread rather than guessed at - a type
@@ -7760,6 +7791,97 @@ def _parse_transform_all_subtype_clause(clause: str, *, for_spell: bool) -> Targ
         turning = [state for state in game.battlefield if subtype in state.subtypes]
         for state in turning:
             state.transform()
+
+    return effect
+
+
+#: Nashi, Searcher in the Dark's whole combat-damage trigger, once
+#: `machines/abilities.py` has split the "Whenever Nashi deals combat damage to
+#: a player," condition off: "you mill that many cards. You may put any number
+#: of legendary and/or enchantment cards from among them into your hand. If you
+#: put no cards into your hand this way, put a +1/+1 counter on Nashi."
+#:
+#: Three sentences, one paragraph, read whole because each depends on the one
+#: before it and none of them can name its own subject:
+#:
+#: - "that many" is the damage the trigger event carries (`GameEvent.amount`),
+#:   not a printed number.
+#: - "from among them" is CR 400.7 anaphora back to the cards the *first*
+#:   sentence actually milled - which is the whole point of DDR#833: a
+#:   replacement effect that exiles them on the way to the graveyard (Leyline
+#:   of the Void) leaves nothing among them to choose, so the question is never
+#:   put at all (CR 608.2d: a player "can't choose an option that's illegal or
+#:   impossible", and with no candidates there is no option).
+#: - "no cards ... this way" is the count the *second* sentence moved, so the
+#:   counter is decided by what happened, not by anything readable up front.
+#:
+#: `Game.put_into_graveyard` is where the replacement gets its say, and `_mill`
+#: routes through it (CR 701.17a: "that player puts that many cards from the
+#: top of their library into their graveyard"; CR 701.17b caps the count at the
+#: library's size - "If instructed to do so, they mill as many as possible").
+_MILL_THAT_MANY_THEN_TAKE_FROM_AMONG_THEM_RE = re.compile(
+    r"^you mill that many cards\.\s*"
+    r"you may put any number of (?P<quality>.+?) cards from among them into your hand\.\s*"
+    r"if you put no cards into your hand this way, "
+    r"put (?P<n>a|an|\w+) (?P<kind>\+1/\+1|-1/-1) counters? on (?P<name>[^.]+)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_mill_that_many_then_take_from_among_them(text: str) -> AbilityEffect | None:
+    """`_MILL_THAT_MANY_THEN_TAKE_FROM_AMONG_THEM_RE`'s shape - see it for what
+    each sentence points back at.
+
+    "Any number" is CR 107.1c ("that player may choose any positive number or
+    zero"), so taking none is a real answer and the third sentence's counter is
+    what it leads to.
+    """
+    match = _MILL_THAT_MANY_THEN_TAKE_FROM_AMONG_THEM_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    quality = match.group("quality").replace(" and/or ", " or ")
+    matches = _quality_matcher(quality)
+    amount = 1 if match.group("n").lower() in {"a", "an"} else _count(match.group("n"))
+    if amount is None:
+        return None
+    kind = _counter_kind(match.group("kind"))
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        event = ability.event
+        if event is None or event.amount is None or event.amount <= 0:
+            return
+        player = game.controller_of(ability)
+        milled = _mill(game, player, event.amount)
+        # CR 400.7: only the cards this mill moved, and only those still in
+        # the graveyard - a card the Leyline exiled on the way is not "among
+        # them" any more, which is DDR#833's ruling.
+        candidates = [state for state in milled if state.zone is Zone.GRAVEYARD and matches(state)]
+        taken: tuple = ()
+        if candidates:
+            taken = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=player.username,
+                    prompt=f"put any number of {quality} cards into your hand",
+                    source=ability.source_name,
+                    # CR 107.1c's "any number of": `amount` is the ceiling and
+                    # any count from zero up to it is a legal answer, which is
+                    # exactly what `exact=False` means.
+                    amount=len(candidates),
+                    exact=False,
+                    cards=tuple(state.id for state in candidates),
+                )
+            )
+            by_id = {state.id: state for state in candidates}
+            for card_id in taken:
+                state = by_id.get(card_id)
+                if state is not None:
+                    player.move(state, Zone.HAND)
+        if taken:
+            return
+        source = ability.source(game)
+        if source is not None and source.zone is Zone.BATTLEFIELD:
+            game.add_counters(source, kind, amount)
 
     return effect
 
@@ -8089,6 +8211,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     add_one_mana_of_any_color = _parse_add_one_mana_of_any_color_trigger(effect_text)
     if add_one_mana_of_any_color is not None:
         return add_one_mana_of_any_color
+    mill_then_take = _parse_mill_that_many_then_take_from_among_them(effect_text)
+    if mill_then_take is not None:
+        return mill_then_take
     transform_self = _parse_transform_clause(effect_text)
     if transform_self is not None:
         return transform_self
@@ -12621,10 +12746,11 @@ class UnmodeledTriggerEffectNotice(BaseModel):
     matched generically off any card's printed text by
     `machines/triggers.condition_matches` - but whose resolution clause names
     a mechanism this engine has nowhere to put: a choice
-    between zero and many cards with no fixed count (Nashi's "you may put any
-    number of ... into your hand" - `DecisionKind.CHOOSE_CARDS` in
-    `machines/decisions.py` only knows how to ask for an exact `amount`, never
-    "as many as you like"), or a target chosen at CR 603.3d announcement but
+    between zero and many cards with no fixed count whose surrounding sentences
+    this file cannot read (the bare-clause case; **Nashi, Searcher in the Dark
+    is no longer one of these** - `Decision.exact=False` is CR 107.1c's "any
+    number" and `_parse_mill_that_many_then_take_from_among_them` reads its
+    whole three-sentence paragraph), or a target chosen at CR 603.3d announcement but
     restricted to what a upstream game *event* says rather than what the
     ability's own printed text says (Questing Beast's "target planeswalker
     **that player** controls", where "that player" is whoever the trigger's
@@ -12670,12 +12796,17 @@ _CAST_PERMISSION_CLAUSE_RE = re.compile(
     re.IGNORECASE,
 )
 
-#: "you may put any number of ... into your hand" - Nashi, Searcher in the
-#: Dark's own second sentence. `DecisionKind.CHOOSE_CARDS` in
-#: `machines/decisions.py` only ever asks for an exact `amount`
-#: (`Game.ask`'s own check: "needs {amount} card(s) chosen"), never an
-#: unbounded "as many as you like" - CR 608.2d's choice, with no decision
-#: shape built for it yet.
+#: "you may put any number of ... into your hand" - a bare CR 608.2d choice
+#: with nothing around it to say *which* cards are on offer.
+#:
+#: `Decision.exact=False` is the decision shape for CR 107.1c's "any number"
+#: and always has been; what a lone clause of this wording lacks is the set to
+#: choose from. Nashi, Searcher in the Dark's own second sentence says "from
+#: among them", pointing back at the cards its first sentence milled, and is
+#: read as one paragraph with them by
+#: `_parse_mill_that_many_then_take_from_among_them` - so Nashi never reaches
+#: this notice any more. A future card writing the clause with an antecedent
+#: this file cannot read still fails closed here.
 _UNBOUNDED_HAND_CHOICE_RE = re.compile(
     r"^you may put any number of .+ into your hand$", re.IGNORECASE
 )
@@ -15546,13 +15677,16 @@ TRIGGER_EFFECTS: dict[TriggerKey, AbilityEffect] = {
     # `_parse_exile_then_play_permission_pair`: one CR 608.2c instruction with
     # the exiling clause it points back at, granting a `machines/casting.
     # PlayPermission` over exactly the card just exiled. So Ragavan's whole
-    # paragraph now runs and leaves no notice. Nashi's and Questing Beast's
-    # still leave one each (CR 608.2c has no notion of running half an effect -
-    # see `_ability_effect_or_notice`):
-    # Nashi's "you may put any number of ... into your hand" and Questing
-    # Beast's "target planeswalker that player controls" are each still a
-    # missing-primitive shape, read by `_unreadable_unbounded_hand_choice_
-    # clause` and `_unreadable_event_player_target_clause` respectively - see
+    # paragraph now runs and leaves no notice. **Nashi's does too**: its three
+    # sentences are read together by
+    # `_parse_mill_that_many_then_take_from_among_them` - the mill for
+    # `GameEvent.amount`, the "from among them" choice over exactly the cards
+    # that mill put in the graveyard (CR 400.7), and the counter that depends
+    # on whether any were taken. Only Questing Beast's still leaves a notice
+    # (CR 608.2c has no notion of running half an effect - see
+    # `_ability_effect_or_notice`): "target planeswalker that player controls"
+    # is a missing-primitive shape, read by
+    # `_unreadable_event_player_target_clause` - see
     # `tests/scenarios/test_trigger_events.py` for the trigger firing and
     # `tests/scenarios/test_combat_damage_to_player_effects.py` for the
     # resolution.
@@ -16584,9 +16718,17 @@ def _parse_copy_this_spell_clause(clause: str, *, for_spell: bool) -> TargetedCl
 # docstring is the authority for both. Which card is CR 608.2d's choice, made
 # by the ability's controller among their own hand.
 
+#: "Put a permanent card from your hand onto the battlefield." (Kona, Rescue
+#: Beastie) and "Put up to two creature cards from your hand onto the
+#: battlefield." (Tooth and Nail's second mode) - one shape, because the second
+#: is the first with a count in front of it and the noun pluralised. CR 115.6's
+#: "up to N" wording is the same "nought to N" the targeting parser reads, and
+#: nothing about the verb changes with the count: it repeats itself once per
+#: card chosen, so a hand short of N puts as many as it can (CR 609.3: an
+#: effect "does as much as it can").
 _PUT_PERMANENT_CARD_FROM_HAND_RE = re.compile(
-    r"^(?P<may>you may )?put a (?P<group>[a-z]+) card from your hand "
-    r"onto the battlefield(?P<tapped> tapped)?\.?$",
+    r"^(?P<may>you may )?put (?:a|an|up to (?P<count>[\w-]+)) (?P<group>[a-z]+) cards? "
+    r"from your hand onto the battlefield(?P<tapped> tapped)?\.?$",
     re.IGNORECASE,
 )
 
@@ -16594,14 +16736,18 @@ _PUT_PERMANENT_CARD_FROM_HAND_RE = re.compile(
 def _parse_put_permanent_card_from_hand_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
-    """`_PUT_PERMANENT_CARD_FROM_HAND_RE`'s shape - Kona, Rescue Beastie.
+    """`_PUT_PERMANENT_CARD_FROM_HAND_RE`'s shape - Kona, Rescue Beastie, and
+    Tooth and Nail's "Put up to two creature cards from your hand onto the
+    battlefield."
 
     The group is read by `_parse_card_group_qualifier`, so "permanent card"
     (CR 110.4a's group) and any single CR 205.2a card type both work, off the
     card's own printed characteristics (CR 400.7: a card in a hand has
     nothing else). A hand with no legal candidate is never asked at all
     (CR 608.2d: "the player can't choose an option that's illegal or
-    impossible").
+    impossible"), and a hand holding fewer than the stated count is asked for
+    as many as it holds - CR 609.3's "does as much as it can", the same floor
+    every other counted instruction in this file applies.
     """
     match = _PUT_PERMANENT_CARD_FROM_HAND_RE.fullmatch(clause.strip())
     if match is None:
@@ -16609,6 +16755,16 @@ def _parse_put_permanent_card_from_hand_clause(
     predicate = _parse_card_group_qualifier(match.group("group"))
     if predicate is None:
         return None
+    amount = 1
+    if match.group("count"):
+        try:
+            amount = _count(match.group("count"))
+        except KeyError:
+            # "up to X creature cards" (CR 107.3a's X, unsubstituted) or a word
+            # `_NUMBER_WORDS` does not carry - fail closed rather than guess.
+            return None
+        if amount is None:
+            return None
     optional = match.group("may") is not None
     tapped = match.group("tapped") is not None
 
@@ -16626,13 +16782,14 @@ def _parse_put_permanent_card_from_hand_clause(
             source=source_name,
         ):
             return
+        wanted = min(amount, len(candidates))
         chosen_ids = game.ask(
             Decision(
                 kind=DecisionKind.CHOOSE_CARDS,
                 player=controller.username,
-                prompt="choose a card to put onto the battlefield",
+                prompt=f"choose {wanted} card(s) to put onto the battlefield",
                 source=source_name,
-                amount=1,
+                amount=wanted,
                 cards=tuple(state.id for state in candidates),
             )
         )

@@ -491,21 +491,18 @@ def test_leyline_of_the_void_exiles_a_cards_own_owner_milling_it():
     assert milled.zone is Zone.EXILE
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Nashi, Searcher in the Dark's combat-damage trigger ('you mill that "
-    "many cards. You may put any number of legendary and/or enchantment cards from "
-    "among them into your hand...') has no TRIGGER_EFFECTS row, and its own text "
-    "mixes a mill clause with a conditional card-selection clause that "
-    "parse_mixed_effect does not read - effect_for returns None for it - so "
-    "dealing combat damage with Nashi mills nothing at all, and the Leyline of the "
-    "Void interaction this episode is actually about is never reached.",
-)
 def test_nashi_deals_combat_damage_and_mills_into_an_opponents_leyline_of_the_void():
     """DDR#833, the full scenario: Nashi mills cards off combat damage, an
     opponent's Leyline of the Void exiles them as they would hit alice's own
     graveyard, and there is nothing left "among them" for Nashi's second
     sentence to choose from.
+
+    CR 701.17a: "For a player to mill a number of cards, that player puts that
+    many cards from the top of their library into their graveyard" - the mill
+    is a move *to the graveyard*, which is exactly the event the Leyline
+    replaces, so the cards never arrive. CR 400.7's "from among them" then has
+    an empty set to offer, and CR 608.2d never puts a question with no legal
+    option, so the third sentence's counter is what happens instead.
     """
     scenario = (
         Scenario()
@@ -522,8 +519,52 @@ def test_nashi_deals_combat_damage_and_mills_into_an_opponents_leyline_of_the_vo
     scenario.attack_with(nashi)
     scenario.no_blocks()
     scenario.combat_damage()
+    while not scenario.game.stack_is_empty:
+        scenario.resolve_top()
 
     # Nashi deals 2 combat damage, so 2 cards leave the library - milled, then
     # exiled by bob's Leyline of the Void before ever touching a graveyard.
     assert len(scenario.player("alice").library) == 0
     assert scenario.player("alice").graveyard == []
+    assert len(scenario.game.exile) == 2, "the Leyline took both"
+    assert scenario.player("alice").hand == [], "nothing was left among them to take"
+    assert nashi.counter_count("+1/+1") == 1, "so the third sentence's counter goes on"
+
+
+def test_without_the_leyline_nashi_takes_the_enchantment_and_gets_no_counter():
+    """The control DDR#833's ruling is measured against: the same trigger with
+    nothing replacing the mill.
+
+    Both milled cards reach alice's graveyard (CR 701.17a), the Leyline of the
+    Void among them is an enchantment card "from among them", and taking it
+    means the third sentence's condition - "if you put no cards into your hand
+    this way" - is false, so no counter goes on. Without this test the xfail
+    above could start passing for the wrong reason: an effect that milled and
+    then offered nothing would satisfy every assertion in it.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Nashi, Searcher in the Dark"],
+            library=["Leyline of the Void", "Mountain"],
+        )
+        .player("bob", life=18)
+        .build()
+    )
+    leyline = scenario.player("alice").library[0]
+    scenario.start_at(Step.COMBAT_DAMAGE)
+    nashi = scenario.creature("Nashi, Searcher in the Dark", "alice")
+    # CR 107.1c's "any number" defaults to none, so the taking is scripted.
+    scenario.will_choose_cards(leyline, source="Nashi, Searcher in the Dark")
+    scenario.attack_with(nashi)
+    scenario.no_blocks()
+    scenario.combat_damage()
+    while not scenario.game.stack_is_empty:
+        scenario.resolve_top()
+
+    assert [state.name for state in scenario.player("alice").hand] == ["Leyline of the Void"]
+    assert [state.name for state in scenario.player("alice").graveyard] == ["Mountain"], (
+        "the Mountain is neither legendary nor an enchantment, so it stays put"
+    )
+    assert nashi.counter_count("+1/+1") == 0, "a card was taken, so no counter"

@@ -13,8 +13,8 @@ entwined Tooth and Nail is {7}{G}{G} rather than {2}.
 
 CR 702.42b is the resolution half: "If the entwine cost was paid, follow the text
 of each of the modes in the order written on the card when the spell resolves."
-Tooth and Nail has no entry in `machines/effects.py`, so nothing follows either
-mode - the xfail at the bottom of this file.
+Both of Tooth and Nail's modes are read off their own printed text now, with no
+`EFFECTS` row, so the last test in this file drives the whole card.
 """
 
 import pytest
@@ -112,18 +112,17 @@ def test_a_spell_without_entwine_refuses_the_announcement():
         casting.choose_modes([1, 2, 3, 4], entwined=True)
 
 
-@pytest.mark.xfail(
-    reason=(
-        "CR 702.42b: 'If the entwine cost was paid, follow the text of each of the "
-        "modes in the order written on the card when the spell resolves.' "
-        "machines/effects.py is keyed by card name and has no Tooth and Nail entry, "
-        "and CR 700.2's 'what a mode does on resolution' is unmodelled in general. "
-        "See docs/engine-coverage.md."
-    ),
-    strict=True,
-)
 def test_an_entwined_tooth_and_nail_does_both_modes():
-    """CR 702.42b, in printed order (CR 608.2c)."""
+    """CR 702.42b, in printed order (CR 608.2c).
+
+    "If the entwine cost was paid, follow the text of each of the modes in the
+    order written on the card when the spell resolves." `resolve_modal_spell`
+    already did that; what was missing was that neither mode's own text could
+    be read. Both are ordinary shapes now - the first is
+    `_SEARCH_UP_TO_N_AND_PUT_RE` with the hand as its destination, the second
+    is `_PUT_PERMANENT_CARD_FROM_HAND_RE` counted rather than singular - so
+    Tooth and Nail needs no `EFFECTS` row of its own.
+    """
     scenario = board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
