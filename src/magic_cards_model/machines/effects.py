@@ -87,10 +87,12 @@ from .casting import PlayAction, finish_suspend, remove_suspend_time_counter
 from .casting_restrictions import create_targeted_cant_cast_restriction, parse_casting_rule_clause
 from .decisions import Decision, DecisionKind
 from .delayed import (
+    ANAPHORIC_TIMING_STEPS,
     DelayedEffect,
     DelayedTrigger,
+    anaphoric_delayed_trigger,
     draw_a_card_for_controller,
-    exile_subject_at_next_end_step,
+    parse_anaphoric_delayed_clause,
     return_subject_to_battlefield_under_owner,
     return_subject_to_hand,
 )
@@ -10666,24 +10668,14 @@ def _parse_attack_this_turn_create_tapped_attacking_tokens(text: str) -> Ability
 # `exile_ability_targets`, which throws the moved object away) and closes over
 # the result when it builds the `DelayedTrigger`.
 
-#: The timing phrases this wave reads, mapped to the `Step` a `BEGINNING_OF_
-#: STEP` event carries for them. CR 511.2: "abilities that trigger 'at end of
-#: combat' trigger as the end of combat step begins" - the same event shape
-#: every other "at the beginning of ..." trigger already uses, just a
-#: different step. CR 513.2 (and its "likewise" for the upkeep) is why waiting
-#: for the *next* occurrence is always correct with no extra bookkeeping: an
-#: event already emitted for the current occurrence of a step never fires
-#: `DelayedTrigger.matches` a second time, so a trigger created during that
-#: step's own beginning is already waiting for the next turn's, not this
-#: turn's - exactly what CR 513.2 asks for.
-_DELAYED_TIMING_STEPS: dict[str, Step] = {
-    "the beginning of the next end step": Step.END_STEP,
-    "the beginning of the next turn's upkeep": Step.UPKEEP,
-    "the beginning of your next upkeep": Step.UPKEEP,
-    "end of combat": Step.END_OF_COMBAT,
-}
-
-_DELAYED_TIMING_PATTERN = "|".join(re.escape(phrase) for phrase in _DELAYED_TIMING_STEPS)
+#: The timing phrases this wave reads live in `machines/delayed.py` as
+#: `ANAPHORIC_TIMING_STEPS`, which carries the CR 511.2 / CR 513.2 reasoning
+#: for why waiting for the *next* occurrence of a step needs no bookkeeping.
+#: This file used to keep a byte-identical private copy; the copy is gone, and
+#: the two word orders below are now derived from the one table rather than
+#: restating its contents. The import can only run this way round -
+#: `effects.py` imports `delayed.py`, never the reverse.
+_DELAYED_TIMING_PATTERN = "|".join(re.escape(phrase) for phrase in ANAPHORIC_TIMING_STEPS)
 
 #: "At <timing>, <verb>." - Phelia's own word order.
 _DELAYED_TIMING_LEADING_RE = re.compile(
@@ -10698,7 +10690,7 @@ _DELAYED_TIMING_TRAILING_RE = re.compile(
 
 def _parse_delayed_timing_clause(clause: str) -> tuple[Step, str] | None:
     """Split `clause` into the step it waits for and the verb phrase left
-    over, in whichever of the two word orders `_DELAYED_TIMING_STEPS` prints
+    over, in whichever of the two word orders `ANAPHORIC_TIMING_STEPS` prints
     it in - or `None` if it names no timing phrase this wave reads at all."""
     clause = clause.strip().rstrip(".")
     match = _DELAYED_TIMING_LEADING_RE.fullmatch(clause) or _DELAYED_TIMING_TRAILING_RE.fullmatch(
@@ -10706,7 +10698,7 @@ def _parse_delayed_timing_clause(clause: str) -> tuple[Step, str] | None:
     )
     if match is None:
         return None
-    step = _DELAYED_TIMING_STEPS.get(match.group("timing").lower())
+    step = ANAPHORIC_TIMING_STEPS.get(match.group("timing").lower())
     if step is None:
         return None
     return step, match.group("verb").strip()
@@ -11285,28 +11277,65 @@ def _parse_delayed_blink_clauses(
 #: (its own docstring's "only if that first pass reads nothing" only helps a
 #: caller whose *first* pass reads `None`, not one that reads a competing
 #: notice instead).
+#:
+#: The qualifier slot before "creature card" is deliberately open - "legendary"
+#: (Goryo's Vengeance), "nonlegendary", "artifact", "multicolored" - rather
+#: than a list this file would have to keep growing. It is safe to be open
+#: because the phrase is then handed to `_targets_understood`, which refuses
+#: any restriction `machines/targeting.py` cannot actually enforce; a qualifier
+#: nobody can read fails the whole parse rather than quietly reanimating
+#: something the card never named. CR 205.4a is the supertype the commonest
+#: qualifier names ("the supertypes are basic, legendary, ongoing, snow, and
+#: world").
 _RETURN_CREATURE_CARD_FROM_GRAVEYARD_TO_BATTLEFIELD_RE = re.compile(
-    r"^return (?P<phrase>target creature card(?: with mana value (?:\d+|x))? "
-    r"from your graveyard) to the battlefield$",
+    r"^return (?P<phrase>target (?:[a-z]+ )*creature card"
+    r"(?: with mana value (?:\d+|x))? from your graveyard) to the battlefield$",
     re.IGNORECASE,
+)
+
+#: Clause two of the same instruction. "It" is Postmortem Lunge's pronoun and
+#: "that creature" is Goryo's Vengeance's; both are CR 400.7 anaphora for
+#: whatever clause one's own return just put onto the battlefield, so they are
+#: one shape and not two. The demonstrative agrees with a creature by
+#: construction here - clause one returned a creature card - so there is
+#: nothing further to check.
+_GAINS_HASTE_ANAPHOR_RE = re.compile(
+    r"^(?:it|that creature|that card|that permanent) gains haste$", re.IGNORECASE
 )
 
 
 def _parse_delayed_reanimate_haste_exile_clauses(
     clauses: list[str], index: int, *, for_spell: bool
 ) -> tuple[int, TargetedClause] | None:
-    """ "Return target creature card [with mana value N] from your graveyard
-    to the battlefield. It gains haste. Exile it at the beginning of the next
-    end step." as one CR 608.2c instruction (Postmortem Lunge) - three
-    consecutive clauses starting at `index`, or `None` if `index` is not the
-    start of this shape.
+    """ "Return target [qualifier] creature card [with mana value N] from your
+    graveyard to the battlefield. It gains haste. <anaphoric delayed clause>."
+    as one CR 608.2c instruction - three consecutive clauses starting at
+    `index`, or `None` if `index` is not the start of this shape.
+
+    Two printings, one shape. Postmortem Lunge reads "target creature card
+    with mana value X ... It gains haste. Exile it at the beginning of the
+    next end step."; Goryo's Vengeance reads "target legendary creature card
+    ... That creature gains haste. Exile it at the beginning of the next end
+    step." The supertype qualifier and the demonstrative pronoun are the only
+    differences, and each one used to fail the parse - which, because an
+    ability resolves whole or fails closed here, took the reanimation in
+    clause one down with it and left the whole archetype inert.
 
     The linkage is CR 400.7 anaphora twice over, the same reasoning
     `_parse_delayed_blink_clauses` already documents for its own "that card":
-    "it" in clause two and clause three both mean whatever clause one's own
-    return just put onto the battlefield, discovered only as clause one
-    actually runs - so this closes over the entered `CardState` rather than
-    resolving either later sentence's target of its own.
+    the pronoun in clause two and the pronoun in clause three both mean
+    whatever clause one's own return just put onto the battlefield, discovered
+    only as clause one actually runs - so this closes over the entered
+    `CardState` rather than resolving either later sentence's target of its
+    own.
+
+    Clause three is not read here at all: it is handed to
+    `machines/delayed.py`'s `parse_anaphoric_delayed_clause` /
+    `anaphoric_delayed_trigger`, which own that shape (CR 603.7a creates the
+    delayed ability, CR 603.7c is why the subject's zone and stamp are
+    captured now rather than re-checked later). That is what makes "Sacrifice
+    that token", "Destroy it" and the return-to-hand variants free here rather
+    than one more literal string comparison each.
 
     Haste is granted with `Duration.INDEFINITE` (CR 611.2a's default: "if no
     duration is stated, it lasts indefinitely") scoped to `only_this_
@@ -11324,13 +11353,10 @@ def _parse_delayed_reanimate_haste_exile_clauses(
         return None
     if index + 2 >= len(clauses):
         return None
-    if clauses[index + 1].strip().rstrip(".").lower() != "it gains haste":
+    if _GAINS_HASTE_ANAPHOR_RE.fullmatch(clauses[index + 1].strip().rstrip(".")) is None:
         return None
-    timing = _parse_delayed_timing_clause(clauses[index + 2])
-    if timing is None:
-        return None
-    step, verb = timing
-    if verb.strip().lower() != "exile it":
+    rider = clauses[index + 2]
+    if parse_anaphoric_delayed_clause(rider) is None:
         return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
@@ -11354,20 +11380,16 @@ def _parse_delayed_reanimate_haste_exile_clauses(
                     modification=grant_ability("Haste"),
                 )
             )
-            game.create_delayed_trigger(
-                DelayedTrigger(
-                    text=clauses[index + 2],
-                    event=TriggerEvent.BEGINNING_OF_STEP,
-                    step=step,
-                    controller=controller,
-                    source_id=source_id,
-                    source_name=source_name,
-                    subject_id=entered.id,
-                    expected_zone=Zone.BATTLEFIELD,
-                    expected_stamp=entered.zone_change_stamp,
-                    callback=exile_subject_at_next_end_step,
-                )
+            trigger = anaphoric_delayed_trigger(
+                rider,
+                subject=entered,
+                controller=controller,
+                source_id=source_id,
+                source_name=source_name,
             )
+            if trigger is None:
+                continue  # the pronoun does not agree; fail closed (CR 603.7a)
+            game.create_delayed_trigger(trigger)
 
     return 3, effect
 
@@ -11429,7 +11451,7 @@ _CONTROL_REPLACEMENT_RE = re.compile(
 
 
 def _unreadable_delayed_clause(text: str, *, for_spell: bool) -> str | None:
-    """The first clause of `text` that names one of `_DELAYED_TIMING_STEPS`'s
+    """The first clause of `text` that names one of `ANAPHORIC_TIMING_STEPS`'s
     phrases, if `_prepare_effect_clauses` can split it out at all - used only
     to decide whether an effect this wave already failed to parse deserves a
     `DelayedClauseNotice`, not to parse it (the caller already tried and
