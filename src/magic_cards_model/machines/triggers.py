@@ -744,6 +744,58 @@ def _controller_clause_holds(
     return True
 
 
+#: CR 603.6d: "Some permanents have text that reads '[This permanent] enters
+#: with . . . ,' 'As [this permanent] enters . . . ,' '[This permanent]
+#: enters as . . . ,' or '[This permanent] enters tapped.'" - the shapes that
+#: qualify *how* a permanent enters, on top of CR 603.6a's bare "enters"/
+#: "enters the battlefield". When a trigger condition is itself written with
+#: one of these qualifiers - Amulet of Vigor's own "Whenever a permanent you
+#: control enters tapped" - the qualifier narrows the CR 603.2 event match
+#: itself, checked once when the event occurs; it is not an intervening "if"
+#: (CR 603.4, 608.2a) rechecked at resolution, since the condition text never
+#: spells "if" for this. `Game.put_onto_battlefield` (`models/game.py`) sets
+#: `card_state.tapped` and applies any entering counters *before* emitting
+#: `TriggerEvent.ENTERS_THE_BATTLEFIELD` (`Game._enters_event`), so the
+#: subject looked up here already carries its real entering state.
+_ENTERS_TAPPED_RE = re.compile(r"\benters?\b(?:[^.]*\bthe battlefield\b)?[^.]*?\btapped\b")
+_ENTERS_UNTAPPED_RE = re.compile(r"\benters?\b(?:[^.]*\bthe battlefield\b)?[^.]*?\buntapped\b")
+_ENTERS_WITH_COUNTER_RE = re.compile(
+    r"\benters?\b[^.]*?\bwith\s+(?:a|an|one or more|\d+)\s+"
+    r"(?P<kind>[+/\-\w]+(?:[ \-][+/\-\w]+)*?)\s+counters?\s+on\s+(?:it|them)\b"
+)
+
+
+def _entry_qualifier_matches(game: "Game", condition: str, event: "GameEvent") -> bool:
+    """Whether an "enters tapped"/"enters untapped"/"enters with a ... counter
+    on it" qualifier (CR 603.6d) on an ENTERS_THE_BATTLEFIELD condition holds
+    for `event`.
+
+    A condition naming none of these qualifiers imposes none, which is what a
+    bare "enters"/"enters the battlefield" already means - this returns True
+    for those unconditionally, the same "nothing named, nothing required"
+    default `_controller_clause_holds` and `_types_match` already use.
+    """
+    lowered = condition.lower()
+    subject: CardState | None = None
+    if event.subject_id is not None:
+        subject = game.find_by_id(event.subject_id)
+
+    if _ENTERS_TAPPED_RE.search(lowered) is not None and (subject is None or not subject.tapped):
+        return False
+    if _ENTERS_UNTAPPED_RE.search(lowered) is not None and (subject is None or subject.tapped):
+        return False
+
+    counter_match = _ENTERS_WITH_COUNTER_RE.search(lowered)
+    if counter_match is not None:
+        if subject is None:
+            return False
+        kind = counter_match.group("kind").strip()
+        if kind not in subject.counters:
+            return False
+
+    return True
+
+
 def condition_matches(
     game: "Game",
     ability: TriggeredAbility,
@@ -757,7 +809,10 @@ def condition_matches(
 
     - **enters** (CR 603.6a) - "When this creature enters" fires for the source
       itself; "Whenever [another] [type] you control enters" fires for another
-      permanent of that type.
+      permanent of that type. A condition additionally qualified "... enters
+      tapped"/"... enters untapped"/"... enters with a[n] [kind] counter on
+      it" (CR 603.6d) only matches an event whose subject actually entered
+      that way - see `_entry_qualifier_matches`.
     - **dies** (CR 700.4, 603.10a) - "When this creature dies" for the source
       itself, and "Whenever another creature you control dies" / "... one or
       more other Cats you control die" for anything else that dies, optionally
@@ -840,6 +895,8 @@ def condition_matches(
         return False
 
     if ability.event is TriggerEvent.ENTERS_THE_BATTLEFIELD:
+        if not _entry_qualifier_matches(game, condition, event):
+            return False
         if mine:
             return event.subject_id == source.id
         if "another" in lowered and event.subject_id == source.id:

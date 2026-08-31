@@ -25,11 +25,43 @@ type="rules")` in the session that wrote this file:
 - **CR 608.2d** - "the player announces these while applying the effect" -
   a bounce land's own "return a land you control" names no target, so which
   land returns is a resolution-time choice, not a targeted one.
+- **CR 603.6d** - "Some permanents have text that reads ... '[This permanent]
+  enters tapped.'" The "tapped" qualifier on Amulet's own condition narrows
+  which entries match at all (CR 603.2): a permanent - including Amulet of
+  Vigor itself, cast as a plain artifact with no "enters tapped" line of its
+  own - that enters untapped (CR 110.5b's default) must not match it.
+- **CR 110.5b** - "Permanents enter the battlefield untapped, unflipped, face
+  up, and phased in unless a spell or ability says otherwise." What Amulet of
+  Vigor's own entry does, having no replacement of its own that says
+  otherwise.
 """
 
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Color, Zone
 from tests.scenarios.harness import Scenario, mana_from
+
+
+def test_amulet_of_vigor_does_not_trigger_off_its_own_untapped_entry():
+    """The reported defect: casting Amulet of Vigor is itself a permanent
+    entering the battlefield, and it enters untapped (CR 110.5b) - it prints
+    no "enters tapped" replacement of its own. Its own condition ("enters
+    tapped") must not match that entry, so nothing should go on the stack
+    from casting it, with no other permanent around to confuse the read."""
+    scenario = Scenario().player("alice", hand=["Amulet of Vigor"], battlefield=["Forest"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (forest,) = scenario.untapped_sources("Forest")
+    amulet = scenario.cast_and_resolve("Amulet of Vigor", forest)
+
+    assert amulet.zone is Zone.BATTLEFIELD
+    assert not amulet.tapped, "CR 110.5b: permanents enter untapped by default"
+    assert not scenario.game.pending_triggers, (
+        "Amulet's own untapped entry should never have matched its "
+        "'enters tapped' condition (CR 603.6d) in the first place"
+    )
+
+    triggered = scenario.game.put_triggers_on_stack()
+    assert triggered == [], "no triggered ability should go on the stack from this entry"
+    assert not scenario.game.stack
 
 
 def test_amulet_untaps_a_permanent_that_entered_tapped():
