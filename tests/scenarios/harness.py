@@ -40,9 +40,12 @@ def mana_from(source: CardState, color: Color | None = None) -> list[Color]:
 
     Read off the card's own `{T}: Add ...` text by the ability parser, so Sol
     Ring correctly makes two and a dual land insists the scenario says which
-    colour it chose.
+    colour it chose. Filtered to `source.up_face_name` (CR 712.8d/712.8e/
+    712.8f): an MDFC on the battlefield only has the mana ability of the face
+    that's up, so Witch Enchanter sitting front face up (a creature) must not
+    read Witch-Blessed Meadow's `{T}: Add {W}.` off the card's other half.
     """
-    abilities = parse_mana_abilities(source.card)
+    abilities = parse_mana_abilities(source.card, source.up_face_name)
     if not abilities:
         raise ValueError(f"{source.card.name} has no mana ability")
 

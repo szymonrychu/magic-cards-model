@@ -1894,7 +1894,22 @@ def _self_enters_modifiers(game: "Game", card_state: CardState) -> list[tuple[st
     correctly places zero counters (CR 704.5f then kills a 0/0 the next state-
     based check, which is the right outcome, not a bug to paper over).
     """
-    parsed = parse_replacement_effects(card_state.card)
+    # CR 712.8d/712.8e/712.8f: a double-faced permanent has only the
+    # characteristics of the face that's up, and CR 109.3 counts abilities -
+    # replacement effects among them - as characteristics. Witch Enchanter
+    # cast for its creature front, `up_face_name` names "Witch Enchanter";
+    # the back face's "As this land enters, you may pay 3 life" is printed on
+    # Witch-Blessed Meadow and is not read here, exactly as a triggered or
+    # activated ability off the other face is not (see `triggers.py`'s
+    # `triggers_for` and `Game.activated_abilities` for the same filter).
+    # `up_face_name` is `None` for an ordinary single-faced card, which keeps
+    # every one of its own lines (`effect.face` is also `None` there).
+    up_face_name = card_state.up_face_name
+    parsed = [
+        effect
+        for effect in parse_replacement_effects(card_state.card)
+        if up_face_name is None or effect.face in (None, up_face_name)
+    ]
     performable: list[tuple[str, Apply, str]] = []
     consumed: set[int] = set()
 

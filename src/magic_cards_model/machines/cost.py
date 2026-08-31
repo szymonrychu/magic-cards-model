@@ -58,6 +58,7 @@ from .abilities import (
     TriggerEvent,
     intrinsic_land_ability,
     parse_abilities,
+    parse_mana_abilities,
 )
 from .combat import Keyword, has_keyword
 from .triggers import GameEvent, is_ability, tapped_for_mana_event
@@ -254,7 +255,9 @@ def spend_restriction(effect: str, source: CardState | None = None) -> ManaRestr
     return ManaRestriction(text=text, clauses=tuple(clauses))
 
 
-def free_tap_mana_abilities(card: Card) -> list[tuple[ManaAbility, ManaRestriction | None]]:
+def free_tap_mana_abilities(
+    card: Card, face: str | None = None
+) -> list[tuple[ManaAbility, ManaRestriction | None]]:
     """Every mana ability this card may be tapped for **on the player's
     behalf**, in printed order, each paired with the CR 106.6 restriction its
     mana would carry (None if it carries none).
@@ -274,23 +277,34 @@ def free_tap_mana_abilities(card: Card) -> list[tuple[ManaAbility, ManaRestricti
     restriction travels with the mana and `auto_tap` can ask whether it permits
     the cost being paid, so a restricted source is offered exactly when its own
     text allows it and withheld otherwise.
+
+    `face` narrows the result to one face's own abilities (CR 712.8d/712.8e/
+    712.8f), the same convention `parse_mana_abilities`/`activated_abilities_of`
+    use - pass `CardState.up_face_name`, never the bare `card`, whenever a
+    real permanent is behind this call. Witch Enchanter sitting on the
+    battlefield front face up must never offer Witch-Blessed Meadow's
+    `{T}: Add {W}.` just because it is printed on the card's other half.
+    `None` filters nothing, which keeps every single-faced card working as
+    before.
     """
     found: list[tuple[ManaAbility, ManaRestriction | None]] = []
     for ability in parse_abilities(card):
         if not isinstance(ability, ActivatedAbility) or ability.mana is None:
+            continue
+        if face is not None and ability.face != face:
             continue
         if [piece.kind for piece in ability.costs] != [CostKind.TAP]:
             continue
         found.append((ability.mana, spend_restriction(ability.effect)))
     if found:
         return found
-    intrinsic = intrinsic_land_ability(card)
+    intrinsic = intrinsic_land_ability(card, face)
     if intrinsic is not None and intrinsic.mana is not None:
         return [(intrinsic.mana, None)]
     return []
 
 
-def free_tap_mana_ability(card: Card) -> ManaAbility | None:
+def free_tap_mana_ability(card: Card, face: str | None = None) -> ManaAbility | None:
     """The one mana ability this card may be tapped for on the player's behalf
     with **no** CR 106.6 restriction attached, or None if it has none.
 
@@ -298,11 +312,13 @@ def free_tap_mana_ability(card: Card) -> ManaAbility | None:
     and so cannot safely be offered restricted mana. `auto_tap` uses
     `free_tap_mana_abilities` instead, which offers restricted abilities too
     and checks each restriction against what is actually being paid for.
+
+    `face` is the same up-face filter `free_tap_mana_abilities` takes.
     """
-    for ability, restriction in free_tap_mana_abilities(card):
+    for ability, restriction in free_tap_mana_abilities(card, face):
         if restriction is None:
             return ability
-    intrinsic = intrinsic_land_ability(card)
+    intrinsic = intrinsic_land_ability(card, face)
     return intrinsic.mana if intrinsic is not None and intrinsic.mana is not None else None
 
 
@@ -382,7 +398,7 @@ def _auto_tap_candidates(payment: "CostPayment", sources: Iterable[CardState]) -
         if not can_tap_for_mana(source, payment.game):
             continue
         land_types, own_counters, has_imprinted_card = _mana_context(payment, source)
-        for ability, printed in free_tap_mana_abilities(source.card):
+        for ability, printed in free_tap_mana_abilities(source.card, source.up_face_name):
             restriction = spend_restriction(printed.text, source) if printed is not None else None
             if restriction is not None and not restriction.allows(payment.spend):
                 continue
@@ -427,10 +443,13 @@ def _withheld_mana_sources(
             continue
         if not can_tap_for_mana(source, payment.game):
             continue
-        if free_tap_mana_abilities(source.card):
+        if free_tap_mana_abilities(source.card, source.up_face_name):
             continue
+        up_face_name = source.up_face_name
         for ability in parse_abilities(source.card):
             if not isinstance(ability, ActivatedAbility) or ability.mana is None:
+                continue
+            if up_face_name is not None and ability.face != up_face_name:
                 continue
             if [piece.kind for piece in ability.costs] == [CostKind.TAP]:
                 continue
@@ -1741,7 +1760,7 @@ def restriction_for_production(
     wanted = sorted(produces)
     matches = [
         restriction
-        for ability, restriction in free_tap_mana_abilities(source.card)
+        for ability, restriction in free_tap_mana_abilities(source.card, source.up_face_name)
         for option in ability.effective()[0]
         if sorted(option) == wanted
     ]
@@ -1927,6 +1946,19 @@ class CostPayment(BaseModel):
         CR 106.12a: an ability that triggers "whenever a permanent is tapped
         for mana" triggers when this mana ability resolves and produces mana -
         emitted here, the only place the engine taps a permanent for mana.
+
+        `source` is validated here, not trusted from the caller: this is the
+        one place a caller with an explicit, hand-picked source list (a
+        scenario's `pay_with`, a player choosing their own sources instead of
+        `auto_tap`) reaches the pool, and `auto_tap` itself is not the only
+        path in. CR 712.8d/712.8e/712.8f give a double-faced permanent only
+        the characteristics of the face that's up, so `produces` must be
+        something a `{T}`-including mana ability *of that face* could
+        actually make right now (`parse_mana_abilities` already reads only
+        the up face - see its own docstring); Witch Enchanter on the
+        battlefield front face up (a creature, no mana ability at all) is
+        refused here even if a caller asks for Witch-Blessed Meadow's `{T}:
+        Add {W}.` by name.
         """
         self._require_open()
         if not can_tap_for_mana(source, self.game):
@@ -1935,6 +1967,21 @@ class CostPayment(BaseModel):
                 "control since their most recent turn began, so its {T} ability "
                 "cannot be activated"
             )
+        abilities = parse_mana_abilities(source.card, source.up_face_name)
+        if not abilities:
+            raise ValueError(
+                f"{source.name} has no {{T}} mana ability on the face that is up "
+                "and cannot be tapped for mana"
+            )
+        land_types, own_counters, has_imprinted_card = _mana_context(self, source)
+        wanted = sorted(produces)
+        if not any(
+            sorted(option) == wanted
+            for ability in abilities
+            for option in ability.effective(land_types, own_counters, has_imprinted_card)[0]
+        ):
+            made = "".join(f"{{{color.value}}}" for color in produces) or "no mana"
+            raise ValueError(f"{source.name} cannot be tapped to add {made}")
         self._transition(CostStep.TAPPING)
 
         source.tap()

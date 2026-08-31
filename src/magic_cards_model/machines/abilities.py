@@ -94,7 +94,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field
 
-from ..models.card import Card, Color, Type
+from ..models.card import Card, Color, Type, subtypes_of, types_of
 from ..models.zone import Zone
 
 # --------------------------------------------------------------------------
@@ -370,7 +370,7 @@ class ManaAbility(BaseModel):
         raise ValueError(f"{color.value} is not one of this ability's options")
 
 
-def parse_mana_abilities(card: Card) -> list[ManaAbility]:
+def parse_mana_abilities(card: Card, face: str | None = None) -> list[ManaAbility]:
     """Every `{T}: Add ...` ability a card has itself, front face and backs.
 
     This is the same `ManaAbility` `parse_abilities` reads onto
@@ -380,6 +380,17 @@ def parse_mana_abilities(card: Card) -> list[ManaAbility]:
     mana ability": Skirk Prospector's `Sacrifice a Goblin: Add {R}.` is still
     read by `parse_abilities` as an activated ability with `mana` set, but a
     caller that only wants "what can I tap this for" does not want it.
+
+    `face` narrows the result to one face's own abilities, the same
+    `CardState.up_face_name` filter `activated_abilities_of` applies (CR
+    712.8d/712.8e/712.8f): a modal double-faced permanent has only the
+    characteristics of the face that's up, and a mana ability is one of them
+    (CR 109.3). Witch Enchanter sitting on the battlefield front face up (a
+    creature with no mana ability of its own) must not be offered
+    Witch-Blessed Meadow's `{T}: Add {W}.` just because it is printed on the
+    other half of the same card. `None` - every single-faced card, and any
+    caller that has not resolved which face is up - filters nothing, matching
+    `activated_abilities_of`'s own default.
 
     A basic land with no printed ability of its own falls back to
     `intrinsic_land_ability` (CR 305.6), the same fallback
@@ -391,10 +402,11 @@ def parse_mana_abilities(card: Card) -> list[ManaAbility]:
         if isinstance(ability, ActivatedAbility)
         and ability.mana is not None
         and any(piece.kind is CostKind.TAP for piece in ability.costs)
+        and (face is None or ability.face == face)
     ]
     if printed:
         return printed
-    intrinsic = intrinsic_land_ability(card)
+    intrinsic = intrinsic_land_ability(card, face)
     return [intrinsic.mana] if intrinsic is not None and intrinsic.mana is not None else []
 
 
@@ -506,7 +518,26 @@ _BASIC_LAND_COLORS: dict[str, Color] = {
 }
 
 
-def intrinsic_land_ability(card: Card) -> "ActivatedAbility | None":
+def _type_line_and_name_for_face(card: Card, face: str | None) -> tuple[str, str]:
+    """The type line and name to read a basic land type off of.
+
+    `face` is a face *name* - the same convention `parse_mana_abilities` and
+    `activated_abilities_of` use - not a `CardFace` object, so every caller
+    can keep passing `CardState.up_face_name` straight through. `None` (a
+    single-faced card, or a caller with no face resolved yet) reads the front
+    face, same as before this parameter existed. A named face that does not
+    match any of `card.card_faces` falls back the same way, rather than
+    raising, since a caller is never wrong to ask about a card with no faces
+    at all.
+    """
+    if face is not None:
+        for candidate in card.card_faces or []:
+            if candidate.name == face:
+                return candidate.type_line or "", candidate.name
+    return card.front_type_line, card.name
+
+
+def intrinsic_land_ability(card: Card, face: str | None = None) -> "ActivatedAbility | None":
     """The unwritten `{T}: Add [colour(s)].` a basic land type carries (CR 305.6).
 
     CR 305.6 grants the mana ability to "an object with the land card type and
@@ -523,11 +554,25 @@ def intrinsic_land_ability(card: Card) -> "ActivatedAbility | None":
     (`activated_abilities_of`). Both call this only when a card has no printed
     *activated* ability of its own, so a land that genuinely prints its mana
     ability as rules text is never second-guessed.
+
+    `face` narrows which face's own type line is read, the same convention
+    `parse_mana_abilities`/`activated_abilities_of` use (CR 712.8d/712.8e/
+    712.8f: a double-faced permanent has only the characteristics of the face
+    that's up). Reading `card.types`/`card.subtypes` unconditionally - the
+    front face only - would grant a basic-land intrinsic ability to a
+    transformed or land-face permanent whose *front* face happens to carry a
+    basic land type, even while some other face is up, and would deny one to
+    a land back face that does, while its creature front sits on the top-level
+    fields. `None` keeps the old front-face-only behaviour for a single-faced
+    card or a caller with no face resolved.
     """
-    if Type.LAND not in card.types:
+    type_line, name = _type_line_and_name_for_face(card, face)
+    if Type.LAND not in types_of(type_line):
         return None
     colors = [
-        _BASIC_LAND_COLORS[subtype] for subtype in card.subtypes if subtype in _BASIC_LAND_COLORS
+        _BASIC_LAND_COLORS[subtype]
+        for subtype in subtypes_of(type_line)
+        if subtype in _BASIC_LAND_COLORS
     ]
     if not colors:
         return None
@@ -540,7 +585,7 @@ def intrinsic_land_ability(card: Card) -> "ActivatedAbility | None":
     return ActivatedAbility(
         raw=text,
         text=text,
-        face=card.name,
+        face=name,
         cost="{T}",
         costs=[Cost(kind=CostKind.TAP, text="{T}")],
         effect=f"Add {printed_effect}.",
