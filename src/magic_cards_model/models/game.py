@@ -15,7 +15,9 @@ from ..machines.abilities import (
     CostKind,
     TriggeredAbility,
     TriggerEvent,
+    granted_mana_abilities,
     parse_abilities,
+    parse_mana_abilities,
 )
 from ..machines.casting import (
     PlayAction,
@@ -95,6 +97,7 @@ from ..machines.keywords import (
     why_cannot_turn_face_up,
 )
 from ..machines.layers import (
+    BASIC_LAND_TYPES,
     Characteristics,
     ComputedBoard,
     ContinuousEffects,
@@ -242,6 +245,104 @@ _COSTS_LESS_IF_TARGETS_COLOR_SPELL_RE = re.compile(
     r"(?P<color>white|blue|black|red|green) spell",
     re.IGNORECASE,
 )
+
+#: CR 601.2f's per-turn-history reduction: "This spell costs {2} less to cast
+#: for each card you've cycled or discarded this turn." (Hollow One, text
+#: confirmed with `resolve_cards` this session). Unlike Emrakul's row above,
+#: what is counted is not a zone but a *history* - CR 701.9a's discards, and
+#: CR 702.29a's cycling, which discards the card to pay an activation cost and
+#: so is one and the same event (CR 702.29d says the pair "cycles or discards"
+#: fires "only once when a card is cycled"). `Game.cards_discarded_this_turn`
+#: is the counter; nothing else in the engine remembers this.
+_COSTS_LESS_PER_CARD_DISCARDED_RE = re.compile(
+    r"costs \{(\d+)\} less to cast for each card you'?ve cycled or discarded this turn",
+    re.IGNORECASE,
+)
+
+#: The *domain* shape: "This spell costs {N} less to cast for each basic land
+#: type among lands you control." (Scion of Draco at {2}, Leyline Binding at
+#: {1} - both confirmed with `resolve_cards` this session). "Domain" is an
+#: ability word and has no rule of its own beyond CR 207.2c ("Ability words
+#: ... have no special rules meaning"), so the em-dashed word is deliberately
+#: outside the match and only the sentence it labels is read. CR 305.6 fixes
+#: the five types being counted: "The basic land types are Plains, Island,
+#: Swamp, Mountain, and Forest."
+_COSTS_LESS_PER_BASIC_LAND_TYPE_RE = re.compile(
+    r"costs \{(\d+)\} less to cast for each basic land type among lands you control",
+    re.IGNORECASE,
+)
+
+#: Obsidian Charmaw's own board-count shape (text confirmed with
+#: `resolve_cards` this session): "This spell costs {1} less to cast for each
+#: land your opponents control that could produce {C}." "Could produce" is
+#: CR 106.7: "The type of mana a permanent could produce at any time includes
+#: any type of mana that an ability of that permanent would produce if the
+#: ability were to resolve at that time" - so this is asked of the land's mana
+#: abilities, not of any mana actually made.
+_COSTS_LESS_PER_OPPONENT_COLORLESS_LAND_RE = re.compile(
+    r"costs \{(\d+)\} less to cast for each land your opponents control "
+    r"that could produce \{C\}",
+    re.IGNORECASE,
+)
+
+#: CR 702.41a's affinity, read off the keyword line rather than off its
+#: reminder text (which is CR 207.2 italics with no game function): "Affinity
+#: is a static ability that functions while the spell with affinity is on the
+#: stack. 'Affinity for [text]' means 'This spell costs {1} less to cast for
+#: each [text] you control.'" The amount is always {1} - it is fixed by the
+#: rule, not printed - so unlike every other row here there is no group to
+#: read it out of.
+_AFFINITY_RE = re.compile(r"\baffinity for (?P<what>[A-Za-z]+)", re.IGNORECASE)
+
+#: What "[text]" in CR 702.41a's "Affinity for [text]" can name, mapped to the
+#: thing to count on the battlefield. Card types (CR 205.2a) on the left of the
+#: split, basic land types (CR 305.6) on the right; anything else is left
+#: unread rather than guessed at, so an affinity variant this does not know
+#: reduces nothing instead of reducing wrongly.
+_AFFINITY_CARD_TYPES: dict[str, Type] = {
+    "artifacts": Type.ARTIFACT,
+    "creatures": Type.CREATURE,
+    "enchantments": Type.ENCHANTMENT,
+    "lands": Type.LAND,
+}
+_AFFINITY_SUBTYPES: dict[str, str] = {
+    "plains": "Plains",
+    "islands": "Island",
+    "swamps": "Swamp",
+    "mountains": "Mountain",
+    "forests": "Forest",
+}
+
+#: Gran-Gran's conditional discount, the one shape in the pool that is neither
+#: a flat static decrease (the Medallion cycle, which `cost_modifier_effect`
+#: already reads) nor a per-count self-discount: "Noncreature spells you cast
+#: cost {1} less to cast as long as there are three or more Lesson cards in
+#: your graveyard." (text confirmed with `resolve_cards` this session). It is
+#: another permanent's static ability, so it is read in
+#: `static_cost_modifiers_for` rather than in `cost_reduction_for`, and it is
+#: all-or-nothing: the graveyard count is a gate, not a multiplier.
+_COSTS_LESS_WHILE_GRAVEYARD_COUNT_RE = re.compile(
+    r"(?P<excludes>non)?(?P<type>creature|artifact|enchantment|instant|sorcery|land) "
+    r"spells you cast cost \{(?P<amount>\d+)\} less to cast as long as there are "
+    r"(?P<count>one|two|three|four|five|six|seven|eight|nine|ten|\d+) or more "
+    r"(?P<subtype>[A-Za-z' -]+?) cards in your graveyard",
+    re.IGNORECASE,
+)
+
+#: The number words `_COSTS_LESS_WHILE_GRAVEYARD_COUNT_RE` accepts, since a
+#: card prints "three or more", never "3 or more".
+_NUMBER_WORDS: dict[str, int] = {
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+    "ten": 10,
+}
 
 #: Ral, Monsoon Mage's own back-face intrinsic (CR 306.5b's own "additional"
 #: shape, layered on top of the printed loyalty number rather than replacing
@@ -1035,6 +1136,30 @@ class Game(BaseModel):
     thrown away. A spell is counted when it is cast (CR 601.2a, CR 601.2i),
     which is exactly what `put_on_stack` already records.
     """
+
+    cards_discarded_this_turn: dict[str, int] = Field(default_factory=dict)
+    """How many cards each player has cycled or discarded this turn, keyed by
+    the player who discarded them.
+
+    CR 701.9a is the discard itself ("To discard a card, move it from its
+    owner's hand to that player's graveyard"), and CR 702.29a makes cycling a
+    discard too: "'Cycling [cost]' means '[Cost], Discard this card: Draw a
+    card.'" - the card is discarded to pay an activation cost, so one cycled
+    card is one discarded card and is counted once, never twice, which is the
+    same "only once when a card is cycled" CR 702.29d spells out for the
+    triggered-ability version of the question.
+
+    Recorded in `discard_cards`, the single place a discard is instructed
+    (`machines/cost.py`'s discard cost component - which is what a cycling
+    activation pays - and `machines/effects.py`'s discard effects both route
+    there). `Player.discard_to_maximum_hand_size`, the cleanup step's CR 514.1
+    discard, is the one path that still does not, so a cleanup discard is not
+    counted here; nothing can be cast between it and the turn ending, so no
+    cost this feeds could read it.
+
+    Feeds Hollow One's own "This spell costs {2} less to cast for each card
+    you've cycled or discarded this turn" (CR 601.2f). Cleared when a new turn
+    begins, the same reset `spells_cast_this_turn` already gets."""
 
     life_gained_this_turn: set[str] = Field(default_factory=set)
     """Which players have gained life this turn (CR 119.9 treats any source
@@ -4873,6 +4998,14 @@ class Game(BaseModel):
             discarded.append(discard_one(self, card, username))
         if not discarded:
             return discarded
+        # CR 601.2f's "for each card you've cycled or discarded this turn"
+        # (Hollow One) counts cards, not instructions, so a two-card discard
+        # adds two. `username` may be None for a player-less scenario; there is
+        # nobody to attribute the count to then, and nothing can read it back.
+        if username is not None:
+            self.cards_discarded_this_turn[username] = self.cards_discarded_this_turn.get(
+                username, 0
+            ) + len(discarded)
         self.emit(
             GameEvent(
                 event=TriggerEvent.DISCARDS_A_CARD,
@@ -5917,19 +6050,71 @@ class Game(BaseModel):
         finds nothing to check, the same as any other condition this reads
         finding no match.
 
-        A card whose reduction sentence this does not recognise reduces nothing.
+        Four more shapes read the same "right now", each counting something
+        different, and all of them generic-mana reductions that CR 118.7a
+        confines to the generic component ("Effects that reduce a cost by an
+        amount of generic mana affect only the generic mana component of that
+        cost. They can't affect the colored or colorless mana components") -
+        `ManaCost.minus` is what enforces that, so Leyline Binding's {5}{W}
+        with all five basic land types out settles on {W} rather than {0}:
+
+        - **a per-turn history** - Hollow One's "for each card you've cycled or
+          discarded this turn", counted in `cards_discarded_this_turn`;
+        - **domain** - Scion of Draco's and Leyline Binding's "for each basic
+          land type among lands you control" (CR 305.6's five). *Domain* is an
+          ability word, and CR 207.2c gives ability words "no special rules
+          meaning", so there is no rule to cite beyond the sentence itself;
+        - **an opponent's board** - Obsidian Charmaw's "for each land your
+          opponents control that could produce {C}", which CR 106.7 defines as
+          "any type of mana that an ability of that permanent would produce if
+          the ability were to resolve at that time";
+        - **affinity** - CR 702.41a: "'Affinity for [text]' means 'This spell
+          costs {1} less to cast for each [text] you control.'" Read off the
+          keyword line, not off its reminder text, which CR 207.2 makes
+          italics with no game function.
+
+        Every shape found is added up rather than raced: nothing in the pool
+        prints two, but a card that did would get both, which is what CR 601.2f
+        says happens ("Some effects may increase or reduce the cost to pay",
+        plural). A card whose reduction sentence this does not recognise
+        reduces nothing.
         """
         # Same DFC-family fix as `effect_for` above: a modal-DFC/transform
         # spell's reduction clause lives on `card_faces`, not the raw
         # top-level `oracle_text` field, so this has to read `oracle_text`
         # (which already falls back to the up face) rather than `card.oracle_text`.
         text = spell.oracle_text or ""
+        owner = caster or spell.controller or self.active_player.username
+        amount = 0
+
         match = _COSTS_LESS_PER_CARD_TYPE.search(text)
         if match is not None:
-            owner = caster or spell.controller or self.active_player.username
             types = {card_type for card in self.player(owner).graveyard for card_type in card.types}
-            amount = int(match.group(1)) * len(types)
-            return ManaCost.parse(f"{{{amount}}}") if amount else ManaCost()
+            amount += int(match.group(1)) * len(types)
+
+        discarded = _COSTS_LESS_PER_CARD_DISCARDED_RE.search(text)
+        if discarded is not None:
+            amount += int(discarded.group(1)) * self.cards_discarded_this_turn.get(owner, 0)
+
+        domain = _COSTS_LESS_PER_BASIC_LAND_TYPE_RE.search(text)
+        if domain is not None:
+            amount += int(domain.group(1)) * len(self.basic_land_types_controlled(owner))
+
+        charmaw = _COSTS_LESS_PER_OPPONENT_COLORLESS_LAND_RE.search(text)
+        if charmaw is not None:
+            lands = [
+                permanent
+                for permanent in self.battlefield
+                if permanent.controller is not None
+                and permanent.controller != owner
+                and Type.LAND in self.characteristics_of(permanent).types
+                and self.could_produce_colorless(permanent)
+            ]
+            amount += int(charmaw.group(1)) * len(lands)
+
+        affinity = _AFFINITY_RE.search(text)
+        if affinity is not None:
+            amount += self._affinity_count(affinity.group("what").lower(), owner)
 
         target_match = _COSTS_LESS_IF_TARGETS_COLOR_SPELL_RE.search(text)
         if target_match is not None and targets:
@@ -5945,10 +6130,97 @@ class Game(BaseModel):
                 if target is None or target.zone is not Zone.STACK:
                     continue
                 if color in target.colors:
-                    return ManaCost.parse(f"{{{int(target_match.group(1))}}}")
-            return ManaCost()
+                    amount += int(target_match.group(1))
+                    break
 
-        return ManaCost()
+        return ManaCost.parse(f"{{{amount}}}") if amount else ManaCost()
+
+    def basic_land_types_controlled(self, controller: str) -> frozenset[str]:
+        """The basic land types (CR 305.6) among lands this player controls -
+        *domain*, which CR 207.2c leaves as an ability word with no rules
+        meaning of its own.
+
+        CR 305.6: "The basic land types are Plains, Island, Swamp, Mountain,
+        and Forest. If an object uses the words 'basic land type,' it's
+        referring to one of these subtypes."
+
+        Read off `characteristics_of`, not off the printed type line, because
+        CR 613.1d's layer 4 is where a land *gains* a type: Dryad of the
+        Ilysian Grove's "Lands you control are every basic land type in
+        addition to their other types" makes one land worth all five, and
+        counting the printing would miss it. A land whose types layer 4 has not
+        touched reads back exactly what it prints, so nothing else changes.
+        """
+        return frozenset(
+            subtype
+            for permanent in self.permanents_controlled_by(controller)
+            for chars in [self.characteristics_of(permanent)]
+            if Type.LAND in chars.types
+            for subtype in chars.subtypes
+            if subtype in BASIC_LAND_TYPES
+        )
+
+    def could_produce_colorless(self, permanent: CardState) -> bool:
+        """Whether this permanent could produce {C} right now (CR 106.7).
+
+        CR 106.7: "The type of mana a permanent could produce at any time
+        includes any type of mana that an ability of that permanent would
+        produce if the ability were to resolve at that time" - so this asks the
+        permanent's mana abilities what they would add, never whether any mana
+        was actually made. Obsidian Charmaw's "for each land your opponents
+        control that could produce {C}" is the only reader today.
+
+        Printed abilities and `granted_ability_texts`'s own are both asked, the
+        same pair `machines/cost.py` taps a source with: Urza's Saga chapter I
+        grants "{T}: Add {C}." onto a land that prints no mana ability at all,
+        and that land could produce {C}. The board-conditional clauses ("If you
+        control an Urza's Mine and an Urza's Power-Plant, add {C}{C}{C}
+        instead") are resolved through `ManaAbility.effective`, so the answer is
+        the one that holds for the board as it stands - which is what "at any
+        time" in CR 106.7 pins it to.
+
+        `any_color` abilities are not counted: CR 106.1b makes colorless one of
+        the six *types* of mana but not one of the five colors, so "one mana of
+        any color" is never {C}.
+        """
+        abilities = parse_mana_abilities(
+            permanent.card, permanent.up_face_name
+        ) + granted_mana_abilities(permanent.granted_ability_texts)
+        if not abilities:
+            return False
+        land_types = self._controlled_land_types(permanent.controller_or_owner)
+        own_counters = frozenset(permanent.counters.counts)
+        has_imprinted_card = self.card_imprinted_on(permanent.id) is not None
+        return any(
+            Color.COLORLESS in option
+            for ability in abilities
+            for option in ability.effective(land_types, own_counters, has_imprinted_card)[0]
+        )
+
+    def _affinity_count(self, what: str, controller: str) -> int:
+        """How much CR 702.41a's affinity takes off, in generic mana.
+
+        "'Affinity for [text]' means 'This spell costs {1} less to cast for
+        each [text] you control.'" - one generic per matching permanent, and
+        the {1} is the rule's, not the card's, so the count *is* the amount.
+        A "[text]" neither `_AFFINITY_CARD_TYPES` nor `_AFFINITY_SUBTYPES`
+        names is left at nothing rather than guessed at.
+        """
+        card_type = _AFFINITY_CARD_TYPES.get(what)
+        subtype = _AFFINITY_SUBTYPES.get(what)
+        if card_type is None and subtype is None:
+            return 0
+        counted = 0
+        for permanent in self.permanents_controlled_by(controller):
+            chars = self.characteristics_of(permanent)
+            matches = (card_type is not None and card_type in chars.types) or (
+                subtype is not None and subtype in chars.subtypes
+            )
+            # One permanent is one count however many ways it matches: CR
+            # 205.2b makes an artifact creature both types, and "affinity for
+            # artifacts" counts artifacts, not card types.
+            counted += 1 if matches else 0
+        return counted
 
     def static_cost_modifiers_for(
         self, spell: CardState, caster: str | None = None
@@ -6045,6 +6317,21 @@ class Game(BaseModel):
                 text = line.strip()
                 if not text or text not in static_lines:
                     continue
+                # Read before `cost_modifier_effect`, which has no shape for a
+                # discount *gated* on a count rather than scaled by one:
+                # Gran-Gran's "Noncreature spells you cast cost {1} less to
+                # cast as long as there are three or more Lesson cards in your
+                # graveyard." The gate is checked against the graveyard as it
+                # stands when CR 601.2f determines the cost, which is five
+                # steps after CR 601.2a moved the spell being cast off it -
+                # so flashing back one of exactly three Lessons leaves two and
+                # gets no discount.
+                gated = _COSTS_LESS_WHILE_GRAVEYARD_COUNT_RE.search(text)
+                if gated is not None:
+                    if self._gated_discount_applies(gated, spell, permanent, caster):
+                        decreases.append(ManaCost.parse(f"{{{int(gated.group('amount'))}}}"))
+                    continue
+
                 effect = cost_modifier_effect(text)
                 if effect is None:
                     if (
@@ -6101,6 +6388,61 @@ class Game(BaseModel):
                 decreases.append(ManaCost.parse(f"{{{grant.amount}}}"))
 
         return increases, decreases, floor
+
+    def _gated_discount_applies(
+        self,
+        gated: "re.Match[str]",
+        spell: CardState,
+        source: CardState,
+        caster: str,
+    ) -> bool:
+        """Whether a `_COSTS_LESS_WHILE_GRAVEYARD_COUNT_RE` line discounts this
+        spell right now - Gran-Gran's "Noncreature spells you cast cost {1}
+        less to cast as long as there are three or more Lesson cards in your
+        graveyard."
+
+        Three gates, all of which have to hold:
+
+        - **whose spell** - "spells *you* cast" is controller-scoped, the same
+          way `CostModifierKind.COLOR_DECREASE`/`TYPE_DECREASE` already are, so
+          the permanent's controller has to be the caster;
+        - **which spells** - "Noncreature" excludes the named type (CR 205.2b:
+          an object with more than one card type "satisf[ies] the criteria for
+          any effect that applies to any of their card types", so an artifact
+          creature is a creature spell and gets nothing);
+        - **the gate itself** - "three or more `<X>` cards in your graveyard",
+          counted against the caster's graveyard as it stands. The count is a
+          gate, not a multiplier: four Lessons discount exactly as much as
+          three do.
+
+        The counted noun is matched against both card types (CR 205.2a) and
+        subtypes (CR 205.3) - "Lesson" is a subtype of an instant or sorcery
+        card, and the same sentence would read "creature cards" on a card that
+        printed one.
+        """
+        if source.controller is not None and source.controller != caster:
+            return False
+
+        named = gated.group("type").lower()
+        spell_type = next((t for t in Type if t.value.lower() == named), None)
+        if spell_type is not None:
+            has_type = spell_type in spell.types
+            if bool(gated.group("excludes")) == has_type:
+                return False
+
+        wanted = gated.group("count").lower()
+        needed = int(wanted) if wanted.isdigit() else _NUMBER_WORDS.get(wanted, 0)
+        if not needed:
+            return False
+
+        noun = gated.group("subtype").strip().lower()
+        counted = 0
+        for card_state in self.player(caster).graveyard:
+            subtypes = {subtype.lower() for subtype in card_state.subtypes}
+            types = {card_type.value.lower() for card_type in card_state.types}
+            if noun in subtypes or noun in types:
+                counted += 1
+        return counted >= needed
 
     def determine_total_cost(self, casting: object) -> CostPayment:
         """CR 601.2f: work out the reduction now, then lock the total cost in.
@@ -7443,6 +7785,7 @@ class Game(BaseModel):
             self.spells_cast_last_turn = self.spells_cast_this_turn
             self.spells_cast_this_turn = {}
             self.permanents_left_battlefield_this_turn = {}
+            self.cards_discarded_this_turn = {}
             self.life_gained_this_turn = set()
             # `play_permissions` is deliberately **not** cleared here. CR 514.2
             # ends an "until end of turn" effect in the cleanup step and

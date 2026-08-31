@@ -336,13 +336,19 @@ def test_iroh_grants_a_lesson_in_the_graveyard_flashback_one():
 
 @pytest.mark.xfail(
     strict=True,
-    reason="Gran-Gran's 'Noncreature spells you cast cost {1} less to cast as "
-    "long as there are three or more Lesson cards in your graveyard' never "
-    "reaches the cost at all: the cast costs the same {1}{R} with three Lessons "
-    "in the graveyard, with four, and with none. `machines/cost.py` grew static "
-    "cost *increases* (DDR#978 above) but no conditional reduction keyed on a "
-    "zone count, so the episode's actual question - which side of CR 601.2a the "
-    "count is taken on - cannot even be posed.",
+    reason="Gran-Gran's discount now reaches the cost - `Game.static_cost_"
+    "modifiers_for` reads the conditional 'as long as there are three or more "
+    "Lesson cards in your graveyard' shape - but two things still make both "
+    "halves of this assertion wrong, measured today. (1) Iroh's CR 400.7g "
+    "flashback grant is still unread (the xfail above), so the base cost is "
+    "Combustion Technique's printed {1}{R} rather than the granted {1}, and "
+    "the four-Lesson case lands on {R} rather than {0}. (2) `machines/"
+    "casting.py` has not performed CR 601.2a's move to the stack by the time "
+    "the cost is determined - `casting.spell.zone` is still the graveyard - so "
+    "the three-Lesson case counts the spell itself and wrongly gets the "
+    "discount, landing on {R} rather than {1}{R}. That second half is the "
+    "episode's actual question, and it is now posable: the count is taken on "
+    "the wrong side of CR 601.2a.",
 )
 def test_gran_grans_discount_counts_the_graveyard_after_the_spell_left_it():
     """DDR#996: casting the Lesson itself takes it out of the count.
