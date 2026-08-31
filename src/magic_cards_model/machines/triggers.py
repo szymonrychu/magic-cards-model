@@ -1539,7 +1539,8 @@ def triggered_abilities_of(card: Card) -> list[TriggeredAbility]:
     ]
     expanded: list[TriggeredAbility] = []
     for ability in printed:
-        expanded.extend(_expand_attacks_or_blocks(ability))
+        for split in _expand_attacks_or_blocks(ability):
+            expanded.extend(_expand_enters_or_attacks(split))
     return expanded + keyword_triggered_abilities(card)
 
 
@@ -1571,6 +1572,43 @@ def _expand_attacks_or_blocks(ability: TriggeredAbility) -> list[TriggeredAbilit
         ),
         ability.model_copy(
             update={"condition": "this creature blocks", "event": TriggerEvent.BLOCKS}
+        ),
+    ]
+
+
+#: "Whenever this creature enters or attacks, ..." - Primeval Titan's own
+#: condition, the same compound shape `_ATTACKS_OR_BLOCKS_RE` reads for
+#: "attacks or blocks": `_trigger_event` (`machines/abilities.py`) reads
+#: "enters?" ahead of "attacks?" in its own precedence order, so a compound
+#: "enters or attacks" condition is read as `TriggerEvent.ENTERS_THE_
+#: BATTLEFIELD` alone and the "or attacks" half is silently dropped - a real
+#: Primeval Titan that attacks without ever having triggered on entry (cast
+#: with haste, or already on the battlefield when this engine first sees it)
+#: would never see its own attack trigger.
+_ENTERS_OR_ATTACKS_RE = re.compile(r"^this creature enters or attacks$", re.IGNORECASE)
+
+
+def _expand_enters_or_attacks(ability: TriggeredAbility) -> list[TriggeredAbility]:
+    """One ability whose condition is `_ENTERS_OR_ATTACKS_RE`'s shape becomes
+    two: the same printed effect, once watching CR 603.6a's entering event and
+    once watching CR 508.3c's attack, each a `TriggeredAbility` in its own
+    right - the same split `_expand_attacks_or_blocks` already performs for
+    its own compound condition, reused here for a second one rather than
+    writing a second splitter.
+
+    Every other printed ability passes through unchanged, singleton-wrapped.
+    """
+    if not _ENTERS_OR_ATTACKS_RE.match(ability.condition.strip()):
+        return [ability]
+    return [
+        ability.model_copy(
+            update={
+                "condition": "this creature enters",
+                "event": TriggerEvent.ENTERS_THE_BATTLEFIELD,
+            }
+        ),
+        ability.model_copy(
+            update={"condition": "this creature attacks", "event": TriggerEvent.ATTACKS}
         ),
     ]
 

@@ -140,6 +140,13 @@ class ReplacementKind(StrEnum):
     SKIP = "skip"
     #: CR 614.1c - "[This permanent] enters tapped."
     ENTERS_TAPPED = "enters_tapped"
+    #: CR 614.1d - "[Objects] enter [the battlefield] untapped." A general
+    #: effect watching a *class* of permanent, not the printing permanent's own
+    #: CR 614.12 self-modification - Spelunking's "Lands you control enter
+    #: untapped" is the pool's only printing, overriding whatever tapped state
+    #: another effect (a search's own "tapped", a shockland's own "enters
+    #: tapped") would otherwise have given the entering land.
+    ENTERS_UNTAPPED = "enters_untapped"
     #: CR 614.1c - "[This permanent] enters with [counters] on it."
     ENTERS_WITH = "enters_with"
     #: CR 614.1c, 616.1c - "... enter as a copy of ...".
@@ -176,6 +183,7 @@ PREVENTION_KINDS = frozenset(
 ENTERS_KINDS = frozenset(
     {
         ReplacementKind.ENTERS_TAPPED,
+        ReplacementKind.ENTERS_UNTAPPED,
         ReplacementKind.ENTERS_WITH,
         ReplacementKind.ENTERS_AS_COPY,
         ReplacementKind.AS_ENTERS,
@@ -357,6 +365,14 @@ _ENTERS_TAPPED = re.compile(
     r"(?:\s+(?P<unless>unless .+?))?\.?$",
     re.IGNORECASE,
 )
+# CR 614.1d - "[Objects] enter [the battlefield] untapped." Spelunking's own
+# "Lands you control enter untapped": a plural, class-scoped subject ("Lands
+# you control"), not `_ENTERS_TAPPED`'s singular "[this permanent]" - and the
+# opposite tapped state, which is why this is not folded into that regex with
+# an alternation. `subject` is read back for `_refers_to_self` the same way
+# every other entering-shape regex here does, though a "you control" subject
+# never actually matches it (it names a class, not the printing card itself).
+_ENTERS_UNTAPPED = re.compile(rf"^(?P<subject>.+?) {_ENTERS} untapped\.?$", re.IGNORECASE)
 _ENTERS_WITH = re.compile(
     rf"^(?:If (?P<condition>[^,]+),\s*)?(?P<subject>[^,]+?) {_ENTERS} with (?P<what>.+?)"
     r"(?:\s+on it)?(?:,\s*(?P<tail>where .+?))?\.?$",
@@ -501,6 +517,7 @@ def _parse_sentence(sentence: str, names: tuple[str, ...]) -> list[ReplacementEf
         _try_as_turned_face_up,
         _try_enters_as_copy,
         _try_enters_tapped,
+        _try_enters_untapped,
         _try_enters_with,
         _try_skip,
         _try_instead_of,
@@ -724,6 +741,22 @@ def _try_enters_tapped(sentence: str, names: tuple[str, ...]) -> list[Replacemen
             subject=subject,
             tapped=True,
             condition=(condition or "").strip() or None,
+            self_replacement=_refers_to_self(subject, names),
+        )
+    ]
+
+
+def _try_enters_untapped(sentence: str, names: tuple[str, ...]) -> list[ReplacementEffect]:
+    match = _ENTERS_UNTAPPED.match(sentence)
+    if not match:
+        return []
+    subject = match.group("subject").strip()
+    return [
+        _make(
+            ReplacementKind.ENTERS_UNTAPPED,
+            sentence,
+            subject=subject,
+            tapped=False,
             self_replacement=_refers_to_self(subject, names),
         )
     ]
@@ -1656,6 +1689,59 @@ def _reduce_counters(game: "Game", source: CardState, event: ReplaceableEvent) -
     event.amount = max(event.amount - 1, 0)
 
 
+# -- "lands you control enter untapped" (CR 614.1d, general and non-self) --
+
+
+def _lands_you_control_enter_untapped_applies(
+    game: "Game", source: CardState, event: ReplaceableEvent
+) -> bool:
+    """ "Lands you control enter untapped" - Spelunking's own second paragraph.
+
+    Unlike `_ENTERS_TAPPED`'s self-only shockland shape, this watches every
+    land entering under its controller's control, not only Spelunking's own
+    arrival - CR 614.12's "may come from the permanent itself if [it affects]
+    only that permanent" is exactly the case this is *not*: "lands you
+    control" plainly affects other objects.
+    """
+    if event.kind is not EventKind.ENTERS_BATTLEFIELD or event.card is None:
+        return False
+    return (
+        Type.LAND in event.card.types
+        and event.card.controller is not None
+        and event.card.controller == source.controller
+    )
+
+
+def _lands_you_control_enter_untapped(
+    game: "Game", source: CardState, event: ReplaceableEvent
+) -> None:
+    """ "...enter untapped." Overrides whatever tapped state the event already
+    carried - a search's own "tapped" (CR 614.1d applies alongside whatever
+    other replacement effect already ran, CR 616.1), a shockland's own "enters
+    tapped" - CR 110.5b's default the sentence restates rather than a new one.
+    """
+    event.tapped = False
+
+
+def _compile_lands_you_control_enter_untapped(effect: ReplacementEffect) -> CardReplacement | None:
+    if effect.kind is not ReplacementKind.ENTERS_UNTAPPED:
+        return None
+    if effect.self_replacement:
+        # A self-referential "this land enters untapped" would already be
+        # read by `_self_enters_modifiers` instead (CR 614.12) - not printed
+        # by any card in this pool, but excluded here so the two paths never
+        # double up if one ever is.
+        return None
+    subject = (effect.subject or "").strip().lower()
+    if subject != "lands you control":
+        return None
+    return CardReplacement(
+        label=effect.text,
+        applies=_lands_you_control_enter_untapped_applies,
+        apply=_lands_you_control_enter_untapped,
+    )
+
+
 def _compile_counter_reducer(effect: ReplacementEffect) -> CardReplacement | None:
     if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD:
         return None
@@ -1693,6 +1779,7 @@ _COMPILERS: tuple[Callable[[ReplacementEffect], CardReplacement | None], ...] = 
     _compile_token_doubler,
     _compile_counter_doubler,
     _compile_counter_reducer,
+    _compile_lands_you_control_enter_untapped,
 )
 
 
