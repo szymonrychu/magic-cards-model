@@ -170,16 +170,15 @@ def test_drown_in_the_loch_creature_mode_accepts_a_creature_within_the_count():
     casting.choose_targets([giant])  # no refusal
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="the targeting half is read now, but Spell Snare has no spell effect - "
-    "`effect_for('Spell Snare', 'Counter target spell with mana value 2.')` is None, "
-    "measured - so the legally targeted spell is never removed from the stack. "
-    "That is the counter-qualifier family in machines/effects.py (plan task 1.13), "
-    "not machines/targeting.py.",
-)
 def test_spell_snare_actually_counters_the_spell_it_legally_targeted():
-    """CR 701.6a's counter: the targeted spell leaves the stack unresolved."""
+    """CR 701.6a's counter: the targeted spell leaves the stack unresolved.
+
+    Written as a strict xfail when the targeting half landed - the effect half
+    was measured as `None` at the time, and named as the counter-qualifier
+    family's job. That family landed in the same wave, so the marker came off
+    rather than the test: both halves are real now, and Spell Snare needed
+    both to do anything at all.
+    """
     scenario = _snare_board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
