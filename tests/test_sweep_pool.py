@@ -139,21 +139,47 @@ def test_a_permanent_spells_own_resolution_is_not_counted_as_a_dead_clause():
 
 
 def test_a_dead_clause_cannot_hide_behind_a_working_one():
-    """Territorial Kavu's attack trigger is read and its domain
-    characteristic-defining ability (CR 613.4a: "Layer 7a: Effects from
-    characteristic-defining abilities that define power and/or toughness are
-    applied") is not. Reporting the best outcome per card called this whole
-    card handled, and the same rule hid Obsidian Charmaw's cost line and
-    Engineered Explosives' sunburst.
-    """
-    clauses = classify_clauses(card("Territorial Kavu"))
-    by_source = {clause.source: clause.category for clause in clauses}
-    assert by_source["triggered"] == HANDLED
-    assert by_source["static"] == SILENT
+    """Obsidian Charmaw's enters-trigger is read and its cost-reduction static
+    line is not, so reporting the best outcome per card would call the whole
+    card handled. The card-level verdict must be the worse of the two.
 
-    category, detail = classify_card(card("Territorial Kavu"))
-    assert category == SILENT
-    assert "power and toughness" in detail
+    This case was originally written against Territorial Kavu, whose domain
+    characteristic-defining ability (CR 613.4a) was unread at the time. The
+    text-keyed layer work landed in the same wave and reads it now - Kavu is
+    `handled` on both clauses, pinned below - so the case moved to a card that
+    still has the split rather than being deleted along with the gap it found.
+    """
+    by_source = {c.source: c.category for c in classify_clauses(card("Obsidian Charmaw"))}
+    assert by_source["triggered"] == HANDLED
+    assert by_source["static"] == STATIC_UNAUDITED
+
+    assert classify_card(card("Obsidian Charmaw"))[0] == STATIC_UNAUDITED
+
+
+def test_the_formerly_unread_layer_shapes_are_read_now():
+    """The six cards `test_an_unread_continuous_effect_is_flagged_rather_than_failing_open`
+    was written against are all read since the text-keyed layer work, and
+    Territorial Kavu with them. Pinned so the gain cannot silently regress -
+    without this, re-parametrising that case would have quietly discarded the
+    evidence that it was ever closed.
+    """
+    for name in (
+        "Stormscale Scion",
+        "Kaheera, the Orphanguard",
+        "Harbinger of the Seas",
+        "Yavimaya, Cradle of Growth",
+        "Leyline of the Guildpact",
+        "Toph, the First Metalbender",
+        "Territorial Kavu",
+    ):
+        statics = [c.category for c in classify_clauses(card(name)) if c.source == "static"]
+        assert statics, f"{name} has no static clause to judge"
+        # At least one, not all: Kaheera carries a second static line -
+        # companion (CR 702.139a) - which is still genuinely unmodelled and
+        # correctly reads `static_unaudited`. The claim here is that the
+        # continuous effect this case was written about is read now, not that
+        # every card on the list is finished.
+        assert HANDLED in statics, f"{name}'s continuous effect regressed to {statics}"
 
 
 def test_the_x_probes_are_the_one_place_the_best_answer_wins():
@@ -168,15 +194,20 @@ def test_the_x_probes_are_the_one_place_the_best_answer_wins():
 # -- Defect 3: the layer-effect near-miss detector fails open ---------------
 
 
+#: The six cards this case was written against - Stormscale Scion, Kaheera,
+#: Harbinger of the Seas, Yavimaya, Leyline of the Guildpact and Toph - were
+#: all genuinely unread when it was written, and are all read now: the
+#: text-keyed layer work landed in the same wave and closed every one of
+#: them. `test_the_formerly_unread_layer_shapes_are_read_now` below pins that
+#: gain so it cannot silently regress. The parameters here were re-picked
+#: from shapes the detector still flags today, because a fail-open test whose
+#: every example has been implemented stops testing anything at all.
 @pytest.mark.parametrize(
     ("name", "phrase"),
     [
-        ("Stormscale Scion", "Other Dragons you control get +1/+1."),
-        ("Kaheera, the Orphanguard", "gets +1/+1 and has vigilance"),
-        ("Harbinger of the Seas", "Nonbasic lands are Islands."),
-        ("Yavimaya, Cradle of Growth", "Each land is a Forest"),
-        ("Leyline of the Guildpact", "is all colors"),
-        ("Toph, the First Metalbender", "are lands in addition to their other types"),
+        ("Angel of Jubilation", "Other nonblack creatures you control get +1/+1."),
+        ("Bloodghast", "This creature has haste as long as an opponent has 10 or less life."),
+        ("Caged Sun", "Creatures you control of the chosen color get +1/+1."),
     ],
 )
 def test_an_unread_continuous_effect_is_flagged_rather_than_failing_open(name, phrase):
