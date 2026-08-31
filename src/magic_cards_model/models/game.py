@@ -2579,12 +2579,63 @@ class Game(BaseModel):
         printed = ability.ability
         text = printed.text if isinstance(printed, TriggeredAbility) else ""
         profile = profile_for_text(text)
+        return self._ask_targets(
+            profile, ability.controller, ability.source_id, ability.source_name, text
+        )
+
+    def _ask_targets(
+        self,
+        profile: TargetingProfile,
+        controller: str,
+        source_id: UUID | None,
+        source_name: str,
+        text: str,
+    ) -> list[TargetRef] | None:
+        """Ask `controller` for `profile`'s targets, addressed to `source_name` (CR 601.2c).
+
+        The shared machinery behind both halves of CR 602.2b/603.3d's "the
+        remainder of the process ... is identical to the process for casting a
+        spell": a triggered ability's own announcement (`_ask_trigger_targets`)
+        and an activated ability's, when its caller supplies no targets
+        (`Game.activate_ability`). Both ask through the ordinary `CHOOSE_TARGETS`
+        question, with the legal candidates worked out by `_legal_target_candidates`
+        - the same checker `machines/targeting.py`'s `TargetingProfile.check`
+        already uses - so this module does not grow a second target grammar.
+
+        Three things can leave this with no targets, and something to say
+        about why, recorded on `targeting_notices` rather than silently
+        returned as if nothing were amiss (the DDR#978-shaped defect: an
+        ability that does nothing looks identical to one with nothing to
+        point at):
+
+        - the restriction itself could not be read at all
+          (`TargetingProfile.understood` is False) - `TargetingNoticeKind.UNPARSED`,
+          an engine gap this returns `[]` for, same as ever;
+        - nothing on the battlefield satisfies it right now, but the
+          requirement was optional anyway (CR 115.6's "up to N", CR 107.1c's
+          "any number of" - `profile.min_targets` is 0) -
+          `TargetingNoticeKind.NO_LEGAL_TARGET`, a legal game state
+          (CR 608.2d's own "nobody says otherwise" default), not a bug -
+          returns `[]`, and the ability still goes on the stack choosing
+          nothing;
+        - nothing satisfies it and the requirement was mandatory
+          (`profile.min_targets` > 0, a plain "target permanent" with no
+          "up to") - `None`, so the caller never puts the ability where it
+          would sit doing nothing: CR 603.3d removes a triggered ability from
+          the stack in this case, and CR 601.2e/602.2b makes an activation
+          with no legal target for a mandatory requirement illegal to begin
+          at all (the same refusal `Game.cast_free_from_exile` already gives
+          a spell with no legal target, CR 601.2c).
+
+        An ability with no targeting requirement at all is not asked anything
+        and gets no notice either - there is nothing to be silent about.
+        """
         if not profile.understood:
             self.targeting_notices.append(
                 TargetingNotice(
                     kind=TargetingNoticeKind.UNPARSED,
-                    source_id=ability.source_id,
-                    source_name=ability.source_name,
+                    source_id=source_id,
+                    source_name=source_name,
                     text=text,
                 )
             )
@@ -2592,13 +2643,13 @@ class Game(BaseModel):
         if not profile.requirements:
             return []
 
-        candidates = self._legal_target_candidates(profile, ability.controller, ability.source_id)
+        candidates = self._legal_target_candidates(profile, controller, source_id)
         if not candidates:
             self.targeting_notices.append(
                 TargetingNotice(
                     kind=TargetingNoticeKind.NO_LEGAL_TARGET,
-                    source_id=ability.source_id,
-                    source_name=ability.source_name,
+                    source_id=source_id,
+                    source_name=source_name,
                     text=text,
                 )
             )
@@ -2606,9 +2657,9 @@ class Game(BaseModel):
 
         decision = Decision(
             kind=DecisionKind.CHOOSE_TARGETS,
-            player=ability.controller,
-            prompt=f"choose targets for {ability.source_name}",
-            source=ability.source_name,
+            player=controller,
+            prompt=f"choose targets for {source_name}",
+            source=source_name,
             targets=tuple(TargetRef.coerce(candidate) for candidate in candidates),
             target_maximum=profile.max_targets,
             target_minimum=min(profile.min_targets, len(candidates)),
@@ -6681,7 +6732,28 @@ class Game(BaseModel):
         text = substitute_x(ability.text, x_value) if "{X}" in ability.cost else ability.text
         profile = profile_for_text(text)
         if profile.understood and profile.requirements:
-            profile.check(list(targets or []), controller, self, source_id=permanent.id)
+            if targets is None:
+                # The caller supplied nothing, so this is not yet a target
+                # announcement (CR 601.2c) at all - ask, the same way a
+                # triggered ability's own announcement is asked
+                # (`_ask_targets`, shared with `_ask_trigger_targets`). An
+                # explicit list, even an empty one, is a real answer already
+                # given and is checked below instead, exactly as before.
+                asked = self._ask_targets(profile, controller, permanent.id, permanent.name, text)
+                if asked is None:
+                    # CR 601.2e, imported wholesale by CR 602.2b: a proposed
+                    # activation that cannot legally be completed - here, a
+                    # mandatory target (CR 601.2c) with no legal object or
+                    # player to name - never happens at all, the same refusal
+                    # `Game.cast_free_from_exile` already gives a spell with
+                    # no legal target for the same reason (CR 601.2c).
+                    raise ValueError(
+                        f"{permanent.name}'s ability requires a target, but no legal "
+                        "target exists, so it cannot be activated (CR 601.2c, CR 602.2b)"
+                    )
+                targets = asked
+            else:
+                profile.check(list(targets), controller, self, source_id=permanent.id)
 
         key = self._activation_key(permanent, index)
         self.activations[key] = self.activations.get(key, 0) + 1
