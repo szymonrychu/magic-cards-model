@@ -1240,12 +1240,16 @@ def prowess_triggers(game: Any, spell: CardState) -> list[CardState]:
     "Prowess is a triggered ability. 'Prowess' means "Whenever you cast a
     noncreature spell, this creature gets +1/+1 until end of turn.""
 
-    Two halves, and only the first is executable here. The trigger condition is
-    a *cast* (CR 601.2a), so it has already happened by the time the spell is on
-    the stack and countering the spell afterwards does not undo it (CR 603.2g
-    is about events that never happened; this one did). The effect is a
-    continuous effect with a duration and `Game` holds none - see
-    `docs/engine-coverage.md`. `prowess_bonus` says what it would be.
+    This answers the trigger half only, and is a *query*: which creatures this
+    cast triggered. The trigger condition is a cast, complete once the spell is
+    on the stack (CR 601.2i), so countering the spell afterwards does not undo
+    it (CR 603.2g is about events that never happened; this one did).
+
+    Nothing has to call this for prowess to work in a game. `machines/triggers`
+    produces the same triggers from `_prowess_ability`'s expansion and puts them
+    on the stack (CR 603.3), and `_prowess_effect` applies the +1/+1 when one
+    resolves. This is the shape a test or a caller uses to ask the question
+    directly.
     """
     if Type.CREATURE in spell.card.types:
         return []
@@ -1259,8 +1263,9 @@ def prowess_triggers(game: Any, spell: CardState) -> list[CardState]:
     ]
 
 
-#: What one prowess trigger would do on resolution (CR 702.108a). Reported
-#: rather than applied: see `prowess_triggers`.
+#: What one prowess trigger does on resolution (CR 702.108a), applied by
+#: `_prowess_effect` as a sublayer 7c continuous effect (CR 613.4c) that ends in
+#: the cleanup step (CR 514.2, CR 703.4p).
 prowess_bonus: tuple[int, int] = (1, 1)
 
 
