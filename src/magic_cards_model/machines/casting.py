@@ -515,7 +515,8 @@ def granted_cast_options(
     Only the caster's own permanents are read ("spells **you** cast", "in
     **your** graveyard"), only genuine `AbilityKind.STATIC` lines (CR 113.3d's
     "Static abilities are written as statements. They're simply true."), and
-    only when the zone the grant names is the zone this cast is coming from. The keyword itself is then expanded by
+    only when the zone the grant names is the zone this cast is coming from.
+    The keyword itself is then expanded by
     `_option_from_keyword`, the same reader that expands a printed one, so a
     granted evoke costs and behaves exactly like a printed evoke (CR 702.74a)
     instead of becoming a second, parallel notion of the keyword.
