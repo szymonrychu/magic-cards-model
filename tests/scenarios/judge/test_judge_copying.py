@@ -344,20 +344,19 @@ def test_a_spider_bringer_and_a_real_bringer_can_both_end_up_on_the_battlefield(
 # --------------------------------------------------------------------------
 
 
-def test_jolraels_animation_needs_x_substituted_and_biomancy_needs_a_clause():
-    """DDR#980, the provable half: exactly what is still missing, and where.
+def test_jolraels_animation_substitutes_x_and_biomancy_reads_its_copy_clause():
+    """DDR#980, the provable half: which parser reads which sentence.
 
-    Jolrael's animation *is* a shape `machines/layers.py` reads -
+    Jolrael's animation is a shape `machines/layers.py` reads -
     `_TARGET_ANIMATION_RE`, layer 4 for the types (CR 613.1d), layer 5 for the
     colours (CR 613.1e), layer 6 for the keywords (CR 613.1f) and sublayer 7b
     for the P/T (CR 613.4b) - but only once the "X/X ... where X is the number
-    of cards in your hand" tail has been turned into a literal. That
-    substitution belongs to `machines/effects.py`, which already does exactly
-    it for a mass pump's "+X/+X ... where X is ..." (`_WHERE_X_IS_RE`), and
-    this test pins the difference: the printed line comes back `None` and the
-    same line with a number in it comes back an effect.
-
-    Aggressive Biomancy is still wholly unbuilt.
+    of cards in your hand" tail has been turned into a literal.
+    `machines/effects._parse_where_x_is_continuous_effect` is that
+    substitution, the general-sentence twin of the one `_parse_mass_pump_
+    clause` has always done for "+X/+X ... where X is ...". CR 608.2h fixes
+    the number as the ability resolves, which is why the parser hands back a
+    closure rather than resolving anything now.
 
     Jolrael, Voice of Zhalfir (verified with `resolve_cards`): "At the
     beginning of combat on your turn, up to one target land you control
@@ -367,19 +366,22 @@ def test_jolraels_animation_needs_x_substituted_and_biomancy_needs_a_clause():
     creature you control, except they have 'When this token enters, it fights
     up to one target creature you don't control.'"
 
-    `_parse_token_clause` refuses the moment it reads "copies of" - the same
-    refusal DDR#951 above already documents - so there is nothing to copy the
-    land with.
+    Aggressive Biomancy's own X is CR 107.3a's, announced as the spell is
+    cast, so `effect_for` reads nothing off the printed text until that
+    number is substituted in - which is exactly what `effect_for` does on its
+    second pass when the caller hands it the announced `x_value`.
     """
-    assert effect_for("Aggressive Biomancy", card("Aggressive Biomancy").oracle_text) is None
+    biomancy = card("Aggressive Biomancy")
+    assert effect_for("Aggressive Biomancy", biomancy.oracle_text) is None
+    assert effect_for("Aggressive Biomancy", biomancy.oracle_text, x_value=2) is not None
 
     jolrael = card("Jolrael, Voice of Zhalfir")
     printed = jolrael.oracle_text.split("\n")[0].split(", ", 1)[1]
     assert printed.startswith("up to one target land you control becomes an X/X")
-    assert trigger_effect_for(jolrael.name, TriggerEvent.BEGINNING_OF_STEP, printed) is None
+    assert trigger_effect_for(jolrael.name, TriggerEvent.BEGINNING_OF_STEP, printed) is not None
 
-    # The identical sentence with CR 107.3a's X already resolved - which is
-    # what `machines/effects.py` would hand the layer parser - does read.
+    # The identical sentence with the number already in it is the shape the
+    # layer parser reads, and needs no substitution step at all.
     substituted = (
         "up to one target land you control becomes a 1/1 green and blue Bird "
         "creature with flying and haste until end of turn. It's still a land."
@@ -390,19 +392,6 @@ def test_jolraels_animation_needs_x_substituted_and_biomancy_needs_a_clause():
     )
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Two clause parsers are missing, both in machines/effects.py. (1) Jolrael's trigger "
-    "prints its magnitude as 'an X/X ... where X is the number of cards in your hand', and "
-    "nothing splits that tail off and substitutes a literal for a *non-mass-pump* sentence - "
-    "`_WHERE_X_IS_RE` is only reached from `_parse_mass_pump_clause`. With the number already in "
-    "it, `machines/layers._TARGET_ANIMATION_RE` reads the whole animation (proven above), so the "
-    "land is simply never animated. (2) 'Create X tokens that are copies of target creature you "
-    'control, except they have "<ability>"\' has no parser at all: `_parse_token_clause` '
-    "returns None on seeing 'copies of'. `models/token.token_copy_of` now takes the CR 707.9a "
-    "added ability (`added_abilities=`) and CR 707.2's copiable values already work, so the "
-    "clause parser is the only missing half of that end.",
-)
 def test_token_copies_of_an_animated_land_are_plain_forests_with_a_fight_trigger():
     """DDR#980: the copy copies the land, not the animation.
 
