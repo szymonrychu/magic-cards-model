@@ -36,10 +36,13 @@ of it it stands on. CR 614.1c's "enter as a copy" replacement works, including
 CR 707.9b's "except ..." modifications and CR 603.12's linked "When you do,
 ..." reflexive ability (DDR#986), and so does a layer 5 colour change laid on
 a spell that has since become a permanent (CR 400.7a, DDR#32). What is still
-absent is named precisely in the two remaining xfail reasons: a copy does not
-acquire the *triggered* abilities of what it copied
-(`machines/triggers.triggers_for` reads the printed card), and
-`machines/effects._parse_token_clause` still refuses the moment it sees
+A copy now acquires the *triggered* abilities of what it copied:
+`machines/triggers.rewritten_ability_lines` answers with the computed ability
+text whenever a continuous effect has taken a printed line away (CR 613.2c -
+after layer 1 those *are* the object's copiable values, CR 613.5), and both
+`triggers_for` and `Game.activated_abilities` read it. What is still absent is
+named precisely in the one remaining xfail reason:
+`machines/effects._parse_token_clause` refuses the moment it sees
 "copies of" in a clause. Every CR number here was looked up with
 `knowledge_search(type="rules")`.
 """
@@ -245,9 +248,14 @@ def test_superior_spider_man_enters_as_a_bringer_named_superior_spider_man():
     of 6/6, and Spider, Human and Hero join the copied subtypes rather than
     replacing them.
 
-    The linked CR 603.12 trigger then resolves and exiles the Bringer, which is
-    the case the xfail below is measured *against*: here nothing reorders the
-    triggers, so the exile happens and only one creature ends up in play.
+    Two of alice's triggers are waiting once it has entered: Bringer's own
+    copied "when this creature enters" ability (CR 707.2 - abilities are among
+    the copiable values, and CR 613.5 makes the layer 1 change instantaneous)
+    and Mind Swap's linked CR 603.12 reflexive one. Both go on the stack, in
+    the order CR 603.3b leaves to their controller. The test below asserts what
+    that order gets her; this one stops at the fact that the copied trigger is
+    there at all, which is what a copy acquiring the copied object's abilities
+    means in practice.
     """
     scenario = (
         Scenario()
@@ -275,26 +283,19 @@ def test_superior_spider_man_enters_as_a_bringer_named_superior_spider_man():
     assert characteristics.subtypes[-3:] == ("Spider", "Human", "Hero")
     assert "Flying" in characteristics.abilities
 
-    # CR 603.12's reflexive ability, on the stack because the choice was taken.
-    assert scenario.stack_names() == ["Superior Spider-Man's triggered ability"]
-    scenario.resolve_top()
+    # Both triggers are on the stack: the copied enters ability and CR 603.12's
+    # reflexive one, the latter on the stack because the choice was taken.
+    assert scenario.stack_names() == ["Superior Spider-Man's triggered ability"] * 2
+    while scenario.game.stack:
+        scenario.resolve_top()
+    # The reanimation resolved first, so by the time "exile that card" ran the
+    # card had changed zones - CR 400.7 makes it a new object with no relation
+    # to the one the ability remembered, and the exile found nothing.
     assert [state.name for state in scenario.player("alice").graveyard] == []
-    assert [state.name for state in scenario.game.exile] == ["Bringer of the Last Gift"]
+    assert [state.name for state in scenario.game.exile] == []
+    assert "Bringer of the Last Gift" in scenario.battlefield_names()
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="One thing is missing, in machines/triggers.py. The copy itself works (proven "
-    "above): Superior Spider-Man enters as Bringer of the Last Gift with CR 707.9b's name and "
-    "4/4 body, and `Game.characteristics_of` reports Bringer's 'When this creature enters ...' "
-    "among its abilities. But `triggers.triggers_for` reads `triggered_abilities_of("
-    "source.card)` - the *printed* Scryfall card - so a copy never acquires the copied object's "
-    "triggered abilities and Bringer's enters trigger never goes on the stack. It would have to "
-    "read the computed characteristics (CR 613.2c: after layer 1, those *are* the object's "
-    "copiable values). With only the linked CR 603.12 exile trigger on the stack, there is no "
-    "second trigger for CR 603.3b to order it against, and the Bringer is exiled rather than "
-    "reanimated.",
-)
 def test_a_spider_bringer_and_a_real_bringer_can_both_end_up_on_the_battlefield():
     """DDR#986: stack the two triggers so the reanimation beats the exile.
 
