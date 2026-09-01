@@ -350,8 +350,8 @@ def test_the_robot_is_sacrificed_for_a_skeleton_that_survives_end_of_combat():
 # --------------------------------------------------------------------------
 
 
-def test_lagrellas_enters_trigger_has_no_scripted_effect():
-    """DDR#981, the half that is still open.
+def test_lagrellas_enters_trigger_has_a_scripted_effect_and_panharmonicon_is_not_a_layer():
+    """DDR#981, both halves, at the level of what is registered where.
 
     Lagrella, the Magpie (verified with `resolve_cards`): "When Lagrella
     enters, exile any number of other target creatures controlled by different
@@ -361,21 +361,30 @@ def test_lagrellas_enters_trigger_has_no_scripted_effect():
     permanent you control to trigger, that ability triggers an additional
     time."
 
-    Panharmonicon's own half is built now - CR 603.2d lives in
+    Panharmonicon's half is CR 603.2d, which lives in
     `machines/triggers.additional_trigger_times`, read off the printed sentence
     rather than through `machines/layers.LAYER_EFFECTS`, because CR 603.2d is
     about how many times an ability triggers and not about any object's
-    characteristics. What is still missing is Lagrella's effect:
-    `trigger_effect_for` returns `None`, so both copies of her trigger resolve
-    and do nothing.
+    characteristics. Lagrella's half is read off her own effect text by
+    `machines/effects._parse_exile_targets_until_leaves_then_counters` - both
+    sentences together, since the second is the delayed triggered ability
+    (CR 603.7a) the first one creates - with no card-name row of her own.
+
+    `trigger_effect_for` is asked with the ability's *effect*, which is what
+    `Game._effect_of` passes it: the "When Lagrella enters," condition in front
+    of it belongs to `machines/triggers.py`, not here.
     """
-    lagrella = card("Lagrella, the Magpie")
-    trigger_line = lagrella.oracle_text.split("\n")[0]
+    (trigger,) = [
+        found
+        for found in parse_abilities(card("Lagrella, the Magpie"))
+        if found.kind is AbilityKind.TRIGGERED
+    ]
+    assert isinstance(trigger, TriggeredAbility)
     assert (
         trigger_effect_for(
-            "Lagrella, the Magpie", TriggerEvent.ENTERS_THE_BATTLEFIELD, trigger_line
+            "Lagrella, the Magpie", TriggerEvent.ENTERS_THE_BATTLEFIELD, trigger.effect
         )
-        is None
+        is not None
     )
     assert "Lagrella, the Magpie" not in LAYER_EFFECTS
     assert "Panharmonicon" not in LAYER_EFFECTS, "CR 603.2d is not a continuous effect"
@@ -389,8 +398,11 @@ def test_panharmonicon_makes_lagrellas_enters_trigger_twice():
     triggered, determine how many times it should trigger, then trigger it that
     many times." Lagrella's enters ability is a triggered ability of a permanent
     alice controls, and a creature entering is what caused it, so it triggers
-    twice. They resolve and do nothing, because the effect itself is still
-    unscripted - the bear is untouched.
+    Both resolve, and both find nothing to do: no `choose_trigger_targets`
+    answer was queued, so each went on the stack targeting nothing at all -
+    "any number of other target creatures" allows zero (CR 107.1c). The bear
+    is bob's and untouched either way; the exile that *does* happen is the
+    test further down, which queues an answer first.
     """
     scenario = (
         Scenario()
@@ -435,15 +447,6 @@ def test_panharmonicon_does_not_double_a_trigger_an_opponent_controls():
     assert scenario.stack_names() == ["Lagrella, the Magpie's triggered ability"]
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="CR 603.2d is built now (machines/triggers.additional_trigger_times), and "
-    "Panharmonicon really does put two of Lagrella's enters triggers on the stack - the "
-    "first assertion below passes. What is missing is Lagrella's own effect: there is no "
-    "('Lagrella, the Magpie', ENTERS_THE_BATTLEFIELD, ...) entry in machines/effects.py, "
-    "so both triggers resolve and do nothing - nothing is exiled, nothing returns, and no "
-    "+1/+1 counter is ever placed.",
-)
 def test_panharmonicon_doubles_the_exile_but_not_the_delayed_counter_trigger():
     """DDR#981: two exiles, still two counters.
 
@@ -473,19 +476,21 @@ def test_panharmonicon_doubles_the_exile_but_not_the_delayed_counter_trigger():
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
     bears = scenario.creature("Grizzly Bears", "alice")
+    # CR 603.3d: a trigger's targets are chosen as it is put on the stack, so
+    # the answer has to be waiting before Lagrella ever enters.
+    scenario.choose_trigger_targets("Lagrella, the Magpie", [bears])
     sources = scenario.untapped_sources("Forest", "Plains", "Island", username="alice")
     lagrella = scenario.cast_and_resolve("Lagrella, the Magpie", *sources, username="alice")
 
     assert len(scenario.game.abilities_on_stack) == 2, "Panharmonicon doubled the enters trigger"
-    scenario.choose_trigger_targets("Lagrella, the Magpie", [bears])
     while scenario.game.stack:
         scenario.resolve_top()
     assert bears.zone is Zone.EXILE
 
     # Lagrella leaving is what brings them back (CR 610.3's "until" pair).
-    scenario.game.move_to_graveyard(lagrella)
-    while scenario.game.stack:
-        scenario.resolve_top()
+    scenario.game.destroy(lagrella)
+    while scenario.game.stack or scenario.pending_triggers:
+        scenario.pass_until_resolved()
 
     assert bears.zone is Zone.BATTLEFIELD
     assert bears.counter_count("+1/+1") == 2

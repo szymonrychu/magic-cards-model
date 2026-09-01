@@ -9,20 +9,19 @@ it: the ante zone is a public zone (CR 400.2), only a card's owner may ante a
 card (CR 407.4), and an ante card's own ability fails closed when the ante it
 depends on cannot happen.
 
-The zone itself is built now: `Zone.ANTE` is CR 400.1's optional eighth, shared
-and public, and `Game.ante` is CR 407.4's verb with its owner check. What is
-still missing is Jeweled Bird's own effect, which has no entry in
-`machines/effects.py`, so the two `xfail` tests below stay red. Jeweled Bird's real oracle
-text, confirmed with `resolve_cards`: "Remove this card from your deck before
-playing if you're not playing for ante. / {T}: Ante this artifact. If you do,
-put all other cards you own from the ante into your graveyard, then draw a
-card."
+The zone is built - `Zone.ANTE` is CR 400.1's optional eighth, shared and
+public, and `Game.ante` is CR 407.4's verb with its owner check - and so is
+Jeweled Bird's own ability, read off its printed text by
+`machines/effects._parse_ante_self_if_you_do_clause` rather than a card-name
+row. Jeweled Bird's real oracle text, confirmed with `resolve_cards`: "Remove
+this card from your deck before playing if you're not playing for ante. /
+{T}: Ante this artifact. If you do, put all other cards you own from the ante
+into your graveyard, then draw a card." Nothing in this file is `xfail` any
+more.
 
 Every CR number here was looked up with `knowledge_search(type="rules")` in the
 session that wrote the file.
 """
-
-import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
@@ -92,13 +91,6 @@ def test_anteing_a_card_from_a_hidden_zone_takes_it_out_of_that_zone_too():
     assert [state.name for state in scenario.player("alice").hand] == []
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Zone.ANTE and Game.ante (CR 400.1, CR 407.4) are built now, but "
-    "Jeweled Bird's own ability still has no entry in `machines/effects.py` - "
-    "there is no activated_effect_for('Jeweled Bird', ...) row - so activating "
-    "it resolves and does nothing.",
-)
 def test_anteing_the_bird_moves_it_out_of_the_battlefield():
     """CR 407.4: "To ante an object is to put that object into the ante zone
     from whichever zone it's currently in."
@@ -116,22 +108,15 @@ def test_anteing_the_bird_moves_it_out_of_the_battlefield():
     assert bird.zone is not Zone.BATTLEFIELD
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Same remaining gap: with no ('Jeweled Bird', ...) entry in "
-    "`machines/effects.py`, nothing calls Game.ante, so the 'If you do' the "
-    "rest of the ability hangs off never becomes true and no card is drawn.",
-)
 def test_the_owner_antes_the_bird_and_draws_a_card():
     """The half of the episode's Jeweled Bird question that is supposed to work.
 
     CR 407.4: "The owner of an object is the only player who can ante that
     object" - and here the owner is doing it, so the ante happens, and the "If
     you do" clause that follows it does too. The stolen-Bird case the episode
-    actually asks about is the mirror image: with the ante refused, that same
-    "if you do" is false and *nothing* in the ability happens. This engine
-    reaches the stolen-Bird answer by accident (it can never ante anything), so
-    only the case it should get right is asserted here.
+    actually asks about is the mirror image, and is the test below this one:
+    with the ante refused, that same "if you do" is false and *nothing* in the
+    ability happens.
     """
     scenario = (
         Scenario()
@@ -146,4 +131,69 @@ def test_the_owner_antes_the_bird_and_draws_a_card():
     scenario.resolve_top()
 
     assert bird.zone is not Zone.BATTLEFIELD
+    assert [state.name for state in scenario.player("alice").hand] == ["Grizzly Bears"]
+
+
+def test_a_stolen_bird_antes_nothing_and_the_rest_of_its_ability_does_not_happen():
+    """DDR#666's actual question: bob has taken control of alice's Jeweled Bird
+    and activates it.
+
+    CR 407.4: "The owner of an object is the only player who can ante that
+    object." Bob controls the Bird but alice owns it (CR 108.3: "The owner of a
+    card in the game is the player who started the game with it in their
+    deck"), so the ante is refused. "If you do" is therefore false, and the
+    whole rest of the ability - the graveyard sweep and the draw - does not
+    happen either: one paragraph, all of it or none of it.
+    """
+    scenario = (
+        Scenario()
+        .player("bob", library=["Grizzly Bears"])
+        .player("alice", battlefield=["Jeweled Bird"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bird = scenario.find("Jeweled Bird", Zone.BATTLEFIELD, "alice")
+    assert bird.owner == "alice"
+    bird.controller = "bob"
+
+    scenario.activate(bird, username="bob")
+    scenario.resolve_top()
+
+    assert bird.zone is Zone.BATTLEFIELD
+    assert scenario.game.ante_zone == []
+    assert [state.name for state in scenario.player("bob").hand] == []
+
+
+def test_the_bird_sweeps_only_the_owners_other_ante_cards_into_the_graveyard():
+    """ "Put all other cards you own from the ante into your graveyard."
+
+    "Other" excludes the Bird itself, which CR 407.4 has just put into the same
+    zone, and "you own" excludes an opponent's ante card sitting beside it -
+    CR 400.3 would send it to bob's graveyard rather than alice's anyway, and
+    the card does not say to move it at all.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            library=["Grizzly Bears"],
+            hand=["Llanowar Elves"],
+            battlefield=["Jeweled Bird"],
+        )
+        .player("bob", hand=["Memnite"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bird = scenario.find("Jeweled Bird", Zone.BATTLEFIELD, "alice")
+    elves = scenario.find("Llanowar Elves", Zone.HAND, "alice")
+    memnite = scenario.find("Memnite", Zone.HAND, "bob")
+    assert scenario.game.ante(elves, "alice") is True
+    assert scenario.game.ante(memnite, "bob") is True
+
+    scenario.activate(bird)
+    scenario.resolve_top()
+
+    assert elves.zone is Zone.GRAVEYARD
+    assert memnite.zone is Zone.ANTE, "bob owns it, so the Bird does not move it"
+    assert bird.zone is Zone.ANTE, "'other' does not include the Bird itself"
     assert [state.name for state in scenario.player("alice").hand] == ["Grizzly Bears"]
