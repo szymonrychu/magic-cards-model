@@ -25,7 +25,11 @@ from ..machines.casting import (
     play_permissions_on,
     usable_play_permission,
 )
-from ..machines.casting_restrictions import CastingRuleEffect, CastingRuleKind
+from ..machines.casting_restrictions import (
+    CastingRuleEffect,
+    CastingRuleKind,
+    cannot_be_countered,
+)
 from ..machines.combat import (
     Attack,
     CombatMachine,
@@ -526,6 +530,17 @@ _CONDITION_COUNT_WORDS: dict[str, int] = {
     "four": 4,
     "five": 5,
 }
+
+
+def _is_minus_symbol(printed: str) -> bool:
+    """Whether a printed loyalty symbol is a negative one (CR 107.7).
+
+    "Negative loyalty symbols point downward and feature a minus sign followed
+    by a number or an X." Both the typographic minus WOTC prints (U+2212) and a
+    plain hyphen are accepted, since the oracle text this is read from uses the
+    former and hand-written text tends to use the latter.
+    """
+    return printed.strip().startswith(("−", "-"))
 
 
 def _card_type_named(quality: str) -> Type | None:
@@ -5835,9 +5850,31 @@ class Game(BaseModel):
         after the spell has moved to its graveyard (or exile): the subject is
         found where it went, and the trigger reads it as it last existed on
         the stack.
+
+        **"This spell can't be countered" is enforced here**, and here only.
+        CR 113.6g: "An object's ability that states it can't be countered or
+        can't be copied functions on the stack", so the ability is live exactly
+        while the spell this method was handed is sitting on the stack.
+        CR 701.6a is the verb it makes impossible - "to counter a spell or
+        ability means to cancel it, removing it from the stack" - so the
+        refusal is simply that the removal does not happen: the object is
+        returned untouched, still on the stack, and **no** counter event is
+        emitted, because nothing was countered for a trigger to watch.
+
+        The guard sits above the `to_exile` branch on purpose. Force of
+        Negation's and Delay's "exile it instead of putting it into its owner's
+        graveyard" is a rider on the countering, not an alternative to it; if
+        the countering cannot happen, there is no graveyard-bound move for the
+        rider to redirect, so an uncounterable spell is not exiled either.
+
+        The counterspell that failed is not refused or rewound anywhere - it
+        was legally cast and legally resolved (CR 608.2b knows nothing about
+        counterability) and simply fails to do the one thing it says.
         """
         if spell not in self.stack:
             raise ValueError(f"{spell.name} is not on the stack")
+        if cannot_be_countered(spell):
+            return spell
         self.stack.remove(spell)
         if isinstance(spell, CardState):
             if to_exile:
@@ -8185,12 +8222,31 @@ class Game(BaseModel):
                 )
             elif piece.kind is CostKind.LOYALTY:
                 # CR 606.4: the loyalty symbol is the whole cost, and the
-                # counter change it asks for is the cost itself. A `−X` cost
-                # has no amount anyone can pay until something can choose X
-                # (CR 107.7: "a minus sign followed by a number or an X").
+                # counter change it asks for is the cost itself.
+                #
+                # CR 107.7: "Negative loyalty symbols point downward and
+                # feature a minus sign followed by a number or an X." A `−X`
+                # symbol therefore has no amount of its own - the amount is the
+                # X the activating player announces, which CR 602.2b puts at
+                # this same moment (the whole of CR 601.2b's announcement,
+                # X included). That is `x_value`, already threaded here from
+                # `begin_activating`, so the cost is built from it and negated
+                # for a minus symbol.
+                #
+                # CR 606.6 - "A loyalty ability with a negative loyalty cost
+                # ... can't be activated unless the permanent has at least that
+                # many loyalty counters on it" - is then enforced against the
+                # *resolved* amount by `loyalty_cost`'s own payment, which is
+                # what makes an announced X larger than the loyalty on the
+                # permanent an unpayable cost rather than a silently clamped
+                # one.
                 amount = ability.loyalty.amount if ability.loyalty else None
                 if amount is None:
-                    raise ValueError(f"cannot build a cost for {piece.text!r}")
+                    if ability.loyalty is None or not _is_minus_symbol(ability.loyalty.printed):
+                        # Not a readable symbol at all - not "−X", just
+                        # unparsed. Refusing beats guessing an amount.
+                        raise ValueError(f"cannot build a cost for {piece.text!r}")
+                    amount = -x_value
                 components.append(
                     loyalty_cost(permanent, amount, payer=controller, description=piece.text)
                 )
@@ -8517,7 +8573,20 @@ class Game(BaseModel):
         # targeting.py` with a literal "X" still in it (nothing there resolves
         # a bare letter to a number), so without this every such target would
         # be refused outright rather than checked against the real, paid X.
-        text = substitute_x(ability.text, x_value) if "{X}" in ability.cost else ability.text
+        #
+        # A **loyalty** ability spells its X differently: CR 107.7's negative
+        # symbol is written "−X", not "{X}", so the `{X}`-in-the-cost test
+        # above does not see it. Tamiyo, Compleated Sage's "−X: Exile target
+        # nonland permanent card with mana value X from your graveyard" is that
+        # shape, and its target clause needs the same substitution for the same
+        # reason - `LoyaltyCost.variable` is what marks the symbol as carrying
+        # a chosen X.
+        has_variable_loyalty = ability.loyalty is not None and ability.loyalty.variable
+        text = (
+            substitute_x(ability.text, x_value)
+            if "{X}" in ability.cost or has_variable_loyalty
+            else ability.text
+        )
         profile = profile_for_text(text)
         if profile.understood and profile.requirements:
             if targets is None:
