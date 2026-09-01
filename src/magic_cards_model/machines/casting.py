@@ -3053,12 +3053,20 @@ class Casting(BaseModel):
         # never called, which `deal_divided_damage` reads as "fall back to
         # splitting the total as evenly as it goes" rather than an error.
         self.spell.division = list(self.division) if self.division is not None else None
-        if self.face is not None and self.spell.card.layout is Layout.SPLIT:
+        if self.spell.card.layout in (Layout.SPLIT, Layout.ADVENTURE):
             # CR 709.3b: "While on the stack, only the characteristics of the
-            # half being cast exist." `CardState.face_played` is what
-            # `up_face` reads for the whole time this spell sits on the
-            # stack - see its own docstring for why this is scoped to split
-            # cards and does not also cover Adventure's `self.face`.
+            # half being cast exist", and CR 715.3b's Adventure equivalent:
+            # "While on the stack as an Adventure, the spell has only its
+            # alternative characteristics." `CardState.face_played` is what
+            # `up_face` reads for the whole time this spell sits on the stack.
+            #
+            # Assigned *unconditionally*, not only when `self.face` is set:
+            # `CardState.move_to` never clears `face_played`, so an adventurer
+            # exiled by CR 715.3d and then recast as its creature half would
+            # otherwise still be carrying the Adventure face it was cast with
+            # the first time, and resolve as an Instant. `None` here is the
+            # CR 715.4 answer - "while on the stack not as an Adventure, an
+            # adventurer card has only its normal characteristics."
             self.spell.face_played = self.face
         if self.game is not None:
             self._emit_becomes_target()

@@ -561,9 +561,10 @@ class CardState(BaseModel):
     `zone is Zone.STACK`.
 
     Set by `Casting.cast`, which knows which half was announced
-    (`Casting.face`/`chosen_face`). It sets it for `Layout.SPLIT` today and not
-    yet for `Layout.ADVENTURE`, which is the whole of what is left of CR 715.3b
-    - `up_face` below already reads either. Fuse (CR 702.102) - casting *both*
+    (`Casting.face`/`chosen_face`), for `Layout.SPLIT` and `Layout.ADVENTURE`
+    alike, and set *unconditionally* - an announcement that named no face
+    clears it, which is CR 715.4's answer for an adventurer card recast as its
+    creature half after CR 715.3d exiled it. Fuse (CR 702.102) - casting *both*
     halves as one spell - is not modelled: this only ever names one half.
     """
     exerted: bool = False
