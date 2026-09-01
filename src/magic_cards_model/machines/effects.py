@@ -5816,8 +5816,26 @@ _GAIN_LIFE_EQUAL_TO_DAMAGE_PREVENTED_RE = re.compile(
 #: qualifying word costs nothing: `create_continuous_effect` still gets its
 #: targets from `Game.resolve_card_targets`, the already-validated
 #: announcement, never from this match.
+#: Echoing Courage's own subject widens this again: "Target creature **and all
+#: other creatures with the same name as that creature** get +2/+2 until end of
+#: turn." One target (CR 115.1), and then a second, untargeted group defined
+#: off it by CR 201.2a's "Two or more objects have the same name if they have
+#: at least one name in common". The plural verb "get" comes with the plural
+#: subject, so both spellings are admitted.
+#:
+#: This subject carries a bare " and ", which `split_effect_clauses` cuts in
+#: two - so `_parse_mixed_clauses` tries this regex against the whole unsplit
+#: text before it splits anything, the same treatment
+#: `_parse_choose_name_search_and_exile_whole_text` already gets there.
+#:
+#: Recognising the shape is all this does. *Which* permanents the buff reaches
+#: is `machines/layers.py`'s selector, read off the card's own text by
+#: `parsed_layer_effects` - and there is no `same name as that creature`
+#: selector there yet, so this text still comes back unreadable from that side.
 _CONTINUOUS_PUMP_OR_KEYWORD_RE = re.compile(
-    r"^target (?:[a-z]+ )?creature (?:gets [+-]\d+/[+-]\d+|gains [a-z ]+) until end of turn\.?$",
+    r"^target (?:[a-z]+ )?creature"
+    r"(?: and all other creatures with the same name as that creature)?"
+    r" (?:gets? [+-]\d+/[+-]\d+|gains? [a-z ]+) until end of turn\.?$",
     re.IGNORECASE,
 )
 
@@ -12545,8 +12563,8 @@ _DRAW_N_CARDS_RE = re.compile(r"^draw (?:a|(?P<count>\w+)) cards?$", re.IGNORECA
 # is the whole reason `ExileMarker.AIRBENT` exists.
 #
 # The annotation goes on **cards only**. CR 701.65a says "for each *card*
-# exiled this way", and a token is not a card (CR 111.1 makes a token an object
-# that is not a card at all), so an airbent token receives no permission - and
+# exiled this way", and a token is not a card (CR 111.6: "A token
+# isn't a card"), so an airbent token receives no permission - and
 # never could use one anyway, because CR 111.7 / CR 704.5d have it cease to
 # exist as a state-based action the moment it is anywhere but the battlefield,
 # which is before any player next receives priority (CR 704.3).
@@ -15737,6 +15755,17 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     )
     if exile_then_cast_types_effect is not None:
         return [exile_then_cast_types_effect]
+    if for_spell and _CONTINUOUS_PUMP_OR_KEYWORD_RE.fullmatch(
+        " ".join(text.strip().split())
+    ):
+        # Read whole for the same reason the two above are: Echoing Courage's
+        # subject, "Target creature and all other creatures with the same name
+        # as that creature", carries a bare " and " that `_CLAUSE_SEPARATOR`
+        # cuts through, leaving two fragments neither of which is a readable
+        # clause. A single-sentence pump with no such "and" (Giant Growth)
+        # reaches exactly the same `create_continuous_effect` one step earlier
+        # than it used to, for the identical effect.
+        return [create_continuous_effect]  # type: ignore[list-item]
     clauses = _prepare_effect_clauses(text)
     if clauses is None:
         return None

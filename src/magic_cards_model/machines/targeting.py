@@ -301,7 +301,7 @@ class TargetRequirement(BaseModel):
     first is one noun ("spell") with one adjective ("creature"); the second is
     CR 115.1's target being satisfied by *either* item, and the items are of
     different kinds - one is a permanent on the battlefield, the other is
-    CR 111.1's "a spell is a card on the stack", of no particular card type.
+    CR 112.1's "A spell is a card on the stack", of no particular card type.
 
     `card_types` and `zones` cannot express that on their own: they are read as
     one conjunction, so unioning `Zone.STACK` in would let a permanent-typed
@@ -494,7 +494,7 @@ class TargetRequirement(BaseModel):
         if self.excludes_source and source_id is not None and target.id == source_id:
             return f"{self.phrase} cannot target {target.name}, which this is on"
         if self.or_any_spell and target.zone is Zone.STACK:
-            # "... or spell" (CR 111.1: a spell is a card on the stack), the
+            # "... or spell" (CR 112.1: "A spell is a card on the stack"), the
             # second half of a two-kind noun list - see `or_any_spell`. Nothing
             # further to check: the phrase named no type for this half.
             return None
@@ -2156,7 +2156,7 @@ def _read_phrase(prefix: str, suffix: str) -> TargetRequirement | None:
             allows_cards = True
             if nouns_read and after_conjunction:
                 # "... or spell" - the second item of a two-kind noun list, not
-                # the noun a preceding "creature" was qualifying. CR 111.1 puts
+                # the noun a preceding "creature" was qualifying. CR 112.1 puts
                 # it on the stack and names no type for it; `or_any_spell` is
                 # how the two halves stay separate restrictions rather than
                 # collapsing into one conjunction. `zones` is left alone, so
