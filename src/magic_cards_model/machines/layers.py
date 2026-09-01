@@ -1636,7 +1636,15 @@ _BECOME_A_COPY_RE = re.compile(
 )
 
 
-def _become_a_copy_builder(*, until_eot: bool) -> EffectBuilder:
+def _become_a_copy_builder(
+    *,
+    until_eot: bool,
+    name_override: str | None = None,
+    power_override: int | None = None,
+    toughness_override: int | None = None,
+    added_types: Sequence[Type] = (),
+    added_subtypes: Sequence[str] = (),
+) -> EffectBuilder:
     """`_BECOME_A_COPY_RE`'s shape.
 
     CR 707.2: "the copy acquires the copiable values of the original
@@ -1667,7 +1675,24 @@ def _become_a_copy_builder(*, until_eot: bool) -> EffectBuilder:
     `card_id` is deliberately left off the replacement: it is the copying
     permanent's own board identity (`CardState.id`), not one of CR 707.2's
     copiable values, and every `Selector` in this module keys off it.
+
+    The `*_override` and `added_*` arguments are CR 707.9b's "except ..."
+    modifications - Superior Spider-Man's "except his name is Superior
+    Spider-Man and he's a 4/4 Spider Human Hero in addition to his other
+    types", read by `machines/replacement._parse_copy_exception`. CR 707.9b:
+    "Some copy effects modify a characteristic as part of the copying process.
+    The final set of values for that characteristic becomes part of the
+    copiable values of the copy." They are therefore written *here*, inside the
+    one layer 1a effect, and not as separate effects in layers 4 and 7 - which
+    would be applied after CR 613.2c had already fixed the copiable values and
+    would not be copiable in turn.
+
+    The added types and subtypes are additive (CR 205.1b: "all the object's
+    prior card types, supertypes, or subtypes are retained"), which is what
+    the printed "in addition to his other types" says.
     """
+    added_types = tuple(added_types)
+    added_subtypes = tuple(added_subtypes)
 
     def builder(
         source: CardState,
@@ -1678,18 +1703,26 @@ def _become_a_copy_builder(*, until_eot: bool) -> EffectBuilder:
         if not targets:
             return []
         copied = printed_characteristics(targets[0])
+        types = copied.types + tuple(
+            card_type for card_type in added_types if card_type not in copied.types
+        )
+        subtypes = copied.subtypes + tuple(
+            subtype for subtype in added_subtypes if subtype not in copied.subtypes
+        )
 
         def modification(chars: Characteristics, board: Board) -> Characteristics:
             return chars.with_(
-                name=copied.name,
+                name=name_override if name_override is not None else copied.name,
                 mana_value=copied.mana_value,
                 supertypes=copied.supertypes,
-                types=copied.types,
-                subtypes=copied.subtypes,
+                types=types,
+                subtypes=subtypes,
                 colors=copied.colors,
                 abilities=copied.abilities,
-                power=copied.power,
-                toughness=copied.toughness,
+                power=power_override if power_override is not None else copied.power,
+                toughness=toughness_override
+                if toughness_override is not None
+                else copied.toughness,
             )
 
         return [

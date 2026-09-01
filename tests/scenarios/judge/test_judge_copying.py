@@ -29,12 +29,18 @@ standing on. DDR#951's own clause parses and runs for real
 (`machines/effects._parse_create_token_then_copy_spell_retargeted_clause`), so
 its Soldier token and its retargeted copy both happen; what it fails on is one
 rules question about the copy's target, recorded in that test's own xfail
-reason. The permanent-copying half is the one that is genuinely absent:
-`machines/effects._parse_token_clause` refuses outright the moment it sees
-"copy of" in a clause (`return None  # CR 707.2 copying needs copiable values
-this wave does not read`), and there is no `replacements_of` row for an "enter
-as a copy" clause - both confirmed directly below rather than assumed from the
-absence of a grep hit. Every CR number here was looked up with
+reason.
+
+The permanent-copying half is now largely built and each test says which piece
+of it it stands on. CR 614.1c's "enter as a copy" replacement works, including
+CR 707.9b's "except ..." modifications and CR 603.12's linked "When you do,
+..." reflexive ability (DDR#986), and so does a layer 5 colour change laid on
+a spell that has since become a permanent (CR 400.7a, DDR#32). What is still
+absent is named precisely in the two remaining xfail reasons: a copy does not
+acquire the *triggered* abilities of what it copied
+(`machines/triggers.triggers_for` reads the printed card), and
+`machines/effects._parse_token_clause` still refuses the moment it sees
+"copies of" in a clause. Every CR number here was looked up with
 `knowledge_search(type="rules")`.
 """
 
@@ -48,7 +54,12 @@ from magic_cards_model.machines.effects import (
     effect_for,
     trigger_effect_for,
 )
-from magic_cards_model.machines.replacement import replacements_of
+from magic_cards_model.machines.replacement import (
+    CopyException,
+    ReplacementKind,
+    parse_replacement_effects,
+    replacements_of,
+)
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card import Color, Type
 from magic_cards_model.models.token import TokenState, is_token
@@ -171,9 +182,8 @@ def test_frontline_heroism_should_copy_psychotic_fury_onto_a_fresh_token():
 # --------------------------------------------------------------------------
 
 
-def test_superior_spider_mans_enter_as_a_copy_clause_has_no_replacement_row():
-    """DDR#986, the provable half: "enter as a copy" is a replacement effect
-    (CR 614.1c) this engine has no row for.
+def test_superior_spider_mans_enter_as_a_copy_clause_is_read_past_its_flavor_word():
+    """DDR#986, the provable half: the clause parses, ability word and all.
 
     Superior Spider-Man (verified with `resolve_cards`): "Mind Swap - You may
     have Superior Spider-Man enter as a copy of any creature card in a
@@ -185,23 +195,59 @@ def test_superior_spider_mans_enter_as_a_copy_clause_has_no_replacement_row():
     are replacement effects." CR 614.12a puts the choice - which graveyard
     card to copy - before the permanent enters, which is exactly why the
     episode's second half works: every Superior Spider-Man entering at once
-    picks what to copy before any of them has exiled anything. None of that is
-    reachable here: `replacements_of` is empty for this card, so
-    `apply_replacements` never sees the clause at all.
+    picks what to copy before any of them has exiled anything.
+
+    Three things had to be read off this one sentence, and each is asserted
+    below rather than assumed:
+
+    - The "Mind Swap - " prefix is a CR 207.2d flavor word ("they have no
+      special rules meaning"), so it is stripped before the entering templates
+      run. Left on, it was swallowed into the subject group, which made
+      `self_replacement` false (the phrase does not begin with the card's
+      name) and `optional` false (the sentence does not begin with "you may
+      have") - the clause parsed and then did nothing.
+    - The "except ..." tail is CR 707.9b's modification of the copying
+      process, read into a name, a power and toughness, and subtypes gained
+      in addition to the copied ones (CR 205.1b).
+    - "When you do, exile that card." is CR 603.12's reflexive ability, linked
+      to the choice above it and carried on the same effect.
+
+    `replacements_of` is still empty and that is correct, not a gap: a
+    CR 614.12 effect that "affect[s] only that permanent" is gathered off the
+    entering card by `_self_enters_modifiers`, never compiled into the
+    battlefield-scanned registry `replacements_of` returns.
     """
     spidey = card("Superior Spider-Man")
-    assert "enter as a copy of any creature card in a graveyard" in spidey.oracle_text
+    assert spidey.oracle_text.startswith("Mind Swap —")
     assert replacements_of(spidey) == []
 
+    (effect,) = parse_replacement_effects(spidey)
+    assert effect.kind is ReplacementKind.ENTERS_AS_COPY
+    assert effect.subject == "Superior Spider-Man"
+    assert effect.copy_of == "any creature card in a graveyard"
+    assert effect.optional is True
+    assert effect.self_replacement is True
+    assert effect.copy_exception == CopyException(
+        name="Superior Spider-Man",
+        power=4,
+        toughness=4,
+        added_subtypes=("Spider", "Human", "Hero"),
+    )
+    assert effect.linked_trigger == "When you do, exile that card."
 
-def test_superior_spider_man_enters_as_plain_superior_spider_man():
-    """The consequence, played out: no copy, no linked trigger, nothing exiled.
 
-    Without the CR 614.1c replacement, Superior Spider-Man resolves as its own
-    printed 4/4 and Bringer of the Last Gift sits untouched in the graveyard.
-    Both of the episode's triggers - Bringer's own "when this creature enters"
-    and Mind Swap's linked "when you do, exile that card" - are simply absent
-    from the stack, which is what the xfail below is measured against.
+def test_superior_spider_man_enters_as_a_bringer_named_superior_spider_man():
+    """The clause played out: CR 707.2's copiable values, CR 707.9b's exceptions.
+
+    Copied whole from Bringer of the Last Gift: flying, its "when this creature
+    enters" ability, and the Vampire and Demon creature types. Overridden by the
+    "except" tail: the name stays Superior Spider-Man, the body is 4/4 instead
+    of 6/6, and Spider, Human and Hero join the copied subtypes rather than
+    replacing them.
+
+    The linked CR 603.12 trigger then resolves and exiles the Bringer, which is
+    the case the xfail below is measured *against*: here nothing reorders the
+    triggers, so the exile happens and only one creature ends up in play.
     """
     scenario = (
         Scenario()
@@ -219,20 +265,35 @@ def test_superior_spider_man_enters_as_plain_superior_spider_man():
     spidey = scenario.cast_and_resolve("Superior Spider-Man", *sources, username="alice")
 
     assert spidey.zone is Zone.BATTLEFIELD
-    assert (spidey.power, spidey.toughness) == (4, 4)
-    assert scenario.stack_names() == []
-    assert scenario.pending_triggers == []
-    assert [state.name for state in scenario.player("alice").graveyard] == [
-        "Bringer of the Last Gift"
-    ]
+    characteristics = scenario.game.characteristics_of(spidey)
+    # Asserted against the printed values of the two real cards, never against
+    # the computed answer this test exists to check.
+    assert characteristics.name == card("Superior Spider-Man").name
+    assert (characteristics.power, characteristics.toughness) == (4, 4)
+    assert card("Bringer of the Last Gift").power == "6"
+    assert "Vampire" in characteristics.subtypes and "Demon" in characteristics.subtypes
+    assert characteristics.subtypes[-3:] == ("Spider", "Human", "Hero")
+    assert "Flying" in characteristics.abilities
+
+    # CR 603.12's reflexive ability, on the stack because the choice was taken.
+    assert scenario.stack_names() == ["Superior Spider-Man's triggered ability"]
+    scenario.resolve_top()
+    assert [state.name for state in scenario.player("alice").graveyard] == []
+    assert [state.name for state in scenario.game.exile] == ["Bringer of the Last Gift"]
 
 
 @pytest.mark.xfail(
     strict=True,
-    reason="replacements_of('Superior Spider-Man') is empty (proven above), so the CR 614.1c "
-    "'enter as a copy' choice is never offered and no copy effect is created - Bringer of the "
-    "Last Gift's own enters trigger is never acquired, never goes on the stack, and never "
-    "returns the original Bringer from the graveyard.",
+    reason="One thing is missing, in machines/triggers.py. The copy itself works (proven "
+    "above): Superior Spider-Man enters as Bringer of the Last Gift with CR 707.9b's name and "
+    "4/4 body, and `Game.characteristics_of` reports Bringer's 'When this creature enters ...' "
+    "among its abilities. But `triggers.triggers_for` reads `triggered_abilities_of("
+    "source.card)` - the *printed* Scryfall card - so a copy never acquires the copied object's "
+    "triggered abilities and Bringer's enters trigger never goes on the stack. It would have to "
+    "read the computed characteristics (CR 613.2c: after layer 1, those *are* the object's "
+    "copiable values). With only the linked CR 603.12 exile trigger on the stack, there is no "
+    "second trigger for CR 603.3b to order it against, and the Bringer is exiled rather than "
+    "reanimated.",
 )
 def test_a_spider_bringer_and_a_real_bringer_can_both_end_up_on_the_battlefield():
     """DDR#986: stack the two triggers so the reanimation beats the exile.

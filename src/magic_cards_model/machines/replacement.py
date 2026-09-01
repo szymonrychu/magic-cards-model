@@ -114,7 +114,7 @@ from enum import StrEnum
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from ..models.card import Card, Color, Type
 from ..models.card_state import CardState, Choice, ChoiceKind
@@ -209,6 +209,36 @@ ENTERS_KINDS = frozenset(
 # --------------------------------------------------------------------------
 
 
+class CopyException(BaseModel):
+    """CR 707.9b's modifications to a copy, read off an "except ..." tail.
+
+    CR 707.9b: "Some copy effects modify a characteristic as part of the
+    copying process. The final set of values for that characteristic becomes
+    part of the copiable values of the copy." So these are not effects layered
+    on top of the copy - they are part of what layer 1a writes (CR 613.2a,
+    CR 613.2c: "After all rules and effects in layer 1 have been applied, the
+    object's characteristics are its copiable values").
+
+    Superior Spider-Man prints all three at once: "except his name is Superior
+    Spider-Man and he's a 4/4 Spider Human Hero in addition to his other
+    types" - a name, a base power and toughness, and subtypes *added* rather
+    than replacing (CR 205.1b's retaining form, spelled out by "in addition to
+    his other types").
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    #: The name the copy has instead of the copied object's (CR 707.9b).
+    name: str | None = None
+    #: The copy's power and toughness, both or neither.
+    power: int | None = None
+    toughness: int | None = None
+    #: Card types gained on top of the copied ones (CR 205.1b).
+    added_types: tuple[Type, ...] = ()
+    #: Subtypes gained on top of the copied ones (CR 205.1b, CR 205.3).
+    added_subtypes: tuple[str, ...] = ()
+
+
 class ReplacementEffect(BaseModel):
     """One replacement or prevention effect read off a card.
 
@@ -280,6 +310,25 @@ class ReplacementEffect(BaseModel):
     amount_expression: str | None = None
     #: What the permanent enters as a copy of.
     copy_of: str | None = None
+    #: CR 707.9b's "except ..." tail, already read into the values it overrides:
+    #: "except his name is Superior Spider-Man and he's a 4/4 Spider Human Hero
+    #: in addition to his other types". CR 707.9b: "Some copy effects modify a
+    #: characteristic as part of the copying process. The final set of values
+    #: for that characteristic becomes part of the copiable values of the copy."
+    #: `None` when the clause has no exception, or when it has one this parser
+    #: cannot read - fail closed, so an unreadable exception leaves the copy
+    #: unmodified rather than half-applied.
+    copy_exception: CopyException | None = None
+    #: The "When you do, ..." sentence printed immediately after this one, as
+    #: printed. CR 603.12: "A resolving spell or ability may allow or instruct
+    #: a player to take an action and create a triggered ability that triggers
+    #: 'when [a player] [does or doesn't]' take that action" - Superior
+    #: Spider-Man's "When you do, exile that card." is linked to the "you may
+    #: have ... enter as a copy" choice above it and happens only if that
+    #: choice was taken. Held here rather than parsed as its own effect
+    #: because a reflexive ability has no independent existence: without the
+    #: action it reflects, it is never created at all.
+    linked_trigger: str | None = None
     #: True when the permanent also enters tapped alongside another `enters`
     #: clause, as on Vesuva.
     tapped: bool = False
@@ -438,9 +487,81 @@ _ENTERS_WITH = re.compile(
 )
 _ENTERS_AS_COPY = re.compile(
     rf"^(?:You may have\s+)?(?P<subject>.+?) (?:{_ENTERS}|enter)(?P<tapped> tapped)?"
-    r" as a copy of (?P<copy_of>.+?)(?:,\s*except\s+.+)?\.?$",
+    r" as a copy of (?P<copy_of>.+?)(?:,\s*except\s+(?P<exception>.+?))?\.?$",
     re.IGNORECASE,
 )
+
+#: "his name is Superior Spider-Man" - CR 707.9b's name modification. The
+#: possessive pronoun is whichever one the card prints; CR 707.9b puts no
+#: constraint on it, and Oracle uses "its" for most cards and a gendered
+#: pronoun for the ones whose characters have them.
+_COPY_EXCEPT_NAME = re.compile(r"^(?:his|her|its|their) name is (?P<name>.+)$", re.IGNORECASE)
+
+#: "he's a 4/4 Spider Human Hero in addition to his other types" - a base P/T
+#: and a run of gained types. "in addition to ... other types" is CR 205.1b's
+#: retaining form, which is why the types are *added* rather than replacing;
+#: a clause without it is refused rather than guessed at, since CR 205.1a's
+#: replacing form would strip the copied object's own types and no card in the
+#: pool prints that shape yet.
+_COPY_EXCEPT_PT_AND_TYPES = re.compile(
+    r"^(?:he|she|it|they)(?:'s| is|'re| are) an? (?P<power>\d+)/(?P<toughness>\d+) "
+    r"(?P<types>[A-Za-z][\w'-]*(?: [A-Za-z][\w'-]*)*) in addition to "
+    r"(?:his|her|its|their) other types$",
+    re.IGNORECASE,
+)
+
+
+def _parse_copy_exception(clause: str | None) -> CopyException | None:
+    """CR 707.9b's "except ..." tail, or `None` if any part of it is unreadable.
+
+    Fail closed, and closed on the *whole* clause: a tail whose first half
+    reads and whose second does not would otherwise produce a copy with the
+    right name and the wrong body, which is worse than a plain copy. CR 608.2c
+    has no notion of running half an instruction, and CR 707.9b's "the final
+    set of values ... becomes part of the copiable values" is a single answer,
+    not a list of independent edits.
+
+    Split on " and " because that is how the printed tails join their clauses.
+    """
+    if not clause:
+        return None
+    name: str | None = None
+    power: int | None = None
+    toughness: int | None = None
+    added_types: list[Type] = []
+    added_subtypes: list[str] = []
+
+    for part in re.split(r"\s+and\s+", clause.strip().rstrip(".")):
+        part = part.strip()
+        if match := _COPY_EXCEPT_NAME.match(part):
+            name = match.group("name").strip()
+            continue
+        if match := _COPY_EXCEPT_PT_AND_TYPES.match(part):
+            power = int(match.group("power"))
+            toughness = int(match.group("toughness"))
+            for word in match.group("types").split():
+                card_type = _CARD_TYPE_WORDS.get(word.lower())
+                if card_type is not None:
+                    added_types.append(card_type)
+                else:
+                    # CR 205.3: anything that is not one of CR 300.1's card
+                    # types in this position is a subtype - "Spider Human
+                    # Hero", stored capitalised the way every subtype is.
+                    added_subtypes.append(word)
+            continue
+        return None
+
+    if name is None and power is None and not added_types and not added_subtypes:
+        return None
+    return CopyException(
+        name=name,
+        power=power,
+        toughness=toughness,
+        added_types=tuple(added_types),
+        added_subtypes=tuple(added_subtypes),
+    )
+
+
 _AS_ENTERS = re.compile(
     rf"^As (?P<subject>.+?) {_ENTERS}(?P<also> or is turned face up)?,\s*(?P<effect>.+?)\.?$",
     re.IGNORECASE,
@@ -543,15 +664,26 @@ def _parse_oracle_text(
             continue
 
         body = _COST_PREFIX.sub("", rules_text)
-        for sentence in _SENTENCE_SPLIT.split(body):
-            sentence = sentence.strip()
-            if not sentence:
-                continue
-            effects.extend(
-                effect.model_copy(update={"raw": paragraph, "reminder": reminder, "face": face})
-                for effect in _parse_sentence(sentence, names)
-            )
+        sentences = [part.strip() for part in _SENTENCE_SPLIT.split(body) if part.strip()]
+        for index, sentence in enumerate(sentences):
+            # CR 603.12's reflexive ability is linked to the sentence in front
+            # of it and has no existence apart from it, so it is carried on
+            # that sentence's effect rather than parsed as one of its own.
+            following = sentences[index + 1] if index + 1 < len(sentences) else None
+            linked = following if following and _REFLEXIVE_OPENER.match(following) else None
+            for effect in _parse_sentence(sentence, names):
+                update = {"raw": paragraph, "reminder": reminder, "face": face}
+                if linked is not None and effect.kind in ENTERS_KINDS:
+                    update["linked_trigger"] = linked
+                effects.append(effect.model_copy(update=update))
     return effects
+
+
+#: "When you do, ..." - CR 603.12's reflexive opener. "When you don't, ..." is
+#: the rule's other half ("triggers 'when [a player] [does or doesn't]' take
+#: that action") and is admitted here so a card printing it is recognised
+#: rather than silently read as an ordinary sentence.
+_REFLEXIVE_OPENER = re.compile(r"^When you (?:do|don[’']?t),\s*(?P<effect>.+)$", re.IGNORECASE)
 
 
 #: A triggered ability's own "[When/Whenever/At] [condition]," opener, split
@@ -600,13 +732,42 @@ def _parse_trigger_effect(rules_text: str, names: tuple[str, ...]) -> list[Repla
 # --------------------------------------------------------------------------
 
 
+#: CR 207.2c's ability word, or CR 207.2d's flavor word, as Scryfall prints
+#: it: a short capitalised phrase and an em dash in front of the real ability.
+#: CR 207.2c: "An ability word appears in italics at the beginning of some
+#: abilities ... they have no special rules meaning"; CR 207.2d says the same
+#: of a flavor word and adds that they "are not included in Oracle card text"
+#: for rules purposes. Bounded to a short run of characters so a sentence that
+#: merely contains an em dash is left alone.
+#:
+#: Written here rather than imported from `machines/targeting.py`'s identical
+#: `_ABILITY_WORD_PREFIX`: that one is a private name in a module this one does
+#: not otherwise depend on, and reaching across for a one-line regex would
+#: couple two parsers that share a rule, not an implementation.
+#:
+#: Superior Spider-Man is the card that needed it. "Mind Swap — You may have
+#: Superior Spider-Man enter as a copy of any creature card in a graveyard..."
+#: matched `_ENTERS_AS_COPY` with the flavor word still attached, so `subject`
+#: came back as "Mind Swap — You may have Superior Spider-Man" - which made
+#: `_refers_to_self` false (the phrase does not start with the card's name)
+#: and `optional` false (the sentence does not *start* with "you may have").
+#: Both are read off the stripped sentence now.
+_ABILITY_WORD_PREFIX = re.compile(r"^[A-Z][^—\n]{0,40}?\s+—\s+")
+
+
 def _parse_sentence(sentence: str, names: tuple[str, ...]) -> list[ReplacementEffect]:
     """Match one sentence against every template, in precedence order.
 
     Precedence matters: "enter tapped as a copy of" must be read as a copy
     effect, not an enters-tapped one, and a prevention sentence starting with
     "If ... would" must be read as prevention rather than as a bare "instead".
+
+    A CR 207.2c ability word or CR 207.2d flavor word in front of the sentence
+    is cut before any template is tried - neither has rules meaning, and left
+    in place both would be swallowed into whichever group the template opens
+    with.
     """
+    sentence = _ABILITY_WORD_PREFIX.sub("", sentence.strip())
     if _ALTERNATIVE_COST.search(sentence):
         # CR 118.9, not CR 614. Not a replacement effect at all, so it is not
         # reported even as UNPARSED.
@@ -829,6 +990,7 @@ def _try_enters_as_copy(sentence: str, names: tuple[str, ...]) -> list[Replaceme
             sentence,
             subject=subject,
             copy_of=match.group("copy_of").strip(),
+            copy_exception=_parse_copy_exception(match.group("exception")),
             tapped=bool(match.group("tapped")),
             optional=sentence.lower().startswith("you may have"),
             self_replacement=_refers_to_self(subject, names),
@@ -3138,31 +3300,123 @@ def _choose_a_quality(kind: ChoiceKind, card_name: str) -> Apply:
 # of target creature"; `_become_a_copy_builder` is reused rather than
 # reimplemented, so the two shapes cannot drift apart.
 
+#: "any creature on the battlefield" (Clone) / "any creature card in a
+#: graveyard" (Superior Spider-Man) - the object the entering permanent may
+#: copy, and the zone to look for it in. CR 707.2 is written about copying an
+#: *object*, not specifically a permanent, and CR 400.1 lists the graveyard as
+#: a zone like any other, so "card in a graveyard" needs no special rule -
+#: only a second place to look. The noun is "card" there and "permanent" on
+#: the battlefield, which is CR 108.1's own distinction ("a Magic card ... A
+#: token isn't a card"), so the wording is admitted per zone rather than
+#: interchangeably.
 _COPY_CANDIDATES_RE = re.compile(
-    r"^any (?P<filter>artifact|creature|enchantment|land|permanent) on the battlefield$",
+    r"^any (?P<filter>artifact|creature|enchantment|land|permanent)"
+    r"(?: on the battlefield| card in a graveyard)$",
     re.IGNORECASE,
 )
 
+_COPY_FROM_GRAVEYARD_RE = re.compile(r"card in a graveyard$", re.IGNORECASE)
+
 
 def _copy_candidates(game: "Game", phrase: str, entering: CardState) -> list[CardState] | None:
-    """The permanents this card may enter as a copy of, or None if the phrase
+    """The objects this card may enter as a copy of, or None if the phrase
     is one this cannot read - fail closed, as everywhere else in this module.
+
+    Two zones are read: the battlefield (Clone) and every graveyard (Superior
+    Spider-Man's "any creature card in a graveyard" - "a graveyard", not "your
+    graveyard", so every player's is searched).
 
     The entering object is excluded: it is not on the battlefield yet, so this
     is belt and braces against a caller that put it there first.
     """
-    match = _COPY_CANDIDATES_RE.match(phrase.strip().rstrip("."))
+    cleaned = phrase.strip().rstrip(".")
+    match = _COPY_CANDIDATES_RE.match(cleaned)
     if match is None:
         return None
     word = match.group("filter").lower()
     wanted = None if word == "permanent" else _CARD_TYPE_WORDS.get(word)
     if wanted is None and word != "permanent":
         return None
+    if _COPY_FROM_GRAVEYARD_RE.search(cleaned):
+        pool: list[CardState] = []
+        for player in game.players_in_game:
+            pool.extend(player.graveyard)
+    else:
+        pool = list(game.battlefield)
     return [
-        permanent
-        for permanent in game.battlefield
-        if permanent.id != entering.id and (wanted is None or wanted in permanent.types)
+        candidate
+        for candidate in pool
+        if candidate.id != entering.id and (wanted is None or wanted in candidate.types)
     ]
+
+
+#: "exile that card" - the one reflexive instruction this module performs.
+#: "That card" is anaphoric to the object the copy was made from, which is why
+#: the copied object is passed in rather than looked up again by name.
+_EXILE_THAT_CARD_RE = re.compile(r"^exile that card\.?$", re.IGNORECASE)
+
+
+def _create_linked_reflexive_trigger(
+    game: "Game",
+    effect: ReplacementEffect,
+    card_name: str,
+    entering: CardState,
+    copied: CardState,
+) -> None:
+    """CR 603.12's reflexive ability, now that the action it reflects happened.
+
+    "A resolving spell or ability may allow or instruct a player to take an
+    action and create a triggered ability that triggers 'when [a player] [does
+    or doesn't]' take that action ... These reflexive triggered abilities
+    follow the rules for delayed triggered abilities (see rule 603.7), except
+    that they're checked immediately after being created and trigger based on
+    whether the trigger event or events occurred earlier during the resolution
+    of the spell or ability that created them."
+
+    Superior Spider-Man's is "When you do, exile that card." - created only on
+    this path, which runs only when the copy choice was actually taken, so
+    "occurred earlier" is true by construction. It goes on the stack as an
+    ordinary trigger, which is what lets the episode's ordering question exist
+    at all: with Bringer of the Last Gift's own enters trigger waiting
+    alongside it, CR 603.3b lets their controller put them on the stack in
+    either order.
+
+    **CR 400.7 is why the callback re-reads the zone.** "An object that moves
+    from one zone to another becomes a new object with no memory of, or
+    relation to, its previous existence" - so a card that has left the
+    graveyard by the time this resolves is not "that card" any more and
+    nothing is exiled. That is the whole ruling DDR#986 turns on, and it falls
+    out of asking rather than of a special case.
+
+    An instruction this cannot read creates nothing rather than a trigger that
+    does something else - the module's fail-closed rule.
+    """
+    linked = effect.linked_trigger
+    if linked is None or entering.controller is None:
+        return
+    match = _REFLEXIVE_OPENER.match(linked)
+    if match is None or not _EXILE_THAT_CARD_RE.match(match.group("effect").strip()):
+        return
+    zone_when_copied = copied.zone
+
+    def exile_that_card(game: "Game", ability: object, trigger: object) -> None:
+        if copied.zone is not zone_when_copied or copied.owner is None:
+            return  # CR 400.7: no longer the object the ability referred to.
+        owner = game.player(copied.owner)
+        pile = owner.cards_in(zone_when_copied)
+        if copied not in pile:
+            return
+        pile.remove(copied)
+        copied.move_to(Zone.EXILE)
+        game.exile.append(copied)
+
+    game.create_reflexive_trigger(
+        text=linked,
+        controller=entering.controller,
+        source_id=entering.id,
+        source_name=card_name,
+        callback=exile_that_card,  # type: ignore[arg-type]
+    )
 
 
 def _enters_as_copy(effect: ReplacementEffect, card_name: str) -> Apply:
@@ -3212,10 +3466,18 @@ def _enters_as_copy(effect: ReplacementEffect, card_name: str) -> Apply:
         chosen = [by_id[card_id] for card_id in chosen_id if card_id in by_id]  # type: ignore[union-attr]
         if not chosen:
             return
-        for built in _become_a_copy_builder(until_eot=False)(
-            entering, game.continuous_effects.tick(), chosen, LayerContext()
-        ):
+        exception = effect.copy_exception or CopyException()
+        for built in _become_a_copy_builder(
+            until_eot=False,
+            name_override=exception.name,
+            power_override=exception.power,
+            toughness_override=exception.toughness,
+            added_types=exception.added_types,
+            added_subtypes=exception.added_subtypes,
+        )(entering, game.continuous_effects.tick(), chosen, LayerContext()):
             game.continuous_effects.add(built)
+
+        _create_linked_reflexive_trigger(game, effect, card_name, entering, chosen[0])
 
     return apply
 
