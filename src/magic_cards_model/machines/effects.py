@@ -1580,6 +1580,21 @@ def scry(count: int) -> Effect:
 # --------------------------------------------------------------------------
 
 
+def end_the_turn_effect(game: "Game", spell: CardState) -> None:
+    """Time Stop: "End the turn." - CR 724.1's procedure, in `Game`.
+
+    Deliberately the last thing this clause does and nothing more: CR 724.1b
+    exiles every object on the stack "including the object that's resolving",
+    so the spell exiles itself here rather than reaching a graveyard.
+
+    A spliced clause (CR 702.47c adds the spliced card's text to this spell)
+    still runs, because `effect_for`'s fallback executes each clause in the
+    order written (CR 608.2c) and this one is Time Stop's only sentence -
+    anything spliced on sits beside it and is reached on its own.
+    """
+    game.end_the_turn()
+
+
 def prevent_all_combat_damage(game: "Game", spell: CardState) -> None:
     """Fog and Angelsong: "Prevent all combat damage that would be dealt this turn."
 
@@ -6200,6 +6215,11 @@ _DAMAGE_EACH_CREATURE_RE = re.compile(
 #: "Prevent all combat damage that would be dealt this turn." (Fog, Angelsong)
 #: - CR 615.1a's prevention effect naming neither a permanent nor a player, so
 #: the shield protects the whole board; see `prevent_all_combat_damage`.
+#: Time Stop's whole text. CR 724.1's procedure lives on `Game.end_the_turn`;
+#: this is only the sentence that calls it. Distinct from
+#: `_CONDITIONAL_END_THE_TURN_RE` far below, which is Day's Undoing's *gated*
+#: "if it's your turn, end the turn" and is still a notice.
+_PLAIN_END_THE_TURN_RE = re.compile(r"^end the turn\.?$", re.IGNORECASE)
 _PREVENT_ALL_COMBAT_DAMAGE_RE = re.compile(
     r"^prevent all combat damage that would be dealt this turn\.?$", re.IGNORECASE
 )
@@ -6597,6 +6617,9 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
             return None
         amount = _count(match.group("n"))
         return damage_each_creature(amount)  # type: ignore[return-value]
+
+    if _PLAIN_END_THE_TURN_RE.fullmatch(clause):
+        return end_the_turn_effect  # type: ignore[return-value]
 
     if _PREVENT_ALL_COMBAT_DAMAGE_RE.fullmatch(clause):
         return prevent_all_combat_damage  # type: ignore[return-value]

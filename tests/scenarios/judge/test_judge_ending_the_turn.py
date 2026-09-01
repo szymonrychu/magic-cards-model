@@ -50,12 +50,12 @@ from tests.cards import card
 from tests.scenarios.harness import Scenario
 
 
-def test_none_of_the_three_cards_effects_are_read():
+def test_which_of_the_three_cards_effects_are_read():
     """DDR#957's blocker, stated as three facts rather than three guesses.
 
-    Time Stop: "End the turn." - CR 724's procedure is built now
-    (`Game.end_the_turn`), but nothing connects the printed sentence to it:
-    `effect_for` returns None, so the spell resolves and does nothing.
+    Time Stop: "End the turn." - CR 724's procedure is built
+    (`Game.end_the_turn`) and its printed sentence now reaches it, so this
+    one is no longer a blocker; the test below plays it.
 
     Plagiarize: "Until end of turn, if target player would draw a card, instead
     that player skips that draw and you draw a card." - a CR 614.1a replacement
@@ -69,7 +69,7 @@ def test_none_of_the_three_cards_effects_are_read():
     draw *is* read - it is the one clause of this episode the engine can run -
     which is what makes the splice half the interesting gap.
     """
-    assert effect_for("Time Stop", card("Time Stop").oracle_text or "") is None
+    assert effect_for("Time Stop", card("Time Stop").oracle_text or "") is not None
     assert effect_for("Plagiarize", card("Plagiarize").oracle_text or "") is None
     assert effect_for("Everdream", card("Everdream").oracle_text or "") is not None
 
@@ -279,15 +279,16 @@ def test_ending_the_turn_gives_nobody_priority_and_runs_no_cleanup_actions():
     assert scenario.game.priority is None or scenario.game.stack == []
 
 
-def test_time_stop_resolves_and_the_turn_carries_on():
-    """DDR#957's baseline: Time Stop is a real spell that does nothing here.
+def test_time_stop_ends_the_turn_and_exiles_the_stack_under_it():
+    """DDR#957's headline: Time Stop's printed "End the turn." runs CR 724.1.
 
-    CR 608.2n puts a resolved instant into its owner's graveyard, and that much
-    happens. What does not happen is CR 724.1 - not because the procedure is
-    missing (`Game.end_the_turn` is built, and the four tests above drive it)
-    but because nothing connects Time Stop's printed "End the turn." to it:
-    `effect_for("Time Stop", ...)` is None, so the spell resolves and does
-    nothing at all.
+    CR 724.1b exiles "every object on the stack, including the object that's
+    resolving" - so the Bolt underneath goes to exile rather than resolving,
+    and Time Stop exiles *itself* instead of reaching the graveyard CR 608.2n
+    would otherwise send it to. CR 724.1d then skips straight to the cleanup
+    step.
+
+    Every CR number here was verified with `knowledge_search(type="rules")`.
     """
     scenario = (
         Scenario()
@@ -302,9 +303,11 @@ def test_time_stop_resolves_and_the_turn_carries_on():
 
     scenario.resolve_top()
 
-    assert stop.zone is Zone.GRAVEYARD
-    assert bolt.zone is Zone.STACK, "CR 724.1b's exile never happened"
-    assert scenario.step is Step.PRECOMBAT_MAIN, "CR 724.1d's skip never happened"
+    assert stop.zone is Zone.EXILE, "CR 724.1b exiles the resolving object too"
+    assert bolt.zone is Zone.EXILE, "CR 724.1b exiles every object on the stack"
+    assert scenario.game.stack_is_empty
+    assert scenario.step is Step.CLEANUP, "CR 724.1d skips to the cleanup step"
+    assert scenario.player("bob").life == 20, "the Bolt never resolved"
 
 
 @pytest.mark.xfail(
