@@ -109,28 +109,26 @@ def test_the_legend_rule_leaves_each_player_exactly_one():
         assert len(scenario.player(username).graveyard) == 1
 
 
-@pytest.mark.xfail(
-    reason=(
-        "CR 704.5j's choice is not asked. `Game._legend_rule_losers` keeps the "
-        "first copy on the battlefield rather than asking its controller which "
-        "to keep, so there is no simultaneous choice for CR 101.4's APNAP "
-        "order to order - the whole point of DDR#976's first half."
-    ),
-    strict=True,
-)
 def test_each_controller_is_asked_which_legend_to_keep():
     """DDR#976: "the active player makes that decision first and then the other
     players go in turn order" (CR 101.4).
 
-    For that to be observable the legend rule has to *ask*. It does not: the
-    check runs to completion with no question put to anybody.
+    CR 704.5j puts the choice on the controller - "that player chooses one of
+    them" - so with both players holding two Isamarus there are two choices to
+    be made at the same moment, and CR 101.4 orders them: the active player is
+    asked first, then the next player in turn order.
     """
     scenario = two_players_two_isamarus().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
     scenario.state_based_actions()
 
-    assert scenario.questions_asked() != []
+    asked = scenario.questions_asked()
+    assert asked != [], "CR 704.5j's choice is put to somebody"
+    legend_questions = [question for question in asked if "704.5j" in (question.prompt or "")]
+    assert [question.player for question in legend_questions] == ["alice", "bob"], (
+        "the active player chooses first, then the next in turn order (CR 101.4)"
+    )
 
 
 # --------------------------------------------------------------------------

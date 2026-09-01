@@ -6745,22 +6745,66 @@ class Game(BaseModel):
         """The legendary permanents the legend rule puts into graveyards (CR 704.5j).
 
         "If two or more legendary permanents with the same name are controlled
-        by the same player, that player chooses one of them, and the rest are
-        put into their owners' graveyards." Nothing here asks the player, so the
-        first copy on the battlefield is the one kept, which keeps a scenario
-        that does not care about the choice reproducible.
+        by the same player, **that player chooses one of them**, and the rest
+        are put into their owners' graveyards."
+
+        The choice is real and is asked, one `CHOOSE_CARDS` question per
+        (controller, name) group. Two players each holding two copies of the
+        same legend is two separate choices made at the same time, which is
+        what CR 101.4 orders: "If multiple players would make choices and/or
+        take actions at the same time, the active player ... makes any choices
+        required, then the next player in turn order". So the groups are walked
+        in `_turn_order_from_active` order, active player first, and the
+        question for each of that player's groups is put before the next
+        player's.
+
+        **The group is offered reversed.** `default_answer` for an exact
+        `CHOOSE_CARDS` answers with the *back* of the offered cards, so
+        reversing the group makes the unscripted default keep the copy that has
+        been on the battlefield longest - the behaviour every scenario that
+        does not care about the choice was already relying on. A scenario that
+        does care answers the question instead.
         """
-        kept: set[tuple[str, str]] = set()
-        losers: list[CardState] = []
+        groups: dict[str, dict[str, list[CardState]]] = {}
         for state in self.battlefield:
             if Supertype.LEGENDARY not in state.supertypes:
                 continue
-            key = (self.controller_of(state).username, state.name)
-            if key in kept:
-                losers.append(state)
-            else:
-                kept.add(key)
+            controller = self.controller_of(state).username
+            groups.setdefault(controller, {}).setdefault(state.name, []).append(state)
+
+        losers: list[CardState] = []
+        for username in self._turn_order_from_active():
+            for name, copies in groups.get(username, {}).items():
+                if len(copies) < 2:
+                    continue
+                kept = self._ask_which_legend_to_keep(username, name, copies)
+                losers.extend(state for state in copies if state is not kept)
         return losers
+
+    def _ask_which_legend_to_keep(
+        self, username: str, name: str, copies: list[CardState]
+    ) -> CardState:
+        """CR 704.5j's "that player chooses one of them", asked once per group."""
+        offered = list(reversed(copies))
+        decision = Decision(
+            kind=DecisionKind.CHOOSE_CARDS,
+            player=username,
+            prompt=f"choose which {name} to keep (CR 704.5j)",
+            amount=1,
+            exact=True,
+            cards=tuple(state.id for state in offered),
+        )
+        chosen_ids = self.ask(decision)
+        assert isinstance(chosen_ids, tuple)
+        by_id = {state.id: state for state in copies}
+        for card_id in chosen_ids:
+            kept = by_id.get(card_id)
+            if kept is not None:
+                return kept
+        # An answer that named nothing on offer keeps the longest-standing
+        # copy, the same as the unscripted default - the legend rule is a
+        # state-based action and has to reach an answer.
+        return copies[0]
 
     def _losing_players(self) -> list[str]:
         """Players a state-based action would remove right now.
