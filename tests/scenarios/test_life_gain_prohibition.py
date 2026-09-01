@@ -28,14 +28,25 @@ an effect says can't happen.
   other results that damage causes)." The damage is one result and the gain is
   another; only the gain is prohibited.
 
-What is modelled here is the *prohibition itself*, on `Player`. Screaming
-Nemesis's trigger has no entry in `machines/effects.py` and Leyline of
-Punishment's static ability has no row in `machines/layers.py`, so neither
-card can set the flag yet - the last test records that gap as an `xfail`.
+Two things are modelled, and they are separate. `Player.cannot_gain_life` is
+the prohibition as *player state*, which most of this file exercises.
+`Game.life_gain_prohibited` is the prohibition as a **board fact**: Leyline of
+Punishment's "Players can't gain life." read fresh off the battlefield on
+every call, which the last test plays out end to end.
+
+- **CR 119.7** - "If an effect says that a player can't gain life ...", the
+  rule that reads either of them back.
+- **CR 611.1** - a continuous effect "affects players or the rules of the
+  game". The Leyline's sentence changes no characteristic of any object, so
+  CR 613's layers have nothing to write and `machines/layers.py` was never the
+  right home for it - the reason it went missing for so long.
+
+Screaming Nemesis's trigger still has no entry in `machines/effects.py`, so
+the *card* that would set `cannot_gain_life` does not reach it yet.
 
 Every CR number in this file was verified with `knowledge_search(q="...",
-type="rules")` in the session that wrote it: CR 101.2, CR 119.3, CR 119.9,
-CR 614.17, CR 614.17c, CR 702.15b.
+type="rules")` in the session that wrote it: CR 101.2, CR 119.3, CR 119.7,
+CR 119.9, CR 611.1, CR 614.17, CR 614.17c, CR 702.15b.
 """
 
 import pytest

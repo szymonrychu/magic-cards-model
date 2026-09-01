@@ -25,8 +25,6 @@ quality. Counterspell countered Supreme Verdict - a wrong board state, not an
 absent one.
 """
 
-import pytest
-
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.casting_restrictions import cannot_be_countered
 from magic_cards_model.models import Zone

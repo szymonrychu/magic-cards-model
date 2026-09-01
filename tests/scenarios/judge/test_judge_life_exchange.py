@@ -24,23 +24,24 @@ The rules:
   two numerical values. That is why Nick's life total is untouched too, rather
   than the exchange half-happening in Amy's favour.
 
-The player-level half of this is modelled now: `Player.cannot_gain_life` is
-CR 119.7's prohibition, and `Player.exchange_life_totals` is the CR 701.12a/c
-primitive - refused as one event, applied as gains and losses (see
+Both the player-level and the game-level halves are modelled now:
+`Player.cannot_gain_life` is CR 119.7's prohibition,
+`Player.exchange_life_totals` is the CR 701.12a/c primitive - refused as one
+event, applied as gains and losses - and `Game.exchange_life_totals` is the
+wrapper a resolving spell or ability reaches, which also emits the gain and
+loss events the primitive does not (see
 `tests/scenarios/test_exchanging_life_totals.py` and
-`tests/scenarios/test_life_gain_prohibition.py` for its corner cases). What is
-still missing is everything that would let the two *cards* reach it: neither
+`tests/scenarios/test_life_gain_prohibition.py` for the corner cases).
+
+What is still missing is what would let the two *cards* reach it: neither
 Mister Negative nor Screaming Nemesis has an entry in `machines/effects.py`,
-and `Game` has no wrapper to resolve an exchange as part of a spell. So this
-file is passing tests on what the engine reads off the printings and on the
-prohibition, and an `xfail` for the game-level exchange.
+so both abilities resolve and do nothing. That is asserted rather than
+`xfail`ed, below.
 
 Every CR number in this file was verified with `knowledge_search(q="...",
 type="rules")` in the session that wrote it: CR 119.3, CR 119.7, CR 603.1 is
 not cited, CR 701.12a, CR 701.12c, CR 701.12g.
 """
-
-import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.abilities import AbilityKind, parse_abilities

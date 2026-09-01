@@ -13,6 +13,7 @@ from ..machines.abilities import (
     AbilityKind,
     ActivatedAbility,
     CostKind,
+    CouldProduce,
     TriggeredAbility,
     TriggerEvent,
     granted_mana_abilities,
@@ -45,6 +46,7 @@ from ..machines.cost import (
     CostModifierNotice,
     CostPayment,
     TotalCost,
+    among_colors,
     cost_component_for_phrase,
     cost_modifier_effect,
     discard_cost,
@@ -614,9 +616,7 @@ _LIFE_GAIN_PROHIBITION_RE = re.compile(
 #: A sentence that prohibits life gain but is not the symmetric shape above -
 #: matched only to fail closed with a notice rather than let it read as
 #: permission, exactly as `_LOOKS_LIKE_ACTIVATION_PROHIBITION_RE` does.
-_LOOKS_LIKE_LIFE_GAIN_PROHIBITION_RE = re.compile(
-    r"\bcan't gain life\b", re.IGNORECASE
-)
+_LOOKS_LIKE_LIFE_GAIN_PROHIBITION_RE = re.compile(r"\bcan't gain life\b", re.IGNORECASE)
 
 #: Pithing Needle's and Disruptor Flute's "sources with the chosen name", which
 #: name their subjects by a CR 614.12a choice rather than by a quality. Left
@@ -7421,19 +7421,92 @@ class Game(BaseModel):
         the six *types* of mana but not one of the five colors, so "one mana of
         any color" is never {C}.
         """
+        return Color.COLORLESS in self.colors_could_produce(permanent)
+
+    def colors_could_produce(
+        self, permanent: CardState, *, skip_could_produce_abilities: bool = False
+    ) -> frozenset[Color]:
+        """Every type of mana this permanent could produce right now (CR 106.7).
+
+        CR 106.7: "The type of mana a permanent could produce at any time
+        includes any type of mana that an ability of that permanent would
+        produce if the ability were to resolve at that time." So each of its
+        mana abilities is asked what it would add, against the board as it
+        stands - never whether any mana was actually made, whether the
+        permanent is untapped, or whether its controller could pay to activate
+        it.
+
+        "Type" is CR 106.1b's six, colorless included, so `Color.COLORLESS` is
+        a member of the answer like any other. An `any_color` ability
+        contributes CR 106.1a's five colours and not colorless.
+
+        Printed and `granted_ability_texts` abilities are both asked, the same
+        pair `machines/cost.py` taps a source with: Urza's Saga chapter I
+        grants "{T}: Add {C}." onto a land that prints no mana ability at all.
+
+        **`skip_could_produce_abilities` is the recursion guard.** Reflecting
+        Pool's own "{T}: Add one mana of any type that a land you control could
+        produce" is itself a land whose type is defined by a survey, so
+        surveying a board of two Reflecting Pools - or a Pool and an Exotic
+        Orchard pointed at each other - would recurse forever. CR 106.7 has no
+        fixed point to offer there, so a permanent whose ability is itself a
+        survey contributes nothing to someone else's survey; every other land
+        answers normally. The answer stays under-inclusive rather than wrong,
+        which is the same direction `colors_land_types_could_produce` errs in.
+        """
         abilities = parse_mana_abilities(
             permanent.card, permanent.up_face_name
         ) + granted_mana_abilities(permanent.granted_ability_texts)
         if not abilities:
-            return False
-        land_types = self._controlled_land_types(permanent.controller_or_owner)
+            return frozenset()
+        controller = permanent.controller_or_owner
+        land_types = self._controlled_land_types(controller)
         own_counters = frozenset(permanent.counters.counts)
         has_imprinted_card = self.card_imprinted_on(permanent.id) is not None
-        return any(
-            Color.COLORLESS in option
-            for ability in abilities
-            for option in ability.effective(land_types, own_counters, has_imprinted_card)[0]
-        )
+
+        colors: set[Color] = set()
+        for ability in abilities:
+            if ability.could_produce is not None:
+                if skip_could_produce_abilities:
+                    continue
+                surveyed = self._could_produce_survey(ability.could_produce, controller)
+                options, any_color = ability.effective(
+                    land_types,
+                    own_counters,
+                    has_imprinted_card,
+                    could_produce_colors=surveyed,
+                )
+            else:
+                options, any_color = ability.effective(land_types, own_counters, has_imprinted_card)
+            if any_color:
+                colors.update(_COLOR_WORDS.values())
+            for option in options:
+                colors.update(option)
+        return frozenset(colors)
+
+    def _could_produce_survey(
+        self, which: CouldProduce, controller: str | None
+    ) -> frozenset[Color]:
+        """CR 106.7's survey itself: the types of mana the lands the clause
+        names could produce right now.
+
+        Reflecting Pool asks about "a land you control", Exotic Orchard about
+        "a land an opponent controls" - `CouldProduce` is which. Every surveyed
+        land is asked with the recursion guard on, so a survey never consults
+        another survey (see `colors_could_produce`).
+        """
+        colors: set[Color] = set()
+        for land in self.battlefield:
+            if Type.LAND not in land.types:
+                continue
+            land_controller = self.controller_of(land).username
+            if which is CouldProduce.LANDS_YOU_CONTROL:
+                if land_controller != controller:
+                    continue
+            elif land_controller == controller:
+                continue
+            colors.update(self.colors_could_produce(land, skip_could_produce_abilities=True))
+        return frozenset(colors)
 
     def _affinity_count(self, what: str, controller: str) -> int:
         """How much CR 702.41a's affinity takes off, in generic mana.
@@ -8696,9 +8769,55 @@ class Game(BaseModel):
                 if ability.mana.amount_from_devotion and color is not None
                 else None
             )
-            produced_mana = ability.mana.resolve(
-                land_types, own_counters, color, has_imprinted_card, count=devotion
+            # The two board-derived narrowings `ManaAbility.effective` asks
+            # for. Without them this fast path resolved the ability against
+            # the printed text alone, while `machines/cost.py`'s auto-tap
+            # solver - which calls the same `effective` - already narrowed;
+            # the two disagreed about what the very same source produces.
+            #
+            # CR 614.12a's chosen colour (Utopia Sprawl's "As this Aura
+            # enters, choose a color", read back by "Add one mana of the
+            # chosen color"), recorded on the permanent as it entered.
+            chosen = permanent.choice
+            chosen_color = (
+                Color(chosen.value)
+                if chosen is not None and chosen.kind is ChoiceKind.COLOR
+                else None
             )
+            # CR 106.7's survey, for Reflecting Pool and Exotic Orchard.
+            could_produce_colors = (
+                self._could_produce_survey(ability.mana.could_produce, controller)
+                if ability.mana.could_produce is not None
+                else None
+            )
+            produced_mana = ability.mana.resolve(
+                land_types,
+                own_counters,
+                color,
+                has_imprinted_card,
+                count=devotion,
+                could_produce_colors=could_produce_colors,
+                chosen_color=chosen_color,
+            )
+            # CR 106.5, for the third narrowing: "of any color among legendary
+            # creatures and planeswalkers you control" (Mox Amber). The colour
+            # the activating player named has to be one the board actually
+            # defines - an empty board defines none, and an ability that would
+            # produce mana of an undefined type produces no mana instead.
+            # `machines/cost.py` already applies this on the payment path; a
+            # direct activation reached the same ability without it, so the
+            # same Mox Amber made nothing when tapped for a spell and one mana
+            # of any colour when activated on its own.
+            allowed = among_colors(ability.effect, self, controller)
+            if allowed is not None:
+                undefined = [produced for produced in produced_mana if produced not in allowed]
+                if undefined:
+                    raise ValueError(
+                        f"{permanent.name} cannot add "
+                        f"{''.join(f'{{{produced.value}}}' for produced in undefined)}: "
+                        f"no permanent it surveys defines that color, so the ability "
+                        f"produces no mana (CR 106.5)"
+                    )
             # CR 106.6: a "Spend this mana only to ..." sentence in this
             # ability's own effect text restricts the mana it just made. The
             # tag goes on the mana in the pool, not on `permanent` - the mana

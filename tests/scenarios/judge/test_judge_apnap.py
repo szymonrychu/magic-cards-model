@@ -19,7 +19,8 @@ one right and does not model the other at all:
   required, then the next player in turn order ..." CR 704.5j's legend rule is
   a choice ("that player chooses one of them"), and `Game._legend_rule_losers`
   keeps the first copy on the battlefield without asking anyone - so the
-  ordering the episode is *about* has nothing to order. That half is `xfail`.
+  ordering the episode is *about* is now asked and ordered: CR 704.5j puts the
+  choice on each controller, and CR 101.4 orders the controllers.
 
 The engine does implement CR 101.4's ordering where it shows: CR 603.3b puts
 simultaneously triggered abilities on the stack in APNAP order, and the episode
@@ -32,8 +33,6 @@ Every CR number in this file was verified with `knowledge_search(q="...",
 type="rules")` in the session that wrote it: CR 101.4, CR 101.4d, CR 102.1,
 CR 117.5, CR 205.4d, CR 603.3b, CR 704.2, CR 704.3, CR 704.5j.
 """
-
-import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
