@@ -274,17 +274,17 @@ def test_a_cost_increaser_that_leaves_mid_payment_does_not_lower_the_locked_in_c
     "`machines/cost.cost_component_for_phrase('{Q}')` now reads CR 107.6's "
     "untap symbol into a `ComponentKind.UNTAP` component (with `untap_cost`, "
     "`_why_not_untap`'s already-untapped refusal, and its pay/unpay halves). "
-    "What is missing is that `Game.activation_cost` has no `CostKind.UNTAP` "
-    "branch, so `{Q}` falls through to the generic `OTHER` reader, which builds "
-    "the component with no card in it - CR 107.6's 'this permanent' is a "
-    "self-reference `_cost_refers_to_self` cannot see in a bare symbol - and "
-    "the activation dies on 'untap needs 1 card(s) chosen, 0 given'. It needs "
-    "the exact mirror of the `CostKind.TAP` branch beside it:\n"
-    "            elif piece.kind is CostKind.UNTAP:\n"
-    "                components.append(\n"
-    "                    untap_cost(permanent, payer=controller, description=piece.text)\n"
-    "                )\n"
-    "with `untap_cost` added to the `machines.cost` import list.",
+    "`Game.activation_cost` now has the matching `CostKind.UNTAP` branch, so "
+    "the whole cost sequence works: {3} is paid, CR 601.2h untaps the Elves, "
+    "and the second activation is correctly refused one mana short. What is "
+    "missing is the *effect*: the granted ability's 'This creature gets +2/+2 "
+    "until end of turn.' reaches "
+    "`machines/effects.create_continuous_effect_of_ability`, which calls "
+    "`ContinuousEffects.create(elves, ...)`, which reads "
+    "`machines/layers.LAYER_EFFECTS` **keyed by card name** - and there is no "
+    "'Llanowar Elves' row, because the pump was never printed on the Elves. A "
+    "quoted ability granted by another permanent (CR 613.1f) has no route into "
+    "the layer registry at all, so the power stays 1.",
 )
 def test_umbral_mantle_cannot_untap_llanowar_elves_for_a_third_mana():
     """DDR#998: the untap cannot pay for itself.

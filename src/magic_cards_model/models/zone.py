@@ -1,7 +1,15 @@
 """Game zones.
 
-The seven zones the rules define (CR 400.1), plus the sideboard, which the rules
-treat as being outside the game rather than as a zone of its own.
+The seven zones the rules define (CR 400.1), the optional eighth that same rule
+names ("Some older cards also use the ante zone"), plus the sideboard, which the
+rules treat as being outside the game rather than as a zone of its own.
+
+**Ante is a zone, and a public one.** CR 400.2 lists "Graveyard, battlefield,
+stack, exile, ante, and command" as the public zones, and CR 407.4 gives the
+only verb that reaches it: "To ante an object is to put that object into the
+ante zone from whichever zone it's currently in. The owner of an object is the
+only player who can ante that object." `Game.ante` enforces that ownership
+check; CR 407.3 is why nothing else in the pool can put a card there.
 
 **Outside the game is not a zone.** CR 400.11a: "Cards in a player's sideboard
 are outside the game. See rule 100.4." - the sideboard is a *group of cards*
@@ -48,6 +56,12 @@ class Zone(StrEnum):
     EXILE = "exile"
     COMMAND = "command"
 
+    #: CR 400.1's optional eighth: "Some older cards also use the ante zone."
+    #: CR 407.4 is the only way in - "To ante an object is to put that object
+    #: into the ante zone from whichever zone it's currently in" - and CR 400.2
+    #: lists ante among the public zones. `Game.ante` is the verb.
+    ANTE = "ante"
+
     # Not a rules zone: cards here are outside the game until swapped in
     SIDEBOARD = "sideboard"
 
@@ -78,6 +92,8 @@ class Zone(StrEnum):
 
 
 _HIDDEN = frozenset({Zone.LIBRARY, Zone.HAND, Zone.SIDEBOARD})
-_SHARED = frozenset({Zone.BATTLEFIELD, Zone.STACK, Zone.EXILE, Zone.COMMAND})
+#: CR 400.1: "Each player has their own library, hand, graveyard, and sideboard.
+#: The other zones are shared by all players" - ante among them.
+_SHARED = frozenset({Zone.BATTLEFIELD, Zone.STACK, Zone.EXILE, Zone.COMMAND, Zone.ANTE})
 _ORDERED = frozenset({Zone.LIBRARY, Zone.GRAVEYARD, Zone.STACK})
 _OUTSIDE_THE_GAME = frozenset({Zone.SIDEBOARD})

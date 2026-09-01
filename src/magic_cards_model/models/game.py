@@ -4,6 +4,7 @@ import re
 from collections.abc import Callable, Sequence
 from enum import StrEnum
 from random import Random
+from typing import ClassVar
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -59,6 +60,7 @@ from ..machines.cost import (
     spend_restriction,
     tap_cost,
     total_cost_for_phrase,
+    untap_cost,
 )
 from ..machines.decisions import (
     NOT_ANSWERED,
@@ -148,10 +150,14 @@ from ..machines.triggers import (
     InterveningIfNotice,
     TargetingNotice,
     TargetingNoticeKind,
+    activated_abilities_from_lines,
     activated_abilities_of,
     apnap_order,
     granted_activated_abilities_of,
     intervening_if_holds,
+    mana_added_event,
+    rewritten_ability_lines,
+    state_triggers_for,
     tapped_for_mana_event,
     triggers_for,
 )
@@ -940,6 +946,9 @@ class Game(BaseModel):
             Zone.STACK: [],
             Zone.EXILE: [],
             Zone.COMMAND: [],
+            # CR 400.1's optional eighth zone, shared like the rest of these.
+            # Empty in every game that is not being played for ante (CR 407.2).
+            Zone.ANTE: [],
         }
     )
     priority: PriorityMachine | None = None
@@ -979,8 +988,17 @@ class Game(BaseModel):
     CR 104.5 sends a player the game is a draw for out of the game, so the
     losers still leave and their objects go with them (CR 800.4a).
 
-    Not the whole of CR 104.4: the mandatory-action loop draws (CR 104.4b) have
-    no loop machinery behind them, and CR 104.4c's "an effect may state that the
+    Not the whole of CR 104.4. **CR 104.4b's mandatory-action loop is detected
+    in exactly one shape and no other**: a chain of CR 605.1b triggered mana
+    abilities resolving inline off a single activation, bounded by
+    `resolve_triggered_mana_abilities`. That is DDR#990's Caged Sun under Toph,
+    the First Metalbender, where CR 605.4a keeps every link off the stack so no
+    player ever receives priority to break it. This is *not* general loop
+    detection: a loop built out of anything that does reach the stack, or out of
+    replacement effects, or out of two permanents triggering each other, is
+    still undetected and will hang or recurse rather than draw.
+
+    CR 104.4c's "an effect may state that the
     game is a draw" needs a registry effect to reach, which none has -
     `end_in_draw` is the staging entry for both. The teams variant (CR 104.4d)
     is outside the free-for-all defaults this model plays.
@@ -1382,6 +1400,34 @@ class Game(BaseModel):
     reads and increments this instead of putting a second copy of the same
     trigger on the stack later in the same turn. Cleared when a new turn
     begins, alongside `activations`/`loyalty_activations`."""
+
+    resolving: StackObject | None = Field(default=None, exclude=True, repr=False)
+    """The object currently resolving, or None (CR 608.2).
+
+    `resolve_top` pops the object off the stack before running its effect, so
+    while a spell resolves it is on no zone at all. CR 724.1b's "including the
+    object that's resolving" needs to be able to name it, and this is the only
+    place that can. Excluded from serialisation: it is live only for the length
+    of one resolution and means nothing in a stored board."""
+
+    turn_ended_exiled_ids: set[UUID] = Field(default_factory=set, exclude=True, repr=False)
+    """Spells CR 724.1b exiled while they were resolving.
+
+    `end_the_turn` gives the resolving spell a zone (exile) that `resolve_top`
+    would otherwise overwrite with the graveyard or the battlefield a few lines
+    later. This is how the two halves agree; each id is consumed once."""
+
+    state_trigger_latches: dict[str, UUID] = Field(default_factory=dict)
+    """Which CR 603.8 state trigger is currently held shut, and by what.
+
+    CR 603.8: an ability that triggers on a game state rather than an event
+    "doesn't trigger again until it has left the stack". Keyed
+    `"<source id>:<printed condition>"`, the value is the id of the
+    `AbilityOnStack` that triggered - `machines/triggers.state_triggers_for`
+    drops the entry the moment that object is neither on the stack nor waiting
+    in `pending_triggers`, so the latch opens for a resolved ability and a
+    *countered* one alike (CR 701.6a: countering removes it from the stack).
+    Not cleared per turn: the latch is about the stack, not the turn."""
 
     blocks_triggered: list[str] = Field(default_factory=list)
     """The blocker/attacker pairs that have already fired their block triggers
@@ -1809,6 +1855,65 @@ class Game(BaseModel):
             if permanent.is_saga and permanent.chapter_numbers:
                 self.add_counters(permanent, Counter.LORE, 1)
 
+    def end_the_turn(self) -> None:
+        """CR 724.1's "end the turn" procedure - Time Stop's whole text.
+
+        CR 724.1: "Some cards end the turn. When an effect ends the turn, follow
+        these steps in order, as they differ from the normal process for
+        resolving spells and abilities (see rule 608)." The steps this performs,
+        each looked up:
+
+        - **CR 724.1a** - "If there are any triggered abilities that triggered
+          before this process began but haven't been put onto the stack yet,
+          those abilities cease to exist. They won't be put onto the stack."
+          `pending_triggers` is emptied.
+        - **CR 724.1b** - "Exile every object on the stack, including the object
+          that's resolving." An ability on the stack has no card behind it
+          (CR 405.1), so it simply ceases to exist; a spell is a card and goes
+          to the exile zone. The resolving object is `Game.resolving`, and
+          **CR 608.2m** is why exiling it does not stop it: "If an instant
+          spell, sorcery spell, or ability that can legally resolve leaves the
+          stack once it starts to resolve, it will continue to resolve fully."
+          So Time Stop's own remaining text - a spliced-on card's, say - still
+          runs after this returns.
+        - **CR 724.1d** - "The current phase and/or step ends. If this happens
+          during combat, remove all creatures and planeswalkers from combat. The
+          game skips straight to the cleanup step." The turn machine's pointer
+          is moved to `Step.CLEANUP` directly; the cleanup step's own turn-based
+          actions (CR 514.1, 514.2) are `cleanup_step`'s job and are *not*
+          performed here, which is what leaves an "until end of turn" effect
+          still running for whatever resolves next.
+        - **CR 724.1f** - "No player gets priority during this process, so
+          triggered abilities are not put onto the stack." Nothing here calls
+          `put_triggers_on_stack` or touches the priority machine.
+
+        **Unverified**: `knowledge_search` in this session could not return
+        CR 724.1c or CR 724.1e, so neither is implemented or cited here.
+        """
+        assert self.turn is not None
+        self.pending_triggers = []  # CR 724.1a
+        for stack_object in list(self.stack):  # CR 724.1b
+            self.stack.remove(stack_object)
+            if isinstance(stack_object, CardState):
+                self._take_out_of_every_zone(stack_object)
+                self.combat.remove(stack_object.id)
+                stack_object.move_to(Zone.EXILE)
+                self.exile.append(stack_object)
+                self.cast_records.pop(stack_object.id, None)
+        resolving = self.resolving
+        if isinstance(resolving, CardState) and resolving not in self.exile:
+            # CR 724.1b's "including the object that's resolving" - already
+            # popped off the stack by `resolve_top`, so it is exiled by name.
+            self._take_out_of_every_zone(resolving)
+            self.combat.remove(resolving.id)
+            resolving.move_to(Zone.EXILE)
+            self.exile.append(resolving)
+            self.turn_ended_exiled_ids.add(resolving.id)
+        # CR 724.1d, the combat half: removing every creature and planeswalker
+        # from combat is `CombatMachine.clear`'s whole job.
+        self.combat.clear()
+        self.turn.advance_to(Step.CLEANUP)
+
     def cleanup_step(self) -> list[CardState]:
         """The cleanup step's two turn-based actions, in order (CR 514.1, 514.2).
 
@@ -2101,6 +2206,23 @@ class Game(BaseModel):
         return card_state
 
     def resolve_top(self) -> StackObject:
+        """Resolve the top of the stack, recording what is resolving (CR 608.2).
+
+        The object is popped off the stack before its effect runs, so nothing
+        downstream could otherwise answer "which object is resolving right
+        now?" - and CR 724.1b needs exactly that: "Exile every object on the
+        stack, **including the object that's resolving**." `Game.resolving` is
+        that answer, live only for the length of one resolution.
+        """
+        if self.stack_is_empty:
+            raise ValueError("the stack is empty")
+        self.resolving = self.stack[-1]
+        try:
+            return self._resolve_top()
+        finally:
+            self.resolving = None
+
+    def _resolve_top(self) -> StackObject:
         """Resolve the top of the stack (CR 608).
 
         A spell's effect happens, then permanents land on the battlefield and
@@ -2208,6 +2330,19 @@ class Game(BaseModel):
                 self.cast_records.pop(spell.id, None)
                 self._before_priority()
                 raise
+
+        if spell.id in self.turn_ended_exiled_ids:
+            # CR 724.1b exiled this spell while it was resolving, and CR 608.2m
+            # let it finish resolving anyway ("If an instant spell, sorcery
+            # spell, or ability that can legally resolve leaves the stack once
+            # it starts to resolve, it will continue to resolve fully"). It has
+            # already been given a zone, so neither of the two placements below
+            # applies - it does not reach a graveyard and it does not enter the
+            # battlefield.
+            self.turn_ended_exiled_ids.discard(spell.id)
+            self.cast_records.pop(spell.id, None)
+            self._before_priority()
+            return spell
 
         if spell.is_permanent:
             # CR 608.3, 608.3a: a resolving permanent spell "becomes a permanent
@@ -2644,6 +2779,70 @@ class Game(BaseModel):
         if chosen:
             copy.targets = list(chosen)
 
+    #: How many triggered mana abilities may resolve inline, back to back, off
+    #: one activation before the engine calls it a CR 104.4b loop. There is no
+    #: printing in the pool that legitimately chains more than a handful, and a
+    #: real loop is unbounded, so any bound well clear of the honest cases
+    #: separates the two. See `resolve_triggered_mana_abilities`.
+    TRIGGERED_MANA_ABILITY_LOOP_BOUND: ClassVar[int] = 64
+
+    def resolve_triggered_mana_abilities(self, triggered: Sequence[AbilityOnStack]) -> None:
+        """Resolve CR 605.1b's triggered mana abilities inline (CR 605.4a).
+
+        CR 605.1b: "A triggered ability is a mana ability if it meets all of the
+        following criteria: it doesn't require a target (see rule 115.6), it
+        triggers from the activation or resolution of an activated mana ability
+        ...". CR 605.4a then keeps it off the stack: it "resolves immediately
+        after the mana ability that triggered it, without waiting for priority".
+
+        Everything handed here already triggered off `ExtraTriggerEvent.
+        MANA_ADDED`, which is raised only by a mana ability resolving, so the
+        remaining criteria are the two checked below: no target, and an effect
+        that could add mana.
+
+        Each resolution that actually puts mana in the pool re-raises the same
+        event from the same source, because a triggered mana ability's own
+        "add" is itself something causing a player to add mana - which is what
+        makes DDR#990's Caged Sun-under-Toph loop a loop at all.
+
+        **CR 104.4b** is the bound: "If a game that's not using the limited
+        range of influence option (including a two-player game) somehow enters
+        a 'loop' of mandatory actions, repeating a sequence of events with no
+        way to stop, the game is a draw." Past
+        `TRIGGERED_MANA_ABILITY_LOOP_BOUND` consecutive inline resolutions off
+        one activation, `Game.drawn` is set and the chain stops.
+        """
+        pending = list(triggered)
+        resolved = 0
+        while pending:
+            ability = pending.pop(0)
+            if ability not in self.pending_triggers:
+                continue
+            printed = ability.ability
+            if not isinstance(printed, TriggeredAbility):
+                continue
+            if ability.targets or not printed.effect.lower().strip().startswith("add "):
+                continue  # CR 605.5: not a mana ability.
+            if resolved >= self.TRIGGERED_MANA_ABILITY_LOOP_BOUND:
+                # CR 104.4b. See `Game.drawn`'s own docstring for what this
+                # detection does and does not cover.
+                self.drawn = True
+                return
+            self.pending_triggers.remove(ability)
+            source = ability.source(self)
+            before = dict(self.player(ability.controller).mana_pool.floating)
+            self._resolve_ability(ability)
+            resolved += 1
+            after = self.player(ability.controller).mana_pool.floating
+            added = [
+                color
+                for color, count in after.items()
+                for _ in range(count - before.get(color, 0))
+                if count > before.get(color, 0)
+            ]
+            if added and source is not None:
+                pending.extend(self.emit(mana_added_event(source, self, mana_added=added)))
+
     def _resolve_ability(self, ability: AbilityOnStack) -> AbilityOnStack:
         """Resolve an ability that was on the stack (CR 608.2).
 
@@ -2889,6 +3088,12 @@ class Game(BaseModel):
         # CR 603.3 puts it on the stack the next time a player would receive
         # priority, alongside these.
         triggered = triggered + self.delayed_triggers.fire(event)
+        # CR 603.8: a state trigger watches a game state, not an event, so it
+        # is swept for after every event rather than matched against one. This
+        # is what lets a countered state trigger fire again immediately - the
+        # counter event is emitted from `Game.counter` after the ability has
+        # already been removed from the stack (CR 701.6a).
+        triggered = triggered + state_triggers_for(self)
         self.pending_triggers.extend(triggered)
         return triggered
 
@@ -2920,8 +3125,15 @@ class Game(BaseModel):
         them for a later call that a scenario may never make.
         """
         placed: list[AbilityOnStack] = []
+        # CR 603.8 / CR 704.1a: a state trigger is a triggered ability whose
+        # condition is a game state, so it is swept for here too - a state that
+        # became true while an ability was resolving (or that was true before
+        # anything ever happened, so no event was emitted to sweep on) has still
+        # triggered, and CR 603.3 puts it on the stack at this same moment.
+        self.pending_triggers.extend(state_triggers_for(self))
         while self.pending_triggers:
             placed.extend(self._put_pending_triggers_on_stack())
+            self.pending_triggers.extend(state_triggers_for(self))
         return placed
 
     def _put_pending_triggers_on_stack(self) -> list[AbilityOnStack]:
@@ -6264,6 +6476,62 @@ class Game(BaseModel):
             )
         return permanent
 
+    @property
+    def ante_zone(self) -> list[CardState]:
+        """CR 400.1's optional eighth zone, shared and public (CR 400.2)."""
+        return self.shared_zones[Zone.ANTE]  # type: ignore[return-value]
+
+    def ante(self, card_state: CardState, anteing_player: str | None = None) -> bool:
+        """Ante a card, and answer whether it actually moved (CR 407.4).
+
+        CR 407.4: "To ante an object is to put that object into the ante zone
+        from whichever zone it's currently in. The owner of an object is the
+        only player who can ante that object." Both halves are here: the move
+        is out of *whatever* zone the card is in, and a player who is not the
+        owner is refused outright rather than quietly succeeding.
+
+        The boolean is what Jeweled Bird's "Ante this artifact. **If you do**,
+        ..." reads: an ante that was refused leaves the whole rest of the
+        ability undone, which is the stolen-Bird ruling DDR#666 walks through.
+
+        `anteing_player` defaults to the card's own controller, which is who is
+        activating the ability that says to ante it - and for a permanent an
+        opponent has stolen, that is exactly the player CR 407.4 refuses.
+
+        CR 407.3 is why there is no other door into this zone: "A few cards
+        have the text 'Remove this card from your deck before playing if you're
+        not playing for ante.' These are the only cards that can add or remove
+        cards from the ante zone or change a card's ownership."
+        """
+        anteing_player = (
+            anteing_player if anteing_player is not None else card_state.controller_or_owner
+        )
+        owner = card_state.owner
+        if owner is None or anteing_player != owner:
+            return False
+        was_on_battlefield = card_state in self.battlefield
+        if was_on_battlefield:
+            self._note_left_battlefield(card_state)
+            self._detach_dependents(card_state)
+        self._take_out_of_every_zone(card_state)
+        self.combat.remove(card_state.id)  # CR 506.4
+        card_state.move_to(Zone.ANTE)
+        self.ante_zone.append(card_state)
+        if was_on_battlefield:
+            # CR 603.6c's generic departure. There is no ante-specific trigger
+            # event, and nothing in the pool watches for one.
+            self.emit(
+                GameEvent(
+                    event=TriggerEvent.LEAVES_THE_BATTLEFIELD,
+                    subject_id=card_state.id,
+                    subject_name=card_state.name,
+                    subject_controller=card_state.controller,
+                    subject_card=card_state.card,
+                    player=card_state.controller,
+                )
+            )
+        return True
+
     def exile_cards(self, cards: Sequence[CardState]) -> list[CardState]:
         """Exile several cards as one instruction (CR 406.2).
 
@@ -6851,9 +7119,15 @@ class Game(BaseModel):
         CR 800.4a: everything they own leaves the game, and CR 800.4j has the
         turn carry on without them. Ownership is not modelled separately from
         control, so this reads their objects off `controller`.
+
+        **CR 800.4n is the one exception**: "When a player leaves the game,
+        objects that player owns in the ante zone do not leave the game." The
+        ante zone is skipped entirely here for that reason.
         """
         assert self.turn is not None
-        for zone_cards in self.shared_zones.values():
+        for zone, zone_cards in self.shared_zones.items():
+            if zone is Zone.ANTE:
+                continue  # CR 800.4n
             for state in list(zone_cards):
                 if state.controller == username:
                     self.combat.remove(state.id)
@@ -7838,7 +8112,19 @@ class Game(BaseModel):
         Create a 0/0 colorless Construct artifact creature token ...'") is the
         only source of these in the pool. Appending rather than interleaving
         keeps a printed ability's own index stable as more get granted.
+
+        **CR 613.5 / CR 707.2**: when a continuous effect has rewritten the
+        permanent's computed ability text away from the printed card - a layer 1
+        copy effect is the only shape that does - the *computed* abilities are
+        the ones it has, and the printed card is not consulted at all. A land
+        that has become a copy of Sol Ring offers `{T}: Add {C}{C}` and nothing
+        of its own. `rewritten_ability_lines` answers None for every permanent
+        whose printed lines all survive, so an ordinary grant still appends and
+        every printed ability's index stays where it was.
         """
+        rewritten = rewritten_ability_lines(self, permanent)
+        if rewritten is not None:
+            return activated_abilities_from_lines(rewritten, permanent.card, permanent.up_face_name)
         return activated_abilities_of(
             permanent.card, permanent.up_face_name
         ) + granted_activated_abilities_of(permanent.granted_ability_texts)
@@ -8333,6 +8619,15 @@ class Game(BaseModel):
                 mana = increase(mana, ManaCost.parse(piece.text).with_x(x_value))
             elif piece.kind is CostKind.TAP:
                 components.append(tap_cost(permanent, payer=controller, description=piece.text))
+            elif piece.kind is CostKind.UNTAP:
+                # CR 107.6: "The untap symbol is {Q}. The untap symbol in an
+                # activation cost means 'Untap this permanent.'" The exact
+                # mirror of the `{T}` branch above - "this permanent" is the
+                # permanent whose ability is being activated, which a bare
+                # symbol never names in words for `_cost_refers_to_self` to
+                # read. CR 602.5a gates both symbols the same way for a
+                # creature, and `why_cannot_activate` already checks that pair.
+                components.append(untap_cost(permanent, payer=controller, description=piece.text))
             elif piece.kind is CostKind.SACRIFICE:
                 components.append(
                     self._choice_cost(piece.text, permanent, sacrifices, controller, sacrifice_cost)
@@ -8866,7 +9161,17 @@ class Game(BaseModel):
             # this: `CostPayment.tap_for_mana` emits the same event when a
             # source pays for a spell instead of being activated directly).
             if any(piece.kind is CostKind.TAP for piece in ability.costs):
-                self.emit(tapped_for_mana_event(permanent, self))
+                self.emit(tapped_for_mana_event(permanent, self, mana_added=produced_mana))
+            if produced_mana:
+                # Not CR 106.12's tap event but its sibling: an ability caused
+                # this player to add mana. Caged Sun's own condition asks about
+                # the adding, not the tapping, so a mana ability with no `{T}`
+                # in its cost raises this one just the same.
+                triggered = self.emit(mana_added_event(permanent, self, mana_added=produced_mana))
+                # CR 605.4a: a triggered mana ability "doesn't go on the stack
+                # ... It simply resolves immediately after the mana ability
+                # that triggered it, without waiting for priority."
+                self.resolve_triggered_mana_abilities(triggered)
             self.put_triggers_on_stack()
             return None
 

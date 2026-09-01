@@ -2007,6 +2007,10 @@ def _parse_keywords(text: str, keywords: list[str], common: dict) -> list[Abilit
     if em_dash is not None:
         return [em_dash]
 
+    parameterised = _parse_keyword_parameter(text, known, common)
+    if parameterised is not None:
+        return [parameterised]
+
     if "." in text or ":" in text:
         return []
 
@@ -2017,6 +2021,53 @@ def _parse_keywords(text: str, keywords: list[str], common: dict) -> list[Abilit
             return []
         parsed.append(KeywordAbility(**common, **match))
     return parsed
+
+
+#: `Keyword X, where X is ...` - Firebending Student's own "Firebending X,
+#: where X is this creature's power." CR 702.189a templates the keyword as
+#: "Firebending N", and a card may print the N as a self-defined X rather than
+#: a literal number.
+_KEYWORD_SELF_DEFINED_X = re.compile(
+    r"^(?P<keyword>[A-Za-z' ]+?) (?P<parameter>X, where X is .+?)\.?$", re.IGNORECASE
+)
+
+
+def _parse_keyword_parameter(text: str, known: list[str], common: dict) -> KeywordAbility | None:
+    """Read `Keyword X, where X is ...`, a keyword whose numeric parameter the
+    card defines in its own words rather than printing as a digit.
+
+    Firebending Student's "Firebending X, where X is this creature's power." is
+    the whole of this shape in the pool. Without it the line falls through
+    `_parse_keywords` twice over - the trailing full stop disqualifies it as a
+    keyword line, and the comma inside would have split it into two tokens of
+    which the second matches no keyword anyway - and lands as a
+    `StaticAbility`, which is the wrong category for what CR 702.189a says is a
+    *triggered* ability.
+
+    The parameter is kept verbatim on `KeywordAbility.parameter` and `count`
+    stays None: **CR 608.2h** is why the number is not resolved here. "If an
+    effect requires information from the game (such as the number of creatures
+    on the battlefield), the answer is determined only once, when the effect is
+    applied" - so X is this creature's power *as the firebending ability
+    resolves*, not as the line is parsed, and a parser that baked in a number
+    would be answering the question at the wrong moment.
+
+    The keyword still has to be on the printing's own Scryfall `keywords` list,
+    the same authority `_parse_keywords` and `_parse_keyword_cost` use.
+    """
+    match = _KEYWORD_SELF_DEFINED_X.match(text.strip())
+    if match is None:
+        return None
+    printed = match.group("keyword").strip()
+    canonical = next((k for k in known if k.lower() == printed.lower()), None)
+    if canonical is None:
+        return None
+    return KeywordAbility(
+        **common,
+        keyword=printed,
+        canonical=canonical,
+        parameter=match.group("parameter").strip(),
+    )
 
 
 def _parse_keyword_cost(text: str, known: list[str], common: dict) -> KeywordAbility | None:

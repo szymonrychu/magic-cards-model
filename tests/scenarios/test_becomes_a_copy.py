@@ -37,21 +37,25 @@ type="rules")` in the session that wrote this file:
   over, the same count `Unholy Heat`'s and `Violent Urge`'s delirium already
   use (`machines/layers.count_card_types`).
 
-**Known, documented gap**: the copy changes what `Game.characteristics_of`
-reports - CR 706's own layer 1 read - but `machines/cost.py`'s mana-source
-lookup and `Game.activated_abilities` still read a permanent's *printed*
-`Card`, not its computed characteristics, so a permanent that has become a
-copy cannot yet be tapped for the *copied* object's own abilities. This is
-the same "`CardState` has no copiable values" limitation `docs/engine-
-coverage.md` already named, only now half-closed rather than fully open -
-see the `xfail` test below and the coverage doc's own updated entry.
-"""
+- **CR 613.5** - "The application of continuous effects as described by the
+  layer system is continually and automatically performed by the game. All
+  resulting changes to an object's characteristics are instantaneous." That
+  is why the last test below can tap the copy for the *copied* object's mana
+  ability: `Game.activated_abilities` reads the computed ability text through
+  `machines/triggers.rewritten_ability_lines`, not the printed `Card`.
+- **CR 605.3b** - a mana ability "doesn't use the stack ... it resolves
+  immediately", so the copied `{T}: Add {C}{C}` is observable only in the
+  pool.
 
-import pytest
+**Remaining gap**: `machines/cost.py`'s own mana-source lookup still calls
+`parse_mana_abilities(source.card, ...)` on the printed card, so a copy used
+as a *payment* source (rather than activated directly) still offers its
+printed mana ability. See `docs/engine-coverage.md`.
+"""
 
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
-from magic_cards_model.models.card import Type
+from magic_cards_model.models.card import Color, Type
 from tests.scenarios.harness import Scenario
 
 
@@ -152,18 +156,13 @@ def test_shifting_woodland_becomes_a_copy_of_a_graveyard_permanent_until_end_of_
     assert reverted.types == (Type.LAND,)
 
 
-@pytest.mark.xfail(
-    reason=(
-        "CR 706's copy changes a permanent's computed Characteristics (Layer 1), "
-        "but machines/cost.py's mana-source lookup and Game.activated_abilities "
-        "still read the permanent's printed Card, not its computed "
-        "characteristics - so a land that has become a copy of Sol Ring cannot "
-        "yet actually be tapped for Sol Ring's own {T}: Add {C}{C}. This is the "
-        "documented remainder of the 'CardState has no copiable values' gap; "
-        "see docs/engine-coverage.md."
-    )
-)
 def test_the_copy_can_be_tapped_for_the_copied_permanents_own_mana_ability():
+    """CR 613.5 has the layer system's changes to an object's characteristics
+    apply instantly, and CR 707.2 puts the copied object's rules text (and so,
+    by CR 707.2a, its abilities) among the copiable values acquired. The land is
+    therefore tapped for Sol Ring's own `{T}: Add {C}{C}`, not for its own mana
+    ability - the ability list `Game.activated_abilities` offers is read off the
+    *computed* characteristics, not off the printed card."""
     scenario = (
         Scenario()
         .player("alice", battlefield=["The Mycosynth Gardens", "Forest", "Sol Ring"])
@@ -176,7 +175,11 @@ def test_the_copy_can_be_tapped_for_the_copied_permanents_own_mana_ability():
     scenario.activate(gardens, forest, index=2, targets=[sol_ring], x_value=1)
     scenario.resolve_top()
 
-    from magic_cards_model.machines.abilities import parse_mana_abilities
+    (ability,) = scenario.game.activated_abilities(gardens)
+    assert ability.text == "{T}: Add {C}{C}."
 
-    (ability,) = parse_mana_abilities(gardens.card, gardens.up_face_name)
-    assert ability.produces() == [gardens.card.colors]
+    # CR 605.3b: a mana ability resolves immediately and never uses the stack,
+    # so the pool is the whole of the observable result.
+    assert scenario.game.activate_ability(gardens, 0) is None
+    assert scenario.player("alice").mana_pool.floating.get(Color.COLORLESS) == 2
+    assert gardens.tapped

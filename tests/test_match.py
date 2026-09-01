@@ -48,7 +48,18 @@ def test_a_new_game_rests_in_the_mulligan_step_before_any_turn():
 def test_a_game_owns_the_shared_zones_and_players_own_theirs():
     game = match().start_game()
 
-    assert set(game.shared_zones) == {Zone.BATTLEFIELD, Zone.STACK, Zone.EXILE, Zone.COMMAND}
+    # CR 400.1: "Each player has their own library, hand, graveyard, and
+    # sideboard. The other zones are shared by all players" - ante included
+    # ("Some older cards also use the ante zone"), empty unless CR 407.4's own
+    # verb has put something there.
+    assert set(game.shared_zones) == {
+        Zone.BATTLEFIELD,
+        Zone.STACK,
+        Zone.EXILE,
+        Zone.COMMAND,
+        Zone.ANTE,
+    }
+    assert game.shared_zones[Zone.ANTE] == []
     assert set(game.player("alice").zones) == {
         Zone.LIBRARY,
         Zone.HAND,

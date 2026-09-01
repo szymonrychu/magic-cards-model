@@ -17,18 +17,23 @@ targeted, countered, or otherwise responded to"); firebending does not, because
 attacking is not the activation or resolution of a mana ability, which is what
 makes DDR#988's question about *when* X is read a real question at all.
 
-Every test here is `xfail`: neither card's ability reaches the engine.
-`machines/triggers.triggered_abilities_of` returns an empty list for Caged Sun
-and, for Firebending Student, only its prowess - the CR 702.189a keyword line is
-not expanded into the trigger it stands for. Every CR number here was looked up
-with `knowledge_search(type="rules")`.
+Caged Sun's trigger now parses, matches `ExtraTriggerEvent.MANA_ADDED`, and is
+resolved inline by `Game.resolve_triggered_mana_abilities` exactly as CR 605.4a
+requires; CR 104.4b's loop bound lives there too. Firebending now parses as the
+CR 702.189a keyword it is, rather than as a static ability. What is still
+missing for each episode is named in each `xfail` below, and lives in files this
+change does not touch. Every CR number here was looked up with
+`knowledge_search(type="rules")`.
 """
 
 import pytest
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.abilities import AbilityKind, parse_abilities
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card import Color
+from magic_cards_model.models.card_state import Choice, ChoiceKind
+from tests.cards import card
 from tests.scenarios.harness import Scenario
 
 # --------------------------------------------------------------------------
@@ -38,12 +43,11 @@ from tests.scenarios.harness import Scenario
 
 @pytest.mark.xfail(
     strict=True,
-    reason="Caged Sun is inert in this engine: `triggered_abilities_of(card("
-    "'Caged Sun'))` is empty and `effect_for('Caged Sun', ...)` is None, so "
-    "neither its 'As this artifact enters, choose a color' nor its "
-    "'Whenever a land's ability causes you to add ... add an additional one "
-    "mana of that color' has any reader. Tapping a Mountain adds one red, not "
-    "two.",
+    reason="Caged Sun's trigger now parses, matches (ExtraTriggerEvent.MANA_ADDED "
+    "in machines/triggers.py) and is resolved inline as CR 605.4a's triggered "
+    "mana ability - but its effect, 'add an additional one mana of that color', "
+    "has no entry in machines/effects.py, so the inline resolution adds nothing "
+    "and the Mountain's one red is all that reaches the pool.",
 )
 def test_caged_sun_adds_an_additional_mana_when_a_land_makes_the_chosen_color():
     """DDR#990's prerequisite: the ordinary, non-looping use of Caged Sun.
@@ -59,23 +63,30 @@ def test_caged_sun_adds_an_additional_mana_when_a_land_makes_the_chosen_color():
     """
     scenario = Scenario().player("alice", battlefield=["Caged Sun", "Mountain"]).build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
+    caged_sun = scenario.find("Caged Sun", Zone.BATTLEFIELD, "alice")
+    # CR 614.1c/614.12a: "As this artifact enters, choose a color." A staged
+    # battlefield never ran the as-enters replacement, so the answer is set
+    # here, the same way `test_chosen_color_mana.py` sets Mikokoro's Citadel's.
+    caged_sun.choice = Choice(kind=ChoiceKind.COLOR, value=Color.RED.value)
     mountain = scenario.find("Mountain", Zone.BATTLEFIELD, "alice")
 
     scenario.activate(mountain)
 
+    assert scenario.stack_names() == [], "CR 605.4a: a triggered mana ability never uses the stack"
     assert scenario.player("alice").mana_pool.floating.get(Color.RED) == 2
 
 
 @pytest.mark.xfail(
     strict=True,
-    reason="two separate gaps stack here: Toph's 'Nontoken artifacts you "
-    "control are lands in addition to their other types' has no entry in "
-    "`machines/layers.LAYER_EFFECTS` (see test_judge_layers.py's DDR#994), and "
-    "Caged Sun's own trigger is unparsed as above. `Game.drawn` is also "
-    "documented as covering only CR 104.4a's simultaneous loss - its docstring "
-    "says CR 104.4b's mandatory-action loops 'have no loop machinery behind "
-    "them' - so nothing in the engine could detect this loop even with both "
-    "cards working.",
+    reason="CR 104.4b's loop bound is built (Game.resolve_triggered_mana_abilities "
+    "sets Game.drawn past TRIGGERED_MANA_ABILITY_LOOP_BOUND consecutive inline "
+    "resolutions), and Caged Sun's trigger now matches and resolves inline. Two "
+    "pieces are still missing, each in a file of its own: Toph's 'Nontoken "
+    "artifacts you control are lands in addition to their other types' has no "
+    "entry in machines/layers.LAYER_EFFECTS (see test_judge_layers.py's DDR#994), "
+    "and Caged Sun's 'add an additional one mana of that color' has no entry in "
+    "machines/effects.py - so nothing adds mana, nothing re-triggers, and the "
+    "loop never starts.",
 )
 def test_toph_turning_caged_sun_into_a_land_draws_the_game():
     """DDR#990: the loop is mandatory and nobody ever gets priority in it.
@@ -99,6 +110,8 @@ def test_toph_turning_caged_sun_into_a_land_draws_the_game():
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
+    caged_sun = scenario.find("Caged Sun", Zone.BATTLEFIELD, "alice")
+    caged_sun.choice = Choice(kind=ChoiceKind.COLOR, value=Color.RED.value)
     mountain = scenario.find("Mountain", Zone.BATTLEFIELD, "alice")
 
     scenario.activate(mountain)
@@ -109,6 +122,32 @@ def test_toph_turning_caged_sun_into_a_land_draws_the_game():
 # --------------------------------------------------------------------------
 # DDR#988 - firebending X, and when X is read
 # --------------------------------------------------------------------------
+
+
+def test_firebending_parses_as_a_keyword_with_its_own_self_defined_x():
+    """DDR#988's first obstacle, now cleared.
+
+    Firebending Student's second line is "Firebending X, where X is this
+    creature's power." (reminder text stripped). CR 702.189a: "Firebending is a
+    triggered ability. 'Firebending N' means 'Whenever this creature attacks,
+    add N {R}. ...'" - so the line is a keyword, and N here is written as an X
+    the card defines in its own words.
+
+    It used to land as a `StaticAbility`: the keyword-line parser comma-split
+    it and the tail matched no keyword, and the trailing full stop disqualified
+    the line anyway. `_parse_keyword_parameter` reads the whole
+    `Keyword X, where X is ...` form instead, and keeps the parameter verbatim -
+    **CR 608.2h** is why it is not resolved to a number here: "the answer is
+    determined only once, when the effect is applied", which is as the
+    firebending ability resolves, not as the card is read.
+    """
+    abilities = parse_abilities(card("Firebending Student"))
+    keywords = [ability for ability in abilities if ability.kind is AbilityKind.KEYWORD]
+
+    assert [keyword.canonical for keyword in keywords] == ["Prowess", "Firebending"]
+    firebending = keywords[1]
+    assert firebending.parameter == "X, where X is this creature's power"
+    assert firebending.count is None, "CR 608.2h: the number is read on resolution"
 
 
 def _firebending_student_attacks(pump: bool = False):
@@ -133,10 +172,15 @@ def _firebending_student_attacks(pump: bool = False):
 
 @pytest.mark.xfail(
     strict=True,
-    reason="`triggered_abilities_of(card('Firebending Student'))` returns only "
-    "its prowess trigger - the 'Firebending X, where X is this creature's "
-    "power' keyword line is not expanded into the CR 702.189a triggered ability "
-    "it stands for, so attacking adds no mana at all and the pool stays empty.",
+    reason="The line now parses as a KeywordAbility (canonical 'Firebending', "
+    'parameter "X, where X is this creature\'s power") instead of a '
+    "StaticAbility, so `_match_keyword` sees it at last. Two pieces are still "
+    "missing, both outside models/game.py: machines/keywords._TRIGGER_EXPANSIONS "
+    "has no 'firebending' row, so `keyword_triggered_abilities` never builds "
+    "CR 702.189a's 'Whenever this creature attacks, add N {R}' triggered "
+    "ability; and even once it does, the add-mana effect needs an entry in "
+    "machines/effects.py. `triggered_abilities_of` therefore still returns only "
+    "prowess, and attacking adds no mana.",
 )
 def test_firebending_adds_mana_equal_to_the_creatures_power_when_it_attacks():
     """DDR#988's prerequisite: firebending is a triggered ability that uses the stack.
@@ -161,8 +205,11 @@ def test_firebending_adds_mana_equal_to_the_creatures_power_when_it_attacks():
 
 @pytest.mark.xfail(
     strict=True,
-    reason="same gap: with no firebending trigger on the stack there is nothing "
-    "to respond to, and no mana is added however large the creature gets.",
+    reason="same two gaps: machines/keywords._TRIGGER_EXPANSIONS has no "
+    "'firebending' row and machines/effects.py has no add-mana effect for it, so "
+    "there is no firebending trigger on the stack to respond to and no mana is "
+    "added however large the creature gets. The prowess half already works - "
+    "the Student really does reach power 5.",
 )
 def test_pumping_the_student_in_response_to_the_trigger_gets_more_mana():
     """DDR#988's actual ruling: X is read as the firebending ability resolves.

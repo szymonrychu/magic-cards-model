@@ -46,6 +46,7 @@ means a card whose trigger is not one of these shapes simply never fires - it is
 never *wrongly* fired. The shapes understood are listed on `condition_matches`.
 """
 
+import contextlib
 import operator
 import re
 from collections.abc import Sequence
@@ -56,9 +57,10 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel, ConfigDict, Field
 
 from ..models.card import Card, Color, Type
-from ..models.card_state import CardState, Counter, TargetRef
+from ..models.card_state import CardState, ChoiceKind, Counter, TargetRef
 from ..models.zone import Zone
 from .abilities import (
+    Ability,
     AbilityKind,
     ActivatedAbility,
     TriggeredAbility,
@@ -127,6 +129,16 @@ class ExtraTriggerEvent(StrEnum):
     #: **Missing emit:** the graveyard-to-exile moves in `models/game.py`
     #: (delve, Rest in Peace's replacement, a graveyard-hate effect).
     EXILED_FROM_GRAVEYARD = "exiled_from_graveyard"
+    #: "An ability caused a player to add mana", which is not the same event as
+    #: CR 106.12's "tapped for mana": Caged Sun's "Whenever a land's ability
+    #: causes you to add one or more mana of the chosen color" is about the
+    #: *adding*, so a mana ability that costs no `{T}` matches it and so does
+    #: another triggered mana ability's own addition - which is the whole of
+    #: DDR#990's loop. `GameEvent.mana_added` carries which mana, and
+    #: `GameEvent.subject_types` the type line of the object whose ability
+    #: added it. Emitted by `Game.activate_ability`'s CR 605.3b fast path and
+    #: by `Game.resolve_triggered_mana_abilities`.
+    MANA_ADDED = "mana_added"
 
 
 class GameEvent(BaseModel):
@@ -189,6 +201,16 @@ class GameEvent(BaseModel):
     (Sanctum of Ugin, Ugin, Eye of the Storms) reads; `None` for an event with
     no `CardState` subject to ask, the same fallback `subject_types` already
     uses."""
+
+    mana_added: tuple[Color, ...] = ()
+    """The mana this event put into a player's pool, one entry per mana.
+
+    CR 106.12a's "tapped for mana" event carried no colours at all, so a
+    condition that asks *which* mana was added - Caged Sun's "Whenever a land's
+    ability causes you to add one or more mana of the chosen color" - had
+    nothing to read. Colourless is `Color.COLORLESS`, so `{C}{C}` is two
+    entries, matching how `ManaAbility.produces` already reports a production.
+    Empty for every event that is not about mana."""
 
     related_id: UUID | None = None
     """The other creature in a blocking pair (CR 509.1a)."""
@@ -461,7 +483,11 @@ class AbilityOnStack(BaseModel):
         return game.find_by_id(self.source_id)
 
 
-def tapped_for_mana_event(source: CardState, game: "Game | None" = None) -> GameEvent:
+def tapped_for_mana_event(
+    source: CardState,
+    game: "Game | None" = None,
+    mana_added: "Sequence[Color] | None" = None,
+) -> GameEvent:
     """CR 106.12a: this permanent's mana ability just resolved and produced mana.
 
     Built once and reused by every place the engine taps something for mana -
@@ -502,6 +528,47 @@ def tapped_for_mana_event(source: CardState, game: "Game | None" = None) -> Game
         subject_card=source.card,
         subject_types=types,
         subject_subtypes=subtypes,
+        mana_added=tuple(mana_added or ()),
+    )
+
+
+def mana_added_event(
+    source: CardState, game: "Game | None" = None, mana_added: "Sequence[Color] | None" = None
+) -> GameEvent:
+    """An ability of `source` just caused its controller to add mana.
+
+    Distinct from `tapped_for_mana_event`: CR 106.12 defines "tap for mana" as
+    activating a mana ability "that includes the {T} symbol in its activation
+    cost", so a condition about *tapping* (Leyline of Abundance's "Whenever you
+    tap a creature for mana") is not the same question as one about *adding*
+    (Caged Sun's "Whenever a land's ability causes you to add one or more mana
+    of the chosen color"). Only the second is matched against this event, which
+    is why a triggered mana ability's own addition re-raises this one and never
+    the tap.
+
+    Types are read off `Game.characteristics_of` (CR 613.5) while the source is
+    still on the battlefield, exactly as `tapped_for_mana_event` does and for
+    the same reason: "a **land's** ability" is a question about the computed
+    type line, which is how Toph, the First Metalbender's static ability can
+    make Caged Sun's own trigger answer it.
+    """
+    on_battlefield = game is not None and source.zone is Zone.BATTLEFIELD
+    if on_battlefield:
+        characteristics = game.characteristics_of(source)
+        types = characteristics.types
+        subtypes = characteristics.subtypes
+    else:
+        types = source.types
+        subtypes = source.subtypes
+    return GameEvent(
+        event=ExtraTriggerEvent.MANA_ADDED,
+        subject_id=source.id,
+        subject_name=source.name,
+        subject_controller=source.controller,
+        subject_card=source.card,
+        subject_types=types,
+        subject_subtypes=subtypes,
+        mana_added=tuple(mana_added or ()),
     )
 
 
@@ -1384,6 +1451,14 @@ _EXILE_FROM_GRAVEYARD_OR_BATTLEFIELD_CONDITION = re.compile(
     r" during your turn$"
 )
 
+#: Caged Sun's "a land's ability causes you to add one or more mana of the
+#: chosen color" - CR 605.1b's triggered mana ability, watching CR 106.12a's
+#: own event for the mana it now carries (`GameEvent.mana_added`). "The chosen
+#: color" is CR 614.12a's as-enters choice, recorded on `CardState.choice`.
+_LAND_ADDED_CHOSEN_MANA_CONDITION = re.compile(
+    r"^a land's ability causes you to add one or more mana of the chosen color$"
+)
+
 #: Tamiyo, Inquisitive Student's "you draw your third card in a turn" - an
 #: ordinal over CR 121.2's individual card draws, which are one event each.
 _NTH_DRAW_CONDITION = re.compile(r"^you draw your (?P<ordinal>[a-z]+) card in a turn$")
@@ -1414,6 +1489,8 @@ def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTrig
         )
     if _NTH_DRAW_CONDITION.match(lowered):
         return frozenset({TriggerEvent.DRAWS_A_CARD})
+    if _LAND_ADDED_CHOSEN_MANA_CONDITION.match(lowered):
+        return frozenset({ExtraTriggerEvent.MANA_ADDED})
     return frozenset()
 
 
@@ -1502,6 +1579,23 @@ def _unread_condition_matches(
         if not isinstance(drawn, dict):
             return False
         return drawn.get(controller, 0) == ordinal
+
+    if _LAND_ADDED_CHOSEN_MANA_CONDITION.match(condition):
+        # CR 605.1b's triggered mana ability: Caged Sun's own condition, read
+        # off `GameEvent.mana_added` (the colours CR 106.12a's event now
+        # carries) and `CardState.choice` (CR 614.12a's as-enters choice).
+        if event.event is not ExtraTriggerEvent.MANA_ADDED:
+            return False
+        if event.subject_controller != controller:
+            return False  # "causes **you** to add".
+        if Type.LAND not in (event.subject_types or ()):
+            return False  # "a **land's** ability".
+        chosen = source.choice
+        if chosen is None or chosen.kind is not ChoiceKind.COLOR:
+            # CR 106.5: with no choice recorded there is no "chosen color" for
+            # the condition to be about, so it does not trigger.
+            return False
+        return any(color.value == chosen.value for color in event.mana_added)
 
     return False
 
@@ -2424,6 +2518,62 @@ def granted_activated_abilities_of(texts: Sequence[str]) -> list[ActivatedAbilit
     ]
 
 
+def rewritten_ability_lines(game: "Game", permanent: CardState) -> tuple[str, ...] | None:
+    """This permanent's *computed* ability text when a continuous effect has
+    rewritten it away from the printed card, else None.
+
+    CR 613.5: "The application of continuous effects as described by the layer
+    system is continually and automatically performed by the game. All resulting
+    changes to an object's characteristics are instantaneous." CR 109.3 counts
+    abilities among an object's characteristics, so a permanent whose layer 1
+    (CR 613.2c, 707.2: "the copy acquires the copiable values of the original
+    object's characteristics") copy effect replaced its rules text has the
+    *copied* object's abilities and none of its own - a land that has become a
+    copy of Sol Ring can be tapped for `{C}{C}` and cannot be tapped for green.
+
+    Only a rewrite is reported, never a plain grant: if every printed line
+    survives into `Characteristics.abilities`, the callers' printed-plus-granted
+    list is already right and keeping it keeps every ability *index* stable.
+    Nothing is reported for a permanent the layer engine has not computed, or
+    for one that lost all its ability text - CR 613.1f removal is already
+    policed by `Game._still_has_ability`.
+    """
+    if permanent.zone is not Zone.BATTLEFIELD:
+        return None
+    try:
+        computed = game.characteristics_of(permanent)
+    except KeyError:
+        return None
+    lines = tuple(computed.abilities)
+    if not lines:
+        return None
+    printed = [line.strip() for line in (permanent.oracle_text or "").splitlines() if line.strip()]
+    if all(line in lines for line in printed):
+        return None
+    return lines
+
+
+def activated_abilities_from_lines(
+    lines: Sequence[str], card: Card, face: str | None = None
+) -> list[ActivatedAbility]:
+    """`rewritten_ability_lines`' output read as activated abilities (CR 602.1).
+
+    The same fallback `activated_abilities_of` applies: a basic land prints no
+    activated ability of its own (its mana ability is reminder text), so a
+    computed line list that parses to nothing falls back to
+    `intrinsic_land_ability` (CR 305.6).
+    """
+    abilities = [
+        ability
+        for ability in parse_granted_ability_lines(lines)
+        if isinstance(ability, ActivatedAbility)
+    ]
+    if abilities:
+        return abilities
+    intrinsic = intrinsic_land_ability(card, face)
+    return [intrinsic] if intrinsic is not None else []
+
+
 def granted_triggered_abilities_of(texts: Sequence[str]) -> list[TriggeredAbility]:
     """`CardState.granted_ability_texts`' own triggered abilities, read the same
     way `triggered_abilities_of` reads a card's printed ones.
@@ -2479,8 +2629,17 @@ def triggers_for(game: "Game", event: GameEvent, sources: list[CardState]) -> li
         # this object, so it is asked here alongside the card's own printed
         # ones. Never *instead* of them - a grant adds.
         granted = granted_triggered_abilities_of(source.granted_ability_texts)
+        # CR 613.5 / CR 707.2: a permanent whose computed ability text has been
+        # rewritten by a layer 1 copy effect has the *copied* object's triggers
+        # and not its own, so the printed card is the wrong thing to read.
+        # `rewritten_ability_lines` answers None whenever nothing was taken
+        # away, which is every ordinary permanent.
+        rewritten = rewritten_ability_lines(game, source)
+        if rewritten is not None:
+            granted = granted_triggered_abilities_of(rewritten)
         granted_ids = {id(ability) for ability in granted}
-        for ability in triggered_abilities_of(source.card) + granted:
+        printed_abilities = [] if rewritten is not None else triggered_abilities_of(source.card)
+        for ability in printed_abilities + granted:
             up_face_name = source.up_face_name
             if (
                 up_face_name is not None
@@ -2527,16 +2686,205 @@ def triggers_for(game: "Game", event: GameEvent, sources: list[CardState]) -> li
                 if fired > 0:
                     continue
                 game.once_per_turn_triggers[key] = fired + 1
-            triggered.append(
-                AbilityOnStack(
-                    kind=AbilityKind.TRIGGERED,
-                    ability=ability,
-                    source_id=source.id,
-                    source_name=source.name,
-                    controller=controller,
-                    event=event,
-                )
+            on_stack = AbilityOnStack(
+                kind=AbilityKind.TRIGGERED,
+                ability=ability,
+                source_id=source.id,
+                source_name=source.name,
+                controller=controller,
+                event=event,
             )
+            triggered.append(on_stack)
+            # CR 603.2d: "determine how many times it should trigger, then
+            # trigger it that many times" - Panharmonicon. Each extra time is a
+            # separate ability on the stack in its own right, with its own id.
+            for _ in range(additional_trigger_times(game, on_stack, source, event)):
+                triggered.append(on_stack.model_copy(update={"id": uuid4()}, deep=True))
+    return triggered
+
+
+#: CR 603.2d's own shape, as Panharmonicon prints it: "If an artifact or
+#: creature entering causes a triggered ability of a permanent you control to
+#: trigger, that ability triggers an additional time."
+_ADDITIONAL_TRIGGER_RE = re.compile(
+    r"^if (?P<cause>.+?) causes a triggered ability of a permanent you control "
+    r"to trigger, that ability triggers an additional time\.?$",
+    re.IGNORECASE,
+)
+
+#: The gate half of `_ADDITIONAL_TRIGGER_RE`: "an artifact or creature entering".
+_ENTERING_CAUSE_RE = re.compile(r"^an? (?P<types>[a-z ]+?) entering$", re.IGNORECASE)
+
+
+def _computed_ability_lines(game: "Game", permanent: CardState) -> tuple[str, ...]:
+    """This permanent's ability text as the layer system computes it (CR 613.5),
+    falling back to the printed lines for a permanent the engine has not
+    computed."""
+    try:
+        return tuple(game.characteristics_of(permanent).abilities)
+    except KeyError:
+        return tuple(
+            line.strip() for line in (permanent.oracle_text or "").splitlines() if line.strip()
+        )
+
+
+def _entering_cause_matches(game: "Game", cause: str, event: GameEvent) -> bool:
+    """Whether this event is the "artifact or creature entering" the multiplier
+    names (CR 603.2d's own "an ability may state that a triggered ability
+    triggers additional times" is gated by the rest of the printed sentence)."""
+    match = _ENTERING_CAUSE_RE.match(cause.strip())
+    if match is None or event.event is not TriggerEvent.ENTERS_THE_BATTLEFIELD:
+        return False
+    wanted = {word.strip().lower() for word in match["types"].split(" or ") if word.strip()}
+    entering = game.find_by_id(event.subject_id) if event.subject_id is not None else None
+    if isinstance(entering, CardState):
+        try:
+            types = game.characteristics_of(entering).types
+        except KeyError:
+            types = tuple(entering.types)
+    elif event.subject_card is not None:
+        types = tuple(event.subject_card.types)
+    else:
+        return False
+    return bool(wanted & {str(card_type).lower() for card_type in types})
+
+
+def additional_trigger_times(
+    game: "Game", ability: AbilityOnStack, source: CardState, event: GameEvent
+) -> int:
+    """How many *extra* times this ability triggers, by CR 603.2d.
+
+    CR 603.2d: "An ability may state that a triggered ability triggers
+    additional times. In this case, rather than simply determining that such an
+    ability has triggered, determine how many times it should trigger, then
+    trigger it that many times."
+
+    Every permanent on the battlefield is asked whether one of its own static
+    ability lines is a multiplier of this shape, read off the *computed* text
+    (CR 613.5). Panharmonicon is the only printing in the pool. Its own gate is
+    checked here rather than assumed: the ability's source has to be a permanent
+    the Panharmonicon's controller controls, and the event has to be an artifact
+    or creature entering.
+
+    Only what `triggers_for` builds from a *printed* ability is multiplied. A
+    delayed triggered ability (CR 603.7a) is created during the resolution of
+    the ability it belongs to and fired by `DelayedTriggers`, never by this
+    function - so doubling the ability that creates a delayed trigger does not
+    double the delayed trigger, which is DDR#981's whole point.
+    """
+    if source.zone is not Zone.BATTLEFIELD:
+        return 0
+    extra = 0
+    for permanent in list(game.battlefield):
+        controller = permanent.controller
+        if controller is None or controller != ability.controller:
+            continue  # "a triggered ability of a permanent **you** control".
+        for line in _computed_ability_lines(game, permanent):
+            match = _ADDITIONAL_TRIGGER_RE.match(line.strip())
+            if match is None:
+                continue
+            if _entering_cause_matches(game, match["cause"], event):
+                extra += 1
+    return extra
+
+
+#: CR 603.8's own shape, as the pool prints it: The Millennium Calendar's
+#: "When there are 1,000 or more time counters on The Millennium Calendar,
+#: sacrifice it and each opponent loses 1,000 life." The count is written with
+#: digit-group commas, which `machines/abilities._split_top_level` already
+#: refuses to read as the CR 603.1 condition/effect boundary.
+_STATE_COUNTER_TRIGGER_RE = re.compile(
+    r"^there are (?P<count>\d[\d,]*) or more (?P<kind>.+?) counters on (?P<subject>.+?)$",
+    re.IGNORECASE,
+)
+
+
+def _state_trigger_abilities(game: "Game", source: CardState) -> list[TriggeredAbility]:
+    """The CR 603.8 abilities this permanent has right now.
+
+    Read off the *computed* ability text (CR 613.5, CR 109.3: abilities are
+    characteristics) rather than the printed card, so a permanent that has lost
+    all abilities in layer 6 (CR 613.1f) has no state trigger left - which is
+    DDR#961's Tishana's Tidebinder exactly. A permanent the layer engine has
+    not computed falls back to its printed text.
+    """
+    try:
+        lines: Sequence[str] = tuple(game.characteristics_of(source).abilities)
+        parsed: list[Ability] = parse_granted_ability_lines(lines)
+    except KeyError:
+        parsed = parse_abilities(source.card)
+    return [
+        ability
+        for ability in parsed
+        if isinstance(ability, TriggeredAbility)
+        and ability.event is None
+        and _STATE_COUNTER_TRIGGER_RE.match(ability.condition.strip())
+    ]
+
+
+def _state_condition_holds(game: "Game", ability: TriggeredAbility, source: CardState) -> bool:
+    """Whether this permanent's game state matches its CR 603.8 condition."""
+    match = _STATE_COUNTER_TRIGGER_RE.match(ability.condition.strip())
+    if match is None:
+        return False
+    subject = match["subject"].strip().rstrip(".").lower()
+    names = {source.name.lower(), "it", "this permanent", "this creature", "this artifact"}
+    with contextlib.suppress(KeyError):
+        names.add(game.characteristics_of(source).name.lower())
+    if subject not in names:
+        # A condition about some *other* object is not something this matcher
+        # can read; answering False keeps CR 603.2's "only if it actually
+        # matches" rather than guessing.
+        return False
+    needed = int(match["count"].replace(",", ""))
+    return source.counters[match["kind"].strip().lower()] >= needed
+
+
+def state_triggers_for(game: "Game") -> list[AbilityOnStack]:
+    """Every CR 603.8 state trigger that has just become true.
+
+    CR 603.8: "Some triggered abilities trigger when a game state ... is true,
+    rather than triggering when an event occurs." CR 704.1a confirms these are
+    triggered abilities and not state-based actions, so what comes back here is
+    an ordinary `AbilityOnStack` that CR 603.3 puts on the stack the next time a
+    player would receive priority.
+
+    The rest of CR 603.8 is the latch: such an ability "doesn't trigger again
+    until it has left the stack". `Game.state_trigger_latches` holds, per source
+    and condition, the id of the ability that is currently holding it shut, and
+    the latch opens the moment that object is neither on the stack nor waiting
+    in `pending_triggers` - which is true whether it left by resolving or by
+    being countered (CR 701.6a: countering "means to cancel it, removing it from
+    the stack"). Countering therefore frees the trigger to fire again at once,
+    which is DDR#961's whole ruling.
+
+    Nothing is appended to `pending_triggers` here; the caller does that, the
+    same way `Game.emit` owns that step for event triggers.
+    """
+    live = {item.id for item in game.stack if isinstance(item, AbilityOnStack)}
+    live |= {item.id for item in game.pending_triggers}
+    for key, ability_id in list(game.state_trigger_latches.items()):
+        if ability_id not in live:
+            del game.state_trigger_latches[key]
+
+    triggered: list[AbilityOnStack] = []
+    for source in list(game.battlefield):
+        controller = source.controller or game.active_player.username
+        for ability in _state_trigger_abilities(game, source):
+            if not _state_condition_holds(game, ability, source):
+                continue
+            key = f"{source.id}:{ability.condition}"
+            if key in game.state_trigger_latches:
+                continue
+            on_stack = AbilityOnStack(
+                kind=AbilityKind.TRIGGERED,
+                ability=ability,
+                source_id=source.id,
+                source_name=source.name,
+                controller=controller,
+            )
+            game.state_trigger_latches[key] = on_stack.id
+            triggered.append(on_stack)
     return triggered
 
 
