@@ -86,13 +86,19 @@ def test_no_player_receives_priority_during_the_cleanup_step():
 
     CR 500.3 names the untap step and "certain cleanup steps" as the steps in
     which no player receives priority; `machines/turn.NO_PRIORITY` is that
-    list, and `grants_priority` is how the rest of the engine asks.
+    list, and `Game.step_grants_priority` is how the rest of the engine asks -
+    it, rather than `TurnMachine.grants_priority`, because CR 514.3 only says
+    "normally" and CR 514.3a can except a cleanup step from the rule. Nothing
+    triggered off the Swarm's discard, so this cleanup is not excepted, and
+    both answers agree.
     """
     scenario = board().build()
     _to_cleanup_discarding_the_swarm(scenario)
 
     assert scenario.step is Step.CLEANUP
     assert not scenario.turn.grants_priority
+    assert not scenario.game.step_grants_priority
+    assert scenario.priority_holder is None
 
 
 def test_flash_does_not_create_a_priority_window_of_its_own():

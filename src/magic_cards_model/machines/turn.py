@@ -163,8 +163,38 @@ turn consists of and there is no sixth. `TurnMachine.phase` reads this with
 
 MAIN_PHASES = frozenset({Step.PRECOMBAT_MAIN, Step.POSTCOMBAT_MAIN})
 
-#: Nobody receives priority in these steps unless something triggers (CR 502.1, 514.3).
 NO_PRIORITY = frozenset({Step.UNTAP, Step.CLEANUP})
+"""The two steps of CR 500.3, in which normally no player receives priority.
+
+CR 500.3: "A step in which no players receive priority ends when all specified
+actions that take place during that step are completed. The only such steps are
+the untap step (see rule 502) and certain cleanup st[eps ...]".
+
+The two are **not** the same shape, and "certain" is the word that separates
+them:
+
+- **untap - never.** CR 502.4: "No player receives priority during the untap
+  step, so no spells can be cast or resolve and no abilities can be activated or
+  resolve. Any ability that triggers during this step will be held until the
+  n[ext time a player would receive priority]." Unconditional.
+- **cleanup - normally.** CR 514.3: "Normally, no player receives priority
+  during the cleanup step, so no spells can be cast and no abilities can be
+  activated. However, this rule is subject to the following exception:" - and
+  CR 514.3a is that exception: "At this point, the game checks to see if any
+  state-based actions would be performed and/or any triggered abilities are
+  waiting to be put onto the stack (including those that trigger 'at the
+  beginnin[g of the next cleanup step]')."
+
+So membership here is only the step's *default*. Whether a particular cleanup
+step grants priority depends on game state, which a `TurnMachine` cannot see -
+`Game.step_grants_priority` is the answer that can, and it is what drives
+`PriorityMachine.withhold`.
+
+(An earlier version of this comment cited CR 502.1 for the untap half. That is
+wrong and was written from memory: CR 502.1 is the phasing turn-based action,
+"First, all phased-in permanents with phasing that the active player controls
+phase out ...". The no-priority rule is CR 502.4.)
+"""
 
 
 class TurnMachine(BaseModel):
@@ -300,10 +330,15 @@ class TurnMachine(BaseModel):
 
     @property
     def grants_priority(self) -> bool:
-        """Whether a player receives priority in this step.
+        """Whether a player receives priority in this step, by default.
 
-        Two separate reasons for no, kept separate: `NO_PRIORITY` is CR 502.1
+        Two separate reasons for no, kept separate: `NO_PRIORITY` is CR 502.4
         and CR 514.3 inside a turn, and the pregame steps are not a turn at all.
+
+        The cleanup half is CR 514.3's "normally": CR 514.3a can give a cleanup
+        step priority after all, and the state it asks about is not visible from
+        here. `Game.step_grants_priority` is the answer that takes it into
+        account, and the one `Game` acts on.
         CR 117.1 makes priority the system that decides "which player can take
         actions at any given time" *unless* a spell or ability is instructing a
         player to take an action; CR 103.6 names its own order and nothing found

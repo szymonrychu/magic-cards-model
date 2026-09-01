@@ -57,9 +57,17 @@ def three_players() -> Scenario:
 
 
 def next_turn(scenario) -> None:
-    """Run the rest of the current turn out and begin the next one."""
+    """Run the rest of the current turn out and begin the next one, at upkeep.
+
+    Stops at upkeep rather than untap because CR 502.4 gives nobody priority in
+    the untap step, and every caller here is about who holds priority on the new
+    turn. CR 117.3a's "the active player receives priority at the beginning of
+    most steps" is true of upkeep, which is the first step of the new turn where
+    there is any priority to be had.
+    """
     scenario.turn.advance_to(Step.CLEANUP)
-    scenario.advance()
+    scenario.advance()  # the new turn's untap step
+    scenario.advance()  # upkeep, where somebody has priority again
 
 
 # -- when the effect applies (CR 723.1) ------------------------------------

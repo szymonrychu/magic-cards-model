@@ -163,7 +163,6 @@ from ..machines.triggers import (
 )
 from ..machines.turn import (
     MAIN_PHASES,
-    NO_PRIORITY,
     STEP_SEQUENCE,
     Step,
     TurnMachine,
@@ -1553,6 +1552,12 @@ class Game(BaseModel):
             self.turn = TurnMachine(players=usernames)
         if self.priority is None:
             self.priority = PriorityMachine(players=usernames)
+            # A fresh `TurnMachine` rests at `Step.UNTAP`, where CR 502.4 gives
+            # nobody priority. Saying so from the first moment is the point:
+            # a client polling a just-built game must not be told the active
+            # player is on the clock when the only legal next thing is the
+            # step ending.
+            self.sync_priority_with_step()
 
     @property
     def is_over(self) -> bool:
@@ -1913,6 +1918,11 @@ class Game(BaseModel):
         # from combat is `CombatMachine.clear`'s whole job.
         self.combat.clear()
         self.turn.advance_to(Step.CLEANUP)
+        # CR 724.1f: "No player gets priority during this process". The pointer
+        # now rests in a cleanup step with an emptied `pending_triggers` and an
+        # exiled stack, so CR 514.3's ordinary "no player receives priority"
+        # is the state to be in, and this is what puts it there.
+        self.sync_priority_with_step()
 
     def cleanup_step(self) -> list[CardState]:
         """The cleanup step's two turn-based actions, in order (CR 514.1, 514.2).
@@ -3506,6 +3516,11 @@ class Game(BaseModel):
         self._check_state_based_actions_and_stack_triggers()
         if self.priority is not None:
             self.priority.reset()
+        # ... unless the step is one that hands none out (CR 502.4, 514.3). A
+        # resolution cannot happen in the untap step at all, but Time Stop's
+        # CR 724.1 drops the pointer into cleanup mid-resolution, and priority
+        # must not come back on the way out of it.
+        self.sync_priority_with_step()
 
     def _take_out_of_every_zone(self, card_state: CardState) -> None:
         """Lift a card out of wherever it currently is, shared zones included."""
@@ -9208,6 +9223,79 @@ class Game(BaseModel):
 
     # -- priority ----------------------------------------------------------
 
+    #: CR 502.4, quoted, and the refusal anybody trying to act in untap gets.
+    UNTAP_HAS_NO_PRIORITY: ClassVar[str] = (
+        "no player receives priority during the untap step, so no spells can be "
+        "cast or resolve and no abilities can be activated or resolve (CR 502.4)"
+    )
+
+    #: CR 514.3, quoted. Only used for a cleanup step CR 514.3a did not except.
+    CLEANUP_HAS_NO_PRIORITY: ClassVar[str] = (
+        "normally, no player receives priority during the cleanup step, so no "
+        "spells can be cast and no abilities can be activated (CR 514.3)"
+    )
+
+    @property
+    def step_grants_priority(self) -> bool:
+        """Whether anybody receives priority in the step now in progress.
+
+        `TurnMachine.grants_priority` answers for the *shape* of the step and is
+        the whole answer for eleven of the twelve. The cleanup step is the one it
+        cannot answer, because CR 514.3 only says "normally" and CR 514.3a's
+        exception is about game state:
+
+        CR 514.3a: "At this point, the game checks to see if any state-based
+        actions would be performed and/or any triggered abilities are waiting to
+        be put onto the stack (including those that trigger 'at the beginnin[g of
+        the next cleanup step]')."
+
+        So a cleanup step with something waiting in `pending_triggers` - or with
+        an object already on the stack, which is that same trigger a moment later
+        - is a cleanup step in which players do receive priority. An empty one is
+        CR 514.3's ordinary case and grants none.
+
+        **Not modelled, and unverified**: `knowledge_search` in this session
+        returns CR 514.3a only as far as the sentence quoted above, so the rest
+        of that rule - what the game does *after* it finds something waiting,
+        including whether a further cleanup step begins - is not implemented and
+        is not cited. What is implemented is the half the excerpt states: such a
+        cleanup step is not one in which nobody receives priority.
+        """
+        assert self.turn is not None
+        if self.turn.step is Step.CLEANUP:
+            return bool(self.pending_triggers) or bool(self.stack)
+        return self.turn.grants_priority
+
+    @property
+    def priority_holder(self) -> str | None:
+        """Who has priority right now, or None if nobody does (CR 502.4, 514.3).
+
+        The single honest answer for a client asking "whose move is it". None is
+        not "unknown" and not "the game is stuck" - it is the untap step (or an
+        ordinary cleanup step) saying that the next thing to happen is the step
+        ending, not a player acting.
+        """
+        return None if self.priority is None else self.priority.holder
+
+    def sync_priority_with_step(self) -> None:
+        """Withhold or restore priority to match the step now in progress.
+
+        Called at every point the step pointer moves. CR 502.4 and CR 514.3 are
+        the two withholding rules and their own wording is what gets stored, so
+        the refusal a caller gets back is the rule.
+        """
+        assert self.turn is not None
+        if self.priority is None:
+            return
+        if self.step_grants_priority:
+            self.priority.grant()
+        elif self.turn.step is Step.UNTAP:
+            self.priority.withhold(self.UNTAP_HAS_NO_PRIORITY)
+        elif self.turn.step is Step.CLEANUP:
+            self.priority.withhold(self.CLEANUP_HAS_NO_PRIORITY)
+        else:
+            self.priority.grant()
+
     def pass_priority(self, username: str) -> PriorityOutcome:
         """Pass priority. If everyone passes, resolve the top of the stack.
 
@@ -9218,8 +9306,21 @@ class Game(BaseModel):
         END_STEP the turn rolls forward here, with everything that boundary
         brings (CR 500.5's mana-pool emptying among them), and the next
         step's first priority round starts with its active player (CR 117.1).
+
+        Refused outright in a step that grants nobody priority (CR 502.4, 514.3),
+        with that rule's own words. The refusal comes *before* CR 704.3's
+        state-based check and CR 603.3's stacking below, because both of those
+        are "the next time a player would receive priority" moments and this is
+        not one: running them here would put an untap-step trigger straight onto
+        the stack, which is the very thing CR 502.4's second sentence forbids.
         """
         assert self.priority is not None
+        if self.priority.withheld is not None:
+            # Through `require`, so a player who is not at the table at all is
+            # still told *that* first: "carol is not in this game" outranks
+            # "nobody has priority", because the second answer would be just as
+            # true next turn and would send the caller looking in the wrong place.
+            self.priority.require(username)
         # CR 704.3, then CR 603.3: state-based actions, then anything that has
         # triggered goes on the stack, before the pass is acted on - the next
         # player (or nobody, if the stack resolves) is about to receive
@@ -9452,10 +9553,13 @@ class Game(BaseModel):
         priority. The turn-based actions are run only when
         `automatic_turn_based_actions` is on - see that field.
 
-        Nothing is put on the stack in the untap or cleanup steps, where no
-        player receives priority (CR 502.4, 514.3); those triggers wait for the
-        next step. CR 514.3a's rule that a cleanup trigger *does* give players
-        priority and repeats the step is not modelled.
+        Nothing is put on the stack in the untap step, where no player receives
+        priority (CR 502.4); CR 502.4's own second sentence holds those triggers
+        over ("Any ability that triggers during this step will be held until the
+        n[ext time a player would receive priority]"), which is what leaving
+        them in `pending_triggers` does. A cleanup step holds them over too
+        *unless* CR 514.3a's exception applies - see `step_grants_priority`, and
+        the note there on how far that rule could be verified.
 
         Two refusals, both raised before anything moves:
 
@@ -9463,8 +9567,8 @@ class Game(BaseModel):
           or, under a CR 723.5 control effect, whoever is deciding for them.
           Anyone else is refused outright.
         - **CR 500.2 / CR 117.4 / CR 405.5**: a step or phase that grants
-          priority (i.e. not one of `NO_PRIORITY`'s untap/cleanup exceptions,
-          CR 500.3) ends only once the stack is empty and every player has
+          priority (i.e. not one of CR 500.3's untap/cleanup exceptions -
+          `step_grants_priority`) ends only once the stack is empty and every player has
           passed in succession. A non-empty stack means that has not happened
           yet, so advancing past it here would strand whatever is waiting -
           the caller must pass priority and let it resolve instead.
@@ -9490,7 +9594,7 @@ class Game(BaseModel):
                 f"{username} may not advance the turn - only {decider} may, as "
                 f"{self.turn.active_player}'s active-player decision (CR 117.3a, 723.5)"
             )
-        if self.turn.step not in NO_PRIORITY and not self.stack_is_empty:
+        if self.step_grants_priority and not self.stack_is_empty:
             raise ValueError(
                 f"cannot advance past {self.turn.step} while the stack is "
                 f"non-empty - pass priority instead (CR 500.2)"
@@ -9579,11 +9683,22 @@ class Game(BaseModel):
             self.turn_based_actions()  # CR 703.3, before state-based actions
             self.check_state_based_actions()  # CR 704.3, before anyone has priority
 
-        if step not in NO_PRIORITY:
-            self.put_triggers_on_stack()  # CR 603.3, before anyone has priority
+        # CR 603.3, before anyone has priority - and only where anyone does.
+        # CR 502.4's second sentence is the untap half: "Any ability that
+        # triggers during this step will be held until the n[ext time a player
+        # would receive priority]", which is exactly leaving it in
+        # `pending_triggers`. The cleanup half is CR 514.3a: a cleanup step with
+        # something waiting *is* one where players receive priority, so the
+        # waiting abilities go on the stack here rather than being held over.
+        if self.step_grants_priority:
+            self.put_triggers_on_stack()
 
         if self.priority is not None:
             self.priority.reset(self.turn.active_index)
+        # CR 502.4 / CR 514.3: and then take it straight back off the ones that
+        # grant nobody priority, so `priority_holder` says nobody rather than
+        # naming a player who may not act.
+        self.sync_priority_with_step()
         return step
 
     def advance_to(self, step: Step) -> Step:
@@ -9613,4 +9728,5 @@ class Game(BaseModel):
         while self.turn.step is not step:
             self.turn.advance()
             self.empty_mana_pools()
+        self.sync_priority_with_step()  # CR 502.4, 514.3
         return self.turn.step

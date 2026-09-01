@@ -317,7 +317,12 @@ class PlayedScenario:
         """Advance to `step`, running the untap step on the way if it is passed."""
         if self.step is Step.UNTAP and step is not Step.UNTAP:
             self.game.untap_step()
-        return self.turn.advance_to(step)
+        reached = self.turn.advance_to(step)
+        # The raw pointer moved, so priority has to be told (CR 502.4, 514.3) -
+        # a scenario that starts in a step granting priority must have some,
+        # and one that stays in untap must have none.
+        self.game.sync_priority_with_step()
+        return reached
 
     def advance(self, username: str | None = None) -> Step:
         """Advance the turn, as `username`'s own decision (or their controller's).
@@ -688,13 +693,21 @@ class PlayedScenario:
     # -- priority ---------------------------------------------------------
 
     @property
-    def priority_holder(self) -> str:
-        assert self.game.priority is not None
-        return self.game.priority.holder
+    def priority_holder(self) -> str | None:
+        """Who has priority, or None if nobody does (CR 502.4, 514.3)."""
+        return self.game.priority_holder
 
     def pass_priority(self, username: str | None = None) -> PriorityOutcome:
-        """Pass priority for one player. Defaults to whoever holds it."""
-        return self.game.pass_priority(username or self.priority_holder)
+        """Pass priority for one player. Defaults to whoever holds it.
+
+        With no `username` in a step where nobody holds priority, the pass is
+        made in the name of the active player, so the refusal a scenario is
+        testing is CR 502.4's and not "you did not say who".
+        """
+        holder = self.priority_holder
+        if username is None and holder is None:
+            username = self.game.controller_of_player(self.turn.active_player)
+        return self.game.pass_priority(username or holder or "")
 
     def pass_until_resolved(self) -> PriorityOutcome:
         """Every player still in the game passes in turn, resolving the top of the stack."""
