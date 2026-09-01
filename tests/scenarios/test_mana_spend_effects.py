@@ -122,7 +122,16 @@ def test_a_spend_effect_is_not_a_cr_405_6c_rider_and_does_not_block_activation()
     "`ContinuousEffect` on the permanent the creature spell becomes - CR 400.7b "
     "is why the effect survives the stack-to-battlefield move at all.\n"
     "None of 1, 2 or 4 is in a file this task owns, and 3 cannot be written "
-    "against a `ManaPayment` field that does not exist yet.",
+    "against a `ManaPayment` field that does not exist yet.\n"
+    "machines/effects.py has **no part** in this pipeline, which is worth "
+    "stating because it is the file every other unread card in this repo needs. "
+    "The sentence is not a spell's or a triggered ability's resolution text at "
+    "all: `machines/abilities.parse_mana_abilities` already reads it off the "
+    "*mana ability's* own trailing text onto `ManaAbility.spend_effect` (the "
+    "first test in this file), and what it produces is a `ContinuousEffect` in "
+    "machines/layers.py, not a `TargetedClause`. So there is no clause parser "
+    "to write here, and adding one would be a second, card-specific reader of "
+    "a sentence that is already parsed.",
 )
 def test_a_creature_cast_with_the_arenas_mana_gains_haste():
     """CR 106.6's second clause, doing what it says.
