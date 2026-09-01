@@ -1389,6 +1389,22 @@ class Game(BaseModel):
     trigger on the stack later in the same turn. Cleared when a new turn
     begins, alongside `activations`/`loyalty_activations`."""
 
+    resolving: StackObject | None = Field(default=None, exclude=True, repr=False)
+    """The object currently resolving, or None (CR 608.2).
+
+    `resolve_top` pops the object off the stack before running its effect, so
+    while a spell resolves it is on no zone at all. CR 724.1b's "including the
+    object that's resolving" needs to be able to name it, and this is the only
+    place that can. Excluded from serialisation: it is live only for the length
+    of one resolution and means nothing in a stored board."""
+
+    turn_ended_exiled_ids: set[UUID] = Field(default_factory=set, exclude=True, repr=False)
+    """Spells CR 724.1b exiled while they were resolving.
+
+    `end_the_turn` gives the resolving spell a zone (exile) that `resolve_top`
+    would otherwise overwrite with the graveyard or the battlefield a few lines
+    later. This is how the two halves agree; each id is consumed once."""
+
     state_trigger_latches: dict[str, UUID] = Field(default_factory=dict)
     """Which CR 603.8 state trigger is currently held shut, and by what.
 
@@ -1827,6 +1843,65 @@ class Game(BaseModel):
             if permanent.is_saga and permanent.chapter_numbers:
                 self.add_counters(permanent, Counter.LORE, 1)
 
+    def end_the_turn(self) -> None:
+        """CR 724.1's "end the turn" procedure - Time Stop's whole text.
+
+        CR 724.1: "Some cards end the turn. When an effect ends the turn, follow
+        these steps in order, as they differ from the normal process for
+        resolving spells and abilities (see rule 608)." The steps this performs,
+        each looked up:
+
+        - **CR 724.1a** - "If there are any triggered abilities that triggered
+          before this process began but haven't been put onto the stack yet,
+          those abilities cease to exist. They won't be put onto the stack."
+          `pending_triggers` is emptied.
+        - **CR 724.1b** - "Exile every object on the stack, including the object
+          that's resolving." An ability on the stack has no card behind it
+          (CR 405.1), so it simply ceases to exist; a spell is a card and goes
+          to the exile zone. The resolving object is `Game.resolving`, and
+          **CR 608.2m** is why exiling it does not stop it: "If an instant
+          spell, sorcery spell, or ability that can legally resolve leaves the
+          stack once it starts to resolve, it will continue to resolve fully."
+          So Time Stop's own remaining text - a spliced-on card's, say - still
+          runs after this returns.
+        - **CR 724.1d** - "The current phase and/or step ends. If this happens
+          during combat, remove all creatures and planeswalkers from combat. The
+          game skips straight to the cleanup step." The turn machine's pointer
+          is moved to `Step.CLEANUP` directly; the cleanup step's own turn-based
+          actions (CR 514.1, 514.2) are `cleanup_step`'s job and are *not*
+          performed here, which is what leaves an "until end of turn" effect
+          still running for whatever resolves next.
+        - **CR 724.1f** - "No player gets priority during this process, so
+          triggered abilities are not put onto the stack." Nothing here calls
+          `put_triggers_on_stack` or touches the priority machine.
+
+        **Unverified**: `knowledge_search` in this session could not return
+        CR 724.1c or CR 724.1e, so neither is implemented or cited here.
+        """
+        assert self.turn is not None
+        self.pending_triggers = []  # CR 724.1a
+        for stack_object in list(self.stack):  # CR 724.1b
+            self.stack.remove(stack_object)
+            if isinstance(stack_object, CardState):
+                self._take_out_of_every_zone(stack_object)
+                self.combat.remove(stack_object.id)
+                stack_object.move_to(Zone.EXILE)
+                self.exile.append(stack_object)
+                self.cast_records.pop(stack_object.id, None)
+        resolving = self.resolving
+        if isinstance(resolving, CardState) and resolving not in self.exile:
+            # CR 724.1b's "including the object that's resolving" - already
+            # popped off the stack by `resolve_top`, so it is exiled by name.
+            self._take_out_of_every_zone(resolving)
+            self.combat.remove(resolving.id)
+            resolving.move_to(Zone.EXILE)
+            self.exile.append(resolving)
+            self.turn_ended_exiled_ids.add(resolving.id)
+        # CR 724.1d, the combat half: removing every creature and planeswalker
+        # from combat is `CombatMachine.clear`'s whole job.
+        self.combat.clear()
+        self.turn.advance_to(Step.CLEANUP)
+
     def cleanup_step(self) -> list[CardState]:
         """The cleanup step's two turn-based actions, in order (CR 514.1, 514.2).
 
@@ -2119,6 +2194,23 @@ class Game(BaseModel):
         return card_state
 
     def resolve_top(self) -> StackObject:
+        """Resolve the top of the stack, recording what is resolving (CR 608.2).
+
+        The object is popped off the stack before its effect runs, so nothing
+        downstream could otherwise answer "which object is resolving right
+        now?" - and CR 724.1b needs exactly that: "Exile every object on the
+        stack, **including the object that's resolving**." `Game.resolving` is
+        that answer, live only for the length of one resolution.
+        """
+        if self.stack_is_empty:
+            raise ValueError("the stack is empty")
+        self.resolving = self.stack[-1]
+        try:
+            return self._resolve_top()
+        finally:
+            self.resolving = None
+
+    def _resolve_top(self) -> StackObject:
         """Resolve the top of the stack (CR 608).
 
         A spell's effect happens, then permanents land on the battlefield and
@@ -2226,6 +2318,19 @@ class Game(BaseModel):
                 self.cast_records.pop(spell.id, None)
                 self._before_priority()
                 raise
+
+        if spell.id in self.turn_ended_exiled_ids:
+            # CR 724.1b exiled this spell while it was resolving, and CR 608.2m
+            # let it finish resolving anyway ("If an instant spell, sorcery
+            # spell, or ability that can legally resolve leaves the stack once
+            # it starts to resolve, it will continue to resolve fully"). It has
+            # already been given a zone, so neither of the two placements below
+            # applies - it does not reach a graveyard and it does not enter the
+            # battlefield.
+            self.turn_ended_exiled_ids.discard(spell.id)
+            self.cast_records.pop(spell.id, None)
+            self._before_priority()
+            return spell
 
         if spell.is_permanent:
             # CR 608.3, 608.3a: a resolving permanent spell "becomes a permanent
