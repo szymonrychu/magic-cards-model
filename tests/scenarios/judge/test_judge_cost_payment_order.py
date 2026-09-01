@@ -16,8 +16,6 @@ Card text verified with `resolve_cards`; every CR number here was looked up
 with `knowledge_search(type="rules")` in this session.
 """
 
-import pytest
-
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.cost import additional_cost_phrases
 from magic_cards_model.models import Zone
@@ -76,7 +74,7 @@ def test_paying_the_whole_cost_sacrifices_the_creature_and_resolves_the_spell():
     The resolution pays out off the sacrificed creature's own printed box here,
     because nothing was modifying it: Omnath is a printed 1/1, so one card and
     one life. The episode's own question - what happens when a continuous
-    effect *was* modifying it as it was sacrificed - is the `xfail` below.
+    effect *was* modifying it as it was sacrificed - is the last test below.
     """
     scenario = board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
@@ -107,8 +105,8 @@ def test_omnath_is_a_plain_one_one_with_no_mana_floating():
     unspent green mana you have."
 
     With nothing floating, the printed 1/1 is the right answer either way -
-    which is the honest thing this file can assert about Omnath's size, and the
-    reason the episode's own question is `xfail` below.
+    the control for the last test below, where four green mana makes the
+    layer effect's contribution visible.
     """
     scenario = board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
@@ -117,23 +115,6 @@ def test_omnath_is_a_plain_one_one_with_no_mana_floating():
     assert (omnath.power, omnath.toughness) == (1, 1)
 
 
-@pytest.mark.xfail(
-    reason="neither the payment order nor Momentous Fall's own effect is the gap any more: "
-    "CostPayment.components_before_mana pays the sacrifice while the four green mana is "
-    "still floating (CR 601.2h), and machines/effects._parse_draw_and_gain_off_sacrificed_"
-    "clause reads 'You draw cards equal to the sacrificed creature's power, then you gain "
-    "life equal to its toughness' off Game.cast_record(spell).additional_cost_cards - the "
-    "test above asserts it paying out one card and one life for a printed 1/1. Two pieces "
-    "are missing, both in files this task does not own. (1) machines/layers.LAYER_EFFECTS "
-    "has no row for Omnath's 'Omnath gets +1/+1 for each unspent green mana you have', so "
-    "Omnath is a 1/1 on the battlefield however much green mana is unspent. (2) Even with "
-    "that row, models/card_state.py carries no last-known power/toughness snapshot - only "
-    "last_known_counters (CR 704.8) - so once Omnath is in the graveyard its power reads "
-    "as the printed 1 again, and CR 608.2h's 'the answer is determined only once, when the "
-    "effect is applied' has nothing to answer from. Both are needed; either alone leaves "
-    "this at one card and one life.",
-    strict=True,
-)
 def test_sacrificing_omnath_before_paying_the_mana_draws_five():
     """DDR#955's actual ruling: pay the sacrifice component first, while the
     four green mana is still in the pool, and Omnath is a 5/5.
@@ -147,11 +128,16 @@ def test_sacrificing_omnath_before_paying_the_mana_draws_five():
     is 5/5. Sacrifice it at that moment and Momentous Fall's effect reads a
     power of 5 and a toughness of 5.
 
-    Two separate pieces are missing. Omnath has no `LAYER_EFFECTS` entry, so it
-    is a 1/1 no matter what is floating - the same registry gap DDR#982 and
-    DDR#801 already record in this package. And Momentous Fall's own effect is
-    unread: `effect_for("Momentous Fall", ...)` is None, so the spell resolves
-    and does nothing whatever the sacrificed creature's size was.
+    Three pieces carry it, and this was `xfail(strict=True)` until all three
+    existed. `machines/layers.LAYER_EFFECTS` has an "Omnath, Locus of Mana"
+    row reading the controller's unspent green live off `LayerContext`.
+    `Game.unspent_mana_of` is where that reading happens, and it consults the
+    open `CostPayment`'s working pool rather than the player's own - CR 601.2g
+    puts the mana there, and the player's `ManaPool` does not see it until the
+    payment writes the remainder back. And `CardState.last_known_power` /
+    `.last_known_toughness` answer CR 608.2h once Omnath is in the graveyard:
+    the spell resolves after the sacrifice was paid, so the size the effect
+    reads is the one the permanent last had, not the printing it reverts to.
     """
     scenario = board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)

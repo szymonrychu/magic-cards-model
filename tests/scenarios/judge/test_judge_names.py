@@ -16,7 +16,6 @@ Factory however many Assembly-Worker types it picks up.
 Every CR number here was looked up with `knowledge_search(type="rules")`.
 """
 
-
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario

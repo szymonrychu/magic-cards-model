@@ -3472,6 +3472,7 @@ class CostPayment(BaseModel):
         self.mana_payment = mana_payment
         self._transition(CostStep.PAID)
         self._write_back_remainder()
+        self._unregister_pool()
         self.overflow = self.pool
         return self.overflow
 
@@ -3531,6 +3532,7 @@ class CostPayment(BaseModel):
         """
         self._require_open()
         self._undo_everything()
+        self._unregister_pool()
         self._transition(CostStep.CANCELLED)
 
     def rewind(self) -> None:
@@ -3556,6 +3558,7 @@ class CostPayment(BaseModel):
 
         self._undo_everything()
         self._restore_payer_pool()
+        self._unregister_pool()
         self.overflow = None
         self.step = CostStep.CANCELLED
 
@@ -3580,6 +3583,29 @@ class CostPayment(BaseModel):
             return
         self.pool = _copy_pool(floating)
         self._preexisting = _copy_pool(floating)
+        self._register_pool()
+
+    def _register_pool(self) -> None:
+        """Publish this payment's working pool as the payer's unspent mana.
+
+        CR 106.4: mana produced and not spent is in the player's mana pool.
+        The working copy above is where CR 601.2g's mana abilities actually
+        put it, so for as long as this payment is open the copy - not the
+        player's own `ManaPool` - is what "unspent mana you have" means. The
+        only reader is `Game.unspent_mana_of`, for Omnath, Locus of Mana's
+        continuous effect; nothing pays out of it.
+        """
+        pools = getattr(self.game, "open_payment_pools", None)
+        if pools is not None and self.payer is not None:
+            pools[self.payer] = self.pool
+
+    def _unregister_pool(self) -> None:
+        """Stop publishing: the payment is paid, cancelled or rewound, and the
+        payer's own `ManaPool` is the answer again (`_write_back_remainder`
+        and `_restore_payer_pool` have already put the right mana in it)."""
+        pools = getattr(self.game, "open_payment_pools", None)
+        if pools is not None and self.payer is not None:
+            pools.pop(self.payer, None)
 
     def _write_back_remainder(self) -> None:
         """Leave what the payment did not spend floating in the payer's pool.

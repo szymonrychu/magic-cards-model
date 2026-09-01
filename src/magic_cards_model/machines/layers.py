@@ -2754,8 +2754,7 @@ def _target_and_same_name_pump_builder(power: int, toughness: int) -> EffectBuil
         return [
             ContinuousEffect(
                 description=(
-                    f"{source.name}: creatures named {target.name} "
-                    f"get {power:+d}/{toughness:+d}"
+                    f"{source.name}: creatures named {target.name} get {power:+d}/{toughness:+d}"
                 ),
                 layer=Layer.POWER_TOUGHNESS,
                 sublayer=Sublayer.MODIFY,
@@ -4816,6 +4815,23 @@ class LayerContext(BaseModel):
     #: than handed in directly the way `your_graveyard` is.
     graveyard_by_controller: Mapping[str, tuple[CardState, ...]] = Field(default_factory=dict)
 
+    #: The unspent mana in each player's mana pool, keyed by the username
+    #: whose pool it is. A second thing the layer engine never sees, and for
+    #: the same reason as a graveyard: it is not on the battlefield. Omnath,
+    #: Locus of Mana's "Omnath gets +1/+1 for each unspent green mana you
+    #: have" is the only reader, and like every other count here it is read
+    #: when the effects are *built* - the board is rebuilt on every call
+    #: (CR 613.5), so Omnath grows and shrinks with the pool rather than
+    #: freezing at whatever was floating when it entered.
+    unspent_mana_by_controller: Mapping[str, Mapping[Color, int]] = Field(default_factory=dict)
+
+    def unspent_mana_of(self, controller: str | None, color: Color) -> int:
+        """How much unspent mana of one colour a player has, or 0 for a player
+        this context knows nothing about."""
+        if controller is None:
+            return 0
+        return self.unspent_mana_by_controller.get(controller, {}).get(color, 0)
+
     def graveyard_of(self, controller: str | None) -> tuple[CardState, ...]:
         """The graveyard a static ability's own controller sees, or none if
         `controller` is not one this context knows about."""
@@ -5068,6 +5084,45 @@ def _tarmogoyf(
             source_ability=text,
             selector=_only(source.id),
             modification=define_power_toughness(lambda chars, board: types, 0, 1),
+        )
+    ]
+
+
+def _omnath_locus_of_mana(
+    source: CardState,
+    timestamp: int,
+    targets: Sequence[CardState],
+    context: LayerContext,
+) -> list[ContinuousEffect]:
+    """ "Omnath gets +1/+1 for each unspent green mana you have."
+
+    Sublayer 7c (CR 613.4c: "modify power and/or toughness ... don't set"),
+    not the characteristic-defining 7a of Tarmogoyf or Boneyard Wurm - Omnath
+    is a printed 1/1 and this *adds* to that, so an empty pool leaves a 1/1
+    rather than a 0/0. There is no duration: CR 611.3 gives a static ability's
+    own continuous effect exactly the life of the ability.
+
+    The count is read off `context.unspent_mana_of` at build time, and the
+    board is rebuilt on every call (CR 613.5), so this tracks the pool live.
+    That is the whole of DDR#955: with four green floating during CR 601.2h's
+    payment, Omnath really is a 5/5 at the moment it is sacrificed, and it is
+    a 1/1 again once that mana is spent.
+
+    "You" is CR 109.5's - the object's controller - which is also whose pool
+    `unspent_mana_of` is asked for.
+    """
+    green = context.unspent_mana_of(source.controller, Color.GREEN)
+    if green == 0:
+        return []
+    return [
+        ContinuousEffect(
+            description=f"Omnath, Locus of Mana: +{green}/+{green} from unspent green mana",
+            layer=Layer.POWER_TOUGHNESS,
+            sublayer=Sublayer.MODIFY,
+            timestamp=timestamp,
+            source_id=source.id,
+            selector=_only(source.id),
+            modification=modify_power_toughness(green, green),
         )
     ]
 
@@ -5348,6 +5403,11 @@ LAYER_EFFECTS: dict[str, EffectBuilder] = {
     "Relentless Rats": _relentless_rats,
     "Tarmogoyf": _tarmogoyf,
     "Boneyard Wurm": _boneyard_wurm,
+    # "Omnath gets +1/+1 for each unspent green mana you have." A live count
+    # of something that is not on the battlefield and not in a graveyard
+    # either - the controller's own mana pool - so no generalised shape reads
+    # it and the row is not dead weight.
+    "Omnath, Locus of Mana": _omnath_locus_of_mana,
     "Nighthawk Scavenger": _nighthawk_scavenger,
     "Allosaurus Rider": _allosaurus_rider,
     "Tishana's Tidebinder": _tishanas_tidebinder,
@@ -5469,9 +5529,7 @@ def effects_for(
     """
     builder = LAYER_EFFECTS.get(source.name)
     if builder is None and ability_text:
-        builder = parsed_layer_effects(
-            ability_text, static_only=static_only, card_name=source.name
-        )
+        builder = parsed_layer_effects(ability_text, static_only=static_only, card_name=source.name)
     if builder is None and not static_only:
         builder = _granted_ability_effects(source)
     # `oracle_text` reads the up face (CR 712.8d/712.8f); `card.oracle_text`

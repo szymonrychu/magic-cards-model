@@ -178,7 +178,7 @@ from .card_state import (
     TargetRef,
     planeswalkers_with_zero_loyalty,
 )
-from .mana import ManaCost, ManaSpend
+from .mana import ManaCost, ManaPool, ManaSpend
 from .player import Player
 from .token import move_refused, tokens_that_cease_to_exist
 from .zone import Zone
@@ -1312,6 +1312,28 @@ class Game(BaseModel):
     the player CR 701.21a names as the one doing the sacrificing. A count
     rather than a flag, so a future card asking "two or more" has the number;
     today only "at least one" is ever asked. Cleared when a new turn begins."""
+
+    open_payment_pools: dict[str, ManaPool] = Field(default_factory=dict)
+    """The working mana pool of each player's currently open `CostPayment`.
+
+    CR 106.4: mana a player has produced and not yet spent is in their mana
+    pool. `machines/cost.CostPayment` works on a *copy* of that pool so a
+    cancelled payment (CR 733.1) throws away only what it produced, which
+    means that between CR 601.2g's mana abilities and CR 601.2h's payment the
+    player's own `ManaPool` underreports: the mana the payment just made is
+    real, unspent, and invisible there.
+
+    Nothing cared until a continuous effect had to count it. Omnath, Locus of
+    Mana's "Omnath gets +1/+1 for each unspent green mana you have" is read by
+    `computed_board`, and DDR#955 is exactly the case where the mana is
+    sitting in an open payment - four green produced for Momentous Fall, with
+    the sacrifice paid before it (CR 601.2h's "in any order"). Registered by
+    `CostPayment._seed_payer_pool` and dropped when the payment is paid,
+    cancelled or rewound, so it is never a second pool a player owns - it
+    *replaces* the player's own for as long as it is open, since it opened as
+    a copy of it.
+
+    """
 
     permanents_left_battlefield_this_turn: dict[str, int] = Field(default_factory=dict)
     """How many permanents each player controlled at the moment those
@@ -3178,9 +3200,7 @@ class Game(BaseModel):
             self.trigger_targets.pop(ability.source_name.split("//")[0].strip(), None)
         return placed
 
-    def _order_triggers_by_controller(
-        self, ordered: list[AbilityOnStack]
-    ) -> list[AbilityOnStack]:
+    def _order_triggers_by_controller(self, ordered: list[AbilityOnStack]) -> list[AbilityOnStack]:
         """CR 603.3b's second half: each controller orders their own block.
 
         "First, each player, in APNAP order, puts each triggered ability they
@@ -3590,6 +3610,14 @@ class Game(BaseModel):
         Controller, not owner - CR 108.4a's fallback is for a card with no
         controller at all, which a battlefield permanent always has.
         """
+        # CR 608.2h: "If an effect requires information from the game ... the
+        # answer is determined only once, when the effect is applied." An
+        # effect that has to ask about a permanent which is no longer one -
+        # Momentous Fall's "You draw cards equal to the sacrificed creature's
+        # power", whose sacrifice CR 601.2h paid before the spell was even on
+        # the stack - has nothing left to read once the continuous effects
+        # stop applying. This is the last instant they still do.
+        permanent.remember_last_known_power_toughness()
         controller = permanent.controller
         if controller is None:
             return
@@ -6842,8 +6870,26 @@ class Game(BaseModel):
             graveyard_by_controller={
                 player.username: tuple(player.graveyard) for player in self.players_in_game
             },
+            # And the mana pools go with them, for the same reason: Omnath,
+            # Locus of Mana's "Omnath gets +1/+1 for each unspent green mana
+            # you have" counts something the layer engine cannot see standing
+            # on the battlefield either.
+            unspent_mana_by_controller={
+                player.username: dict(self.unspent_mana_of(player).floating)
+                for player in self.players_in_game
+            },
         )
         return self.continuous_effects.board(self.battlefield, context)
+
+    def unspent_mana_of(self, player: Player) -> ManaPool:
+        """The mana this player has produced and not yet spent (CR 106.4).
+
+        Their own `ManaPool`, except while a `CostPayment` of theirs is open:
+        that payment opened as a copy of this very pool and every mana ability
+        activated for it (CR 601.2g) adds into the copy, so the copy is the
+        one that knows what is actually unspent. See `open_payment_pools`.
+        """
+        return self.open_payment_pools.get(player.username, player.mana_pool)
 
     def characteristics_of(self, permanent: CardState) -> Characteristics:
         """This permanent's characteristics right now, layers included (CR 613.5)."""
