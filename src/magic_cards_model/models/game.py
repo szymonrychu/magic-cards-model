@@ -4,6 +4,7 @@ import re
 from collections.abc import Callable, Sequence
 from enum import StrEnum
 from random import Random
+from typing import ClassVar
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -153,6 +154,7 @@ from ..machines.triggers import (
     apnap_order,
     granted_activated_abilities_of,
     intervening_if_holds,
+    mana_added_event,
     rewritten_ability_lines,
     state_triggers_for,
     tapped_for_mana_event,
@@ -985,8 +987,17 @@ class Game(BaseModel):
     CR 104.5 sends a player the game is a draw for out of the game, so the
     losers still leave and their objects go with them (CR 800.4a).
 
-    Not the whole of CR 104.4: the mandatory-action loop draws (CR 104.4b) have
-    no loop machinery behind them, and CR 104.4c's "an effect may state that the
+    Not the whole of CR 104.4. **CR 104.4b's mandatory-action loop is detected
+    in exactly one shape and no other**: a chain of CR 605.1b triggered mana
+    abilities resolving inline off a single activation, bounded by
+    `resolve_triggered_mana_abilities`. That is DDR#990's Caged Sun under Toph,
+    the First Metalbender, where CR 605.4a keeps every link off the stack so no
+    player ever receives priority to break it. This is *not* general loop
+    detection: a loop built out of anything that does reach the stack, or out of
+    replacement effects, or out of two permanents triggering each other, is
+    still undetected and will hang or recurse rather than draw.
+
+    CR 104.4c's "an effect may state that the
     game is a draw" needs a registry effect to reach, which none has -
     `end_in_draw` is the staging entry for both. The teams variant (CR 104.4d)
     is outside the free-for-all defaults this model plays.
@@ -2766,6 +2777,70 @@ class Game(BaseModel):
         assert isinstance(chosen, (list, tuple))
         if chosen:
             copy.targets = list(chosen)
+
+    #: How many triggered mana abilities may resolve inline, back to back, off
+    #: one activation before the engine calls it a CR 104.4b loop. There is no
+    #: printing in the pool that legitimately chains more than a handful, and a
+    #: real loop is unbounded, so any bound well clear of the honest cases
+    #: separates the two. See `resolve_triggered_mana_abilities`.
+    TRIGGERED_MANA_ABILITY_LOOP_BOUND: ClassVar[int] = 64
+
+    def resolve_triggered_mana_abilities(self, triggered: Sequence[AbilityOnStack]) -> None:
+        """Resolve CR 605.1b's triggered mana abilities inline (CR 605.4a).
+
+        CR 605.1b: "A triggered ability is a mana ability if it meets all of the
+        following criteria: it doesn't require a target (see rule 115.6), it
+        triggers from the activation or resolution of an activated mana ability
+        ...". CR 605.4a then keeps it off the stack: it "resolves immediately
+        after the mana ability that triggered it, without waiting for priority".
+
+        Everything handed here already triggered off `ExtraTriggerEvent.
+        MANA_ADDED`, which is raised only by a mana ability resolving, so the
+        remaining criteria are the two checked below: no target, and an effect
+        that could add mana.
+
+        Each resolution that actually puts mana in the pool re-raises the same
+        event from the same source, because a triggered mana ability's own
+        "add" is itself something causing a player to add mana - which is what
+        makes DDR#990's Caged Sun-under-Toph loop a loop at all.
+
+        **CR 104.4b** is the bound: "If a game that's not using the limited
+        range of influence option (including a two-player game) somehow enters
+        a 'loop' of mandatory actions, repeating a sequence of events with no
+        way to stop, the game is a draw." Past
+        `TRIGGERED_MANA_ABILITY_LOOP_BOUND` consecutive inline resolutions off
+        one activation, `Game.drawn` is set and the chain stops.
+        """
+        pending = list(triggered)
+        resolved = 0
+        while pending:
+            ability = pending.pop(0)
+            if ability not in self.pending_triggers:
+                continue
+            printed = ability.ability
+            if not isinstance(printed, TriggeredAbility):
+                continue
+            if ability.targets or not printed.effect.lower().strip().startswith("add "):
+                continue  # CR 605.5: not a mana ability.
+            if resolved >= self.TRIGGERED_MANA_ABILITY_LOOP_BOUND:
+                # CR 104.4b. See `Game.drawn`'s own docstring for what this
+                # detection does and does not cover.
+                self.drawn = True
+                return
+            self.pending_triggers.remove(ability)
+            source = ability.source(self)
+            before = dict(self.player(ability.controller).mana_pool.floating)
+            self._resolve_ability(ability)
+            resolved += 1
+            after = self.player(ability.controller).mana_pool.floating
+            added = [
+                color
+                for color, count in after.items()
+                for _ in range(count - before.get(color, 0))
+                if count > before.get(color, 0)
+            ]
+            if added and source is not None:
+                pending.extend(self.emit(mana_added_event(source, self, mana_added=added)))
 
     def _resolve_ability(self, ability: AbilityOnStack) -> AbilityOnStack:
         """Resolve an ability that was on the stack (CR 608.2).
@@ -9076,7 +9151,17 @@ class Game(BaseModel):
             # this: `CostPayment.tap_for_mana` emits the same event when a
             # source pays for a spell instead of being activated directly).
             if any(piece.kind is CostKind.TAP for piece in ability.costs):
-                self.emit(tapped_for_mana_event(permanent, self))
+                self.emit(tapped_for_mana_event(permanent, self, mana_added=produced_mana))
+            if produced_mana:
+                # Not CR 106.12's tap event but its sibling: an ability caused
+                # this player to add mana. Caged Sun's own condition asks about
+                # the adding, not the tapping, so a mana ability with no `{T}`
+                # in its cost raises this one just the same.
+                triggered = self.emit(mana_added_event(permanent, self, mana_added=produced_mana))
+                # CR 605.4a: a triggered mana ability "doesn't go on the stack
+                # ... It simply resolves immediately after the mana ability
+                # that triggered it, without waiting for priority."
+                self.resolve_triggered_mana_abilities(triggered)
             self.put_triggers_on_stack()
             return None
 

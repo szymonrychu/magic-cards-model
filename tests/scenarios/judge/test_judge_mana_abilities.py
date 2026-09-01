@@ -17,11 +17,11 @@ targeted, countered, or otherwise responded to"); firebending does not, because
 attacking is not the activation or resolution of a mana ability, which is what
 makes DDR#988's question about *when* X is read a real question at all.
 
-Every test here is `xfail`: neither card's ability reaches the engine.
-`machines/triggers.triggered_abilities_of` returns an empty list for Caged Sun
-and, for Firebending Student, only its prowess - the CR 702.189a keyword line is
-not expanded into the trigger it stands for. Every CR number here was looked up
-with `knowledge_search(type="rules")`.
+Caged Sun's trigger now parses, matches `ExtraTriggerEvent.MANA_ADDED`, and is
+resolved inline by `Game.resolve_triggered_mana_abilities` exactly as CR 605.4a
+requires; CR 104.4b's loop bound lives there too. What is still missing for
+DDR#990 is named in each `xfail` below, and lives in files this change does not
+touch. Every CR number here was looked up with `knowledge_search(type="rules")`.
 """
 
 import pytest
@@ -29,6 +29,7 @@ import pytest
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card import Color
+from magic_cards_model.models.card_state import Choice, ChoiceKind
 from tests.scenarios.harness import Scenario
 
 # --------------------------------------------------------------------------
@@ -38,12 +39,11 @@ from tests.scenarios.harness import Scenario
 
 @pytest.mark.xfail(
     strict=True,
-    reason="Caged Sun is inert in this engine: `triggered_abilities_of(card("
-    "'Caged Sun'))` is empty and `effect_for('Caged Sun', ...)` is None, so "
-    "neither its 'As this artifact enters, choose a color' nor its "
-    "'Whenever a land's ability causes you to add ... add an additional one "
-    "mana of that color' has any reader. Tapping a Mountain adds one red, not "
-    "two.",
+    reason="Caged Sun's trigger now parses, matches (ExtraTriggerEvent.MANA_ADDED "
+    "in machines/triggers.py) and is resolved inline as CR 605.4a's triggered "
+    "mana ability - but its effect, 'add an additional one mana of that color', "
+    "has no entry in machines/effects.py, so the inline resolution adds nothing "
+    "and the Mountain's one red is all that reaches the pool.",
 )
 def test_caged_sun_adds_an_additional_mana_when_a_land_makes_the_chosen_color():
     """DDR#990's prerequisite: the ordinary, non-looping use of Caged Sun.
@@ -59,23 +59,30 @@ def test_caged_sun_adds_an_additional_mana_when_a_land_makes_the_chosen_color():
     """
     scenario = Scenario().player("alice", battlefield=["Caged Sun", "Mountain"]).build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
+    caged_sun = scenario.find("Caged Sun", Zone.BATTLEFIELD, "alice")
+    # CR 614.1c/614.12a: "As this artifact enters, choose a color." A staged
+    # battlefield never ran the as-enters replacement, so the answer is set
+    # here, the same way `test_chosen_color_mana.py` sets Mikokoro's Citadel's.
+    caged_sun.choice = Choice(kind=ChoiceKind.COLOR, value=Color.RED.value)
     mountain = scenario.find("Mountain", Zone.BATTLEFIELD, "alice")
 
     scenario.activate(mountain)
 
+    assert scenario.stack_names() == [], "CR 605.4a: a triggered mana ability never uses the stack"
     assert scenario.player("alice").mana_pool.floating.get(Color.RED) == 2
 
 
 @pytest.mark.xfail(
     strict=True,
-    reason="two separate gaps stack here: Toph's 'Nontoken artifacts you "
-    "control are lands in addition to their other types' has no entry in "
-    "`machines/layers.LAYER_EFFECTS` (see test_judge_layers.py's DDR#994), and "
-    "Caged Sun's own trigger is unparsed as above. `Game.drawn` is also "
-    "documented as covering only CR 104.4a's simultaneous loss - its docstring "
-    "says CR 104.4b's mandatory-action loops 'have no loop machinery behind "
-    "them' - so nothing in the engine could detect this loop even with both "
-    "cards working.",
+    reason="CR 104.4b's loop bound is built (Game.resolve_triggered_mana_abilities "
+    "sets Game.drawn past TRIGGERED_MANA_ABILITY_LOOP_BOUND consecutive inline "
+    "resolutions), and Caged Sun's trigger now matches and resolves inline. Two "
+    "pieces are still missing, each in a file of its own: Toph's 'Nontoken "
+    "artifacts you control are lands in addition to their other types' has no "
+    "entry in machines/layers.LAYER_EFFECTS (see test_judge_layers.py's DDR#994), "
+    "and Caged Sun's 'add an additional one mana of that color' has no entry in "
+    "machines/effects.py - so nothing adds mana, nothing re-triggers, and the "
+    "loop never starts.",
 )
 def test_toph_turning_caged_sun_into_a_land_draws_the_game():
     """DDR#990: the loop is mandatory and nobody ever gets priority in it.
@@ -99,6 +106,8 @@ def test_toph_turning_caged_sun_into_a_land_draws_the_game():
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
+    caged_sun = scenario.find("Caged Sun", Zone.BATTLEFIELD, "alice")
+    caged_sun.choice = Choice(kind=ChoiceKind.COLOR, value=Color.RED.value)
     mountain = scenario.find("Mountain", Zone.BATTLEFIELD, "alice")
 
     scenario.activate(mountain)

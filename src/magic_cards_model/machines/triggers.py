@@ -57,7 +57,7 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel, ConfigDict, Field
 
 from ..models.card import Card, Color, Type
-from ..models.card_state import CardState, Counter, TargetRef
+from ..models.card_state import CardState, ChoiceKind, Counter, TargetRef
 from ..models.zone import Zone
 from .abilities import (
     Ability,
@@ -129,6 +129,16 @@ class ExtraTriggerEvent(StrEnum):
     #: **Missing emit:** the graveyard-to-exile moves in `models/game.py`
     #: (delve, Rest in Peace's replacement, a graveyard-hate effect).
     EXILED_FROM_GRAVEYARD = "exiled_from_graveyard"
+    #: "An ability caused a player to add mana", which is not the same event as
+    #: CR 106.12's "tapped for mana": Caged Sun's "Whenever a land's ability
+    #: causes you to add one or more mana of the chosen color" is about the
+    #: *adding*, so a mana ability that costs no `{T}` matches it and so does
+    #: another triggered mana ability's own addition - which is the whole of
+    #: DDR#990's loop. `GameEvent.mana_added` carries which mana, and
+    #: `GameEvent.subject_types` the type line of the object whose ability
+    #: added it. Emitted by `Game.activate_ability`'s CR 605.3b fast path and
+    #: by `Game.resolve_triggered_mana_abilities`.
+    MANA_ADDED = "mana_added"
 
 
 class GameEvent(BaseModel):
@@ -191,6 +201,16 @@ class GameEvent(BaseModel):
     (Sanctum of Ugin, Ugin, Eye of the Storms) reads; `None` for an event with
     no `CardState` subject to ask, the same fallback `subject_types` already
     uses."""
+
+    mana_added: tuple[Color, ...] = ()
+    """The mana this event put into a player's pool, one entry per mana.
+
+    CR 106.12a's "tapped for mana" event carried no colours at all, so a
+    condition that asks *which* mana was added - Caged Sun's "Whenever a land's
+    ability causes you to add one or more mana of the chosen color" - had
+    nothing to read. Colourless is `Color.COLORLESS`, so `{C}{C}` is two
+    entries, matching how `ManaAbility.produces` already reports a production.
+    Empty for every event that is not about mana."""
 
     related_id: UUID | None = None
     """The other creature in a blocking pair (CR 509.1a)."""
@@ -463,7 +483,11 @@ class AbilityOnStack(BaseModel):
         return game.find_by_id(self.source_id)
 
 
-def tapped_for_mana_event(source: CardState, game: "Game | None" = None) -> GameEvent:
+def tapped_for_mana_event(
+    source: CardState,
+    game: "Game | None" = None,
+    mana_added: "Sequence[Color] | None" = None,
+) -> GameEvent:
     """CR 106.12a: this permanent's mana ability just resolved and produced mana.
 
     Built once and reused by every place the engine taps something for mana -
@@ -504,6 +528,47 @@ def tapped_for_mana_event(source: CardState, game: "Game | None" = None) -> Game
         subject_card=source.card,
         subject_types=types,
         subject_subtypes=subtypes,
+        mana_added=tuple(mana_added or ()),
+    )
+
+
+def mana_added_event(
+    source: CardState, game: "Game | None" = None, mana_added: "Sequence[Color] | None" = None
+) -> GameEvent:
+    """An ability of `source` just caused its controller to add mana.
+
+    Distinct from `tapped_for_mana_event`: CR 106.12 defines "tap for mana" as
+    activating a mana ability "that includes the {T} symbol in its activation
+    cost", so a condition about *tapping* (Leyline of Abundance's "Whenever you
+    tap a creature for mana") is not the same question as one about *adding*
+    (Caged Sun's "Whenever a land's ability causes you to add one or more mana
+    of the chosen color"). Only the second is matched against this event, which
+    is why a triggered mana ability's own addition re-raises this one and never
+    the tap.
+
+    Types are read off `Game.characteristics_of` (CR 613.5) while the source is
+    still on the battlefield, exactly as `tapped_for_mana_event` does and for
+    the same reason: "a **land's** ability" is a question about the computed
+    type line, which is how Toph, the First Metalbender's static ability can
+    make Caged Sun's own trigger answer it.
+    """
+    on_battlefield = game is not None and source.zone is Zone.BATTLEFIELD
+    if on_battlefield:
+        characteristics = game.characteristics_of(source)
+        types = characteristics.types
+        subtypes = characteristics.subtypes
+    else:
+        types = source.types
+        subtypes = source.subtypes
+    return GameEvent(
+        event=ExtraTriggerEvent.MANA_ADDED,
+        subject_id=source.id,
+        subject_name=source.name,
+        subject_controller=source.controller,
+        subject_card=source.card,
+        subject_types=types,
+        subject_subtypes=subtypes,
+        mana_added=tuple(mana_added or ()),
     )
 
 
@@ -1386,6 +1451,14 @@ _EXILE_FROM_GRAVEYARD_OR_BATTLEFIELD_CONDITION = re.compile(
     r" during your turn$"
 )
 
+#: Caged Sun's "a land's ability causes you to add one or more mana of the
+#: chosen color" - CR 605.1b's triggered mana ability, watching CR 106.12a's
+#: own event for the mana it now carries (`GameEvent.mana_added`). "The chosen
+#: color" is CR 614.12a's as-enters choice, recorded on `CardState.choice`.
+_LAND_ADDED_CHOSEN_MANA_CONDITION = re.compile(
+    r"^a land's ability causes you to add one or more mana of the chosen color$"
+)
+
 #: Tamiyo, Inquisitive Student's "you draw your third card in a turn" - an
 #: ordinal over CR 121.2's individual card draws, which are one event each.
 _NTH_DRAW_CONDITION = re.compile(r"^you draw your (?P<ordinal>[a-z]+) card in a turn$")
@@ -1416,6 +1489,8 @@ def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTrig
         )
     if _NTH_DRAW_CONDITION.match(lowered):
         return frozenset({TriggerEvent.DRAWS_A_CARD})
+    if _LAND_ADDED_CHOSEN_MANA_CONDITION.match(lowered):
+        return frozenset({ExtraTriggerEvent.MANA_ADDED})
     return frozenset()
 
 
@@ -1504,6 +1579,23 @@ def _unread_condition_matches(
         if not isinstance(drawn, dict):
             return False
         return drawn.get(controller, 0) == ordinal
+
+    if _LAND_ADDED_CHOSEN_MANA_CONDITION.match(condition):
+        # CR 605.1b's triggered mana ability: Caged Sun's own condition, read
+        # off `GameEvent.mana_added` (the colours CR 106.12a's event now
+        # carries) and `CardState.choice` (CR 614.12a's as-enters choice).
+        if event.event is not ExtraTriggerEvent.MANA_ADDED:
+            return False
+        if event.subject_controller != controller:
+            return False  # "causes **you** to add".
+        if Type.LAND not in (event.subject_types or ()):
+            return False  # "a **land's** ability".
+        chosen = source.choice
+        if chosen is None or chosen.kind is not ChoiceKind.COLOR:
+            # CR 106.5: with no choice recorded there is no "chosen color" for
+            # the condition to be about, so it does not trigger.
+            return False
+        return any(color.value == chosen.value for color in event.mana_added)
 
     return False
 
