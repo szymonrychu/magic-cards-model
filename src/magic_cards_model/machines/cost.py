@@ -68,9 +68,11 @@ from .abilities import (
 from .combat import Keyword, has_keyword
 from .triggers import (
     GameEvent,
+    activated_abilities_from_lines,
     activated_abilities_of,
     granted_activated_abilities_of,
     is_ability,
+    rewritten_ability_lines,
     tapped_for_mana_event,
 )
 
@@ -118,21 +120,43 @@ def is_snow_source(source: CardState) -> bool:
 # state that came out was wrong, not missing, which is why no test caught it.
 
 
-def _activations_of(source: CardState) -> list[ActivatedAbility]:
-    """`Game.activated_abilities(source)`'s own list, rebuilt from the same two
+def _activations_of(source: CardState, game: Any = None) -> list[ActivatedAbility]:
+    """`Game.activated_abilities(source)`'s own list, rebuilt from the same
     functions in the same order - printed abilities of the up face first
     (CR 712.8d/712.8e/712.8f), then `CardState.granted_ability_texts`'s.
 
     Rebuilt rather than asked of the game because a `CostPayment` may have no
     game behind it, and because an index into this list is what
     `Game.why_cannot_activate` takes: same order, same index.
+
+    **CR 613.5 / CR 707.2**, and the whole reason `game` is a parameter: when a
+    continuous effect has rewritten this permanent's computed ability text away
+    from the printed card - a layer 1 copy effect is the only shape in the pool
+    that does - the *computed* abilities are the ones it has, and the printed
+    card is not consulted at all (CR 613.5: "all resulting changes to an
+    object's characteristics are instantaneous"; CR 707.2: "the copy acquires
+    the copiable values of the original object's characteristics"). A Forest
+    that has become a copy of Sol Ring is tapped for `{C}{C}` and cannot be
+    tapped for `{G}`.
+
+    `Game.activated_abilities` already reads it this way, so before this
+    parameter existed the two paths disagreed: activating the copy's ability
+    directly was right, and spending the same permanent on a cost silently
+    offered its printed one. Without a game there is no layer engine to ask and
+    the printed reading is all there is, which is the answer this had before.
     """
+    if game is not None:
+        rewritten = rewritten_ability_lines(game, source)
+        if rewritten is not None:
+            return activated_abilities_from_lines(rewritten, source.card, source.up_face_name)
     return activated_abilities_of(
         source.card, source.up_face_name
     ) + granted_activated_abilities_of(source.granted_ability_texts)
 
 
-def tappable_mana_activations(source: CardState) -> list[tuple[int, ActivatedAbility]]:
+def tappable_mana_activations(
+    source: CardState, game: Any = None
+) -> list[tuple[int, ActivatedAbility]]:
     """Every mana ability of `source` whose whole cost is a bare `{T}`, each
     with the index `Game.activated_abilities`/`Game.why_cannot_activate` know
     it by.
@@ -145,10 +169,13 @@ def tappable_mana_activations(source: CardState) -> list[tuple[int, ActivatedAbi
     The `{T}`-only filter is `free_tap_mana_abilities`'s own, for the same
     CR 118.3c reason: a cost beyond the tap is a cost only the player may
     choose to pay.
+
+    `game` is `_activations_of`'s own CR 613.5 parameter: passed, a permanent
+    that has become a copy of something offers the *copy's* `{T}` ability here.
     """
     return [
         (index, ability)
-        for index, ability in enumerate(_activations_of(source))
+        for index, ability in enumerate(_activations_of(source, game))
         if ability.mana is not None and [piece.kind for piece in ability.costs] == [CostKind.TAP]
     ]
 
@@ -657,7 +684,7 @@ def _auto_tap_candidates(payment: "CostPayment", sources: Iterable[CardState]) -
         if not can_tap_for_mana(source, payment.game):
             continue
         land_types, own_counters, has_imprinted_card = _mana_context(payment, source)
-        for index, activation in tappable_mana_activations(source):
+        for index, activation in tappable_mana_activations(source, payment.game):
             ability = activation.mana
             if ability is None:
                 continue
@@ -718,13 +745,10 @@ def _withheld_mana_sources(
             continue
         if not can_tap_for_mana(source, payment.game):
             continue
-        if free_tap_mana_abilities(source.card, source.up_face_name):
+        if tappable_mana_activations(source, payment.game):
             continue
-        up_face_name = source.up_face_name
-        for ability in parse_abilities(source.card):
-            if not isinstance(ability, ActivatedAbility) or ability.mana is None:
-                continue
-            if up_face_name is not None and ability.face != up_face_name:
+        for ability in _activations_of(source, payment.game):
+            if ability.mana is None:
                 continue
             if [piece.kind for piece in ability.costs] == [CostKind.TAP]:
                 continue
@@ -2793,7 +2817,7 @@ INFER_RESTRICTION: Any = object()
 
 
 def restriction_for_production(
-    source: CardState, produces: Sequence[Color]
+    source: CardState, produces: Sequence[Color], game: Any = None
 ) -> ManaRestriction | None:
     """The CR 106.6 restriction on mana a manual `tap_for_mana(source, produces)`
     just made, worked out from which of `source`'s `{T}`-only abilities could
@@ -2813,12 +2837,17 @@ def restriction_for_production(
     only one available here, since the caller has already been given the mana.
     A caller that knows which ability it activated passes the restriction
     explicitly and none of this runs.
+
+    `game` is `_activations_of`'s CR 613.5 parameter again: the abilities asked
+    are the permanent's *computed* ones, so a copy's restriction (or its lack of
+    one) is the one read, never the printed card's.
     """
     wanted = sorted(produces)
     matches = [
-        restriction
-        for ability, restriction in free_tap_mana_abilities(source.card, source.up_face_name)
-        for option in ability.effective()[0]
+        spend_restriction(activation.effect)
+        for _index, activation in tappable_mana_activations(source, game)
+        if activation.mana is not None
+        for option in activation.mana.effective()[0]
         if sorted(option) == wanted
     ]
     if not matches or any(restriction is None for restriction in matches):
@@ -3173,6 +3202,12 @@ class CostPayment(BaseModel):
         the same questions `_auto_tap_candidates` asks on the automatic path;
         neither was asked on any path before.
 
+        **CR 613.5 / CR 707.2**: which abilities `source` has is asked of the
+        layer engine through `_activations_of`, not of the printed `Card`. A
+        Forest that has become a copy of Sol Ring is tapped for `{C}{C}` here
+        and refuses `{G}`, the same answer `Game.activated_abilities` gives when
+        the copy's ability is activated directly.
+
         Mana from a snow permanent (CR 205.4g) is marked as such, because `{S}`
         can only be paid with mana produced by a snow source (CR 107.4h, 106.3).
 
@@ -3204,9 +3239,25 @@ class CostPayment(BaseModel):
         # Urza's Saga chapter I's own "This Saga gains '{T}: Add {C}.'" is
         # what makes this second half necessary; see `granted_mana_
         # abilities`'s own docstring.
-        abilities = parse_mana_abilities(source.card, source.up_face_name) + granted_mana_abilities(
-            source.granted_ability_texts
-        )
+        activations = _activations_of(source, self.game)
+        rewritten = (
+            rewritten_ability_lines(self.game, source) if self.game is not None else None
+        ) is not None
+        if rewritten:
+            # CR 613.5 / CR 707.2: the computed text is the only text this
+            # permanent has, so the printed card is not consulted at all - the
+            # `{T}` filter `parse_mana_abilities` applies is applied to the
+            # copied lines instead. See `_activations_of`.
+            abilities = [
+                activation.mana
+                for activation in activations
+                if activation.mana is not None
+                and any(piece.kind is CostKind.TAP for piece in activation.costs)
+            ]
+        else:
+            abilities = parse_mana_abilities(
+                source.card, source.up_face_name
+            ) + granted_mana_abilities(source.granted_ability_texts)
         if not abilities:
             raise ValueError(
                 f"{source.name} has no {{T}} mana ability on the face that is up "
@@ -3216,7 +3267,6 @@ class CostPayment(BaseModel):
         wanted = sorted(produces)
         refusals: list[str] = []
         payable = False
-        activations = _activations_of(source)
         for ability in abilities:
             behind = _activation_behind(activations, ability)
             effect = behind[1].effect if behind is not None else ""
@@ -3255,7 +3305,7 @@ class CostPayment(BaseModel):
         source.tap()
         self.tapped_for_mana.append(source)
         if restriction is INFER_RESTRICTION:
-            restriction = restriction_for_production(source, produces)
+            restriction = restriction_for_production(source, produces, self.game)
         # CR 106.6's additional-effect clause travels with the mana too, and
         # unlike the restriction it needs no inference: `ability` is the one
         # this loop matched to `produces`, and the sentence is already parsed

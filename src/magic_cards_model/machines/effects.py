@@ -1420,9 +1420,19 @@ def seasoned_pyromancer(game: "Game", ability: AbilityOnStack) -> None:
     chosen_ids = game.ask(decision)
     by_id = {state.id: state for state in hand}
     discarded = [by_id[card_id] for card_id in chosen_ids]
-    for state in discarded:
-        player.discard(state)
-    player.draw(2)
+    # Through `Game.discard_cards` and `Game.draw_cards`, never `Player.discard`
+    # / `Player.draw`: the `Player` methods move cards and nothing else, so a
+    # discard performed that way raises no `DISCARDS_A_CARD` event (CR 701.9a is
+    # only the move; the event is what a "whenever you discard" ability watches),
+    # is not counted in `Game.cards_discarded_this_turn`, and gets no CR 702.35a
+    # madness replacement - and a draw performed that way raises no
+    # `DRAWS_A_CARD` and skips CR 121.6's draw replacements. CR 601.2f's cost
+    # reduction is read off that discard count, so Hollow One was charged the
+    # wrong price after a Pyromancer's discard until this routed through the
+    # `Game`. CR 121.2 makes "draw two cards" two individual draws, which
+    # `Game.draw_cards` performs one at a time.
+    game.discard_cards(player.username, discarded, source=ability.source_name)
+    game.draw_cards(player, 2)
     nonlands = sum(1 for state in discarded if not state.card.is_land)
     create_tokens(game, ELEMENTAL, ability.controller, nonlands)
 
@@ -5479,7 +5489,16 @@ def _watch_for_the_exiled_card_returning_and_add_counters(
             return
         if card.controller != controller:
             return  # "under **your** control": an opponent's creature went home.
-        card.add_counters(kind, amount)
+        # `Game.add_counters`, never `CardState.add_counters`: CR 614.16 - "some
+        # replacement effects apply ... 'if an effect would put one or more
+        # counters on a permanent'. These replacement effects apply if the effect
+        # of a resolving spell or ability [does so]" - and this delayed ability
+        # resolving is exactly that, so Vizier of Remedies and a doubling effect
+        # get their say. CR 122.6's "counters being put on an object" event is
+        # raised on the same route, which is what a "whenever one or more +1/+1
+        # counters are put on this creature" ability watches for; the bare
+        # `CardState` call raised neither.
+        game.add_counters(card, kind, amount)
 
     game.create_delayed_trigger(
         DelayedTrigger(

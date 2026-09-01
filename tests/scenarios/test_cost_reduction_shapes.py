@@ -279,6 +279,103 @@ def test_the_discard_count_is_per_turn():
     assert scenario.game.cost_reduction_for(golem, "alice") == ManaCost()
 
 
+def test_a_discard_a_resolving_ability_causes_discounts_hollow_one():
+    """**Regression.** Every other Hollow One test above calls
+    `Game.discard_cards` itself. This one makes a *card* do the discarding, and
+    that is the whole point: `machines/effects.seasoned_pyromancer` used to call
+    `Player.discard` and `Player.draw` directly.
+
+    What was silently wrong: `Player.discard` is only CR 701.9a's move ("to
+    discard a card, move it from its owner's hand to that player's graveyard").
+    It raises no `DISCARDS_A_CARD` event, and - the consequence this test
+    asserts - it never reaches `Game.cards_discarded_this_turn`. CR 601.2f has
+    the player "determine the total cost of the spell ... some effects may
+    increase or reduce the cost to pay", and Hollow One's own sentence reads
+    that count, so a Hollow One cast after a Seasoned Pyromancer was charged the
+    full printed {5} instead of {1}. Nothing about the Pyromancer's own
+    resolution looked wrong; the price of the *next* card was the only witness.
+
+    CR 121.2 - "cards may only be drawn one at a time" - is the draw half:
+    `Game.draw_cards` performs two individual draws, each its own replaceable
+    and triggerable event, where `Player.draw(2)` performed neither.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            # Hollow One last: `seasoned_pyromancer` offers the hand in reverse
+            # order, so the unscripted CR 701.9b default takes the front two.
+            hand=["Seasoned Pyromancer", "Grizzly Bears", "Lightning Bolt", "Hollow One"],
+            battlefield=["Mountain", "Mountain", "Mountain", "Mountain"],
+            library=["Island"] * 10,
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.find("Grizzly Bears", Zone.HAND, "alice")
+    bolt = scenario.find("Lightning Bolt", Zone.HAND, "alice")
+    scenario.will_choose_cards(bears, bolt, username="alice", source="Seasoned Pyromancer")
+
+    sources = scenario.untapped_sources("Mountain", "Mountain", "Mountain")
+    scenario.cast_and_resolve("Seasoned Pyromancer", *sources)
+    scenario.pass_until_resolved()  # the enters trigger
+
+    assert bears.zone is Zone.GRAVEYARD and bolt.zone is Zone.GRAVEYARD
+    assert scenario.game.cards_discarded_this_turn["alice"] == 2, (
+        "the effect's own discard has to reach CR 601.2f's counter"
+    )
+    # CR 121.2's two individual draws really happened: Hollow One plus two
+    # Islands off the top.
+    assert sorted(state.name for state in scenario.player("alice").hand) == [
+        "Hollow One",
+        "Island",
+        "Island",
+    ]
+
+    casting = scenario.cast("Hollow One")
+    scenario.game.determine_total_cost(casting)
+
+    assert str(casting.total_cost.mana) == "{1}", "{2} off for each of the two discards"
+
+
+def test_the_pyromancers_tokens_still_count_the_cards_it_discarded():
+    """The same resolution's third sentence - "for each nonland card discarded
+    this way, create a 1/1 red Elemental" - is a linked count over exactly the
+    cards this discard binned, so routing the discard through `Game.discard_
+    cards` must not change it: two nonland cards, two Elementals."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Seasoned Pyromancer", "Grizzly Bears", "Mountain", "Hollow One"],
+            battlefield=["Mountain", "Mountain", "Mountain"],
+            library=["Island"] * 10,
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.find("Grizzly Bears", Zone.HAND, "alice")
+    land = scenario.find("Mountain", Zone.HAND, "alice")
+    scenario.will_choose_cards(bears, land, username="alice", source="Seasoned Pyromancer")
+
+    sources = scenario.untapped_sources("Mountain", "Mountain", "Mountain")
+    scenario.cast_and_resolve("Seasoned Pyromancer", *sources)
+    scenario.pass_until_resolved()
+
+    elementals = [name for name in scenario.battlefield_names() if name == "Elemental Token"]
+    assert len(elementals) == 1, "one of the two discarded cards was a land"
+    # Both cards were discarded even though only one made a token, so the
+    # discount is {4} however the tokens came out.
+    assert scenario.game.cards_discarded_this_turn["alice"] == 2
+
+    casting = scenario.cast("Hollow One")
+    scenario.game.determine_total_cost(casting)
+
+    assert str(casting.total_cost.mana) == "{1}"
+
+
 # -- Obsidian Charmaw: "each land your opponents control that could produce {C}"
 
 

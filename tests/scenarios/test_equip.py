@@ -30,11 +30,13 @@ import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.keywords import (
+    attachment_state_based_actions,
     equip_activation,
     equipment_state_based_actions,
     equipped_creature,
 )
 from magic_cards_model.models import Zone
+from magic_cards_model.models.card import Type
 from tests.scenarios.harness import Scenario, mana_from
 
 
@@ -178,3 +180,87 @@ def test_equipping_a_second_creature_moves_it():
         permanent.untap()
     equip(scenario, cutter, wolf).resolve()
     assert equipped_creature(scenario.game, cutter) is wolf
+
+
+# --------------------------------------------------------------------------
+# CR 704.5p - the *other* unattachment state-based action
+# --------------------------------------------------------------------------
+
+
+def test_an_animated_equipment_falls_off_the_creature_it_was_equipping():
+    """CR 704.5p, the rule CR 704.5n above is deliberately not: "If a battle or
+    creature is attached to an object or player, it becomes unattached and
+    remains on the battlefield."
+
+    CR 301.5c is what makes it matter: "An Equipment that's also a creature
+    can't equip a creature unless that Equipment has reconfigure." Karn, the
+    Great Creator's "+1: Until your next turn, up to one target noncreature
+    artifact becomes an artifact creature with power and toughness each equal to
+    its mana value" aimed at an equipped Shadowspear is the pool's one route to
+    that state, and it is CR 704.5p - not CR 704.5n - that resolves it: the
+    *host* is a perfectly legal creature the whole time, so
+    `equipment_state_based_actions` correctly finds nothing.
+
+    What was silently wrong: `attachment_state_based_actions` read
+    `CardState.types`, which is the printed type line (CR 613.5 puts the layer
+    system's answer somewhere else entirely). Shadowspear prints "Legendary
+    Artifact - Equipment", so the sweep saw a plain Equipment and left it
+    equipping a creature it may not legally equip.
+
+    The sweep is still called by hand here, as every CR 704.5n test above calls
+    its own: `Game.check_state_based_actions` dispatches
+    `equipment_state_based_actions` and not this one - see
+    `docs/engine-coverage.md`.
+    """
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            battlefield=[
+                "Karn, the Great Creator",
+                "Shadowspear",
+                "Grizzly Bears",
+                "Mountain",
+                "Mountain",
+            ],
+            library=["Island"] * 10,
+        )
+        .player("bob", library=["Island"] * 10)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    spear = scenario.find("Shadowspear", Zone.BATTLEFIELD, "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    equip(scenario, spear, bears).resolve()
+    assert equipped_creature(scenario.game, spear) is bears
+
+    karn = scenario.creature("Karn, the Great Creator", "alice")
+    scenario.activate(karn, index=0, targets=[spear])
+    scenario.pass_until_resolved()
+    assert scenario.game.computed_board().of(spear).is_creature
+    assert Type.CREATURE not in spear.types, "the printed type line still says Artifact"
+
+    # CR 704.5n's own sweep has nothing to say: the host is a legal creature.
+    assert equipment_state_based_actions(scenario.game) == []
+
+    unattached = attachment_state_based_actions(scenario.game)
+
+    assert unattached == [spear]
+    assert not spear.is_attached
+    assert spear.zone is Zone.BATTLEFIELD, "CR 704.5p: it 'remains on the battlefield'"
+
+
+def test_an_equipment_that_is_not_a_creature_is_left_attached():
+    """The negative half of CR 704.5p, and the reason it may not simply
+    unattach everything it finds: an ordinary Equipment on an ordinary creature
+    is exactly the state the rule excuses by name ("neither an Aura, an
+    Equipment, nor a Fortification")."""
+    scenario = board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    cutter = scenario.find("Cori-Steel Cutter", Zone.BATTLEFIELD, "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    equip(scenario, cutter, bears).resolve()
+
+    assert attachment_state_based_actions(scenario.game) == []
+    assert equipped_creature(scenario.game, cutter) is bears
