@@ -336,6 +336,18 @@ class ExileMarker(StrEnum):
     player discards it, but exiles it instead of putting it into their
     graveyard." The card sits in its own pile of exile until the triggered
     ability that follows is resolved, and CR 702.35b casts it from there."""
+    AIRBENT = "airbent"
+    """CR 701.65a: "Certain spells and abilities instruct a player to airbend
+    one or more permanents and/or spells. To do so, that player exiles those
+    objects. For each card exiled this way, for as long as it remains exiled,
+    its owner may cast it for {2} rather than its mana cost."
+
+    A CR 701 keyword *action*, not a CR 702 keyword ability, so - like
+    `ADVENTURED` - nothing is printed on the exiled card to read the permission
+    off; the pile it lands in is the whole record. `ExileAnnotation.owner` is
+    load-bearing here in a way it is not for most of the markers above: the
+    permission is the **owner's**, and the player who airbent the object is
+    usually somebody else."""
     IMPRINTED = "imprinted"
     """"Imprint" is an ability word (CR 207.2c): it "has no special rules
     meaning" of its own, so the rule is whatever the card's own sentence says -

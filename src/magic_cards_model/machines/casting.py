@@ -465,6 +465,53 @@ def castable_from(card: Card, zone: Zone) -> list[KeywordCastOption]:
     return [option for option in keyword_cast_options(card) if option.zone is zone]
 
 
+def marker_cast_options(spell: CardState) -> list[KeywordCastOption]:
+    """The cast options a card has because of the *pile of exile it is in*
+    (CR 406.4), rather than because of anything printed on it.
+
+    Every option in `keyword_cast_options` is read off a printed CR 702 keyword
+    line, so a permission handed out by a CR 701 keyword *action* - which
+    prints nothing on the object it moves - can never come from there.
+    Airbend is that shape.
+
+    CR 701.65a: "Certain spells and abilities instruct a player to airbend one
+    or more permanents and/or spells. To do so, that player exiles those
+    objects. For each card exiled this way, for as long as it remains exiled,
+    its owner may cast it for {2} rather than its mana cost."
+
+    Three things follow, and each is a field below:
+
+    - **{2} rather than its mana cost** is an alternative cost (CR 118.9), so
+      `pays_mana_cost` is false and `cost` is the flat `{2}`, whatever the card
+      itself costs.
+    - **for as long as it remains exiled** is the marker, and nothing more.
+      There is no "on a later turn" here the way plot (CR 702.170d) and
+      foretell (CR 702.143a) have one, so no `later_turn` - an airbent card may
+      be recast the moment its owner has priority.
+    - **its owner** is `ExileAnnotation.owner`, which `why_not` already
+      enforces. It matters more here than for any other marker: the player who
+      airbent the object is usually not its owner, and the episode this is
+      modelled from turns on exactly that.
+
+    CR 701.65a says "for each **card** exiled this way", which is why a token
+    airbent this way gets nothing: it is not a card, and CR 111.7/CR 704.5d
+    have it cease to exist before anybody could ask.
+    """
+    annotation = spell.exile_annotation
+    if annotation is None or annotation.marker is not ExileMarker.AIRBENT:
+        return []
+    return [
+        KeywordCastOption(
+            keyword="Airbend",
+            rule="CR 701.65a",
+            zone=Zone.EXILE,
+            cost=TotalCost.of(ManaCost.parse("{2}")),
+            pays_mana_cost=False,
+            marker=ExileMarker.AIRBENT,
+        )
+    ]
+
+
 # --------------------------------------------------------------------------
 # A keyword another permanent grants a spell as it is cast (CR 610.5)
 # --------------------------------------------------------------------------
@@ -1894,9 +1941,18 @@ class Casting(BaseModel):
         """The keyword options that would cast this spell out of its origin
         zone - the card's own, and any another permanent grants it right now
         (CR 610.5)."""
-        return castable_from(self.spell.card, self.origin_zone) + [
-            granted.option for granted in self.granted_cast_options
-        ]
+        return (
+            castable_from(self.spell.card, self.origin_zone)
+            # CR 701.65a's airbend and anything else whose permission is the
+            # pile of exile itself, filtered to the zone this cast is coming
+            # from the same way the printed options above are.
+            + [
+                option
+                for option in marker_cast_options(self._as_announced)
+                if option.zone is self.origin_zone
+            ]
+            + [granted.option for granted in self.granted_cast_options]
+        )
 
     @property
     def granted_cast_options(self) -> list[GrantedCastOption]:
@@ -1931,10 +1987,11 @@ class Casting(BaseModel):
 
     def _use_keyword(self, keyword: str, choosing: list[CardState] | None) -> CastingStep:
         printed_options = keyword_cast_options(self.spell.card)
+        marker_options = marker_cast_options(self._as_announced)
         granted_options = [granted.option for granted in self.granted_cast_options]
         options = [
             option
-            for option in printed_options + granted_options
+            for option in printed_options + marker_options + granted_options
             if option.keyword.lower() == keyword.lower()
         ]
         if not options:
@@ -2152,7 +2209,9 @@ class Casting(BaseModel):
             )
 
         keyword_options: list[tuple[str, KeywordCastOption]] = [
-            (self.spell.name, option) for option in keyword_cast_options(self.spell.card)
+            (self.spell.name, option)
+            for option in keyword_cast_options(self.spell.card)
+            + marker_cast_options(self._as_announced)
         ]
         # CR 610.5: a keyword another permanent grants as this spell is cast is
         # an alternative cost like any other, and the option carries the

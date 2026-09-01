@@ -150,6 +150,13 @@ def executes(keyword: str) -> bool:
         # (`_parse_earthbend_clause`), not here. Listed explicitly so the pool
         # sweeper reports it as executed rather than silently ignored.
         "earthbend",
+        # CR 701.65a, the same shape as earthbend above: a CR 701 keyword
+        # action embedded in another ability's effect text. The exile itself is
+        # `machines/effects.py`'s clause to perform; the half executed here is
+        # what the exiled card may do afterwards - `machines/casting.
+        # marker_cast_options` reads `ExileMarker.AIRBENT` back into the {2}
+        # cast CR 701.65a grants its owner.
+        "airbend",
     }
 
 
