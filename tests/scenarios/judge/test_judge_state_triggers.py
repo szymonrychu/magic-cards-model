@@ -39,8 +39,6 @@ Card text verified with `resolve_cards`; every CR number here was looked up
 with `knowledge_search(type="rules")` in this session.
 """
 
-import pytest
-
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.abilities import AbilityKind, parse_abilities
 from magic_cards_model.models import Zone
@@ -146,20 +144,6 @@ def test_the_state_trigger_fires_again_once_the_first_one_has_resolved():
     assert second.id != first.id
 
 
-@pytest.mark.xfail(
-    reason="ONE gap, and it is one line in models/game.py. The Calendar's own effect is built "
-    "now - `machines/effects._parse_sacrifice_self_clause` reads 'sacrifice it' (CR 701.21a) "
-    "and `parse_clause_effect` reads 'each opponent loses 1,000 life' past its digit-group "
-    "comma - and `trigger_effect_for` accepts `event=None` so a CR 603.8 state trigger, which "
-    "has no `TriggerEvent` to be keyed under, reaches the text-driven fallback. But "
-    "`Game._effect_of` is gated on `and ability.ability.event is not None`, so it never asks "
-    "`trigger_effect_for` at all for such an ability and the trigger resolves doing nothing. "
-    "Dropping that one conjunct from the `isinstance(ability.ability, TriggeredAbility)` test "
-    "makes this test - and both Caged Sun tests in test_judge_mana_abilities.py, whose trigger "
-    "condition is also unread by the event parser - pass, with no other change anywhere in "
-    "the suite.",
-    strict=True,
-)
 def test_countering_the_state_trigger_lets_it_trigger_again_before_the_abilities_go():
     """DDR#961's ruling, in full.
 

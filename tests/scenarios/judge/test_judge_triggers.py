@@ -18,8 +18,6 @@ Sourced from the DDR judge transcripts. Episodes covered:
 Every CR number here was looked up with `knowledge_search(type="rules")`.
 """
 
-import pytest
-
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.abilities import (
     AbilityKind,

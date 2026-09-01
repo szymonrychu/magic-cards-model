@@ -18,7 +18,6 @@ the controller question DDR#989 is about. Airbend (CR 701.65a) is whole now:
 Every CR number here was looked up with `knowledge_search(type="rules")`.
 """
 
-
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.casting import marker_cast_options
 from magic_cards_model.models import Zone

@@ -2972,7 +2972,17 @@ class Game(BaseModel):
         keyword = keyword_effect_for(ability)
         if keyword is not None:
             return keyword
-        if isinstance(ability.ability, TriggeredAbility) and ability.ability.event is not None:
+        if isinstance(ability.ability, TriggeredAbility):
+            # `event` may be None, and that is not "no effect": CR 603.8's
+            # state triggers ("Some triggered abilities trigger when a game
+            # state ... is true, rather than triggering when an event occurs")
+            # have no `TriggerEvent` to name, and neither does a condition the
+            # parser reads without matching one of the enumerated events -
+            # Caged Sun's "Whenever a land's ability causes you to add one or
+            # more mana of the chosen color". `trigger_effect_for` takes
+            # `TriggerEvent | None` and keys such a row on the condition text,
+            # so gating on the event here was refusing to look the effect up
+            # at all.
             return trigger_effect_for(
                 ability.source_name, ability.ability.event, ability.ability.effect
             )
