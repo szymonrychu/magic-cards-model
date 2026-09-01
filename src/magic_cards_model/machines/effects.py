@@ -8512,6 +8512,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     )
     if attacking_tokens_then_sacrifice is not None:
         return attacking_tokens_then_sacrifice
+    may_cost_then_attacking_token = _parse_may_cost_then_attacking_token_clause(effect_text)
+    if may_cost_then_attacking_token is not None:
+        return may_cost_then_attacking_token
     put_from_hand_attacking = _parse_put_creature_from_hand_attacking_then_return(effect_text)
     if put_from_hand_attacking is not None:
         return put_from_hand_attacking
@@ -12528,6 +12531,232 @@ def _parse_create_tapped_attacking_tokens_then_sacrifice(text: str) -> AbilityEf
                     effect="sacrifice",
                     event=TriggerEvent.BEGINNING_OF_STEP,
                     step=Step.END_STEP,
+                    controller=controller.username,
+                    source_id=source_id,
+                    source_name=source_name,
+                    subject_id=token.id,
+                    expected_zone=Zone.BATTLEFIELD,
+                    expected_stamp=token.zone_change_stamp,
+                )
+            )
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# "You may <cost>. If you do, create ... tapped and attacking[. Sacrifice
+# that token at <timing>.]" (CR 118.12, CR 508.4, CR 603.7a)
+# --------------------------------------------------------------------------
+#
+# `_ATTACK_TAPPED_ATTACKING_TOKENS_THEN_SACRIFICE_RE` above is this shape with
+# the choice removed and the timing fixed to the end step. The two cards this
+# section is for both put a CR 118.12 optional cost in front of it:
+#
+#   Kavaron Harrier - "you may pay {2}. If you do, create a 2/2 colorless
+#   Robot artifact creature token that's tapped and attacking. Sacrifice that
+#   token at end of combat."
+#
+#   Gut, True Soul Zealot - "you may sacrifice another creature or an
+#   artifact. If you do, create a 4/1 black Skeleton creature token with
+#   menace that's tapped and attacking."
+#
+# CR 118.12 is the shape: "[A player] may [do something]. If [that player]
+# [does, doesn't, or can't], [effect]." The choice belongs to *resolution*, not
+# to putting the ability on the stack - CR 603.3d imports only CR 601.2c-d's
+# targets and divisions, and neither of these abilities targets anything - which
+# is exactly why DDR#983's trick works: order the Harrier's trigger to resolve
+# first (CR 603.3b) and the Robot exists by the time Gut asks for a sacrifice.
+#
+# Read whole rather than per clause: "If you do" and "that token" both point
+# back at earlier sentences of the same paragraph, so `split_effect_clauses`
+# would leave fragments naming nothing (CR 608.2c).
+#
+# CR 701.21a is the sacrifice on both ends of it - the optional cost and the
+# delayed clean-up: "To sacrifice a permanent, its controller moves it from the
+# battlefield directly to its owner's graveyard."
+
+#: The restriction nouns `_attacking_token_sacrifice_candidates` reads - one of
+#: CR 205.2a's card types, per item of an "or" list.
+_SACRIFICE_ITEM_RE = re.compile(r"^(?:a|an|another)?\s*(?P<noun>[a-z]+)$", re.IGNORECASE)
+
+_MAY_COST_THEN_ATTACKING_TOKEN_RE = re.compile(
+    r"^you may (?:pay (?P<mana>(?:\{[^}]+\})+)|sacrifice (?P<restriction>[^.]+))\.\s*"
+    rf"if you do, create (?P<n>{_COUNT}) (?P<desc>.+?) \btokens?\b"
+    r"(?:\s+with\s+(?P<tail>.+?))?"
+    r"(?:\s+named (?P<name>.+?))?"
+    r"\s+that(?:'s|’s| is| are) tapped and attacking\."
+    r"(?:\s*sacrifice (?:that token|them|those tokens) at (?P<timing>[^.]+)\.?)?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _attacking_token_sacrifice_candidates(
+    restriction: str,
+) -> Callable[["Game", Player, UUID | None], list[CardState]] | None:
+    """Read "another creature or an artifact" into the permanents that satisfy
+    it, or `None` if this wave cannot read the restriction at all.
+
+    `_sacrifice_restriction` above reads only a *single* card type, fail-closed
+    on anything compound, which is right for the shape it serves and wrong for
+    this one - so this reads the "or" list CR 109.2's descriptions allow. Each
+    item is one of CR 205.2a's card types, optionally with its own "a"/"an"; a
+    word that is not a card type takes the whole clause down rather than
+    offering the player permanents the card never named.
+
+    **"Another" is applied to the whole list**, not only to the item it
+    precedes. Read strictly, Gut's "another creature or an artifact" excludes
+    Gut only from the creature half - but Gut is not an artifact, and no other
+    card in the pool prints this shape, so the two readings cannot be told
+    apart here. The whole-list reading is the one that can never let a
+    permanent sacrifice itself to its own ability by accident; if a printing
+    ever needs the narrow one, this is the line to split.
+    """
+    wanted: set[Type] = set()
+    excludes_source = False
+    for item in re.split(r",\s*|\s+or\s+", restriction.strip().lower()):
+        if not item:
+            continue
+        match = _SACRIFICE_ITEM_RE.fullmatch(item.strip())
+        if match is None:
+            return None
+        if item.strip().startswith("another"):
+            excludes_source = True
+        try:
+            wanted.add(Type(match.group("noun")))
+        except ValueError:
+            return None
+    if not wanted:
+        return None
+
+    def candidates(game: "Game", player: Player, source_id: UUID | None) -> list[CardState]:
+        return [
+            state
+            for state in game.battlefield
+            if state.controller == player.username
+            and (not excludes_source or state.id != source_id)
+            and (set(state.types) & wanted)
+        ]
+
+    return candidates
+
+
+def _parse_may_cost_then_attacking_token_clause(text: str) -> AbilityEffect | None:
+    """`_MAY_COST_THEN_ATTACKING_TOKEN_RE`'s shape - see the section note.
+
+    Fail-closed on every part: a token descriptor `_parse_generic_token_
+    descriptor` cannot read, a sacrifice restriction
+    `_attacking_token_sacrifice_candidates` cannot read, an unparseable mana
+    cost, or a timing phrase `delayed.ANAPHORIC_TIMING_STEPS` does not know
+    each take the whole ability down rather than doing part of it (CR 608.2c).
+
+    The mana half only spends mana already floating - `Game.may_pay_mana_cost`'s
+    own documented limitation, CR 608.2g's mid-resolution "chance to activate
+    mana abilities" not being modelled - so a controller who would have to tap
+    a land to find the {2} is treated as unable to pay and the "if you do"
+    branch correctly does not run.
+
+    CR 508.4 places the token into the combat already in progress, against
+    whatever the controller's own attack already named
+    (`_defender_of_controllers_attack`); a controller attacking nothing gets a
+    tapped token that is not attacking anything, which is the honest outcome
+    rather than an invented defender.
+    """
+    match = _MAY_COST_THEN_ATTACKING_TOKEN_RE.fullmatch(
+        " ".join(_strip_non_effect_preamble(text).split())
+    )
+    if match is None:
+        return None
+
+    cost: ManaCost | None = None
+    candidates_of = None
+    prompt = ""
+    if match.group("mana") is not None:
+        try:
+            cost = ManaCost.parse(match.group("mana"))
+        except ValueError:
+            return None
+        prompt = f"pay {cost}"
+    else:
+        restriction = match.group("restriction")
+        candidates_of = _attacking_token_sacrifice_candidates(restriction)
+        if candidates_of is None:
+            return None
+        prompt = f"sacrifice {restriction.strip()}"
+
+    count = _count(match.group("n"))
+    definition = _parse_generic_token_descriptor(
+        match.group("desc").strip().split(), match.group("tail")
+    )
+    if definition is None:
+        return None
+    if name := match.group("name"):
+        # CR 111.9: a name the creating effect states, rather than CR 111.4's
+        # subtype-derived default.
+        definition = definition.model_copy(update={"name": name.strip()})
+
+    step: Step | None = None
+    if timing := match.group("timing"):
+        step = ANAPHORIC_TIMING_STEPS.get(timing.strip().lower())
+        if step is None:
+            return None
+    sacrifice_text = "" if step is None else f"Sacrifice that token at {match.group('timing')}."
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.controller_of(ability)
+        source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
+        if cost is not None:
+            if not game.may_pay_mana_cost(controller, cost, source=source_name):
+                return
+        else:
+            assert candidates_of is not None
+            available = candidates_of(game, controller, source_id)
+            decision = Decision(
+                kind=DecisionKind.MAY,
+                player=controller.username,
+                prompt=prompt,
+                source=source_name,
+                affirmative_is_legal=bool(available),
+            )
+            if not game.ask(decision):
+                return
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=controller.username,
+                    prompt="choose a permanent to sacrifice",
+                    source=source_name,
+                    amount=1,
+                    cards=tuple(candidate.id for candidate in available),
+                )
+            )
+            assert isinstance(chosen_ids, tuple)
+            if not chosen_ids:
+                return
+            by_id = {candidate.id: candidate for candidate in available}
+            game.sacrifice(by_id[chosen_ids[0]])
+
+        created = create_tokens(
+            game,
+            definition,
+            controller.username,
+            count,
+            tapped=True,
+            attacking=_defender_of_controllers_attack(game, controller.username),
+        )
+        if step is None:
+            return
+        for token in created:
+            # CR 603.7a creates this now, and CR 603.7e makes it the same
+            # controller and source as the ability that created it. CR 603.7c
+            # is `expected_zone`/`expected_stamp`: a token that has already
+            # left the battlefield - fed to Gut, in DDR#983's own line - is a
+            # different object, so the delayed sacrifice affects nothing.
+            game.create_delayed_trigger(
+                DelayedTrigger(
+                    text=sacrifice_text,
+                    effect="sacrifice",
+                    event=TriggerEvent.BEGINNING_OF_STEP,
+                    step=step,
                     controller=controller.username,
                     source_id=source_id,
                     source_name=source_name,

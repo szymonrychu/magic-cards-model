@@ -111,6 +111,7 @@ __all__ = [
     "ask_attackers",
     "ask_blockers",
     "ask_mulligan",
+    "ask_trigger_order",
     "default_answer",
     "legal_options",
 ]
@@ -630,7 +631,7 @@ def ask_mulligan(script: DecisionScript, player: str, *, prompt: str = "take a m
 def ask_trigger_order(
     script: DecisionScript,
     player: str,
-    abilities: tuple[UUID, ...],
+    abilities: tuple[tuple[UUID, str], ...],
     *,
     prompt: str = "order your triggered abilities on the stack",
 ) -> tuple[UUID, ...]:
@@ -641,9 +642,12 @@ def ask_trigger_order(
     which *player's* block goes on first; this is the only choice left, and it
     is the one DDR#983 turns on.
 
-    `abilities` is that player's own waiting abilities, in the order they
-    triggered, and the answer is a permutation of exactly them, **bottom of the
-    stack first**. Asked and validated here rather than through `Game.ask` for
+    `abilities` is that player's own waiting abilities as `(id, source_name)`
+    pairs, in the order they triggered - pairs rather than `AbilityOnStack`
+    objects so this module stays free of `machines/triggers.py`. The answer is
+    a permutation of exactly them, **bottom of the stack first**, given as ids
+    or as source names (`_resolve_trigger_order`). Asked and validated here
+    rather than through `Game.ask` for
     the same reason `ask_mulligan` and the two combat declarations are: it is a
     question the rules ask, not one a resolving effect asks (CR 608.2d), and
     there is no yes-or-no for `legal_options` to narrow.
@@ -659,11 +663,10 @@ def ask_trigger_order(
     controller puts it on the stack" going unperformed, and adding one would
     put an ability on the stack that never triggered.
     """
-    if len(abilities) < 2:
-        return abilities
-    decision = Decision(
-        kind=DecisionKind.ORDER_TRIGGERS, player=player, prompt=prompt, cards=abilities
-    )
+    ids = tuple(ability_id for ability_id, _ in abilities)
+    if len(ids) < 2:
+        return ids
+    decision = Decision(kind=DecisionKind.ORDER_TRIGGERS, player=player, prompt=prompt, cards=ids)
     script.asked.append(decision)
     found, value = script.take(decision)
     if not found and script.provider is not None:
@@ -673,11 +676,48 @@ def ask_trigger_order(
     if not found:
         value = default_answer(decision)
     if not isinstance(value, (list, tuple)):
-        raise ValueError(f"{decision.prompt}: the answer is a sequence of ability ids")
-    order = tuple(value)
-    if sorted(order, key=str) != sorted(abilities, key=str):
+        raise ValueError(f"{decision.prompt}: the answer is a sequence of ability ids or names")
+    order = _resolve_trigger_order(decision, tuple(value), abilities)
+    if sorted(order, key=str) != sorted(ids, key=str):
         raise ValueError(f"{decision.prompt}: the answer must order exactly the abilities offered")
     return order
+
+
+def _resolve_trigger_order(
+    decision: Decision, answer: tuple[object, ...], abilities: tuple[tuple[UUID, str], ...]
+) -> tuple[UUID, ...]:
+    """Turn an `ORDER_TRIGGERS` answer into ability ids.
+
+    A live answerer names ids, because it is looking at the abilities. A
+    *scripted* one cannot: the abilities do not exist until the event fires, so
+    a scenario that wants to state CR 603.3b's order in advance has only the
+    printed source name to say it with - the same vocabulary
+    `Scenario.choose_trigger_targets` already uses to name a trigger before it
+    is on the stack. So a `str` in the answer is read as a source name and
+    matched to one of the abilities offered.
+
+    A name matching more than one of the offered abilities is refused rather
+    than guessed at: two triggers of the same permanent are two orderings and
+    the answer would not have said which is which.
+    """
+    remaining = list(abilities)
+    order: list[UUID] = []
+    for item in answer:
+        if isinstance(item, UUID):
+            order.append(item)
+            continue
+        if not isinstance(item, str):
+            raise ValueError(f"{decision.prompt}: {item!r} is neither an ability id nor a name")
+        hits = [
+            pair for pair in remaining if pair[1] == item or pair[1].split("//")[0].strip() == item
+        ]
+        if len(hits) != 1:
+            raise ValueError(
+                f"{decision.prompt}: {item!r} names {len(hits)} of the abilities offered, not one"
+            )
+        remaining.remove(hits[0])
+        order.append(hits[0][0])
+    return tuple(order)
 
 
 def _ask_declaration(
