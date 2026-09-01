@@ -40,8 +40,6 @@ Card text verified with `resolve_cards`; every CR number here was looked up
 with `knowledge_search(type="rules")` in this session.
 """
 
-import pytest
-
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.abilities import AbilityKind, parse_abilities
 from magic_cards_model.machines.effects import effect_for
@@ -310,21 +308,6 @@ def test_time_stop_ends_the_turn_and_exiles_the_stack_under_it():
     assert scenario.player("bob").life == 20, "the Bolt never resolved"
 
 
-@pytest.mark.xfail(
-    reason="ONE gap now, and it is in machines/effects.py: Time Stop's 'End the turn.' has "
-    "no entry there, so `effect_for` returns None, the spell resolves doing nothing, and "
-    "nothing calls Game.end_the_turn - the first assertion below, `scenario.step is "
-    "Step.CLEANUP`, is the one that fails, on Step.PRECOMBAT_MAIN. Everything else this "
-    "episode needs is built and asserted by the tests above: CR 724.1's procedure "
-    "(Game.end_the_turn), splice (CR 702.47, Casting.splice - the reveal, the additional "
-    "cost, CR 612.10's appended text and CR 702.47e's removal), and Plagiarize's CR 614.1a "
-    "draw replacement (machines/replacement.DrawRedirection on Game.draw_redirections). "
-    "The row effects.py needs has to leave the *rest* of the resolving text running: "
-    "CR 702.47c has appended 'Draw a card.' to this spell, and CR 608.2m keeps the spell "
-    "resolving after CR 724.1b exiles it, so the spliced clause must still run - in the "
-    "cleanup step CR 724.1d has just jumped to.",
-    strict=True,
-)
 def test_the_spliced_draw_happens_in_cleanup_and_plagiarize_steals_it():
     """DDR#957's ruling, in the order the rules put it.
 
@@ -379,6 +362,18 @@ def test_the_spliced_draw_happens_in_cleanup_and_plagiarize_steals_it():
     )
     scenario.resolve_top()
 
-    assert scenario.step is Step.CLEANUP
+    assert scenario.step is Step.CLEANUP, "CR 724.1d skipped to the cleanup step"
     assert len(scenario.player("alice").hand) == 1, "Amy drew the spliced card"
-    assert scenario.player("bob").hand == []
+    # The draw itself is the episode's question, and library counts are what
+    # answer it: bob's spliced "Draw a card" was replaced, so he skipped it and
+    # alice drew instead (CR 614.1a, the DrawRedirection Plagiarize left behind).
+    assert len(scenario.player("bob").library) == 5, "bob skipped the draw"
+    assert len(scenario.player("alice").library) == 4, "alice took it"
+    # Everdream is still in bob's hand, and that is correct: splice says
+    # "**reveal** this card from your hand", and CR 701.20a's reveal is "show
+    # that card to all players for a brief time" - it moves nothing. Nothing in
+    # CR 702.47's retrievable text moves the card either, and `Casting.splice`
+    # records the same reading. An earlier version of this test asserted bob's
+    # hand was empty, which conflated "did not draw" with "no longer holds the
+    # card he only revealed".
+    assert [state.name for state in scenario.player("bob").hand] == ["Everdream"]
