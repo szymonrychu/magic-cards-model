@@ -32,3 +32,39 @@ run = "cd ../magic-cards-model-api && mise run docker:push"
 [tasks.image-tag]
 description = "Print the short git sha the image tasks would tag with"
 run = "cd ../magic-cards-model-api && mise run image-tag"
+
+# ---------------------------------------------------------------- rules --
+# The Comprehensive Rules, straight from Wizards. `knowledge_search` is the
+# fast path and stays the first stop, but it TRUNCATES long rules - CR 305.7
+# came back cut at "and any" on every phrasing tried, and the cut-off tail
+# ("Note that this doesn't remove any abilities that were granted to the land
+# by other effects") was the sentence that settled the question. This is the
+# fallback for exactly that: the primary source, on disk, greppable, whole.
+#
+# The download URL carries the release date and changes with every CR update,
+# so the task scrapes the rules page for the current link rather than pinning
+# one. The file is gitignored - it is Wizards' document, it is a megabyte, and
+# it goes stale; re-pull it rather than committing it.
+[tasks."rules:pull"]
+description = "Download the current Comprehensive Rules txt to .rules/"
+run = """
+set -eu
+mkdir -p .rules
+URL="$(curl -sL https://magic.wizards.com/en/rules \
+  | grep -oE 'https://media\\.wizards\\.com/[0-9]{4}/downloads/MagicCompRules[^"]*\\.txt' \
+  | head -1)"
+test -n "$URL" || { echo "could not find a CR txt link on magic.wizards.com/en/rules" >&2; exit 1; }
+echo "pulling $URL"
+# The href has a literal space in the filename; curl needs it percent-encoded.
+curl -fsSL "${URL// /%20}" -o .rules/MagicCompRules.txt
+# UTF-8 BOM and CRLF line endings come with the file. Left as they are so the
+# bytes match what Wizards published; `rules:find` strips the CR for display.
+head -3 .rules/MagicCompRules.txt | tr -d '\\r' | sed -n '3p'
+echo "saved to .rules/MagicCompRules.txt ($(wc -c < .rules/MagicCompRules.txt | tr -d ' ') bytes)"
+"""
+
+[tasks."rules:find"]
+description = "Print a rule and its subrules in full: mise run rules:find 305.7"
+# A script rather than an inline body, so mise appends the rule number as an
+# argument instead of the body having to reach for a positional it never gets.
+run = "scripts/cr.sh"

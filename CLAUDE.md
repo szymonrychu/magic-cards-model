@@ -31,9 +31,31 @@ This is not hypothetical. Both of these already happened in this repo:
 
 Plausible-and-wrong is the whole problem. You will not catch it by feel.
 
-If `knowledge_search` cannot confirm a rule, say so in your report and mark the
-code `unparsed` or the test `xfail`. **Writing a CR number you did not look up
-is a defect even when the number turns out to be right** - it means the next one
+### When `knowledge_search` is not enough
+
+It **truncates long rules**. CR 305.7 came back cut at "and any" on every
+phrasing tried, and the missing tail - "Note that this doesn't remove any
+abilities that were granted to the land by other effects" - was the whole
+answer to the question being asked. A truncated rule reads like a complete one.
+
+So there is a second source, the primary one, on disk:
+
+```sh
+mise run rules:pull          # latest CR from wizards.com, into .rules/ (gitignored)
+mise run rules:find 305.7    # that rule and its subrules, in full
+```
+
+`rules:pull` scrapes the current download link rather than pinning a URL,
+because the filename carries the release date and moves with every update.
+
+`knowledge_search` stays the first stop - it is faster and it searches by
+meaning, not just by number. Reach for `rules:find` when a rule comes back cut
+off, when you need a rule's exact full wording, or when you already know the
+number and want to read it whole. Both are lookups; neither is memory.
+
+If **neither** can confirm a rule, say so in your report and mark the code
+`unparsed` or the test `xfail`. **Writing a CR number you did not look up is a
+defect even when the number turns out to be right** - it means the next one
 will not be.
 
 Card text is the same: verify with `resolve_cards`, never from memory.
