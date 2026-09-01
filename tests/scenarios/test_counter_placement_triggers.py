@@ -12,10 +12,15 @@ now reads the condition itself (`_unread_trigger_events` ->
 CR 107.15a's Saga chapters - so the last test in this file plays the whole loop
 for real: adapt the Broodscale, and its own ability triggers.
 
-Two call sites still put counters on without going through `Game.add_counters`
-and so raise nothing: `machines/effects.py`'s and `machines/cost.py`'s direct
-`CardState.add_counters` calls. They are named in this repo's gap notes rather
-than worked around here.
+The two call sites that used to put counters on without going through
+`Game.add_counters`, and so raised nothing, are both closed: `machines/cost.py`'s
+`PLACE_COUNTERS`/`LOYALTY` components route through it whenever a game is behind
+the payment, and `machines/effects.py`'s last direct `CardState.add_counters` -
+Lagrella, the Magpie's delayed return - does too. The Lagrella pair at the
+bottom of this file is that fix's regression. `Player.add_counters` for *energy*
+(CR 107.14: "the energy symbol is {E}. It represents one energy counter") is the one
+counter route with no `Game` method to reach for; it
+raises no event either, and is a gap rather than a bypass.
 
 Card text verified with `resolve_cards`. Every CR number here was looked up with
 `knowledge_search(type="rules")` in the session that wrote this file:
@@ -38,6 +43,7 @@ Card text verified with `resolve_cards`. Every CR number here was looked up with
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.triggers import ExtraTriggerEvent, GameEvent
+from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario
 
 
@@ -205,3 +211,94 @@ def test_adapting_the_broodscale_creates_an_eldrazi_spawn():
 
     assert broodscale.counter_count("+1/+1") == 1
     assert scenario.stack_names() == ["Basking Broodscale's triggered ability"]
+
+
+# --------------------------------------------------------------------------
+# Counters put by a *delayed* triggered ability - Lagrella, the Magpie
+# --------------------------------------------------------------------------
+
+
+def lagrella_board(*extra: str) -> Scenario:
+    """Alice with Lagrella in hand, a Broodscale to exile, and GWU to cast her.
+
+    Bob holds a creature only so that "creatures controlled by different
+    players" is a sentence with more than one player in it; the scenario
+    targets alice's own Broodscale, because the counters clause is "when an
+    exiled card enters under **your** control this way".
+    """
+    return (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Lagrella, the Magpie"],
+            battlefield=["Basking Broodscale", "Forest", "Plains", "Island", *extra],
+        )
+        .player("bob", battlefield=["Hill Giant"])
+    )
+
+
+def _exile_the_broodscale_and_kill_lagrella(scenario):
+    """Play Lagrella's whole CR 610.3 "until" pair out and return the Broodscale."""
+    broodscale = scenario.creature("Basking Broodscale", "alice")
+    scenario.choose_trigger_targets("Lagrella, the Magpie", [broodscale])
+    sources = scenario.untapped_sources("Forest", "Plains", "Island", username="alice")
+    lagrella = scenario.cast_and_resolve("Lagrella, the Magpie", *sources, username="alice")
+    while scenario.game.stack or scenario.pending_triggers:
+        scenario.pass_until_resolved()
+    assert broodscale.zone is Zone.EXILE
+
+    scenario.game.destroy(lagrella)
+    return broodscale
+
+
+def test_lagrellas_returned_creature_fires_its_own_counters_put_trigger():
+    """**Regression.** Lagrella's delayed trigger used to call `CardState.
+    add_counters` directly.
+
+    What was silently wrong: `CardState.add_counters` is only the bookkeeping.
+    It raises no CR 122.6 event - "some spells and abilities refer to counters
+    being put on an object; this refers to putting counters on that object
+    while it's on the battlefield and also to an object that's given counters as
+    it enters the battlefield" - so Basking Broodscale's own "whenever one or
+    more +1/+1 counters are put on this creature" never fired. The Broodscale
+    came back with a correct-looking pair of counters and no Eldrazi Spawn, and
+    nothing in the counter total said anything was missing.
+
+    CR 603.7a makes the returning half a delayed triggered ability created as
+    Lagrella's enters ability resolved, so the counters it puts on are the
+    effect of a resolving ability like any other and go through
+    `Game.add_counters`.
+    """
+    scenario = lagrella_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    broodscale = _exile_the_broodscale_and_kill_lagrella(scenario)
+    while scenario.game.stack or scenario.pending_triggers:
+        scenario.pass_until_resolved()
+
+    assert broodscale.zone is Zone.BATTLEFIELD
+    assert broodscale.counter_count("+1/+1") == 2
+    assert "Eldrazi Spawn Token" in scenario.battlefield_names(), (
+        "CR 122.6's event has to reach the Broodscale's own trigger"
+    )
+
+
+def test_doubling_season_doubles_lagrellas_two_counters():
+    """CR 614.16: "Some replacement effects apply ... 'if an effect would put
+    one or more counters on a permanent.' These replacement effects apply if the
+    effect of a resolving spell or ability ... [does so]" - and Lagrella's
+    delayed trigger resolving is exactly that, so Doubling Season's second
+    sentence sees it. Four counters, not two.
+
+    The bare `CardState.add_counters` this used to call is the one route into
+    the counters that no replacement effect can reach, so before the fix the
+    enchantment sat on the battlefield doing nothing at all here.
+    """
+    scenario = lagrella_board("Doubling Season").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    broodscale = _exile_the_broodscale_and_kill_lagrella(scenario)
+    while scenario.game.stack or scenario.pending_triggers:
+        scenario.pass_until_resolved()
+
+    assert broodscale.counter_count("+1/+1") == 4

@@ -47,11 +47,20 @@ type="rules")` in the session that wrote this file:
   immediately", so the copied `{T}: Add {C}{C}` is observable only in the
   pool.
 
-**Remaining gap**: `machines/cost.py`'s own mana-source lookup still calls
-`parse_mana_abilities(source.card, ...)` on the printed card, so a copy used
-as a *payment* source (rather than activated directly) still offers its
-printed mana ability. See `docs/engine-coverage.md`.
+`machines/cost.py`'s own mana-source lookup used to disagree with that: it read
+`parse_mana_abilities(source.card, ...)` off the printed card, so a copy used as
+a *payment* source (rather than activated directly) offered its printed mana
+ability. `_activations_of` now takes the game and asks
+`rewritten_ability_lines` first, so both paths give the same answer; the last
+two tests in this file are the regression.
+
+**Remaining gap**: a continuous effect that only *adds* to a permanent's text
+(an extra basic land type from Dryad of the Ilysian Grove) is still invisible to
+both paths - `rewritten_ability_lines` reports only a rewrite. See
+`docs/engine-coverage.md`.
 """
+
+import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
@@ -183,3 +192,78 @@ def test_the_copy_can_be_tapped_for_the_copied_permanents_own_mana_ability():
     assert scenario.game.activate_ability(gardens, 0) is None
     assert scenario.player("alice").mana_pool.floating.get(Color.COLORLESS) == 2
     assert gardens.tapped
+
+
+def test_the_copy_pays_a_cost_with_the_copied_permanents_mana_ability():
+    """**Regression**, and the other half of the test above: a copy used as a
+    *payment source* rather than activated directly.
+
+    What was silently wrong: `machines/cost.py`'s mana-source lookup called
+    `parse_mana_abilities(source.card, ...)` on the printed `Card`, so the two
+    paths disagreed about the same permanent. `Game.activated_abilities` offered
+    Sol Ring's `{T}: Add {C}{C}` (correct, CR 613.5 + CR 707.2), while paying a
+    cost with the same land offered The Mycosynth Gardens' printed `{T}: Add
+    {C}` - one mana instead of two, off a card the game no longer had.
+
+    The downstream consequence asserted here is the one a player would notice:
+    Mind Stone's {2} is payable by the copy *alone*, and was not before.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Mind Stone"],
+            battlefield=["The Mycosynth Gardens", "Forest", "Sol Ring"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    gardens = scenario.find("The Mycosynth Gardens", Zone.BATTLEFIELD)
+    sol_ring = scenario.find("Sol Ring", Zone.BATTLEFIELD)
+    # A Forest pays the {X}, {T} activation exactly, so no mana is left
+    # floating and the copy is demonstrably the only thing paying below.
+    (forest,) = scenario.untapped_sources("Forest")
+    scenario.activate(gardens, forest, index=2, targets=[sol_ring], x_value=1)
+    scenario.resolve_top()
+    gardens.untap()
+    assert scenario.player("alice").mana_pool.floating == {}
+
+    casting = scenario.cast("Mind Stone")
+    payment = casting.begin_paying()
+    # CR 118.3c's own choice, made by the solver over the copy alone: before the
+    # fix it found only {C} here and refused the {2} outright.
+    payment.auto_tap([gardens])
+    payment.pay()
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+    mind_stone = scenario.find("Mind Stone", Zone.BATTLEFIELD)
+
+    assert mind_stone.zone is Zone.BATTLEFIELD
+    assert gardens.tapped, "one tap paid the whole {2}"
+
+
+def test_the_copy_refuses_the_printed_cards_own_production():
+    """CR 707.2b: "once an object has been copied, changing the copiable values
+    of the original object won't cause the copy to change" - and CR 613.5 makes
+    the layer system's answer the only answer. The Mycosynth Gardens' printed
+    `{T}: Add {C}` is not a thing this permanent can do any more, so asking the
+    payment machinery for a single colorless off it is refused by name rather
+    than quietly produced.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Mind Stone"], battlefield=["The Mycosynth Gardens", "Sol Ring"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    gardens = scenario.find("The Mycosynth Gardens", Zone.BATTLEFIELD)
+    sol_ring = scenario.find("Sol Ring", Zone.BATTLEFIELD)
+    scenario.activate(gardens, sol_ring, index=2, targets=[sol_ring], x_value=1)
+    scenario.resolve_top()
+    gardens.untap()
+
+    casting = scenario.cast("Mind Stone")
+    payment = casting.begin_paying()
+
+    with pytest.raises(ValueError, match="cannot be tapped to add"):
+        payment.tap_for_mana(gardens, [Color.COLORLESS])

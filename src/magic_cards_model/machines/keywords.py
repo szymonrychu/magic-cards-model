@@ -1270,6 +1270,20 @@ def attachment_state_based_actions(game: Any) -> list[CardState]:
     already police them: an Aura by CR 704.5m, an Equipment or Fortification by
     CR 704.5n.
 
+    **Computed types, not printed ones** (CR 613.5: "the application of
+    continuous effects as described by the layer system is continually and
+    automatically performed by the game. All resulting changes to an object's
+    characteristics are instantaneous"). The only way an attached permanent in
+    this pool ever *becomes* a creature is a layer 4 effect landing on it while
+    it sits there - Karn, the Great Creator's "+1: Until your next turn, up to
+    one target noncreature artifact becomes an artifact creature ..." aimed at an
+    equipped Equipment - and `CardState.types` reads the printed type line, so
+    asking it would answer "artifact" and this rule would never fire on the one
+    board that reaches it. The subtype excusals are read off the same computed
+    characteristics, which is CR 301.5c's second sentence ("an Equipment that
+    loses the subtype 'Equipment' can't equip anything") for free. A permanent
+    the layer engine cannot answer for falls back to the printed reading.
+
     Not dispatched by `Game.check_state_based_actions`, which calls
     `equipment_state_based_actions` and not this - see `docs/engine-coverage.md`.
     """
@@ -1277,16 +1291,29 @@ def attachment_state_based_actions(game: Any) -> list[CardState]:
     for permanent in list(game.battlefield):
         if permanent.attached_to is None:
             continue
-        types = permanent.types
+        types, subtypes = _computed_types_and_subtypes(game, permanent)
         if Type.CREATURE in types or Type.BATTLE in types:
             permanent.unattach()
             unattached.append(permanent)
             continue
-        if any(name in permanent.subtypes for name in ("Aura", "Equipment", "Fortification")):
+        if any(name in subtypes for name in ("Aura", "Equipment", "Fortification")):
             continue
         permanent.unattach()
         unattached.append(permanent)
     return unattached
+
+
+def _computed_types_and_subtypes(
+    game: Any, permanent: CardState
+) -> tuple[tuple[Type, ...], tuple[str, ...]]:
+    """This permanent's card types and subtypes with the layers applied
+    (CR 613.5), falling back to the printed ones when there is no layer engine
+    behind `game` or it has nothing computed for this object."""
+    try:
+        computed = game.characteristics_of(permanent)
+    except (AttributeError, KeyError):
+        return tuple(permanent.types), tuple(permanent.subtypes)
+    return tuple(computed.types), tuple(computed.subtypes)
 
 
 def equipped_creature(game: Any, equipment: CardState) -> CardState | None:
