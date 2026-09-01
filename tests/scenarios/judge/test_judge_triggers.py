@@ -27,6 +27,7 @@ from magic_cards_model.machines.abilities import (
     TriggerEvent,
     parse_abilities,
 )
+from magic_cards_model.machines.decisions import DecisionKind
 from magic_cards_model.machines.effects import effect_for, trigger_effect_for
 from magic_cards_model.machines.layers import LAYER_EFFECTS
 from magic_cards_model.models import Zone
@@ -155,17 +156,18 @@ def test_both_attack_triggers_go_on_the_stack_under_one_controller():
     ]
 
 
-def test_the_controller_is_not_asked_which_of_their_two_triggers_goes_on_first():
-    """The gap the xfail below rests on, stated as its own fact.
+def test_the_controller_is_asked_which_of_their_two_triggers_goes_on_first():
+    """The choice CR 603.3b leaves to the controller, now actually put.
 
     CR 603.3b: "First, each player, in APNAP order, puts each triggered
     ability they control on the stack in any order they choose." *In any order
     they choose* is the whole episode - Amy needs the Harrier's trigger to
     resolve **first**, so the Robot exists before Gut asks her to sacrifice
-    something. `Game.put_triggers_on_stack` instead keeps one player's own
-    abilities in the order they triggered, which is a fixed order nobody is
-    asked about: the Harrier goes on lowest here and therefore resolves
-    **last**, the opposite of what the trick needs.
+    something. This test was written the other way round, asserting that
+    `Game._put_pending_triggers_on_stack` asked nobody and kept the order the
+    abilities triggered in; it now asserts the question is raised, and that an
+    *unscripted* alice still gets that same order, because `default_answer`
+    hands back the offered order unchanged.
     """
     scenario = (
         Scenario()
@@ -182,9 +184,13 @@ def test_the_controller_is_not_asked_which_of_their_two_triggers_goes_on_first()
     scenario.attack_with(harrier, gut)
 
     # Bottom of the stack first, so Gut's is on top and resolves before the
-    # Harrier's - and no `Decision` was raised asking alice about it.
+    # Harrier's - the order they triggered in, which nobody moved.
     assert scenario.stack_names()[-1] == "Gut, True Soul Zealot's triggered ability"
-    assert scenario.questions_asked() == []
+    # The question was still asked, of alice, about exactly her two abilities.
+    (asked,) = scenario.questions_asked()
+    assert asked.kind is DecisionKind.ORDER_TRIGGERS
+    assert asked.player == "alice"
+    assert len(asked.cards) == 2
 
 
 def test_both_pay_and_sacrifice_clauses_are_behaviour_rather_than_notices():
@@ -260,21 +266,6 @@ def test_the_unordered_default_lets_gut_eat_the_harrier_before_it_pays():
     assert scenario.game.delayed_triggers.triggers == []
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="ONE gap, and it is in models/game.py: Game._put_pending_triggers_on_stack never "
-    "asks a controller for CR 603.3b's 'in any order they choose'. It calls "
-    "machines/triggers.apnap_order, which sorts by seat only, and then appends each of one "
-    "player's abilities in the order they triggered - so the Harrier's goes on lowest and "
-    "resolves last, the opposite of what the episode needs. Everything else is built: "
-    "machines/decisions.DecisionKind.ORDER_TRIGGERS and ask_trigger_order put and validate "
-    "the question, Scenario.will_order_triggers scripts the answer (both used below), and "
-    "machines/effects._parse_may_cost_then_attacking_token_clause reads both cards' CR 118.12 "
-    "clauses (proven above). What game.py needs, between `ordered = apnap_order(...)` and the "
-    "loop that appends: group `ordered` by controller, call "
-    "`ask_trigger_order(self.decisions, controller, tuple((a.id, a.source_name) for a in "
-    "block))` per controller, and re-lay each block in the returned order.",
-)
 def test_the_robot_is_sacrificed_for_a_skeleton_that_survives_end_of_combat():
     """DDR#983: pay {2}, feed the Robot to Gut, keep the Skeleton.
 

@@ -898,6 +898,32 @@ def every_creature(chars: Characteristics, board: Board) -> bool:
     return chars.is_creature
 
 
+def same_name_as(name: str) -> Selector:
+    """Every creature whose name is `name` (CR 201.2a).
+
+    "Two or more objects have the same name if they have at least one name in
+    common, even if one or more of those objects have additional names. An
+    object with no name doesn't have the same name as any other object" - so
+    an empty name never matches, and that is the one clause worth writing out
+    here, since `Characteristics.name` carries exactly one name in this model
+    (nothing melded or merged exists yet) and "at least one in common" reduces
+    to equality until something does.
+
+    A *name*, not a creature type: the difference is the whole of DDR#249's
+    Echoing Courage ruling. A token created by an Assembly-Worker's ability is
+    named "Assembly-Worker Token" (CR 111.4 - the ability states no name, so
+    the name is "its subtype(s) plus the word 'token'"), and an animated
+    Mishra's Factory has gained the Assembly-Worker creature *type* while
+    keeping its own name. Neither shares a name with the Assembly-Worker card,
+    so neither is selected.
+    """
+
+    def selector(chars: Characteristics, board: Board) -> bool:
+        return bool(name) and chars.is_creature and chars.name == name
+
+    return selector
+
+
 def creatures_controlled_by(username: str | None) -> Selector:
     def selector(chars: Characteristics, board: Board) -> bool:
         return chars.is_creature and chars.controller == username
@@ -1476,6 +1502,20 @@ _SUBJECT = (
 _PUMP_RE = re.compile(
     rf"^{_SUBJECT} gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)"
     rf"(?: and gains (?P<keyword>[a-z ]+))? until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+#: Echoing Courage: "Target creature and all other creatures with the same name
+#: as that creature get +2/+2 until end of turn." A sibling of `_PUMP_RE` and
+#: not a widening of it, because the *subject* is two groups joined by a bare
+#: "and" - the target, plus a set defined by CR 201.2a's "the same name" - and
+#: `_SUBJECT` deliberately describes only the first of them. The optional
+#: adjective ("target **legendary** creature") is admitted for the same reason
+#: `_SUBJECT` admits it: this parser recognises the shape, it does not
+#: re-derive what was legally targeted.
+_TARGET_AND_SAME_NAME_PUMP_RE = re.compile(
+    r"^target(?: [a-z]+)? creature and all other creatures with the same name as "
+    r"that creature get (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) until end of turn\.?$",
     re.IGNORECASE,
 )
 
@@ -2684,6 +2724,48 @@ def _pump_and_keyword_builder(power: int, toughness: int, keyword: str | None) -
                     )
                 )
         return effects
+
+    return builder
+
+
+def _target_and_same_name_pump_builder(power: int, toughness: int) -> EffectBuilder:
+    """ "Target creature and all other creatures with the same name as that
+    creature get +N/+N until end of turn." (Echoing Courage.)
+
+    Sublayer 7c, like `_pump_and_keyword_builder` (CR 613.4c: "modify power
+    and/or toughness ... don't set"), but with a `Selector` that is *not*
+    fixed to the target's identity. The set of objects an effect affects is
+    settled when it begins (CR 611.2c), and here that set is "every creature
+    with this name" - which is what `same_name_as` asks the board, so a
+    creature that shares the name is pumped and one that merely shares a
+    creature type is not (CR 201.2a).
+
+    The target itself has the name, so one effect covers both halves of the
+    sentence; the name is read off the target once, at build time, because
+    that is the moment the effect begins.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            ContinuousEffect(
+                description=(
+                    f"{source.name}: creatures named {target.name} "
+                    f"get {power:+d}/{toughness:+d}"
+                ),
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.MODIFY,
+                timestamp=timestamp,
+                duration=Duration.UNTIL_END_OF_TURN,
+                selector=same_name_as(target.name),
+                modification=modify_power_toughness(power, toughness),
+            )
+            for target in targets
+        ]
 
     return builder
 
@@ -4213,6 +4295,10 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
     sentence = _strip_ability_word(_normalize_duration_first(sentence))
     if _BOARD_COUNT_GATE_RE.fullmatch(sentence):
         return _parse_board_gated_group_sentence(sentence)
+    if match := _TARGET_AND_SAME_NAME_PUMP_RE.fullmatch(sentence):
+        return _target_and_same_name_pump_builder(
+            int(match.group("power")), int(match.group("toughness"))
+        )
     if match := _PUMP_RE.fullmatch(sentence):
         power, toughness = int(match.group("power")), int(match.group("toughness"))
         keyword = match.group("keyword")
@@ -5285,6 +5371,38 @@ LAYER_EFFECTS: dict[str, EffectBuilder] = {
 }
 
 
+def _granted_ability_effects(source: CardState) -> EffectBuilder | None:
+    """A builder read off an ability *granted* to this permanent (CR 613.1f).
+
+    `CardState.granted_ability_texts` holds the quoted lines another
+    permanent's layer-6 grant is putting on this one, printed exactly as the
+    granting card quotes them - Umbral Mantle's "{3}, {Q}: This creature gets
+    +2/+2 until end of turn." on an equipped Llanowar Elves. `LAYER_EFFECTS`
+    is keyed by card name and the parser fallback reads the source's own
+    printing, so neither can reach such a line: "Llanowar Elves" has no row
+    and never will, because that pump was never printed on it.
+
+    Only consulted on the resolution path (`static_only=False`), never on the
+    battlefield sweep - the line is an *activated* ability, and applying its
+    body as though it were this permanent's static contribution (CR 611.3)
+    would leave the Elves permanently +2/+2 without anybody paying {3}.
+    `layer_readable_sentences`' own `static_only` gate refuses an activated
+    ability's body anyway, so this is belt and braces.
+
+    The first granted line that parses wins. A caller that knows *which*
+    granted ability is resolving should say so with `effects_for`'s
+    `ability_text` instead, which is checked first and is exact; this fallback
+    exists because the resolution path currently hands `effects_for` only the
+    permanent, and a permanent carrying two different granted quoted layer
+    abilities at once would need it.
+    """
+    for text in source.granted_ability_texts:
+        builder = parsed_layer_effects(text, static_only=False, card_name=source.name)
+        if builder is not None:
+            return builder
+    return None
+
+
 def effects_for(
     source: CardState,
     timestamp: int,
@@ -5293,6 +5411,7 @@ def effects_for(
     notices: list[LayerNotice] | None = None,
     *,
     static_only: bool = False,
+    ability_text: str | None = None,
 ) -> list[ContinuousEffect]:
     """The continuous effects one card generates, or none if it is not registered
     and its own oracle text is not one of `parsed_layer_effects`'s shapes either.
@@ -5329,8 +5448,32 @@ def effects_for(
       activated pump): restricting to `StaticAbility` bodies there would make
       `create_continuous_effect_of_ability` blind to the exact text it exists
       to read.
+
+    `ability_text` is the resolving ability's *own* text, when there is one -
+    `machines/effects.create_continuous_effect_of_ability` passes it. Without
+    it, both routes into a builder key off the source permanent: its name in
+    `LAYER_EFFECTS`, or its own oracle text in the parser. Neither can ever
+    reach an ability **granted** to that permanent by something else
+    (CR 613.1f: "Layer 6: Ability-adding effects, keyword counters,
+    ability-removing effects ... are applied"). Umbral Mantle's quoted "{3},
+    {Q}: This creature gets +2/+2 until end of turn." is on Llanowar Elves,
+    and "Llanowar Elves" has no `LAYER_EFFECTS` row and never will, because
+    the pump was never printed on it - so the ability resolved and did
+    nothing.
+
+    It is tried *after* the name row and *before* the source's own text, which
+    is the order that changes nothing already working: a card with a row keeps
+    it, and a card whose own text carries the ability reaches the same builder
+    either way (the ability text is a subset of that text). The only new
+    outcome is the granted one.
     """
     builder = LAYER_EFFECTS.get(source.name)
+    if builder is None and ability_text:
+        builder = parsed_layer_effects(
+            ability_text, static_only=static_only, card_name=source.name
+        )
+    if builder is None and not static_only:
+        builder = _granted_ability_effects(source)
     # `oracle_text` reads the up face (CR 712.8d/712.8f); `card.oracle_text`
     # is the raw Scryfall field, null for a modal-DFC/transform permanent -
     # same family as `effect_for`'s fix in `Game.resolve_top`. Without this,
@@ -5497,6 +5640,7 @@ class ContinuousEffects(BaseModel):
         source: CardState,
         targets: Sequence[CardState] = (),
         context: LayerContext | None = None,
+        ability_text: str | None = None,
     ) -> list[ContinuousEffect]:
         """A spell or ability has resolved: create and keep its continuous effects.
 
@@ -5511,9 +5655,21 @@ class ContinuousEffects(BaseModel):
         false is dropped rather than stored, so it can never start later if the
         condition becomes true again.
 
+        `ability_text` is the resolving ability's own text, when the caller is
+        an ability rather than a spell - the only route by which an ability
+        *granted* to `source` by another permanent (CR 613.1f) can be read at
+        all. See `effects_for`.
+
         Returns the effects that were kept.
         """
-        built = effects_for(source, self.tick(), targets, context, self.layer_notices)
+        built = effects_for(
+            source,
+            self.tick(),
+            targets,
+            context,
+            self.layer_notices,
+            ability_text=ability_text,
+        )
         kept = [effect for effect in built if effect.holds]
         self.effects.extend(kept)
         return kept

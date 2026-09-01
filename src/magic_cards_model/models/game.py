@@ -71,6 +71,7 @@ from ..machines.decisions import (
     ask_attackers,
     ask_blockers,
     ask_mulligan,
+    ask_trigger_order,
     default_answer,
     legal_options,
 )
@@ -3154,7 +3155,9 @@ class Game(BaseModel):
 
         waiting, self.pending_triggers = self.pending_triggers, []
         waiting = [item for item in waiting if self.is_in_game(item.controller)]  # CR 800.4d
-        ordered = apnap_order(waiting, self._turn_order_from_active())
+        ordered = self._order_triggers_by_controller(
+            apnap_order(waiting, self._turn_order_from_active())
+        )
         placed: list[AbilityOnStack] = []
         for ability in ordered:
             targets = self._targets_for_trigger(ability)
@@ -3174,6 +3177,45 @@ class Game(BaseModel):
             self.trigger_targets.pop(ability.source_name, None)
             self.trigger_targets.pop(ability.source_name.split("//")[0].strip(), None)
         return placed
+
+    def _order_triggers_by_controller(
+        self, ordered: list[AbilityOnStack]
+    ) -> list[AbilityOnStack]:
+        """CR 603.3b's second half: each controller orders their own block.
+
+        "First, each player, in APNAP order, puts each triggered ability they
+        control on the stack in any order they choose." `apnap_order` settles
+        which player's block goes on first and no more than that - within one
+        block the order is the player's, and until this existed it was the
+        order the abilities happened to trigger in, which nobody was asked
+        about.
+
+        `apnap_order` is a stable sort by seat, so one controller's abilities
+        are already contiguous; each run is handed to `ask_trigger_order` and
+        re-laid in the answer, bottom of the stack first. A block of one is not
+        a choice and `ask_trigger_order` does not ask about it; an unscripted
+        block of several keeps the order it triggered in, which is what
+        `default_answer` returns, so nothing moves unless a caller says so.
+        """
+        result: list[AbilityOnStack] = []
+        index = 0
+        while index < len(ordered):
+            stop = index
+            while stop < len(ordered) and ordered[stop].controller == ordered[index].controller:
+                stop += 1
+            block = ordered[index:stop]
+            index = stop
+            if len(block) < 2:
+                result.extend(block)
+                continue
+            by_id = {ability.id: ability for ability in block}
+            chosen = ask_trigger_order(
+                self.decisions,
+                block[0].controller,
+                tuple((ability.id, ability.source_name) for ability in block),
+            )
+            result.extend(by_id[ability_id] for ability_id in chosen)
+        return result
 
     def _emit_ability_becomes_target(self, ability: AbilityOnStack) -> None:
         """The objects this ability targeted have become targets (CR 115.1).
