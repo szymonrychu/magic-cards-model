@@ -4099,8 +4099,10 @@ def order_effects(
     """Put the applicable effects in the order they will be applied (CR 616.1).
 
     The rules hand the choice to the affected object's controller, one effect at
-    a time, and there is nobody here to ask - the same gap `Game.put_triggers_on_stack`
-    has for CR 603.3b. The stand-in is deterministic: the effects that player
+    a time, and there is nobody here to ask. This was `Game.put_triggers_on_stack`'s
+    gap for CR 603.3b too, until `Game._order_triggers_by_controller` started
+    putting that one to the player; CR 616.1 has no such question yet. The
+    stand-in is deterministic: the effects that player
     controls come first, then everybody else's, each group in battlefield order.
 
     CR 616.1a-d's forced choices are checked first even so, because they are not

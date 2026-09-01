@@ -3183,9 +3183,20 @@ class Game(BaseModel):
         CR 603.3b orders them: "each player, in APNAP order, puts each triggered
         ability they control on the stack in any order they choose". The active
         player goes first, so the active player's trigger sits *lowest* and
-        resolves *last*. Within one player's abilities the order they triggered
-        in is kept - the rules leave that choice to the player, and a fixed order
-        is what makes a scenario reproducible.
+        resolves *last*. Within one player's abilities the order is that
+        player's own choice, put to them by `_order_triggers_by_controller`
+        through `machines/decisions.ask_trigger_order`; an unscripted, unasked
+        player keeps the order they triggered in, which is what makes a
+        scenario reproducible.
+
+        This is the only path in the engine that puts more than one object on
+        the stack at once. Every other stack append - a cast spell, an
+        activated ability, a single `copy_spell` - is one object, so CR 405.3
+        ("if an effect puts two or more objects on the stack at the same time,
+        those controlled by the active player are put on lowest, followed by
+        each other player's objects in APNAP order") is honoured here, by
+        `machines/triggers.apnap_order`, or nowhere - because there is nowhere
+        else it applies.
 
         Targets are chosen here, not when the ability triggered (CR 603.3d).
 

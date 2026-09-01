@@ -2894,8 +2894,14 @@ def apnap_order(triggered: list[AbilityOnStack], turn_order: list[str]) -> list[
     "First, each player, in APNAP order, puts each triggered ability they
     control on the stack in any order they choose." The active player goes
     first, so the active player's trigger ends up at the *bottom* of the pile
-    and resolves last. Within one player's set the order they triggered in is
-    kept, which the rules leave to the player.
+    and resolves last. This settles only which *player's* block goes on first -
+    CR 405.3's direction too, for objects an effect puts on the stack at once.
+    Within one player's set the order they triggered in is kept here, and
+    `Game._order_triggers_by_controller` is what then puts CR 603.3b's "in any
+    order they choose" to that player.
+
+    A stable sort, deliberately: one controller's abilities stay contiguous, so
+    the caller can walk the result and hand each run to its own controller.
     """
     rank = {username: index for index, username in enumerate(turn_order)}
     return sorted(triggered, key=lambda item: rank.get(item.controller, len(rank)))

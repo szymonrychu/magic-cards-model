@@ -662,10 +662,27 @@ def ask_trigger_order(
     rather than silently repaired: dropping an ability would be CR 603.3's "its
     controller puts it on the stack" going unperformed, and adding one would
     put an ability on the stack that never triggered.
+
+    The `prompt` carries each source's printed name, numbered against `cards`.
+    `Decision.cards` here holds `AbilityOnStack` ids, and an ability on the
+    stack is an object but not a card (CR 113.1c, CR 405.1), so nothing that
+    looks ids up among the board's cards can name them - a live seat asked this
+    question with only the ids in front of it is being asked to choose between
+    two anonymous hex strings.
     """
     ids = tuple(ability_id for ability_id, _ in abilities)
     if len(ids) < 2:
         return ids
+    # The prompt names each ability's source, numbered in the same order as
+    # `cards`, because `Decision.cards` for this kind holds `AbilityOnStack`
+    # ids and an ability is not a card (CR 113.1c, CR 405.1) - so nothing that
+    # resolves ids against the board can put a name to them, and a live seat
+    # would otherwise be asked to order two anonymous ids. The numbering is
+    # positional against `cards` so an answerer that only has the ids can still
+    # tell which is which.
+    prompt = f"{prompt}, bottom of the stack first: " + ", ".join(
+        f"{index}. {name}" for index, (_, name) in enumerate(abilities, start=1)
+    )
     decision = Decision(kind=DecisionKind.ORDER_TRIGGERS, player=player, prompt=prompt, cards=ids)
     script.asked.append(decision)
     found, value = script.take(decision)

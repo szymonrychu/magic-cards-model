@@ -50,6 +50,7 @@ Existing files, as a guide to where a new case belongs:
 | `test_pregame_steps.py` | CR 103.5, 103.6, 103.8, 500.1: the two steps a dealt game *rests* in before its first turn - what they refuse to claim about the turn (no phase, no turn number, no priority), and how a seat declares and acts through them without the engine asking anybody anything |
 | `test_state_based_actions.py` | CR 704: 0 toughness, the empty library, the legend rule |
 | `test_triggered_abilities.py` | CR 603: what triggers, when it goes on the stack, APNAP order, the intervening *if* |
+| `test_ordering_objects_onto_the_stack.py` | CR 603.3b, 405.3, 405.2, 400.5, 503.1a, 502.4, 510.3a: *who* chooses the order things go on the stack - the block a player orders themselves, the between-players order the rules fix, the run of one that is not a choice, and the batches flushed away from the priority loop (a held untap trigger meeting an upkeep one, and the combat damage step's own). Asserts resolution order, never merely that a question was asked |
 | `test_activated_abilities.py` | CR 602: activating, paying the cost, restrictions, and the mana ability that skips the stack |
 | `test_multiplayer.py` | CR 800: three players, turn order, and leaving the game |
 | `test_ward.py`, `test_prowess.py`, `test_cascade.py`, `test_persist.py`, `test_mobilize.py` | CR 702 keywords that *are* triggered abilities, generated from the keyword line |
