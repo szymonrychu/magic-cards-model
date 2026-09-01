@@ -47,7 +47,7 @@ from magic_cards_model.machines.layers import compute_board, static_effects
 from magic_cards_model.machines.replacement import replacements_of
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card import Color, Type
-from magic_cards_model.models.token import TokenState
+from magic_cards_model.models.token import TokenState, is_token
 from tests.cards import card
 from tests.scenarios.harness import Scenario
 
@@ -487,17 +487,36 @@ def test_countering_the_spell_drafnas_ability_targets_removes_that_ability():
     assert [
         state.name
         for state in scenario.game.battlefield
-        if state.controller == "alice" and isinstance(state, TokenState)
+        if state.controller == "alice" and is_token(state)
     ] == []
 
 
 @pytest.mark.xfail(
     strict=True,
-    reason="trigger_effect_for('Flamehold Grappler', ENTERS_THE_BATTLEFIELD, ...) is None "
-    "(asserted in the test), so the delayed copy is never set up and CR 707.10's second stack "
-    "object is never built. Unlike DDR#951 above, there is no clause parser for this shape at "
-    "all - 'copy the next spell you cast this turn when you cast it' is a delayed triggered "
-    "ability (CR 603.7) nothing in machines/effects.py reads.",
+    reason="ONE clause is left, and it belongs in machines/effects.py. The old "
+    "reason here was stale about everything except the parser: Game.copy_spell "
+    "implements CR 707.10, offer_new_targets_for_copy implements CR 707.10c, and "
+    "a copy of a permanent spell already becomes a token as it resolves "
+    "(CR 707.10f, CR 608.3f). machines/delayed.py is complete too - "
+    "DelayedTrigger takes a parsed `callback`, watches TriggerEvent.CAST_SPELL, "
+    "and DelayedTriggers.create is CR 603.7a's 'the ability exists from now'. "
+    "What is missing is that "
+    "trigger_effect_for('Flamehold Grappler', ENTERS_THE_BATTLEFIELD, 'When "
+    "this creature enters, copy the next spell you cast this turn when you cast "
+    "it.') returns None: no clause parser in machines/effects.py reads 'copy the "
+    "next spell you cast this turn when you cast it', so nothing calls "
+    "DelayedTriggers.create and CR 707.10's second stack object is never built. "
+    "It needs an effects.py clause that, on the ETB resolving, creates a "
+    "DelayedTrigger with event=TriggerEvent.CAST_SPELL, remaining=1, "
+    "controller=the Grappler's controller, and a callback that calls "
+    "game.copy_spell(spell, controller) then "
+    "game.offer_new_targets_for_copy(copy, controller, "
+    "source_name='Flamehold Grappler') - CR 603.7d puts the source and "
+    "controller on the creating ability, and CR 603.7b's 'the next' is the "
+    "remaining=1. Not machines/casting.py: casting.py already emits the "
+    "CAST_SPELL event this waits for, and a cast-time hook there would be a "
+    "second, card-specific copy of the delayed-trigger machinery delayed.py "
+    "already has.",
 )
 def test_flamehold_grapplers_untargeted_copy_still_copies_a_countered_spell():
     """DDR#977's contrast case: no target, so nothing to make illegal.
@@ -513,26 +532,36 @@ def test_flamehold_grapplers_untargeted_copy_still_copies_a_countered_spell():
 
     Amy ends with a Sol Ring token even though the Sol Ring card itself is in
     the graveyard.
+
+    The Grappler is **cast** here rather than placed on the battlefield: its
+    ability is "When this creature enters", so a board that starts with it in
+    play never triggers it at all and the delayed ability (CR 603.7a: it "won't
+    trigger until it has actually been created") would never exist. The token
+    is counted with `models.token.is_token` rather than
+    `isinstance(state, TokenState)`, because CR 707.10f's token is the
+    resolving copy itself - a plain `CardState` with `token=True`, which no
+    `TokenState` check can ever match.
     """
-    grappler = card("Flamehold Grappler")
-    trigger_line = grappler.oracle_text.split("\n")[1]
+    grappler_card = card("Flamehold Grappler")
+    trigger_line = grappler_card.oracle_text.split("\n")[1]
     assert trigger_line.startswith("When this creature enters, copy the next spell")
-    assert (
-        trigger_effect_for("Flamehold Grappler", TriggerEvent.ENTERS_THE_BATTLEFIELD, trigger_line)
-        is None
-    )
 
     scenario = (
         Scenario()
         .player(
             "alice",
-            hand=["Sol Ring"],
-            battlefield=["Flamehold Grappler", "Island", "Island"],
+            hand=["Flamehold Grappler", "Sol Ring"],
+            battlefield=["Island", "Mountain", "Plains", "Island"],
         )
         .player("bob", hand=["Counterspell"], battlefield=["Island", "Island"])
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
+    lands = scenario.untapped_sources("Island", "Mountain", "Plains", username="alice")
+    scenario.cast_and_resolve("Flamehold Grappler", *lands, username="alice")
+    while scenario.game.stack:
+        scenario.resolve_top()  # the enters trigger, creating the delayed one
+
     (one,) = scenario.untapped_sources("Island", username="alice")
     sol_ring = scenario.cast_onto_stack("Sol Ring", one, username="alice")
     scenario.pass_priority("alice")
@@ -545,6 +574,6 @@ def test_flamehold_grapplers_untargeted_copy_still_copies_a_countered_spell():
     tokens = [
         state
         for state in scenario.game.battlefield
-        if state.controller == "alice" and isinstance(state, TokenState)
+        if state.controller == "alice" and is_token(state)
     ]
     assert [token.name for token in tokens] == ["Sol Ring"]

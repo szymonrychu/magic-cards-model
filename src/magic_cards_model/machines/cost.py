@@ -854,11 +854,25 @@ class ComponentKind(StrEnum):
     #: in `_OBJECT_KINDS`: nothing is chosen, the cards are whichever ones are
     #: on top, so the count lives in `amount` the way paying life does.
     MILL = "mill"
+    #: CR 107.6, "The untap symbol is {Q}. The untap symbol in an activation
+    #: cost means 'Untap this permanent.'" The twin of `TAP`, and refused for
+    #: the mirrored reason: "a permanent that's already untapped can't be
+    #: untapped again to pay the cost". Umbral Mantle's granted `{3}, {Q}:` is
+    #: the pool's printing.
+    UNTAP = "untap"
+    #: CR 701.59a, "to 'collect evidence N' means to exile any number of cards
+    #: from your graveyard with total mana value N or greater." Detective's
+    #: Phoenix prints it inside a bestow cost, `Bestow-{R}, Collect evidence
+    #: 6.`. Not in `_OBJECT_KINDS`: "any number of cards" fixes no count at
+    #: all, only the total mana value in `amount`, so the cards chosen are
+    #: checked against that threshold rather than against a `required` count.
+    COLLECT_EVIDENCE = "collect_evidence"
 
 
 _OBJECT_KINDS = frozenset(
     {
         ComponentKind.TAP,
+        ComponentKind.UNTAP,
         ComponentKind.SACRIFICE,
         ComponentKind.DISCARD,
         ComponentKind.EXILE,
@@ -1073,8 +1087,99 @@ class CostComponent(BaseModel):
             ComponentKind.LOYALTY: self._why_not_loyalty,
             ComponentKind.EXERT: self._why_not_exert,
             ComponentKind.MILL: self._why_not_mill,
+            ComponentKind.UNTAP: self._why_not_untap,
+            ComponentKind.COLLECT_EVIDENCE: self._why_not_collect_evidence,
         }
         return checks[self.kind](game)
+
+    def _why_not_untap(self, _game: Any) -> str | None:
+        """CR 107.6: "A permanent that's already untapped can't be untapped
+        again to pay the cost" - the exact mirror of CR 107.5's already-tapped
+        refusal, and CR 701.26b says the same from the other side ("Only tapped
+        permanents can be untapped").
+
+        CR 602.5a's summoning-sickness half - "a creature's activated ability
+        with the tap symbol ({T}) or the untap symbol ({Q}) in its activation
+        cost can't be activated unless the creature has been under its
+        controller's control since their most recent turn began" - is a
+        restriction on *activating*, not on paying, and lives where the
+        `{T}` half of the same sentence already does (`can_tap_for_mana`,
+        `Game.activate_ability`), not here.
+        """
+        for card in self.cards:
+            if card.zone is not Zone.BATTLEFIELD:
+                return f"{card.name} is not on the battlefield, so it cannot be untapped"
+            if not card.tapped:
+                return f"{card.name} is already untapped, so it cannot be untapped to pay a cost"
+        return self._why_not_controlled()
+
+    def _why_not_collect_evidence(self, game: Any) -> str | None:
+        """CR 701.59a-b: enough total mana value has to be there to exile.
+
+        CR 701.59a fixes what the cost asks for - "exile any number of cards
+        from your graveyard with total mana value N or greater" - and CR 701.59b
+        is the "if unable" case: "if a player is given the choice to collect
+        evidence but is unable to exile cards with total mana value N or greater
+        from their graveyard ... they can't choose to do so." Choosing to pay a
+        cost is such a choice, so a graveyard that cannot reach N refuses the
+        payment outright rather than exiling what it can (CR 118.3).
+
+        Cards already chosen are checked against the same threshold; an
+        unchosen component is checked against the whole graveyard, because
+        `pay` is what picks in that case.
+        """
+        if self.amount <= 0:
+            # CR 118.5: a cost of nothing is paid by acknowledging it, and
+            # "total mana value 0 or greater" is met by exiling nothing.
+            return None
+        if self.cards:
+            for card in self.cards:
+                if card.zone is not Zone.GRAVEYARD:
+                    return f"{card.name} is in the {card.zone.value}, not the graveyard"
+            controlled = self._why_not_controlled()
+            if controlled is not None:
+                return controlled
+            total = sum(card.mana_value for card in self.cards)
+            if total < self.amount:
+                return (
+                    f"the cards chosen have total mana value {total:g}, not the "
+                    f"{self.amount} collect evidence {self.amount} asks for (CR 701.59a)"
+                )
+            return None
+        if game is None or self.payer is None:
+            return "collecting evidence needs a game and a player whose graveyard to exile from"
+        graveyard = game.player(self.payer).cards_in(Zone.GRAVEYARD)
+        available = sum(card.mana_value for card in graveyard)
+        if available < self.amount:
+            return (
+                f"{self.payer}'s graveyard holds total mana value {available:g}, not the "
+                f"{self.amount} collect evidence {self.amount} asks for (CR 701.59b)"
+            )
+        return None
+
+    def _evidence_to_exile(self, game: Any) -> list[CardState]:
+        """Which graveyard cards this collect-evidence cost exiles.
+
+        CR 701.59a's "any number of cards" is a choice, and nothing in the
+        engine makes it, so the cards are taken highest mana value first -
+        the fewest cards that reach the threshold. A component whose cards
+        were chosen already keeps them.
+        """
+        if self.cards:
+            return list(self.cards)
+        graveyard = sorted(
+            game.player(self.payer).cards_in(Zone.GRAVEYARD),
+            key=lambda card: card.mana_value,
+            reverse=True,
+        )
+        chosen: list[CardState] = []
+        total = 0.0
+        for card in graveyard:
+            if total >= self.amount:
+                break
+            chosen.append(card)
+            total += card.mana_value
+        return chosen
 
     def _why_not_mill(self, game: Any) -> str | None:
         """CR 701.17b: a player can't mill more cards than their library holds,
@@ -1285,6 +1390,25 @@ class CostComponent(BaseModel):
                 # combat clean-up - so this delegates outright rather than
                 # special-casing one more zone by hand.
                 game.exile_cards(list(self.cards))
+        elif self.kind is ComponentKind.UNTAP:
+            for card in self.cards:
+                self._remember(card)
+                # CR 107.6's "Untap this permanent", with `exert_applies=False`
+                # because CR 701.43a delays one thing only - "it doesn't untap
+                # during your next untap step" - and a cost is not that step.
+                # The exert stays on for the step it was aimed at.
+                card.untap(exert_applies=False)
+        elif self.kind is ComponentKind.COLLECT_EVIDENCE and self.amount:
+            # CR 701.59a's exile, through `Game.exile_cards` for the same
+            # reason the `EXILE` branch above uses it: one cost is one
+            # instruction, so a "one or more cards leave your graveyard"
+            # trigger (CR 603.2c) sees a single batch however many cards the
+            # threshold needed.
+            chosen = self._evidence_to_exile(game)
+            for card in chosen:
+                self._remember(card)
+            if chosen:
+                game.exile_cards(list(chosen))
         elif self.kind is ComponentKind.MILL and self.amount:
             # CR 701.17a's move, routed through `Game.put_into_graveyard` so a
             # replacement effect watching a card enter a graveyard (Rest in
@@ -1374,6 +1498,11 @@ class CostComponent(BaseModel):
             # Tapping moves nothing, so untapping is the whole rewind.
             for card, _ in reversed(self._undo):
                 card.untap(exert_applies=False)
+        elif self.kind is ComponentKind.UNTAP:
+            # Untapping moves nothing either, so re-tapping is the whole
+            # rewind - the mirror of `TAP`'s above.
+            for card, _ in reversed(self._undo):
+                card.tap()
         elif self.kind is ComponentKind.MILL:
             # CR 733.1: the rewind has to put the cards back *on top*, in the
             # order they were milled in - `_return` appends, which would leave
@@ -1460,6 +1589,48 @@ def tap_cost(*cards: CardState, payer: str | None = None, description: str = "")
         required=len(cards),
         payer=payer,
         description=description,
+    )
+
+
+def untap_cost(*cards: CardState, payer: str | None = None, description: str = "") -> CostComponent:
+    """Untap permanents as a cost (CR 107.6's `{Q}`).
+
+    "The untap symbol in an activation cost means 'Untap this permanent.' A
+    permanent that's already untapped can't be untapped again to pay the cost"
+    - the exact mirror of `tap_cost`, refused by `_why_not_untap` for the
+    mirrored reason (CR 118.3).
+
+    Built empty by `cost_component_for_phrase`, because `{Q}` is a
+    self-reference (CR 107.6's "this permanent") and only the caller knows
+    which permanent that is - the same shape `exert_cost` uses for
+    "Exert this land".
+    """
+    return CostComponent(
+        kind=ComponentKind.UNTAP,
+        cards=list(cards),
+        required=len(cards) or 1,
+        payer=payer,
+        description=description,
+    )
+
+
+def collect_evidence_cost(
+    amount: int, payer: str | None = None, description: str = ""
+) -> CostComponent:
+    """Collect evidence N as a cost (CR 701.59a).
+
+    "To 'collect evidence N' means to exile any number of cards from your
+    graveyard with total mana value N or greater." The N rides in `amount`,
+    because "any number of cards" fixes no count - the threshold is the whole
+    demand, and `_why_not_collect_evidence` is what checks it against
+    CR 701.59b's "if unable ... they can't choose to do so".
+    """
+    return CostComponent(
+        kind=ComponentKind.COLLECT_EVIDENCE,
+        amount=amount,
+        payer=payer,
+        description=description,
+        zone=Zone.GRAVEYARD,
     )
 
 
@@ -2257,6 +2428,16 @@ _PHRASE_DISCARD = re.compile(
 _PHRASE_TAP = re.compile(
     r"^tap (?P<count>\w+) (?:untapped )?(?P<quality>[\w ,]+?) you control$", re.IGNORECASE
 )
+#: `Collect evidence 6` (Detective's Phoenix's `Bestow-{R}, Collect evidence
+#: 6.`) - CR 701.59a's keyword action used as a cost. Nothing is named to
+#: choose: "any number of cards ... with total mana value N or greater" is a
+#: threshold, not a count, so this carries only N.
+_PHRASE_COLLECT_EVIDENCE = re.compile(r"^collect evidence (?P<amount>\d+)$", re.IGNORECASE)
+#: `{Q}`, CR 107.6's untap symbol, which "in an activation cost means 'Untap
+#: this permanent.'" Umbral Mantle's granted `{3}, {Q}:` is the pool's
+#: printing. Read here rather than left to `ManaCost.parse` because it is not
+#: mana at all - it is an action, exactly as `{T}` is (CR 107.5).
+_PHRASE_UNTAP_SYMBOL = re.compile(r"^\{Q\}$", re.IGNORECASE)
 #: `Mill a card` (Millikin's `{T}, Mill a card: Add {C}.`) - CR 701.17a's
 #: keyword action used as a cost. Nothing is chosen: the cards come off the top
 #: of the payer's own library, so this carries a count and no requirement.
@@ -2444,6 +2625,17 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
             return None
         return mill_cost(count, payer, description=text)
 
+    evidence = _PHRASE_COLLECT_EVIDENCE.match(text)
+    if evidence is not None:
+        return collect_evidence_cost(int(evidence.group("amount")), payer, description=text)
+
+    if _PHRASE_UNTAP_SYMBOL.match(text):
+        # CR 107.6's "Untap this permanent": the permanent is the one whose
+        # ability this is, and only the caller knows which that is, so the
+        # component is built empty and correctly refuses to be paid until the
+        # card is filled in (CR 118.3) - same as `_PHRASE_EXERT_SELF` below.
+        return untap_cost(payer=payer, description=text)
+
     if _PHRASE_EXERT_SELF.match(text):
         # The permanent exerted is the one whose ability this is, and only the
         # caller knows which that is, so the component is built empty and
@@ -2550,7 +2742,7 @@ def total_cost_for_phrase(phrase: str, payer: str | None = None) -> TotalCost | 
     mana = ManaCost()
     components: list[CostComponent] = []
     for part in _split_cost_phrase(phrase):
-        if _ONLY_MANA.match(part):
+        if _ONLY_MANA.match(part) and not _ACTION_SYMBOL.match(part):
             mana = mana.plus(ManaCost.parse(part))
             continue
         waterbend = waterbend_mana_cost(part)
@@ -2565,6 +2757,14 @@ def total_cost_for_phrase(phrase: str, payer: str | None = None) -> TotalCost | 
 
 
 _ONLY_MANA = re.compile(r"^(?:\{[^{}]+\}|\s)+$")
+
+#: The two brace-wrapped symbols that are *not* mana: CR 107.5's tap symbol
+#: `{T}` and CR 107.6's untap symbol `{Q}`, each of which "in an activation
+#: cost means" an action rather than a payment from the mana pool. They match
+#: `_ONLY_MANA`'s shape and would otherwise be handed to `ManaCost.parse`,
+#: which rightly refuses them - so `total_cost_for_phrase` checks this first
+#: and lets `cost_component_for_phrase` read them as the actions they are.
+_ACTION_SYMBOL = re.compile(r"^\s*\{[TQ]\}\s*$", re.IGNORECASE)
 
 
 #: Splits a printed cost on its commas, or on a joining "and" with no comma at

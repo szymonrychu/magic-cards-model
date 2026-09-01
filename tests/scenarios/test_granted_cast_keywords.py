@@ -304,22 +304,6 @@ def test_a_creature_card_in_the_graveyard_gets_nothing():
         casting.use_keyword("flashback")
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Only the *cost* is missing now, and it is not in a file this task "
-    "owns. `machines/casting._option_from_keyword` has a bestow branch "
-    "(CR 702.103a), `_printed_zone_permissions` reads the card's own CR 604.6 "
-    "sentence and copies that option to the graveyard, and `CardState.bestowed` "
-    "carries CR 702.103b's Aura-ness on the stack and the battlefield with "
-    "CR 702.103f's un-bestow on `unattach`. What refuses the cast is "
-    "`Detective's Phoenix's Bestow cost could not be read`: the printed cost is "
-    "'{R}, Collect evidence 6' and `machines/cost.cost_component_for_phrase` "
-    "has no 'collect evidence N' shape, so `total_cost_for_phrase` returns "
-    "None and the option is marked not understood. CR 701.59a - 'to collect "
-    "evidence N means to exile any number of cards from your graveyard with "
-    "total mana value N or greater' - is the component that needs adding to "
-    "machines/cost.py.",
-)
 def test_the_phoenix_is_cast_from_the_graveyard_with_bestow():
     """Detective's Phoenix (confirmed with `resolve_cards`): "Bestow-{R},
     Collect evidence 6." plus "You may cast this card from your graveyard using
@@ -329,7 +313,11 @@ def test_the_phoenix_is_cast_from_the_graveyard_with_bestow():
     The expected cost is the *whole* printed cost, both parts: `str(TotalCost)`
     joins the mana and each component with ", ", so a correctly modelled bestow
     cost renders "{R}, Collect evidence 6" and not "{R}" - CR 701.59a's exile is
-    a cost component (CR 118.3), not flavour on the front of one."""
+    a cost component (CR 118.3), not flavour on the front of one.
+
+    Asserted on `CostPayment.total_cost`, not on `.cost`: the latter is the
+    mana half alone, which is exactly the half that would still read "{R}" if
+    collect evidence were being silently charged nothing."""
     scenario = (
         Scenario()
         .player(
@@ -347,7 +335,76 @@ def test_the_phoenix_is_cast_from_the_graveyard_with_bestow():
     casting.use_keyword("bestow")
     casting.choose_targets([bears])
 
-    assert str(casting.begin_paying().cost) == "{R}, Collect evidence 6"
+    assert str(casting.begin_paying().total_cost) == "{R}, Collect evidence 6"
+
+
+def test_paying_the_bestow_cost_exiles_the_evidence_out_of_the_graveyard():
+    """CR 701.59a: "to 'collect evidence N' means to exile any number of cards
+    from your graveyard with total mana value N or greater."
+
+    Emrakul, the Promised End's printed mana value clears the 6 on its own, so
+    one card is the whole payment and the second card in the graveyard is left
+    where it was. Asserted against the printed `cmc`, not against a total the
+    engine computed.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Mountain", "Grizzly Bears"],
+            graveyard=["Detective's Phoenix", "Emrakul, the Promised End", "Lightning Bolt"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears")
+    emrakul = scenario.find("Emrakul, the Promised End", Zone.GRAVEYARD, "alice")
+    assert emrakul.card.cmc >= 6
+
+    casting = scenario.cast("Detective's Phoenix", from_zone=Zone.GRAVEYARD)
+    casting.use_keyword("bestow")
+    casting.choose_targets([bears])
+    scenario.pay_with(casting.begin_paying(), *scenario.untapped_sources("Mountain"))
+
+    assert emrakul.zone is Zone.EXILE
+    assert scenario.find("Lightning Bolt", Zone.GRAVEYARD, "alice").zone is Zone.GRAVEYARD
+
+
+def test_a_graveyard_short_of_six_mana_value_cannot_pay_the_bestow_cost():
+    """CR 701.59b: "If a player is given the choice to collect evidence but is
+    unable to exile cards with total mana value N or greater from their
+    graveyard ... they can't [choose to do so]."
+
+    Choosing to pay a cost is such a choice, so CR 118.3 - "a player can't pay
+    a cost without having the necessary resources to pay it fully" - refuses
+    the whole payment rather than exiling what there is. Lightning Bolt is the
+    only other card in the graveyard and its printed mana value is 1.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Mountain", "Grizzly Bears"],
+            graveyard=["Detective's Phoenix", "Lightning Bolt"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears")
+    bolt = scenario.find("Lightning Bolt", Zone.GRAVEYARD, "alice")
+    assert bolt.card.cmc == 1
+
+    casting = scenario.cast("Detective's Phoenix", from_zone=Zone.GRAVEYARD)
+    casting.use_keyword("bestow")
+    casting.choose_targets([bears])
+    payment = casting.begin_paying()
+
+    assert payment.unpayable is not None
+    with pytest.raises(ValueError, match="CR 701.59b"):
+        scenario.pay_with(payment, *scenario.untapped_sources("Mountain"))
+    assert bolt.zone is Zone.GRAVEYARD
 
 
 def test_the_phoenix_prints_its_own_permission_to_bestow_from_the_graveyard():
