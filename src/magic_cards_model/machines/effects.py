@@ -2842,6 +2842,107 @@ def _parse_search_mv_lte_count_clause(clause: str, *, for_spell: bool) -> Target
     return effect
 
 
+#: Neoform's own shape: "Search your library for a creature card with mana
+#: value equal to 1 plus the sacrificed creature's mana value, put that card
+#: onto the battlefield with an additional +1/+1 counter on it, then shuffle."
+#:
+#: `_SEARCH_AND_PUT_RE`'s bound is `(?: with mana value (?P<max_mv>\d+) or
+#: less)?` - a printed digit and a ceiling. This one is neither: it is an
+#: *equality*, and the number it compares against is not printed anywhere on
+#: the card. It is read off the creature the caster already sacrificed to pay
+#: CR 118.8a's printed additional cost ("As an additional cost to cast this
+#: spell, sacrifice a creature"), which CR 601.2h had them pay before the spell
+#: was ever put on the stack - `Game.cast_record(spell).additional_cost_cards`
+#: is where that choice was recorded, the same field `_parse_counter_on_
+#: additional_cost_card_clause` and Fling's own damage clause already read.
+#:
+#: CR 202.3: "The mana value of an object is a number equal to the total amount
+#: of mana in its mana cost, regardless of color." The sacrificed creature is
+#: in its owner's graveyard by the time this resolves, which changes nothing -
+#: mana value is a characteristic of the card and CR 202.3e's X is zero
+#: anywhere but the stack, so the graveyard copy answers the same number the
+#: battlefield one did. That is *not* the CR 608.2h last-known-information case
+#: Momentous Fall's power-and-toughness clause is, and deliberately so.
+_SEARCH_MV_EQUAL_TO_SACRIFICED_RE = re.compile(
+    r"^search (?:your|their) library for (?:a|an) (?P<quality>.+?) card with mana value "
+    r"equal to (?P<offset>\d+) plus the sacrificed creature['’]s mana value, "
+    r"put that card onto the battlefield"
+    r"(?P<counter> with an additional \+1/\+1 counter on it)?"
+    r", then shuffle\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_search_mv_equal_to_sacrificed_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_SEARCH_MV_EQUAL_TO_SACRIFICED_RE`'s shape - Neoform's whole second
+    paragraph.
+
+    Spell-only: the number comes off *this spell's* own cast record, and an
+    ability has no additional cost and no cast record to read.
+
+    Fail-closed on both halves of the sentence. A quality
+    `_search_quality_is_readable` cannot read takes the whole clause down
+    rather than searching for the wrong thing (CR 608.2c), and a cast record
+    with no sacrificed card - which should be impossible, since CR 601.2h makes
+    the sacrifice part of casting the spell at all - leaves the search with no
+    number to compare against, so nothing is searched for rather than a search
+    for mana value `offset`.
+
+    CR 701.23a is the search and CR 701.23b is why failing to find is legal:
+    "creature card" is a stated quality. `_search_library` folds CR 701.24a's
+    shuffle and CR 701.24b's "the found cards aren't included in the shuffle"
+    in for us.
+
+    **The +1/+1 counter is put on after the permanent has entered**, not as
+    part of the entering event. Printed strictly, "put that card onto the
+    battlefield **with** an additional +1/+1 counter on it" is CR 614.1c's
+    "enters with . . ." shape, applied by CR 614.12 while the permanent is on
+    its way in; this engine's `Game.enter_the_battlefield` takes no externally
+    supplied counters, so the counter goes on through `Game.add_counters` the
+    moment it lands instead. Nothing between the two moments can tell the
+    difference on this board: CR 704.3 checks state-based actions only when a
+    player would receive priority, never mid-resolution, and no ability
+    anywhere in this pool triggers on a permanent *entering* with counters as
+    opposed to on counters being put on it (CR 122.6). An engine that grows
+    either would need this to become a real `machines/replacement.py` effect.
+    """
+    if not for_spell:
+        return None
+    match = _SEARCH_MV_EQUAL_TO_SACRIFICED_RE.fullmatch(" ".join(clause.strip().split()))
+    if match is None:
+        return None
+    quality = match.group("quality")
+    if not _search_quality_is_readable(quality):
+        return None
+    matches_quality = _quality_matcher(quality)
+    offset = int(match.group("offset"))
+    with_counter = match.group("counter") is not None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object)
+        record = game.cast_record(stack_object)
+        if not record.additional_cost_cards:
+            return
+        sacrificed = game.find_by_id(record.additional_cost_cards[0])
+        if sacrificed is None:
+            return
+        wanted = offset + sacrificed.mana_value
+
+        def matches(state: CardState) -> bool:
+            return matches_quality(state) and state.mana_value == wanted
+
+        found = _search_library(game, controller, matches, source=stack_object.name)
+        if found is None:
+            return
+        permanent = game.put_onto_battlefield(found, controller.username)
+        if with_counter and permanent is not None and permanent.zone is Zone.BATTLEFIELD:
+            game.add_counters(permanent, Counter.PLUS_ONE, 1)
+
+    return effect
+
+
 #: "[you may ]put a land card from your hand onto the battlefield[ tapped]" -
 #: Arboreal Grazer's whole trigger (and the first half of Cultivator Colossus's
 #: longer, repeating one, read separately by `_PUT_LAND_FROM_HAND_REPEAT_RE`
@@ -12618,9 +12719,7 @@ def _parse_airbend_clause(clause: str, *, for_spell: bool) -> TargetedClause | N
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         targets = [
-            target
-            for target in game.resolve_targets(stack_object)
-            if isinstance(target, CardState)
+            target for target in game.resolve_targets(stack_object) if isinstance(target, CardState)
         ]
         if not targets:
             return
@@ -15582,6 +15681,11 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     search_mv_lte_count = _parse_search_mv_lte_count_clause(clause, for_spell=for_spell)
     if search_mv_lte_count is not None:
         return search_mv_lte_count
+    search_mv_equal_to_sacrificed = _parse_search_mv_equal_to_sacrificed_clause(
+        clause, for_spell=for_spell
+    )
+    if search_mv_equal_to_sacrificed is not None:
+        return search_mv_equal_to_sacrificed
     imprint = _parse_imprint_clause(clause, for_spell=for_spell)
     if imprint is not None:
         return imprint
@@ -15755,9 +15859,7 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     )
     if exile_then_cast_types_effect is not None:
         return [exile_then_cast_types_effect]
-    if for_spell and _CONTINUOUS_PUMP_OR_KEYWORD_RE.fullmatch(
-        " ".join(text.strip().split())
-    ):
+    if for_spell and _CONTINUOUS_PUMP_OR_KEYWORD_RE.fullmatch(" ".join(text.strip().split())):
         # Read whole for the same reason the two above are: Echoing Courage's
         # subject, "Target creature and all other creatures with the same name
         # as that creature", carries a bare " and " that `_CLAUSE_SEPARATOR`
