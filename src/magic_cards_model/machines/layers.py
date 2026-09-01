@@ -345,7 +345,7 @@ def printed_characteristics(
             # cmc is not it - that is the printing, which CR 708.2 says this
             # object does not have while it is face down.
             mana_value=0,
-            controller=state.controller,
+            controller=state.stored_controller,
             # CR 708.2 leaves it with *no* characteristics beyond those listed,
             # so there are no supertypes and no colors to carry over either.
             supertypes=(),
@@ -387,7 +387,7 @@ def printed_characteristics(
         card_id=state.id,
         name=state.name,
         mana_value=state.mana_value,
-        controller=state.controller,
+        controller=state.stored_controller,
         supertypes=tuple(state.supertypes),
         types=tuple(state.types),
         subtypes=tuple(state.subtypes),
@@ -5738,6 +5738,21 @@ class ContinuousEffects(BaseModel):
         if effect.holds:
             self.effects.append(effect)
         return effect
+
+    @property
+    def has_control_effect(self) -> bool:
+        """Whether any stored effect is a layer 2 control change (CR 613.1b).
+
+        Asked by `CardState.controller` before it recomputes the whole board
+        to answer a question the board would answer with the base controller
+        anyway. Sound because `set_controller` is reachable from exactly one
+        builder, `_gain_control_until_eot_builder`, and that builder only ever
+        runs from `create` - a resolving spell or ability - so a control
+        change is always a *stored* effect and never one the battlefield sweep
+        rebuilds. A static ability that changed control (an Aura's "You control
+        enchanted creature") would have to be added here as well as there.
+        """
+        return any(effect.layer is Layer.CONTROL for effect in self.active)
 
     @property
     def active(self) -> list[ContinuousEffect]:

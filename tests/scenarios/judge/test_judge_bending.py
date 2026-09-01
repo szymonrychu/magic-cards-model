@@ -18,7 +18,6 @@ the controller question DDR#989 is about. Airbend (CR 701.65a) is whole now:
 Every CR number here was looked up with `knowledge_search(type="rules")`.
 """
 
-import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.casting import marker_cast_options
@@ -202,20 +201,6 @@ def test_the_earthbend_return_is_a_delayed_trigger_controlled_by_the_earthbender
     assert all(trigger.subject_id == forest.id for trigger in delayed)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="ONE gap now, and it is in models/card_state.py and models/game.py. Threaten is "
-    "built: `machines/effects._parse_untap_and_gain_control_clause` reads its whole effect, "
-    "untaps the target (CR 701.26b) and hands 'gain control of target creature until end of "
-    "turn.' and 'target creature gains haste until end of turn.' to "
-    "`machines/layers.parsed_layer_effects`, so `game.characteristics_of(forest).controller` "
-    "really does answer 'bob' and the Forest really does gain haste. What is still missing is "
-    "that `CardState.controller` is a plain stored field and `Game.controller_of` reads it "
-    "directly, so that layer 2 effect (CR 613.1b) is invisible to `forest.controller`, to "
-    "combat, to state-based actions and to the delayed trigger - both would have to consult "
-    "the computed board (CR 613.5). The very next assertion in this test, "
-    "`forest.controller == 'bob'`, is the one that fails.",
-)
 def test_an_earthbent_land_returns_to_the_earthbender_even_if_someone_else_killed_it():
     """DDR#989: bob steals and sacrifices the land, and alice gets it back.
 

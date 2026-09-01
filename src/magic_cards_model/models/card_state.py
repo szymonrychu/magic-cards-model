@@ -476,10 +476,26 @@ class CardState(BaseModel):
     a deck are four `CardState`s sharing one `Card`, each with its own `id`.
     """
 
+    #: `populate_by_name` so `stored_controller` answers to both its own name
+    #: and to `controller`, which is the alias every caller writes and every
+    #: `model_dump`/`model_validate` round trip carries.
+    model_config = ConfigDict(populate_by_name=True)
+
     id: UUID = Field(default_factory=uuid4)
     card: Card
     zone: Zone = Zone.LIBRARY
-    controller: str | None = None
+    stored_controller: str | None = Field(default=None, alias="controller")
+    """Who controls this object before any continuous effect is applied.
+
+    Read through the `controller` property, never directly - CR 613.1b puts
+    control-changing effects in layer 2, so the answer to "who controls this
+    permanent" is a computed one (CR 613.5) and this is only its base. Written
+    directly by exactly the two places that hand a permanent to a player
+    outside the layer system: `Game.put_onto_battlefield` and
+    `Game.change_control`, both of which are stating the base rather than
+    applying an effect.
+    """
+
     owner: str | None = None
     """Who owns this card (CR 108.3).
 
@@ -915,6 +931,47 @@ class CardState(BaseModel):
             return None
         finally:
             self._asking_the_board = False
+
+    @property
+    def controller(self) -> str | None:
+        """Who controls this object right now, layer 2 included (CR 613.1b).
+
+        `stored_controller` is the base; a control-changing effect - Threaten's
+        "gain control of it until end of turn", Act of Treason's, an Aura's -
+        is a continuous effect in layer 2, and CR 613.5 has the layer system
+        "continually and automatically" applied, so the answer has to be
+        computed rather than stored. Exactly the shape `power` and `toughness`
+        already have, and for exactly the same reason: everything that asks -
+        combat, the state-based actions, a delayed trigger, a test - asks this
+        attribute, and none of them should have to know the layer system
+        exists.
+
+        Falls back to the base whenever the layer engine has nothing to say:
+        an unbound `CardState`, or an object that is not on the battlefield -
+        which is right twice over, since CR 109.4 gives only objects on the
+        stack or the battlefield a controller at all, and the stack is not a
+        zone CR 613.5 computes.
+        """
+        effects = getattr(self._board_source, "continuous_effects", None)
+        if effects is not None and not effects.has_control_effect:
+            # Nothing in play changes control, so the board would hand back
+            # this very value - and computing it is not free. See
+            # `ContinuousEffects.has_control_effect` for why that is sound.
+            return self.stored_controller
+        computed = self.computed_characteristics
+        if computed is not None and computed.controller is not None:
+            return computed.controller
+        return self.stored_controller
+
+    @controller.setter
+    def controller(self, value: str | None) -> None:
+        """Set the *base* controller (CR 613.1b's layer 2 is not written here).
+
+        A caller stating who controls a permanent - `Game.put_onto_battlefield`
+        as it enters, `Game.change_control` for a permanent handed over with no
+        duration - is stating the base the layers are then applied to.
+        """
+        self.stored_controller = value
 
     @property
     def controller_or_owner(self) -> str | None:

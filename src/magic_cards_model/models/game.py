@@ -9527,7 +9527,16 @@ class Game(BaseModel):
         self.turn.grant_extra_turn(username)
 
     def controller_of(self, state: StackObject) -> Player:
-        """Who controls this object. Unlabelled cards belong to the active player."""
+        """Who controls this object. Unlabelled cards belong to the active player.
+
+        For a permanent this is CR 613.1b's layer 2 answer, not a stored one:
+        `CardState.controller` consults the computed board (CR 613.5), so a
+        "gain control of it until end of turn" effect reaches every caller
+        here - combat, the state-based actions, a delayed trigger - without
+        any of them knowing the layer system exists. An `AbilityOnStack`'s
+        controller is a plain field, and rightly: CR 603.3 fixes it when the
+        ability is put on the stack.
+        """
         return self.player(state.controller) if state.controller else self.active_player
 
     def _owner_of(self, state: CardState) -> Player:
