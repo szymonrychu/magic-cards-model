@@ -19,13 +19,19 @@ and `Game._effective_protection_qualities` are what changed that: a granted
 same way a granted keyword is, and `protection_refusal`/`protection_from_damage`
 now read it there in addition to a permanent's own printed text.
 
-The **damage half** (CR 702.16e) is what this file proves end to end, because
+The **damage half** (CR 702.16e) is proven end to end, because
 `Game.deal_damage` now carries a source (`docs/engine-coverage.md`,
 `scenarios/test_prevention_effects.py`) and both combat and spell damage name
-one. The **targeting half** (CR 702.16b) is not proven the same way for a
-*colour* quality - see the xfail at the bottom - because `protection_refusal`
-only reads the card-type flavour of a quality, a gap `test_protection.py`
-already documents for printed protection and which is unchanged by this file.
+one. The **targeting half** (CR 702.16b) is proven too, and for a *colour*
+quality: `Game.protection_refusal` matches the quality with the same reader
+the damage half uses, so a red spell is refused at announcement rather than
+announced and then prevented.
+
+That ordering is why the spell-damage case below is a **sweeper** and not a
+Lightning Bolt. A red spell cannot legally be pointed at a creature with
+protection from red at all (CR 702.16b), so a Bolt never reaches the point
+where CR 702.16e would prevent its damage; only a spell that chooses no
+targets can demonstrate the damage half against a colour quality.
 
 Every CR number here was looked up with `knowledge_search(type="rules")` in
 the session that wrote this file.
@@ -102,27 +108,36 @@ def test_the_granted_protection_prevents_combat_damage_from_a_red_source():
 
 
 def test_the_granted_protection_prevents_spell_damage_from_a_red_source():
-    """The damage half again, off a spell this time rather than a blocker -
-    Lightning Bolt is red, so it deals nothing to a protected target even
-    though `machines/targeting.py` still let it be announced (the known
-    targeting-side gap the xfail below documents)."""
+    """The damage half again, off a spell this time rather than a blocker.
+
+    The spell has to be a **non-targeting** one, and that is the point of the
+    case rather than an inconvenience: CR 702.16b stops a red spell being
+    *targeted* at the protected creature at all, so a Lightning Bolt aimed at
+    it never gets far enough to have its damage prevented - the announcement is
+    refused (see the last test in this file). Pyroclasm's "Pyroclasm deals 2
+    damage to each creature" chooses no targets, so it resolves against the
+    protected creature and CR 702.16e is what stops it: 2 damage, enough to
+    kill a 2/2 outright, prevented in full.
+    """
     scenario = (
         Scenario()
         .manual_turn_based_actions()
-        .player("alice", hand=["Lightning Bolt"], battlefield=["Mountain"])
+        .player("alice", hand=["Pyroclasm"], battlefield=["Mountain", "Mountain"])
         .player("bob", battlefield=["Akroma's Memorial", "Grizzly Bears"])
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
     bears = scenario.creature("Grizzly Bears", "bob")
-    (mountain,) = scenario.untapped_sources("Mountain", username="alice")
+    sources = scenario.untapped_sources("Mountain", "Mountain", username="alice")
 
-    bolt = scenario.cast_onto_stack("Lightning Bolt", mountain, targets=[bears])
+    pyroclasm = scenario.cast_onto_stack("Pyroclasm", *sources)
     scenario.resolve_top()
 
-    assert bolt.zone is Zone.GRAVEYARD
-    assert bears.zone is Zone.BATTLEFIELD
-    assert bears.damage == 0
+    assert pyroclasm.zone is Zone.GRAVEYARD
+    assert bears.damage == 0, "protection from red prevented Pyroclasm's damage (CR 702.16e)"
+    assert bears.zone is Zone.BATTLEFIELD, (
+        "a 2/2 that took none of the 2 damage is not destroyed (CR 704.5g)"
+    )
 
 
 def test_the_grant_switches_off_the_moment_the_memorial_leaves():
@@ -155,16 +170,13 @@ def test_the_grant_switches_off_the_moment_the_memorial_leaves():
     )
 
 
-@pytest.mark.xfail(
-    reason="machines/targeting.py reads the caster's own text, not the target's, and "
-    "Game.protection_refusal only checks the card-type flavour of a quality - a colour "
-    "is read on the damage side (Game.source_has_quality) but not the targeting side. "
-    "This is the same gap test_protection.py documents for printed protection "
-    "(test_a_sorcery_is_not_an_instant's neighbours); a granted colour quality inherits "
-    "it rather than introducing a new one.",
-    strict=True,
-)
 def test_granted_color_protection_still_stops_a_same_colored_spell_from_targeting():
+    """CR 702.16b's targeting half, for a *colour* quality and a granted one.
+
+    `Game.protection_refusal` reads the quality with the same matcher the
+    damage half uses, so a colour is enforced at announcement (CR 601.2c) and
+    not only prevented on resolution - the two halves of CR 702.16 agree about
+    what "the stated quality" means."""
     scenario = (
         Scenario()
         .manual_turn_based_actions()

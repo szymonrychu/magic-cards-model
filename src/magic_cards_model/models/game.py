@@ -182,6 +182,31 @@ StackObject = CardState | AbilityOnStack
 #: so the qualities are split apart rather than kept as one phrase.
 _PROTECTION = re.compile(r"protection from ([^.;\n]+)", re.IGNORECASE)
 
+#: The *unresolved* half of a protection phrase: a grant that names the quality
+#: by a choice still to be made rather than by the quality itself. Mother of
+#: Runes prints "gains protection from the color of your choice until end of
+#: turn", and reading that sentence off her own printing yields the quality
+#: "the color of your choice until end of turn", which names no colour and no
+#: card type.
+#:
+#: CR 702.16a: "This quality is usually a color ... but can be any
+#: characteristic value or information" - a choice not yet made is neither, so
+#: the phrase is dropped here rather than carried as a quality nothing can ever
+#: match. What Mother actually grants is written onto the *target* by
+#: `machines/layers.py` as a resolved "Protection from red" line, and that line
+#: is what `Game._effective_protection_qualities` reads.
+_UNRESOLVED_PROTECTION_QUALITY = re.compile(
+    r"^(?:a |the )?(?:color|colour|card type|quality) of your choice\b", re.IGNORECASE
+)
+
+#: "You have protection from the chosen card name" - Runed Halo's second line,
+#: and the only shape in the pool that grants protection to a *player*. The
+#: quality is the CR 614.12a name chosen as the permanent entered, which
+#: `machines/replacement.py` stores on `CardState.choice`.
+_PLAYER_PROTECTION_FROM_CHOSEN_NAME = re.compile(
+    r"^you have protection from the chosen card name\b", re.IGNORECASE
+)
+
 #: A cost sentence that names the permanent its ability is printed on -
 #: "Exert this land", "Sacrifice this creature". CR 602.1a: an activated
 #: ability's source is the object it is printed on, so "this" is that object and
@@ -384,7 +409,9 @@ def _qualities_from_text(text: str | None) -> list[str]:
     for match in _PROTECTION.finditer(text or ""):
         for part in match.group(1).split(" and from "):
             quality = part.strip().rstrip(",").strip()
-            if quality and quality not in qualities:
+            if not quality or _UNRESOLVED_PROTECTION_QUALITY.match(quality):
+                continue
+            if quality not in qualities:
                 qualities.append(quality)
     return qualities
 
@@ -5220,29 +5247,105 @@ class Game(BaseModel):
         the stated quality and can't be targeted by abilities from a source with
         the stated quality."
 
-        Only the card-type flavour of the quality is read, because CR 702.16a
-        makes that a rule of its own: "If the quality is a card type, subtype, or
-        supertype, the ability applies to sources that are permanents with that
-        card type, subtype, or supertype and to any sources not on the
-        battlefield that are of that card type, subtype, or supertype. This is an
-        exception to rule 109.2." Emrakul's "protection from instants" is exactly
-        that shape, and an instant is never on the battlefield, so both halves of
-        the rule point at the same thing here.
+        The quality is matched by `source_has_quality`, which reads both
+        flavours CR 702.16a names - "This quality is usually a color (as in
+        'protection from black') but can be any characteristic value or
+        information" - so a colour quality refuses a targeting spell here
+        exactly as it prevents that source's damage in `protection_from_damage`.
+        Reading only the card-type half here was a real split: Lightning Bolt
+        could still be *announced* at a creature with protection from red, and
+        only its damage was prevented on resolution, which is CR 702.16e doing
+        CR 702.16b's job.
 
         A quality this engine cannot read is not enforced - see
-        `docs/engine-coverage.md`. Protection on a *player* is not modelled at
-        all: no card in the pool grants it and `Player` has no text to read.
+        `docs/engine-coverage.md`.
+
+        A **player** target is answered by `Player.protection_refusal`, which
+        matches the card-name flavour off `Player.protection_from` (Runed
+        Halo's CR 614.12a chosen name), unioned with the grants currently on
+        the battlefield - see `player_protection_qualities`.
         """
+        if isinstance(target, Player):
+            return self._player_protection_refusal(target, source)
         if not isinstance(target, CardState):
             return None
         for quality in self._effective_protection_qualities(target):
-            card_type = _card_type_named(quality)
-            if card_type is not None and card_type in source.types:
+            if self.source_has_quality_of_card(source, quality):
                 return (
                     f"{target.name} has protection from {quality}, so {source.name} "
                     f"cannot target it (CR 702.16b)"
                 )
         return None
+
+    def _player_protection_refusal(self, target: Player, source: "Card") -> str | None:
+        """Why a *player's* protection stops `source` targeting them (CR 702.16b).
+
+        Two sources of quality, unioned: what the player carries on
+        `Player.protection_from` - the card-name flavour, which
+        `Player.protection_refusal` matches - and what the battlefield is
+        granting them right now (`player_protection_qualities`), which is read
+        fresh so the grant ends with its permanent (CR 604.2).
+        """
+        refusal = target.protection_refusal(source)
+        if refusal is not None:
+            return refusal
+        for quality in self.player_protection_qualities(target.username):
+            if quality == source.name or self.source_has_quality_of_card(source, quality):
+                return (
+                    f"{target.username} has protection from {quality}, so {source.name} "
+                    f"cannot target them (CR 702.16b)"
+                )
+        return None
+
+    def player_protection_qualities(self, username: str) -> list[str]:
+        """Every quality the battlefield currently grants this *player*
+        protection from (CR 702.16a, CR 613.10).
+
+        CR 613.10: "Some continuous effects affect players rather than objects.
+        For example, an effect might give a player protection from red." That
+        is this, and it is deliberately **not** a CR 613 layer: the layers write
+        characteristics onto objects, and a player is not an object, so
+        `machines/layers.py`'s permanent-only sweep has nowhere to put it.
+
+        Read fresh from the battlefield on every call rather than latched onto
+        the player, because CR 604.2 bounds a static ability's continuous effect
+        to while its source is on the battlefield - a Runed Halo that leaves
+        must take its protection with it, and a value written once onto
+        `Player.protection_from` would outlive its source.
+        """
+        qualities: list[str] = []
+        for permanent in self.battlefield:
+            if self.controller_of(permanent).username != username:
+                continue
+            for line in (permanent.card.oracle_text or "").split("\n"):
+                if not _PLAYER_PROTECTION_FROM_CHOSEN_NAME.match(line.strip()):
+                    continue
+                chosen = permanent.choice
+                # The line says "the chosen **card name**", so only a
+                # CR 614.12a card-name choice answers it - a colour choice on
+                # some other permanent is not this quality.
+                if chosen is None or chosen.kind is not ChoiceKind.CARD_NAME:
+                    continue
+                if chosen.value and chosen.value not in qualities:
+                    qualities.append(chosen.value)
+        return qualities
+
+    def source_has_quality_of_card(self, source: "Card", quality: str) -> bool:
+        """`source_has_quality` for a bare `Card` rather than a `CardState`.
+
+        The targeting half of CR 702.16b is asked about the *card* behind a
+        spell or an ability's source, while the damage half (CR 702.16e) is
+        asked about a `CardState`. Both read the same two flavours of quality,
+        so the reading lives in one place and this is the adapter.
+        """
+        wanted = quality.strip().lower()
+        card_type = _card_type_named(wanted)
+        if card_type is not None:
+            return card_type in source.types
+        color = _COLOR_WORDS.get(wanted)
+        if color is not None:
+            return color in source.colors
+        return False
 
     def _effective_protection_qualities(self, target: CardState) -> list[str]:
         """Every quality `target` has protection from right now: its own printed
@@ -5518,6 +5621,9 @@ class Game(BaseModel):
 
         Colours and card types are read; anything else returns False rather than
         being guessed at, and is listed in `docs/engine-coverage.md`.
+
+        A permanent's own types and colours are the ones asked about, so this
+        reads the `CardState` rather than the printing behind it.
         """
         wanted = quality.strip().lower()
         card_type = _card_type_named(wanted)
@@ -5536,15 +5642,39 @@ class Game(BaseModel):
 
         Damage with no known source is never prevented here: CR 702.16e asks
         about the source's qualities, and an anonymous source has none to check.
-        Protection on a *player* is not modelled - `Player` has no text - so
-        only a permanent's protection is read.
+
+        The rule says "to a permanent **or player** with protection", so a
+        damage event aimed at a player is read the same way, against the
+        qualities that player holds (`Player.protection_from`, the card-name
+        flavour) and the ones the battlefield grants them right now
+        (`player_protection_qualities`).
         """
-        if event.kind is not EventKind.DAMAGE or event.card is None or event.source is None:
+        if event.kind is not EventKind.DAMAGE or event.source is None:
             return None
+        if event.card is None:
+            return self._player_protection_from_damage(event)
         for quality in self._effective_protection_qualities(event.card):
             if self.source_has_quality(event.source, quality):
                 return (
                     f"{event.card.name} has protection from {quality}, so damage from "
+                    f"{event.source.name} is prevented (CR 702.16e)"
+                )
+        return None
+
+    def _player_protection_from_damage(self, event: ReplaceableEvent) -> str | None:
+        """CR 702.16e's player half: damage from a source with the stated
+        quality, aimed at a player with protection from it, is prevented."""
+        player = event.player
+        if player is None or event.source is None:
+            return None
+        qualities = list(player.protection_from)
+        for quality in self.player_protection_qualities(player.username):
+            if quality not in qualities:
+                qualities.append(quality)
+        for quality in qualities:
+            if quality == event.source.name or self.source_has_quality(event.source, quality):
+                return (
+                    f"{player.username} has protection from {quality}, so damage from "
                     f"{event.source.name} is prevented (CR 702.16e)"
                 )
         return None
