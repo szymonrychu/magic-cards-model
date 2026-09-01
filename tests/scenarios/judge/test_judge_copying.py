@@ -42,8 +42,11 @@ import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.abilities import TriggerEvent
-from magic_cards_model.machines.effects import effect_for, trigger_effect_for
-from magic_cards_model.machines.layers import compute_board, static_effects
+from magic_cards_model.machines.effects import (
+    create_continuous_effect,
+    effect_for,
+    trigger_effect_for,
+)
 from magic_cards_model.machines.replacement import replacements_of
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card import Color, Type
@@ -356,22 +359,27 @@ def test_token_copies_of_an_animated_land_are_plain_forests_with_a_fight_trigger
 # --------------------------------------------------------------------------
 
 
-def test_purelace_can_target_the_clone_spell_but_has_no_effect_of_its_own():
-    """DDR#32, the provable half: the target is legal, the effect is missing.
+def test_purelace_targets_a_spell_on_the_stack_and_is_a_layer_five_effect():
+    """DDR#32, the provable half: the target is legal and the effect is real.
 
     Purelace (verified with `resolve_cards`): "Target spell or permanent
     becomes white." `machines/targeting.py` reads that phrase into a real
     requirement, so a spell already on the stack is a legal target and the
     cast goes through - which is the whole premise of the episode, Nick lacing
-    the Clone *spell* rather than the permanent. `effect_for` then returns
-    `None`, so nothing ever becomes white.
+    the Clone *spell* rather than the permanent.
+
+    The colour change itself is a continuous effect, so `effect_for` routes
+    the card to `create_continuous_effect` rather than to a one-shot: layer 5
+    (CR 613.1e, "Layer 5: Color-changing effects are applied"), read off the
+    printed sentence by `machines/layers._BECOMES_COLOR_RE`. This test asserts
+    the routing; the test below asserts what it does.
 
     (Noted, and not this episode's point: that requirement's `zones` is
     `{Zone.STACK}` alone, so the same parse would refuse the "or permanent"
     half of the printed phrase. Recorded in the wave ledger rather than
     tested here.)
     """
-    assert effect_for("Purelace", card("Purelace").oracle_text) is None
+    assert effect_for("Purelace", card("Purelace").oracle_text) is create_continuous_effect
 
     scenario = (
         Scenario()
@@ -391,13 +399,6 @@ def test_purelace_can_target_the_clone_spell_but_has_no_effect_of_its_own():
     assert purelace.zone is Zone.GRAVEYARD
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Clone's 'enter as a copy' has no replacements_of row and effect_for('Purelace') is "
-    "None (both proven above), so nothing copies Forerunner of Slaughter and nothing turns the "
-    "resulting permanent white - CR 613.1a layer 1 copy effects and CR 613.1e layer 5 "
-    "colour-changing effects are both absent for these two cards.",
-)
 def test_a_laced_clone_of_a_devoid_creature_ends_up_white():
     """DDR#32: a colour-changing effect beats a colour-defining ability here.
 
@@ -433,9 +434,19 @@ def test_a_laced_clone_of_a_devoid_creature_ends_up_white():
     scenario.resolve_top()  # Purelace
     scenario.resolve_top()  # Clone, entering as a copy
 
-    copy = scenario.creature("Forerunner of Slaughter", "alice")
-    board = compute_board(scenario.game.battlefield, static_effects(scenario.game.battlefield))
-    assert board[copy.id].colors == frozenset({Color.WHITE})
+    # The permanent is looked up by the identity the spell had on the stack,
+    # not by name: CR 400.7's "new object" carve-out list includes CR 400.7a,
+    # so this is the same `CardState`, and `scenario.creature(...)` searches
+    # printed names, which layer 1 never rewrites.
+    assert clone.zone is Zone.BATTLEFIELD
+    assert clone.card.name == "Clone"
+    assert scenario.game.characteristics_of(clone).name == "Forerunner of Slaughter"
+    # `Characteristics.colors` is an ordered `tuple`, not a `frozenset`, and
+    # `Game.characteristics_of` is the read that includes the effects created
+    # by resolution (CR 611.2) - `compute_board(battlefield, static_effects(...))`
+    # deliberately builds only the *static* ones (CR 611.3), so Purelace's
+    # would be invisible to it.
+    assert scenario.game.characteristics_of(clone).colors == (Color.WHITE,)
 
 
 # --------------------------------------------------------------------------

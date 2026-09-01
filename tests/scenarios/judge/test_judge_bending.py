@@ -222,29 +222,50 @@ def test_the_earthbend_return_is_a_delayed_trigger_controlled_by_the_earthbender
 
 @pytest.mark.xfail(
     strict=True,
-    reason="Threaten has no scripted effect - `effect_for('Threaten', ...)` is "
-    "None - so it resolves, goes to the graveyard, and the Forest is still "
-    "controlled by alice. There is no control-changing effect anywhere in "
-    "`machines/layers.LAYER_EFFECTS` (CR 613.1b's layer 2 is unpopulated), so "
-    "the board state this episode asks about cannot be built.",
+    reason="Two things are missing, both outside this task's files. (1) "
+    "`effect_for('Threaten', ...)` is still None: Threaten's first sentence is "
+    "'Untap target creature and gain control of it until end of turn.', one sentence carrying a "
+    "one-shot untap *and* a continuous effect, and nothing in `machines/effects.py` splits it - "
+    "`machines/layers._GAIN_CONTROL_UNTIL_EOT_RE` reads the control clause on its own (layer 2, "
+    "CR 613.1b) and never sees it, so the spell resolves doing nothing. (2) Even once it is "
+    "split, `CardState.controller` (`models/card_state.py`) is a plain stored field and "
+    "`Game.controller_of` (`models/game.py`) reads it directly, so a layer 2 effect is invisible "
+    "to `forest.controller`, to combat, to state-based actions and to the delayed trigger; both "
+    "would have to consult the computed board (CR 613.5).",
 )
 def test_an_earthbent_land_returns_to_the_earthbender_even_if_someone_else_killed_it():
     """DDR#989: bob steals and sacrifices the land, and alice gets it back.
 
     Threaten (confirmed with `resolve_cards`): "Untap target creature and gain
-    control of it until end of turn." The earthbent Forest is a land creature
-    (CR 701.66a), so it is a legal target. Bob then sacrifices it (CR 701.21a:
-    "its controller moves it from the battlefield directly to its owner's
-    graveyard"), which is a death the delayed trigger is watching for.
+    control of it until end of turn. That creature gains haste until end of
+    turn." The earthbent Forest is a land creature (CR 701.66a), so it is a
+    legal target. Bob then sacrifices it (CR 701.21a: "its controller moves it
+    from the battlefield directly to its owner's graveyard"), which is a death
+    the delayed trigger is watching for.
 
     CR 603.7e already fixed that trigger's controller as alice when Badgermole
     Cub's ability resolved, so the land comes back tapped under *alice's*
     control - the "different from how a lot of similar effects in Magic's
     history have worked" the episode warns about.
+
+    The turn is handed to bob before Threaten is cast, and that is not
+    housekeeping: Threaten is a sorcery, and CR 307.1 lets a player cast one
+    only "during a main phase of their turn when the stack is empty" (CR
+    117.1a says the same about noninstants generally). An earlier version of
+    this test cast it as bob during
+    alice's turn and the engine correctly refused - the refusal, not the
+    episode, was what it measured.
     """
     scenario, forest = _earthbend_a_forest()
 
-    scenario.pass_priority("alice")
+    # Alice's turn ends and bob's begins (CR 500.1, CR 505.1) - the earthbend
+    # animation has no duration in CR 701.66a, so the Forest is still a land
+    # creature when bob's main phase arrives.
+    scenario.turn.advance_to(Step.CLEANUP)
+    scenario.advance()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    assert scenario.turn.active_player == "bob"
+
     bob_lands = scenario.untapped_sources("Mountain", "Mountain", "Mountain", username="bob")
     scenario.cast_and_resolve("Threaten", *bob_lands, username="bob", targets=[forest])
     assert forest.controller == "bob"
