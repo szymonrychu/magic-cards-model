@@ -639,33 +639,6 @@ def test_countering_the_spell_drafnas_ability_targets_removes_that_ability():
     ] == []
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="ONE clause is left, and it belongs in machines/effects.py. The old "
-    "reason here was stale about everything except the parser: Game.copy_spell "
-    "implements CR 707.10, offer_new_targets_for_copy implements CR 707.10c, and "
-    "a copy of a permanent spell already becomes a token as it resolves "
-    "(CR 707.10f, CR 608.3f). machines/delayed.py is complete too - "
-    "DelayedTrigger takes a parsed `callback`, watches TriggerEvent.CAST_SPELL, "
-    "and DelayedTriggers.create is CR 603.7a's 'the ability exists from now'. "
-    "What is missing is that "
-    "trigger_effect_for('Flamehold Grappler', ENTERS_THE_BATTLEFIELD, 'When "
-    "this creature enters, copy the next spell you cast this turn when you cast "
-    "it.') returns None: no clause parser in machines/effects.py reads 'copy the "
-    "next spell you cast this turn when you cast it', so nothing calls "
-    "DelayedTriggers.create and CR 707.10's second stack object is never built. "
-    "It needs an effects.py clause that, on the ETB resolving, creates a "
-    "DelayedTrigger with event=TriggerEvent.CAST_SPELL, remaining=1, "
-    "controller=the Grappler's controller, and a callback that calls "
-    "game.copy_spell(spell, controller) then "
-    "game.offer_new_targets_for_copy(copy, controller, "
-    "source_name='Flamehold Grappler') - CR 603.7d puts the source and "
-    "controller on the creating ability, and CR 603.7b's 'the next' is the "
-    "remaining=1. Not machines/casting.py: casting.py already emits the "
-    "CAST_SPELL event this waits for, and a cast-time hook there would be a "
-    "second, card-specific copy of the delayed-trigger machinery delayed.py "
-    "already has.",
-)
 def test_flamehold_grapplers_untargeted_copy_still_copies_a_countered_spell():
     """DDR#977's contrast case: no target, so nothing to make illegal.
 

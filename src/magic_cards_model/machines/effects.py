@@ -8667,6 +8667,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     )
     if create_token_then_copy_spell_retargeted is not None:
         return create_token_then_copy_spell_retargeted
+    copy_next_spell_you_cast = _parse_copy_next_spell_you_cast_clause(effect_text)
+    if copy_next_spell_you_cast is not None:
+        return copy_next_spell_you_cast
     pay_any_life_then_draw = _parse_pay_any_life_then_draw_that_many_clause(effect_text)
     if pay_any_life_then_draw is not None:
         return pay_any_life_then_draw
@@ -16291,6 +16294,110 @@ def _parse_create_token_then_copy_spell_retargeted_clause(text: str) -> AbilityE
         # names a specific new target (the very token just created) rather
         # than letting the controller choose freely among legal ones.
         copy.targets = [TargetRef.coerce(tokens[0])]
+
+    return effect
+
+
+#: Flamehold Grappler's whole enters trigger, once its condition has been split
+#: off: "copy the next spell you cast this turn when you cast it. You may choose
+#: new targets for the copy."
+#:
+#: Read whole rather than per clause: the second sentence's "the copy" is the
+#: object the first sentence's own delayed ability will make, so split apart it
+#: names nothing (CR 608.2c has no notion of running half an instruction) - the
+#: same treatment `_CREATE_TOKEN_THEN_COPY_SPELL_RETARGETED_RE` above already
+#: gets for Frontline Heroism's two-sentence pair.
+#:
+#: "When you cast it" is what makes this a delayed triggered ability rather than
+#: something this resolution does now. CR 603.7a: "Delayed triggered abilities
+#: are created during the resolution of spells or abilities ... A delayed
+#: triggered ability won't trigger until it has actually been created, even if
+#: its trigger event occurred just beforehand" - so the spell that put the
+#: Grappler itself on the stack is never the one copied, however recently it was
+#: cast.
+_COPY_NEXT_SPELL_YOU_CAST_RE = re.compile(
+    r"^copy the next spell you cast this turn when you cast it\."
+    r"(?P<new_targets>\s*you may choose new targets for the copy\.?)?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_copy_next_spell_you_cast_clause(text: str) -> AbilityEffect | None:
+    """`_COPY_NEXT_SPELL_YOU_CAST_RE`'s shape - Flamehold Grappler.
+
+    Creates one `DelayedTrigger` watching `TriggerEvent.CAST_SPELL`, which
+    `Game.put_on_stack` already emits for every spell cast (CR 707.10 is
+    explicit that a *copy* is not cast, so a copy this ability makes can never
+    feed it a second time).
+
+    - `remaining=1` is CR 603.7b's default and is exactly "the **next** spell".
+    - `expires_end_of_turn=True` is CR 603.7b's "unless it has a stated
+      duration, such as 'this turn'" - printed here as "this turn", so a
+      Grappler whose controller casts nothing else this turn does not carry the
+      permission into the next one.
+    - `only_when_active` scopes the event to one player. It is named for the
+      active player because that is what its first user needed, but every
+      reader of it compares `GameEvent.player` and nothing else (see
+      `DelayedTrigger.matches`), and `Game.put_on_stack` sets that field to the
+      caster - so this is CR 109.5's "you" ("copy the next spell **you** cast"),
+      read exactly, not an approximation.
+    - CR 603.7d/e put the source and the controller on the ability that created
+      this one, which is the Grappler's own enters trigger.
+
+    **The spell is resolved from last known information.** DDR#977's whole
+    point is that the copy still happens when the original was countered in
+    response: the delayed ability goes on the stack above the spell it is
+    copying, an opponent may then put a counterspell above *that*, and by the
+    time this callback runs the original may be in a graveyard. So the object
+    is fetched by `Game.find_by_id` - which searches every zone - rather than
+    off `Game.stack`. CR 608.2b's on-resolution target check is what would
+    normally punish a vanished object, and it does not apply here: it only
+    refuses an object that "specifies targets", and this ability specifies
+    none.
+
+    CR 707.10c is the second sentence: "Some effects copy a spell or ability
+    and state that its controller may choose new targets for the copy." It is
+    only offered when the card actually prints it, so the group is optional
+    here rather than assumed.
+
+    CR 707.10f finishes the job with no help from this clause: "Some effects
+    copy a permanent spell. As that copy resolves, it ceases being a copy of a
+    spell and becomes a token permanent" - `Game.resolve_top` already does that.
+    """
+    match = _COPY_NEXT_SPELL_YOU_CAST_RE.fullmatch(
+        " ".join(_strip_non_effect_preamble(text).split())
+    )
+    if match is None:
+        return None
+    may_retarget = match.group("new_targets") is not None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        def callback(game: "Game", on_stack: AbilityOnStack, trigger: DelayedTrigger) -> None:
+            event = on_stack.event
+            if event is None or event.subject_id is None:
+                return
+            spell = game.find_by_id(event.subject_id)
+            if not isinstance(spell, CardState):
+                return
+            copy = game.copy_spell(spell, controller=trigger.controller)
+            if may_retarget:
+                game.offer_new_targets_for_copy(
+                    copy, trigger.controller, source_name=trigger.source_name
+                )
+
+        game.create_delayed_trigger(
+            DelayedTrigger(
+                text="Copy the next spell you cast this turn when you cast it.",
+                event=TriggerEvent.CAST_SPELL,
+                controller=ability.controller,
+                source_id=ability.source_id,
+                source_name=ability.source_name,
+                only_when_active=ability.controller,
+                remaining=1,
+                expires_end_of_turn=True,
+                callback=callback,
+            )
+        )
 
     return effect
 
