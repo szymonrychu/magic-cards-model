@@ -29,12 +29,18 @@ standing on. DDR#951's own clause parses and runs for real
 (`machines/effects._parse_create_token_then_copy_spell_retargeted_clause`), so
 its Soldier token and its retargeted copy both happen; what it fails on is one
 rules question about the copy's target, recorded in that test's own xfail
-reason. The permanent-copying half is the one that is genuinely absent:
-`machines/effects._parse_token_clause` refuses outright the moment it sees
-"copy of" in a clause (`return None  # CR 707.2 copying needs copiable values
-this wave does not read`), and there is no `replacements_of` row for an "enter
-as a copy" clause - both confirmed directly below rather than assumed from the
-absence of a grep hit. Every CR number here was looked up with
+reason.
+
+The permanent-copying half is now largely built and each test says which piece
+of it it stands on. CR 614.1c's "enter as a copy" replacement works, including
+CR 707.9b's "except ..." modifications and CR 603.12's linked "When you do,
+..." reflexive ability (DDR#986), and so does a layer 5 colour change laid on
+a spell that has since become a permanent (CR 400.7a, DDR#32). What is still
+absent is named precisely in the two remaining xfail reasons: a copy does not
+acquire the *triggered* abilities of what it copied
+(`machines/triggers.triggers_for` reads the printed card), and
+`machines/effects._parse_token_clause` still refuses the moment it sees
+"copies of" in a clause. Every CR number here was looked up with
 `knowledge_search(type="rules")`.
 """
 
@@ -42,9 +48,18 @@ import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.abilities import TriggerEvent
-from magic_cards_model.machines.effects import effect_for, trigger_effect_for
-from magic_cards_model.machines.layers import compute_board, static_effects
-from magic_cards_model.machines.replacement import replacements_of
+from magic_cards_model.machines.effects import (
+    create_continuous_effect,
+    create_continuous_effect_of_ability,
+    effect_for,
+    trigger_effect_for,
+)
+from magic_cards_model.machines.replacement import (
+    CopyException,
+    ReplacementKind,
+    parse_replacement_effects,
+    replacements_of,
+)
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card import Color, Type
 from magic_cards_model.models.token import TokenState, is_token
@@ -167,9 +182,8 @@ def test_frontline_heroism_should_copy_psychotic_fury_onto_a_fresh_token():
 # --------------------------------------------------------------------------
 
 
-def test_superior_spider_mans_enter_as_a_copy_clause_has_no_replacement_row():
-    """DDR#986, the provable half: "enter as a copy" is a replacement effect
-    (CR 614.1c) this engine has no row for.
+def test_superior_spider_mans_enter_as_a_copy_clause_is_read_past_its_flavor_word():
+    """DDR#986, the provable half: the clause parses, ability word and all.
 
     Superior Spider-Man (verified with `resolve_cards`): "Mind Swap - You may
     have Superior Spider-Man enter as a copy of any creature card in a
@@ -181,23 +195,59 @@ def test_superior_spider_mans_enter_as_a_copy_clause_has_no_replacement_row():
     are replacement effects." CR 614.12a puts the choice - which graveyard
     card to copy - before the permanent enters, which is exactly why the
     episode's second half works: every Superior Spider-Man entering at once
-    picks what to copy before any of them has exiled anything. None of that is
-    reachable here: `replacements_of` is empty for this card, so
-    `apply_replacements` never sees the clause at all.
+    picks what to copy before any of them has exiled anything.
+
+    Three things had to be read off this one sentence, and each is asserted
+    below rather than assumed:
+
+    - The "Mind Swap - " prefix is a CR 207.2d flavor word ("they have no
+      special rules meaning"), so it is stripped before the entering templates
+      run. Left on, it was swallowed into the subject group, which made
+      `self_replacement` false (the phrase does not begin with the card's
+      name) and `optional` false (the sentence does not begin with "you may
+      have") - the clause parsed and then did nothing.
+    - The "except ..." tail is CR 707.9b's modification of the copying
+      process, read into a name, a power and toughness, and subtypes gained
+      in addition to the copied ones (CR 205.1b).
+    - "When you do, exile that card." is CR 603.12's reflexive ability, linked
+      to the choice above it and carried on the same effect.
+
+    `replacements_of` is still empty and that is correct, not a gap: a
+    CR 614.12 effect that "affect[s] only that permanent" is gathered off the
+    entering card by `_self_enters_modifiers`, never compiled into the
+    battlefield-scanned registry `replacements_of` returns.
     """
     spidey = card("Superior Spider-Man")
-    assert "enter as a copy of any creature card in a graveyard" in spidey.oracle_text
+    assert spidey.oracle_text.startswith("Mind Swap —")
     assert replacements_of(spidey) == []
 
+    (effect,) = parse_replacement_effects(spidey)
+    assert effect.kind is ReplacementKind.ENTERS_AS_COPY
+    assert effect.subject == "Superior Spider-Man"
+    assert effect.copy_of == "any creature card in a graveyard"
+    assert effect.optional is True
+    assert effect.self_replacement is True
+    assert effect.copy_exception == CopyException(
+        name="Superior Spider-Man",
+        power=4,
+        toughness=4,
+        added_subtypes=("Spider", "Human", "Hero"),
+    )
+    assert effect.linked_trigger == "When you do, exile that card."
 
-def test_superior_spider_man_enters_as_plain_superior_spider_man():
-    """The consequence, played out: no copy, no linked trigger, nothing exiled.
 
-    Without the CR 614.1c replacement, Superior Spider-Man resolves as its own
-    printed 4/4 and Bringer of the Last Gift sits untouched in the graveyard.
-    Both of the episode's triggers - Bringer's own "when this creature enters"
-    and Mind Swap's linked "when you do, exile that card" - are simply absent
-    from the stack, which is what the xfail below is measured against.
+def test_superior_spider_man_enters_as_a_bringer_named_superior_spider_man():
+    """The clause played out: CR 707.2's copiable values, CR 707.9b's exceptions.
+
+    Copied whole from Bringer of the Last Gift: flying, its "when this creature
+    enters" ability, and the Vampire and Demon creature types. Overridden by the
+    "except" tail: the name stays Superior Spider-Man, the body is 4/4 instead
+    of 6/6, and Spider, Human and Hero join the copied subtypes rather than
+    replacing them.
+
+    The linked CR 603.12 trigger then resolves and exiles the Bringer, which is
+    the case the xfail below is measured *against*: here nothing reorders the
+    triggers, so the exile happens and only one creature ends up in play.
     """
     scenario = (
         Scenario()
@@ -215,20 +265,35 @@ def test_superior_spider_man_enters_as_plain_superior_spider_man():
     spidey = scenario.cast_and_resolve("Superior Spider-Man", *sources, username="alice")
 
     assert spidey.zone is Zone.BATTLEFIELD
-    assert (spidey.power, spidey.toughness) == (4, 4)
-    assert scenario.stack_names() == []
-    assert scenario.pending_triggers == []
-    assert [state.name for state in scenario.player("alice").graveyard] == [
-        "Bringer of the Last Gift"
-    ]
+    characteristics = scenario.game.characteristics_of(spidey)
+    # Asserted against the printed values of the two real cards, never against
+    # the computed answer this test exists to check.
+    assert characteristics.name == card("Superior Spider-Man").name
+    assert (characteristics.power, characteristics.toughness) == (4, 4)
+    assert card("Bringer of the Last Gift").power == "6"
+    assert "Vampire" in characteristics.subtypes and "Demon" in characteristics.subtypes
+    assert characteristics.subtypes[-3:] == ("Spider", "Human", "Hero")
+    assert "Flying" in characteristics.abilities
+
+    # CR 603.12's reflexive ability, on the stack because the choice was taken.
+    assert scenario.stack_names() == ["Superior Spider-Man's triggered ability"]
+    scenario.resolve_top()
+    assert [state.name for state in scenario.player("alice").graveyard] == []
+    assert [state.name for state in scenario.game.exile] == ["Bringer of the Last Gift"]
 
 
 @pytest.mark.xfail(
     strict=True,
-    reason="replacements_of('Superior Spider-Man') is empty (proven above), so the CR 614.1c "
-    "'enter as a copy' choice is never offered and no copy effect is created - Bringer of the "
-    "Last Gift's own enters trigger is never acquired, never goes on the stack, and never "
-    "returns the original Bringer from the graveyard.",
+    reason="One thing is missing, in machines/triggers.py. The copy itself works (proven "
+    "above): Superior Spider-Man enters as Bringer of the Last Gift with CR 707.9b's name and "
+    "4/4 body, and `Game.characteristics_of` reports Bringer's 'When this creature enters ...' "
+    "among its abilities. But `triggers.triggers_for` reads `triggered_abilities_of("
+    "source.card)` - the *printed* Scryfall card - so a copy never acquires the copied object's "
+    "triggered abilities and Bringer's enters trigger never goes on the stack. It would have to "
+    "read the computed characteristics (CR 613.2c: after layer 1, those *are* the object's "
+    "copiable values). With only the linked CR 603.12 exile trigger on the stack, there is no "
+    "second trigger for CR 603.3b to order it against, and the Bringer is exiled rather than "
+    "reanimated.",
 )
 def test_a_spider_bringer_and_a_real_bringer_can_both_end_up_on_the_battlefield():
     """DDR#986: stack the two triggers so the reanimation beats the exile.
@@ -278,8 +343,20 @@ def test_a_spider_bringer_and_a_real_bringer_can_both_end_up_on_the_battlefield(
 # --------------------------------------------------------------------------
 
 
-def test_neither_jolraels_animation_nor_aggressive_biomancy_has_a_scripted_effect():
-    """DDR#980, the provable half: both ends of the interaction are unbuilt.
+def test_jolraels_animation_needs_x_substituted_and_biomancy_needs_a_clause():
+    """DDR#980, the provable half: exactly what is still missing, and where.
+
+    Jolrael's animation *is* a shape `machines/layers.py` reads -
+    `_TARGET_ANIMATION_RE`, layer 4 for the types (CR 613.1d), layer 5 for the
+    colours (CR 613.1e), layer 6 for the keywords (CR 613.1f) and sublayer 7b
+    for the P/T (CR 613.4b) - but only once the "X/X ... where X is the number
+    of cards in your hand" tail has been turned into a literal. That
+    substitution belongs to `machines/effects.py`, which already does exactly
+    it for a mass pump's "+X/+X ... where X is ..." (`_WHERE_X_IS_RE`), and
+    this test pins the difference: the printed line comes back `None` and the
+    same line with a number in it comes back an effect.
+
+    Aggressive Biomancy is still wholly unbuilt.
 
     Jolrael, Voice of Zhalfir (verified with `resolve_cards`): "At the
     beginning of combat on your turn, up to one target land you control
@@ -289,22 +366,41 @@ def test_neither_jolraels_animation_nor_aggressive_biomancy_has_a_scripted_effec
     creature you control, except they have 'When this token enters, it fights
     up to one target creature you don't control.'"
 
-    `effect_for` returns `None` for both, and `_parse_token_clause` refuses
-    the moment it reads "copies of" - the same refusal DDR#951 above already
-    documents. So there is nothing to animate a land with, and nothing to copy
-    it with.
+    `_parse_token_clause` refuses the moment it reads "copies of" - the same
+    refusal DDR#951 above already documents - so there is nothing to copy the
+    land with.
     """
     assert effect_for("Aggressive Biomancy", card("Aggressive Biomancy").oracle_text) is None
+
     jolrael = card("Jolrael, Voice of Zhalfir")
-    assert effect_for(jolrael.name, jolrael.oracle_text) is None
+    printed = jolrael.oracle_text.split("\n")[0].split(", ", 1)[1]
+    assert printed.startswith("up to one target land you control becomes an X/X")
+    assert trigger_effect_for(jolrael.name, TriggerEvent.BEGINNING_OF_STEP, printed) is None
+
+    # The identical sentence with CR 107.3a's X already resolved - which is
+    # what `machines/effects.py` would hand the layer parser - does read.
+    substituted = (
+        "up to one target land you control becomes a 1/1 green and blue Bird "
+        "creature with flying and haste until end of turn. It's still a land."
+    )
+    assert (
+        trigger_effect_for(jolrael.name, TriggerEvent.BEGINNING_OF_STEP, substituted)
+        is create_continuous_effect_of_ability
+    )
 
 
 @pytest.mark.xfail(
     strict=True,
-    reason="effect_for is None for both Jolrael and Aggressive Biomancy (proven above), so no "
-    "land is animated and no token copies are created at all - CR 707.2 copiable values and the "
-    "CR 707.9a 'except they have ...' added ability are both unimplemented, and machines/"
-    "casting.py never threads a non-modal spell's announced X into its effect either.",
+    reason="Two clause parsers are missing, both in machines/effects.py. (1) Jolrael's trigger "
+    "prints its magnitude as 'an X/X ... where X is the number of cards in your hand', and "
+    "nothing splits that tail off and substitutes a literal for a *non-mass-pump* sentence - "
+    "`_WHERE_X_IS_RE` is only reached from `_parse_mass_pump_clause`. With the number already in "
+    "it, `machines/layers._TARGET_ANIMATION_RE` reads the whole animation (proven above), so the "
+    "land is simply never animated. (2) 'Create X tokens that are copies of target creature you "
+    'control, except they have "<ability>"\' has no parser at all: `_parse_token_clause` '
+    "returns None on seeing 'copies of'. `models/token.token_copy_of` now takes the CR 707.9a "
+    "added ability (`added_abilities=`) and CR 707.2's copiable values already work, so the "
+    "clause parser is the only missing half of that end.",
 )
 def test_token_copies_of_an_animated_land_are_plain_forests_with_a_fight_trigger():
     """DDR#980: the copy copies the land, not the animation.
@@ -331,14 +427,51 @@ def test_token_copies_of_an_animated_land_are_plain_forests_with_a_fight_trigger
         .player(
             "alice",
             hand=["Aggressive Biomancy"],
-            battlefield=["Jolrael, Voice of Zhalfir", "Forest", "Forest", "Island", "Island"],
+            battlefield=[
+                "Jolrael, Voice of Zhalfir",
+                "Forest",
+                "Forest",
+                "Forest",
+                "Island",
+                "Island",
+                "Island",
+            ],
         )
         .player("bob", battlefield=["Grizzly Bears"])
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    sources = scenario.untapped_sources("Forest", "Island", "Island", username="alice")
-    scenario.cast_and_resolve("Aggressive Biomancy", *sources, username="alice")
+    forest, *_ = scenario.untapped_sources("Forest", "Forest", "Forest", username="alice")
+
+    # Jolrael's ability is "At the beginning of combat on your turn ...", so
+    # the scenario has to *reach* that step: starting in the precombat main
+    # phase and casting there animates nothing at all. One card in hand
+    # (Aggressive Biomancy itself) makes X 1, and CR 611.2c fixes that as the
+    # trigger resolves - emptying the hand to cast the spell does not shrink
+    # the Bird afterwards.
+    scenario.choose_trigger_targets("Jolrael, Voice of Zhalfir", [forest])
+    scenario.advance()
+    assert scenario.step is Step.BEGINNING_OF_COMBAT
+    scenario.pass_until_resolved()
+    assert scenario.game.characteristics_of(forest).is_creature
+
+    # Aggressive Biomancy is a sorcery (CR 307.1), so it waits for the
+    # postcombat main phase; the animation is "until end of turn" and is still
+    # running there (CR 514.2 ends it in the cleanup step, not before).
+    scenario.start_at(Step.POSTCOMBAT_MAIN)
+    casting = scenario.cast("Aggressive Biomancy", username="alice", targets=[forest])
+    casting.determine_cost(x_value=2)
+    payment = casting.begin_paying()
+    assert str(payment.cost) == "{4}{G}{U}"
+    scenario.pay_with(
+        payment,
+        *scenario.untapped_sources(
+            "Forest", "Forest", "Forest", "Island", "Island", "Island", username="alice"
+        ),
+    )
+    scenario.put_on_stack(casting)
+    while scenario.game.stack or scenario.pending_triggers:
+        scenario.pass_until_resolved()
 
     tokens = [
         state
@@ -348,6 +481,13 @@ def test_token_copies_of_an_animated_land_are_plain_forests_with_a_fight_trigger
     assert len(tokens) == 2
     assert all(Type.CREATURE not in token.card.types for token in tokens)
     assert all(token.name == "Forest" for token in tokens)
+    # CR 707.9a's added ability rode along with the copiable values, so each
+    # token really did put its fight trigger on the stack - and CR 701.14b is
+    # why the Bears took nothing from it.
+    assert all(
+        "it fights up to one target creature you don't control" in (token.card.oracle_text or "")
+        for token in tokens
+    )
     assert scenario.creature("Grizzly Bears", "bob").damage == 0
 
 
@@ -356,22 +496,27 @@ def test_token_copies_of_an_animated_land_are_plain_forests_with_a_fight_trigger
 # --------------------------------------------------------------------------
 
 
-def test_purelace_can_target_the_clone_spell_but_has_no_effect_of_its_own():
-    """DDR#32, the provable half: the target is legal, the effect is missing.
+def test_purelace_targets_a_spell_on_the_stack_and_is_a_layer_five_effect():
+    """DDR#32, the provable half: the target is legal and the effect is real.
 
     Purelace (verified with `resolve_cards`): "Target spell or permanent
     becomes white." `machines/targeting.py` reads that phrase into a real
     requirement, so a spell already on the stack is a legal target and the
     cast goes through - which is the whole premise of the episode, Nick lacing
-    the Clone *spell* rather than the permanent. `effect_for` then returns
-    `None`, so nothing ever becomes white.
+    the Clone *spell* rather than the permanent.
+
+    The colour change itself is a continuous effect, so `effect_for` routes
+    the card to `create_continuous_effect` rather than to a one-shot: layer 5
+    (CR 613.1e, "Layer 5: Color-changing effects are applied"), read off the
+    printed sentence by `machines/layers._BECOMES_COLOR_RE`. This test asserts
+    the routing; the test below asserts what it does.
 
     (Noted, and not this episode's point: that requirement's `zones` is
     `{Zone.STACK}` alone, so the same parse would refuse the "or permanent"
     half of the printed phrase. Recorded in the wave ledger rather than
     tested here.)
     """
-    assert effect_for("Purelace", card("Purelace").oracle_text) is None
+    assert effect_for("Purelace", card("Purelace").oracle_text) is create_continuous_effect
 
     scenario = (
         Scenario()
@@ -391,13 +536,6 @@ def test_purelace_can_target_the_clone_spell_but_has_no_effect_of_its_own():
     assert purelace.zone is Zone.GRAVEYARD
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Clone's 'enter as a copy' has no replacements_of row and effect_for('Purelace') is "
-    "None (both proven above), so nothing copies Forerunner of Slaughter and nothing turns the "
-    "resulting permanent white - CR 613.1a layer 1 copy effects and CR 613.1e layer 5 "
-    "colour-changing effects are both absent for these two cards.",
-)
 def test_a_laced_clone_of_a_devoid_creature_ends_up_white():
     """DDR#32: a colour-changing effect beats a colour-defining ability here.
 
@@ -433,9 +571,19 @@ def test_a_laced_clone_of_a_devoid_creature_ends_up_white():
     scenario.resolve_top()  # Purelace
     scenario.resolve_top()  # Clone, entering as a copy
 
-    copy = scenario.creature("Forerunner of Slaughter", "alice")
-    board = compute_board(scenario.game.battlefield, static_effects(scenario.game.battlefield))
-    assert board[copy.id].colors == frozenset({Color.WHITE})
+    # The permanent is looked up by the identity the spell had on the stack,
+    # not by name: CR 400.7's "new object" carve-out list includes CR 400.7a,
+    # so this is the same `CardState`, and `scenario.creature(...)` searches
+    # printed names, which layer 1 never rewrites.
+    assert clone.zone is Zone.BATTLEFIELD
+    assert clone.card.name == "Clone"
+    assert scenario.game.characteristics_of(clone).name == "Forerunner of Slaughter"
+    # `Characteristics.colors` is an ordered `tuple`, not a `frozenset`, and
+    # `Game.characteristics_of` is the read that includes the effects created
+    # by resolution (CR 611.2) - `compute_board(battlefield, static_effects(...))`
+    # deliberately builds only the *static* ones (CR 611.3), so Purelace's
+    # would be invisible to it.
+    assert scenario.game.characteristics_of(clone).colors == (Color.WHITE,)
 
 
 # --------------------------------------------------------------------------

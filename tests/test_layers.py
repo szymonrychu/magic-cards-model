@@ -16,6 +16,7 @@ import pytest
 from magic_cards_model.machines.layers import (
     ContinuousEffect,
     ContinuousEffects,
+    CopySublayer,
     Duration,
     Layer,
     LayerContext,
@@ -510,6 +511,7 @@ def test_a_copy_effect_replaces_the_copiable_values():
     copy = ContinuousEffect(
         description="copy",
         layer=Layer.COPY,
+        sublayer=CopySublayer.COPIABLE,  # CR 613.2a
         timestamp=1,
         selector=lambda chars, board: chars.card_id == bears.id,
         modification=lambda chars, board: chars.with_(
@@ -537,14 +539,6 @@ def test_a_copy_effect_replaces_the_copiable_values():
     assert board.of(beast).name == "Questing Beast"
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="CR 613.2 splits layer 1 into sublayers - CR 613.2a's 1a for copy effects and "
-    "CR 613.2b's 1b for face-down objects - and machines/layers.py does not: _SUBLAYERED is "
-    "(Layer.POWER_TOUGHNESS,) alone, so every layer 1 effect is ordered by timestamp against "
-    "every other one. A face-down modification with an earlier timestamp than a copy effect "
-    "therefore applies first, where CR 613.2a/613.2b put it strictly after.",
-)
 def test_layer_1_applies_copy_effects_before_face_down_ones():
     """CR 613.2a then CR 613.2b, regardless of timestamp.
 
@@ -555,8 +549,11 @@ def test_layer_1_applies_copy_effects_before_face_down_ones():
     timestamp and the 1a copy effect the later one; CR 613.2a still puts the
     copy first, so the face-down 2/2 is what the board ends up reporting.
 
-    The engine has no sublayer for layer 1, so timestamp order alone wins and
-    the copy lands last instead.
+    `CopySublayer` is what says which of the two an effect is: `COPIABLE` for
+    CR 613.2a's copy effects, `FACE_DOWN` for CR 613.2b's. Nothing about the
+    two `ContinuousEffect`s below is inferable from their bodies - each is a
+    plain modification of the same permanent - so the sublayer has to be
+    declared, exactly the way a layer 7 effect declares 7b against 7c.
     """
     bears = permanent("Grizzly Bears")
     beast = permanent("Questing Beast")
@@ -565,6 +562,7 @@ def test_layer_1_applies_copy_effects_before_face_down_ones():
     face_down = ContinuousEffect(
         description="1b: face down",  # CR 613.2b / CR 708.2
         layer=Layer.COPY,
+        sublayer=CopySublayer.FACE_DOWN,
         timestamp=1,
         selector=lambda chars, board: chars.card_id == bears.id,
         modification=lambda chars, board: chars.with_(
@@ -574,6 +572,7 @@ def test_layer_1_applies_copy_effects_before_face_down_ones():
     copy = ContinuousEffect(
         description="1a: copy",  # CR 613.2a
         layer=Layer.COPY,
+        sublayer=CopySublayer.COPIABLE,
         timestamp=2,
         selector=lambda chars, board: chars.card_id == bears.id,
         modification=lambda chars, board: chars.with_(

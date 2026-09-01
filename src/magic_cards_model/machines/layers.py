@@ -14,6 +14,16 @@ effects in a different order and you get a different creature.
     613.1f  Layer 6: ability-adding and ability-removing effects
     613.1g  Layer 7: power- and/or toughness-changing effects
 
+Layer 1 has sublayers of its own (CR 613.2):
+
+    613.2a  1a: copiable effects - copy effects (CR 707) and merge effects
+    613.2b  1b: face-down spells and permanents, modified as CR 708.2 says
+
+and CR 613.2c is what makes the pair matter: "After all rules and effects in
+layer 1 have been applied, the object's characteristics are its copiable
+values." A face-down 2/2 with an *earlier* timestamp than a copy effect still
+applies after it, because CR 613.2 puts the sublayer ahead of the timestamp.
+
 Layer 7 has sublayers of its own (CR 613.4):
 
     613.4a  7a: characteristic-defining abilities that define P/T (CR 604.3)
@@ -32,7 +42,8 @@ Ordering inside a layer:
 
 - **Timestamp order** (CR 613.7). Oldest first. In layers 2-6, effects from
   characteristic-defining abilities apply before everything else (CR 613.3);
-  in layer 7 the CDAs get their own sublayer instead.
+  in layer 7 the CDAs get their own sublayer instead. Layers 1 and 7 sort by
+  sublayer first and only then by timestamp (CR 613.2, CR 613.4).
 - **Dependency** (CR 613.8), which overrides timestamps. An effect depends on
   another when they share a layer and applying the other would change this
   one's existence, what it applies to, or what it does to the things it applies
@@ -108,9 +119,39 @@ class Sublayer(IntEnum):
     SWITCH = 4  # 7d
 
 
-#: Layer 7 is the only layer this engine splits into sublayers. Layer 1 has
-#: sublayers too (CR 613.2), but copy effects are not modelled beyond the layer.
-_SUBLAYERED = (Layer.POWER_TOUGHNESS,)
+class CopySublayer(IntEnum):
+    """The sublayers of layer 1, in order (CR 613.2).
+
+    CR 613.2a is 1a: "Copiable effects are applied. This includes copy effects
+    (see rule 707, 'Copying Objects') and changes to an object's
+    characteristics determined by merging an object with a permanent".
+    CR 613.2b is 1b: "Face-down spells and permanents have their
+    characteristics modified as defined in rule 708.2."
+
+    A separate enum from `Sublayer` rather than more members on it: the two
+    layers' sublayers are different sets that never mix, and one enum holding
+    both would let a layer-7 effect be given a layer-1 sublayer and vice
+    versa. `_sublayer_matches_layer` enforces the pairing.
+    """
+
+    COPIABLE = 1  # 1a
+    FACE_DOWN = 2  # 1b
+
+
+#: The two layers CR 613 splits into sublayers, each with its own ordered
+#: sublayer enum: layer 1 by CR 613.2 (CR 613.2a then CR 613.2b) and layer 7
+#: by CR 613.4 (7a through 7d). CR 613.2 and CR 613.4 word the ordering
+#: identically - "apply effects in a series of sublayers in the order
+#: described below. Within each sublayer, apply effects in timestamp order" -
+#: so the sublayer decides first and CR 613.7's timestamp only breaks ties
+#: *inside* one sublayer.
+_SUBLAYERS_BY_LAYER: dict[Layer, tuple[Sublayer | CopySublayer, ...]] = {
+    Layer.COPY: tuple(CopySublayer),
+    Layer.POWER_TOUGHNESS: tuple(Sublayer),
+}
+
+#: The layers that have sublayers at all, for the validator and the loop.
+_SUBLAYERED = tuple(_SUBLAYERS_BY_LAYER)
 
 
 class Duration(StrEnum):
@@ -434,7 +475,7 @@ class ContinuousEffect(BaseModel):
     #: Human-readable, and what the application journal reports.
     description: str
     layer: Layer
-    sublayer: Sublayer | None = None
+    sublayer: Sublayer | CopySublayer | None = None
     timestamp: int = 0
     source_id: UUID | None = None
     source_ability: str | None = None
@@ -485,6 +526,8 @@ class ContinuousEffect(BaseModel):
             raise ValueError(f"an effect in layer {self.layer} needs a sublayer")
         if self.layer not in _SUBLAYERED and self.sublayer is not None:
             raise ValueError(f"layer {self.layer} has no sublayers")
+        if self.sublayer is not None and self.sublayer not in _SUBLAYERS_BY_LAYER[self.layer]:
+            raise ValueError(f"{self.sublayer!r} is not one of layer {self.layer}'s sublayers")
         if self.layer is Layer.POWER_TOUGHNESS:
             is_seven_a = self.sublayer is Sublayer.CHARACTERISTIC_DEFINING
             if is_seven_a != self.characteristic_defining:
@@ -583,7 +626,9 @@ def compute_board(
             if not group:
                 continue
             # CR 613.3: in layers 2-6, characteristic-defining abilities apply
-            # before everything else. Layer 7 does the same thing with 7a.
+            # before everything else. Layer 7 does the same thing with 7a, and
+            # layer 1's own sublayers (CR 613.2a, CR 613.2b) are likewise the
+            # whole of its ordering - CR 613.3 does not reach either of them.
             if layer in _SUBLAYERED:
                 phases = [group]
             else:
@@ -598,8 +643,14 @@ def compute_board(
     return ComputedBoard(characteristics=board, journal=journal)
 
 
-def _sublayers_of(layer: Layer) -> tuple[Sublayer | None, ...]:
-    return tuple(Sublayer) if layer in _SUBLAYERED else (None,)
+def _sublayers_of(layer: Layer) -> tuple[Sublayer | CopySublayer | None, ...]:
+    """The sublayers `compute_board` walks for one layer, in rules order.
+
+    Layer 1 (CR 613.2) and layer 7 (CR 613.4) each have their own ordered set;
+    every other layer is one undivided pass, spelled `(None,)` so the caller
+    has a single loop.
+    """
+    return _SUBLAYERS_BY_LAYER.get(layer, (None,))
 
 
 def _counter_effects(board: Board) -> list[ContinuousEffect]:
@@ -1585,7 +1636,15 @@ _BECOME_A_COPY_RE = re.compile(
 )
 
 
-def _become_a_copy_builder(*, until_eot: bool) -> EffectBuilder:
+def _become_a_copy_builder(
+    *,
+    until_eot: bool,
+    name_override: str | None = None,
+    power_override: int | None = None,
+    toughness_override: int | None = None,
+    added_types: Sequence[Type] = (),
+    added_subtypes: Sequence[str] = (),
+) -> EffectBuilder:
     """`_BECOME_A_COPY_RE`'s shape.
 
     CR 707.2: "the copy acquires the copiable values of the original
@@ -1616,7 +1675,24 @@ def _become_a_copy_builder(*, until_eot: bool) -> EffectBuilder:
     `card_id` is deliberately left off the replacement: it is the copying
     permanent's own board identity (`CardState.id`), not one of CR 707.2's
     copiable values, and every `Selector` in this module keys off it.
+
+    The `*_override` and `added_*` arguments are CR 707.9b's "except ..."
+    modifications - Superior Spider-Man's "except his name is Superior
+    Spider-Man and he's a 4/4 Spider Human Hero in addition to his other
+    types", read by `machines/replacement._parse_copy_exception`. CR 707.9b:
+    "Some copy effects modify a characteristic as part of the copying process.
+    The final set of values for that characteristic becomes part of the
+    copiable values of the copy." They are therefore written *here*, inside the
+    one layer 1a effect, and not as separate effects in layers 4 and 7 - which
+    would be applied after CR 613.2c had already fixed the copiable values and
+    would not be copiable in turn.
+
+    The added types and subtypes are additive (CR 205.1b: "all the object's
+    prior card types, supertypes, or subtypes are retained"), which is what
+    the printed "in addition to his other types" says.
     """
+    added_types = tuple(added_types)
+    added_subtypes = tuple(added_subtypes)
 
     def builder(
         source: CardState,
@@ -1627,24 +1703,36 @@ def _become_a_copy_builder(*, until_eot: bool) -> EffectBuilder:
         if not targets:
             return []
         copied = printed_characteristics(targets[0])
+        types = copied.types + tuple(
+            card_type for card_type in added_types if card_type not in copied.types
+        )
+        subtypes = copied.subtypes + tuple(
+            subtype for subtype in added_subtypes if subtype not in copied.subtypes
+        )
 
         def modification(chars: Characteristics, board: Board) -> Characteristics:
             return chars.with_(
-                name=copied.name,
+                name=name_override if name_override is not None else copied.name,
                 mana_value=copied.mana_value,
                 supertypes=copied.supertypes,
-                types=copied.types,
-                subtypes=copied.subtypes,
+                types=types,
+                subtypes=subtypes,
                 colors=copied.colors,
                 abilities=copied.abilities,
-                power=copied.power,
-                toughness=copied.toughness,
+                power=power_override if power_override is not None else copied.power,
+                toughness=toughness_override
+                if toughness_override is not None
+                else copied.toughness,
             )
 
         return [
             ContinuousEffect(
                 description=f"{source.name} becomes a copy of {copied.name}",
                 layer=Layer.COPY,
+                # CR 613.2a: a copy effect is a 1a effect, applied ahead of
+                # every CR 613.2b face-down modification whatever the
+                # timestamps say.
+                sublayer=CopySublayer.COPIABLE,
                 timestamp=timestamp,
                 source_id=source.id,
                 selector=_only(source.id),
@@ -1824,6 +1912,54 @@ _BECOMES_TYPE_IN_ADDITION_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "Gain control of target creature until end of turn." - the control half of
+#: Threaten and every card templated after it ("Untap target creature and gain
+#: control of it until end of turn.", confirmed with `resolve_cards`), and of
+#: Act of Treason's and Mark of Mutiny's identical clause.
+#:
+#: Layer 2 (CR 613.1b: "Layer 2: Control-changing effects are applied"), and a
+#: duration this shape *requires*: an untimed "gain control of target
+#: creature" (Mind Control, Control Magic) is an Aura's or enchantment's own
+#: static ability (CR 611.3), which lasts as long as its source is on the
+#: battlefield rather than until a cleanup step, and lands on this module's
+#: static path instead. Requiring "until end of turn" is what keeps the two
+#: apart, exactly as `_ANTHEM_RE` and `_MASS_PUMP_UNTIL_EOT_RE` are kept apart.
+#:
+#: "it" and "that creature" are admitted alongside `_SUBJECT` because the
+#: printed clause is anaphoric - Threaten names its target in the *untap* half
+#: of the same sentence and refers back to it here. Nothing is re-derived from
+#: the pronoun: `targets` already carries what `machines/targeting.py`
+#: legalised at CR 601.2c, the same contract every other shape here relies on.
+_GAIN_CONTROL_UNTIL_EOT_RE = re.compile(
+    rf"^(?:you )?gain control of (?:{_SUBJECT}|it|that creature|that permanent) "
+    r"until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+#: "Target spell or permanent becomes white." (Purelace, confirmed with
+#: `resolve_cards`) - layer 5, the colour-changing layer (CR 613.1e), and the
+#: first shape this module reads into it that names a single object rather
+#: than a board-wide class the way `_ALL_COLORS_RE` does.
+#:
+#: The subject alternation is deliberately wider than `_SUBJECT`: Purelace's
+#: "target spell or permanent" reaches onto the stack, which none of the
+#: pump/keyword shapes ever do (CR 609.2: "Effects apply only to permanents
+#: unless the instruction's text states otherwise", and this instruction does
+#: state otherwise). Nothing is re-derived from the phrase - `targets` already
+#: carries whatever `machines/targeting.py` legalised at CR 601.2c - so the
+#: alternation only has to *recognise* the shape.
+#:
+#: The duration group is optional because CR 611.2a takes the duration from
+#: what the card states and Purelace states none: a colour laced on is
+#: permanent. "becomes `<colour>` until end of turn" is admitted in the same
+#: shape rather than as a second one, since the two differ only in `Duration`.
+_BECOMES_COLOR_RE = re.compile(
+    r"^(?:target spell or permanent|target permanent|target spell"
+    rf"|{_SUBJECT}) becomes (?P<color>white|blue|black|red|green)"
+    r"(?P<until_eot> until end of turn)?\.?$",
+    re.IGNORECASE,
+)
+
 #: "This land becomes a 2/2 Assembly-Worker artifact creature until end of
 #: turn." (Mishra's Factory, confirmed with `resolve_cards`) - a permanent
 #: animating itself. Layer 4 for the types and subtype (CR 613.1d) and sublayer
@@ -1946,6 +2082,145 @@ def _fold_retention_clauses(sentences: list[str]) -> list[str]:
             continue
         folded.append(sentence)
     return folded
+
+
+#: "Up to one target land you control becomes an X/X green and blue Bird
+#: creature with flying and haste until end of turn ... It's still a land."
+#: (Jolrael, Voice of Zhalfir's beginning-of-combat trigger, confirmed with
+#: `resolve_cards`) - `_SELF_ANIMATION_RE`'s sibling, animating something the
+#: ability *targeted* rather than the permanent the ability is printed on, and
+#: naming colours and keywords the self-animation shape never does.
+#:
+#: Four layers from one ability (CR 613.6, "If an effect should be applied in
+#: different layers and/or sublayers, the parts of the effect each apply in
+#: their appropriate ones"): layer 4 for the card types and the creature type
+#: (CR 613.1d), layer 5 for the colours (CR 613.1e), layer 6 for the keywords
+#: (CR 613.1f) and sublayer 7b for the P/T (CR 613.4b: "Effects that set power
+#: and/or toughness to a specific number or value are applied").
+#:
+#: CR 205.1a is why the "It's still a land." clause has to be part of the same
+#: sentence - "the new card type(s) replaces any existing card types", so
+#: without it the animated Forest would stop being a land - and CR 205.1b is
+#: what the clause does: "all the object's prior card types, supertypes, or
+#: subtypes are retained". `_fold_retention_clauses` joins the two printed
+#: sentences into one before any shape is tried, exactly as it already does
+#: for Mishra's Factory.
+#:
+#: **The P/T must already be a literal.** Jolrael prints "an X/X ... where X is
+#: the number of cards in your hand", and this module has no `Game` to count a
+#: hand with; `machines/effects.py`'s `_WHERE_X_IS_RE` is what splits that tail
+#: off and substitutes a number before the sentence reaches here, the same
+#: contract `_MASS_PUMP_UNTIL_EOT_RE` already relies on for Craterhoof
+#: Behemoth's "+X/+X".
+_TARGET_ANIMATION_RE = re.compile(
+    r"^(?:[Uu]p to (?:one|two|three) )?(?:target|another target) "
+    r"(?P<what>[a-z]+(?: [a-z]+)*?) becomes an? "
+    r"(?P<power>\d+)/(?P<toughness>\d+) "
+    r"(?P<colors>(?:white|blue|black|red|green)(?:(?:,| and) "
+    r"(?:white|blue|black|red|green))* )?"
+    r"(?P<subtype>[A-Z][A-Za-z'-]*(?: [A-Z][A-Za-z'-]*)? )?"
+    r"(?P<types>(?:artifact |enchantment |land )*creature)"
+    r"(?: with (?P<keywords>[a-z]+(?:(?:,| and) [a-z]+)*))? until end of turn\.?"
+    r"(?:\s+[Ii]t's still an? (?P<retained>[a-z]+)\.?)?$"
+)
+
+
+def _target_animation_builder(
+    power: int,
+    toughness: int,
+    colors: list[Color],
+    subtype: str | None,
+    types: list[Type],
+    keywords: list[str],
+) -> EffectBuilder:
+    """`_TARGET_ANIMATION_RE`'s shape - Jolrael's animation of a land she
+    targeted.
+
+    The subject is `targets`, whatever `create_continuous_effect_of_ability`
+    resolved for the trigger - so "up to one target land you control" legally
+    choosing zero (CR 115.6) animates nothing rather than falling back to the
+    ability's own source, the same contract every other targeted shape here
+    keeps.
+
+    Each part goes to its own layer (CR 613.6) and every part carries the same
+    timestamp, so nothing here can reorder against itself. The colour list is
+    a *set* (CR 613.1e; CR 202.2f: "Effects may change an object's color"), not
+    an addition: "becomes an X/X green and blue Bird creature" states the
+    colours the object has, and a colourless land animated this way is green
+    and blue and nothing else.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        def become(chars: Characteristics, board: Board) -> Characteristics:
+            # CR 205.1a replaces the card types; the retained type is already
+            # folded into `types` by the caller (CR 205.1b). CR 205.3d is why
+            # the old subtypes go with the old types.
+            return chars.with_(
+                types=tuple(types),
+                subtypes=(subtype,) if subtype is not None else (),
+            )
+
+        effects: list[ContinuousEffect] = []
+        for target in targets:
+            stamp = only_this_incarnation(target, target.zone_change_stamp)
+            named = f"{subtype} " if subtype is not None else ""
+            effects.append(
+                ContinuousEffect(
+                    description=(
+                        f"{source.name}: {target.name} becomes a {power}/{toughness} "
+                        f"{named}{' '.join(card_type.value for card_type in types)}"
+                    ),
+                    layer=Layer.TYPE,
+                    timestamp=timestamp,
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=stamp,
+                    modification=become,
+                )
+            )
+            if colors:
+                effects.append(
+                    ContinuousEffect(
+                        description=(
+                            f"{source.name}: {target.name} becomes "
+                            f"{' and '.join(color.value for color in colors)}"
+                        ),
+                        layer=Layer.COLOR,
+                        timestamp=timestamp,
+                        duration=Duration.UNTIL_END_OF_TURN,
+                        selector=stamp,
+                        modification=set_colors(*colors),
+                    )
+                )
+            for keyword in keywords:
+                effects.append(
+                    ContinuousEffect(
+                        description=f"{source.name}: {target.name} gains {keyword}",
+                        layer=Layer.ABILITY,
+                        timestamp=timestamp,
+                        duration=Duration.UNTIL_END_OF_TURN,
+                        selector=stamp,
+                        modification=grant_ability(keyword),
+                    )
+                )
+            effects.append(
+                ContinuousEffect(
+                    description=f"{source.name}: {target.name} has base P/T {power}/{toughness}",
+                    layer=Layer.POWER_TOUGHNESS,
+                    sublayer=Sublayer.SET,
+                    timestamp=timestamp,
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=stamp,
+                    modification=set_power_toughness(power, toughness),
+                )
+            )
+        return effects
+
+    return builder
 
 
 def _self_animation_builder(
@@ -2778,6 +3053,97 @@ def _becomes_type_in_addition_builder(extra_type: Type) -> EffectBuilder:
                 duration=Duration.UNTIL_END_OF_TURN,
                 selector=only_this_incarnation(target, target.zone_change_stamp),
                 modification=add_type(extra_type),
+            )
+            for target in targets
+        ]
+
+    return builder
+
+
+def _gain_control_until_eot_builder() -> EffectBuilder:
+    """`_GAIN_CONTROL_UNTIL_EOT_RE`'s shape - Threaten's control half.
+
+    Layer 2 (CR 613.1b), lasting until end of turn (CR 611.2a: "as long as
+    stated by the spell or ability"), and the new controller is the resolving
+    spell's or ability's own controller - "*you* gain control", CR 611.2's
+    effect belongs to whoever controlled the object that created it.
+
+    `only_this_incarnation` rather than `_only`: a creature that leaves the
+    battlefield and comes back is a new object with no relation to the one
+    this effect was applied to (CR 400.7), and CR 400.7a's carry-over is
+    written about a permanent *spell* on the stack becoming a permanent, not
+    about a permanent that died. DDR#989 turns on exactly that: the stolen
+    land is sacrificed and returns under the earthbender's control, not the
+    thief's.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        if source.controller is None:
+            return []
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: {source.controller} gains control of {target.name}",
+                layer=Layer.CONTROL,
+                timestamp=timestamp,
+                duration=Duration.UNTIL_END_OF_TURN,
+                selector=only_this_incarnation(target, target.zone_change_stamp),
+                modification=set_controller(source.controller),
+            )
+            for target in targets
+        ]
+
+    return builder
+
+
+def _becomes_color_builder(color: Color, *, until_eot: bool) -> EffectBuilder:
+    """ "[Subject] becomes `<colour>`." - Purelace's "Target spell or permanent
+    becomes white." (confirmed with `resolve_cards`).
+
+    Layer 5 (CR 613.1e: "Layer 5: Color-changing effects are applied"), and a
+    *set* rather than an addition: CR 105.2 has no "in addition to its other
+    colors" wording on this template, so `set_colors` replaces whatever the
+    object had. Purelace's own reminder text - "(Mana symbols on that permanent
+    remain unchanged.)" - is the rules consequence of that, not an exception to
+    it: the mana cost is untouched, and only the *derived* colour (CR 202.2)
+    is overwritten here.
+
+    **No duration** unless the sentence prints one. CR 611.2a fixes a
+    resolution effect's duration at "as long as stated by the spell or
+    ability", and Purelace states none, so the change is permanent - which is
+    what makes DDR#32 a question about layers at all rather than about the
+    turn ending.
+
+    The selector keys on the **`CardState.id`** rather than on
+    `only_this_incarnation`'s zone-change stamp, and that is the whole of
+    CR 400.7a: "Effects from spells, activated abilities, and triggered
+    abilities that change the characteristics or controller of a permanent
+    spell on the stack continue to apply to the permanent that spell becomes."
+    Purelace is cast at a Clone still on the stack; the stamp is reissued when
+    that spell resolves onto the battlefield, and a stamped selector would
+    quietly drop the effect at exactly the moment CR 400.7a says it must
+    survive. The id does not change, so keying on it carries the colour over
+    for free.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: {target.name} becomes {color.value}",
+                layer=Layer.COLOR,
+                timestamp=timestamp,
+                duration=Duration.UNTIL_END_OF_TURN if until_eot else Duration.INDEFINITE,
+                selector=_only(target.id),
+                modification=set_colors(color),
             )
             for target in targets
         ]
@@ -3928,6 +4294,13 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
         if extra_type is None:
             return None
         return _becomes_creature_with_mana_value_pt_builder(extra_type)
+    if _GAIN_CONTROL_UNTIL_EOT_RE.fullmatch(sentence):
+        return _gain_control_until_eot_builder()
+    if match := _BECOMES_COLOR_RE.fullmatch(sentence):
+        return _becomes_color_builder(
+            _COLOR_WORDS[match.group("color").lower()],
+            until_eot=bool(match.group("until_eot")),
+        )
     if match := _BECOMES_TYPE_IN_ADDITION_RE.fullmatch(sentence):
         extra_type = _OTHER_PERMANENT_TYPE_WORDS.get(match.group("extra_type").lower())
         if extra_type is None:
@@ -3938,6 +4311,37 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
         if extra_type is None:
             return None
         return _self_becomes_type_until_next_turn_builder(extra_type, match.group("ability"))
+    if match := _TARGET_ANIMATION_RE.fullmatch(sentence):
+        types = [_card_type_word(word) for word in match.group("types").split()]
+        if match.group("retained") is not None:
+            types.append(_card_type_word(match.group("retained")))
+        if any(card_type is None for card_type in types):
+            return None
+        keywords = []
+        if match.group("keywords") is not None:
+            validated = _split_and_validate_keywords(match.group("keywords"))
+            if validated is None:
+                return None
+            keywords = validated
+        raw_colors = match.group("colors")
+        colors = (
+            [
+                _COLOR_WORDS[word]
+                for word in re.findall(r"[a-z]+", raw_colors)
+                if word in _COLOR_WORDS
+            ]
+            if raw_colors
+            else []
+        )
+        subtype = match.group("subtype")
+        return _target_animation_builder(
+            int(match.group("power")),
+            int(match.group("toughness")),
+            colors,
+            subtype.strip() if subtype else None,
+            [card_type for card_type in types if card_type is not None],
+            keywords,
+        )
     if match := _SELF_ANIMATION_RE.fullmatch(sentence):
         types = [_card_type_word(word) for word in match.group("types").split()]
         if match.group("retained") is not None:
