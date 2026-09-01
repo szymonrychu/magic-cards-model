@@ -834,9 +834,52 @@ def _writes_differently(
     while the value written is identical, and timestamps decide between them
     (CR 613.7). Comparing changed-field sets instead reads that collapse as a
     dependency, which wrongly lets a later effect jump the queue.
+
+    A field holding a *collection* - subtypes, abilities, types, colors - needs
+    one refinement on top of that. CR 613.8a asks whether applying `other`
+    changes "what it does to any objects", which is a question about this
+    effect's own contribution, not about the value it happens to land on. An
+    additive effect meeting a setting effect in the same layer lands on
+    different absolute values in the two orders purely because of the setting
+    effect's own handiwork, and reading that as a dependency is what collapsed
+    Blood Moon against Dryad of the Ilysian Grove into a single order.
+
+    Dryad's "Lands you control are every basic land type in addition to their
+    other types" and Blood Moon's "Nonbasic lands are Mountains" are exactly
+    that pair. Neither changes the other's text, existence, or subject set -
+    "nonbasic" is a supertype question (CR 205.4c, CR 305.8) that adding a
+    basic land type cannot answer differently - so CR 613.8 finds no dependency
+    and CR 613.7's timestamps decide, and the two orders genuinely differ:
+    Blood Moon last leaves a nonbasic land a Mountain and nothing else, Dryad
+    last leaves it all five basic types. So for a collection field this
+    compares the elements the effect *adds and removes*, discounting whatever
+    `other` itself added or removed on that object - which is the "ignores
+    differences that are just `other`'s own handiwork" the caller's docstring
+    promises. Order within the collection is not a characteristic and is
+    ignored too.
     """
     written = _changed_fields(was, before_result) | _changed_fields(now, after_result)
-    return any(getattr(before_result, field) != getattr(after_result, field) for field in written)
+    for field in written:
+        before_value = getattr(before_result, field)
+        after_value = getattr(after_result, field)
+        if before_value == after_value:
+            continue
+        was_value, now_value = getattr(was, field), getattr(now, field)
+        if not all(
+            isinstance(value, tuple) for value in (before_value, after_value, was_value, now_value)
+        ):
+            # A scalar - power, toughness, controller. The value written is the
+            # whole of what the effect does, so comparing outcomes is exact,
+            # and it is what keeps Humility and Opalescence independent in 7b.
+            return True
+        # What `other` alone did to this object, which this effect is not
+        # responsible for and must not be judged on.
+        others_doing = set(now_value) ^ set(was_value)
+        contribution_before = (set(before_value) ^ set(was_value)) - others_doing
+        contribution_after = (set(after_value) ^ set(now_value)) - others_doing
+        if contribution_before != contribution_after:
+            return True
+    return False
 
 
 def _changed_fields(before: Characteristics, after: Characteristics) -> frozenset[str]:

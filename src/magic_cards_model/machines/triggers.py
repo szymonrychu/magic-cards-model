@@ -717,6 +717,32 @@ def _required_subtype(condition: str) -> str | None:
     return match.group(1) if match else None
 
 
+#: "a Mountain you control enters" (Valakut, the Molten Pinnacle) - a *subtype*
+#: named on an entry condition (CR 205.3i's land types here, but the shape is
+#: subtype-generic). Capitalization is the discriminator, the same one
+#: `_CAST_SUBTYPE`'s own comment relies on: Oracle templating always
+#: capitalizes a subtype, and never capitalizes the card-type and colour words
+#: `_types_match`/`_color_matches` already read, so "a creature you control
+#: enters" and "a nonland permanent enters" cannot match this. Anchored at the
+#: start so it reads the condition's *subject*, not a qualifier buried later
+#: in the sentence.
+_ENTERING_SUBTYPE = re.compile(
+    r"^(?:an?|one or more) (?P<subtype>[A-Z][A-Za-z]*?)s? (?:you control |an opponent controls )?"
+    r"enters?\b"
+)
+
+
+def _required_entering_subtype(condition: str) -> str | None:
+    """The subtype an ENTERS_THE_BATTLEFIELD condition demands, or `None`.
+
+    Split from `_required_subtype` because that one reads only the "other ...
+    you control" shape CR 603.10a's death triggers print, which never matches
+    an entry condition's plain "a Mountain you control enters".
+    """
+    match = _ENTERING_SUBTYPE.match(condition.strip())
+    return match.group("subtype") if match else None
+
+
 def _subtype_matches(subtypes: tuple[str, ...] | None, subtype: str | None) -> bool:
     """Whether `subtypes` names `subtype` (CR 712.8f). See `_types_match`'s
     docstring for why this reads `GameEvent.subject_subtypes`, not a raw
@@ -1088,6 +1114,16 @@ def condition_matches(
         if not _controller_clause_holds(
             condition, controller, event.subject_controller
         ) or not _types_match(event.subject_types, condition):
+            return False
+        # A subtype named as the entry condition's subject (CR 205.3i,
+        # CR 712.8f) - Valakut, the Molten Pinnacle's "Whenever a Mountain you
+        # control enters". `_types_match` reads *card* types only and so
+        # answers True for any permanent at all here, which let a plain Forest
+        # entering fire a Mountain trigger. `GameEvent.subject_subtypes` is the
+        # computed, layer-aware read (CR 613.5), so a land that is a Mountain
+        # only because of Blood Moon or Dryad of the Ilysian Grove counts, and
+        # one that is not does not.
+        if not _subtype_matches(event.subject_subtypes, _required_entering_subtype(condition)):
             return False
         # "Whenever one or more tokens you control enter" (Caretaker's
         # Talent) - CR 111.1's token, not a card type `_types_match` already
@@ -2029,6 +2065,10 @@ def intervening_if_holds(
     if sacrificed is not None:
         return sacrificed
 
+    subtype_count = _controlled_subtype_count_holds(game, clause, source)
+    if subtype_count is not None:
+        return subtype_count
+
     return _fail_closed(game, ability, source)
 
 
@@ -2268,6 +2308,90 @@ _SPELLS_CAST_LAST_TURN = re.compile(r"^a player cast (?P<count>\w+) or more spel
 #: The counts these clauses are printed with, spelled out as the cards spell
 #: them. A number this does not know is left to `_fail_closed`.
 _NUMBER_WORDS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5}
+
+
+#: Valakut, the Molten Pinnacle's clause: "you control at least five other
+#: Mountains". A board count of permanents with a named subtype (CR 205.3i's
+#: land types here, but the shape is subtype-generic), optionally excluding the
+#: ability's own source - which is what "other" means, and what makes Valakut
+#: need *six* Mountains on the battlefield rather than five.
+#:
+#: `clause` reaches this lowercased, so the subtype cannot be told apart by
+#: capitalization the way `_ENTERING_SUBTYPE` tells it apart. That is safe
+#: here: the clause names the thing being counted and nothing else, and a
+#: card-type word ("creatures", "lands") is counted correctly by
+#: `_controlled_subtype_count_holds`'s own card-type branch rather than being
+#: mistaken for a subtype.
+_CONTROLLED_SUBTYPE_COUNT = re.compile(
+    r"^you control (?P<comparison>at least|more than|fewer than|exactly) "
+    r"(?P<count>[a-z]+) (?P<other>other )?(?P<subtype>[a-z]+?)s$"
+)
+
+#: How each comparison word in `_CONTROLLED_SUBTYPE_COUNT` answers.
+_SUBTYPE_COUNT_COMPARISONS = {
+    "at least": operator.ge,
+    "more than": operator.gt,
+    "fewer than": operator.lt,
+    "exactly": operator.eq,
+}
+
+
+def _controlled_subtype_count_holds(game: "Game", clause: str, source: CardState) -> bool | None:
+    """CR 603.4's clause as "how many <subtype>s do you control right now".
+
+    Valakut, the Molten Pinnacle's "if you control at least five other
+    Mountains". Two things make this more than a name count:
+
+    - **CR 613.5** - the subtypes counted are the *computed* ones, so every
+      land is a Mountain while Blood Moon is out, and every land you control is
+      one while Dryad of the Ilysian Grove is. That is the whole Valakut combo,
+      and reading `CardState.subtypes` here would miss all of it.
+    - **CR 608.2a** - this same clause is asked again as the ability resolves,
+      and the count is taken live both times, so a board that shrank in between
+      answers False the second time and the ability is removed from the stack
+      doing nothing.
+
+    "Other" excludes the source itself (CR 700.4's "other" is "any object
+    other than the object being referred to"). `None`, not False, when the
+    clause is not this shape, so anything else still reaches `_fail_closed`.
+    """
+    match = _CONTROLLED_SUBTYPE_COUNT.match(clause)
+    if match is None:
+        return None
+    wanted = _NUMBER_WORDS.get(match.group("count"))
+    if wanted is None:
+        return None
+
+    subtype = match.group("subtype")
+    controller = source.controller or game.active_player.username
+    card_type = _card_type_for_word(subtype)
+
+    count = 0
+    for state in game.permanents_controlled_by(controller):
+        if match.group("other") and state.id == source.id:
+            continue
+        characteristics = game.characteristics_of(state)
+        if card_type is not None:
+            if card_type in characteristics.types:
+                count += 1
+        elif any(word.lower() == subtype for word in characteristics.subtypes):
+            count += 1
+
+    return _SUBTYPE_COUNT_COMPARISONS[match.group("comparison")](count, wanted)
+
+
+def _card_type_for_word(word: str) -> Type | None:
+    """The CR 300.1 card type a counted noun names, or `None` for a subtype.
+
+    "you control at least three other creatures" counts a card type; "at least
+    five other Mountains" counts a subtype (CR 205.3i). The two are counted off
+    different fields of the computed characteristics, so they have to be told
+    apart before counting.
+    """
+    for kind in Type:
+        if kind.value == word:
+            return kind
+    return None
 
 
 def _spells_cast_last_turn_holds(game: "Game", clause: str) -> bool | None:
@@ -2551,6 +2675,39 @@ def rewritten_ability_lines(game: "Game", permanent: CardState) -> tuple[str, ..
     if all(line in lines for line in printed):
         return None
     return lines
+
+
+def added_ability_lines(game: "Game", permanent: CardState) -> tuple[str, ...]:
+    """The ability lines a continuous effect *added* to this permanent on top of
+    everything it prints, in computed order.
+
+    The additive twin of `rewritten_ability_lines`, which reports only the case
+    where a printed line was taken *away*. A layer 4 effect that grants a basic
+    land type grants the intrinsic "{T}: Add [mana symbol]" that comes with it
+    (CR 305.6, CR 613.1d) - Urborg, Tomb of Yawgmoth's Swamp, Yavimaya, Cradle
+    of Growth's Forest, Dryad of the Ilysian Grove's all five - and every
+    printed line survives, so `rewritten_ability_lines` correctly answers None
+    and the caller keeps its printed list. That left the added mana ability
+    visible on the computed board (CR 613.5) and unusable: the Forest under an
+    Urborg could not actually be tapped for {B}.
+
+    Reported separately, rather than by widening `rewritten_ability_lines`, so
+    a caller can **append** these and keep every printed ability's index where
+    it was - the stability `Game.activated_abilities` depends on.
+
+    A line the permanent already carries in `granted_ability_texts` is left out,
+    since those are folded in by the callers themselves and would otherwise be
+    counted twice.
+    """
+    if permanent.zone is not Zone.BATTLEFIELD:
+        return ()
+    try:
+        computed = game.characteristics_of(permanent)
+    except KeyError:
+        return ()
+    printed = {line.strip() for line in (permanent.oracle_text or "").splitlines() if line.strip()}
+    granted = set(permanent.granted_ability_texts)
+    return tuple(line for line in computed.abilities if line not in printed and line not in granted)
 
 
 def activated_abilities_from_lines(

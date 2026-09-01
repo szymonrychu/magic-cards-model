@@ -158,6 +158,7 @@ from ..machines.triggers import (
     TargetingNoticeKind,
     activated_abilities_from_lines,
     activated_abilities_of,
+    added_ability_lines,
     apnap_order,
     granted_activated_abilities_of,
     intervening_if_holds,
@@ -3079,18 +3080,34 @@ class Game(BaseModel):
     # -- events and triggered abilities (CR 603) ---------------------------
 
     def _enters_event(self, permanent: CardState) -> GameEvent:
+        # CR 712.8f, 603.10: judged by the face that's actually up on the
+        # battlefield (`CardState.types`/`.subtypes`, land-face aware), not
+        # `permanent.card.types`'s front-face-only read - a Witch-Blessed
+        # Meadow entering as a land is not a creature entering.
+        #
+        # CR 613.5 then has the layer system "continually and automatically"
+        # applied, so the types and subtypes a trigger condition is judged
+        # against are the *computed* ones, not the printed ones - exactly the
+        # read `tapped_for_mana_event` and `mana_added_event` already document.
+        # A Forest entering under Dryad of the Ilysian Grove ("Lands you
+        # control are every basic land type in addition to their other types",
+        # layer 4, CR 613.1d) really is a Mountain entering, which is what
+        # Valakut, the Molten Pinnacle's "Whenever a Mountain you control
+        # enters" has to see. `enter_the_battlefield` has already appended the
+        # permanent and stamped its effects (CR 613.7a) before emitting this,
+        # so the computed board is the post-entry one CR 603.10 asks about.
+        types, subtypes = permanent.types, permanent.subtypes
+        if permanent.zone is Zone.BATTLEFIELD:
+            characteristics = self.characteristics_of(permanent)
+            types, subtypes = characteristics.types, characteristics.subtypes
         return GameEvent(
             event=TriggerEvent.ENTERS_THE_BATTLEFIELD,
             subject_id=permanent.id,
             subject_name=permanent.name,
             subject_controller=permanent.controller,
             subject_card=permanent.card,
-            # CR 712.8f, 603.10: judged by the face that's actually up on the
-            # battlefield (`CardState.types`/`.subtypes`, land-face aware), not
-            # `permanent.card.types`'s front-face-only read - a Witch-Blessed
-            # Meadow entering as a land is not a creature entering.
-            subject_types=permanent.types,
-            subject_subtypes=permanent.subtypes,
+            subject_types=types,
+            subject_subtypes=subtypes,
             player=permanent.controller,
         )
 
@@ -8105,9 +8122,27 @@ class Game(BaseModel):
         answers normally. The answer stays under-inclusive rather than wrong,
         which is the same direction `colors_land_types_could_produce` errs in.
         """
-        abilities = parse_mana_abilities(
-            permanent.card, permanent.up_face_name
-        ) + granted_mana_abilities(permanent.granted_ability_texts)
+        granted = granted_mana_abilities(permanent.granted_ability_texts)
+        rewritten = rewritten_ability_lines(self, permanent)
+        if rewritten is not None:
+            # CR 613.5: once a continuous effect has rewritten the printed
+            # lines, those computed lines are the ones this permanent has -
+            # which is where a Blood Mooned nonbasic land's intrinsic "{T}: Add
+            # {R}" comes from (CR 305.6), since nothing prints it. The grants
+            # are still added on top, being layer 6 effects (CR 613.1f) applied
+            # after the layer 4 change that caused the rewrite, so a Blood
+            # Mooned Urza's Saga "could produce" both {R} and its chapter I
+            # {C} - which is what CR 106.7 is asking.
+            abilities = granted_mana_abilities(rewritten) + granted
+        else:
+            # Plus whatever layer 4 added without removing anything: a land
+            # granted a basic land type could produce that type's mana
+            # (CR 305.6), which is exactly what CR 106.7 is asking about.
+            abilities = (
+                parse_mana_abilities(permanent.card, permanent.up_face_name)
+                + granted
+                + granted_mana_abilities(added_ability_lines(self, permanent))
+            )
         if not abilities:
             return frozenset()
         controller = permanent.controller_or_owner
@@ -8486,12 +8521,38 @@ class Game(BaseModel):
         whose printed lines all survive, so an ordinary grant still appends and
         every printed ability's index stays where it was.
         """
+        granted = granted_activated_abilities_of(permanent.granted_ability_texts)
         rewritten = rewritten_ability_lines(self, permanent)
         if rewritten is not None:
-            return activated_abilities_from_lines(rewritten, permanent.card, permanent.up_face_name)
-        return activated_abilities_of(
-            permanent.card, permanent.up_face_name
-        ) + granted_activated_abilities_of(permanent.granted_ability_texts)
+            # A rewrite replaces the *printed* text, and nothing more. An
+            # ability granted to this object by something that already resolved
+            # is a separate continuous effect (CR 611.2) applied in layer 6
+            # (CR 613.1f), which is after both layer 1's copy effects
+            # (CR 613.2c) and layer 4's type changes (CR 613.1d) - so it is
+            # still on the object however thoroughly the printed lines were
+            # rewritten, and has to be appended here too.
+            #
+            # Urza's Saga under Blood Moon is the case that needs it: CR 305.7
+            # sets its subtype to Mountain and takes away every ability its
+            # rules text generated, leaving the computed line list as just the
+            # Mountain's intrinsic "{T}: Add {R}" (CR 305.6) - but the "{T}: Add
+            # {C}" and the Construct maker its chapters already granted are
+            # untouched, so the land taps for {C} *or* {R} and still makes
+            # tokens. Dropping the grants here made it a bare Mountain.
+            base = activated_abilities_from_lines(rewritten, permanent.card, permanent.up_face_name)
+            already = {ability.raw for ability in base}
+            return base + [ability for ability in granted if ability.raw not in already]
+        # An ability a continuous effect *added* without taking any printed one
+        # away - the intrinsic "{T}: Add [mana symbol]" that comes with a basic
+        # land type granted in layer 4 (CR 305.6, CR 613.1d), which is how
+        # Urborg turns every land into a black source. Appended last so every
+        # printed ability keeps the index it had.
+        added = activated_abilities_from_lines(
+            added_ability_lines(self, permanent), permanent.card, permanent.up_face_name
+        )
+        base = activated_abilities_of(permanent.card, permanent.up_face_name) + granted
+        seen = {ability.raw for ability in base}
+        return base + [ability for ability in added if ability.raw not in seen]
 
     def why_cannot_activate(
         self, permanent: CardState, index: int = 0, controller: str | None = None
@@ -8869,6 +8930,21 @@ class Game(BaseModel):
         computed before it arrived - is not judged, so this can only ever take
         an ability away that an effect actually removed.
         """
+        if any(ability.raw == text for text in permanent.granted_ability_texts):
+            # An ability *granted* to this object is a continuous effect from
+            # the resolution that granted it (CR 611.2), applied in layer 6
+            # (CR 613.1f) - after the layer 4 type change (CR 613.1d) whose
+            # CR 305.7 clause strips the abilities generated from the land's
+            # own rules text. So layer 4 taking the printed text away cannot
+            # take this one, and the computed line list - which holds what
+            # survived layer 4 - is not the place to look for it.
+            #
+            # Urza's Saga under Blood Moon is the case: chapter I's granted
+            # "{T}: Add {C}." used to be found here only by accident, as a
+            # substring of the printed chapter line "I - This Saga gains
+            # '{T}: Add {C}.'". Blood Moon removes that printed line, and the
+            # grant was refused with it.
+            return True
         try:
             computed = self.characteristics_of(permanent)
         except KeyError:

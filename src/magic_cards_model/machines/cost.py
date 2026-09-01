@@ -70,6 +70,7 @@ from .triggers import (
     GameEvent,
     activated_abilities_from_lines,
     activated_abilities_of,
+    added_ability_lines,
     granted_activated_abilities_of,
     is_ability,
     rewritten_ability_lines,
@@ -145,13 +146,34 @@ def _activations_of(source: CardState, game: Any = None) -> list[ActivatedAbilit
     offered its printed one. Without a game there is no layer engine to ask and
     the printed reading is all there is, which is the answer this had before.
     """
+    granted = granted_activated_abilities_of(source.granted_ability_texts)
     if game is not None:
         rewritten = rewritten_ability_lines(game, source)
         if rewritten is not None:
-            return activated_abilities_from_lines(rewritten, source.card, source.up_face_name)
-    return activated_abilities_of(
-        source.card, source.up_face_name
-    ) + granted_activated_abilities_of(source.granted_ability_texts)
+            # The grants are appended here too, for the reason
+            # `Game.activated_abilities` spells out: a rewrite replaces the
+            # printed text, while an ability granted by something that already
+            # resolved is its own continuous effect (CR 611.2) applied in
+            # layer 6 (CR 613.1f), after both the layer 1 copy effects and the
+            # layer 4 type changes that can cause a rewrite. Keeping the two
+            # paths identical is the whole point of this helper - a Blood
+            # Mooned Urza's Saga must be spendable on a cost for the same
+            # {C} its own chapter I granted, not only for the Mountain's {R}.
+            base = activated_abilities_from_lines(rewritten, source.card, source.up_face_name)
+            already = {ability.raw for ability in base}
+            return base + [ability for ability in granted if ability.raw not in already]
+    base = activated_abilities_of(source.card, source.up_face_name) + granted
+    if game is None:
+        return base
+    # The additive half, kept identical to `Game.activated_abilities`: a basic
+    # land type granted in layer 4 brings its intrinsic mana ability with it
+    # (CR 305.6), and a land that gained one has to be spendable on a cost for
+    # it, not merely show it on the computed board.
+    added = activated_abilities_from_lines(
+        added_ability_lines(game, source), source.card, source.up_face_name
+    )
+    seen = {ability.raw for ability in base}
+    return base + [ability for ability in added if ability.raw not in seen]
 
 
 def tappable_mana_activations(
@@ -3255,9 +3277,16 @@ class CostPayment(BaseModel):
                 and any(piece.kind is CostKind.TAP for piece in activation.costs)
             ]
         else:
-            abilities = parse_mana_abilities(
-                source.card, source.up_face_name
-            ) + granted_mana_abilities(source.granted_ability_texts)
+            # Plus the intrinsic mana ability that came with a basic land type
+            # granted in layer 4 (CR 305.6, CR 613.1d) - Urborg's Swamp,
+            # Yavimaya's Forest, Dryad's all five. Without it the type showed on
+            # the computed board and the land still refused to be tapped for it.
+            added = added_ability_lines(self.game, source) if self.game is not None else ()
+            abilities = (
+                parse_mana_abilities(source.card, source.up_face_name)
+                + granted_mana_abilities(source.granted_ability_texts)
+                + granted_mana_abilities(added)
+            )
         if not abilities:
             raise ValueError(
                 f"{source.name} has no {{T}} mana ability on the face that is up "

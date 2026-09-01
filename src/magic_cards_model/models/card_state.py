@@ -1907,8 +1907,20 @@ class CardState(BaseModel):
 
     @property
     def is_saga(self) -> bool:
-        """CR 303.5: an enchantment with the Saga subtype."""
-        return "Saga" in self.subtypes
+        """CR 303.5: an enchantment with the Saga subtype.
+
+        Layer-aware (CR 613.5, CR 613.1d), the same shape `controller`,
+        `power` and `toughness` already have: the subtype is asked of the
+        *computed* characteristics on the battlefield and of the printing
+        everywhere else. Urza's Saga under Blood Moon is the case that needs
+        it - CR 305.7 sets its subtype to Mountain, so it stops being a Saga
+        at all, and every rule that reads this has to agree: CR 505.4 /
+        CR 714.3c stop giving it lore counters, and CR 704.5s stops putting it
+        into its owner's graveyard.
+        """
+        computed = self.computed_characteristics
+        subtypes = self.subtypes if computed is None else computed.subtypes
+        return "Saga" in subtypes
 
     @property
     def is_class(self) -> bool:
@@ -1964,6 +1976,15 @@ class CardState(BaseModel):
             return ()
         from ..machines.abilities import TriggeredAbility, TriggerEvent, parse_abilities
 
+        # CR 613.1f: layer 6 can remove an ability, and CR 305.7 removes every
+        # ability generated from a land's rules text when an effect sets its
+        # subtype to a basic land type. A chapter ability the Saga no longer
+        # *has* is not counted - CR 714.2d ("A Saga's final chapter number is
+        # the greatest value among chapter abilities it has") says "has", and
+        # CR 714.4 / CR 704.5s / CR 505.4 / CR 714.3c all gate on "a Saga
+        # permanent with one or more chapter abilities". So the computed
+        # ability list, not the printing, decides.
+        computed = self.computed_characteristics
         up_face_name = self.up_face_name or self.card.name
         return tuple(
             sorted(
@@ -1973,6 +1994,7 @@ class CardState(BaseModel):
                 and isinstance(ability, TriggeredAbility)
                 and ability.event is TriggerEvent.LORE_COUNTERS_ADDED
                 and ability.chapter is not None
+                and (computed is None or computed.has_ability(ability.raw))
             )
         )
 
