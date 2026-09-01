@@ -22,9 +22,9 @@ Sourced from the DDR judge transcripts. Episodes covered:
 - **DDR#707** - Tishana's Tidebinder vs. Soul Warden (a trigger already on the
   stack, and a replacement applied afterwards)
 - **DDR#901** - Officious Interrogation + Stridehangar Automaton (a token
-  replacement that *does* parse into `IF_WOULD_INSTEAD`, on a card with no row
-  in the registry - the same shape DDR#830 already found for damage, now on
-  token creation)
+  replacement that parses into `IF_WOULD_INSTEAD` and now compiles too, off
+  `_compile_extra_token` - the same route DDR#830's damage replacements take,
+  applied to token creation)
 - **DDR#833** - Nashi, Searcher in the Dark vs. Leyline of the Void (an
   opponent's Leyline of the Void reaches a player's *own* self-mill, because
   "opponent's graveyard" is judged from the Leyline's controller, not the
@@ -47,19 +47,18 @@ effect into behaviour - a hand-written per-card `REPLACEMENTS` registry (the
 same shape as `machines/effects.py`'s `EFFECTS` table) for the genuine
 exceptions, plus a set of generic compilers tried on a registry miss for every
 wording common enough to template. `replacements_of` is what `Game` actually
-consults through `apply_replacements`, and it tries both. A card's replacement
-clause can still *parse* into a real `ReplacementKind` - Stridehangar
-Automaton's token-plus-an-extra-Thopter clause parses as `IF_WOULD_INSTEAD`
-below - and do nothing at the table, because its exact wording matches no
-compiled shape and it has no `REPLACEMENTS` row of its own; that gap is what
-DDR#901 is about. Pariah and Ancient Adamantoise's declarative "All damage that
+consults through `apply_replacements`, and it tries both, plus the shapes that
+live in neither a sentence nor a template: a keyword's own rule (umbra armor,
+CR 702.89a) and CR 614.17d's can't-enter effects. A card's replacement clause
+can still *parse* into a real `ReplacementKind` and do nothing at the table
+when its exact wording matches no compiled shape and it has no `REPLACEMENTS`
+row of its own; that gap is what DDR#901 was about, and it is closed for
+Stridehangar Automaton below. Pariah and Ancient Adamantoise's declarative "All damage that
 would be dealt to you ... is dealt to X instead" does not even reach
 `IF_WOULD_INSTEAD`: the parser only claims sentences that open with
 "If ... would ...", so this phrasing (used by every damage-redirection aura,
 not just these two) comes back `UNPARSED`.
 """
-
-import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.replacement import (
@@ -98,10 +97,10 @@ def test_ancient_adamantoise_should_catch_damage_aimed_at_its_controller():
     """DDR#939: all damage to alice should be redirected to her Adamantoise.
 
     Pariah does the same "all damage to you instead" trick as an Aura rather
-    than a creature's own text, but Auras have no attachment in this model (see
-    the umbra armor xfail below), so Ancient Adamantoise - which redirects
-    damage aimed at *itself*, no attachment needed - isolates the redirection
-    gap on its own without also depending on the missing-attachment gap.
+    than a creature's own text, so it would also depend on the Aura being
+    attached to something; Ancient Adamantoise redirects damage aimed at
+    *itself*, no attachment needed, which isolates the redirection gap on its
+    own.
 
     Driven from alice's side of the table so the Bolt is cast by the active
     player during their own main phase (CR 117.3a). While this was an `xfail`
@@ -252,12 +251,6 @@ def test_the_darkness_crystal_should_exile_the_dying_blocker_and_add_two_more_li
     assert scenario.player("alice").life == starting_life + 6 + 2, "plus the Crystal's own gain"
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="replacement effects are not applied (CR 614) and Auras have no attachment: "
-    "CardState cannot say what Hyena Umbra is enchanting, so umbra armor has nothing "
-    "to protect",
-)
 def test_umbra_armor_eats_the_destruction_and_the_creature_survives():
     """DDR#403: destruction is replaced, so the creature never leaves.
 
@@ -269,6 +262,11 @@ def test_umbra_armor_eats_the_destruction_and_the_creature_survives():
 
     The lethal damage state-based action (CR 704.5g) destroys the creature, and
     that destruction is what umbra armor catches.
+
+    The Aura is attached by hand (CR 701.3a) because a board staged straight
+    onto the battlefield never went through casting an Aura at a target; an
+    unattached Aura would be binned by CR 704.5m on the first state-based
+    sweep, with nothing left to protect anything.
     """
     scenario = (
         Scenario()
@@ -276,9 +274,10 @@ def test_umbra_armor_eats_the_destruction_and_the_creature_survives():
         .player("bob", battlefield=["Grizzly Bears", "Hyena Umbra"])
         .build()
     )
-    scenario.start_at(Step.PRECOMBAT_MAIN)
     bears = scenario.creature("Grizzly Bears", "bob")
     umbra = scenario.creature("Hyena Umbra", "bob")
+    umbra.attach_to(bears)
+    scenario.start_at(Step.PRECOMBAT_MAIN)
 
     (mountain,) = scenario.untapped_sources("Mountain", username="alice")
     scenario.cast_and_resolve("Lightning Bolt", mountain, username="alice", targets=[bears])
@@ -288,11 +287,6 @@ def test_umbra_armor_eats_the_destruction_and_the_creature_survives():
     assert umbra.zone is Zone.GRAVEYARD, "the Aura is destroyed in the creature's place"
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="replacement effects are not applied (CR 614), so nothing ever reaches the "
-    "CR 616.1 choice between two applicable effects",
-)
 def test_only_one_destruction_replacer_gets_to_apply():
     """DDR#853: two shields, one destruction, one shield spent.
 
@@ -302,18 +296,26 @@ def test_only_one_destruction_replacer_gets_to_apply():
     with something that is not a destruction, the second shield has nothing left
     to catch - CR 614.7: an effect that would replace an event that never
     happens simply does nothing.
+
+    The destruction here is a spell that uses the word *destroy* (CR 701.8b's
+    first branch) rather than the lethal-damage state-based action the test
+    above uses - the same event reached the other legal way, and the one that
+    cannot be confused with two Auras' own +1/+1 raising the toughness out of
+    a burn spell's range.
     """
     scenario = (
         Scenario()
-        .player("alice", hand=["Lightning Bolt"], battlefield=["Mountain"])
+        .player("alice", hand=["Erode"], battlefield=["Plains"])
         .player("bob", battlefield=["Grizzly Bears", "Hyena Umbra", "Hyena Umbra"])
         .build()
     )
-    scenario.start_at(Step.PRECOMBAT_MAIN)
     bears = scenario.creature("Grizzly Bears", "bob")
+    for umbra in scenario.creatures("Hyena Umbra", "Hyena Umbra", username="bob"):
+        umbra.attach_to(bears)  # CR 701.3a, or CR 704.5m bins them both
+    scenario.start_at(Step.PRECOMBAT_MAIN)
 
-    (mountain,) = scenario.untapped_sources("Mountain", username="alice")
-    scenario.cast_and_resolve("Lightning Bolt", mountain, username="alice", targets=[bears])
+    (plains,) = scenario.untapped_sources("Plains", username="alice")
+    scenario.cast_and_resolve("Erode", plains, username="alice", targets=[bears])
 
     assert bears.zone is Zone.BATTLEFIELD
     assert [state.name for state in scenario.player("bob").graveyard] == ["Hyena Umbra"], (
@@ -398,7 +400,7 @@ def test_a_trigger_already_on_the_stack_survives_its_source_losing_its_abilities
 
 
 # --------------------------------------------------------------------------
-# DDR#901 - a token-creation replacement that parses, but has no row
+# DDR#901 - a token-creation replacement, parsed and performed
 # --------------------------------------------------------------------------
 
 
@@ -410,22 +412,14 @@ def test_stridehangar_automatons_token_clause_parses_as_if_would_instead():
     additional 1/1 colorless Thopter artifact creature token with flying are
     created instead." That is CR 614.1a's exact template - "If [event] would
     [happen], [replacement] instead" - and `parse_replacement_effects` reads it
-    that way. `replacements_of` is still empty for this card, the same
-    DDR#830-shaped gap: a parsed shape with no row that turns it into
-    behaviour.
+    that way. `replacements_of` now compiles that shape into behaviour too, so
+    the card generates exactly one performable replacement effect.
     """
     (effect,) = parse_replacement_effects(card("Stridehangar Automaton"))
     assert effect.kind is ReplacementKind.IF_WOULD_INSTEAD
-    assert replacements_of(card("Stridehangar Automaton")) == []
+    assert len(replacements_of(card("Stridehangar Automaton"))) == 1
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Stridehangar Automaton parses into a real IF_WOULD_INSTEAD (proven "
-    "above) but has no row in replacements_of, so apply_replacements never sees "
-    "it: Hangarback Walker's dies trigger creates exactly two Thopters, one per "
-    "+1/+1 counter, with no extra Thopter added on top.",
-)
 def test_stridehangar_automaton_should_add_an_extra_thopter_to_any_artifact_token_event():
     """DDR#901: any artifact token creation under Stridehangar Automaton's
     controller becomes that many tokens *plus* an extra 1/1 Thopter.

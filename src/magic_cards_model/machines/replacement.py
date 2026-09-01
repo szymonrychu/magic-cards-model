@@ -118,7 +118,7 @@ from pydantic import BaseModel
 
 from ..models.card import Card, Color, Type
 from ..models.card_state import CardState, Choice, ChoiceKind
-from ..models.token import is_token
+from ..models.token import TokenDefinition, is_token
 from ..models.zone import Zone
 from .decisions import Decision, DecisionKind
 
@@ -272,6 +272,12 @@ class ReplacementEffect(BaseModel):
     variable_amount: bool = False
     #: The kind of counter, as printed: "+1/+1", "shield", "charge".
     counter_kind: str | None = None
+    #: How many, when the card states it as an expression rather than a number
+    #: or an X - Ulamog, the Defiler's "equal to the greatest mana value among
+    #: cards in exile". Kept as the printed phrase; `_self_enters_modifiers`
+    #: evaluates it against the game as the permanent enters, and refuses the
+    #: whole effect if it recognises no resolver for the phrase.
+    amount_expression: str | None = None
     #: What the permanent enters as a copy of.
     copy_of: str | None = None
     #: True when the permanent also enters tapped alongside another `enters`
@@ -870,7 +876,7 @@ def _try_enters_with(sentence: str, names: tuple[str, ...]) -> list[ReplacementE
         return []
     subject = match.group("subject").strip()
     what = match.group("what").strip()
-    amount, variable, counter_kind = _read_counters(what)
+    amount, variable, counter_kind, expression = _read_counters(what)
     return [
         _make(
             ReplacementKind.ENTERS_WITH,
@@ -880,6 +886,7 @@ def _try_enters_with(sentence: str, names: tuple[str, ...]) -> list[ReplacementE
             amount=amount,
             variable_amount=variable,
             counter_kind=counter_kind,
+            amount_expression=expression,
             condition=(match.group("condition") or "").strip() or None,
             self_replacement=_refers_to_self(subject, names),
         )
@@ -888,18 +895,39 @@ def _try_enters_with(sentence: str, names: tuple[str, ...]) -> list[ReplacementE
 
 _COUNTERS = re.compile(r"^(?P<amount>[\w+/-]+) (?P<kind>.+?) counters?$", re.IGNORECASE)
 
+#: "a number of +1/+1 counters on it equal to the greatest mana value among
+#: cards in exile" - Ulamog, the Defiler. The count is neither a literal nor
+#: CR 107.3m's X: it is an expression evaluated as the permanent enters, which
+#: is what `amount_expression` carries and what
+#: `_ENTERS_WITH_AMOUNT_RESOLVERS` further down turns into a number. The kind
+#: of counter is still plainly readable, so it is read here rather than the
+#: whole clause being abandoned to `variable_amount`.
+_COUNTERS_EQUAL_TO = re.compile(
+    r"^an? number of (?P<kind>.+?) counters?(?: on it)? equal to (?P<expression>.+?)$",
+    re.IGNORECASE,
+)
 
-def _read_counters(what: str) -> tuple[int | None, bool, str | None]:
-    """Read "four +1/+1 counters", "X charge counters", "a shield counter".
+
+def _read_counters(what: str) -> tuple[int | None, bool, str | None, str | None]:
+    """Read "four +1/+1 counters", "X charge counters", "a shield counter",
+    and "a number of +1/+1 counters on it equal to [expression]".
+
+    Returns `(amount, variable, kind, expression)`. Only the last shape fills
+    `expression`, and it always leaves `amount` unset and `variable` true - the
+    count is not knowable from the text alone.
 
     Anything more elaborate - Agent's Toolkit enters with four different kinds
     at once - leaves the counter fields empty rather than picking one.
     """
-    match = _COUNTERS.match(what.strip())
+    text = what.strip()
+    equal_to = _COUNTERS_EQUAL_TO.match(text)
+    if equal_to:
+        return None, True, equal_to.group("kind").strip(), equal_to.group("expression").strip()
+    match = _COUNTERS.match(text)
     if not match:
-        return None, False, None
+        return None, False, None, None
     amount, variable = _amount_of(match.group("amount"))
-    return amount, variable, match.group("kind").strip()
+    return amount, variable, match.group("kind").strip(), None
 
 
 # --------------------------------------------------------------------------
@@ -1144,6 +1172,30 @@ class ReplaceableEvent:
     #: `_stack_replacements` does not gate on this at all and rebound's does.
     resolving: bool = False
 
+    #: What the tokens being created are, for `CREATE_TOKENS` (CR 111.3).
+    #:
+    #: Without it the event says only *how many*, which is enough for Doubling
+    #: Season ("twice that many of **those** tokens") and not enough for
+    #: anything that asks what kind - Stridehangar Automaton watches for
+    #: "artifact tokens" specifically, and cannot tell one from a Saproling
+    #: without this. `None` for a token *copy*, whose characteristics come from
+    #: a printed card rather than a definition (CR 707.2); `card` carries the
+    #: original in that case, and is the thing to read instead.
+    definition: TokenDefinition | None = None
+    #: Tokens a replacement effect added to a `CREATE_TOKENS` event that are
+    #: *not* more of `definition` - Stridehangar Automaton's "those tokens plus
+    #: an additional 1/1 ... Thopter ... are created instead".
+    #:
+    #: Kept apart from `amount` because CR 614.6's modified event really is one
+    #: creation of two different kinds of token, not two creations: they are
+    #: created by draining this list inside the same `create_tokens` call, with
+    #: no second `CREATE_TOKENS` event raised for them. Raising one would let
+    #: the same permanent's effect apply again to its own addition, which
+    #: CR 614.5 forbids ("it gets only one opportunity to affect an event or
+    #: any modified events that may replace that event") and which would not
+    #: terminate.
+    extra: list[TokenDefinition] = field(default_factory=list)
+
     #: A `DESTROY` that a replacement effect called off (CR 614.8, CR 701.8c).
     #: The destruction simply does not happen; the permanent stays where it is.
     replaced: bool = False
@@ -1215,6 +1267,12 @@ class ApplicableEffect:
     #: A prevention shield (CR 615.1) outlives the object that made it, so the
     #: controller is recorded when the shield is created and carried here.
     controller_username: str | None = None
+
+    #: CR 616.1c: "If any of the replacement and/or prevention effects would
+    #: cause an object to become a copy of another object as it enters the
+    #: battlefield, one of them must be chosen." True for exactly those, which
+    #: is what `order_effects` puts first - the choice is forced, not free.
+    copy_as_it_enters: bool = False
 
     @property
     def controller(self) -> str:
@@ -2006,6 +2064,208 @@ def _compile_token_doubler(effect: ReplacementEffect) -> CardReplacement | None:
     )
 
 
+# -- "if one or more <filter> tokens would be created under your control, those
+#     tokens plus an additional <descriptor> are created instead" --
+#
+# Stridehangar Automaton. CR 614.16, verified this session: "Some replacement
+# effects apply 'if an effect would create one or more tokens' ... These
+# replacement effects apply if the effect of a resolving spell or ability
+# creates the tokens" - the same clause `_compile_token_doubler` above leans
+# on, so a token created by a resolving triggered ability (Hangarback Walker's
+# dies trigger) is squarely in scope.
+#
+# CR 701.7b is what makes this readable at all: "If a replacement effect
+# applies to a token being created, that effect applies before considering any
+# continuous effects that will modify the characteristics of that token." The
+# `CREATE_TOKENS` event is raised before a single token has been built, so the
+# `TokenDefinition` on it is still exactly what the creating effect stated
+# (CR 111.3) and "artifact tokens" is a question that can be answered.
+
+#: The event half. `filter` is a single word naming a card type, and only the
+#: types below are read - a filter this cannot check ("Thopter tokens",
+#: "creature tokens you control that aren't Thopters") matches nothing and the
+#: whole effect goes uncompiled, per the fail-closed rule above.
+_EXTRA_TOKEN_EVENT_RE = re.compile(
+    r"^one or more (?P<filter>\w+) tokens would be created under your control$", re.IGNORECASE
+)
+_EXTRA_TOKEN_REPLACEMENT_RE = re.compile(
+    r"^those tokens plus an additional (?P<descriptor>.+?) are created$", re.IGNORECASE
+)
+
+#: The card types a filter may name, as CR 205.2a spells them.
+_CARD_TYPE_WORDS: dict[str, Type] = {
+    "artifact": Type.ARTIFACT,
+    "creature": Type.CREATURE,
+    "enchantment": Type.ENCHANTMENT,
+    "land": Type.LAND,
+}
+
+#: Colour words a token descriptor may use (CR 105.1), plus CR 105.2's
+#: "colorless", which is handled separately because it names no colour.
+_TOKEN_COLOR_WORDS: dict[str, Color] = {
+    "white": Color.WHITE,
+    "blue": Color.BLUE,
+    "black": Color.BLACK,
+    "red": Color.RED,
+    "green": Color.GREEN,
+}
+
+#: The keywords a "... with X" tail may name. Deliberately a short closed list:
+#: a tail naming anything else leaves the descriptor unread and the effect
+#: uncompiled, rather than a token quietly created without an ability it should
+#: have had. `machines/effects.py` keeps its own, longer copy for the *creation*
+#: side; duplicated here rather than reached into, since that one is private.
+_TOKEN_TAIL_KEYWORDS = frozenset(
+    {
+        "flying",
+        "first strike",
+        "double strike",
+        "vigilance",
+        "haste",
+        "trample",
+        "lifelink",
+        "deathtouch",
+        "menace",
+        "reach",
+        "defender",
+        "hexproof",
+        "indestructible",
+    }
+)
+
+_TOKEN_DESCRIPTOR_TAIL_RE = re.compile(r"^(?P<head>.+?) with (?P<tail>[a-z, ]+)$", re.IGNORECASE)
+_TOKEN_PT_RE = re.compile(r"^\d+/\d+$")
+
+
+def _read_token_descriptor(descriptor: str) -> TokenDefinition | None:
+    """ "1/1 colorless Thopter artifact creature token with flying" (CR 111.3).
+
+    Read right to left the way the type line is built (CR 205.1a): the word
+    "token", then "creature" (CR 205.2a), then an optional "artifact" ahead of
+    it, then a leading power/toughness (CR 208.1), then colour words or
+    CR 105.2's "colorless", and whatever capitalized words are left are the
+    subtypes (CR 205.3), which CR 111.4 also turns into the token's name.
+
+    Anything this cannot read whole returns `None`, which takes the entire
+    replacement effect with it - a token created with the wrong
+    characteristics is a worse answer than a card that does nothing.
+    """
+    text = descriptor.strip().rstrip(".")
+    keywords: tuple[str, ...] = ()
+
+    tail_match = _TOKEN_DESCRIPTOR_TAIL_RE.match(text)
+    if tail_match is not None:
+        parts = [
+            part.strip()
+            for part in re.split(r",\s*|\s+and\s+", tail_match.group("tail"))
+            if part.strip()
+        ]
+        if not parts or any(part.lower() not in _TOKEN_TAIL_KEYWORDS for part in parts):
+            return None
+        keywords = tuple(part.title() for part in parts)
+        text = tail_match.group("head")
+
+    words = text.split()
+    if not words or words[-1].lower() != "token":
+        return None
+    words = words[:-1]
+    if not words or words[-1].lower() != "creature":
+        return None
+    words = words[:-1]
+
+    types: tuple[Type, ...] = (Type.CREATURE,)
+    if words and words[-1].lower() == "artifact":
+        types = (Type.ARTIFACT, Type.CREATURE)
+        words = words[:-1]
+
+    power = toughness = None
+    if words and _TOKEN_PT_RE.match(words[0]):
+        power_text, toughness_text = words[0].split("/")
+        power, toughness = int(power_text), int(toughness_text)
+        words = words[1:]
+
+    colors: list[Color] = []
+    while words and words[0].lower() in _TOKEN_COLOR_WORDS:
+        colors.append(_TOKEN_COLOR_WORDS[words[0].lower()])
+        words = words[1:]
+    if words and words[0].lower() == "colorless":
+        words = words[1:]
+
+    if not words or not all(word[:1].isupper() for word in words):
+        return None
+    return TokenDefinition(
+        types=types,
+        subtypes=tuple(words),
+        colors=tuple(colors),
+        power=power,
+        toughness=toughness,
+        keywords=keywords,
+    )
+
+
+def _extra_token_applies(wanted: Type) -> Applies:
+    """ "If one or more **artifact** tokens would be created under your control".
+
+    "Under your control" is CR 111.2's "the token enters the battlefield under
+    that player's control", so the test is against the player *creating* them,
+    exactly as `_doubling_season_tokens_applies` already reads the same phrase.
+
+    What kind of token is read off the event's `definition` when the creating
+    effect stated one (CR 111.3), and off the original permanent's own types
+    when this is a token *copy* instead, whose characteristics are a printed
+    card's (CR 707.2, CR 111.3's "functionally equivalent" both ways round).
+    """
+
+    def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
+        if event.kind is not EventKind.CREATE_TOKENS or event.amount <= 0:
+            return False
+        if event.player is None or event.player.username != source.controller:
+            return False
+        if event.definition is not None:
+            return wanted in event.definition.types
+        return event.card is not None and wanted in event.card.types
+
+    return applies
+
+
+def _create_an_additional_token(extra: TokenDefinition) -> Apply:
+    """ "...those tokens plus an additional [token] are created instead."
+
+    "Those tokens" is the batch untouched - `amount` and `definition` are left
+    exactly as they were - and the addition is queued on the event for
+    `create_tokens` to drain. One modified event, one creation (CR 614.6).
+    """
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        event.extra.append(extra)
+
+    return apply
+
+
+def _compile_extra_token(effect: ReplacementEffect) -> CardReplacement | None:
+    if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD:
+        return None
+    event_match = _EXTRA_TOKEN_EVENT_RE.match((effect.event or "").strip())
+    if event_match is None:
+        return None
+    wanted = _CARD_TYPE_WORDS.get(event_match.group("filter").lower())
+    if wanted is None:
+        return None
+    replacement_match = _EXTRA_TOKEN_REPLACEMENT_RE.match(
+        (effect.replacement or "").strip().rstrip(".")
+    )
+    if replacement_match is None:
+        return None
+    extra = _read_token_descriptor(replacement_match.group("descriptor"))
+    if extra is None:
+        return None
+    return CardReplacement(
+        label=effect.text,
+        applies=_extra_token_applies(wanted),
+        apply=_create_an_additional_token(extra),
+    )
+
+
 # -- "if an effect would put one or more counters on a permanent you control,
 #     it puts twice that many of those counters on that permanent instead" --
 
@@ -2153,6 +2413,208 @@ def _compile_counter_reducer(effect: ReplacementEffect) -> CardReplacement | Non
     )
 
 
+# --------------------------------------------------------------------------
+# Keyword-only shapes (CR 702)
+# --------------------------------------------------------------------------
+#
+# A keyword ability's meaning is not in the card's rules text at all - it is in
+# the rule that defines the keyword, and the parenthetical on the card is
+# reminder text, which `strip_reminder_text` drops before a single template is
+# tried (CR 207.2a). So `parse_replacement_effects(card("Hyena Umbra"))` is
+# empty and always will be: there is no sentence to parse. The keyword itself
+# is the sentence, and it is read off `Card.keywords` here.
+
+
+#: CR 702.89a, verified this session: "Umbra armor is a static ability that
+#: appears on some Auras. 'Umbra armor' means 'If enchanted permanent would be
+#: destroyed, instead remove all damage marked on it and destroy this Aura.'"
+#:
+#: The word *instead* is CR 614.1a, so this is a replacement effect on the
+#: destruction itself rather than on the graveyard move it would have become -
+#: which is exactly why `EventKind.DESTROY` exists and is raised separately.
+#: CR 614.6: the replaced event never happens, so the enchanted permanent did
+#: not die (CR 700.4) and no dies trigger fires for it.
+_UMBRA_ARMOR = "umbra armor"
+
+
+def _umbra_armor_applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
+    """ "If **enchanted permanent** would be destroyed" (CR 702.89a).
+
+    Three things have to be true and each is checked: the event is a
+    destruction (CR 701.8a, and *only* the ways CR 701.8b allows - the engine
+    raises `DESTROY` for nothing else), the destruction has not already been
+    replaced by something else (CR 614.7: an effect that would replace an event
+    that never happens does nothing, which is what stops a second Aura on the
+    same creature spending itself for a destruction the first one already
+    called off), and this Aura is attached to the permanent being destroyed
+    (CR 301.5a - `attached_to` names a card, and an Aura on a *player* names
+    none, so it can never match a permanent's destruction).
+    """
+    if event.kind is not EventKind.DESTROY or event.replaced:
+        return False
+    if event.card is None:
+        return False
+    return source.attached_to == event.card.id
+
+
+def _umbra_armor(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+    """ "...instead remove all damage marked on it and destroy this Aura."
+
+    Both halves of the one replacement, and the destruction itself called off
+    (CR 614.6). Removing the marked damage is what stops CR 704.5g destroying
+    the creature all over again on the very next state-based check: the damage
+    is *marked* on the permanent (CR 120.6) and survives the destruction being
+    replaced, so leaving it there would be an infinite loop of Auras.
+
+    Destroying the Aura goes back through `Game.destroy`, so it is a real
+    destruction with its own `DESTROY` event - an Aura with umbra armor of its
+    own is not attached to itself, so nothing here recurses.
+    """
+    if event.card is not None:
+        event.card.damage = 0
+    event.replaced = True
+    if source is not None:
+        game.destroy(source)
+
+
+def _keyword_replacements(card: Card) -> list[CardReplacement]:
+    """The replacement effects a card's *keywords* generate (CR 702).
+
+    Only umbra armor so far. Read off `Card.keywords` rather than the oracle
+    text because the text says nothing a parser could use - the keyword's
+    meaning lives in CR 702.89a and the card's own parenthesis is reminder
+    text (CR 207.2a).
+    """
+    if any(keyword.strip().lower() == _UMBRA_ARMOR for keyword in card.keywords):
+        return [
+            CardReplacement(
+                label="umbra armor: destroy this Aura instead (CR 702.89a)",
+                applies=_umbra_armor_applies,
+                apply=_umbra_armor,
+            )
+        ]
+    return []
+
+
+# --------------------------------------------------------------------------
+# "Can't enter the battlefield" (CR 614.17d)
+# --------------------------------------------------------------------------
+#
+# CR 614.17, verified this session: "Some effects state that something can't
+# happen. These effects aren't replacement effects, but follow similar rules."
+# CR 614.17d names this family in particular: "Some 'can't' effects modify how
+# a permanent enters the battlefield or whether it can enter the battlefield.
+# Such effects may come from the permanent itself if they affect only that
+# permanent". Grafdigger's Cage's is the general kind - it watches every
+# creature card in every graveyard and library, not itself.
+#
+# "Follow similar rules" is why this is carried on the same `ENTERS_BATTLEFIELD`
+# event the real replacement effects use, and the docstring on `_cant_enter`
+# says what that costs: CR 614.17c's "if an event can't happen, it can only be
+# replaced by a self-replacement effect" is a *precedence* rule this machinery
+# has no way to express, so a can't-enter effect here competes for CR 616.1's
+# ordering rather than pre-empting it.
+#
+# The card does not say where the object goes, and CR 400.4a's sibling wording
+# for a card that cannot enter - "it remains in its previous zone" - is what
+# happens: the event's destination is set back to its origin.
+
+_CANT_ENTER_RE = re.compile(
+    r"^(?P<filter>\w+) cards in (?P<zones>[\w, ]+?) can'?t enter the battlefield\.?$",
+    re.IGNORECASE,
+)
+
+#: The zone words a "cards in ..." clause may name, plural as printed.
+_ZONE_PLURALS: dict[str, Zone] = {
+    "graveyard": Zone.GRAVEYARD,
+    "graveyards": Zone.GRAVEYARD,
+    "library": Zone.LIBRARY,
+    "libraries": Zone.LIBRARY,
+    "hand": Zone.HAND,
+    "hands": Zone.HAND,
+    "exile": Zone.EXILE,
+}
+
+
+def _read_zone_list(text: str) -> frozenset[Zone] | None:
+    """ "graveyards and libraries" as a set of zones, or None if a word is
+    one this cannot name - fail closed, exactly as the compilers above do."""
+    zones: set[Zone] = set()
+    for word in re.split(r",\s*|\s+and\s+", text.strip()):
+        word = word.strip().lower()
+        if not word:
+            continue
+        zone = _ZONE_PLURALS.get(word)
+        if zone is None:
+            return None
+        zones.add(zone)
+    return frozenset(zones) or None
+
+
+def _cant_enter(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+    """The object does not enter; it stays where it was.
+
+    CR 400.4a states the same outcome for the rules' own can't-enter case -
+    "if an instant or sorcery card would enter the battlefield, it remains in
+    its previous zone" - and CR 614.6's "the original event never happens" is
+    what makes the rest follow: nothing enters, so no enters-the-battlefield
+    ability triggers (CR 603.6a) and any counters or tapped state the event was
+    carrying go with it. `Game.enter_the_battlefield` reads the destination
+    back and returns the card to that zone.
+    """
+    if event.origin is not None:
+        event.destination = event.origin
+
+
+def _cant_enter_applies(wanted: Type, zones: frozenset[Zone]) -> Applies:
+    """ "**Creature cards** in graveyards and libraries can't enter the battlefield."
+
+    "Cards", so a token is excluded: CR 111.6, "a token isn't a card", and a
+    token being created has no origin zone worth the name anyway. The type is
+    read off the entering object's own types, and the origin off the event -
+    which is why this refuses a creature entering from a hand, from exile, or
+    as a resolving spell off the stack, all of which the Cage leaves alone.
+    """
+
+    def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
+        card_state = event.card
+        if event.kind is not EventKind.ENTERS_BATTLEFIELD or card_state is None:
+            return False
+        if event.origin not in zones or is_token(card_state):
+            return False
+        return wanted in card_state.types
+
+    return applies
+
+
+def _cant_enter_replacements(card: Card) -> list[CardReplacement]:
+    """Grafdigger's Cage's first line, and anything else printed to that shape.
+
+    Read straight off the oracle text rather than through
+    `parse_replacement_effects`: CR 614.17 says these are not replacement
+    effects, so the parser at the top of this module correctly refuses to
+    claim them (the sentence carries none of its cue words either).
+    """
+    found: list[CardReplacement] = []
+    for line in (card.oracle_text or "").splitlines():
+        rules_text, _ = strip_reminder_text(line)
+        match = _CANT_ENTER_RE.match(rules_text.strip())
+        if match is None:
+            continue
+        wanted = _CARD_TYPE_WORDS.get(match.group("filter").lower())
+        zones = _read_zone_list(match.group("zones"))
+        if wanted is None or zones is None:
+            continue
+        found.append(
+            CardReplacement(
+                label=f"{rules_text.strip()} (CR 614.17d)",
+                applies=_cant_enter_applies(wanted, zones),
+                apply=_cant_enter,
+            )
+        )
+    return found
+
+
 #: Tried in order against every parsed effect on a `REPLACEMENTS` miss. Order
 #: does not matter between them - each one's event/replacement match is
 #: specific enough that at most one ever claims a given `ReplacementEffect`.
@@ -2168,6 +2630,7 @@ _COMPILERS: tuple[Callable[[ReplacementEffect], CardReplacement | None], ...] = 
     _compile_draw_doubler,
     _compile_draw_plus,
     _compile_token_doubler,
+    _compile_extra_token,
     _compile_counter_doubler,
     _compile_counter_reducer,
     _compile_lands_you_control_enter_untapped,
@@ -2200,8 +2663,13 @@ def _compile(effect: ReplacementEffect) -> CardReplacement | None:
 
 
 def parsed_card_replacements(card: Card) -> list[CardReplacement]:
-    """Every generic shape above that this card's own oracle text matches."""
-    found: list[CardReplacement] = []
+    """Every generic shape above that this card's own oracle text matches.
+
+    Plus the shapes its *keywords* generate, which no amount of text parsing
+    would ever reach (see `_keyword_replacements`), and CR 614.17d's
+    can't-enter effects, which the parser deliberately does not claim.
+    """
+    found: list[CardReplacement] = _keyword_replacements(card) + _cant_enter_replacements(card)
     for effect in parse_replacement_effects(card):
         compiled = _compile(effect)
         if compiled is not None:
@@ -2238,7 +2706,9 @@ def replacements_of_state(permanent: CardState) -> list[CardReplacement]:
     if not permanent.is_class:
         return parsed_card_replacements(permanent.card)
     names = _names_of(permanent.card)
-    found: list[CardReplacement] = []
+    found: list[CardReplacement] = _keyword_replacements(permanent.card) + _cant_enter_replacements(
+        permanent.card
+    )
     for effect in _parse_oracle_text(permanent.class_ability_text, face=None, names=names):
         compiled = _compile(effect)
         if compiled is not None:
@@ -2640,7 +3110,150 @@ def _choose_a_quality(kind: ChoiceKind, card_name: str) -> Apply:
     return apply
 
 
-def _self_enters_modifiers(game: "Game", card_state: CardState) -> list[tuple[str, Apply, str]]:
+# --------------------------------------------------------------------------
+# "[This permanent] enters as a copy of ..." (CR 614.1c, 616.1c)
+# --------------------------------------------------------------------------
+#
+# Clone: "You may have this creature enter as a copy of any creature on the
+# battlefield." CR 614.1c makes "[This permanent] enters as . . ." a
+# replacement effect, and CR 614.12 lets it come from the permanent itself,
+# which is why this is gathered by `_self_enters_modifiers` off the entering
+# card rather than compiled into `_COMPILERS`: the Clone is not on the
+# battlefield when it applies, so no battlefield scan would ever find it.
+#
+# CR 616.1c gives it its own step ahead of the ordinary free choice: "If any of
+# the replacement and/or prevention effects would cause an object to become a
+# copy of another object as it enters the battlefield, one of them must be
+# chosen." `ApplicableEffect.copy_as_it_enters` carries that, and
+# `order_effects` sorts on it.
+#
+# CR 614.12a is the choice itself: "If a replacement effect that modifies how a
+# permanent enters the battlefield requires a choice, that choice is made
+# before the permanent enters the battlefield" - both the "you may" and which
+# creature, asked from inside `apply_replacements`, which every route onto the
+# battlefield runs before the card is put there.
+#
+# What is copied is CR 707.2's copiable values, and `machines/layers.py`
+# already builds exactly that layer-1 effect for "this creature becomes a copy
+# of target creature"; `_become_a_copy_builder` is reused rather than
+# reimplemented, so the two shapes cannot drift apart.
+
+_COPY_CANDIDATES_RE = re.compile(
+    r"^any (?P<filter>artifact|creature|enchantment|land|permanent) on the battlefield$",
+    re.IGNORECASE,
+)
+
+
+def _copy_candidates(game: "Game", phrase: str, entering: CardState) -> list[CardState] | None:
+    """The permanents this card may enter as a copy of, or None if the phrase
+    is one this cannot read - fail closed, as everywhere else in this module.
+
+    The entering object is excluded: it is not on the battlefield yet, so this
+    is belt and braces against a caller that put it there first.
+    """
+    match = _COPY_CANDIDATES_RE.match(phrase.strip().rstrip("."))
+    if match is None:
+        return None
+    word = match.group("filter").lower()
+    wanted = None if word == "permanent" else _CARD_TYPE_WORDS.get(word)
+    if wanted is None and word != "permanent":
+        return None
+    return [
+        permanent
+        for permanent in game.battlefield
+        if permanent.id != entering.id and (wanted is None or wanted in permanent.types)
+    ]
+
+
+def _enters_as_copy(effect: ReplacementEffect, card_name: str) -> Apply:
+    """CR 614.1c's "enters as a copy of", as a thing to do before it enters.
+
+    Nothing about the `ReplaceableEvent` changes - no tapped flag, no counters
+    - exactly like `_choose_a_quality` above: what the effect does is register
+    the layer-1 copy effect (CR 613.1a, CR 707.2) that decides what the
+    permanent's characteristics will be once it is there. `CardState.power`
+    already reads the computed characteristics first, so the copy is visible
+    the moment the permanent is on the battlefield.
+
+    A board with no legal candidate is not an error: CR 707.2 has nothing to
+    copy, so the permanent simply enters as itself.
+    """
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        # Imported here rather than at module scope: `machines/layers.py` is a
+        # sibling this module is imported by, the same reason `keywords` and
+        # `casting` are imported inside `_stack_replacements`.
+        from .layers import LayerContext, _become_a_copy_builder
+
+        entering = event.card
+        if entering is None or entering.controller is None:
+            return
+        candidates = _copy_candidates(game, effect.copy_of or "", entering)
+        if not candidates:
+            return
+        if effect.optional and not game.may(
+            entering.controller,
+            f"have {card_name} enter as a copy of {effect.copy_of}",
+            source=card_name,
+        ):
+            # CR 614.12a's choice, declined. The permanent enters as itself.
+            return
+        chosen_id = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=entering.controller,
+                prompt=f"choose {effect.copy_of} for {card_name} to enter as a copy of",
+                source=card_name,
+                amount=1,
+                cards=tuple(candidate.id for candidate in candidates),
+            )
+        )
+        by_id = {candidate.id: candidate for candidate in candidates}
+        chosen = [by_id[card_id] for card_id in chosen_id if card_id in by_id]  # type: ignore[union-attr]
+        if not chosen:
+            return
+        for built in _become_a_copy_builder(until_eot=False)(
+            entering, game.continuous_effects.tick(), chosen, LayerContext()
+        ):
+            game.continuous_effects.add(built)
+
+    return apply
+
+
+def _greatest_mana_value_among_cards_in_exile(game: "Game", entering: CardState) -> int:
+    """ "the greatest mana value among cards in exile" - Ulamog, the Defiler.
+
+    Every card in exile, whoever owns it, and read as the objects actually are
+    right now (CR 613.5-shaped: the count is worked out as the permanent
+    enters, not when the spell was cast).
+
+    A card exiled **face down** contributes 0, and that is the whole point of
+    the clause in play. CR 406.3a: "A card exiled face down has no
+    characteristics"; CR 202.3a: "The mana value of an object with no mana cost
+    is 0". `CardState.mana_value` already answers 0 for such a card, so nothing
+    special is done here - the rule is enforced one layer down, where every
+    other reader of a mana value gets it too.
+
+    An empty exile is 0 rather than an error: "the greatest ... among" an empty
+    set of cards is nothing, and CR 122.1 has no counters to put on.
+    """
+    values = [state.mana_value for state in game.exile]
+    return int(max(values)) if values else 0
+
+
+#: The `ENTERS_WITH` count expressions this engine can evaluate, keyed by the
+#: printed phrase in lower case. A phrase with no entry leaves the count
+#: unknown and the whole effect skipped - fail closed, the same way an
+#: unreadable `ENTERS_TAPPED` condition is skipped a few lines below, rather
+#: than a permanent silently entering with the wrong number of counters.
+_ENTERS_WITH_AMOUNT_RESOLVERS: dict[str, Callable[["Game", CardState], int]] = {
+    "the greatest mana value among cards in exile": _greatest_mana_value_among_cards_in_exile,
+}
+
+
+def _self_enters_modifiers(
+    game: "Game", card_state: CardState
+) -> list[tuple[str, Apply, str, bool]]:
     """The card's own "enters ..." replacement effects, as things to apply.
 
     CR 614.12: "Some replacement effects modify how a permanent enters the
@@ -2697,7 +3310,8 @@ def _self_enters_modifiers(game: "Game", card_state: CardState) -> list[tuple[st
         for effect in parse_replacement_effects(card_state.card)
         if up_face_name is None or effect.face in (None, up_face_name)
     ]
-    performable: list[tuple[str, Apply, str]] = []
+    #: (key suffix, what to do, label, CR 616.1c copy-as-it-enters).
+    performable: list[tuple[str, Apply, str, bool]] = []
     consumed: set[int] = set()
 
     for index, effect in enumerate(parsed):
@@ -2723,9 +3337,24 @@ def _self_enters_modifiers(game: "Game", card_state: CardState) -> list[tuple[st
                         f"self:{index}",
                         _pay_life_or_tapped(int(payment.group(1)), card_state.card.name),
                         f"{effect.text} {parsed[follower].text}",
+                        False,
                     )
                 )
                 continue
+
+        if effect.kind is ReplacementKind.ENTERS_AS_COPY and effect.condition is None:
+            # CR 614.1c / 616.1c. `_enters_as_copy` refuses a `copy_of` phrase
+            # it cannot read, so a card whose candidates this cannot work out
+            # enters as itself rather than as a guess.
+            performable.append(
+                (
+                    f"self:{index}",
+                    _enters_as_copy(effect, card_state.card.name),
+                    effect.text,
+                    True,
+                )
+            )
+            continue
 
         if effect.kind is ReplacementKind.AS_ENTERS and effect.condition is None:
             choice_kind = _classify_choice(effect.replacement or "")
@@ -2735,6 +3364,7 @@ def _self_enters_modifiers(game: "Game", card_state: CardState) -> list[tuple[st
                         f"self:{index}",
                         _choose_a_quality(choice_kind, card_state.card.name),
                         effect.text,
+                        False,
                     )
                 )
                 continue
@@ -2755,6 +3385,13 @@ def _self_enters_modifiers(game: "Game", card_state: CardState) -> list[tuple[st
             and effect.counter_kind is not None
             and amount is None
             and effect.variable_amount
+            # CR 107.3m is "if an object's ... replacement effect **refers to
+            # X**". A count stated as an expression instead - Ulamog, the
+            # Defiler's "equal to the greatest mana value among cards in
+            # exile" - refers to no X at all, and must not be answered with
+            # the announcement's own X, which for a card with no {X} in its
+            # cost is recorded as 0 rather than left unset.
+            and effect.amount_expression is None
         ):
             # CR 107.3m: only a spell that actually resolved into this object
             # defines X here - `game.cast_records` is popped once resolution
@@ -2765,13 +3402,30 @@ def _self_enters_modifiers(game: "Game", card_state: CardState) -> list[tuple[st
             record = game.cast_records.get(card_state.id)
             if record is not None:
                 amount = record.x_value
+        if (
+            effect.kind is ReplacementKind.ENTERS_WITH
+            and effect.counter_kind is not None
+            and amount is None
+            and effect.amount_expression is not None
+        ):
+            # "...equal to [expression]" - not a literal and not CR 107.3m's X,
+            # but a count worked out against the game as the permanent enters.
+            # An expression with no resolver leaves `amount` None and the
+            # effect is skipped below, unchanged.
+            resolver = _ENTERS_WITH_AMOUNT_RESOLVERS.get(
+                effect.amount_expression.strip().rstrip(".").lower()
+            )
+            if resolver is not None:
+                amount = resolver(game, card_state)
         readable_counters = (
             effect.kind is ReplacementKind.ENTERS_WITH
             and effect.counter_kind is not None
             and amount is not None
         )
         if effect.kind is ReplacementKind.ENTERS_TAPPED or readable_counters:
-            performable.append((f"self:{index}", _apply_self_enters(effect, amount), effect.text))
+            performable.append(
+                (f"self:{index}", _apply_self_enters(effect, amount), effect.text, False)
+            )
     return performable
 
 
@@ -2977,13 +3631,14 @@ def applicable_effects(game: "Game", event: ReplaceableEvent) -> list[Applicable
 
     if event.kind is EventKind.ENTERS_BATTLEFIELD and event.card is not None:
         entering = event.card
-        for suffix, apply, label in _self_enters_modifiers(game, entering):
+        for suffix, apply, label, copy_as_it_enters in _self_enters_modifiers(game, entering):
             found.append(
                 ApplicableEffect(
                     key=f"{entering.id}:{suffix}",
                     source=entering,
                     label=label,
                     apply=apply,
+                    copy_as_it_enters=copy_as_it_enters,
                 )
             )
 
@@ -3017,13 +3672,19 @@ def order_effects(
     CR 616.1a-d's forced choices are checked first even so, because they are not
     a matter of preference: a self-replacement effect (CR 614.15) must be chosen
     before anything else, then a control-changing one (CR 616.1b), then a
-    copy-as-it-enters one (CR 616.1c). No effect the engine can perform is any of
-    those yet, so the hook currently never fires - but it is the shape the rule
-    demands, and it is where such an effect will plug in.
+    copy-as-it-enters one (CR 616.1c). Only the third of those is an effect this
+    engine can perform - Clone's "enters as a copy of" - and it is sorted ahead
+    of everything else here. The other two are still hooks with nothing to hang
+    on them, and remain the shape the rule demands.
     """
     ordered = list(candidates)
     chooser = event.chooser(game)
-    ordered.sort(key=lambda effect: 0 if effect.controller == chooser else 1)
+    ordered.sort(
+        key=lambda effect: (
+            0 if effect.copy_as_it_enters else 1,  # CR 616.1c, before the free choice
+            0 if effect.controller == chooser else 1,
+        )
+    )
     return ordered
 
 

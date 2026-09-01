@@ -87,11 +87,81 @@ def test_a_face_down_exiled_card_has_a_mana_value_of_zero():
     assert emrakul.types == ()
 
 
+def _ulamog_board(exiled_face_down: bool):
+    """Amy's side of DDR#956, with the exile staged by hand.
+
+    Ulamog, the Defiler is {10}, so ten lands; bob's library is basics, whose
+    mana value is 0 (CR 202.3a - no mana cost), so whatever the cast trigger
+    reaches for cannot raise the greatest mana value in exile above Emrakul's.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            exile=["Emrakul, the Promised End"],
+            hand=["Ulamog, the Defiler"],
+            battlefield=["Forest"] * 10,
+        )
+        .player("bob", library=["Forest"] * 6)
+        .build()
+    )
+    if exiled_face_down:
+        scenario.find("Emrakul, the Promised End", Zone.EXILE, "alice").face_up = False
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_ulamog_counts_a_face_up_exiled_card_at_its_printed_mana_value():
+    """The control for the ruling below: face **up**, Emrakul is {13}.
+
+    CR 614.1c: "[This permanent] enters with . . ." is a replacement effect,
+    and CR 614.12 lets it come from the permanent itself. The count is an
+    expression rather than a number, so it is worked out against the game as
+    Ulamog enters. Asserted against Emrakul's printed cost, not against a
+    value read back off the same code path.
+    """
+    scenario = _ulamog_board(exiled_face_down=False)
+    emrakul = scenario.find("Emrakul, the Promised End", Zone.EXILE, "alice")
+    assert emrakul.card.mana_cost == "{13}"
+
+    scenario.cast_and_resolve("Ulamog, the Defiler", auto=True, username="alice")
+    # Ulamog's own "when you cast this spell" trigger (CR 603.2) went on the
+    # stack above the spell and resolved first; the spell itself is still
+    # waiting under it.
+    while scenario.game.stack:
+        scenario.resolve_top()
+    ulamog = scenario.creature("Ulamog, the Defiler", "alice")
+
+    assert ulamog.counters["+1/+1"] == 13
+
+
+def test_ulamog_counts_a_face_down_exiled_card_as_zero():
+    """DDR#956's ruling itself, with the exile staged rather than made by Pyxis.
+
+    CR 406.3a: "A card exiled face down has no characteristics"; CR 202.3a:
+    "The mana value of an object with no mana cost is 0". So the greatest mana
+    value among cards in exile is 0, Ulamog enters with no counters, and
+    CR 122.1's counter-driven annihilator X is 0 with it.
+    """
+    scenario = _ulamog_board(exiled_face_down=True)
+
+    scenario.cast_and_resolve("Ulamog, the Defiler", auto=True, username="alice")
+    # Ulamog's own "when you cast this spell" trigger (CR 603.2) went on the
+    # stack above the spell and resolved first; the spell itself is still
+    # waiting under it.
+    while scenario.game.stack:
+        scenario.resolve_top()
+    ulamog = scenario.creature("Ulamog, the Defiler", "alice")
+
+    assert ulamog.counters["+1/+1"] == 0
+
+
 @pytest.mark.xfail(
     reason="Pyxis of Pandemonium's '{T}: Each player exiles the top card of "
-    "their library face down.' resolves and exiles nothing, and Ulamog, "
-    "the Defiler's 'enters with counters equal to the greatest mana value "
-    "among cards in exile' has no enters-replacement entry either",
+    "their library face down.' resolves and exiles nothing: ACTIVATED_EFFECTS "
+    "in machines/effects.py has no entry for the card and effect_for returns "
+    "None, so exile stays empty. Ulamog's own half now works - see the two "
+    "tests above, which stage the same exile by hand and get 13 and 0.",
     strict=True,
 )
 def test_pyxis_exiles_face_down_and_ulamog_counts_it_as_zero():
