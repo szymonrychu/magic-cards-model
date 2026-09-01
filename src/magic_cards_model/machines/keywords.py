@@ -150,6 +150,13 @@ def executes(keyword: str) -> bool:
         # (`_parse_earthbend_clause`), not here. Listed explicitly so the pool
         # sweeper reports it as executed rather than silently ignored.
         "earthbend",
+        # CR 701.65a, the same shape as earthbend above: a CR 701 keyword
+        # action embedded in another ability's effect text. The exile itself is
+        # `machines/effects.py`'s clause to perform; the half executed here is
+        # what the exiled card may do afterwards - `machines/casting.
+        # marker_cast_options` reads `ExileMarker.AIRBENT` back into the {2}
+        # cast CR 701.65a grants its owner.
+        "airbend",
     }
 
 
@@ -461,6 +468,75 @@ def keyword_triggered_abilities(card: Card) -> list[TriggeredAbility]:
     """
     built: list[TriggeredAbility] = []
     for ability in keyword_abilities(card):
+        expand = _TRIGGER_EXPANSIONS.get(ability.canonical.lower())
+        if expand is not None:
+            built.append(expand(ability))
+    return built
+
+
+#: One keyword line as a *grant* writes it - "Evoke {4}", "Ward {2}", the
+#: keyword and, when the rule takes one, a mana cost. Deliberately narrower
+#: than the printed-line parser in `machines/abilities.py`: the only lines
+#: that ever reach `granted_keyword_triggered_abilities` are lines this engine
+#: wrote itself (`machines/casting.py` stamps the keyword it announced onto
+#: `CardState.granted_ability_texts`), so anything more elaborate than
+#: keyword-plus-mana is not a shape that can arrive here, and matching it
+#: loosely would only let an ordinary granted *sentence* be mistaken for a
+#: keyword.
+_GRANTED_KEYWORD_LINE_RE = re.compile(
+    r"^(?P<keyword>[A-Za-z][A-Za-z'-]*)(?:\s+(?P<cost>\{[^:]*\}))?\.?$"
+)
+
+
+def granted_keyword_ability(text: str) -> KeywordAbility | None:
+    """One `CardState.granted_ability_texts` line read back as a CR 702 keyword.
+
+    None for a line that is not a bare keyword, and None for a keyword this
+    module writes no triggered ability for - a grant nothing here can expand
+    hands out nothing rather than a guessed ability.
+    """
+    match = _GRANTED_KEYWORD_LINE_RE.match(text.strip())
+    if match is None:
+        return None
+    keyword = match.group("keyword")
+    if keyword.lower() not in _TRIGGER_EXPANSIONS:
+        return None
+    cost = match.group("cost")
+    return KeywordAbility(
+        raw=text,
+        text=text.strip(),
+        face="",
+        keyword=keyword,
+        canonical=keyword,
+        cost=cost,
+        cost_is_mana=cost is not None,
+    )
+
+
+def granted_keyword_triggered_abilities(texts: Sequence[str]) -> list[TriggeredAbility]:
+    """`CardState.granted_ability_texts`' keyword lines, written out as the
+    triggered abilities CR 702.1 says they are shorthand for.
+
+    The granted twin of `keyword_triggered_abilities`, and the reason a
+    *granted* evoke sacrifices the creature it was paid for. CR 702.74a makes
+    evoke two abilities - an alternative cost and "When this permanent enters,
+    if its evoke cost was paid, its controller sacrifices it" - and a permanent
+    that gained the keyword as it was cast keeps the second one: CR 400.7b,
+    "effects from static abilities that grant an ability to a permanent spell
+    that functions on the battlefield continue to apply to the permanent that
+    spell becomes", with CR 611.3d adding that such an ability "lasts
+    indefinitely unless some other duration is stated". So killing the granting
+    permanent in response changes nothing, which is exactly what this makes
+    observable: the keyword is on the *object*, not on the grantor.
+
+    Callers append this to the printed list rather than replacing it, the same
+    convention `granted_activated_abilities_of` documents for its own half.
+    """
+    built: list[TriggeredAbility] = []
+    for text in texts:
+        ability = granted_keyword_ability(text)
+        if ability is None:
+            continue
         expand = _TRIGGER_EXPANSIONS.get(ability.canonical.lower())
         if expand is not None:
             built.append(expand(ability))
@@ -1842,11 +1918,20 @@ def discard(game: Any, card: CardState, player: str) -> CardState:
     if card not in owner.cards_in(Zone.HAND):
         raise ValueError(f"{card.name} is not in {player}'s hand (CR 701.9a)")
 
+    turn = getattr(getattr(game, "turn", None), "turn_number", None)
+
     if not madness_replaces_discard(card):
         owner.move(card, Zone.GRAVEYARD)
+        # CR 702.187b's "as long as you discarded this card this turn", recorded
+        # on the card the far side of the move because that is the object the
+        # clause is about. Not a count - `Game.cards_discarded_this_turn` is
+        # that, and it cannot say *which* card, which is the only thing mayhem
+        # asks. `CardState.move_to` clears it again the moment the card leaves
+        # the graveyard (CR 400.7).
+        card.discarded_by = player
+        card.discarded_on_turn = turn
         return card
 
-    turn = getattr(getattr(game, "turn", None), "turn_number", None)
     owner.cards_in(Zone.HAND).remove(card)
     card.move_to(Zone.EXILE)
     card.exile_annotation = madness_annotation(card, turn)

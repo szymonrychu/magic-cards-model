@@ -10,9 +10,12 @@ Sourced from the DDR judge transcripts. Episodes covered:
 
 Earthbend (CR 701.66a) is the one of the four this engine implements - see
 `tests/scenarios/test_earthbend.py` for the mechanic itself; this file only adds
-the controller question DDR#989 is about. Airbend (CR 701.65a) has no
-implementation at all: `Aang, Swift Savior`'s enters trigger parses ("airbend up
-to one other target creature or spell") but resolves to nothing.
+the controller question DDR#989 is about. Airbend (CR 701.65a) is half done: the
+{2} cast its exile pile grants is modelled (`ExileMarker.AIRBENT`,
+`machines/casting.marker_cast_options`), but the exile itself is not - `Aang,
+Swift Savior`'s enters trigger parses ("airbend up to one other target creature
+or spell") and resolves to nothing, because `machines/effects.py` has no clause
+parser for the word.
 
 Every CR number here was looked up with `knowledge_search(type="rules")`.
 """
@@ -20,7 +23,9 @@ Every CR number here was looked up with `knowledge_search(type="rules")`.
 import pytest
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.casting import marker_cast_options
 from magic_cards_model.models import Zone
+from magic_cards_model.models.card_state import ExileAnnotation, ExileMarker
 from tests.scenarios.harness import Scenario
 
 # --------------------------------------------------------------------------
@@ -73,11 +78,54 @@ def test_airbending_a_permanent_exiles_it_and_leaves_a_two_mana_permission():
     assert bears.zone is Zone.EXILE
 
 
+def test_an_airbent_card_in_exile_may_be_cast_by_its_owner_for_two():
+    """CR 701.65a's *permission*, the half that is not the exile.
+
+    "For each card exiled this way, for as long as it remains exiled, its owner
+    may cast it for {2} rather than its mana cost." Airbend is a CR 701 keyword
+    action, so nothing is printed on the exiled card to read that off - the pile
+    it is in is the whole record, which is what `ExileMarker.AIRBENT` and
+    `machines/casting.marker_cast_options` are.
+
+    The board is staged at the state the exile leaves behind rather than played
+    into it, because performing the exile is `machines/effects.py`'s clause and
+    is still missing (the test above). Nothing is faked: a real Grizzly Bears
+    printing, in the real exile zone, annotated the way CR 406.4 says the pile
+    is tracked.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Island", "Island"])
+        .player("bob", exile=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.find("Grizzly Bears", Zone.EXILE, "bob")
+    bears.exile_annotation = ExileAnnotation(marker=ExileMarker.AIRBENT, owner="bob")
+
+    (option,) = marker_cast_options(bears)
+
+    assert option.rule == "CR 701.65a"
+    assert option.zone is Zone.EXILE
+    assert option.pays_mana_cost is False
+    assert str(option.cost.mana) == "{2}"
+    # CR 701.65a gives the permission to the card's *owner*, and the player who
+    # airbent it is somebody else - alice is refused, bob is not.
+    assert option.why_not(bears, "alice") is not None
+    assert option.why_not(bears, "bob") is None
+    # No "on a later turn" clause anywhere in CR 701.65a, unlike plot
+    # (CR 702.170d) and foretell (CR 702.143a).
+    assert option.later_turn is False
+
+
 @pytest.mark.xfail(
     strict=True,
-    reason="same gap - nothing is exiled, so nothing ceases to exist either. "
-    "The token half of the episode cannot be reached until airbend is "
-    "implemented at all.",
+    reason="`machines/effects.py` has no airbend clause parser, so Aang's "
+    "trigger resolves and exiles nothing. Everything else this test needs is "
+    "in place: the token is created by the attack trigger, and "
+    "`machines/casting.marker_cast_options` reads CR 701.65a's {2} back off "
+    "`ExileMarker.AIRBENT`. Only the exile itself is missing, and it belongs "
+    "to a file this task does not own.",
 )
 def test_airbending_a_token_makes_it_cease_to_exist_before_anyone_can_recast_it():
     """The airbend episode's token corner: the {2} permission is worthless.
@@ -88,27 +136,41 @@ def test_airbending_a_token_makes_it_cease_to_exist_before_anyone_can_recast_it(
     action" (CR 704.5d). So the token is gone before any player would receive
     priority to cast it.
 
-    Fire Navy Trebuchet's Ballistic Boulder is the pool's nearest token to the
-    episode's example; the assertion is only that the token is not on the
-    battlefield and not castable from exile.
+    Fire Navy Trebuchet (confirmed with `resolve_cards`): "Whenever you attack,
+    create a 2/1 colorless Construct artifact creature token with flying named
+    Ballistic Boulder that's tapped and attacking." So the token has to be made
+    the way the card makes it - bob attacks - and Aang's own flash is what lets
+    alice cast him in the middle of that combat to airbend it.
     """
     scenario = (
         Scenario()
-        .player("alice", hand=["Aang, Swift Savior"], battlefield=["Plains", "Island", "Island"])
         .player("bob", battlefield=["Fire Navy Trebuchet", "Grizzly Bears"])
+        .player("alice", hand=["Aang, Swift Savior"], battlefield=["Plains", "Island", "Island"])
         .build()
     )
-    scenario.start_at(Step.PRECOMBAT_MAIN)
-    bears = scenario.creature("Grizzly Bears", "bob")
-    scenario.choose_trigger_targets("Aang, Swift Savior", [bears])
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(scenario.creature("Grizzly Bears", "bob"))
+    scenario.pass_until_resolved()
+    token = scenario.creature("Ballistic Boulder", "bob")
+
+    # CR 117.1: bob is the active player and holds priority once his own
+    # trigger has resolved; alice's flash cast needs her to have it.
+    scenario.pass_priority("bob")
+    scenario.choose_trigger_targets("Aang, Swift Savior", [token])
     scenario.cast_and_resolve(
-        "Aang, Swift Savior", *scenario.untapped_sources("Plains", "Island", "Island")
+        "Aang, Swift Savior",
+        *scenario.untapped_sources("Plains", "Island", "Island", username="alice"),
+        username="alice",
     )
     while scenario.game.stack or scenario.pending_triggers:
         scenario.pass_until_resolved()
+    scenario.state_based_actions()
 
-    assert bears.zone is Zone.EXILE
-    assert "Grizzly Bears" not in scenario.battlefield_names()
+    # CR 111.7/CR 704.5d: it is in no zone at all, exile included.
+    assert token.zone is not Zone.BATTLEFIELD
+    assert scenario.zones_containing(token) == []
+    # CR 701.65a's permission is "for each *card*", and a token is not one.
+    assert marker_cast_options(token) == []
 
 
 # --------------------------------------------------------------------------

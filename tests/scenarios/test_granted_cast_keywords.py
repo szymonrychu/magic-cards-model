@@ -39,8 +39,10 @@ Every printing is a real Scryfall fixture from `tests/fixtures/cards/`.
 import pytest
 
 from magic_cards_model.machines import Step
-from magic_cards_model.machines.casting import AlternativeCostSource
+from magic_cards_model.machines.casting import AlternativeCostSource, keyword_cast_options
 from magic_cards_model.models import Zone
+from magic_cards_model.models.card import Type
+from tests.cards import card, card_state
 
 from .harness import Scenario
 
@@ -304,17 +306,30 @@ def test_a_creature_card_in_the_graveyard_gets_nothing():
 
 @pytest.mark.xfail(
     strict=True,
-    reason="Detective's Phoenix prints its own CR 604.6 permission - 'You may "
-    "cast this card from your graveyard using its bestow ability.' - but "
-    "bestow itself is unimplemented: `machines/keywords.py` (another task's "
-    "file) has no bestow expansion and `_option_from_keyword` therefore has no "
-    "bestow branch, so there is no cost to cast it for and no Aura to attach.",
+    reason="Only the *cost* is missing now, and it is not in a file this task "
+    "owns. `machines/casting._option_from_keyword` has a bestow branch "
+    "(CR 702.103a), `_printed_zone_permissions` reads the card's own CR 604.6 "
+    "sentence and copies that option to the graveyard, and `CardState.bestowed` "
+    "carries CR 702.103b's Aura-ness on the stack and the battlefield with "
+    "CR 702.103f's un-bestow on `unattach`. What refuses the cast is "
+    "`Detective's Phoenix's Bestow cost could not be read`: the printed cost is "
+    "'{R}, Collect evidence 6' and `machines/cost.cost_component_for_phrase` "
+    "has no 'collect evidence N' shape, so `total_cost_for_phrase` returns "
+    "None and the option is marked not understood. CR 701.59a - 'to collect "
+    "evidence N means to exile any number of cards from your graveyard with "
+    "total mana value N or greater' - is the component that needs adding to "
+    "machines/cost.py.",
 )
 def test_the_phoenix_is_cast_from_the_graveyard_with_bestow():
     """Detective's Phoenix (confirmed with `resolve_cards`): "Bestow-{R},
     Collect evidence 6." plus "You may cast this card from your graveyard using
     its bestow ability." - a permission gated on the origin zone, printed on
-    the card itself (CR 604.6, CR 113.6f)."""
+    the card itself (CR 604.6, CR 113.6f).
+
+    The expected cost is the *whole* printed cost, both parts: `str(TotalCost)`
+    joins the mana and each component with ", ", so a correctly modelled bestow
+    cost renders "{R}, Collect evidence 6" and not "{R}" - CR 701.59a's exile is
+    a cost component (CR 118.3), not flavour on the front of one."""
     scenario = (
         Scenario()
         .player(
@@ -332,4 +347,71 @@ def test_the_phoenix_is_cast_from_the_graveyard_with_bestow():
     casting.use_keyword("bestow")
     casting.choose_targets([bears])
 
-    assert str(casting.begin_paying().cost) == "{R}"
+    assert str(casting.begin_paying().cost) == "{R}, Collect evidence 6"
+
+
+def test_the_phoenix_prints_its_own_permission_to_bestow_from_the_graveyard():
+    """CR 604.6, read off the card rather than off any keyword.
+
+    "Some static abilities function while an object is in a zone other than the
+    battlefield." Detective's Phoenix prints one: "You may cast this card from
+    your graveyard using its bestow ability." It names an ability the card
+    already has and a zone to use it from, so the graveyard option is the
+    keyword's own option with the zone changed - same cost, same CR 118.9
+    replacement of the mana cost (CR 702.103a).
+    """
+    options = keyword_cast_options(card("Detective's Phoenix"))
+
+    zones = {option.zone: option for option in options if option.keyword.lower() == "bestow"}
+    assert set(zones) == {Zone.HAND, Zone.GRAVEYARD}
+    assert zones[Zone.GRAVEYARD].rule == "CR 604.6, CR 702.103a"
+    assert zones[Zone.GRAVEYARD].pays_mana_cost is False
+
+
+def test_a_bestowed_spell_is_an_aura_enchantment_and_not_a_creature():
+    """CR 702.103b: "As a spell cast bestowed is put onto the stack, it becomes
+    an Aura enchantment and gains enchant creature."
+
+    Asserted against the printed type line, which says Enchantment Creature -
+    Phoenix: the printing is unchanged (CR 108.1) and only the object in the
+    game is an Aura.
+    """
+    phoenix = card_state("Detective's Phoenix", zone=Zone.STACK)
+    assert Type.CREATURE in phoenix.card.types
+
+    phoenix.bestowed = True
+
+    assert Type.CREATURE not in phoenix.types
+    assert Type.ENCHANTMENT in phoenix.types
+    assert "Aura" in phoenix.subtypes
+    assert "Enchant" in phoenix.keywords
+
+
+def test_an_unattached_bestowed_permanent_is_a_creature_again():
+    """CR 702.103f: "If a bestowed Aura becomes unattached, it ceases to be
+    bestowed.\""""
+    phoenix = card_state("Detective's Phoenix", zone=Zone.BATTLEFIELD)
+    phoenix.bestowed = True
+    bears = card_state("Grizzly Bears", zone=Zone.BATTLEFIELD)
+    phoenix.attach_to(bears)
+    assert Type.CREATURE not in phoenix.types
+
+    phoenix.unattach()
+
+    assert phoenix.bestowed is False
+    assert Type.CREATURE in phoenix.types
+    assert "Aura" not in phoenix.subtypes
+
+
+def test_bestowed_does_not_survive_a_move_off_the_battlefield():
+    """CR 400.7: the object that leaves is a new one, and CR 702.103b carries
+    bestowed across exactly one zone change - stack to battlefield, "the
+    permanent it becomes as it resolves"."""
+    phoenix = card_state("Detective's Phoenix", zone=Zone.STACK)
+    phoenix.bestowed = True
+
+    phoenix.move_to(Zone.BATTLEFIELD)
+    assert phoenix.bestowed is True
+
+    phoenix.move_to(Zone.GRAVEYARD)
+    assert phoenix.bestowed is False

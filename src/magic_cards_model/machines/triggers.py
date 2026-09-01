@@ -2424,6 +2424,47 @@ def granted_activated_abilities_of(texts: Sequence[str]) -> list[ActivatedAbilit
     ]
 
 
+def granted_triggered_abilities_of(texts: Sequence[str]) -> list[TriggeredAbility]:
+    """`CardState.granted_ability_texts`' own triggered abilities, read the same
+    way `triggered_abilities_of` reads a card's printed ones.
+
+    Two sources, mirroring that function exactly:
+
+    - the granted lines that begin When, Whenever or At, expanded through the
+      same compound-condition splitters a printed line goes through;
+    - the granted lines that are a bare CR 702 keyword, written out by
+      `machines/keywords.granted_keyword_triggered_abilities`.
+
+    The second is what makes a *granted* evoke behave like a printed one.
+    CR 702.74a: "Evoke represents two abilities: a static ability that
+    functions in any zone from which the card with evoke can be cast and a
+    triggered ability that functions on the battlefield." `machines/casting.py`
+    executes the first when the keyword is announced; this is where the second
+    comes from once the permanent is on the battlefield, and CR 400.7b -
+    "effects from static abilities that grant an ability to a permanent spell
+    that functions on the battlefield continue to apply to the permanent that
+    spell becomes" - is why it is read off the object rather than off whatever
+    granted it, which may well be dead by then.
+    """
+    # Imported here rather than at the top for the same cycle
+    # `triggered_abilities_of` documents: `machines/keywords.py` imports this
+    # module for `AbilityOnStack`.
+    from .keywords import granted_keyword_triggered_abilities
+
+    granted = [
+        ability
+        for ability in parse_granted_ability_lines(texts)
+        if isinstance(ability, TriggeredAbility)
+        and (ability.event is not None or _unread_trigger_events(ability.condition))
+    ]
+    expanded: list[TriggeredAbility] = []
+    for ability in granted:
+        for split in _expand_attacks_or_blocks(ability):
+            for enters_split in _expand_enters_or_attacks(split):
+                expanded.extend(_expand_enters_or_leaves(enters_split))
+    return expanded + granted_keyword_triggered_abilities(texts)
+
+
 def triggers_for(game: "Game", event: GameEvent, sources: list[CardState]) -> list[AbilityOnStack]:
     """Every ability `sources` have that this event triggers (CR 603.2).
 
@@ -2434,9 +2475,23 @@ def triggers_for(game: "Game", event: GameEvent, sources: list[CardState]) -> li
     triggered: list[AbilityOnStack] = []
     for source in sources:
         controller = source.controller or game.active_player.username
-        for ability in triggered_abilities_of(source.card):
+        # CR 400.7b / CR 611.3d: an ability granted to this object is had by
+        # this object, so it is asked here alongside the card's own printed
+        # ones. Never *instead* of them - a grant adds.
+        granted = granted_triggered_abilities_of(source.granted_ability_texts)
+        granted_ids = {id(ability) for ability in granted}
+        for ability in triggered_abilities_of(source.card) + granted:
             up_face_name = source.up_face_name
-            if up_face_name is not None and ability.face != up_face_name:
+            if (
+                up_face_name is not None
+                # A granted line was never printed on any face (its `face` is
+                # the empty string), so the double-faced filter below is not
+                # a question that can be asked of it - CR 712.8d is about
+                # which of the *card's* two printed sides is up, and a grant
+                # is on neither.
+                and id(ability) not in granted_ids
+                and ability.face != up_face_name
+            ):
                 # CR 712.8d/712.8e/712.8f: a double-faced permanent has only
                 # the characteristics of the face that's up, and CR 109.3
                 # counts abilities among them. Witch-Blessed Meadow, played as

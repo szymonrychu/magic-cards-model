@@ -14,8 +14,9 @@ controller exiles it. For as long as that card remains exiled, that player may
 play it."
 
 Adventure is not a CR 702 keyword - there is no `Adventure [cost]` line to parse
-- so the whole thing is read off the card's faces. Two pieces are xfailed: the
-replacement on resolution, and the alternative characteristics.
+- so the whole thing is read off the card's faces: `CardState.face_played`
+carries the announced half (CR 715.3b), and the exile on resolution is a
+registered stack replacement (CR 715.3d).
 """
 
 import pytest
@@ -219,24 +220,11 @@ def test_an_unmarked_adventurer_card_in_exile_may_not_be_cast_from_there():
         casting.use_keyword("Adventure")
 
 
-# -- what is not modelled ---------------------------------------------------
+# -- resolving as an Adventure ----------------------------------------------
 
 
-@pytest.mark.xfail(
-    reason=(
-        "CR 715.3d replaces where an Adventure goes as it resolves - exile "
-        "instead of its owner's graveyard. That replacement is registered now "
-        "(machines/replacement.py, _stack_replacements) and Game.resolve_top "
-        "routes the graveyard move through apply_replacements, and "
-        "machines/casting.py does tell the game the Adventure face was chosen "
-        "(Game.note_cast, off Casting.face). What still blocks it is CR 715.3b: "
-        "it is not modelled, so the spell is still a Creature on the stack and "
-        "resolve_top puts it onto the battlefield rather than into a graveyard "
-        "at all. casting.exile_adventured applies CR 715.3d by hand."
-    ),
-    strict=True,
-)
 def test_an_adventure_exiles_itself_on_resolution():
+    """CR 715.3d: exiled instead of put into its owner's graveyard."""
     scenario = board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
@@ -250,21 +238,8 @@ def test_an_adventure_exiles_itself_on_resolution():
     assert stomp.zone is Zone.EXILE
 
 
-@pytest.mark.xfail(
-    reason=(
-        "measured: models/card_state.py models CR 715.3b now - `face_played` "
-        "carries an Adventure's chosen half as well as a split card's, and "
-        "`up_face` reads it while the object is on the stack, so a CardState "
-        "with face_played='Stomp' is an Instant named Stomp with a {1}{R} cost "
-        "(see the two tests above). What is missing is one line in "
-        "machines/casting.py: `Casting.put_on_stack` copies `self.face` onto "
-        "`spell.face_played` only for `Layout.SPLIT`, so an Adventure's "
-        "announced face never reaches the object and the spell resolves as the "
-        "Creature its front face prints."
-    ),
-    strict=True,
-)
 def test_an_adventure_on_the_stack_is_an_instant_and_not_a_creature():
+    """CR 715.3b: on the stack as an Adventure it has only Stomp's types."""
     scenario = board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
 

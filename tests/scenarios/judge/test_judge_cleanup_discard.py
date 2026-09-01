@@ -21,20 +21,23 @@ answer is no, and flash is a red herring:
   you discarded this card this turn, you may cast it from your graveyard by
   paying [cost] rather than paying its mana cost.'"
 
-The engine models the discard and the priority-free cleanup step. It does not
-model mayhem at all - the keyword parses as a keyword and grants nothing - so
-the second half is `xfail`.
+The engine models all of it: the discard, the priority-free cleanup step, and
+mayhem itself - `machines/casting._option_from_keyword` reads the keyword into a
+cast-from-graveyard option whose alternative cost replaces the mana cost, and
+`CardState.discarded_by`/`discarded_on_turn` (written by
+`machines/keywords.discard`) answer CR 702.187b's "as long as you discarded this
+card this turn".
 
 Every CR number in this file was verified with `knowledge_search(q="...",
 type="rules")` in the session that wrote it: CR 402.2, CR 500.3, CR 514.1,
-CR 514.3, CR 514.3a, CR 701.9a, CR 702.187a, CR 702.187b, CR 703.4n.
+CR 514.3, CR 514.3a, CR 701.9a, CR 702.187a, CR 702.187b, CR 702.187c,
+CR 703.4n, and CR 400.7 for what a card loses when it leaves the graveyard.
 """
-
-import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.casting import Casting
 from magic_cards_model.models import Zone
+from magic_cards_model.models.card_state import CardState
 from tests.cards import card
 from tests.scenarios.harness import Scenario
 
@@ -107,15 +110,27 @@ def test_flash_does_not_create_a_priority_window_of_its_own():
     assert not scenario.turn.grants_priority
 
 
-@pytest.mark.xfail(
-    reason=(
-        "Mayhem (CR 702.187a/b) is not modelled. The keyword parses off the "
-        "printing but nothing turns it into an alternative cost or a permission "
-        "to cast from the graveyard, so `Casting.alternative_costs` is empty and "
-        "a card discarded this turn offers nothing at the next priority window."
-    ),
-    strict=True,
-)
+def _discarded_in_the_main_phase() -> tuple[Scenario, CardState]:
+    """alice discards the Swarm at a legal priority window, not at cleanup.
+
+    CR 701.9a's discard through `Game.discard_cards`, so the card is annotated
+    the way a real discard annotates it - the cleanup discard of the tests above
+    goes through `Player.discard_to_maximum_hand_size` and does not, which is
+    the second reason the episode's trick fails.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Swarm, Being of Bees"], battlefield=["Swamp"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (swarm,) = scenario.game.discard_cards(
+        "alice", [scenario.find("Swarm, Being of Bees", Zone.HAND, "alice")]
+    )
+    return scenario, swarm
+
+
 def test_mayhem_offers_the_discarded_card_from_the_graveyard():
     """CR 702.187b: "you may cast it from your graveyard by paying [cost]
     rather than paying its mana cost", as long as you discarded it this turn.
@@ -123,13 +138,32 @@ def test_mayhem_offers_the_discarded_card_from_the_graveyard():
     Asked at a legal priority window rather than during cleanup, so the only
     thing being tested is mayhem itself.
     """
+    scenario, swarm = _discarded_in_the_main_phase()
+    assert swarm.zone is Zone.GRAVEYARD
+
+    casting = Casting(
+        spell=swarm,
+        caster="alice",
+        origin_zone=Zone.GRAVEYARD,
+        game=scenario.game,
+    )
+
+    (option,) = casting.alternative_costs
+    assert option.keyword == "Mayhem"
+    assert option.rule == "CR 702.187b"
+    assert str(option.cost.mana) == "{B}"
+    assert option.available
+
+
+def test_mayhem_refuses_a_card_that_reached_the_graveyard_some_other_way():
+    """CR 702.187b's own condition: "as long as you discarded this card this
+    turn". A creature that died, or one put there by a mill, was never
+    discarded - the option is still *listed*, because the keyword is printed,
+    and it is not available.
+    """
     scenario = (
         Scenario()
-        .player(
-            "alice",
-            graveyard=["Swarm, Being of Bees"],
-            battlefield=["Swamp"],
-        )
+        .player("alice", graveyard=["Swarm, Being of Bees"], battlefield=["Swamp"])
         .player("bob")
         .build()
     )
@@ -142,7 +176,24 @@ def test_mayhem_offers_the_discarded_card_from_the_graveyard():
         origin_zone=Zone.GRAVEYARD,
         game=scenario.game,
     )
-    assert [str(cost.mana) for cost in casting.alternative_costs] == ["{B}"]
+
+    (option,) = casting.alternative_costs
+    assert not option.available
+    assert "did not discard" in (option.unavailable or "")
+
+
+def test_a_discarded_card_that_leaves_the_graveyard_is_no_longer_discarded():
+    """CR 400.7: "an object that moves from one zone to another becomes a new
+    object with no memory of ... its previous existence", so a card that was
+    discarded and then left the graveyard is not a card anybody discarded.
+    """
+    _, swarm = _discarded_in_the_main_phase()
+    assert swarm.discarded_by == "alice"
+
+    swarm.move_to(Zone.HAND)
+
+    assert swarm.discarded_by is None
+    assert swarm.discarded_on_turn is None
 
 
 # --------------------------------------------------------------------------

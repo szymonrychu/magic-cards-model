@@ -126,9 +126,36 @@ class KeywordCastOption(BaseModel):
     later_turn: bool = False
     """True when the card may only be cast on a turn after the one it was
     exiled on - plot (CR 702.170d), foretell, and warp all say so."""
+    discarded_this_turn: bool = False
+    """True when the keyword only applies to a card its controller *discarded*
+    this turn - mayhem's own "As long as you discarded this card this turn"
+    (CR 702.187b), and nothing else in this pool.
+
+    Not a count. `Game.cards_discarded_this_turn` records how many cards each
+    player has discarded, which answers Hollow One's cost reduction and cannot
+    answer this: the question here is whether *this card* was one of them, and
+    who discarded it. `CardState.discarded_by`/`discarded_on_turn` are that
+    record, written by `machines/keywords.discard`, and `why_not` reads both."""
     understood: bool = True
     """False when the keyword's printed cost could not be read into something
     payable. The option is still reported, so a sweep can see the gap."""
+    granted_line: str | None = None
+    """The keyword line this option came from when it was *granted* rather
+    than printed (CR 610.5) - `"Evoke {4}"` for Ashling, the Limitless's
+    "Elemental permanent spells you cast from your hand gain evoke {4} as you
+    cast them." `None` for a keyword read off the card's own printing, which
+    needs no line recorded because the printing already says it.
+
+    CR 400.7b is what this is for: "effects from static abilities that grant an
+    ability to a permanent spell that functions on the battlefield continue to
+    apply to the permanent that spell becomes", and CR 611.3d adds that such an
+    ability "lasts indefinitely unless some other duration is stated". A
+    keyword that is *two* abilities - evoke is, by CR 702.74a - therefore keeps
+    its battlefield half after the grantor is gone, and the only way for that
+    to be true of the object rather than of the grantor is for the object to
+    carry the line. `Casting._use_keyword` stamps it onto
+    `CardState.granted_ability_texts`, where
+    `machines/triggers.granted_triggered_abilities_of` reads it back."""
 
     def why_not(
         self, spell: CardState, caster: str, game: Any = None, origin: Zone | None = None
@@ -172,6 +199,24 @@ class KeywordCastOption(BaseModel):
                 return (
                     f"{spell.name} became {self.marker.value} this turn; it can only be "
                     f"cast on a later turn ({self.rule})"
+                )
+
+        if self.discarded_this_turn:
+            # CR 702.187b's "as long as **you** discarded **this card** this
+            # turn" - both halves, off the card's own discard record rather
+            # than off `Game.cards_discarded_this_turn`, which counts a
+            # player's discards and can say neither which card nor, for the
+            # count alone, that this one was among them.
+            now = _turn_number(game)
+            if spell.discarded_by != caster:
+                return (
+                    f"{caster} did not discard {spell.name}, so it cannot be cast "
+                    f"with {self.keyword} ({self.rule})"
+                )
+            if now is not None and spell.discarded_on_turn != now:
+                return (
+                    f"{spell.name} was not discarded this turn, so it cannot be cast "
+                    f"with {self.keyword} ({self.rule})"
                 )
 
         if (
@@ -225,6 +270,38 @@ def _option_from_keyword(ability: KeywordAbility) -> KeywordCastOption | None:
             zone=Zone.GRAVEYARD,
             cost=cost,
             pays_mana_cost=False,
+            understood=cost is not None,
+        )
+
+    if canonical == "mayhem":
+        # CR 702.187a: "Mayhem is a static ability that functions while the card
+        # with mayhem is in a player's graveyard." CR 702.187b: "'Mayhem
+        # [cost]' means 'As long as you discarded this card this turn, you may
+        # cast it from your graveyard by paying [cost] rather than paying its
+        # mana cost.'"
+        #
+        # Structurally flashback (CR 702.34a) - the graveyard half is the
+        # permission, and the cost replaces the mana cost - with the one clause
+        # flashback does not have: "as long as you discarded this card this
+        # turn". That is `discarded_this_turn` below, and it is a fact about a
+        # *specific card*, not about how many cards a player has discarded -
+        # `CardState.discarded_by`/`discarded_on_turn` is where the discard
+        # itself records it (see `KeywordCastOption.discarded_this_turn`).
+        #
+        # CR 702.187c's costless form - "'Mayhem' without a cost means 'You may
+        # play this card from your graveyard if you discarded it this turn'" -
+        # is deliberately not folded in here: it says *play*, which reaches
+        # lands and is a different permission from an alternative cost, and no
+        # printing in this pool has it. A bare `Mayhem` line therefore reads as
+        # not understood rather than as a free cast.
+        cost = total_cost_for_phrase(printed) if printed else None
+        return KeywordCastOption(
+            keyword=ability.canonical,
+            rule="CR 702.187b",
+            zone=Zone.GRAVEYARD,
+            cost=cost,
+            pays_mana_cost=False,
+            discarded_this_turn=True,
             understood=cost is not None,
         )
 
@@ -317,6 +394,30 @@ def _option_from_keyword(ability: KeywordAbility) -> KeywordCastOption | None:
             pays_mana_cost=False,
         )
 
+    if canonical == "bestow":
+        # CR 702.103a: "Bestow represents a static ability that functions in any
+        # zone from which you could play the card it's on. 'Bestow [cost]'
+        # means 'As you cast this spell, you may choose to cast it bestowed. If
+        # you do, ... pay [cost] rather than its mana cost.'" So it is an
+        # alternative cost (CR 118.9) that also changes what the spell *is*:
+        # CR 702.103b, "as a spell cast bestowed is put onto the stack, it
+        # becomes an Aura enchantment and gains enchant creature", which is
+        # `CardState.bestowed` and not this option's business.
+        #
+        # The zone is the hand, the only zone "from which you could play the
+        # card" for a creature card by default; a printing whose own text opens
+        # another one says so itself (CR 604.6) and is read by
+        # `_printed_zone_permissions` below, not here.
+        cost = total_cost_for_phrase(printed) if printed else None
+        return KeywordCastOption(
+            keyword=ability.canonical,
+            rule="CR 702.103a",
+            zone=Zone.HAND,
+            cost=cost,
+            pays_mana_cost=False,
+            understood=cost is not None,
+        )
+
     if canonical == "warp":
         # CR 702.185a: warp is two static abilities that function while the card
         # is on the stack, one of which may create a delayed triggered ability.
@@ -349,6 +450,54 @@ def _warp_from_exile(ability: KeywordAbility) -> KeywordCastOption:
     )
 
 
+#: Detective's Phoenix: "You may cast this card from your graveyard using its
+#: bestow ability." A CR 604.6 static ability of the card itself - "some static
+#: abilities function while an object is in a zone other than the battlefield"
+#: - naming both the zone it opens and the ability it opens it for, so the
+#: keyword's own option is reused rather than a second cost invented for it.
+_PRINTED_CAST_FROM_ZONE_USING_KEYWORD = re.compile(
+    r"you may cast this card from your (?P<zone>graveyard|hand|exile) using its "
+    r"(?P<keyword>[a-z]+) ability",
+    re.IGNORECASE,
+)
+
+#: The zone words that sentence can name, as zones.
+_PRINTED_PERMISSION_ZONES = {
+    "graveyard": Zone.GRAVEYARD,
+    "hand": Zone.HAND,
+    "exile": Zone.EXILE,
+}
+
+
+def _printed_zone_permissions(
+    card: Card, options: list[KeywordCastOption]
+) -> list[KeywordCastOption]:
+    """The extra zones a card's own printed text opens for a keyword it has
+    (CR 604.6, CR 113.6f).
+
+    One option per sentence and per matching keyword option, copied from the
+    keyword's own so the cost, the CR 118.9 replacement and the "could not be
+    read" flag are all identical - only the zone differs. That is what the
+    printed sentence actually says: it names an ability the card already has
+    and a zone to use it from, and not a new way to pay.
+
+    A sentence naming a keyword the card does not have adds nothing, rather
+    than inventing an option with no cost behind it.
+    """
+    text = (card.oracle_text or "").replace("\n", " ")
+    extra: list[KeywordCastOption] = []
+    for match in _PRINTED_CAST_FROM_ZONE_USING_KEYWORD.finditer(text):
+        zone = _PRINTED_PERMISSION_ZONES[match.group("zone").lower()]
+        keyword = match.group("keyword").lower()
+        for option in options:
+            if option.keyword.lower() != keyword or option.zone is zone:
+                continue
+            extra.append(
+                option.model_copy(update={"zone": zone, "rule": f"CR 604.6, {option.rule}"})
+            )
+    return extra
+
+
 def keyword_cast_options(card: Card) -> list[KeywordCastOption]:
     """Every way this card's own text lets it be cast, in printed order (CR 601.3).
 
@@ -366,6 +515,7 @@ def keyword_cast_options(card: Card) -> list[KeywordCastOption]:
         options.append(option)
         if option.keyword.lower() == "warp":
             options.append(_warp_from_exile(ability))
+    options.extend(_printed_zone_permissions(card, options))
 
     if adventure_face(card) is not None:
         # CR 715.3d: "Instead of putting a spell that was cast as an Adventure
@@ -387,6 +537,53 @@ def keyword_cast_options(card: Card) -> list[KeywordCastOption]:
 def castable_from(card: Card, zone: Zone) -> list[KeywordCastOption]:
     """The keyword options that cast this card out of one zone."""
     return [option for option in keyword_cast_options(card) if option.zone is zone]
+
+
+def marker_cast_options(spell: CardState) -> list[KeywordCastOption]:
+    """The cast options a card has because of the *pile of exile it is in*
+    (CR 406.4), rather than because of anything printed on it.
+
+    Every option in `keyword_cast_options` is read off a printed CR 702 keyword
+    line, so a permission handed out by a CR 701 keyword *action* - which
+    prints nothing on the object it moves - can never come from there.
+    Airbend is that shape.
+
+    CR 701.65a: "Certain spells and abilities instruct a player to airbend one
+    or more permanents and/or spells. To do so, that player exiles those
+    objects. For each card exiled this way, for as long as it remains exiled,
+    its owner may cast it for {2} rather than its mana cost."
+
+    Three things follow, and each is a field below:
+
+    - **{2} rather than its mana cost** is an alternative cost (CR 118.9), so
+      `pays_mana_cost` is false and `cost` is the flat `{2}`, whatever the card
+      itself costs.
+    - **for as long as it remains exiled** is the marker, and nothing more.
+      There is no "on a later turn" here the way plot (CR 702.170d) and
+      foretell (CR 702.143a) have one, so no `later_turn` - an airbent card may
+      be recast the moment its owner has priority.
+    - **its owner** is `ExileAnnotation.owner`, which `why_not` already
+      enforces. It matters more here than for any other marker: the player who
+      airbent the object is usually not its owner, and the episode this is
+      modelled from turns on exactly that.
+
+    CR 701.65a says "for each **card** exiled this way", which is why a token
+    airbent this way gets nothing: it is not a card, and CR 111.7/CR 704.5d
+    have it cease to exist before anybody could ask.
+    """
+    annotation = spell.exile_annotation
+    if annotation is None or annotation.marker is not ExileMarker.AIRBENT:
+        return []
+    return [
+        KeywordCastOption(
+            keyword="Airbend",
+            rule="CR 701.65a",
+            zone=Zone.EXILE,
+            cost=TotalCost.of(ManaCost.parse("{2}")),
+            pays_mana_cost=False,
+            marker=ExileMarker.AIRBENT,
+        )
+    ]
 
 
 # --------------------------------------------------------------------------
@@ -581,9 +778,13 @@ def _granted_option(
     )
     if option is None or option.zone is not zone:
         return None
+    # The keyword written back out the way a card would print it, so the object
+    # can carry the grant itself once it is announced (CR 400.7b) - see
+    # `KeywordCastOption.granted_line`.
+    line = f"{keyword.capitalize()} {printed}" if printed else keyword.capitalize()
     # The granting rule and the keyword's own rule, in that order: one says why
     # this spell has the keyword at all, the other says what the keyword does.
-    return option.model_copy(update={"rule": f"{rule}, {option.rule}"})
+    return option.model_copy(update={"rule": f"{rule}, {option.rule}", "granted_line": line})
 
 
 def _grant_as_you_cast(
@@ -1440,6 +1641,14 @@ class Casting(BaseModel):
     """The exile pile the card was in before that move (CR 406.5): plot,
     foretell, madness and warp all cast out of a *particular* pile, and the
     move to the stack drops the annotation."""
+    announced_discarded_by: str | None = None
+    """Who had discarded the card before that move (CR 701.9a), and"""
+    announced_discarded_on_turn: int | None = None
+    """which turn they discarded it on - `CardState.discarded_by` and
+    `discarded_on_turn`, kept for the same reason the exile annotation above is.
+    Mayhem's own "as long as you discarded this card this turn" (CR 702.187b) is
+    a question about the card as it sat in the graveyard, and CR 601.2a's move
+    to the stack has already made it a new object that nobody discarded."""
 
     def model_post_init(self, _context: object) -> None:
         """CR 601.3: the announcement is refused if the timing does not allow it,
@@ -1496,6 +1705,8 @@ class Casting(BaseModel):
         self.announced_zone = self.spell.zone
         self.announced_stamp = self.spell.zone_change_stamp
         self.announced_exile_annotation = self.spell.exile_annotation
+        self.announced_discarded_by = self.spell.discarded_by
+        self.announced_discarded_on_turn = self.spell.discarded_on_turn
         self._lift_out_of_every_zone()
         self.spell.move_to(Zone.STACK)
         game.stack.append(self.spell)
@@ -1570,6 +1781,8 @@ class Casting(BaseModel):
                 "zone": self.announced_zone,
                 "zone_change_stamp": self.announced_stamp,
                 "exile_annotation": self.announced_exile_annotation,
+                "discarded_by": self.announced_discarded_by,
+                "discarded_on_turn": self.announced_discarded_on_turn,
             }
         )
 
@@ -1809,9 +2022,18 @@ class Casting(BaseModel):
         """The keyword options that would cast this spell out of its origin
         zone - the card's own, and any another permanent grants it right now
         (CR 610.5)."""
-        return castable_from(self.spell.card, self.origin_zone) + [
-            granted.option for granted in self.granted_cast_options
-        ]
+        return (
+            castable_from(self.spell.card, self.origin_zone)
+            # CR 701.65a's airbend and anything else whose permission is the
+            # pile of exile itself, filtered to the zone this cast is coming
+            # from the same way the printed options above are.
+            + [
+                option
+                for option in marker_cast_options(self._as_announced)
+                if option.zone is self.origin_zone
+            ]
+            + [granted.option for granted in self.granted_cast_options]
+        )
 
     @property
     def granted_cast_options(self) -> list[GrantedCastOption]:
@@ -1846,10 +2068,11 @@ class Casting(BaseModel):
 
     def _use_keyword(self, keyword: str, choosing: list[CardState] | None) -> CastingStep:
         printed_options = keyword_cast_options(self.spell.card)
+        marker_options = marker_cast_options(self._as_announced)
         granted_options = [granted.option for granted in self.granted_cast_options]
         options = [
             option
-            for option in printed_options + granted_options
+            for option in printed_options + marker_options + granted_options
             if option.keyword.lower() == keyword.lower()
         ]
         if not options:
@@ -1873,6 +2096,29 @@ class Casting(BaseModel):
         option = usable[0]
         self._enter_modes()
         self.keyword_used = option.keyword
+        if option.keyword.lower() == "bestow":
+            # CR 702.103b: "As a spell cast bestowed is put onto the stack, it
+            # becomes an Aura enchantment and gains enchant creature." CR 601.2a
+            # has already put it there, so this is the moment - and it is the
+            # object that changes, not the announcement, which is why the flag
+            # lives on `CardState`. A refused announcement rewinds the card to
+            # its origin zone, and `CardState.move_to` clears the flag on the
+            # way (CR 400.7).
+            self.spell.bestowed = True
+        # CR 610.5's grant happens "at the time the player proposes the
+        # casting", and CR 400.7b keeps it on the permanent the spell becomes.
+        # Recorded on the object rather than left implicit in the grantor's
+        # static ability, because by the time the keyword's battlefield half
+        # matters the grantor may be in a graveyard - which is the whole point
+        # of CR 400.7b, and of CR 611.3d's "lasts indefinitely unless some
+        # other duration is stated".
+        if option.granted_line is not None and (
+            option.granted_line not in self.spell.granted_ability_texts
+        ):
+            self.spell.granted_ability_texts = (
+                *self.spell.granted_ability_texts,
+                option.granted_line,
+            )
 
         if option.pays_mana_cost:
             # Warp's second half: the card is cast from exile for its own mana
@@ -2053,7 +2299,9 @@ class Casting(BaseModel):
             )
 
         keyword_options: list[tuple[str, KeywordCastOption]] = [
-            (self.spell.name, option) for option in keyword_cast_options(self.spell.card)
+            (self.spell.name, option)
+            for option in keyword_cast_options(self.spell.card)
+            + marker_cast_options(self._as_announced)
         ]
         # CR 610.5: a keyword another permanent grants as this spell is cast is
         # an alternative cost like any other, and the option carries the
@@ -3091,12 +3339,20 @@ class Casting(BaseModel):
         # never called, which `deal_divided_damage` reads as "fall back to
         # splitting the total as evenly as it goes" rather than an error.
         self.spell.division = list(self.division) if self.division is not None else None
-        if self.face is not None and self.spell.card.layout is Layout.SPLIT:
+        if self.spell.card.layout in (Layout.SPLIT, Layout.ADVENTURE):
             # CR 709.3b: "While on the stack, only the characteristics of the
-            # half being cast exist." `CardState.face_played` is what
-            # `up_face` reads for the whole time this spell sits on the
-            # stack - see its own docstring for why this is scoped to split
-            # cards and does not also cover Adventure's `self.face`.
+            # half being cast exist", and CR 715.3b's Adventure equivalent:
+            # "While on the stack as an Adventure, the spell has only its
+            # alternative characteristics." `CardState.face_played` is what
+            # `up_face` reads for the whole time this spell sits on the stack.
+            #
+            # Assigned *unconditionally*, not only when `self.face` is set:
+            # `CardState.move_to` never clears `face_played`, so an adventurer
+            # exiled by CR 715.3d and then recast as its creature half would
+            # otherwise still be carrying the Adventure face it was cast with
+            # the first time, and resolve as an Instant. `None` here is the
+            # CR 715.4 answer - "while on the stack not as an Adventure, an
+            # adventurer card has only its normal characteristics."
             self.spell.face_played = self.face
         if self.game is not None:
             self._emit_becomes_target()
@@ -3225,6 +3481,8 @@ class Casting(BaseModel):
         self.spell.zone = self.announced_zone
         self.spell.zone_change_stamp = self.announced_stamp
         self.spell.exile_annotation = self.announced_exile_annotation
+        self.spell.discarded_by = self.announced_discarded_by
+        self.spell.discarded_on_turn = self.announced_discarded_on_turn
         self.announced_zone = None
 
     def _enter_modes(self) -> None:
