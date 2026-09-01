@@ -167,6 +167,7 @@ from .card_state import (
     CardState,
     ChoiceKind,
     Counter,
+    ExileAnnotation,
     ExileMarker,
     TargetRef,
     planeswalkers_with_zero_loyalty,
@@ -746,6 +747,16 @@ class CastRecord(BaseModel):
     itself."""
     face: str | None = None
     """The name of the face being cast, for a card with more than one (CR 715.3)."""
+    exile_annotation: "ExileAnnotation | None" = None
+    """The exile pile the card was cast out of, captured before CR 601.2a's
+    move to the stack cleared it.
+
+    `CardState.move_to` nulls `exile_annotation` for any non-exile
+    destination, so by the time a spell is on the stack the pile it came from
+    is gone - and CR 702.143a's foretell asks afterwards, needing
+    `turn_exiled` to count "the number of turns you've begun since it was
+    foretold". Captured at announcement by `Casting.announced_exile_annotation`
+    for the same reason `origin_zone` is."""
     modes: list[int] = Field(default_factory=list)
     """The chosen modes, as their 1-based position on the card (CR 700.2)."""
     mode_targets: list[list[TargetRef]] = Field(default_factory=list)
@@ -1967,6 +1978,7 @@ class Game(BaseModel):
         keyword: str | None = None,
         origin_zone: Zone = Zone.HAND,
         face: str | None = None,
+        exile_annotation: "ExileAnnotation | None" = None,
         modes: list[int] | None = None,
         mode_targets: list[list[TargetRef]] | None = None,
         x_value: int = 0,
@@ -2005,6 +2017,7 @@ class Game(BaseModel):
             keyword=keyword,
             origin_zone=origin_zone,
             face=face,
+            exile_annotation=exile_annotation,
             modes=list(modes or []),
             mode_targets=[list(slice_) for slice_ in mode_targets or []],
             x_value=x_value,
