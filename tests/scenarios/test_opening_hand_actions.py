@@ -632,3 +632,36 @@ def test_no_action_is_offered_for_a_card_that_is_not_in_the_opening_hand():
 def test_every_card_with_a_rider_is_a_real_printing_in_the_pool(name: str):
     """A registry entry for a card the fixture pool does not have tests nothing."""
     assert card(name) is not None
+
+
+def test_a_revealed_card_is_not_offered_a_second_time():
+    """CR 103.6b: "Each card may be revealed this way only once."
+
+    CR 103.6a's card leaves the hand for the battlefield, so it stops being
+    offered on its own. A reveal does not - CR 701.20b leaves the card exactly
+    where it is - so the offer has to be withdrawn deliberately, and it was
+    not: Devourer of Destiny was offered again after being revealed, for ever.
+
+    Through the API that read to a player as a button that did nothing. The
+    action really was performed on every click, the panel came back identical,
+    and the rider was scheduled again each time.
+    """
+    match = series(broodscale(), devoted(), seed="reveal-once")
+    game = dealt(match, {"alice": "Devourer of Destiny"}, on_the_play="alice")
+    for player in game.players:
+        game.declare_mulligan(player.username, take=False)
+    alice = game.player("alice")
+    devourer = next(state for state in alice.hand if state.name == "Devourer of Destiny")
+
+    assert [d.source for d in game.opening_hand_options("alice")] == ["Devourer of Destiny"]
+
+    game.take_opening_hand_action("alice", devourer.id)
+
+    assert devourer.zone is Zone.HAND, "CR 701.20b: revealing leaves it in hand"
+    assert game.opening_hand_reveals == [devourer.id]
+    assert game.opening_hand_options("alice") == [], "CR 103.6b allows the reveal only once"
+
+    with pytest.raises(ValueError, match="offers that action"):
+        game.take_opening_hand_action("alice", devourer.id)
+
+    assert game.opening_hand_reveals == [devourer.id], "the second attempt changed nothing"

@@ -4011,6 +4011,16 @@ class Game(BaseModel):
             for action in actions:
                 if action.requires_not_starting_player and player.username == starting_player:
                     continue
+                if card_state.id in self.opening_hand_reveals:
+                    # CR 103.6b: "Each card may be revealed this way only
+                    # once." A card put onto the battlefield under CR 103.6a
+                    # leaves the hand, so the loop above stops offering it on
+                    # its own - but a *revealed* card stays in hand
+                    # (CR 701.20b), so without this it was offered again after
+                    # being taken, for ever. Through the API that read as a
+                    # button that did nothing: the action really was performed
+                    # each time, and the panel came back unchanged.
+                    continue
                 offers.append(
                     (
                         Decision(
