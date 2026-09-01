@@ -44,6 +44,7 @@ from magic_cards_model.machines import Step
 from magic_cards_model.machines.abilities import TriggerEvent
 from magic_cards_model.machines.effects import (
     create_continuous_effect,
+    create_continuous_effect_of_ability,
     effect_for,
     trigger_effect_for,
 )
@@ -281,8 +282,20 @@ def test_a_spider_bringer_and_a_real_bringer_can_both_end_up_on_the_battlefield(
 # --------------------------------------------------------------------------
 
 
-def test_neither_jolraels_animation_nor_aggressive_biomancy_has_a_scripted_effect():
-    """DDR#980, the provable half: both ends of the interaction are unbuilt.
+def test_jolraels_animation_needs_x_substituted_and_biomancy_needs_a_clause():
+    """DDR#980, the provable half: exactly what is still missing, and where.
+
+    Jolrael's animation *is* a shape `machines/layers.py` reads -
+    `_TARGET_ANIMATION_RE`, layer 4 for the types (CR 613.1d), layer 5 for the
+    colours (CR 613.1e), layer 6 for the keywords (CR 613.1f) and sublayer 7b
+    for the P/T (CR 613.4b) - but only once the "X/X ... where X is the number
+    of cards in your hand" tail has been turned into a literal. That
+    substitution belongs to `machines/effects.py`, which already does exactly
+    it for a mass pump's "+X/+X ... where X is ..." (`_WHERE_X_IS_RE`), and
+    this test pins the difference: the printed line comes back `None` and the
+    same line with a number in it comes back an effect.
+
+    Aggressive Biomancy is still wholly unbuilt.
 
     Jolrael, Voice of Zhalfir (verified with `resolve_cards`): "At the
     beginning of combat on your turn, up to one target land you control
@@ -292,22 +305,41 @@ def test_neither_jolraels_animation_nor_aggressive_biomancy_has_a_scripted_effec
     creature you control, except they have 'When this token enters, it fights
     up to one target creature you don't control.'"
 
-    `effect_for` returns `None` for both, and `_parse_token_clause` refuses
-    the moment it reads "copies of" - the same refusal DDR#951 above already
-    documents. So there is nothing to animate a land with, and nothing to copy
-    it with.
+    `_parse_token_clause` refuses the moment it reads "copies of" - the same
+    refusal DDR#951 above already documents - so there is nothing to copy the
+    land with.
     """
     assert effect_for("Aggressive Biomancy", card("Aggressive Biomancy").oracle_text) is None
+
     jolrael = card("Jolrael, Voice of Zhalfir")
-    assert effect_for(jolrael.name, jolrael.oracle_text) is None
+    printed = jolrael.oracle_text.split("\n")[0].split(", ", 1)[1]
+    assert printed.startswith("up to one target land you control becomes an X/X")
+    assert trigger_effect_for(jolrael.name, TriggerEvent.BEGINNING_OF_STEP, printed) is None
+
+    # The identical sentence with CR 107.3a's X already resolved - which is
+    # what `machines/effects.py` would hand the layer parser - does read.
+    substituted = (
+        "up to one target land you control becomes a 1/1 green and blue Bird "
+        "creature with flying and haste until end of turn. It's still a land."
+    )
+    assert (
+        trigger_effect_for(jolrael.name, TriggerEvent.BEGINNING_OF_STEP, substituted)
+        is create_continuous_effect_of_ability
+    )
 
 
 @pytest.mark.xfail(
     strict=True,
-    reason="effect_for is None for both Jolrael and Aggressive Biomancy (proven above), so no "
-    "land is animated and no token copies are created at all - CR 707.2 copiable values and the "
-    "CR 707.9a 'except they have ...' added ability are both unimplemented, and machines/"
-    "casting.py never threads a non-modal spell's announced X into its effect either.",
+    reason="Two clause parsers are missing, both in machines/effects.py. (1) Jolrael's trigger "
+    "prints its magnitude as 'an X/X ... where X is the number of cards in your hand', and "
+    "nothing splits that tail off and substitutes a literal for a *non-mass-pump* sentence - "
+    "`_WHERE_X_IS_RE` is only reached from `_parse_mass_pump_clause`. With the number already in "
+    "it, `machines/layers._TARGET_ANIMATION_RE` reads the whole animation (proven above), so the "
+    "land is simply never animated. (2) 'Create X tokens that are copies of target creature you "
+    'control, except they have "<ability>"\' has no parser at all: `_parse_token_clause` '
+    "returns None on seeing 'copies of'. `models/token.token_copy_of` now takes the CR 707.9a "
+    "added ability (`added_abilities=`) and CR 707.2's copiable values already work, so the "
+    "clause parser is the only missing half of that end.",
 )
 def test_token_copies_of_an_animated_land_are_plain_forests_with_a_fight_trigger():
     """DDR#980: the copy copies the land, not the animation.
@@ -334,14 +366,51 @@ def test_token_copies_of_an_animated_land_are_plain_forests_with_a_fight_trigger
         .player(
             "alice",
             hand=["Aggressive Biomancy"],
-            battlefield=["Jolrael, Voice of Zhalfir", "Forest", "Forest", "Island", "Island"],
+            battlefield=[
+                "Jolrael, Voice of Zhalfir",
+                "Forest",
+                "Forest",
+                "Forest",
+                "Island",
+                "Island",
+                "Island",
+            ],
         )
         .player("bob", battlefield=["Grizzly Bears"])
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    sources = scenario.untapped_sources("Forest", "Island", "Island", username="alice")
-    scenario.cast_and_resolve("Aggressive Biomancy", *sources, username="alice")
+    forest, *_ = scenario.untapped_sources("Forest", "Forest", "Forest", username="alice")
+
+    # Jolrael's ability is "At the beginning of combat on your turn ...", so
+    # the scenario has to *reach* that step: starting in the precombat main
+    # phase and casting there animates nothing at all. One card in hand
+    # (Aggressive Biomancy itself) makes X 1, and CR 611.2c fixes that as the
+    # trigger resolves - emptying the hand to cast the spell does not shrink
+    # the Bird afterwards.
+    scenario.choose_trigger_targets("Jolrael, Voice of Zhalfir", [forest])
+    scenario.advance()
+    assert scenario.step is Step.BEGINNING_OF_COMBAT
+    scenario.pass_until_resolved()
+    assert scenario.game.characteristics_of(forest).is_creature
+
+    # Aggressive Biomancy is a sorcery (CR 307.1), so it waits for the
+    # postcombat main phase; the animation is "until end of turn" and is still
+    # running there (CR 514.2 ends it in the cleanup step, not before).
+    scenario.start_at(Step.POSTCOMBAT_MAIN)
+    casting = scenario.cast("Aggressive Biomancy", username="alice", targets=[forest])
+    casting.determine_cost(x_value=2)
+    payment = casting.begin_paying()
+    assert str(payment.cost) == "{4}{G}{U}"
+    scenario.pay_with(
+        payment,
+        *scenario.untapped_sources(
+            "Forest", "Forest", "Forest", "Island", "Island", "Island", username="alice"
+        ),
+    )
+    scenario.put_on_stack(casting)
+    while scenario.game.stack or scenario.pending_triggers:
+        scenario.pass_until_resolved()
 
     tokens = [
         state
@@ -351,6 +420,13 @@ def test_token_copies_of_an_animated_land_are_plain_forests_with_a_fight_trigger
     assert len(tokens) == 2
     assert all(Type.CREATURE not in token.card.types for token in tokens)
     assert all(token.name == "Forest" for token in tokens)
+    # CR 707.9a's added ability rode along with the copiable values, so each
+    # token really did put its fight trigger on the stack - and CR 701.14b is
+    # why the Bears took nothing from it.
+    assert all(
+        "it fights up to one target creature you don't control" in (token.card.oracle_text or "")
+        for token in tokens
+    )
     assert scenario.creature("Grizzly Bears", "bob").damage == 0
 
 

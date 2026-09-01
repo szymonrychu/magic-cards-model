@@ -73,7 +73,7 @@ Three of the rules above are only half here, because the other half belongs to
   Season's token half watches.
 """
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
@@ -528,8 +528,46 @@ def create_predefined_tokens(
     return create_tokens(game, definition, controller, count, **options)
 
 
+def copiable_card_with_added_abilities(printed: Card, added: Sequence[str]) -> Card:
+    """`printed` plus `added`, as one `Card` - CR 707.9a's added ability.
+
+    CR 707.9a: "Some copy effects cause the copy to gain an ability as part of
+    the copying process. This ability becomes part of the copiable values for
+    the copy, along with any other abilities that were copied."
+
+    "Part of the copiable values" is the whole reason this returns a new `Card`
+    rather than putting the line on `CardState.granted_ability_texts` or
+    creating a layer 6 effect. A layer 6 grant (CR 613.1f) is applied *after*
+    layer 1 and is not copiable at all, and `granted_ability_texts` is a
+    battlefield-static channel reconciled by `machines/layers.
+    sync_granted_ability_texts`. Neither is read by `triggered_abilities_of`,
+    which parses the object's `Card` - so an added "When this token enters,
+    ..." would never trigger. Appending the line to the printed oracle text is
+    what CR 707.9a actually describes: the copy's *text* includes it.
+
+    The `Card` this returns is a `model_copy` of a real Scryfall printing with
+    a fresh `id` (CR 108.1 keeps the oracle text authoritative; the id is this
+    engine's own object identity, and two objects with different text must not
+    share one). Nothing is hand-written: every characteristic but the oracle
+    text is the printing's own.
+
+    `added` empty returns `printed` unchanged, so a plain CR 707.2 copy pays
+    nothing for this rule existing.
+    """
+    lines = [line for line in (text.strip() for text in added) if line]
+    if not lines:
+        return printed
+    body = "\n".join([*([printed.oracle_text] if printed.oracle_text else []), *lines])
+    return printed.model_copy(update={"id": uuid4(), "oracle_text": body})
+
+
 def token_copy_of(
-    game: "Game", original: CardState, controller: str, count: int = 1, **options: Any
+    game: "Game",
+    original: CardState,
+    controller: str,
+    count: int = 1,
+    added_abilities: Sequence[str] = (),
+    **options: Any,
 ) -> list[TokenState]:
     """ "Create a token that's a copy of [something]" (CR 701.7a, CR 707.2).
 
@@ -556,6 +594,13 @@ def token_copy_of(
     raised here too and Doubling Season doubles a token copy exactly as it
     doubles any other.
 
+    `added_abilities` is CR 707.9a's "except they have '<ability>'" channel -
+    Aggressive Biomancy's "except they have 'When this token enters, it fights
+    up to one target creature you don't control.'" Each line becomes part of
+    the copy's *copiable values*, not a grant on top of them; see
+    `copiable_card_with_added_abilities` for why that distinction decides
+    whether the added trigger ever fires.
+
     **Not modelled**: CR 707.2's "as ... enters" power-and-toughness setting and
     face-down status, and CR 111.12's "a copy of a nonexistent object" - the
     caller has an object in hand, so there is nothing nonexistent to copy.
@@ -579,9 +624,11 @@ def token_copy_of(
     count = creation.amount
     extra_definitions = list(creation.extra)
 
+    copiable = copiable_card_with_added_abilities(original.card, added_abilities)
+
     created: list[TokenState] = []
     for _ in range(count):
-        copy = TokenState(card=original.card, zone=Zone.STACK, controller=controller)
+        copy = TokenState(card=copiable, zone=Zone.STACK, controller=controller)
         game.put_onto_battlefield(copy, controller, tapped=bool(options.get("tapped")))
         created.append(copy)
     for extra in extra_definitions:

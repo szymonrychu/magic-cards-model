@@ -2051,6 +2051,145 @@ def _fold_retention_clauses(sentences: list[str]) -> list[str]:
     return folded
 
 
+#: "Up to one target land you control becomes an X/X green and blue Bird
+#: creature with flying and haste until end of turn ... It's still a land."
+#: (Jolrael, Voice of Zhalfir's beginning-of-combat trigger, confirmed with
+#: `resolve_cards`) - `_SELF_ANIMATION_RE`'s sibling, animating something the
+#: ability *targeted* rather than the permanent the ability is printed on, and
+#: naming colours and keywords the self-animation shape never does.
+#:
+#: Four layers from one ability (CR 613.6, "If an effect should be applied in
+#: different layers and/or sublayers, the parts of the effect each apply in
+#: their appropriate ones"): layer 4 for the card types and the creature type
+#: (CR 613.1d), layer 5 for the colours (CR 613.1e), layer 6 for the keywords
+#: (CR 613.1f) and sublayer 7b for the P/T (CR 613.4b: "Effects that set power
+#: and/or toughness to a specific number or value are applied").
+#:
+#: CR 205.1a is why the "It's still a land." clause has to be part of the same
+#: sentence - "the new card type(s) replaces any existing card types", so
+#: without it the animated Forest would stop being a land - and CR 205.1b is
+#: what the clause does: "all the object's prior card types, supertypes, or
+#: subtypes are retained". `_fold_retention_clauses` joins the two printed
+#: sentences into one before any shape is tried, exactly as it already does
+#: for Mishra's Factory.
+#:
+#: **The P/T must already be a literal.** Jolrael prints "an X/X ... where X is
+#: the number of cards in your hand", and this module has no `Game` to count a
+#: hand with; `machines/effects.py`'s `_WHERE_X_IS_RE` is what splits that tail
+#: off and substitutes a number before the sentence reaches here, the same
+#: contract `_MASS_PUMP_UNTIL_EOT_RE` already relies on for Craterhoof
+#: Behemoth's "+X/+X".
+_TARGET_ANIMATION_RE = re.compile(
+    r"^(?:[Uu]p to (?:one|two|three) )?(?:target|another target) "
+    r"(?P<what>[a-z]+(?: [a-z]+)*?) becomes an? "
+    r"(?P<power>\d+)/(?P<toughness>\d+) "
+    r"(?P<colors>(?:white|blue|black|red|green)(?:(?:,| and) "
+    r"(?:white|blue|black|red|green))* )?"
+    r"(?P<subtype>[A-Z][A-Za-z'-]*(?: [A-Z][A-Za-z'-]*)? )?"
+    r"(?P<types>(?:artifact |enchantment |land )*creature)"
+    r"(?: with (?P<keywords>[a-z]+(?:(?:,| and) [a-z]+)*))? until end of turn\.?"
+    r"(?:\s+[Ii]t's still an? (?P<retained>[a-z]+)\.?)?$"
+)
+
+
+def _target_animation_builder(
+    power: int,
+    toughness: int,
+    colors: list[Color],
+    subtype: str | None,
+    types: list[Type],
+    keywords: list[str],
+) -> EffectBuilder:
+    """`_TARGET_ANIMATION_RE`'s shape - Jolrael's animation of a land she
+    targeted.
+
+    The subject is `targets`, whatever `create_continuous_effect_of_ability`
+    resolved for the trigger - so "up to one target land you control" legally
+    choosing zero (CR 115.6) animates nothing rather than falling back to the
+    ability's own source, the same contract every other targeted shape here
+    keeps.
+
+    Each part goes to its own layer (CR 613.6) and every part carries the same
+    timestamp, so nothing here can reorder against itself. The colour list is
+    a *set* (CR 613.1e; CR 202.2f: "Effects may change an object's color"), not
+    an addition: "becomes an X/X green and blue Bird creature" states the
+    colours the object has, and a colourless land animated this way is green
+    and blue and nothing else.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        def become(chars: Characteristics, board: Board) -> Characteristics:
+            # CR 205.1a replaces the card types; the retained type is already
+            # folded into `types` by the caller (CR 205.1b). CR 205.3d is why
+            # the old subtypes go with the old types.
+            return chars.with_(
+                types=tuple(types),
+                subtypes=(subtype,) if subtype is not None else (),
+            )
+
+        effects: list[ContinuousEffect] = []
+        for target in targets:
+            stamp = only_this_incarnation(target, target.zone_change_stamp)
+            named = f"{subtype} " if subtype is not None else ""
+            effects.append(
+                ContinuousEffect(
+                    description=(
+                        f"{source.name}: {target.name} becomes a {power}/{toughness} "
+                        f"{named}{' '.join(card_type.value for card_type in types)}"
+                    ),
+                    layer=Layer.TYPE,
+                    timestamp=timestamp,
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=stamp,
+                    modification=become,
+                )
+            )
+            if colors:
+                effects.append(
+                    ContinuousEffect(
+                        description=(
+                            f"{source.name}: {target.name} becomes "
+                            f"{' and '.join(color.value for color in colors)}"
+                        ),
+                        layer=Layer.COLOR,
+                        timestamp=timestamp,
+                        duration=Duration.UNTIL_END_OF_TURN,
+                        selector=stamp,
+                        modification=set_colors(*colors),
+                    )
+                )
+            for keyword in keywords:
+                effects.append(
+                    ContinuousEffect(
+                        description=f"{source.name}: {target.name} gains {keyword}",
+                        layer=Layer.ABILITY,
+                        timestamp=timestamp,
+                        duration=Duration.UNTIL_END_OF_TURN,
+                        selector=stamp,
+                        modification=grant_ability(keyword),
+                    )
+                )
+            effects.append(
+                ContinuousEffect(
+                    description=f"{source.name}: {target.name} has base P/T {power}/{toughness}",
+                    layer=Layer.POWER_TOUGHNESS,
+                    sublayer=Sublayer.SET,
+                    timestamp=timestamp,
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=stamp,
+                    modification=set_power_toughness(power, toughness),
+                )
+            )
+        return effects
+
+    return builder
+
+
 def _self_animation_builder(
     power: int, toughness: int, subtype: str | None, types: list[Type]
 ) -> EffectBuilder:
@@ -4139,6 +4278,37 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
         if extra_type is None:
             return None
         return _self_becomes_type_until_next_turn_builder(extra_type, match.group("ability"))
+    if match := _TARGET_ANIMATION_RE.fullmatch(sentence):
+        types = [_card_type_word(word) for word in match.group("types").split()]
+        if match.group("retained") is not None:
+            types.append(_card_type_word(match.group("retained")))
+        if any(card_type is None for card_type in types):
+            return None
+        keywords = []
+        if match.group("keywords") is not None:
+            validated = _split_and_validate_keywords(match.group("keywords"))
+            if validated is None:
+                return None
+            keywords = validated
+        raw_colors = match.group("colors")
+        colors = (
+            [
+                _COLOR_WORDS[word]
+                for word in re.findall(r"[a-z]+", raw_colors)
+                if word in _COLOR_WORDS
+            ]
+            if raw_colors
+            else []
+        )
+        subtype = match.group("subtype")
+        return _target_animation_builder(
+            int(match.group("power")),
+            int(match.group("toughness")),
+            colors,
+            subtype.strip() if subtype else None,
+            [card_type for card_type in types if card_type is not None],
+            keywords,
+        )
     if match := _SELF_ANIMATION_RE.fullmatch(sentence):
         types = [_card_type_word(word) for word in match.group("types").split()]
         if match.group("retained") is not None:
