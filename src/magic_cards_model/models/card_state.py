@@ -739,6 +739,32 @@ class CardState(BaseModel):
     just visible but actually usable - activatable, tappable for mana - the
     same as one printed on the card."""
 
+    discarded_by: str | None = None
+    """Who discarded this card (CR 701.9a), for as long as it stays where the
+    discard put it. `None` for a card that reached its zone any other way.
+
+    Mayhem is why this exists. CR 702.187b: "'Mayhem [cost]' means 'As long as
+    you discarded this card this turn, you may cast it from your graveyard by
+    paying [cost] rather than paying its mana cost.'" That is a fact about one
+    specific card and about who discarded it - `Game.cards_discarded_this_turn`
+    counts a player's discards and cannot answer either half.
+
+    Written by `machines/keywords.discard`, the one place a discard actually
+    happens with a game to hand, and cleared by `move_to` for any destination
+    but the graveyard, because CR 400.7 makes a card that moves on a new object
+    that was never discarded. It is *not* cleared on the way into the graveyard,
+    which is where the discard puts it - the same asymmetry `exile_annotation`
+    already draws for a card annotated as it is exiled."""
+    discarded_on_turn: int | None = None
+    """The turn number this card was discarded on (CR 701.9a), or `None`.
+
+    Mayhem's "this turn" (CR 702.187b) read against `Turn.turn_number`, and the
+    reason this is a turn number rather than a flag: nothing sweeps the
+    graveyard at end of turn, so "was it discarded this turn" is answered by
+    comparing to the turn it is being asked on, exactly the way
+    `ExileAnnotation.turn_exiled` answers plot's and foretell's "a later turn"
+    (CR 702.170d, CR 702.143a)."""
+
     zone_change_stamp: UUID = Field(default_factory=uuid4)
     """Which incarnation of this object we are on (CR 400.7).
 
@@ -1544,6 +1570,15 @@ class CardState(BaseModel):
             # to sit in means nothing. Kept when the destination *is* exile, so
             # a caller can annotate the card either side of the move.
             self.exile_annotation = None
+        if zone is not Zone.GRAVEYARD:
+            # CR 400.7 again, for CR 701.9a's discard: the object that leaves
+            # the graveyard is not the card anybody discarded, so mayhem's "as
+            # long as you discarded this card this turn" (CR 702.187b) stops
+            # being true of it. Kept when the destination *is* the graveyard,
+            # because that is the move the discard itself makes -
+            # `machines/keywords.discard` annotates the card the far side of it.
+            self.discarded_by = None
+            self.discarded_on_turn = None
         if zone is Zone.BATTLEFIELD:
             # It has only just arrived, so it has not been here since the turn
             # began (CR 302.6).

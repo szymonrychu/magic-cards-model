@@ -125,6 +125,16 @@ class KeywordCastOption(BaseModel):
     later_turn: bool = False
     """True when the card may only be cast on a turn after the one it was
     exiled on - plot (CR 702.170d), foretell, and warp all say so."""
+    discarded_this_turn: bool = False
+    """True when the keyword only applies to a card its controller *discarded*
+    this turn - mayhem's own "As long as you discarded this card this turn"
+    (CR 702.187b), and nothing else in this pool.
+
+    Not a count. `Game.cards_discarded_this_turn` records how many cards each
+    player has discarded, which answers Hollow One's cost reduction and cannot
+    answer this: the question here is whether *this card* was one of them, and
+    who discarded it. `CardState.discarded_by`/`discarded_on_turn` are that
+    record, written by `machines/keywords.discard`, and `why_not` reads both."""
     understood: bool = True
     """False when the keyword's printed cost could not be read into something
     payable. The option is still reported, so a sweep can see the gap."""
@@ -190,6 +200,24 @@ class KeywordCastOption(BaseModel):
                     f"cast on a later turn ({self.rule})"
                 )
 
+        if self.discarded_this_turn:
+            # CR 702.187b's "as long as **you** discarded **this card** this
+            # turn" - both halves, off the card's own discard record rather
+            # than off `Game.cards_discarded_this_turn`, which counts a
+            # player's discards and can say neither which card nor, for the
+            # count alone, that this one was among them.
+            now = _turn_number(game)
+            if spell.discarded_by != caster:
+                return (
+                    f"{caster} did not discard {spell.name}, so it cannot be cast "
+                    f"with {self.keyword} ({self.rule})"
+                )
+            if now is not None and spell.discarded_on_turn != now:
+                return (
+                    f"{spell.name} was not discarded this turn, so it cannot be cast "
+                    f"with {self.keyword} ({self.rule})"
+                )
+
         if (
             self.timing is CastTiming.SORCERY
             and game is not None
@@ -241,6 +269,38 @@ def _option_from_keyword(ability: KeywordAbility) -> KeywordCastOption | None:
             zone=Zone.GRAVEYARD,
             cost=cost,
             pays_mana_cost=False,
+            understood=cost is not None,
+        )
+
+    if canonical == "mayhem":
+        # CR 702.187a: "Mayhem is a static ability that functions while the card
+        # with mayhem is in a player's graveyard." CR 702.187b: "'Mayhem
+        # [cost]' means 'As long as you discarded this card this turn, you may
+        # cast it from your graveyard by paying [cost] rather than paying its
+        # mana cost.'"
+        #
+        # Structurally flashback (CR 702.34a) - the graveyard half is the
+        # permission, and the cost replaces the mana cost - with the one clause
+        # flashback does not have: "as long as you discarded this card this
+        # turn". That is `discarded_this_turn` below, and it is a fact about a
+        # *specific card*, not about how many cards a player has discarded -
+        # `CardState.discarded_by`/`discarded_on_turn` is where the discard
+        # itself records it (see `KeywordCastOption.discarded_this_turn`).
+        #
+        # CR 702.187c's costless form - "'Mayhem' without a cost means 'You may
+        # play this card from your graveyard if you discarded it this turn'" -
+        # is deliberately not folded in here: it says *play*, which reaches
+        # lands and is a different permission from an alternative cost, and no
+        # printing in this pool has it. A bare `Mayhem` line therefore reads as
+        # not understood rather than as a free cast.
+        cost = total_cost_for_phrase(printed) if printed else None
+        return KeywordCastOption(
+            keyword=ability.canonical,
+            rule="CR 702.187b",
+            zone=Zone.GRAVEYARD,
+            cost=cost,
+            pays_mana_cost=False,
+            discarded_this_turn=True,
             understood=cost is not None,
         )
 
@@ -1460,6 +1520,14 @@ class Casting(BaseModel):
     """The exile pile the card was in before that move (CR 406.5): plot,
     foretell, madness and warp all cast out of a *particular* pile, and the
     move to the stack drops the annotation."""
+    announced_discarded_by: str | None = None
+    """Who had discarded the card before that move (CR 701.9a), and"""
+    announced_discarded_on_turn: int | None = None
+    """which turn they discarded it on - `CardState.discarded_by` and
+    `discarded_on_turn`, kept for the same reason the exile annotation above is.
+    Mayhem's own "as long as you discarded this card this turn" (CR 702.187b) is
+    a question about the card as it sat in the graveyard, and CR 601.2a's move
+    to the stack has already made it a new object that nobody discarded."""
 
     def model_post_init(self, _context: object) -> None:
         """CR 601.3: the announcement is refused if the timing does not allow it,
@@ -1516,6 +1584,8 @@ class Casting(BaseModel):
         self.announced_zone = self.spell.zone
         self.announced_stamp = self.spell.zone_change_stamp
         self.announced_exile_annotation = self.spell.exile_annotation
+        self.announced_discarded_by = self.spell.discarded_by
+        self.announced_discarded_on_turn = self.spell.discarded_on_turn
         self._lift_out_of_every_zone()
         self.spell.move_to(Zone.STACK)
         game.stack.append(self.spell)
@@ -1590,6 +1660,8 @@ class Casting(BaseModel):
                 "zone": self.announced_zone,
                 "zone_change_stamp": self.announced_stamp,
                 "exile_annotation": self.announced_exile_annotation,
+                "discarded_by": self.announced_discarded_by,
+                "discarded_on_turn": self.announced_discarded_on_turn,
             }
         )
 
@@ -3230,6 +3302,8 @@ class Casting(BaseModel):
         self.spell.zone = self.announced_zone
         self.spell.zone_change_stamp = self.announced_stamp
         self.spell.exile_annotation = self.announced_exile_annotation
+        self.spell.discarded_by = self.announced_discarded_by
+        self.spell.discarded_on_turn = self.announced_discarded_on_turn
         self.announced_zone = None
 
     def _enter_modes(self) -> None:

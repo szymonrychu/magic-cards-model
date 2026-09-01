@@ -1911,11 +1911,20 @@ def discard(game: Any, card: CardState, player: str) -> CardState:
     if card not in owner.cards_in(Zone.HAND):
         raise ValueError(f"{card.name} is not in {player}'s hand (CR 701.9a)")
 
+    turn = getattr(getattr(game, "turn", None), "turn_number", None)
+
     if not madness_replaces_discard(card):
         owner.move(card, Zone.GRAVEYARD)
+        # CR 702.187b's "as long as you discarded this card this turn", recorded
+        # on the card the far side of the move because that is the object the
+        # clause is about. Not a count - `Game.cards_discarded_this_turn` is
+        # that, and it cannot say *which* card, which is the only thing mayhem
+        # asks. `CardState.move_to` clears it again the moment the card leaves
+        # the graveyard (CR 400.7).
+        card.discarded_by = player
+        card.discarded_on_turn = turn
         return card
 
-    turn = getattr(getattr(game, "turn", None), "turn_number", None)
     owner.cards_in(Zone.HAND).remove(card)
     card.move_to(Zone.EXILE)
     card.exile_annotation = madness_annotation(card, turn)
