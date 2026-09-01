@@ -1673,6 +1673,33 @@ def _read_revolt_mana_value_override(text: str) -> int | None:
     return None if match is None else int(match.group("n"))
 
 
+def spell_profile_for_text(text: str, card: Card | None = None) -> TargetingProfile:
+    """What a *spell* whose text has already been rewritten may target.
+
+    `targeting_profile` is the normal way in, but it takes a `Card` and so
+    always reads the printed text. A spell with `{X}` in its mana cost has to
+    be read with X already substituted (CR 107.3a: X is announced at
+    CR 601.2b, before targets at CR 601.2c, so it is always known by then),
+    and that rewritten text has no `Card` to hang off.
+
+    Distinct from `profile_for_text`, which reads text *whole* because its job
+    is one ability's own words. A spell must drop the lines belonging to its
+    triggered and activated abilities - CR 113.1c makes such an ability its
+    own object, choosing its own targets when it goes on the stack, not when
+    the permanent is cast. Walking Ballista is the card that proves it: its
+    "It deals 1 damage to any target" is an activated ability, and reading the
+    card whole made the *creature spell* look like it required a target.
+    """
+    profile = _parse(text, spell_only=True)
+    if card is not None:
+        profile = _with_aura_target(card, profile)
+        # CR 702.16b compares a protected target against the source card's
+        # qualities, so the profile has to carry it - `targeting_profile`
+        # stamps this on every branch and this path was losing it.
+        profile = profile.model_copy(update={"source_card": card})
+    return profile
+
+
 def _parse(oracle_text: str, spell_only: bool = True) -> TargetingProfile:
     text = _spell_text(oracle_text) if spell_only else oracle_text
     text = _RETARGETING.sub("", text)

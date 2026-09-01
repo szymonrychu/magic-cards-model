@@ -164,13 +164,30 @@ def test_discarding_as_an_additional_cost_puts_the_cards_in_the_graveyard():
 
 
 def life_board(life: int = 20) -> Scenario:
-    """Alice holds Fumarole, whose additional cost is 3 life."""
+    """Alice holds Fumarole, whose additional cost is 3 life.
+
+    The Grizzly Bears is here so Fumarole has something to announce: it reads
+    "Destroy target creature and target land", and CR 601.2c requires both
+    before the spell reaches the stack. The lands double as the mana.
+    """
     return Scenario().player(
         "alice",
         life=life,
         hand=["Fumarole"],
-        battlefield=["Swamp", "Mountain", "Mountain", "Mountain", "Mountain"],
+        battlefield=[
+            "Swamp",
+            "Mountain",
+            "Mountain",
+            "Mountain",
+            "Mountain",
+            "Grizzly Bears",
+        ],
     )
+
+
+def fumarole_targets(scenario: PlayedScenario) -> list[CardState]:
+    """A creature and a land for Fumarole's two required targets."""
+    return [scenario.creature("Grizzly Bears", "alice"), scenario.creature("Swamp", "alice")]
 
 
 def test_paying_life_as_an_additional_cost_comes_off_the_life_total():
@@ -180,9 +197,10 @@ def test_paying_life_as_an_additional_cost_comes_off_the_life_total():
     assert additional_cost_phrases(scenario.find("Fumarole", Zone.HAND).card) == ["pay 3 life"]
 
     casting = announce(scenario, "Fumarole")
+    casting.choose_targets(fumarole_targets(scenario))
     payment = casting.begin_paying()
     scenario.pay_with(
-        payment, *scenario.untapped_sources("Swamp", "Mountain", "Mountain", "Mountain", "Mountain")
+        payment, *scenario.untapped_sources("Mountain", "Mountain", "Mountain", "Mountain", "Swamp")
     )
     scenario.put_on_stack(casting)
 
@@ -405,8 +423,9 @@ def test_a_generic_reduction_leaves_the_coloured_pips_alone():
 
     assert casting.total_cost.mana == ManaCost.parse("{B}{R}")
 
+    casting.choose_targets(fumarole_targets(scenario))
     payment = casting.begin_paying()
-    scenario.pay_with(payment, *scenario.untapped_sources("Swamp", "Mountain"))
+    scenario.pay_with(payment, *scenario.untapped_sources("Mountain", "Swamp"))
     scenario.put_on_stack(casting)
 
     assert scenario.player("alice").life == 17
@@ -446,6 +465,8 @@ def test_a_phyrexian_symbol_is_paid_with_life_when_there_is_no_mana():
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
     casting = announce(scenario, "Gitaxian Probe")
+    # CR 601.2c: "Look at target opponent's hand" needs the opponent named.
+    casting.choose_targets(["bob"])
     payment = casting.begin_paying()
     payment.pay()
     spell = scenario.put_on_stack(casting)

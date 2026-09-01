@@ -421,6 +421,9 @@ def test_ragavans_exiled_card_is_cast_for_its_own_mana_cost():
     scenario.start_at(Step.POSTCOMBAT_MAIN)
     casting = scenario.cast("Lightning Bolt", username="alice", from_zone=Zone.EXILE)
     casting.use_permission()
+    # CR 601.2c, after the permission is announced: the Bolt still needs a
+    # target, and this test is about what it costs, not what it hits.
+    casting.choose_targets(["bob"])
     assert str(casting.total_cost.mana) == "{R}"
 
     (mountain,) = scenario.untapped_sources("Mountain")

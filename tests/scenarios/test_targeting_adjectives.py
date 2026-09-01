@@ -107,7 +107,10 @@ def test_a_noncreature_spell_may_be_announced_as_the_target():
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
     bolt = scenario.cast_onto_stack(
-        "Lightning Bolt", *scenario.untapped_sources("Mountain", username="bob"), username="bob"
+        "Lightning Bolt",
+        *scenario.untapped_sources("Mountain", username="bob"),
+        username="bob",
+        targets=["alice"],
     )
     scenario.pass_priority("bob")  # CR 117.3c: bob keeps priority after casting
     islands = scenario.untapped_sources("Island", "Island", "Island", username="alice")

@@ -69,6 +69,7 @@ from .targeting import (
     profile_for_modes,
     profile_for_modes_with_owners,
     profile_for_text,
+    spell_profile_for_text,
     targeting_profile,
 )
 from .triggers import GameEvent
@@ -1703,7 +1704,14 @@ class Casting(BaseModel):
                 if face is not None:
                     return profile_for_text(face.oracle_text or "")
             if "{X}" in (self.spell.mana_cost or ""):
-                return profile_for_text(substitute_x(self.spell.oracle_text, self.x_value))
+                # Spell-scoped, not `profile_for_text`: that one reads text
+                # whole because it exists for an ability's own words, and a
+                # creature spell with an activated ability that targets
+                # (Walking Ballista's "It deals 1 damage to any target") would
+                # otherwise look like a spell requiring a target (CR 113.1c).
+                return spell_profile_for_text(
+                    substitute_x(self.spell.oracle_text, self.x_value), self.spell.card
+                )
             return targeting_profile(self.spell.card)
         return profile_for_modes(self.spell.card, self.chosen_mode_objects, self.x_value)
 
@@ -2909,6 +2917,35 @@ class Casting(BaseModel):
         assert self.payment is not None
         return self.payment
 
+    def _refuse_unless_targets_announced(self) -> None:
+        """CR 601.2c: a target the spell requires must actually be announced.
+
+        "The player announces their choice of an appropriate object or player
+        for each target the spell requires." `choose_targets` already refuses
+        too few targets - but only when it is *called*, and a caller can skip
+        it entirely, leaving `self.targets` empty. That is not a targeted
+        spell cast at nothing; it is an announcement (CR 601.2c) that was
+        never completed, so CR 601.2e makes the proposal illegal and CR 733.1
+        reverses it. This is the one place every casting path passes through
+        on the way to the stack, which is where it has to be caught.
+
+        Left unchecked when the target parser could not read the spell's text
+        (`understood is False`), for the same reason `TargetingProfile.check`
+        skips it: refusing a target the parser merely failed to understand
+        would be worse than not checking. CR 700.2c is handled by reading
+        `self.targeting`, which is already narrowed to the chosen modes - a
+        mode that targets nothing requires nothing.
+        """
+        profile = self.targeting
+        if profile is None or not profile.understood:
+            return
+        required = profile.min_targets
+        if required and len(self.targets) < required:
+            raise ValueError(
+                f"too few targets: {len(self.targets)} announced where "
+                f"{self.spell.name} requires {required} (CR 601.2c)"
+            )
+
     def _refuse_unless_modes_satisfied(self) -> None:
         """CR 700.2a/601.2b: modes are chosen as part of casting, not optional.
 
@@ -3036,6 +3073,7 @@ class Casting(BaseModel):
         if self.payment is None or self.payment.step is not CostStep.PAID:
             raise ValueError("cannot finish casting before the cost is paid")
         self._refuse_unless_modes_satisfied()
+        self._refuse_unless_targets_announced()
         self._refuse_if_x_changed_since_targets()
         self._refuse_unless_allowed_from_its_zone()
 

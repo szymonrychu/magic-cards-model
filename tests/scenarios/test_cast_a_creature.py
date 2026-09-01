@@ -134,7 +134,9 @@ def test_an_instant_resolves_to_the_graveyard_not_the_battlefield():
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
     (mountain,) = scenario.untapped_sources("Mountain")
-    bolt = scenario.cast_and_resolve("Lightning Bolt", mountain)
+    # CR 601.2c: a Bolt announces a target even when the test is about where
+    # it lands afterwards. Its own controller is a legal "any target".
+    bolt = scenario.cast_and_resolve("Lightning Bolt", mountain, targets=["alice"])
 
     assert bolt.zone is Zone.GRAVEYARD
     assert "Lightning Bolt" not in scenario.battlefield_names()
