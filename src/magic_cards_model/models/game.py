@@ -5655,7 +5655,32 @@ class Game(BaseModel):
         """
         if is_indestructible(permanent, self):
             return permanent  # CR 702.12b
+        if not self.destruction_happens(permanent):
+            return permanent
         return self.put_into_graveyard(permanent)
+
+    def destruction_happens(self, permanent: CardState) -> bool:
+        """Whether this destruction survives CR 614's replacement effects.
+
+        CR 701.8c: "A regeneration effect replaces a destruction event", and
+        CR 614.8 says regeneration is a destruction-replacement effect whose
+        "instead" is implicit. Umbra armor (CR 702.89a) is the same shape
+        without the counters. Both need the destruction to be a *replaceable
+        event* in its own right rather than the graveyard move it would
+        otherwise become, which is why this is raised before
+        `put_into_graveyard` and separately from the `ZONE_CHANGE` that
+        follows it.
+
+        False means the destruction was called off and the permanent stays on
+        the battlefield - nothing moves, nothing dies, no trigger fires.
+        """
+        event = apply_replacements(
+            self,
+            ReplaceableEvent(
+                kind=EventKind.DESTROY, card=permanent, player=self.controller_of(permanent)
+            ),
+        )
+        return event.happens
 
     def sacrifice(self, permanent: CardState) -> CardState:
         """Sacrifice a permanent (CR 701.21a).
@@ -6277,6 +6302,15 @@ class Game(BaseModel):
         # in this list for either of them - and an indestructible 0/0 is, which
         # is the point of the distinction.
         for state in leaving:
+            # CR 704.5g and CR 704.5h are destructions (CR 701.8b), so a
+            # destruction-replacement - regeneration, umbra armor - gets its
+            # say before the move. Everything else in `leaving` is "put into
+            # its owner's graveyard" and cannot be replaced that way; CR 704.5f
+            # states it outright ("Regeneration can't replace this event").
+            if self._destroyed_by_state_based_action(state, board) and not self.destruction_happens(
+                state
+            ):
+                continue
             self.put_into_graveyard(state)
 
         # CR 704.5n, after the round that killed the host: an Equipment whose
@@ -6384,6 +6418,32 @@ class Game(BaseModel):
         if toughness <= 0:
             return True  # CR 704.5f
         # CR 704.5g's arithmetic, plus CR 704.5h's deathtouch, which needs none.
+        return state.damage >= toughness or state.dealt_deathtouch_damage
+
+    def _destroyed_by_state_based_action(self, state: CardState, board: ComputedBoard) -> bool:
+        """Which of the state-based actions taking this permanent is a *destroy*.
+
+        CR 701.8b names exactly two: CR 704.5g's lethal damage and CR 704.5h's
+        damage from a deathtouch source. CR 704.5f's toughness of 0 or less,
+        the legend rule, CR 704.5i, CR 704.5m and CR 704.5z all read "is put
+        into its owner's graveyard" instead, so a destruction-replacement must
+        not reach them.
+
+        CR 704.5f wins where both would apply: a creature at 0 toughness is put
+        into the graveyard whatever damage is marked on it, and regeneration
+        cannot replace that event. So a 0-toughness creature answers False here
+        even when it also has lethal damage marked.
+        """
+        if is_indestructible(state, self):
+            return False  # CR 702.12b - it was never in `leaving` for these two
+        if self._toughness_is_zero_or_less(state, board):
+            return False  # CR 704.5f, not a destruction
+        try:
+            toughness = board.of(state).toughness
+        except KeyError:
+            toughness = state.toughness
+        if toughness is None:
+            return state.dealt_deathtouch_damage  # CR 704.5h needs no arithmetic
         return state.damage >= toughness or state.dealt_deathtouch_damage
 
     def _toughness_is_zero_or_less(self, state: CardState, board: ComputedBoard) -> bool:

@@ -1046,6 +1046,24 @@ class EventKind(StrEnum):
     ZONE_CHANGE = "zone_change"
     #: Damage is about to be dealt to a permanent or a player (CR 119.3, 615.1).
     DAMAGE = "damage"
+    #: A permanent is about to be destroyed (CR 701.8a).
+    #:
+    #: Deliberately narrower than the graveyard move it usually becomes.
+    #: CR 701.8b: "The only ways a permanent can be destroyed are as a result
+    #: of an effect that uses the word 'destroy' or as a result of the
+    #: state-based actions that check for lethal damage (see rule 704.5g) or
+    #: damage from a source with deathtouch (see rule 704.5h). If a permanent
+    #: is put into its owner's graveyard for any other reason, it hasn't been
+    #: 'destroyed.'" So sacrificing, bouncing, the legend rule and CR 704.5f's
+    #: toughness of 0 or less raise no `DESTROY` - they are `ZONE_CHANGE`s,
+    #: and a destruction-replacement must not save a permanent from them.
+    #: CR 704.5f says so in as many words: "Regeneration can't replace this
+    #: event."
+    #:
+    #: This is what CR 614.8's regeneration and umbra armor replace, so the
+    #: event is raised *before* the move and carries `replaced` rather than
+    #: an amount: there is nothing to reduce, only something to call off.
+    DESTROY = "destroy"
     #: A player is about to draw one card (CR 121.1, 121.6, 614.11).
     DRAW = "draw"
     #: A player is about to gain life (CR 119.3).
@@ -1126,6 +1144,10 @@ class ReplaceableEvent:
     #: `_stack_replacements` does not gate on this at all and rebound's does.
     resolving: bool = False
 
+    #: A `DESTROY` that a replacement effect called off (CR 614.8, CR 701.8c).
+    #: The destruction simply does not happen; the permanent stays where it is.
+    replaced: bool = False
+
     #: The keys of the effects that have already applied (CR 614.5).
     applied: set[str] = field(default_factory=set)
     #: A human-readable trace of what applied, in order. Scenario tests assert
@@ -1141,6 +1163,8 @@ class ReplaceableEvent:
         """
         if self.kind is EventKind.DAMAGE:
             return self.amount > 0
+        if self.kind is EventKind.DESTROY:
+            return not self.replaced
         return True
 
     def chooser(self, game: "Game") -> str | None:
