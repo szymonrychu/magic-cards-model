@@ -1284,8 +1284,10 @@ def attachment_state_based_actions(game: Any) -> list[CardState]:
     loses the subtype 'Equipment' can't equip anything") for free. A permanent
     the layer engine cannot answer for falls back to the printed reading.
 
-    Not dispatched by `Game.check_state_based_actions`, which calls
-    `equipment_state_based_actions` and not this - see `docs/engine-coverage.md`.
+    Dispatched by `Game._state_based_actions_once`, immediately after
+    `equipment_state_based_actions`, so an ordinary state-based-action check
+    performs it - CR 704.3 then repeats the check, which is what turns the
+    unattachment into the start of the next round rather than a loose end.
     """
     unattached: list[CardState] = []
     for permanent in list(game.battlefield):

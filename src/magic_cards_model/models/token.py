@@ -661,6 +661,13 @@ def _put_onto_the_battlefield_attacking(
         return  # CR 506.3c, CR 508.4a
     if defender.is_card and game.find_by_id(defender.card_id) is None:  # type: ignore[arg-type]
         return  # CR 506.3c
+    # CR 508.8 is a two-clause condition - "If no creatures are declared as
+    # attackers **or put onto the battlefield attacking**, skip the declare
+    # blockers and combat damage steps" - and this is the second clause. The
+    # creature was never *declared* (CR 508.4c), so setting this alongside
+    # `declare_attacker` is not a claim that it was; the flag records that
+    # CR 508.8's condition was met, which either half of the rule does.
+    game.combat.attacked_this_combat = True
     game.combat.attacks.append(Attack(attacker_id=token.id, defender=defender))
 
 

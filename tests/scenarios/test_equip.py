@@ -207,10 +207,14 @@ def test_an_animated_equipment_falls_off_the_creature_it_was_equipping():
     Artifact - Equipment", so the sweep saw a plain Equipment and left it
     equipping a creature it may not legally equip.
 
-    The sweep is still called by hand here, as every CR 704.5n test above calls
-    its own: `Game.check_state_based_actions` dispatches
-    `equipment_state_based_actions` and not this one - see
-    `docs/engine-coverage.md`.
+    This test used to call `attachment_state_based_actions` by hand and assert
+    it returned the Shadowspear, because nothing in `Game` dispatched it.
+    `Game._state_based_actions_once` now does, beside
+    `equipment_state_based_actions`, so the unattachment has already happened by
+    the time anything here could ask for it - CR 704.3 checks "whenever a player
+    would get priority", and resolving Karn's ability reaches one. The
+    by-hand call is kept only as CR 704.3's repeat check: it must find nothing
+    left to do.
     """
     scenario = (
         Scenario()
@@ -243,12 +247,61 @@ def test_an_animated_equipment_falls_off_the_creature_it_was_equipping():
 
     # CR 704.5n's own sweep has nothing to say: the host is a legal creature.
     assert equipment_state_based_actions(scenario.game) == []
+    # CR 704.3's repeat check: the dispatched sweep already did it.
+    assert attachment_state_based_actions(scenario.game) == []
 
-    unattached = attachment_state_based_actions(scenario.game)
-
-    assert unattached == [spear]
     assert not spear.is_attached
     assert spear.zone is Zone.BATTLEFIELD, "CR 704.5p: it 'remains on the battlefield'"
+
+
+def test_an_animated_equipment_falls_off_during_an_ordinary_state_based_action_check():
+    """CR 704.5p reached the way the game reaches it, with nobody calling the
+    sweep by hand.
+
+    CR 704.3: "Whenever a player would get priority, the game checks for any of
+    the listed conditions for state-based actions, then performs all applicable
+    state-based actions simultaneously as a single event." Karn's +1 resolving
+    onto an equipped Shadowspear (CR 301.5c: "An Equipment that's also a
+    creature can't equip a creature unless that Equipment has reconfigure")
+    creates the condition *during* the resolution, so the very next check has
+    to perform it - no scenario should have to know the rule exists to see it
+    happen.
+
+    The board is the one above; what differs is that nothing here mentions
+    `attachment_state_based_actions`.
+    """
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            battlefield=[
+                "Karn, the Great Creator",
+                "Shadowspear",
+                "Grizzly Bears",
+                "Mountain",
+                "Mountain",
+            ],
+            library=["Island"] * 10,
+        )
+        .player("bob", library=["Island"] * 10)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    spear = scenario.find("Shadowspear", Zone.BATTLEFIELD, "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    equip(scenario, spear, bears).resolve()
+    assert equipped_creature(scenario.game, spear) is bears
+
+    karn = scenario.creature("Karn, the Great Creator", "alice")
+    scenario.activate(karn, index=0, targets=[spear])
+    scenario.pass_until_resolved()
+
+    assert scenario.game.computed_board().of(spear).is_creature, "Karn's +1 landed"
+    assert not spear.is_attached, "CR 704.5p performed by the ordinary check"
+    assert spear.zone is Zone.BATTLEFIELD, "CR 704.5p: it 'remains on the battlefield'"
+    assert equipped_creature(scenario.game, spear) is None
+    assert bears.zone is Zone.BATTLEFIELD, "the host is untouched"
 
 
 def test_an_equipment_that_is_not_a_creature_is_left_attached():

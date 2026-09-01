@@ -99,6 +99,7 @@ from ..machines.effects import (
 )
 from ..machines.keywords import (
     ascend_state_based_actions,
+    attachment_state_based_actions,
     aura_state_based_actions,
     equipment_state_based_actions,
     has_rebound,
@@ -7110,6 +7111,14 @@ class Game(BaseModel):
         # is already off the battlefield by the time it looks: `equipment_state_based_actions`
         # does not check that what it is unattaching is an Equipment.
         equipment_state_based_actions(self)
+        # CR 704.5p, immediately after it: "If a battle or creature is attached
+        # to an object or player, it becomes unattached and remains on the
+        # battlefield." Unconditional where CR 704.5n asks whether the host is
+        # legal, and read off the *computed* types (CR 613.5), which is how
+        # CR 301.5c's "An Equipment that's also a creature can't equip a
+        # creature" is enforced when a layer 4 effect animates an Equipment
+        # that is already equipping something.
+        attachment_state_based_actions(self)
         # CR 702.131b (ascend): "Any time you control ten or more permanents
         # and you don't have the city's blessing, you get the city's blessing
         # for the rest of the game." Not itself a triggered ability with a
@@ -9840,12 +9849,16 @@ class Game(BaseModel):
             # (CR 614.10a). Walking the pointer past them here, before either
             # begins, does that.
             #
-            # The condition is the declaration, not who is still in combat:
+            # The condition is what happened, not who is still in combat:
             # CR 508.8 keys off "declared as attackers or put onto the
             # battlefield attacking", so CR 506.4 removing an attacker after
-            # the declaration does not un-skip the combat. Nothing in this
-            # model puts a creature onto the battlefield attacking, so the
-            # declaration flag is the whole of it. Only the automatic path
+            # the fact does not un-skip the combat. Both halves of that union
+            # set `attacked_this_combat` - `combat.declare_attacker` for the
+            # declaration, `models/token._put_onto_the_battlefield_attacking`
+            # for Parhelion II's Angels and Ilharg's creature card, which
+            # CR 508.4c says were never declared - so the flag is the whole of
+            # it and asking `combat.attacks` here would be the wrong reading
+            # anyway. Only the automatic path
             # skips: a caller driving combat by hand may have declared its
             # attackers in whatever way it likes, and its steps must be there
             # when it steps into them.
