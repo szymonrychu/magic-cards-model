@@ -393,6 +393,30 @@ def _option_from_keyword(ability: KeywordAbility) -> KeywordCastOption | None:
             pays_mana_cost=False,
         )
 
+    if canonical == "bestow":
+        # CR 702.103a: "Bestow represents a static ability that functions in any
+        # zone from which you could play the card it's on. 'Bestow [cost]'
+        # means 'As you cast this spell, you may choose to cast it bestowed. If
+        # you do, ... pay [cost] rather than its mana cost.'" So it is an
+        # alternative cost (CR 118.9) that also changes what the spell *is*:
+        # CR 702.103b, "as a spell cast bestowed is put onto the stack, it
+        # becomes an Aura enchantment and gains enchant creature", which is
+        # `CardState.bestowed` and not this option's business.
+        #
+        # The zone is the hand, the only zone "from which you could play the
+        # card" for a creature card by default; a printing whose own text opens
+        # another one says so itself (CR 604.6) and is read by
+        # `_printed_zone_permissions` below, not here.
+        cost = total_cost_for_phrase(printed) if printed else None
+        return KeywordCastOption(
+            keyword=ability.canonical,
+            rule="CR 702.103a",
+            zone=Zone.HAND,
+            cost=cost,
+            pays_mana_cost=False,
+            understood=cost is not None,
+        )
+
     if canonical == "warp":
         # CR 702.185a: warp is two static abilities that function while the card
         # is on the stack, one of which may create a delayed triggered ability.
@@ -425,6 +449,54 @@ def _warp_from_exile(ability: KeywordAbility) -> KeywordCastOption:
     )
 
 
+#: Detective's Phoenix: "You may cast this card from your graveyard using its
+#: bestow ability." A CR 604.6 static ability of the card itself - "some static
+#: abilities function while an object is in a zone other than the battlefield"
+#: - naming both the zone it opens and the ability it opens it for, so the
+#: keyword's own option is reused rather than a second cost invented for it.
+_PRINTED_CAST_FROM_ZONE_USING_KEYWORD = re.compile(
+    r"you may cast this card from your (?P<zone>graveyard|hand|exile) using its "
+    r"(?P<keyword>[a-z]+) ability",
+    re.IGNORECASE,
+)
+
+#: The zone words that sentence can name, as zones.
+_PRINTED_PERMISSION_ZONES = {
+    "graveyard": Zone.GRAVEYARD,
+    "hand": Zone.HAND,
+    "exile": Zone.EXILE,
+}
+
+
+def _printed_zone_permissions(
+    card: Card, options: list[KeywordCastOption]
+) -> list[KeywordCastOption]:
+    """The extra zones a card's own printed text opens for a keyword it has
+    (CR 604.6, CR 113.6f).
+
+    One option per sentence and per matching keyword option, copied from the
+    keyword's own so the cost, the CR 118.9 replacement and the "could not be
+    read" flag are all identical - only the zone differs. That is what the
+    printed sentence actually says: it names an ability the card already has
+    and a zone to use it from, and not a new way to pay.
+
+    A sentence naming a keyword the card does not have adds nothing, rather
+    than inventing an option with no cost behind it.
+    """
+    text = (card.oracle_text or "").replace("\n", " ")
+    extra: list[KeywordCastOption] = []
+    for match in _PRINTED_CAST_FROM_ZONE_USING_KEYWORD.finditer(text):
+        zone = _PRINTED_PERMISSION_ZONES[match.group("zone").lower()]
+        keyword = match.group("keyword").lower()
+        for option in options:
+            if option.keyword.lower() != keyword or option.zone is zone:
+                continue
+            extra.append(
+                option.model_copy(update={"zone": zone, "rule": f"CR 604.6, {option.rule}"})
+            )
+    return extra
+
+
 def keyword_cast_options(card: Card) -> list[KeywordCastOption]:
     """Every way this card's own text lets it be cast, in printed order (CR 601.3).
 
@@ -442,6 +514,7 @@ def keyword_cast_options(card: Card) -> list[KeywordCastOption]:
         options.append(option)
         if option.keyword.lower() == "warp":
             options.append(_warp_from_exile(ability))
+    options.extend(_printed_zone_permissions(card, options))
 
     if adventure_face(card) is not None:
         # CR 715.3d: "Instead of putting a spell that was cast as an Adventure
@@ -2015,6 +2088,15 @@ class Casting(BaseModel):
         option = usable[0]
         self._enter_modes()
         self.keyword_used = option.keyword
+        if option.keyword.lower() == "bestow":
+            # CR 702.103b: "As a spell cast bestowed is put onto the stack, it
+            # becomes an Aura enchantment and gains enchant creature." CR 601.2a
+            # has already put it there, so this is the moment - and it is the
+            # object that changes, not the announcement, which is why the flag
+            # lives on `CardState`. A refused announcement rewinds the card to
+            # its origin zone, and `CardState.move_to` clears the flag on the
+            # way (CR 400.7).
+            self.spell.bestowed = True
         # CR 610.5's grant happens "at the time the player proposes the
         # casting", and CR 400.7b keeps it on the permanent the spell becomes.
         # Recorded on the object rather than left implicit in the grantor's

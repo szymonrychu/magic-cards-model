@@ -751,6 +751,29 @@ class CardState(BaseModel):
     just visible but actually usable - activatable, tappable for mana - the
     same as one printed on the card."""
 
+    bestowed: bool = False
+    """True while this object was cast bestowed and is still an Aura (CR 702.103).
+
+    CR 702.103a makes bestow "a static ability that functions in any zone from
+    which you could play the card it's on"; CR 702.103b is what this flag
+    represents: "As a spell cast bestowed is put onto the stack, it becomes an
+    Aura enchantment and gains enchant creature. It is a bestowed Aura spell,
+    and the permanent it becomes as it resolves will be a bestowed Aura
+    permanent."
+
+    So it is not a fact about the printing - the same Detective's Phoenix is a
+    creature when hardcast and an Aura when bestowed - which is exactly why it
+    lives here and not on `Card`. `types`, `subtypes` and `keywords` all read it
+    while the object is on the stack or the battlefield, the two zones CR
+    702.103b names; everywhere else the card is the enchantment creature it
+    prints.
+
+    Cleared by `unattach` (CR 702.103f: "If a bestowed Aura becomes unattached,
+    it ceases to be bestowed") and by `move_to` for any zone change, since
+    CR 400.7 makes what leaves a new object that was never cast bestowed at
+    all. `Casting.cast` is what sets it (CR 601.2b's announcement is where
+    "you may choose to cast it bestowed" is answered)."""
+
     discarded_by: str | None = None
     """Who discarded this card (CR 701.9a), for as long as it stays where the
     discard put it. `None` for a card that reached its zone any other way.
@@ -1029,9 +1052,21 @@ class CardState(BaseModel):
         if self.face_down_characteristics is not None:
             return self.face_down_characteristics.types
         up_face = self.up_face
-        if up_face is not None:
-            return tuple(types_of(up_face.type_line or ""))
-        return tuple(self.card.types)
+        printed = (
+            tuple(types_of(up_face.type_line or ""))
+            if up_face is not None
+            else tuple(self.card.types)
+        )
+        if self._is_bestowed_object:
+            # CR 702.103b: "it becomes an Aura enchantment". An Aura
+            # enchantment is not a creature, which is the whole reason bestow
+            # exists - the same card is a creature spell when hardcast and an
+            # Aura spell when bestowed.
+            without_creature = tuple(kind for kind in printed if kind is not Type.CREATURE)
+            return without_creature + (
+                (Type.ENCHANTMENT,) if Type.ENCHANTMENT not in printed else ()
+            )
+        return printed
 
     @property
     def subtypes(self) -> tuple[str, ...]:
@@ -1047,9 +1082,17 @@ class CardState(BaseModel):
         if self.face_down_characteristics is not None:
             return self.face_down_characteristics.subtypes
         up_face = self.up_face
-        if up_face is not None:
-            return tuple(subtypes_of(up_face.type_line or ""))
-        return tuple(self.card.subtypes)
+        printed = (
+            tuple(subtypes_of(up_face.type_line or ""))
+            if up_face is not None
+            else tuple(self.card.subtypes)
+        )
+        if self._is_bestowed_object and "Aura" not in printed:
+            # CR 702.103b again: an *Aura* enchantment. CR 303.4 is what makes
+            # that subtype mean anything - "Aura" is the enchantment subtype
+            # the attachment rules are written against.
+            return printed + ("Aura",)
+        return printed
 
     @property
     def supertypes(self) -> tuple[Supertype, ...]:
@@ -1114,13 +1157,33 @@ class CardState(BaseModel):
         if self.face_down_characteristics is not None:
             return self.face_down_characteristics.keywords
         if not self.card.card_faces:
-            return tuple(self.card.keywords)
+            return self._with_bestowed_enchant(tuple(self.card.keywords))
         # Imported here: `machines/` imports `models/`, so the reverse import
         # only resolves at call time.
         from ..machines.abilities import keywords_in_lines
 
         on_this_face = keywords_in_lines(self.oracle_text.split("\n"), list(self.card.keywords))
-        return tuple(keyword for keyword in self.card.keywords if keyword.lower() in on_this_face)
+        return self._with_bestowed_enchant(
+            tuple(keyword for keyword in self.card.keywords if keyword.lower() in on_this_face)
+        )
+
+    @property
+    def _is_bestowed_object(self) -> bool:
+        """CR 702.103b's window: bestowed, and on the stack or the battlefield.
+
+        "As a spell cast bestowed is put onto the stack, it becomes an Aura
+        enchantment ... and the permanent it becomes as it resolves will be a
+        bestowed Aura permanent." Those are the only two zones the rule speaks
+        about; `bestowed` is cleared on any other move anyway (`move_to`), so
+        this is belt and braces rather than a second rule.
+        """
+        return self.bestowed and self.zone in (Zone.STACK, Zone.BATTLEFIELD)
+
+    def _with_bestowed_enchant(self, keywords: tuple[str, ...]) -> tuple[str, ...]:
+        """CR 702.103b's "and gains enchant creature", as a keyword (CR 702.5a)."""
+        if not self._is_bestowed_object or "Enchant" in keywords:
+            return keywords
+        return keywords + ("Enchant",)
 
     @property
     def oracle_text(self) -> str:
@@ -1377,8 +1440,15 @@ class CardState(BaseModel):
         "To 'unattach' an Equipment from a creature means to move it away from
         that creature so the Equipment is on the battlefield but is not
         equipping anything."
+
+        CR 702.103f: "If a bestowed Aura becomes unattached, it ceases to be
+        bestowed." So a bestowed permanent that comes off its creature stops
+        being an Aura here and is the creature its card prints again - which is
+        the whole point of bestow, and why this is the one place `bestowed` is
+        cleared while the object stays on the battlefield.
         """
         self.attachment = None
+        self.bestowed = False
 
     def mark_damage(self, amount: int) -> int:
         """Mark damage on this creature. It stays until cleanup."""
@@ -1562,8 +1632,15 @@ class CardState(BaseModel):
         # one carried. `id` stays put (this engine mutates rather than
         # replaces), so this is what tells a round trip apart from a card
         # that simply stayed put - see `DelayedTrigger.expected_stamp`.
+        origin = self.zone
         self.zone_change_stamp = uuid4()
         self.zone = zone
+        if not (origin is Zone.STACK and zone is Zone.BATTLEFIELD):
+            # CR 702.103b carries bestowed across exactly one zone change:
+            # "the permanent it becomes as it resolves will be a bestowed Aura
+            # permanent". Every other move is CR 400.7's new object, which
+            # nobody cast bestowed.
+            self.bestowed = False
         # CR 704.8 / CR 603.10a: an ability that looks back in time needs the
         # counters the object had as it left, and CR 122.2 has just taken them
         # away. Persist is the card in the pool that asks (CR 702.79a).
