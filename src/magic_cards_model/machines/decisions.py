@@ -91,6 +91,7 @@ their step's turn-based action runs rather than while anything resolves.
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from enum import StrEnum
+from itertools import zip_longest
 from typing import TYPE_CHECKING, Any, Protocol
 from uuid import UUID
 
@@ -336,6 +337,22 @@ class Decision:
     #: The cards being looked at, for `SCRY` and `SURVEIL`, top first; the
     #: candidate cards a `CHOOSE_CARDS` answer must be a subset of.
     cards: tuple[UUID, ...] = ()
+    #: A human-readable label per `cards` entry, positionally aligned, for the
+    #: kinds whose ids name something no card lookup can resolve.
+    #:
+    #: `ORDER_TRIGGERS` is the case that needs it: `cards` there holds
+    #: `AbilityOnStack` ids, and CR 113.1c / CR 405.1 make an ability on the
+    #: stack an object with no card, so nothing that resolves ids against the
+    #: board can name them. Worse, CR 603.3b is asked one step *before*
+    #: CR 603.3's "its controller puts it on the stack", so at the moment the
+    #: question is published those abilities are in no zone at all - not the
+    #: stack, not `pending_triggers` - and a caller reading the game cannot
+    #: find them however hard it looks. The asker is the only thing that still
+    #: holds them, so the label has to travel with the question.
+    #:
+    #: Empty for every other kind, whose `cards` are real cards a lookup can
+    #: name.
+    card_labels: tuple[str, ...] = ()
     #: Whether the affirmative branch is legal at all (CR 608.2d, CR 119.4).
     #: `False` removes it from `legal_options`, which is how paying 2 life at
     #: 1 life stops being an option rather than becoming a rules violation.
@@ -634,6 +651,7 @@ def ask_trigger_order(
     abilities: tuple[tuple[UUID, str], ...],
     *,
     prompt: str = "order your triggered abilities on the stack",
+    ability_texts: tuple[str, ...] = (),
 ) -> tuple[UUID, ...]:
     """Put CR 603.3b's ordering to one player, and return the order they chose.
 
@@ -683,7 +701,24 @@ def ask_trigger_order(
     prompt = f"{prompt}, bottom of the stack first: " + ", ".join(
         f"{index}. {name}" for index, (_, name) in enumerate(abilities, start=1)
     )
-    decision = Decision(kind=DecisionKind.ORDER_TRIGGERS, player=player, prompt=prompt, cards=ids)
+    # `card_labels` is the structured form of what the prompt says in prose:
+    # one label per `cards` entry, so a caller does not have to parse English
+    # to build a usable picker. `ability_texts` is optional because a caller
+    # that has only the `(id, source_name)` pairs can still ask - it then gets
+    # the source name alone, which is enough unless two of the abilities share
+    # a source, which is exactly the common case (two copies of one card), so
+    # pass it whenever it is available.
+    labels = tuple(
+        f"{name} - {text}" if text else name
+        for (_, name), text in zip_longest(abilities, ability_texts, fillvalue="")
+    )
+    decision = Decision(
+        kind=DecisionKind.ORDER_TRIGGERS,
+        player=player,
+        prompt=prompt,
+        cards=ids,
+        card_labels=labels,
+    )
     script.asked.append(decision)
     found, value = script.take(decision)
     if not found and script.provider is not None:

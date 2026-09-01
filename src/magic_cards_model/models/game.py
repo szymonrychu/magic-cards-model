@@ -3292,6 +3292,13 @@ class Game(BaseModel):
                 self.decisions,
                 block[0].controller,
                 tuple((ability.id, ability.source_name) for ability in block),
+                # Two copies of one card is the ordinary case for this
+                # question, so the source name alone does not distinguish the
+                # options - the ability's own text does. Nothing downstream can
+                # recover it: CR 603.3b is asked one step before CR 603.3 puts
+                # these on the stack, so at this moment they are in no zone at
+                # all and this frame is the only thing still holding them.
+                ability_texts=tuple(ability.ability.text for ability in block),
             )
             result.extend(by_id[ability_id] for ability_id in chosen)
         return result
