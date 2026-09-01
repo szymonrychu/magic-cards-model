@@ -60,6 +60,7 @@ from ..machines.cost import (
     spend_restriction,
     tap_cost,
     total_cost_for_phrase,
+    untap_cost,
 )
 from ..machines.decisions import (
     NOT_ANSWERED,
@@ -8618,6 +8619,15 @@ class Game(BaseModel):
                 mana = increase(mana, ManaCost.parse(piece.text).with_x(x_value))
             elif piece.kind is CostKind.TAP:
                 components.append(tap_cost(permanent, payer=controller, description=piece.text))
+            elif piece.kind is CostKind.UNTAP:
+                # CR 107.6: "The untap symbol is {Q}. The untap symbol in an
+                # activation cost means 'Untap this permanent.'" The exact
+                # mirror of the `{T}` branch above - "this permanent" is the
+                # permanent whose ability is being activated, which a bare
+                # symbol never names in words for `_cost_refers_to_self` to
+                # read. CR 602.5a gates both symbols the same way for a
+                # creature, and `why_cannot_activate` already checks that pair.
+                components.append(untap_cost(permanent, payer=controller, description=piece.text))
             elif piece.kind is CostKind.SACRIFICE:
                 components.append(
                     self._choice_cost(piece.text, permanent, sacrifices, controller, sacrifice_cost)
