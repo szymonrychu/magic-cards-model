@@ -1635,6 +1635,14 @@ def profile_for_text(text: str) -> TargetingProfile:
     return _parse(_REMINDER.sub("", text), spell_only=False)
 
 
+#: CR 207.2c's ability word, or CR 207.2d's flavor word, as Scryfall prints
+#: it: a short capitalised phrase and an em dash in front of the real ability.
+#: Both "have no special rules meaning", so they are cut before the line is
+#: judged. Bounded to a few words so a sentence that merely contains an em
+#: dash is left alone.
+_ABILITY_WORD_PREFIX = re.compile(r"^[A-Z][^—\n]{0,40}?\s+—\s+")
+
+
 def _spell_text(oracle_text: str) -> str:
     """The lines that are part of casting the spell, not of an ability.
 
@@ -1645,7 +1653,19 @@ def _spell_text(oracle_text: str) -> str:
     lines: list[str] = []
     for line in oracle_text.splitlines():
         stripped = _REMINDER.sub("", line).strip()
-        if not stripped or ":" in stripped or _TRIGGER.match(stripped):
+        # CR 207.2c: "An ability word appears in italics at the beginning of
+        # some abilities ... they have no special rules meaning", and CR 207.2d
+        # says the same of a flavor word. Scryfall prints both as "<Word> — "
+        # in front of the ability, which hid the "When" from the trigger test
+        # below: Mister Negative's "Darkforce Inversion — When Mister Negative
+        # enters, you may exchange life totals with target opponent" survived
+        # into the *spell's* profile, so a plain creature spell looked like it
+        # required a target.
+        # Only for the test below - the line itself is kept whole, because
+        # `_read_revolt_mana_value_override` matches on "Revolt — ..." and
+        # would lose Fatal Push's wider number if the word were cut here.
+        without_word = _ABILITY_WORD_PREFIX.sub("", stripped)
+        if not stripped or ":" in stripped or _TRIGGER.match(without_word):
             continue
         lines.append(stripped)
     return "\n".join(lines)

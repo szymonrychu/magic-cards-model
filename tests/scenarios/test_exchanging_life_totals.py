@@ -201,13 +201,11 @@ def test_exchanging_with_yourself_changes_nothing():
 def mister_negative_board(alice_life: int = 5, bob_life: int = 17) -> Scenario:
     """Alice with Mister Negative in hand at a life total worse than Bob's.
 
-    Put onto the battlefield rather than cast (`put_onto_battlefield`, the
-    Tooth and Nail path): the mechanic under test is the enters trigger, and
-    `Game.put_onto_battlefield` fires it exactly as a resolved creature spell
-    would. Casting it is currently refused for an unrelated reason -
-    `machines/targeting.py` reads the "target opponent" printed inside the
-    *triggered ability* as a target the **spell** requires, so CR 601.2c's
-    announcement check refuses a Mister Negative cast with no targets named.
+    Six Plains and a Swamp so the {5}{W}{B} can actually be paid: the headline test
+    below casts it for real. CR 601.2c requires a target only for what the
+    *spell* requires, and Mister Negative's "target opponent" is printed
+    inside its enters trigger - CR 113.1c makes that its own object, choosing
+    its target when the trigger goes on the stack.
     """
     return (
         Scenario()
@@ -216,6 +214,7 @@ def mister_negative_board(alice_life: int = 5, bob_life: int = 17) -> Scenario:
             "alice",
             life=alice_life,
             hand=["Mister Negative"],
+            battlefield=["Plains"] * 6 + ["Swamp"],
             library=["Grizzly Bears"] * 12,
         )
         .player("bob", life=bob_life)
@@ -231,8 +230,9 @@ def test_mister_negative_exchanges_life_totals_when_it_enters():
     """
     scenario = mister_negative_board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    scenario.put_onto_battlefield("Mister Negative", "alice")
-    scenario.pass_until_resolved()  # the enters trigger  # the enters trigger
+    lands = scenario.untapped_sources(*["Plains"] * 6, "Swamp", username="alice")
+    scenario.cast_and_resolve("Mister Negative", *lands, username="alice")
+    scenario.pass_until_resolved()  # the enters trigger
 
     assert scenario.player("alice").life == 17
     assert scenario.player("bob").life == 5
