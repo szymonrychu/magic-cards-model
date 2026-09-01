@@ -192,7 +192,11 @@ def test_an_equipment_falls_off_where_an_aura_would_have_died():
     umbra.attach_to(bears)
     cutter.attach_to(bears)
 
-    scenario.game.destroy(bears)
+    # Sacrificed rather than destroyed: CR 700.4 makes it dying either way, and
+    # CR 701.8b keeps sacrificing out of destruction's way entirely - which is
+    # what stops Hyena Umbra's own umbra armor (CR 702.89a) saving the host and
+    # turning this into a test of that instead of of CR 704.5m/704.5n.
+    scenario.game.sacrifice(bears)
     scenario.state_based_actions()
 
     assert umbra.zone is Zone.GRAVEYARD, "CR 704.5m"

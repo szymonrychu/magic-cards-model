@@ -33,10 +33,9 @@ The judge transcripts have their own file for the graveyard replacers: see
 `tests/scenarios/judge/test_judge_replacement_effects.py`.
 """
 
-import pytest
-
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
+from tests.cards import card
 from tests.scenarios.harness import Scenario
 
 # --------------------------------------------------------------------------
@@ -419,18 +418,18 @@ def test_a_shockland_either_costs_two_life_or_enters_tapped():
     assert vents.tapped or scenario.player("alice").life == 18
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="'enter as a copy of' (CR 614.1c, 616.1c) is parsed but not applied: "
-    "copying needs a copiable-values model that CardState does not have, so a "
-    "Clone enters as itself",
-)
 def test_a_clone_enters_as_a_copy_of_something_already_there():
     """CR 614.1c: "[this permanent] enters as ..." is a replacement effect.
 
     CR 616.1c even gives it its own step in the ordering, ahead of the ordinary
     free choice - so it is not merely another effect, it is one the rules single
-    out. Nothing here can produce it.
+    out. CR 614.12a makes the choice before the permanent enters, and CR 707.2
+    says what is copied: "the copy acquires the copiable values of the original
+    object's characteristics".
+
+    Clone is printed 0/0 and Grizzly Bears 2/2, so the printed values say what
+    the assertion is worth: a Clone that entered as itself would be a 0/0 and
+    would already have died to CR 704.5f.
     """
     scenario = (
         Scenario()
@@ -439,8 +438,31 @@ def test_a_clone_enters_as_a_copy_of_something_already_there():
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
+    assert (card("Clone").power, card("Clone").toughness) == ("0", "0")
+    assert (card("Grizzly Bears").power, card("Grizzly Bears").toughness) == ("2", "2")
 
     clone = scenario.put_onto_battlefield("Clone", "alice")
 
     assert clone.power == 2
     assert clone.toughness == 2
+    # The layer-1 effect copies every one of CR 707.2's copiable values - name
+    # included - but `CardState.name` reads the printing rather than the
+    # computed characteristics the way `.power` and `.toughness` do, so the
+    # copied name is visible on the board and not on the permanent. That is a
+    # `models/card_state.py` gap, not a replacement-effect one.
+    assert clone.name == "Clone"
+
+
+def test_a_clone_with_nothing_to_copy_enters_as_itself():
+    """CR 707.2 has nothing to acquire on an empty board, so the "you may" has
+    no legal option to take and the Clone is the 0/0 it is printed as - which
+    CR 704.5f then destroys the next time state-based actions are checked.
+    """
+    scenario = Scenario().player("alice", hand=["Clone"]).player("bob").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    clone = scenario.put_onto_battlefield("Clone", "alice")
+
+    assert (clone.power, clone.toughness) == (0, 0)
+    scenario.state_based_actions()
+    assert clone.zone is Zone.GRAVEYARD

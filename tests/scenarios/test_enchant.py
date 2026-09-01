@@ -126,7 +126,14 @@ def test_an_aura_on_nothing_is_a_state_based_action():
 
 
 def test_an_aura_whose_creature_died_is_illegal_too():
-    """CR 704.5m again: the host has to still be there, and still be legal."""
+    """CR 704.5m again: the host has to still be there, and still be legal.
+
+    The host is sacrificed rather than destroyed. CR 700.4 makes it dying
+    either way, and CR 701.8b keeps sacrificing out of destruction's way -
+    which matters here because Hyena Umbra carries umbra armor (CR 702.89a)
+    and would otherwise replace the destruction of its own host, leaving this
+    test asserting nothing about CR 704.5m.
+    """
     scenario = board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     bears = scenario.creature("Grizzly Bears")
@@ -136,6 +143,6 @@ def test_an_aura_whose_creature_died_is_illegal_too():
 
     assert aura_state_based_actions(scenario.game) == []
 
-    scenario.game.destroy(bears)
+    scenario.game.sacrifice(bears)
 
     assert aura_state_based_actions(scenario.game) == [umbra]

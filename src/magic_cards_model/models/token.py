@@ -462,10 +462,19 @@ def create_tokens(
         kind=EventKind.CREATE_TOKENS,
         player=game.player(controller),  # CR 111.2: the creator is the owner
         amount=count,
+        definition=definition,
     )
     apply_replacements(game, creation)
     count = creation.amount
-    if count <= 0:
+    # A replacement effect may add tokens that are not more of `definition` -
+    # Stridehangar Automaton's "those tokens plus an additional 1/1 ... Thopter
+    # ... are created instead". CR 614.6 makes that one modified event, so they
+    # are created here inside the same call and raise no creation event of
+    # their own; a second event would give the same effect a second opportunity
+    # against its own addition, which CR 614.5 refuses and which would not
+    # terminate.
+    extra_definitions = list(creation.extra)
+    if count <= 0 and not extra_definitions:
         return []
 
     card = definition.to_card()
@@ -490,6 +499,15 @@ def create_tokens(
         if attacking is not None:
             _put_onto_the_battlefield_attacking(game, token, attacking)
         created.append(token)
+
+    for extra in extra_definitions:
+        # A different token with its own stated characteristics (CR 111.3), so
+        # none of this call's `tapped`/`attacking`/`counters`/`attached_to`
+        # applies to it: those describe how *these* tokens were asked for, and
+        # the addition was asked for by somebody else's card.
+        addition = TokenState(card=extra.to_card(), zone=Zone.STACK, controller=controller)
+        game.put_onto_battlefield(addition, controller)
+        created.append(addition)
     return created
 
 
@@ -547,16 +565,29 @@ def token_copy_of(
     from ..machines.replacement import EventKind, ReplaceableEvent, apply_replacements
 
     creation = ReplaceableEvent(
-        kind=EventKind.CREATE_TOKENS, player=game.player(controller), amount=count
+        kind=EventKind.CREATE_TOKENS,
+        player=game.player(controller),
+        amount=count,
+        # No `TokenDefinition` here: a token copy's characteristics are the
+        # original's copiable values (CR 707.2), not a set of values some
+        # effect stated (CR 111.3). `card` carries the original so a
+        # replacement effect that asks *what kind* of token is being created -
+        # Stridehangar Automaton's "artifact tokens" - has something to read.
+        card=original,
     )
     apply_replacements(game, creation)
     count = creation.amount
+    extra_definitions = list(creation.extra)
 
     created: list[TokenState] = []
     for _ in range(count):
         copy = TokenState(card=original.card, zone=Zone.STACK, controller=controller)
         game.put_onto_battlefield(copy, controller, tapped=bool(options.get("tapped")))
         created.append(copy)
+    for extra in extra_definitions:
+        addition = TokenState(card=extra.to_card(), zone=Zone.STACK, controller=controller)
+        game.put_onto_battlefield(addition, controller)
+        created.append(addition)
     return created
 
 

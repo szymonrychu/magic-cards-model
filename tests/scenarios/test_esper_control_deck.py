@@ -22,6 +22,7 @@ import pytest
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Deck, DeckLimits, Match, Player, Zone
 from tests.cards import card
+from tests.scenarios.harness import Scenario
 
 #: Mainboard as registered: 60 cards. The source data prints some lands as
 #: several separate one-of rows (Quantum Riddler arrives as 2 + 2); merging
@@ -175,21 +176,94 @@ def test_each_copy_is_its_own_card():
     assert len({state.id for state in seizes}) == 4
 
 
-# -- what the deck needs that the engine does not have yet -----------------
+# -- the sideboard's Grafdigger's Cage, as behaviour ------------------------
+#
+# Both of the Cage's lines, asserted by what they *do* rather than by what
+# `parse_abilities` returns. The previous test here asked for
+# `ability.effect is not None`, which `StaticAbility` has no field for at all -
+# so no static ability on any card in the pool could ever have satisfied it,
+# and the xfail was measuring the assertion rather than the engine.
+#
+# Grafdigger's Cage (verified with `resolve_cards`): "Creature cards in
+# graveyards and libraries can't enter the battlefield. / Players can't cast
+# spells from graveyards or libraries."
 
 
-@pytest.mark.xfail(
-    reason="Grafdigger's Cage's static prohibition is unmodelled: nothing in "
-    'machines/ reads "Players can\'t cast spells from graveyards or libraries", '
-    "and the sweeper's classifier files the card as no_rules_text because "
-    "has_rules_text() skips every static line on a permanent.",
-    strict=True,
-)
-def test_grafdiggers_cage_is_a_modelled_static_ability():
-    from magic_cards_model.machines.abilities import parse_abilities
+def test_the_cage_refuses_a_flashback_granted_cast_out_of_the_graveyard():
+    """The second line: "Players can't cast spells from graveyards or libraries."
 
-    cage = card("Grafdigger's Cage")
-    abilities = parse_abilities(cage)
+    CR 601.3 needs both halves - a rule or effect allowing the cast *and* no
+    rule or effect prohibiting it - and CR 101.2 makes the Cage's "can't" beat
+    the permission Flashback just handed out. The refusal names the Cage, so a
+    player can tell which permanent stopped them.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Flashback"],
+            graveyard=["Lightning Bolt"],
+            battlefield=["Mountain", "Mountain"],
+        )
+        .player("bob", battlefield=["Grafdigger's Cage"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bolt = scenario.find("Lightning Bolt", Zone.GRAVEYARD, "alice")
+    scenario.cast_and_resolve("Flashback", *scenario.untapped_sources("Mountain"), targets=[bolt])
 
-    assert abilities, "Grafdigger's Cage parses into abilities"
-    assert any(getattr(ability, "effect", None) is not None for ability in abilities)
+    with pytest.raises(ValueError, match="Grafdigger's Cage"):
+        scenario.cast("Lightning Bolt", from_zone=Zone.GRAVEYARD)
+
+    assert bolt.zone is Zone.GRAVEYARD
+
+
+def test_the_cage_keeps_a_creature_card_in_the_graveyard_it_came_from():
+    """The first line: "Creature cards in graveyards and libraries can't enter
+    the battlefield."
+
+    CR 614.17d: "Some 'can't' effects modify how a permanent enters the
+    battlefield or whether it can enter the battlefield." CR 614.6 then says
+    the event never happens, so nothing enters and no enters-the-battlefield
+    ability triggers (CR 603.6a); CR 400.4a states the outcome the rules use
+    for their own can't-enter case, "it remains in its previous zone", which is
+    what the card does here.
+
+    Driven through `put_onto_battlefield` rather than through a reanimation
+    spell so the assertion is about the Cage and nothing else - the same reason
+    `test_judge_replacement_effects.py`'s own token test drives `Game.destroy`
+    directly.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", graveyard=["Grizzly Bears"])
+        .player("bob", battlefield=["Grafdigger's Cage"])
+        .build()
+    )
+    bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
+
+    scenario.game.put_onto_battlefield(bears, "alice")
+
+    assert bears.zone is Zone.GRAVEYARD
+    assert bears not in scenario.game.battlefield
+    assert bears in scenario.player("alice").graveyard
+
+
+def test_the_cage_lets_a_creature_spell_from_the_hand_through():
+    """ "in graveyards and libraries" - the Cage names two zones and no others,
+    so an ordinary creature cast out of a hand is untouched. Without this the
+    test above would pass just as well for a Cage that stopped everything.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Grizzly Bears"], battlefield=["Forest", "Forest"])
+        .player("bob", battlefield=["Grafdigger's Cage"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    bears = scenario.cast_and_resolve(
+        "Grizzly Bears", *scenario.untapped_sources("Forest", "Forest")
+    )
+
+    assert bears.zone is Zone.BATTLEFIELD
