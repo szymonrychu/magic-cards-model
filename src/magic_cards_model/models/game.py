@@ -574,6 +574,35 @@ _LOOKS_LIKE_ACTIVATION_PROHIBITION_RE = re.compile(
     r"^activated abilities of .+ can't be activated", re.IGNORECASE
 )
 
+#: A static ability that stops players gaining life at all - Leyline of
+#: Punishment's "Players can't gain life.", Sulfuric Vortex's and Rampaging
+#: Ferocidon's "Players can't gain life." on the same one-sentence shape.
+#:
+#: This is the same *kind* of continuous effect as `_ACTIVATION_PROHIBITION_RE`
+#: above and is here for the same reason: it changes no characteristic of any
+#: object, so `machines/layers.py` has nothing to write - CR 613's layers are
+#: for characteristics, control, and copiable values. CR 611.1 puts it in the
+#: last of its three categories, "affects players or the rules of the game",
+#: and CR 119.7 is where the rules read it back ("If an effect says that a
+#: player can't gain life ..."). CR 604.2 and CR 611.3 bound it to while its
+#: source is on the battlefield, which is why `life_gain_prohibited` rescans
+#: the battlefield on every call rather than caching (CR 611.3a: not "locked
+#: in").
+#:
+#: "Players" and "Each player" are both printed; a prohibition naming one
+#: player specifically ("You can't gain life") is a different shape and is
+#: deliberately not matched here - see `_LOOKS_LIKE_LIFE_GAIN_PROHIBITION_RE`.
+_LIFE_GAIN_PROHIBITION_RE = re.compile(
+    r"^(?:players|each player) can't gain life\.?$", re.IGNORECASE
+)
+
+#: A sentence that prohibits life gain but is not the symmetric shape above -
+#: matched only to fail closed with a notice rather than let it read as
+#: permission, exactly as `_LOOKS_LIKE_ACTIVATION_PROHIBITION_RE` does.
+_LOOKS_LIKE_LIFE_GAIN_PROHIBITION_RE = re.compile(
+    r"\bcan't gain life\b", re.IGNORECASE
+)
+
 #: Pithing Needle's and Disruptor Flute's "sources with the chosen name", which
 #: name their subjects by a CR 614.12a choice rather than by a quality. Left
 #: alone here on purpose: `machines/replacement.py` already records an
@@ -4825,6 +4854,90 @@ class Game(BaseModel):
             player.gain_life(event.amount)
             self.emit(GameEvent(event=TriggerEvent.GAINS_LIFE, player=player.username))
         return player.life
+
+    def exchange_life_totals(self, a: Player | str, b: Player | str) -> int:
+        """Two players exchange life totals (CR 701.12a, CR 701.12c).
+
+        CR 701.12a: "A spell or ability may instruct players to exchange
+        something (for example, life totals ...) as part of its resolution.
+        When such a spell or ability resolves, if the entire exchange can't
+        happen, no part of the exchange occurs." `Player.exchange_life_totals`
+        is where that all-or-nothing decision lives, together with CR 119.7 and
+        CR 119.8's two reasons for refusing; this is the wrapper a resolving
+        spell or ability actually reaches, the counterpart of `gain_life`.
+
+        The **events** are this method's own job. CR 701.12c makes the exchange
+        gains and losses ("each player gains or loses the amount of life
+        necessary to equal the other player's previous life total"), so a
+        trigger watching "whenever a player gains life" (CR 119.9) or loses it
+        must see them - and the `Player` primitive adjusts the totals without
+        emitting anything, exactly as `Player.gain_life` does under
+        `Game.gain_life`. One event per player who actually moved: a player
+        whose total was already equal gained and lost nothing, and CR 603.2g
+        gives a trigger nothing to fire on there.
+
+        No replacement effects are applied to the halves. CR 701.12c does say
+        "Replacement effects may modify these gains and losses", and this does
+        not do that yet - routing the halves back through `Game.gain_life`
+        would re-ask CR 119.7 *after* the all-or-nothing decision had already
+        been made on the pre-replacement amounts, which is the wrong order. It
+        is recorded in `docs/engine-coverage.md` rather than half-built here.
+
+        Returns the life **this** player - `a` - lost by the exchange, negative
+        if they gained: Mister Negative's "If you lost life this way, draw that
+        many cards" is the question, and it is asked from one side.
+        """
+        if isinstance(a, str):
+            a = self.player(a)
+        if isinstance(b, str):
+            b = self.player(b)
+
+        before = {a.username: a.life, b.username: b.life}
+        lost = a.exchange_life_totals(b)
+        for player in (a, b):
+            moved = player.life - before[player.username]
+            if moved > 0:
+                self.emit(GameEvent(event=TriggerEvent.GAINS_LIFE, player=player.username))
+            elif moved < 0:
+                self.emit(GameEvent(event=TriggerEvent.LOSES_LIFE, player=player.username))
+        return lost
+
+    def life_gain_prohibited(self, username: str) -> str | None:
+        """Why this player can't gain life right now, or None (CR 119.7).
+
+        CR 119.7: "If an effect says that a player can't gain life ..." - this
+        is where that effect is found. Leyline of Punishment's "Players can't
+        gain life." changes no characteristic of any object, so CR 613's layers
+        have nothing to write and `machines/layers.py` is the wrong home; the
+        effect belongs to CR 611.1's third category, "affects players or the
+        rules of the game", and is read where the rules ask the question.
+
+        The battlefield is rescanned on every call rather than cached, because
+        CR 604.2 bounds a static ability's continuous effect to while its
+        source is on the battlefield and CR 611.3a says such an effect "isn't
+        'locked in'". A Leyline destroyed mid-turn stops prohibiting at once.
+
+        The shapes in the pool are symmetric - "Players can't gain life"
+        catches its own controller too - so no controller comparison is made.
+        A sentence that prohibits life gain in a shape
+        `_LIFE_GAIN_PROHIBITION_RE` cannot read records a `LayerNotice` and is
+        **not** treated as permission, the same way `_activation_prohibition`
+        fails closed on an unreadable prohibition.
+        """
+        for source in list(self.battlefield):
+            for line in parse_abilities(source.card):
+                if line.kind is not AbilityKind.STATIC:
+                    continue
+                text = (line.text or "").strip()
+                if not _LOOKS_LIKE_LIFE_GAIN_PROHIBITION_RE.search(text):
+                    continue
+                if not _LIFE_GAIN_PROHIBITION_RE.match(text):
+                    self._record_unread_prohibition(source, text)
+                    continue
+                if not self._still_has_static_line(source, text):
+                    continue
+                return f"{username} can't gain life: {source.name} says so (CR 119.7, CR 611.1)"
+        return None
 
     def add_counters(self, permanent: CardState, kind: str, amount: int = 1) -> int:
         """Put counters on a permanent, replacement effects included (CR 122.1).

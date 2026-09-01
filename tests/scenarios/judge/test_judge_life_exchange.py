@@ -42,11 +42,34 @@ not cited, CR 701.12a, CR 701.12c, CR 701.12g.
 
 import pytest
 
+from magic_cards_model.machines import Step
 from magic_cards_model.machines.abilities import AbilityKind, parse_abilities
 from magic_cards_model.machines.effects import effect_for
-from magic_cards_model.machines.triggers import triggered_abilities_of
+from magic_cards_model.machines.triggers import TriggerEvent, triggered_abilities_of
+from magic_cards_model.models.game import DelayedTrigger
 from magic_cards_model.models.player import Player
 from tests.cards import card
+from tests.scenarios.harness import Scenario
+
+
+def _life_watchers(scenario) -> None:
+    """Stage a delayed trigger on each of the two life events (CR 603.7).
+
+    No card in the pool prints "whenever a player loses life", so the watchers
+    are created through `Game.create_delayed_trigger` the way a resolving spell
+    would - what is under test is that the exchange *emits* the events, not
+    what anything does about them.
+    """
+    for event in (TriggerEvent.GAINS_LIFE, TriggerEvent.LOSES_LIFE):
+        scenario.game.create_delayed_trigger(
+            DelayedTrigger(
+                text=f"Whenever a player {event}, note it.",
+                effect="unmodelled",
+                event=event,
+                controller="amy",
+                source_name="a resolving spell",
+            )
+        )
 
 
 def test_both_printings_carry_the_triggered_abilities_the_ruling_needs():
@@ -115,21 +138,51 @@ def test_a_player_who_cannot_gain_life_does_not_gain_life():
     assert amy.life == 20
 
 
-@pytest.mark.xfail(
-    reason=(
-        "The CR 701.12a/701.12c exchange primitive exists on `Player` now "
-        "(`Player.exchange_life_totals`), but `Game` has no wrapper for it, so "
-        "no resolving spell or ability can reach it. `Game.exchange_life_totals` "
-        "belongs to whoever owns models/game.py."
-    ),
-    strict=True,
-)
 def test_the_exchange_is_refused_outright_when_one_half_cannot_happen():
     """DDR#974's ruling: Amy below Nick, and nothing moves.
 
-    CR 119.7 stops Amy's half; CR 701.12a/701.12g then stop Nick's, because an
-    exchange is one event rather than two independent adjustments.
-    """
-    from magic_cards_model.models import game as game_module
+    CR 119.7 stops Amy's half; CR 701.12a then stops Nick's, because an
+    exchange is one event rather than two independent adjustments: "if the
+    entire exchange can't happen, no part of the exchange occurs."
 
-    assert hasattr(game_module.Game, "exchange_life_totals")
+    Driven through `Game.exchange_life_totals`, the wrapper a resolving spell
+    or ability reaches, rather than through the `Player` primitive - the point
+    of the case is that the refusal survives the trip through `Game`, and that
+    a refused exchange emits no life-gain or life-loss event either.
+    """
+    scenario = Scenario().player("amy", life=5).player("nick", life=17).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    game = scenario.game
+    game.player("amy").cannot_gain_life = True
+    _life_watchers(scenario)
+
+    lost = game.exchange_life_totals("amy", "nick")
+
+    assert lost == 0
+    assert game.player("amy").life == 5, "CR 119.7 refuses amy's half"
+    assert game.player("nick").life == 17, "CR 701.12a refuses nick's with it"
+    assert scenario.pending_triggers == [], "nothing moved, so nothing is announced"
+
+
+def test_an_exchange_that_can_happen_moves_both_totals_and_announces_both():
+    """The other side of CR 701.12a, so the refusal above is not vacuous.
+
+    CR 701.12c: "each player gains or loses the amount of life necessary to
+    equal the other player's previous life total" - and those really are a
+    gain and a loss, so CR 119.9's triggers have events to watch. The return
+    value is the life the *first* player lost, which is what Mister Negative's
+    "If you lost life this way, draw that many cards" asks for.
+    """
+    scenario = Scenario().player("amy", life=17).player("nick", life=5).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    game = scenario.game
+    _life_watchers(scenario)
+
+    lost = game.exchange_life_totals("amy", "nick")
+
+    assert lost == 12, "amy went from 17 to 5"
+    assert game.player("amy").life == 5
+    assert game.player("nick").life == 17
+    assert sorted(item.ability.event for item in scenario.pending_triggers) == sorted(
+        [TriggerEvent.GAINS_LIFE, TriggerEvent.LOSES_LIFE]
+    ), "one gain and one loss, each announced once (CR 701.12c)"

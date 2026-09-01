@@ -455,15 +455,34 @@ class Player(BaseModel):
         happen is not a gain event for CR 119.9 to trigger on. The argument
         check runs first regardless - a negative "gain" is a caller bug at any
         life total, and a prohibited player is not somewhere to hide one.
+
+        `cannot_gain_life` is the prohibition set directly on this player;
+        `Game.life_gain_prohibited` is the one a permanent on the battlefield
+        imposes (Leyline of Punishment's "Players can't gain life"). Both are
+        CR 119.7's "an effect says that a player can't gain life" and both
+        refuse identically - the board-derived one is asked fresh rather than
+        mirrored onto a field, because CR 604.2 ends it with its source.
         """
         if amount < 0:
             raise ValueError("cannot gain a negative amount of life")
         if self.cannot_gain_life:
             return self.life
+        if self._prohibited_from_gaining_life:
+            return self.life
         self.life += amount
         if self.game is not None:
             self.game.life_gained_this_turn.add(self.username)
         return self.life
+
+    @property
+    def _prohibited_from_gaining_life(self) -> bool:
+        """Whether something on the battlefield forbids this player gaining
+        life (CR 119.7). False for a player with no game around them - there is
+        no battlefield to carry the prohibition."""
+        game = self.game
+        if game is None:
+            return False
+        return game.life_gain_prohibited(self.username) is not None
 
     def lose_life(self, amount: int) -> int:
         """Lose life, returning the new total (CR 119.3).
@@ -544,9 +563,17 @@ class Player(BaseModel):
         the Screaming Nemesis episode where the exchange goes through.
 
         Asked of either player, about either player - CR 701.12a's "the entire
-        exchange" is one event and has no near side."""
+        exchange" is one event and has no near side.
+
+        Both prohibitions are consulted for the gaining half: the one set on
+        the player and the one a permanent imposes through
+        `Game.life_gain_prohibited`, because CR 119.7 is written about "an
+        effect", not about where this engine happens to keep it.
+        """
         for player, opponent in ((self, other), (other, self)):
-            if opponent.life > player.life and player.cannot_gain_life:
+            if opponent.life > player.life and (
+                player.cannot_gain_life or player._prohibited_from_gaining_life
+            ):
                 return (
                     f"{player.username} can't gain life, so the exchange that would raise "
                     f"their life total from {player.life} to {opponent.life} won't happen "

@@ -149,20 +149,21 @@ def test_a_negative_gain_is_still_refused_as_a_bad_call():
         alice.gain_life(-1)
 
 
-@pytest.mark.xfail(
-    reason="Leyline of Punishment's 'Players can't gain life.' is a static "
-    "ability with no row in machines/layers.LAYER_EFFECTS, so nothing sets "
-    "Player.cannot_gain_life from the battlefield - the prohibition exists as "
-    "player state and has no card able to impose it yet",
-    strict=True,
-)
 def test_leyline_of_punishment_imposes_the_prohibition_on_both_players():
     """The plan's test-first case, end to end: with the Leyline out, a lifelink
     hit gains nothing.
 
     Leyline of Punishment (verified with `resolve_cards`): "Players can't gain
     life. Damage can't be prevented." It is a continuous effect from a static
-    ability (CR 604.1), and reading it is `machines/layers.py`'s job.
+    ability, and it is symmetric - "Players", not "your opponents" - so the
+    Leyline's own controller is caught by it too. Here that is bob, whose
+    lifelink damage from the Wurm he is being hit by is irrelevant; what
+    matters is that alice, attacking with a lifelink creature, gains nothing.
+
+    Read by `Game.life_gain_prohibited`, not by `machines/layers.py`: the
+    sentence changes no characteristic, so CR 613's layers have nothing to
+    write. CR 611.1 calls it an effect that "affects players or the rules of
+    the game", and CR 119.7 is the rule that reads it back.
     """
     scenario = (
         Scenario()
