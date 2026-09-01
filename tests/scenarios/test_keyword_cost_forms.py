@@ -119,17 +119,21 @@ def test_a_phrase_the_parser_cannot_read_is_refused_rather_than_guessed():
 # -- the ones that parse and still have nowhere to go -----------------------
 
 
-@pytest.mark.xfail(
-    reason=(
-        "CR 702.29a: 'Cycling [cost]' means '[Cost], Discard this card: Draw a "
-        "card.' - an activated ability that functions only in the hand. Nothing "
-        "expands the keyword into that ability, and Game.begin_activating only "
-        "activates abilities of battlefield permanents, so a card with cycling "
-        "cannot be cycled. Needs models/game.py, which this change does not own."
-    ),
-    strict=True,
-)
 def test_a_card_with_cycling_can_be_cycled():
+    """CR 702.29a, played for real: the keyword line becomes an ability that runs.
+
+    "Cycling is an activated ability that functions only while the card with
+    cycling is in a player's hand. 'Cycling [cost]' means '[Cost], Discard this
+    card: Draw a card.'" Street Wraith's cost is "Pay 2 life", so the whole
+    activation is: pay 2 life, discard the Wraith, draw the Mountain.
+
+    `scenario.cycle` is the door rather than `scenario.activate`, because
+    `Game.begin_activating` reads the abilities of a *battlefield permanent*
+    and a card in hand has none of those. CR 702.29b is the reason that is not
+    a contradiction: the ability "continues to exist while the object is on the
+    battlefield and in all other zones", so the zone gates when it may be
+    activated, not whether it exists.
+    """
     from magic_cards_model.machines import Step
     from magic_cards_model.models import Zone
     from tests.scenarios.harness import Scenario
@@ -144,10 +148,11 @@ def test_a_card_with_cycling_can_be_cycled():
     scenario.start_at(Step.PRECOMBAT_MAIN)
     wraith = scenario.find("Street Wraith", Zone.HAND)
 
-    scenario.activate(wraith)
+    scenario.cycle(wraith)
 
-    assert wraith.zone is Zone.GRAVEYARD
+    assert wraith.zone is Zone.GRAVEYARD, "discarding it is part of the cost"
     assert scenario.player("alice").life == 18
+    assert [state.name for state in scenario.player("alice").hand] == ["Mountain"]
 
 
 def test_a_card_with_suspend_offers_a_way_to_cast_it():

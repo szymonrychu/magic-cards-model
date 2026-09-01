@@ -27,19 +27,18 @@ that many cards."
 - **CR 119.9** - "whenever a player gains life" reads the gain half, so an
   exchange that raises a life total is a life gain like any other.
 
-`Player.exchange_life_totals` is the primitive. Nothing calls it yet: Mister
-Negative has no entry in `machines/effects.py`, which the last test records.
+`Player.exchange_life_totals` is the primitive, and `machines/effects.py` now
+reaches it: the tests at the bottom of this file cast Mister Negative and play
+the whole Darkforce Inversion trigger, optional "you may" and reflexive draw
+included. The tests above call the primitive directly, because the prohibitions
+it enforces need life totals no printed card in the pool can set up.
 
 Every CR number in this file was verified with `knowledge_search(q="...",
 type="rules")` in the session that wrote it: CR 119.7, CR 119.8, CR 119.9,
 CR 701.12a, CR 701.12c, CR 701.12g.
 """
 
-import pytest
-
 from magic_cards_model.machines import Step
-from magic_cards_model.machines.effects import effect_for
-from tests.cards import card
 from tests.scenarios.harness import Scenario
 
 
@@ -199,23 +198,106 @@ def test_exchanging_with_yourself_changes_nothing():
     assert alice.life == 9
 
 
-@pytest.mark.xfail(
-    reason="Mister Negative has no entry in machines/effects.py, so its "
-    "Darkforce Inversion trigger resolves and does nothing. Both engine "
-    "halves exist now - Player.exchange_life_totals is the CR 701.12a "
-    "primitive and Game.exchange_life_totals is the wrapper a resolving "
-    "ability reaches - so what is missing is only the effects.py row that "
-    "would read 'exchange life totals with target opponent' and call it",
-    strict=True,
-)
-def test_mister_negative_exchanges_life_totals_when_it_enters():
-    """The card the primitive is for, once `machines/effects.py` names it."""
-    scenario = (
-        Scenario()
-        .player("alice", life=5, hand=["Mister Negative"], battlefield=["Plains"] * 7)
-        .player("bob", life=17)
-        .build()
-    )
-    scenario.start_at(Step.PRECOMBAT_MAIN)
+def mister_negative_board(alice_life: int = 5, bob_life: int = 17) -> Scenario:
+    """Alice with Mister Negative in hand at a life total worse than Bob's.
 
-    assert effect_for("Mister Negative", card("Mister Negative").oracle_text) is not None
+    Put onto the battlefield rather than cast (`put_onto_battlefield`, the
+    Tooth and Nail path): the mechanic under test is the enters trigger, and
+    `Game.put_onto_battlefield` fires it exactly as a resolved creature spell
+    would. Casting it is currently refused for an unrelated reason -
+    `machines/targeting.py` reads the "target opponent" printed inside the
+    *triggered ability* as a target the **spell** requires, so CR 601.2c's
+    announcement check refuses a Mister Negative cast with no targets named.
+    """
+    return (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            life=alice_life,
+            hand=["Mister Negative"],
+            library=["Grizzly Bears"] * 12,
+        )
+        .player("bob", life=bob_life)
+    )
+
+
+def test_mister_negative_exchanges_life_totals_when_it_enters():
+    """The card the primitive is for, played through the engine.
+
+    "Darkforce Inversion - When Mister Negative enters, you may exchange life
+    totals with target opponent." CR 701.12c does it as gains and losses, so
+    alice climbs from 5 to 17 and bob drops from 17 to 5.
+    """
+    scenario = mister_negative_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.put_onto_battlefield("Mister Negative", "alice")
+    scenario.pass_until_resolved()  # the enters trigger  # the enters trigger
+
+    assert scenario.player("alice").life == 17
+    assert scenario.player("bob").life == 5
+
+
+def test_the_controller_who_gained_life_draws_nothing():
+    """ "If you lost life this way, draw that many cards" - alice gained, so
+    the reflexive clause's condition is false and no card is drawn.
+
+    The condition is on the *controller's* side of the exchange, not on
+    whether any life moved at all: bob lost twelve here and that is nobody's
+    draw.
+    """
+    scenario = mister_negative_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.put_onto_battlefield("Mister Negative", "alice")
+    scenario.pass_until_resolved()  # the enters trigger
+
+    assert [state.name for state in scenario.player("alice").hand] == []
+
+
+def test_the_controller_who_lost_life_draws_that_many_cards():
+    """The clause the card is built around, from the other side.
+
+    Alice at 20 exchanging with bob at 14 loses 6, so she draws 6 - "that many"
+    being the amount the exchange moved, and CR 121.2 making that six
+    individual draws.
+    """
+    scenario = mister_negative_board(alice_life=20, bob_life=14).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.put_onto_battlefield("Mister Negative", "alice")
+    scenario.pass_until_resolved()  # the enters trigger
+
+    assert scenario.player("alice").life == 14
+    assert len(scenario.player("alice").hand) == 6
+
+
+def test_declining_the_may_leaves_both_life_totals_alone():
+    """ "You may" is CR 608.2d's own optional question. A controller who
+    declines exchanges nothing and draws nothing - and, since no life moved,
+    the reflexive clause has nothing to count either."""
+    scenario = mister_negative_board(alice_life=20, bob_life=14).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.will_take_the_may(False, username="alice", source="Mister Negative")
+
+    scenario.put_onto_battlefield("Mister Negative", "alice")
+    scenario.pass_until_resolved()  # the enters trigger
+
+    assert scenario.player("alice").life == 20
+    assert scenario.player("bob").life == 14
+    assert [state.name for state in scenario.player("alice").hand] == []
+
+
+def test_a_controller_who_cannot_gain_life_exchanges_nothing_and_draws_nothing():
+    """CR 119.7 read through the card: alice can't gain life, and the exchange
+    would raise her, so "the exchange won't happen" - CR 701.12a's all-or-
+    nothing then leaves bob's total alone too, and "if you lost life this way"
+    is false because nothing happened at all.
+    """
+    scenario = mister_negative_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.player("alice").cannot_gain_life = True
+    scenario.put_onto_battlefield("Mister Negative", "alice")
+    scenario.pass_until_resolved()  # the enters trigger
+
+    assert scenario.player("alice").life == 5
+    assert scenario.player("bob").life == 17
+    assert [state.name for state in scenario.player("alice").hand] == []

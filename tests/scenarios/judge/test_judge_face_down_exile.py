@@ -18,14 +18,14 @@ face-up one, so an effect that reaches for face-up cards cannot see it
 (`CardState.has_no_characteristics`). The one departure is a card in a pile
 that grants permission to play it - a foretold or plotted card - which stays
 readable, because this engine does not yet turn such a card face up at
-announcement the way CR 406.3a's second sentence and CR 601.3f do. Driving the
-whole DDR#956 scenario through Pyxis and Ulamog is a separate `xfail`.
+announcement the way CR 406.3a's second sentence and CR 601.3f do. Both halves
+of DDR#956 are played for real below - Pyxis' own ability exiles face down, and
+Ulamog's enters-with-counters line reads the exile - so the episode runs end to
+end with no `xfail` left.
 
 Card text verified with `resolve_cards`; every CR number here was looked up
 with `knowledge_search(type="rules")` in this session.
 """
-
-import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.casting import MarkedExile
@@ -156,14 +156,89 @@ def test_ulamog_counts_a_face_down_exiled_card_as_zero():
     assert ulamog.counters["+1/+1"] == 0
 
 
-@pytest.mark.xfail(
-    reason="Pyxis of Pandemonium's '{T}: Each player exiles the top card of "
-    "their library face down.' resolves and exiles nothing: ACTIVATED_EFFECTS "
-    "in machines/effects.py has no entry for the card and effect_for returns "
-    "None, so exile stays empty. Ulamog's own half now works - see the two "
-    "tests above, which stage the same exile by hand and get 13 and 0.",
-    strict=True,
-)
+def pyxis_board() -> Scenario:
+    """DDR#956's table: Amy's Emrakul on top, Nick's Pyxis ready to tap."""
+    return (
+        Scenario()
+        .player(
+            "alice",
+            library=["Emrakul, the Promised End", "Forest", "Forest"],
+            hand=["Ulamog, the Defiler"],
+            battlefield=["Forest"] * 10,
+        )
+        .player("bob", library=["Island"] * 3, battlefield=["Pyxis of Pandemonium"])
+    )
+
+
+def test_pyxis_exiles_the_top_card_of_every_library_face_down():
+    """DDR#956's first half, played for real.
+
+    Pyxis of Pandemonium (verified with `resolve_cards`): "{T}: Each player
+    exiles the top card of their library face down." "Each player" is
+    symmetric, so both libraries lose their top card, and CR 406.3's "cards
+    'exiled face down' can't be examined by any player" is why both arrive
+    with `face_up` cleared rather than merely face up in exile.
+    """
+    scenario = pyxis_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    pyxis = scenario.find("Pyxis of Pandemonium", Zone.BATTLEFIELD, "bob")
+
+    scenario.pass_priority("alice")
+    scenario.activate(pyxis, username="bob")
+    scenario.resolve_top()
+
+    exiled = scenario.game.exile
+    assert len(exiled) == 2, "each player exiled the top card of their library"
+    assert all(state.face_down for state in exiled)
+    assert [state.card.name for state in exiled] == [
+        "Emrakul, the Promised End",
+        "Island",
+    ]
+
+
+def test_the_exiled_card_has_left_its_owners_library():
+    """The move is a real zone change, not a peek: the card that was on top is
+    gone from the library and the next one is on top now."""
+    scenario = pyxis_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    pyxis = scenario.find("Pyxis of Pandemonium", Zone.BATTLEFIELD, "bob")
+
+    scenario.pass_priority("alice")
+    scenario.activate(pyxis, username="bob")
+    scenario.resolve_top()
+
+    assert [state.card.name for state in scenario.player("alice").library] == [
+        "Forest",
+        "Forest",
+    ]
+    assert len(scenario.player("bob").library) == 2
+
+
+def test_the_face_down_exiled_card_reads_as_mana_value_zero_where_it_sits():
+    """DDR#956's ruling, on the card Pyxis actually put there.
+
+    CR 406.3a gives it no characteristics and CR 202.3a then reads its mana
+    value as 0 - so "the greatest mana value among cards in exile" gets
+    nothing from a face-up-{13} Emrakul lying face down. Asserted on the
+    exiled object rather than through Ulamog, so the assertion is about where
+    the card sits rather than about what reads it; the end-to-end test below
+    puts the two halves together.
+    """
+    scenario = pyxis_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    pyxis = scenario.find("Pyxis of Pandemonium", Zone.BATTLEFIELD, "bob")
+
+    scenario.pass_priority("alice")
+    scenario.activate(pyxis, username="bob")
+    scenario.resolve_top()
+
+    emrakul = next(
+        state for state in scenario.game.exile if state.card.name == "Emrakul, the Promised End"
+    )
+    assert emrakul.card.mana_cost == "{13}", "face up it is the printed {13}"
+    assert max(state.mana_value for state in scenario.game.exile) == 0
+
+
 def test_pyxis_exiles_face_down_and_ulamog_counts_it_as_zero():
     """DDR#956's whole scenario, end to end.
 
@@ -176,23 +251,8 @@ def test_pyxis_exiles_face_down_and_ulamog_counts_it_as_zero():
     of CR 406.3a and CR 202.3a the face-down Emrakul contributes 0, so Ulamog
     enters with no counters at all - and CR 122.1's counter-driven annihilator
     X is 0 with it.
-
-    Two gaps stack up here. Pyxis' activated ability reaches the stack and
-    resolves without moving a card, so exile stays empty; and Ulamog's
-    enters-with-counters line is a CR 614.1c replacement with no row in
-    `machines/replacement.py`'s registry, so the count is never asked for.
     """
-    scenario = (
-        Scenario()
-        .player(
-            "alice",
-            library=["Emrakul, the Promised End", "Forest", "Forest"],
-            hand=["Ulamog, the Defiler"],
-            battlefield=["Forest"] * 10,
-        )
-        .player("bob", library=["Island"] * 3, battlefield=["Pyxis of Pandemonium"])
-        .build()
-    )
+    scenario = pyxis_board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     pyxis = scenario.find("Pyxis of Pandemonium", Zone.BATTLEFIELD, "bob")
 
@@ -200,12 +260,13 @@ def test_pyxis_exiles_face_down_and_ulamog_counts_it_as_zero():
     scenario.activate(pyxis, username="bob")
     scenario.resolve_top()
 
-    exiled = scenario.game.exile
-    assert len(exiled) == 2, "each player exiled the top card of their library"
-    assert all(state.face_down for state in exiled)
-
-    scenario.pass_priority("bob")
-    ulamog = scenario.cast_and_resolve("Ulamog, the Defiler", auto=True, username="alice")
+    scenario.cast_and_resolve("Ulamog, the Defiler", auto=True, username="alice")
+    # Ulamog's own "when you cast this spell" trigger (CR 603.2) went on the
+    # stack above the spell and resolved first; the spell itself is still
+    # waiting under it.
+    while scenario.game.stack:
+        scenario.resolve_top()
+    ulamog = scenario.creature("Ulamog, the Defiler", "alice")
 
     assert ulamog.counters["+1/+1"] == 0, "a face-down card's mana value is 0"
 

@@ -137,39 +137,79 @@ def test_bolt_bend_cannot_be_aimed_at_a_spell_with_no_targets():
         scenario.cast_onto_stack("Bolt Bend", auto=True, username="bob", targets=[bears])
 
 
-@pytest.mark.xfail(
-    reason="CR 115.7d's 'choose new targets' is implemented only for a copy of "
-    "a spell (Game.offer_new_targets_for_copy); nothing retargets a spell "
-    "already on the stack, and Deflecting Swat has no effect_for row",
-    strict=True,
-)
+def redirection_board() -> Scenario:
+    """Alice pointing a Bolt at Bob; Bob holding the Swat to send it back."""
+    return (
+        Scenario()
+        .player("alice", hand=["Lightning Bolt"], battlefield=["Mountain"])
+        .player("bob", hand=["Deflecting Swat"], battlefield=["Mountain"] * 3)
+    )
+
+
 def test_deflecting_swat_moves_a_bolt_from_its_caster_to_someone_else():
     """DDR#959's premise, spelled out on a spell that *does* have a target.
 
     CR 115.7d: "If an effect allows a player to 'choose new targets' for a
     spell or ability, the player may leave any number of the targets unchanged,
     even if those targets would be illegal." Bob redirects Alice's Lightning
-    Bolt back at her.
+    Bolt back at her, and it is *Bob* who chooses - the Swat's controller, not
+    the Bolt's (CR 115.7's "some effects allow a player to change the
+    target(s)"; the player is the one the effect names).
 
-    Not implemented: the engine's only retargeting path is
-    `Game.offer_new_targets_for_copy`, built for CR 707.10c's copies (Alania,
-    Divergent Storm). A real spell on the stack keeps the `TargetRef` it was
-    announced with, and `effect_for("Deflecting Swat", ...)` is None, so the
-    Swat resolves and changes nothing - the Bolt still hits bob.
+    The Swat resolves first (CR 608.2: last on, first off), so the Bolt is
+    still on the stack with its old target when the new one is chosen, and only
+    then does the Bolt itself resolve into alice's face for its printed 3.
     """
-    scenario = (
-        Scenario()
-        .player("alice", hand=["Lightning Bolt"], battlefield=["Mountain"])
-        .player("bob", hand=["Deflecting Swat"], battlefield=["Mountain"] * 3)
-        .build()
-    )
+    scenario = redirection_board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     bolt = scenario.cast_onto_stack("Lightning Bolt", auto=True, username="alice", targets=["bob"])
     scenario.pass_priority("alice")
     scenario.cast_onto_stack("Deflecting Swat", auto=True, username="bob", targets=[bolt])
+    scenario.will_choose_targets("alice", username="bob")
 
     scenario.resolve_top()
     scenario.resolve_top()
 
     assert scenario.player("alice").life == 17
     assert scenario.player("bob").life == 20
+
+
+def test_declining_the_swats_may_leaves_the_bolt_where_it_was():
+    """CR 115.7d is a permission, and Deflecting Swat spells it "you may".
+
+    A controller who declines the CR 608.2d question changes nothing, and the
+    Bolt resolves at the target it was announced with - which is the same
+    outcome as an unread effect, so this is the case that has to be driven by
+    an explicit refusal rather than by silence.
+    """
+    scenario = redirection_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bolt = scenario.cast_onto_stack("Lightning Bolt", auto=True, username="alice", targets=["bob"])
+    scenario.pass_priority("alice")
+    scenario.cast_onto_stack("Deflecting Swat", auto=True, username="bob", targets=[bolt])
+    scenario.will_take_the_may(False, username="bob")
+
+    scenario.resolve_top()
+    scenario.resolve_top()
+
+    assert scenario.player("alice").life == 20
+    assert scenario.player("bob").life == 17
+
+
+def test_the_swats_own_controller_is_the_one_asked():
+    """CR 115.7d hands the choice to the player the retargeting effect names.
+
+    Alice cast the Bolt, but it is Bob's Swat, so it is Bob who answers - a
+    scripted answer addressed to alice is never consumed, and the question put
+    to bob falls through to the default instead.
+    """
+    scenario = redirection_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bolt = scenario.cast_onto_stack("Lightning Bolt", auto=True, username="alice", targets=["bob"])
+    scenario.pass_priority("alice")
+    scenario.cast_onto_stack("Deflecting Swat", auto=True, username="bob", targets=[bolt])
+    scenario.will_take_the_may(False, username="alice")
+
+    scenario.resolve_top()
+
+    assert [question.player for question in scenario.questions_asked()] == ["bob", "bob"]

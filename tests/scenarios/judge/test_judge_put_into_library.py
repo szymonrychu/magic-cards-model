@@ -17,17 +17,20 @@ the rest on top") never triggers it, because those cards were in the library the
 whole time; and a Brainstorm does trigger it, once, because two cards genuinely
 leave the hand for the library at the same time.
 
-None of that is expressible here: `machines/abilities.TriggerEvent` has no
-"cards put into a library" shape at all - twenty-two conditions are recognised
-and this is not one - so the ability parses with `event` unset and never fires.
+The condition is now matched by `ExtraTriggerEvent.PUT_INTO_LIBRARY`, which
+`Game.put_cards_into_library` raises once per instruction with a count, and
+Brainstorm's second sentence routes through it - so the episode's Brainstorm
+ruling is playable here rather than asserted about the parser. The first test
+below still records the half that has not moved: the *printed* condition is not
+one of the shapes `TriggeredAbility.event` recognises, so the ability's own
+`event` field stays None and the match is made elsewhere.
 Every CR number here was looked up with `knowledge_search(type="rules")` in the
 session that wrote the file.
 """
 
-import pytest
-
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.abilities import TriggeredAbility, parse_abilities
+from magic_cards_model.models import Zone
 from tests.cards import card
 from tests.scenarios.harness import Scenario
 
@@ -51,37 +54,68 @@ def test_the_library_trigger_parses_with_no_trigger_event():
     assert library_trigger[0].event is None
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="No `TriggerEvent` covers 'one or more cards are put into a library', "
-    "so Wan Shi Tong's ability never triggers and no Spirit tokens are created.",
-)
-def test_a_brainstorm_puts_two_cards_into_the_library_and_triggers_once():
-    """The episode's Brainstorm ruling.
-
-    Brainstorm draws three, which really does move those cards out of the
-    library, and then puts two cards from hand back - so cards are *put into* a
-    library, and CR 603.2c's "an ability triggers only once each time its trigger
-    event occurs" makes that a single trigger even though two cards move, because
-    they move as one event.
-    """
-    scenario = (
+def brainstorm_board() -> Scenario:
+    """Alice with Brainstorm, three cards to draw, and Wan Shi Tong watching."""
+    return (
         Scenario()
         .player(
             "alice",
             hand=["Brainstorm"],
-            library=["Grizzly Bears", "Grizzly Bears", "Grizzly Bears"],
+            library=["Grizzly Bears", "Hill Giant", "Mountain"],
             battlefield=["Island", "Wan Shi Tong, All-Knowing"],
         )
         .player("bob")
-        .build()
     )
+
+
+def test_a_brainstorm_puts_two_cards_into_the_library_and_triggers_once():
+    """The episode's Brainstorm ruling.
+
+    Brainstorm draws three, which really does move those cards out of the
+    library (CR 121.1: "a player draws a card by putting the top card of their
+    library into their hand"; CR 121.2 makes three draws of one, not one of
+    three), and then puts two cards from hand back - so cards are *put into* a
+    library, and CR 603.2c's "an ability triggers only once each time its trigger
+    event occurs" makes that a single trigger even though two cards move, because
+    they move as one event.
+
+    The assertion is on the stack, not on `pending_triggers`: CR 603.3 drains
+    the queue onto the stack "the next time a player would receive priority",
+    which `resolve_top` reaches before returning.
+    """
+    scenario = brainstorm_board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     (island,) = scenario.untapped_sources("Island", username="alice")
 
     scenario.cast_and_resolve("Brainstorm", island, username="alice")
 
-    assert len(scenario.pending_triggers) == 1
+    assert [item.source_name for item in scenario.game.stack] == ["Wan Shi Tong, All-Knowing"]
+
+
+def test_the_two_cards_the_caster_names_are_the_ones_that_go_back():
+    """CR 608.2d: "the player announces their choice" as the spell resolves.
+
+    Which two of the four cards now in hand go back on the library is
+    Brainstorm's controller's choice, and "in any order" is the same choice
+    again - the first card named ends up on top. Nothing is asked about the
+    two that stay.
+    """
+    scenario = brainstorm_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (island,) = scenario.untapped_sources("Island", username="alice")
+    brainstorm = scenario.cast_onto_stack("Brainstorm", island, username="alice")
+    assert brainstorm.zone is Zone.STACK
+
+    giant = scenario.find("Hill Giant", Zone.LIBRARY, "alice")
+    mountain = scenario.find("Mountain", Zone.LIBRARY, "alice")
+    scenario.will_choose_cards(mountain, giant, username="alice", source="Brainstorm")
+    scenario.pass_until_resolved()
+
+    assert [state.name for state in scenario.player("alice").hand] == ["Grizzly Bears"]
+    assert [state.name for state in scenario.player("alice").library] == [
+        "Mountain",
+        "Hill Giant",
+    ]
 
 
 def test_scrying_does_not_move_a_card_into_the_library():
