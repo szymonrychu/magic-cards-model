@@ -33,7 +33,7 @@ boros-ponza list), and `replacement.py` already records the colour as the land
 enters. What is *not* wired is the step between them: `machines/cost.
 _mana_context` builds `ManaAbility.effective`'s arguments off the permanent and
 does not yet pass `chosen_color=source.choice`, so the ability's type stays
-undefined at activation time and CR 106.5 applies. That is the `xfail` at the
+undefined at activation time and CR 106.5 applies. That is the case at the
 bottom, and it is a one-value change in `cost.py`, which this file's task does
 not own.
 
@@ -148,23 +148,20 @@ def test_the_colour_is_chosen_as_the_land_enters():
         Color.GREEN,
     )
     # "This land enters tapped." - the same sentence, and the reason the
-    # `xfail` below untaps before activating rather than playing and tapping in
+    # test below untaps before activating rather than playing and tapping in
     # one turn.
     assert citadel.tapped
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="`machines/cost._mana_context` builds `ManaAbility.effective`'s arguments "
-    "from the permanent (its controller's land types, its own counters, whether a "
-    "card is imprinted on it) and does not pass `chosen_color=source.choice`, so the "
-    "colour CR 614.12a recorded as the land entered never reaches the ability and "
-    "CR 106.5 leaves it producing no mana. The parser reads the clause; the payment "
-    "path has yet to answer it.",
-)
 def test_the_citadel_taps_for_the_colour_chosen_as_it_entered():
     """The whole mechanic, end to end: a Sunken Citadel that entered naming
-    black taps for black, and for nothing else."""
+    black taps for black, and for nothing else.
+
+    CR 614.12a records the colour on the permanent as it enters;
+    `Game.activate_ability` reads it back off `CardState.choice` and hands it
+    to `ManaAbility.resolve` as `chosen_color`, which is what stops CR 106.5
+    ("an ability that would produce mana of an undefined type produces no mana
+    instead") from emptying the ability."""
     scenario = Scenario().player("alice", battlefield=["Sunken Citadel"]).player("bob").build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     citadel = scenario.find("Sunken Citadel", Zone.BATTLEFIELD, "alice")
@@ -175,11 +172,6 @@ def test_the_citadel_taps_for_the_colour_chosen_as_it_entered():
     assert scenario.player("alice").mana_pool.floating == {Color.BLACK: 1}
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="same missing hook as above - the ability produces no mana at all, so "
-    "there is none for the CR 106.6 restriction to be attached to.",
-)
 def test_the_citadels_restricted_ability_makes_two_restricted_mana():
     """boros-ponza's actual use of the card: two mana of the chosen colour that
     can only pay for a land's activated ability (CR 106.6)."""

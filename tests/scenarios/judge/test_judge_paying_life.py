@@ -121,12 +121,6 @@ def test_armistices_life_gain_is_an_effect_paid_for_with_mana_alone():
     assert scenario.player("bob").life == 23
 
 
-@pytest.mark.xfail(
-    reason="Leyline of Punishment's 'Players can't gain life.' is a static "
-    "ability with no entry in machines/layers.LAYER_EFFECTS and no "
-    "prohibition anywhere else, so Player.gain_life runs unimpeded",
-    strict=True,
-)
 def test_leyline_of_punishment_stops_only_the_life_gain_half():
     """DDR#964's actual question: with Leyline of Punishment out, Amy activates
     Armistice - she draws, her opponent gains nothing.
@@ -138,10 +132,13 @@ def test_leyline_of_punishment_stops_only_the_life_gain_half():
     instruction that's impossible to perform is ignored") apply: the draw still
     happens, the life gain does not.
 
-    The engine has no way to express "players can't gain life" at all - it is a
-    continuous effect in CR 613's layer system with no row in
-    `machines/layers.LAYER_EFFECTS`, and `Player.gain_life` consults nothing -
-    so bob gains the 3 life anyway.
+    The prohibition is **not** a CR 613 layer, which is why it was missing for
+    so long while `machines/layers.py` was blamed for it: "Players can't gain
+    life" changes no characteristic of any object, so the layers have nothing
+    to write. It is CR 611.1's "affects players or the rules of the game", read
+    back by CR 119.7, and it lives in `Game.life_gain_prohibited` - a fresh
+    battlefield scan on every call, the same shape as
+    `Game._activation_prohibition` (CR 604.2, CR 611.3a).
     """
     scenario = (
         Scenario()

@@ -70,13 +70,17 @@ def _ugin_board() -> Scenario:
     )
 
 
-def _tamiyo_board() -> Scenario:
+def _tamiyo_board(graveyard: list[str] | None = None) -> Scenario:
+    """Alice's Tamiyo board. `graveyard` stocks alice's graveyard, which the
+    `−X` ability needs something in - it exiles "target nonland permanent card
+    with mana value X from your graveyard"."""
     return (
         Scenario()
         .player(
             "alice",
             library=["Island"] * 5,
             battlefield=["Tamiyo, Compleated Sage", "Grizzly Bears"],
+            graveyard=list(graveyard or []),
         )
         .player("bob", library=["Island"] * 5)
         .build()
@@ -364,40 +368,44 @@ def test_a_targeted_loyalty_ability_announces_its_target():
     assert bears.tapped, "the effect half now resolves for real (CR 701.26a)"
 
 
-def test_a_variable_loyalty_cost_is_refused_until_something_can_choose_x():
+def test_a_variable_loyalty_cost_is_refused_when_x_exceeds_the_loyalty():
     """Tamiyo's `−X: Exile target nonland permanent card with mana value X
     from your graveyard. Create a token that's a copy of that card.`
 
-    CR 107.7: "a minus sign followed by a number or an X" - the X is a
-    player's choice, and there is no decision point to choose it in. The
-    engine refuses rather than guessing an amount: `activation_cost` raises
-    "cannot build a cost for '−X'", and the walker is untouched. The xfail
-    below records the missing capability.
+    CR 606.6: "A loyalty ability with a negative loyalty cost, taking into
+    account any additional costs, can't be activated unless the permanent has
+    at least that many loyalty counters on it." Tamiyo has five, so an
+    announced X of six is not a cost that can be paid - and the refusal leaves
+    the walker alone rather than taking off as many as it can.
+
+    The X itself is not the obstacle any more: CR 107.7 makes it part of the
+    symbol and CR 602.2b announces it as the activation begins, which is what
+    `x_value` carries. What is being refused here is the *amount*, not the
+    engine's ability to read it.
     """
-    scenario = _tamiyo_board()
+    scenario = _tamiyo_board(graveyard=["Grizzly Bears"])
     scenario.start_at(Step.PRECOMBAT_MAIN)
     tamiyo = scenario.find("Tamiyo, Compleated Sage", Zone.BATTLEFIELD)
 
-    with pytest.raises(ValueError, match="cannot build a cost for '−X'"):
-        scenario.activate(tamiyo, index=1)
+    with pytest.raises(ValueError):
+        scenario.activate(tamiyo, index=1, x_value=6)
 
     assert tamiyo.loyalty == 5, "the refusal left the walker alone"
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Tamiyo's −X cost parses (CostKind.LOYALTY, amount None, per CR "
-    "107.7's 'a minus sign followed by a number or an X'), but no player can "
-    "choose the X: machines/cost.py has no component for a variable loyalty "
-    "cost, so game.py's activation_cost raises 'cannot build a cost for −X'. "
-    "Choosing X needs a decision point this engine does not have yet.",
-)
 def test_activating_tamiyos_minus_x_pays_the_chosen_amount():
-    """The whole path once X can be chosen: activate with X = 2, and two of
-    Tamiyo's five loyalty counters come off as the cost (CR 606.4, 606.6)."""
-    scenario = _tamiyo_board()
+    """The whole path with X chosen: activate with X = 2, and two of Tamiyo's
+    five loyalty counters come off as the cost (CR 606.4, CR 606.6).
+
+    CR 107.7 makes the X part of the symbol, and CR 602.2b announces it as the
+    activation begins - the same moment a spell's X is fixed - so `x_value` is
+    the decision point, threaded from `Scenario.activate` through
+    `begin_activating` into `activation_cost`. Nothing new was needed for it;
+    the LOYALTY branch was simply ignoring the value already in its hand."""
+    scenario = _tamiyo_board(graveyard=["Grizzly Bears"])
     scenario.start_at(Step.PRECOMBAT_MAIN)
     tamiyo = scenario.find("Tamiyo, Compleated Sage", Zone.BATTLEFIELD)
+    binned = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
 
-    scenario.activate(tamiyo, index=1)  # with a chosen X of 2
+    scenario.activate(tamiyo, index=1, x_value=2, targets=[binned])
     assert tamiyo.loyalty == 3

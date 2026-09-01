@@ -222,11 +222,23 @@ def _among_colors(
     cannot parse: refusing every activation on a sentence this cannot read
     would be a louder wrong answer than the narrow gap it replaces.
     """
+    return among_colors(effect, payment.game, source.controller or payment.payer)
+
+
+def among_colors(effect: str, game: Any, controller: str | None) -> frozenset[Color] | None:
+    """`_among_colors` without a `CostPayment` to reach the game through.
+
+    The survey needs exactly two things - a game to read the battlefield from
+    and the controller whose permanents "you control" means - and the payment
+    path happens to be one way to hold both. `Game.activate_ability`'s CR 605.3b
+    mana fast path holds them directly and never builds a `CostPayment` at all,
+    so the reading lives here and `_among_colors` is the payment-path adapter.
+    Without this, the same Mox Amber produced nothing when tapped through a
+    payment and one mana of any colour when activated directly.
+    """
     match = _ANY_COLOR_AMONG.search(effect)
     if match is None:
         return None
-    game = payment.game
-    controller = source.controller or payment.payer
     if game is None or controller is None:
         return None
 
@@ -573,6 +585,36 @@ def _mana_context(
     return payment.game._controlled_land_types(controller), own_counters, has_imprinted_card
 
 
+def _mana_narrowings(payment: "CostPayment", source: CardState, ability: ManaAbility) -> dict:
+    """The two board-derived narrowings `ManaAbility.effective` takes as
+    keyword arguments, for a source being tapped through a payment.
+
+    - **`could_produce_colors`** (CR 106.7) - the real survey, run over the
+      permanents themselves rather than left to
+      `colors_land_types_could_produce`'s land-type fallback. Reflecting Pool
+      beside an Ancient Tomb taps for `{C}` because the Tomb's own printed
+      ability says so, which no subtype set could ever report; Exotic Orchard,
+      which has no fallback at all, becomes a mana source for the first time.
+    - **`chosen_color`** (CR 614.12a) - the colour recorded on this permanent
+      as it entered, for Utopia Sprawl's and Sunken Citadel's "the chosen
+      color".
+
+    `Game.colors_could_produce` carries its own recursion guard, so a Pool
+    surveying a Pool terminates.
+    """
+    game = payment.game
+    could_produce_colors = None
+    if ability.could_produce is not None and game is not None:
+        survey = getattr(game, "_could_produce_survey", None)
+        if survey is not None:
+            could_produce_colors = survey(ability.could_produce, source.controller or payment.payer)
+    chosen_color = None
+    choice = source.choice
+    if choice is not None and choice.kind is ChoiceKind.COLOR:
+        chosen_color = Color(choice.value)
+    return {"could_produce_colors": could_produce_colors, "chosen_color": chosen_color}
+
+
 #: One thing `auto_tap` may tap: the permanent, what its chosen ability would
 #: add right now, and the CR 106.6 restriction that mana would carry.
 _Candidate = tuple[CardState, list[list[Color]], ManaRestriction | None]
@@ -624,7 +666,12 @@ def _auto_tap_candidates(payment: "CostPayment", sources: Iterable[CardState]) -
             restriction = spend_restriction(printed.text, source) if printed is not None else None
             if restriction is not None and not restriction.allows(payment.spend):
                 continue
-            options, any_color = ability.effective(land_types, own_counters, has_imprinted_card)
+            options, any_color = ability.effective(
+                land_types,
+                own_counters,
+                has_imprinted_card,
+                **_mana_narrowings(payment, source, ability),
+            )
             options, any_color = _narrow_to_defined_colors(
                 options, any_color, _among_colors(activation.effect, payment, source)
             )
@@ -2980,7 +3027,12 @@ class CostPayment(BaseModel):
                     refusals.append(refused)
                     continue
             options, _any_color = _narrow_to_defined_colors(
-                ability.effective(land_types, own_counters, has_imprinted_card)[0],
+                ability.effective(
+                    land_types,
+                    own_counters,
+                    has_imprinted_card,
+                    **_mana_narrowings(self, source, ability),
+                )[0],
                 False,
                 _among_colors(effect, self, source),
             )

@@ -41,7 +41,9 @@ basic land type that CR 305.6 grants the matching intrinsic ability for. An
 Ancient Tomb's {C}, a Mana Confluence's any colour, and every "Add one mana of
 any color" land are invisible - see
 `machines/abilities.colors_land_types_could_produce`. Those cases are the
-`xfail`s at the bottom of this file.
+two scenarios at the bottom of this file, which the real survey
+(`Game.colors_could_produce`, run over the permanents rather than over land
+types) now passes.
 
 Every CR number here was looked up with `knowledge_search(type="rules")` in the
 session that wrote or last changed the file.
@@ -161,13 +163,6 @@ def test_the_orchard_narrows_to_exactly_what_the_survey_came_back_with():
     assert orchard.effective(frozenset({"Plains"})) == ([], False)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="nothing passes `ManaAbility.effective`'s `could_produce_colors` yet - "
-    "`machines/cost._mana_context` builds those arguments and knows only the "
-    "ability's own controller - so the Orchard's CR 106.7 survey comes back empty "
-    "and CR 106.5 leaves it producing no mana at all, white included.",
-)
 def test_the_orchard_taps_for_the_color_an_opponents_plains_could_produce():
     """The other half of the standoff: white *is* a colour bob's Plains could
     produce (CR 305.6), so alice's Orchard makes it."""
@@ -187,13 +182,6 @@ def test_the_orchard_taps_for_the_color_an_opponents_plains_could_produce():
     assert orchard.tapped
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="the survey reads land *types*, not the lands themselves: "
-    "`colors_land_types_could_produce` maps CR 305.6's five basic land types to "
-    "their colours and knows nothing about a nonbasic land's printed ability, so "
-    "Ancient Tomb's {C} is invisible to a Reflecting Pool beside it.",
-)
 def test_the_pool_taps_for_colorless_beside_a_land_with_no_basic_land_type():
     """CR 106.1b's sixth type, and the limit of a type-only survey.
 
@@ -229,8 +217,8 @@ def test_the_engine_has_one_enum_for_colors_and_types_alike():
     Orchard, which therefore cannot see a Wastes) from one that says "any
     **type**" (Reflecting Pool, which can).
 
-    Recorded as an assertion rather than an `xfail` because it is not a
-    scenario that fails - it is the shape of the data the two `xfail`s above
-    would have to be built on.
+    Recorded as an assertion rather than a scenario because it is not
+    something that fails - it is the shape of the data the two scenarios above
+    are built on.
     """
     assert {color.value for color in Color} == {"W", "U", "B", "R", "G", "C"}

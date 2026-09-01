@@ -278,22 +278,31 @@ def test_damage_from_an_instant_source_is_prevented():
     assert emrakul.damage == 0
 
 
-@pytest.mark.xfail(
-    reason="protection for a *player* is not modelled: Player has no text to read "
-    "and Runed Halo's chosen name is a choice nothing can make (CR 702.16b)",
-    strict=True,
-)
 def test_a_player_can_have_protection_too():
-    """CR 702.16b covers "a permanent *or player* with protection"."""
+    """CR 702.16b covers "a permanent *or player* with protection".
+
+    Runed Halo is **cast** rather than staged onto the battlefield, and that is
+    load-bearing: "As this enchantment enters, choose a card name" is a
+    CR 614.12a replacement effect, and CR 614.12a puts the choice *before* the
+    permanent enters. The scenario harness's staged battlefield skips
+    `Game.enter_the_battlefield`, so a staged Halo is a Halo that was never
+    asked, and it names nothing to have protection from.
+    """
     scenario = (
         Scenario()
         .manual_turn_based_actions()
+        .player("bob", hand=["Runed Halo"], battlefield=["Plains", "Plains"])
         .player("alice", hand=["Lightning Bolt"], battlefield=["Mountain"])
-        .player("bob", library=["Island"], battlefield=["Runed Halo"])
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Plains", "Plains", username="bob")
+    scenario.will_choose("Lightning Bolt", username="bob", source="Runed Halo")
+    scenario.cast_and_resolve("Runed Halo", *sources, username="bob")
 
     assert (
         scenario.game.protection_refusal(scenario.player("bob"), card("Lightning Bolt")) is not None
+    )
+    assert scenario.game.protection_refusal(scenario.player("bob"), card("Shock")) is None, (
+        "the chosen name is one name, not every red spell (CR 702.16a)"
     )

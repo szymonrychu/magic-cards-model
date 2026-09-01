@@ -10,7 +10,7 @@ is deliberately not a mechanics file: the deck's mechanics are surveyed in
 `docs/deck-gaps/grinding-cam.md`, and the gaps found there are large enough
 (Mox Amber makes mana it should not, Loki never triggers, Metallic Rebuke
 counters nothing) that a scenario driving them would have to be bent until it
-passed. The one such assertion here is `xfail(strict=True)`.
+passed.
 
 Rules used, each looked up with `knowledge_search` while writing this file:
 
@@ -260,17 +260,14 @@ def test_the_starting_player_skips_their_first_draw_step():
 # -- what the engine cannot do with this deck yet ---------------------------
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "Mox Amber's 'among legendary creatures and planeswalkers you control' "
-        "qualifier is dropped: parse_mana_abilities reads only 'Add one mana of "
-        "any color', so a Mox Amber with no legends on the battlefield adds mana "
-        "it should not (CR 605.2 - a mana ability stays one even when the game "
-        "state does not let it produce mana). See docs/deck-gaps/grinding-cam.md."
-    ),
-)
 def test_mox_amber_adds_nothing_without_a_legendary_creature_or_planeswalker():
+    """CR 106.5: "If an ability would produce one or more mana of an undefined
+    type, it produces no mana instead."
+
+    Mox Amber's "of any color among legendary creatures and planeswalkers you
+    control" is a board survey, and an empty board defines no colour at all -
+    so the activation is refused rather than making a colour nobody named. The
+    ability is still a mana ability while it makes nothing (CR 605.2)."""
     from magic_cards_model.models import Color
     from tests.scenarios.harness import Scenario
 

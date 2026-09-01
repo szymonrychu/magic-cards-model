@@ -201,8 +201,11 @@ def test_exchanging_with_yourself_changes_nothing():
 
 @pytest.mark.xfail(
     reason="Mister Negative has no entry in machines/effects.py, so its "
-    "Darkforce Inversion trigger resolves and does nothing - the exchange "
-    "primitive exists on Player and no card reaches it yet",
+    "Darkforce Inversion trigger resolves and does nothing. Both engine "
+    "halves exist now - Player.exchange_life_totals is the CR 701.12a "
+    "primitive and Game.exchange_life_totals is the wrapper a resolving "
+    "ability reaches - so what is missing is only the effects.py row that "
+    "would read 'exchange life totals with target opponent' and call it",
     strict=True,
 )
 def test_mister_negative_exchanges_life_totals_when_it_enters():

@@ -13,6 +13,7 @@ from ..machines.abilities import (
     AbilityKind,
     ActivatedAbility,
     CostKind,
+    CouldProduce,
     TriggeredAbility,
     TriggerEvent,
     granted_mana_abilities,
@@ -25,7 +26,11 @@ from ..machines.casting import (
     play_permissions_on,
     usable_play_permission,
 )
-from ..machines.casting_restrictions import CastingRuleEffect, CastingRuleKind
+from ..machines.casting_restrictions import (
+    CastingRuleEffect,
+    CastingRuleKind,
+    cannot_be_countered,
+)
 from ..machines.combat import (
     Attack,
     CombatMachine,
@@ -41,6 +46,7 @@ from ..machines.cost import (
     CostModifierNotice,
     CostPayment,
     TotalCost,
+    among_colors,
     cost_component_for_phrase,
     cost_modifier_effect,
     discard_cost,
@@ -181,6 +187,31 @@ StackObject = CardState | AbilityOnStack
 #: [quality]'." CR 702.16g makes "protection from A and from B" two abilities,
 #: so the qualities are split apart rather than kept as one phrase.
 _PROTECTION = re.compile(r"protection from ([^.;\n]+)", re.IGNORECASE)
+
+#: The *unresolved* half of a protection phrase: a grant that names the quality
+#: by a choice still to be made rather than by the quality itself. Mother of
+#: Runes prints "gains protection from the color of your choice until end of
+#: turn", and reading that sentence off her own printing yields the quality
+#: "the color of your choice until end of turn", which names no colour and no
+#: card type.
+#:
+#: CR 702.16a: "This quality is usually a color ... but can be any
+#: characteristic value or information" - a choice not yet made is neither, so
+#: the phrase is dropped here rather than carried as a quality nothing can ever
+#: match. What Mother actually grants is written onto the *target* by
+#: `machines/layers.py` as a resolved "Protection from red" line, and that line
+#: is what `Game._effective_protection_qualities` reads.
+_UNRESOLVED_PROTECTION_QUALITY = re.compile(
+    r"^(?:a |the )?(?:color|colour|card type|quality) of your choice\b", re.IGNORECASE
+)
+
+#: "You have protection from the chosen card name" - Runed Halo's second line,
+#: and the only shape in the pool that grants protection to a *player*. The
+#: quality is the CR 614.12a name chosen as the permanent entered, which
+#: `machines/replacement.py` stores on `CardState.choice`.
+_PLAYER_PROTECTION_FROM_CHOSEN_NAME = re.compile(
+    r"^you have protection from the chosen card name\b", re.IGNORECASE
+)
 
 #: A cost sentence that names the permanent its ability is printed on -
 #: "Exert this land", "Sacrifice this creature". CR 602.1a: an activated
@@ -384,7 +415,9 @@ def _qualities_from_text(text: str | None) -> list[str]:
     for match in _PROTECTION.finditer(text or ""):
         for part in match.group(1).split(" and from "):
             quality = part.strip().rstrip(",").strip()
-            if quality and quality not in qualities:
+            if not quality or _UNRESOLVED_PROTECTION_QUALITY.match(quality):
+                continue
+            if quality not in qualities:
                 qualities.append(quality)
     return qualities
 
@@ -501,6 +534,17 @@ _CONDITION_COUNT_WORDS: dict[str, int] = {
 }
 
 
+def _is_minus_symbol(printed: str) -> bool:
+    """Whether a printed loyalty symbol is a negative one (CR 107.7).
+
+    "Negative loyalty symbols point downward and feature a minus sign followed
+    by a number or an X." Both the typographic minus WOTC prints (U+2212) and a
+    plain hyphen are accepted, since the oracle text this is read from uses the
+    former and hand-written text tends to use the latter.
+    """
+    return printed.strip().startswith(("−", "-"))
+
+
 def _card_type_named(quality: str) -> Type | None:
     """The card type a protection quality names, or None if it names something else.
 
@@ -546,6 +590,33 @@ _ACTIVATION_PROHIBITION_RE = re.compile(
 _LOOKS_LIKE_ACTIVATION_PROHIBITION_RE = re.compile(
     r"^activated abilities of .+ can't be activated", re.IGNORECASE
 )
+
+#: A static ability that stops players gaining life at all - Leyline of
+#: Punishment's "Players can't gain life.", Sulfuric Vortex's and Rampaging
+#: Ferocidon's "Players can't gain life." on the same one-sentence shape.
+#:
+#: This is the same *kind* of continuous effect as `_ACTIVATION_PROHIBITION_RE`
+#: above and is here for the same reason: it changes no characteristic of any
+#: object, so `machines/layers.py` has nothing to write - CR 613's layers are
+#: for characteristics, control, and copiable values. CR 611.1 puts it in the
+#: last of its three categories, "affects players or the rules of the game",
+#: and CR 119.7 is where the rules read it back ("If an effect says that a
+#: player can't gain life ..."). CR 604.2 and CR 611.3 bound it to while its
+#: source is on the battlefield, which is why `life_gain_prohibited` rescans
+#: the battlefield on every call rather than caching (CR 611.3a: not "locked
+#: in").
+#:
+#: "Players" and "Each player" are both printed; a prohibition naming one
+#: player specifically ("You can't gain life") is a different shape and is
+#: deliberately not matched here - see `_LOOKS_LIKE_LIFE_GAIN_PROHIBITION_RE`.
+_LIFE_GAIN_PROHIBITION_RE = re.compile(
+    r"^(?:players|each player) can't gain life\.?$", re.IGNORECASE
+)
+
+#: A sentence that prohibits life gain but is not the symmetric shape above -
+#: matched only to fail closed with a notice rather than let it read as
+#: permission, exactly as `_LOOKS_LIKE_ACTIVATION_PROHIBITION_RE` does.
+_LOOKS_LIKE_LIFE_GAIN_PROHIBITION_RE = re.compile(r"\bcan't gain life\b", re.IGNORECASE)
 
 #: Pithing Needle's and Disruptor Flute's "sources with the chosen name", which
 #: name their subjects by a CR 614.12a choice rather than by a quality. Left
@@ -4799,6 +4870,90 @@ class Game(BaseModel):
             self.emit(GameEvent(event=TriggerEvent.GAINS_LIFE, player=player.username))
         return player.life
 
+    def exchange_life_totals(self, a: Player | str, b: Player | str) -> int:
+        """Two players exchange life totals (CR 701.12a, CR 701.12c).
+
+        CR 701.12a: "A spell or ability may instruct players to exchange
+        something (for example, life totals ...) as part of its resolution.
+        When such a spell or ability resolves, if the entire exchange can't
+        happen, no part of the exchange occurs." `Player.exchange_life_totals`
+        is where that all-or-nothing decision lives, together with CR 119.7 and
+        CR 119.8's two reasons for refusing; this is the wrapper a resolving
+        spell or ability actually reaches, the counterpart of `gain_life`.
+
+        The **events** are this method's own job. CR 701.12c makes the exchange
+        gains and losses ("each player gains or loses the amount of life
+        necessary to equal the other player's previous life total"), so a
+        trigger watching "whenever a player gains life" (CR 119.9) or loses it
+        must see them - and the `Player` primitive adjusts the totals without
+        emitting anything, exactly as `Player.gain_life` does under
+        `Game.gain_life`. One event per player who actually moved: a player
+        whose total was already equal gained and lost nothing, and CR 603.2g
+        gives a trigger nothing to fire on there.
+
+        No replacement effects are applied to the halves. CR 701.12c does say
+        "Replacement effects may modify these gains and losses", and this does
+        not do that yet - routing the halves back through `Game.gain_life`
+        would re-ask CR 119.7 *after* the all-or-nothing decision had already
+        been made on the pre-replacement amounts, which is the wrong order. It
+        is recorded in `docs/engine-coverage.md` rather than half-built here.
+
+        Returns the life **this** player - `a` - lost by the exchange, negative
+        if they gained: Mister Negative's "If you lost life this way, draw that
+        many cards" is the question, and it is asked from one side.
+        """
+        if isinstance(a, str):
+            a = self.player(a)
+        if isinstance(b, str):
+            b = self.player(b)
+
+        before = {a.username: a.life, b.username: b.life}
+        lost = a.exchange_life_totals(b)
+        for player in (a, b):
+            moved = player.life - before[player.username]
+            if moved > 0:
+                self.emit(GameEvent(event=TriggerEvent.GAINS_LIFE, player=player.username))
+            elif moved < 0:
+                self.emit(GameEvent(event=TriggerEvent.LOSES_LIFE, player=player.username))
+        return lost
+
+    def life_gain_prohibited(self, username: str) -> str | None:
+        """Why this player can't gain life right now, or None (CR 119.7).
+
+        CR 119.7: "If an effect says that a player can't gain life ..." - this
+        is where that effect is found. Leyline of Punishment's "Players can't
+        gain life." changes no characteristic of any object, so CR 613's layers
+        have nothing to write and `machines/layers.py` is the wrong home; the
+        effect belongs to CR 611.1's third category, "affects players or the
+        rules of the game", and is read where the rules ask the question.
+
+        The battlefield is rescanned on every call rather than cached, because
+        CR 604.2 bounds a static ability's continuous effect to while its
+        source is on the battlefield and CR 611.3a says such an effect "isn't
+        'locked in'". A Leyline destroyed mid-turn stops prohibiting at once.
+
+        The shapes in the pool are symmetric - "Players can't gain life"
+        catches its own controller too - so no controller comparison is made.
+        A sentence that prohibits life gain in a shape
+        `_LIFE_GAIN_PROHIBITION_RE` cannot read records a `LayerNotice` and is
+        **not** treated as permission, the same way `_activation_prohibition`
+        fails closed on an unreadable prohibition.
+        """
+        for source in list(self.battlefield):
+            for line in parse_abilities(source.card):
+                if line.kind is not AbilityKind.STATIC:
+                    continue
+                text = (line.text or "").strip()
+                if not _LOOKS_LIKE_LIFE_GAIN_PROHIBITION_RE.search(text):
+                    continue
+                if not _LIFE_GAIN_PROHIBITION_RE.match(text):
+                    self._record_unread_prohibition(source, text)
+                    continue
+                if not self._still_has_static_line(source, text):
+                    continue
+                return f"{username} can't gain life: {source.name} says so (CR 119.7, CR 611.1)"
+        return None
+
     def add_counters(self, permanent: CardState, kind: str, amount: int = 1) -> int:
         """Put counters on a permanent, replacement effects included (CR 122.1).
 
@@ -5220,29 +5375,105 @@ class Game(BaseModel):
         the stated quality and can't be targeted by abilities from a source with
         the stated quality."
 
-        Only the card-type flavour of the quality is read, because CR 702.16a
-        makes that a rule of its own: "If the quality is a card type, subtype, or
-        supertype, the ability applies to sources that are permanents with that
-        card type, subtype, or supertype and to any sources not on the
-        battlefield that are of that card type, subtype, or supertype. This is an
-        exception to rule 109.2." Emrakul's "protection from instants" is exactly
-        that shape, and an instant is never on the battlefield, so both halves of
-        the rule point at the same thing here.
+        The quality is matched by `source_has_quality`, which reads both
+        flavours CR 702.16a names - "This quality is usually a color (as in
+        'protection from black') but can be any characteristic value or
+        information" - so a colour quality refuses a targeting spell here
+        exactly as it prevents that source's damage in `protection_from_damage`.
+        Reading only the card-type half here was a real split: Lightning Bolt
+        could still be *announced* at a creature with protection from red, and
+        only its damage was prevented on resolution, which is CR 702.16e doing
+        CR 702.16b's job.
 
         A quality this engine cannot read is not enforced - see
-        `docs/engine-coverage.md`. Protection on a *player* is not modelled at
-        all: no card in the pool grants it and `Player` has no text to read.
+        `docs/engine-coverage.md`.
+
+        A **player** target is answered by `Player.protection_refusal`, which
+        matches the card-name flavour off `Player.protection_from` (Runed
+        Halo's CR 614.12a chosen name), unioned with the grants currently on
+        the battlefield - see `player_protection_qualities`.
         """
+        if isinstance(target, Player):
+            return self._player_protection_refusal(target, source)
         if not isinstance(target, CardState):
             return None
         for quality in self._effective_protection_qualities(target):
-            card_type = _card_type_named(quality)
-            if card_type is not None and card_type in source.types:
+            if self.source_has_quality_of_card(source, quality):
                 return (
                     f"{target.name} has protection from {quality}, so {source.name} "
                     f"cannot target it (CR 702.16b)"
                 )
         return None
+
+    def _player_protection_refusal(self, target: Player, source: "Card") -> str | None:
+        """Why a *player's* protection stops `source` targeting them (CR 702.16b).
+
+        Two sources of quality, unioned: what the player carries on
+        `Player.protection_from` - the card-name flavour, which
+        `Player.protection_refusal` matches - and what the battlefield is
+        granting them right now (`player_protection_qualities`), which is read
+        fresh so the grant ends with its permanent (CR 604.2).
+        """
+        refusal = target.protection_refusal(source)
+        if refusal is not None:
+            return refusal
+        for quality in self.player_protection_qualities(target.username):
+            if quality == source.name or self.source_has_quality_of_card(source, quality):
+                return (
+                    f"{target.username} has protection from {quality}, so {source.name} "
+                    f"cannot target them (CR 702.16b)"
+                )
+        return None
+
+    def player_protection_qualities(self, username: str) -> list[str]:
+        """Every quality the battlefield currently grants this *player*
+        protection from (CR 702.16a, CR 613.10).
+
+        CR 613.10: "Some continuous effects affect players rather than objects.
+        For example, an effect might give a player protection from red." That
+        is this, and it is deliberately **not** a CR 613 layer: the layers write
+        characteristics onto objects, and a player is not an object, so
+        `machines/layers.py`'s permanent-only sweep has nowhere to put it.
+
+        Read fresh from the battlefield on every call rather than latched onto
+        the player, because CR 604.2 bounds a static ability's continuous effect
+        to while its source is on the battlefield - a Runed Halo that leaves
+        must take its protection with it, and a value written once onto
+        `Player.protection_from` would outlive its source.
+        """
+        qualities: list[str] = []
+        for permanent in self.battlefield:
+            if self.controller_of(permanent).username != username:
+                continue
+            for line in (permanent.card.oracle_text or "").split("\n"):
+                if not _PLAYER_PROTECTION_FROM_CHOSEN_NAME.match(line.strip()):
+                    continue
+                chosen = permanent.choice
+                # The line says "the chosen **card name**", so only a
+                # CR 614.12a card-name choice answers it - a colour choice on
+                # some other permanent is not this quality.
+                if chosen is None or chosen.kind is not ChoiceKind.CARD_NAME:
+                    continue
+                if chosen.value and chosen.value not in qualities:
+                    qualities.append(chosen.value)
+        return qualities
+
+    def source_has_quality_of_card(self, source: "Card", quality: str) -> bool:
+        """`source_has_quality` for a bare `Card` rather than a `CardState`.
+
+        The targeting half of CR 702.16b is asked about the *card* behind a
+        spell or an ability's source, while the damage half (CR 702.16e) is
+        asked about a `CardState`. Both read the same two flavours of quality,
+        so the reading lives in one place and this is the adapter.
+        """
+        wanted = quality.strip().lower()
+        card_type = _card_type_named(wanted)
+        if card_type is not None:
+            return card_type in source.types
+        color = _COLOR_WORDS.get(wanted)
+        if color is not None:
+            return color in source.colors
+        return False
 
     def _effective_protection_qualities(self, target: CardState) -> list[str]:
         """Every quality `target` has protection from right now: its own printed
@@ -5518,6 +5749,9 @@ class Game(BaseModel):
 
         Colours and card types are read; anything else returns False rather than
         being guessed at, and is listed in `docs/engine-coverage.md`.
+
+        A permanent's own types and colours are the ones asked about, so this
+        reads the `CardState` rather than the printing behind it.
         """
         wanted = quality.strip().lower()
         card_type = _card_type_named(wanted)
@@ -5536,15 +5770,39 @@ class Game(BaseModel):
 
         Damage with no known source is never prevented here: CR 702.16e asks
         about the source's qualities, and an anonymous source has none to check.
-        Protection on a *player* is not modelled - `Player` has no text - so
-        only a permanent's protection is read.
+
+        The rule says "to a permanent **or player** with protection", so a
+        damage event aimed at a player is read the same way, against the
+        qualities that player holds (`Player.protection_from`, the card-name
+        flavour) and the ones the battlefield grants them right now
+        (`player_protection_qualities`).
         """
-        if event.kind is not EventKind.DAMAGE or event.card is None or event.source is None:
+        if event.kind is not EventKind.DAMAGE or event.source is None:
             return None
+        if event.card is None:
+            return self._player_protection_from_damage(event)
         for quality in self._effective_protection_qualities(event.card):
             if self.source_has_quality(event.source, quality):
                 return (
                     f"{event.card.name} has protection from {quality}, so damage from "
+                    f"{event.source.name} is prevented (CR 702.16e)"
+                )
+        return None
+
+    def _player_protection_from_damage(self, event: ReplaceableEvent) -> str | None:
+        """CR 702.16e's player half: damage from a source with the stated
+        quality, aimed at a player with protection from it, is prevented."""
+        player = event.player
+        if player is None or event.source is None:
+            return None
+        qualities = list(player.protection_from)
+        for quality in self.player_protection_qualities(player.username):
+            if quality not in qualities:
+                qualities.append(quality)
+        for quality in qualities:
+            if quality == event.source.name or self.source_has_quality(event.source, quality):
+                return (
+                    f"{player.username} has protection from {quality}, so damage from "
                     f"{event.source.name} is prevented (CR 702.16e)"
                 )
         return None
@@ -5592,9 +5850,31 @@ class Game(BaseModel):
         after the spell has moved to its graveyard (or exile): the subject is
         found where it went, and the trigger reads it as it last existed on
         the stack.
+
+        **"This spell can't be countered" is enforced here**, and here only.
+        CR 113.6g: "An object's ability that states it can't be countered or
+        can't be copied functions on the stack", so the ability is live exactly
+        while the spell this method was handed is sitting on the stack.
+        CR 701.6a is the verb it makes impossible - "to counter a spell or
+        ability means to cancel it, removing it from the stack" - so the
+        refusal is simply that the removal does not happen: the object is
+        returned untouched, still on the stack, and **no** counter event is
+        emitted, because nothing was countered for a trigger to watch.
+
+        The guard sits above the `to_exile` branch on purpose. Force of
+        Negation's and Delay's "exile it instead of putting it into its owner's
+        graveyard" is a rider on the countering, not an alternative to it; if
+        the countering cannot happen, there is no graveyard-bound move for the
+        rider to redirect, so an uncounterable spell is not exiled either.
+
+        The counterspell that failed is not refused or rewound anywhere - it
+        was legally cast and legally resolved (CR 608.2b knows nothing about
+        counterability) and simply fails to do the one thing it says.
         """
         if spell not in self.stack:
             raise ValueError(f"{spell.name} is not on the stack")
+        if cannot_be_countered(spell):
+            return spell
         self.stack.remove(spell)
         if isinstance(spell, CardState):
             if to_exile:
@@ -6465,22 +6745,66 @@ class Game(BaseModel):
         """The legendary permanents the legend rule puts into graveyards (CR 704.5j).
 
         "If two or more legendary permanents with the same name are controlled
-        by the same player, that player chooses one of them, and the rest are
-        put into their owners' graveyards." Nothing here asks the player, so the
-        first copy on the battlefield is the one kept, which keeps a scenario
-        that does not care about the choice reproducible.
+        by the same player, **that player chooses one of them**, and the rest
+        are put into their owners' graveyards."
+
+        The choice is real and is asked, one `CHOOSE_CARDS` question per
+        (controller, name) group. Two players each holding two copies of the
+        same legend is two separate choices made at the same time, which is
+        what CR 101.4 orders: "If multiple players would make choices and/or
+        take actions at the same time, the active player ... makes any choices
+        required, then the next player in turn order". So the groups are walked
+        in `_turn_order_from_active` order, active player first, and the
+        question for each of that player's groups is put before the next
+        player's.
+
+        **The group is offered reversed.** `default_answer` for an exact
+        `CHOOSE_CARDS` answers with the *back* of the offered cards, so
+        reversing the group makes the unscripted default keep the copy that has
+        been on the battlefield longest - the behaviour every scenario that
+        does not care about the choice was already relying on. A scenario that
+        does care answers the question instead.
         """
-        kept: set[tuple[str, str]] = set()
-        losers: list[CardState] = []
+        groups: dict[str, dict[str, list[CardState]]] = {}
         for state in self.battlefield:
             if Supertype.LEGENDARY not in state.supertypes:
                 continue
-            key = (self.controller_of(state).username, state.name)
-            if key in kept:
-                losers.append(state)
-            else:
-                kept.add(key)
+            controller = self.controller_of(state).username
+            groups.setdefault(controller, {}).setdefault(state.name, []).append(state)
+
+        losers: list[CardState] = []
+        for username in self._turn_order_from_active():
+            for name, copies in groups.get(username, {}).items():
+                if len(copies) < 2:
+                    continue
+                kept = self._ask_which_legend_to_keep(username, name, copies)
+                losers.extend(state for state in copies if state is not kept)
         return losers
+
+    def _ask_which_legend_to_keep(
+        self, username: str, name: str, copies: list[CardState]
+    ) -> CardState:
+        """CR 704.5j's "that player chooses one of them", asked once per group."""
+        offered = list(reversed(copies))
+        decision = Decision(
+            kind=DecisionKind.CHOOSE_CARDS,
+            player=username,
+            prompt=f"choose which {name} to keep (CR 704.5j)",
+            amount=1,
+            exact=True,
+            cards=tuple(state.id for state in offered),
+        )
+        chosen_ids = self.ask(decision)
+        assert isinstance(chosen_ids, tuple)
+        by_id = {state.id: state for state in copies}
+        for card_id in chosen_ids:
+            kept = by_id.get(card_id)
+            if kept is not None:
+                return kept
+        # An answer that named nothing on offer keeps the longest-standing
+        # copy, the same as the unscripted default - the legend rule is a
+        # state-based action and has to reach an answer.
+        return copies[0]
 
     def _losing_players(self) -> list[str]:
         """Players a state-based action would remove right now.
@@ -7097,19 +7421,92 @@ class Game(BaseModel):
         the six *types* of mana but not one of the five colors, so "one mana of
         any color" is never {C}.
         """
+        return Color.COLORLESS in self.colors_could_produce(permanent)
+
+    def colors_could_produce(
+        self, permanent: CardState, *, skip_could_produce_abilities: bool = False
+    ) -> frozenset[Color]:
+        """Every type of mana this permanent could produce right now (CR 106.7).
+
+        CR 106.7: "The type of mana a permanent could produce at any time
+        includes any type of mana that an ability of that permanent would
+        produce if the ability were to resolve at that time." So each of its
+        mana abilities is asked what it would add, against the board as it
+        stands - never whether any mana was actually made, whether the
+        permanent is untapped, or whether its controller could pay to activate
+        it.
+
+        "Type" is CR 106.1b's six, colorless included, so `Color.COLORLESS` is
+        a member of the answer like any other. An `any_color` ability
+        contributes CR 106.1a's five colours and not colorless.
+
+        Printed and `granted_ability_texts` abilities are both asked, the same
+        pair `machines/cost.py` taps a source with: Urza's Saga chapter I
+        grants "{T}: Add {C}." onto a land that prints no mana ability at all.
+
+        **`skip_could_produce_abilities` is the recursion guard.** Reflecting
+        Pool's own "{T}: Add one mana of any type that a land you control could
+        produce" is itself a land whose type is defined by a survey, so
+        surveying a board of two Reflecting Pools - or a Pool and an Exotic
+        Orchard pointed at each other - would recurse forever. CR 106.7 has no
+        fixed point to offer there, so a permanent whose ability is itself a
+        survey contributes nothing to someone else's survey; every other land
+        answers normally. The answer stays under-inclusive rather than wrong,
+        which is the same direction `colors_land_types_could_produce` errs in.
+        """
         abilities = parse_mana_abilities(
             permanent.card, permanent.up_face_name
         ) + granted_mana_abilities(permanent.granted_ability_texts)
         if not abilities:
-            return False
-        land_types = self._controlled_land_types(permanent.controller_or_owner)
+            return frozenset()
+        controller = permanent.controller_or_owner
+        land_types = self._controlled_land_types(controller)
         own_counters = frozenset(permanent.counters.counts)
         has_imprinted_card = self.card_imprinted_on(permanent.id) is not None
-        return any(
-            Color.COLORLESS in option
-            for ability in abilities
-            for option in ability.effective(land_types, own_counters, has_imprinted_card)[0]
-        )
+
+        colors: set[Color] = set()
+        for ability in abilities:
+            if ability.could_produce is not None:
+                if skip_could_produce_abilities:
+                    continue
+                surveyed = self._could_produce_survey(ability.could_produce, controller)
+                options, any_color = ability.effective(
+                    land_types,
+                    own_counters,
+                    has_imprinted_card,
+                    could_produce_colors=surveyed,
+                )
+            else:
+                options, any_color = ability.effective(land_types, own_counters, has_imprinted_card)
+            if any_color:
+                colors.update(_COLOR_WORDS.values())
+            for option in options:
+                colors.update(option)
+        return frozenset(colors)
+
+    def _could_produce_survey(
+        self, which: CouldProduce, controller: str | None
+    ) -> frozenset[Color]:
+        """CR 106.7's survey itself: the types of mana the lands the clause
+        names could produce right now.
+
+        Reflecting Pool asks about "a land you control", Exotic Orchard about
+        "a land an opponent controls" - `CouldProduce` is which. Every surveyed
+        land is asked with the recursion guard on, so a survey never consults
+        another survey (see `colors_could_produce`).
+        """
+        colors: set[Color] = set()
+        for land in self.battlefield:
+            if Type.LAND not in land.types:
+                continue
+            land_controller = self.controller_of(land).username
+            if which is CouldProduce.LANDS_YOU_CONTROL:
+                if land_controller != controller:
+                    continue
+            elif land_controller == controller:
+                continue
+            colors.update(self.colors_could_produce(land, skip_could_produce_abilities=True))
+        return frozenset(colors)
 
     def _affinity_count(self, what: str, controller: str) -> int:
         """How much CR 702.41a's affinity takes off, in generic mana.
@@ -7942,12 +8339,31 @@ class Game(BaseModel):
                 )
             elif piece.kind is CostKind.LOYALTY:
                 # CR 606.4: the loyalty symbol is the whole cost, and the
-                # counter change it asks for is the cost itself. A `−X` cost
-                # has no amount anyone can pay until something can choose X
-                # (CR 107.7: "a minus sign followed by a number or an X").
+                # counter change it asks for is the cost itself.
+                #
+                # CR 107.7: "Negative loyalty symbols point downward and
+                # feature a minus sign followed by a number or an X." A `−X`
+                # symbol therefore has no amount of its own - the amount is the
+                # X the activating player announces, which CR 602.2b puts at
+                # this same moment (the whole of CR 601.2b's announcement,
+                # X included). That is `x_value`, already threaded here from
+                # `begin_activating`, so the cost is built from it and negated
+                # for a minus symbol.
+                #
+                # CR 606.6 - "A loyalty ability with a negative loyalty cost
+                # ... can't be activated unless the permanent has at least that
+                # many loyalty counters on it" - is then enforced against the
+                # *resolved* amount by `loyalty_cost`'s own payment, which is
+                # what makes an announced X larger than the loyalty on the
+                # permanent an unpayable cost rather than a silently clamped
+                # one.
                 amount = ability.loyalty.amount if ability.loyalty else None
                 if amount is None:
-                    raise ValueError(f"cannot build a cost for {piece.text!r}")
+                    if ability.loyalty is None or not _is_minus_symbol(ability.loyalty.printed):
+                        # Not a readable symbol at all - not "−X", just
+                        # unparsed. Refusing beats guessing an amount.
+                        raise ValueError(f"cannot build a cost for {piece.text!r}")
+                    amount = -x_value
                 components.append(
                     loyalty_cost(permanent, amount, payer=controller, description=piece.text)
                 )
@@ -8274,7 +8690,20 @@ class Game(BaseModel):
         # targeting.py` with a literal "X" still in it (nothing there resolves
         # a bare letter to a number), so without this every such target would
         # be refused outright rather than checked against the real, paid X.
-        text = substitute_x(ability.text, x_value) if "{X}" in ability.cost else ability.text
+        #
+        # A **loyalty** ability spells its X differently: CR 107.7's negative
+        # symbol is written "−X", not "{X}", so the `{X}`-in-the-cost test
+        # above does not see it. Tamiyo, Compleated Sage's "−X: Exile target
+        # nonland permanent card with mana value X from your graveyard" is that
+        # shape, and its target clause needs the same substitution for the same
+        # reason - `LoyaltyCost.variable` is what marks the symbol as carrying
+        # a chosen X.
+        has_variable_loyalty = ability.loyalty is not None and ability.loyalty.variable
+        text = (
+            substitute_x(ability.text, x_value)
+            if "{X}" in ability.cost or has_variable_loyalty
+            else ability.text
+        )
         profile = profile_for_text(text)
         if profile.understood and profile.requirements:
             if targets is None:
@@ -8340,9 +8769,55 @@ class Game(BaseModel):
                 if ability.mana.amount_from_devotion and color is not None
                 else None
             )
-            produced_mana = ability.mana.resolve(
-                land_types, own_counters, color, has_imprinted_card, count=devotion
+            # The two board-derived narrowings `ManaAbility.effective` asks
+            # for. Without them this fast path resolved the ability against
+            # the printed text alone, while `machines/cost.py`'s auto-tap
+            # solver - which calls the same `effective` - already narrowed;
+            # the two disagreed about what the very same source produces.
+            #
+            # CR 614.12a's chosen colour (Utopia Sprawl's "As this Aura
+            # enters, choose a color", read back by "Add one mana of the
+            # chosen color"), recorded on the permanent as it entered.
+            chosen = permanent.choice
+            chosen_color = (
+                Color(chosen.value)
+                if chosen is not None and chosen.kind is ChoiceKind.COLOR
+                else None
             )
+            # CR 106.7's survey, for Reflecting Pool and Exotic Orchard.
+            could_produce_colors = (
+                self._could_produce_survey(ability.mana.could_produce, controller)
+                if ability.mana.could_produce is not None
+                else None
+            )
+            produced_mana = ability.mana.resolve(
+                land_types,
+                own_counters,
+                color,
+                has_imprinted_card,
+                count=devotion,
+                could_produce_colors=could_produce_colors,
+                chosen_color=chosen_color,
+            )
+            # CR 106.5, for the third narrowing: "of any color among legendary
+            # creatures and planeswalkers you control" (Mox Amber). The colour
+            # the activating player named has to be one the board actually
+            # defines - an empty board defines none, and an ability that would
+            # produce mana of an undefined type produces no mana instead.
+            # `machines/cost.py` already applies this on the payment path; a
+            # direct activation reached the same ability without it, so the
+            # same Mox Amber made nothing when tapped for a spell and one mana
+            # of any colour when activated on its own.
+            allowed = among_colors(ability.effect, self, controller)
+            if allowed is not None:
+                undefined = [produced for produced in produced_mana if produced not in allowed]
+                if undefined:
+                    raise ValueError(
+                        f"{permanent.name} cannot add "
+                        f"{''.join(f'{{{produced.value}}}' for produced in undefined)}: "
+                        f"no permanent it surveys defines that color, so the ability "
+                        f"produces no mana (CR 106.5)"
+                    )
             # CR 106.6: a "Spend this mana only to ..." sentence in this
             # ability's own effect text restricts the mana it just made. The
             # tag goes on the mana in the pool, not on `permanent` - the mana

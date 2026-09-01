@@ -25,8 +25,6 @@ quality. Counterspell countered Supreme Verdict - a wrong board state, not an
 absent one.
 """
 
-import pytest
-
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.casting_restrictions import cannot_be_countered
 from magic_cards_model.models import Zone
@@ -87,16 +85,12 @@ def test_an_ordinary_spell_reports_nothing_of_the_kind():
 # -- what it stops ----------------------------------------------------------
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "the quality is read here but never enforced: the counter itself "
-        "happens in `Game.counter` (models/game.py) via `counter_targets` "
-        "(machines/effects.py), neither of which this task owns, so neither "
-        "consults `machines.casting_restrictions.cannot_be_countered`"
-    ),
-)
 def test_a_counterspell_resolves_against_supreme_verdict_and_does_nothing():
+    """CR 113.6g's ability, enforced where CR 701.6a's verb lives.
+
+    `Game.counter` refuses to remove the spell from the stack and emits no
+    counter event; the Counterspell itself was legally cast and legally
+    resolved, and simply fails to do the one thing it says."""
     scenario = _board()
     verdict = _verdict_on_the_stack(scenario)
     scenario.pass_priority("alice")

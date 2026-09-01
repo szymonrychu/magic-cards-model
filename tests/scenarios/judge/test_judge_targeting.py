@@ -131,11 +131,6 @@ def test_a_two_target_spell_resolves_for_whichever_target_is_still_legal():
     assert len(scenario.player("alice").hand) == 1, "the draw happens regardless"
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="protection is not modelled (CR 702.16) and non-mana activated abilities are "
-    "not activatable, so Mother of Runes cannot make the target illegal",
-)
 def test_protection_gained_in_response_makes_the_creature_an_illegal_target():
     """DDR#71: the target stays in its zone but stops being legal anyway.
 
@@ -143,6 +138,10 @@ def test_protection_gained_in_response_makes_the_creature_an_illegal_target():
     spells with the stated quality." Mother of Runes grants protection from red
     after the Bolt is already on the stack; CR 608.2b rechecks legality on
     resolution and finds none, so the Bolt is countered.
+
+    The announcement itself was legal - the protection did not exist yet - so
+    this is the recheck doing the work, not CR 601.2c. That is the whole point
+    of the ruling: protection gained *in response* is what kills the spell.
     """
     scenario = (
         Scenario()
@@ -156,7 +155,10 @@ def test_protection_gained_in_response_makes_the_creature_an_illegal_target():
     (mountain,) = scenario.untapped_sources("Mountain", username="alice")
     spell = scenario.cast_onto_stack("Lightning Bolt", mountain, username="alice", targets=[mother])
 
-    # bob activates Mother of Runes targeting herself, choosing red.
+    # bob activates Mother of Runes targeting herself, choosing red. The colour
+    # is CR 608.2d's choice and has to be answered: left to the default table
+    # the ability would choose white, and a red Bolt would resolve untouched.
+    scenario.will_choose("R", username="bob", source="Mother of Runes")
     scenario.game.activate_ability(mother, 0, "bob", targets=[mother])
     scenario.resolve_top()
 
