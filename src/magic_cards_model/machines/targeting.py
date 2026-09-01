@@ -291,6 +291,24 @@ class TargetRequirement(BaseModel):
     found no single numbered CR rule defining "another"/"other" this session;
     this is read off the plain-English word, the same way `must_be_tapped` is
     read off "tapped" rather than off a rule number."""
+    or_any_spell: bool = False
+    """True for a noun list whose last item is a bare "spell" reached across an
+    "or" - Aang, Swift Savior's "airbend up to one other **target creature or
+    spell**".
+
+    "Target creature spell" and "target creature or spell" are two different
+    restrictions and the word "or" is the only thing telling them apart. The
+    first is one noun ("spell") with one adjective ("creature"); the second is
+    CR 115.1's target being satisfied by *either* item, and the items are of
+    different kinds - one is a permanent on the battlefield, the other is
+    CR 111.1's "a spell is a card on the stack", of no particular card type.
+
+    `card_types` and `zones` cannot express that on their own: they are read as
+    one conjunction, so unioning `Zone.STACK` in would let a permanent-typed
+    restriction reach any spell on the stack only by also dropping the type
+    check for battlefield permanents. This flag keeps the two apart instead -
+    `_rejects_card` accepts anything on the stack outright when it is set, and
+    everything else still goes through the ordinary permanent checks."""
     exiled_with_source: bool = False
     """True for "target ... card exiled with `<name>`" (The Darkness Crystal,
     Mosswort Bridge's own hideaway-play permission does not use this - it
@@ -475,6 +493,11 @@ class TargetRequirement(BaseModel):
             return f"{self.phrase} can only target a player, not {target.name}"
         if self.excludes_source and source_id is not None and target.id == source_id:
             return f"{self.phrase} cannot target {target.name}, which this is on"
+        if self.or_any_spell and target.zone is Zone.STACK:
+            # "... or spell" (CR 111.1: a spell is a card on the stack), the
+            # second half of a two-kind noun list - see `or_any_spell`. Nothing
+            # further to check: the phrase named no type for this half.
+            return None
         if target.zone not in self.zones:
             wanted = " or ".join(sorted(zone.value for zone in self.zones))
             return (
@@ -2092,6 +2115,11 @@ def _read_phrase(prefix: str, suffix: str) -> TargetRequirement | None:
     bare_card = False
     nouns_read = 0
     noun_end = index
+    or_any_spell = False
+    #: Whether the token just skipped was a noun-list conjunction. "Target
+    #: creature spell" and "target creature or spell" differ by this word and
+    #: by nothing else - see `TargetRequirement.or_any_spell`.
+    after_conjunction = False
 
     while index < len(words):
         word = words[index]
@@ -2101,6 +2129,7 @@ def _read_phrase(prefix: str, suffix: str) -> TargetRequirement | None:
             # to the next item rather than treating it as the end of the list
             # or as an unread noun.
             index += 1
+            after_conjunction = True
             continue
         if nouns_read and adjectives.take(word):
             # Each item in an Oxford-comma (or plain "or"/"and") noun list may
@@ -2125,7 +2154,16 @@ def _read_phrase(prefix: str, suffix: str) -> TargetRequirement | None:
             allows_cards = True
         elif singular in _SPELL_NOUNS:
             allows_cards = True
-            zones = {Zone.STACK}
+            if nouns_read and after_conjunction:
+                # "... or spell" - the second item of a two-kind noun list, not
+                # the noun a preceding "creature" was qualifying. CR 111.1 puts
+                # it on the stack and names no type for it; `or_any_spell` is
+                # how the two halves stay separate restrictions rather than
+                # collapsing into one conjunction. `zones` is left alone, so
+                # the first half keeps whatever zone it named.
+                or_any_spell = True
+            else:
+                zones = {Zone.STACK}
         elif singular in _PLAYER_NOUNS:
             allows_players = True
             opponent_only = opponent_only or singular == "opponent"
@@ -2169,6 +2207,7 @@ def _read_phrase(prefix: str, suffix: str) -> TargetRequirement | None:
         nouns_read += 1
         index += 1
         noun_end = index
+        after_conjunction = False
 
     # "target creature token you control": the adjective may follow its noun.
     if nouns_read and noun_end < len(words) and words[noun_end] == "token":
@@ -2274,6 +2313,7 @@ def _read_phrase(prefix: str, suffix: str) -> TargetRequirement | None:
         allows_players=allows_players,
         opponent_only=opponent_only and not allows_cards,
         zones=frozenset(zones),
+        or_any_spell=or_any_spell,
         controller=controller,
         must_be_tapped=must_be_tapped,
         excludes_source=excludes_source or adjectives.excludes_source,

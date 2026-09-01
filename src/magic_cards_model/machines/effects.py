@@ -83,7 +83,7 @@ from ..models.token import (
 from ..models.zone import Zone
 from . import combat as combat_rules
 from .abilities import ActivatedAbility, TriggerEvent, self_normalized_effect_text
-from .casting import PlayAction, finish_suspend, remove_suspend_time_counter
+from .casting import PlayAction, annotate_exile, finish_suspend, remove_suspend_time_counter
 from .casting_restrictions import create_targeted_cant_cast_restriction, parse_casting_rule_clause
 from .combat import has_keyword
 from .decisions import Decision, DecisionKind
@@ -12525,6 +12525,93 @@ _DRAW_N_CARDS_RE = re.compile(r"^draw (?:a|(?P<count>\w+)) cards?$", re.IGNORECA
 
 
 # --------------------------------------------------------------------------
+# Airbend (CR 701.65a)
+# --------------------------------------------------------------------------
+#
+# The same shape as earthbend below: a CR 701 keyword *action*, embedded in
+# some other ability's effect text (Aang, Swift Savior's "When Aang enters,
+# airbend up to one other target creature or spell."), so it is written here
+# rather than in `machines/keywords.py`. `machines/keywords.executes` already
+# knows the word, so the pool sweeper does not report it as silently ignored.
+#
+# CR 701.65a: "Certain spells and abilities instruct a player to airbend one or
+# more permanents and/or spells. To do so, that player exiles those objects.
+# For each card exiled this way, for as long as it remains exiled, its owner
+# may cast it for {2} rather than its mana cost."
+#
+# Two halves, and only the first is here. The exile is this clause. The {2}
+# permission is `machines/casting.marker_cast_options`, read back off the pile
+# the card landed in (CR 406.4) rather than off anything printed on it - which
+# is the whole reason `ExileMarker.AIRBENT` exists.
+#
+# The annotation goes on **cards only**. CR 701.65a says "for each *card*
+# exiled this way", and a token is not a card (CR 111.1 makes a token an object
+# that is not a card at all), so an airbent token receives no permission - and
+# never could use one anyway, because CR 111.7 / CR 704.5d have it cease to
+# exist as a state-based action the moment it is anywhere but the battlefield,
+# which is before any player next receives priority (CR 704.3).
+#
+# CR 701.65b ("An ability that triggers whenever a player airbends triggers
+# when that player exiles one or more objects as a result of an instruction to
+# airbend") has no card in this pool to trigger, so nothing is emitted for it;
+# the ordinary battlefield-departure events `Game.exile_permanent` raises are
+# unaffected.
+
+#: "Airbend up to one other target creature or spell." - the whole of an
+#: ability's effect text once its trigger condition has been split off. The
+#: count and the "other" are already enforced by `machines/targeting.py` off
+#: the same printed words, so nothing here has to re-read them; this only has
+#: to recognise that the instruction *is* an airbend.
+_AIRBEND_RE = re.compile(
+    r"^airbend (?:up to (?:\w+|\d+) )?(?:other |another )?target\b.*$", re.IGNORECASE
+)
+
+
+def airbend(game: "Game", objects: list[CardState]) -> None:
+    """CR 701.65a's exile, plus CR 406.4's note on each *card* that lands.
+
+    One instruction, so `Game.exile_cards` rather than a loop of
+    `exile_permanent` - CR 603.2c's "one event containing multiple
+    occurrences" is the difference, and it is what a "whenever one or more
+    cards leave your graveyard" ability would read.
+
+    An object the move refused (CR 111.8's token that has already left the
+    battlefield) never reaches exile, so it is never annotated: the check is on
+    where the object actually ended up, not on what was asked for.
+    """
+    for exiled in game.exile_cards(objects):
+        if exiled.zone is not Zone.EXILE or is_token(exiled):
+            continue
+        annotate_exile(exiled, ExileMarker.AIRBENT, exiled.owner, game)
+
+
+def _parse_airbend_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """ "Airbend ... target ..." - see `_AIRBEND_RE` and the section note.
+
+    Reads only the targets the ability already chose (CR 601.2c / 603.3d ran
+    long before this resolves), rechecked by `Game.resolve_targets` for
+    CR 608.2b. "Up to one" means an ability that chose none is legal and simply
+    does nothing, which falls out of the empty list rather than needing a case.
+    """
+    if for_spell:
+        return None  # no card in the pool prints airbend on a spell.
+    if _AIRBEND_RE.fullmatch(" ".join(clause.strip().rstrip(".").split())) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        targets = [
+            target
+            for target in game.resolve_targets(stack_object)
+            if isinstance(target, CardState)
+        ]
+        if not targets:
+            return
+        airbend(game, targets)
+
+    return effect
+
+
+# --------------------------------------------------------------------------
 # Earthbend (CR 701.66a)
 # --------------------------------------------------------------------------
 #
@@ -15495,6 +15582,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     delayed = _parse_delayed_single_clause(clause, for_spell=for_spell)
     if delayed is not None:
         return delayed
+    airbend_clause = _parse_airbend_clause(clause, for_spell=for_spell)
+    if airbend_clause is not None:
+        return airbend_clause
     earthbend_clause = _parse_earthbend_clause(clause, for_spell=for_spell)
     if earthbend_clause is not None:
         return earthbend_clause
