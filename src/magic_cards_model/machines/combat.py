@@ -175,13 +175,19 @@ class CombatMachine(BaseModel):
     damage_steps_done: int = 0
     first_strike_step_happened: bool = False
     attacked_this_combat: bool = False
-    """Whether anybody was declared as an attacker this combat (CR 508.8).
+    """Whether anybody attacked this combat, either way CR 508.8 counts.
 
-    CR 508.8 keys off the declaration - "If no creatures are declared as
-    attackers or put onto the battlefield attacking" - not off who is still in
-    combat, so CR 506.4's `remove` takes an attacker out without un-setting
-    this: the declaration happened. Only `clear` resets it, at the end of
-    combat (CR 511.3).
+    CR 508.8 is a union of two histories - "If no creatures are declared as
+    attackers **or put onto the battlefield attacking**, skip the declare
+    blockers and combat damage steps" - and neither half is "is any creature
+    attacking right now". `declare_attacker` sets this for the first half and
+    `models/token._put_onto_the_battlefield_attacking` for the second (CR
+    508.4); a creature put onto the battlefield attacking was never *declared*
+    (CR 508.4c), and CR 508.8 does not ask that it was.
+
+    Because it is a history, CR 506.4's `remove` takes a creature out of combat
+    without un-setting this: the thing CR 508.8 asks about already happened.
+    Only `clear` resets it, at the end of combat (CR 511.3).
     """
 
     @property

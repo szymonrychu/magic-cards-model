@@ -236,3 +236,88 @@ def test_no_attack_means_no_angels():
 
     assert scenario.stack_names() == []
     assert angels(scenario) == []
+
+
+# --------------------------------------------------------------------------
+# CR 508.8 - the step this creature's own combat needs in order to exist
+# --------------------------------------------------------------------------
+
+
+def test_a_token_created_attacking_deals_its_combat_damage_across_an_advanced_turn():
+    """CR 508.8, from the side that matters: the combat damage step happens.
+
+    "If no creatures are declared as attackers or put onto the battlefield
+    attacking, skip the declare blockers and combat damage steps." `Game.advance`
+    performs that skip as it steps out of the declare attackers step, so a
+    creature that is attacking without the step existing deals no damage at all
+    - the silent failure this test is here to catch.
+
+    Fire Navy Trebuchet (confirmed with `resolve_cards`): "Defender, reach /
+    Whenever you attack, create a 2/1 colorless Construct artifact creature
+    token with flying named Ballistic Boulder that's tapped and attacking.
+    Sacrifice that token at the beginning of the next end step." The Trebuchet
+    itself has defender and cannot attack, so Grizzly Bears is the declared
+    attacker and the Boulder is the one CR 508.4 puts in - and unlike every
+    test above, this one walks the steps with `Game.advance` rather than moving
+    the pointer by hand, which is the only route that consults CR 508.8.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Fire Navy Trebuchet", "Grizzly Bears"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(scenario.creature("Grizzly Bears", "alice"))
+    while scenario.game.stack or scenario.pending_triggers:
+        scenario.pass_until_resolved()
+    boulder = scenario.creature("Ballistic Boulder", "alice")
+    assert is_token(boulder) and scenario.game.is_attacking(boulder)
+
+    while scenario.step is not Step.END_STEP:
+        scenario.advance()
+
+    # 2 from the bear, 2 from the Boulder - the second only if its own combat
+    # damage step happened.
+    assert scenario.player("bob").life == 20 - 2 - 2
+
+
+def test_a_creature_put_onto_the_battlefield_attacking_is_itself_enough_to_keep_the_steps():
+    """CR 508.8's second clause, on its own: no creature was ever *declared*.
+
+    The rule is a union of two histories - "If no creatures are declared as
+    attackers **or put onto the battlefield attacking**" - and CR 508.4c says
+    the second kind was never declared ("A creature that's put onto the
+    battlefield attacking or that is stated to be attacking isn't affected by
+    requirements or restrictions that apply to the declaration of attackers").
+    So a combat in which the declaration found nothing and an effect then put a
+    creature in still has a declare blockers step and a combat damage step.
+
+    Every card in the pool that puts a creature onto the battlefield attacking
+    does so from an "attacks"/"whenever you attack" trigger, which cannot fire
+    without a declared attacker, so the declared half of CR 508.8 would answer
+    for those boards on its own. This one reaches the second clause directly
+    through the engine's own CR 508.4 primitive - the same call Parhelion II's
+    Angels and Ilharg's creature card arrive by - on a real Grizzly Bears in a
+    real game.
+    """
+    from magic_cards_model.models.card_state import TargetRef
+    from magic_cards_model.models.token import _put_onto_the_battlefield_attacking
+
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Grizzly Bears"], library=["Mountain"] * 5)
+        .player("bob", library=["Mountain"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    assert scenario.attackers() == [], "nobody was declared"
+
+    bears = scenario.put_onto_battlefield("Grizzly Bears", "alice", tapped=True)
+    _put_onto_the_battlefield_attacking(scenario.game, bears, TargetRef.coerce("bob"))
+    assert scenario.game.is_attacking(bears)
+
+    while scenario.step is not Step.END_STEP:
+        scenario.advance()
+
+    assert scenario.player("bob").life == 20 - 2, "the combat damage step was not skipped"

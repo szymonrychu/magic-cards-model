@@ -238,3 +238,38 @@ def test_the_return_is_of_the_object_not_of_a_creature_that_is_still_one():
     (trigger,) = scenario.game.delayed_triggers.triggers
     assert trigger.subject_id == purphoros.id
     assert trigger.source_name == "Ilharg, the Raze-Boar"
+
+
+def test_purphoros_deals_its_combat_damage_alongside_ilharg():
+    """DDR#965's first question, answered by playing it out: yes, it does.
+
+    A creature put onto the battlefield attacking is an attacking creature for
+    the rest of the combat, so CR 510.1 assigns its combat damage like any
+    other unblocked attacker. The step it needs has to exist first, which is
+    CR 508.8: "If no creatures are declared as attackers or put onto the
+    battlefield attacking, skip the declare blockers and combat damage steps."
+    Purphoros is the second half of that union - CR 508.4c says it was never
+    declared - and Ilharg is the first.
+
+    The steps are walked with `Game.advance` rather than by moving the turn
+    pointer, because CR 508.8's skip lives on that path and nowhere else: a
+    scenario that jumps straight to the combat damage step cannot tell whether
+    the game would have skipped it.
+    """
+    scenario = board().build()
+    ilharg = scenario.creature("Ilharg, the Raze-Boar", "alice")
+
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(ilharg)
+    scenario.pass_until_resolved()
+    purphoros = scenario.find("Purphoros, God of the Forge", Zone.BATTLEFIELD, "alice")
+    assert purphoros in scenario.attackers()
+
+    while scenario.step is not Step.END_STEP:
+        scenario.advance()
+
+    board_state = scenario.game.computed_board()
+    expected = board_state.of(ilharg).power + board_state.of(purphoros).power
+    assert scenario.player("bob").life == 20 - expected, (
+        "both attackers connected, Purphoros included"
+    )
