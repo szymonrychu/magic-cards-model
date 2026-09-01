@@ -90,10 +90,39 @@ def test_a_spend_effect_is_not_a_cr_405_6c_rider_and_does_not_block_activation()
 
 @pytest.mark.xfail(
     strict=True,
-    reason="`ManaAbility.spend_effect` is recorded and nothing applies it: no path "
-    "from the mana in the pool to the spell it later pays for carries CR 106.6's "
-    "'additional effect that affects the spell or ability that mana is spent on', so "
-    "the Ashmouth Hound cast off the Arena's {R}{R} enters without haste.",
+    reason="`ManaAbility.spend_effect` is parsed and consumed by nobody. CR 106.6's "
+    "spend *restriction* has a whole pipeline; its sibling clause - 'have an "
+    "additional effect that affects the spell or ability that mana is spent on' - "
+    "has none, and the four missing pieces are each the exact mirror of a "
+    "restriction piece that is already there. Measured on this board: after "
+    "`activate(arena, index=1)` the pool is `floating={RED: 2}` with "
+    "`restricted=[]`, and the Hound's CastRecord is `mana_spent={RED: 2}` - a "
+    "colour count with nothing to say which mana it was. What is needed, in "
+    "order:\n"
+    "1. models/mana.py: a `ManaSpendEffect` beside `ManaRestriction`, a "
+    "`spend_effect` slot in `ManaPool.add`/`add_all` and in `_Bucket` (today "
+    "`(color, snow, restriction_slot)`), and a `spend_effects_spent` list on "
+    "`ManaPayment` filled by `_settle` exactly the way `restricted_spent` is. "
+    "Without the bucket dimension there is no way to say which of the two red "
+    "mana paid.\n"
+    "2. models/game.py, in `activate_ability`'s mana branch beside "
+    "`restriction = spend_restriction(ability.effect, permanent)`: pass "
+    "`ability.mana.spend_effect` into the same `mana_pool.add` call, so the "
+    "Arena's `{R}{R}` is tagged as it is produced (CR 605.3b - the tag goes on "
+    "the mana, not on the land). This is where the mana in *this* test is made; "
+    "`machines/cost.CostPayment.tap_for_mana` is the other production site and "
+    "needs the same one-line mirror of its `restriction_for_production` call, "
+    "but nothing here traverses it.\n"
+    "3. machines/casting.py at CR 601.2h: once step 1 exists, "
+    "`Casting._move_to_the_stack` reads "
+    "`self.payment.mana_payment.spend_effects_spent` and records it on the "
+    "spell, and models/game.py's `note_cast`/`CastRecord` carry it the way "
+    "`mana_spent` already does.\n"
+    "4. machines/layers.py: 'it gains haste until end of turn' as a "
+    "`ContinuousEffect` on the permanent the creature spell becomes - CR 400.7b "
+    "is why the effect survives the stack-to-battlefield move at all.\n"
+    "None of 1, 2 or 4 is in a file this task owns, and 3 cannot be written "
+    "against a `ManaPayment` field that does not exist yet.",
 )
 def test_a_creature_cast_with_the_arenas_mana_gains_haste():
     """CR 106.6's second clause, doing what it says.

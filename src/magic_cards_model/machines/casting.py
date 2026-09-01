@@ -1915,18 +1915,48 @@ class Casting(BaseModel):
             if self.spell.card.layout is Layout.SPLIT and self.face is not None:
                 face = self.chosen_face
                 if face is not None:
-                    return profile_for_text(face.oracle_text or "")
+                    return self._with_bestowed_target(profile_for_text(face.oracle_text or ""))
             if "{X}" in (self.spell.mana_cost or ""):
                 # Spell-scoped, not `profile_for_text`: that one reads text
                 # whole because it exists for an ability's own words, and a
                 # creature spell with an activated ability that targets
                 # (Walking Ballista's "It deals 1 damage to any target") would
                 # otherwise look like a spell requiring a target (CR 113.1c).
-                return spell_profile_for_text(
-                    substitute_x(self.spell.oracle_text, self.x_value), self.spell.card
+                return self._with_bestowed_target(
+                    spell_profile_for_text(
+                        substitute_x(self.spell.oracle_text, self.x_value), self.spell.card
+                    )
                 )
-            return targeting_profile(self.spell.card)
-        return profile_for_modes(self.spell.card, self.chosen_mode_objects, self.x_value)
+            return self._with_bestowed_target(targeting_profile(self.spell.card))
+        return self._with_bestowed_target(
+            profile_for_modes(self.spell.card, self.chosen_mode_objects, self.x_value)
+        )
+
+    def _with_bestowed_target(self, profile: TargetingProfile) -> TargetingProfile:
+        """CR 702.103b's target, which no printed line of the card carries.
+
+        "As a spell cast bestowed is put onto the stack, it becomes an Aura
+        enchantment and gains enchant creature." CR 303.4a then makes that
+        enchant ability the spell's target - "an Aura spell requires a target,
+        which is defined by its enchant ability" - so a creature spell that
+        printed no target at all requires one the moment bestow is announced.
+
+        `targeting_profile` reads the *printed* card, where the Phoenix is a
+        plain Enchantment Creature with neither the Aura subtype nor an
+        enchant keyword, so the enchant target it prepends for every other
+        Aura is not reachable from there. This prepends it from the
+        announcement instead, in the same position and for the same reason
+        (`targeting._with_aura_target`): the enchant target comes first, and
+        anything the card's own text targets follows it.
+        """
+        if not self.spell.bestowed:
+            return profile
+        enchant = profile_for_text("target creature")
+        if not enchant.understood or not enchant.requirements:
+            return profile
+        return profile.model_copy(
+            update={"requirements": (*enchant.requirements, *profile.requirements)}
+        )
 
     # -- CR 601.2b: modes, alternative costs, additional costs -------------
 
@@ -3380,6 +3410,15 @@ class Casting(BaseModel):
                     else {}
                 ),
                 kicked=self.kicked,
+                # CR 400.7 makes the spell a new object the moment CR 601.2a
+                # moves it off the exile pile, so the annotation that pile
+                # carried is gone by now - `announced_exile_annotation` is the
+                # copy taken before that move. Foretell is what needs it:
+                # CR 702.143a's "that card gains 'Foretell [cost]'" is paid
+                # from exile, and Lupine Harbingers counts "the number of turns
+                # you've begun since it was foretold" off `turn_exiled`, a
+                # number nothing else on the record can answer for.
+                exile_annotation=self.announced_exile_annotation,
                 additional_cost_cards=[
                     card.id
                     for extra in self.additional_costs

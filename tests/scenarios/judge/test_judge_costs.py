@@ -44,6 +44,7 @@ import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.cost import TotalCost, total_cost_for_phrase, waterbend_mana_cost
+from magic_cards_model.machines.keywords import equip_activation
 from magic_cards_model.models import ManaCost, Zone
 from tests.scenarios.harness import Scenario
 
@@ -263,44 +264,92 @@ def test_a_cost_increaser_that_leaves_mid_payment_does_not_lower_the_locked_in_c
 
 @pytest.mark.xfail(
     strict=True,
-    reason="Umbral Mantle grants its ability in quoted text on the equipped "
-    "creature, and neither half of that reaches the engine: "
-    "`triggers.activated_abilities_of(card('Umbral Mantle'))` is empty, so even "
-    "its own `Equip {0}` (CR 702.6a) is unparsed, and `cost_component_for_phrase"
-    "('{3}, {Q}')` returns None, so the untap symbol (CR 107.6) has no reader in "
-    "machines/cost.py either. `Game.activate_ability` raises ValueError - 'Umbral "
-    "Mantle has no activated ability number 0' - long before the sequencing "
-    "question this episode is about can be asked.",
+    reason="ONE line is left, and it is in models/game.py. Everything else "
+    "measured working: `keywords.equip_activation` pays CR 702.6a's `Equip {0}` "
+    "and attaches the Mantle, the layer-6 quoted-ability grant puts "
+    "`{3}, {Q}: This creature gets +2/+2 until end of turn.` on the Elves as "
+    "`Game.activated_abilities(elves)[1]`, `machines/abilities._classify_cost` "
+    "already classifies `{Q}` as `CostKind.UNTAP`, `Game.begin_activating` "
+    "already gates CR 602.5a on `{CostKind.TAP, CostKind.UNTAP}`, and "
+    "`machines/cost.cost_component_for_phrase('{Q}')` now reads CR 107.6's "
+    "untap symbol into a `ComponentKind.UNTAP` component (with `untap_cost`, "
+    "`_why_not_untap`'s already-untapped refusal, and its pay/unpay halves). "
+    "What is missing is that `Game.activation_cost` has no `CostKind.UNTAP` "
+    "branch, so `{Q}` falls through to the generic `OTHER` reader, which builds "
+    "the component with no card in it - CR 107.6's 'this permanent' is a "
+    "self-reference `_cost_refers_to_self` cannot see in a bare symbol - and "
+    "the activation dies on 'untap needs 1 card(s) chosen, 0 given'. It needs "
+    "the exact mirror of the `CostKind.TAP` branch beside it:\n"
+    "            elif piece.kind is CostKind.UNTAP:\n"
+    "                components.append(\n"
+    "                    untap_cost(permanent, payer=controller, description=piece.text)\n"
+    "                )\n"
+    "with `untap_cost` added to the `machines.cost` import list.",
 )
 def test_umbral_mantle_cannot_untap_llanowar_elves_for_a_third_mana():
-    """DDR#998: the untap trick does not work, and the engine cannot even try it.
+    """DDR#998: the untap cannot pay for itself.
 
     Umbral Mantle (confirmed with `resolve_cards`): "Equipped creature has
-    '{3}, {Q}: This creature gets +2/+2 until end of turn.' Equip {0}". CR
-    107.6: "The untap symbol in an activation cost means 'Untap this
-    permanent.'" CR 602.2b makes activating an ability follow CR 601.2b-i, so
-    the {3} is a mana payment settled at CR 601.2f, the chance to make mana is
-    CR 601.2g, and untapping the Elves is part of CR 601.2h's payment - which
-    is *after* the last moment CR 605.3a lets a mana ability be activated for
-    this cost. The Elves therefore cannot be untapped and retapped to help pay
-    for the very ability doing the untapping.
+    '{3}, {Q}: This creature gets +2/+2 until end of turn.' ({Q} is the untap
+    symbol.) Equip {0}". CR 107.6: "The untap symbol in an activation cost
+    means 'Untap this permanent.'"
 
-    The engine cannot express the refusal because it never gets that far: this
-    test attaches the Mantle the only way CR 702.6a offers and fails on the
-    activation itself.
+    The sequencing is the whole question. CR 602.1a makes `{3}, {Q}` the
+    activation cost, CR 601.2h pays it - "the player pays the total cost" -
+    and CR 601.2g is the last moment mana abilities may be activated for it:
+    "mana abilities must be activated before costs are paid", which CR 605.3a
+    says the same way from the mana ability's side. The Elves is untapped by
+    CR 601.2h, strictly after that window has closed, so the green mana it can
+    make once untapped is a *later* mana and never the third one paying for
+    this very activation.
+
+    Both halves are here, because the refusal is only worth anything against a
+    working activation. First three Forests pay the {3} and the tapped Elves is
+    untapped by CR 601.2h. Then the Elves taps for its one green mana again,
+    that mana empties as the step ends (CR 500.5, CR 703.4q), and only two
+    Forests are left - one short. The second activation must be refused, and
+    nothing about the Elves may change: still tapped, still its printed power
+    plus the +2/+2 the first activation already gave it.
     """
     scenario = (
         Scenario()
-        .player("alice", battlefield=["Llanowar Elves", "Umbral Mantle", "Forest"])
+        .player(
+            "alice",
+            battlefield=["Llanowar Elves", "Umbral Mantle", *["Forest"] * 5],
+        )
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
     elves = scenario.creature("Llanowar Elves", "alice")
     mantle = scenario.find("Umbral Mantle", Zone.BATTLEFIELD, "alice")
 
-    scenario.activate(mantle, targets=[elves])  # Equip {0}, CR 702.6a
+    equip = equip_activation(scenario.game, mantle, elves, "alice")
+    equip.begin_paying().pay()  # CR 118.5: {0} is paid by saying so
+    equip.activate()
+    scenario.resolve_top()
+    assert mantle.is_attached
 
-    assert elves.power == 3
+    # The Elves taps for its one green mana, which empties as the step ends.
+    scenario.activate(elves, index=0)
+    assert elves.tapped
+    scenario.advance()
+
+    # Three Forests pay the {3}; CR 601.2h then untaps the Elves.
+    scenario.activate(elves, *scenario.untapped_sources(*["Forest"] * 3), index=1)
+    scenario.resolve_top()
+    assert not elves.tapped
+    assert elves.power == int(elves.card.power) + 2
+
+    # It taps for green again, and that mana empties too. Two Forests are left.
+    scenario.activate(elves, index=0)
+    assert elves.tapped
+    scenario.advance()
+
+    with pytest.raises(ValueError):
+        scenario.activate(elves, *scenario.untapped_sources(*["Forest"] * 2), index=1)
+
+    assert elves.tapped
+    assert elves.power == int(elves.card.power) + 2
 
 
 # --------------------------------------------------------------------------
