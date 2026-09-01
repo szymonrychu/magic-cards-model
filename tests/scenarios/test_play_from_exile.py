@@ -157,10 +157,14 @@ def test_searching_for_zero_cards_is_legal_and_grants_nothing():
     out no permission - as opposed to an implementation that quietly requires
     at least one card and would either exile a Sol Ring nobody asked for or
     raise.
+
+    The decline is one answer, not one per card: CR 701.23a's search is a single
+    choice over every candidate at once (`Game.search_library`), so choosing no
+    cards at all is how "any number" is answered with zero.
     """
     scenario = _ugin_board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    scenario.will_take_the_may(False, times=None)
+    scenario.will_choose_cards()
 
     exiled = _ultimate(scenario)
 
@@ -244,8 +248,8 @@ def test_the_permission_does_not_reach_a_card_exiled_by_something_else():
     """
     scenario = _ugin_board(["Sol Ring", "Mishra's Bauble", "Forest"]).build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    scenario.will_take_the_may(True, times=1)  # find the Sol Ring, decline the rest
-    scenario.will_take_the_may(False, times=None)
+    # One search, one answer (CR 701.23a): name the Sol Ring and nothing else.
+    scenario.will_choose_cards(scenario.find("Sol Ring", Zone.LIBRARY, "alice"))
 
     exiled = _ultimate(scenario)
     assert [state.name for state in exiled] == ["Sol Ring"]

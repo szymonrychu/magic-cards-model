@@ -404,6 +404,23 @@ class Decision:
     #: (every card offered) and any count from zero up to it, inclusive, is a
     #: legal answer.
     exact: bool = True
+    #: `CHOOSE_CARDS` only: what an unscripted, unprovided player chooses, in
+    #: place of the kind's own documented default ("the back of `cards`", or
+    #: nothing at all when `exact` is `False`). `None` - every question that
+    #: existed before searching became one choice - keeps that default.
+    #:
+    #: `Game.search_library` is the caller that needs it. CR 701.23b makes a
+    #: stated-quality search of a hidden zone declinable, so the question is
+    #: `exact=False` and the generic "any number" default would be to find
+    #: *nothing* - which is a real answer a player may give, but a ridiculous
+    #: one to give on their behalf: an unscripted fetchland would pay the life,
+    #: sacrifice itself, and find no land. The searcher's default is instead
+    #: "find, taking the candidates in zone order", which is exactly what this
+    #: engine did when a search was a walk of yes/no questions whose own `MAY`
+    #: default was yes. A default is a documented deviation, not a decision
+    #: (see the module docstring), and this field is where a caller writes the
+    #: deviation down rather than hiding it in a reversed candidate list.
+    default_cards: tuple[UUID, ...] | None = None
 
 
 def legal_options(decision: Decision) -> tuple[bool, ...]:
@@ -462,6 +479,14 @@ def default_answer(decision: Decision) -> object:
         # always legal, and is what an unscripted player does.
         return ()
     if decision.kind is DecisionKind.CHOOSE_CARDS:
+        if decision.default_cards is not None:
+            # The asker wrote down what an unscripted player takes - see
+            # `Decision.default_cards`. Like every other branch here it is the
+            # asker's job to keep it legal (a subset of `cards`, within
+            # `amount`): `Game.ask` returns a default without re-validating it,
+            # because a default that could be illegal would be a bug in the
+            # question, not an answer to refuse.
+            return decision.default_cards
         if not decision.exact:
             # CR 107.1c's "any number": the least-destructive, most-reversible
             # answer is none at all - the same posture `SCRY`/`SURVEIL`'s own

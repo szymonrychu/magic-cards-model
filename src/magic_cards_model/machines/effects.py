@@ -11210,10 +11210,33 @@ def _hand_exile_mv_matcher(mv: str | None, cmp: str | None) -> Callable[[CardSta
 
 
 def _hand_exile_description(match: re.Match[str]) -> str:
-    description = match.group("quality").strip()
+    """`_HAND_EXILE_RE`'s clause as the noun phrase the card prints, for a prompt.
+
+    **Word order is the whole job.** The quality is an adjective ("colorless")
+    and the mana-value bound qualifies the *card*, so the noun sits between
+    them - "a colorless card with mana value 7 or greater", which is exactly
+    how Ugin's Labyrinth prints it (verified with `resolve_cards`). Building
+    the description as "`<quality>` with mana value ..." and letting each
+    prompt append "card" afterwards put the noun last, and published
+    "exile a colorless with mana value 7 or greater card from your hand" to a
+    live seat. The full phrase, article and all, is therefore assembled here
+    once instead of half here and half at each prompt.
+    """
+    description = f"{match.group('quality').strip()} card"
     if match.group("mv"):
         description = f"{description} with mana value {match.group('mv')} or {match.group('cmp')}"
-    return description
+    return f"{_article(description)} {description}"
+
+
+def _article(phrase: str) -> str:
+    """ "a" or "an", by the sound the phrase starts with.
+
+    Cosmetic, and only ever used for a prompt a human reads - but "exile a
+    artifact card" is the same class of defect as the scrambled word order
+    `_hand_exile_description` documents, and the regex accepts both articles
+    ("a|an") without capturing which one the card printed.
+    """
+    return "an" if phrase[:1].lower() in "aeiou" else "a"
 
 
 def _permanent_id_and_name(stack_object: "StackObject", *, for_spell: bool) -> tuple[UUID, str]:
@@ -11271,9 +11294,14 @@ def _parse_imprint_clause(clause: str, *, for_spell: bool) -> TargetedClause | N
         decision = Decision(
             kind=DecisionKind.MAY,
             player=player.username,
-            prompt=f"exile a {description} card from your hand",
+            prompt=f"exile {description} from your hand",
             source=source_name,
             affirmative_is_legal=bool(candidates),
+            # The qualifying cards, so the yes/no is answered knowing what is
+            # on offer. The hand is a hidden zone (CR 400.2), so a client
+            # cannot work them out from the game state; `Game.ask` labels them
+            # by name on the way out.
+            cards=tuple(state.id for state in candidates),
         )
         if not game.ask(decision):
             return
@@ -11281,7 +11309,7 @@ def _parse_imprint_clause(clause: str, *, for_spell: bool) -> TargetedClause | N
             Decision(
                 kind=DecisionKind.CHOOSE_CARDS,
                 player=player.username,
-                prompt=f"choose a {description} card to exile",
+                prompt=f"choose {description} to exile",
                 source=source_name,
                 amount=1,
                 cards=tuple(state.id for state in candidates),

@@ -2,6 +2,7 @@
 
 import re
 from collections.abc import Callable, Sequence
+from dataclasses import replace
 from enum import StrEnum
 from random import Random
 from typing import ClassVar
@@ -4430,6 +4431,37 @@ class Game(BaseModel):
 
     # -- decisions made during resolution (CR 608.2d) -------------------------
 
+    def _with_card_labels(self, decision: Decision) -> Decision:
+        """Name the cards a question offers (`Decision.card_labels`).
+
+        A question carries `CardState` ids in `cards` - the candidates of a
+        `CHOOSE_CARDS`, the cards being looked at by a `SCRY` or a `SURVEIL`,
+        the qualifying cards a `MAY` is about - and for a question about a
+        *hidden* zone (CR 400.2: the library and the hand) a client
+        holding the game state cannot turn those ids into cards - only the
+        player looking at the zone may, and the whole point of asking is that
+        they are being shown it. Ugin's Labyrinth published "you may exile a
+        colorless card with mana value 7 or greater from your hand" to a live
+        seat with nothing naming which cards qualified; the choice that follows
+        it named them only by id.
+
+        So the label travels with every question, filled in once here rather
+        than at each of the thirty-odd askers - a caller that already built its
+        own labels (`search_library`, `ask_trigger_order`, whose ids are not
+        cards at all) keeps them untouched.
+
+        All-or-nothing: if any id names nothing this game can find, the labels
+        are left empty rather than misaligned, because `card_labels` is
+        documented as positionally aligned with `cards` and a client indexing
+        into a partial list would read the wrong name for the wrong card.
+        """
+        if decision.card_labels or not decision.cards:
+            return decision
+        states = [self.find_by_id(card_id) for card_id in decision.cards]
+        if any(state is None for state in states):
+            return decision
+        return replace(decision, card_labels=tuple(state.name for state in states if state))
+
     def ask(self, decision: Decision) -> object:
         """Put one question to a player and get the answer back (CR 608.2d).
 
@@ -4454,7 +4486,12 @@ class Game(BaseModel):
         `decisions.provider` (if one is set) consulted, and only once that
         also has nothing - `NOT_ANSWERED`, or no provider at all - does
         `default_answer` speak for the player.
+
+        Every `CHOOSE_CARDS` question is labelled on its way through here - see
+        `_with_card_labels` - so a client is never handed a list of ids naming
+        cards it cannot see.
         """
+        decision = self._with_card_labels(decision)
         self.decisions.asked.append(decision)
         allowed = legal_options(decision)
         found, value = self.decisions.take(decision)
@@ -4510,6 +4547,12 @@ class Game(BaseModel):
                     f"{decision.prompt}: cannot choose a card that was not offered: "
                     f"{', '.join(stray)}"
                 )
+            if len(set(value)) != len(value):
+                # One card is one object (CR 109.1) and can be chosen once.
+                # Naming it twice would, for a search, take it out of the zone
+                # twice; for a discard it would claim to discard two cards
+                # while moving one.
+                raise ValueError(f"{decision.prompt}: the same card cannot be chosen twice")
             if decision.exact:
                 if len(value) != decision.amount:
                     raise ValueError(
@@ -5156,21 +5199,56 @@ class Game(BaseModel):
         at once; it is CR 701.23a's ordinary single-zone search, run three
         times, once per zone this same predicate applies to unchanged.
 
-        CR 701.23b is the rule that makes a search of a *hidden* zone a
-        decision: "If a player is searching a hidden zone for cards with a
-        stated quality ... that player isn't required to find some or all of
-        those cards even if they're present in that zone." CR 400.2 makes the
-        library and the hand hidden zones and the graveyard a public one, but
-        this method does not special-case that distinction - `optional`
-        already defaults to `False` (find everything this predicate and
-        `count` allow, the shape every zone-widened caller in this pool wants),
-        and a caller searching a hidden zone for a genuinely declinable find
-        opts into `optional=True` exactly as it always could for the library.
+        **One choice, over every candidate at once.** CR 701.23a's searcher
+        looks at the whole zone and *finds a card*: the choice is which of the
+        matching cards they want, made once. This used to be a walk - each
+        matching card in zone order got its own yes/no question - and that is a
+        different game. A walk never lets the searcher say what they want, only
+        decline what they are shown, so a Wooded Foothills activated to fetch a
+        Breeding Pool could only decline candidates until Breeding Pool happened
+        to come up next, and after CR 701.24b's shuffle "next" is arbitrary. The
+        live bug this closes is exactly that: one decline, and the seat was
+        handed a basic Forest.
 
-        CR 701.23d is the exception: "If a player is searching a hidden zone
+        So the question is a single `DecisionKind.CHOOSE_CARDS` carrying every
+        legal candidate in `cards`, with `card_labels` naming them (the zone may
+        be hidden, so a client cannot look the ids up itself), and the answer
+        names the cards the searcher wants. It is asked at all only when there
+        is something to decide: a mandatory search whose candidates do not
+        outnumber `count` has exactly one legal answer and is taken without
+        asking, the same way `Game.ask` forces a question with one option.
+
+        CR 701.23b is the rule that makes a search *declinable*: "If a player is
+        searching a hidden zone for cards with a stated quality ... that player
+        isn't required to find some or all of those cards even if they're
+        present in that zone." That is `optional=True`, and it is asked as an
+        inexact question (`exact=False`): any number of the candidates from zero
+        up to `count` is a legal answer, so finding nothing is a real answer a
+        searcher may give.
+
+        CR 701.23d is the other branch: "If a player is searching a hidden zone
         simply for a quantity of cards, such as 'a card' or 'three cards,' that
-        player must find that many cards (or as many as possible ...)." A search
-        with no stated quality passes `optional=False` and finds what is there.
+        player must find that many cards (or as many as possible, if the zone
+        doesn't contain that many)." That is `optional=False`, asked as an exact
+        question for `min(count, len(candidates))` cards - "as many as possible"
+        - so the searcher chooses *which*, never *whether*.
+
+        CR 400.2 makes the graveyard, battlefield, stack and exile public zones
+        and the library and hand hidden ones, and this method deliberately does
+        not branch on that. What CR 400.2 changes is whether CR 701.23b/701.23d
+        apply at all - both are written about hidden zones - not whether
+        CR 701.23a's find is a choice; a search of a public zone that matches
+        more cards than it takes is still the searcher picking which, and
+        picking is the same question with the same shape. The hidden/public
+        difference is therefore carried by `optional`, which the caller sets
+        from its own card's text, rather than inferred from the zone here: a
+        public-zone search is simply never `optional=True`, and every
+        zone-widened caller in this pool already passes `optional=False`.
+
+        The default answer, when nobody is scripted or provided, is
+        `Decision.default_cards`: the candidates in zone order, up to `count`.
+        That is what this engine found when the search was a walk whose `MAY`
+        questions defaulted to yes, so an unscripted fetch still fetches.
 
         CR 701.23e: nothing is revealed unless the effect says so, so nothing is
         revealed here.
@@ -5185,17 +5263,30 @@ class Game(BaseModel):
         if isinstance(player, str):
             player = self.player(player)
 
-        found: list[CardState] = []
-        for state in list(player.cards_in(zone)):
-            if len(found) >= count:
-                break
-            if not matches(state):
-                continue
-            if optional and not self.may(
-                player, f"find {state.name} while searching your {zone.value}", source=source
-            ):
-                continue
-            found.append(state)
+        candidates = [state for state in player.cards_in(zone) if matches(state)]
+        limit = min(count, len(candidates))
+        found: list[CardState] = candidates[:limit]
+        if candidates and (optional or len(candidates) > limit):
+            chosen = self.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=player.username,
+                    prompt=(
+                        f"choose up to {limit} card(s) to find while searching your {zone.value}"
+                        if optional
+                        else f"choose {limit} card(s) to find while searching your {zone.value}"
+                    ),
+                    source=source,
+                    amount=limit,
+                    cards=tuple(state.id for state in candidates),
+                    card_labels=tuple(state.name for state in candidates),
+                    exact=not optional,
+                    default_cards=tuple(state.id for state in found),
+                )
+            )
+            assert isinstance(chosen, tuple)
+            by_id = {state.id: state for state in candidates}
+            found = [by_id[card_id] for card_id in chosen]
 
         for state in found:
             player.cards_in(zone).remove(state)

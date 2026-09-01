@@ -157,6 +157,89 @@ def test_the_imprint_defaults_to_taking_it_unscripted():
     assert exiled.name == "Devourer of Destiny"
 
 
+def test_the_question_names_the_qualifying_cards_in_hand():
+    """The live payload for this trigger was `{"kind": "may", "prompt": "exile a
+    colorless with mana value 7 or greater card from your hand"}` and nothing
+    else - a seat holding two qualifying cards could not tell which cards
+    qualified, let alone say which one it meant.
+
+    The hand is a hidden zone (CR 400.2), so a client cannot work the candidates
+    out of the game state: the ids and their names travel with the question.
+    `Decision.card_labels` is positionally aligned with `Decision.cards`, and
+    `Game.ask` fills it in for every question that offers cards.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Ugin's Labyrinth", "Devourer of Destiny", "All Is Dust", "Lightning Bolt"],
+            battlefield=[],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    all_is_dust = scenario.find("All Is Dust", Zone.HAND, "alice")
+    scenario.will_take_the_may(True, source="Ugin's Labyrinth")
+    scenario.will_choose_cards(all_is_dust, username="alice")
+
+    scenario.play_land("Ugin's Labyrinth", "alice")
+    scenario.game.put_triggers_on_stack()
+    scenario.resolve_top()
+
+    asked = [q for q in scenario.questions_asked() if q.source == "Ugin's Labyrinth"]
+    may, choice = asked
+    assert may.kind is DecisionKind.MAY
+    assert sorted(may.card_labels) == ["All Is Dust", "Devourer of Destiny"]
+    assert choice.kind is DecisionKind.CHOOSE_CARDS
+    assert sorted(choice.card_labels) == ["All Is Dust", "Devourer of Destiny"]
+    assert len(choice.cards) == len(choice.card_labels)
+    assert "Lightning Bolt" not in choice.card_labels, "red, mana value 1 - not a candidate"
+    assert all_is_dust.zone is Zone.EXILE, "and the card the seat named is the one exiled"
+
+
+def test_the_prompts_read_as_english():
+    """The same live payload said "exile a colorless with mana value 7 or
+    greater card from your hand". The noun was in the wrong place: the quality
+    is an adjective and the mana-value bound qualifies the card, so the phrase
+    is "a colorless card with mana value 7 or greater", exactly as the card
+    prints it. The prompt is generated, so the builder was mangling every
+    prompt of this shape, not one string.
+
+    Two differently-shaped clauses, both real printings in the pool: Ugin's
+    Labyrinth's "a colorless card with mana value 7 or greater" and Isochron
+    Scepter's "an instant card with mana value 2 or less", which also has the
+    other article and the other bound.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Ugin's Labyrinth", "Devourer of Destiny", "Isochron Scepter", "Lightning Bolt"],
+            battlefield=["Island", "Island"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.will_take_the_may(False, times=None)
+
+    scenario.play_land("Ugin's Labyrinth", "alice")
+    scenario.game.put_triggers_on_stack()
+    scenario.resolve_top()
+    scenario.cast_and_resolve("Isochron Scepter", *scenario.untapped_sources("Island", "Island"))
+    scenario.game.put_triggers_on_stack()
+    scenario.resolve_top()
+
+    prompts = {q.source: q.prompt for q in scenario.questions_asked() if q.kind is DecisionKind.MAY}
+    assert prompts["Ugin's Labyrinth"] == (
+        "exile a colorless card with mana value 7 or greater from your hand"
+    )
+    assert prompts["Isochron Scepter"] == (
+        "exile an instant card with mana value 2 or less from your hand"
+    )
+
+
 # --------------------------------------------------------------------------
 # The conditional mana ability that reads the link back (CR 605.1a)
 # --------------------------------------------------------------------------

@@ -299,10 +299,13 @@ def test_an_optional_search_may_decline_to_find_a_card_that_is_there():
     they're present in that zone." CR 400.2 lists the public zones and the
     library is not one, so this applies to every library search.
 
-    Declining is answered through the same CR 608.2d machinery as a scry.
+    Declining is answered through the same CR 608.2d machinery as a scry, and
+    it is *one* answer: CR 701.23a's search is a single choice over every
+    candidate at once, so declining means naming no cards, not answering "no"
+    once per card the predicate matched.
     """
     scenario = _board()
-    scenario.will_take_the_may(False, times=None)
+    scenario.will_choose_cards()
 
     found = scenario.game.search_library(
         "alice", lambda state: state.card.name == "Island", optional=True
