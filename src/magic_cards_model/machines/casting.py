@@ -128,6 +128,23 @@ class KeywordCastOption(BaseModel):
     understood: bool = True
     """False when the keyword's printed cost could not be read into something
     payable. The option is still reported, so a sweep can see the gap."""
+    granted_line: str | None = None
+    """The keyword line this option came from when it was *granted* rather
+    than printed (CR 610.5) - `"Evoke {4}"` for Ashling, the Limitless's
+    "Elemental permanent spells you cast from your hand gain evoke {4} as you
+    cast them." `None` for a keyword read off the card's own printing, which
+    needs no line recorded because the printing already says it.
+
+    CR 400.7b is what this is for: "effects from static abilities that grant an
+    ability to a permanent spell that functions on the battlefield continue to
+    apply to the permanent that spell becomes", and CR 611.3d adds that such an
+    ability "lasts indefinitely unless some other duration is stated". A
+    keyword that is *two* abilities - evoke is, by CR 702.74a - therefore keeps
+    its battlefield half after the grantor is gone, and the only way for that
+    to be true of the object rather than of the grantor is for the object to
+    carry the line. `Casting._use_keyword` stamps it onto
+    `CardState.granted_ability_texts`, where
+    `machines/triggers.granted_triggered_abilities_of` reads it back."""
 
     def why_not(
         self, spell: CardState, caster: str, game: Any = None, origin: Zone | None = None
@@ -580,9 +597,13 @@ def _granted_option(
     )
     if option is None or option.zone is not zone:
         return None
+    # The keyword written back out the way a card would print it, so the object
+    # can carry the grant itself once it is announced (CR 400.7b) - see
+    # `KeywordCastOption.granted_line`.
+    line = f"{keyword.capitalize()} {printed}" if printed else keyword.capitalize()
     # The granting rule and the keyword's own rule, in that order: one says why
     # this spell has the keyword at all, the other says what the keyword does.
-    return option.model_copy(update={"rule": f"{rule}, {option.rule}"})
+    return option.model_copy(update={"rule": f"{rule}, {option.rule}", "granted_line": line})
 
 
 def _grant_as_you_cast(
@@ -1865,6 +1886,20 @@ class Casting(BaseModel):
         option = usable[0]
         self._enter_modes()
         self.keyword_used = option.keyword
+        # CR 610.5's grant happens "at the time the player proposes the
+        # casting", and CR 400.7b keeps it on the permanent the spell becomes.
+        # Recorded on the object rather than left implicit in the grantor's
+        # static ability, because by the time the keyword's battlefield half
+        # matters the grantor may be in a graveyard - which is the whole point
+        # of CR 400.7b, and of CR 611.3d's "lasts indefinitely unless some
+        # other duration is stated".
+        if option.granted_line is not None and (
+            option.granted_line not in self.spell.granted_ability_texts
+        ):
+            self.spell.granted_ability_texts = (
+                *self.spell.granted_ability_texts,
+                option.granted_line,
+            )
 
         if option.pays_mana_cost:
             # Warp's second half: the card is cast from exile for its own mana

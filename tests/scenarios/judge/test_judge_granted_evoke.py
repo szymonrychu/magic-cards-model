@@ -17,10 +17,12 @@ ability lasts indefinitely unless some other duration is stated". The Elemental
 still has evoke as it enters, so evoke's trigger still fires and it is still
 sacrificed.
 
-This engine models evoke as an alternative cost read off a card's *own* printed
-keyword (`Casting.use_keyword`, `scenarios/test_evoke.py`); a keyword *granted*
-by another permanent's static ability is not read anywhere, so both halves of
-the episode are `xfail` here. Every CR number was looked up with
+Both halves of the granted keyword are modelled: `Casting.granted_cast_options`
+reads CR 610.5's grant into the same `KeywordCastOption` a printed evoke
+produces, and `Casting._use_keyword` stamps the granted keyword line onto
+`CardState.granted_ability_texts`, where `machines/triggers.
+granted_triggered_abilities_of` reads it back as CR 702.74a's second ability.
+Every CR number was looked up with
 `knowledge_search(type="rules")` in the session that wrote the file.
 """
 
@@ -91,19 +93,6 @@ def test_ashling_grants_evoke_to_an_elemental_being_cast():
     assert str(casting.total_cost.mana) == "{4}"
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="The cost half of the granted evoke now works (the test above): "
-    "`Casting.granted_cast_options` reads CR 610.5's grant and the Hound is "
-    "cast for {4}. The *trigger* half does not: CR 702.74a's second ability "
-    "reaches a permanent only through `machines/keywords."
-    "keyword_triggered_abilities`, which reads the printed `Card.keywords` of "
-    "the permanent that entered, and `machines/triggers.triggers_for` asks "
-    "`triggered_abilities_of(source.card)` alone - neither consults a grant. "
-    "So no evoke sacrifice trigger exists for the Hound and CR 400.7b's "
-    "point (killing Ashling changes nothing) cannot be observed. Both files "
-    "belong to other tasks in this wave.",
-)
 def test_killing_ashling_in_response_does_not_save_the_evoked_elemental():
     """The episode's actual question, and its answer.
 

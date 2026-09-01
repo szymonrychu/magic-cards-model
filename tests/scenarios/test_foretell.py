@@ -235,10 +235,15 @@ def test_put_on_stack_takes_a_card_out_of_exile_not_just_the_owners_hand():
         "Game.note_cast, so nothing captures the annotation on the way past. "
         "CastRecord (models/game.py) has no field for it either, so "
         "_self_enters_modifiers falls through to CR 107.3m's announced X, which "
-        "is 0 for a spell with no {X} in its cost. Three files: capture the "
-        "annotation before the move (machines/casting.py), carry it "
-        "(models/game.py's CastRecord), and read 'the number of turns you've "
-        "begun since it was foretold' off it (machines/replacement.py)."
+        "is 0 for a spell with no {X} in its cost. The capture is now done: "
+        "Casting._move_to_the_stack keeps the pre-move annotation in "
+        "`Casting.announced_exile_annotation` (CR 400.7's new object is why it "
+        "has to be kept at all). Two files are still missing, and neither is "
+        "machines/casting.py: models/game.py needs a CastRecord field and a "
+        "note_cast keyword to carry the annotation, and machines/replacement.py "
+        "needs `_self_enters_modifiers` to read 'the number of turns you've "
+        "begun since it was foretold' (CR 702.143a) off it instead of falling "
+        "through to CR 107.3m's announced X."
     ),
     strict=True,
 )
