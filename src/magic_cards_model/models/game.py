@@ -148,10 +148,13 @@ from ..machines.triggers import (
     InterveningIfNotice,
     TargetingNotice,
     TargetingNoticeKind,
+    activated_abilities_from_lines,
     activated_abilities_of,
     apnap_order,
     granted_activated_abilities_of,
     intervening_if_holds,
+    rewritten_ability_lines,
+    state_triggers_for,
     tapped_for_mana_event,
     triggers_for,
 )
@@ -1382,6 +1385,18 @@ class Game(BaseModel):
     reads and increments this instead of putting a second copy of the same
     trigger on the stack later in the same turn. Cleared when a new turn
     begins, alongside `activations`/`loyalty_activations`."""
+
+    state_trigger_latches: dict[str, UUID] = Field(default_factory=dict)
+    """Which CR 603.8 state trigger is currently held shut, and by what.
+
+    CR 603.8: an ability that triggers on a game state rather than an event
+    "doesn't trigger again until it has left the stack". Keyed
+    `"<source id>:<printed condition>"`, the value is the id of the
+    `AbilityOnStack` that triggered - `machines/triggers.state_triggers_for`
+    drops the entry the moment that object is neither on the stack nor waiting
+    in `pending_triggers`, so the latch opens for a resolved ability and a
+    *countered* one alike (CR 701.6a: countering removes it from the stack).
+    Not cleared per turn: the latch is about the stack, not the turn."""
 
     blocks_triggered: list[str] = Field(default_factory=list)
     """The blocker/attacker pairs that have already fired their block triggers
@@ -2889,6 +2904,12 @@ class Game(BaseModel):
         # CR 603.3 puts it on the stack the next time a player would receive
         # priority, alongside these.
         triggered = triggered + self.delayed_triggers.fire(event)
+        # CR 603.8: a state trigger watches a game state, not an event, so it
+        # is swept for after every event rather than matched against one. This
+        # is what lets a countered state trigger fire again immediately - the
+        # counter event is emitted from `Game.counter` after the ability has
+        # already been removed from the stack (CR 701.6a).
+        triggered = triggered + state_triggers_for(self)
         self.pending_triggers.extend(triggered)
         return triggered
 
@@ -2920,8 +2941,15 @@ class Game(BaseModel):
         them for a later call that a scenario may never make.
         """
         placed: list[AbilityOnStack] = []
+        # CR 603.8 / CR 704.1a: a state trigger is a triggered ability whose
+        # condition is a game state, so it is swept for here too - a state that
+        # became true while an ability was resolving (or that was true before
+        # anything ever happened, so no event was emitted to sweep on) has still
+        # triggered, and CR 603.3 puts it on the stack at this same moment.
+        self.pending_triggers.extend(state_triggers_for(self))
         while self.pending_triggers:
             placed.extend(self._put_pending_triggers_on_stack())
+            self.pending_triggers.extend(state_triggers_for(self))
         return placed
 
     def _put_pending_triggers_on_stack(self) -> list[AbilityOnStack]:
@@ -7838,7 +7866,19 @@ class Game(BaseModel):
         Create a 0/0 colorless Construct artifact creature token ...'") is the
         only source of these in the pool. Appending rather than interleaving
         keeps a printed ability's own index stable as more get granted.
+
+        **CR 613.5 / CR 707.2**: when a continuous effect has rewritten the
+        permanent's computed ability text away from the printed card - a layer 1
+        copy effect is the only shape that does - the *computed* abilities are
+        the ones it has, and the printed card is not consulted at all. A land
+        that has become a copy of Sol Ring offers `{T}: Add {C}{C}` and nothing
+        of its own. `rewritten_ability_lines` answers None for every permanent
+        whose printed lines all survive, so an ordinary grant still appends and
+        every printed ability's index stays where it was.
         """
+        rewritten = rewritten_ability_lines(self, permanent)
+        if rewritten is not None:
+            return activated_abilities_from_lines(rewritten, permanent.card, permanent.up_face_name)
         return activated_abilities_of(
             permanent.card, permanent.up_face_name
         ) + granted_activated_abilities_of(permanent.granted_ability_texts)

@@ -18,10 +18,22 @@ sentence, which strips the Calendar's abilities, only runs afterwards
 second trigger reaches the stack the Calendar has no abilities left, so nothing
 stops it.
 
-The Calendar's ability now parses as a trigger condition (the comma inside
-"1,000" is no longer read as the CR 603.1 boundary), but there is still no
-state-trigger machinery for it to plug into, so the ruling itself remains out
-of reach.
+The Calendar's ability parses as a trigger condition (the comma inside "1,000"
+is no longer read as the CR 603.1 boundary), and CR 603.8's own machinery is
+now built: `machines/triggers.state_triggers_for` sweeps the battlefield for a
+"there are N or more <kind> counters on <this permanent>" condition wherever
+triggers are flushed before priority, and `Game.state_trigger_latches` holds
+each one shut until its ability has left the stack - by resolving *or* by being
+countered (CR 701.6a: "To counter a spell or ability means to cancel it,
+removing it from the stack").
+
+CR 704.1a is what puts this in `machines/triggers.py` rather than among the
+state-based actions: "Abilities that watch for a specified game state are
+triggered abilities, not state-based actions."
+
+The full ruling is still `xfail`, for one reason and one only: the Calendar's
+own *effect* ("sacrifice it and each opponent loses 1,000 life") has no entry
+in `machines/effects.py`, so the second trigger resolves and does nothing.
 
 Card text verified with `resolve_cards`; every CR number here was looked up
 with `knowledge_search(type="rules")` in this session.
@@ -64,37 +76,77 @@ def test_the_calendars_state_trigger_condition_reads_past_the_number():
     assert state_trigger.event is None, "no TriggerEvent shape was matched for it"
 
 
-def test_a_thousand_time_counters_trigger_nothing():
-    """DDR#961's premise, which the engine never even reaches.
+def test_a_thousand_time_counters_trigger_once_and_then_latch():
+    """DDR#961's premise.
 
-    CR 603.8's state trigger should fire the moment the game state matches -
+    CR 603.8's state trigger fires the moment the game state matches -
     CR 603.2: "Whenever a game event or game state matches a triggered
     ability's trigger event, that ability automatically triggers" - and
     CR 704.1a is explicit that these are triggered abilities, not state-based
-    actions.
+    actions ("Abilities that watch for a specified game state are triggered
+    abilities, not state-based actions").
 
-    With a thousand time counters sitting on the Calendar, nothing goes on the
-    stack, the Calendar is not sacrificed, and Bob keeps his 20 life. Recorded
-    as the honest baseline the `xfail` below is measured against.
+    CR 603.3 then puts it on the stack "the next time a player would receive
+    priority", which is what `put_triggers_on_stack` represents. The rest of
+    CR 603.8 is the latch that keeps Dark Depths from looping: the ability
+    "doesn't trigger again until it has left the stack", so a second sweep
+    while the first is still sitting there produces nothing.
+
+    999 counters is not the condition, and 1,001 is - the count is read past
+    its own digit-group comma.
     """
     scenario = (
         Scenario().player("alice", battlefield=["The Millennium Calendar"]).player("bob").build()
     )
     calendar = scenario.find("The Millennium Calendar", Zone.BATTLEFIELD, "alice")
-    calendar.add_counters("time", 1000)
+    calendar.add_counters("time", 999)
 
     scenario.start_at(Step.PRECOMBAT_MAIN)
+    assert scenario.game.put_triggers_on_stack() == [], "999 is not 1,000 or more"
 
-    assert scenario.game.pending_triggers == []
-    assert scenario.stack_names() == []
-    assert calendar.zone is Zone.BATTLEFIELD
-    assert scenario.player("bob").life == 20
+    calendar.add_counters("time", 2)
+    (first,) = scenario.game.put_triggers_on_stack()
+
+    assert first.source_name == "The Millennium Calendar"
+    assert first.controller == "alice"
+    assert scenario.stack_names() == ["The Millennium Calendar's triggered ability"]
+    # CR 603.8's latch: still on the stack, so it has not triggered again.
+    assert scenario.game.put_triggers_on_stack() == []
+
+
+def test_the_state_trigger_fires_again_once_the_first_one_has_resolved():
+    """The other half of CR 603.8's latch. The Calendar's own effect is not in
+    `machines/effects.py`, so the ability resolves and does nothing and the
+    thousand counters are still there - which means the condition is true
+    again, and the ability, having left the stack, triggers again. That is
+    exactly the rule ("doesn't trigger again until it has left the stack"), not
+    a bug in the sweep."""
+    scenario = (
+        Scenario().player("alice", battlefield=["The Millennium Calendar"]).player("bob").build()
+    )
+    calendar = scenario.find("The Millennium Calendar", Zone.BATTLEFIELD, "alice")
+    calendar.add_counters("time", 1000)
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    (first,) = scenario.game.put_triggers_on_stack()
+    scenario.resolve_top()
+
+    # `resolve_top` flushes CR 603.3's triggers itself, so the second one is
+    # already there: the ability left the stack, the condition is still true.
+    assert scenario.stack_names() == ["The Millennium Calendar's triggered ability"]
+    (second,) = scenario.game.stack
+    assert second.id != first.id
 
 
 @pytest.mark.xfail(
-    reason="CR 603.8 state triggers are not modelled at all: the Calendar's "
-    "condition parses now, but nothing watches the game state for it, so "
-    "nothing ever triggers to be countered, re-trigger, or resolve",
+    reason="CR 603.8's state-trigger sweep and latch are now built "
+    "(`machines/triggers.state_triggers_for`), and the whole DDR#961 sequence "
+    "runs: the Calendar's trigger goes on the stack, Tishana's Tidebinder "
+    "counters it, and the state trigger fires again and resolves. What is "
+    "missing is only the Calendar's own effect - there is no "
+    "('The Millennium Calendar', TriggerEvent, ...) entry in "
+    "machines/effects.py, so the second trigger resolves and does nothing, "
+    "leaving the Calendar on the battlefield and Bob at 20",
     strict=True,
 )
 def test_countering_the_state_trigger_lets_it_trigger_again_before_the_abilities_go():

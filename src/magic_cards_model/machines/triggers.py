@@ -46,6 +46,7 @@ means a card whose trigger is not one of these shapes simply never fires - it is
 never *wrongly* fired. The shapes understood are listed on `condition_matches`.
 """
 
+import contextlib
 import operator
 import re
 from collections.abc import Sequence
@@ -59,6 +60,7 @@ from ..models.card import Card, Color, Type
 from ..models.card_state import CardState, Counter, TargetRef
 from ..models.zone import Zone
 from .abilities import (
+    Ability,
     AbilityKind,
     ActivatedAbility,
     TriggeredAbility,
@@ -2424,6 +2426,62 @@ def granted_activated_abilities_of(texts: Sequence[str]) -> list[ActivatedAbilit
     ]
 
 
+def rewritten_ability_lines(game: "Game", permanent: CardState) -> tuple[str, ...] | None:
+    """This permanent's *computed* ability text when a continuous effect has
+    rewritten it away from the printed card, else None.
+
+    CR 613.5: "The application of continuous effects as described by the layer
+    system is continually and automatically performed by the game. All resulting
+    changes to an object's characteristics are instantaneous." CR 109.3 counts
+    abilities among an object's characteristics, so a permanent whose layer 1
+    (CR 613.2c, 707.2: "the copy acquires the copiable values of the original
+    object's characteristics") copy effect replaced its rules text has the
+    *copied* object's abilities and none of its own - a land that has become a
+    copy of Sol Ring can be tapped for `{C}{C}` and cannot be tapped for green.
+
+    Only a rewrite is reported, never a plain grant: if every printed line
+    survives into `Characteristics.abilities`, the callers' printed-plus-granted
+    list is already right and keeping it keeps every ability *index* stable.
+    Nothing is reported for a permanent the layer engine has not computed, or
+    for one that lost all its ability text - CR 613.1f removal is already
+    policed by `Game._still_has_ability`.
+    """
+    if permanent.zone is not Zone.BATTLEFIELD:
+        return None
+    try:
+        computed = game.characteristics_of(permanent)
+    except KeyError:
+        return None
+    lines = tuple(computed.abilities)
+    if not lines:
+        return None
+    printed = [line.strip() for line in (permanent.oracle_text or "").splitlines() if line.strip()]
+    if all(line in lines for line in printed):
+        return None
+    return lines
+
+
+def activated_abilities_from_lines(
+    lines: Sequence[str], card: Card, face: str | None = None
+) -> list[ActivatedAbility]:
+    """`rewritten_ability_lines`' output read as activated abilities (CR 602.1).
+
+    The same fallback `activated_abilities_of` applies: a basic land prints no
+    activated ability of its own (its mana ability is reminder text), so a
+    computed line list that parses to nothing falls back to
+    `intrinsic_land_ability` (CR 305.6).
+    """
+    abilities = [
+        ability
+        for ability in parse_granted_ability_lines(lines)
+        if isinstance(ability, ActivatedAbility)
+    ]
+    if abilities:
+        return abilities
+    intrinsic = intrinsic_land_ability(card, face)
+    return [intrinsic] if intrinsic is not None else []
+
+
 def granted_triggered_abilities_of(texts: Sequence[str]) -> list[TriggeredAbility]:
     """`CardState.granted_ability_texts`' own triggered abilities, read the same
     way `triggered_abilities_of` reads a card's printed ones.
@@ -2479,8 +2537,17 @@ def triggers_for(game: "Game", event: GameEvent, sources: list[CardState]) -> li
         # this object, so it is asked here alongside the card's own printed
         # ones. Never *instead* of them - a grant adds.
         granted = granted_triggered_abilities_of(source.granted_ability_texts)
+        # CR 613.5 / CR 707.2: a permanent whose computed ability text has been
+        # rewritten by a layer 1 copy effect has the *copied* object's triggers
+        # and not its own, so the printed card is the wrong thing to read.
+        # `rewritten_ability_lines` answers None whenever nothing was taken
+        # away, which is every ordinary permanent.
+        rewritten = rewritten_ability_lines(game, source)
+        if rewritten is not None:
+            granted = granted_triggered_abilities_of(rewritten)
         granted_ids = {id(ability) for ability in granted}
-        for ability in triggered_abilities_of(source.card) + granted:
+        printed_abilities = [] if rewritten is not None else triggered_abilities_of(source.card)
+        for ability in printed_abilities + granted:
             up_face_name = source.up_face_name
             if (
                 up_face_name is not None
@@ -2537,6 +2604,106 @@ def triggers_for(game: "Game", event: GameEvent, sources: list[CardState]) -> li
                     event=event,
                 )
             )
+    return triggered
+
+
+#: CR 603.8's own shape, as the pool prints it: The Millennium Calendar's
+#: "When there are 1,000 or more time counters on The Millennium Calendar,
+#: sacrifice it and each opponent loses 1,000 life." The count is written with
+#: digit-group commas, which `machines/abilities._split_top_level` already
+#: refuses to read as the CR 603.1 condition/effect boundary.
+_STATE_COUNTER_TRIGGER_RE = re.compile(
+    r"^there are (?P<count>\d[\d,]*) or more (?P<kind>.+?) counters on (?P<subject>.+?)$",
+    re.IGNORECASE,
+)
+
+
+def _state_trigger_abilities(game: "Game", source: CardState) -> list[TriggeredAbility]:
+    """The CR 603.8 abilities this permanent has right now.
+
+    Read off the *computed* ability text (CR 613.5, CR 109.3: abilities are
+    characteristics) rather than the printed card, so a permanent that has lost
+    all abilities in layer 6 (CR 613.1f) has no state trigger left - which is
+    DDR#961's Tishana's Tidebinder exactly. A permanent the layer engine has
+    not computed falls back to its printed text.
+    """
+    try:
+        lines: Sequence[str] = tuple(game.characteristics_of(source).abilities)
+        parsed: list[Ability] = parse_granted_ability_lines(lines)
+    except KeyError:
+        parsed = parse_abilities(source.card)
+    return [
+        ability
+        for ability in parsed
+        if isinstance(ability, TriggeredAbility)
+        and ability.event is None
+        and _STATE_COUNTER_TRIGGER_RE.match(ability.condition.strip())
+    ]
+
+
+def _state_condition_holds(game: "Game", ability: TriggeredAbility, source: CardState) -> bool:
+    """Whether this permanent's game state matches its CR 603.8 condition."""
+    match = _STATE_COUNTER_TRIGGER_RE.match(ability.condition.strip())
+    if match is None:
+        return False
+    subject = match["subject"].strip().rstrip(".").lower()
+    names = {source.name.lower(), "it", "this permanent", "this creature", "this artifact"}
+    with contextlib.suppress(KeyError):
+        names.add(game.characteristics_of(source).name.lower())
+    if subject not in names:
+        # A condition about some *other* object is not something this matcher
+        # can read; answering False keeps CR 603.2's "only if it actually
+        # matches" rather than guessing.
+        return False
+    needed = int(match["count"].replace(",", ""))
+    return source.counters[match["kind"].strip().lower()] >= needed
+
+
+def state_triggers_for(game: "Game") -> list[AbilityOnStack]:
+    """Every CR 603.8 state trigger that has just become true.
+
+    CR 603.8: "Some triggered abilities trigger when a game state ... is true,
+    rather than triggering when an event occurs." CR 704.1a confirms these are
+    triggered abilities and not state-based actions, so what comes back here is
+    an ordinary `AbilityOnStack` that CR 603.3 puts on the stack the next time a
+    player would receive priority.
+
+    The rest of CR 603.8 is the latch: such an ability "doesn't trigger again
+    until it has left the stack". `Game.state_trigger_latches` holds, per source
+    and condition, the id of the ability that is currently holding it shut, and
+    the latch opens the moment that object is neither on the stack nor waiting
+    in `pending_triggers` - which is true whether it left by resolving or by
+    being countered (CR 701.6a: countering "means to cancel it, removing it from
+    the stack"). Countering therefore frees the trigger to fire again at once,
+    which is DDR#961's whole ruling.
+
+    Nothing is appended to `pending_triggers` here; the caller does that, the
+    same way `Game.emit` owns that step for event triggers.
+    """
+    live = {item.id for item in game.stack if isinstance(item, AbilityOnStack)}
+    live |= {item.id for item in game.pending_triggers}
+    for key, ability_id in list(game.state_trigger_latches.items()):
+        if ability_id not in live:
+            del game.state_trigger_latches[key]
+
+    triggered: list[AbilityOnStack] = []
+    for source in list(game.battlefield):
+        controller = source.controller or game.active_player.username
+        for ability in _state_trigger_abilities(game, source):
+            if not _state_condition_holds(game, ability, source):
+                continue
+            key = f"{source.id}:{ability.condition}"
+            if key in game.state_trigger_latches:
+                continue
+            on_stack = AbilityOnStack(
+                kind=AbilityKind.TRIGGERED,
+                ability=ability,
+                source_id=source.id,
+                source_name=source.name,
+                controller=controller,
+            )
+            game.state_trigger_latches[key] = on_stack.id
+            triggered.append(on_stack)
     return triggered
 
 
