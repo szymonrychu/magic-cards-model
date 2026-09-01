@@ -943,6 +943,9 @@ class Game(BaseModel):
             Zone.STACK: [],
             Zone.EXILE: [],
             Zone.COMMAND: [],
+            # CR 400.1's optional eighth zone, shared like the rest of these.
+            # Empty in every game that is not being played for ante (CR 407.2).
+            Zone.ANTE: [],
         }
     )
     priority: PriorityMachine | None = None
@@ -6292,6 +6295,62 @@ class Game(BaseModel):
             )
         return permanent
 
+    @property
+    def ante_zone(self) -> list[CardState]:
+        """CR 400.1's optional eighth zone, shared and public (CR 400.2)."""
+        return self.shared_zones[Zone.ANTE]  # type: ignore[return-value]
+
+    def ante(self, card_state: CardState, anteing_player: str | None = None) -> bool:
+        """Ante a card, and answer whether it actually moved (CR 407.4).
+
+        CR 407.4: "To ante an object is to put that object into the ante zone
+        from whichever zone it's currently in. The owner of an object is the
+        only player who can ante that object." Both halves are here: the move
+        is out of *whatever* zone the card is in, and a player who is not the
+        owner is refused outright rather than quietly succeeding.
+
+        The boolean is what Jeweled Bird's "Ante this artifact. **If you do**,
+        ..." reads: an ante that was refused leaves the whole rest of the
+        ability undone, which is the stolen-Bird ruling DDR#666 walks through.
+
+        `anteing_player` defaults to the card's own controller, which is who is
+        activating the ability that says to ante it - and for a permanent an
+        opponent has stolen, that is exactly the player CR 407.4 refuses.
+
+        CR 407.3 is why there is no other door into this zone: "A few cards
+        have the text 'Remove this card from your deck before playing if you're
+        not playing for ante.' These are the only cards that can add or remove
+        cards from the ante zone or change a card's ownership."
+        """
+        anteing_player = (
+            anteing_player if anteing_player is not None else card_state.controller_or_owner
+        )
+        owner = card_state.owner
+        if owner is None or anteing_player != owner:
+            return False
+        was_on_battlefield = card_state in self.battlefield
+        if was_on_battlefield:
+            self._note_left_battlefield(card_state)
+            self._detach_dependents(card_state)
+        self._take_out_of_every_zone(card_state)
+        self.combat.remove(card_state.id)  # CR 506.4
+        card_state.move_to(Zone.ANTE)
+        self.ante_zone.append(card_state)
+        if was_on_battlefield:
+            # CR 603.6c's generic departure. There is no ante-specific trigger
+            # event, and nothing in the pool watches for one.
+            self.emit(
+                GameEvent(
+                    event=TriggerEvent.LEAVES_THE_BATTLEFIELD,
+                    subject_id=card_state.id,
+                    subject_name=card_state.name,
+                    subject_controller=card_state.controller,
+                    subject_card=card_state.card,
+                    player=card_state.controller,
+                )
+            )
+        return True
+
     def exile_cards(self, cards: Sequence[CardState]) -> list[CardState]:
         """Exile several cards as one instruction (CR 406.2).
 
@@ -6879,9 +6938,15 @@ class Game(BaseModel):
         CR 800.4a: everything they own leaves the game, and CR 800.4j has the
         turn carry on without them. Ownership is not modelled separately from
         control, so this reads their objects off `controller`.
+
+        **CR 800.4n is the one exception**: "When a player leaves the game,
+        objects that player owns in the ante zone do not leave the game." The
+        ante zone is skipped entirely here for that reason.
         """
         assert self.turn is not None
-        for zone_cards in self.shared_zones.values():
+        for zone, zone_cards in self.shared_zones.items():
+            if zone is Zone.ANTE:
+                continue  # CR 800.4n
             for state in list(zone_cards):
                 if state.controller == username:
                     self.combat.remove(state.id)
