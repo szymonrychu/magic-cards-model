@@ -258,6 +258,26 @@ class DecisionKind(StrEnum):
     #: same "least destructive, most reversible" posture `SCRY`/`SURVEIL`'s own
     #: "keep everything on top" default already takes.
     PUT_ON_TOP_OR_BOTTOM = "put_on_top_or_bottom"
+    #: CR 603.3b: "If multiple abilities have triggered since the last time a
+    #: player received priority, the abilities are placed on the stack in a
+    #: two-part process. First, each player, in APNAP order, puts each
+    #: triggered ability they control on the stack **in any order they
+    #: choose**." That last clause is a real choice and this is it - asked of
+    #: one player, about the abilities *that player* controls, once APNAP has
+    #: already fixed which player's block goes on first.
+    #:
+    #: Not a resolving effect's choice (CR 608.2d), so it sits beside
+    #: `MULLIGAN` and the two combat declarations as a question the rules ask.
+    #:
+    #: `Decision.cards` carries the `AbilityOnStack.id` of each of that
+    #: player's waiting abilities, in the order they triggered. The answer is a
+    #: permutation of exactly those ids, **bottom of the stack first** - so the
+    #: last id in the answer is the one that resolves first, which is the way
+    #: round DDR#983's trick needs (put the Harrier's on last, resolve it
+    #: first). An answer that is not a permutation of what was offered is
+    #: refused; the default is the offered order unchanged, which is what this
+    #: engine did before anybody was asked.
+    ORDER_TRIGGERS = "order_triggers"
 
 
 @dataclass(frozen=True)
@@ -391,6 +411,12 @@ def default_answer(decision: Decision) -> object:
         return 0
     if decision.kind is DecisionKind.PUT_ON_TOP_OR_BOTTOM:
         return True
+    if decision.kind is DecisionKind.ORDER_TRIGGERS:
+        # CR 603.3b's "in any order they choose" with nobody choosing: the
+        # order they triggered in, which is exactly what `apnap_order` gave
+        # this engine before the question existed. A permutation is always
+        # legal, so there is no `affirmative_is_legal` branch here.
+        return decision.cards
     if decision.kind in (DecisionKind.DECLARE_ATTACKERS, DecisionKind.DECLARE_BLOCKERS):
         # CR 508.1 says "if any" and CR 509.1 says "may": declaring nobody is
         # always legal, and is what an unscripted player does.
@@ -599,6 +625,59 @@ def ask_mulligan(script: DecisionScript, player: str, *, prompt: str = "take a m
     if not isinstance(value, bool):
         raise ValueError(f"{decision.prompt}: a yes-or-no question needs a bool answer")
     return value
+
+
+def ask_trigger_order(
+    script: DecisionScript,
+    player: str,
+    abilities: tuple[UUID, ...],
+    *,
+    prompt: str = "order your triggered abilities on the stack",
+) -> tuple[UUID, ...]:
+    """Put CR 603.3b's ordering to one player, and return the order they chose.
+
+    "First, each player, in APNAP order, puts each triggered ability they
+    control on the stack in any order they choose." APNAP has already decided
+    which *player's* block goes on first; this is the only choice left, and it
+    is the one DDR#983 turns on.
+
+    `abilities` is that player's own waiting abilities, in the order they
+    triggered, and the answer is a permutation of exactly them, **bottom of the
+    stack first**. Asked and validated here rather than through `Game.ask` for
+    the same reason `ask_mulligan` and the two combat declarations are: it is a
+    question the rules ask, not one a resolving effect asks (CR 608.2d), and
+    there is no yes-or-no for `legal_options` to narrow.
+
+    Consultation order is `Game.ask`'s exactly - a scripted answer first, then
+    `script.provider`, then `default_answer`'s "leave it as it triggered".
+    Fewer than two abilities is not a choice at all (CR 101.4's "if multiple
+    players would make choices"; here, one ability has exactly one order), so
+    nothing is asked and nothing is recorded.
+
+    An answer that is not a permutation of `abilities` is refused outright
+    rather than silently repaired: dropping an ability would be CR 603.3's "its
+    controller puts it on the stack" going unperformed, and adding one would
+    put an ability on the stack that never triggered.
+    """
+    if len(abilities) < 2:
+        return abilities
+    decision = Decision(
+        kind=DecisionKind.ORDER_TRIGGERS, player=player, prompt=prompt, cards=abilities
+    )
+    script.asked.append(decision)
+    found, value = script.take(decision)
+    if not found and script.provider is not None:
+        provided = script.provider.decide(decision)
+        if provided is not NOT_ANSWERED:
+            found, value = True, provided
+    if not found:
+        value = default_answer(decision)
+    if not isinstance(value, (list, tuple)):
+        raise ValueError(f"{decision.prompt}: the answer is a sequence of ability ids")
+    order = tuple(value)
+    if sorted(order, key=str) != sorted(abilities, key=str):
+        raise ValueError(f"{decision.prompt}: the answer must order exactly the abilities offered")
+    return order
 
 
 def _ask_declaration(
