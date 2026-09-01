@@ -558,6 +558,29 @@ class PlayedScenario:
         """
         self._queue(DecisionKind.CHOOSE_CARDS, tuple(c.id for c in cards), username, source, times)
 
+    def will_choose_targets(
+        self,
+        *targets: Target,
+        username: str | None = None,
+        source: str | None = None,
+        times: int | None = 1,
+    ) -> None:
+        """Answer the next `CHOOSE_TARGETS` question with exactly these targets.
+
+        The vocabulary is `targets=`'s own: a `CardState` is an object target
+        and a `str` a player target, both coerced to a `TargetRef` the way
+        CR 115.1 makes them one kind of thing. `Game.ask` still checks the
+        answer against the legal candidates it offered, so naming something
+        illegal raises rather than being silently accepted.
+        """
+        self._queue(
+            DecisionKind.CHOOSE_TARGETS,
+            tuple(TargetRef.coerce(target) for target in targets),
+            username,
+            source,
+            times,
+        )
+
     def scry_keeping_everything_on_top(
         self, *, username: str | None = None, times: int | None = 1
     ) -> None:
@@ -886,6 +909,42 @@ class PlayedScenario:
     ) -> str | None:
         return self.game.why_cannot_activate(source, index, username)
 
+    def cycle(
+        self,
+        card_state: CardState,
+        *mana_sources: CardState,
+        username: str | None = None,
+        index: int = 0,
+    ) -> object:
+        """Cycle a card out of its owner's hand (CR 702.29a).
+
+        "Cycling is an activated ability that functions only while the card
+        with cycling is in a player's hand. 'Cycling [cost]' means '[Cost],
+        Discard this card: Draw a card.'" CR 702.29b adds that the ability
+        "continues to exist while the object is on the battlefield and in all
+        other zones", which is why the *zone* is what gates it, not the card.
+
+        `activate` is deliberately not the door: it goes through
+        `Game.begin_activating`, which only reaches abilities of battlefield
+        permanents, so a card in hand has "no activated ability number 0"
+        there - correctly, for the abilities `Game` reads off a permanent.
+        Cycling is built by `machines/keywords.py` out of the keyword line
+        instead, discard and all, so this delegates to its own driver rather
+        than widening the permanent path.
+
+        `mana_sources` pay a cycling cost that needs mana; Street Wraith's
+        "Cycling—Pay 2 life" needs none.
+        """
+        from magic_cards_model.machines import keywords
+
+        player = username or self.game.controller_of(card_state).username
+
+        def pay(payment: CostPayment) -> None:
+            for mana_source in mana_sources:
+                payment.tap_for_mana(mana_source, mana_from(mana_source))
+
+        return keywords.cycle(self.game, card_state, player, pay, index)
+
     def turn_face_up(
         self, permanent: CardState, *mana_sources: CardState, username: str | None = None
     ) -> CardState:
@@ -907,6 +966,7 @@ class PlayedScenario:
         from_zone: Zone = Zone.HAND,
         targets: list[Target] | None = None,
         *,
+        division: list[int] | None = None,
         sacrificing: list[CardState] | None = None,
         discarding: list[CardState] | None = None,
         exiling: list[CardState] | None = None,
@@ -940,6 +1000,11 @@ class PlayedScenario:
         )
         if targets is not None:
             casting.choose_targets(targets)
+        if division is not None:
+            # CR 601.2d: the division is announced *after* the targets, in the
+            # same CR 601.2 announcement, and each of those targets must
+            # receive at least one of whatever is divided.
+            casting.announce_division(division)
         return casting
 
     def cast_onto_stack(
@@ -949,6 +1014,7 @@ class PlayedScenario:
         username: str | None = None,
         targets: list[Target] | None = None,
         auto: bool = False,
+        division: list[int] | None = None,
         sacrificing: list[CardState] | None = None,
         discarding: list[CardState] | None = None,
         exiling: list[CardState] | None = None,
@@ -969,6 +1035,7 @@ class PlayedScenario:
             name,
             username,
             targets=targets,
+            division=division,
             sacrificing=sacrificing,
             discarding=discarding,
             exiling=exiling,
@@ -1007,6 +1074,7 @@ class PlayedScenario:
         username: str | None = None,
         targets: list[Target] | None = None,
         auto: bool = False,
+        division: list[int] | None = None,
         sacrificing: list[CardState] | None = None,
         discarding: list[CardState] | None = None,
         exiling: list[CardState] | None = None,
@@ -1028,6 +1096,7 @@ class PlayedScenario:
             username=username,
             targets=targets,
             auto=auto,
+            division=division,
             sacrificing=sacrificing,
             discarding=discarding,
             exiling=exiling,

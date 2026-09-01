@@ -374,8 +374,15 @@ def return_subject_to_battlefield_under_owner(
 
 def return_subject_to_hand(game: "Game", ability: AbilityOnStack, trigger: DelayedTrigger) -> None:
     """ "Return it to its owner's hand at the beginning of the next end step" -
-    Aether Membrane's and dash's shape (CR 701.19a). `Game.return_to_hand`
-    already goes to the *owner's* hand, whoever controls it now.
+    Aether Membrane's and dash's shape. `Game.return_to_hand` already goes to
+    the *owner's* hand, whoever controls it now.
+
+    Dash is **CR 702.109a**: "Dash represents three abilities: two static
+    abilities that function while the card with dash is on the stack, one of
+    which may create a delayed triggered ability, and a static ability that
+    functions while the object with dash is on the battlefield." That delayed
+    triggered ability is this one. (This docstring cited CR 701.19a until now,
+    which is Regenerate - a number nobody had looked up.)
     """
     permanent = trigger.still_affects(game)
     if permanent is not None:
@@ -571,9 +578,15 @@ _SIMPLE_VERB_RE = re.compile(
     re.IGNORECASE,
 )
 #: "return <anaphor> to <destination>" - the two destinations that recur.
+#: "your hand" is the same destination as "its owner's hand" here, and CR 400.3
+#: is why: "if an object would go to any library, graveyard, or hand other than
+#: its owner's, it goes to its owner's corresponding zone." A card Ilharg, the
+#: Raze-Boar put onto the battlefield out of your own hand is one you own, so
+#: the two phrasings name the same zone; `Game.return_to_hand` sends it to the
+#: owner's hand either way, which is the only thing the rules permit.
 _RETURN_RE = re.compile(
     rf"^return (?P<anaphor>{_ANAPHOR_PATTERN}) to "
-    r"(?P<destination>its owner's hand|the battlefield under its owner's control)$",
+    r"(?P<destination>its owner's hand|your hand|the battlefield under its owner's control)$",
     re.IGNORECASE,
 )
 
@@ -712,7 +725,7 @@ def parse_anaphoric_delayed_clause(clause: str) -> AnaphoricDelayedClause | None
         anaphor = returning.group("anaphor").lower()
         verb = (
             "return_to_hand"
-            if returning.group("destination").lower() == "its owner's hand"
+            if returning.group("destination").lower() in ("its owner's hand", "your hand")
             else "return_to_battlefield"
         )
 

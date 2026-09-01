@@ -3594,6 +3594,23 @@ _PITCH_ALTERNATIVE_COST_LINE_RE = re.compile(
     re.IGNORECASE | re.MULTILINE,
 )
 
+#: "If you control a commander, you may cast this spell without paying its mana
+#: cost." (Deflecting Swat) - the free half of the same CR 118.9 family
+#: `_PITCH_ALTERNATIVE_COST_LINE_RE` reads: "an alternative cost is a cost
+#: listed in a spell's text ... that its controller may pay rather than paying
+#: the spell's mana cost". CR 118.9b adds that alternative costs are generally
+#: optional, which is the "you may". Either way it is a cost, never part of
+#: what the spell *does* on resolution, so it is stripped here for the same
+#: reason - left in, it is one unreadable clause and, the paragraph being
+#: atomic, it would take the sentence printed beside it down with it.
+#:
+#: The leading condition is read generally rather than as the commander one
+#: Deflecting Swat happens to print, exactly as the pitch line above does.
+_FREE_ALTERNATIVE_COST_LINE_RE = re.compile(
+    r"^(?:If [^.]+?, )?You may cast this spell without paying its mana cost\.\s*",
+    re.IGNORECASE | re.MULTILINE,
+)
+
 #: "This spell costs {N} less to cast if [condition]." (Mystical Dispute) - a
 #: static ability about *announcing* the spell (CR 601.2f), never part of
 #: what it does on resolution. This self-referential reduction (as opposed to
@@ -3706,6 +3723,7 @@ def _strip_non_effect_preamble(text: str) -> str:
     text = _ADDITIONAL_COST_LINE_RE.sub("", text)
     text = _CANT_BE_COUNTERED_LINE_RE.sub("", text)
     text = _PITCH_ALTERNATIVE_COST_LINE_RE.sub("", text)
+    text = _FREE_ALTERNATIVE_COST_LINE_RE.sub("", text)
     text = _SELF_COST_REDUCTION_LINE_RE.sub("", text)
     text = _PER_COUNT_COST_REDUCTION_LINE_RE.sub("", text)
     text = _REMINDER_LINE_RE.sub("", text)
@@ -5322,13 +5340,18 @@ def _parse_counter_on_additional_cost_card_clause(clause: str) -> TargetedClause
 
 
 #: "<Source> deals N damage divided as you choose among one or two targets."
-#: (Electrolyze) - CR 601.2d's division, read by `deal_divided_damage`, which
-#: already does its own count-agnostic split at resolution rather than
-#: needing `_targets_understood` to vet a restriction: the phrase is always
-#: the fixed "one or two targets", never a printed restriction like "target
-#: creature" this wave would otherwise have to read.
+#: (Electrolyze), or "among one, two, or three targets" (Arc Lightning) -
+#: CR 601.2d's division, read by `deal_divided_damage`, which already does its
+#: own count-agnostic split at resolution rather than needing
+#: `_targets_understood` to vet a restriction: the phrase is always a plain
+#: run of CR 115.4 "targets", never a printed restriction like "target
+#: creature" this wave would otherwise have to read. The ceiling in the phrase
+#: is not re-read here either - `machines/targeting.py` is what counts the
+#: targets at announcement, and the payout below is driven by how many were
+#: actually chosen and by the caster's announced division.
 _DIVIDED_DAMAGE_RE = re.compile(
-    rf".*\bdeals? (?P<n>{_COUNT}) damage divided as you choose among one or two targets\.?$",
+    rf".*\bdeals? (?P<n>{_COUNT}) damage divided as you choose "
+    r"among one(?:, two)?,? or (?:two|three) targets\.?$",
     re.IGNORECASE,
 )
 #: Shatterskull Smashing: "deals X damage divided as you choose among up to
@@ -8290,6 +8313,15 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     )
     if attacking_tokens_then_sacrifice is not None:
         return attacking_tokens_then_sacrifice
+    put_from_hand_attacking = _parse_put_creature_from_hand_attacking_then_return(effect_text)
+    if put_from_hand_attacking is not None:
+        return put_from_hand_attacking
+    exchange_life = _parse_exchange_life_totals_then_draw(effect_text)
+    if exchange_life is not None:
+        return exchange_life
+    copy_exiled_and_cast = _parse_copy_exiled_card_and_cast(effect_text)
+    if copy_exiled_and_cast is not None:
+        return copy_exiled_and_cast
     mana_adding = _parse_mana_adding_trigger(effect_text)
     if mana_adding is not None:
         return mana_adding
@@ -9450,6 +9482,21 @@ _SHUFFLE_HAND_AND_GRAVEYARD_RE = re.compile(
 #: Ruin's "..., then shuffles".
 _BARE_SHUFFLE_RE = re.compile(r"^shuffles?$", re.IGNORECASE)
 
+#: "exiles the top card of their library face down" - Pyxis of Pandemonium's
+#: first activated ability, run for every player rather than for the
+#: activating one, which is why it is a step of the "each player ..." sentence
+#: rather than a controller-scoped clause.
+#:
+#: "Face down" is the load-bearing half: CR 406.3 keeps such a card from being
+#: examined, and CR 406.3a gives it no characteristics at all, which
+#: CR 202.3a then reads as a mana value of 0. The phrase is optional in the
+#: pattern because the plain face-up exile is the same instruction otherwise.
+_EACH_PLAYER_EXILES_TOP_RE = re.compile(
+    rf"^exiles? the top (?:card|(?P<n>{_COUNT}) cards) of (?:their|his or her) library"
+    r"(?P<face_down> face down)?$",
+    re.IGNORECASE,
+)
+
 #: "searches their library for a <quality> card, puts it onto the battlefield"
 #: - Field of Ruin's own basic-land fetch, run for every player rather than
 #: for the resolving ability's controller, which is why it cannot go through
@@ -9520,6 +9567,23 @@ def _parse_each_player_step(text: str) -> ClauseEffect | None:
 
     if _BARE_SHUFFLE_RE.fullmatch(clause):
         return lambda game, player, source: game.shuffle_library(player)
+
+    if match := _EACH_PLAYER_EXILES_TOP_RE.fullmatch(clause):
+        amount = _count(match.group("n")) if match.group("n") else 1
+        face_down = match.group("face_down") is not None
+
+        def exile_top_of_library(game: "Game", player: Player, source: str) -> None:
+            for card_state in list(player.library[:amount]):
+                moved = game.exile_permanent(card_state)
+                if moved is not None and face_down:
+                    # CR 406.3: "Cards 'exiled face down' can't be examined by
+                    # any player except when instructions allow it", and
+                    # CR 406.3a: "A card exiled face down has no
+                    # characteristics" - which `CardState.has_no_characteristics`
+                    # is what actually enforces, once `face_up` is cleared.
+                    moved.face_up = False
+
+        return exile_top_of_library
 
     if match := _EACH_PLAYER_SEARCH_RE.fullmatch(clause):
         matcher = _quality_matcher(match.group("quality"))
@@ -11951,6 +12015,275 @@ _ATTACK_TAPPED_ATTACKING_TOKENS_THEN_SACRIFICE_RE = re.compile(
 )
 
 
+#: Isochron Scepter's `{2}, {T}` ability, read whole: "You may copy the exiled
+#: card. If you do, you may cast the copy without paying its mana cost."
+#:
+#: Whole rather than per-clause because the second sentence's "the copy" is the
+#: object the first sentence made: split apart, it names nothing, and CR 608.2c
+#: has no notion of running half an instruction.
+#:
+#: CR 707.12 is the whole point of the shape: "an effect that instructs a
+#: player to cast a copy of an object (and not just copy a spell) follows the
+#: rules for casting spells, except that the copy is created in the same zone
+#: the object is in and then cast while another spell or ability is resolving."
+#: The imprinted card is in exile, so the copy is created in exile and cast
+#: from there - which is why `Game.copy_spell` (CR 707.10's put-a-copy-on-the-
+#: stack) is the wrong door and the copy is built here instead. CR 112.1b:
+#: "some effects allow a player to cast a copy of a card; if the player does,
+#: that copy is a spell as well", and CR 112.2a gives the copy's owner: "the
+#: owner of that copy is the player who is instructed to create it and given
+#: permission to cast it."
+_COPY_EXILED_CARD_AND_CAST_RE = re.compile(
+    r"^you may copy the exiled card\.?\s*"
+    r"if you do, you may cast the copy without paying its mana cost\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_copy_exiled_card_and_cast(text: str) -> AbilityEffect | None:
+    """`_COPY_EXILED_CARD_AND_CAST_RE`'s shape - Isochron Scepter's activated
+    ability.
+
+    "The exiled card" is the definite reference the Imprint clause left
+    behind, found the same way `_parse_return_imprinted_clause` finds it:
+    `Game.card_imprinted_on`, by the source permanent's own id, rather than a
+    pointer stored anywhere. Nothing imprinted means nothing to copy, and the
+    ability then does nothing (CR 101.3).
+
+    Two CR 608.2d questions in printed order, the second being CR 118.12's
+    "if you do" - so declining the first is never asked the second. A copy
+    that is made and not cast does not linger: CR 707.10a is a state-based
+    action, "if a copy of a card is in any zone other than the stack or the
+    battlefield, it ceases to exist", and it is performed here rather than
+    left for a check that does not know about this copy.
+
+    The cast itself is `Game.cast_free_from_exile` - CR 118.9's "without
+    paying its mana cost", with the copy's own new targets chosen at CR 601.2c
+    as it is cast, which is what makes the imprinted Orim's Chant point at a
+    fresh player every activation.
+    """
+    if (
+        _COPY_EXILED_CARD_AND_CAST_RE.fullmatch(" ".join(_strip_non_effect_preamble(text).split()))
+        is None
+    ):
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
+        exiled = game.card_imprinted_on(source_id)
+        if exiled is None:
+            return
+        controller = game.controller_of(ability)
+        if not game.may(controller, "copy the exiled card", source=source_name):
+            return
+        # CR 707.12: created in the same zone the object is in - exile.
+        # CR 707.2: the copy acquires the original's copiable values, which is
+        # what sharing the immutable `Card` printing amounts to here.
+        copy = CardState(
+            card=exiled.card,
+            zone=Zone.EXILE,
+            controller=controller.username,
+            owner=controller.username,  # CR 112.2a
+            is_copy=True,
+        )
+        game.exile.append(copy)
+        if (
+            game.may(controller, "cast the copy without paying its mana cost", source=source_name)
+            and game.cast_free_from_exile(copy, controller.username) is not None
+        ):
+            return
+        if copy in game.exile:
+            game.exile.remove(copy)  # CR 707.10a
+
+    return effect
+
+
+#: Mister Negative's Darkforce Inversion trigger, read whole: "you may exchange
+#: life totals with target opponent. If you lost life this way, draw that many
+#: cards."
+#:
+#: Whole rather than per-clause because the second sentence is *about* the
+#: first: "that many" is the amount the exchange moved, which only the first
+#: sentence's own return value knows. Split apart, the second clause names a
+#: number nothing can supply, and CR 608.2c has no notion of running half an
+#: instruction - so they are matched together or not at all.
+#:
+#: CR 701.12a is the exchange itself: "if the entire exchange can't happen, no
+#: part of the exchange occurs", which `Player.exchange_life_totals` decides
+#: before anything moves; CR 119.7 and CR 119.8 are the two prohibitions that
+#: can refuse it (a player who can't gain life can't be raised by an exchange,
+#: and the mirror for losing). CR 701.12c is why the movement is gains and
+#: losses rather than an assignment: "each player gains or loses the amount of
+#: life necessary to equal the other player's previous life total". The wrapper
+#: reached is `Game.exchange_life_totals`, not the `Player` primitive under it:
+#: the wrapper is what emits CR 701.12c's gain and loss events, which CR 119.9's
+#: "whenever a player gains life" triggers watch.
+_EXCHANGE_LIFE_TOTALS_THEN_DRAW_RE = re.compile(
+    r"^(?P<may>you may )?exchange life totals with target opponent\.?"
+    r"(?:\s*if you lost life this way, (?P<draw>draw that many cards)\.?)?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_exchange_life_totals_then_draw(text: str) -> AbilityEffect | None:
+    """`_EXCHANGE_LIFE_TOTALS_THEN_DRAW_RE`'s shape - Mister Negative's own
+    enters trigger.
+
+    The opponent is a real CR 115.1 target, chosen when the ability went on
+    the stack, so it is read back through `Game.resolve_targets` - CR 608.2b's
+    legality check included: an opponent who has left the game since is no
+    longer a legal target and the ability then has nothing to exchange with.
+
+    "You may" is CR 608.2d's plain optional question, asked before anything
+    moves. Declining, or a CR 701.12a refusal, both leave the amount at 0, and
+    a draw of "that many" is then a draw of none - CR 121.2's "if a player is
+    instructed to draw multiple cards, that player performs that many
+    individual card draws", of which zero is a legal count.
+
+    The draw is guarded on having *lost* life, as printed: the exchange is
+    signed from this player's side, so a controller who gained draws nothing.
+    """
+    match = _EXCHANGE_LIFE_TOTALS_THEN_DRAW_RE.fullmatch(
+        " ".join(_strip_non_effect_preamble(text).split())
+    )
+    if match is None:
+        return None
+    optional = match.group("may") is not None
+    draws = match.group("draw") is not None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.controller_of(ability)
+        opponent = next(
+            (thing for thing in game.resolve_targets(ability) if isinstance(thing, Player)),
+            None,
+        )
+        if opponent is None:
+            return
+        source_name = ability.source_name
+        if optional and not game.may(
+            controller, "exchange life totals with target opponent", source=source_name
+        ):
+            return
+        lost = game.exchange_life_totals(controller, opponent)
+        if draws and lost > 0:
+            game.draw_cards(controller, lost)
+
+    return effect
+
+
+#: Ilharg, the Raze-Boar's attack trigger, read whole: "you may put a creature
+#: card from your hand onto the battlefield tapped and attacking. Return that
+#: creature to your hand at the beginning of the next end step."
+#:
+#: Whole rather than per-clause because `split_effect_clauses` cuts on a bare
+#: " and ", which slices "tapped and attacking" into "tapped" / "attacking" -
+#: two fragments no parser can read back together, and CR 608.2c has no notion
+#: of running half an instruction, so the whole ability would fail closed.
+#:
+#: CR 508.4 is what the second half of the first sentence means: "If a creature
+#: is put onto the battlefield attacking, its controller chooses which defending
+#: player, planeswalker a defending player controls, or battle a defending
+#: player protects it's attacking as it enters the battlefield." CR 508.4a and
+#: CR 506.3c are the two refusals - a defending player who has left the game,
+#: or a permanent no longer on the battlefield - and both are honoured by the
+#: CR 508.4 primitive this calls rather than re-checked here.
+_PUT_CREATURE_FROM_HAND_ATTACKING_RE = re.compile(
+    r"^you may put an? (?P<group>[a-z]+) card from your hand onto the battlefield "
+    r"tapped and attacking\.\s*"
+    r"(?P<delayed>return that [a-z]+ to your hand at the beginning of the next end step)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_put_creature_from_hand_attacking_then_return(text: str) -> AbilityEffect | None:
+    """`_PUT_CREATURE_FROM_HAND_ATTACKING_RE`'s shape - Ilharg's attack trigger.
+
+    Three things in printed order (CR 608.2c):
+
+    1. CR 608.2d's plain "you may", then a `CHOOSE_CARDS` question over the
+       cards in hand of the printed group - "creature card" here, read by the
+       same `_parse_card_group_qualifier` every other group-reading clause in
+       this file uses, so a group this file cannot read fails the whole
+       ability closed rather than putting the wrong card down.
+    2. `Game.put_onto_battlefield` tapped, and then CR 508.4's own placement
+       into combat. The creature Ilharg is already attacking sets the
+       defending player: CR 508.4 hands the choice to the permanent's
+       controller, and the only defender this engine can read off the board is
+       the one the controller's own attack already named.
+    3. CR 603.7a's delayed triggered ability for the second sentence, built by
+       `anaphoric_delayed_trigger` off the printed clause - "that creature" is
+       a pronoun for whatever step 2 actually produced, which is exactly the
+       shape that primitive exists for. CR 603.7c is why it is created about
+       *that* object and checks it is still there when it resolves.
+
+    The delayed trigger is created only if a creature actually arrived: a
+    declined "you may", an empty hand, or a card the move refused leaves
+    nothing for "that creature" to name, and CR 101.3 ignores an instruction
+    that is impossible to perform.
+    """
+    match = _PUT_CREATURE_FROM_HAND_ATTACKING_RE.fullmatch(
+        " ".join(_strip_non_effect_preamble(text).split())
+    )
+    if match is None:
+        return None
+    matches_group = _parse_card_group_qualifier(match.group("group"))
+    if matches_group is None:
+        return None
+    delayed_clause = match.group("delayed")
+    if parse_anaphoric_delayed_clause(delayed_clause) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        from ..models.token import _put_onto_the_battlefield_attacking
+
+        controller = game.controller_of(ability)
+        source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
+        candidates = [state for state in controller.hand if matches_group(state)]
+        if not candidates:
+            return
+        if not game.may(
+            controller,
+            "put a creature card from your hand onto the battlefield tapped and attacking",
+            source=source_name,
+        ):
+            return
+        decision = Decision(
+            kind=DecisionKind.CHOOSE_CARDS,
+            player=controller.username,
+            prompt="choose a creature card to put onto the battlefield attacking",
+            source=source_name,
+            amount=1,
+            cards=tuple(state.id for state in reversed(candidates)),
+        )
+        chosen_ids = game.ask(decision)
+        if not chosen_ids:
+            return
+        by_id = {state.id: state for state in candidates}
+        chosen = by_id[chosen_ids[0]]
+        permanent = game.put_onto_battlefield(chosen, controller.username, tapped=True)
+        if permanent is None or permanent.zone is not Zone.BATTLEFIELD:
+            return
+        defender = _defender_of_controllers_attack(game, controller.username)
+        if defender is not None:
+            # CR 508.4, via `models/token.py`'s own primitive: it is annotated
+            # for a `TokenState` because the token half was written first, but
+            # everything it reads - `is_creature`, `controller`, `id` - is
+            # `CardState`'s, and CR 508.4 draws no distinction between a token
+            # and a card put onto the battlefield attacking.
+            _put_onto_the_battlefield_attacking(game, permanent, defender)  # type: ignore[arg-type]
+        trigger = anaphoric_delayed_trigger(
+            delayed_clause,
+            subject=permanent,
+            controller=controller.username,
+            source_id=source_id,
+            source_name=source_name,
+        )
+        if trigger is not None:
+            game.create_delayed_trigger(trigger)
+
+    return effect
+
+
 def _parse_create_tapped_attacking_tokens_then_sacrifice(text: str) -> AbilityEffect | None:
     """`_ATTACK_TAPPED_ATTACKING_TOKENS_THEN_SACRIFICE_RE`'s shape - see it for
     what this reads and why it is one paragraph rather than two clauses.
@@ -13800,6 +14133,70 @@ def _spell_target_requirement(phrase: str) -> TargetRequirement | None:
     return requirement
 
 
+#: "put two cards from your hand on top of your library in any order"
+#: (Brainstorm), and its bottom-of-library twin. CR 121.1's draw is a move
+#: *out* of the library; this is the move back in, and CR 603.2c is the reason
+#: it has to be one instruction rather than N: "an ability triggers only once
+#: each time its trigger event occurs", and "whenever one or more cards are put
+#: into a library from anywhere" (Wan Shi Tong, All-Knowing) is one event with a
+#: count. `Game.put_cards_into_library` is where that single event is emitted.
+#:
+#: "in any order" is CR 608.2d's choice, made by the same player and the same
+#: `CHOOSE_CARDS` question that picks *which* cards: the answer is an ordered
+#: list, and the first card named ends up nearest the top.
+_PUT_CARDS_FROM_HAND_INTO_LIBRARY_RE = re.compile(
+    rf"^put (?P<count>{_COUNT}) cards? from your hand "
+    r"on (?:(?P<top>top)|the (?P<bottom>bottom)) of your library"
+    r"(?: in any order)?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_put_cards_from_hand_into_library_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_PUT_CARDS_FROM_HAND_INTO_LIBRARY_RE`'s shape - Brainstorm's second half.
+
+    The cards are the controller's own choice (CR 608.2d: "the player
+    announces their choice of an appropriate object ... as the spell or
+    ability resolves"), asked as one `CHOOSE_CARDS` question over the whole
+    hand. A hand short of the count moves as many as it has - CR 609.3's
+    "does as much as it can" - rather than refusing the whole instruction.
+
+    The move itself goes through `Game.put_cards_into_library`, which is what
+    makes the two cards one CR 603.2c event instead of two.
+    """
+    match = _PUT_CARDS_FROM_HAND_INTO_LIBRARY_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    count = _count(match.group("count"))
+    to_bottom = match.group("bottom") is not None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        player = game.controller_of(stack_object)
+        hand = list(player.hand)
+        amount = min(count, len(hand))
+        if amount <= 0:
+            return
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        decision = Decision(
+            kind=DecisionKind.CHOOSE_CARDS,
+            player=player.username,
+            prompt=(
+                f"choose {amount} card(s) from your hand to put on "
+                f"{'the bottom' if to_bottom else 'top'} of your library"
+            ),
+            source=source,
+            amount=amount,
+            cards=tuple(state.id for state in reversed(hand)),
+        )
+        chosen_ids = game.ask(decision)
+        by_id = {state.id: state for state in hand}
+        game.put_cards_into_library([by_id[card_id] for card_id in chosen_ids], to_bottom=to_bottom)
+
+    return effect
+
+
 def _put_spell_in_library(game: "Game", spell: CardState, *, top: bool) -> None:
     """Move a spell off the stack straight into its owner's library (CR
     401.2), instead of letting it resolve.
@@ -15162,6 +15559,14 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     copy_this_spell = _parse_copy_this_spell_clause(clause, for_spell=for_spell)
     if copy_this_spell is not None:
         return copy_this_spell
+    choose_new_targets = _parse_choose_new_targets_clause(clause, for_spell=for_spell)
+    if choose_new_targets is not None:
+        return choose_new_targets
+    put_from_hand_into_library = _parse_put_cards_from_hand_into_library_clause(
+        clause, for_spell=for_spell
+    )
+    if put_from_hand_into_library is not None:
+        return put_from_hand_into_library
     put_permanent_from_hand = _parse_put_permanent_card_from_hand_clause(
         clause, for_spell=for_spell
     )
@@ -16789,6 +17194,72 @@ def _parse_copy_this_spell_clause(clause: str, *, for_spell: bool) -> TargetedCl
         if source is None or source.zone is not Zone.STACK:
             return
         game.copy_spell(source, game.controller_of(stack_object).username)
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# "You may choose new targets for target spell or ability." (CR 115.7)
+# --------------------------------------------------------------------------
+#
+# CR 115.7: "Some effects allow a player to change the target(s) of a spell or
+# ability, and other effects allow a player to choose new targets for a spell
+# or ability." Deflecting Swat is the second kind, and CR 115.7d says what that
+# means: "If an effect allows a player to 'choose new targets' for a spell or
+# ability, the player may leave any number of the targets unchanged, even if
+# those targets would be illegal."
+#
+# Which is exactly the shape `Game.offer_new_targets_for_copy` already
+# implements for CR 707.10c's copies - a plain CR 608.2d `MAY`, then a
+# `CHOOSE_TARGETS` question over the legal candidates read out of the *targeted
+# object's own* printed text, with declining leaving the targets it already had
+# in place rather than emptying them. That method is named for the copy case it
+# was written for but is card-agnostic underneath, so this calls it as it
+# stands rather than growing a second retargeting reader beside it.
+
+#: "You may choose new targets for target spell or ability." (Deflecting Swat).
+#: The retargeting permission itself is CR 115.7d; the "target spell or
+#: ability" it applies to is the requirement `machines/targeting.py` reads (see
+#: `test_judge_retargeting.py`), so nothing here re-reads it.
+_CHOOSE_NEW_TARGETS_RE = re.compile(
+    r"^you may choose new targets for target spell or ability\.?$", re.IGNORECASE
+)
+
+
+def _parse_choose_new_targets_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_CHOOSE_NEW_TARGETS_RE`'s shape - Deflecting Swat's second sentence.
+
+    The object retargeted is this spell's own single target, taken through
+    `Game.resolve_targets` so CR 608.2b's "a target that's no longer in the
+    zone it was in when it was targeted is illegal" is honoured first: a Bolt
+    that has already resolved is not there to retarget, and the whole clause
+    then does nothing rather than reaching for a stale object.
+
+    A spell that has no targets of its own is CR 101.3's case - "any part of
+    an instruction that's impossible to perform is ignored" - and comes out
+    the far side of `offer_new_targets_for_capture`'s own empty-candidate
+    guard doing nothing, which is the ruling
+    `test_judge_retargeting.py::test_deflecting_swat_resolving_leaves_a_
+    targetless_spell_alone` already asserts.
+    """
+    if _CHOOSE_NEW_TARGETS_RE.fullmatch(clause.strip()) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        targeted = game.resolve_targets(stack_object)
+        if not targeted:
+            return
+        subject = targeted[0]
+        if not isinstance(subject, CardState):
+            # An `AbilityOnStack` is a legal target of this text too, but
+            # `offer_new_targets_for_copy` reads `CardState.oracle_text` for
+            # the requirements to re-choose against, so an ability is left
+            # alone rather than half-handled.
+            return
+        source_name = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        game.offer_new_targets_for_copy(
+            subject, game.controller_of(stack_object).username, source_name=source_name
+        )
 
     return effect
 

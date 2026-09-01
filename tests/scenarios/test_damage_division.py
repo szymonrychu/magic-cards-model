@@ -15,12 +15,13 @@ the spell can be announced at its targets like any other. `check_division`
 enforces the rule that every target chosen receives at least one - and, from the
 targets' side, that no more targets are chosen than there is to go round.
 
-**What is still missing is the record.** Nothing on the casting or on the spell
-holds the announced division, so `machines/effects.py` splits the amount as
-evenly as it goes with the remainder on the first target - which for two damage
-means all of it on one target, or one each on two, and is right by luck. A card
-dividing three or more has choices this model cannot store. The xfail at the
-bottom of this file is that gap.
+**The record is real now.** `Casting.announce_division` checks the announcement
+against the profile and carries it onto the spell as `CardState.division` at the
+CR 601.2c/d moment its targets are set; `machines/effects.py` reads it back at
+resolution. A caster who announces nothing still gets the old even-split
+fallback, which for Electrolyze's two damage is right either way - so the second
+half of this file is Arc Lightning, whose three damage among two targets gives
+the caster a choice that the fallback cannot imitate.
 
 Every CR number here was looked up with `knowledge_search(type="rules")`.
 """
@@ -342,30 +343,166 @@ def test_the_division_is_two_damage_and_each_target_takes_at_least_one():
 
 
 # --------------------------------------------------------------------------
-# Gaps
+# A division the caster actually chooses (CR 601.2d)
 # --------------------------------------------------------------------------
+#
+# Electrolyze's two damage among two targets can only ever be 1 and 1, so it
+# cannot show whether the caster's announcement was recorded or whether the
+# even-split fallback happened to agree. Arc Lightning ("Arc Lightning deals 3
+# damage divided as you choose among one, two, or three targets", verified with
+# `resolve_cards`) has three to divide, so 2/1 and 1/2 are different boards.
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="the announced division has nowhere to live (CR 601.2d): "
-    "machines/targeting.py can check a division but Casting and CardState hold no field "
-    "for one, so machines/effects.py divides the amount as evenly as it goes",
-)
+def arc_board() -> Scenario:
+    """Alice with Arc Lightning and the mana for it; Bob with two creatures."""
+    return (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Arc Lightning"],
+            battlefield=["Mountain", "Mountain", "Mountain"],
+        )
+        .player("bob", battlefield=["Grizzly Bears", "Watchwolf"])
+    )
+
+
+def cast_arc_lightning(scenario, targets, division):
+    sources = scenario.untapped_sources("Mountain", "Mountain", "Mountain", username="alice")
+    scenario.cast_onto_stack(
+        "Arc Lightning", *sources, username="alice", targets=targets, division=division
+    )
+    return scenario.pass_until_resolved()
+
+
 def test_the_caster_chooses_how_the_damage_is_divided():
-    """CR 601.2d, the half of it that is not modelled.
+    """CR 601.2d: "the player announces the division", and it is *that* division
+    that is paid out.
 
-    "The player announces the division. Each of these targets must receive at
-    least one of whatever is being divided." Two damage among two targets can
-    only be 1 and 1, so the gap shows only when there is a choice - and there is
-    nowhere to record one. This asks for 2 and 0, which CR 601.2d would refuse
-    anyway; the point is that nothing was asked at all.
+    Two damage on the 2/2 and one on the 3/3 - the announcement, not an even
+    split, which for three among two would have been 2 and 1 in whichever order
+    the targets were named. The 2/2 Grizzly Bears dies (CR 704.5g) and the 3/3
+    Watchwolf lives with one marked.
     """
-    scenario = board().build()
+    scenario = arc_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "bob")
+    wolf = scenario.creature("Watchwolf", "bob")
+
+    cast_arc_lightning(scenario, [bears, wolf], [2, 1])
+
+    assert bears.zone is Zone.GRAVEYARD
+    assert (wolf.damage, wolf.zone) == (1, Zone.BATTLEFIELD)
+
+
+def test_the_same_two_targets_the_other_way_round_kill_neither():
+    """The mirror of the case above, and the reason it proves anything.
+
+    One on the 2/2 and two on the 3/3 is an equally legal CR 601.2d
+    announcement over the same two targets, and both creatures live. An engine
+    that ignored the announcement and split evenly could not produce both
+    boards.
+    """
+    scenario = arc_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "bob")
+    wolf = scenario.creature("Watchwolf", "bob")
+
+    cast_arc_lightning(scenario, [bears, wolf], [1, 2])
+
+    assert (bears.damage, bears.zone) == (1, Zone.BATTLEFIELD)
+    assert (wolf.damage, wolf.zone) == (2, Zone.BATTLEFIELD)
+
+
+def test_a_share_of_none_is_not_a_legal_division():
+    """CR 601.2d: "Each of these targets must receive at least one of whatever
+    is being divided."
+
+    Three damage across two targets as 3 and 0 is refused at announcement, not
+    silently corrected. The refusal leaves nothing announced behind it: the
+    casting is still mid-CR 601.2 with no division recorded, so a caster cannot
+    reach resolution having half-said an illegal one.
+    """
+    scenario = arc_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "bob")
+    wolf = scenario.creature("Watchwolf", "bob")
+
+    casting = scenario.cast("Arc Lightning", "alice", targets=[bears, wolf])
+    with pytest.raises(ValueError, match="at least one"):
+        casting.announce_division([3, 0])
+
+    assert casting.division is None
+
+
+def test_a_division_that_does_not_use_the_whole_amount_is_refused():
+    """The other half of CR 601.2d's arithmetic: the division is *of* the whole
+    amount, so 1 and 1 out of three damage is not a legal announcement either.
+    """
+    scenario = arc_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "bob")
+    wolf = scenario.creature("Watchwolf", "bob")
+
+    with pytest.raises(ValueError, match="must use all 3 damage"):
+        scenario.cast("Arc Lightning", "alice", targets=[bears, wolf], division=[1, 1])
+
+
+def test_an_announced_division_survives_a_target_leaving():
+    """CR 115.7f and CR 608.2b together: the division is locked in at
+    announcement, so a target that has become illegal loses its own share and
+    the rest is *not* re-divided onto what is left.
+
+    Arc Lightning announces 2 on the Bears and 1 on the Watchwolf; the Bears is
+    Bolted away in response, and the Watchwolf still takes only its own 1
+    rather than inheriting the two that had nowhere to go.
+    """
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Arc Lightning", "Lightning Bolt"],
+            battlefield=["Mountain"] * 4,
+        )
+        .player("bob", battlefield=["Grizzly Bears", "Watchwolf"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "bob")
+    wolf = scenario.creature("Watchwolf", "bob")
+
+    sources = scenario.untapped_sources("Mountain", "Mountain", "Mountain", username="alice")
+    scenario.cast_onto_stack(
+        "Arc Lightning", *sources, username="alice", targets=[bears, wolf], division=[2, 1]
+    )
+    (mountain,) = scenario.untapped_sources("Mountain", username="alice")
+    scenario.cast_and_resolve("Lightning Bolt", mountain, username="alice", targets=[bears])
+    assert bears.zone is Zone.GRAVEYARD
+
+    scenario.pass_until_resolved()
+
+    assert wolf.damage == 1, "the two that had nowhere to go went nowhere"
+    assert wolf.zone is Zone.BATTLEFIELD
+
+
+def test_all_three_among_three_targets_is_one_each():
+    """ "one, two, or three targets" with three chosen leaves exactly one
+    division (CR 601.2d), and a face may be one of them (CR 115.4).
+    """
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Arc Lightning"], battlefield=["Mountain"] * 3)
+        .player("bob", battlefield=["Grizzly Bears", "Memnite"])
+        .build()
+    )
     scenario.start_at(Step.PRECOMBAT_MAIN)
     bears = scenario.creature("Grizzly Bears", "bob")
     memnite = scenario.creature("Memnite", "bob")
 
-    cast_electrolyze(scenario, [bears, memnite])
+    cast_arc_lightning(scenario, [bears, memnite, "bob"], [1, 1, 1])
 
-    assert (bears.damage, memnite.zone) == (2, Zone.BATTLEFIELD)
+    assert bears.damage == 1
+    assert memnite.zone is Zone.GRAVEYARD, "a 1/1 dies to its share (CR 704.5g)"
+    assert scenario.player("bob").life == 19

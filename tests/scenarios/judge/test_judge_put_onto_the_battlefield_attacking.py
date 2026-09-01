@@ -16,15 +16,16 @@ creature" in Ilharg's delayed trigger is an identifier for the object, so
 Purphoros comes back to hand even if devotion has fallen and it is no longer a
 creature by the end step.
 
-The engine puts Ilharg's attack trigger on the stack correctly and then does
-nothing with it, and has no devotion-driven type-changing static ability at
-all - so the rulings themselves are `xfail`.
+The engine now plays the first ruling out for real: the attack trigger puts the
+creature card onto the battlefield tapped and attacking (CR 508.4) and creates
+CR 603.7's delayed triggered ability for the return. The devotion half is still
+missing - there is no devotion-gated type-changing static ability in
+`machines/layers.LAYER_EFFECTS` - so this file's Purphoros is always a creature,
+which is the episode's easy case and is recorded as such below.
 
 Card text verified with `resolve_cards`; every CR number here was looked up
 with `knowledge_search(type="rules")` in this session.
 """
-
-import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.abilities import AbilityKind, parse_abilities
@@ -47,8 +48,8 @@ def board() -> Scenario:
     )
 
 
-def test_ilhargs_attack_trigger_reaches_the_stack_and_does_nothing():
-    """DDR#965's baseline: the trigger is real, its effect is not.
+def test_ilhargs_attack_trigger_reaches_the_stack_before_it_does_anything():
+    """DDR#965's baseline: the trigger is a separate object on the stack.
 
     Ilharg, the Raze-Boar (verified with `resolve_cards`): "Whenever Ilharg
     attacks, you may put a creature card from your hand onto the battlefield
@@ -56,15 +57,9 @@ def test_ilhargs_attack_trigger_reaches_the_stack_and_does_nothing():
     the next end step."
 
     CR 508.1m: "Any abilities that trigger on attackers being declared
-    trigger." The engine gets that far - `TriggerEvent.ATTACKS` matches and the
-    ability goes on the stack (CR 603.3). Resolving it performs nothing:
-    `machines/effects.py` has no reader for "put a creature card from your hand
-    onto the battlefield tapped and attacking", so Purphoros stays in hand.
-
-    (Contrast `models/token._put_onto_the_battlefield_attacking`, which handles
-    the *token* half of CR 508.4 and is exercised by
-    `tests/scenarios/test_tokens.py`. The primitive exists; nothing routes a
-    card from hand into it.)
+    trigger." CR 603.3 puts the ability on the stack the next time a player
+    would receive priority - so declaring the attack moves nothing by itself,
+    and Purphoros is still in hand with the ability waiting to resolve.
     """
     scenario = board().build()
     ilharg = scenario.creature("Ilharg, the Raze-Boar", "alice")
@@ -73,13 +68,42 @@ def test_ilhargs_attack_trigger_reaches_the_stack_and_does_nothing():
     scenario.attack_with(ilharg)
 
     assert scenario.stack_names() == ["Ilharg, the Raze-Boar's triggered ability"]
-
-    scenario.pass_until_resolved()
-
     assert scenario.battlefield_names() == ["Ilharg, the Raze-Boar"]
     assert [state.card.name for state in scenario.player("alice").hand] == [
         "Purphoros, God of the Forge"
     ]
+
+
+def test_declining_ilhargs_may_leaves_the_creature_in_hand():
+    """ "You may" is CR 608.2d's optional question, and a controller who
+    declines it moves nothing - and creates no delayed trigger either, because
+    "that creature" would name nothing (CR 101.3)."""
+    scenario = board().build()
+    ilharg = scenario.creature("Ilharg, the Raze-Boar", "alice")
+
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(ilharg)
+    scenario.will_take_the_may(False, username="alice")
+    scenario.pass_until_resolved()
+
+    assert scenario.battlefield_names() == ["Ilharg, the Raze-Boar"]
+    assert scenario.game.delayed_triggers.triggers == []
+
+
+def test_an_empty_hand_is_never_even_asked():
+    """CR 101.3: "any part of an instruction that's impossible to perform is
+    ignored." With no creature card in hand there is nothing to choose among,
+    so no question is put at all - not a question answered "no"."""
+    scenario = (
+        Scenario().player("alice", battlefield=["Ilharg, the Raze-Boar"]).player("bob").build()
+    )
+    ilharg = scenario.creature("Ilharg, the Raze-Boar", "alice")
+
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(ilharg)
+    scenario.pass_until_resolved()
+
+    assert scenario.questions_asked() == []
 
 
 def test_ilhargs_return_clause_is_part_of_the_same_trigger_paragraph():
@@ -137,13 +161,6 @@ def test_purphoros_has_no_devotion_gated_type_change():
     assert purphoros.is_creature, "devotion is never consulted"
 
 
-@pytest.mark.xfail(
-    reason="Ilharg's 'put a creature card from your hand onto the battlefield "
-    "tapped and attacking' has no reader in machines/effects.py, so the "
-    "trigger resolves and moves nothing; the delayed return trigger "
-    "(CR 603.7) is never created either",
-    strict=True,
-)
 def test_purphoros_is_put_in_attacking_and_returns_to_hand_at_end_of_turn():
     """DDR#965's ruling, written out.
 
@@ -156,12 +173,10 @@ def test_purphoros_is_put_in_attacking_and_returns_to_hand_at_end_of_turn():
     triggers on attackers being declared (CR 508.1m) sees it.
 
     Then Ilharg's second sentence sets up a delayed triggered ability
-    (CR 603.7) that returns "that creature" at the beginning of the next end
-    step - an identifier for the object, so it returns whether or not Purphoros
-    is still a creature at that point.
-
-    Not runnable: the first sentence does nothing at all, so there is no
-    permanent to return.
+    (CR 603.7a: it is created during the resolution of the ability that made
+    it, "and not one moment earlier") that returns "that creature" at the
+    beginning of the next end step - an identifier for the object, so it
+    returns whether or not Purphoros is still a creature at that point.
     """
     scenario = board().build()
     ilharg = scenario.creature("Ilharg, the Raze-Boar", "alice")
@@ -181,3 +196,45 @@ def test_purphoros_is_put_in_attacking_and_returns_to_hand_at_end_of_turn():
         scenario.resolve_top()
 
     assert purphoros.zone is Zone.HAND
+
+
+def test_the_creature_put_in_attacking_was_never_declared_as_an_attacker():
+    """CR 508.4c, the episode's Propaganda note: "A creature that's put onto
+    the battlefield attacking or that is stated to be attacking isn't affected
+    by requirements or restrictions that apply to the declaration of
+    attackers."
+
+    It was never *declared*, so nothing that triggers on attackers being
+    declared (CR 508.1m) sees it - here, Ilharg's own attack trigger does not
+    fire a second time off the creature it just put into combat.
+    """
+    scenario = board().build()
+    ilharg = scenario.creature("Ilharg, the Raze-Boar", "alice")
+
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(ilharg)
+    scenario.pass_until_resolved()
+
+    purphoros = scenario.find("Purphoros, God of the Forge", Zone.BATTLEFIELD, "alice")
+    assert purphoros in scenario.attackers()
+    assert scenario.stack_names() == [], "no second attack trigger"
+
+
+def test_the_return_is_of_the_object_not_of_a_creature_that_is_still_one():
+    """DDR#965's "that creature" ruling, from the delayed trigger's own side.
+
+    CR 603.7c ties the delayed ability to the object it was created about, and
+    the pronoun is an identifier rather than a recheck. The trigger records the
+    permanent it is waiting for, and it is Purphoros itself.
+    """
+    scenario = board().build()
+    ilharg = scenario.creature("Ilharg, the Raze-Boar", "alice")
+
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(ilharg)
+    scenario.pass_until_resolved()
+
+    purphoros = scenario.find("Purphoros, God of the Forge", Zone.BATTLEFIELD, "alice")
+    (trigger,) = scenario.game.delayed_triggers.triggers
+    assert trigger.subject_id == purphoros.id
+    assert trigger.source_name == "Ilharg, the Raze-Boar"

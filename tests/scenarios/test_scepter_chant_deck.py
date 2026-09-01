@@ -10,9 +10,9 @@ holding Orim's Chant: the artifact exiles the Chant on entry, then its
 `{2}, {T}` ability copies the exiled card and casts the copy for free
 (CR 707.12, CR 112.1b), so every turn the opponent is told "target player can't
 cast spells this turn." What this file asserts about that engine is exactly what
-the engine can do today - the imprint half works, the copy-and-cast half does
-not, and the `xfail` below is strict so it will fail loudly the day it starts
-working. See `docs/deck-gaps/scepter-chant.md`.
+the engine can do today - both halves now run: the artifact imprints the Chant
+on entry, and the `{2}, {T}` ability creates CR 707.12's copy in exile and casts
+it from there for nothing. See `docs/deck-gaps/scepter-chant.md`.
 
 CR numbers used here, each looked up with `knowledge_search` in the session that
 wrote this file:
@@ -34,8 +34,6 @@ wrote this file:
 - **CR 701.2a** - only an object's controller may activate its ability.
 - **CR 702.139a** - companion functions outside the game.
 """
-
-import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Deck, Match, Player, Zone
@@ -204,17 +202,6 @@ def test_isochron_scepter_imprints_orims_chant_on_entry():
     assert scenario.game.card_imprinted_on(scepter.id) is chant
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "The lock does not function. Isochron Scepter's '{2}, {T}: You may copy "
-        "the exiled card. If you do, you may cast the copy without paying its "
-        "mana cost.' returns None from activated_effect_for - neither clause "
-        "parses and no notice is recorded, so activating it does nothing at "
-        "all. CR 707.12's cast-a-copy and CR 112.1b's copy-as-a-spell have no "
-        "representation in the engine. See docs/deck-gaps/scepter-chant.md."
-    ),
-)
 def test_the_scepter_recasts_the_imprinted_chant():
     """CR 602.2 / CR 701.2a: activating the Scepter should copy the imprinted
     Orim's Chant and let its controller cast the copy for free (CR 707.12),
@@ -240,8 +227,111 @@ def test_the_scepter_recasts_the_imprinted_chant():
     scepter = scenario.cast_and_resolve("Isochron Scepter", *sources)
     scenario.pass_until_resolved()
 
-    payment = scenario.game.begin_activating(scepter, 0, "alice")
-    scenario.auto_pay(payment)
+    scenario.activate(scepter, auto=True, username="alice")
     scenario.pass_until_resolved()
 
     assert "Orim's Chant" in scenario.stack_names()
+
+
+def imprinted_scepter_board() -> Scenario:
+    """Alice with an Isochron Scepter already on the battlefield holding an
+    imprinted Orim's Chant, and the mana to activate it."""
+    return (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Isochron Scepter", "Orim's Chant"],
+            battlefield=["Island", "Plains", "Mystic Gate", "Hallowed Fountain"],
+        )
+        .player("bob", hand=["Counterspell"])
+    )
+
+
+def imprint(scenario):
+    """Cast the Scepter and imprint the Chant; returns the Scepter."""
+    chant = scenario.find("Orim's Chant", Zone.HAND)
+    sources = scenario.untapped_sources("Island", "Plains")
+    scenario.will_take_the_may()
+    scenario.will_choose_cards(chant)
+    scepter = scenario.cast_and_resolve("Isochron Scepter", *sources)
+    scenario.pass_until_resolved()
+    return scepter
+
+
+def test_the_imprinted_card_itself_never_leaves_exile():
+    """CR 707.12: "the copy is created in the same zone the object is in and
+    then cast" - it is the *copy* that goes to the stack, so the imprinted
+    Orim's Chant is still sitting in exile afterwards, ready for the next
+    activation. That is the whole reason the lock repeats.
+    """
+    scenario = imprinted_scepter_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scepter = imprint(scenario)
+    chant = scenario.game.card_imprinted_on(scepter.id)
+
+    scenario.activate(scepter, auto=True, username="alice")
+    scenario.pass_until_resolved()
+
+    assert chant is not None
+    assert chant.zone is Zone.EXILE
+    assert scenario.game.card_imprinted_on(scepter.id) is chant
+
+
+def test_declining_the_copy_leaves_nothing_behind():
+    """The first "you may" is CR 608.2d's own optional question, and CR 118.12's
+    "if you do" gate means the second is never reached. Nothing is copied,
+    nothing is cast, and exile still holds only the imprinted card.
+    """
+    scenario = imprinted_scepter_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scepter = imprint(scenario)
+
+    scenario.will_take_the_may(False, username="alice", source="Isochron Scepter")
+    scenario.activate(scepter, auto=True, username="alice")
+    scenario.pass_until_resolved()
+
+    assert scenario.stack_names() == []
+    assert [state.card.name for state in scenario.game.exile] == ["Orim's Chant"]
+
+
+def test_a_copy_that_is_made_and_not_cast_ceases_to_exist():
+    """CR 707.10a: "if a copy of a card is in any zone other than the stack or
+    the battlefield, it ceases to exist."
+
+    Taking the copy and then declining the cast leaves a copy of Orim's Chant
+    sitting in exile, which is exactly the object that rule removes - exile
+    must be back to the one imprinted card.
+    """
+    scenario = imprinted_scepter_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scepter = imprint(scenario)
+
+    scenario.will_take_the_may(True, username="alice", source="Isochron Scepter")
+    scenario.will_take_the_may(False, username="alice", source="Isochron Scepter")
+    scenario.activate(scepter, auto=True, username="alice")
+    scenario.pass_until_resolved()
+
+    assert scenario.stack_names() == []
+    assert [state.card.name for state in scenario.game.exile] == ["Orim's Chant"]
+    assert not any(state.is_copy for state in scenario.game.exile)
+
+
+def test_the_copy_resolves_and_locks_the_opponent_out():
+    """CR 112.1b: "some effects allow a player to cast a copy of a card; if the
+    player does, that copy is a spell as well" - so it resolves like any other
+    spell and Orim's Chant's "target player can't cast spells this turn" lands
+    on bob - the copy's targets being chosen fresh at CR 601.2c as it is cast,
+    not inherited from anywhere.
+    """
+    scenario = imprinted_scepter_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scepter = imprint(scenario)
+
+    scenario.will_choose_targets("bob", username="alice")
+    scenario.activate(scepter, auto=True, username="alice")
+    scenario.pass_until_resolved()  # the Scepter's ability, casting the copy
+    copy = scenario.game.stack[-1]
+
+    assert copy.is_copy
+    assert copy.card.name == "Orim's Chant"
+    assert [str(target) for target in copy.targets] == ["bob"]

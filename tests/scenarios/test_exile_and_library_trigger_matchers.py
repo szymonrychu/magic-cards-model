@@ -25,8 +25,6 @@ Card text verified with `resolve_cards`. CR numbers looked up with
   with a count, so one trigger.
 """
 
-import pytest
-
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.triggers import ExtraTriggerEvent, GameEvent
 from magic_cards_model.models.zone import Zone
@@ -164,23 +162,38 @@ def test_wan_shi_tong_does_not_fire_on_an_unrelated_zone_change():
     assert scenario.pending_triggers == []
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="the matcher is here and works (the two tests above), but nothing emits a "
-    "put-into-a-library event: Brainstorm's own 'put two cards from your hand on top of your "
-    "library' moves them through models/game.py and machines/effects.py, neither of which "
-    "raises one. models/game.py is Task 1.5's file.",
-)
 def test_a_brainstorm_puts_two_cards_into_the_library_and_triggers_wan_shi_tong():
     """DDR#999's Brainstorm ruling, played for real: two cards genuinely leave
     the hand for the library, so cards are *put into* a library and the ability
-    triggers once (CR 603.2c)."""
+    triggers once (CR 603.2c).
+
+    Asserted on the *stack* rather than on `pending_triggers`: CR 603.3 puts a
+    triggered ability on the stack "the next time a player would receive
+    priority", and `resolve_top` reaches that point before handing control
+    back, so by the time this test looks the queue has already been drained
+    into the stack. The tests above emit the event by hand and never reach a
+    priority window, which is why they read the queue instead."""
     scenario = wan_shi_tong_board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     (island,) = scenario.untapped_sources("Island", username="alice")
 
     scenario.cast_and_resolve("Brainstorm", island, username="alice")
 
-    assert [trigger.source_name for trigger in scenario.pending_triggers] == [
-        "Wan Shi Tong, All-Knowing"
-    ]
+    assert [item.source_name for item in scenario.game.stack] == ["Wan Shi Tong, All-Knowing"]
+
+
+def test_the_two_cards_going_back_are_one_event_not_two():
+    """CR 603.2c: "an ability triggers only once each time its trigger event
+    occurs".
+
+    Brainstorm's "put two cards from your hand on top of your library" is one
+    instruction, and one instruction is one event however many cards it moves.
+    An engine that emitted a put-into-a-library event per card would leave two
+    of Wan Shi Tong's abilities on the stack here, not one."""
+    scenario = wan_shi_tong_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (island,) = scenario.untapped_sources("Island", username="alice")
+
+    scenario.cast_and_resolve("Brainstorm", island, username="alice")
+
+    assert len(scenario.game.stack) == 1
