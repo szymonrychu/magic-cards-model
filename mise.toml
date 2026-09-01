@@ -21,3 +21,14 @@ run = ["uv run ruff format .", "uv run ruff check --fix ."]
 [tasks.test]
 description = "Run the test suite"
 run = "uv run pytest"
+
+# The Dockerfiles live in ../magic-cards-model-api because this engine is a
+# path dependency of it, so both images are built from there. These just
+# delegate - do not duplicate the build logic here.
+[tasks."docker:push"]
+description = "Push both images to harbor (runs the real task in the api repo)"
+run = "cd ../magic-cards-model-api && mise run docker:push"
+
+[tasks.image-tag]
+description = "Print the short git sha the image tasks would tag with"
+run = "cd ../magic-cards-model-api && mise run image-tag"
