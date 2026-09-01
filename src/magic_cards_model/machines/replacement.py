@@ -117,7 +117,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict
 
 from ..models.card import Card, Color, Type
-from ..models.card_state import CardState, Choice, ChoiceKind
+from ..models.card_state import CardState, Choice, ChoiceKind, ExileMarker
 from ..models.token import TokenDefinition, is_token
 from ..models.zone import Zone
 from .decisions import Decision, DecisionKind
@@ -3513,6 +3513,67 @@ _ENTERS_WITH_AMOUNT_RESOLVERS: dict[str, Callable[["Game", CardState], int]] = {
 }
 
 
+#: "where X is the number of turns you've begun since it was foretold" -
+#: Lupine Harbingers' own count, printed on the card in
+#: `tests/fixtures/cards/` (`resolve_cards` has no entry for this printing, so
+#: the fixture's real Scryfall text is the source read here). Matched on the
+#: sentence rather than stored at parse time because `_ENTERS_WITH`'s "where
+#: ..." tail is deliberately not routed into `amount_expression`: that field
+#: feeds `_ENTERS_WITH_AMOUNT_RESOLVERS`, and its presence is what tells
+#: CR 107.3m's announced X apart from an expression, which this is not either.
+_TURNS_SINCE_FORETOLD_RE = re.compile(
+    r"number of turns you'?ve begun since it was foretold", re.IGNORECASE
+)
+
+
+def _turns_begun_since_foretold(game: "Game", entering: CardState) -> int | None:
+    """ "The number of turns you've begun since it was foretold", or `None`.
+
+    CR 702.143a: "Foretell is a keyword that functions while the card with
+    foretell is in a player's hand. Any time a player has priority during their
+    turn, that player may pay {2} and exile a card with foretell from their
+    hand face down." The turn that happened on is the only thing the count
+    needs, and `ExileAnnotation.turn_exiled` is where the foretell pile records
+    it - read here off `CastRecord.exile_annotation`, because CR 400.7 makes
+    the spell a new object and `CardState.move_to` drops the annotation on the
+    way to the stack.
+
+    **The reading taken, and why.** The card says turns *you have begun*, not
+    turns that have passed, so the count has to be per-player. This engine has
+    two candidates and neither is that exactly:
+
+    - `TurnMachine.turns_taken` counts every turn any player begins, so in a
+      two-player game it would double the answer - bob's turns are not ones
+      alice began.
+    - `TurnMachine.turn_number` counts rounds of the table. Every player takes
+      exactly one turn per round (CR 500.1 gives the turn its five phases;
+      turn order is seating order), so the number of rounds elapsed *is* the
+      number of turns the foretelling player has begun since.
+
+    `turn_number` is therefore the right one, and the docstring on
+    `TurnMachine.turns_taken` names the single case where it is not: an extra
+    turn (CR 500.7) deliberately does not move `turn_number`, so a player given
+    one would be counted a turn short. Recorded rather than guessed at - no
+    card in the pool combines foretell with an extra turn, and inventing a
+    per-player counter to cover it belongs to `machines/turn.py`, not here.
+
+    `None` when there is nothing to count from: no cast record (the permanent
+    arrived some other way), no exile annotation, or an annotation from a pile
+    that is not foretell's. Fail closed, like every other unreadable count in
+    this module - the effect is skipped and the permanent enters with no
+    counters rather than with a guessed number.
+    """
+    record = game.cast_records.get(entering.id)
+    if record is None or record.exile_annotation is None or game.turn is None:
+        return None
+    annotation = record.exile_annotation
+    if annotation.marker is not ExileMarker.FORETOLD or annotation.turn_exiled is None:
+        return None
+    # Never negative: a stamp from the future is not a state this can reach,
+    # and CR 122.1 has no notion of putting a negative number of counters on.
+    return max(0, game.turn.turn_number - annotation.turn_exiled)
+
+
 def _self_enters_modifiers(
     game: "Game", card_state: CardState
 ) -> list[tuple[str, Apply, str, bool]]:
@@ -3642,6 +3703,17 @@ def _self_enters_modifiers(
             if holds is None or not holds(game, card_state):
                 continue
         amount = effect.amount
+        if (
+            effect.kind is ReplacementKind.ENTERS_WITH
+            and effect.counter_kind is not None
+            and amount is None
+            and effect.variable_amount
+            and _TURNS_SINCE_FORETOLD_RE.search(effect.text or "")
+        ):
+            # Ahead of CR 107.3m's X below on purpose: this card's X is not the
+            # announced one (its cost has no {X} at all, so the announcement
+            # records 0), it is the count its own sentence names.
+            amount = _turns_begun_since_foretold(game, card_state)
         if (
             effect.kind is ReplacementKind.ENTERS_WITH
             and effect.counter_kind is not None

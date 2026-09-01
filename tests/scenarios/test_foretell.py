@@ -221,36 +221,30 @@ def test_put_on_stack_takes_a_card_out_of_exile_not_just_the_owners_hand():
     assert scenario.zones_containing(harbingers) == ["shared:stack"]
 
 
-@pytest.mark.xfail(
-    reason=(
-        "ONE file is left, and it is machines/replacement.py. Everything the "
-        "value of X needs is now on the record and measured to be there: "
-        "CR 400.7 makes the spell a new object, so CardState.move_to drops "
-        "exile_annotation on the exile-to-stack move - "
-        "Casting.announced_exile_annotation captures it before that move and "
-        "Casting._move_to_the_stack now hands it to Game.note_cast, so at the "
-        "moment Lupine Harbingers enters, "
-        "game.cast_records[spell.id].exile_annotation is "
-        "ExileAnnotation(marker=FORETOLD, owner='alice', turn_exiled=1) and "
-        "turn.turn_number is 2. What still reads the wrong thing is "
-        "`_self_enters_modifiers` in machines/replacement.py: the card's line "
-        "parses as ENTERS_WITH with counter_kind='+1/+1', amount=None, "
-        "variable_amount=True and amount_expression=None, so it takes the "
-        "`record.x_value` branch (CR 107.3m's announced X, 0 for a spell with "
-        "no {X} in its cost) and puts on zero counters. It needs a branch "
-        "ahead of that one for CR 702.143a's 'the number of turns you've begun "
-        "since it was foretold' - amount = turn.turn_number - "
-        "record.exile_annotation.turn_exiled when the record carries a FORETOLD "
-        "annotation - which is CR 614.12's 'effects [that] may come from the "
-        "permanent itself' being told the count its own sentence names."
-    ),
-    strict=True,
-)
 def test_it_enters_with_a_counter_for_each_turn_since_it_was_foretold():
+    """CR 614.1c's "enters with", counted off the pile it was foretold into.
+
+    Lupine Harbingers' printed line is "Lupine Harbingers enters the
+    battlefield with X +1/+1 counters on it, where X is the number of turns
+    you've begun since it was foretold." - not CR 107.3m's announced X (its
+    mana cost has no {X} at all), so `_self_enters_modifiers` in
+    `machines/replacement.py` reads the count off the record's foretell
+    annotation instead: `TurnMachine.turn_number` now, minus
+    `ExileAnnotation.turn_exiled` then. See `_turns_begun_since_foretold` for
+    why rounds of the table are the right per-player count and where that
+    reading stops being exact.
+
+    Alice foretells on her first turn and casts it on her second, so she has
+    begun exactly one turn since - one counter, asserted as the literal 1
+    rather than as "at least one", which the earlier version of this test
+    could not distinguish from the zero the announced-X branch used to give.
+    """
     scenario = board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
+    foretold_on = scenario.turn.turn_number
     foretell_it(scenario)
     alices_next_main(scenario)
+    assert scenario.turn.turn_number == foretold_on + 1
 
     casting = scenario.cast("Lupine Harbingers", from_zone=Zone.EXILE)
     casting.use_keyword("Foretell")
@@ -259,4 +253,7 @@ def test_it_enters_with_a_counter_for_each_turn_since_it_was_foretold():
     scenario.put_on_stack(casting)
     wolf = scenario.resolve_top()
 
-    assert wolf.counter_count("+1/+1") >= 1
+    assert wolf.counter_count("+1/+1") == 1
+    # The printed body is untouched by the counters; CR 122.1a is what makes
+    # the creature bigger than the 4/4 printed on the card.
+    assert (wolf.card.power, wolf.card.toughness) == ("4", "4")
