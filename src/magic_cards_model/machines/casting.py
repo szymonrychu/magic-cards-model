@@ -1932,7 +1932,16 @@ class Casting(BaseModel):
                 face = self.chosen_face
                 if face is not None:
                     return self._with_bestowed_target(profile_for_text(face.oracle_text or ""))
-            if "{X}" in (self.spell.mana_cost or ""):
+            # `self.modal is None` matters as much as the `{X}`: a MODAL card
+            # with an X in its cost (Kozilek's Command, `{X}{C}{C}`) reaches
+            # here whenever its modes have not been announced yet, and reading
+            # its text whole would count the targets of every bullet - three,
+            # for a card that will only ever need the targets of the two modes
+            # actually chosen (CR 700.2c). CR 601.2c enforcement downstream
+            # then refuses the cast for "too few targets" before the caster is
+            # ever asked which modes they want. Modal stays `understood=False`
+            # until `choose_modes` runs, which is what the fallthrough gives.
+            if self.modal is None and "{X}" in (self.spell.mana_cost or ""):
                 # Spell-scoped, not `profile_for_text`: that one reads text
                 # whole because it exists for an ability's own words, and a
                 # creature spell with an activated ability that targets

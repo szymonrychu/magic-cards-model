@@ -677,3 +677,43 @@ def test_x_value_must_agree_between_targets_and_cost():
 
     with pytest.raises(ValueError, match="X was 0 when targets were chosen but is now 1"):
         casting.cast()
+
+
+def test_a_modal_x_spell_asks_for_no_targets_before_its_modes_are_chosen():
+    """CR 700.2c: "if a spell or ability targets one or more targets only if a
+    particular mode is chosen for it, its controller will need to choose those
+    targets only if they chose that mode".
+
+    So a modal spell announced with no modes yet requires NOTHING, and its
+    profile says `understood=False` - the question "what does this target" has
+    no answer until CR 700.2a's mode choice has been made.
+
+    The regression this pins: the branch that substitutes X into a spell's own
+    text before reading its targets (Postmortem Lunge's "mana value X") did not
+    exclude modal cards, and Kozilek's Command is `{X}{C}{C}`. Its four bullets
+    were read whole, as one non-modal blob, so the profile demanded three
+    targets up front - one for each bullet that says "target" - for a card that
+    chooses two modes and will need at most two. CR 601.2c enforcement then
+    refused the cast for "too few targets" before the caster was ever asked
+    which modes they wanted, which is how it reached a player as "I cannot cast
+    Kozilek's Command and target creatures with it at all".
+    """
+    scenario = board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    casting = scenario.cast("Kozilek's Command")
+
+    assert not casting.targeting.understood, (
+        "which targets a modal spell needs depends on modes nobody has chosen yet"
+    )
+    assert casting.targeting.min_targets == 0, "a mode-less modal spell requires no target"
+
+    # And the same spell, once its modes ARE announced, asks for exactly the
+    # one target its single targeting mode needs - not three.
+    # "Choose two", so two it is: mode 3 ("Exile target creature with mana
+    # value X or less") requires one, and mode 4 ("Exile UP TO X target cards
+    # from graveyards") requires none. One required target for the pair, where
+    # reading all four bullets as one blob demanded three.
+    casting.choose_modes([3, 4], x_value=1)
+    assert casting.targeting.understood
+    assert casting.targeting.min_targets == 1, "only the chosen modes target (CR 700.2c)"
