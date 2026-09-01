@@ -581,6 +581,30 @@ class PlayedScenario:
             times,
         )
 
+    def will_order_triggers(
+        self,
+        *source_names: str,
+        username: str | None = None,
+        times: int | None = 1,
+    ) -> None:
+        """Answer the next `ORDER_TRIGGERS` question (CR 603.3b) by naming the
+        source of each of that player's own waiting triggers, **bottom of the
+        stack first**.
+
+        "First, each player, in APNAP order, puts each triggered ability they
+        control on the stack in any order they choose." The last name given is
+        therefore the trigger that goes on *top* and so resolves *first* -
+        which is the way round DDR#983's trick needs.
+
+        Named by printed source rather than by ability id for the same reason
+        `choose_trigger_targets` is: the abilities do not exist until the event
+        fires, so there is no id for a scenario to name in advance.
+        `machines/decisions._resolve_trigger_order` refuses a name that does
+        not match exactly one of the abilities actually offered, so a
+        misspelling raises rather than being quietly ignored.
+        """
+        self._queue(DecisionKind.ORDER_TRIGGERS, tuple(source_names), username, None, times)
+
     def scry_keeping_everything_on_top(
         self, *, username: str | None = None, times: int | None = 1
     ) -> None:

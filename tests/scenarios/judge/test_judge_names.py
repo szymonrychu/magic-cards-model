@@ -24,10 +24,16 @@ from tests.scenarios.harness import Scenario
 
 
 def _urza_factory_board(extra: list[str] | None = None) -> "Scenario":
-    """Urza's Factory plus the seven lands its token ability costs."""
+    """Urza's Factory plus the seven lands its token ability costs.
+
+    Echoing Courage is always in hand: it used to be dealt only when `extra`
+    was `None`, which is the opposite of what the one test that casts it
+    passes, so that test's `find` raised on an empty hand before it asserted
+    anything at all.
+    """
     return Scenario().player(
         "alice",
-        hand=["Echoing Courage"] if extra is None else [],
+        hand=["Echoing Courage"],
         battlefield=["Urza's Factory", *["Mountain"] * 7, *(extra or [])],
     )
 
@@ -63,10 +69,22 @@ def test_an_unnamed_token_is_named_after_its_subtypes_plus_the_word_token():
 
 @pytest.mark.xfail(
     strict=True,
-    reason="Echoing Courage has no scripted effect - `effect_for('Echoing "
-    "Courage', ...)` is None - so it resolves, goes to the graveyard, and "
-    "nothing anywhere gets +2/+2. The name-matching half of the ruling (which "
-    "permanents the buff reaches) cannot be observed until the pump exists.",
+    reason="`machines/layers.py` has no selector for CR 201.2a's 'the same name as that "
+    "creature'. The `machines/effects.py` half is done: "
+    "`_CONTINUOUS_PUMP_OR_KEYWORD_RE` now admits the 'Target creature and all other "
+    "creatures with the same name as that creature' subject and `_parse_mixed_clauses` "
+    "matches it against the whole unsplit text (the bare ' and ' inside the subject would "
+    "otherwise be cut in two), so `effect_for('Echoing Courage', ...)` is no longer None and "
+    "the spell reaches `create_continuous_effect`. That hands the card's own text to "
+    "`machines/layers.parsed_layer_effects`, which returns None: `_PUMP_RE`'s `_SUBJECT` "
+    "reads only 'target creature'/'this creature'/'this permanent'/'another target creature', "
+    "and `_pump_and_keyword_builder` builds one `only_this_incarnation` effect per resolved "
+    "target, so nothing anywhere can widen the effect to the other permanents sharing the "
+    "target's name. Needed in `machines/layers.py`: a `same_name_as(name)` `Selector`, a "
+    "`_TARGET_AND_SAME_NAME_PUMP_RE` sibling of `_PUMP_RE`, its dispatch beside "
+    "`_PUMP_RE.fullmatch(sentence)` in `effects_for`, and a builder that selects on that name "
+    "instead of on the target's identity. Everything the ruling turns on is already true "
+    "board-side and asserted by the two tests around this one.",
 )
 def test_echoing_courage_buffs_only_the_permanents_sharing_the_targets_name():
     """DDR#249: same *name*, not same creature type.

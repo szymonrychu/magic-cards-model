@@ -10,12 +10,10 @@ Sourced from the DDR judge transcripts. Episodes covered:
 
 Earthbend (CR 701.66a) is the one of the four this engine implements - see
 `tests/scenarios/test_earthbend.py` for the mechanic itself; this file only adds
-the controller question DDR#989 is about. Airbend (CR 701.65a) is half done: the
-{2} cast its exile pile grants is modelled (`ExileMarker.AIRBENT`,
-`machines/casting.marker_cast_options`), but the exile itself is not - `Aang,
-Swift Savior`'s enters trigger parses ("airbend up to one other target creature
-or spell") and resolves to nothing, because `machines/effects.py` has no clause
-parser for the word.
+the controller question DDR#989 is about. Airbend (CR 701.65a) is whole now:
+`machines/effects._parse_airbend_clause` performs the exile and writes CR 406.4's
+`ExileMarker.AIRBENT` note onto each exiled *card*, and
+`machines/casting.marker_cast_options` reads the {2} back off that note.
 
 Every CR number here was looked up with `knowledge_search(type="rules")`.
 """
@@ -52,13 +50,6 @@ def _aang_airbending(target_name: str, target_owner: str):
     return scenario, target
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="airbend has no implementation: `effect_for('Aang, Swift Savior', "
-    "...)` is None and nothing in `machines/keywords.py` or "
-    "`machines/effects.py` handles the word, so the enters trigger goes on the "
-    "stack, resolves, and leaves the targeted permanent exactly where it was.",
-)
 def test_airbending_a_permanent_exiles_it_and_leaves_a_two_mana_permission():
     """The airbend episode's first half: it is an exile plus a permission.
 
@@ -88,10 +79,10 @@ def test_an_airbent_card_in_exile_may_be_cast_by_its_owner_for_two():
     `machines/casting.marker_cast_options` are.
 
     The board is staged at the state the exile leaves behind rather than played
-    into it, because performing the exile is `machines/effects.py`'s clause and
-    is still missing (the test above). Nothing is faked: a real Grizzly Bears
-    printing, in the real exile zone, annotated the way CR 406.4 says the pile
-    is tracked.
+    into it, so that this test is about `marker_cast_options` alone - the test
+    above is the one that plays the exile out through Aang. Nothing is faked: a
+    real Grizzly Bears printing, in the real exile zone, annotated the way
+    CR 406.4 says the pile is tracked.
     """
     scenario = (
         Scenario()
@@ -118,15 +109,6 @@ def test_an_airbent_card_in_exile_may_be_cast_by_its_owner_for_two():
     assert option.later_turn is False
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="`machines/effects.py` has no airbend clause parser, so Aang's "
-    "trigger resolves and exiles nothing. Everything else this test needs is "
-    "in place: the token is created by the attack trigger, and "
-    "`machines/casting.marker_cast_options` reads CR 701.65a's {2} back off "
-    "`ExileMarker.AIRBENT`. Only the exile itself is missing, and it belongs "
-    "to a file this task does not own.",
-)
 def test_airbending_a_token_makes_it_cease_to_exist_before_anyone_can_recast_it():
     """The airbend episode's token corner: the {2} permission is worthless.
 

@@ -19,13 +19,11 @@ the real `Match.start_game` path and asserts CR 103's opening against it.
   size, normally seven.
 - CR 401.1: when the game begins, each player's deck becomes their library.
 
-The archetype's own engine is checked at the bottom, where it half fails: the
-CR 118.9 pitch cast on Allosaurus Rider works and Summoner's Pact works, bill
-and all, but the Neoform/Eldritch Evolution payoff that turns the pitched
-creature into a fatty does not. See `docs/deck-gaps/allosaurus-combo.md`.
+The archetype's own engine is checked at the bottom: the CR 118.9 pitch cast on
+Allosaurus Rider, Summoner's Pact and its bill, and Neoform's payoff that turns
+the pitched creature into a fatty. Eldritch Evolution's own version of that
+payoff is still unread - see the Neoform test's docstring for what it needs.
 """
-
-import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Deck, Game, Match, Player, Zone
@@ -263,20 +261,27 @@ def test_allosaurus_rider_is_pitch_cast_for_two_green_cards():
 # -- Gaps -----------------------------------------------------------------
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Neoform's resolution is unmodelled: 'search your library for a creature card "
-    "with mana value equal to 1 plus the sacrificed creature's mana value, put that card "
-    "onto the battlefield with an additional +1/+1 counter on it, then shuffle' (CR 701.23, "
-    "701.24b) has no effect anywhere in the dispatch chain, so the spell resolves, nothing "
-    "is searched for, and it goes to the graveyard. Eldritch Evolution is the same clause "
-    "and equally silent. See docs/deck-gaps/allosaurus-combo.md",
-)
 def test_neoform_turns_the_pitched_rider_into_a_fatty():
     """The whole archetype in one line: pitch Allosaurus Rider (mana value 7,
     CR 118.9c - the alternative cost does not change it), sacrifice it to
     Neoform (CR 118.8a additional cost), and search out the mana-value-8
-    creature. CR 701.23 is the search; CR 701.24b the shuffle that follows.
+    creature. CR 701.23a is the search, CR 701.23b why failing to find would
+    have been legal, and CR 701.24a/701.24b the shuffle that follows.
+
+    The number the search is bounded by is not printed on Neoform at all: it is
+    CR 202.3's mana value of the creature that paid CR 118.8a's additional
+    cost, read back off `Game.cast_record(spell).additional_cost_cards` -
+    CR 601.2h had it sacrificed before the spell was ever put on the stack, so
+    by resolution it is a card in a graveyard, whose mana value is the same
+    number it was on the battlefield.
+
+    Eldritch Evolution is *almost* the same clause and is still unread: its
+    "Search your library for a creature card with mana value X or less, where X
+    is 2 plus the sacrificed creature's mana value" is the comparison version
+    of the same sentence, but its third sentence, "Exile Eldritch Evolution",
+    replaces where the resolving spell itself goes (CR 614.1 / CR 608.2n's
+    graveyard), which needs a `machines/replacement.py` effect this engine has
+    no shape for yet - and CR 608.2c has no notion of running half of it.
     """
     scenario = (
         Scenario()
@@ -302,10 +307,24 @@ def test_neoform_turns_the_pitched_rider_into_a_fatty():
     rider = scenario.put_on_stack(casting)
     scenario.resolve_top()
 
-    scenario.cast_and_resolve("Neoform", *scenario.untapped_sources("Forest", "Island"))
+    # CR 118.8a's printed additional cost, chosen and paid as part of casting
+    # (CR 601.2h) - the Rider is the creature the search's number is read off.
+    scenario.will_choose_cards(scenario.find("Griselbrand", Zone.LIBRARY))
+    scenario.cast_and_resolve(
+        "Neoform",
+        *scenario.untapped_sources("Forest", "Island"),
+        sacrificing=[rider],
+    )
 
     assert rider.zone is Zone.GRAVEYARD
-    assert scenario.find("Griselbrand", Zone.BATTLEFIELD).zone is Zone.BATTLEFIELD
+    griselbrand = scenario.find("Griselbrand", Zone.BATTLEFIELD)
+    assert griselbrand.zone is Zone.BATTLEFIELD
+    # CR 202.3 off the two printed mana costs: {5}{G}{G} is 7, {4}{B}{B}{B}{B}
+    # is 8, and 8 is the "1 plus" the sacrificed creature's. The alternative
+    # cost the Rider was cast for never touched its mana value (CR 118.9c).
+    assert rider.card.mana_cost == "{5}{G}{G}"
+    assert griselbrand.card.mana_cost == "{4}{B}{B}{B}{B}"
+    assert griselbrand.counter_count("+1/+1") == 1
 
 
 def test_summoners_pact_fetches_the_rider_and_bills_the_next_upkeep():

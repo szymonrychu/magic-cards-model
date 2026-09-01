@@ -73,12 +73,16 @@ def test_paying_the_whole_cost_sacrifices_the_creature_and_resolves_the_spell():
     first kind, so both are paid here, and CR 608.2n then puts the resolved
     instant into its owner's graveyard.
 
-    What the resolution *does* is the `xfail` below; that the cost is really
-    paid is this test.
+    The resolution pays out off the sacrificed creature's own printed box here,
+    because nothing was modifying it: Omnath is a printed 1/1, so one card and
+    one life. The episode's own question - what happens when a continuous
+    effect *was* modifying it as it was sacrificed - is the `xfail` below.
     """
     scenario = board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice = scenario.player("alice")
     omnath = scenario.creature("Omnath, Locus of Mana", "alice")
+    before = alice.life
 
     casting = scenario.cast("Momentous Fall", sacrificing=[omnath])
     payment = casting.begin_paying()
@@ -90,6 +94,9 @@ def test_paying_the_whole_cost_sacrifices_the_creature_and_resolves_the_spell():
     scenario.resolve_top()
 
     assert fall.zone is Zone.GRAVEYARD
+    # Off the printed box, never off the computed size this file is about.
+    assert len(alice.hand) == int(omnath.card.power)
+    assert alice.life - before == int(omnath.card.toughness)
 
 
 def test_omnath_is_a_plain_one_one_with_no_mana_floating():
@@ -111,16 +118,20 @@ def test_omnath_is_a_plain_one_one_with_no_mana_floating():
 
 
 @pytest.mark.xfail(
-    reason="the payment order is no longer the gap - CostPayment.components_before_mana "
-    "now pays the sacrifice while the four green mana is still floating (CR 601.2h). "
-    "Two registry gaps remain, both outside machines/cost.py: Omnath's 'gets +1/+1 for "
-    "each unspent green mana you have' has no row in machines/layers.LAYER_EFFECTS, so "
-    "Omnath is a 1/1 however much mana is unspent; and Momentous Fall's own two-clause "
-    "effect ('You draw cards equal to the sacrificed creature's power, then you gain "
-    "life equal to its toughness') is not read by machines/effects.py at all - "
-    "effect_for returns None, so the spell resolves and does nothing. A last-known-"
-    "information snapshot of the sacrificed creature (CR 608.2h) is what would carry "
-    "the power and toughness to that effect once it exists.",
+    reason="neither the payment order nor Momentous Fall's own effect is the gap any more: "
+    "CostPayment.components_before_mana pays the sacrifice while the four green mana is "
+    "still floating (CR 601.2h), and machines/effects._parse_draw_and_gain_off_sacrificed_"
+    "clause reads 'You draw cards equal to the sacrificed creature's power, then you gain "
+    "life equal to its toughness' off Game.cast_record(spell).additional_cost_cards - the "
+    "test above asserts it paying out one card and one life for a printed 1/1. Two pieces "
+    "are missing, both in files this task does not own. (1) machines/layers.LAYER_EFFECTS "
+    "has no row for Omnath's 'Omnath gets +1/+1 for each unspent green mana you have', so "
+    "Omnath is a 1/1 on the battlefield however much green mana is unspent. (2) Even with "
+    "that row, models/card_state.py carries no last-known power/toughness snapshot - only "
+    "last_known_counters (CR 704.8) - so once Omnath is in the graveyard its power reads "
+    "as the printed 1 again, and CR 608.2h's 'the answer is determined only once, when the "
+    "effect is applied' has nothing to answer from. Both are needed; either alone leaves "
+    "this at one card and one life.",
     strict=True,
 )
 def test_sacrificing_omnath_before_paying_the_mana_draws_five():

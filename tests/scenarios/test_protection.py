@@ -20,11 +20,12 @@ organised around which of them this engine can express:
 - **CR 702.16e**, *damage* from sources with the quality is prevented -
   enforced end to end: `Game.deal_damage` carries a source, and both combat
   (`machines/combat._deal_combat_damage`) and spell damage
-  (`machines/effects.py`) name theirs. The one test below that still xfails
-  calls `deal_damage` with no source at all, on purpose, which is a different
-  thing from the engine being unable to name one - see its own docstring, and
-  `scenarios/test_prevention_effects.py`/`scenarios/test_protection_grants.py`
-  for the cases with a real source.
+  (`machines/effects.py`) name theirs, and the untargeted case below names
+  alice's own Lightning Bolt as the source rather than dealing the damage
+  anonymously - an anonymous source carries no quality for protection to check,
+  so a `deal_damage` call without `source=` was never CR 702.16e's subject at
+  all. See `scenarios/test_prevention_effects.py` and
+  `scenarios/test_protection_grants.py` for the cast and combat routes.
 - **CR 702.16f**, an attacking creature with it can't be *blocked* by creatures
   with the quality - vacuous for "from instants", and unenforced in general.
 - **CR 702.16m**, multiple instances of one quality are redundant - Emrakul's
@@ -245,35 +246,30 @@ def test_announcing_a_protected_target_is_refused_as_the_spell_is_cast():
         scenario.cast("Lightning Bolt", username="alice", targets=[emrakul])
 
 
-@pytest.mark.xfail(
-    reason="CR 702.16e is implemented end to end now, not just possible: "
-    "`Game.deal_damage` takes a `source`, `Game.protection_from_damage` reads "
-    "the target's protection against it, and real callers actually pass one - "
-    "`machines/combat._deal_combat_damage` names the attacker or blocker, and "
-    "the damage entries in `machines/effects.py` name the spell or ability - "
-    "covered end to end in scenarios/test_prevention_effects.py and "
-    "scenarios/test_protection_grants.py. This test's own call below deals its "
-    "damage anonymously (`deal_damage(emrakul, 3)`, no `source=`), which is a "
-    "choice this test makes, not an engine gap: an anonymous source has no "
-    "quality for protection to check against, so this specific call is "
-    "correctly never prevented",
-    strict=True,
-)
 def test_damage_from_an_instant_source_is_prevented():
     """CR 702.16e: even damage that never targeted is prevented.
 
-    An *anonymous* call, on purpose - `deal_damage(emrakul, 3)` names no
-    source, so there is nothing here for protection to check a quality
-    against. `scenarios/test_protection_grants.py`'s Lightning Bolt and
-    combat tests are the ones that show a real, named source actually being
-    prevented; this one stays xfail to keep that distinction visible rather
-    than deleting the case that first exposed the gap.
+    "Any damage that would be dealt by sources that have the stated quality to
+    a permanent or player with protection is prevented." Nothing in that
+    sentence mentions targeting, so this deals the damage through
+    `Game.deal_damage` directly rather than by casting anything - CR 702.16b's
+    announcement refusal is a different test above, and routing through a cast
+    would only ever exercise that one.
+
+    What the damage needs is a *source*, because protection checks a quality
+    and an anonymous source has none to check. CR 702.16a: "If the quality is a
+    card type ... the ability applies ... to any sources not on the battlefield
+    that are of that card type" - so alice's Lightning Bolt, a real instant
+    card sitting in her hand, is exactly the kind of source CR 702.16e names,
+    and it is the object CR 120.1 would call the source of the damage anyway.
     """
     scenario = emrakul_on_bobs_board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     emrakul = scenario.creature("Emrakul, the Promised End", "bob")
+    bolt = scenario.find("Lightning Bolt", Zone.HAND, "alice")
+    assert "Instant" in bolt.card.type_line
 
-    scenario.game.deal_damage(emrakul, 3)
+    scenario.game.deal_damage(emrakul, 3, source=bolt)
 
     assert emrakul.damage == 0
 

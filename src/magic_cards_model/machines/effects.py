@@ -83,7 +83,7 @@ from ..models.token import (
 from ..models.zone import Zone
 from . import combat as combat_rules
 from .abilities import ActivatedAbility, TriggerEvent, self_normalized_effect_text
-from .casting import PlayAction, finish_suspend, remove_suspend_time_counter
+from .casting import PlayAction, annotate_exile, finish_suspend, remove_suspend_time_counter
 from .casting_restrictions import create_targeted_cant_cast_restriction, parse_casting_rule_clause
 from .combat import has_keyword
 from .decisions import Decision, DecisionKind
@@ -2838,6 +2838,187 @@ def _parse_search_mv_lte_count_clause(clause: str, *, for_spell: bool) -> Target
         found = _search_library(game, controller, matches, source=source)
         if found is not None:
             controller.add(found, Zone.HAND)
+
+    return effect
+
+
+#: Neoform's own shape: "Search your library for a creature card with mana
+#: value equal to 1 plus the sacrificed creature's mana value, put that card
+#: onto the battlefield with an additional +1/+1 counter on it, then shuffle."
+#:
+#: `_SEARCH_AND_PUT_RE`'s bound is `(?: with mana value (?P<max_mv>\d+) or
+#: less)?` - a printed digit and a ceiling. This one is neither: it is an
+#: *equality*, and the number it compares against is not printed anywhere on
+#: the card. It is read off the creature the caster already sacrificed to pay
+#: CR 118.8a's printed additional cost ("As an additional cost to cast this
+#: spell, sacrifice a creature"), which CR 601.2h had them pay before the spell
+#: was ever put on the stack - `Game.cast_record(spell).additional_cost_cards`
+#: is where that choice was recorded, the same field `_parse_counter_on_
+#: additional_cost_card_clause` and Fling's own damage clause already read.
+#:
+#: CR 202.3: "The mana value of an object is a number equal to the total amount
+#: of mana in its mana cost, regardless of color." The sacrificed creature is
+#: in its owner's graveyard by the time this resolves, which changes nothing -
+#: mana value is a characteristic of the card and CR 202.3e's X is zero
+#: anywhere but the stack, so the graveyard copy answers the same number the
+#: battlefield one did. That is *not* the CR 608.2h last-known-information case
+#: Momentous Fall's power-and-toughness clause is, and deliberately so.
+_SEARCH_MV_EQUAL_TO_SACRIFICED_RE = re.compile(
+    r"^search (?:your|their) library for (?:a|an) (?P<quality>.+?) card with mana value "
+    r"equal to (?P<offset>\d+) plus the sacrificed creature['’]s mana value, "
+    r"put that card onto the battlefield"
+    r"(?P<counter> with an additional \+1/\+1 counter on it)?"
+    r", then shuffle\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_search_mv_equal_to_sacrificed_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_SEARCH_MV_EQUAL_TO_SACRIFICED_RE`'s shape - Neoform's whole second
+    paragraph.
+
+    Spell-only: the number comes off *this spell's* own cast record, and an
+    ability has no additional cost and no cast record to read.
+
+    Fail-closed on both halves of the sentence. A quality
+    `_search_quality_is_readable` cannot read takes the whole clause down
+    rather than searching for the wrong thing (CR 608.2c), and a cast record
+    with no sacrificed card - which should be impossible, since CR 601.2h makes
+    the sacrifice part of casting the spell at all - leaves the search with no
+    number to compare against, so nothing is searched for rather than a search
+    for mana value `offset`.
+
+    CR 701.23a is the search and CR 701.23b is why failing to find is legal:
+    "creature card" is a stated quality. `_search_library` folds CR 701.24a's
+    shuffle and CR 701.24b's "the found cards aren't included in the shuffle"
+    in for us.
+
+    **The +1/+1 counter is put on after the permanent has entered**, not as
+    part of the entering event. Printed strictly, "put that card onto the
+    battlefield **with** an additional +1/+1 counter on it" is CR 614.1c's
+    "enters with . . ." shape, applied by CR 614.12 while the permanent is on
+    its way in; this engine's `Game.enter_the_battlefield` takes no externally
+    supplied counters, so the counter goes on through `Game.add_counters` the
+    moment it lands instead. Nothing between the two moments can tell the
+    difference on this board: CR 704.3 checks state-based actions only when a
+    player would receive priority, never mid-resolution, and no ability
+    anywhere in this pool triggers on a permanent *entering* with counters as
+    opposed to on counters being put on it (CR 122.6). An engine that grows
+    either would need this to become a real `machines/replacement.py` effect.
+    """
+    if not for_spell:
+        return None
+    match = _SEARCH_MV_EQUAL_TO_SACRIFICED_RE.fullmatch(" ".join(clause.strip().split()))
+    if match is None:
+        return None
+    quality = match.group("quality")
+    if not _search_quality_is_readable(quality):
+        return None
+    matches_quality = _quality_matcher(quality)
+    offset = int(match.group("offset"))
+    with_counter = match.group("counter") is not None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object)
+        record = game.cast_record(stack_object)
+        if not record.additional_cost_cards:
+            return
+        sacrificed = game.find_by_id(record.additional_cost_cards[0])
+        if sacrificed is None:
+            return
+        wanted = offset + sacrificed.mana_value
+
+        def matches(state: CardState) -> bool:
+            return matches_quality(state) and state.mana_value == wanted
+
+        found = _search_library(game, controller, matches, source=stack_object.name)
+        if found is None:
+            return
+        permanent = game.put_onto_battlefield(found, controller.username)
+        if with_counter and permanent is not None and permanent.zone is Zone.BATTLEFIELD:
+            game.add_counters(permanent, Counter.PLUS_ONE, 1)
+
+    return effect
+
+
+#: Momentous Fall's whole second paragraph: "You draw cards equal to the
+#: sacrificed creature's power, then you gain life equal to its toughness."
+#:
+#: Read whole, ahead of `split_effect_clauses`: the second half's "its" is
+#: CR 400.7 anaphora back to the creature the *first* half named, and cut apart
+#: the fragment "you gain life equal to its toughness" names nothing at all.
+#: One CR 608.2c instruction, so it is one parser.
+#:
+#: Both numbers come off the creature that paid CR 118.8a's printed additional
+#: cost, recorded in `Game.cast_record(spell).additional_cost_cards` the same
+#: way `_deal_damage_equal_to_sacrificed_creature_power` reads Fling's.
+_DRAW_AND_GAIN_OFF_SACRIFICED_RE = re.compile(
+    r"^you draw cards equal to the sacrificed creature['’]s power, "
+    r"then you gain life equal to its toughness\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_draw_and_gain_off_sacrificed_clause(
+    text: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_DRAW_AND_GAIN_OFF_SACRIFICED_RE`'s shape - Momentous Fall.
+
+    Spell-only: the numbers come off *this spell's* own cast record, and an
+    ability has no additional cost and no cast record to read.
+
+    **CR 608.2h is the rule this clause is really about**, and this engine can
+    only half honour it: "If an effect requires information from the game ...
+    the answer is determined only once, when the effect is applied." The
+    creature is in its owner's graveyard by then - CR 601.2h paid the sacrifice
+    before the spell was ever put on the stack - so the power and toughness
+    wanted here are the ones it last had *on the battlefield*, not the ones a
+    graveyard card computes now.
+
+    What is read below is `CardState.power`/`.toughness`, which is the printed
+    box plus counters (CR 122.1a). That is the same answer for a creature whose
+    size on the battlefield came only from its printing and its counters -
+    which is every card in this pool that pays this cost today - and the wrong
+    answer for one whose size came from a continuous effect that stopped
+    applying when it left (Omnath, Locus of Mana's own "+1/+1 for each unspent
+    green mana you have", the whole point of DDR#955). `CardState` carries a
+    `last_known_counters` snapshot for CR 704.8 but no last-known
+    power/toughness, so there is nothing better to read yet; when there is,
+    this is the one line that has to change.
+
+    An absent power or toughness (no card recorded, or a printed `*` this
+    engine cannot compute off a card that has left the battlefield) draws and
+    gains zero rather than guessing. CR 121.3's empty-library loss is
+    `Game.draw_cards`'s business, not this clause's.
+    """
+    if not for_spell:
+        return None
+    # `_strip_non_effect_preamble` first: Momentous Fall's own printed
+    # additional-cost line ("As an additional cost to cast this spell,
+    # sacrifice a creature.") is part of casting it (CR 601.2f/601.2h), not
+    # part of its resolution, and it is already paid by the time this runs.
+    stripped = " ".join(_strip_non_effect_preamble(text).split())
+    if _DRAW_AND_GAIN_OFF_SACRIFICED_RE.fullmatch(stripped) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object)
+        record = game.cast_record(stack_object)
+        sacrificed = None
+        if record.additional_cost_cards:
+            sacrificed = game.find_by_id(record.additional_cost_cards[0])
+        power = 0 if sacrificed is None or sacrificed.power is None else max(sacrificed.power, 0)
+        toughness = (
+            0
+            if sacrificed is None or sacrificed.toughness is None
+            else max(sacrificed.toughness, 0)
+        )
+        if power:
+            game.draw_cards(controller, power)
+        if toughness:
+            controller.gain_life(toughness)
 
     return effect
 
@@ -5816,8 +5997,26 @@ _GAIN_LIFE_EQUAL_TO_DAMAGE_PREVENTED_RE = re.compile(
 #: qualifying word costs nothing: `create_continuous_effect` still gets its
 #: targets from `Game.resolve_card_targets`, the already-validated
 #: announcement, never from this match.
+#: Echoing Courage's own subject widens this again: "Target creature **and all
+#: other creatures with the same name as that creature** get +2/+2 until end of
+#: turn." One target (CR 115.1), and then a second, untargeted group defined
+#: off it by CR 201.2a's "Two or more objects have the same name if they have
+#: at least one name in common". The plural verb "get" comes with the plural
+#: subject, so both spellings are admitted.
+#:
+#: This subject carries a bare " and ", which `split_effect_clauses` cuts in
+#: two - so `_parse_mixed_clauses` tries this regex against the whole unsplit
+#: text before it splits anything, the same treatment
+#: `_parse_choose_name_search_and_exile_whole_text` already gets there.
+#:
+#: Recognising the shape is all this does. *Which* permanents the buff reaches
+#: is `machines/layers.py`'s selector, read off the card's own text by
+#: `parsed_layer_effects` - and there is no `same name as that creature`
+#: selector there yet, so this text still comes back unreadable from that side.
 _CONTINUOUS_PUMP_OR_KEYWORD_RE = re.compile(
-    r"^target (?:[a-z]+ )?creature (?:gets [+-]\d+/[+-]\d+|gains [a-z ]+) until end of turn\.?$",
+    r"^target (?:[a-z]+ )?creature"
+    r"(?: and all other creatures with the same name as that creature)?"
+    r" (?:gets? [+-]\d+/[+-]\d+|gains? [a-z ]+) until end of turn\.?$",
     re.IGNORECASE,
 )
 
@@ -8313,6 +8512,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     )
     if attacking_tokens_then_sacrifice is not None:
         return attacking_tokens_then_sacrifice
+    may_cost_then_attacking_token = _parse_may_cost_then_attacking_token_clause(effect_text)
+    if may_cost_then_attacking_token is not None:
+        return may_cost_then_attacking_token
     put_from_hand_attacking = _parse_put_creature_from_hand_attacking_then_return(effect_text)
     if put_from_hand_attacking is not None:
         return put_from_hand_attacking
@@ -8468,6 +8670,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     )
     if create_token_then_copy_spell_retargeted is not None:
         return create_token_then_copy_spell_retargeted
+    copy_next_spell_you_cast = _parse_copy_next_spell_you_cast_clause(effect_text)
+    if copy_next_spell_you_cast is not None:
+        return copy_next_spell_you_cast
     pay_any_life_then_draw = _parse_pay_any_life_then_draw_that_many_clause(effect_text)
     if pay_any_life_then_draw is not None:
         return pay_any_life_then_draw
@@ -12339,6 +12544,232 @@ def _parse_create_tapped_attacking_tokens_then_sacrifice(text: str) -> AbilityEf
 
 
 # --------------------------------------------------------------------------
+# "You may <cost>. If you do, create ... tapped and attacking[. Sacrifice
+# that token at <timing>.]" (CR 118.12, CR 508.4, CR 603.7a)
+# --------------------------------------------------------------------------
+#
+# `_ATTACK_TAPPED_ATTACKING_TOKENS_THEN_SACRIFICE_RE` above is this shape with
+# the choice removed and the timing fixed to the end step. The two cards this
+# section is for both put a CR 118.12 optional cost in front of it:
+#
+#   Kavaron Harrier - "you may pay {2}. If you do, create a 2/2 colorless
+#   Robot artifact creature token that's tapped and attacking. Sacrifice that
+#   token at end of combat."
+#
+#   Gut, True Soul Zealot - "you may sacrifice another creature or an
+#   artifact. If you do, create a 4/1 black Skeleton creature token with
+#   menace that's tapped and attacking."
+#
+# CR 118.12 is the shape: "[A player] may [do something]. If [that player]
+# [does, doesn't, or can't], [effect]." The choice belongs to *resolution*, not
+# to putting the ability on the stack - CR 603.3d imports only CR 601.2c-d's
+# targets and divisions, and neither of these abilities targets anything - which
+# is exactly why DDR#983's trick works: order the Harrier's trigger to resolve
+# first (CR 603.3b) and the Robot exists by the time Gut asks for a sacrifice.
+#
+# Read whole rather than per clause: "If you do" and "that token" both point
+# back at earlier sentences of the same paragraph, so `split_effect_clauses`
+# would leave fragments naming nothing (CR 608.2c).
+#
+# CR 701.21a is the sacrifice on both ends of it - the optional cost and the
+# delayed clean-up: "To sacrifice a permanent, its controller moves it from the
+# battlefield directly to its owner's graveyard."
+
+#: The restriction nouns `_attacking_token_sacrifice_candidates` reads - one of
+#: CR 205.2a's card types, per item of an "or" list.
+_SACRIFICE_ITEM_RE = re.compile(r"^(?:a|an|another)?\s*(?P<noun>[a-z]+)$", re.IGNORECASE)
+
+_MAY_COST_THEN_ATTACKING_TOKEN_RE = re.compile(
+    r"^you may (?:pay (?P<mana>(?:\{[^}]+\})+)|sacrifice (?P<restriction>[^.]+))\.\s*"
+    rf"if you do, create (?P<n>{_COUNT}) (?P<desc>.+?) \btokens?\b"
+    r"(?:\s+with\s+(?P<tail>.+?))?"
+    r"(?:\s+named (?P<name>.+?))?"
+    r"\s+that(?:'s|’s| is| are) tapped and attacking\."
+    r"(?:\s*sacrifice (?:that token|them|those tokens) at (?P<timing>[^.]+)\.?)?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _attacking_token_sacrifice_candidates(
+    restriction: str,
+) -> Callable[["Game", Player, UUID | None], list[CardState]] | None:
+    """Read "another creature or an artifact" into the permanents that satisfy
+    it, or `None` if this wave cannot read the restriction at all.
+
+    `_sacrifice_restriction` above reads only a *single* card type, fail-closed
+    on anything compound, which is right for the shape it serves and wrong for
+    this one - so this reads the "or" list CR 109.2's descriptions allow. Each
+    item is one of CR 205.2a's card types, optionally with its own "a"/"an"; a
+    word that is not a card type takes the whole clause down rather than
+    offering the player permanents the card never named.
+
+    **"Another" is applied to the whole list**, not only to the item it
+    precedes. Read strictly, Gut's "another creature or an artifact" excludes
+    Gut only from the creature half - but Gut is not an artifact, and no other
+    card in the pool prints this shape, so the two readings cannot be told
+    apart here. The whole-list reading is the one that can never let a
+    permanent sacrifice itself to its own ability by accident; if a printing
+    ever needs the narrow one, this is the line to split.
+    """
+    wanted: set[Type] = set()
+    excludes_source = False
+    for item in re.split(r",\s*|\s+or\s+", restriction.strip().lower()):
+        if not item:
+            continue
+        match = _SACRIFICE_ITEM_RE.fullmatch(item.strip())
+        if match is None:
+            return None
+        if item.strip().startswith("another"):
+            excludes_source = True
+        try:
+            wanted.add(Type(match.group("noun")))
+        except ValueError:
+            return None
+    if not wanted:
+        return None
+
+    def candidates(game: "Game", player: Player, source_id: UUID | None) -> list[CardState]:
+        return [
+            state
+            for state in game.battlefield
+            if state.controller == player.username
+            and (not excludes_source or state.id != source_id)
+            and (set(state.types) & wanted)
+        ]
+
+    return candidates
+
+
+def _parse_may_cost_then_attacking_token_clause(text: str) -> AbilityEffect | None:
+    """`_MAY_COST_THEN_ATTACKING_TOKEN_RE`'s shape - see the section note.
+
+    Fail-closed on every part: a token descriptor `_parse_generic_token_
+    descriptor` cannot read, a sacrifice restriction
+    `_attacking_token_sacrifice_candidates` cannot read, an unparseable mana
+    cost, or a timing phrase `delayed.ANAPHORIC_TIMING_STEPS` does not know
+    each take the whole ability down rather than doing part of it (CR 608.2c).
+
+    The mana half only spends mana already floating - `Game.may_pay_mana_cost`'s
+    own documented limitation, CR 608.2g's mid-resolution "chance to activate
+    mana abilities" not being modelled - so a controller who would have to tap
+    a land to find the {2} is treated as unable to pay and the "if you do"
+    branch correctly does not run.
+
+    CR 508.4 places the token into the combat already in progress, against
+    whatever the controller's own attack already named
+    (`_defender_of_controllers_attack`); a controller attacking nothing gets a
+    tapped token that is not attacking anything, which is the honest outcome
+    rather than an invented defender.
+    """
+    match = _MAY_COST_THEN_ATTACKING_TOKEN_RE.fullmatch(
+        " ".join(_strip_non_effect_preamble(text).split())
+    )
+    if match is None:
+        return None
+
+    cost: ManaCost | None = None
+    candidates_of = None
+    prompt = ""
+    if match.group("mana") is not None:
+        try:
+            cost = ManaCost.parse(match.group("mana"))
+        except ValueError:
+            return None
+        prompt = f"pay {cost}"
+    else:
+        restriction = match.group("restriction")
+        candidates_of = _attacking_token_sacrifice_candidates(restriction)
+        if candidates_of is None:
+            return None
+        prompt = f"sacrifice {restriction.strip()}"
+
+    count = _count(match.group("n"))
+    definition = _parse_generic_token_descriptor(
+        match.group("desc").strip().split(), match.group("tail")
+    )
+    if definition is None:
+        return None
+    if name := match.group("name"):
+        # CR 111.9: a name the creating effect states, rather than CR 111.4's
+        # subtype-derived default.
+        definition = definition.model_copy(update={"name": name.strip()})
+
+    step: Step | None = None
+    if timing := match.group("timing"):
+        step = ANAPHORIC_TIMING_STEPS.get(timing.strip().lower())
+        if step is None:
+            return None
+    sacrifice_text = "" if step is None else f"Sacrifice that token at {match.group('timing')}."
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.controller_of(ability)
+        source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
+        if cost is not None:
+            if not game.may_pay_mana_cost(controller, cost, source=source_name):
+                return
+        else:
+            assert candidates_of is not None
+            available = candidates_of(game, controller, source_id)
+            decision = Decision(
+                kind=DecisionKind.MAY,
+                player=controller.username,
+                prompt=prompt,
+                source=source_name,
+                affirmative_is_legal=bool(available),
+            )
+            if not game.ask(decision):
+                return
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=controller.username,
+                    prompt="choose a permanent to sacrifice",
+                    source=source_name,
+                    amount=1,
+                    cards=tuple(candidate.id for candidate in available),
+                )
+            )
+            assert isinstance(chosen_ids, tuple)
+            if not chosen_ids:
+                return
+            by_id = {candidate.id: candidate for candidate in available}
+            game.sacrifice(by_id[chosen_ids[0]])
+
+        created = create_tokens(
+            game,
+            definition,
+            controller.username,
+            count,
+            tapped=True,
+            attacking=_defender_of_controllers_attack(game, controller.username),
+        )
+        if step is None:
+            return
+        for token in created:
+            # CR 603.7a creates this now, and CR 603.7e makes it the same
+            # controller and source as the ability that created it. CR 603.7c
+            # is `expected_zone`/`expected_stamp`: a token that has already
+            # left the battlefield - fed to Gut, in DDR#983's own line - is a
+            # different object, so the delayed sacrifice affects nothing.
+            game.create_delayed_trigger(
+                DelayedTrigger(
+                    text=sacrifice_text,
+                    effect="sacrifice",
+                    event=TriggerEvent.BEGINNING_OF_STEP,
+                    step=step,
+                    controller=controller.username,
+                    source_id=source_id,
+                    source_name=source_name,
+                    subject_id=token.id,
+                    expected_zone=Zone.BATTLEFIELD,
+                    expected_stamp=token.zone_change_stamp,
+                )
+            )
+
+    return effect
+
+
+# --------------------------------------------------------------------------
 # Delayed-trigger clauses (CR 603.7)
 # --------------------------------------------------------------------------
 #
@@ -12522,6 +12953,91 @@ _DRAW_A_CARD_RE = re.compile(r"^draw a card$", re.IGNORECASE)
 #: used where a count word may appear (Artist's Talent's "If you do, draw a
 #: card" as a `_parse_sacrifice_consequence` shape).
 _DRAW_N_CARDS_RE = re.compile(r"^draw (?:a|(?P<count>\w+)) cards?$", re.IGNORECASE)
+
+
+# --------------------------------------------------------------------------
+# Airbend (CR 701.65a)
+# --------------------------------------------------------------------------
+#
+# The same shape as earthbend below: a CR 701 keyword *action*, embedded in
+# some other ability's effect text (Aang, Swift Savior's "When Aang enters,
+# airbend up to one other target creature or spell."), so it is written here
+# rather than in `machines/keywords.py`. `machines/keywords.executes` already
+# knows the word, so the pool sweeper does not report it as silently ignored.
+#
+# CR 701.65a: "Certain spells and abilities instruct a player to airbend one or
+# more permanents and/or spells. To do so, that player exiles those objects.
+# For each card exiled this way, for as long as it remains exiled, its owner
+# may cast it for {2} rather than its mana cost."
+#
+# Two halves, and only the first is here. The exile is this clause. The {2}
+# permission is `machines/casting.marker_cast_options`, read back off the pile
+# the card landed in (CR 406.4) rather than off anything printed on it - which
+# is the whole reason `ExileMarker.AIRBENT` exists.
+#
+# The annotation goes on **cards only**. CR 701.65a says "for each *card*
+# exiled this way", and a token is not a card (CR 111.6: "A token
+# isn't a card"), so an airbent token receives no permission - and
+# never could use one anyway, because CR 111.7 / CR 704.5d have it cease to
+# exist as a state-based action the moment it is anywhere but the battlefield,
+# which is before any player next receives priority (CR 704.3).
+#
+# CR 701.65b ("An ability that triggers whenever a player airbends triggers
+# when that player exiles one or more objects as a result of an instruction to
+# airbend") has no card in this pool to trigger, so nothing is emitted for it;
+# the ordinary battlefield-departure events `Game.exile_permanent` raises are
+# unaffected.
+
+#: "Airbend up to one other target creature or spell." - the whole of an
+#: ability's effect text once its trigger condition has been split off. The
+#: count and the "other" are already enforced by `machines/targeting.py` off
+#: the same printed words, so nothing here has to re-read them; this only has
+#: to recognise that the instruction *is* an airbend.
+_AIRBEND_RE = re.compile(
+    r"^airbend (?:up to (?:\w+|\d+) )?(?:other |another )?target\b.*$", re.IGNORECASE
+)
+
+
+def airbend(game: "Game", objects: list[CardState]) -> None:
+    """CR 701.65a's exile, plus CR 406.4's note on each *card* that lands.
+
+    One instruction, so `Game.exile_cards` rather than a loop of
+    `exile_permanent` - CR 603.2c's "one event containing multiple
+    occurrences" is the difference, and it is what a "whenever one or more
+    cards leave your graveyard" ability would read.
+
+    An object the move refused (CR 111.8's token that has already left the
+    battlefield) never reaches exile, so it is never annotated: the check is on
+    where the object actually ended up, not on what was asked for.
+    """
+    for exiled in game.exile_cards(objects):
+        if exiled.zone is not Zone.EXILE or is_token(exiled):
+            continue
+        annotate_exile(exiled, ExileMarker.AIRBENT, exiled.owner, game)
+
+
+def _parse_airbend_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """ "Airbend ... target ..." - see `_AIRBEND_RE` and the section note.
+
+    Reads only the targets the ability already chose (CR 601.2c / 603.3d ran
+    long before this resolves), rechecked by `Game.resolve_targets` for
+    CR 608.2b. "Up to one" means an ability that chose none is legal and simply
+    does nothing, which falls out of the empty list rather than needing a case.
+    """
+    if for_spell:
+        return None  # no card in the pool prints airbend on a spell.
+    if _AIRBEND_RE.fullmatch(" ".join(clause.strip().rstrip(".").split())) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        targets = [
+            target for target in game.resolve_targets(stack_object) if isinstance(target, CardState)
+        ]
+        if not targets:
+            return
+        airbend(game, targets)
+
+    return effect
 
 
 # --------------------------------------------------------------------------
@@ -15477,6 +15993,11 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     search_mv_lte_count = _parse_search_mv_lte_count_clause(clause, for_spell=for_spell)
     if search_mv_lte_count is not None:
         return search_mv_lte_count
+    search_mv_equal_to_sacrificed = _parse_search_mv_equal_to_sacrificed_clause(
+        clause, for_spell=for_spell
+    )
+    if search_mv_equal_to_sacrificed is not None:
+        return search_mv_equal_to_sacrificed
     imprint = _parse_imprint_clause(clause, for_spell=for_spell)
     if imprint is not None:
         return imprint
@@ -15495,6 +16016,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     delayed = _parse_delayed_single_clause(clause, for_spell=for_spell)
     if delayed is not None:
         return delayed
+    airbend_clause = _parse_airbend_clause(clause, for_spell=for_spell)
+    if airbend_clause is not None:
+        return airbend_clause
     earthbend_clause = _parse_earthbend_clause(clause, for_spell=for_spell)
     if earthbend_clause is not None:
         return earthbend_clause
@@ -15647,6 +16171,20 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     )
     if exile_then_cast_types_effect is not None:
         return [exile_then_cast_types_effect]
+    draw_and_gain_off_sacrificed = _parse_draw_and_gain_off_sacrificed_clause(
+        text, for_spell=for_spell
+    )
+    if draw_and_gain_off_sacrificed is not None:
+        return [draw_and_gain_off_sacrificed]
+    if for_spell and _CONTINUOUS_PUMP_OR_KEYWORD_RE.fullmatch(" ".join(text.strip().split())):
+        # Read whole for the same reason the two above are: Echoing Courage's
+        # subject, "Target creature and all other creatures with the same name
+        # as that creature", carries a bare " and " that `_CLAUSE_SEPARATOR`
+        # cuts through, leaving two fragments neither of which is a readable
+        # clause. A single-sentence pump with no such "and" (Giant Growth)
+        # reaches exactly the same `create_continuous_effect` one step earlier
+        # than it used to, for the identical effect.
+        return [create_continuous_effect]  # type: ignore[list-item]
     clauses = _prepare_effect_clauses(text)
     if clauses is None:
         return None
@@ -15985,6 +16523,110 @@ def _parse_create_token_then_copy_spell_retargeted_clause(text: str) -> AbilityE
         # names a specific new target (the very token just created) rather
         # than letting the controller choose freely among legal ones.
         copy.targets = [TargetRef.coerce(tokens[0])]
+
+    return effect
+
+
+#: Flamehold Grappler's whole enters trigger, once its condition has been split
+#: off: "copy the next spell you cast this turn when you cast it. You may choose
+#: new targets for the copy."
+#:
+#: Read whole rather than per clause: the second sentence's "the copy" is the
+#: object the first sentence's own delayed ability will make, so split apart it
+#: names nothing (CR 608.2c has no notion of running half an instruction) - the
+#: same treatment `_CREATE_TOKEN_THEN_COPY_SPELL_RETARGETED_RE` above already
+#: gets for Frontline Heroism's two-sentence pair.
+#:
+#: "When you cast it" is what makes this a delayed triggered ability rather than
+#: something this resolution does now. CR 603.7a: "Delayed triggered abilities
+#: are created during the resolution of spells or abilities ... A delayed
+#: triggered ability won't trigger until it has actually been created, even if
+#: its trigger event occurred just beforehand" - so the spell that put the
+#: Grappler itself on the stack is never the one copied, however recently it was
+#: cast.
+_COPY_NEXT_SPELL_YOU_CAST_RE = re.compile(
+    r"^copy the next spell you cast this turn when you cast it\."
+    r"(?P<new_targets>\s*you may choose new targets for the copy\.?)?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_copy_next_spell_you_cast_clause(text: str) -> AbilityEffect | None:
+    """`_COPY_NEXT_SPELL_YOU_CAST_RE`'s shape - Flamehold Grappler.
+
+    Creates one `DelayedTrigger` watching `TriggerEvent.CAST_SPELL`, which
+    `Game.put_on_stack` already emits for every spell cast (CR 707.10 is
+    explicit that a *copy* is not cast, so a copy this ability makes can never
+    feed it a second time).
+
+    - `remaining=1` is CR 603.7b's default and is exactly "the **next** spell".
+    - `expires_end_of_turn=True` is CR 603.7b's "unless it has a stated
+      duration, such as 'this turn'" - printed here as "this turn", so a
+      Grappler whose controller casts nothing else this turn does not carry the
+      permission into the next one.
+    - `only_when_active` scopes the event to one player. It is named for the
+      active player because that is what its first user needed, but every
+      reader of it compares `GameEvent.player` and nothing else (see
+      `DelayedTrigger.matches`), and `Game.put_on_stack` sets that field to the
+      caster - so this is CR 109.5's "you" ("copy the next spell **you** cast"),
+      read exactly, not an approximation.
+    - CR 603.7d/e put the source and the controller on the ability that created
+      this one, which is the Grappler's own enters trigger.
+
+    **The spell is resolved from last known information.** DDR#977's whole
+    point is that the copy still happens when the original was countered in
+    response: the delayed ability goes on the stack above the spell it is
+    copying, an opponent may then put a counterspell above *that*, and by the
+    time this callback runs the original may be in a graveyard. So the object
+    is fetched by `Game.find_by_id` - which searches every zone - rather than
+    off `Game.stack`. CR 608.2b's on-resolution target check is what would
+    normally punish a vanished object, and it does not apply here: it only
+    refuses an object that "specifies targets", and this ability specifies
+    none.
+
+    CR 707.10c is the second sentence: "Some effects copy a spell or ability
+    and state that its controller may choose new targets for the copy." It is
+    only offered when the card actually prints it, so the group is optional
+    here rather than assumed.
+
+    CR 707.10f finishes the job with no help from this clause: "Some effects
+    copy a permanent spell. As that copy resolves, it ceases being a copy of a
+    spell and becomes a token permanent" - `Game.resolve_top` already does that.
+    """
+    match = _COPY_NEXT_SPELL_YOU_CAST_RE.fullmatch(
+        " ".join(_strip_non_effect_preamble(text).split())
+    )
+    if match is None:
+        return None
+    may_retarget = match.group("new_targets") is not None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        def callback(game: "Game", on_stack: AbilityOnStack, trigger: DelayedTrigger) -> None:
+            event = on_stack.event
+            if event is None or event.subject_id is None:
+                return
+            spell = game.find_by_id(event.subject_id)
+            if not isinstance(spell, CardState):
+                return
+            copy = game.copy_spell(spell, controller=trigger.controller)
+            if may_retarget:
+                game.offer_new_targets_for_copy(
+                    copy, trigger.controller, source_name=trigger.source_name
+                )
+
+        game.create_delayed_trigger(
+            DelayedTrigger(
+                text="Copy the next spell you cast this turn when you cast it.",
+                event=TriggerEvent.CAST_SPELL,
+                controller=ability.controller,
+                source_id=ability.source_id,
+                source_name=ability.source_name,
+                only_when_active=ability.controller,
+                remaining=1,
+                expires_end_of_turn=True,
+                callback=callback,
+            )
+        )
 
     return effect
 

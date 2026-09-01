@@ -187,29 +187,56 @@ def test_the_controller_is_not_asked_which_of_their_two_triggers_goes_on_first()
     assert scenario.questions_asked() == []
 
 
-def test_neither_attack_triggers_pay_or_sacrifice_clause_becomes_behaviour():
-    """The other gap: CR 118.12's "if you do" pair is read, not executed.
+def test_both_pay_and_sacrifice_clauses_are_behaviour_rather_than_notices():
+    """CR 118.12's "if you do" pair, on both cards, read and executed.
 
-    CR 118.12 is the shape both cards print: "[A player] may [do something].
-    If [that player] [does, doesn't, or can't], [effect]." The episode's first
+    CR 118.12 is the shape both print: "[A player] may [do something]. If
+    [that player] [does, doesn't, or can't], [effect]." The episode's first
     important fact is that this choice is *not* on CR 603.3d's list of things
     settled when the ability goes on the stack (that list is CR 601.2c-d's
-    targets and divisions), so it waits for resolution - which is why the
-    Robot can exist by the time Gut asks.
+    targets and divisions), so it waits for resolution - which is why the Robot
+    can exist by the time Gut asks.
 
-    Here the Harrier's whole clause comes back as a notice-only effect and
-    Gut's as `None`, so resolving both leaves the board exactly as it was: no
-    Robot, no Skeleton, and no delayed "sacrifice that token at end of combat"
-    registered either.
+    Both used to come back unread from `machines/effects.py` - the Harrier's as
+    a notice-only stand-in and Gut's as `None`. Both are now
+    `_parse_may_cost_then_attacking_token_clause`'s shape.
+
+    Each is handed the *effect* half, not the whole printed line:
+    `trigger_effect_for` is a fail-closed whole-clause dispatcher, and the
+    "Whenever ... attacks," condition is split off by `machines/abilities.py`
+    long before it gets there. `parse_abilities` is what does that split in the
+    real game, so it is what supplies the text here rather than a hand-cut
+    string.
     """
-    harrier_text = card("Kavaron Harrier").oracle_text
-    effect = trigger_effect_for("Kavaron Harrier", TriggerEvent.ATTACKS, harrier_text)
-    assert effect is not None
-    assert effect.__name__ == "delayed_notice_only"
+    for name in ("Kavaron Harrier", "Gut, True Soul Zealot"):
+        (triggered,) = [
+            found
+            for found in parse_abilities(card(name))
+            if found.kind is AbilityKind.TRIGGERED and found.event is TriggerEvent.ATTACKS
+        ]
+        effect = trigger_effect_for(name, TriggerEvent.ATTACKS, triggered.effect)
+        assert effect is not None, name
+        assert effect.__name__ != "delayed_notice_only", name
 
-    gut_text = card("Gut, True Soul Zealot").oracle_text.split("\n")[0]
-    assert trigger_effect_for("Gut, True Soul Zealot", TriggerEvent.ATTACKS, gut_text) is None
 
+def test_the_unordered_default_lets_gut_eat_the_harrier_before_it_pays():
+    """What DDR#983's board does with nobody asked for CR 603.3b's order.
+
+    The Harrier's trigger goes on the stack lowest and so resolves last. Gut's
+    resolves first, with no Robot in existence yet, and takes the only other
+    thing alice controls that its restriction reaches - the Harrier itself
+    (CR 701.21a). The Harrier's own trigger still resolves afterwards, from the
+    graveyard (CR 113.7a: an ability on the stack exists independently of its
+    source), but alice has no mana floating and `Game.may_pay_mana_cost` only
+    spends the pool - CR 608.2g's mid-resolution "chance to activate mana
+    abilities" is not modelled - so the {2} goes unpaid and CR 118.12's "if you
+    do" branch does not run.
+
+    One Skeleton, no Robot, and no delayed sacrifice registered: the *right*
+    board for the wrong reason, which is why the episode's own test below is
+    still `xfail`. CR 111.4 names the token: the ability states no name, so it
+    is "its subtype(s) plus the word 'token'".
+    """
     scenario = (
         Scenario()
         .player(
@@ -226,18 +253,27 @@ def test_neither_attack_triggers_pay_or_sacrifice_clause_becomes_behaviour():
     while scenario.game.stack:
         scenario.resolve_top()
 
+    assert harrier.zone is Zone.GRAVEYARD
     assert sorted(scenario.battlefield_names()) == sorted(
-        ["Kavaron Harrier", "Gut, True Soul Zealot", "Mountain", "Mountain"]
+        ["Gut, True Soul Zealot", "Mountain", "Mountain", "Skeleton Token"]
     )
     assert scenario.game.delayed_triggers.triggers == []
 
 
 @pytest.mark.xfail(
     strict=True,
-    reason="two gaps, either of which alone sinks it: Game.put_triggers_on_stack never asks a "
-    "controller for CR 603.3b's ordering of their own simultaneous triggers, and neither "
-    "card's CR 118.12 'you may ... if you do' clause has a scripted effect (both proven above), "
-    "so no Robot and no Skeleton token is created at all.",
+    reason="ONE gap, and it is in models/game.py: Game._put_pending_triggers_on_stack never "
+    "asks a controller for CR 603.3b's 'in any order they choose'. It calls "
+    "machines/triggers.apnap_order, which sorts by seat only, and then appends each of one "
+    "player's abilities in the order they triggered - so the Harrier's goes on lowest and "
+    "resolves last, the opposite of what the episode needs. Everything else is built: "
+    "machines/decisions.DecisionKind.ORDER_TRIGGERS and ask_trigger_order put and validate "
+    "the question, Scenario.will_order_triggers scripts the answer (both used below), and "
+    "machines/effects._parse_may_cost_then_attacking_token_clause reads both cards' CR 118.12 "
+    "clauses (proven above). What game.py needs, between `ordered = apnap_order(...)` and the "
+    "loop that appends: group `ordered` by controller, call "
+    "`ask_trigger_order(self.decisions, controller, tuple((a.id, a.source_name) for a in "
+    "block))` per controller, and re-lay each block in the returned order.",
 )
 def test_the_robot_is_sacrificed_for_a_skeleton_that_survives_end_of_combat():
     """DDR#983: pay {2}, feed the Robot to Gut, keep the Skeleton.
@@ -252,8 +288,17 @@ def test_the_robot_is_sacrificed_for_a_skeleton_that_survives_end_of_combat():
     triggered ability (CR 603.7a: "delayed triggered abilities are created
     during the resolution of spells or abilities"), and it names the *Robot*.
     The Robot is already gone when the end of combat step arrives, so that
-    delayed trigger has nothing to sacrifice; nothing anywhere tells Amy to
-    sacrifice the Skeleton, and she keeps it.
+    delayed trigger has nothing to sacrifice (CR 603.7c); nothing anywhere
+    tells Amy to sacrifice the Skeleton, and she keeps it.
+
+    The two Mountains are tapped for mana *before* the triggers resolve, and
+    that is not staging around a gap: CR 605.3a lets a mana ability be
+    activated whenever its controller has priority, and alice has priority
+    after her own triggers go on the stack. `Game.may_pay_mana_cost` spends
+    only the floating pool, so this is how the {2} is actually payable.
+
+    Both token names are CR 111.4's default - neither ability states a name, so
+    each is "its subtype(s) plus the word 'token'".
     """
     scenario = (
         Scenario()
@@ -267,16 +312,26 @@ def test_the_robot_is_sacrificed_for_a_skeleton_that_survives_end_of_combat():
     scenario.start_at(Step.DECLARE_ATTACKERS)
     harrier = scenario.creature("Kavaron Harrier", "alice")
     gut = scenario.creature("Gut, True Soul Zealot", "alice")
+    # CR 603.3b: alice's own two triggers, bottom of the stack first - so Gut's
+    # goes on lowest and the Harrier's resolves first, which is the whole trick.
+    scenario.will_order_triggers("Gut, True Soul Zealot", "Kavaron Harrier", username="alice")
     scenario.attack_with(harrier, gut)
-    while scenario.game.stack:
-        scenario.resolve_top()
+
+    # CR 605.3a: mana abilities, activated with priority, for the Harrier's {2}.
+    for mountain in scenario.untapped_sources("Mountain", "Mountain", username="alice"):
+        scenario.activate(mountain)
+
+    scenario.resolve_top()  # the Harrier's: pay {2}, get the Robot
+    robot = scenario.creature("Robot Token", "alice")
+    scenario.will_choose_cards(robot, username="alice")
+    scenario.resolve_top()  # Gut's: feed the Robot to it
 
     tokens = [
         state
         for state in scenario.game.battlefield
         if state.controller == "alice" and isinstance(state, TokenState)
     ]
-    assert [token.name for token in tokens] == ["Skeleton"]
+    assert [token.name for token in tokens] == ["Skeleton Token"]
 
     scenario.start_at(Step.END_OF_COMBAT)
     while scenario.game.stack:
@@ -286,7 +341,7 @@ def test_the_robot_is_sacrificed_for_a_skeleton_that_survives_end_of_combat():
         for state in scenario.game.battlefield
         if state.controller == "alice" and isinstance(state, TokenState)
     ]
-    assert [token.name for token in survivors] == ["Skeleton"]
+    assert [token.name for token in survivors] == ["Skeleton Token"]
 
 
 # --------------------------------------------------------------------------
