@@ -19,17 +19,21 @@ makes DDR#988's question about *when* X is read a real question at all.
 
 Caged Sun's trigger now parses, matches `ExtraTriggerEvent.MANA_ADDED`, and is
 resolved inline by `Game.resolve_triggered_mana_abilities` exactly as CR 605.4a
-requires; CR 104.4b's loop bound lives there too. What is still missing for
-DDR#990 is named in each `xfail` below, and lives in files this change does not
-touch. Every CR number here was looked up with `knowledge_search(type="rules")`.
+requires; CR 104.4b's loop bound lives there too. Firebending now parses as the
+CR 702.189a keyword it is, rather than as a static ability. What is still
+missing for each episode is named in each `xfail` below, and lives in files this
+change does not touch. Every CR number here was looked up with
+`knowledge_search(type="rules")`.
 """
 
 import pytest
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.abilities import AbilityKind, parse_abilities
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card import Color
 from magic_cards_model.models.card_state import Choice, ChoiceKind
+from tests.cards import card
 from tests.scenarios.harness import Scenario
 
 # --------------------------------------------------------------------------
@@ -120,6 +124,32 @@ def test_toph_turning_caged_sun_into_a_land_draws_the_game():
 # --------------------------------------------------------------------------
 
 
+def test_firebending_parses_as_a_keyword_with_its_own_self_defined_x():
+    """DDR#988's first obstacle, now cleared.
+
+    Firebending Student's second line is "Firebending X, where X is this
+    creature's power." (reminder text stripped). CR 702.189a: "Firebending is a
+    triggered ability. 'Firebending N' means 'Whenever this creature attacks,
+    add N {R}. ...'" - so the line is a keyword, and N here is written as an X
+    the card defines in its own words.
+
+    It used to land as a `StaticAbility`: the keyword-line parser comma-split
+    it and the tail matched no keyword, and the trailing full stop disqualified
+    the line anyway. `_parse_keyword_parameter` reads the whole
+    `Keyword X, where X is ...` form instead, and keeps the parameter verbatim -
+    **CR 608.2h** is why it is not resolved to a number here: "the answer is
+    determined only once, when the effect is applied", which is as the
+    firebending ability resolves, not as the card is read.
+    """
+    abilities = parse_abilities(card("Firebending Student"))
+    keywords = [ability for ability in abilities if ability.kind is AbilityKind.KEYWORD]
+
+    assert [keyword.canonical for keyword in keywords] == ["Prowess", "Firebending"]
+    firebending = keywords[1]
+    assert firebending.parameter == "X, where X is this creature's power"
+    assert firebending.count is None, "CR 608.2h: the number is read on resolution"
+
+
 def _firebending_student_attacks(pump: bool = False):
     """Alice attacks with Firebending Student, optionally holding a pump spell
     she can cast in response to the firebending trigger.
@@ -142,10 +172,15 @@ def _firebending_student_attacks(pump: bool = False):
 
 @pytest.mark.xfail(
     strict=True,
-    reason="`triggered_abilities_of(card('Firebending Student'))` returns only "
-    "its prowess trigger - the 'Firebending X, where X is this creature's "
-    "power' keyword line is not expanded into the CR 702.189a triggered ability "
-    "it stands for, so attacking adds no mana at all and the pool stays empty.",
+    reason="The line now parses as a KeywordAbility (canonical 'Firebending', "
+    'parameter "X, where X is this creature\'s power") instead of a '
+    "StaticAbility, so `_match_keyword` sees it at last. Two pieces are still "
+    "missing, both outside models/game.py: machines/keywords._TRIGGER_EXPANSIONS "
+    "has no 'firebending' row, so `keyword_triggered_abilities` never builds "
+    "CR 702.189a's 'Whenever this creature attacks, add N {R}' triggered "
+    "ability; and even once it does, the add-mana effect needs an entry in "
+    "machines/effects.py. `triggered_abilities_of` therefore still returns only "
+    "prowess, and attacking adds no mana.",
 )
 def test_firebending_adds_mana_equal_to_the_creatures_power_when_it_attacks():
     """DDR#988's prerequisite: firebending is a triggered ability that uses the stack.
@@ -170,8 +205,11 @@ def test_firebending_adds_mana_equal_to_the_creatures_power_when_it_attacks():
 
 @pytest.mark.xfail(
     strict=True,
-    reason="same gap: with no firebending trigger on the stack there is nothing "
-    "to respond to, and no mana is added however large the creature gets.",
+    reason="same two gaps: machines/keywords._TRIGGER_EXPANSIONS has no "
+    "'firebending' row and machines/effects.py has no add-mana effect for it, so "
+    "there is no firebending trigger on the stack to respond to and no mana is "
+    "added however large the creature gets. The prowess half already works - "
+    "the Student really does reach power 5.",
 )
 def test_pumping_the_student_in_response_to_the_trigger_gets_more_mana():
     """DDR#988's actual ruling: X is read as the firebending ability resolves.
