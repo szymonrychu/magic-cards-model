@@ -350,8 +350,8 @@ def test_the_robot_is_sacrificed_for_a_skeleton_that_survives_end_of_combat():
 # --------------------------------------------------------------------------
 
 
-def test_lagrellas_enters_trigger_and_panharmonicon_are_both_unbuilt():
-    """DDR#981, the provable half: neither side of the interaction exists yet.
+def test_lagrellas_enters_trigger_has_no_scripted_effect():
+    """DDR#981, the half that is still open.
 
     Lagrella, the Magpie (verified with `resolve_cards`): "When Lagrella
     enters, exile any number of other target creatures controlled by different
@@ -361,10 +361,13 @@ def test_lagrellas_enters_trigger_and_panharmonicon_are_both_unbuilt():
     permanent you control to trigger, that ability triggers an additional
     time."
 
-    `trigger_effect_for` returns `None` for Lagrella's enters trigger, and
-    Panharmonicon's own static ability has no entry in `machines/layers.
-    LAYER_EFFECTS` and no trigger-multiplying machinery anywhere - nothing in
-    this engine makes an ability "trigger an additional time".
+    Panharmonicon's own half is built now - CR 603.2d lives in
+    `machines/triggers.additional_trigger_times`, read off the printed sentence
+    rather than through `machines/layers.LAYER_EFFECTS`, because CR 603.2d is
+    about how many times an ability triggers and not about any object's
+    characteristics. What is still missing is Lagrella's effect:
+    `trigger_effect_for` returns `None`, so both copies of her trigger resolve
+    and do nothing.
     """
     lagrella = card("Lagrella, the Magpie")
     trigger_line = lagrella.oracle_text.split("\n")[0]
@@ -375,19 +378,19 @@ def test_lagrellas_enters_trigger_and_panharmonicon_are_both_unbuilt():
         is None
     )
     assert "Lagrella, the Magpie" not in LAYER_EFFECTS
-    assert "Panharmonicon" not in LAYER_EFFECTS
+    assert "Panharmonicon" not in LAYER_EFFECTS, "CR 603.2d is not a continuous effect"
 
 
-def test_panharmonicon_does_not_make_lagrella_trigger_twice_here():
-    """The consequence, played out: one trigger, and it does nothing.
+def test_panharmonicon_makes_lagrellas_enters_trigger_twice():
+    """CR 603.2d, played out: two abilities on the stack off one entry.
 
-    This is the *right answer for the wrong reason*, and worth pinning down so
-    a later wave that feeds Panharmonicon into the engine can tell the two
-    apart. The episode says Panharmonicon **does** double Lagrella's enters
-    trigger - it is a genuine triggered ability of a permanent alice controls,
-    caused by a creature entering - so alice should get two exile abilities.
-    What she must not get is extra +1/+1 counters, and that is a different
-    ability entirely.
+    "An ability may state that a triggered ability triggers additional times.
+    In this case, rather than simply determining that such an ability has
+    triggered, determine how many times it should trigger, then trigger it that
+    many times." Lagrella's enters ability is a triggered ability of a permanent
+    alice controls, and a creature entering is what caused it, so it triggers
+    twice. They resolve and do nothing, because the effect itself is still
+    unscripted - the bear is untouched.
     """
     scenario = (
         Scenario()
@@ -403,18 +406,43 @@ def test_panharmonicon_does_not_make_lagrella_trigger_twice_here():
     sources = scenario.untapped_sources("Forest", "Plains", "Island", username="alice")
     scenario.cast_and_resolve("Lagrella, the Magpie", *sources, username="alice")
 
-    assert scenario.stack_names() == ["Lagrella, the Magpie's triggered ability"]
+    assert scenario.stack_names() == ["Lagrella, the Magpie's triggered ability"] * 2
     bears = scenario.creature("Grizzly Bears", "bob")
-    scenario.resolve_top()
+    while scenario.game.stack:
+        scenario.resolve_top()
     assert bears.zone is Zone.BATTLEFIELD
     assert bears.counter_count("+1/+1") == 0
 
 
+def test_panharmonicon_does_not_double_a_trigger_an_opponent_controls():
+    """ "a triggered ability of a permanent **you** control" - bob's
+    Panharmonicon does nothing for alice's Lagrella, however plainly a creature
+    entered."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Lagrella, the Magpie"],
+            battlefield=["Forest", "Plains", "Island"],
+        )
+        .player("bob", battlefield=["Panharmonicon"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Forest", "Plains", "Island", username="alice")
+    scenario.cast_and_resolve("Lagrella, the Magpie", *sources, username="alice")
+
+    assert scenario.stack_names() == ["Lagrella, the Magpie's triggered ability"]
+
+
 @pytest.mark.xfail(
     strict=True,
-    reason="trigger_effect_for('Lagrella, the Magpie', ENTERS_THE_BATTLEFIELD, ...) is None and "
-    "Panharmonicon has no LAYER_EFFECTS row or any trigger-multiplying machinery (both proven "
-    "above), so nothing is exiled, nothing returns, and no +1/+1 counter is ever placed.",
+    reason="CR 603.2d is built now (machines/triggers.additional_trigger_times), and "
+    "Panharmonicon really does put two of Lagrella's enters triggers on the stack - the "
+    "first assertion below passes. What is missing is Lagrella's own effect: there is no "
+    "('Lagrella, the Magpie', ENTERS_THE_BATTLEFIELD, ...) entry in machines/effects.py, "
+    "so both triggers resolve and do nothing - nothing is exiled, nothing returns, and no "
+    "+1/+1 counter is ever placed.",
 )
 def test_panharmonicon_doubles_the_exile_but_not_the_delayed_counter_trigger():
     """DDR#981: two exiles, still two counters.

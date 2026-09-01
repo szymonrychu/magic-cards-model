@@ -2594,17 +2594,106 @@ def triggers_for(game: "Game", event: GameEvent, sources: list[CardState]) -> li
                 if fired > 0:
                     continue
                 game.once_per_turn_triggers[key] = fired + 1
-            triggered.append(
-                AbilityOnStack(
-                    kind=AbilityKind.TRIGGERED,
-                    ability=ability,
-                    source_id=source.id,
-                    source_name=source.name,
-                    controller=controller,
-                    event=event,
-                )
+            on_stack = AbilityOnStack(
+                kind=AbilityKind.TRIGGERED,
+                ability=ability,
+                source_id=source.id,
+                source_name=source.name,
+                controller=controller,
+                event=event,
             )
+            triggered.append(on_stack)
+            # CR 603.2d: "determine how many times it should trigger, then
+            # trigger it that many times" - Panharmonicon. Each extra time is a
+            # separate ability on the stack in its own right, with its own id.
+            for _ in range(additional_trigger_times(game, on_stack, source, event)):
+                triggered.append(on_stack.model_copy(update={"id": uuid4()}, deep=True))
     return triggered
+
+
+#: CR 603.2d's own shape, as Panharmonicon prints it: "If an artifact or
+#: creature entering causes a triggered ability of a permanent you control to
+#: trigger, that ability triggers an additional time."
+_ADDITIONAL_TRIGGER_RE = re.compile(
+    r"^if (?P<cause>.+?) causes a triggered ability of a permanent you control "
+    r"to trigger, that ability triggers an additional time\.?$",
+    re.IGNORECASE,
+)
+
+#: The gate half of `_ADDITIONAL_TRIGGER_RE`: "an artifact or creature entering".
+_ENTERING_CAUSE_RE = re.compile(r"^an? (?P<types>[a-z ]+?) entering$", re.IGNORECASE)
+
+
+def _computed_ability_lines(game: "Game", permanent: CardState) -> tuple[str, ...]:
+    """This permanent's ability text as the layer system computes it (CR 613.5),
+    falling back to the printed lines for a permanent the engine has not
+    computed."""
+    try:
+        return tuple(game.characteristics_of(permanent).abilities)
+    except KeyError:
+        return tuple(
+            line.strip() for line in (permanent.oracle_text or "").splitlines() if line.strip()
+        )
+
+
+def _entering_cause_matches(game: "Game", cause: str, event: GameEvent) -> bool:
+    """Whether this event is the "artifact or creature entering" the multiplier
+    names (CR 603.2d's own "an ability may state that a triggered ability
+    triggers additional times" is gated by the rest of the printed sentence)."""
+    match = _ENTERING_CAUSE_RE.match(cause.strip())
+    if match is None or event.event is not TriggerEvent.ENTERS_THE_BATTLEFIELD:
+        return False
+    wanted = {word.strip().lower() for word in match["types"].split(" or ") if word.strip()}
+    entering = game.find_by_id(event.subject_id) if event.subject_id is not None else None
+    if isinstance(entering, CardState):
+        try:
+            types = game.characteristics_of(entering).types
+        except KeyError:
+            types = tuple(entering.types)
+    elif event.subject_card is not None:
+        types = tuple(event.subject_card.types)
+    else:
+        return False
+    return bool(wanted & {str(card_type).lower() for card_type in types})
+
+
+def additional_trigger_times(
+    game: "Game", ability: AbilityOnStack, source: CardState, event: GameEvent
+) -> int:
+    """How many *extra* times this ability triggers, by CR 603.2d.
+
+    CR 603.2d: "An ability may state that a triggered ability triggers
+    additional times. In this case, rather than simply determining that such an
+    ability has triggered, determine how many times it should trigger, then
+    trigger it that many times."
+
+    Every permanent on the battlefield is asked whether one of its own static
+    ability lines is a multiplier of this shape, read off the *computed* text
+    (CR 613.5). Panharmonicon is the only printing in the pool. Its own gate is
+    checked here rather than assumed: the ability's source has to be a permanent
+    the Panharmonicon's controller controls, and the event has to be an artifact
+    or creature entering.
+
+    Only what `triggers_for` builds from a *printed* ability is multiplied. A
+    delayed triggered ability (CR 603.7a) is created during the resolution of
+    the ability it belongs to and fired by `DelayedTriggers`, never by this
+    function - so doubling the ability that creates a delayed trigger does not
+    double the delayed trigger, which is DDR#981's whole point.
+    """
+    if source.zone is not Zone.BATTLEFIELD:
+        return 0
+    extra = 0
+    for permanent in list(game.battlefield):
+        controller = permanent.controller
+        if controller is None or controller != ability.controller:
+            continue  # "a triggered ability of a permanent **you** control".
+        for line in _computed_ability_lines(game, permanent):
+            match = _ADDITIONAL_TRIGGER_RE.match(line.strip())
+            if match is None:
+                continue
+            if _entering_cause_matches(game, match["cause"], event):
+                extra += 1
+    return extra
 
 
 #: CR 603.8's own shape, as the pool prints it: The Millennium Calendar's
