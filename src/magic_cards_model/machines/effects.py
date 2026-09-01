@@ -2943,6 +2943,86 @@ def _parse_search_mv_equal_to_sacrificed_clause(
     return effect
 
 
+#: Momentous Fall's whole second paragraph: "You draw cards equal to the
+#: sacrificed creature's power, then you gain life equal to its toughness."
+#:
+#: Read whole, ahead of `split_effect_clauses`: the second half's "its" is
+#: CR 400.7 anaphora back to the creature the *first* half named, and cut apart
+#: the fragment "you gain life equal to its toughness" names nothing at all.
+#: One CR 608.2c instruction, so it is one parser.
+#:
+#: Both numbers come off the creature that paid CR 118.8a's printed additional
+#: cost, recorded in `Game.cast_record(spell).additional_cost_cards` the same
+#: way `_deal_damage_equal_to_sacrificed_creature_power` reads Fling's.
+_DRAW_AND_GAIN_OFF_SACRIFICED_RE = re.compile(
+    r"^you draw cards equal to the sacrificed creature['’]s power, "
+    r"then you gain life equal to its toughness\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_draw_and_gain_off_sacrificed_clause(
+    text: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_DRAW_AND_GAIN_OFF_SACRIFICED_RE`'s shape - Momentous Fall.
+
+    Spell-only: the numbers come off *this spell's* own cast record, and an
+    ability has no additional cost and no cast record to read.
+
+    **CR 608.2h is the rule this clause is really about**, and this engine can
+    only half honour it: "If an effect requires information from the game ...
+    the answer is determined only once, when the effect is applied." The
+    creature is in its owner's graveyard by then - CR 601.2h paid the sacrifice
+    before the spell was ever put on the stack - so the power and toughness
+    wanted here are the ones it last had *on the battlefield*, not the ones a
+    graveyard card computes now.
+
+    What is read below is `CardState.power`/`.toughness`, which is the printed
+    box plus counters (CR 122.1a). That is the same answer for a creature whose
+    size on the battlefield came only from its printing and its counters -
+    which is every card in this pool that pays this cost today - and the wrong
+    answer for one whose size came from a continuous effect that stopped
+    applying when it left (Omnath, Locus of Mana's own "+1/+1 for each unspent
+    green mana you have", the whole point of DDR#955). `CardState` carries a
+    `last_known_counters` snapshot for CR 704.8 but no last-known
+    power/toughness, so there is nothing better to read yet; when there is,
+    this is the one line that has to change.
+
+    An absent power or toughness (no card recorded, or a printed `*` this
+    engine cannot compute off a card that has left the battlefield) draws and
+    gains zero rather than guessing. CR 121.3's empty-library loss is
+    `Game.draw_cards`'s business, not this clause's.
+    """
+    if not for_spell:
+        return None
+    # `_strip_non_effect_preamble` first: Momentous Fall's own printed
+    # additional-cost line ("As an additional cost to cast this spell,
+    # sacrifice a creature.") is part of casting it (CR 601.2f/601.2h), not
+    # part of its resolution, and it is already paid by the time this runs.
+    stripped = " ".join(_strip_non_effect_preamble(text).split())
+    if _DRAW_AND_GAIN_OFF_SACRIFICED_RE.fullmatch(stripped) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object)
+        record = game.cast_record(stack_object)
+        sacrificed = None
+        if record.additional_cost_cards:
+            sacrificed = game.find_by_id(record.additional_cost_cards[0])
+        power = 0 if sacrificed is None or sacrificed.power is None else max(sacrificed.power, 0)
+        toughness = (
+            0
+            if sacrificed is None or sacrificed.toughness is None
+            else max(sacrificed.toughness, 0)
+        )
+        if power:
+            game.draw_cards(controller, power)
+        if toughness:
+            controller.gain_life(toughness)
+
+    return effect
+
+
 #: "[you may ]put a land card from your hand onto the battlefield[ tapped]" -
 #: Arboreal Grazer's whole trigger (and the first half of Cultivator Colossus's
 #: longer, repeating one, read separately by `_PUT_LAND_FROM_HAND_REPEAT_RE`
@@ -15859,6 +15939,11 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     )
     if exile_then_cast_types_effect is not None:
         return [exile_then_cast_types_effect]
+    draw_and_gain_off_sacrificed = _parse_draw_and_gain_off_sacrificed_clause(
+        text, for_spell=for_spell
+    )
+    if draw_and_gain_off_sacrificed is not None:
+        return [draw_and_gain_off_sacrificed]
     if for_spell and _CONTINUOUS_PUMP_OR_KEYWORD_RE.fullmatch(" ".join(text.strip().split())):
         # Read whole for the same reason the two above are: Echoing Courage's
         # subject, "Target creature and all other creatures with the same name
