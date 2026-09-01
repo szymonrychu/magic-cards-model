@@ -767,6 +767,21 @@ class CardState(BaseModel):
     dropped on some other zone change either.
     """
 
+    spliced_text: tuple[str, ...] = ()
+    """Rules text added to this *spell* by a splice ability (CR 702.47c).
+
+    "The spell has the characteristics of the main spell, plus the rules text
+    of each of the spliced cards. This is a text-changing effect (see rule
+    612)." CR 612.10 fixes where it goes: "A splice ability changes a spell's
+    text by adding the rules text of the card with splice to the spell,
+    following that spell's own rules text. It doesn't modify or replace any of
+    that spell's own text." So it is appended by `oracle_text`, never merged
+    into the printing - `Card` stays the immutable Scryfall object.
+
+    Cleared by `move_to`, which is CR 702.47e: "The spell loses any splice
+    changes once it leaves the stack for any reason."
+    """
+
     granted_ability_texts: tuple[str, ...] = ()
     """Ability lines given to *this object specifically*, printed exactly as
     the granting effect's own quoted text - "This Saga gains '{T}: Add
@@ -1265,15 +1280,21 @@ class CardState(BaseModel):
 
     @property
     def oracle_text(self) -> str:
-        """This object's rules text (CR 708.2). Face down, it is empty."""
+        """This object's rules text (CR 708.2, CR 612.10). Face down, it is empty.
+
+        Spliced text (CR 702.47c) is appended after the object's own, which is
+        the order CR 612.10 states: "adding the rules text of the card with
+        splice to the spell, **following** that spell's own rules text". That
+        order is the whole of DDR#957 - Time Stop ends the turn first, and the
+        spliced draw happens afterwards, in the cleanup step it lands in.
+        """
         if self.has_no_characteristics:
             return ""  # CR 406.3a
         if self.face_down_characteristics is not None:
             return self.face_down_characteristics.oracle_text
         up_face = self.up_face
-        if up_face is not None:
-            return up_face.oracle_text or ""
-        return self.card.oracle_text or ""
+        own = up_face.oracle_text if up_face is not None else self.card.oracle_text
+        return "\n".join([own or "", *self.spliced_text]).strip("\n")
 
     @property
     def mana_cost(self) -> str | None:
@@ -1791,6 +1812,14 @@ class CardState(BaseModel):
             # permanent". Every other move is CR 400.7's new object, which
             # nobody cast bestowed.
             self.bestowed = False
+        if origin is Zone.STACK and zone is not Zone.STACK:
+            # CR 702.47e: "The spell loses any splice changes once it leaves
+            # the stack for any reason." *Leaves* - so the move that puts it
+            # there (CR 601.2a, hand to stack) keeps what a splice
+            # announcement added, and so does `Game.put_on_stack` re-stating
+            # the zone of a spell already on the stack; every move off it, to
+            # any zone, takes the text away.
+            self.spliced_text = ()
         # CR 704.8 / CR 603.10a: an ability that looks back in time needs the
         # counters the object had as it left, and CR 122.2 has just taken them
         # away. Persist is the card in the pool that asks (CR 702.79a).

@@ -133,10 +133,12 @@ from ..machines.opening_hand import (
 )
 from ..machines.priority import PriorityMachine, PriorityOutcome
 from ..machines.replacement import (
+    DrawRedirection,
     EventKind,
     ReplaceableEvent,
     UnwiredChoiceNotice,
     apply_replacements,
+    draw_redirection_for,
 )
 from ..machines.targeting import (
     TargetingProfile,
@@ -1541,6 +1543,15 @@ class Game(BaseModel):
     {coin_flips_performed}:coin"`, so a scenario asserting on the result
     stays reproducible and the second flip of a game differs from the first."""
 
+    draw_redirections: list[DrawRedirection] = Field(default_factory=list)
+    """CR 614.1a replacement effects a resolved spell left behind, taking one
+    player's draws for another - Plagiarize.
+
+    Kept beside `prevention_shields` and for the same reason: the source is a
+    graveyard card by the time the effect ever applies, and the effect has a
+    duration of its own (CR 514.2 ends it in the cleanup step, which is where
+    `discard_to_maximum_hand_size` clears the list)."""
+
     prevention_shields: list["PreventionShield"] = Field(default_factory=list)
     """Prevention effects created by a resolving spell or ability (CR 615.1).
 
@@ -1985,6 +1996,16 @@ class Game(BaseModel):
             for shield in self.prevention_shields
             if not shield.spent and not shield.until_end_of_turn
         ]
+        # CR 514.2's same sentence again, for the draw redirections: an
+        # "until end of turn" replacement effect ends here, *after* the
+        # discard above - which is the whole of DDR#957's ruling, since a
+        # draw that happens earlier in this same cleanup step is still
+        # replaced.
+        self.draw_redirections = [
+            redirection
+            for redirection in self.draw_redirections
+            if not redirection.until_end_of_turn
+        ]
         self._bottom_unused_cascade_permissions()
         # CR 514.2's same sentence: "all 'until end of turn' ... effects end".
         # A card exiled by Ugin's −11 stays exiled and stops being castable.
@@ -2376,6 +2397,8 @@ class Game(BaseModel):
                 self.cast_records.pop(spell.id, None)
                 self._before_priority()
                 raise
+
+        self._create_resolution_replacements(spell)
 
         if spell.id in self.turn_ended_exiled_ids:
             # CR 724.1b exiled this spell while it was resolving, and CR 608.2m
@@ -3617,6 +3640,34 @@ class Game(BaseModel):
         for zone_cards in self.shared_zones.values():
             if card_state in zone_cards:
                 zone_cards.remove(card_state)
+
+    def _create_resolution_replacements(self, spell: CardState) -> None:
+        """A resolving spell that leaves a replacement effect behind (CR 614.1a).
+
+        Plagiarize is the printing: "Until end of turn, if target player would
+        draw a card, instead that player skips that draw and you draw a card."
+        There is nothing for `machines/effects.py` to do when it resolves - no
+        object moves, no counter is placed - and nothing for the layer engine
+        either, because CR 614 is not one of CR 613's layers. What it leaves is
+        a `DrawRedirection` on `Game.draw_redirections`, exactly the way a
+        resolved prevention spell leaves a CR 615.1 shield.
+
+        The targeted player is read off the spell's own announced targets,
+        which CR 608.2b has already rechecked (`spell_fizzles` ran above and a
+        spell whose only target became illegal never got here).
+        """
+        target = next(
+            (
+                ref.username
+                for ref in spell.targets
+                if ref.username is not None and self.is_in_game(ref.username)
+            ),
+            None,
+        )
+        controller = self.controller_of(spell).username
+        redirection = draw_redirection_for(spell.oracle_text or "", controller, target)
+        if redirection is not None:
+            self.draw_redirections.append(redirection)
 
     def _apply_mana_spend_effects(self, permanent: CardState) -> None:
         """CR 106.6's additional effect, applied to the permanent that spell
