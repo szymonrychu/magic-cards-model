@@ -47,6 +47,7 @@ from ..models.mana import (
     ManaPool,
     ManaRestriction,
     ManaSpend,
+    ManaSpendEffect,
     ManaSymbol,
     PaymentOption,
     SpendClause,
@@ -2831,12 +2832,15 @@ def _copy_pool(pool: ManaPool) -> ManaPool:
     A payment works on a copy so a cancellation throws away only what the
     payment itself produced; the copy has to carry the CR 106.6 tags too, or
     restricted mana the player already had would silently become spendable on
-    anything the moment a payment opened.
+    anything the moment a payment opened. Both of CR 106.6's tags travel: the
+    spend *effect* on the copy is what tells the settled `ManaPayment` which
+    of the mana it spent carried an additional effect on the spell.
     """
     return ManaPool(
         floating=dict(pool.floating),
         snow=dict(pool.snow),
         restricted=[entry.model_copy(deep=True) for entry in pool.restricted],
+        spend_effects=[tagged.model_copy(deep=True) for tagged in pool.spend_effects],
     )
 
 
@@ -3252,7 +3256,17 @@ class CostPayment(BaseModel):
         self.tapped_for_mana.append(source)
         if restriction is INFER_RESTRICTION:
             restriction = restriction_for_production(source, produces)
-        self.pool.add_all(produces, snow=is_snow_source(source), restriction=restriction)
+        # CR 106.6's additional-effect clause travels with the mana too, and
+        # unlike the restriction it needs no inference: `ability` is the one
+        # this loop matched to `produces`, and the sentence is already parsed
+        # onto it by `machines/abilities.parse_mana_abilities`.
+        spend_effect = ManaSpendEffect(text=ability.spend_effect) if ability.spend_effect else None
+        self.pool.add_all(
+            produces,
+            snow=is_snow_source(source),
+            restriction=restriction,
+            spend_effect=spend_effect,
+        )
         if self.game is not None:
             triggered = self.game.emit(tapped_for_mana_event(source, self.game))
             self.triggers_caused.extend(ability.id for ability in triggered)
@@ -3472,6 +3486,7 @@ class CostPayment(BaseModel):
         self.mana_payment = mana_payment
         self._transition(CostStep.PAID)
         self._write_back_remainder()
+        self._unregister_pool()
         self.overflow = self.pool
         return self.overflow
 
@@ -3531,6 +3546,7 @@ class CostPayment(BaseModel):
         """
         self._require_open()
         self._undo_everything()
+        self._unregister_pool()
         self._transition(CostStep.CANCELLED)
 
     def rewind(self) -> None:
@@ -3556,6 +3572,7 @@ class CostPayment(BaseModel):
 
         self._undo_everything()
         self._restore_payer_pool()
+        self._unregister_pool()
         self.overflow = None
         self.step = CostStep.CANCELLED
 
@@ -3580,6 +3597,29 @@ class CostPayment(BaseModel):
             return
         self.pool = _copy_pool(floating)
         self._preexisting = _copy_pool(floating)
+        self._register_pool()
+
+    def _register_pool(self) -> None:
+        """Publish this payment's working pool as the payer's unspent mana.
+
+        CR 106.4: mana produced and not spent is in the player's mana pool.
+        The working copy above is where CR 601.2g's mana abilities actually
+        put it, so for as long as this payment is open the copy - not the
+        player's own `ManaPool` - is what "unspent mana you have" means. The
+        only reader is `Game.unspent_mana_of`, for Omnath, Locus of Mana's
+        continuous effect; nothing pays out of it.
+        """
+        pools = getattr(self.game, "open_payment_pools", None)
+        if pools is not None and self.payer is not None:
+            pools[self.payer] = self.pool
+
+    def _unregister_pool(self) -> None:
+        """Stop publishing: the payment is paid, cancelled or rewound, and the
+        payer's own `ManaPool` is the answer again (`_write_back_remainder`
+        and `_restore_payer_pool` have already put the right mana in it)."""
+        pools = getattr(self.game, "open_payment_pools", None)
+        if pools is not None and self.payer is not None:
+            pools.pop(self.payer, None)
 
     def _write_back_remainder(self) -> None:
         """Leave what the payment did not spend floating in the payer's pool.

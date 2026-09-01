@@ -1607,6 +1607,22 @@ class Casting(BaseModel):
     tapping: list[CardState] = Field(default_factory=list)
     """The permanents chosen to pay a printed "tap ..." additional cost -
     Swallow Whole's "tap an untapped creature you control"."""
+    spliced_card_ids: list[UUID] = Field(default_factory=list)
+    """The cards revealed from the caster's hand to splice onto this spell
+    (CR 702.47a), in the order they were announced.
+
+    Ids rather than `CardState`s, because a spliced card never moves: it is
+    revealed and stays in hand, and this list only has to say which cards were
+    revealed - CR 702.47b's "You can't splice any one card onto the same spell
+    more than once" is the one question asked of it afterwards."""
+
+    spliced_text: list[str] = Field(default_factory=list)
+    """The rules text each spliced card adds, in announcement order (CR
+    702.47c, CR 612.10). Written onto `CardState.spliced_text` by `cast()`,
+    not before: until the announcement is complete CR 601.6/CR 733.1 can still
+    reverse the whole thing, and a rewound casting must leave no text behind.
+    """
+
     printed_additional_costs_charged: bool = False
     """Whether the card's own "As an additional cost to cast this spell, ..."
     sentences have already been folded into `additional_costs` (CR 601.2f).
@@ -2069,6 +2085,81 @@ class Casting(BaseModel):
     def granted_cast_options(self) -> list[GrantedCastOption]:
         """CR 610.5's grants, as they stand at this announcement."""
         return granted_cast_options(self.game, self.spell, self.caster, self.origin_zone)
+
+    def splice(self, name: str) -> CastingStep:
+        """CR 702.47a: reveal a card with splice from hand and add it to this spell.
+
+        "Splice is a static ability that functions while a card is in your
+        hand. 'Splice onto [quality] [cost]' means 'You may reveal this card
+        from your hand as you cast a [quality] spell. If you do, add this
+        card's rules text to that spell and pay its splice cost.'"
+
+        Three things happen, in that order:
+
+        - The card is **revealed** and stays in hand. Nothing moves it; CR
+          701.20a's reveal is the whole of what happens to the card itself,
+          and `spliced_card_ids` is the record.
+        - Its splice cost becomes an **additional cost** of this spell, folded
+          into `additional_costs` exactly as a printed "As an additional cost
+          to cast this spell" sentence is. CR 601.2h then pays it with
+          everything else.
+        - Its rules text is **added to the spell**, after the spell's own (CR
+          702.47c, CR 612.10). That is written onto the spell by `cast()`, so
+          a casting reversed under CR 601.6/CR 733.1 leaves no text behind,
+          and `CardState.move_to` takes it away again when the spell leaves
+          the stack (CR 702.47e).
+
+        Refused when the main spell is not of the quality the splice ability
+        names, when the named card is not in the caster's hand, when it has no
+        splice ability, when it has already been spliced onto this spell
+        (CR 702.47b: "You can't splice any one card onto the same spell more
+        than once"), and when its rules text would require choices this
+        announcement cannot make - CR 702.47b's first sentence, "You can't
+        choose to use a splice ability if you can't make the required choices
+        (targets, etc.) for that card's rules text", read fail-closed: a
+        spliced card that targets is refused rather than spliced on with its
+        targets unannounced.
+        """
+        return self._refusing(lambda: self._splice(name))
+
+    def _splice(self, name: str) -> CastingStep:
+        if self.game is None:
+            raise ValueError("splicing needs a game to find the card in hand")
+        hand = self.game.player(self.caster).hand
+        candidates = [
+            card for card in hand if card.name == name and card.id not in self.spliced_card_ids
+        ]
+        if not candidates:
+            already = any(card.id in self.spliced_card_ids for card in hand if card.name == name)
+            if already:
+                # CR 702.47b's second sentence.
+                raise ValueError(f"{name} is already spliced onto {self.spell.name}")
+            raise ValueError(f"{self.caster} has no {name} in hand to splice")
+        card = candidates[0]
+        splice = _keyword(card.card, "Splice")
+        if splice is None:
+            raise ValueError(f"{name} has no splice ability")
+        quality, cost = _splice_parameter(splice)
+        if quality is None or cost is None:
+            raise ValueError(f"{name}'s splice ability could not be read: {splice.parameter}")
+        if not _matches_splice_quality(self.spell, quality):
+            raise ValueError(f"{self.spell.name} is not {quality}, so {name} cannot splice onto it")
+        text = _spliced_rules_text(card.card)
+        if not text:
+            raise ValueError(f"{name} has no rules text to splice onto {self.spell.name}")
+        profile = profile_for_text(text)
+        if profile.understood and profile.requirements:
+            # CR 702.47b: the choices for the spliced card's own text cannot be
+            # made here, so the splice is refused rather than announced half.
+            raise ValueError(
+                f"{name}'s rules text requires targets, which cannot be chosen for a "
+                "spliced card yet (CR 702.47b)"
+            )
+        self.spliced_card_ids.append(card.id)
+        self.spliced_text.append(text)
+        self.additional_costs.append(TotalCost.of(cost).assign_payer(self.caster))
+        self.payment = None  # the total cost has changed; re-determine it
+        return self.step
 
     def use_keyword(self, keyword: str, *, choosing: list[CardState] | None = None) -> CastingStep:
         """CR 601.2b: announce that this spell is being cast using a keyword.
@@ -3396,6 +3487,13 @@ class Casting(BaseModel):
             # what mana was spent to pay the total cost (CR 601.2h), and
             # whether a kicker cost was among the costs paid (CR 702.33d).
             # `Game.note_cast` is where every answer is kept.
+            # CR 702.47c/CR 612.10: the spliced cards' rules text is added to
+            # the spell, following its own. Written here, at the end of a
+            # completed announcement, because CR 601.6 can still reverse
+            # everything up to this point and a rewound casting must leave the
+            # card's text unchanged. CR 702.47e takes it off again, in
+            # `CardState.move_to`, whenever the spell leaves the stack.
+            self.spell.spliced_text = tuple(self.spliced_text)
             self.game.note_cast(
                 self.spell,
                 keyword=self.keyword_used,
@@ -3409,6 +3507,18 @@ class Casting(BaseModel):
                     if self.payment is not None and self.payment.mana_payment is not None
                     else {}
                 ),
+                # CR 106.6: the mana that just paid this cost may carry an
+                # additional effect on the spell it was spent on. Which mana
+                # paid is only knowable here, at CR 601.2h, and only from the
+                # settled payment - the pool has already been debited.
+                spend_effects=[
+                    tagged.effect.text
+                    for tagged in (
+                        self.payment.mana_payment.spend_effects_spent
+                        if self.payment is not None and self.payment.mana_payment is not None
+                        else []
+                    )
+                ],
                 kicked=self.kicked,
                 # CR 400.7 makes the spell a new object the moment CR 601.2a
                 # moves it off the exile pile, so the annotation that pile
@@ -3925,6 +4035,66 @@ def exile_adventured(game: Any, spell: CardState, owner: str | None = None) -> C
     spell.move_to(Zone.EXILE)
     game.exile.append(spell)
     return annotate_exile(spell, ExileMarker.ADVENTURED, player.username, game)
+
+
+#: CR 207.2's reminder text, dropped from a spliced card's rules text the same
+#: way `machines/abilities.py` drops it from an ability line.
+_SPLICE_REMINDER_RE = re.compile(r"\([^()]*\)")
+
+#: "Splice onto instant or sorcery {2}{U}" - the quality and the cost, as
+#: CR 702.47a templates them: "Splice onto [quality] [cost]".
+_SPLICE_PARAMETER_RE = re.compile(
+    r"^onto (?P<quality>.+?)\s+(?P<cost>(?:\{[^}]+\})+)$", re.IGNORECASE
+)
+
+
+def _splice_parameter(ability: KeywordAbility) -> tuple[str | None, str | None]:
+    """CR 702.47a's `[quality]` and `[cost]`, off the printed parameter.
+
+    Returns `(None, None)` for a parameter this cannot read, which
+    `Casting._splice` turns into a refusal rather than a free splice.
+    """
+    parameter = (ability.parameter or ability.cost or "").strip()
+    match = _SPLICE_PARAMETER_RE.fullmatch(parameter)
+    if match is None:
+        return None, None
+    return match.group("quality").strip().lower(), match.group("cost")
+
+
+def _matches_splice_quality(spell: CardState, quality: str) -> bool:
+    """Whether `spell` is the "[quality] spell" a splice ability names.
+
+    Every printed splice ability in this pool says "onto Arcane" or "onto
+    instant or sorcery", so the quality is read as card types and subtypes -
+    each word of the quality, minus the "or"s, matched against the spell's own
+    types (CR 205.2a) and subtypes (CR 205.3). All of them must match nothing;
+    any one of them matching is enough, because the quality is a disjunction.
+    """
+    words = [word for word in quality.replace(",", " ").split() if word.lower() != "or"]
+    if not words:
+        return False
+    have = {card_type.value.lower() for card_type in spell.types}
+    have |= {subtype.lower() for subtype in spell.subtypes}
+    return any(word.lower() in have for word in words)
+
+
+def _spliced_rules_text(card: Card) -> str:
+    """The rules text a spliced card adds to a spell (CR 702.47c, CR 612.10).
+
+    The card's own paragraphs, minus its splice line and minus CR 207.2's
+    reminder text. The splice ability itself is a static ability that
+    functions only in a player's hand (CR 702.47a), so it does nothing
+    whatever on the spell that carries it; leaving it in would only hand
+    `machines/effects.py` a clause it cannot read, which fails the *whole*
+    spell closed - the opposite of what CR 702.47c asks for.
+    """
+    lines = []
+    for line in (card.oracle_text or "").split("\n"):
+        stripped = _SPLICE_REMINDER_RE.sub("", line).strip()
+        if not stripped or stripped.lower().startswith("splice onto"):
+            continue
+        lines.append(stripped)
+    return "\n".join(lines)
 
 
 def _keyword(card: Card, keyword: str) -> KeywordAbility | None:

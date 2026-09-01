@@ -607,6 +607,52 @@ class ManaRestriction(BaseModel):
         return self.text
 
 
+class ManaSpendEffect(BaseModel):
+    """CR 106.6's *second* clause, carried by the mana the same way a
+    restriction is: "have an additional effect that affects the spell or
+    ability that mana is spent on".
+
+    Arena of Glory prints the only one in this pool: "{R}, {T}, Exert this
+    land: Add {R}{R}. If that mana is spent on a creature spell, it gains
+    haste until end of turn." `text` is that trailing sentence verbatim, read
+    off the mana ability by `machines/abilities.parse_mana_abilities` onto
+    `ManaAbility.spend_effect` and handed to `ManaPool.add` as the mana is
+    produced - the tag is on the *mana*, not on the land, which is what makes
+    it survive the land being destroyed and makes it apply to nothing else the
+    land ever taps for.
+
+    Unlike `ManaRestriction`, an unread sentence here is not fail-closed and
+    could not be: this clause never narrows what the mana may pay for, so
+    refusing to spend it would be strictly worse than spending it and applying
+    nothing. The reading happens later, at CR 601.2h, in
+    `machines/layers.spend_effect_grant`; a sentence nothing there recognises
+    is recorded, spent, and quietly does nothing extra.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    text: str
+
+    def __str__(self) -> str:
+        return self.text
+
+
+class SpendEffectMana(BaseModel):
+    """How much mana in a pool carries one particular `ManaSpendEffect`.
+
+    `RestrictedMana`'s twin, kept in its own list for the same reason: the
+    pool's `floating` total stays the whole amount of mana that is there
+    (CR 106.4a), and this says which part of it is tagged.
+    """
+
+    effect: ManaSpendEffect
+    amounts: dict[Color, int] = Field(default_factory=dict)
+
+    @property
+    def total(self) -> int:
+        return sum(self.amounts.values())
+
+
 class RestrictedMana(BaseModel):
     """How much mana in a pool carries one particular restriction.
 
@@ -641,6 +687,13 @@ class ManaPayment(BaseModel):
     spend: dict[Color, int] = Field(default_factory=dict)
     snow_spent: dict[Color, int] = Field(default_factory=dict)
     restricted_spent: list[RestrictedMana] = Field(default_factory=list)
+    spend_effects_spent: list[SpendEffectMana] = Field(default_factory=list)
+    """How much of `spend` carried a CR 106.6 spend *effect*, and which.
+
+    `restricted_spent`'s twin. The caller that put the payment together -
+    `machines/casting.Casting._move_to_the_stack`, at CR 601.2h - reads this
+    to record on the spell what the mana it was paid with does to it.
+    """
     life_paid: int = 0
 
     @property
@@ -657,11 +710,21 @@ class ManaPayment(BaseModel):
 # --------------------------------------------------------------------------
 
 #: (colour, came from a snow source, index into `ManaPool.restricted` or -1
-#: for mana with no CR 106.6 restriction on it).
-_Bucket = tuple[Color, bool, int]
+#: for mana with no CR 106.6 restriction on it, index into
+#: `ManaPool.spend_effects` or -1 for mana carrying no CR 106.6 spend effect).
+#:
+#: The last two slots are separate dimensions because CR 106.6 lists the
+#: restriction and the additional effect as separate things a mana ability may
+#: do, and a card may print either without the other. Nothing in this pool
+#: prints both on one mana ability, and `_buckets` says what it assumes when
+#: that changes.
+_Bucket = tuple[Color, bool, int, int]
 
 #: The `_Bucket` slot meaning "no spend restriction".
 UNRESTRICTED = -1
+
+#: The `_Bucket` slot meaning "no CR 106.6 spend effect".
+NO_SPEND_EFFECT = -1
 
 
 class ManaPool(BaseModel):
@@ -678,6 +741,12 @@ class ManaPool(BaseModel):
     """The CR 106.6-restricted part of `floating`, one entry per distinct
     restriction. Never more than `floating` holds of that colour; the rest of
     `floating` is spendable on anything."""
+
+    spend_effects: list[SpendEffectMana] = Field(default_factory=list)
+    """The part of `floating` carrying CR 106.6's *additional effect* clause,
+    one entry per distinct effect. Unlike `restricted` this narrows nothing -
+    the mana pays for whatever it could have paid for anyway - it only records
+    what happens to the spell it is spent on."""
 
     @property
     def total(self) -> int:
@@ -705,6 +774,7 @@ class ManaPool(BaseModel):
         amount: int = 1,
         snow: bool = False,
         restriction: "ManaRestriction | None" = None,
+        spend_effect: "ManaSpendEffect | None" = None,
     ) -> None:
         if amount < 0:
             raise ValueError("cannot add a negative amount of mana")
@@ -714,15 +784,19 @@ class ManaPool(BaseModel):
         if restriction is not None and amount:
             entry = self._entry_for(restriction)
             entry.amounts[color] = entry.amounts.get(color, 0) + amount
+        if spend_effect is not None and amount:
+            tagged = self._effect_entry_for(spend_effect)
+            tagged.amounts[color] = tagged.amounts.get(color, 0) + amount
 
     def add_all(
         self,
         colors: Iterable[Color],
         snow: bool = False,
         restriction: "ManaRestriction | None" = None,
+        spend_effect: "ManaSpendEffect | None" = None,
     ) -> None:
         for color in colors:
-            self.add(color, snow=snow, restriction=restriction)
+            self.add(color, snow=snow, restriction=restriction, spend_effect=spend_effect)
 
     def empty(self) -> None:
         """Empty the pool, as happens when each step and phase ends.
@@ -736,6 +810,7 @@ class ManaPool(BaseModel):
         self.floating = {}
         self.snow = {}
         self.restricted = []
+        self.spend_effects = []
 
     def _entry_for(self, restriction: ManaRestriction) -> RestrictedMana:
         for entry in self.restricted:
@@ -743,6 +818,14 @@ class ManaPool(BaseModel):
                 return entry
         entry = RestrictedMana(restriction=restriction)
         self.restricted.append(entry)
+        return entry
+
+    def _effect_entry_for(self, effect: ManaSpendEffect) -> SpendEffectMana:
+        for entry in self.spend_effects:
+            if entry.effect == effect:
+                return entry
+        entry = SpendEffectMana(effect=effect)
+        self.spend_effects.append(entry)
         return entry
 
     # -- paying ------------------------------------------------------------
@@ -837,12 +920,19 @@ class ManaPool(BaseModel):
             entry = self._entry_for(taken.restriction)
             for color, amount in taken.amounts.items():
                 entry.amounts[color] = max(entry.amounts.get(color, 0) - amount, 0)
+        for tagged in payment.spend_effects_spent:
+            marked = self._effect_entry_for(tagged.effect)
+            for color, amount in tagged.amounts.items():
+                marked.amounts[color] = max(marked.amounts.get(color, 0) - amount, 0)
 
         self.floating = {color: n for color, n in self.floating.items() if n > 0}
         self.snow = {color: n for color, n in self.snow.items() if n > 0}
         for entry in self.restricted:
             entry.amounts = {color: n for color, n in entry.amounts.items() if n > 0}
         self.restricted = [entry for entry in self.restricted if entry.amounts]
+        for tagged in self.spend_effects:
+            tagged.amounts = {color: n for color, n in tagged.amounts.items() if n > 0}
+        self.spend_effects = [tagged for tagged in self.spend_effects if tagged.amounts]
         return self
 
     # -- the search --------------------------------------------------------
@@ -913,12 +1003,15 @@ class ManaPool(BaseModel):
         spend: Counter[Color] = Counter()
         snow_spent: Counter[Color] = Counter()
         restricted_spent: dict[int, Counter[Color]] = {}
-        for (color, is_snow, slot), amount in spent.items():
+        effects_spent: dict[int, Counter[Color]] = {}
+        for (color, is_snow, slot, effect_slot), amount in spent.items():
             spend[color] += amount
             if is_snow:
                 snow_spent[color] += amount
             if slot != UNRESTRICTED:
                 restricted_spent.setdefault(slot, Counter())[color] += amount
+            if effect_slot != NO_SPEND_EFFECT:
+                effects_spent.setdefault(effect_slot, Counter())[color] += amount
         return ManaPayment(
             options=tuple(options),
             spend=dict(spend),
@@ -926,6 +1019,10 @@ class ManaPool(BaseModel):
             restricted_spent=[
                 RestrictedMana(restriction=self.restricted[slot].restriction, amounts=dict(taken))
                 for slot, taken in sorted(restricted_spent.items())
+            ],
+            spend_effects_spent=[
+                SpendEffectMana(effect=self.spend_effects[slot].effect, amounts=dict(taken))
+                for slot, taken in sorted(effects_spent.items())
             ],
             life_paid=life,
         )
@@ -978,18 +1075,36 @@ class ManaPool(BaseModel):
                 for slot, entry in enumerate(self.restricted)
                 if entry.amounts.get(color, 0)
             ]
+            per_effect = [
+                (slot, tagged.amounts.get(color, 0))
+                for slot, tagged in enumerate(self.spend_effects)
+                if tagged.amounts.get(color, 0)
+            ]
             restricted_here = sum(count for _slot, count in per_slot)
-            unrestricted = max(amount - restricted_here, 0)
+            tagged_here = sum(count for _slot, count in per_effect)
+            # A restricted bucket and a spend-effect bucket are counted as
+            # disjoint parts of the same colour. No card in this pool prints
+            # both clauses of CR 106.6 on one mana ability; when one does, the
+            # two lists have to be crossed here instead of subtracted, and the
+            # `_Bucket` key already has the room for it.
+            unrestricted = max(amount - restricted_here - tagged_here, 0)
             snow = min(self.snow.get(color, 0), unrestricted)
             for is_snow, count in ((False, unrestricted - snow), (True, snow)):
                 if count:
-                    buckets[(color, is_snow, UNRESTRICTED)] = count
+                    buckets[(color, is_snow, UNRESTRICTED, NO_SPEND_EFFECT)] = count
             for slot, count in per_slot:
-                buckets[(color, False, slot)] = count
+                buckets[(color, False, slot, NO_SPEND_EFFECT)] = count
+            for slot, count in per_effect:
+                buckets[(color, False, UNRESTRICTED, slot)] = count
         return dict(
             sorted(
                 buckets.items(),
-                key=lambda item: (item[0][2] == UNRESTRICTED, item[0][1], -item[1]),
+                key=lambda item: (
+                    item[0][2] == UNRESTRICTED,
+                    item[0][3] == NO_SPEND_EFFECT,
+                    item[0][1],
+                    -item[1],
+                ),
             )
         )
 

@@ -262,30 +262,6 @@ def test_a_cost_increaser_that_leaves_mid_payment_does_not_lower_the_locked_in_c
     assert scenario.player("bob").life == 17
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="ONE line is left, and it is in models/game.py. Everything else "
-    "measured working: `keywords.equip_activation` pays CR 702.6a's `Equip {0}` "
-    "and attaches the Mantle, the layer-6 quoted-ability grant puts "
-    "`{3}, {Q}: This creature gets +2/+2 until end of turn.` on the Elves as "
-    "`Game.activated_abilities(elves)[1]`, `machines/abilities._classify_cost` "
-    "already classifies `{Q}` as `CostKind.UNTAP`, `Game.begin_activating` "
-    "already gates CR 602.5a on `{CostKind.TAP, CostKind.UNTAP}`, and "
-    "`machines/cost.cost_component_for_phrase('{Q}')` now reads CR 107.6's "
-    "untap symbol into a `ComponentKind.UNTAP` component (with `untap_cost`, "
-    "`_why_not_untap`'s already-untapped refusal, and its pay/unpay halves). "
-    "`Game.activation_cost` now has the matching `CostKind.UNTAP` branch, so "
-    "the whole cost sequence works: {3} is paid, CR 601.2h untaps the Elves, "
-    "and the second activation is correctly refused one mana short. What is "
-    "missing is the *effect*: the granted ability's 'This creature gets +2/+2 "
-    "until end of turn.' reaches "
-    "`machines/effects.create_continuous_effect_of_ability`, which calls "
-    "`ContinuousEffects.create(elves, ...)`, which reads "
-    "`machines/layers.LAYER_EFFECTS` **keyed by card name** - and there is no "
-    "'Llanowar Elves' row, because the pump was never printed on the Elves. A "
-    "quoted ability granted by another permanent (CR 613.1f) has no route into "
-    "the layer registry at all, so the power stays 1.",
-)
 def test_umbral_mantle_cannot_untap_llanowar_elves_for_a_third_mana():
     """DDR#998: the untap cannot pay for itself.
 

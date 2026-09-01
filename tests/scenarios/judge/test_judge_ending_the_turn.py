@@ -58,8 +58,12 @@ def test_none_of_the_three_cards_effects_are_read():
     `effect_for` returns None, so the spell resolves and does nothing.
 
     Plagiarize: "Until end of turn, if target player would draw a card, instead
-    that player skips that draw and you draw a card." - a CR 614 replacement
-    effect with a duration; no row in `machines/replacement.py`'s registry.
+    that player skips that draw and you draw a card." - a CR 614.1a replacement
+    effect with a duration, and `effect_for` is still the wrong place to look
+    for it: nothing about it is a resolution *effect*. It is built now as a
+    `machines/replacement.DrawRedirection`, left behind on
+    `Game.draw_redirections` by `Game._create_resolution_replacements` the way
+    a resolved prevention spell leaves a CR 615.1 shield - see the test below.
 
     Everdream: "Draw a card." plus "Splice onto instant or sorcery {2}{U}". The
     draw *is* read - it is the one clause of this episode the engine can run -
@@ -70,19 +74,24 @@ def test_none_of_the_three_cards_effects_are_read():
     assert effect_for("Everdream", card("Everdream").oracle_text or "") is not None
 
 
-def test_splice_is_parsed_as_a_keyword_and_goes_no_further():
-    """DDR#957's first mechanic: splice is recognised, and unimplemented.
+def test_splice_reveals_the_card_charges_its_cost_and_adds_its_text():
+    """DDR#957's first mechanic, end to end on a spell whose text the engine
+    can already run.
 
     CR 702.47a: "Splice is a static ability that functions while a card is in
     your hand. 'Splice onto [quality] [cost]' means 'You may reveal this card
     from your hand as you cast a [quality] spell. If you do, add this card's
-    rules text to that spell.'" CR 702.47c adds that the spliced spell "has the
-    characteristics of the main spell, plus the rules text of each of the
-    spliced cards", which is a CR 612 text-changing effect.
+    rules text to that spell and pay its splice cost.'" CR 702.47c: the spell
+    "has the characteristics of the main spell, plus the rules text of each of
+    the spliced cards", and CR 612.10 says where it goes - "following that
+    spell's own rules text". CR 702.47e takes it away again: "The spell loses
+    any splice changes once it leaves the stack for any reason."
 
-    `machines/abilities.py` reads the keyword and its parameter off Everdream
-    and stops there: `machines/casting.py` has no splice path at all, so no
-    spell can ever be cast with a card spliced onto it.
+    This test was written the other way round, asserting that
+    `machines/casting.py` had no splice path at all. Lightning Bolt stands in
+    for Time Stop here, because Time Stop's own "End the turn." still has no
+    row in `machines/effects.py` (see the `xfail` at the bottom); splice
+    itself does not care which instant it is spliced onto.
     """
     abilities = parse_abilities(card("Everdream"))
     keywords = [ability for ability in abilities if ability.kind is AbilityKind.KEYWORD]
@@ -91,9 +100,78 @@ def test_splice_is_parsed_as_a_keyword_and_goes_no_further():
     assert splice.canonical == "Splice"
     assert splice.parameter == "onto instant or sorcery {2}{U}"
 
-    import magic_cards_model.machines.casting as casting
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            library=["Forest"] * 5,
+            hand=["Lightning Bolt", "Everdream"],
+            battlefield=["Mountain"] + ["Island"] * 3,
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    casting = scenario.cast("Lightning Bolt", "alice", targets=["bob"])
 
-    assert [name for name in dir(casting) if "splice" in name.lower()] == []
+    casting.splice("Everdream")
+
+    # {R} plus the splice cost {2}{U}, as one total cost (CR 601.2f/601.2h).
+    assert str(casting.total_cost) == "{2}{R}{U}"
+    scenario.pay_with(
+        casting.begin_paying(),
+        *scenario.untapped_sources("Mountain", "Island", "Island", "Island", username="alice"),
+    )
+    spell = scenario.put_on_stack(casting)
+
+    # CR 612.10: the spliced text follows the spell's own, and the spell's own
+    # printing is untouched.
+    assert spell.oracle_text == f"{card('Lightning Bolt').oracle_text}\nDraw a card."
+    assert spell.card.oracle_text == card("Lightning Bolt").oracle_text
+    # CR 702.47a reveals the card and leaves it in hand; nothing moves it.
+    assert [held.name for held in scenario.player("alice").hand] == ["Everdream"]
+
+    scenario.resolve_top()
+
+    assert scenario.player("bob").life == 17, "the main spell's own text still ran"
+    assert len(scenario.player("alice").hand) == 2, "and the spliced draw ran after it"
+    # CR 702.47e: off the stack, the splice changes are gone.
+    assert spell.spliced_text == ()
+
+
+def test_plagiarize_takes_the_targeted_players_next_draw():
+    """DDR#957's second mechanic: a draw replaced, and by whom.
+
+    Plagiarize (confirmed with `resolve_cards`): "Until end of turn, if target
+    player would draw a card, instead that player skips that draw and you draw
+    a card." CR 614.1a is the shape - "[if] [Event] would happen, [Something
+    else] happens instead" - and CR 614.6 has the new event happen in place of
+    the old one, so bob draws nothing at all rather than drawing and giving
+    it away.
+
+    The spell is in a graveyard by the time the effect ever applies, which is
+    why this cannot be a static ability read off a permanent: it is stored on
+    `Game.draw_redirections`, and CR 514.2's cleanup step is what ends it.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", library=["Forest"] * 5, hand=["Plagiarize"], battlefield=["Island"] * 4)
+        .player("bob", library=["Mountain"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.cast_and_resolve(
+        "Plagiarize",
+        *scenario.untapped_sources(*["Island"] * 4, username="alice"),
+        username="alice",
+        targets=["bob"],
+    )
+
+    scenario.game.draw_cards(scenario.player("bob"), 1)
+
+    assert len(scenario.player("alice").hand) == 1, "alice drew instead"
+    assert scenario.player("bob").hand == [], "bob skipped the draw entirely"
+    assert len(scenario.player("bob").library) == 5, "and nothing left his library"
 
 
 def test_ending_the_turn_exiles_the_whole_stack_and_skips_to_cleanup():
@@ -230,12 +308,18 @@ def test_time_stop_resolves_and_the_turn_carries_on():
 
 
 @pytest.mark.xfail(
-    reason="CR 724.1's procedure is built (Game.end_the_turn, driven by the tests "
-    "above). Three pieces are still missing, each in a file of its own: splice "
-    "(CR 702.47) is parsed but has no cast path in machines/casting.py, so "
-    "`casting.splice(...)` does not exist; Plagiarize's draw replacement has no "
-    "entry in machines/replacement.py; and Time Stop's 'End the turn.' has no "
-    "row in machines/effects.py, so no resolution calls end_the_turn",
+    reason="ONE gap now, and it is in machines/effects.py: Time Stop's 'End the turn.' has "
+    "no entry there, so `effect_for` returns None, the spell resolves doing nothing, and "
+    "nothing calls Game.end_the_turn - the first assertion below, `scenario.step is "
+    "Step.CLEANUP`, is the one that fails, on Step.PRECOMBAT_MAIN. Everything else this "
+    "episode needs is built and asserted by the tests above: CR 724.1's procedure "
+    "(Game.end_the_turn), splice (CR 702.47, Casting.splice - the reveal, the additional "
+    "cost, CR 612.10's appended text and CR 702.47e's removal), and Plagiarize's CR 614.1a "
+    "draw replacement (machines/replacement.DrawRedirection on Game.draw_redirections). "
+    "The row effects.py needs has to leave the *rest* of the resolving text running: "
+    "CR 702.47c has appended 'Draw a card.' to this spell, and CR 608.2m keeps the spell "
+    "resolving after CR 724.1b exiles it, so the spliced clause must still run - in the "
+    "cleanup step CR 724.1d has just jumped to.",
     strict=True,
 )
 def test_the_spliced_draw_happens_in_cleanup_and_plagiarize_steals_it():
@@ -272,6 +356,9 @@ def test_the_spliced_draw_happens_in_cleanup_and_plagiarize_steals_it():
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
+    # CR 117.1: alice is the active player and receives priority first, and
+    # Time Stop is bob's instant - he needs priority to cast it at all.
+    scenario.pass_priority("alice")
 
     casting = scenario.cast("Time Stop", username="bob")
     casting.splice("Everdream")

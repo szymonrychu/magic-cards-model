@@ -345,7 +345,7 @@ def printed_characteristics(
             # cmc is not it - that is the printing, which CR 708.2 says this
             # object does not have while it is face down.
             mana_value=0,
-            controller=state.controller,
+            controller=state.stored_controller,
             # CR 708.2 leaves it with *no* characteristics beyond those listed,
             # so there are no supertypes and no colors to carry over either.
             supertypes=(),
@@ -387,7 +387,7 @@ def printed_characteristics(
         card_id=state.id,
         name=state.name,
         mana_value=state.mana_value,
-        controller=state.controller,
+        controller=state.stored_controller,
         supertypes=tuple(state.supertypes),
         types=tuple(state.types),
         subtypes=tuple(state.subtypes),
@@ -896,6 +896,32 @@ def only_this_incarnation(permanent: CardState, stamp: UUID) -> Selector:
 
 def every_creature(chars: Characteristics, board: Board) -> bool:
     return chars.is_creature
+
+
+def same_name_as(name: str) -> Selector:
+    """Every creature whose name is `name` (CR 201.2a).
+
+    "Two or more objects have the same name if they have at least one name in
+    common, even if one or more of those objects have additional names. An
+    object with no name doesn't have the same name as any other object" - so
+    an empty name never matches, and that is the one clause worth writing out
+    here, since `Characteristics.name` carries exactly one name in this model
+    (nothing melded or merged exists yet) and "at least one in common" reduces
+    to equality until something does.
+
+    A *name*, not a creature type: the difference is the whole of DDR#249's
+    Echoing Courage ruling. A token created by an Assembly-Worker's ability is
+    named "Assembly-Worker Token" (CR 111.4 - the ability states no name, so
+    the name is "its subtype(s) plus the word 'token'"), and an animated
+    Mishra's Factory has gained the Assembly-Worker creature *type* while
+    keeping its own name. Neither shares a name with the Assembly-Worker card,
+    so neither is selected.
+    """
+
+    def selector(chars: Characteristics, board: Board) -> bool:
+        return bool(name) and chars.is_creature and chars.name == name
+
+    return selector
 
 
 def creatures_controlled_by(username: str | None) -> Selector:
@@ -1476,6 +1502,20 @@ _SUBJECT = (
 _PUMP_RE = re.compile(
     rf"^{_SUBJECT} gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)"
     rf"(?: and gains (?P<keyword>[a-z ]+))? until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+#: Echoing Courage: "Target creature and all other creatures with the same name
+#: as that creature get +2/+2 until end of turn." A sibling of `_PUMP_RE` and
+#: not a widening of it, because the *subject* is two groups joined by a bare
+#: "and" - the target, plus a set defined by CR 201.2a's "the same name" - and
+#: `_SUBJECT` deliberately describes only the first of them. The optional
+#: adjective ("target **legendary** creature") is admitted for the same reason
+#: `_SUBJECT` admits it: this parser recognises the shape, it does not
+#: re-derive what was legally targeted.
+_TARGET_AND_SAME_NAME_PUMP_RE = re.compile(
+    r"^target(?: [a-z]+)? creature and all other creatures with the same name as "
+    r"that creature get (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) until end of turn\.?$",
     re.IGNORECASE,
 )
 
@@ -2686,6 +2726,112 @@ def _pump_and_keyword_builder(power: int, toughness: int, keyword: str | None) -
         return effects
 
     return builder
+
+
+def _target_and_same_name_pump_builder(power: int, toughness: int) -> EffectBuilder:
+    """ "Target creature and all other creatures with the same name as that
+    creature get +N/+N until end of turn." (Echoing Courage.)
+
+    Sublayer 7c, like `_pump_and_keyword_builder` (CR 613.4c: "modify power
+    and/or toughness ... don't set"), but with a `Selector` that is *not*
+    fixed to the target's identity. The set of objects an effect affects is
+    settled when it begins (CR 611.2c), and here that set is "every creature
+    with this name" - which is what `same_name_as` asks the board, so a
+    creature that shares the name is pumped and one that merely shares a
+    creature type is not (CR 201.2a).
+
+    The target itself has the name, so one effect covers both halves of the
+    sentence; the name is read off the target once, at build time, because
+    that is the moment the effect begins.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            ContinuousEffect(
+                description=(
+                    f"{source.name}: creatures named {target.name} get {power:+d}/{toughness:+d}"
+                ),
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.MODIFY,
+                timestamp=timestamp,
+                duration=Duration.UNTIL_END_OF_TURN,
+                selector=same_name_as(target.name),
+                modification=modify_power_toughness(power, toughness),
+            )
+            for target in targets
+        ]
+
+    return builder
+
+
+#: CR 106.6's additional-effect clause, as a mana ability prints it: "If that
+#: mana is spent on a creature spell, it gains haste until end of turn."
+#: (Arena of Glory). The subject is the *spell* the mana was spent on, so the
+#: card type it names is checked against that spell, and the grant lands on
+#: the permanent the spell becomes (CR 400.7b: "if a spell is countered or
+#: resolves, the card that represents it ... becomes a new object" - the
+#: permanent a resolving permanent spell becomes is the same object it was on
+#: the stack, which is why "it gains haste" reaches the creature at all).
+_MANA_SPEND_EFFECT_RE = re.compile(
+    r"^if that mana is spent on an? (?P<what>[a-z]+) spell, "
+    r"it gains (?P<keyword>[a-z ]+) until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def spend_effect_grant(text: str) -> tuple[Type, str] | None:
+    """Read a CR 106.6 spend-effect sentence into (card type, keyword).
+
+    `None` for a sentence this module does not recognise, and that is not
+    fail-closed on purpose: unlike a spend *restriction*, this clause never
+    narrows what the mana may pay for, so an unread one costs the game an
+    extra grant and nothing else. Refusing to spend the mana would be strictly
+    worse - the land would stop making usable mana over a sentence that only
+    ever gives something away.
+
+    Only a known keyword is returned (`_KNOWN_KEYWORDS`), for the same reason
+    `_pump_and_keyword_builder`'s own grant checks: `grant_ability` writes the
+    word into the object's abilities and something has to be able to read it
+    back.
+    """
+    match = _MANA_SPEND_EFFECT_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    card_type = _card_type_word(match.group("what"))
+    keyword = match.group("keyword").strip().lower()
+    if card_type is None or keyword not in _KNOWN_KEYWORDS:
+        return None
+    return card_type, keyword.capitalize()
+
+
+def spend_effect_effects(text: str, permanent: CardState, timestamp: int) -> list[ContinuousEffect]:
+    """The continuous effects one spend-effect sentence puts on `permanent`.
+
+    Empty when the sentence is unreadable, or when the spell it was spent on
+    was not of the card type the sentence names - "if that mana is spent on a
+    **creature** spell" says nothing about the instant it also paid for.
+    """
+    grant = spend_effect_grant(text)
+    if grant is None:
+        return []
+    card_type, keyword = grant
+    if card_type not in permanent.types:
+        return []
+    return [
+        ContinuousEffect(
+            description=f"{permanent.name} gains {keyword} (CR 106.6, mana spent on it)",
+            layer=Layer.ABILITY,
+            timestamp=timestamp,
+            duration=Duration.UNTIL_END_OF_TURN,
+            selector=only_this_incarnation(permanent, permanent.zone_change_stamp),
+            modification=grant_ability(keyword),
+        )
+    ]
 
 
 def _keyword_grant_builder(keyword: str) -> EffectBuilder:
@@ -4213,6 +4359,10 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
     sentence = _strip_ability_word(_normalize_duration_first(sentence))
     if _BOARD_COUNT_GATE_RE.fullmatch(sentence):
         return _parse_board_gated_group_sentence(sentence)
+    if match := _TARGET_AND_SAME_NAME_PUMP_RE.fullmatch(sentence):
+        return _target_and_same_name_pump_builder(
+            int(match.group("power")), int(match.group("toughness"))
+        )
     if match := _PUMP_RE.fullmatch(sentence):
         power, toughness = int(match.group("power")), int(match.group("toughness"))
         keyword = match.group("keyword")
@@ -4730,6 +4880,23 @@ class LayerContext(BaseModel):
     #: than handed in directly the way `your_graveyard` is.
     graveyard_by_controller: Mapping[str, tuple[CardState, ...]] = Field(default_factory=dict)
 
+    #: The unspent mana in each player's mana pool, keyed by the username
+    #: whose pool it is. A second thing the layer engine never sees, and for
+    #: the same reason as a graveyard: it is not on the battlefield. Omnath,
+    #: Locus of Mana's "Omnath gets +1/+1 for each unspent green mana you
+    #: have" is the only reader, and like every other count here it is read
+    #: when the effects are *built* - the board is rebuilt on every call
+    #: (CR 613.5), so Omnath grows and shrinks with the pool rather than
+    #: freezing at whatever was floating when it entered.
+    unspent_mana_by_controller: Mapping[str, Mapping[Color, int]] = Field(default_factory=dict)
+
+    def unspent_mana_of(self, controller: str | None, color: Color) -> int:
+        """How much unspent mana of one colour a player has, or 0 for a player
+        this context knows nothing about."""
+        if controller is None:
+            return 0
+        return self.unspent_mana_by_controller.get(controller, {}).get(color, 0)
+
     def graveyard_of(self, controller: str | None) -> tuple[CardState, ...]:
         """The graveyard a static ability's own controller sees, or none if
         `controller` is not one this context knows about."""
@@ -4982,6 +5149,45 @@ def _tarmogoyf(
             source_ability=text,
             selector=_only(source.id),
             modification=define_power_toughness(lambda chars, board: types, 0, 1),
+        )
+    ]
+
+
+def _omnath_locus_of_mana(
+    source: CardState,
+    timestamp: int,
+    targets: Sequence[CardState],
+    context: LayerContext,
+) -> list[ContinuousEffect]:
+    """ "Omnath gets +1/+1 for each unspent green mana you have."
+
+    Sublayer 7c (CR 613.4c: "modify power and/or toughness ... don't set"),
+    not the characteristic-defining 7a of Tarmogoyf or Boneyard Wurm - Omnath
+    is a printed 1/1 and this *adds* to that, so an empty pool leaves a 1/1
+    rather than a 0/0. There is no duration: CR 611.3 gives a static ability's
+    own continuous effect exactly the life of the ability.
+
+    The count is read off `context.unspent_mana_of` at build time, and the
+    board is rebuilt on every call (CR 613.5), so this tracks the pool live.
+    That is the whole of DDR#955: with four green floating during CR 601.2h's
+    payment, Omnath really is a 5/5 at the moment it is sacrificed, and it is
+    a 1/1 again once that mana is spent.
+
+    "You" is CR 109.5's - the object's controller - which is also whose pool
+    `unspent_mana_of` is asked for.
+    """
+    green = context.unspent_mana_of(source.controller, Color.GREEN)
+    if green == 0:
+        return []
+    return [
+        ContinuousEffect(
+            description=f"Omnath, Locus of Mana: +{green}/+{green} from unspent green mana",
+            layer=Layer.POWER_TOUGHNESS,
+            sublayer=Sublayer.MODIFY,
+            timestamp=timestamp,
+            source_id=source.id,
+            selector=_only(source.id),
+            modification=modify_power_toughness(green, green),
         )
     ]
 
@@ -5262,6 +5468,11 @@ LAYER_EFFECTS: dict[str, EffectBuilder] = {
     "Relentless Rats": _relentless_rats,
     "Tarmogoyf": _tarmogoyf,
     "Boneyard Wurm": _boneyard_wurm,
+    # "Omnath gets +1/+1 for each unspent green mana you have." A live count
+    # of something that is not on the battlefield and not in a graveyard
+    # either - the controller's own mana pool - so no generalised shape reads
+    # it and the row is not dead weight.
+    "Omnath, Locus of Mana": _omnath_locus_of_mana,
     "Nighthawk Scavenger": _nighthawk_scavenger,
     "Allosaurus Rider": _allosaurus_rider,
     "Tishana's Tidebinder": _tishanas_tidebinder,
@@ -5285,6 +5496,38 @@ LAYER_EFFECTS: dict[str, EffectBuilder] = {
 }
 
 
+def _granted_ability_effects(source: CardState) -> EffectBuilder | None:
+    """A builder read off an ability *granted* to this permanent (CR 613.1f).
+
+    `CardState.granted_ability_texts` holds the quoted lines another
+    permanent's layer-6 grant is putting on this one, printed exactly as the
+    granting card quotes them - Umbral Mantle's "{3}, {Q}: This creature gets
+    +2/+2 until end of turn." on an equipped Llanowar Elves. `LAYER_EFFECTS`
+    is keyed by card name and the parser fallback reads the source's own
+    printing, so neither can reach such a line: "Llanowar Elves" has no row
+    and never will, because that pump was never printed on it.
+
+    Only consulted on the resolution path (`static_only=False`), never on the
+    battlefield sweep - the line is an *activated* ability, and applying its
+    body as though it were this permanent's static contribution (CR 611.3)
+    would leave the Elves permanently +2/+2 without anybody paying {3}.
+    `layer_readable_sentences`' own `static_only` gate refuses an activated
+    ability's body anyway, so this is belt and braces.
+
+    The first granted line that parses wins. A caller that knows *which*
+    granted ability is resolving should say so with `effects_for`'s
+    `ability_text` instead, which is checked first and is exact; this fallback
+    exists because the resolution path currently hands `effects_for` only the
+    permanent, and a permanent carrying two different granted quoted layer
+    abilities at once would need it.
+    """
+    for text in source.granted_ability_texts:
+        builder = parsed_layer_effects(text, static_only=False, card_name=source.name)
+        if builder is not None:
+            return builder
+    return None
+
+
 def effects_for(
     source: CardState,
     timestamp: int,
@@ -5293,6 +5536,7 @@ def effects_for(
     notices: list[LayerNotice] | None = None,
     *,
     static_only: bool = False,
+    ability_text: str | None = None,
 ) -> list[ContinuousEffect]:
     """The continuous effects one card generates, or none if it is not registered
     and its own oracle text is not one of `parsed_layer_effects`'s shapes either.
@@ -5329,8 +5573,30 @@ def effects_for(
       activated pump): restricting to `StaticAbility` bodies there would make
       `create_continuous_effect_of_ability` blind to the exact text it exists
       to read.
+
+    `ability_text` is the resolving ability's *own* text, when there is one -
+    `machines/effects.create_continuous_effect_of_ability` passes it. Without
+    it, both routes into a builder key off the source permanent: its name in
+    `LAYER_EFFECTS`, or its own oracle text in the parser. Neither can ever
+    reach an ability **granted** to that permanent by something else
+    (CR 613.1f: "Layer 6: Ability-adding effects, keyword counters,
+    ability-removing effects ... are applied"). Umbral Mantle's quoted "{3},
+    {Q}: This creature gets +2/+2 until end of turn." is on Llanowar Elves,
+    and "Llanowar Elves" has no `LAYER_EFFECTS` row and never will, because
+    the pump was never printed on it - so the ability resolved and did
+    nothing.
+
+    It is tried *after* the name row and *before* the source's own text, which
+    is the order that changes nothing already working: a card with a row keeps
+    it, and a card whose own text carries the ability reaches the same builder
+    either way (the ability text is a subset of that text). The only new
+    outcome is the granted one.
     """
     builder = LAYER_EFFECTS.get(source.name)
+    if builder is None and ability_text:
+        builder = parsed_layer_effects(ability_text, static_only=static_only, card_name=source.name)
+    if builder is None and not static_only:
+        builder = _granted_ability_effects(source)
     # `oracle_text` reads the up face (CR 712.8d/712.8f); `card.oracle_text`
     # is the raw Scryfall field, null for a modal-DFC/transform permanent -
     # same family as `effect_for`'s fix in `Game.resolve_top`. Without this,
@@ -5497,6 +5763,7 @@ class ContinuousEffects(BaseModel):
         source: CardState,
         targets: Sequence[CardState] = (),
         context: LayerContext | None = None,
+        ability_text: str | None = None,
     ) -> list[ContinuousEffect]:
         """A spell or ability has resolved: create and keep its continuous effects.
 
@@ -5511,9 +5778,21 @@ class ContinuousEffects(BaseModel):
         false is dropped rather than stored, so it can never start later if the
         condition becomes true again.
 
+        `ability_text` is the resolving ability's own text, when the caller is
+        an ability rather than a spell - the only route by which an ability
+        *granted* to `source` by another permanent (CR 613.1f) can be read at
+        all. See `effects_for`.
+
         Returns the effects that were kept.
         """
-        built = effects_for(source, self.tick(), targets, context, self.layer_notices)
+        built = effects_for(
+            source,
+            self.tick(),
+            targets,
+            context,
+            self.layer_notices,
+            ability_text=ability_text,
+        )
         kept = [effect for effect in built if effect.holds]
         self.effects.extend(kept)
         return kept
@@ -5524,6 +5803,21 @@ class ContinuousEffects(BaseModel):
         if effect.holds:
             self.effects.append(effect)
         return effect
+
+    @property
+    def has_control_effect(self) -> bool:
+        """Whether any stored effect is a layer 2 control change (CR 613.1b).
+
+        Asked by `CardState.controller` before it recomputes the whole board
+        to answer a question the board would answer with the base controller
+        anyway. Sound because `set_controller` is reachable from exactly one
+        builder, `_gain_control_until_eot_builder`, and that builder only ever
+        runs from `create` - a resolving spell or ability - so a control
+        change is always a *stored* effect and never one the battlefield sweep
+        rebuilds. A static ability that changed control (an Aura's "You control
+        enchanted creature") would have to be added here as well as there.
+        """
+        return any(effect.layer is Layer.CONTROL for effect in self.active)
 
     @property
     def active(self) -> list[ContinuousEffect]:

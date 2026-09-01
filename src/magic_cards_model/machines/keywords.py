@@ -387,6 +387,34 @@ def _mobilize_ability(ability: KeywordAbility) -> TriggeredAbility:
     )
 
 
+def _firebending_ability(ability: KeywordAbility) -> TriggeredAbility:
+    """CR 702.189a: "Firebending is a triggered ability. 'Firebending N' means
+    'Whenever this creature attacks, add N {R}. Until end of combat, you don't
+    lose this mana as steps and phases end.'"
+    """
+    if ability.count is not None:
+        amount, tail = str(ability.count), ""
+    else:
+        # "X, where X is this creature's power" - CR 608.2h reads the number
+        # as the ability resolves, so the definition is carried through into
+        # the effect text verbatim rather than resolved here.
+        parameter = (ability.parameter or "X").strip()
+        head, _, where = parameter.partition(",")
+        amount = head.strip() or "X"
+        tail = f", {where.strip()}" if where.strip() else ""
+    return _expansion(
+        ability,
+        keyword="firebending",
+        word=TriggerWord.WHENEVER,
+        condition="this creature attacks",
+        effect=(
+            f"add {amount} {{R}}{tail}. Until end of combat, you don't lose this mana "
+            "as steps and phases end"
+        ),
+        event=TriggerEvent.ATTACKS,
+    )
+
+
 def _madness_ability(ability: KeywordAbility) -> TriggeredAbility:
     """CR 702.35a's *second* ability. Madness is two abilities, not one.
 
@@ -447,6 +475,7 @@ _TRIGGER_EXPANSIONS: dict[str, Callable[[KeywordAbility], TriggeredAbility]] = {
     "storm": _storm_ability,
     "persist": _persist_ability,
     "mobilize": _mobilize_ability,
+    "firebending": _firebending_ability,
     "evoke": _evoke_ability,
     "madness": _madness_ability,
     "hideaway": _hideaway_ability,

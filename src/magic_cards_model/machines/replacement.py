@@ -3947,6 +3947,105 @@ def _shield_effects(game: "Game", event: ReplaceableEvent) -> list[ApplicableEff
     ]
 
 
+class DrawRedirection(BaseModel):
+    """One player's draws taken by another, for a duration (CR 614.1a).
+
+    Plagiarize prints the only one in this pool: "Until end of turn, if target
+    player would draw a card, instead that player skips that draw and you draw
+    a card." That is CR 614.1a's "[if] [Event] would happen, [Something else]
+    happens instead" shape, but unlike every other entry in this module it is
+    not a static ability of a permanent - the instant that made it is in a
+    graveyard by the time it ever applies, and CR 614.6 has the new event
+    happen in place of the old one for as long as the duration runs.
+
+    Stored on `Game.draw_redirections` for the same reason
+    `Game.prevention_shields` stores a CR 615.1 shield: the effect has to
+    outlive its source, and it has a duration of its own that CR 514.2's
+    cleanup step ends.
+    """
+
+    label: str
+    """What the effect says, for the event trace."""
+
+    controller: str
+    """Who created it - `ApplicableEffect` needs a controller for CR 616.1's
+    ordering, and the spell that made this is long gone."""
+
+    skipping: str
+    """The player whose draw is replaced: Plagiarize's "target player"."""
+
+    drawing: str
+    """The player who draws instead: Plagiarize's "you" (CR 109.5)."""
+
+    until_end_of_turn: bool = True
+    """CR 514.2 ends it in the cleanup step, alongside the marked damage and
+    every other "until end of turn" effect."""
+
+
+#: Plagiarize's whole printed sentence. Matched entire rather than split into
+#: `ReplacementEffect`'s event/replacement halves, because the replacement half
+#: names two different players ("that player" and "you") and nothing in this
+#: module's clause splitter carries that pairing.
+_DRAW_REDIRECTION_RE = re.compile(
+    r"^until end of turn, if target player would draw a card, instead that player "
+    r"skips that draw and you draw a card\.?$",
+    re.IGNORECASE,
+)
+
+
+def draw_redirection_for(text: str, controller: str, target: str | None) -> DrawRedirection | None:
+    """Read a resolving spell's text into a `DrawRedirection`, or `None`.
+
+    `target` is the player the spell targeted (CR 115.1), rechecked for
+    legality by the caller at CR 608.2b before this is ever asked; `None` means
+    no player was targeted, and then there is nothing to redirect.
+    """
+    if target is None:
+        return None
+    if _DRAW_REDIRECTION_RE.fullmatch(" ".join(text.strip().split())) is None:
+        return None
+    return DrawRedirection(
+        label=" ".join(text.strip().split()),
+        controller=controller,
+        skipping=target,
+        drawing=controller,
+    )
+
+
+def _draw_redirection_effects(game: "Game", event: ReplaceableEvent) -> list[ApplicableEffect]:
+    """The draw redirections waiting on this draw event (CR 614.1a).
+
+    Sourceless, like `_shield_effects`: the spell that created one is in a
+    graveyard, and CR 614.6 does not care.
+    """
+    if event.kind is not EventKind.DRAW or event.player is None:
+        return []
+
+    def applier(redirection: DrawRedirection) -> Apply:
+        def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+            # "that player skips that draw" - the event's own draw is replaced
+            # down to nothing, which CR 603.2g then makes trigger nothing.
+            event.amount = 0
+            # "and you draw a card" - a *new* draw, by a different player, so
+            # it goes through `Game.draw_cards` and is itself replaceable
+            # (CR 614.6: the modified event is what happens).
+            game.draw_cards(game.player(redirection.drawing), 1)
+
+        return apply
+
+    return [
+        ApplicableEffect(
+            key=f"draw-redirection:{index}",
+            source=None,
+            label=redirection.label,
+            apply=applier(redirection),
+            controller_username=redirection.controller,
+        )
+        for index, redirection in enumerate(game.draw_redirections)
+        if redirection.skipping == event.player.username and event.amount > 0
+    ]
+
+
 def applicable_effects(game: "Game", event: ReplaceableEvent) -> list[ApplicableEffect]:
     """Every effect that would modify this event as it stands (CR 614.1, 616.1).
 
@@ -3962,6 +4061,7 @@ def applicable_effects(game: "Game", event: ReplaceableEvent) -> list[Applicable
 
     found.extend(_protection_effects(game, event))
     found.extend(_shield_effects(game, event))
+    found.extend(_draw_redirection_effects(game, event))
 
     if event.kind is EventKind.ENTERS_BATTLEFIELD and event.card is not None:
         entering = event.card

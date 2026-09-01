@@ -476,10 +476,26 @@ class CardState(BaseModel):
     a deck are four `CardState`s sharing one `Card`, each with its own `id`.
     """
 
+    #: `populate_by_name` so `stored_controller` answers to both its own name
+    #: and to `controller`, which is the alias every caller writes and every
+    #: `model_dump`/`model_validate` round trip carries.
+    model_config = ConfigDict(populate_by_name=True)
+
     id: UUID = Field(default_factory=uuid4)
     card: Card
     zone: Zone = Zone.LIBRARY
-    controller: str | None = None
+    stored_controller: str | None = Field(default=None, alias="controller")
+    """Who controls this object before any continuous effect is applied.
+
+    Read through the `controller` property, never directly - CR 613.1b puts
+    control-changing effects in layer 2, so the answer to "who controls this
+    permanent" is a computed one (CR 613.5) and this is only its base. Written
+    directly by exactly the two places that hand a permanent to a player
+    outside the layer system: `Game.put_onto_battlefield` and
+    `Game.change_control`, both of which are stating the base rather than
+    applying an effect.
+    """
+
     owner: str | None = None
     """Who owns this card (CR 108.3).
 
@@ -708,6 +724,27 @@ class CardState(BaseModel):
     the owner reveal it as it leaves the battlefield.
     """
 
+    last_known_power: int | None = None
+    """The power this object had the last time it left the battlefield (CR 608.2h).
+
+    `last_known_counters`' sibling, and there for the same reason: an effect
+    that has to look at a permanent which is no longer a permanent has nothing
+    left to read. Counters are only half the answer - CR 122.2 destroys them
+    on a zone change, which `last_known_counters` records - because a
+    continuous effect stops applying too, and no snapshot recorded that.
+    Omnath, Locus of Mana is the card that makes the difference visible: its
+    "+1/+1 for each unspent green mana you have" is a continuous effect from a
+    static ability (CR 604.2), so a sacrificed Omnath's printing says 1 and
+    the answer CR 608.2h wants is 5.
+
+    `None` for an object that has never left the battlefield, which is also
+    every object that has never been on it.
+    """
+
+    last_known_toughness: int | None = None
+    """The toughness this object had the last time it left the battlefield
+    (CR 608.2h). `last_known_power`'s other half, taken at the same instant."""
+
     last_known_counters: Counters = Field(default_factory=Counters)
     """The counters this object had the last time it changed zones (CR 704.8).
 
@@ -728,6 +765,21 @@ class CardState(BaseModel):
     Souls' chosen creature type) ever asks again for the same object's
     lifetime on the battlefield, so there is no rule that says it should be
     dropped on some other zone change either.
+    """
+
+    spliced_text: tuple[str, ...] = ()
+    """Rules text added to this *spell* by a splice ability (CR 702.47c).
+
+    "The spell has the characteristics of the main spell, plus the rules text
+    of each of the spliced cards. This is a text-changing effect (see rule
+    612)." CR 612.10 fixes where it goes: "A splice ability changes a spell's
+    text by adding the rules text of the card with splice to the spell,
+    following that spell's own rules text. It doesn't modify or replace any of
+    that spell's own text." So it is appended by `oracle_text`, never merged
+    into the printing - `Card` stays the immutable Scryfall object.
+
+    Cleared by `move_to`, which is CR 702.47e: "The spell loses any splice
+    changes once it leaves the stack for any reason."
     """
 
     granted_ability_texts: tuple[str, ...] = ()
@@ -894,6 +946,47 @@ class CardState(BaseModel):
             return None
         finally:
             self._asking_the_board = False
+
+    @property
+    def controller(self) -> str | None:
+        """Who controls this object right now, layer 2 included (CR 613.1b).
+
+        `stored_controller` is the base; a control-changing effect - Threaten's
+        "gain control of it until end of turn", Act of Treason's, an Aura's -
+        is a continuous effect in layer 2, and CR 613.5 has the layer system
+        "continually and automatically" applied, so the answer has to be
+        computed rather than stored. Exactly the shape `power` and `toughness`
+        already have, and for exactly the same reason: everything that asks -
+        combat, the state-based actions, a delayed trigger, a test - asks this
+        attribute, and none of them should have to know the layer system
+        exists.
+
+        Falls back to the base whenever the layer engine has nothing to say:
+        an unbound `CardState`, or an object that is not on the battlefield -
+        which is right twice over, since CR 109.4 gives only objects on the
+        stack or the battlefield a controller at all, and the stack is not a
+        zone CR 613.5 computes.
+        """
+        effects = getattr(self._board_source, "continuous_effects", None)
+        if effects is not None and not effects.has_control_effect:
+            # Nothing in play changes control, so the board would hand back
+            # this very value - and computing it is not free. See
+            # `ContinuousEffects.has_control_effect` for why that is sound.
+            return self.stored_controller
+        computed = self.computed_characteristics
+        if computed is not None and computed.controller is not None:
+            return computed.controller
+        return self.stored_controller
+
+    @controller.setter
+    def controller(self, value: str | None) -> None:
+        """Set the *base* controller (CR 613.1b's layer 2 is not written here).
+
+        A caller stating who controls a permanent - `Game.put_onto_battlefield`
+        as it enters, `Game.change_control` for a permanent handed over with no
+        duration - is stating the base the layers are then applied to.
+        """
+        self.stored_controller = value
 
     @property
     def controller_or_owner(self) -> str | None:
@@ -1187,15 +1280,21 @@ class CardState(BaseModel):
 
     @property
     def oracle_text(self) -> str:
-        """This object's rules text (CR 708.2). Face down, it is empty."""
+        """This object's rules text (CR 708.2, CR 612.10). Face down, it is empty.
+
+        Spliced text (CR 702.47c) is appended after the object's own, which is
+        the order CR 612.10 states: "adding the rules text of the card with
+        splice to the spell, **following** that spell's own rules text". That
+        order is the whole of DDR#957 - Time Stop ends the turn first, and the
+        spliced draw happens afterwards, in the cleanup step it lands in.
+        """
         if self.has_no_characteristics:
             return ""  # CR 406.3a
         if self.face_down_characteristics is not None:
             return self.face_down_characteristics.oracle_text
         up_face = self.up_face
-        if up_face is not None:
-            return up_face.oracle_text or ""
-        return self.card.oracle_text or ""
+        own = up_face.oracle_text if up_face is not None else self.card.oracle_text
+        return "\n".join([own or "", *self.spliced_text]).strip("\n")
 
     @property
     def mana_cost(self) -> str | None:
@@ -1329,6 +1428,14 @@ class CardState(BaseModel):
         computed = self.computed_characteristics
         if computed is not None and computed.toughness is not None:
             return computed.toughness
+        if self.zone is not Zone.BATTLEFIELD and self.last_known_toughness is not None:
+            return self.last_known_toughness  # CR 608.2h, as for `power`
+        return self._printed_toughness
+
+    @property
+    def _printed_toughness(self) -> int | None:
+        """`toughness` with neither the layer engine nor CR 608.2h's snapshot
+        consulted - the printing plus counters, and nothing else."""
         if self.has_no_characteristics:
             return None  # CR 406.3a
         if self.face_down_characteristics is not None:
@@ -1357,6 +1464,19 @@ class CardState(BaseModel):
         computed = self.computed_characteristics
         if computed is not None and computed.power is not None:
             return computed.power
+        if self.zone is not Zone.BATTLEFIELD and self.last_known_power is not None:
+            # CR 608.2h's last known information, for an effect that has to
+            # ask about a permanent which is no longer one. See
+            # `_remember_last_known_power_toughness`: the snapshot exists only
+            # for an object that has actually left the battlefield, so nothing
+            # that never was a permanent is affected.
+            return self.last_known_power
+        return self._printed_power
+
+    @property
+    def _printed_power(self) -> int | None:
+        """`power` with neither the layer engine nor CR 608.2h's snapshot
+        consulted - the printing plus counters, and nothing else."""
         if self.has_no_characteristics:
             return None  # CR 406.3a
         if self.face_down_characteristics is not None:
@@ -1614,6 +1734,47 @@ class CardState(BaseModel):
         elif self.zone in (Zone.BATTLEFIELD, Zone.STACK):
             self.face_down_characteristics = FaceDownCharacteristics()  # CR 708.2a
 
+    def remember_last_known_power_toughness(self) -> None:
+        """Take CR 608.2h's snapshot while this object is still a permanent.
+
+        Called by `Game._note_left_battlefield`, at the one moment every route
+        off the battlefield already agrees on: the permanent is still in
+        `Game.battlefield`, so the layer engine still answers for it. It
+        cannot be taken from `move_to`, which runs after the permanent has
+        been taken out of the zone and where CR 613.5 therefore has nothing
+        left to say about it.
+
+        Only the battlefield is snapshotted: it is the one zone where the
+        answer can be anything other than the printing, and the one an effect
+        looking back at a creature that "was sacrificed" or "died" is looking
+        back at. `move_to` clears the snapshot on any move that does *not*
+        start on the battlefield - CR 400.7 makes what arrives a new object
+        with "no memory of, or relation to, its previous existence", so a card
+        that has moved on from the graveyard, or has come back, must not still
+        be answering with what it was on the battlefield two zones ago.
+
+        Only what a *continuous effect* was contributing is recorded, which is
+        why each half is compared against `_printed_power`/`_printed_toughness`
+        and left `None` when they agree. The printing does not change on a
+        zone change (CR 108.1), so it needs no snapshot to survive one; the
+        counters deliberately do not survive it (CR 122.2: "counters on an
+        object are not retained if that object moves from one zone to another
+        ... they simply cease to exist"), and a card in a graveyard reading
+        back the +1/+1 counters it died with would be wrong. What is left is
+        exactly the gap: an effect from a static ability (CR 604.2) or a
+        resolved one (CR 611.2) stops applying the instant the permanent is
+        not a permanent, and nothing else remembers it.
+
+        `computed_characteristics` is the whole of CR 613, and answers `None`
+        for an unbound `CardState` - which then has no continuous effect on it
+        to record.
+        """
+        computed = self.computed_characteristics
+        power = None if computed is None else computed.power
+        toughness = None if computed is None else computed.toughness
+        self.last_known_power = None if power == self._printed_power else power
+        self.last_known_toughness = None if toughness == self._printed_toughness else toughness
+
     def move_to(self, zone: Zone) -> None:
         """Move to another zone, resetting the state a card loses on the way.
 
@@ -1633,6 +1794,16 @@ class CardState(BaseModel):
         # replaces), so this is what tells a round trip apart from a card
         # that simply stayed put - see `DelayedTrigger.expected_stamp`.
         origin = self.zone
+        if origin is not Zone.BATTLEFIELD:
+            # CR 400.7: a move that did not start on the battlefield is a new
+            # object with "no memory of, or relation to, its previous
+            # existence", so CR 608.2h's snapshot of what continuous effects
+            # were doing to it as a permanent stops being about this object.
+            # The battlefield case is stamped by `Game._note_left_battlefield`
+            # instead - see `remember_last_known_power_toughness` for why it
+            # cannot be taken from here.
+            self.last_known_power = None
+            self.last_known_toughness = None
         self.zone_change_stamp = uuid4()
         self.zone = zone
         if not (origin is Zone.STACK and zone is Zone.BATTLEFIELD):
@@ -1641,6 +1812,14 @@ class CardState(BaseModel):
             # permanent". Every other move is CR 400.7's new object, which
             # nobody cast bestowed.
             self.bestowed = False
+        if origin is Zone.STACK and zone is not Zone.STACK:
+            # CR 702.47e: "The spell loses any splice changes once it leaves
+            # the stack for any reason." *Leaves* - so the move that puts it
+            # there (CR 601.2a, hand to stack) keeps what a splice
+            # announcement added, and so does `Game.put_on_stack` re-stating
+            # the zone of a spell already on the stack; every move off it, to
+            # any zone, takes the text away.
+            self.spliced_text = ()
         # CR 704.8 / CR 603.10a: an ability that looks back in time needs the
         # counters the object had as it left, and CR 122.2 has just taken them
         # away. Persist is the card in the pool that asks (CR 702.79a).

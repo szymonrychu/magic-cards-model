@@ -71,6 +71,7 @@ from ..machines.decisions import (
     ask_attackers,
     ask_blockers,
     ask_mulligan,
+    ask_trigger_order,
     default_answer,
     legal_options,
 )
@@ -120,6 +121,7 @@ from ..machines.layers import (
     count_card_types,
     grant_ability,
     only_this_incarnation,
+    spend_effect_effects,
 )
 from ..machines.modes import substitute_x
 from ..machines.opening_hand import (
@@ -131,10 +133,12 @@ from ..machines.opening_hand import (
 )
 from ..machines.priority import PriorityMachine, PriorityOutcome
 from ..machines.replacement import (
+    DrawRedirection,
     EventKind,
     ReplaceableEvent,
     UnwiredChoiceNotice,
     apply_replacements,
+    draw_redirection_for,
 )
 from ..machines.targeting import (
     TargetingProfile,
@@ -177,7 +181,7 @@ from .card_state import (
     TargetRef,
     planeswalkers_with_zero_loyalty,
 )
-from .mana import ManaCost, ManaSpend
+from .mana import ManaCost, ManaPool, ManaSpend, ManaSpendEffect
 from .player import Player
 from .token import move_refused, tokens_that_cease_to_exist
 from .zone import Zone
@@ -769,6 +773,16 @@ class CastRecord(BaseModel):
     `modes` - `mode_targets[i]` is what mode `modes[i]` targets."""
     x_value: int = 0
     """The value announced for X (CR 107.3a), which a mode's target count may use."""
+    spend_effects: tuple[str, ...] = ()
+    """CR 106.6's additional-effect sentences carried by the mana that paid
+    this spell's cost, verbatim.
+
+    Filled at CR 601.2h from `ManaPayment.spend_effects_spent`, so it names
+    only the effects of mana that was *actually spent* on this spell - the
+    Arena's other red left floating tags nothing. Read once, as the spell
+    resolves, by `Game._apply_mana_spend_effects`.
+    """
+
     mana_spent: dict[Color, int] = Field(default_factory=dict)
     """How much mana of each colour was spent paying the total cost (CR 601.2h),
     taken from `machines/cost.ManaPayment.spend`. Colourless mana spent on a
@@ -1312,6 +1326,28 @@ class Game(BaseModel):
     rather than a flag, so a future card asking "two or more" has the number;
     today only "at least one" is ever asked. Cleared when a new turn begins."""
 
+    open_payment_pools: dict[str, ManaPool] = Field(default_factory=dict)
+    """The working mana pool of each player's currently open `CostPayment`.
+
+    CR 106.4: mana a player has produced and not yet spent is in their mana
+    pool. `machines/cost.CostPayment` works on a *copy* of that pool so a
+    cancelled payment (CR 733.1) throws away only what it produced, which
+    means that between CR 601.2g's mana abilities and CR 601.2h's payment the
+    player's own `ManaPool` underreports: the mana the payment just made is
+    real, unspent, and invisible there.
+
+    Nothing cared until a continuous effect had to count it. Omnath, Locus of
+    Mana's "Omnath gets +1/+1 for each unspent green mana you have" is read by
+    `computed_board`, and DDR#955 is exactly the case where the mana is
+    sitting in an open payment - four green produced for Momentous Fall, with
+    the sacrifice paid before it (CR 601.2h's "in any order"). Registered by
+    `CostPayment._seed_payer_pool` and dropped when the payment is paid,
+    cancelled or rewound, so it is never a second pool a player owns - it
+    *replaces* the player's own for as long as it is open, since it opened as
+    a copy of it.
+
+    """
+
     permanents_left_battlefield_this_turn: dict[str, int] = Field(default_factory=dict)
     """How many permanents each player controlled at the moment those
     permanents left the battlefield this turn, keyed by that controller.
@@ -1506,6 +1542,15 @@ class Game(BaseModel):
     instead: `flip_coin` seeds each flip from `f"{shuffle_seed}:
     {coin_flips_performed}:coin"`, so a scenario asserting on the result
     stays reproducible and the second flip of a game differs from the first."""
+
+    draw_redirections: list[DrawRedirection] = Field(default_factory=list)
+    """CR 614.1a replacement effects a resolved spell left behind, taking one
+    player's draws for another - Plagiarize.
+
+    Kept beside `prevention_shields` and for the same reason: the source is a
+    graveyard card by the time the effect ever applies, and the effect has a
+    duration of its own (CR 514.2 ends it in the cleanup step, which is where
+    `discard_to_maximum_hand_size` clears the list)."""
 
     prevention_shields: list["PreventionShield"] = Field(default_factory=list)
     """Prevention effects created by a resolving spell or ability (CR 615.1).
@@ -1951,6 +1996,16 @@ class Game(BaseModel):
             for shield in self.prevention_shields
             if not shield.spent and not shield.until_end_of_turn
         ]
+        # CR 514.2's same sentence again, for the draw redirections: an
+        # "until end of turn" replacement effect ends here, *after* the
+        # discard above - which is the whole of DDR#957's ruling, since a
+        # draw that happens earlier in this same cleanup step is still
+        # replaced.
+        self.draw_redirections = [
+            redirection
+            for redirection in self.draw_redirections
+            if not redirection.until_end_of_turn
+        ]
         self._bottom_unused_cascade_permissions()
         # CR 514.2's same sentence: "all 'until end of turn' ... effects end".
         # A card exiled by Ugin's −11 stays exiled and stops being castable.
@@ -2098,6 +2153,7 @@ class Game(BaseModel):
         mode_targets: list[list[TargetRef]] | None = None,
         x_value: int = 0,
         mana_spent: dict[Color, int] | None = None,
+        spend_effects: list[str] | None = None,
         kicked: int = 0,
         additional_cost_cards: list[UUID] | None = None,
     ) -> "CastRecord":
@@ -2137,6 +2193,7 @@ class Game(BaseModel):
             mode_targets=[list(slice_) for slice_ in mode_targets or []],
             x_value=x_value,
             mana_spent=dict(mana_spent or {}),
+            spend_effects=tuple(spend_effects or ()),
             kicked=kicked,
             additional_cost_cards=list(additional_cost_cards or []),
         )
@@ -2341,6 +2398,8 @@ class Game(BaseModel):
                 self._before_priority()
                 raise
 
+        self._create_resolution_replacements(spell)
+
         if spell.id in self.turn_ended_exiled_ids:
             # CR 724.1b exiled this spell while it was resolving, and CR 608.2m
             # let it finish resolving anyway ("If an instant spell, sorcery
@@ -2406,6 +2465,7 @@ class Game(BaseModel):
                 was_cast=True,
                 attach_to=attachment,
             )
+            self._apply_mana_spend_effects(spell)
             self._create_resolution_delayed_triggers(spell)
             # Deliberately *not* popped here, unlike the graveyard-bound branch
             # below. CR 608.2a rechecks a triggered ability's intervening *if*
@@ -2935,7 +2995,17 @@ class Game(BaseModel):
         keyword = keyword_effect_for(ability)
         if keyword is not None:
             return keyword
-        if isinstance(ability.ability, TriggeredAbility) and ability.ability.event is not None:
+        if isinstance(ability.ability, TriggeredAbility):
+            # `event` may be None, and that is not "no effect": CR 603.8's
+            # state triggers ("Some triggered abilities trigger when a game
+            # state ... is true, rather than triggering when an event occurs")
+            # have no `TriggerEvent` to name, and neither does a condition the
+            # parser reads without matching one of the enumerated events -
+            # Caged Sun's "Whenever a land's ability causes you to add one or
+            # more mana of the chosen color". `trigger_effect_for` takes
+            # `TriggerEvent | None` and keys such a row on the condition text,
+            # so gating on the event here was refusing to look the effect up
+            # at all.
             return trigger_effect_for(
                 ability.source_name, ability.ability.event, ability.ability.effect
             )
@@ -3154,7 +3224,9 @@ class Game(BaseModel):
 
         waiting, self.pending_triggers = self.pending_triggers, []
         waiting = [item for item in waiting if self.is_in_game(item.controller)]  # CR 800.4d
-        ordered = apnap_order(waiting, self._turn_order_from_active())
+        ordered = self._order_triggers_by_controller(
+            apnap_order(waiting, self._turn_order_from_active())
+        )
         placed: list[AbilityOnStack] = []
         for ability in ordered:
             targets = self._targets_for_trigger(ability)
@@ -3174,6 +3246,43 @@ class Game(BaseModel):
             self.trigger_targets.pop(ability.source_name, None)
             self.trigger_targets.pop(ability.source_name.split("//")[0].strip(), None)
         return placed
+
+    def _order_triggers_by_controller(self, ordered: list[AbilityOnStack]) -> list[AbilityOnStack]:
+        """CR 603.3b's second half: each controller orders their own block.
+
+        "First, each player, in APNAP order, puts each triggered ability they
+        control on the stack in any order they choose." `apnap_order` settles
+        which player's block goes on first and no more than that - within one
+        block the order is the player's, and until this existed it was the
+        order the abilities happened to trigger in, which nobody was asked
+        about.
+
+        `apnap_order` is a stable sort by seat, so one controller's abilities
+        are already contiguous; each run is handed to `ask_trigger_order` and
+        re-laid in the answer, bottom of the stack first. A block of one is not
+        a choice and `ask_trigger_order` does not ask about it; an unscripted
+        block of several keeps the order it triggered in, which is what
+        `default_answer` returns, so nothing moves unless a caller says so.
+        """
+        result: list[AbilityOnStack] = []
+        index = 0
+        while index < len(ordered):
+            stop = index
+            while stop < len(ordered) and ordered[stop].controller == ordered[index].controller:
+                stop += 1
+            block = ordered[index:stop]
+            index = stop
+            if len(block) < 2:
+                result.extend(block)
+                continue
+            by_id = {ability.id: ability for ability in block}
+            chosen = ask_trigger_order(
+                self.decisions,
+                block[0].controller,
+                tuple((ability.id, ability.source_name) for ability in block),
+            )
+            result.extend(by_id[ability_id] for ability_id in chosen)
+        return result
 
     def _emit_ability_becomes_target(self, ability: AbilityOnStack) -> None:
         """The objects this ability targeted have become targets (CR 115.1).
@@ -3532,6 +3641,63 @@ class Game(BaseModel):
             if card_state in zone_cards:
                 zone_cards.remove(card_state)
 
+    def _create_resolution_replacements(self, spell: CardState) -> None:
+        """A resolving spell that leaves a replacement effect behind (CR 614.1a).
+
+        Plagiarize is the printing: "Until end of turn, if target player would
+        draw a card, instead that player skips that draw and you draw a card."
+        There is nothing for `machines/effects.py` to do when it resolves - no
+        object moves, no counter is placed - and nothing for the layer engine
+        either, because CR 614 is not one of CR 613's layers. What it leaves is
+        a `DrawRedirection` on `Game.draw_redirections`, exactly the way a
+        resolved prevention spell leaves a CR 615.1 shield.
+
+        The targeted player is read off the spell's own announced targets,
+        which CR 608.2b has already rechecked (`spell_fizzles` ran above and a
+        spell whose only target became illegal never got here).
+        """
+        target = next(
+            (
+                ref.username
+                for ref in spell.targets
+                if ref.username is not None and self.is_in_game(ref.username)
+            ),
+            None,
+        )
+        controller = self.controller_of(spell).username
+        redirection = draw_redirection_for(spell.oracle_text or "", controller, target)
+        if redirection is not None:
+            self.draw_redirections.append(redirection)
+
+    def _apply_mana_spend_effects(self, permanent: CardState) -> None:
+        """CR 106.6's additional effect, applied to the permanent that spell
+        just became.
+
+        "Some spells or abilities that produce mana ... have an additional
+        effect that affects the spell or ability that mana is spent on." Arena
+        of Glory's "If that mana is spent on a creature spell, it gains haste
+        until end of turn." is the printing: the sentence travelled with the
+        mana (`ManaPool.spend_effects`), the payment recorded which of it was
+        actually spent here (CR 601.2h, `ManaPayment.spend_effects_spent`) and
+        `CastRecord.spend_effects` carried it through announcement.
+
+        Applied after `enter_the_battlefield` because that is where the object
+        gains a battlefield to be a permanent on: the grant is an ordinary
+        layer 6 continuous effect (CR 613.1f) with an "until end of turn"
+        duration, and every reader of haste - `Game.can_attack`, the summoning
+        sickness check - already asks the computed board.
+
+        A spell that is not the card type the sentence names gets nothing, and
+        a sentence this engine cannot read gets nothing either; neither is
+        refused, because this clause only ever gives something away.
+        """
+        sentences = self.cast_record(permanent).spend_effects
+        if not sentences:
+            return
+        for sentence in sentences:
+            for effect in spend_effect_effects(sentence, permanent, self.continuous_effects.tick()):
+                self.continuous_effects.add(effect)
+
     def _note_left_battlefield(self, permanent: CardState) -> None:
         """Record Revolt's own condition: a permanent left the battlefield
         this turn (an ability word, CR 207.2c - Fatal Push's own printed
@@ -3548,6 +3714,14 @@ class Game(BaseModel):
         Controller, not owner - CR 108.4a's fallback is for a card with no
         controller at all, which a battlefield permanent always has.
         """
+        # CR 608.2h: "If an effect requires information from the game ... the
+        # answer is determined only once, when the effect is applied." An
+        # effect that has to ask about a permanent which is no longer one -
+        # Momentous Fall's "You draw cards equal to the sacrificed creature's
+        # power", whose sacrifice CR 601.2h paid before the spell was even on
+        # the stack - has nothing left to read once the continuous effects
+        # stop applying. This is the last instant they still do.
+        permanent.remember_last_known_power_toughness()
         controller = permanent.controller
         if controller is None:
             return
@@ -6800,8 +6974,26 @@ class Game(BaseModel):
             graveyard_by_controller={
                 player.username: tuple(player.graveyard) for player in self.players_in_game
             },
+            # And the mana pools go with them, for the same reason: Omnath,
+            # Locus of Mana's "Omnath gets +1/+1 for each unspent green mana
+            # you have" counts something the layer engine cannot see standing
+            # on the battlefield either.
+            unspent_mana_by_controller={
+                player.username: dict(self.unspent_mana_of(player).floating)
+                for player in self.players_in_game
+            },
         )
         return self.continuous_effects.board(self.battlefield, context)
+
+    def unspent_mana_of(self, player: Player) -> ManaPool:
+        """The mana this player has produced and not yet spent (CR 106.4).
+
+        Their own `ManaPool`, except while a `CostPayment` of theirs is open:
+        that payment opened as a copy of this very pool and every mana ability
+        activated for it (CR 601.2g) adds into the copy, so the copy is the
+        one that knows what is actually unspent. See `open_payment_pools`.
+        """
+        return self.open_payment_pools.get(player.username, player.mana_pool)
 
     def characteristics_of(self, permanent: CardState) -> Characteristics:
         """This permanent's characteristics right now, layers included (CR 613.5)."""
@@ -9159,8 +9351,22 @@ class Game(BaseModel):
             # `permanent` is passed only to resolve "the chosen type"
             # (CR 614.12a records the answer on the object that was asked).
             restriction = spend_restriction(ability.effect, permanent)
+            # CR 106.6's other clause, tagged onto the same mana and for the
+            # same reason: "have an additional effect that affects the spell
+            # or ability that mana is spent on". Arena of Glory's "If that
+            # mana is spent on a creature spell, it gains haste until end of
+            # turn." is read off the ability's own trailing text by
+            # `machines/abilities.parse_mana_abilities`, so there is nothing
+            # to re-parse here - the sentence only has to reach the pool.
+            spend_effect = (
+                ManaSpendEffect(text=ability.mana.spend_effect)
+                if ability.mana.spend_effect
+                else None
+            )
             for produced in produced_mana:
-                self.player(controller).mana_pool.add(produced, restriction=restriction)
+                self.player(controller).mana_pool.add(
+                    produced, restriction=restriction, spend_effect=spend_effect
+                )
             # CR 405.6c: "If a mana ability both produces mana and has
             # another effect, the mana is produced and the other effect
             # happens immediately." `why_cannot_activate` already refused
@@ -9439,7 +9645,16 @@ class Game(BaseModel):
         self.turn.grant_extra_turn(username)
 
     def controller_of(self, state: StackObject) -> Player:
-        """Who controls this object. Unlabelled cards belong to the active player."""
+        """Who controls this object. Unlabelled cards belong to the active player.
+
+        For a permanent this is CR 613.1b's layer 2 answer, not a stored one:
+        `CardState.controller` consults the computed board (CR 613.5), so a
+        "gain control of it until end of turn" effect reaches every caller
+        here - combat, the state-based actions, a delayed trigger - without
+        any of them knowing the layer system exists. An `AbilityOnStack`'s
+        controller is a plain field, and rightly: CR 603.3 fixes it when the
+        ability is put on the stack.
+        """
         return self.player(state.controller) if state.controller else self.active_player
 
     def _owner_of(self, state: CardState) -> Player:
