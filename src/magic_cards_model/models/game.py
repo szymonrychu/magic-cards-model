@@ -121,6 +121,7 @@ from ..machines.layers import (
     count_card_types,
     grant_ability,
     only_this_incarnation,
+    spend_effect_effects,
 )
 from ..machines.modes import substitute_x
 from ..machines.opening_hand import (
@@ -178,7 +179,7 @@ from .card_state import (
     TargetRef,
     planeswalkers_with_zero_loyalty,
 )
-from .mana import ManaCost, ManaPool, ManaSpend
+from .mana import ManaCost, ManaPool, ManaSpend, ManaSpendEffect
 from .player import Player
 from .token import move_refused, tokens_that_cease_to_exist
 from .zone import Zone
@@ -770,6 +771,16 @@ class CastRecord(BaseModel):
     `modes` - `mode_targets[i]` is what mode `modes[i]` targets."""
     x_value: int = 0
     """The value announced for X (CR 107.3a), which a mode's target count may use."""
+    spend_effects: tuple[str, ...] = ()
+    """CR 106.6's additional-effect sentences carried by the mana that paid
+    this spell's cost, verbatim.
+
+    Filled at CR 601.2h from `ManaPayment.spend_effects_spent`, so it names
+    only the effects of mana that was *actually spent* on this spell - the
+    Arena's other red left floating tags nothing. Read once, as the spell
+    resolves, by `Game._apply_mana_spend_effects`.
+    """
+
     mana_spent: dict[Color, int] = Field(default_factory=dict)
     """How much mana of each colour was spent paying the total cost (CR 601.2h),
     taken from `machines/cost.ManaPayment.spend`. Colourless mana spent on a
@@ -2121,6 +2132,7 @@ class Game(BaseModel):
         mode_targets: list[list[TargetRef]] | None = None,
         x_value: int = 0,
         mana_spent: dict[Color, int] | None = None,
+        spend_effects: list[str] | None = None,
         kicked: int = 0,
         additional_cost_cards: list[UUID] | None = None,
     ) -> "CastRecord":
@@ -2160,6 +2172,7 @@ class Game(BaseModel):
             mode_targets=[list(slice_) for slice_ in mode_targets or []],
             x_value=x_value,
             mana_spent=dict(mana_spent or {}),
+            spend_effects=tuple(spend_effects or ()),
             kicked=kicked,
             additional_cost_cards=list(additional_cost_cards or []),
         )
@@ -2429,6 +2442,7 @@ class Game(BaseModel):
                 was_cast=True,
                 attach_to=attachment,
             )
+            self._apply_mana_spend_effects(spell)
             self._create_resolution_delayed_triggers(spell)
             # Deliberately *not* popped here, unlike the graveyard-bound branch
             # below. CR 608.2a rechecks a triggered ability's intervening *if*
@@ -3593,6 +3607,35 @@ class Game(BaseModel):
         for zone_cards in self.shared_zones.values():
             if card_state in zone_cards:
                 zone_cards.remove(card_state)
+
+    def _apply_mana_spend_effects(self, permanent: CardState) -> None:
+        """CR 106.6's additional effect, applied to the permanent that spell
+        just became.
+
+        "Some spells or abilities that produce mana ... have an additional
+        effect that affects the spell or ability that mana is spent on." Arena
+        of Glory's "If that mana is spent on a creature spell, it gains haste
+        until end of turn." is the printing: the sentence travelled with the
+        mana (`ManaPool.spend_effects`), the payment recorded which of it was
+        actually spent here (CR 601.2h, `ManaPayment.spend_effects_spent`) and
+        `CastRecord.spend_effects` carried it through announcement.
+
+        Applied after `enter_the_battlefield` because that is where the object
+        gains a battlefield to be a permanent on: the grant is an ordinary
+        layer 6 continuous effect (CR 613.1f) with an "until end of turn"
+        duration, and every reader of haste - `Game.can_attack`, the summoning
+        sickness check - already asks the computed board.
+
+        A spell that is not the card type the sentence names gets nothing, and
+        a sentence this engine cannot read gets nothing either; neither is
+        refused, because this clause only ever gives something away.
+        """
+        sentences = self.cast_record(permanent).spend_effects
+        if not sentences:
+            return
+        for sentence in sentences:
+            for effect in spend_effect_effects(sentence, permanent, self.continuous_effects.tick()):
+                self.continuous_effects.add(effect)
 
     def _note_left_battlefield(self, permanent: CardState) -> None:
         """Record Revolt's own condition: a permanent left the battlefield
@@ -9247,8 +9290,22 @@ class Game(BaseModel):
             # `permanent` is passed only to resolve "the chosen type"
             # (CR 614.12a records the answer on the object that was asked).
             restriction = spend_restriction(ability.effect, permanent)
+            # CR 106.6's other clause, tagged onto the same mana and for the
+            # same reason: "have an additional effect that affects the spell
+            # or ability that mana is spent on". Arena of Glory's "If that
+            # mana is spent on a creature spell, it gains haste until end of
+            # turn." is read off the ability's own trailing text by
+            # `machines/abilities.parse_mana_abilities`, so there is nothing
+            # to re-parse here - the sentence only has to reach the pool.
+            spend_effect = (
+                ManaSpendEffect(text=ability.mana.spend_effect)
+                if ability.mana.spend_effect
+                else None
+            )
             for produced in produced_mana:
-                self.player(controller).mana_pool.add(produced, restriction=restriction)
+                self.player(controller).mana_pool.add(
+                    produced, restriction=restriction, spend_effect=spend_effect
+                )
             # CR 405.6c: "If a mana ability both produces mana and has
             # another effect, the mana is produced and the other effect
             # happens immediately." `why_cannot_activate` already refused

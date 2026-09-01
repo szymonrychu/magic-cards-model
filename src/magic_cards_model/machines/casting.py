@@ -3409,6 +3409,18 @@ class Casting(BaseModel):
                     if self.payment is not None and self.payment.mana_payment is not None
                     else {}
                 ),
+                # CR 106.6: the mana that just paid this cost may carry an
+                # additional effect on the spell it was spent on. Which mana
+                # paid is only knowable here, at CR 601.2h, and only from the
+                # settled payment - the pool has already been debited.
+                spend_effects=[
+                    tagged.effect.text
+                    for tagged in (
+                        self.payment.mana_payment.spend_effects_spent
+                        if self.payment is not None and self.payment.mana_payment is not None
+                        else []
+                    )
+                ],
                 kicked=self.kicked,
                 # CR 400.7 makes the spell a new object the moment CR 601.2a
                 # moves it off the exile pile, so the annotation that pile

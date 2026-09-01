@@ -30,11 +30,12 @@ Measured before this file existed: `parse_mana_abilities(card("Arena of
 Glory"))[1]` came back with `rider=None` **and** `unparsed_rider=None`. The
 sentence was skipped and forgotten, so nothing downstream could tell the
 ability apart from a plain "{R}, {T}, Exert: Add {R}{R}." It is now recorded on
-`ManaAbility.spend_effect`. Nothing applies it yet, which is the `xfail` at the
-bottom - but the gap is queryable instead of invisible.
+`ManaAbility.spend_effect` and carried the whole way: `models/mana.
+ManaSpendEffect` tags the mana in the pool, `ManaPayment.spend_effects_spent`
+says which of it CR 601.2h actually spent, `CastRecord.spend_effects` carries
+that to resolution, and `machines/layers.spend_effect_effects` turns the
+sentence into the layer 6 grant (CR 613.1f) the creature enters with.
 """
-
-import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.abilities import parse_mana_abilities
@@ -88,51 +89,6 @@ def test_a_spend_effect_is_not_a_cr_405_6c_rider_and_does_not_block_activation()
     assert scenario.game.why_cannot_activate(arena, 1) is None
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="`ManaAbility.spend_effect` is parsed and consumed by nobody. CR 106.6's "
-    "spend *restriction* has a whole pipeline; its sibling clause - 'have an "
-    "additional effect that affects the spell or ability that mana is spent on' - "
-    "has none, and the four missing pieces are each the exact mirror of a "
-    "restriction piece that is already there. Measured on this board: after "
-    "`activate(arena, index=1)` the pool is `floating={RED: 2}` with "
-    "`restricted=[]`, and the Hound's CastRecord is `mana_spent={RED: 2}` - a "
-    "colour count with nothing to say which mana it was. What is needed, in "
-    "order:\n"
-    "1. models/mana.py: a `ManaSpendEffect` beside `ManaRestriction`, a "
-    "`spend_effect` slot in `ManaPool.add`/`add_all` and in `_Bucket` (today "
-    "`(color, snow, restriction_slot)`), and a `spend_effects_spent` list on "
-    "`ManaPayment` filled by `_settle` exactly the way `restricted_spent` is. "
-    "Without the bucket dimension there is no way to say which of the two red "
-    "mana paid.\n"
-    "2. models/game.py, in `activate_ability`'s mana branch beside "
-    "`restriction = spend_restriction(ability.effect, permanent)`: pass "
-    "`ability.mana.spend_effect` into the same `mana_pool.add` call, so the "
-    "Arena's `{R}{R}` is tagged as it is produced (CR 605.3b - the tag goes on "
-    "the mana, not on the land). This is where the mana in *this* test is made; "
-    "`machines/cost.CostPayment.tap_for_mana` is the other production site and "
-    "needs the same one-line mirror of its `restriction_for_production` call, "
-    "but nothing here traverses it.\n"
-    "3. machines/casting.py at CR 601.2h: once step 1 exists, "
-    "`Casting._move_to_the_stack` reads "
-    "`self.payment.mana_payment.spend_effects_spent` and records it on the "
-    "spell, and models/game.py's `note_cast`/`CastRecord` carry it the way "
-    "`mana_spent` already does.\n"
-    "4. machines/layers.py: 'it gains haste until end of turn' as a "
-    "`ContinuousEffect` on the permanent the creature spell becomes - CR 400.7b "
-    "is why the effect survives the stack-to-battlefield move at all.\n"
-    "None of 1, 2 or 4 is in a file this task owns, and 3 cannot be written "
-    "against a `ManaPayment` field that does not exist yet.\n"
-    "machines/effects.py has **no part** in this pipeline, which is worth "
-    "stating because it is the file every other unread card in this repo needs. "
-    "The sentence is not a spell's or a triggered ability's resolution text at "
-    "all: `machines/abilities.parse_mana_abilities` already reads it off the "
-    "*mana ability's* own trailing text onto `ManaAbility.spend_effect` (the "
-    "first test in this file), and what it produces is a `ContinuousEffect` in "
-    "machines/layers.py, not a `TargetedClause`. So there is no clause parser "
-    "to write here, and adding one would be a second, card-specific reader of "
-    "a sentence that is already parsed.",
-)
 def test_a_creature_cast_with_the_arenas_mana_gains_haste():
     """CR 106.6's second clause, doing what it says.
 

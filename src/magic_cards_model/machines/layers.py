@@ -2769,6 +2769,71 @@ def _target_and_same_name_pump_builder(power: int, toughness: int) -> EffectBuil
     return builder
 
 
+#: CR 106.6's additional-effect clause, as a mana ability prints it: "If that
+#: mana is spent on a creature spell, it gains haste until end of turn."
+#: (Arena of Glory). The subject is the *spell* the mana was spent on, so the
+#: card type it names is checked against that spell, and the grant lands on
+#: the permanent the spell becomes (CR 400.7b: "if a spell is countered or
+#: resolves, the card that represents it ... becomes a new object" - the
+#: permanent a resolving permanent spell becomes is the same object it was on
+#: the stack, which is why "it gains haste" reaches the creature at all).
+_MANA_SPEND_EFFECT_RE = re.compile(
+    r"^if that mana is spent on an? (?P<what>[a-z]+) spell, "
+    r"it gains (?P<keyword>[a-z ]+) until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def spend_effect_grant(text: str) -> tuple[Type, str] | None:
+    """Read a CR 106.6 spend-effect sentence into (card type, keyword).
+
+    `None` for a sentence this module does not recognise, and that is not
+    fail-closed on purpose: unlike a spend *restriction*, this clause never
+    narrows what the mana may pay for, so an unread one costs the game an
+    extra grant and nothing else. Refusing to spend the mana would be strictly
+    worse - the land would stop making usable mana over a sentence that only
+    ever gives something away.
+
+    Only a known keyword is returned (`_KNOWN_KEYWORDS`), for the same reason
+    `_pump_and_keyword_builder`'s own grant checks: `grant_ability` writes the
+    word into the object's abilities and something has to be able to read it
+    back.
+    """
+    match = _MANA_SPEND_EFFECT_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    card_type = _card_type_word(match.group("what"))
+    keyword = match.group("keyword").strip().lower()
+    if card_type is None or keyword not in _KNOWN_KEYWORDS:
+        return None
+    return card_type, keyword.capitalize()
+
+
+def spend_effect_effects(text: str, permanent: CardState, timestamp: int) -> list[ContinuousEffect]:
+    """The continuous effects one spend-effect sentence puts on `permanent`.
+
+    Empty when the sentence is unreadable, or when the spell it was spent on
+    was not of the card type the sentence names - "if that mana is spent on a
+    **creature** spell" says nothing about the instant it also paid for.
+    """
+    grant = spend_effect_grant(text)
+    if grant is None:
+        return []
+    card_type, keyword = grant
+    if card_type not in permanent.types:
+        return []
+    return [
+        ContinuousEffect(
+            description=f"{permanent.name} gains {keyword} (CR 106.6, mana spent on it)",
+            layer=Layer.ABILITY,
+            timestamp=timestamp,
+            duration=Duration.UNTIL_END_OF_TURN,
+            selector=only_this_incarnation(permanent, permanent.zone_change_stamp),
+            modification=grant_ability(keyword),
+        )
+    ]
+
+
 def _keyword_grant_builder(keyword: str) -> EffectBuilder:
     """ ""[Subject] gains <keyword> until end of turn." (CR 613.1f, CR 113.10)."""
 
