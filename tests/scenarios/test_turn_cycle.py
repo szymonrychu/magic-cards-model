@@ -57,11 +57,25 @@ def test_each_player_untaps_only_their_own_permanents():
 
 
 def test_priority_follows_the_active_player_into_the_new_turn():
+    """CR 117.3a, and CR 502.4 on the step it is *not* true of.
+
+    A turn does not begin by handing the new active player priority: it begins
+    with an untap step, in which "no player receives priority" (CR 502.4). The
+    new active player gets it at the beginning of the first step that grants
+    any, which is upkeep.
+    """
     scenario = two_players().build()
+    assert scenario.priority_holder is None, "a game rests at untap (CR 502.4)"
+    scenario.start_at(Step.UPKEEP)
     assert scenario.priority_holder == "alice"
 
     scenario.turn.advance_to(Step.CLEANUP)
-    scenario.advance()
+    scenario.advance()  # bob's untap step
+
+    assert scenario.priority_holder is None
+    assert scenario.turn.active_player == "bob"
+
+    scenario.advance()  # bob's upkeep
 
     assert scenario.priority_holder == "bob"
 

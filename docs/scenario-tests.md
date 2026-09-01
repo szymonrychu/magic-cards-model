@@ -33,6 +33,7 @@ Existing files, as a guide to where a new case belongs:
 | `test_cast_a_creature.py` | A permanent spell from library to battlefield, and paying for it |
 | `test_turn_cycle.py` | The turn passing between players; what resets, what untaps |
 | `test_priority.py` | CR 117: who may act and when, and what a round of passes causes |
+| `test_steps_without_priority.py` | CR 500.3, 502.4, 514.3, 514.3a: the two steps in which nobody receives priority - untap unconditionally, cleanup only "normally" - the refusal a pass gets there, and CR 502.4's second sentence holding an untap-step trigger until priority next exists |
 | `test_special_actions.py` | Playing a land: no stack, no priority window, one per turn |
 | `test_stack.py` | CR 608 last-in-first-out resolution, counterspells included |
 | `test_removal.py` | Damage, and the state-based action that destroys a creature |

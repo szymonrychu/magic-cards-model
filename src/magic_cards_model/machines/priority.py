@@ -6,6 +6,13 @@ item resolves, or, if the stack is empty, the step or phase ends (CR 117.4).
 
 Casting a spell or activating an ability resets the count, and the player who
 did it keeps priority (CR 117.3c).
+
+Not every step hands priority out. CR 502.4: "No player receives priority during
+the untap step, so no spells can be cast or resolve and no abilities can be
+activated or resolve." CR 514.3 says the same of the cleanup step, "normally",
+with CR 514.3a's exception. While a step like that is in progress the machine is
+*withheld*: `holder` is None, nobody may pass, and `Game` restores it as the next
+step that does grant priority begins.
 """
 
 from enum import StrEnum
@@ -52,14 +59,53 @@ class PriorityMachine(BaseModel):
     `decider`.
     """
 
+    withheld: str | None = None
+    """Why no player has priority right now, or None if somebody does.
+
+    CR 502.4 and CR 514.3 each name a step in which no player receives priority.
+    The text stored here is the rule's own, so the refusal a pass gets back is
+    the rule rather than a paraphrase. `Game` is what puts it here and what
+    clears it, because the reason is a property of the step, not of CR 117.
+
+    Deliberately not a bare bool: "nobody has priority" is always for a stated
+    reason, and a caller who is refused deserves to be told which one.
+    """
+
     @property
-    def holder(self) -> str:
+    def seat(self) -> str:
+        """The seat priority sits at, whether or not it is being granted.
+
+        The bookkeeping pointer. `holder` is the rules answer and is None while
+        priority is withheld; this is where it resumes when it comes back, and
+        is what a round of passes is counted against.
+        """
         return self.players[self.holder_index]
 
     @property
-    def decider(self) -> str:
-        """Who may act on the priority currently held (CR 723.5)."""
-        return self.decider_for(self.holder)
+    def holder(self) -> str | None:
+        """Who has priority, or None if nobody does (CR 502.4, 514.3)."""
+        return None if self.withheld is not None else self.seat
+
+    @property
+    def decider(self) -> str | None:
+        """Who may act on the priority currently held (CR 723.5).
+
+        None while priority is withheld: there is no held priority to act on.
+        """
+        holder = self.holder
+        return None if holder is None else self.decider_for(holder)
+
+    def withhold(self, reason: str) -> None:
+        """Nobody receives priority until it is granted again (CR 502.4, 514.3).
+
+        `reason` is quoted straight back at whoever tries to act, so it should be
+        the rule's own wording.
+        """
+        self.withheld = reason
+
+    def grant(self) -> None:
+        """Priority is handed out again; the seat it resumes at is unchanged."""
+        self.withheld = None
 
     def decider_for(self, player: str) -> str:
         """Who makes this player's choices - themselves, unless controlled (CR 723.5)."""
@@ -91,7 +137,7 @@ class PriorityMachine(BaseModel):
         }
         if not self.seated:
             return
-        if self.holder in self.departed:
+        if self.seat in self.departed:
             self._step_holder()
         self.passes = min(self.passes, len(self.seated))
 
@@ -102,7 +148,7 @@ class PriorityMachine(BaseModel):
         """Move priority to the next seat that is still in the game."""
         for _ in range(len(self.players)):
             self.holder_index = (self.holder_index + 1) % len(self.players)
-            if self.holder not in self.departed:
+            if self.seat not in self.departed:
                 return
 
     def reset(self, active_index: int | None = None) -> str:
@@ -110,14 +156,20 @@ class PriorityMachine(BaseModel):
 
         If the active player has left the game, the next player in turn order
         receives priority instead (CR 800.4j).
+
+        Grants priority as well as moving it: this is the "beginning of most
+        steps and phases" moment of CR 117.3a, and a step that is *not* one of
+        those has `Game` withhold it again straight afterwards (CR 502.4,
+        514.3). Returns the seat, which is the holder in every case but that.
         """
         if active_index is not None:
             self.active_index = active_index
         self.holder_index = self.active_index
         self.passes = 0
-        if self.holder in self.departed and self.seated:
+        self.withheld = None
+        if self.seat in self.departed and self.seated:
             self._step_holder()
-        return self.holder
+        return self.seat
 
     def retain(self, player: str) -> str:
         """The player who just acted keeps priority (CR 117.3c).
@@ -135,13 +187,13 @@ class PriorityMachine(BaseModel):
             raise KeyError(f"no player named {player}")
         if player in self.departed:
             raise ValueError(f"{player} has left the game")
-        if player not in (self.holder, self.decider):
-            raise ValueError(f"{player} does not have priority, {self.holder} does")
+        if player not in (self.seat, self.decider_for(self.seat)):
+            raise ValueError(f"{player} does not have priority, {self.seat} does")
 
-        acting_for = self.holder if player != self.holder else player
+        acting_for = self.seat if player != self.seat else player
         self.holder_index = self.players.index(acting_for)
         self.passes = 0
-        return self.holder
+        return self.seat
 
     def pass_priority(self, player: str, stack_is_empty: bool) -> PriorityOutcome:
         """Pass priority. Raises if `player` is not the one holding it.
@@ -173,13 +225,20 @@ class PriorityMachine(BaseModel):
 
         The priority itself does not move (CR 723.3): the controlled player is
         still the one holding it, and still the active player.
+
+        Refuses everybody while priority is withheld (CR 502.4, 514.3): there is
+        no priority to act on, so there is no decision for anyone to make.
         """
         if player not in self.players:
             raise KeyError(f"no player named {player}")
         if player in self.departed:
             raise ValueError(f"{player} has left the game")
-        if self.decider == player:
+        if self.withheld is not None:
+            raise ValueError(self.withheld)
+        if self.decider_for(self.seat) == player:
             return
-        if self.holder == player:
-            raise ValueError(f"{self.decider} is making {player}'s decisions this turn (CR 723.5)")
-        raise ValueError(f"{player} does not have priority, {self.holder} does")
+        if self.seat == player:
+            raise ValueError(
+                f"{self.decider_for(self.seat)} is making {player}'s decisions this turn (CR 723.5)"
+            )
+        raise ValueError(f"{player} does not have priority, {self.seat} does")
