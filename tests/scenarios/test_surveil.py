@@ -70,6 +70,27 @@ def test_surveil_one_can_leave_the_card_on_top():
     assert _graveyard_names(scenario) == []
 
 
+def test_the_surveil_question_names_cr_701_25a_s_own_two_destinations():
+    """CR 701.25a: "put any number of them into your graveyard and the rest on
+    top of your library".
+
+    The graveyard, not a scry's bottom - the whole difference between the two
+    keywords, said in the question itself so a client rendering it does not
+    have to infer the destination from the kind. `Game.look_at_top_and_split`
+    asks the same shape for cards with a third pair of destinations entirely,
+    which is why one shared label would be wrong.
+    """
+    scenario = _library("Island", "Mountain", "Forest").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.surveil_keeping_everything_on_top()
+
+    scenario.game.surveil("alice", 2, source="Dragon's Rage Channeler")
+
+    (asked,) = scenario.questions_asked()
+    assert asked.moved_label == "your graveyard"
+    assert asked.kept_label == "top of your library"
+
+
 def test_a_surveilled_card_is_in_the_graveyard_not_the_bottom_of_the_library():
     """The one difference from a scry, and the reason for this file.
 

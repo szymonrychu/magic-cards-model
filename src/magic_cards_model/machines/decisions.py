@@ -353,6 +353,28 @@ class Decision:
     #: Empty for every other kind, whose `cards` are real cards a lookup can
     #: name.
     card_labels: tuple[str, ...] = ()
+    #: Where the cards the player picks (`CardSplit.moved`) end up, and where
+    #: the ones they do not pick end up, in short lowercase prose: "bottom of
+    #: your library", "your graveyard", "top of your library", "exiled".
+    #:
+    #: `SCRY` and `SURVEIL` are asked with one fixed pair of destinations each
+    #: (CR 701.22a: bottom / top; CR 701.25a: graveyard / top), but
+    #: `Game.look_at_top_and_split` asks the *same* question for cards whose
+    #: pair is neither - Devourer of Destiny keeps one on top and exiles the
+    #: rest - so the kind alone does not say where anything goes. Without
+    #: these, every client has to guess the scry pair, and for Devourer that
+    #: guess is wrong on both halves: it tells the player the card they tick
+    #: goes to the bottom when it is the one card that stays on top, and never
+    #: mentions exile at all.
+    #:
+    #: Note which way round they are. `moved` is *the pile the player opts
+    #: into*, not "the pile that leaves the top": scry's opt-in is bottoming a
+    #: card, Devourer's opt-in is putting one back on top. That is what makes
+    #: an empty answer the right decline in both cases. So do not read
+    #: `moved_label` as "where the cards go that leave the library" - read the
+    #: label, which is why it travels with the question.
+    moved_label: str = ""
+    kept_label: str = ""
     #: Whether the affirmative branch is legal at all (CR 608.2d, CR 119.4).
     #: `False` removes it from `legal_options`, which is how paying 2 life at
     #: 1 life stops being an option rather than becoming a rules violation.

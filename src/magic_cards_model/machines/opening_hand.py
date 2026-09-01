@@ -278,6 +278,18 @@ def _devourer_of_destiny_first_upkeep(
     unscripted player - whose default answer moves nothing - exiles all four,
     which is what declining a "you may put one back" does. More than one card
     kept is refused: the card says "one".
+
+    That reading is the opposite of a scry's, where "moved" is the half that
+    leaves the top, and it is deliberate. `CardSplit.moved` is the pile the
+    player *opts into*, and this card's opt-in is the putting back ("you may
+    put one of those cards back on top"), so an empty answer has to mean "keep
+    nothing, exile all four" - which is exactly what an empty `moved` gives
+    here. Flipping it so that "moved" always meant "leaves the top" would make
+    the do-nothing answer keep all four on top and exile none, the one outcome
+    the card never produces. What used to make that safe to read from the
+    outside was nothing at all, which is the bug: `moved_label` / `kept_label`
+    below now say where each half actually goes, so no client has to infer a
+    direction from the field name.
     """
     player = game.player(trigger.controller)
     kept, rest = game.look_at_top_and_split(
@@ -285,6 +297,8 @@ def _devourer_of_destiny_first_upkeep(
         4,
         source=trigger.source_name,
         prompt="look at the top four cards; you may put one back on top",
+        moved_label="top of your library",
+        kept_label="exiled",
     )
     if len(kept) > 1:
         raise ValueError(

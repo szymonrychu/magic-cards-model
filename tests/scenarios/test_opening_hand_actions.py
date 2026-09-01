@@ -526,6 +526,47 @@ def test_one_card_may_be_put_back_on_top_and_the_rest_exiled():
     )
 
 
+def test_the_upkeep_question_says_where_both_halves_of_the_split_go():
+    """The question a client has to render, and the bug this test exists for.
+
+    `Game.look_at_top_and_split` reuses `DecisionKind.SCRY` for a look-then-
+    split whose two destinations live entirely in the caller, so a client that
+    reads the kind and assumes CR 701.22a's own pair (bottom / top) gets
+    Devourer of Destiny wrong on *both* halves: the picked card stays on top,
+    and the rest are exiled, which a scry never does. `moved_label` and
+    `kept_label` carry the real destinations with the question, and the second
+    half of this test proves the labels are not decoration - the cards go
+    exactly where they say.
+    """
+    match = series(broodscale(), devoted())
+    game = dealt(match, {"alice": "Devourer of Destiny"}, on_the_play="alice")
+    alice = game.player("alice")
+    will_take(game, "alice", "Devourer of Destiny")
+    match.run_mulligans(game)
+    top_four = list(alice.library[:4])
+    kept = top_four[1]
+    game.decisions.add(
+        ScriptedAnswer(
+            kind=DecisionKind.SCRY,
+            value=CardSplit(moved=(kept.id,)),
+            player="alice",
+            source="Devourer of Destiny",
+        )
+    )
+
+    game.advance("alice")
+    game.resolve_top()
+
+    (asked,) = [d for d in game.decisions.asked if d.kind is DecisionKind.SCRY]
+    assert asked.source == "Devourer of Destiny"
+    assert asked.moved_label == "top of your library"
+    assert asked.kept_label == "exiled"
+    assert asked.cards == tuple(state.id for state in top_four)
+    # And the board agrees with the labels.
+    assert alice.library[0] is kept
+    assert [state.zone for state in top_four if state is not kept] == [Zone.EXILE] * 3
+
+
 def test_the_trigger_waits_for_its_own_controller_s_upkeep():
     """CR 603.7b plus `only_when_active`: "your first upkeep", not the next one.
 

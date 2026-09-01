@@ -15651,6 +15651,8 @@ def _merge_look_top_reveal_to_hand_clauses(
             count,
             source=source,
             prompt=f"reveal a {quality_description} card from the top {count}",
+            moved_label="your hand",
+            kept_label="bottom of your library",
         )
         if len(moved) > 1 or any(not matches(state) for state in moved):
             raise ValueError(
@@ -15733,6 +15735,8 @@ def _merge_look_top_split_hand_graveyard_clauses(
             count,
             source=source,
             prompt="put one into your hand, the other into your graveyard",
+            moved_label="your hand",
+            kept_label="your graveyard",
         )
         if len(moved) != 1 or len(rest) != count - 1:
             raise ValueError(
@@ -18660,6 +18664,8 @@ def _explore(game: "Game", permanent: CardState, controller: Player, source_name
         1,
         source=source_name,
         prompt="put the revealed card into your graveyard, or back on top",
+        moved_label="your graveyard",
+        kept_label="top of your library",
     )
     for state in to_graveyard:
         game.put_into_graveyard(state)

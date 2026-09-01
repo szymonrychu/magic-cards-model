@@ -67,6 +67,26 @@ def test_scry_two_leaves_the_library_alone_when_both_stay_on_top():
     assert _names(scenario) == ["Island", "Mountain", "Forest", "Swamp"]
 
 
+def test_the_scry_question_names_cr_701_22a_s_own_two_destinations():
+    """CR 701.22a: "put any number of them on the bottom of your library ...
+    and the rest on top of your library".
+
+    `Game.look_at_top_and_split` asks a `DecisionKind.SCRY`-shaped question for
+    cards whose destinations are neither of those, so the kind alone does not
+    say where a picked card goes. A real scry has to keep saying the bottom and
+    the top, or one wrong label would be shared by all three askers.
+    """
+    scenario = _library("Island", "Mountain", "Forest").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.scry_keeping_everything_on_top()
+
+    scenario.game.scry("alice", 2, source="Preordain")
+
+    (asked,) = scenario.questions_asked()
+    assert asked.moved_label == "bottom of your library"
+    assert asked.kept_label == "top of your library"
+
+
 def test_a_card_put_on_the_bottom_goes_under_everything_else():
     """CR 701.22a: "on the bottom of your library".
 

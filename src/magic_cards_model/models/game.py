@@ -4920,6 +4920,10 @@ class Game(BaseModel):
                 source=source,
                 amount=count,
                 cards=tuple(state.id for state in looked_at),
+                # CR 701.22a's own two destinations, quoted above, so a client
+                # does not have to infer them from the kind.
+                moved_label="bottom of your library",
+                kept_label="top of your library",
             )
         )
         assert isinstance(answer, CardSplit)
@@ -4964,6 +4968,10 @@ class Game(BaseModel):
                 source=source,
                 amount=count,
                 cards=tuple(state.id for state in looked_at),
+                # CR 701.25a's own two destinations, quoted above: the same
+                # "rest on top" as a scry, a different first half.
+                moved_label="your graveyard",
+                kept_label="top of your library",
             )
         )
         assert isinstance(answer, CardSplit)
@@ -4985,6 +4993,8 @@ class Game(BaseModel):
         player: Player | str,
         count: int,
         *,
+        moved_label: str,
+        kept_label: str,
         source: str | None = None,
         prompt: str | None = None,
     ) -> tuple[list[CardState], list[CardState]]:
@@ -5019,6 +5029,23 @@ class Game(BaseModel):
         not describe (Duskwatch Recruiter's is CR 702's "look at" wording, not
         scry) are answerable to their own card's printed order, not this
         method's name.
+
+        `moved_label` and `kept_label` are required, and required for exactly
+        that reason: the two destinations live only in the caller, so a
+        question published without them tells a client nothing about where
+        either half goes and every client is left to guess the scry pair.
+        Devourer of Destiny is the card that broke on that guess - its picked
+        half stays on *top* and its rest is *exiled*, the opposite of a scry
+        on both halves - so the destinations now travel with the question,
+        stamped onto `Decision.moved_label` / `Decision.kept_label`.
+
+        Which half is `moved` is the caller's choice and is *not* fixed to
+        "the half that leaves the library": `moved` is the pile the player
+        actively opts into. For a scry that is the bottomed cards; for
+        Devourer's "you may put one of those cards back on top" it is the one
+        card put back. Keeping it that way is what makes the empty answer -
+        what an unscripted or declining player gives - the correct decline for
+        both. See `Decision.moved_label`.
         """
         if isinstance(player, str):
             player = self.player(player)
@@ -5034,6 +5061,8 @@ class Game(BaseModel):
                 source=source,
                 amount=count,
                 cards=tuple(state.id for state in looked_at),
+                moved_label=moved_label,
+                kept_label=kept_label,
             )
         )
         assert isinstance(answer, CardSplit)
