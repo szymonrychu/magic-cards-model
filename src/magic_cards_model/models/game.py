@@ -27,6 +27,7 @@ from ..machines.casting import (
     PlayPermission,
     play_permissions_on,
     usable_play_permission,
+    why_cannot_cast_restriction,
 )
 from ..machines.casting_restrictions import (
     CastingRuleEffect,
@@ -85,6 +86,7 @@ from ..machines.delayed import (
 )
 from ..machines.effects import (
     AnaphoricClauseNotice,
+    CastFromHandExileNotice,
     ConditionalClauseNotice,
     ControlReplacementNotice,
     DelayedClauseNotice,
@@ -1121,6 +1123,16 @@ class Game(BaseModel):
     trigger used to resolve offering no decision at all, with nothing anywhere
     recording that a choice had gone unoffered. The same unreadable-is-not-
     the-same-as-no-effect record every other notice list here keeps."""
+
+    cast_from_hand_exile_notices: list[CastFromHandExileNotice] = Field(default_factory=list)
+    """One entry per "Whenever a player casts a spell from their hand, that
+    player exiles it[, ...]" effect (Knowledge Pool's, Possibility Storm's)
+    whose tail - what happens after the exile - this wave could not read.
+    Knowledge Pool's own reported defect: ability 2 used to resolve, put
+    nothing in exile, grant no free cast, and leave the cast spell sitting on
+    the stack, with nothing anywhere recording that a clause had gone
+    unread. The same unreadable-is-not-the-same-as-no-effect record every
+    other notice list here keeps."""
 
     conditional_clause_notices: list[ConditionalClauseNotice] = Field(default_factory=list)
     """One entry per "you may sacrifice `<restriction>`. If you do,
@@ -2225,6 +2237,29 @@ class Game(BaseModel):
         """
         if move_refused(card_state, Zone.STACK) is not None:
             return card_state
+        # CR 400.7: the card is about to become a new object on the stack, so
+        # its origin has to be read *now* - `GameEvent.origin_zone` is what
+        # Knowledge Pool's "from their hand" and Appa, Steadfast Guardian's
+        # "from exile" restrict a CAST_SPELL trigger to (`machines/triggers.
+        # _origin_zone_matches`).
+        #
+        # `card_state.zone` is *not* reliably that answer any more by the
+        # time this method runs: `machines/casting.Casting._move_to_the_
+        # stack` moves the card onto `game.stack` itself, at CR 601.2a's own
+        # "first step" of the announcement, well before `Casting.cast()`
+        # calls this method - so for a spell cast the ordinary way,
+        # `card_state.zone` already reads `Zone.STACK` here, which is not an
+        # origin at all. `Casting.cast()` calls `Game.note_cast` with the
+        # real origin before it ever reaches this method (see that method's
+        # own `self.origin_zone`), so the `CastRecord` it just wrote is
+        # consulted first; `cast_free_from_exile` is the one other caller,
+        # ordered the same way for the same reason (its own docstring), so
+        # its record is there too. `card_state.zone` is the fallback for a
+        # spell that reaches here with no record at all - there is no such
+        # path in this engine today, but reading a zone that has not been
+        # moved yet is still the right default if one is ever added.
+        record = self.cast_records.get(card_state.id)
+        origin_zone = record.origin_zone if record is not None else card_state.zone
         # Exile and the command zone are modelled as shared, not per-player
         # (`shared_zones`, not `owner.zones`) - a card foretold, plotted, or
         # exiled by an Adventure sits there, and was left behind (duplicated
@@ -2267,6 +2302,7 @@ class Game(BaseModel):
                 subject_colors=card_state.colors,
                 player=controller,
                 amount=int(mana_value),
+                origin_zone=origin_zone,
             )
         )
         # CR 117.3c gives priority straight back to the caster, so this is the
@@ -2712,7 +2748,9 @@ class Game(BaseModel):
             )
         )
 
-    def cast_free_from_exile(self, card: CardState, controller: str) -> CardState | None:
+    def cast_free_from_exile(
+        self, card: CardState, controller: str, *, keyword: str | None = None
+    ) -> CardState | None:
         """CR 702.88a/b: cast `card` straight out of exile, choosing new
         targets (CR 601.2c) and paying no mana cost (CR 118.9's alternative
         cost, via CR 702.88b's "follows the rules for paying alternative
@@ -2732,7 +2770,30 @@ class Game(BaseModel):
         `Game.note_cast` records `origin_zone=Zone.EXILE` so a card that
         rebounds *again* by some other effect's rebound (there is only one in
         the pool, but the record does not know that) is never mistaken for
-        one cast from hand a second time.
+        one cast from hand a second time. Called **before** `put_on_stack`,
+        not after: that method reads the `CastRecord` this call writes to
+        learn the cast's real origin for its own `GameEvent.origin_zone`
+        (CR 400.7 - the card is already a stack object by the time `put_on_
+        stack` could otherwise ask `card.zone`, which is why it cannot simply
+        read the zone itself here the way it does for a plain hand-cast). A
+        free cast this method makes is from exile, never from hand, and
+        `Knowledge Pool`'s and `Possibility Storm`'s own "casts a spell from
+        their hand" trigger reads exactly this to avoid re-triggering on the
+        free cast it itself granted.
+
+        `keyword` is `CastRecord.keyword` - CR 601.2b's own "the player
+        announces ... any keyword actions". `None` by default, because most
+        of this method's callers cast under no keyword at all: Fight
+        Rigging's hideaway free cast (CR 702.75a) and Isochron Scepter's
+        copy-and-cast (CR 707.10) are alternative-cost casts granted by a
+        printed ability, not a keyword action, and Knowledge Pool's and
+        Possibility Storm's own free casts (CR 118.9's alternative cost, read
+        off the card's own "without paying its mana cost" text) are the same
+        shape - no keyword names any of them. Only `_create_rebound_delayed_
+        trigger`'s callback actually rebounds (CR 702.88a), and passes
+        `keyword="Rebound"` itself; every other call site used to get that
+        same label unconditionally, which mislabelled a hideaway or
+        Isochron-copy cast's `CastRecord` as a rebound it never was.
         """
         profile = profile_for_text(card.oracle_text or "")
         targets: list[TargetRef] = []
@@ -2756,9 +2817,41 @@ class Game(BaseModel):
             assert isinstance(chosen, (list, tuple))
             targets = list(chosen)
         card.targets = targets
+        self.note_cast(card, keyword=keyword, origin_zone=Zone.EXILE)
         self.put_on_stack(card, controller)
-        self.note_cast(card, keyword="Rebound", origin_zone=Zone.EXILE)
         return card
+
+    def has_legal_free_cast(self, card: CardState, controller: str) -> bool:
+        """Whether `cast_free_from_exile(card, controller)` would actually
+        cast something, without doing it.
+
+        Two independent ways a nominally-legal-looking free cast is not
+        actually one, both checked here rather than discovered by trying and
+        failing:
+
+        - **CR 611.1** - a flat prohibition ("Your opponents can't cast
+          noncreature spells this turn", Grafdigger's Cage's graveyard/library
+          ban) holds at any timing. `machines.keywords.cascade` already checks
+          this for its own free cast (`why_cannot_cast_restriction`); this
+          reuses the same function rather than a second copy of the same
+          check.
+        - **CR 601.2c** - casting a targeted spell is illegal when nothing
+          satisfies its restriction, which `cast_free_from_exile` itself only
+          discovers by asking for targets and getting none back, returning
+          `None` afterwards.
+
+        An ability offering a *choice* among several exiled cards - Knowledge
+        Pool's own free cast - needs to know this **before** asking, so an
+        uncastable card can be left off the menu (CR 608.2d: "the player
+        can't choose an option that's illegal or impossible") instead of
+        being offered, chosen, and only then discovered to do nothing.
+        """
+        if why_cannot_cast_restriction(card, controller, self) is not None:
+            return False
+        profile = profile_for_text(card.oracle_text or "")
+        if not profile.requirements:
+            return True
+        return bool(self._legal_target_candidates(profile, controller, card.id))
 
     def copy_spell(self, spell: CardState, controller: str | None = None) -> CardState:
         """CR 707.10: put a copy of `spell` onto the stack.
@@ -6483,6 +6576,55 @@ class Game(BaseModel):
         )
         return spell
 
+    def exile_from_stack(self, spell: CardState) -> CardState:
+        """Exile a spell straight off the stack - CR 701.13a's exile verb, a
+        different move from `counter`'s CR 701.6a entirely, not a variant of
+        it.
+
+        Knowledge Pool's and Possibility Storm's identical opening clause -
+        "Whenever a player casts a spell from their hand, that player exiles
+        it" - is CR 601.2a's third way a spell can leave the stack besides
+        resolving or being countered ("A spell remains on the stack until it
+        resolves ... is countered, or a rule or effect moves it elsewhere").
+        This is that move, and it is built as its own method rather than a
+        call to `counter(spell, to_exile=True)` because that method's
+        `to_exile` branch is wrong for this shape in exactly the two ways its
+        own docstring warns against:
+
+        - **`counter`'s `cannot_be_countered` guard sits above its `to_exile`
+          branch.** CR 113.6g's "can't be countered" disables CR 701.6a's
+          counter verb only; exiling is a different verb (CR 701.13a) that
+          the same clause says nothing about, so a spell that can't be
+          countered is exiled all the same - going through `counter` would
+          wrongly let such a spell resolve untouched instead.
+        - **`counter` always emits `TriggerEvent.SPELL_IS_COUNTERED`.**
+          Nothing here was countered - CR 701.6a's "cancel it" never
+          happened, the spell is simply relocated - so emitting that event
+          would wrongly fire every "whenever a spell is countered" ability in
+          the game for a spell that only left the stack.
+
+        What *is* reused, because it is correct for both moves: the spell is
+        taken out of every zone (`_take_out_of_every_zone` - exile and the
+        stack are both shared zones, CR 400.2), removed from combat (CR
+        506.4 - moot for a spell that was never a permanent, kept for the
+        same symmetry `counter` keeps it for), and its `CastRecord` popped
+        so a later intervening *if* about how it was cast fails closed
+        instead of reading a stale record for an object that, per CR 400.7,
+        is now new (`machines/triggers._cast_record_for_clause`).
+        `CardState.move_to` already resets `targets` for every destination
+        but the stack (CR 400.7), so the exiled spell keeps none - no
+        further cleanup is needed for that half.
+        """
+        if spell not in self.stack:
+            raise ValueError(f"{spell.name} is not on the stack")
+        self.stack.remove(spell)
+        self._take_out_of_every_zone(spell)
+        self.combat.remove(spell.id)  # CR 506.4
+        spell.move_to(Zone.EXILE)
+        self.exile.append(spell)
+        self.cast_records.pop(spell.id, None)
+        return spell
+
     def destroy(self, permanent: CardState) -> CardState:
         """Put a permanent into its controller's graveyard.
 
@@ -6754,15 +6896,35 @@ class Game(BaseModel):
         imprinted`) and its "Return the exiled card to its owner's hand"
         ability both call this rather than keeping their own pointer.
         """
-        for card in self.exile:
-            annotation = card.exile_annotation
-            if (
-                annotation is not None
-                and annotation.marker in (ExileMarker.IMPRINTED, ExileMarker.HIDEAWAY)
-                and annotation.linked_permanent_id == permanent_id
-            ):
-                return card
-        return None
+        found = self.cards_imprinted_on(permanent_id)
+        return found[0] if found else None
+
+    def cards_imprinted_on(self, permanent_id: UUID) -> list[CardState]:
+        """Every card exiled *with* `permanent_id` - CR 607.3's plural half of
+        `card_imprinted_on`'s own linked-ability read.
+
+        Ugin's Labyrinth and Fight Rigging's hideaway both ever exile at most
+        one card with themselves, which is all `card_imprinted_on` (now this
+        method's first hit, kept for those two callers) ever needed. Knowledge
+        Pool links up to three cards per player on entry (CR 607.2a's own
+        "each player exiles the top three cards of their library") plus
+        whatever its second ability has exiled on earlier triggers (CR
+        607.1c: an ability is linked to itself), and a later trigger has to
+        offer *all* of them, not just the first one this scan happens to
+        reach - the exact plural CR 607.3 names outright: "the ability refers
+        to each of the exiled cards."
+
+        Returned in the shared exile zone's own order, which is insertion
+        order (`Game.exile_permanent`/`exile_top_of_library` append), not any
+        particular game-meaningful order - nothing in the pool asks for one.
+        """
+        return [
+            card
+            for card in self.exile
+            if (annotation := card.exile_annotation) is not None
+            and annotation.marker in (ExileMarker.IMPRINTED, ExileMarker.HIDEAWAY)
+            and annotation.linked_permanent_id == permanent_id
+        ]
 
     def exile_permanent(self, permanent: CardState) -> CardState:
         """Move a permanent to the shared exile zone.

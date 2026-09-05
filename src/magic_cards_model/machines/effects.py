@@ -4599,6 +4599,277 @@ def _parse_hideaway_play_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+# --------------------------------------------------------------------------
+# "Whenever a player casts a spell from their hand, that player exiles it
+# [, ...]" - Knowledge Pool and Possibility Storm's shared opening clause.
+# --------------------------------------------------------------------------
+
+#: Knowledge Pool: "Whenever a player casts a spell from their hand, that
+#: player exiles it. If the player does, they may cast a spell from among
+#: other cards exiled with this artifact without paying its mana cost."
+#: Possibility Storm: "Whenever a player casts a spell from their hand, that
+#: player exiles it, then exiles cards from the top of their library until
+#: they exile a card that shares a card type with it. That player may cast
+#: that card without paying its mana cost. Then they put all cards exiled
+#: with this enchantment on the bottom of their library in a random order."
+#: Both confirmed with `resolve_cards` in the session that wrote this - the
+#: opening clause is byte-identical, matched here on the *whole*, unsplit
+#: `effect_text` (`TriggeredAbility.effect`, everything after "a player casts
+#: a spell from their hand,") for the same reason `_ability_effect_or_notice`'s
+#: docstring gives four other times: Knowledge Pool's second sentence, "If
+#: the player does, ...", is CR 118.12 anaphora back to the first, and
+#: `_prepare_effect_clauses` would cut the two apart at the period before
+#: either parser saw the dependency between them.
+_CAST_FROM_HAND_THEN_EXILE_RE = re.compile(
+    r"^that player exiles it(?P<tail>.*)$", re.IGNORECASE | re.DOTALL
+)
+
+#: Knowledge Pool's own tail. "This `<type>`" is CR 201.4's plain self-
+#: reference by printed type (artifact, here) rather than a name - Possibility
+#: Storm prints the identical shape with "this enchantment", which is why the
+#: word is a wildcard rather than the literal "artifact".
+_KNOWLEDGE_POOL_TAIL_RE = re.compile(
+    r"^\.\s*if the player does,\s*they may cast a spell from among other cards exiled with "
+    r"this \w+ without paying its mana cost\.?$",
+    re.IGNORECASE,
+)
+
+#: Possibility Storm's own tail - a genuinely different template from
+#: Knowledge Pool's past the shared opening: dig from the top of the library
+#: until a card sharing a type with the exiled spell turns up (CR 701.17a's
+#: "look at cards from the top of a library" shape, bounded by a type match
+#: rather than a count), offer that one card (not a choice among several),
+#: then bottom everything this ability exiled that was not cast.
+_POSSIBILITY_STORM_TAIL_RE = re.compile(
+    r"^,\s*then exiles cards from the top of (?:their|his or her) library until they exile a "
+    r"card that shares a card type with it\.\s*"
+    r"that player may cast that card without paying its mana cost\.\s*"
+    r"then they put all cards exiled with this \w+ on the bottom of (?:their|his or her) "
+    r"library in a random order\.?$",
+    re.IGNORECASE,
+)
+
+
+def _exile_cast_spell_or_none(
+    game: "Game", ability: AbilityOnStack
+) -> tuple[CardState, str] | None:
+    """The shared "that player exiles it" half of both effects below.
+
+    `None` when CR 118.12's mandatory action could not even be started - the
+    cast spell named by `ability.event.subject_id` is no longer on the stack,
+    because a second copy of this same permanent's own trigger already
+    exiled it (two Knowledge Pools: the ability that resolves *second* finds
+    nothing left to exile) or because the spell was countered in response
+    while this trigger sat above it. Either way, CR 118.12's "if the player
+    does" (Knowledge Pool) and Possibility Storm's own unconditional
+    anaphora both read false in that case - the caller does nothing further,
+    matching `docs/scenario-tests.md`'s own two-Pools and countered-in-
+    response cases.
+
+    Returns the exiled spell and **`GameEvent.player`** - who cast it, and
+    therefore who does the exiling and gets the free cast (CR 602.2b's
+    controller of the *triggered ability* has nothing to do with this: the
+    condition is "a player casts a spell", not "you cast a spell", so this
+    fires for either seat, and the ability's own `controller` is Knowledge
+    Pool's controller, not the caster). Using `ability.controller` here is
+    the trap: it would hand the Pool's controller a free spell every time an
+    opponent cast something.
+    """
+    event = ability.event
+    if event is None or event.subject_id is None or event.player is None:
+        return None
+    spell = game.find_by_id(event.subject_id)
+    if not isinstance(spell, CardState) or spell not in game.stack:
+        return None
+    game.exile_from_stack(spell)
+    return spell, event.player
+
+
+def _knowledge_pool_free_cast_effect(game: "Game", ability: AbilityOnStack) -> None:
+    """Knowledge Pool's second ability, once `_parse_cast_from_hand_then_
+    exile_clause` has matched `_KNOWLEDGE_POOL_TAIL_RE`.
+
+    The exiled spell is linked to the permanent (CR 607.2a) exactly the way
+    `_parse_imprint_clause`'s hand-exile shape already links its own choice -
+    self-linked, per CR 607.1c, since this same ability is what a *later*
+    trigger reads to find it again. `Game.cards_imprinted_on` is CR 607.3's
+    plural: every card this permanent has ever exiled this way, across every
+    trigger, not just this one - "other cards exiled with this artifact"
+    (excluding, by id, only the card *this* trigger just exiled, never a
+    same-named copy exiled earlier).
+
+    The choice follows `_parse_imprint_clause`'s own established order
+    (`docs/engine-coverage.md`'s Imprint row): `DecisionKind.MAY` with
+    `affirmative_is_legal` true only when a legal candidate exists (CR
+    608.2d), then `DecisionKind.CHOOSE_CARDS` for which one. No new
+    `DecisionKind` - both already exist and are answered everywhere a client
+    talks to this engine.
+
+    `Game.has_legal_free_cast` filters the candidate list *before* the MAY
+    is even asked, rather than discovering after the fact that
+    `cast_free_from_exile` returned `None` for a targeted candidate with no
+    legal target (CR 601.2c) - an uncastable card is not a legal choice
+    (CR 608.2d), so it is never offered as one.
+    """
+    result = _exile_cast_spell_or_none(game, ability)
+    if result is None:
+        return
+    spell, exiler = result
+    source_id = ability.source_id
+    if source_id is None:
+        return
+    spell.exile_annotation = ExileAnnotation(
+        marker=ExileMarker.IMPRINTED, owner=spell.owner, linked_permanent_id=source_id
+    )
+    candidates = [
+        card
+        for card in game.cards_imprinted_on(source_id)
+        if card.id != spell.id and game.has_legal_free_cast(card, exiler)
+    ]
+    decision = Decision(
+        kind=DecisionKind.MAY,
+        player=exiler,
+        prompt=(
+            f"cast a spell from among other cards exiled with {ability.source_name} "
+            "without paying its mana cost"
+        ),
+        source=ability.source_name,
+        affirmative_is_legal=bool(candidates),
+        cards=tuple(card.id for card in candidates),
+    )
+    if not game.ask(decision):
+        return
+    chosen_ids = game.ask(
+        Decision(
+            kind=DecisionKind.CHOOSE_CARDS,
+            player=exiler,
+            prompt="choose a card to cast without paying its mana cost",
+            source=ability.source_name,
+            amount=1,
+            cards=tuple(card.id for card in candidates),
+        )
+    )
+    assert isinstance(chosen_ids, tuple)
+    by_id = {card.id: card for card in candidates}
+    chosen = by_id[chosen_ids[0]]
+    game.cast_free_from_exile(chosen, exiler)
+
+
+def _possibility_storm_effect(game: "Game", ability: AbilityOnStack) -> None:
+    """Possibility Storm, once `_parse_cast_from_hand_then_exile_clause` has
+    matched `_POSSIBILITY_STORM_TAIL_RE`.
+
+    Structurally `machines.keywords.cascade` with a different stopping
+    condition and a different resting place for the exiled spell itself:
+    dig from the top of the library, sharing a card type with the just-
+    exiled spell rather than a lesser mana value, offer the one hit found (not
+    a choice among several - CR 608.2d's plain "may", the same shape
+    `_parse_hideaway_play_clause` uses for its own single fixed card), then
+    bottom **everything this ability exiled** that was not cast - the exiled
+    spell itself included, since it is "exiled with this enchantment" too
+    (CR 607.2a) and this card names no other resting place for it, unlike
+    Knowledge Pool's silence (which is exactly why Knowledge Pool's own
+    unused cards stay in exile forever and this card's do not).
+
+    `Game.has_legal_free_cast` gates the "may cast" the same way it gates
+    Knowledge Pool's menu: an uncastable hit (CR 611.1's flat prohibitions,
+    or CR 601.2c's no-legal-target) is never offered the choice at all.
+
+    The shuffle is `Random`, seeded off `Game.shuffle_seed`/`shuffles_
+    performed` the same reproducible way `machines.keywords.cascade` and
+    every other "bottom in a random order" clause in this module already
+    are, not a bare `Random()` a scenario could not pin down.
+    """
+    result = _exile_cast_spell_or_none(game, ability)
+    if result is None:
+        return
+    spell, exiler = result
+    source_id = ability.source_id
+    if source_id is None:
+        return
+    spell.exile_annotation = ExileAnnotation(
+        marker=ExileMarker.IMPRINTED, owner=spell.owner, linked_permanent_id=source_id
+    )
+    owner = game.player(exiler)
+    spell_types = set(spell.types)
+    dug: list[CardState] = []
+    hit: CardState | None = None
+    while owner.library:
+        state = owner.library[0]
+        owner.move(state, Zone.EXILE)
+        game.exile.append(state)
+        state.exile_annotation = ExileAnnotation(
+            marker=ExileMarker.IMPRINTED, owner=state.owner, linked_permanent_id=source_id
+        )
+        dug.append(state)
+        if set(state.types) & spell_types:
+            hit = state
+            break
+
+    cast_hit = False
+    if hit is not None and game.has_legal_free_cast(hit, exiler):
+        decision = Decision(
+            kind=DecisionKind.MAY,
+            player=exiler,
+            prompt=f"cast {hit.name} without paying its mana cost",
+            source=ability.source_name,
+            affirmative_is_legal=True,
+            cards=(hit.id,),
+        )
+        if game.ask(decision):
+            cast_hit = game.cast_free_from_exile(hit, exiler) is not None
+
+    bottomed = [spell, *(state for state in dug if not (cast_hit and state is hit))]
+    rng = Random(f"{game.shuffle_seed}:{game.shuffles_performed}:possibility-storm")  # noqa: S311
+    rng.shuffle(bottomed)
+    game.shuffles_performed += 1
+    for state in bottomed:
+        if state in game.exile:
+            game.exile.remove(state)
+            owner.add(state, Zone.LIBRARY)  # the bottom of the library
+
+
+def _parse_cast_from_hand_then_exile_clause(text: str) -> AbilityEffect | None:
+    """Knowledge Pool's and Possibility Storm's shared opening clause - see
+    the block comment above `_CAST_FROM_HAND_THEN_EXILE_RE` for the two
+    printings and why this reads the whole, unsplit text.
+
+    Tried by `_ability_effect_or_notice` ahead of `_prepare_effect_clauses`'
+    per-clause split, joining four existing precedents that whole docstring
+    already lists for the same reason: `_parse_conditional_sacrifice_clause`'s
+    "you may sacrifice ... If you do, ..." (CR 118.12), `_parse_mana_adding_
+    trigger`'s "adds an additional <mana>", `parse_casting_rule_clause`'s
+    "instant and sorcery spells ... cost {1} less", and `_parse_choose_name_
+    search_and_exile_whole_text` - each an instruction `_CLAUSE_SEPARATOR`'s
+    bare-comma/period/"and" splitting would otherwise cut apart before a
+    per-clause parser ever saw the dependency between the halves.
+
+    A recognised head with an unread tail refuses the *whole* ability
+    (`CastFromHandExileNotice`) rather than exiling the spell and dropping
+    the tail - one paragraph is one ability (`docs/scenario-tests.md`), and a
+    half-applied "exiled it but nothing else happened" is a wrong board that
+    looks like a legal one.
+    """
+    whole = " ".join(_strip_non_effect_preamble(text).split())
+    match = _CAST_FROM_HAND_THEN_EXILE_RE.match(whole)
+    if match is None:
+        return None
+    tail = match.group("tail")
+    if _KNOWLEDGE_POOL_TAIL_RE.match(tail) is not None:
+        return _knowledge_pool_free_cast_effect
+    if _POSSIBILITY_STORM_TAIL_RE.match(tail) is not None:
+        return _possibility_storm_effect
+
+    def unread_tail_notice_only(game: "Game", ability: AbilityOnStack) -> None:
+        game.cast_from_hand_exile_notices.append(
+            CastFromHandExileNotice(
+                source_id=ability.source_id, source_name=ability.source_name, text=tail
+            )
+        )
+
+    return unread_tail_notice_only
+
+
 #: Back from the Brink: "Exile a creature card from your graveyard and pay
 #: its mana cost: Create a token that's a copy of that card." "That card" is
 #: not a target (CR 115.1 - the sentence never says "target") - it is CR
@@ -7670,6 +7941,40 @@ class ImprintNotice(BaseModel):
     """The unreadable clause itself, as printed."""
 
 
+class CastFromHandExileNotice(BaseModel):
+    """One "Whenever a player casts a spell from their hand, that player
+    exiles it[, ...]" effect (Knowledge Pool's and Possibility Storm's shared
+    opening clause, confirmed identical with `resolve_cards` in the session
+    that wrote this) whose *tail* - what happens after the exile - this wave
+    could not read.
+
+    This is Knowledge Pool's own reported defect, recorded rather than
+    repeated: the trigger fired and resolved, the cast spell stayed on the
+    stack, and nothing anywhere said a clause had gone unread. Once the
+    shared head is recognised (`_parse_cast_from_hand_then_exile_clause`),
+    every printing this wave knows about is read to the end - Knowledge
+    Pool's "if the player does, they may cast ..." and Possibility Storm's
+    dig-until-shared-type tail both parse in full - so this notice exists for
+    a *third* printing of the same opening this wave has not seen, the same
+    "unreadable is not the same as no effect" record `AnaphoricClauseNotice`,
+    `ImprintNotice`, `ModeNotice`, `LayerNotice`, and `CostModifierNotice`
+    already keep for their own gaps. One paragraph is one ability
+    (`docs/scenario-tests.md`'s own convention): the exile and the tail are
+    one CR 608.2c instruction, so an unread tail refuses the *whole* thing -
+    the spell is **not** exiled either - rather than running the readable
+    half and silently dropping the rest, which would be a half-applied
+    effect masquerading as a correct one.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    source_id: UUID | None
+    source_name: str
+    text: str
+    """The unreadable tail, as printed - everything after "that player
+    exiles it"."""
+
+
 def _is_layer_effect_text(text: str) -> bool:
     """True if `text` - a resolving ability's or spell's own effect text - is
     one of `machines.layers`'s one-shot resolution shapes (CR 611.2), or
@@ -8873,7 +9178,21 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     Raveler's own +1) too: neither contains a bare " and ", so both already
     matched by the per-clause path below and now simply match one step
     earlier, for the identical effect.
+
+    Tried ahead of everything else too, now: `_parse_cast_from_hand_then_
+    exile_clause` against the whole, unsplit text - Knowledge Pool's "Whenever
+    a player casts a spell from their hand, that player exiles it. If the
+    player does, ..." is the reported defect this fifth precedent exists for:
+    `_prepare_effect_clauses` cuts the ability at the period, and the second
+    fragment's "If the player does" is CR 118.12 anaphora straight back to
+    the first - read apart, neither `parse_mixed_effect` clause parser below
+    had any idea the two sentences were one instruction, so ability 2
+    resolved and did nothing: no exile, no `Notice`, the gap invisible.
+    Possibility Storm shares the identical opening and is read the same way.
     """
+    cast_from_hand_then_exile = _parse_cast_from_hand_then_exile_clause(effect_text)
+    if cast_from_hand_then_exile is not None:
+        return cast_from_hand_then_exile
     casting_rule_whole = parse_casting_rule_clause(effect_text, for_spell=False)
     if casting_rule_whole is not None:
         return casting_rule_whole
@@ -10299,11 +10618,59 @@ def _merge_each_player_clauses(
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        # `_permanent_id_and_name` (defined below) is called for its id half
+        # only - see the exile-linking comment inside the loop for why.
+        source_id, _ = _permanent_id_and_name(stack_object, for_spell=for_spell)
         for step in ordered:
             # CR 608.2e / CR 101.4: the whole table completes one step before
             # the next one starts, in APNAP order within each step.
             for player in _players_in_apnap_order(game):
+                before = len(game.exile)
                 step(game, player, source)
+                # CR 607.2a, CR 406.6: an ability that exiles cards and later
+                # refers to "the exiled cards" or cards "exiled with [this
+                # object]" links the two. Knowledge Pool's "Imprint — When
+                # this artifact enters, each player exiles the top three
+                # cards of their library" is exactly this instruction, routed
+                # here through `_EACH_PLAYER_EXILES_TOP_RE`'s `exile_top_of_
+                # library` step, and its second ability's "other cards
+                # exiled with this artifact" is the reader - but until this
+                # fix, `exile_top_of_library` called `Game.exile_permanent`
+                # and left `exile_annotation` at `None`, so the reader always
+                # found an empty pool no matter what ability 2 itself wrote.
+                #
+                # `ClauseEffect` (`Callable[[Game, Player, str], None]`) hands
+                # a step the source's *name*, never its id, so a step cannot
+                # annotate what it moves on its own - widening the type would
+                # touch every `ClauseEffect` in this module, most of which
+                # exile nothing at all. Diffing `game.exile` before and after
+                # each step instead is a property of *this* closure alone
+                # (it already holds `stack_object`, and therefore the id):
+                # whatever a step newly appended to the shared exile zone is
+                # "exiled with" the object this whole ability is printed on,
+                # by CR 607.2a's own structural test, no keyword or per-step
+                # wiring needed.
+                #
+                # `if card.exile_annotation is None and card.face_up` guards
+                # two things at once: it leaves alone anything a step already
+                # annotated for its own reason (none does today, but a future
+                # step should not be overwritten), and - load-bearing - it
+                # skips Pyxis of Pandemonium's own face-down exile from this
+                # same regex (`_EACH_PLAYER_EXILES_TOP_RE`'s `face_down`
+                # branch). `CardState.has_no_characteristics` (CR 406.3a) is
+                # `face_down and exile_annotation is None` exactly *because*
+                # Pyxis's own "play a card exiled with Pyxis" second ability
+                # is not built yet (`docs/engine-coverage.md`) - annotating
+                # that card here would give it a name, a type line and a mana
+                # value it is not supposed to have, breaking DDR#956's ruling
+                # (`test_judge_face_down_exile.py`) for a link nothing reads.
+                for card in game.exile[before:]:
+                    if card.exile_annotation is None and card.face_up:
+                        card.exile_annotation = ExileAnnotation(
+                            marker=ExileMarker.IMPRINTED,
+                            owner=card.owner,
+                            linked_permanent_id=source_id,
+                        )
 
     return kept_fragments, effect
 

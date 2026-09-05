@@ -331,3 +331,56 @@ def test_returning_with_nothing_imprinted_does_nothing():
     assert alice.hand == []
     assert scenario.game.exile == []
     assert land.tapped
+
+
+# --------------------------------------------------------------------------
+# Knowledge Pool's own ETB - the "each player exiles the top N" shape,
+# distinct from Ugin's Labyrinth's "you may exile ... from your hand" one
+# --------------------------------------------------------------------------
+
+
+def test_knowledge_pools_etb_links_what_it_exiles_to_the_permanent():
+    """Knowledge Pool (verified with `resolve_cards`): "Imprint — When this
+    artifact enters, each player exiles the top three cards of their
+    library."
+
+    This is CR 607.2a's link written a *second* way in the pool:
+    `_parse_imprint_clause` only ever read the "you may exile ... from your
+    hand" shape (Ugin's Labyrinth's own), so Knowledge Pool's "each player
+    exiles the top three cards of their library" - routed through
+    `_merge_each_player_clauses` in `machines/effects.py`, not `_parse_
+    imprint_clause` at all - called `Game.exile_permanent` and left `exile_
+    annotation` at `None` on every card it moved. Knowledge Pool's own second
+    ability ("cast a spell from among other cards exiled with this
+    artifact") then found an empty pool no matter what it had exiled,
+    which is the regression this test is against.
+
+    Cast for real, not staged (`battlefield=["Knowledge Pool"]` would skip
+    `Game.enter_the_battlefield` and never fire the ETB at all) - see
+    `tests/scenarios/test_cast_from_hand_exile_and_free_cast.py`, which
+    covers Knowledge Pool's second ability in full.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Knowledge Pool"],
+            library=["Forest", "Island", "Swamp", "Mountain"],
+            battlefield=["Forest"] * 6,
+        )
+        .player("bob", library=["Forest", "Island", "Swamp", "Mountain"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    pool = scenario.cast_and_resolve("Knowledge Pool", *scenario.untapped_sources(*["Forest"] * 6))
+    scenario.resolve_top()  # the ETB: each player exiles their top three
+
+    assert [state.name for state in scenario.player("alice").library] == ["Mountain"]
+    assert [state.name for state in scenario.player("bob").library] == ["Mountain"]
+    assert len(scenario.game.exile) == 6
+    for state in scenario.game.exile:
+        annotation = state.exile_annotation
+        assert annotation is not None, "the defect: this used to be None for every exiled card"
+        assert annotation.marker is ExileMarker.IMPRINTED
+        assert annotation.linked_permanent_id == pool.id
+        assert state.face_up, "CR 406.3: exiled face up by default"
