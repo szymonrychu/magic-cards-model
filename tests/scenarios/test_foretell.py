@@ -145,6 +145,34 @@ def test_a_foretold_card_cannot_be_cast_the_turn_it_was_foretold():
         casting.use_keyword("Foretell")
 
 
+def test_casting_the_foretold_card_without_announcing_foretell_is_refused():
+    """The `test_flashback.py` live-game defect, generalized to foretell:
+    Lupine Harbingers' face cost `{3}{G}` (mana value 4) is real and payable
+    from a six-Forest board, so an engine that treated the mere *existence*
+    of the exile permission as CR 601.2b's announced choice would let it
+    through for the cheaper face cost instead of refusing outright - the
+    other direction of the same undercharge Faithful Mending's flashback
+    showed. CR 702.143a's exile permission does not exist apart from
+    Foretell's own printed cost, so `use_keyword("Foretell")` has to be
+    called."""
+    scenario = board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    foretell_it(scenario)
+    alices_next_main(scenario)
+
+    forests = scenario.untapped_sources(*["Forest"] * 4, username="alice")
+    casting = scenario.cast("Lupine Harbingers", from_zone=Zone.EXILE)
+    assert casting.total_cost.mana == ManaCost.parse("{3}{G}")
+    scenario.pay_with(casting.begin_paying(), *forests)
+
+    with pytest.raises(ValueError, match="Foretell"):
+        casting.cast()
+    casting.cancel()
+
+    assert scenario.find("Lupine Harbingers", Zone.EXILE, "alice").zone is Zone.EXILE
+    assert all(forest.untapped for forest in forests)
+
+
 def test_a_foretold_card_is_cast_from_exile_for_its_foretell_cost():
     scenario = board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)

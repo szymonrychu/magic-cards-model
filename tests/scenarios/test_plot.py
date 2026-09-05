@@ -126,6 +126,40 @@ def test_a_card_without_plot_cannot_be_plotted():
 # -- casting it later -------------------------------------------------------
 
 
+def test_casting_the_plotted_card_without_announcing_plot_is_refused():
+    """The `test_flashback.py` live-game defect, generalized to plot:
+    CR 702.170d's exile permission does not exist apart from Plot's own "cast
+    it ... without paying its mana cost" - a caster who never calls
+    `use_keyword("Plot")` gets no permission at all to cast from exile, not a
+    fallback to the printed mana cost. The mere existence of the option (the
+    card is plotted, it is a later turn, alice is the owner) is not CR
+    601.2b's announced choice.
+    """
+    scenario = board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    plot_it(scenario)
+    alices_next_turn(scenario)
+    # `manual_turn_based_actions()` means nothing untaps automatically - the
+    # Mountains spent on the plot special action stay tapped across the
+    # manual `advance()` loop in `alices_next_turn`, so this test (unlike its
+    # neighbours, which cast Plot for free) untaps them itself to pay a real
+    # mana cost.
+    for mountain in scenario.game.permanents_controlled_by("alice"):
+        mountain.untap()
+
+    sources = scenario.untapped_sources("Mountain", "Mountain")
+    casting = scenario.cast("Slickshot Show-Off", from_zone=Zone.EXILE)
+    assert casting.total_cost.mana == ManaCost.parse("{1}{R}")
+    scenario.pay_with(casting.begin_paying(), *sources)
+
+    with pytest.raises(ValueError, match="Plot"):
+        casting.cast()
+    casting.cancel()
+
+    assert scenario.find("Slickshot Show-Off", Zone.EXILE, "alice").zone is Zone.EXILE
+    assert all(source.untapped for source in sources)
+
+
 def test_a_plotted_card_cannot_be_cast_on_the_turn_it_was_plotted():
     """CR 702.170d: "during any turn after the turn in which it became plotted"."""
     scenario = board().build()

@@ -14,6 +14,20 @@ Lava Dart's `Flashback—Sacrifice a Mountain.`, which is the em-dash form.
 
 The stack half - "Then exile it" - is a replacement applied as the spell
 resolves, and lands in the xfail at the bottom.
+
+**A live-game defect, closed here**: `why_cannot_cast_from` answers CR 601.3's
+existence question - "could *anything* allow this cast from here" - which is
+right for what it is, but nothing downstream ever asked the *second*
+question CR 601.2b/CR 118.9a require: did the announcement actually *claim*
+one of those options. A caster who cast Faithful Mending (mana cost `{W}{U}`,
+Flashback `{1}{W}{U}`) from the graveyard **without ever announcing
+Flashback** got it on the stack anyway, `Casting.keyword_used` stayed `None`,
+`total_cost` fell back to the printed `{W}{U}`, and `CastRecord.keyword`
+stayed `None` too - so `machines/replacement.py`'s "if the flashback cost was
+paid, exile this card" never fired and the card went back to the graveyard,
+castable for `{W}{U}` forever. `test_casting_it_from_the_graveyard_without_
+announcing_flashback_is_refused` below through `test_the_loop_is_closed_the_
+card_cannot_be_recast_for_the_face_cost` are that report, made concrete.
 """
 
 import pytest
@@ -160,6 +174,106 @@ def test_casting_it_normally_from_hand_still_costs_its_mana_cost():
     assert casting.total_cost.mana == ManaCost.parse("{R}")
     scenario.pay_with(casting.begin_paying(), mountain)
     assert scenario.put_on_stack(casting).zone is Zone.STACK
+
+
+# -- the live-game defect: casting from the graveyard without a claim ------
+
+
+def _faithful_mending_board() -> Scenario:
+    """alice, three lands - enough for `{W}{U}` and NOT for `{1}{W}{U}` - is
+    what makes the undercharge visible: a three-land board can legally pay
+    Faithful Mending's face cost but not its Flashback cost."""
+    return board(graveyard=["Faithful Mending"], battlefield=["Plains", "Island", "Island"])
+
+
+def test_casting_it_from_the_graveyard_without_announcing_flashback_is_refused():
+    """The live-game report itself: a caster who taps the lands and pays
+    Faithful Mending's `{W}{U}` face cost from the graveyard, without ever
+    announcing Flashback, must be refused - `KeywordCastOption`'s mere
+    *existence* for this zone is not CR 601.2b's announced choice. CR 601.6/
+    CR 733.1: the whole cast is reversed, including the payment, so the card
+    stays in the graveyard and the lands used to pay for it come back
+    untapped.
+    """
+    scenario = _faithful_mending_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    plains, island, _ = scenario.untapped_sources("Plains", "Island", "Island")
+
+    casting = scenario.cast("Faithful Mending", from_zone=Zone.GRAVEYARD)
+    scenario.pay_with(casting.begin_paying(), plains, island)
+
+    with pytest.raises(ValueError, match="Flashback") as excinfo:
+        casting.cast()
+    assert "CR 702.34a" in str(excinfo.value)
+    casting.cancel()
+
+    assert scenario.find("Faithful Mending", Zone.GRAVEYARD, "alice").zone is Zone.GRAVEYARD
+    assert plains.untapped
+    assert island.untapped
+
+
+def test_announcing_flashback_charges_the_flashback_cost_not_the_face_cost():
+    """This is the assertion that would have caught the report: once
+    Flashback is actually announced, the cost is the printed Flashback
+    `{1}{W}{U}` (mana value 3), not the face cost `{W}{U}` (mana value 2) the
+    buggy engine charged - so the two lands that used to be enough for the
+    face cost (the undercharge itself) fall one mana short of the real one.
+    """
+    scenario = _faithful_mending_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    plains, island, _ = scenario.untapped_sources("Plains", "Island", "Island")
+
+    casting = scenario.cast("Faithful Mending", from_zone=Zone.GRAVEYARD)
+    casting.use_keyword("Flashback")
+
+    assert str(casting.total_cost.mana) == "{1}{W}{U}"
+    payment = casting.begin_paying()
+    payment.tap_for_mana(plains, [Color.WHITE])
+    payment.tap_for_mana(island, [Color.BLUE])
+    with pytest.raises(ValueError, match="cannot pay"):
+        payment.pay()
+
+
+def test_the_announced_flashback_cast_resolves_and_is_exiled():
+    """With a fourth land, the announced Flashback cast can actually be paid,
+    resolves, and CR 702.34a's second half exiles it - and the cast record
+    says why."""
+    scenario = board(
+        graveyard=["Faithful Mending"],
+        battlefield=["Plains", "Island", "Island", "Island"],
+    ).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Plains", "Island", "Island", "Island")
+
+    casting = scenario.cast("Faithful Mending", from_zone=Zone.GRAVEYARD)
+    casting.use_keyword("Flashback")
+    scenario.pay_with(casting.begin_paying(), *sources)
+    scenario.put_on_stack(casting)
+    mending = scenario.resolve_top()
+
+    assert mending.zone is Zone.EXILE
+
+
+def test_the_loop_is_closed_the_card_cannot_be_recast_for_the_face_cost():
+    """The report's own loop: after the flashback cast resolves and the card
+    is exiled, it is not in the graveyard any more and cannot be cast again
+    from there for its face cost - or at all, since nothing gives exile a
+    permission for it."""
+    scenario = board(
+        graveyard=["Faithful Mending"],
+        battlefield=["Plains", "Island", "Island", "Island"],
+    ).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Plains", "Island", "Island", "Island")
+
+    casting = scenario.cast("Faithful Mending", from_zone=Zone.GRAVEYARD)
+    casting.use_keyword("Flashback")
+    scenario.pay_with(casting.begin_paying(), *sources)
+    scenario.put_on_stack(casting)
+    mending = scenario.resolve_top()
+
+    assert mending not in scenario.player("alice").graveyard
+    assert why_cannot_cast_from(mending, "alice", Zone.EXILE, scenario.game) is not None
 
 
 # -- the half that is not modelled ------------------------------------------

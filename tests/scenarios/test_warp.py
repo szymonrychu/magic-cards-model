@@ -168,6 +168,39 @@ def test_a_warped_card_is_cast_from_exile_later_for_its_full_mana_cost():
     assert colossus not in scenario.game.exile
 
 
+def test_casting_the_warped_card_from_exile_without_announcing_warp_is_refused():
+    """The `test_flashback.py` live-game defect, generalized to warp's own
+    second half: CR 702.185b's exile permission is still tied to the warp
+    keyword even though `pays_mana_cost=True` there (the printed mana cost
+    *is* the right cost, unlike flashback) - a caster who never calls
+    `use_keyword("Warp")` must still be refused, because the permission to
+    cast from exile at all comes from the keyword, not from the coincidence
+    that the cost happens to be right either way.
+    """
+    scenario = board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    sources = scenario.untapped_sources("Island", "Island", "Island")
+    casting = scenario.cast("Bygone Colossus")
+    casting.use_keyword("Warp")
+    scenario.pay_with(casting.begin_paying(), *sources)
+    scenario.put_on_stack(casting)
+    exile_warped(scenario.game, scenario.resolve_top())
+    alices_next_main(scenario)
+
+    islands = scenario.untapped_sources(*["Island"] * 9, username="alice")
+    again = scenario.cast("Bygone Colossus", from_zone=Zone.EXILE)
+    assert again.total_cost.mana == ManaCost.parse("{9}")
+    scenario.pay_with(again.begin_paying(), *islands)
+
+    with pytest.raises(ValueError, match="Warp"):
+        again.cast()
+    again.cancel()
+
+    assert scenario.find("Bygone Colossus", Zone.EXILE, "alice").zone is Zone.EXILE
+    assert all(island.untapped for island in islands)
+
+
 def test_an_unwarped_card_in_exile_cannot_be_cast_with_warp():
     """CR 601.3: the pile is what the permission is keyed on (CR 406.4)."""
     scenario = (

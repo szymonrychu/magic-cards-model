@@ -203,6 +203,38 @@ def test_an_exiled_adventure_is_marked_and_can_be_cast_as_the_creature():
     assert giant not in scenario.game.exile
 
 
+def test_casting_the_adventured_creature_without_announcing_adventure_is_refused():
+    """The `test_flashback.py` live-game defect, generalized to CR 715.3d's
+    Adventure exile: `pays_mana_cost=True` there too (the creature's own
+    `{2}{R}` is the right cost), but the permission to cast it from exile at
+    all is still tied to the Adventure keyword - a caster who never calls
+    `use_keyword("Adventure")` must be refused, not let through just because
+    the fallback cost happens to be correct.
+    """
+    scenario = board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    sources = scenario.untapped_sources("Mountain", "Mountain")
+    casting = scenario.cast("Bonecrusher Giant")
+    casting.cast_as_adventure()
+    scenario.pay_with(casting.begin_paying(), *sources)
+    scenario.put_on_stack(casting)
+    stomp = scenario.resolve_top()
+    exile_adventured(scenario.game, stomp, "alice")
+
+    remaining = scenario.untapped_sources("Mountain", "Mountain", "Mountain")
+    giant_casting = scenario.cast("Bonecrusher Giant", from_zone=Zone.EXILE)
+    assert giant_casting.total_cost.mana == ManaCost.parse("{2}{R}")
+    scenario.pay_with(giant_casting.begin_paying(), *remaining)
+
+    with pytest.raises(ValueError, match="Adventure"):
+        giant_casting.cast()
+    giant_casting.cancel()
+
+    assert stomp.zone is Zone.EXILE
+    assert all(source.untapped for source in remaining)
+
+
 def test_an_unmarked_adventurer_card_in_exile_may_not_be_cast_from_there():
     """CR 601.3: only the CR 715.3d pile carries the permission (CR 406.4)."""
     scenario = (

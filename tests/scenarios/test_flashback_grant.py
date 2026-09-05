@@ -11,13 +11,16 @@ CR 601.3's ordinary "you may cast [that card] this turn" permission
 the graveyard rather than exile, paying the card's own mana cost - which is
 exactly what "the flashback cost is equal to its mana cost" describes.
 
-**One real gap stays open, deliberately not modelled here**: CR 702.34a's
-"then exile it instead of putting it anywhere else" only fires off
-`CastRecord.keyword == "flashback"` (`machines/casting.py`'s own exile
-check for a card *printed* with flashback), which a `PlayPermission`-driven
-cast never sets - the card goes to its owner's graveyard the ordinary way
-once it resolves, not to exile. `test_the_recast_spell_goes_to_the_graveyard_
-not_exile` below is that gap, made concrete rather than merely claimed.
+CR 702.34a's own second half - "then exile it instead of putting it anywhere
+else any time it would leave the stack" - now fires for this
+`PlayPermission`-driven cast too: `PlayPermission.flashback` marks the grant
+as CR 702.34a's own (set by `_parse_grant_flashback_clause` in
+`machines/effects.py`), and `Casting.cast()` reads it to write
+`CastRecord.keyword = "Flashback"` even though no keyword line was announced
+- the only thing `machines/replacement.py`'s exile-on-leaving-the-stack check
+(`_stack_replacements`) actually looks at.
+`test_the_recast_spell_is_exiled_not_returned_to_the_graveyard` below proves
+it, rather than merely claiming it.
 
 Every CR number below was looked up with `knowledge_search(q="...",
 type="rules")` in the session that wrote this file:
@@ -29,6 +32,10 @@ type="rules")` in the session that wrote this file:
   identity and dies if the card moves again before it is used.
 - **CR 118.9c** - an alternative cost replaces what is paid, not the
   card's own printed mana cost.
+- **CR 611.3d** - a static ability's continuous effect may "grant an ability
+  to a permanent spell or card that allows it to be cast", which is what lets
+  a *granted* flashback carry both of CR 702.34a's static abilities, not just
+  the first.
 """
 
 from magic_cards_model.machines import Step
@@ -94,11 +101,13 @@ def test_the_recast_spell_can_actually_be_cast_from_the_graveyard():
     assert bolt.zone is Zone.STACK
 
 
-def test_the_recast_spell_goes_to_the_graveyard_not_exile():
-    """CR 702.34a's own exile-after-flashback is not built here (see this
-    file's own header) - the deliberate deviation, made concrete rather than
-    just claimed. A real flashback-cast Lightning Bolt would be exiled
-    instead; this one is not.
+def test_the_recast_spell_is_exiled_not_returned_to_the_graveyard():
+    """CR 702.34a's second static ability - "exile this card instead of
+    putting it anywhere else any time it would leave the stack" - applies to
+    a *granted* flashback exactly as it does to a printed one (CR 611.3d):
+    once the flashback cost (here, Lightning Bolt's own mana cost, per
+    Flashback's "the flashback cost is equal to its mana cost") was paid, the
+    resolved spell is exiled rather than going to its owner's graveyard.
     """
     scenario = (
         Scenario()
@@ -125,4 +134,4 @@ def test_the_recast_spell_goes_to_the_graveyard_not_exile():
     scenario.put_on_stack(casting)
     scenario.resolve_top()
 
-    assert bolt.zone is Zone.GRAVEYARD, "not exiled - the known, documented gap"
+    assert bolt.zone is Zone.EXILE
