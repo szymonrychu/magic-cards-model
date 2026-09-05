@@ -7826,10 +7826,11 @@ class Game(BaseModel):
         `Game.cleanup_step`'s ordinary same-turn sweep leaves it alone.
 
         `flashback=True` is CR 702.34a's grant handed out as a permission
-        rather than read off a printed keyword line - Past in Flames' and
-        Underworld Breach's "... gains flashback ... equal to its mana cost" -
+        rather than read off a printed keyword line - Past in Flames' and the
+        spell Flashback's "... gains flashback ... equal to its mana cost" -
         see `PlayPermission.flashback`'s own docstring for why its second,
-        exile-on-leaving-the-stack half still has to apply.
+        exile-on-leaving-the-stack half still has to apply, and for why
+        Underworld Breach (which grants escape, not flashback) is not one.
         """
         turn = self.turn
         permission = PlayPermission(

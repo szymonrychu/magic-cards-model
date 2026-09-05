@@ -12,8 +12,8 @@ under CR 118.9, paid rather than the mana cost.
 Both printed forms are in the pool: Faithless Looting's `Flashback {2}{R}` and
 Lava Dart's `Flashback—Sacrifice a Mountain.`, which is the em-dash form.
 
-The stack half - "Then exile it" - is a replacement applied as the spell
-resolves, and lands in the xfail at the bottom.
+The stack half - "Then exile it" - is a replacement applied any time the spell
+would leave the stack, and is asserted at the bottom of this file.
 
 **A live-game defect, closed here**: `why_cannot_cast_from` answers CR 601.3's
 existence question - "could *anything* allow this cast from here" - which is

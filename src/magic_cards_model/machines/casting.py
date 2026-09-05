@@ -938,10 +938,18 @@ class PlayPermission(BaseModel):
     flashback: bool = False
     """Whether this grant *is* CR 702.34a's flashback, handed out as a
     `PlayPermission` rather than read off a printed keyword line - Past in
-    Flames' and Underworld Breach's "Each/Target instant or sorcery card in
-    your graveyard gains flashback ... equal to its mana cost" both mint one
+    Flames' "Each instant and sorcery card in your graveyard gains flashback
+    until end of turn. The flashback cost is equal to its mana cost." and the
+    spell Flashback's "Target instant or sorcery card in your graveyard gains
+    flashback ..." (both texts confirmed with `resolve_cards`) each mint one
     of these (`machines/effects.py`'s `_parse_grant_flashback_clause` and
     `_parse_each_graveyard_instant_sorcery_gains_flashback_clause`).
+
+    Underworld Breach is **not** one of these and must not be added here: its
+    text grants *escape*, not flashback - "Each nonland card in your graveyard
+    has escape. The escape cost is equal to the card's mana cost plus exile
+    three other cards from your graveyard." - which is a different keyword
+    with a different cost shape, and it is banned in Modern besides.
 
     CR 702.34a is one clause naming two static abilities together: "'Flashback
     [cost]' means 'You may cast this card from your graveyard ... by paying
