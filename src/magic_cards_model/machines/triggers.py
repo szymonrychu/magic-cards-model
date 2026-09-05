@@ -269,6 +269,24 @@ class GameEvent(BaseModel):
     on-stack number, not the printed one, or a Chalice on 3 would never catch
     a Fireball cast for X=3."""
 
+    origin_zone: Zone | None = None
+    """For a `TriggerEvent.CAST_SPELL` event, the zone the card was in
+    immediately before CR 601.2a moved it to the stack (CR 400.7: it is a new
+    object on the stack, so this has to be captured before the move, not
+    re-derived from the object afterwards). `Game.put_on_stack` is the only
+    place a `CAST_SPELL` event is built, and it reads `card_state.zone` before
+    calling `_take_out_of_every_zone`/`move_to`.
+
+    Knowledge Pool's "Whenever a player casts a spell **from their hand**" and
+    Appa, Steadfast Guardian's "Whenever you cast a spell **from exile**" both
+    restrict this event to a specific origin - CR 603.2's "matches a triggered
+    ability's trigger event" is not satisfied by a cast from anywhere else,
+    which is exactly what `condition_matches`'s `CAST_SPELL` branch reads this
+    for. Without it, a flashback cast from the graveyard matched "from their
+    hand" the same as a cast from hand, and a card whose own free cast comes
+    from exile (Knowledge Pool's second ability) would re-trigger itself
+    forever. `None` for an event this field was never populated for."""
+
 
 class TargetingNoticeKind(StrEnum):
     """Why a triggered ability went on the stack with no targets chosen."""
@@ -877,6 +895,65 @@ def _color_matches(colors: tuple[Color, ...] | None, condition: str) -> bool:
     return bool(color_set & named)
 
 
+#: The zone words a "cast a ... spell **from** [zone]" clause names -
+#: Knowledge Pool's and Possibility Storm's "from their hand" (also "from
+#: your hand", the singular-controller phrasing prowess-style keyword
+#: expansions would use if one ever named a zone) and Appa, Steadfast
+#: Guardian's "from exile" are the two shapes actually printed in the pool
+#: (grepped across `tests/fixtures/cards/*.json` rather than guessed), but
+#: the word list is zone-generic so a future graveyard- or library-scoped
+#: cast trigger reads correctly with no further parser work. "Exile" takes no
+#: possessive ("from exile", never "from your exile" - exile is a shared
+#: zone, CR 400.2), so it is matched on its own rather than through the
+#: `their|your|his or her` possessive `_CAST_ORIGIN_ZONE_RE` group the other
+#: four zones share.
+_CAST_ORIGIN_ZONE_WORDS: dict[str, Zone] = {
+    "hand": Zone.HAND,
+    "graveyard": Zone.GRAVEYARD,
+    "library": Zone.LIBRARY,
+    "battlefield": Zone.BATTLEFIELD,
+}
+
+_CAST_ORIGIN_ZONE_RE = re.compile(
+    r"\bfrom (?:(?:their|your|his or her) (?P<possessive>hand|graveyard|library|battlefield)"
+    r"|(?P<bare>exile))\b",
+    re.IGNORECASE,
+)
+
+
+def _required_cast_origin_zone(condition: str) -> Zone | None:
+    """The zone a "cast a ... spell from [zone]" condition restricts the cast
+    to, or `None` when the condition names no origin at all - which is what a
+    plain "whenever you cast a spell" means (CR 603.2: no restriction is no
+    restriction).
+    """
+    match = _CAST_ORIGIN_ZONE_RE.search(condition)
+    if match is None:
+        return None
+    word = (match.group("possessive") or match.group("bare") or "").lower()
+    return _CAST_ORIGIN_ZONE_WORDS.get(word)
+
+
+def _origin_zone_matches(origin_zone: Zone | None, condition: str) -> bool:
+    """Whether a `CAST_SPELL` event's `GameEvent.origin_zone` satisfies a
+    condition's "from [zone]" restriction, if it has one.
+
+    `origin_zone is None` matches anything: every real `CAST_SPELL` event
+    populates it (`Game.put_on_stack` is the only emitter), so `None` here
+    means the condition asked about something this engine doesn't track
+    rather than a cast this engine knows happened from nowhere - the same
+    "nothing required" default `_types_match` and `_color_matches` already
+    fall back to, kept on the permissive side rather than refusing a
+    legitimate trigger over missing data.
+    """
+    required = _required_cast_origin_zone(condition)
+    if required is None:
+        return True
+    if origin_zone is None:
+        return True
+    return origin_zone is required
+
+
 #: CR 202.3's ordinary mana-value comparisons, as a "cast a ... spell"
 #: condition phrases them. Order matters: the "or greater"/"or less"/
 #: "greater than"/"less than" forms are tried before the bare-number
@@ -1203,6 +1280,8 @@ def condition_matches(
         if mine and "this spell" in lowered:
             return event.subject_id == source.id
         if not _controller_clause_holds(condition, controller, event.player):
+            return False
+        if not _origin_zone_matches(event.origin_zone, condition):
             return False
         if "during your turn" in lowered or "during their turn" in lowered:
             # Ral, Monsoon Mage's own condition: the cast has to have

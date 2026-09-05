@@ -410,7 +410,7 @@ def rebound_recast(game: "Game", ability: AbilityOnStack, trigger: DelayedTrigge
     prompt = f"cast {card.name} from exile without paying its mana cost"
     if not game.may(trigger.controller, prompt, source=card.name):
         return
-    game.cast_free_from_exile(card, trigger.controller)
+    game.cast_free_from_exile(card, trigger.controller, keyword="Rebound")
 
 
 def draw_a_card_for_controller(
