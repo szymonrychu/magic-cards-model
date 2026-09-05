@@ -6605,7 +6605,7 @@ class Game(BaseModel):
 
         What *is* reused, because it is correct for both moves: the spell is
         taken out of every zone (`_take_out_of_every_zone` - exile and the
-        stack are both shared zones, CR 400.2), removed from combat (CR
+        stack are both shared zones, CR 400.1), removed from combat (CR
         506.4 - moot for a spell that was never a permanent, kept for the
         same symmetry `counter` keeps it for), and its `CastRecord` popped
         so a later intervening *if* about how it was cast fails closed

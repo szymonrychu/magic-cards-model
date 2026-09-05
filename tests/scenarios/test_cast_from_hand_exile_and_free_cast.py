@@ -100,6 +100,7 @@ session - neither existed in the pool before), `lightning_bolt`, `mountain`,
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.decisions import DecisionKind
+from magic_cards_model.machines.triggers import _required_cast_origin_zone
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card_state import ExileAnnotation, ExileMarker
 
@@ -719,3 +720,27 @@ def test_possibility_storm_exiles_a_hand_cast_spell_and_digs_for_a_shared_type()
     assert scenario.game.pending_triggers == []
     assert scenario.game.stack == []
     assert elves.power == 4, "Giant Growth actually resolved: +3/+3 on a 1/1 Llanowar Elves"
+
+
+def test_a_from_exile_cast_trigger_reads_its_zone_too():
+    """The other printed origin-zone phrasing in the pool, and the one the
+    zone-word table silently dropped.
+
+    Appa, Steadfast Guardian (`resolve_cards`, this session) prints "Whenever
+    you cast a spell **from exile**, create a 1/1 white Ally creature token."
+    `_CAST_ORIGIN_ZONE_RE` matches the bare word - exile takes no possessive,
+    being a shared zone (CR 400.1: "a normal game ... uses ... the exile
+    zone") - but `_CAST_ORIGIN_ZONE_WORDS` had no `exile` row, so
+    `_required_cast_origin_zone` answered `None`, which `_origin_zone_matches`
+    reads as *no restriction at all*. Appa's trigger therefore fired on every
+    cast from anywhere, a hand cast included: the exact inverse of the
+    Knowledge Pool defect, and invisible because the docstring above the table
+    already claimed this card was handled.
+
+    Both directions are asserted here. A restriction that only ever says "no"
+    is as wrong as one that only ever says "yes", and only the pair
+    distinguishes a real zone read from a hardcoded refusal.
+    """
+    assert _required_cast_origin_zone("you cast a spell from exile") is Zone.EXILE
+    assert _required_cast_origin_zone("a player casts a spell from their hand") is Zone.HAND
+    assert _required_cast_origin_zone("you cast a spell") is None

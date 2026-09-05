@@ -904,7 +904,9 @@ def _color_matches(colors: tuple[Color, ...] | None, condition: str) -> bool:
 #: the word list is zone-generic so a future graveyard- or library-scoped
 #: cast trigger reads correctly with no further parser work. "Exile" takes no
 #: possessive ("from exile", never "from your exile" - exile is a shared
-#: zone, CR 400.2), so it is matched on its own rather than through the
+#: zone, CR 400.1: "Each player has their own library, hand, and graveyard.
+#: The other zones are shared by all players."), so it is matched on its own
+#: rather than through the
 #: `their|your|his or her` possessive `_CAST_ORIGIN_ZONE_RE` group the other
 #: four zones share.
 _CAST_ORIGIN_ZONE_WORDS: dict[str, Zone] = {
@@ -912,6 +914,7 @@ _CAST_ORIGIN_ZONE_WORDS: dict[str, Zone] = {
     "graveyard": Zone.GRAVEYARD,
     "library": Zone.LIBRARY,
     "battlefield": Zone.BATTLEFIELD,
+    "exile": Zone.EXILE,
 }
 
 _CAST_ORIGIN_ZONE_RE = re.compile(
