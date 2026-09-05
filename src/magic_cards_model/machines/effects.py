@@ -7502,12 +7502,13 @@ _DAMAGE_THEN_GROUP_TYPE_ABILITY_GRANT_RE = re.compile(
 #: reuses it rather than the keyword machinery: `zone=Zone.GRAVEYARD` lets
 #: the permission reach a card that never left the graveyard,
 #: `pays_mana_cost=True` matches "the flashback cost is equal to its mana
-#: cost" exactly. **One real gap stays open**: CR 702.34a's "then exile it
-#: instead of putting it anywhere else" only fires off `CastRecord.keyword ==
-#: "flashback"` (`machines/casting.py`'s own exile-replacement check), which
-#: a `PlayPermission`-driven cast never sets - the card resolves and goes to
-#: its owner's graveyard the ordinary way rather than being exiled. Recorded
-#: here rather than silently guessed away; see `docs/engine-coverage.md`.
+#: cost" exactly. CR 702.34a's "then exile it instead of putting it anywhere
+#: else" is the same grant's second half, and `flashback=True` below is what
+#: tells `Casting.cast()` to write `CastRecord.keyword = "Flashback"` even
+#: though no keyword was announced - the only thing
+#: `machines/replacement.py`'s exile-on-leaving-the-stack check
+#: (`_stack_replacements`) actually reads. See `PlayPermission.flashback`'s
+#: own docstring.
 _GRANT_FLASHBACK_RE = re.compile(
     r"^(?P<phrase>target instant or sorcery card in your graveyard) gains flashback "
     r"until end of turn\.\s*the flashback cost is equal to its mana cost\.?$",
@@ -7532,6 +7533,7 @@ def _parse_grant_flashback_clause(effect_text: str) -> Effect | None:
                     controller.username,
                     action=PlayAction.CAST,
                     pays_mana_cost=True,
+                    flashback=True,
                     source_name=spell.name,
                     zone=Zone.GRAVEYARD,
                     rule="CR 601.3",
@@ -7546,11 +7548,8 @@ def _parse_grant_flashback_clause(effect_text: str) -> Effect | None:
 #: for the "Flashback" spell above, generalised from one chosen target to
 #: every qualifying card in the graveyard - CR 608.2c runs the sentence over
 #: the whole set at once, not once per card with a fresh choice. The same
-#: documented gap applies here too: CR 702.34a's own "then exile it instead"
-#: half of flashback never fires for a `PlayPermission`-driven cast (see
-#: `_parse_grant_flashback_clause`'s docstring), so a card flashed back this
-#: way returns to the graveyard afterward rather than being exiled - recorded
-#: in `docs/engine-coverage.md`, not silently guessed away.
+#: `flashback=True` applies here too, for the same reason
+#: `_parse_grant_flashback_clause`'s own comment gives.
 _EACH_GRAVEYARD_INSTANT_SORCERY_GAINS_FLASHBACK_RE = re.compile(
     r"^each instant and sorcery card in your graveyard gains flashback "
     r"until end of turn\.\s*the flashback cost is equal to its mana cost\.?$",
@@ -7575,6 +7574,7 @@ def _parse_each_graveyard_instant_sorcery_gains_flashback_clause(effect_text: st
                 controller.username,
                 action=PlayAction.CAST,
                 pays_mana_cost=True,
+                flashback=True,
                 source_name=spell.name,
                 zone=Zone.GRAVEYARD,
                 rule="CR 601.3",

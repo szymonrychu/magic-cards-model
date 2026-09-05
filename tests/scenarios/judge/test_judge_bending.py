@@ -107,6 +107,39 @@ def test_an_airbent_card_in_exile_may_be_cast_by_its_owner_for_two():
     assert option.later_turn is False
 
 
+def test_an_airbent_card_can_actually_be_cast_for_two():
+    """Casting all the way through `Casting`, not just reading the option off
+    `marker_cast_options` - the live-game report this closes: with
+    `ExileMarker.AIRBENT` set and `use_keyword("Airbend")` correctly
+    announced (the cost correctly becomes `{2}`), `_refuse_unless_allowed_
+    from_its_zone` still raised "nothing allows alice to cast ... from the
+    exile (CR 601.3)" - an airbent card could not be cast at all, because
+    `why_cannot_cast_from` (CR 601.3's existence question) consulted only a
+    printed `KeywordCastOption` or a live `PlayPermission`, never
+    `marker_cast_options` - and airbend (a CR 701 keyword *action*, nothing
+    printed on the card) is neither of those.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", exile=["Grizzly Bears"], battlefield=["Island", "Island"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.find("Grizzly Bears", Zone.EXILE, "alice")
+    bears.exile_annotation = ExileAnnotation(marker=ExileMarker.AIRBENT, owner="alice")
+
+    sources = scenario.untapped_sources("Island", "Island")
+    casting = scenario.cast("Grizzly Bears", from_zone=Zone.EXILE)
+    casting.use_keyword("Airbend")
+
+    assert str(casting.total_cost.mana) == "{2}"
+    scenario.pay_with(casting.begin_paying(), *sources)
+    bears = scenario.put_on_stack(casting)
+
+    assert bears.zone is Zone.STACK
+
+
 def test_airbending_a_token_makes_it_cease_to_exist_before_anyone_can_recast_it():
     """The airbend episode's token corner: the {2} permission is worthless.
 

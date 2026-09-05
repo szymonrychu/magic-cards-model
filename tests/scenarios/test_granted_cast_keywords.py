@@ -42,6 +42,7 @@ from magic_cards_model.machines import Step
 from magic_cards_model.machines.casting import AlternativeCostSource, keyword_cast_options
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card import Type
+from magic_cards_model.models.mana import ManaCost
 from tests.cards import card, card_state
 
 from .harness import Scenario
@@ -293,6 +294,29 @@ def test_the_lesson_half_does_not_cover_a_non_lesson():
     assert str(casting.begin_paying().cost) == "{1}"
 
 
+def test_casting_the_lesson_without_announcing_the_granted_flashback_is_refused():
+    """The `test_flashback.py` live-game defect, generalized to a CR 611.3d/
+    610.5 granted keyword option: Iroh's grant does not exist apart from the
+    flashback cost it names ({1} for a Lesson) - a caster who never calls
+    `use_keyword("flashback")` gets no permission to cast the Lesson from the
+    graveyard at all, not a fallback to its own printed `{1}{R}`."""
+    scenario = _iroh().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "bob")
+    mountains = scenario.untapped_sources("Mountain", "Mountain")
+
+    casting = scenario.cast("Combustion Technique", from_zone=Zone.GRAVEYARD)
+    casting.choose_targets([bears])
+    assert casting.total_cost.mana == ManaCost.parse("{1}{R}")
+    scenario.pay_with(casting.begin_paying(), *mountains)
+
+    with pytest.raises(ValueError, match="Flashback"):
+        casting.cast()
+    casting.cancel()
+
+    assert scenario.find("Combustion Technique", Zone.GRAVEYARD, "alice").zone is Zone.GRAVEYARD
+
+
 def test_a_creature_card_in_the_graveyard_gets_nothing():
     """Neither half names a creature card, so Grizzly Bears in the graveyard is
     still uncastable from there (CR 601.3)."""
@@ -302,6 +326,40 @@ def test_a_creature_card_in_the_graveyard_gets_nothing():
     with pytest.raises(ValueError, match="flashback|nothing allows"):
         casting = scenario.cast("Grizzly Bears", from_zone=Zone.GRAVEYARD)
         casting.use_keyword("flashback")
+
+
+def test_the_phoenix_cannot_be_cast_from_the_graveyard_without_announcing_bestow():
+    """The `test_flashback.py` live-game defect, generalized to a printed
+    CR 604.6 zone permission: "you may cast this card from your graveyard
+    using its bestow ability" does not exist apart from the bestow ability it
+    names - a caster who never calls `use_keyword("bestow")` gets no
+    permission to cast from the graveyard at all, not a fallback to the
+    printed `{2}{R}` mana cost (a real, payable cost here, which is exactly
+    what would have let the undercharge hide)."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            graveyard=["Detective's Phoenix"],
+            battlefield=["Mountain", "Mountain", "Mountain"],
+        )
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    phoenix = scenario.find("Detective's Phoenix", Zone.GRAVEYARD, "alice")
+    sources = scenario.untapped_sources("Mountain", "Mountain", "Mountain")
+
+    casting = scenario.cast("Detective's Phoenix", from_zone=Zone.GRAVEYARD)
+    assert casting.total_cost.mana == ManaCost.parse("{2}{R}")
+    scenario.pay_with(casting.begin_paying(), *sources)
+
+    with pytest.raises(ValueError, match="Bestow"):
+        casting.cast()
+    casting.cancel()
+
+    assert phoenix.zone is Zone.GRAVEYARD
+    assert all(source.untapped for source in sources)
 
 
 def test_the_phoenix_is_cast_from_the_graveyard_with_bestow():

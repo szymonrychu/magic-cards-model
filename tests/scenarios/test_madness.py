@@ -214,6 +214,53 @@ def test_discarding_it_a_second_time_is_not_possible_from_exile():
         discard(scenario.game, rootwalla, "alice")
 
 
+def test_casting_from_the_madness_pile_without_announcing_madness_is_refused():
+    """The `test_flashback.py` live-game defect, generalized to madness:
+    CR 702.35a's permission is "may cast it **by paying [cost] rather than
+    paying its mana cost**" - not a permission to cast the exiled card for
+    its own mana cost. Blazing Rootwalla's face cost `{R}` is a real,
+    payable cost, so an engine that treated the mere *existence* of the
+    Madness `KeywordCastOption` as CR 601.2b's announced choice would
+    happily charge it instead of the correct `{0}`. `Casting.keyword_used`
+    has to actually be set by `use_keyword("Madness")`.
+    """
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Blazing Rootwalla"],
+            battlefield=["Wild Mongrel", "Forest", "Mountain"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    rootwalla = scenario.find("Blazing Rootwalla", Zone.HAND, "alice")
+    mongrel = scenario.creature("Wild Mongrel")
+    scenario.activate(mongrel, discarding=[rootwalla])
+    assert rootwalla.zone is Zone.EXILE
+
+    (mountain,) = scenario.untapped_sources("Mountain")
+    casting = scenario.cast("Blazing Rootwalla", from_zone=Zone.EXILE)
+    assert str(casting.total_cost.mana) == "{R}"
+    scenario.pay_with(casting.begin_paying(), mountain)
+
+    with pytest.raises(ValueError, match="Madness"):
+        scenario.put_on_stack(casting)
+    casting.cancel()
+
+    assert rootwalla.zone is Zone.EXILE
+    assert mountain.untapped
+
+    # Announcing it properly charges the right cost: {0}, not {R}.
+    reannounced = scenario.cast("Blazing Rootwalla", from_zone=Zone.EXILE)
+    reannounced.use_keyword("Madness")
+    assert str(reannounced.total_cost.mana) == ""
+    reannounced.begin_paying().pay()
+    assert scenario.put_on_stack(reannounced).zone is Zone.STACK
+
+
 def test_declining_madness_puts_the_card_into_the_graveyard():
     """The other branch of the trigger: "or put it into your graveyard".
 

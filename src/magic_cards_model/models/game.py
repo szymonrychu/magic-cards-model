@@ -7781,6 +7781,7 @@ class Game(BaseModel):
         immediate: bool = False,
         until_next_turn_of: str | None = None,
         expires_end_of_next_turn: bool = False,
+        flashback: bool = False,
     ) -> PlayPermission:
         """CR 601.3: let `player` play this one card out of `zone`, for a turn.
 
@@ -7823,6 +7824,12 @@ class Game(BaseModel):
         `PlayPermission.expires_end_of_next_turn`'s own docstring. A caller
         passing this should also pass `until_end_of_turn=False`, so
         `Game.cleanup_step`'s ordinary same-turn sweep leaves it alone.
+
+        `flashback=True` is CR 702.34a's grant handed out as a permission
+        rather than read off a printed keyword line - Past in Flames' and
+        Underworld Breach's "... gains flashback ... equal to its mana cost" -
+        see `PlayPermission.flashback`'s own docstring for why its second,
+        exile-on-leaving-the-stack half still has to apply.
         """
         turn = self.turn
         permission = PlayPermission(
@@ -7832,6 +7839,7 @@ class Game(BaseModel):
             zone=zone,
             action=action,
             pays_mana_cost=pays_mana_cost,
+            flashback=flashback,
             source_name=source_name,
             rule=rule,
             until_end_of_turn=until_end_of_turn and until_next_turn_of is None,

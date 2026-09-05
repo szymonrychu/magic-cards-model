@@ -231,6 +231,13 @@ class KeywordCastOption(BaseModel):
         return None
 
 
+def _describe_keyword_cost(option: KeywordCastOption) -> str:
+    """What `option` charges, in words, for `_unclaimed_zone_permission_message`."""
+    if option.cost is not None:
+        return str(option.cost)
+    return "its mana cost" if option.pays_mana_cost else "nothing"
+
+
 def _turn_number(game: Any) -> int | None:
     turn = getattr(game, "turn", None)
     return None if turn is None else int(turn.turn_number)
@@ -928,6 +935,28 @@ class PlayPermission(BaseModel):
     action: PlayAction = PlayAction.CAST
     pays_mana_cost: bool = True
     """False is CR 118.9's "without paying its mana cost"."""
+    flashback: bool = False
+    """Whether this grant *is* CR 702.34a's flashback, handed out as a
+    `PlayPermission` rather than read off a printed keyword line - Past in
+    Flames' and Underworld Breach's "Each/Target instant or sorcery card in
+    your graveyard gains flashback ... equal to its mana cost" both mint one
+    of these (`machines/effects.py`'s `_parse_grant_flashback_clause` and
+    `_parse_each_graveyard_instant_sorcery_gains_flashback_clause`).
+
+    CR 702.34a is one clause naming two static abilities together: "'Flashback
+    [cost]' means 'You may cast this card from your graveyard ... by paying
+    [cost] rather than paying its mana cost' and 'If the flashback cost was
+    paid, exile this card instead of putting it anywhere else any time it
+    would leave the stack.'" CR 611.3d is what lets a static ability *grant*
+    "an ability to a permanent spell or card that allows it to be cast" at
+    all - it says nothing narrows the grant to only the first half of what the
+    keyword means, so a granted flashback is still flashback, second clause
+    included, once `pays_mana_cost=True` here means the flashback cost (equal
+    to the mana cost, by both grants' own second sentence) was in fact what
+    was paid. `Casting.cast()` reads this to write `CastRecord.keyword =
+    "Flashback"` even though no keyword was announced, which is the only
+    thing `machines/replacement.py`'s exile-on-leaving-the-stack check
+    (`_stack_replacements`) actually looks at."""
     source_name: str = ""
     """The card whose ability handed this out, for the error message."""
     rule: str = "CR 601.3"
@@ -1127,18 +1156,21 @@ def why_cannot_cast_from(spell: CardState, caster: str, zone: Zone, game: Any = 
 
     A card in hand needs no permission - that is where the rules cast from by
     default (CR 302.1, 601.3). Anywhere else, some keyword has to allow it -
-    printed on the card, or granted to it where it lies by somebody's static
-    ability (CR 611.3d, Iroh's flashback grant) - or some effect has to have
-    handed out a `PlayPermission`, and that grant's own conditions have to
-    hold.
+    printed on the card, granted to it where it lies by somebody's static
+    ability (CR 611.3d, Iroh's flashback grant), or carried by the pile of
+    exile it is sitting in rather than by anything printed on it (CR 701.65a's
+    airbend - `marker_cast_options`) - or some effect has to have handed out a
+    `PlayPermission`, and that grant's own conditions have to hold.
     """
     if zone is Zone.HAND:
         return None
     if usable_play_permission(game, spell, caster) is not None:
         return None
-    options = castable_from(spell.card, zone) + [
-        granted.option for granted in granted_cast_options(game, spell, caster, zone)
-    ]
+    options = (
+        castable_from(spell.card, zone)
+        + [option for option in marker_cast_options(spell) if option.zone is zone]
+        + [granted.option for granted in granted_cast_options(game, spell, caster, zone)]
+    )
     reasons = [option.why_not(spell, caster, game, origin=zone) for option in options]
     if any(reason is None for reason in reasons):
         return None
@@ -3417,21 +3449,67 @@ class Casting(BaseModel):
         )
 
     def _refuse_unless_allowed_from_its_zone(self) -> None:
-        """CR 601.3: a spell cast from anywhere but the hand needs permission.
+        """CR 601.3: a spell cast from anywhere but the hand needs permission -
+        and CR 601.2b's announcement has to have actually *claimed* it.
 
         "A player can begin to cast a spell only if a rule or effect allows
         that player to cast it and no rule or effect prohibits that player from
         casting it." The hand is where the rules cast from by default
         (CR 302.1, CR 601.3); every other zone needs a keyword's static grant
-        or an effect's `PlayPermission`.
+        or an effect's `PlayPermission`. Two separate questions follow from
+        that one sentence, and both have to clear:
+
+        1. **Could anything allow this** (`why_cannot_cast_from`) - CR 601.3's
+           existence question, left exactly as it was: three scenario tests
+           (`test_flashback.py`, `test_madness.py`, `test_play_from_exile.py`)
+           call it directly with that meaning, and it is still the right
+           refusal-reason string when nothing at all applies.
+        2. **Did this announcement claim it.** CR 702.34a's flashback (and
+           mayhem CR 702.187b, plot CR 702.170d, foretell CR 702.143a, madness
+           CR 702.35a, a printed CR 604.6 zone permission, and a CR 610.5/
+           CR 611.3d granted keyword option) each read as one clause tying a
+           zone permission to a specific cost that replaces the mana cost -
+           the graveyard permission does not exist apart from flashback's own
+           cost. CR 601.2b makes choosing to pay that cost a *previously made
+           choice* the player announces, and CR 118.9a lets only one
+           alternative cost apply to a spell, which presupposes the player
+           choosing one rather than the engine picking the sole option that
+           happens to be available. So `keyword_used`/`permission_used` has
+           to be set - the mere *existence* of a `KeywordCastOption` for this
+           zone is not the same as announcing it, and treating it as such is
+           exactly the live-game defect this closes: Faithful Mending
+           (mana cost `{W}{U}`, Flashback `{1}{W}{U}`) charged and recast from
+           the graveyard for `{W}{U}` forever, because nothing ever checked
+           that `Flashback` had actually been named.
+
+        Question 2 is skipped when a live `PlayPermission` is what makes
+        question 1 answer "yes" (`usable_play_permission`): such a permission
+        already **is** CR 601.3's claimed grant the moment a resolving effect
+        hands it out (Ugin's −11, Ragavan's trigger, cascade, suspend), and
+        removing that leniency would refuse every live-play caller that never
+        calls `use_permission()` explicitly. Warp's second half and CR 715.3d's
+        Adventure are two `KeywordCastOption`s where `pays_mana_cost=True`
+        (the printed mana cost is the *right* cost, not an undercharge) but
+        the zone permission is still tied to the keyword, so they still need
+        `keyword_used` set - `use_keyword("Warp")`/`use_keyword("Adventure")`
+        - rather than the `PlayPermission` leniency, which does not apply to
+        them at all.
+
+        Bare CR 118.9 alternative costs cast from the hand - evoke
+        (CR 702.74a), dash (CR 702.109a), morph/megamorph/disguise
+        (CR 702.37a, CR 702.37c), bestow (CR 702.103a's "you may choose"),
+        warp from hand (CR 702.185a) - never reach question 2 at all: this
+        method returns immediately for `origin_zone is Zone.HAND`, which is
+        exactly where the rules already cast from by default and where none
+        of those five need to prove anything more than question 1.
 
         Checked here rather than at announcement because `Casting` is driven
         step by step: a scenario legitimately constructs the machine for a card
         in the graveyard and *then* discovers, through `use_keyword`, that
         nothing allows it. This is the last point before the spell reaches the
-        stack, and CR 601.6 rewinds the whole thing anyway, so refusing here
-        refuses the same action - it just lets the earlier steps say their own,
-        more specific "no" first.
+        stack, and CR 601.6/CR 733.1 rewind the whole thing anyway, so refusing
+        here refuses the same action - it just lets the earlier steps say their
+        own, more specific "no" first.
         """
         if self.origin_zone is Zone.HAND:
             return
@@ -3443,8 +3521,62 @@ class Casting(BaseModel):
             refusal = why_cannot_cast_from(
                 self._as_announced, self.caster, self.origin_zone, self.game
             )
-        if refusal is not None:
-            raise ValueError(refusal)
+            if refusal is not None:
+                raise ValueError(refusal)
+            if self.keyword_used is not None or self.permission_used is not None:
+                return
+            if usable_play_permission(self.game, self._as_announced, self.caster) is not None:
+                return
+            raise ValueError(self._unclaimed_zone_permission_message())
+
+    def _unclaimed_zone_permission_message(self) -> str:
+        """Name what CR 601.2b needed this announcement to claim, the way
+        `use_alternative_cost` already names its own options ("name it: ...")
+        when more than one applies.
+
+        Driven off `self.cast_options` - the same option machinery
+        `why_cannot_cast_from` and `use_keyword` both already read off the
+        card's printed keywords, the pile of exile it sits in, and whatever
+        another permanent grants it - never off a table of card names.
+        """
+        usable = [
+            option
+            for option in self.cast_options
+            if option.why_not(self._as_announced, self.caster, self.game, origin=self.origin_zone)
+            is None
+        ]
+        names = ", ".join(
+            f"{option.keyword} {_describe_keyword_cost(option)} ({option.rule})"
+            for option in usable
+        )
+        if not names:
+            # Reached only if a live `PlayPermission` supplied question 1's
+            # "yes" and was somehow not already caught by the leniency check
+            # above - kept as an honest fallback rather than an assertion, so
+            # an unanticipated permission shape fails loud instead of raising
+            # out of an empty join.
+            return (
+                f"{self.spell.name} can be cast from the {self.origin_zone.value} only by "
+                f"claiming the permission that allows it (CR 601.2b)"
+            )
+        return (
+            f"{self.spell.name} can be cast from your {self.origin_zone.value} only by "
+            f"announcing a keyword that allows it: {names}"
+        )
+
+    def _granted_flashback_keyword(self) -> str | None:
+        """ "Flashback", if this cast was made under a granted-flashback
+        `PlayPermission` (`PlayPermission.flashback`), else `None`.
+
+        CR 702.34a's exile-instead-of-anywhere-else half is written entirely
+        off `CastRecord.keyword` by `machines/replacement.py`'s
+        `_stack_replacements`, which has no notion of a `PlayPermission` at
+        all - a printed flashback sets `keyword_used` and reaches that check
+        for free, so a granted one has to arrive the same way.
+        """
+        if self.permission_used is not None and self.permission_used.flashback:
+            return "Flashback"
+        return None
 
     def cast(self) -> CardState:
         """Finish casting: the cost is paid and the spell is on the stack."""
@@ -3505,7 +3637,9 @@ class Casting(BaseModel):
             self.spell.spliced_text = tuple(self.spliced_text)
             self.game.note_cast(
                 self.spell,
-                keyword=self.keyword_used,
+                keyword=self.keyword_used
+                if self.keyword_used is not None
+                else self._granted_flashback_keyword(),
                 origin_zone=self.origin_zone,
                 face=self.face,
                 modes=list(self.chosen_mode_numbers),
