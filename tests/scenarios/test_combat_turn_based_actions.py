@@ -52,7 +52,7 @@ from magic_cards_model.machines.decisions import (
     DeclaredPair,
     ScriptedAnswer,
 )
-from magic_cards_model.machines.delayed import DelayedTrigger
+from magic_cards_model.machines.delayed import DelayedTrigger, SacrificeSubject
 from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario
 
@@ -84,7 +84,7 @@ def watcher(scenario, event: TriggerEvent, text: str, controller: str = "alice")
     return scenario.game.create_delayed_trigger(
         DelayedTrigger(
             text=text,
-            effect="unmodelled",
+            effect=SacrificeSubject(),
             event=event,
             controller=controller,
             source_name="a resolving spell",

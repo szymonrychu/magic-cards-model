@@ -85,13 +85,12 @@ from ..models.card_state import CardState
 from ..models.zone import Zone
 from .abilities import TriggerEvent
 from .decisions import Decision, DecisionKind
-from .delayed import DelayedTrigger
+from .delayed import DelayedTrigger, devourer_of_destiny_first_upkeep
 from .turn import Step
 
 if TYPE_CHECKING:  # pragma: no cover - import cycle: the models build on the machines
     from ..models.game import Game
     from ..models.player import Player
-    from .triggers import AbilityOnStack
 
 __all__ = [
     "RIDERS",
@@ -267,50 +266,6 @@ def _gemstone_caverns_rider(game: "Game", card_state: CardState, player: "Player
         player.move(by_id[card_id], Zone.EXILE)
 
 
-def _devourer_of_destiny_first_upkeep(
-    game: "Game", ability: "AbilityOnStack", trigger: DelayedTrigger
-) -> None:
-    """ "look at the top four cards of your library. You may put one of those
-    cards back on top of your library. Exile the rest." (Devourer of Destiny)
-
-    `Game.look_at_top_and_split` asks CR 701.22a's shared look-then-split
-    question; the "moved" half is read here as the card kept on top, so an
-    unscripted player - whose default answer moves nothing - exiles all four,
-    which is what declining a "you may put one back" does. More than one card
-    kept is refused: the card says "one".
-
-    That reading is the opposite of a scry's, where "moved" is the half that
-    leaves the top, and it is deliberate. `CardSplit.moved` is the pile the
-    player *opts into*, and this card's opt-in is the putting back ("you may
-    put one of those cards back on top"), so an empty answer has to mean "keep
-    nothing, exile all four" - which is exactly what an empty `moved` gives
-    here. Flipping it so that "moved" always meant "leaves the top" would make
-    the do-nothing answer keep all four on top and exile none, the one outcome
-    the card never produces. What used to make that safe to read from the
-    outside was nothing at all, which is the bug: `moved_label` / `kept_label`
-    below now say where each half actually goes, so no client has to infer a
-    direction from the field name.
-    """
-    player = game.player(trigger.controller)
-    kept, rest = game.look_at_top_and_split(
-        player,
-        4,
-        source=trigger.source_name,
-        prompt="look at the top four cards; you may put one back on top",
-        moved_label="top of your library",
-        kept_label="exiled",
-    )
-    if len(kept) > 1:
-        raise ValueError(
-            f"{trigger.source_name}: only one of those cards may be put back on top "
-            f"of your library (CR 608.2d)"
-        )
-    for state in rest:
-        player.add(state, Zone.EXILE)
-    for index, state in enumerate(kept):
-        player.library.insert(index, state)
-
-
 def _devourer_of_destiny_rider(game: "Game", card_state: CardState, player: "Player") -> None:
     """ "If you do, at the beginning of your first upkeep, ..." (Devourer of Destiny)
 
@@ -327,8 +282,7 @@ def _devourer_of_destiny_rider(game: "Game", card_state: CardState, player: "Pla
                 "your library. You may put one of those cards back on top of your "
                 "library. Exile the rest."
             ),
-            effect="",
-            callback=_devourer_of_destiny_first_upkeep,
+            effect=devourer_of_destiny_first_upkeep,
             event=TriggerEvent.BEGINNING_OF_STEP,
             step=Step.UPKEEP,
             controller=player.username,

@@ -121,6 +121,7 @@ from ..models.card_state import CardState, Choice, ChoiceKind, ExileMarker
 from ..models.token import TokenDefinition, is_token
 from ..models.zone import Zone
 from .decisions import Decision, DecisionKind
+from .delayed import ReflexiveExileCopiedCard
 
 if TYPE_CHECKING:
     from ..models.game import Game
@@ -3397,25 +3398,12 @@ def _create_linked_reflexive_trigger(
     match = _REFLEXIVE_OPENER.match(linked)
     if match is None or not _EXILE_THAT_CARD_RE.match(match.group("effect").strip()):
         return
-    zone_when_copied = copied.zone
-
-    def exile_that_card(game: "Game", ability: object, trigger: object) -> None:
-        if copied.zone is not zone_when_copied or copied.owner is None:
-            return  # CR 400.7: no longer the object the ability referred to.
-        owner = game.player(copied.owner)
-        pile = owner.cards_in(zone_when_copied)
-        if copied not in pile:
-            return
-        pile.remove(copied)
-        copied.move_to(Zone.EXILE)
-        game.exile.append(copied)
-
     game.create_reflexive_trigger(
         text=linked,
         controller=entering.controller,
         source_id=entering.id,
         source_name=card_name,
-        callback=exile_that_card,  # type: ignore[arg-type]
+        callback=ReflexiveExileCopiedCard(card_id=copied.id, zone_when_copied=copied.zone),
     )
 
 

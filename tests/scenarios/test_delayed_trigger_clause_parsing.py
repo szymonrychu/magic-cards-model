@@ -253,13 +253,13 @@ def test_a_delayed_return_created_during_the_end_step_waits_for_the_next_turns_e
     # end step has already begun - CR 513.2 says it waits for the *next*
     # turn's end step, not this already-begun one.
     from magic_cards_model.machines.abilities import TriggerEvent
-    from magic_cards_model.machines.delayed import DelayedTrigger
+    from magic_cards_model.machines.delayed import DelayedTrigger, SacrificeSubject
 
     watchwolf.tap()
     scenario.game.create_delayed_trigger(
         DelayedTrigger(
             text="At the beginning of the next end step, tap Watchwolf again's return marker.",
-            effect="sacrifice",  # any registered no-op-if-absent key works; not exercised here
+            effect=SacrificeSubject(),  # subject_id=None below: harmless, not exercised here
             event=TriggerEvent.BEGINNING_OF_STEP,
             step=Step.END_STEP,
             controller="alice",
