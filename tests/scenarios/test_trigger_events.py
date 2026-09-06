@@ -47,7 +47,7 @@ import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.abilities import TriggerEvent
-from magic_cards_model.machines.delayed import DelayedTrigger
+from magic_cards_model.machines.delayed import DelayedTrigger, SacrificeSubject
 from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario
 
@@ -79,7 +79,7 @@ def watcher(scenario, event: TriggerEvent, text: str, controller: str = "alice")
     return scenario.game.create_delayed_trigger(
         DelayedTrigger(
             text=text,
-            effect="unmodelled",
+            effect=SacrificeSubject(),
             event=event,
             controller=controller,
             source_name="a resolving spell",
@@ -509,7 +509,7 @@ def test_a_sacrifice_paid_as_a_cost_fires_both_the_sacrifice_and_the_dies_trigge
         scenario.game.create_delayed_trigger(
             DelayedTrigger(
                 text=text,
-                effect="unmodelled",
+                effect=SacrificeSubject(),
                 event=event,
                 controller="alice",
                 source_name=source,

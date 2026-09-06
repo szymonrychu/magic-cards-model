@@ -42,7 +42,7 @@ warp cost was paid. See `docs/engine-coverage.md`.
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.abilities import TriggerEvent
-from magic_cards_model.machines.delayed import DelayedTrigger
+from magic_cards_model.machines.delayed import DelayedTrigger, GrantExtraTurn, SacrificeSubject
 from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario
 
@@ -68,7 +68,7 @@ def sacrifice_at_next_end_step(scenario, permanent, controller: str) -> DelayedT
     return scenario.game.create_delayed_trigger(
         DelayedTrigger(
             text="At the beginning of the next end step, sacrifice it.",
-            effect="sacrifice",
+            effect=SacrificeSubject(),
             event=TriggerEvent.BEGINNING_OF_STEP,
             step=Step.END_STEP,
             controller=controller,
@@ -227,7 +227,7 @@ def test_an_ability_told_to_wait_for_one_players_turn_ignores_everyone_elses():
     scenario.game.create_delayed_trigger(
         DelayedTrigger(
             text="At the beginning of bob's next end step, sacrifice it.",
-            effect="sacrifice",
+            effect=SacrificeSubject(),
             event=TriggerEvent.BEGINNING_OF_STEP,
             step=Step.END_STEP,
             controller="bob",
@@ -374,7 +374,7 @@ def test_an_extra_turn_granted_by_a_delayed_trigger_comes_after_the_turn_it_wait
     scenario.game.create_delayed_trigger(
         DelayedTrigger(
             text="After that turn, that player takes an extra turn.",
-            effect="grant_extra_turn",
+            effect=GrantExtraTurn(),
             event=TriggerEvent.BEGINNING_OF_STEP,
             step=Step.END_STEP,
             controller="alice",
