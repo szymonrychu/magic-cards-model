@@ -5,7 +5,15 @@ from enum import StrEnum
 from typing import Any, Self
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, RootModel, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    PrivateAttr,
+    RootModel,
+    model_serializer,
+    model_validator,
+)
 
 from ..ids import new_id
 from .card import Card, Color, Layout, Supertype, Type, subtypes_of, supertypes_of, types_of
@@ -2097,6 +2105,72 @@ class CardState(BaseModel):
         if self.is_saga and self.chapter_numbers:
             self.counters.add(Counter.LORE, 1)
 
+    @model_validator(mode="wrap")
+    @classmethod
+    def _resolve_token_subclass(cls, data: Any, handler: Any) -> "CardState":
+        """A token survives as a `TokenState` across a round trip (CR 111.1).
+
+        `token.TokenState` is `CardState`'s only subclass, and its whole
+        reason to exist - `move_to`'s CR 111.8 override - depends on staying a
+        `TokenState` instance. Every field that stores one is typed plainly as
+        `CardState` (`Player.zones`, `Game`'s `StackObject`), which is fine for
+        an in-memory game: pydantic leaves an instance that already is the
+        right class alone. It is not fine for a `dict` - the shape a game is
+        in right after a `model_dump`/JSON round trip, with no Python type
+        information left in it anywhere - because there `CardState` is all the
+        field annotation has ever named, and building one throws
+        `TokenState`'s override away even though the dict itself still says
+        `token: true`.
+
+        So `CardState` reads its own subclass off that flag rather than
+        trusting the field annotation: a dict payload with `token` true is
+        handed to `TokenState` instead. `cls is CardState` keeps this from
+        firing again once it has - `TokenState.model_validate` reaches this
+        same validator through inheritance, with `cls` bound to `TokenState`,
+        and must fall straight through to `handler`. Anything that is not a
+        dict-with-`token`-true (an in-memory instance, a plain permanent, a
+        token dict already being validated as `TokenState`) also falls
+        straight through, unchanged.
+        """
+        if cls is CardState and isinstance(data, dict) and data.get("token"):
+            from .token import TokenState  # deferred: token.py imports CardState
+
+            return TokenState.model_validate(data)
+        return handler(data)
+
+    @model_serializer(mode="wrap")
+    def _dump_with_subclass_fields(self, handler: Any) -> dict[str, Any]:
+        """A `TokenState`'s own fields survive a dump through a `CardState`-typed
+        container, alongside `_resolve_token_subclass`'s other half of CR 111.1.
+
+        Every field that stores a permanent is typed plainly as `CardState`
+        (`Player.zones`, `Game`'s `StackObject`), so `model_dump` builds each
+        item from *that* schema - `TokenState`'s own fields are simply not
+        part of it. Pydantic's default there is to serialize by the
+        container's declared type rather than the object's actual one, which
+        silently dropped `TokenState.left_the_battlefield` from a dumped
+        token: not merely a class the decoder could not have rebuilt, but a
+        flag CR 111.8 needs that never made it into the dict to rebuild from
+        in the first place.
+
+        `handler(self)` is that default - correct and complete whenever `self`
+        really is a plain `CardState`, and already correct for a subclass
+        serialized under its *own* type (its schema already knows its own
+        fields, so this is then a harmless no-op). It only needs help for the
+        one case in between: a subclass instance reached through a schema
+        built for `CardState`. `type(self).model_fields` there names every
+        field the object actually has; the ones `CardState` itself does not
+        declare are read straight off `self` and added on top, which keeps
+        this correct for any future field `TokenState` (or another
+        `CardState` subclass) adds without needing a matching change here.
+        """
+        data = handler(self)
+        if type(self) is not CardState:
+            own_only = set(type(self).model_fields) - set(CardState.model_fields)
+            for name in own_only:
+                data[name] = getattr(self, name)
+        return data
+
     @model_validator(mode="after")
     def _planeswalkers_start_loyal(self) -> Self:
         """A planeswalker built straight onto the battlefield has its loyalty.
@@ -2119,6 +2193,32 @@ class CardState(BaseModel):
         if self.zone is Zone.BATTLEFIELD and self.is_saga and not self.counters:
             self._enter_with_lore_counter()
         return self
+
+
+def bind_all_to_game(states: Iterable[CardState], game: Any) -> None:
+    """`bind_to_game` (CR 613.5), over every `CardState` `game` holds.
+
+    `Game.model_post_init` already stamps `player.game = self` on every
+    player so `Player.discard` has a rules engine to ask, but it does not
+    call this - and `bind_to_game` has exactly one production call site,
+    `Game.put_onto_battlefield`. That covers a card *entering* the
+    battlefield during play. It does nothing for a permanent that is already
+    there the moment a `Game` is built from a dict: a cold `model_validate`
+    never routes a single card through `put_onto_battlefield`, so every one
+    of its permanents answers `power`/`toughness` with the printed value plus
+    counters (CR 122.1a) instead of the layer engine's (CR 613.5) - silently
+    different from the same game played continuously, for as long as nothing
+    re-enters the battlefield to get bound.
+
+    This is the loop that closes that gap: hand it every `CardState` the
+    game holds - `Game.shared_zones` and every `Player.zones`, the same two
+    collections `Game`'s own target-candidate sweeps already walk - and
+    `game`, once, from `Game.model_post_init`, right alongside the `player.
+    game = self` loop it already runs. It does not live in `Game` itself
+    only because nothing in this module is allowed to import it.
+    """
+    for state in states:
+        state.bind_to_game(game)
 
 
 def annihilate_counters_on(permanents: Iterable[CardState]) -> list[CardState]:

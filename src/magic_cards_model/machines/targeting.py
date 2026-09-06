@@ -1449,7 +1449,15 @@ def _read_other_than_exclusion(
     return frozenset(), frozenset(_TYPE_NOUNS[word] for word in type_words)
 
 
-_CACHE: dict[tuple[str, str], TargetingProfile] = {}
+#: Keyed on oracle text alone, not `(card.name, text)`: a card's `Card`
+#: instance must never sit inside this cache, because `Card` is
+#: `ConfigDict(extra="ignore")` rather than frozen, and a cached instance is
+#: shared - unboundedly - across every game the process ever runs. Stamping
+#: one game's `Card` into a profile that a later, unrelated game then reads
+#: back out would let a mutation in the first game leak into the second.
+#: `source_card` is therefore never stored here; `targeting_profile` stamps it
+#: onto a fresh copy of the cached profile on every call instead.
+_CACHE: dict[str, TargetingProfile] = {}
 
 
 def targeting_profile(card: Card) -> TargetingProfile:
@@ -1471,19 +1479,19 @@ def targeting_profile(card: Card) -> TargetingProfile:
     # Turntimber Symbiosis) with no target requirement read from its text at
     # all - same family as `effect_for`'s fix in `Game.resolve_top`.
     text = card.front_oracle_text
-    key = (card.name, text)
-    profile = _CACHE.get(key)
+    profile = _CACHE.get(text)
     if profile is None:
         if modal_profile(card):
             profile = TargetingProfile(understood=False)
         else:
             profile = _parse(text)
             profile = _with_aura_target(card, profile)
-        # Stamped last so every branch above carries it: this is the card whose
-        # qualities CR 702.16b compares against a protected target.
-        profile = profile.model_copy(update={"source_card": card})
-        _CACHE[key] = profile
-    return profile
+        _CACHE[text] = profile
+    # Stamped here, on every call, rather than baked into the cached entry:
+    # this is the card whose qualities CR 702.16b compares against a
+    # protected target, and it must be *this* call's `card`, never whichever
+    # game's `Card` happened to populate the cache first.
+    return profile.model_copy(update={"source_card": card})
 
 
 def _with_aura_target(card: Card, profile: TargetingProfile) -> TargetingProfile:
