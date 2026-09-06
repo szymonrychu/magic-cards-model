@@ -1071,6 +1071,18 @@ class CostComponent(BaseModel):
     """How many objects this component needs chosen. Zero for paying life."""
 
     cards: list[CardState] = Field(default_factory=list)
+    """The objects chosen to pay this component, held by reference rather than
+    by id. Kept as `CardState` rather than `list[UUID]` (unlike `CostPayment.
+    tapped_for_mana`) because `why_not`/`pay` read a dozen of this object's own
+    fields (`.zone`, `.tapped`, `.controller`, `.counters`, `.mana_value`,
+    `.name`) throughout this class, several of them from call sites that pass
+    no `game` at all (a unit test paying a bare component); reducing this to
+    ids would mean every one of those reads needs a `game` to resolve through,
+    which does not exist everywhere this class is used. `unpay` is the one
+    place that both mutates through a captured reference *and* can run after a
+    dump/decode round trip (a payment resumed from `AbilityOnStack.
+    keyword_activation.payment`/`.unless_payment`), so that is where the
+    re-resolve lives instead - see its own docstring's `_live` helper."""
     description: str = ""
     paid: bool = False
 
@@ -1100,6 +1112,12 @@ class CostComponent(BaseModel):
     """
 
     _undo: list[tuple[CardState, dict[str, Any]]] = PrivateAttr(default_factory=list)
+    """What `pay` changed, so `unpay` can put it back (CR 733.1). A
+    `PrivateAttr`, so - unlike every `Field` above it - it does not survive a
+    dump/decode round trip at all: a decoded `CostComponent` with `paid=True`
+    always comes back with `_undo == []`. `unpay` refuses loudly rather than
+    silently restoring nothing when that state was needed and is gone; see its
+    own docstring."""
 
     def __str__(self) -> str:
         if self.description:
@@ -1529,9 +1547,47 @@ class CostComponent(BaseModel):
         self.paid = True
 
     def unpay(self, game: Any) -> None:
-        """Put back exactly what paying took, in reverse order (CR 733.1)."""
+        """Put back exactly what paying took, in reverse order (CR 733.1).
+
+        Two hazards, both about what a decode leaves behind:
+
+        - `self._undo` is a `PrivateAttr` (see its own docstring) and does not
+          survive a dump/decode round trip at all. A paid component whose
+          `_undo` came back empty cannot be rewound - not "rewound to no
+          effect", genuinely cannot, because the prior state it needs is gone -
+          so this refuses loudly rather than silently doing nothing, the same
+          choice `CostPayment._restore_payer_pool` makes for `_preexisting`.
+          `PAY_LIFE` is exempt: its rewind only ever reads `self.amount` and
+          `self.payer`, both plain fields that do survive.
+        - Even when `_undo` did survive (the ordinary, non-decoded case), the
+          `CardState`s it captured are the ones `self.cards` already held, and
+          those are real, live objects only until the *next* round trip -
+          `self.cards: list[CardState]` is not `Any`/excluded and would decode
+          to copies with the same id as, but not the same identity as, the
+          battlefield object, the identical hazard `_equip_effect`/`_crew_
+          effect` had for `activation.card`. `_live` below re-resolves each
+          one through `game.find_by_id` before mutating it; `game` is `None`
+          only for a component paid outside a `Game` (a unit test), where the
+          captured object is the only real one there is.
+        """
         if not self.paid:
             return
+        if (
+            not self._undo
+            and self.kind is not ComponentKind.PAY_LIFE
+            and (self.cards or self.amount)
+        ):
+            raise RuntimeError(
+                f"{self} was paid but its undo history (CostComponent._undo) "
+                "did not survive a dump/decode round trip, so there is "
+                "nothing left to rewind it from"
+            )
+
+        def _live(card: CardState) -> CardState:
+            if game is None:
+                return card
+            found = game.find_by_id(card.id)
+            return found if isinstance(found, CardState) else card
 
         if self.kind is ComponentKind.PAY_LIFE:
             if self.amount:
@@ -1540,27 +1596,28 @@ class CostComponent(BaseModel):
             # Exerting moves nothing either, and CR 701.43b lets it be exerted
             # more than once, so the rewind is simply putting the flag back.
             for card, _ in reversed(self._undo):
-                card.exerted = False
+                _live(card).exerted = False
         elif self.kind is ComponentKind.TAP:
             # Tapping moves nothing, so untapping is the whole rewind.
             for card, _ in reversed(self._undo):
-                card.untap(exert_applies=False)
+                _live(card).untap(exert_applies=False)
         elif self.kind is ComponentKind.UNTAP:
             # Untapping moves nothing either, so re-tapping is the whole
             # rewind - the mirror of `TAP`'s above.
             for card, _ in reversed(self._undo):
-                card.tap()
+                _live(card).tap()
         elif self.kind is ComponentKind.MILL:
             # CR 733.1: the rewind has to put the cards back *on top*, in the
             # order they were milled in - `_return` appends, which would leave
             # them on the bottom of the library. Walking `self._undo` backwards
             # and inserting each at index 0 restores the original order.
             for card, snapshot in reversed(self._undo):
-                self._return(game, card, snapshot)
+                live = _live(card)
+                self._return(game, live, snapshot)
                 library = game.player(self.payer).cards_in(Zone.LIBRARY)
-                if library and library[-1] is card:
+                if library and library[-1] is live:
                     library.pop()
-                library.insert(0, card)
+                library.insert(0, live)
         elif self.kind in (
             ComponentKind.LOYALTY,
             ComponentKind.REMOVE_COUNTERS,
@@ -1572,10 +1629,10 @@ class CostComponent(BaseModel):
             # its zone list and re-appends it - reordering the battlefield for
             # a payment that moved nothing.
             for card, snapshot in reversed(self._undo):
-                card.counters = snapshot["counters"]
+                _live(card).counters = snapshot["counters"]
         else:
             for card, snapshot in reversed(self._undo):
-                self._return(game, card, snapshot)
+                self._return(game, _live(card), snapshot)
 
         self._undo = []
         self.paid = False
@@ -2931,12 +2988,20 @@ class CostSubstitution(BaseModel):
     rule: str
     """The CR number that keyword expands to, quoted in refusals."""
 
-    card: CardState
+    card_id: UUID
+    card_name: str
+    """The id and name of the object paying this symbol, kept as plain data
+    rather than the `CardState` itself - `component.cards` next door already
+    holds the same object for the actual tap or exile, so a `card: CardState`
+    field here was a second, redundant reference to it, dumping a whole extra
+    copy of the same permanent on every serialization for no reader that
+    needed more than its id and name (`__str__`'s message, and `entry.card.id`
+    in `machines/objects_as_costs.py`'s own-object check)."""
     option: PaymentOption
     component: CostComponent
 
     def __str__(self) -> str:
-        return f"{self.card.name} pays {self.option} ({self.keyword}, {self.rule})"
+        return f"{self.card_name} pays {self.option} ({self.keyword}, {self.rule})"
 
 
 def cost_less(cost: ManaCost, options: Iterable[PaymentOption]) -> ManaCost:
@@ -2984,7 +3049,19 @@ class CostPayment(BaseModel):
     payer: str | None = None
     pool: ManaPool = Field(default_factory=ManaPool)
     step: CostStep = CostStep.PENDING
-    tapped_for_mana: list[CardState] = Field(default_factory=list)
+    tapped_for_mana: list[UUID] = Field(default_factory=list)
+    """The ids of the sources this payment's own `tap_for_mana` calls tapped,
+    matching `triggers_caused` below rather than holding the `CardState`s
+    themselves. It used to be `list[CardState]`, which round-tripped as a full
+    second copy of every tapped permanent (`Game.find_by_id`, `game.battlefield`
+    and this list each dumping their own `CardState` with the same id) - and
+    once `AbilityOnStack.keyword_activation`/`.unless_payment` could survive a
+    round trip at all, `_undo_everything` untapping those decoded copies
+    directly left the real battlefield sources tapped forever with no error,
+    the identical shape `_equip_effect`/`_crew_effect` had for `activation.
+    card`. `_undo_everything` re-resolves each id through `game.find_by_id`
+    now; `_tapped_sources` below is the only place a live object is still kept,
+    and only for the no-`game` path."""
     overflow: ManaPool | None = None
 
     triggers_caused: list[UUID] = Field(default_factory=list)
@@ -3049,7 +3126,21 @@ class CostPayment(BaseModel):
 
     _preexisting: ManaPool | None = PrivateAttr(default=None)
     """The payer's floating mana as it stood when the payment opened, so a
-    rewind (CR 733.1) can put it back after `pay` spent part of it."""
+    rewind (CR 733.1) can put it back after `pay` spent part of it.
+
+    A `PrivateAttr`, so it does not survive a dump/decode round trip -
+    `_restore_payer_pool` refuses loudly rather than silently restoring
+    nothing when that matters (see its own docstring)."""
+
+    _tapped_sources: dict[UUID, CardState] = PrivateAttr(default_factory=dict)
+    """The live objects behind `tapped_for_mana`'s ids, for the one case that
+    still needs them by reference: a `CostPayment` used with no `game` at all
+    (a unit test tapping a bare `CardState` directly). `_undo_everything`
+    resolves through `game.find_by_id` whenever there is a game; this is only
+    the fallback for when there is none to ask. A `PrivateAttr` here is safe -
+    unlike `_preexisting` and `CostComponent._undo` - because a payment with no
+    `game` was never attached to one to be serialized as part of in the first
+    place."""
 
     @classmethod
     def for_total(
@@ -3138,7 +3229,12 @@ class CostPayment(BaseModel):
                 f"has no {option} left to pay ({keyword}, {rule})"
             )
         entry = CostSubstitution(
-            keyword=keyword, rule=rule, card=card, option=option, component=component
+            keyword=keyword,
+            rule=rule,
+            card_id=card.id,
+            card_name=card.name,
+            option=option,
+            component=component,
         )
         self.substitutions.append(entry)
         self.components.append(component)
@@ -3353,7 +3449,8 @@ class CostPayment(BaseModel):
         self._transition(CostStep.TAPPING)
 
         source.tap()
-        self.tapped_for_mana.append(source)
+        self.tapped_for_mana.append(source.id)
+        self._tapped_sources[source.id] = source
         if restriction is INFER_RESTRICTION:
             restriction = restriction_for_production(source, produces, self.game)
         # CR 106.6's additional-effect clause travels with the mana too, and
@@ -3763,9 +3860,27 @@ class CostPayment(BaseModel):
         The PAID half of CR 733.1's reversal: `pay` replaced the pool with the
         remainder, which spent whatever pre-existing mana the payment used, so
         undoing the whole action puts that mana back.
+
+        `game is None or payer is None` is a legitimate no-op: there was never
+        a pool to restore into. `_preexisting is None` while `game` and
+        `payer` are both set is a different thing entirely - in production a
+        `CostPayment` only ever comes from `for_total`, which seeds
+        `_preexisting` whenever it has a `game` and `payer` to seed it from, so
+        reaching PAID with a `game`/`payer` but no `_preexisting` means the
+        snapshot was there once and a dump/decode round trip dropped it
+        (`_preexisting` is a `PrivateAttr`; see its own docstring). Restoring
+        nothing and reporting success would leave a rewound payment's mana
+        gone - the reviewer's exact repro - so this refuses loudly instead.
         """
-        if self._preexisting is None or self.game is None or self.payer is None:
+        if self.game is None or self.payer is None:
             return
+        if self._preexisting is None:
+            raise RuntimeError(
+                f"cannot rewind {self.payer}'s payment: its pre-payment mana "
+                "pool snapshot (CostPayment._preexisting) did not survive a "
+                "dump/decode round trip, so there is nothing to restore it "
+                "from"
+            )
         try:
             pool = self.game.player(self.payer).mana_pool
         except (KeyError, ValueError, AttributeError):
@@ -3777,9 +3892,22 @@ class CostPayment(BaseModel):
     def _undo_everything(self) -> None:
         for component in reversed(self.components):
             component.unpay(self.game)
-        for source in self.tapped_for_mana:
-            source.untap()
+        for source_id in self.tapped_for_mana:
+            # Re-resolved through `game` rather than held by reference (see
+            # `tapped_for_mana`'s own docstring): after a dump/decode round
+            # trip the only object that answers to this id and is actually on
+            # the battlefield is the one `game.find_by_id` finds.
+            # `_tapped_sources` only carries a live object when there is no
+            # `game` to ask at all (a unit test tapping a bare `CardState`).
+            source = (
+                self.game.find_by_id(source_id)
+                if self.game is not None
+                else self._tapped_sources.get(source_id)
+            )
+            if isinstance(source, CardState):
+                source.untap()
         self.tapped_for_mana = []
+        self._tapped_sources = {}
         self.pool.empty()
         self.mana_payment = None
         self._discard_triggers_caused()

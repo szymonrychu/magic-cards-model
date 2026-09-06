@@ -14,9 +14,10 @@ as long as the process that ran the game keeps running:
   the layer engine instead of falling back to the printed value plus
   counters. `Game.put_onto_battlefield` is its only production call site, so
   a permanent already on the battlefield the moment a `Game` is decoded from
-  a dict never gets bound at all. `card_state.bind_all_to_game` is the loop
-  that closes the gap - see the T7 report for why it could not be wired into
-  `Game.model_post_init` itself in this task.
+  a dict used to never get bound at all. `Game.model_post_init` now closes
+  that gap itself - the same walk `card_state.bind_all_to_game` already did
+  by hand, wired in rather than left as a loop a caller has to remember to
+  run.
 - `TokenState` (CR 111.1) used to lose its own class on a round trip, because
   every field that stores one is typed plainly as `CardState` and a `dict`
   carries no Python type information. `CardState` now reads its own subclass
@@ -32,7 +33,6 @@ own files because neither needs a played game to demonstrate.
 
 from magic_cards_model.machines.layers import compute_board, static_effects
 from magic_cards_model.models import Type, Zone
-from magic_cards_model.models.card_state import bind_all_to_game
 from magic_cards_model.models.game import Game
 from magic_cards_model.models.token import TREASURE, TokenState, create_tokens
 from tests.scenarios.harness import Scenario
@@ -79,32 +79,19 @@ def test_an_unequip_after_a_cold_decode_still_takes_the_grant_back_off():
 
 
 # --------------------------------------------------------------------------
-# 3. `bind_to_game` (CR 613.5) - the helper `Game.model_post_init` needs
+# 3. `bind_to_game` (CR 613.5), wired into `Game.model_post_init` itself
 # --------------------------------------------------------------------------
 
 
-def _every_card_state(game: Game):
-    for cards in game.shared_zones.values():
-        yield from (state for state in cards if hasattr(state, "bind_to_game"))
-    for player in game.players:
-        for cards in player.zones.values():
-            yield from cards
-
-
-def test_bind_all_to_game_gives_a_decoded_creature_its_layer_computed_power():
+def test_a_cold_decode_gives_a_battlefield_creature_its_layer_computed_power():
     """Glorious Anthem: "Creatures you control get +1/+1" (CR 613.4c).
 
     Live, `Scenario.build` already binds a staged battlefield permanent, so
-    the Bears reads 3/3. A cold decode has no such binding at all yet -
-    `Game.model_post_init` (models/game.py) does not call this helper, and
-    that file is out of scope for this task: it is held by a concurrent agent
-    working on machines/triggers.py and models/game.py, so the one-loop
-    change it still needs (iterate `self.shared_zones.values()` and each
-    player's `.zones.values()`, exactly as `_every_card_state` above does,
-    calling `state.bind_to_game(self)` on each) is reported rather than made
-    here. What this test proves instead: `bind_all_to_game` (`models/
-    card_state.py`), applied to a decoded game by hand, produces exactly the
-    live game's answer - the fix is correct and ready for that one-loop wire.
+    the Bears reads 3/3. `Game.model_post_init` now runs the same binding
+    itself - the loop `card_state.bind_all_to_game` already did by hand - so a
+    cold `model_validate` needs no extra call at all: the decoded creature
+    must already read as bound the moment it comes back, not only after some
+    caller remembers to bind it.
     """
     scenario = Scenario().player("alice", battlefield=["Glorious Anthem", "Grizzly Bears"]).build()
     bears = scenario.creature("Grizzly Bears", "alice")
@@ -112,14 +99,9 @@ def test_bind_all_to_game_gives_a_decoded_creature_its_layer_computed_power():
 
     decoded = Game.model_validate(scenario.game.model_dump(mode="json"))
     decoded_bears = next(s for s in decoded.battlefield if s.name == "Grizzly Bears")
-    assert (decoded_bears.power, decoded_bears.toughness) == (2, 2), (
-        "unbound: a fresh decode has not asked the layer engine yet"
-    )
-
-    bind_all_to_game(_every_card_state(decoded), decoded)
 
     assert (decoded_bears.power, decoded_bears.toughness) == (3, 3), (
-        "bound, the decoded creature now answers exactly as the live one does"
+        "bound automatically on decode, with no manual bind_all_to_game call needed"
     )
 
 

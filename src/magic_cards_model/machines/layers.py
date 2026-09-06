@@ -5557,6 +5557,18 @@ class LayerContext(BaseModel):
     are applied, so a caller rebuilds them whenever it recomputes the board -
     which is what CR 613.5 asks for anyway ("continually and automatically
     performed by the game").
+
+    `graveyards`, `your_graveyard`, and `graveyard_by_controller` below are the
+    only `CardState`-typed fields anywhere in this module - every other layer
+    field is an id, a `Selector`, or a `Modification`. This class is built
+    fresh on every `compute_board`/`static_effects` call and is never stored on
+    a serialized model (`Game`, `CardState`, or anything else that gets
+    `model_dump`ed); nothing here should change that. Doing so would put a
+    battlefield snapshot's `CardState`s into a second serialized location -
+    exactly the stale-copy-by-reference hazard `_equip_effect`/`_crew_effect`
+    hit for `KeywordActivation.card` (`machines/keywords.py`) - for a value
+    that is already meant to be rebuilt every time, not carried across a round
+    trip at all.
     """
 
     model_config = ConfigDict(frozen=True)

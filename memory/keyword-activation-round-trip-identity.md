@@ -37,8 +37,22 @@ copy it mutates a throwaway duplicate, and `game.find_by_id(cutter.id)` shows
 the Equipment forever unattached with no error anywhere. Fixed by re-resolving
 `activation.card` through `game.find_by_id` before mutating it, the same
 CR 113.7a re-check `_equip_effect` already did for its *target* but not for
-its own source. `_crew_effect`/`_cycling_effect` were already safe: neither
-mutates through `activation.card` directly, only by id.
+its own source.
+
+**Correction, 2026-09-07.** `_crew_effect` was not already safe - a later
+review caught it. It never mutates through `activation.card`, but it does
+read `activation.card.zone` to recheck the Vehicle is still on the
+battlefield (CR 608.2h) before creating two `ContinuousEffect`s, and that
+recheck against a frozen decoded snapshot is exactly the same bug shape as a
+stale mutation: crew uses the stack, so a Vehicle destroyed in response and
+then dumped/decoded still reads `battlefield` on the captured copy, and the
+effect happily creates two live layer effects for a permanent that is
+actually in the graveyard - silently, with `CardState.move_to` keeping `id`
+stable enough that they latch back on if the Vehicle returns before cleanup.
+Fixed the same way as `_equip_effect`: `vehicle = game.find_by_id(activation.
+card.id)` before the zone check. `_cycling_effect` is the one that was
+genuinely audited and needed nothing: it reads nothing off `activation.card`
+at all.
 
 **How to apply:** typing a field correctly and getting a clean dump/decode is
 not the same claim as "resolves identically" - a `CardState` (or any object)

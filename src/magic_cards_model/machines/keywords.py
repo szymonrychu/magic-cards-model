@@ -1179,13 +1179,41 @@ def _crew_effect(activation: KeywordActivation) -> list[ContinuousEffect]:
 
     CR 702.122e's "Whenever this Vehicle becomes crewed" is not modelled - see
     `docs/engine-coverage.md`.
+
+    The Vehicle is re-read off `game` by id rather than through `activation.
+    card` directly, the same re-resolve `_equip_effect` does and for the same
+    reason: once `AbilityOnStack.keyword_activation` survives a dump-and-decode
+    round trip, `activation.card` is a decoded `CardState` with the same id as,
+    but not the same identity as, the object actually sitting in `game`'s
+    zones. Crew goes on the stack, so an opponent gets a chance to destroy the
+    Vehicle in response before this resolves; in the stateless-library world
+    every priority pass is a dump/decode, and checking `activation.card.zone`
+    directly reads a frozen snapshot taken when the ability was activated, not
+    the Vehicle's zone now. CR 608.2h is the general rule this recheck serves:
+    "If the effect requires information from a specific object ... the effect
+    uses the current information of that object if it's in the public zone it
+    was expected to be in; if it's no longer in that zone ... the effect uses
+    the object's last known information." `game.find_by_id` gives the current
+    information; falling back to `activation.card` only when the id is not on
+    this `game` at all matches `_equip_effect`'s own fallback, for the same
+    CR 113.7a reason (the ability still resolves after its source is gone).
+
+    A previous pass claimed this function was "audited" and needed no fix
+    because it does not mutate through `activation.card` - true, but beside
+    the point: the bug here was never a wild mutation, it was reading a stale
+    `.zone` off a decoded copy and creating two live `ContinuousEffect`s for a
+    Vehicle that was actually already in a graveyard. `_cycling_effect` above
+    is the one that was genuinely audited and is safe: it reads nothing off
+    `activation.card` at all.
     """
     game = activation.game
-    vehicle = activation.card
+    vehicle = game.find_by_id(activation.card.id)
+    if not isinstance(vehicle, CardState):
+        vehicle = activation.card
     if vehicle.zone is not Zone.BATTLEFIELD:
-        # CR 608.2: the ability resolves regardless, but a Vehicle that has
-        # left the battlefield is a different object (CR 400.7) and nothing
-        # here applies to it.
+        # CR 608.2h / CR 400.7: a Vehicle that has left the battlefield is a
+        # different object, and nothing here applies to it - the ability still
+        # resolves (CR 113.7a) but does nothing.
         return []
     timestamp = game.continuous_effects.tick()
     created = [

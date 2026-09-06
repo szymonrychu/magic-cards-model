@@ -1682,6 +1682,24 @@ class Game(BaseModel):
             # that lets `Player.discard` find the rules. Excluded from the
             # serialised model, so it cannot make the game state cyclic.
             player.game = self
+        for zone_cards in self.shared_zones.values():
+            # `CardState.bind_to_game` (CR 613.5) is what makes `power`/
+            # `toughness` ask the layer engine instead of falling back to the
+            # printed value plus counters. `Game.put_onto_battlefield` is its
+            # only production call site, so a permanent already on the
+            # battlefield the moment a `Game` is built straight from a dict -
+            # every cold `model_validate` - never got bound at all, and
+            # answered with the printed value even under an anthem, silently
+            # different from the same game played continuously. This binds
+            # every `CardState` the game holds, shared zones and each player's
+            # own, the same walk `card_state.bind_all_to_game` does by hand.
+            for state in zone_cards:
+                if isinstance(state, CardState):
+                    state.bind_to_game(self)
+        for player in self.players:
+            for zone_cards in player.zones.values():
+                for state in zone_cards:
+                    state.bind_to_game(self)
         for stack_item in (*self.stack, *self.pending_triggers):
             # `AbilityOnStack.keyword_activation.game` (`machines/keywords.
             # KeywordActivation.game`) is the same shape as `Player.game`
@@ -1692,8 +1710,41 @@ class Game(BaseModel):
             # identical reason), so both are walked even though only an
             # *activated* ability ever actually carries a `keyword_activation` -
             # a triggered one has none to relink.
-            if isinstance(stack_item, AbilityOnStack) and stack_item.keyword_activation is not None:
-                stack_item.keyword_activation.game = self
+            #
+            # Only `self.stack` is walked among `shared_zones` - not every zone
+            # the dict's declared type (`dict[Zone, list[StackObject]]`) would
+            # in principle allow an `AbilityOnStack` into. That is correct
+            # today: every place this engine puts an `AbilityOnStack` anywhere
+            # puts it on the stack (`battlefield`'s own docstring already says
+            # as much - "Only cards ever live here, never abilities" - and the
+            # same is true of exile, command, and ante, none of which any
+            # activation or trigger path ever touches). It is still brittle
+            # against the type as written, which says nothing that would stop
+            # a future zone from holding one; if that ever changes, this walk
+            # has to widen with it rather than silently leaving a relink gap
+            # the type system would not catch.
+            if not isinstance(stack_item, AbilityOnStack):
+                continue
+            if stack_item.keyword_activation is not None:
+                activation = stack_item.keyword_activation
+                activation.game = self
+                if activation.payment is not None:
+                    # `KeywordActivation.payment` (`machines/cost.CostPayment`)
+                    # has the identical `game: Any = Field(exclude=True)` shape,
+                    # and without this a resumed crew/equip/cycling payment
+                    # that is still `PENDING` - an open ward-shaped cost mid
+                    # activation - comes back unable to seed its payer's pool
+                    # or find anything it tapped (CR 733.1's rewind needs
+                    # `game` to find the payer and the tapped sources by id).
+                    activation.payment.game = self
+            if stack_item.unless_payment is not None:
+                # `AbilityOnStack.unless_payment` (CR 702.21a's ward) is the
+                # other `CostPayment` this object can hold, sitting beside
+                # `keyword_activation` rather than inside it - relinked the
+                # same way and for the same reason: `_seed_payer_pool` needs
+                # `game` to have run at all, and a payment paused mid-payment
+                # (`begin_paying`, still `PENDING`) needs it seeded to resume.
+                stack_item.unless_payment.game = self
         if self.turn is None:
             self.turn = TurnMachine(players=usernames)
         if self.priority is None:

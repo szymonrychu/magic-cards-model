@@ -38,6 +38,7 @@ carries the identical type with no special handling at all.
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.cost import CostStep
 from magic_cards_model.machines.keywords import (
+    crew_activation,
     equip_activation,
     equipped_creature,
     ward_triggers,
@@ -230,3 +231,72 @@ def test_a_game_with_no_ward_payment_dumps_and_resolves_fine():
 
     played.resolve_top()
     assert decoded_bolt.zone is Zone.GRAVEYARD
+
+
+# --------------------------------------------------------------------------
+# keyword_activation - Consulate Dreadnought's crew (CR 702.122a)
+# --------------------------------------------------------------------------
+
+
+def _crew_board() -> Scenario:
+    return (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            battlefield=[
+                "Consulate Dreadnought",
+                "Grizzly Bears",
+                "Grizzly Bears",
+                "Grizzly Bears",
+            ],
+        )
+        .player("bob", battlefield=["Grizzly Bears"])
+    )
+
+
+def test_a_vehicle_destroyed_after_a_round_trip_gains_no_continuous_effects_from_crew():
+    """Crew on the stack, dumped and decoded, then the real Vehicle destroyed
+    on the *decoded* game before its own crew ability resolves.
+
+    `_crew_effect` used to recheck `activation.card.zone` directly - a decoded
+    copy, frozen at the moment the ability was activated - instead of asking
+    `game` where the Vehicle actually is now (CR 608.2h). Crew uses the stack,
+    so an opponent gets priority to respond before it resolves, and in the
+    stateless-library world every priority pass is a dump/decode. Before the
+    fix in `machines/keywords.py`, destroying the real Consulate Dreadnought on
+    the decoded game and then resolving crew still created two live
+    `ContinuousEffect`s (CR 613.1d: artifact, creature) for a permanent that is
+    actually already in the graveyard - silently, with no error, and
+    `CardState.move_to` keeps `id` stable enough that they would latch back on
+    if the Vehicle ever returned to the battlefield before cleanup.
+    """
+    scenario = _crew_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    vehicle = scenario.find("Consulate Dreadnought", Zone.BATTLEFIELD, "alice")
+    bears = scenario.creatures("Grizzly Bears", "Grizzly Bears", "Grizzly Bears", username="alice")
+
+    activation = crew_activation(scenario.game, vehicle, list(bears), "alice")
+    activation.begin_paying()
+    activation.payment.pay()
+    on_stack = activation.activate()
+
+    assert on_stack in scenario.game.stack
+    assert on_stack.keyword_activation is activation
+
+    played = _round_trip(scenario.game)
+    (decoded_ability,) = [item for item in played.game.stack if isinstance(item, AbilityOnStack)]
+    assert decoded_ability.keyword_activation is not None
+    assert not decoded_ability.keyword_activation.applied
+
+    decoded_vehicle = played.game.find_by_id(vehicle.id)
+    assert isinstance(decoded_vehicle, CardState)
+    played.game.destroy(decoded_vehicle)
+    assert decoded_vehicle.zone is Zone.GRAVEYARD
+
+    played.resolve_top()  # CR 608.2n, through `keyword_effect_for` alone
+
+    assert played.game.continuous_effects.effects == [], (
+        "a destroyed Vehicle must gain no continuous effects when its own "
+        "crew ability resolves after a round trip"
+    )

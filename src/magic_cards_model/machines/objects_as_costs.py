@@ -474,7 +474,7 @@ def _substitute(
     refusal = offer.why_not(card, payer, payment.game)
     if refusal is not None:
         raise ValueError(refusal)
-    if any(entry.card.id == card.id for entry in payment.substitutions):
+    if any(entry.card_id == card.id for entry in payment.substitutions):
         # One object, one symbol: CR 702.51a taps *an* untapped creature per
         # symbol, and a creature already promised to this payment is no longer
         # untapped by the time the next symbol would want it.

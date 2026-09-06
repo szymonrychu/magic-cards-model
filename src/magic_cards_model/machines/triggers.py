@@ -445,20 +445,44 @@ class AbilityOnStack(BaseModel):
       `Player.game`.
     - `KeywordActivation.payment` is a `CostPayment`, which is already plain
       data once its own `.game` is excluded (see `unless_payment` below for
-      why that is safe) - no change needed there.
+      why that is safe) - but a *paused* payment (still `PENDING`, mid crew or
+      equip) does need `.game` back to resume: `Game.model_post_init` relinks
+      `keyword_activation.payment.game` the same pass it relinks `keyword_
+      activation.game` itself, not "no change needed" as this once claimed.
     - `KeywordActivation.on_stack` points back at this very `AbilityOnStack`,
       which would make a dump cycle forever if both sides kept the edge.
       `KeywordActivation.on_stack` is `exclude=True` for exactly that reason,
       and `model_post_init` below re-wires it from this side after a decode,
       the one direction that does not close a loop.
-    - `KeywordActivation.result` (`Any`) stays `exclude=True`: it is whatever
-      the keyword's effect returned, read by the caller that just resolved it
-      in the same call. A game is never persisted mid-resolution -
-      `machines/decisions.py`'s pause-and-replay design re-runs a command that
-      cannot finish from its last committed snapshot rather than resuming a
-      half-mutated object - so a decoded `KeywordActivation` is always
-      pre-resolution (`applied=False`, `result=None`) and never needs the
-      value that would have been dropped here.
+    - `KeywordActivation.result` (`Any`) stays `exclude=True`. The reason is
+      not that a caller promises never to dump a `Game` mid-resolution -
+      nothing in this model enforces a caller's contract, and `machines/
+      decisions.py`'s pause-and-replay design is exactly that, a convention
+      the caller follows, not something this class can rely on. What actually
+      rules a mid-flight `result` out is `Game.resolve_top`/`_resolve_top`
+      (`models/game.py`): the ability is popped off `self.stack` (CR 608.2n)
+      before its effect ever runs, and on an exception `_resolve_ability`'s
+      `except Exception` branch discards it and calls `_before_priority()`
+      without ever pushing it back onto the stack. A mid-flight ability -
+      resolving cleanly or blown up partway through - therefore sits in no
+      serialized field at all: not `self.stack`, not `self.pending_triggers`,
+      and not `Game.resolving` either, which is itself `exclude=True` and is
+      reset to `None` in `resolve_top`'s own `finally` before control ever
+      returns to a caller that might dump the game. There is no path back into
+      a serialized `Game` for a `KeywordActivation` that is not pre-resolution
+      - not a promise, a structural fact about where the reference lives.
+
+      One field on this class *is* serialized in an intermediate-looking
+      shape, though: `applied` is a plain `bool`, not excluded, and `run_
+      effect` (`machines/keywords.py`) sets it `True` *before* calling the
+      keyword's effect function. A dump taken from inside that call - a
+      re-entrant `game.ask`, say - would decode to an activation reading
+      `applied=True` with `result` still `None`, and `run_effect`'s own early
+      return (`if self.applied: return self.result`) would then treat it as
+      already run and silently do nothing. Unreachable today only because of
+      the same pop: nothing dumps a `Game` from inside a running effect call,
+      since the ability that effect belongs to has already left every
+      serialized field by the time the call starts.
     """
 
     division: list[int] | None = None
@@ -512,27 +536,38 @@ class AbilityOnStack(BaseModel):
     `machines/keywords._ward_effect` is what reads it back.
 
     Option (a) of the two the serialization task offered - reduced to data,
-    not refused - and it costs nothing beyond what `CostPayment` already does:
-    `CostPayment.game` is its own `exclude=True` field (mirroring `Player.game`
-    and this module's own `KeywordActivation.game`), and every other field on
-    it - `cost`, `components`, `pool`, `step`, `tapped_for_mana`, and the rest -
-    is already plain pydantic data with no callable or live object among them.
-    `KeywordActivation.payment` next door already carries this exact type with
-    no special handling at all, which is the proof this was never really an
-    `Any` in the first place.
+    not refused. `_ward_effect` (`machines/keywords.py`) only ever reads
+    `ward_was_paid`, which is `payment.step is CostStep.PAID` - never
+    `payment.game` - so *counters or lets through* needs nothing more than
+    what was serialized here.
 
-    What makes dropping `.game` safe here specifically is `_ward_effect`
-    (`machines/keywords.py`): it reads only `ward_was_paid`, which is
-    `payment.step is CostStep.PAID` - never `payment.game`. A payment that is
-    still open when a game is persisted would need `.game` back to keep
-    tapping and moving cards, but `machines/decisions.py`'s pause-and-replay
-    design means that state is never the one that reaches storage: a command
-    that cannot finish raises and is replayed from its last *committed*
-    snapshot with answers replayed as a tape, so the mutated, half-paid object
-    is discarded rather than persisted (see that module's own docstring). A
-    persisted `unless_payment` is therefore always a terminal one - `None`,
-    still `CostStep.PENDING`, or `CostStep.PAID` - and none of those need
-    `.game` to be read correctly by `_ward_effect` after a round trip.
+    Resuming a *paused* payment is a different question, though, and an
+    earlier version of this note answered it wrong by not asking it at all: it
+    said every other field on `CostPayment` - "`cost`, `components`, `pool`,
+    `step`, `tapped_for_mana`, and the rest" - was "already plain pydantic
+    data with no callable or live object among them", and that a persisted
+    `unless_payment` is always terminal (`None`, `PENDING` with nothing tapped
+    yet, or settled `PAID`) so none of that mattered anyway. Both halves were
+    wrong. `tapped_for_mana` held live `CardState`s by reference until it was
+    reduced to `list[UUID]` (`machines/cost.py`) - a full duplicate permanent
+    on every dump, and untapping those decoded copies on `rewind` silently
+    left the real battlefield sources tapped forever. And a `CostStep.PENDING`
+    payment mid-tapping - the exact shape ward is opened in, one priority pass
+    before anyone decides whether to pay - round-trips identically to a
+    finished one, so "always terminal" was never true either; resuming it
+    needs `game` back to find its own tapped sources, seed its payer's pool,
+    and keep tapping, which is why `Game.model_post_init` now relinks `.game`
+    on both `keyword_activation.payment` and this field. `CostComponent.cards`
+    still holds `CardState`s by reference too (ward itself never uses one, but
+    `unless_payment`'s type does not rule one out for some future non-mana
+    ward cost) - safe because the one place that both mutates through a
+    captured reference and can run after a decode, `CostComponent.unpay`,
+    re-resolves each one through `game.find_by_id` first. And two more pieces
+    of this class's state genuinely do not survive a round trip at all:
+    `CostComponent._undo` and `CostPayment._preexisting`
+    are `PrivateAttr`s, so a decoded payment's `rewind`/`unpay` now refuse
+    loudly rather than silently restoring nothing when that state is gone -
+    see both methods' own docstrings.
     """
 
     def model_post_init(self, _context: object) -> None:
