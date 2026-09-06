@@ -84,7 +84,7 @@ from ..machines.decisions import (
     rule_for_kind,
 )
 from ..machines.delayed import (
-    DelayedEffect,
+    DelayedEffectSpec,
     DelayedTrigger,
     DelayedTriggers,
     ExileWarped,
@@ -2783,7 +2783,7 @@ class Game(BaseModel):
         controller: str,
         source_id: UUID | None,
         source_name: str,
-        callback: DelayedEffect,
+        callback: DelayedEffectSpec,
     ) -> AbilityOnStack:
         """Create a reflexive triggered ability (CR 603.12) and queue it for
         the stack.

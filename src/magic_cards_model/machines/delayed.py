@@ -1371,7 +1371,7 @@ class DelayedTriggers(BaseModel):
         controller: str,
         source_id: UUID | None,
         source_name: str,
-        callback: DelayedEffect,
+        callback: DelayedEffectSpec,
     ) -> AbilityOnStack:
         """CR 603.12: create a reflexive triggered ability and hand back the
         stack object it becomes - with no wait, unlike an ordinary delayed
