@@ -1682,6 +1682,18 @@ class Game(BaseModel):
             # that lets `Player.discard` find the rules. Excluded from the
             # serialised model, so it cannot make the game state cyclic.
             player.game = self
+        for stack_item in (*self.stack, *self.pending_triggers):
+            # `AbilityOnStack.keyword_activation.game` (`machines/keywords.
+            # KeywordActivation.game`) is the same shape as `Player.game`
+            # above - excluded from serialisation because it is a live `Game`,
+            # relinked here rather than kept as a cycle. Both `self.stack` and
+            # `self.pending_triggers` can hold an `AbilityOnStack` (`CostPayment.
+            # _discard_triggers_caused` checks the same two places for the
+            # identical reason), so both are walked even though only an
+            # *activated* ability ever actually carries a `keyword_activation` -
+            # a triggered one has none to relink.
+            if isinstance(stack_item, AbilityOnStack) and stack_item.keyword_activation is not None:
+                stack_item.keyword_activation.game = self
         if self.turn is None:
             self.turn = TurnMachine(players=usernames)
         if self.priority is None:

@@ -611,8 +611,24 @@ class KeywordActivation(BaseModel):
     """CR 602.1b timing, as printed in the rule the keyword expands to."""
     targets: list[TargetRef] = Field(default_factory=list)
     game: Any = Field(default=None, exclude=True, repr=False)
+    """The live `Game` this activation acts on. Reset to `None` by a round
+    trip and relinked from the outside by `Game.model_post_init`, which walks
+    `self.stack` and `self.pending_triggers` for exactly this field the same
+    way it already relinks every `Player.game` - see that method's own
+    comment. Nothing in this module needs it to already be set for a decoded
+    `AbilityOnStack.keyword_activation`: `run_effect` has not been called yet
+    (see `result` below), and `Game._effect_of` only reaches
+    `keyword_effect_for` - and so `run_effect` - after the ability is back on
+    a real, live `Game`'s stack."""
     payment: CostPayment | None = None
-    on_stack: AbilityOnStack | None = None
+    on_stack: AbilityOnStack | None = Field(default=None, exclude=True, repr=False)
+    """The `AbilityOnStack` this activation put on the stack - a link back to
+    the very object that, when this activation survives a round trip at all,
+    holds it as `AbilityOnStack.keyword_activation`. Keeping this edge on
+    serialisation would dump forever (`self -> on_stack -> keyword_activation
+    -> self -> ...`), so it is `exclude=True` here and `AbilityOnStack.
+    model_post_init` re-wires it from the other side after a decode - the one
+    direction that does not reopen the loop."""
     applied: bool = False
     """True once this keyword's effect has happened (CR 608.2).
 
@@ -1027,8 +1043,26 @@ def _equip_effect(activation: KeywordActivation) -> CardState | None:
     The target is rechecked here because CR 608.2b does: a creature that has
     left the battlefield, or changed controller out from under "creature you
     control", is no longer a legal target and the ability does nothing.
+
+    The Equipment itself is re-read off `game` by id rather than mutated
+    through `activation.card` directly, which matters only once
+    `AbilityOnStack.keyword_activation` can survive a dump-and-decode round
+    trip: `activation.card` is then a decoded `CardState` with the same id as,
+    but not the same identity as, the one actually sitting in `game`'s zones,
+    and `attach_to` writes onto `self.attachment` - mutating the decoded copy
+    would leave the real battlefield Equipment looking unattached forever, a
+    plausible-looking wrong game with no error anywhere. `game.find_by_id`
+    finds the real object in the ordinary, non-decoded case too (there it *is*
+    `activation.card`, so this changes nothing there), and falls back to
+    `activation.card` only if the id is not on this `game` at all (CR 113.7a:
+    the ability still resolves after its source is gone, and attaching a
+    permanent that exists nowhere the game can see is indistinguishable from
+    doing nothing).
     """
     game = activation.game
+    equipment = game.find_by_id(activation.card.id)
+    if not isinstance(equipment, CardState):
+        equipment = activation.card
     for target in activation.targets:
         creature = game.resolve_target(target)
         if not isinstance(creature, CardState):
@@ -1037,7 +1071,7 @@ def _equip_effect(activation: KeywordActivation) -> CardState | None:
             continue  # CR 301.5: an Equipment can't legally be attached to a noncreature
         if game.controller_of(creature).username != activation.player:
             continue
-        activation.card.attach_to(creature)
+        equipment.attach_to(creature)
         return creature
     return None
 
@@ -2563,3 +2597,17 @@ for _name in ("cycling", "landcycling", "typecycling"):
 for _land in ("plains", "island", "swamp", "mountain", "forest"):
     KEYWORD_EFFECTS[f"{_land}cycling"] = _cycling_effect
 del _name, _land
+
+# `AbilityOnStack.keyword_activation`/`.unless_payment` (machines/triggers.py)
+# carry `KeywordActivation` and `CostPayment` as string forward references,
+# because `.cost` (which defines `CostPayment`) already imports names from
+# `.triggers`, and this module (which defines `KeywordActivation`) imports
+# `AbilityOnStack` from it too - either real import up there would be
+# circular. Both real classes exist by now, so this is where the deferred
+# annotations are actually resolved; `machines/__init__.py` imports `.casting`
+# before anything else that touches `AbilityOnStack`, and `.casting` imports
+# this module, so this always runs before an `AbilityOnStack` is built for
+# real anywhere in the package.
+AbilityOnStack.model_rebuild(
+    _types_namespace={"KeywordActivation": KeywordActivation, "CostPayment": CostPayment}
+)

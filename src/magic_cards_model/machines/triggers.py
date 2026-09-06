@@ -75,6 +75,14 @@ from .turn import Step
 if TYPE_CHECKING:  # pragma: no cover - import cycle: Game builds on the machines
     from ..models.game import CastRecord, Game
 
+    # `.cost` imports names from this module and `.keywords` imports
+    # `AbilityOnStack` itself, so neither can be imported for real up here -
+    # `keyword_activation`/`unless_payment` below carry these as string
+    # annotations, and `keywords.py`'s own `model_rebuild()` call, run once
+    # both classes exist, is what resolves them for real.
+    from .cost import CostPayment
+    from .keywords import KeywordActivation
+
 
 class ExtraTriggerEvent(StrEnum):
     """Trigger events with no `machines/abilities.TriggerEvent` member.
@@ -409,7 +417,7 @@ class AbilityOnStack(BaseModel):
     pool that reads this; `machines/effects.py`'s `activated_effect_for` is
     what turns it back into the literal word "X" in the ability's own text."""
 
-    keyword_activation: Any = Field(default=None, exclude=True, repr=False)
+    keyword_activation: "KeywordActivation | None" = Field(default=None, repr=False)
     """The `machines/keywords.KeywordActivation` this ability came from, if any.
 
     `machines/effects.py` keys an ability's effect by the name of the card it is
@@ -420,8 +428,37 @@ class AbilityOnStack(BaseModel):
 
     This is the link back. `machines/keywords.keyword_effect_for` reads it, and
     it is the one thing a resolver needs to run a keyword's effect through the
-    ordinary CR 608.2 path rather than by hand. Excluded from serialisation,
-    because the activation holds a live `Game`.
+    ordinary CR 608.2 path rather than by hand.
+
+    Round-trips as real data now, not dropped: a dumped-and-decoded ability
+    used to lose this entirely (`exclude=True`), so `keyword_effect_for` fell
+    through past a keyword's own effect to the ordinary card-name lookup and a
+    decoded cycling or equip activation resolved as nothing. `KeywordActivation`
+    itself needed three fixes before it could carry across a round trip -
+    see its own docstring and `model_post_init` below:
+
+    - `KeywordActivation.game` (a live `Game`) is still `exclude=True` and
+      reset to `None` on decode; nothing this module's `run_effect` reaches
+      needs it to have survived by the time an ability is resolved through
+      `keyword_effect_for` after a round trip, because `Game.model_post_init`
+      relinks it from the outside, the same way it already relinks
+      `Player.game`.
+    - `KeywordActivation.payment` is a `CostPayment`, which is already plain
+      data once its own `.game` is excluded (see `unless_payment` below for
+      why that is safe) - no change needed there.
+    - `KeywordActivation.on_stack` points back at this very `AbilityOnStack`,
+      which would make a dump cycle forever if both sides kept the edge.
+      `KeywordActivation.on_stack` is `exclude=True` for exactly that reason,
+      and `model_post_init` below re-wires it from this side after a decode,
+      the one direction that does not close a loop.
+    - `KeywordActivation.result` (`Any`) stays `exclude=True`: it is whatever
+      the keyword's effect returned, read by the caller that just resolved it
+      in the same call. A game is never persisted mid-resolution -
+      `machines/decisions.py`'s pause-and-replay design re-runs a command that
+      cannot finish from its last committed snapshot rather than resuming a
+      half-mutated object - so a decoded `KeywordActivation` is always
+      pre-resolution (`applied=False`, `result=None`) and never needs the
+      value that would have been dropped here.
     """
 
     division: list[int] | None = None
@@ -464,7 +501,7 @@ class AbilityOnStack(BaseModel):
     A tuple rather than a single id because a printed cost may sacrifice more
     than one permanent; every printing in the pool sacrifices exactly one."""
 
-    unless_payment: Any = Field(default=None, exclude=True, repr=False)
+    unless_payment: "CostPayment | None" = Field(default=None, repr=False)
     """The `machines/cost.CostPayment` made for an "unless that player pays" clause.
 
     CR 702.21a's ward is the one ability of this shape the engine produces:
@@ -474,8 +511,46 @@ class AbilityOnStack(BaseModel):
     resolves**. `machines/keywords.WardTrigger` is the view that opens it and
     `machines/keywords._ward_effect` is what reads it back.
 
-    Excluded from serialisation, because a `CostPayment` holds a live `Game`.
+    Option (a) of the two the serialization task offered - reduced to data,
+    not refused - and it costs nothing beyond what `CostPayment` already does:
+    `CostPayment.game` is its own `exclude=True` field (mirroring `Player.game`
+    and this module's own `KeywordActivation.game`), and every other field on
+    it - `cost`, `components`, `pool`, `step`, `tapped_for_mana`, and the rest -
+    is already plain pydantic data with no callable or live object among them.
+    `KeywordActivation.payment` next door already carries this exact type with
+    no special handling at all, which is the proof this was never really an
+    `Any` in the first place.
+
+    What makes dropping `.game` safe here specifically is `_ward_effect`
+    (`machines/keywords.py`): it reads only `ward_was_paid`, which is
+    `payment.step is CostStep.PAID` - never `payment.game`. A payment that is
+    still open when a game is persisted would need `.game` back to keep
+    tapping and moving cards, but `machines/decisions.py`'s pause-and-replay
+    design means that state is never the one that reaches storage: a command
+    that cannot finish raises and is replayed from its last *committed*
+    snapshot with answers replayed as a tape, so the mutated, half-paid object
+    is discarded rather than persisted (see that module's own docstring). A
+    persisted `unless_payment` is therefore always a terminal one - `None`,
+    still `CostStep.PENDING`, or `CostStep.PAID` - and none of those need
+    `.game` to be read correctly by `_ward_effect` after a round trip.
     """
+
+    def model_post_init(self, _context: object) -> None:
+        """Re-close the `KeywordActivation.on_stack` loop `exclude=True` opened.
+
+        `keyword_activation.on_stack` is excluded from serialisation so a dump
+        does not chase `self -> keyword_activation -> on_stack -> self`
+        forever; this is the one direction that puts the edge back without
+        recreating that cycle, run after both live construction (`_activate_
+        impl` already assigns `self.on_stack = AbilityOnStack(...,
+        keyword_activation=self)`, so this only repeats what it just did) and
+        `model_validate` decoding a dump (where nothing else would ever set it
+        again). `KeywordActivation.game` is not relinked here - only `Game`
+        itself has the reference to relink it with, so `Game.model_post_init`
+        does that half, the same way it already relinks `Player.game`.
+        """
+        if self.keyword_activation is not None:
+            self.keyword_activation.on_stack = self
 
     @property
     def name(self) -> str:
