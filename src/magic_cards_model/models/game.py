@@ -6,7 +6,7 @@ from contextlib import contextmanager
 from dataclasses import replace
 from enum import StrEnum
 from random import Random
-from typing import ClassVar
+from typing import Any, ClassVar
 from uuid import NAMESPACE_OID, UUID, uuid4, uuid5
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -25,6 +25,7 @@ from ..machines.abilities import (
     parse_mana_abilities,
 )
 from ..machines.casting import (
+    Casting,
     PlayAction,
     PlayPermission,
     play_permissions_on,
@@ -86,6 +87,7 @@ from ..machines.delayed import (
     DelayedEffect,
     DelayedTrigger,
     DelayedTriggers,
+    ExileWarped,
     rebound_recast,
     return_subject_to_hand,
 )
@@ -133,6 +135,8 @@ from ..machines.layers import (
     spend_effect_effects,
 )
 from ..machines.modes import substitute_x
+from ..machines.objects_as_costs import convoke as pay_convoke
+from ..machines.objects_as_costs import delve as pay_delve
 from ..machines.opening_hand import (
     RIDERS,
     OpeningHandAction,
@@ -2835,7 +2839,7 @@ class Game(BaseModel):
                         "Exile the permanent this spell becomes at the "
                         "beginning of the next end step."
                     ),
-                    effect="warp:exile",
+                    effect=ExileWarped(),
                     event=TriggerEvent.BEGINNING_OF_STEP,
                     step=Step.END_STEP,
                     controller=spell.controller or self.active_player.username,
@@ -2862,7 +2866,7 @@ class Game(BaseModel):
                     expected_stamp=spell.zone_change_stamp,  # CR 603.7c parenthetical
                     event=TriggerEvent.BEGINNING_OF_STEP,
                     step=Step.END_STEP,
-                    callback=return_subject_to_hand,
+                    effect=return_subject_to_hand,
                 )
             )
 
@@ -2949,7 +2953,7 @@ class Game(BaseModel):
                 subject_id=spell.id,
                 expected_zone=Zone.EXILE,  # CR 603.7c
                 expected_stamp=spell.zone_change_stamp,  # CR 603.7c parenthetical
-                callback=rebound_recast,
+                effect=rebound_recast,
             )
         )
 
@@ -8280,6 +8284,157 @@ class Game(BaseModel):
     ) -> PlayPermission | None:
         """The live permission letting `player` take `action` with `card`, or None."""
         return usable_play_permission(self, card, player, action)
+
+    def assert_quiescent(self) -> None:
+        """Raise loudly if the game is sitting mid-announcement or mid-resolution.
+
+        `Casting` and `CostPayment` (see `Game.cast` below) are locals that
+        never outlive one call - they are not `Game` fields, so nothing about
+        them is ever written into a `Game.model_dump()`. A caller who drives
+        their step-by-step API by hand and forgets to reach `cast()`/`cancel()`
+        or `pay()`/`rewind()` before letting the `Game` be persisted leaves no
+        trace of the object that could still finish or cancel the action - a
+        card sitting on the stack that decodes back with no `Casting` behind
+        it any more. `Game.resolving` (unset outside the length of one
+        `resolve_top` call) and `open_payment_pools` (emptied the moment a
+        `CostPayment` is paid, cancelled or rewound - `CostPayment._register_
+        pool`/`_unregister_pool`) are the two pieces of `Game` state such an
+        abandoned action would leave behind, so together they are what this
+        checks.
+        """
+        if self.resolving is not None:
+            raise AssertionError(
+                f"game is mid-resolution: {self.resolving!r} is still Game.resolving "
+                "with no resolve_top() call left on the stack to finish or undo it"
+            )
+        if self.open_payment_pools:
+            raise AssertionError(
+                "game has an open CostPayment for "
+                f"{sorted(self.open_payment_pools)} with no CostPayment object left "
+                "to pay or rewind it"
+            )
+
+    def cast(
+        self,
+        card: CardState,
+        caster: str,
+        *,
+        modes: Sequence[int | str] | None = None,
+        x_value: int | None = None,
+        targets: Sequence[Any] | None = None,
+        division: Sequence[int] | None = None,
+        keyword: str | None = None,
+        alternative_cost: int | str | None = None,
+        choosing: list[CardState] | None = None,
+        convoke: Sequence[tuple[CardState, Color | None]] | None = None,
+        delve: Sequence[CardState] | None = None,
+        mana_sources: Sequence[CardState | tuple[CardState, Sequence[Color]]] | None = None,
+    ) -> CardState:
+        """Cast `card` for `caster`, start to finish, as one atomic action.
+
+        CR 601.2 lays casting out as an ordered sequence: propose (601.2a),
+        announce modes and any alternative or variable costs (601.2b),
+        announce targets (601.2c), announce a division among them (601.2d), a
+        legality check (601.2e), determine the total cost (601.2f), activate
+        mana abilities (601.2g), pay (601.2h) - and only then, at 601.2i,
+        "the spell becomes cast." `Casting`/`CostPayment` model that sequence
+        as an object the caller drives one step at a time (CR 601.2a already
+        moves the card onto the stack, well before the cast is either legal
+        or paid for), which is exactly what leaves a half-finished
+        announcement observable to a caller that stops driving it partway
+        through. This method is what makes the whole sequence atomic by
+        construction instead of by caller discipline: both objects are
+        created here, driven start to finish here, and never returned or
+        stored anywhere `self` keeps a reference to - they are gone the
+        moment this call returns, one way or the other.
+
+        What makes reversing it safe, when it has to be reversed, is CR
+        601.2's own closing sentence together with CR 601.6: "If a player is
+        unable to comply with the requirements of a step ... the casting of
+        the spell is illegal; the game returns to the moment before the
+        casting of that spell was proposed." CR 733.1 spells out what that
+        return means: "the entire action is reversed and any payments
+        already made are canceled ... If the action was casting a spell, the
+        spell returns to the zone it came from." `Casting.cancel` and
+        `CostPayment.rewind` are this engine's own implementation of exactly
+        that - and they restore the card's pre-move CR 400.7 identity stamp,
+        not merely its zone, because CR 400.7's "an object that moves from
+        one zone to another becomes a new object with no memory of ... its
+        previous existence" is what a `PlayPermission` or a delayed trigger
+        watching that exact object would otherwise lose. Every step below
+        that can refuse raises `ValueError`; it is caught once, here, both
+        objects are rewound (each rewind is already safe to call whether or
+        not that step ever ran), and the exception is re-raised - so a caller
+        of `Game.cast` either gets back a spell on the stack with its cost
+        paid, or an untouched game and an exception, with nothing in between
+        for it, or a decode of `self`, to ever observe.
+
+        The keyword parameters mirror what `magic_cards_model_api.engine_api.
+        cast_card` drives by hand today, minus the pieces that belong to an
+        HTTP request rather than to the rule itself (a card looked up by id
+        or name, a dry-run probe that is never atomic by definition since it
+        must leave no trace whether or not the cast would succeed):
+        `modes`/`x_value` and `targets`/`division` are CR 601.2b-d's own
+        announcements; `keyword` and `alternative_cost` (with `choosing` for
+        the objects either one's cost needs, such as a pitched card) are the
+        two ways CR 601.3's permission to cast can be claimed, alongside a
+        live `PlayPermission` this method checks for automatically wherever
+        `keyword` and `alternative_cost` are both left unclaimed; `convoke`
+        (CR 702.51a/b) and `delve` (CR 702.66a/b) apply "only after the total
+        cost ... is determined", so they run against the open payment rather
+        than the announcement; and `mana_sources` are the abilities this call
+        may activate on `caster`'s behalf (CR 601.2g) - a bare source lets the
+        engine choose what colour it makes, a `(source, colors)` pair pins it.
+        """
+        origin_zone = card.zone
+        # CR 601.3's dynamic half is asked before CR 601.2a's move, exactly
+        # like `engine_api.cast_card` asks it - the object `usable_play_
+        # permission` looks for is recorded against the pre-move CR 400.7
+        # stamp, and `origin_zone` itself is read now for the same reason.
+        permitted = origin_zone is Zone.EXILE and self.play_permission_for(card, caster) is not None
+        # A `Casting` that fails to build (CR 601.3's static half, checked in
+        # its own `model_post_init`) has moved nothing and leaves nothing to
+        # rewind, so this is not inside the try/except below.
+        casting = Casting(spell=card, caster=caster, origin_zone=origin_zone, game=self)
+        payment: CostPayment | None = None
+        try:
+            if alternative_cost is not None:
+                casting.use_alternative_cost(alternative_cost, choosing=choosing)
+            elif keyword:
+                casting.use_keyword(keyword)
+            elif permitted:
+                casting.use_permission()
+            if modes:
+                casting.choose_modes(modes, x_value=x_value)
+            if targets:
+                casting.choose_targets(list(targets))
+            payment = casting.determine_cost(x_value=x_value)
+            if division is not None:
+                casting.announce_division(division)
+            for creature, color in convoke or ():
+                pay_convoke(payment, casting.spell, creature, color)
+            if delve:
+                pay_delve(payment, casting.spell, *delve)
+            unpinned: list[CardState] = []
+            for entry in mana_sources or ():
+                if isinstance(entry, tuple):
+                    source, colors = entry
+                    payment.tap_for_mana(source, list(colors))
+                else:
+                    unpinned.append(entry)
+            if unpinned and payment.shortfall:
+                payment.auto_tap(unpinned)
+            payment.pay()
+            state = casting.cast()
+        except ValueError:
+            if payment is not None:
+                payment.rewind()
+            if not casting.is_settled:
+                casting.cancel()
+            raise
+        self.put_on_stack(state, casting.caster)
+        self.retain_priority(casting.caster)
+        return state
 
     def can_play_land(self, username: str) -> bool:
         """Whether `username` may play a land right now (CR 305.1-305.3).

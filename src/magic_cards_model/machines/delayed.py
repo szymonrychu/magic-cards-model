@@ -63,14 +63,15 @@ and do nothing.
 
 Every previous factory name survives, as either the class itself or a
 singleton instance of it, so no construction site outside this file has to
-change *except* the handful this task's own requirement 2-4 rewrites. The one
-deliberate exception is `models/game.py`'s three call sites (warp's `effect=
-"warp:exile"`, dash's and rebound's `callback=<function>`): that file is owned
-by a concurrent worktree for the span of this task and cannot be edited here,
-so `DelayedTrigger`'s own before-validator (`_accept_legacy_effect_shapes`)
-translates those two old shapes into the new field. See that validator's
-docstring for the exact, narrow translation and why it is not a reintroduction
-of `DELAYED_EFFECTS`.
+change *except* the handful this task's own requirement 2-4 rewrites.
+`models/game.py`'s three call sites (warp's, dash's, and rebound's) build
+`effect=` directly - `ExileWarped()`, `return_subject_to_hand`,
+`rebound_recast` - the same as everywhere else in the codebase. An earlier
+revision of this module carried a `DelayedTrigger` before-validator that
+translated a `callback=` keyword and a bare-string `effect=` into that shape,
+because `models/game.py` was locked by a concurrent worktree at the time; the
+lock is gone, those three sites were converted, and the validator was deleted
+with them (see `memory/delayed-trigger-serialization-game-py-isolation.md`).
 """
 
 import re
@@ -78,7 +79,7 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING, Annotated, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field
 
 from ..ids import new_id
 from ..models.card import Type
@@ -941,48 +942,6 @@ class DelayedTrigger(BaseModel):
     `_drop_sibling_triggers` to drop the sibling once either half fires, so a
     one-shot ability does not sit around forever after it has already done its
     job."""
-
-    @model_validator(mode="before")
-    @classmethod
-    def _accept_legacy_effect_shapes(cls, data: object) -> object:
-        """Two narrow, closed compatibility shims for exactly the shapes
-        `models/game.py` still passes - not a revival of the deleted,
-        string-keyed `DELAYED_EFFECTS` registry, which this never consults.
-
-        `models/game.py` builds this task's isolation rule keeps off limits (a
-        concurrent worktree owns it for the span of this task), and it still
-        builds three `DelayedTrigger`s the pre-refactor way: warp's own
-        literal `effect="warp:exile"`, and dash's/rebound's `callback=
-        return_subject_to_hand` / `callback=rebound_recast`. Both old shapes
-        are translated here, and nowhere else, into the new `effect` field:
-
-        - `callback=<value>` is accepted as an alias for `effect=<value>` only
-          when `effect` is not already given - a keyword rename, not a lookup.
-          `return_subject_to_hand`/`rebound_recast` are themselves singleton
-          `DelayedEffectSpecBase` instances now (see above), so the value that
-          arrives here already is one; nothing is looked up.
-        - A bare string `effect` is accepted as shorthand for `{"kind":
-          <string>}`, which only ever validates for a zero-argument union
-          member - `Field(discriminator="kind")` still refuses any `kind` it
-          does not recognise, which is the fail-closed property `DELAYED_
-          EFFECTS.get` lacked. Only warp's literal string reaches this branch;
-          every other `effect="..."` string this codebase used to write has
-          been rewritten to a real `DelayedEffectSpec` instance directly.
-
-        Every call site this task's isolation rule lets it touch passes a real
-        `DelayedEffectSpec` instance as `effect=` directly and never reaches
-        either branch. Once `models/game.py` is free to edit, its three sites
-        should become `effect=ExileWarped()` / `effect=ReturnSubjectToHand()`
-        / `effect=ReboundRecast()` and this validator should be deleted.
-        """
-        if isinstance(data, dict):
-            if "callback" in data and "effect" not in data:
-                data = dict(data)
-                data["effect"] = data.pop("callback")
-            if isinstance(data.get("effect"), str):
-                data = dict(data)
-                data["effect"] = {"kind": data["effect"]}
-        return data
 
     def matches(self, event: GameEvent) -> bool:
         """Whether this event is the one being waited for (CR 603.2, 603.7b).
