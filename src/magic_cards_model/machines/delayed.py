@@ -56,10 +56,11 @@ for it and `machines/triggers.py` is not this file's to change.
 import re
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ..ids import new_id
 from ..models.card import Type
 from ..models.card_state import CardState
 from ..models.zone import Zone
@@ -78,7 +79,7 @@ DelayedEffect = Callable[["Game", AbilityOnStack, "DelayedTrigger"], None]
 class DelayedTrigger(BaseModel):
     """One delayed triggered ability, waiting for its event (CR 603.7)."""
 
-    id: UUID = Field(default_factory=uuid4)
+    id: UUID = Field(default_factory=new_id)
 
     text: str
     """The ability as it would read on a card, for the stack listing and for a

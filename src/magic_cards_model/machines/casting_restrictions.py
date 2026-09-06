@@ -63,10 +63,11 @@ anything to Supreme Verdict.
 import re
 from collections.abc import Callable
 from typing import Any
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ..ids import new_id
 from ..models.card import Card, Type
 from ..models.zone import Zone
 from .abilities import AbilityKind, parse_abilities
@@ -129,7 +130,7 @@ class CastingRuleEffect(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
-    id: UUID = Field(default_factory=uuid4)
+    id: UUID = Field(default_factory=new_id)
     kind: str
     controller: str
     """Whose effect this is. For a restriction, this is the source's

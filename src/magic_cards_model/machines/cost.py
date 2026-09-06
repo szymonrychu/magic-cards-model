@@ -3249,7 +3249,28 @@ class CostPayment(BaseModel):
         battlefield front face up (a creature, no mana ability at all) is
         refused here even if a caller asks for Witch-Blessed Meadow's `{T}:
         Add {W}.` by name.
+
+        Run under `Game._id_allocator_scope` whenever there is a game:
+        `_tap_for_mana_impl`'s own `game.emit` below mints a fresh
+        `AbilityOnStack` id for every "tapped for mana" trigger it finds -
+        CR 106.12a. `pay()` already wraps its own `settle_mana`/`pool.pay`
+        path, but this is a separate one: the api's `pay_with` calls this
+        directly, once per hand-picked source, before `pay()` is ever
+        reached, and `auto_tap` below calls it directly too.
         """
+        if self.game is None:
+            return self._tap_for_mana_impl(source, produces, restriction)
+        with self.game._id_allocator_scope():
+            return self._tap_for_mana_impl(source, produces, restriction)
+
+    def _tap_for_mana_impl(
+        self,
+        source: CardState,
+        produces: list[Color],
+        restriction: ManaRestriction | None = INFER_RESTRICTION,
+    ) -> ManaPool:
+        """The rest of `tap_for_mana` - see its own docstring for why it is
+        split out."""
         self._require_open()
         if not can_tap_for_mana(source, self.game):
             raise ValueError(
@@ -3499,7 +3520,22 @@ class CostPayment(BaseModel):
         order." `components_before_mana` is the first sentence's freedom - pay
         the sacrifice before the mana, or after - and the mill components are
         held back to the second sentence's pass regardless of it.
+
+        Run under `Game._id_allocator_scope` whenever there is a game: a
+        sacrifice, discard, exile, or mill component's own `pay(self.game)`
+        below moves a real card (`CardState.move_to` mints a fresh
+        `zone_change_stamp`), and this is called directly by a caller paying a
+        cost - `Casting.cast()` and `Game.activate_ability` are downstream of
+        the announcement, not upstream of this call, so their own allocator
+        scopes do not cover it.
         """
+        if self.game is not None:
+            with self.game._id_allocator_scope():
+                return self._pay_impl()
+        return self._pay_impl()
+
+    def _pay_impl(self) -> ManaPool:
+        """The rest of `pay` - see its own docstring for why it is split out."""
         self._require_open()
         if self.step in {CostStep.PENDING, CostStep.TAPPING}:
             self.finish_tapping()

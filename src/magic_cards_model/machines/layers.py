@@ -79,15 +79,20 @@ from __future__ import annotations
 import re
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from enum import IntEnum, StrEnum
-from uuid import UUID, uuid4
+from typing import TYPE_CHECKING, Annotated, Literal
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from ..ids import new_id
 from ..models.card import Color, Supertype, Type
 from ..models.card_state import CardState, Counter
 from ..models.zone import Zone
 from .abilities import layer_readable_sentences, self_normalized_effect_text
 from .combat import Keyword
+
+if TYPE_CHECKING:
+    from ..models.game import Game
 
 # --------------------------------------------------------------------------
 # Layers
@@ -132,10 +137,24 @@ class CopySublayer(IntEnum):
     layers' sublayers are different sets that never mix, and one enum holding
     both would let a layer-7 effect be given a layer-1 sublayer and vice
     versa. `_sublayer_matches_layer` enforces the pairing.
+
+    The values deliberately do not start at 1: `ContinuousEffect.sublayer`'s
+    type is the untagged `Sublayer | CopySublayer | None`, and pydantic
+    resolves an untagged union by trying each member in declared order and
+    keeping the first one a bare integer validates against. `Sublayer.
+    CHARACTERISTIC_DEFINING` is also `1`, declared first, so a `CopySublayer.
+    COPIABLE` serialized to `1` silently decoded back as `Sublayer.
+    CHARACTERISTIC_DEFINING` instead - the whole layer-1 copy effect a
+    `BecomeACopy` produces would then sit in the wrong layer's sublayer set,
+    caught by round-tripping a real "becomes a copy" card. Numbering these
+    5 and 6 instead makes every raw value unique across both enums, which is
+    all an untagged union needs to resolve unambiguously; nothing compares a
+    `CopySublayer` against a `Sublayer` by numeric value; both stay compared
+    only within their own layer's tuple in `_SUBLAYERS_BY_LAYER`.
     """
 
-    COPIABLE = 1  # 1a
-    FACE_DOWN = 2  # 1b
+    COPIABLE = 5  # 1a
+    FACE_DOWN = 6  # 1b
 
 
 #: The two layers CR 613 splits into sublayers, each with its own ordered
@@ -195,10 +214,11 @@ class Duration(StrEnum):
     INDEFINITE = "indefinite"
 
 
-#: Whether a "for as long as" duration is still running (CR 611.2b). Reads the
-#: game, not the layer engine's board: "for as long as this creature remains on
-#: the battlefield" is a question about a zone.
-Condition = Callable[[], bool]
+# `Condition` - whether a "for as long as" duration is still running
+# (CR 611.2b) - is defined below, after `Characteristics`/`Board`, alongside
+# `Selector`/`Modification`/`Count`: all four used to be plain callables and
+# are now frozen pydantic models so `ContinuousEffect.model_dump(mode="json")`
+# can serialize them.
 
 
 # --------------------------------------------------------------------------
@@ -243,6 +263,14 @@ class Characteristics(BaseModel):
     #: lands in addition to their other types". Carried alongside `counters`,
     #: which is here for the same reason.
     is_token: bool = False
+    #: `CardState.zone_change_stamp` as of this computation. Not a
+    #: characteristic (CR 400.7 identity, not one of CR 613's seven layers'
+    #: business) - carried for the same reason `counters` and `is_token` are:
+    #: so a `Selector` can ask "is this the same incarnation of the permanent
+    #: the effect was built for" without holding a live `CardState` reference,
+    #: which is what makes the effect (and the selector inside it) safe to
+    #: serialize. `only_this_incarnation` is the reader.
+    zone_change_stamp: UUID | None = None
 
     @property
     def is_creature(self) -> bool:
@@ -304,14 +332,773 @@ class Characteristics(BaseModel):
 #: The whole battlefield as the layer system sees it, mid-computation.
 Board = Mapping[UUID, Characteristics]
 
+
+# --------------------------------------------------------------------------
+# Selectors, modifications, counts, and conditions: frozen pydantic models
+# instead of the closures every one of these used to be.
+# --------------------------------------------------------------------------
+#
+# `ContinuousEffect.selector`/`.modification`/`.condition`, and `Modification`'s
+# own `count` argument, used to be plain Python closures. A closure cannot be
+# serialized - `Game.model_dump(mode="json")` raises `PydanticSerializationError:
+# Unable to serialize unknown type: <class 'function'>` the moment any of these
+# is stored - so each is now a frozen, `kind`-discriminated pydantic model
+# instead, with `__call__` (or, for `Condition`, `holds_in`) carrying the exact
+# body the closure used to run, moved rather than rewritten. Every factory
+# function below this point (`only_this_incarnation`, `grant_ability`,
+# `modify_power_toughness`, ...) is now a thin constructor returning one of
+# these models, so none of the ~76 call sites across the codebase, and neither
+# consumer (`_project`, `_depends_on`/`_writes_differently`), had to change.
+#
+# The union membership is the reachable set read off this module's own factory
+# list - every function that returns `Selector`/`Modification`/`Count`, plus
+# the handful of builder-local closures inline in a builder's own body
+# (`_become_a_copy_builder`'s `modification`; `_self_becomes_type_until_next_
+# turn_builder`/`_target_animation_builder`/`_self_animation_builder`'s shared
+# `become`; `_other_creatures_are_type_builder`'s inline `selector`) - not from
+# what the test suite happens to exercise, which is a smaller set:
+# `parsed_layer_effects` with `static_only=False` can build anthem- and
+# animation-shaped effects the suite never runs.
+
+
+class CountBase(BaseModel):
+    """How many of something an effect counts (CR 613.5) - the `Count` union's
+    common shape. Judged against one object and the board as it stands in
+    whichever sublayer asks.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    def __call__(self, chars: Characteristics, board: Board) -> int:
+        raise NotImplementedError
+
+
+class FixedCount(CountBase):
+    """A count already worked out once, at build time, and never recomputed.
+
+    Tarmogoyf's, Boneyard Wurm's and Nighthawk Scavenger's own characteristic-
+    defining abilities each count a graveyard the layer engine cannot see once
+    the board is being computed - `context.graveyards`/`context.graveyard_of`/
+    `context.opponents_graveyard_of` - so each reads its number once, when its
+    row builds the effect. This is where that fixed number lives now, in place
+    of the `lambda chars, board: types`-shaped closure that used to hold it.
+    """
+
+    kind: Literal["fixed"] = "fixed"
+    value: int
+
+    def __call__(self, chars: Characteristics, board: Board) -> int:
+        return self.value
+
+
+class CountOtherCreaturesNamed(CountBase):
+    """How many *other* creatures on the board have this name."""
+
+    kind: Literal["other_creatures_named"] = "other_creatures_named"
+    name: str
+
+    def __call__(self, chars: Characteristics, board: Board) -> int:
+        return sum(
+            1
+            for other in board.values()
+            if other.card_id != chars.card_id and other.is_creature and other.name == self.name
+        )
+
+
+class CountLandsControlledBy(CountBase):
+    kind: Literal["lands_controlled_by"] = "lands_controlled_by"
+    username: str | None = None
+
+    def __call__(self, chars: Characteristics, board: Board) -> int:
+        return sum(
+            1 for other in board.values() if other.is_land and other.controller == self.username
+        )
+
+
+class CountPermanentsControlledBy(CountBase):
+    """How many permanents of `card_type` a player controls (CR 205.2a)."""
+
+    kind: Literal["permanents_controlled_by"] = "permanents_controlled_by"
+    username: str | None = None
+    card_type: Type
+
+    def __call__(self, chars: Characteristics, board: Board) -> int:
+        return sum(
+            1
+            for other in board.values()
+            if self.card_type in other.types and other.controller == self.username
+        )
+
+
+class CountBasicLandTypesAmongLandsControlledBy(CountBase):
+    """How many of the five basic land types (CR 305.6) are among the lands
+    one player controls - *domain*'s number.
+    """
+
+    kind: Literal["basic_land_types_among_lands_controlled_by"] = (
+        "basic_land_types_among_lands_controlled_by"
+    )
+    username: str | None = None
+
+    def __call__(self, chars: Characteristics, board: Board) -> int:
+        found = {
+            subtype
+            for other in board.values()
+            if other.is_land and other.controller == self.username
+            for subtype in other.subtypes
+            if subtype in BASIC_LAND_TYPES
+        }
+        return len(found)
+
+
+#: How many of something an effect counts, judged against one object and the
+#: board as it stands in that sublayer (CR 613.5).
+Count = Annotated[
+    FixedCount
+    | CountOtherCreaturesNamed
+    | CountLandsControlledBy
+    | CountPermanentsControlledBy
+    | CountBasicLandTypesAmongLandsControlledBy,
+    Field(discriminator="kind"),
+]
+
+
+class SelectorBase(BaseModel):
+    """Does this effect apply to that object? Judged against characteristics as
+    computed so far, with the rest of the board available for effects that
+    count things or say "each other" (CR 613.5).
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        raise NotImplementedError
+
+
+class Only(SelectorBase):
+    """Exactly one permanent, by id."""
+
+    kind: Literal["only"] = "only"
+    card_id: UUID
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        return chars.card_id == self.card_id
+
+
+class OnlyThisIncarnation(SelectorBase):
+    """Like `Only`, but also refuses CR 400.7's "new object" - same `id`, but a
+    permanent that left its zone and came back since `stamp` was taken. See
+    `only_this_incarnation`'s own docstring for the full CR 400.7/CR 611.2c
+    argument; `chars.zone_change_stamp` is what lets this be a value rather
+    than a closure over a live `CardState`.
+    """
+
+    kind: Literal["only_this_incarnation"] = "only_this_incarnation"
+    card_id: UUID
+    stamp: UUID
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        return chars.card_id == self.card_id and chars.zone_change_stamp == self.stamp
+
+
+class EveryCreature(SelectorBase):
+    kind: Literal["every_creature"] = "every_creature"
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        return chars.is_creature
+
+
+class SameNameAs(SelectorBase):
+    """Every creature whose name is `name` (CR 201.2a)."""
+
+    kind: Literal["same_name_as"] = "same_name_as"
+    name: str
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        return bool(self.name) and chars.is_creature and chars.name == self.name
+
+
+class CreaturesControlledBy(SelectorBase):
+    kind: Literal["creatures_controlled_by"] = "creatures_controlled_by"
+    username: str | None = None
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        return chars.is_creature and chars.controller == self.username
+
+
+class OtherCreaturesControlledBy(SelectorBase):
+    """ "Other creatures you control" - the source itself is excluded."""
+
+    kind: Literal["other_creatures_controlled_by"] = "other_creatures_controlled_by"
+    source_id: UUID
+    username: str | None = None
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        return (
+            chars.is_creature
+            and chars.controller == self.username
+            and chars.card_id != self.source_id
+        )
+
+
+class OtherCreatures(SelectorBase):
+    """Every creature except this one, whoever controls it - Ygra, Eater of
+    All's "Other creatures are Food artifacts ..." reaches every creature on
+    the battlefield, not only its controller's, which is what tells this apart
+    from `OtherCreaturesControlledBy`.
+    """
+
+    kind: Literal["other_creatures"] = "other_creatures"
+    source_id: UUID
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        return chars.is_creature and chars.card_id != self.source_id
+
+
+class CreaturesControlledByOpponentsOf(SelectorBase):
+    """ "Creatures your opponents control" - every creature someone else
+    controls. A permanent with no controller at all is nobody's, so it is not
+    caught.
+    """
+
+    kind: Literal["creatures_controlled_by_opponents_of"] = "creatures_controlled_by_opponents_of"
+    username: str | None = None
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        return (
+            chars.is_creature and chars.controller is not None and chars.controller != self.username
+        )
+
+
+class LandsControlledBy(SelectorBase):
+    kind: Literal["lands_controlled_by"] = "lands_controlled_by"
+    username: str | None = None
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        return chars.is_land and chars.controller == self.username
+
+
+class NonbasicLands(SelectorBase):
+    """Every land without the basic supertype (CR 205.4c)."""
+
+    kind: Literal["nonbasic_lands"] = "nonbasic_lands"
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        return chars.is_land and not chars.is_basic
+
+
+class EveryLand(SelectorBase):
+    kind: Literal["every_land"] = "every_land"
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        return chars.is_land
+
+
+class OtherNonAuraEnchantments(SelectorBase):
+    kind: Literal["other_non_aura_enchantments"] = "other_non_aura_enchantments"
+    source_id: UUID
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        return (
+            chars.card_id != self.source_id
+            and Type.ENCHANTMENT in chars.types
+            and "Aura" not in chars.subtypes
+        )
+
+
+class QualifiedCreatures(SelectorBase):
+    """ "[Other] [non<colour>] [land] creature[ token]s [you control|your
+    opponents control]" - the anthem subject with the qualifiers the pool
+    actually prints, composed one predicate at a time. See `qualified_
+    creatures`'s own docstring for what each qualifier means.
+
+    `gate_card_type`/`gate_threshold` replace what used to be a `board_gate:
+    Callable[[Board], bool]` parameter - CR 611.3a's "isn't 'locked in'" board
+    condition, stored as the two scalars `CreatureQualifiers` already carries
+    rather than a closure over them, for the same reason every other field
+    here is a value and not a callable.
+    """
+
+    kind: Literal["qualified_creatures"] = "qualified_creatures"
+    source_id: UUID
+    username: str | None = None
+    other: bool = False
+    opponents: bool = False
+    without_color: Color | None = None
+    land: bool = False
+    tokens: bool = False
+    gate_card_type: Type | None = None
+    gate_threshold: int = 0
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        if not chars.is_creature:
+            return False
+        if self.opponents:
+            if chars.controller is None or chars.controller == self.username:
+                return False
+        elif self.username is not None and chars.controller != self.username:
+            return False
+        if self.other and chars.card_id == self.source_id:
+            return False
+        if self.without_color is not None and self.without_color in chars.colors:
+            return False
+        if self.land and not chars.is_land:
+            return False
+        if self.tokens and not chars.is_token:
+            return False
+        if self.gate_card_type is not None:
+            count = sum(
+                1
+                for other in board.values()
+                if self.gate_card_type in other.types and other.controller == self.username
+            )
+            if count < self.gate_threshold:
+                return False
+        return True
+
+
+class AllPermanentsControlledBy(SelectorBase):
+    """ "Each [nonland] permanent you control"."""
+
+    kind: Literal["all_permanents_controlled_by"] = "all_permanents_controlled_by"
+    username: str | None = None
+    nonland: bool = False
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        return chars.controller == self.username and not (self.nonland and chars.is_land)
+
+
+class PermanentsControlledBy(SelectorBase):
+    """ "[Nontoken] <card type>s you control" (CR 205.2a)."""
+
+    kind: Literal["permanents_controlled_by"] = "permanents_controlled_by"
+    username: str | None = None
+    card_type: Type
+    nontoken: bool = False
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        if self.nontoken and chars.is_token:
+            return False
+        return self.card_type in chars.types and chars.controller == self.username
+
+
+class CreaturesControlledByWithSubtype(SelectorBase):
+    """ "[Other] <subtype>s you control"."""
+
+    kind: Literal["creatures_controlled_by_with_subtype"] = "creatures_controlled_by_with_subtype"
+    username: str | None = None
+    subtypes: tuple[str, ...] = ()
+    other_than: UUID | None = None
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        wanted = {subtype.lower() for subtype in self.subtypes}
+        return (
+            chars.is_creature
+            and chars.controller == self.username
+            and chars.card_id != self.other_than
+            and any(subtype.lower() in wanted for subtype in chars.subtypes)
+        )
+
+
+class CreaturesControlledByWithColor(SelectorBase):
+    kind: Literal["creatures_controlled_by_with_color"] = "creatures_controlled_by_with_color"
+    username: str | None = None
+    color: Color
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        return (
+            chars.is_creature and chars.controller == self.username and self.color in chars.colors
+        )
+
+
+class PermanentsControlledByWithCounters(SelectorBase):
+    kind: Literal["permanents_controlled_by_with_counters"] = (
+        "permanents_controlled_by_with_counters"
+    )
+    username: str | None = None
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        return chars.controller == self.username and any(
+            count > 0 for count in chars.counters.values()
+        )
+
+
 #: Does this effect apply to that object? Judged against characteristics as
-#: computed so far, with the rest of the board available for effects that count
-#: things or say "each other" (CR 613.5).
-Selector = Callable[[Characteristics, Board], bool]
+#: computed so far, with the rest of the board available for effects that
+#: count things or say "each other" (CR 613.5).
+Selector = Annotated[
+    Only
+    | OnlyThisIncarnation
+    | EveryCreature
+    | SameNameAs
+    | CreaturesControlledBy
+    | OtherCreaturesControlledBy
+    | OtherCreatures
+    | CreaturesControlledByOpponentsOf
+    | LandsControlledBy
+    | NonbasicLands
+    | EveryLand
+    | OtherNonAuraEnchantments
+    | QualifiedCreatures
+    | AllPermanentsControlledBy
+    | PermanentsControlledBy
+    | CreaturesControlledByWithSubtype
+    | CreaturesControlledByWithColor
+    | PermanentsControlledByWithCounters,
+    Field(discriminator="kind"),
+]
+
+
+class ModificationBase(BaseModel):
+    """What the effect does to one object it applies to. Pure: returns a new
+    `Characteristics`, never edits the one it was handed.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        raise NotImplementedError
+
+
+class LoseAllAbilities(ModificationBase):
+    """Layer 6 removal (CR 613.1f)."""
+
+    kind: Literal["lose_all_abilities"] = "lose_all_abilities"
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        return chars.with_(abilities=())
+
+
+class GrantAbility(ModificationBase):
+    """Layer 6 addition (CR 613.1f), deduplicated."""
+
+    kind: Literal["grant_ability"] = "grant_ability"
+    text: str
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        if chars.has_ability(self.text):
+            return chars
+        return chars.with_(abilities=chars.abilities + (self.text,))
+
+
+class GrantAbilityInstance(ModificationBase):
+    """Layer 6 addition (CR 613.1f) that does *not* deduplicate - see
+    `grant_ability_instance`'s own docstring (ward, CR 702.21a, CR 113.2c).
+    """
+
+    kind: Literal["grant_ability_instance"] = "grant_ability_instance"
+    text: str
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        return chars.with_(abilities=chars.abilities + (self.text,))
+
+
+class AddType(ModificationBase):
+    """Layer 4: gain a card type on top of the ones already there (CR 205.1b)."""
+
+    kind: Literal["add_type"] = "add_type"
+    card_type: Type
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        if self.card_type in chars.types:
+            return chars
+        return chars.with_(types=chars.types + (self.card_type,))
+
+
+class AddSubtype(ModificationBase):
+    """Layer 4: gain a land type "in addition to" the ones already there.
+
+    A land with a basic land type has the matching mana ability intrinsically
+    (CR 305.6), so the ability comes along with the type.
+    """
+
+    kind: Literal["add_subtype"] = "add_subtype"
+    subtype: str
+    mana_ability: str | None = None
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        if self.subtype in chars.subtypes:
+            return chars
+        changes: dict[str, object] = {"subtypes": chars.subtypes + (self.subtype,)}
+        if self.mana_ability is not None and not chars.has_ability(self.mana_ability):
+            changes["abilities"] = chars.abilities + (self.mana_ability,)
+        return chars.with_(**changes)
+
+
+class AddBasicLandTypes(ModificationBase):
+    """Layer 4: become every basic land type in addition to the others (CR 613.1d)."""
+
+    kind: Literal["add_basic_land_types"] = "add_basic_land_types"
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        subtypes = list(chars.subtypes)
+        abilities = list(chars.abilities)
+        for subtype, mana_ability in BASIC_LAND_TYPES.items():
+            if subtype not in subtypes:
+                subtypes.append(subtype)
+            if mana_ability not in abilities:
+                abilities.append(mana_ability)
+        return chars.with_(subtypes=tuple(subtypes), abilities=tuple(abilities))
+
+
+class SetBasicLandType(ModificationBase):
+    """Layer 4: become a basic land type, losing the old ones (CR 305.7)."""
+
+    kind: Literal["set_basic_land_type"] = "set_basic_land_type"
+    subtype: str
+    mana_ability: str
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        return chars.with_(subtypes=(self.subtype,), abilities=(self.mana_ability,))
+
+
+class SetColors(ModificationBase):
+    """Layer 5 (CR 613.1e)."""
+
+    kind: Literal["set_colors"] = "set_colors"
+    colors: tuple[Color, ...] = ()
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        return chars.with_(colors=self.colors)
+
+
+class SetController(ModificationBase):
+    """Layer 2 (CR 613.1b)."""
+
+    kind: Literal["set_controller"] = "set_controller"
+    username: str
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        return chars.with_(controller=self.username)
+
+
+class ReplaceText(ModificationBase):
+    """Layer 3, word for word (CR 612.1, CR 612.2)."""
+
+    kind: Literal["replace_text"] = "replace_text"
+    old: str
+    new: str
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        return chars.with_(
+            abilities=tuple(line.replace(self.old, self.new) for line in chars.abilities)
+        )
+
+
+class SetPowerToughness(ModificationBase):
+    """Sublayer 7b (CR 613.4b)."""
+
+    kind: Literal["set_power_toughness"] = "set_power_toughness"
+    power: int
+    toughness: int
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        return chars.with_(power=self.power, toughness=self.toughness)
+
+
+class SetPowerToughnessToManaValue(ModificationBase):
+    """Sublayer 7b, where the value is read off the object (CR 613.4b)."""
+
+    kind: Literal["set_power_toughness_to_mana_value"] = "set_power_toughness_to_mana_value"
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        value = int(chars.mana_value)
+        return chars.with_(power=value, toughness=value)
+
+
+class DefinePowerToughness(ModificationBase):
+    """Sublayer 7a: a characteristic-defining ability that defines P/T."""
+
+    kind: Literal["define_power_toughness"] = "define_power_toughness"
+    count: Count
+    power: int = 0
+    toughness: int = 0
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        amount = self.count(chars, board)
+        return chars.with_(power=amount + self.power, toughness=amount + self.toughness)
+
+
+class DefinePower(ModificationBase):
+    """Sublayer 7a, power only (CR 613.4a)."""
+
+    kind: Literal["define_power"] = "define_power"
+    count: Count
+    power: int = 0
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        return chars.with_(power=self.count(chars, board) + self.power)
+
+
+class ModifyPowerToughness(ModificationBase):
+    """Sublayer 7c (CR 613.4c). Adds; never sets."""
+
+    kind: Literal["modify_power_toughness"] = "modify_power_toughness"
+    power: int
+    toughness: int
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        return chars.with_(
+            power=(chars.power or 0) + self.power,
+            toughness=(chars.toughness or 0) + self.toughness,
+        )
+
+
+class ModifyPowerToughnessPer(ModificationBase):
+    """Sublayer 7c where the size of the pump is counted on the board (CR 613.4c)."""
+
+    kind: Literal["modify_power_toughness_per"] = "modify_power_toughness_per"
+    count: Count
+    power: int
+    toughness: int
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        amount = self.count(chars, board)
+        return chars.with_(
+            power=(chars.power or 0) + self.power * amount,
+            toughness=(chars.toughness or 0) + self.toughness * amount,
+        )
+
+
+class SwitchPowerToughness(ModificationBase):
+    """Sublayer 7d (CR 613.4d)."""
+
+    kind: Literal["switch_power_toughness"] = "switch_power_toughness"
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        return chars.with_(power=chars.toughness, toughness=chars.power)
+
+
+class BecomeACopy(ModificationBase):
+    """CR 707.2/CR 707.4: a permanent already on the battlefield copies a
+    different object's copiable values while remaining itself. See
+    `_become_a_copy_builder`'s own docstring for the whole argument; every
+    field here is a *resolved* value, fixed at the moment the effect was
+    built, never re-derived from a live target.
+    """
+
+    kind: Literal["become_a_copy"] = "become_a_copy"
+    name: str
+    mana_value: float
+    supertypes: tuple[Supertype, ...] = ()
+    types: tuple[Type, ...] = ()
+    subtypes: tuple[str, ...] = ()
+    colors: tuple[Color, ...] = ()
+    abilities: tuple[str, ...] = ()
+    power: int | None = None
+    toughness: int | None = None
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        return chars.with_(
+            name=self.name,
+            mana_value=self.mana_value,
+            supertypes=self.supertypes,
+            types=self.types,
+            subtypes=self.subtypes,
+            colors=self.colors,
+            abilities=self.abilities,
+            power=self.power,
+            toughness=self.toughness,
+        )
+
+
+class SetTypesAndSubtypes(ModificationBase):
+    """Layer 4: replace the object's types and subtypes outright (CR 205.1a).
+
+    Shared by `_self_becomes_type_until_next_turn_builder`, `_target_
+    animation_builder` and `_self_animation_builder` - three different printed
+    shapes ("becomes a land", Jolrael's animation, Mishra's Factory's own) that
+    all do the identical thing to the board once their own regex has picked the
+    types and the optional subtype apart.
+    """
+
+    kind: Literal["set_types_and_subtypes"] = "set_types_and_subtypes"
+    types: tuple[Type, ...] = ()
+    subtypes: tuple[str, ...] = ()
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        return chars.with_(types=self.types, subtypes=self.subtypes)
+
+
+class AddTypesAndSubtype(ModificationBase):
+    """Layer 4 (CR 613.1d): gain each card type and the creature type named,
+    keeping everything already there (CR 205.1b).
+    """
+
+    kind: Literal["add_types_and_subtype"] = "add_types_and_subtype"
+    types: tuple[Type, ...] = ()
+    subtype: str
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        for card_type in self.types:
+            chars = AddType(card_type=card_type)(chars, board)
+        return AddSubtype(subtype=self.subtype)(chars, board)
+
 
 #: What the effect does to one object it applies to. Pure: returns a new
 #: `Characteristics`, never edits the one it was handed.
-Modification = Callable[[Characteristics, Board], Characteristics]
+Modification = Annotated[
+    LoseAllAbilities
+    | GrantAbility
+    | GrantAbilityInstance
+    | AddType
+    | AddSubtype
+    | AddBasicLandTypes
+    | SetBasicLandType
+    | SetColors
+    | SetController
+    | ReplaceText
+    | SetPowerToughness
+    | SetPowerToughnessToManaValue
+    | DefinePowerToughness
+    | DefinePower
+    | ModifyPowerToughness
+    | ModifyPowerToughnessPer
+    | SwitchPowerToughness
+    | BecomeACopy
+    | SetTypesAndSubtypes
+    | AddTypesAndSubtype,
+    Field(discriminator="kind"),
+]
+
+
+class ConditionBase(BaseModel):
+    """Whether a "for as long as" duration is still running (CR 611.2b).
+
+    Takes the `Game`, not the layer engine's board: "for as long as this
+    creature remains on the battlefield" is a question about a zone, and the
+    layer engine never sees one. `ContinuousEffect.holds` is what calls this.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    def holds_in(self, game: Game) -> bool:
+        raise NotImplementedError
+
+
+class RemainsOnBattlefield(ConditionBase):
+    """ "For as long as this creature remains on the battlefield" (CR 611.2b).
+
+    Looks the permanent up by id every time, rather than closing over a live
+    `CardState` - the same `zone_change_stamp` trick `OnlyThisIncarnation` uses,
+    and for the same reason (CR 400.7: a permanent that leaves and returns is a
+    new object, so the condition must stay false for the returning one, not
+    read as true just because the id is unchanged).
+    """
+
+    kind: Literal["remains_on_battlefield"] = "remains_on_battlefield"
+    card_id: UUID
+    stamp: UUID
+
+    def holds_in(self, game: Game) -> bool:
+        permanent = game.find_by_id(self.card_id)
+        if permanent is None:
+            return False
+        return permanent.zone is Zone.BATTLEFIELD and permanent.zone_change_stamp == self.stamp
+
+
+#: Whether a "for as long as" duration is still running (CR 611.2b).
+Condition = RemainsOnBattlefield
 
 
 def printed_characteristics(
@@ -361,6 +1148,7 @@ def printed_characteristics(
             toughness=face_down.toughness,
             counters=on_the_permanent,
             is_token=state.token,
+            zone_change_stamp=state.zone_change_stamp,
         )
     # CR 712.8d/712.8e/712.8f: a double-faced permanent has only the
     # characteristics of the face that is up - the front face by default
@@ -398,6 +1186,7 @@ def printed_characteristics(
         toughness=toughness,
         counters=on_the_permanent,
         is_token=state.token,
+        zone_change_stamp=state.zone_change_stamp,
     )
 
 
@@ -469,14 +1258,31 @@ class ContinuousEffect(BaseModel):
     that is the key ability removal is matched on.
     """
 
-    model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
+    model_config = ConfigDict(frozen=True)
 
-    id: UUID = Field(default_factory=uuid4)
+    id: UUID = Field(default_factory=new_id)
     #: Human-readable, and what the application journal reports.
     description: str
     layer: Layer
     sublayer: Sublayer | CopySublayer | None = None
     timestamp: int = 0
+    #: This effect's position among the other effects `effects_for` returned
+    #: for the same source in the same call (CR 613.7a: a static ability's
+    #: whole set of effects shares one timestamp - the permanent's - and
+    #: CR 611.2c/613.7b does the same for one resolving ability's whole batch).
+    #: Neither CR 613.7 nor CR 613.8 (dependency) says which of two same-source,
+    #: same-timestamp, independent effects goes first - Scion of Draco's five
+    #: colour-conditioned grants and Elesh Norn, Grand Cenobite's two anthem
+    #: lines are both this shape, and the result happens to be commutative for
+    #: both. Lacking a rule, the engine's own tie-break is the order the
+    #: abilities are written on the source: `effects_for` enumerates its
+    #: builder's output 0, 1, 2, ... in the order `parsed_layer_effects` (or a
+    #: `LAYER_EFFECTS` row) produced it, which is a pure function of the
+    #: source's own oracle text - never of `id`, which is freshly randomised
+    #: every time a static effect is rebuilt (CR 613.5) and so cannot be used
+    #: for this at all. Only breaks a tie; effects at different timestamps
+    #: order by timestamp regardless of `order`.
+    order: int = 0
     source_id: UUID | None = None
     source_ability: str | None = None
     #: True for an effect from a characteristic-defining ability (CR 604.3).
@@ -497,15 +1303,29 @@ class ContinuousEffect(BaseModel):
     selector: Selector
     modification: Modification
 
-    @property
-    def holds(self) -> bool:
+    def holds(self, game: Game | None = None) -> bool:
         """Is this effect's duration still running (CR 611.2b)?
 
         Always true for an effect with no `condition`. `UNTIL_END_OF_TURN` is
         not asked here - it is removed outright by `ContinuousEffects.end_the_turn`
         (CR 514.2), because CR 514.2 ends the effect rather than suspending it.
+
+        `game` is only ever dereferenced when there *is* a condition to check -
+        every effect with no `condition` returns `True` without touching it, so
+        the huge majority of callers that have no `Game` handy (a bare
+        `compute_board` call, most of `ContinuousEffects`' own callers) can
+        pass nothing at all. A `condition` with no `game` to check it against is
+        a caller that forgot to plumb one through, and that fails loudly rather
+        than guessing - see `memory/silent-default-dispatch-tables.md`.
         """
-        return self.condition is None or self.condition()
+        if self.condition is None:
+            return True
+        if game is None:
+            raise ValueError(
+                f'{self.description!r} has a "for as long as" condition but no '
+                "game was given to check it against"
+            )
+        return self.condition.holds_in(game)
 
     @model_validator(mode="after")
     def _duration_matches_condition(self) -> ContinuousEffect:
@@ -595,8 +1415,14 @@ def compute_board(
 ) -> ComputedBoard:
     """Apply every continuous effect to every permanent, in layer order (CR 613).
 
-    Pure: the `CardState`s are read and never written. Ask again after the board
-    changes and you get a fresh answer, which is what CR 613.5 requires.
+    Pure: the `CardState`s are read and never written, and `effects` is taken
+    as given - CR 611.2b's "for as long as" filtering happens upstream, in
+    `ContinuousEffects.active`, which is the one place that actually has a
+    `Game` to check a condition against. This function never sees one, by
+    design: it is what makes `Game.model_dump(mode="json")` able to decode a
+    game back into something that computes the same board without this
+    function ever touching a live object. Ask again after the board changes
+    and you get a fresh answer, which is what CR 613.5 requires.
 
     Counters come off the permanents themselves (`CardState.counters`, CR 122.1).
     `+1/+1` and `-1/-1` counters become 7c effects (CR 613.4c); other counters
@@ -612,11 +1438,7 @@ def compute_board(
     for state in permanents:
         board[state.id] = printed_characteristics(state, counters.get(state.id))
 
-    # CR 611.2b: an effect whose "for as long as" duration has stopped running
-    # is no longer applied. This is not CR 613.6's "already started applying"
-    # carve-out - that one is about layer 6 removing the source's ability, and
-    # a duration that has expired takes the effect away outright.
-    all_effects = [effect for effect in effects if effect.holds] + _counter_effects(board)
+    all_effects = list(effects) + _counter_effects(board)
     journal = Journal()
     started: set[object] = set()
 
@@ -689,8 +1511,31 @@ def _apply_group(
     Timestamp order unless dependency says otherwise, and the order is worked
     out again after each application because applying one effect can create or
     destroy a dependency between two that have not applied yet (CR 613.8c).
+
+    The tie-break after timestamp is `source_id` then `order` - both a pure
+    function of where the effect came from (see `ContinuousEffect.order`),
+    never `id`. `id` is freshly randomised on every rebuild of a static
+    effect (CR 613.5 recomputes the board from scratch, `effects_for` mints a
+    new `ContinuousEffect` each time), so sorting by it gave two same-timestamp
+    effects - Scion of Draco's five colour grants, Elesh Norn, Grand
+    Cenobite's two anthem lines - a different relative order on every
+    computation, which CR 613.7 does not allow: `Journal.applied` order is a
+    rules question, not an implementation detail. `source_id` is included
+    ahead of `order` only as defence in depth against two different sources
+    ever sharing one timestamp (nothing in this engine currently produces
+    that: every permanent and every resolution batch gets its own tick from
+    `ContinuousEffects.tick`) - it is stable across rebuilds and across a
+    dump/decode cycle either way, since a permanent's id is minted once, when
+    it enters play, and never changes after that.
     """
-    pending = sorted(group, key=lambda effect: (effect.timestamp, str(effect.id)))
+    pending = sorted(
+        group,
+        key=lambda effect: (
+            effect.timestamp,
+            str(effect.source_id) if effect.source_id is not None else "",
+            effect.order,
+        ),
+    )
     current = dict(board)
     seen_cycles: set[frozenset[UUID]] = set()
 
@@ -897,48 +1742,37 @@ def _changed_fields(before: Characteristics, after: Characteristics) -> frozense
 
 
 def _only(card_id: UUID) -> Selector:
-    def selector(chars: Characteristics, board: Board) -> bool:
-        return chars.card_id == card_id
-
-    return selector
+    return Only(card_id=card_id)
 
 
 def only_this_incarnation(permanent: CardState, stamp: UUID) -> Selector:
     """Like `_only`, but also refuses CR 400.7's "new object" - same `id`, but
     a permanent that left its zone and came back since `stamp` was taken.
 
-    `Selector` only sees `Characteristics` and the computed `Board`, and
-    neither carries a `zone_change_stamp` - `CardState.id` is never reissued
-    on a zone change, only the stamp is, so this reads the live `CardState`
-    directly rather than through the board. That is the same thing a
-    `Duration.FOR_AS_LONG_AS` `Condition` already does for a live count, and
-    it matters for exactly the same reason: an effect with `Duration.
-    INDEFINITE` is never swept away by `ContinuousEffects.end_the_turn`, so an
-    effect scoped only to `card_id` would keep re-applying to whatever the
-    same id becomes forever - including a permanent CR 603.7's own delayed
-    return already sent back to the battlefield as a plain, unanimated land.
-    Earthbend (CR 701.66a) is the first user; nothing before it created an
-    indefinite effect on an object that could round-trip through another zone.
+    CR 611.2c fixes "the set of objects it affects ... when that continuous
+    effect begins", and CR 400.7 says the thing that comes back from the
+    graveyard is not in that set: "An object that moves from one zone to
+    another becomes a new object with no memory of, or relation to, its
+    previous existence." A Giant Growth on a Bear that then dies and is
+    returned this turn was pumping the returned Bear while these builders used
+    `_only`, because `CardState.id` is stable across the move and nothing else
+    was being asked. See `OnlyThisIncarnation` for why the comparison can now
+    be made against `Characteristics.zone_change_stamp` rather than a live
+    `CardState`.
 
-    It is now the selector *every* target-fixed builder in this module uses,
-    not only the indefinite ones. CR 611.2c fixes "the set of objects it
-    affects ... when that continuous effect begins", and CR 400.7 says the
-    thing that comes back from the graveyard is not in that set: "An object
-    that moves from one zone to another becomes a new object with no memory
-    of, or relation to, its previous existence." A Giant Growth on a Bear that
-    then dies and is returned this turn was pumping the returned Bear while
-    these builders used `_only`, because `CardState.id` is stable across the
-    move and nothing else was being asked.
+    It is the selector *every* target-fixed builder in this module uses, not
+    only the indefinite ones - an effect with `Duration.INDEFINITE` is never
+    swept away by `ContinuousEffects.end_the_turn`, so an effect scoped only to
+    `card_id` would keep re-applying to whatever the same id becomes forever,
+    including a permanent CR 603.7's own delayed return already sent back to
+    the battlefield as a plain, unanimated land. Earthbend (CR 701.66a) is the
+    first user; nothing before it created an indefinite effect on an object
+    that could round-trip through another zone.
     """
-
-    def selector(chars: Characteristics, board: Board) -> bool:
-        return chars.card_id == permanent.id and permanent.zone_change_stamp == stamp
-
-    return selector
+    return OnlyThisIncarnation(card_id=permanent.id, stamp=stamp)
 
 
-def every_creature(chars: Characteristics, board: Board) -> bool:
-    return chars.is_creature
+every_creature: Selector = EveryCreature()
 
 
 def same_name_as(name: str) -> Selector:
@@ -960,27 +1794,16 @@ def same_name_as(name: str) -> Selector:
     keeping its own name. Neither shares a name with the Assembly-Worker card,
     so neither is selected.
     """
-
-    def selector(chars: Characteristics, board: Board) -> bool:
-        return bool(name) and chars.is_creature and chars.name == name
-
-    return selector
+    return SameNameAs(name=name)
 
 
 def creatures_controlled_by(username: str | None) -> Selector:
-    def selector(chars: Characteristics, board: Board) -> bool:
-        return chars.is_creature and chars.controller == username
-
-    return selector
+    return CreaturesControlledBy(username=username)
 
 
 def other_creatures_controlled_by(source_id: UUID, username: str | None) -> Selector:
     """ "Other creatures you control" - the source itself is excluded."""
-
-    def selector(chars: Characteristics, board: Board) -> bool:
-        return chars.is_creature and chars.controller == username and chars.card_id != source_id
-
-    return selector
+    return OtherCreaturesControlledBy(source_id=source_id, username=username)
 
 
 def creatures_controlled_by_opponents_of(username: str | None) -> Selector:
@@ -988,38 +1811,21 @@ def creatures_controlled_by_opponents_of(username: str | None) -> Selector:
 
     A permanent with no controller at all is nobody's, so it is not caught.
     """
-
-    def selector(chars: Characteristics, board: Board) -> bool:
-        return chars.is_creature and chars.controller is not None and chars.controller != username
-
-    return selector
+    return CreaturesControlledByOpponentsOf(username=username)
 
 
 def lands_controlled_by(username: str | None) -> Selector:
-    def selector(chars: Characteristics, board: Board) -> bool:
-        return chars.is_land and chars.controller == username
-
-    return selector
+    return LandsControlledBy(username=username)
 
 
-def nonbasic_lands(chars: Characteristics, board: Board) -> bool:
-    """Every land without the basic supertype (CR 205.4c)."""
-    return chars.is_land and not chars.is_basic
+#: Every land without the basic supertype (CR 205.4c).
+nonbasic_lands: Selector = NonbasicLands()
 
-
-def every_land(chars: Characteristics, board: Board) -> bool:
-    return chars.is_land
+every_land: Selector = EveryLand()
 
 
 def other_non_aura_enchantments(source_id: UUID) -> Selector:
-    def selector(chars: Characteristics, board: Board) -> bool:
-        return (
-            chars.card_id != source_id
-            and Type.ENCHANTMENT in chars.types
-            and "Aura" not in chars.subtypes
-        )
-
-    return selector
+    return OtherNonAuraEnchantments(source_id=source_id)
 
 
 def qualified_creatures(
@@ -1031,7 +1837,8 @@ def qualified_creatures(
     without_color: Color | None = None,
     land: bool = False,
     tokens: bool = False,
-    board_gate: Callable[[Board], bool] | None = None,
+    gate_card_type: Type | None = None,
+    gate_threshold: int = 0,
 ) -> Selector:
     """ "[Other] [non<colour>] [land] creature[ token]s [you control|your
     opponents control]" - the anthem subject with the qualifiers the pool
@@ -1057,33 +1864,26 @@ def qualified_creatures(
       isn't represented by a card"), which rides on `Characteristics.is_token`
       for the same reason `permanents_controlled_by`'s `nontoken` does.
 
-    `board_gate` is the whole-board condition a printed "as long as ..." clause
-    puts in front of the anthem (Fecund Greenshell's ten lands). It belongs
-    here rather than in a `Duration`: a static ability's effect "isn't 'locked
-    in'; it applies at any given moment to whatever its text indicates"
-    (CR 611.3a), so the count is taken from the board every time CR 613.5
-    recomputes it and the anthem switches itself off the moment a land leaves.
+    `gate_card_type`/`gate_threshold` are the whole-board "as long as you
+    control N or more <card type>s" condition a printed "as long as ..."
+    clause puts in front of the anthem (Fecund Greenshell's ten lands). They
+    belong here rather than in a `Duration`: a static ability's effect "isn't
+    'locked in'; it applies at any given moment to whatever its text
+    indicates" (CR 611.3a), so the count is taken from the board every time
+    CR 613.5 recomputes it and the anthem switches itself off the moment a
+    land leaves.
     """
-
-    def selector(chars: Characteristics, board: Board) -> bool:
-        if not chars.is_creature:
-            return False
-        if opponents:
-            if chars.controller is None or chars.controller == username:
-                return False
-        elif username is not None and chars.controller != username:
-            return False
-        if other and chars.card_id == source_id:
-            return False
-        if without_color is not None and without_color in chars.colors:
-            return False
-        if land and not chars.is_land:
-            return False
-        if tokens and not chars.is_token:
-            return False
-        return board_gate is None or board_gate(board)
-
-    return selector
+    return QualifiedCreatures(
+        source_id=source_id,
+        username=username,
+        other=other,
+        opponents=opponents,
+        without_color=without_color,
+        land=land,
+        tokens=tokens,
+        gate_card_type=gate_card_type,
+        gate_threshold=gate_threshold,
+    )
 
 
 def all_permanents_controlled_by(username: str | None, *, nonland: bool = False) -> Selector:
@@ -1093,11 +1893,7 @@ def all_permanents_controlled_by(username: str | None, *, nonland: bool = False)
     board so a permanent that became a land in layer 4 (CR 613.1d) drops out
     before layer 5 (CR 613.1e) reads this.
     """
-
-    def selector(chars: Characteristics, board: Board) -> bool:
-        return chars.controller == username and not (nonland and chars.is_land)
-
-    return selector
+    return AllPermanentsControlledBy(username=username, nonland=nonland)
 
 
 def permanents_controlled_by(
@@ -1110,13 +1906,7 @@ def permanents_controlled_by(
     travels on the board at all: CR 111.1's token/card distinction is not a
     characteristic, and a `Selector` is handed nothing else.
     """
-
-    def selector(chars: Characteristics, board: Board) -> bool:
-        if nontoken and chars.is_token:
-            return False
-        return card_type in chars.types and chars.controller == username
-
-    return selector
+    return PermanentsControlledBy(username=username, card_type=card_type, nontoken=nontoken)
 
 
 def creatures_controlled_by_with_subtype(
@@ -1132,17 +1922,9 @@ def creatures_controlled_by_with_subtype(
     one-item list. Read against the subtypes on the *computed* board, so a
     creature that gained the subtype in layer 4 is included (CR 613.5).
     """
-    wanted = {subtype.lower() for subtype in subtypes}
-
-    def selector(chars: Characteristics, board: Board) -> bool:
-        return (
-            chars.is_creature
-            and chars.controller == username
-            and chars.card_id != other_than
-            and any(subtype.lower() in wanted for subtype in chars.subtypes)
-        )
-
-    return selector
+    return CreaturesControlledByWithSubtype(
+        username=username, subtypes=tuple(subtypes), other_than=other_than
+    )
 
 
 def creatures_controlled_by_with_color(username: str | None, color: Color) -> Selector:
@@ -1151,11 +1933,7 @@ def creatures_controlled_by_with_color(username: str | None, color: Color) -> Se
     creature has when layer 6 runs, which is after layer 5 (CR 613.1e, CR
     613.1f) and so already includes any colour-changing effect.
     """
-
-    def selector(chars: Characteristics, board: Board) -> bool:
-        return chars.is_creature and chars.controller == username and color in chars.colors
-
-    return selector
+    return CreaturesControlledByWithColor(username=username, color=color)
 
 
 def permanents_controlled_by_with_counters(username: str | None) -> Selector:
@@ -1164,27 +1942,16 @@ def permanents_controlled_by_with_counters(username: str | None) -> Selector:
     ride on `Characteristics.counters` for exactly this kind of read; a counter
     recorded with a count of zero is no counter at all.
     """
-
-    def selector(chars: Characteristics, board: Board) -> bool:
-        return chars.controller == username and any(count > 0 for count in chars.counters.values())
-
-    return selector
+    return PermanentsControlledByWithCounters(username=username)
 
 
-def lose_all_abilities(chars: Characteristics, board: Board) -> Characteristics:
-    """Layer 6 removal (CR 613.1f)."""
-    return chars.with_(abilities=())
+#: Layer 6 removal (CR 613.1f).
+lose_all_abilities: Modification = LoseAllAbilities()
 
 
 def grant_ability(text: str) -> Modification:
     """Layer 6 addition (CR 613.1f)."""
-
-    def modification(chars: Characteristics, board: Board) -> Characteristics:
-        if chars.has_ability(text):
-            return chars
-        return chars.with_(abilities=chars.abilities + (text,))
-
-    return modification
+    return GrantAbility(text=text)
 
 
 def grant_ability_instance(text: str) -> Modification:
@@ -1198,22 +1965,12 @@ def grant_ability_instance(text: str) -> Modification:
     abilities" is then the whole of it, so two sources granting ward {1} give
     the permanent two independent triggers rather than one.
     """
-
-    def modification(chars: Characteristics, board: Board) -> Characteristics:
-        return chars.with_(abilities=chars.abilities + (text,))
-
-    return modification
+    return GrantAbilityInstance(text=text)
 
 
 def add_type(card_type: Type) -> Modification:
     """Layer 4: gain a card type on top of the ones already there (CR 205.1b)."""
-
-    def modification(chars: Characteristics, board: Board) -> Characteristics:
-        if card_type in chars.types:
-            return chars
-        return chars.with_(types=chars.types + (card_type,))
-
-    return modification
+    return AddType(card_type=card_type)
 
 
 def add_subtype(subtype: str, mana_ability: str | None = None) -> Modification:
@@ -1223,16 +1980,7 @@ def add_subtype(subtype: str, mana_ability: str | None = None) -> Modification:
     (CR 305.6), so the ability comes along with the type. This is what makes
     Urborg turn everything into a black source.
     """
-
-    def modification(chars: Characteristics, board: Board) -> Characteristics:
-        if subtype in chars.subtypes:
-            return chars
-        changes: dict[str, object] = {"subtypes": chars.subtypes + (subtype,)}
-        if mana_ability is not None and not chars.has_ability(mana_ability):
-            changes["abilities"] = chars.abilities + (mana_ability,)
-        return chars.with_(**changes)
-
-    return modification
+    return AddSubtype(subtype=subtype, mana_ability=mana_ability)
 
 
 #: The five basic land types (CR 305.6) and the mana ability each one carries.
@@ -1247,23 +1995,14 @@ BASIC_LAND_TYPES: dict[str, str] = {
 }
 
 
-def add_basic_land_types(chars: Characteristics, board: Board) -> Characteristics:
-    """Layer 4: become every basic land type in addition to the others (CR 613.1d).
-
-    Dryad of the Ilysian Grove. "In addition to" keeps whatever land types were
-    already there, and each basic type gained brings its intrinsic mana ability
-    with it (CR 305.6) - which is why a Dryad turns every land into a source of
-    all five colours. It is *not* CR 305.7's "sets a land's subtype", so nothing
-    is stripped.
-    """
-    subtypes = list(chars.subtypes)
-    abilities = list(chars.abilities)
-    for subtype, mana_ability in BASIC_LAND_TYPES.items():
-        if subtype not in subtypes:
-            subtypes.append(subtype)
-        if mana_ability not in abilities:
-            abilities.append(mana_ability)
-    return chars.with_(subtypes=tuple(subtypes), abilities=tuple(abilities))
+#: Layer 4: become every basic land type in addition to the others (CR 613.1d).
+#:
+#: Dryad of the Ilysian Grove. "In addition to" keeps whatever land types were
+#: already there, and each basic type gained brings its intrinsic mana ability
+#: with it (CR 305.6) - which is why a Dryad turns every land into a source of
+#: all five colours. It is *not* CR 305.7's "sets a land's subtype", so nothing
+#: is stripped.
+add_basic_land_types: Modification = AddBasicLandTypes()
 
 
 def set_basic_land_type(subtype: str, mana_ability: str) -> Modification:
@@ -1277,58 +2016,31 @@ def set_basic_land_type(subtype: str, mana_ability: str) -> Modification:
     Limitation: every subtype is replaced, which is right for a plain land and
     wrong for a land creature, whose creature types should survive.
     """
-
-    def modification(chars: Characteristics, board: Board) -> Characteristics:
-        return chars.with_(subtypes=(subtype,), abilities=(mana_ability,))
-
-    return modification
+    return SetBasicLandType(subtype=subtype, mana_ability=mana_ability)
 
 
 def set_colors(*colors: Color) -> Modification:
     """Layer 5 (CR 613.1e)."""
-
-    def modification(chars: Characteristics, board: Board) -> Characteristics:
-        return chars.with_(colors=tuple(colors))
-
-    return modification
+    return SetColors(colors=tuple(colors))
 
 
 def set_controller(username: str) -> Modification:
     """Layer 2 (CR 613.1b)."""
-
-    def modification(chars: Characteristics, board: Board) -> Characteristics:
-        return chars.with_(controller=username)
-
-    return modification
+    return SetController(username=username)
 
 
 def replace_text(old: str, new: str) -> Modification:
     """Layer 3, word for word (CR 612.1, CR 612.2)."""
-
-    def modification(chars: Characteristics, board: Board) -> Characteristics:
-        return chars.with_(abilities=tuple(line.replace(old, new) for line in chars.abilities))
-
-    return modification
+    return ReplaceText(old=old, new=new)
 
 
 def set_power_toughness(power: int, toughness: int) -> Modification:
     """Sublayer 7b (CR 613.4b)."""
-
-    def modification(chars: Characteristics, board: Board) -> Characteristics:
-        return chars.with_(power=power, toughness=toughness)
-
-    return modification
+    return SetPowerToughness(power=power, toughness=toughness)
 
 
-def set_power_toughness_to_mana_value(chars: Characteristics, board: Board) -> Characteristics:
-    """Sublayer 7b, where the value is read off the object (CR 613.4b)."""
-    value = int(chars.mana_value)
-    return chars.with_(power=value, toughness=value)
-
-
-#: How many of something an effect counts, judged against one object and the
-#: board as it stands in that sublayer (CR 613.5).
-Count = Callable[[Characteristics, Board], int]
+#: Sublayer 7b, where the value is read off the object (CR 613.4b).
+set_power_toughness_to_mana_value: Modification = SetPowerToughnessToManaValue()
 
 
 def define_power_toughness(count: Count, power: int = 0, toughness: int = 0) -> Modification:
@@ -1346,12 +2058,7 @@ def define_power_toughness(count: Count, power: int = 0, toughness: int = 0) -> 
     is `(lands, 1, 1)`. Both halves are *set*, never added to: a CDA defines the
     value rather than modifying one (CR 613.4a against CR 613.4c).
     """
-
-    def modification(chars: Characteristics, board: Board) -> Characteristics:
-        amount = count(chars, board)
-        return chars.with_(power=amount + power, toughness=amount + toughness)
-
-    return modification
+    return DefinePowerToughness(count=count, power=power, toughness=toughness)
 
 
 def define_power(count: Count, power: int = 0) -> Modification:
@@ -1363,11 +2070,7 @@ def define_power(count: Count, power: int = 0) -> Modification:
     overwrites both halves, which would erase a real printed toughness that no
     ability ever named. This leaves toughness exactly as layers 1-6 left it.
     """
-
-    def modification(chars: Characteristics, board: Board) -> Characteristics:
-        return chars.with_(power=count(chars, board) + power)
-
-    return modification
+    return DefinePower(count=count, power=power)
 
 
 def modify_power_toughness(power: int, toughness: int) -> Modification:
@@ -1376,14 +2079,7 @@ def modify_power_toughness(power: int, toughness: int) -> Modification:
     A creature with no value yet for its power counts as 0 (CR 208.5), which is
     what lets a pump land on a `*` whose CDA has been removed.
     """
-
-    def modification(chars: Characteristics, board: Board) -> Characteristics:
-        return chars.with_(
-            power=(chars.power or 0) + power,
-            toughness=(chars.toughness or 0) + toughness,
-        )
-
-    return modification
+    return ModifyPowerToughness(power=power, toughness=toughness)
 
 
 def modify_power_toughness_per(count: Count, power: int, toughness: int) -> Modification:
@@ -1393,35 +2089,16 @@ def modify_power_toughness_per(count: Count, power: int, toughness: int) -> Modi
     Relentless Rats". Counted against the board as it stands in 7c, so a Rat
     that stopped being a creature earlier in the layers is not counted.
     """
-
-    def modification(chars: Characteristics, board: Board) -> Characteristics:
-        amount = count(chars, board)
-        return chars.with_(
-            power=(chars.power or 0) + power * amount,
-            toughness=(chars.toughness or 0) + toughness * amount,
-        )
-
-    return modification
+    return ModifyPowerToughnessPer(count=count, power=power, toughness=toughness)
 
 
 def count_other_creatures_named(name: str) -> Count:
     """How many *other* creatures on the board have this name."""
-
-    def count(chars: Characteristics, board: Board) -> int:
-        return sum(
-            1
-            for other in board.values()
-            if other.card_id != chars.card_id and other.is_creature and other.name == name
-        )
-
-    return count
+    return CountOtherCreaturesNamed(name=name)
 
 
 def count_lands_controlled_by(username: str | None) -> Count:
-    def count(chars: Characteristics, board: Board) -> int:
-        return sum(1 for other in board.values() if other.is_land and other.controller == username)
-
-    return count
+    return CountLandsControlledBy(username=username)
 
 
 def count_permanents_controlled_by(username: str | None, card_type: Type) -> Count:
@@ -1431,15 +2108,7 @@ def count_permanents_controlled_by(username: str | None, card_type: Type) -> Cou
     control" is what this exists for - `count_lands_controlled_by`'s sibling,
     generalised past lands to any of the fifteen card types.
     """
-
-    def count(chars: Characteristics, board: Board) -> int:
-        return sum(
-            1
-            for other in board.values()
-            if card_type in other.types and other.controller == username
-        )
-
-    return count
+    return CountPermanentsControlledBy(username=username, card_type=card_type)
 
 
 def count_card_types(cards: Iterable[CardState]) -> int:
@@ -1455,14 +2124,12 @@ def count_card_types(cards: Iterable[CardState]) -> int:
     return len(types)
 
 
-def switch_power_toughness(chars: Characteristics, board: Board) -> Characteristics:
-    """Sublayer 7d (CR 613.4d).
-
-    "Such effects take the value of power and apply it to the creature's
-    toughness, and take the value of toughness and apply it to the creature's
-    power" - the values as they stand at 7d, after 7a through 7c.
-    """
-    return chars.with_(power=chars.toughness, toughness=chars.power)
+#: Sublayer 7d (CR 613.4d).
+#:
+#: "Such effects take the value of power and apply it to the creature's
+#: toughness, and take the value of toughness and apply it to the creature's
+#: power" - the values as they stand at 7d, after 7a through 7c.
+switch_power_toughness: Modification = SwitchPowerToughness()
 
 
 # --------------------------------------------------------------------------
@@ -1792,21 +2459,17 @@ def _become_a_copy_builder(
         subtypes = copied.subtypes + tuple(
             subtype for subtype in added_subtypes if subtype not in copied.subtypes
         )
-
-        def modification(chars: Characteristics, board: Board) -> Characteristics:
-            return chars.with_(
-                name=name_override if name_override is not None else copied.name,
-                mana_value=copied.mana_value,
-                supertypes=copied.supertypes,
-                types=types,
-                subtypes=subtypes,
-                colors=copied.colors,
-                abilities=copied.abilities,
-                power=power_override if power_override is not None else copied.power,
-                toughness=toughness_override
-                if toughness_override is not None
-                else copied.toughness,
-            )
+        modification = BecomeACopy(
+            name=name_override if name_override is not None else copied.name,
+            mana_value=copied.mana_value,
+            supertypes=copied.supertypes,
+            types=types,
+            subtypes=subtypes,
+            colors=copied.colors,
+            abilities=copied.abilities,
+            power=power_override if power_override is not None else copied.power,
+            toughness=toughness_override if toughness_override is not None else copied.toughness,
+        )
 
         return [
             ContinuousEffect(
@@ -2103,8 +2766,7 @@ def _self_becomes_type_until_next_turn_builder(
         targets: Sequence[CardState],
         context: LayerContext,
     ) -> list[ContinuousEffect]:
-        def become(chars: Characteristics, board: Board) -> Characteristics:
-            return chars.with_(types=(extra_type,), subtypes=())
+        become = SetTypesAndSubtypes(types=(extra_type,), subtypes=())
 
         effects: list[ContinuousEffect] = []
         for target in targets:
@@ -2239,14 +2901,12 @@ def _target_animation_builder(
         targets: Sequence[CardState],
         context: LayerContext,
     ) -> list[ContinuousEffect]:
-        def become(chars: Characteristics, board: Board) -> Characteristics:
-            # CR 205.1a replaces the card types; the retained type is already
-            # folded into `types` by the caller (CR 205.1b). CR 205.3d is why
-            # the old subtypes go with the old types.
-            return chars.with_(
-                types=tuple(types),
-                subtypes=(subtype,) if subtype is not None else (),
-            )
+        # CR 205.1a replaces the card types; the retained type is already
+        # folded into `types` by the caller (CR 205.1b). CR 205.3d is why the
+        # old subtypes go with the old types.
+        become = SetTypesAndSubtypes(
+            types=tuple(types), subtypes=(subtype,) if subtype is not None else ()
+        )
 
         effects: list[ContinuousEffect] = []
         for target in targets:
@@ -2328,15 +2988,13 @@ def _self_animation_builder(
         targets: Sequence[CardState],
         context: LayerContext,
     ) -> list[ContinuousEffect]:
-        def become(chars: Characteristics, board: Board) -> Characteristics:
-            # CR 205.1a: the new card types replace the old ones, and with them
-            # go the subtypes that belonged only to those types (CR 205.3d: "An
-            # object can't gain a subtype that doesn't correspond to one of
-            # that object's types").
-            return chars.with_(
-                types=tuple(types),
-                subtypes=(subtype,) if subtype is not None else (),
-            )
+        # CR 205.1a: the new card types replace the old ones, and with them go
+        # the subtypes that belonged only to those types (CR 205.3d: "An
+        # object can't gain a subtype that doesn't correspond to one of that
+        # object's types").
+        become = SetTypesAndSubtypes(
+            types=tuple(types), subtypes=(subtype,) if subtype is not None else ()
+        )
 
         effects: list[ContinuousEffect] = []
         for target in targets:
@@ -3042,7 +3700,8 @@ def _creature_group(
             without_color=qualifiers.without_color,
             land=qualifiers.land,
             tokens=qualifiers.tokens,
-            board_gate=qualifiers.board_gate(source.controller),
+            gate_card_type=qualifiers.gate_card_type,
+            gate_threshold=qualifiers.gate_threshold,
         ),
         f"{'other ' if other else ''}{qualifiers.words}"
         f"{'creature tokens' if qualifiers.tokens else 'creatures'} "
@@ -3061,9 +3720,12 @@ class CreatureQualifiers(BaseModel):
 
     The gate is stored as a count, not as a closure, because the player it
     counts for is the *source's* controller and nothing at parse time knows
-    who that is - `_creature_group` builds the closure once it has the
-    permanent. `words` and `gate_words` are only the printed prefixes, for the
-    journal line.
+    who that is - `_creature_group` passes `gate_card_type`/`gate_threshold`
+    straight through to `qualified_creatures` once it has the permanent, and
+    `QualifiedCreatures.__call__` (the `Selector` that produces) does the
+    counting itself rather than closing over a board-checking function.
+    `words` and `gate_words` are only the printed prefixes, for the journal
+    line.
     """
 
     model_config = ConfigDict(frozen=True)
@@ -3093,26 +3755,6 @@ class CreatureQualifiers(BaseModel):
         if self.land:
             prefix += "land "
         return prefix
-
-    def board_gate(self, username: str | None) -> Callable[[Board], bool] | None:
-        """The "as long as you control N or more <card type>s" test, against the
-        board as it stands (CR 611.3a, CR 604.2). `None` when nothing is gated.
-        """
-        card_type, threshold = self.gate_card_type, self.gate_threshold
-        if card_type is None:
-            return None
-
-        def gate(board: Board) -> bool:
-            return (
-                sum(
-                    1
-                    for other in board.values()
-                    if card_type in other.types and other.controller == username
-                )
-                >= threshold
-            )
-
-        return gate
 
 
 def qualifiers_from_subject(
@@ -3716,18 +4358,7 @@ def count_basic_land_types_among_lands_controlled_by(username: str | None) -> Co
     that gained a basic land type in layer 4 (CR 613.1d) counts - which is the
     whole reason Territorial Kavu grows next to a Dryad of the Ilysian Grove.
     """
-
-    def count(chars: Characteristics, board: Board) -> int:
-        found = {
-            subtype
-            for other in board.values()
-            if other.is_land and other.controller == username
-            for subtype in other.subtypes
-            if subtype in BASIC_LAND_TYPES
-        }
-        return len(found)
-
-    return count
+    return CountBasicLandTypesAmongLandsControlledBy(username=username)
 
 
 def _basic_land_type_count_cda_builder(line: str) -> EffectBuilder:
@@ -4045,13 +4676,7 @@ def _add_types_and_subtype(types: Sequence[Type], subtype: str) -> Modification:
     """Layer 4 (CR 613.1d): gain each card type and the creature type named,
     keeping everything already there (CR 205.1b).
     """
-
-    def modification(chars: Characteristics, board: Board) -> Characteristics:
-        for card_type in types:
-            chars = add_type(card_type)(chars, board)
-        return add_subtype(subtype)(chars, board)
-
-    return modification
+    return AddTypesAndSubtype(types=tuple(types), subtype=subtype)
 
 
 def _other_creatures_are_type_builder(
@@ -4085,8 +4710,7 @@ def _other_creatures_are_type_builder(
         targets: Sequence[CardState],
         context: LayerContext,
     ) -> list[ContinuousEffect]:
-        def selector(chars: Characteristics, board: Board) -> bool:
-            return chars.is_creature and not (other and chars.card_id == source.id)
+        selector = OtherCreatures(source_id=source.id) if other else every_creature
 
         subject = "other creatures" if other else "creatures"
         printed = _source_line_for(source, line)
@@ -5191,7 +5815,7 @@ def _tarmogoyf(
             source_id=source.id,
             source_ability=text,
             selector=_only(source.id),
-            modification=define_power_toughness(lambda chars, board: types, 0, 1),
+            modification=define_power_toughness(FixedCount(value=types), 0, 1),
         )
     ]
 
@@ -5269,7 +5893,7 @@ def _boneyard_wurm(
             source_id=source.id,
             source_ability=text,
             selector=_only(source.id),
-            modification=define_power_toughness(lambda chars, board: creatures, 0, 0),
+            modification=define_power_toughness(FixedCount(value=creatures), 0, 0),
         )
     ]
 
@@ -5306,7 +5930,7 @@ def _nighthawk_scavenger(
             source_id=source.id,
             source_ability=text,
             selector=_only(source.id),
-            modification=define_power(lambda chars, board: types, 1),
+            modification=define_power(FixedCount(value=types), 1),
         )
     ]
 
@@ -5471,14 +6095,12 @@ def _remains_on_the_battlefield(permanent: CardState) -> Condition:
 
     The zone is asked each time the board is computed, so the effect ends the
     moment the permanent leaves - and CR 400.7 means a permanent that leaves and
-    comes back is a new object, so the condition stays false for the returning
-    one.
+    comes back is a new object, so the stamp is what keeps the condition false
+    for the returning one rather than reading the id alone and getting it
+    wrong the same way a bare `_only` selector would (see `only_this_
+    incarnation`'s own docstring for the identical argument).
     """
-
-    def condition() -> bool:
-        return permanent.zone is Zone.BATTLEFIELD
-
-    return condition
+    return RemainsOnBattlefield(card_id=permanent.id, stamp=permanent.zone_change_stamp)
 
 
 #: Continuous effects by card name, for the shapes `parsed_layer_effects`
@@ -5669,7 +6291,13 @@ def effects_for(
                 LayerNotice(source_id=source.id, source_name=source.name, text=text or "")
             )
         return []
-    return builder(source, timestamp, targets, context or LayerContext())
+    built = builder(source, timestamp, targets, context or LayerContext())
+    # `order` is this call's own answer to "which of these came first" - set
+    # here, once, on the builder's actual output order, rather than trusting
+    # every builder (a `LAYER_EFFECTS` row, the generic parser's per-sentence
+    # `combined`, a granted-ability grant) to have stamped it itself. See
+    # `ContinuousEffect.order`.
+    return [effect.model_copy(update={"order": index}) for index, effect in enumerate(built)]
 
 
 def static_effects(
@@ -5769,8 +6397,6 @@ class ContinuousEffects(BaseModel):
     later than that spell's effect, which is what CR 613.7 means by order.
     """
 
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
     effects: list[ContinuousEffect] = Field(default_factory=list)
     """Effects created by resolution, oldest first. Static abilities are not
     stored: they are rebuilt from the battlefield every time (CR 611.3b)."""
@@ -5807,6 +6433,7 @@ class ContinuousEffects(BaseModel):
         targets: Sequence[CardState] = (),
         context: LayerContext | None = None,
         ability_text: str | None = None,
+        game: Game | None = None,
     ) -> list[ContinuousEffect]:
         """A spell or ability has resolved: create and keep its continuous effects.
 
@@ -5819,7 +6446,9 @@ class ContinuousEffects(BaseModel):
         CR 611.2b is applied here: "If the 'for as long as' duration never
         starts, the effect does nothing." An effect whose condition is already
         false is dropped rather than stored, so it can never start later if the
-        condition becomes true again.
+        condition becomes true again. `game` is what `holds` checks that
+        condition against - only ever needed when `source` is the one row in
+        `LAYER_EFFECTS` that carries one (Tishana's Tidebinder).
 
         `ability_text` is the resolving ability's own text, when the caller is
         an ability rather than a spell - the only route by which an ability
@@ -5836,19 +6465,18 @@ class ContinuousEffects(BaseModel):
             self.layer_notices,
             ability_text=ability_text,
         )
-        kept = [effect for effect in built if effect.holds]
+        kept = [effect for effect in built if effect.holds(game)]
         self.effects.extend(kept)
         return kept
 
-    def add(self, effect: ContinuousEffect) -> ContinuousEffect:
+    def add(self, effect: ContinuousEffect, game: Game | None = None) -> ContinuousEffect:
         """Keep one hand-built effect, for a caller that is not going through
         the registry. Subject to CR 611.2b just the same."""
-        if effect.holds:
+        if effect.holds(game):
             self.effects.append(effect)
         return effect
 
-    @property
-    def has_control_effect(self) -> bool:
+    def has_control_effect(self, game: Game | None = None) -> bool:
         """Whether any stored effect is a layer 2 control change (CR 613.1b).
 
         Asked by `CardState.controller` before it recomputes the whole board
@@ -5860,14 +6488,13 @@ class ContinuousEffects(BaseModel):
         rebuilds. A static ability that changed control (an Aura's "You control
         enchanted creature") would have to be added here as well as there.
         """
-        return any(effect.layer is Layer.CONTROL for effect in self.active)
+        return any(effect.layer is Layer.CONTROL for effect in self.active(game))
 
-    @property
-    def active(self) -> list[ContinuousEffect]:
+    def active(self, game: Game | None = None) -> list[ContinuousEffect]:
         """The stored effects whose duration is still running (CR 611.2b)."""
-        return [effect for effect in self.effects if effect.holds]
+        return [effect for effect in self.effects if effect.holds(game)]
 
-    def end_the_turn(self) -> list[ContinuousEffect]:
+    def end_the_turn(self, game: Game | None = None) -> list[ContinuousEffect]:
         """End every "until end of turn" effect (CR 514.2, CR 703.4p).
 
         CR 500.5b sends "until end of turn" to CR 514.2, and CR 514.2 is
@@ -5884,7 +6511,7 @@ class ContinuousEffects(BaseModel):
         ended = [
             effect
             for effect in self.effects
-            if effect.duration is Duration.UNTIL_END_OF_TURN or not effect.holds
+            if effect.duration is Duration.UNTIL_END_OF_TURN or not effect.holds(game)
         ]
         gone = {effect.id for effect in ended}
         self.effects = [effect for effect in self.effects if effect.id not in gone]
@@ -5912,7 +6539,10 @@ class ContinuousEffects(BaseModel):
         return ended
 
     def all_effects(
-        self, permanents: Sequence[CardState], context: LayerContext | None = None
+        self,
+        permanents: Sequence[CardState],
+        context: LayerContext | None = None,
+        game: Game | None = None,
     ) -> list[ContinuousEffect]:
         """Static-ability effects and stored durational ones, in one list.
 
@@ -5935,10 +6565,13 @@ class ContinuousEffects(BaseModel):
                     static_only=True,
                 )
             )
-        return effects + self.active
+        return effects + self.active(game)
 
     def board(
-        self, permanents: Sequence[CardState], context: LayerContext | None = None
+        self,
+        permanents: Sequence[CardState],
+        context: LayerContext | None = None,
+        game: Game | None = None,
     ) -> ComputedBoard:
         """What the board is, with everything applied (CR 613.5)."""
-        return compute_board(permanents, self.all_effects(permanents, context))
+        return compute_board(permanents, self.all_effects(permanents, context, game))

@@ -1730,7 +1730,20 @@ class Casting(BaseModel):
         refusal = why_cannot_cast_restriction(self.spell, self.caster, self.game)
         if refusal is not None:
             raise ValueError(refusal)
-        self._move_to_the_stack()
+        if self.game is None:
+            # No game to hold a stack, no `_id_allocator_scope` to open - see
+            # `_move_to_the_stack`'s own early return for this same case.
+            self._move_to_the_stack()
+        else:
+            # CR 601.2a's move mints `self.spell`'s new `zone_change_stamp`
+            # (`CardState.move_to`), so it has to run with `Game._allocate_id`
+            # installed - `Game.objects_created`'s own docstring is why every
+            # mutating public entry point needs this, and constructing a
+            # `Casting` with a `game` is exactly that: it is this whole
+            # machine's own CR 601.2a moment, reached before any explicit
+            # method call on the object the caller gets back.
+            with self.game._id_allocator_scope():
+                self._move_to_the_stack()
 
     # -- CR 601.2a: the card is on the stack from here on ------------------
 
@@ -3587,7 +3600,25 @@ class Casting(BaseModel):
         return None
 
     def cast(self) -> CardState:
-        """Finish casting: the cost is paid and the spell is on the stack."""
+        """Finish casting: the cost is paid and the spell is on the stack.
+
+        Run under `Game._id_allocator_scope` whenever there is a game to
+        install it on: `_cast_impl` moves the spell's face-down turn and
+        stack placement (`CardState.move_to` mints a fresh
+        `zone_change_stamp`) and, once on the stack, may put ward's own
+        trigger there too (`_emit_becomes_target`) - both persisted ids, both
+        minted only here. The no-game path (`Casting` driven as a pure
+        announcement machine, see `_move_to_the_stack`'s own docstring) has
+        no `Game` to install an allocator on and needs none: nothing it does
+        is replayed.
+        """
+        if self.game is None:
+            return self._cast_impl()
+        with self.game._id_allocator_scope():
+            return self._cast_impl()
+
+    def _cast_impl(self) -> CardState:
+        """The rest of `cast` - see its own docstring for why it is split out."""
         if self.payment is None or self.payment.step is not CostStep.PAID:
             raise ValueError("cannot finish casting before the cost is paid")
         self._refuse_unless_modes_satisfied()
@@ -3746,7 +3777,28 @@ class Casting(BaseModel):
         CR 733.1: the entire action is reversed and any payments already made
         are cancelled. The spell goes back where it came from, since a spell
         that cannot be cast legally was never cast at all (CR 601.6).
+
+        Run under `Game._id_allocator_scope` whenever there is a game to
+        install it on: `_cancel_impl` mints a fresh `zone_change_stamp`
+        putting `self.spell` back in `self.origin_zone` (`CardState.move_to`),
+        and `_undo_the_move_to_the_stack` mints another restoring it to
+        `announced_zone` through `Player.add` (immediately overwritten there
+        with the original `announced_stamp`, but the mint still has to come
+        from the installed allocator for `objects_created`'s count to stay
+        deterministic across a replay). The no-game path mirrors `cast()`'s
+        own no-game branch: this is the hottest of the six sites this
+        docstring is one of - the api's `rewind_unfinished` calls it on every
+        refused or dry-run cast attempt, most of which never had a game to
+        hold a stack in the first place.
         """
+        if self.game is None:
+            self._cancel_impl()
+            return
+        with self.game._id_allocator_scope():
+            self._cancel_impl()
+
+    def _cancel_impl(self) -> None:
+        """The rest of `cancel` - see its own docstring for why it is split out."""
         if self.is_settled:
             raise ValueError(f"casting is already {self.step}")
         if self.payment is not None:
@@ -3991,7 +4043,19 @@ class MarkedExile(BaseModel):
 
         CR 406.3: exiled cards are face up by default; foretell says face down,
         which is what `face_down` carries.
+
+        Run under `Game._id_allocator_scope`: `_take_impl` mints
+        `self.card`'s new `zone_change_stamp` (`CardState.move_to`, CR 400.7),
+        which needs `self.game` and is always present by the time this runs -
+        unlike `Casting.cast()`/`.cancel()`, nothing above dereferences
+        `self.game` without a null check, so there is no pure-announcement
+        path to branch on here.
         """
+        with self.game._id_allocator_scope():
+            return self._take_impl()
+
+    def _take_impl(self) -> CardState:
+        """The rest of `take` - see its own docstring for why it is split out."""
         payment = self.begin_paying()
         if payment.step is not CostStep.PAID:
             raise ValueError("the special action's cost has not been paid yet")
@@ -4013,7 +4077,24 @@ class MarkedExile(BaseModel):
         return self.card
 
     def cancel(self) -> None:
-        """Rewind the cost, leaving the card where it was (CR 733.1)."""
+        """Rewind the cost, leaving the card where it was (CR 733.1).
+
+        Run under `Game._id_allocator_scope` whenever there is a game:
+        `CostPayment.rewind` can itself move a real card - undoing a
+        sacrifice, discard, exile, or mill component's own `pay` - which
+        mints that card's `zone_change_stamp` the same way `take`'s move
+        does. `self.game` can be `None` here even though `take` never
+        reaches this state with one missing, because a caller may build a
+        `MarkedExile` and cancel it before ever calling `take`.
+        """
+        if self.game is None:
+            self._cancel_impl()
+            return
+        with self.game._id_allocator_scope():
+            self._cancel_impl()
+
+    def _cancel_impl(self) -> None:
+        """The rest of `cancel` - see its own docstring for why it is split out."""
         if self.payment is not None:
             self.payment.rewind()
 

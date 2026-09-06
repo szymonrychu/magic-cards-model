@@ -106,6 +106,7 @@ from .layers import (
     LayerContext,
     LayerNotice,
     Sublayer,
+    _only,
     add_subtype,
     add_type,
     count_card_types,
@@ -500,7 +501,7 @@ def _parse_pump_and_becomes_chosen_color_clause(text: str) -> AbilityEffect | No
                 sublayer=Sublayer.MODIFY,
                 timestamp=timestamp,
                 duration=Duration.UNTIL_END_OF_TURN,
-                selector=_selects_id(source.id),
+                selector=_only(source.id),
                 modification=modify_power_toughness(power, toughness),
             )
         )
@@ -510,7 +511,7 @@ def _parse_pump_and_becomes_chosen_color_clause(text: str) -> AbilityEffect | No
                 layer=Layer.COLOR,
                 timestamp=timestamp,
                 duration=Duration.UNTIL_END_OF_TURN,
-                selector=_selects_id(source.id),
+                selector=_only(source.id),
                 modification=set_colors(color),
             )
         )
@@ -528,18 +529,6 @@ _PROTECTION_FROM_CHOSEN_COLOR_RE = re.compile(
     r"until end of turn\.?$",
     re.IGNORECASE,
 )
-
-
-def _selects_id(card_id: UUID) -> Callable[[Characteristics, object], bool]:
-    """One permanent, by id - the hand-built twin of `machines.layers`'s own
-    private `_only`, needed here because that helper is not exported and this
-    module builds `ContinuousEffect`s outside the text-driven registry.
-    """
-
-    def selector(chars: Characteristics, board: object) -> bool:
-        return chars.card_id == card_id
-
-    return selector
 
 
 def _parse_protection_from_chosen_color_clause(text: str) -> AbilityEffect | None:
@@ -587,7 +576,7 @@ def _parse_protection_from_chosen_color_clause(text: str) -> AbilityEffect | Non
                 layer=Layer.ABILITY,
                 timestamp=store.tick(),
                 duration=Duration.UNTIL_END_OF_TURN,
-                selector=_selects_id(target.id),
+                selector=_only(target.id),
                 modification=grant_ability(f"Protection from {_COLOR_NAME[color]}"),
             )
         )
@@ -1129,7 +1118,7 @@ def _run_mass_pump(
     timestamp = store.tick()
     context = layer_context_for(game, game.player(controller))
     for built in builder(source, timestamp, targets, context):
-        if built.holds:
+        if built.holds(game):
             store.add(built)
 
 
@@ -1221,7 +1210,7 @@ def _parse_where_x_is_continuous_effect(effect_text: str) -> AbilityEffect | Non
         timestamp = store.tick()
         context = layer_context_for(game, game.controller_of(ability))
         for built in builder(source, timestamp, targets, context):
-            if built.holds:
+            if built.holds(game):
                 store.add(built)
 
     return effect
@@ -1293,7 +1282,7 @@ def _parse_untap_and_gain_control_clause(effect_text: str) -> Effect | None:
                 continue
             timestamp = store.tick()
             for built in builder(spell, timestamp, targets, context):
-                if built.holds:
+                if built.holds(game):
                     store.add(built)
 
     return effect
@@ -2560,7 +2549,7 @@ def tishanas_tidebinder(game: "Game", ability: AbilityOnStack) -> None:
         if store is None or tidebinder is None:
             continue
         if permanent is not None and permanent.zone is Zone.BATTLEFIELD:
-            store.create(tidebinder, targets=[permanent])
+            store.create(tidebinder, targets=[permanent], game=game)
 
 
 def damage_ability_targets(amount: int) -> AbilityEffect:
@@ -12533,7 +12522,7 @@ def _parse_counters_and_becomes_type_clause(text: str) -> AbilityEffect | None:
                     layer=Layer.TYPE,
                     timestamp=store.tick(),
                     duration=Duration.INDEFINITE,
-                    selector=lambda chars, board, tid=target.id: chars.card_id == tid,
+                    selector=_only(target.id),
                     modification=add_subtype(subtype),
                 )
             )
@@ -12874,7 +12863,7 @@ def _parse_undergrowth_pump_and_fight_clause(text: str) -> AbilityEffect | None:
                 sublayer=Sublayer.MODIFY,
                 timestamp=store.tick(),
                 duration=Duration.UNTIL_END_OF_TURN,
-                selector=lambda chars, board, sid=source.id: chars.card_id == sid,
+                selector=_only(source.id),
                 modification=modify_power_toughness(amount, 0),
             )
         )
@@ -14927,7 +14916,7 @@ def _parse_pump_per_discard_then_delayed_draw_clause(text: str) -> AbilityEffect
                 sublayer=Sublayer.MODIFY,
                 timestamp=store.tick(),
                 duration=Duration.UNTIL_END_OF_TURN,
-                selector=lambda chars, board, tid=target.id: chars.card_id == tid,
+                selector=_only(target.id),
                 modification=modify_power_toughness(magnitude, discard_count * per_toughness),
             )
         )
@@ -19309,7 +19298,7 @@ def _parse_return_target_from_graveyard_gains_then_bounce(text: str) -> AbilityE
                 layer=Layer.ABILITY,
                 timestamp=store.tick(),
                 duration=Duration.INDEFINITE,
-                selector=_selects_id(put.id),
+                selector=_only(put.id),
                 modification=grant_ability(keyword.title()),
             )
         )
@@ -19963,7 +19952,7 @@ def _parse_double_power_target_clause(text: str) -> AbilityEffect | None:
                 sublayer=Sublayer.MODIFY,
                 timestamp=store.tick(),
                 duration=Duration.UNTIL_END_OF_TURN,
-                selector=_selects_id(target.id),
+                selector=_only(target.id),
                 modification=modify_power_toughness(power, 0),
             )
         )

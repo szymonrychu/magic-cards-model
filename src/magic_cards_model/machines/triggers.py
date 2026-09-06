@@ -52,10 +52,11 @@ import re
 from collections.abc import Sequence
 from enum import StrEnum
 from typing import TYPE_CHECKING, Any
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ..ids import new_id
 from ..models.card import Card, Color, Type
 from ..models.card_state import CardState, ChoiceKind, Counter, TargetRef
 from ..models.zone import Zone
@@ -387,7 +388,7 @@ class AbilityOnStack(BaseModel):
     is what is left to describe the ability once the object is gone.
     """
 
-    id: UUID = Field(default_factory=uuid4)
+    id: UUID = Field(default_factory=new_id)
     kind: AbilityKind
     ability: TriggeredAbility | ActivatedAbility
     source_id: UUID | None = None
@@ -2938,7 +2939,7 @@ def triggers_for(game: "Game", event: GameEvent, sources: list[CardState]) -> li
             # trigger it that many times" - Panharmonicon. Each extra time is a
             # separate ability on the stack in its own right, with its own id.
             for _ in range(additional_trigger_times(game, on_stack, source, event)):
-                triggered.append(on_stack.model_copy(update={"id": uuid4()}, deep=True))
+                triggered.append(on_stack.model_copy(update={"id": new_id()}, deep=True))
     return triggered
 
 

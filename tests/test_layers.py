@@ -11,27 +11,38 @@ only thing the layer system is for. Each names the rule it is checking; every CR
 number in this file was looked up with `knowledge_search`.
 """
 
+from uuid import uuid4
+
 import pytest
 
 from magic_cards_model.machines.layers import (
+    BecomeACopy,
+    Characteristics,
     ContinuousEffect,
     ContinuousEffects,
     CopySublayer,
     Duration,
     Layer,
     LayerContext,
+    RemainsOnBattlefield,
     Sublayer,
+    _changed_fields,
+    _only,
     compute_board,
     effects_for,
     every_creature,
     lose_all_abilities,
     modify_power_toughness,
     printed_characteristics,
+    replace_text,
+    set_colors,
+    set_power_toughness,
     static_effects,
 )
 from magic_cards_model.models import Zone
-from magic_cards_model.models.card import Supertype, Type
+from magic_cards_model.models.card import Color, Supertype, Type
 from tests.cards import card_state
+from tests.scenarios.harness import Scenario
 
 
 def permanent(name: str, controller: str = "alice"):
@@ -228,16 +239,16 @@ def test_within_a_sublayer_the_oldest_effect_applies_first():
         layer=Layer.POWER_TOUGHNESS,
         sublayer=Sublayer.SET,
         timestamp=1,
-        selector=lambda chars, board: chars.is_creature,
-        modification=lambda chars, board: chars.with_(power=7, toughness=7),
+        selector=every_creature,
+        modification=set_power_toughness(7, 7),
     )
     second = ContinuousEffect(
         description="second",
         layer=Layer.POWER_TOUGHNESS,
         sublayer=Sublayer.SET,
         timestamp=2,
-        selector=lambda chars, board: chars.is_creature,
-        modification=lambda chars, board: chars.with_(power=3, toughness=3),
+        selector=every_creature,
+        modification=set_power_toughness(3, 3),
     )
 
     board = compute_board([bears], [second, first])
@@ -462,15 +473,15 @@ def test_a_characteristic_defining_ability_never_depends_on_a_normal_effect():
         layer=Layer.COLOR,
         timestamp=99,
         characteristic_defining=True,
-        selector=lambda chars, board: chars.is_creature,
-        modification=lambda chars, board: chars.with_(colors=()),
+        selector=every_creature,
+        modification=set_colors(),
     )
     granted = ContinuousEffect(
         description="effect",
         layer=Layer.COLOR,
         timestamp=1,
-        selector=lambda chars, board: chars.is_creature,
-        modification=lambda chars, board: chars.with_(colors=("U",)),
+        selector=every_creature,
+        modification=set_colors(Color.BLUE),
     )
 
     board = compute_board([bears], [granted, defined])
@@ -513,8 +524,8 @@ def test_a_copy_effect_replaces_the_copiable_values():
         layer=Layer.COPY,
         sublayer=CopySublayer.COPIABLE,  # CR 613.2a
         timestamp=1,
-        selector=lambda chars, board: chars.card_id == bears.id,
-        modification=lambda chars, board: chars.with_(
+        selector=_only(bears.id),
+        modification=BecomeACopy(
             name=copied.name,
             mana_value=copied.mana_value,
             supertypes=copied.supertypes,
@@ -564,21 +575,26 @@ def test_layer_1_applies_copy_effects_before_face_down_ones():
         layer=Layer.COPY,
         sublayer=CopySublayer.FACE_DOWN,
         timestamp=1,
-        selector=lambda chars, board: chars.card_id == bears.id,
-        modification=lambda chars, board: chars.with_(
-            name="", subtypes=(), abilities=(), power=2, toughness=2
-        ),
+        # A real face-down mask only overwrites part of what CR 707.2 lists
+        # (CR 708.2), but `set_power_toughness` alone is enough to prove the
+        # sublayer ordering below - the only thing this test asserts.
+        selector=_only(bears.id),
+        modification=set_power_toughness(2, 2),
     )
     copy = ContinuousEffect(
         description="1a: copy",  # CR 613.2a
         layer=Layer.COPY,
         sublayer=CopySublayer.COPIABLE,
         timestamp=2,
-        selector=lambda chars, board: chars.card_id == bears.id,
-        modification=lambda chars, board: chars.with_(
+        selector=_only(bears.id),
+        modification=BecomeACopy(
             name=copied.name,
+            mana_value=copied.mana_value,
+            supertypes=copied.supertypes,
             types=copied.types,
             subtypes=copied.subtypes,
+            colors=copied.colors,
+            abilities=copied.abilities,
             power=copied.power,
             toughness=copied.toughness,
         ),
@@ -637,7 +653,7 @@ def test_an_effect_that_modifies_a_creature_with_no_printed_power_reads_it_as_ze
         layer=Layer.POWER_TOUGHNESS,
         sublayer=Sublayer.MODIFY,
         timestamp=1,
-        selector=lambda chars, board: chars.card_id == lantern.id,
+        selector=_only(lantern.id),
         modification=modify_power_toughness(2, 2),
     )
 
@@ -686,16 +702,41 @@ def test_a_for_as_long_as_effect_needs_a_condition():
 
 def test_a_condition_on_an_effect_with_no_such_duration_is_refused():
     """The other way round: nothing would ever check it, so it is a defect."""
+    bears = permanent("Grizzly Bears")
     with pytest.raises(ValueError, match="no condition"):
         ContinuousEffect(
             description="pump",
             layer=Layer.POWER_TOUGHNESS,
             sublayer=Sublayer.MODIFY,
             duration=Duration.UNTIL_END_OF_TURN,
-            condition=lambda: True,
+            condition=RemainsOnBattlefield(card_id=bears.id, stamp=bears.zone_change_stamp),
             selector=every_creature,
             modification=modify_power_toughness(1, 1),
         )
+
+
+def test_a_for_as_long_as_condition_without_a_game_fails_loudly():
+    """`Condition.holds_in` needs a `Game` to look its permanent up in - it can
+    no longer close over a live `CardState` the way the old closure did, which
+    is the whole point (that closure is what made this unserializable).
+
+    A caller that forgets to pass one is a bug, not a "probably fine" - CR
+    611.2b's duration would otherwise be silently read as always-true or
+    always-false. See `memory/silent-default-dispatch-tables.md`.
+    """
+    bears = permanent("Grizzly Bears")
+    pump = ContinuousEffect(
+        description="pump",
+        layer=Layer.POWER_TOUGHNESS,
+        sublayer=Sublayer.MODIFY,
+        duration=Duration.FOR_AS_LONG_AS,
+        condition=RemainsOnBattlefield(card_id=bears.id, stamp=bears.zone_change_stamp),
+        selector=every_creature,
+        modification=modify_power_toughness(2, 2),
+    )
+
+    with pytest.raises(ValueError, match="game was given"):
+        pump.holds()
 
 
 def test_an_effect_whose_duration_has_stopped_is_not_applied():
@@ -704,22 +745,31 @@ def test_an_effect_whose_duration_has_stopped_is_not_applied():
     This is not CR 613.6's "already started applying" carve-out - that one is
     about layer 6 taking away the ability that generates a *static* effect.
     A duration that has run out takes its effect away outright.
+
+    `compute_board` itself is pure and no longer filters on `holds` at all
+    (see its own docstring) - the filtering this test is about happens one
+    level up, wherever a `Game` is available to check the condition against,
+    which is why this asks `pump.holds(game)` before deciding what to hand
+    `compute_board`.
     """
-    bears = permanent("Grizzly Bears")
-    running = [True]
+    scenario = Scenario().player("alice", battlefield=["Grizzly Bears"]).build()
+    bears = scenario.creature("Grizzly Bears", "alice")
     pump = ContinuousEffect(
         description="pump",
         layer=Layer.POWER_TOUGHNESS,
         sublayer=Sublayer.MODIFY,
         duration=Duration.FOR_AS_LONG_AS,
-        condition=lambda: running[0],
+        condition=RemainsOnBattlefield(card_id=bears.id, stamp=bears.zone_change_stamp),
         selector=every_creature,
         modification=modify_power_toughness(2, 2),
     )
 
-    assert compute_board([bears], [pump]).of(bears).power_toughness == (4, 4)
-    running[0] = False
-    assert compute_board([bears], [pump]).of(bears).power_toughness == (2, 2)
+    def held_effects() -> list[ContinuousEffect]:
+        return [pump] if pump.holds(scenario.game) else []
+
+    assert compute_board([bears], held_effects()).of(bears).power_toughness == (4, 4)
+    scenario.game.destroy(bears)
+    assert compute_board([bears], held_effects()).of(bears).power_toughness == (2, 2)
 
 
 def test_the_store_stamps_a_permanent_when_it_first_sees_it():
@@ -743,23 +793,32 @@ def test_the_store_stamps_a_permanent_when_it_first_sees_it():
 
 def test_the_store_drops_an_effect_whose_duration_never_started():
     """CR 611.2b: "If the 'for as long as' duration never starts, the effect does
-    nothing." Not stored, so it cannot start later either."""
+    nothing." Not stored, so it cannot start later either.
+
+    `bears` is never put on `game`'s battlefield, so `RemainsOnBattlefield`
+    reads false from the very first check - the bare-`RemainsOnBattlefield`
+    version of `tests/scenarios/test_continuous_effects_with_a_duration.py::
+    test_an_effect_whose_duration_never_starts_does_nothing`'s real Tishana's
+    Tidebinder.
+    """
     bears = permanent("Grizzly Bears")
     store = ContinuousEffects()
+    game = Scenario().player("alice", battlefield=[]).build().game
 
     store.add(
         ContinuousEffect(
             description="never starts",
             layer=Layer.ABILITY,
             duration=Duration.FOR_AS_LONG_AS,
-            condition=lambda: False,
+            condition=RemainsOnBattlefield(card_id=bears.id, stamp=bears.zone_change_stamp),
             selector=every_creature,
             modification=lose_all_abilities,
-        )
+        ),
+        game,
     )
 
     assert store.effects == []
-    assert store.board([bears]).of(bears).abilities == ()
+    assert store.board([bears], game=game).of(bears).abilities == ()
 
 
 def test_end_of_turn_removes_only_the_until_end_of_turn_effects():
@@ -811,3 +870,50 @@ def test_the_registry_builds_nothing_for_a_spell_with_no_targets():
     assert compute_board([rootwalla], static_effects([rootwalla])).of(
         rootwalla
     ).power_toughness == (1, 1)
+
+
+def test_replace_text_round_trips_at_the_model_level():
+    """`ReplaceText` (CR 612.1, CR 612.2) has no real printing behind it in
+    this pool: nothing in `machines/layers.py`'s parser wires a text-changing
+    effect into it (`replace_text` has no caller at all, `grep -rn
+    "replace_text\\(" src/` confirms it), so `tests/scenarios/
+    test_layer_effects_round_trip.py`'s "one real printing per member" rule
+    cannot be honoured here - see that file's own module docstring, which
+    names this test as the deliberate exception.
+
+    Tested directly at the model level instead: the modification round-trips
+    through `model_dump`/`model_validate` and applies identically before and
+    after, which is everything the design claims for a member with no
+    resolution path to exercise it end to end.
+    """
+    modification = replace_text("Bear", "Grr")
+    restored = type(modification).model_validate(modification.model_dump(mode="json"))
+
+    chars = Characteristics(card_id=uuid4(), name="Test", abilities=("Bear token",))
+    board: dict = {}
+    expected = chars.with_(abilities=("Grr token",))
+
+    assert modification(chars, board) == expected
+    assert restored(chars, board) == expected
+
+
+def test_zone_change_stamp_never_appears_as_a_changed_field():
+    """`Characteristics.zone_change_stamp` is CR 400.7 identity, not a
+    characteristic (see its own docstring) - `_changed_fields` must never
+    report it changing, the same guarantee `counters` and `is_token` already
+    carry by the identical argument. Exercised against a representative
+    modification from each layer this module writes, since a modification
+    that touched it at all would be a defect nothing else here would catch.
+    """
+    bears = permanent("Grizzly Bears")
+    before = printed_characteristics(bears)
+    board = {before.card_id: before}
+    for modification in (
+        lose_all_abilities,
+        set_power_toughness(3, 3),
+        modify_power_toughness(1, 1),
+        set_colors(Color.BLUE),
+    ):
+        after = modification(before, board)
+        assert after.zone_change_stamp == before.zone_change_stamp
+        assert "zone_change_stamp" not in _changed_fields(before, after)

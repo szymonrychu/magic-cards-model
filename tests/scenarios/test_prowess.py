@@ -484,6 +484,6 @@ def test_the_trigger_resolves_after_its_creature_dies_and_pumps_nothing():
     assert swiftspear.zone is Zone.GRAVEYARD
     assert [
         effect
-        for effect in scenario.game.continuous_effects.active
+        for effect in scenario.game.continuous_effects.active(scenario.game)
         if effect.source_id == swiftspear.id
     ] == []

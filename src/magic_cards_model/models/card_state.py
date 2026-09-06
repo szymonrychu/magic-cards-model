@@ -3,10 +3,11 @@
 from collections.abc import Iterable
 from enum import StrEnum
 from typing import Any, Self
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, RootModel, model_validator
 
+from ..ids import new_id
 from .card import Card, Color, Layout, Supertype, Type, subtypes_of, supertypes_of, types_of
 from .zone import Zone
 
@@ -481,7 +482,7 @@ class CardState(BaseModel):
     #: `model_dump`/`model_validate` round trip carries.
     model_config = ConfigDict(populate_by_name=True)
 
-    id: UUID = Field(default_factory=uuid4)
+    id: UUID = Field(default_factory=new_id)
     card: Card
     zone: Zone = Zone.LIBRARY
     stored_controller: str | None = Field(default=None, alias="controller")
@@ -852,7 +853,7 @@ class CardState(BaseModel):
     `ExileAnnotation.turn_exiled` answers plot's and foretell's "a later turn"
     (CR 702.170d, CR 702.143a)."""
 
-    zone_change_stamp: UUID = Field(default_factory=uuid4)
+    zone_change_stamp: UUID = Field(default_factory=new_id)
     """Which incarnation of this object we are on (CR 400.7).
 
     "An object that moves from one zone to another becomes a new object with
@@ -968,7 +969,7 @@ class CardState(BaseModel):
         zone CR 613.5 computes.
         """
         effects = getattr(self._board_source, "continuous_effects", None)
-        if effects is not None and not effects.has_control_effect:
+        if effects is not None and not effects.has_control_effect(self._board_source):
             # Nothing in play changes control, so the board would hand back
             # this very value - and computing it is not free. See
             # `ContinuousEffects.has_control_effect` for why that is sound.
@@ -1804,7 +1805,7 @@ class CardState(BaseModel):
             # cannot be taken from here.
             self.last_known_power = None
             self.last_known_toughness = None
-        self.zone_change_stamp = uuid4()
+        self.zone_change_stamp = new_id()
         self.zone = zone
         if not (origin is Zone.STACK and zone is Zone.BATTLEFIELD):
             # CR 702.103b carries bestowed across exactly one zone change:

@@ -75,10 +75,10 @@ Three of the rules above are only half here, because the other half belongs to
 
 from collections.abc import Iterable, Sequence
 from typing import TYPE_CHECKING, Any
-from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict
 
+from ..ids import new_id
 from .card import Card, Color, Layout, Legalities, Legality, Rarity, Supertype, Type
 from .card_state import CardState, CounterKind
 from .zone import Zone
@@ -216,7 +216,7 @@ class TokenDefinition(BaseModel):
         `set` are not characteristics (CR 109.3) and mean nothing here.
         """
         return Card(
-            id=uuid4(),
+            id=new_id(),
             name=self.card_name,
             type_line=self.type_line,
             mana_cost=None,
@@ -558,7 +558,7 @@ def copiable_card_with_added_abilities(printed: Card, added: Sequence[str]) -> C
     if not lines:
         return printed
     body = "\n".join([*([printed.oracle_text] if printed.oracle_text else []), *lines])
-    return printed.model_copy(update={"id": uuid4(), "oracle_text": body})
+    return printed.model_copy(update={"id": new_id(), "oracle_text": body})
 
 
 def token_copy_of(

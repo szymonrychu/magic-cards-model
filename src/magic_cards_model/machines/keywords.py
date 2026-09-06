@@ -67,6 +67,7 @@ from .layers import (
     Duration,
     Layer,
     Sublayer,
+    _only,
     add_type,
     modify_power_toughness,
 )
@@ -721,7 +722,23 @@ class KeywordActivation(BaseModel):
 
         Not a mana ability, so it uses the stack and can be responded to
         (CR 605.1a is what would take it off).
+
+        Run under `Game._id_allocator_scope` whenever there is a game to
+        install it on: `_activate_impl` mints this activation's own
+        `AbilityOnStack` id, and `put_triggers_on_stack` mints one more per
+        trigger that has been waiting - both persisted, both minted only
+        here. The api reaches this directly from `cycle_card` and
+        `crew_vehicle`, so it cannot lean on an outer scope. The no-game path
+        (a `KeywordActivation` built without one) has no `Game` to install an
+        allocator on and needs none: nothing it does is replayed.
         """
+        if self.game is None:
+            return self._activate_impl()
+        with self.game._id_allocator_scope():
+            return self._activate_impl()
+
+    def _activate_impl(self) -> AbilityOnStack:
+        """The rest of `activate` - see its own docstring for why it is split out."""
         # Deliberately not `begin_paying`: CR 602.5 is checked once, as the
         # activation is announced. By now the cost has been paid, and cycling's
         # cost is discarding the card itself - so re-asking "is it in your
@@ -768,7 +785,23 @@ class KeywordActivation(BaseModel):
         return self.run_effect()
 
     def cancel(self) -> None:
-        """Rewind the cost, leaving everything where it was (CR 733.1)."""
+        """Rewind the cost, leaving everything where it was (CR 733.1).
+
+        Run under `Game._id_allocator_scope` whenever there is a game to
+        install it on: `CostPayment.rewind` puts back a card the cost
+        sacrificed, discarded, exiled or milled, and every one of those moves
+        mints a fresh `zone_change_stamp` (CR 400.7). The api reaches this on
+        the rewind path the same way it reaches `Casting.cancel`, so it needs
+        its own scope rather than an outer one.
+        """
+        if self.game is None:
+            self._cancel_impl()
+            return
+        with self.game._id_allocator_scope():
+            self._cancel_impl()
+
+    def _cancel_impl(self) -> None:
+        """The rest of `cancel` - see its own docstring for why it is split out."""
         if self.payment is not None:
             self.payment.rewind()
 
@@ -1129,7 +1162,7 @@ def _crew_effect(activation: KeywordActivation) -> list[ContinuousEffect]:
                 timestamp=timestamp,
                 duration=Duration.UNTIL_END_OF_TURN,
                 source_id=vehicle.id,
-                selector=_only_this(vehicle.id),
+                selector=_only(vehicle.id),
                 modification=add_type(added),
             )
         )
@@ -2230,19 +2263,10 @@ def _prowess_effect(game: Any, ability: AbilityOnStack) -> None:
             timestamp=game.continuous_effects.tick(),
             duration=Duration.UNTIL_END_OF_TURN,
             source_id=source.id,
-            selector=_only_this(source.id),
+            selector=_only(source.id),
             modification=modify_power_toughness(power, toughness),
         )
     )
-
-
-def _only_this(card_id: UUID) -> Callable[[Any, Any], bool]:
-    """A layer selector that picks out one permanent (CR 611.2c)."""
-
-    def selector(chars: Any, board: Any) -> bool:
-        return bool(chars.card_id == card_id)
-
-    return selector
 
 
 def _persist_effect(game: Any, ability: AbilityOnStack) -> CardState | None:

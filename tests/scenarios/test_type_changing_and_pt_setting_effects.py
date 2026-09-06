@@ -57,6 +57,7 @@ from magic_cards_model.machines.layers import (
     LayerContext,
     LayerNotice,
     Sublayer,
+    _only,
     compute_board,
     looks_like_unparsed_layer_effect,
     modify_power_toughness,
@@ -389,7 +390,7 @@ def test_setting_pt_beats_a_pump_regardless_of_which_was_created_first():
             sublayer=Sublayer.SET,
             timestamp=set_timestamp,
             duration=Duration.UNTIL_END_OF_TURN,
-            selector=lambda chars, board: chars.card_id == bears.id,
+            selector=_only(bears.id),
             modification=set_power_toughness(3, 3),
         )
         pump_effect = ContinuousEffect(
@@ -398,7 +399,7 @@ def test_setting_pt_beats_a_pump_regardless_of_which_was_created_first():
             sublayer=Sublayer.MODIFY,
             timestamp=pump_timestamp,
             duration=Duration.UNTIL_END_OF_TURN,
-            selector=lambda chars, board: chars.card_id == bears.id,
+            selector=_only(bears.id),
             modification=modify_power_toughness(3, 3),
         )
         return compute_board(permanents, [set_effect, pump_effect])

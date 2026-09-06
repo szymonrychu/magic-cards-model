@@ -1,15 +1,17 @@
 """A single game: the players, the shared zones, and where the turn is."""
 
 import re
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterator, Sequence
+from contextlib import contextmanager
 from dataclasses import replace
 from enum import StrEnum
 from random import Random
 from typing import ClassVar
-from uuid import UUID
+from uuid import NAMESPACE_OID, UUID, uuid4, uuid5
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ..ids import install_id_allocator, reset_id_allocator
 from ..machines import combat as combat_rules
 from ..machines.abilities import (
     AbilityKind,
@@ -1558,6 +1560,43 @@ class Game(BaseModel):
     {coin_flips_performed}:coin"`, so a scenario asserting on the result
     stays reproducible and the second flip of a game differs from the first."""
 
+    game_uid: UUID = Field(default_factory=uuid4)
+    """This `Game`'s own identity, mixed into every id `_allocate_id` mints.
+
+    `shuffle_seed` is what makes two games *shuffle* identically when they
+    share a seed (CR 701.24a) - by design, since a replay must reshuffle the
+    same way. An object id has the opposite requirement: it must be unique,
+    never shared with any other object anywhere, including another game built
+    at the default `shuffle_seed=0`. Deriving ids from `shuffle_seed` alone
+    made every such game mint the identical sequence
+    `uuid5(NAMESPACE_OID, "0:0")`, `"0:1"`, ... - two unrelated games colliding
+    on every id in lockstep. `game_uid` is a plain serialised field precisely
+    so it survives a decode: a snapshot replayed twice carries the same
+    `game_uid` both times (byte-identical replay, `objects_created`'s own
+    guarantee below), while a freshly built `Game` gets a fresh one via
+    `uuid4`'s own randomness (unique identity, this field's guarantee) -
+    `default_factory` runs once per construction, never on `model_validate`
+    decoding an already-serialised value.
+    """
+
+    objects_created: int = 0
+    """How many object ids this game has minted, counting up -
+    `shuffles_performed`'s own convention (see its docstring), applied to
+    `ids.new_id` instead of `Random`. Every mutating public method installs
+    `_allocate_id` as this context's id allocator for the span of its own
+    call, through `_id_allocator_scope` (see its docstring), so a game
+    replayed from the same decoded snapshot - the same sequence of calls -
+    mints the same ids, in the same order, both times.
+
+    Scoped to the one call that installs it, and reset again once it returns,
+    rather than installed once for the object's whole life: two unrelated
+    `Game`s built moments apart in the same process would otherwise both start
+    minting from whatever `_allocate_id` produces first and leave that
+    allocator sitting active for whichever next call anywhere in the process
+    happens to create an object - a card built for a *different* game's
+    opening hand, say - which is a real collision, not merely a cosmetic one:
+    two distinct objects would compare equal by id."""
+
     draw_redirections: list[DrawRedirection] = Field(default_factory=list)
     """CR 614.1a replacement effects a resolved spell left behind, taking one
     player's draws for another - Plagiarize.
@@ -1598,6 +1637,38 @@ class Game(BaseModel):
     Note that `Scenario.start_at` walks the turn machine directly and never
     fires turn-based actions, whatever this is set to.
     """
+
+    def _allocate_id(self) -> UUID:
+        """One `uuid5(game_uid, objects_created)` id - see `game_uid`'s own
+        docstring for why identity, not `shuffle_seed`, is the namespace, and
+        `objects_created`'s for why this is installed per call rather than
+        once."""
+        allocated = uuid5(NAMESPACE_OID, f"{self.game_uid}:{self.objects_created}")
+        self.objects_created += 1
+        return allocated
+
+    @contextmanager
+    def _id_allocator_scope(self) -> Iterator[None]:
+        """Install `_allocate_id` as this context's id allocator for the
+        span of the `with` block, restoring whatever was installed before on
+        exit - `objects_created`'s own docstring is why every mutating public
+        method needs this rather than installing once for the object's whole
+        life.
+
+        Every one of those methods opens its own `with self._id_allocator_
+        scope():` rather than sharing one scope across a whole request:
+        `install_id_allocator` returns the `ContextVar` `Token` `reset_id_
+        allocator` needs, so nesting is safe by construction - an inner
+        scope's exit restores the outer scope's allocator (this same one,
+        when both belong to the same game) rather than clobbering it with
+        `None`. `pass_priority` calling `resolve_top`, which is also called on
+        its own by another caller, is exactly this shape.
+        """
+        token = install_id_allocator(self._allocate_id)
+        try:
+            yield
+        finally:
+            reset_id_allocator(token)
 
     def model_post_init(self, _context: object) -> None:
         usernames = [player.username for player in self.players]
@@ -1727,7 +1798,20 @@ class Game(BaseModel):
         A permanent that was already untapped is not untapped by this step -
         only tapped permanents can be untapped (CR 701.26b) - and so triggers
         nothing.
+
+        Run under `_id_allocator_scope`: `_untap_step_impl`'s own `emit` per
+        untapped permanent mints a fresh `AbilityOnStack` id for every
+        "becomes untapped" trigger it finds. `turn_based_actions` already
+        reaches this from inside `advance`'s own scope, but the api's `set_
+        step` also calls it directly on its own (`engine_api.py` around line
+        953), so it needs a scope of its own rather than relying on that
+        nesting.
         """
+        with self._id_allocator_scope():
+            self._untap_step_impl()
+
+    def _untap_step_impl(self) -> None:
+        """The rest of `untap_step` - see its own docstring for why it is split out."""
         active = self.active_player
         self.begin_turn_for(active.username)
         remaining = self.players_skipping_next_untap.get(active.username, 0)
@@ -2004,7 +2088,7 @@ class Game(BaseModel):
         """
         discarded = self.active_player.discard_to_maximum_hand_size()
         self.remove_all_damage()
-        self.continuous_effects.end_the_turn()  # CR 514.2, the other half
+        self.continuous_effects.end_the_turn(self)  # CR 514.2, the other half
         self.delayed_triggers.expire_this_turn()  # CR 514.2, the delayed-trigger half
         self.prevention_shields = [
             shield
@@ -2237,6 +2321,13 @@ class Game(BaseModel):
         """
         if move_refused(card_state, Zone.STACK) is not None:
             return card_state
+        with self._id_allocator_scope():
+            return self._put_on_stack(card_state, controller)
+
+    def _put_on_stack(self, card_state: CardState, controller: str) -> CardState:
+        """The rest of `put_on_stack`, run with `_allocate_id` installed - see
+        `objects_created`'s own docstring for why that installation is scoped
+        to this one call rather than done once for the object's whole life."""
         # CR 400.7: the card is about to become a new object on the stack, so
         # its origin has to be read *now* - `GameEvent.origin_zone` is what
         # Knowledge Pool's "from their hand" and Appa, Steadfast Guardian's
@@ -2324,7 +2415,8 @@ class Game(BaseModel):
             raise ValueError("the stack is empty")
         self.resolving = self.stack[-1]
         try:
-            return self._resolve_top()
+            with self._id_allocator_scope():
+                return self._resolve_top()
         finally:
             self.resolving = None
 
@@ -2700,7 +2792,8 @@ class Game(BaseModel):
                 timestamp=store.tick(),
                 selector=only_this_incarnation(permanent, permanent.zone_change_stamp),
                 modification=grant_ability("Haste"),
-            )
+            ),
+            self,
         )
 
     def _create_rebound_delayed_trigger(self, spell: CardState, cast_from_hand: bool) -> None:
@@ -3826,7 +3919,7 @@ class Game(BaseModel):
             return
         for sentence in sentences:
             for effect in spend_effect_effects(sentence, permanent, self.continuous_effects.tick()):
-                self.continuous_effects.add(effect)
+                self.continuous_effects.add(effect, self)
 
     def _note_left_battlefield(self, permanent: CardState) -> None:
         """Record Revolt's own condition: a permanent left the battlefield
@@ -4099,11 +4192,12 @@ class Game(BaseModel):
         where every mulligan reshuffle's seed comes from - see `pregame_seed`.
         """
         assert self.turn is not None
-        self.pregame_seed = seed_prefix
-        self.mulligan_declarations = {}
-        step = self.turn.begin_pregame()
-        self._resolve_mulligan_round_if_ready()
-        return self.turn.step if self.turn.in_pregame else step
+        with self._id_allocator_scope():
+            self.pregame_seed = seed_prefix
+            self.mulligan_declarations = {}
+            step = self.turn.begin_pregame()
+            self._resolve_mulligan_round_if_ready()
+            return self.turn.step if self.turn.in_pregame else step
 
     # -- CR 103.5: the mulligan process ---------------------------------------
 
@@ -4163,9 +4257,10 @@ class Game(BaseModel):
                 f"({player.mulligans_taken} taken) (CR 103.5)"
             )
 
-        self.mulligan_declarations[username] = take
-        self._resolve_mulligan_round_if_ready()
-        return self.turn.step
+        with self._id_allocator_scope():
+            self.mulligan_declarations[username] = take
+            self._resolve_mulligan_round_if_ready()
+            return self.turn.step
 
     def _resolve_mulligan_round_if_ready(self) -> None:
         """Carry out one round of CR 103.5 once every declaration is in.
@@ -4278,22 +4373,25 @@ class Game(BaseModel):
         unless the game was never in the pregame at all.
         """
         assert self.turn is not None
-        while self.turn.step is Step.MULLIGAN:
-            pending = self.awaiting_mulligan_declarations
-            for username in pending:
-                self.declare_mulligan(username, ask_mulligan(self.decisions, username))
-            if not pending:
-                # Every seat left is at CR 103.5's ceiling, so the round has no
-                # questions in it at all and nothing triggered its resolution.
-                # Resolving it keeps every remaining hand, which ends the process.
-                self._resolve_mulligan_round_if_ready()
-            # Anything else means a round resolved and a fresh one opened for
-            # whoever mulliganed, which is the loop going round again. It always
-            # terminates: a player who keeps mulliganing runs out of hand.
+        with self._id_allocator_scope():
+            while self.turn.step is Step.MULLIGAN:
+                pending = self.awaiting_mulligan_declarations
+                for username in pending:
+                    self.declare_mulligan(username, ask_mulligan(self.decisions, username))
+                if not pending:
+                    # Every seat left is at CR 103.5's ceiling, so the round has
+                    # no questions in it at all and nothing triggered its
+                    # resolution. Resolving it keeps every remaining hand, which
+                    # ends the process.
+                    self._resolve_mulligan_round_if_ready()
+                # Anything else means a round resolved and a fresh one opened
+                # for whoever mulliganed, which is the loop going round again.
+                # It always terminates: a player who keeps mulliganing runs out
+                # of hand.
 
-        if self.turn.step is Step.PREGAME_ACTIONS:
-            self.take_opening_hand_actions()
-        return self.turn.step
+            if self.turn.step is Step.PREGAME_ACTIONS:
+                self.take_opening_hand_actions()
+            return self.turn.step
 
     # -- opening-hand actions (CR 103.6) --------------------------------------
 
@@ -4381,10 +4479,11 @@ class Game(BaseModel):
                 f"actions, not {username}'s (CR 103.6)"
             )
         player = self.player(username)
-        for _, action, card_state in self._opening_hand_offers(player):
-            if card_state.id == card:
-                self._perform_opening_hand_action(action, card_state, player)
-                return
+        with self._id_allocator_scope():
+            for _, action, card_state in self._opening_hand_offers(player):
+                if card_state.id == card:
+                    self._perform_opening_hand_action(action, card_state, player)
+                    return
         raise ValueError(f"no card in {username}'s opening hand offers that action (CR 103.6)")
 
     @property
@@ -6654,7 +6753,23 @@ class Game(BaseModel):
         graveyard for any other reason, it hasn't been 'destroyed.'" Sacrificing,
         exiling, bouncing, and CR 704.5f's toughness of 0 or less are not
         destruction and go through `put_into_graveyard` and friends directly.
+
+        Run under `_id_allocator_scope`: `put_into_graveyard` below mints
+        `permanent`'s new `zone_change_stamp` (`CardState.move_to`) and may
+        emit a "dies" trigger of its own, both persisted ids. `check_state_
+        based_actions`' own CR 704.5g/704.5h handling does not call this -
+        `_state_based_actions_once` inlines the same `destruction_happens`-
+        then-`put_into_graveyard` shape under its own scope instead - so this
+        method has no wrapped caller to rely on: the api's `run_state_based_
+        actions` calls it directly, once per creature with lethal damage,
+        before ever calling `check_state_based_actions` itself
+        (`engine_api.py` around line 861).
         """
+        with self._id_allocator_scope():
+            return self._destroy_impl(permanent)
+
+    def _destroy_impl(self, permanent: CardState) -> CardState:
+        """The rest of `destroy` - see its own docstring for why it is split out."""
         if is_indestructible(permanent, self):
             return permanent  # CR 702.12b
         if not self.destruction_happens(permanent):
@@ -7238,7 +7353,22 @@ class Game(BaseModel):
         CR 104.5 like any other loss. The check that finds the game already
         over does nothing - CR 104.1 ends the game immediately, and a state
         that arrives after the end never happens.
+
+        Run under `_id_allocator_scope`: each round's `_state_based_actions_
+        once` mints a `zone_change_stamp` for every permanent it moves to a
+        graveyard (CR 704.5f/704.5g/704.5h/704.5i/704.5m/704.5z/704.5s) and
+        may emit a "dies" trigger for each, all persisted ids. `pass_priority`
+        and `resolve_top` already reach this from inside their own scopes,
+        but the api's `run_state_based_actions` calls it directly too
+        (`engine_api.py` around line 862), so it needs a scope of its own
+        rather than relying on that nesting.
         """
+        with self._id_allocator_scope():
+            return self._check_state_based_actions_impl()
+
+    def _check_state_based_actions_impl(self) -> list[CardState]:
+        """The rest of `check_state_based_actions` - see its own docstring
+        for why it is split out."""
         if self.is_over:
             return []
         gone: list[CardState] = []
@@ -7301,7 +7431,7 @@ class Game(BaseModel):
                 for player in self.players_in_game
             },
         )
-        return self.continuous_effects.board(self.battlefield, context)
+        return self.continuous_effects.board(self.battlefield, context, self)
 
     def unspent_mana_of(self, player: Player) -> ManaPool:
         """The mana this player has produced and not yet spent (CR 106.4).
@@ -7738,16 +7868,18 @@ class Game(BaseModel):
 
     def declare_attackers(self, attacks: list[tuple[CardState, "Targetable | str"]]) -> None:
         """Declare a whole attack at once, in order (CR 508.1, 508.2b)."""
-        for creature, defender in attacks:
-            self.declare_attacker(creature, defender)
-        if attacks:
-            # CR 508.3d: "An ability that reads 'Whenever [a player] attacks,
-            # . . .' triggers if one or more creatures that player controls
-            # are declared as attackers" - once for the whole declaration,
-            # not once per attacker, so this is its own subject-less event
-            # alongside each creature's own ATTACKS event above.
-            self.emit(GameEvent(event=TriggerEvent.ATTACKS, player=self.active_player.username))
-        self.put_triggers_on_stack()
+        with self._id_allocator_scope():
+            for creature, defender in attacks:
+                self.declare_attacker(creature, defender)
+            if attacks:
+                # CR 508.3d: "An ability that reads 'Whenever [a player]
+                # attacks, . . .' triggers if one or more creatures that
+                # player controls are declared as attackers" - once for the
+                # whole declaration, not once per attacker, so this is its own
+                # subject-less event alongside each creature's own ATTACKS
+                # event above.
+                self.emit(GameEvent(event=TriggerEvent.ATTACKS, player=self.active_player.username))
+            self.put_triggers_on_stack()
 
     def can_block(self, blocker: CardState, attacker: CardState) -> bool:
         """Whether this creature could block that attacker on its own (CR 509.1a).
@@ -7775,30 +7907,31 @@ class Game(BaseModel):
         per combat, so re-declaring a block that was already declared does not
         fire it again.
         """
-        combat_rules.declare_blockers(self, blocks)
+        with self._id_allocator_scope():
+            combat_rules.declare_blockers(self, blocks)
 
-        for attack in self.combat.attacks:
-            attacker = self.find_by_id(attack.attacker_id)
-            for blocker_id in attack.blockers:
-                blocker = self.find_by_id(blocker_id)
-                if attacker is None or blocker is None:
-                    continue
-                pair = f"{blocker_id}:{attack.attacker_id}"
-                if pair in self.blocks_triggered:
-                    continue
-                self.blocks_triggered.append(pair)
-                self.emit(
-                    GameEvent(
-                        event=TriggerEvent.BLOCKS,
-                        subject_id=blocker.id,
-                        subject_name=blocker.name,
-                        subject_controller=self.controller_of(blocker).username,
-                        subject_card=blocker.card,
-                        related_id=attacker.id,
-                        player=self.controller_of(blocker).username,
+            for attack in self.combat.attacks:
+                attacker = self.find_by_id(attack.attacker_id)
+                for blocker_id in attack.blockers:
+                    blocker = self.find_by_id(blocker_id)
+                    if attacker is None or blocker is None:
+                        continue
+                    pair = f"{blocker_id}:{attack.attacker_id}"
+                    if pair in self.blocks_triggered:
+                        continue
+                    self.blocks_triggered.append(pair)
+                    self.emit(
+                        GameEvent(
+                            event=TriggerEvent.BLOCKS,
+                            subject_id=blocker.id,
+                            subject_name=blocker.name,
+                            subject_controller=self.controller_of(blocker).username,
+                            subject_card=blocker.card,
+                            related_id=attacker.id,
+                            player=self.controller_of(blocker).username,
+                        )
                     )
-                )
-        self.put_triggers_on_stack()
+            self.put_triggers_on_stack()
 
     def attacking_creatures(self) -> list[CardState]:
         found = (self.find_by_id(card_id) for card_id in self.combat.attacker_ids)
@@ -8090,8 +8223,9 @@ class Game(BaseModel):
         # (CR 614.1c), which `enter_the_battlefield` applies on the way in.
         # The player who played the land keeps priority, so this is the CR 603.3
         # window.
-        self.enter_the_battlefield(land, username, was_cast=False)
-        self.put_triggers_on_stack()
+        with self._id_allocator_scope():
+            self.enter_the_battlefield(land, username, was_cast=False)
+            self.put_triggers_on_stack()
         return land
 
     # -- determining a spell's total cost (CR 601.2f) ----------------------
@@ -9593,233 +9727,238 @@ class Game(BaseModel):
         is needed but missing, or when the one given is not on offer. It is
         not consulted at all for an ability with only one possible output.
         """
-        ability = self.activated_abilities(permanent)[index]
-        controller = controller or self.controller_of(permanent).username
+        with self._id_allocator_scope():
+            ability = self.activated_abilities(permanent)[index]
+            controller = controller or self.controller_of(permanent).username
 
-        # CR 602.2b: "the remainder of the process for activating an ability is
-        # identical to the process for casting a spell", so CR 601.2c applies -
-        # the targets are announced and checked here, against the ability's own
-        # text rather than the card's spell text (CR 113.1c).
-        #
-        # `x_value` is substituted in first when the printed cost carries an
-        # {X} at all (CR 107.3a: X is announced as part of paying the cost,
-        # CR 601.2b/602.2b, a step already finished by the time targets are
-        # announced, CR 601.2c) - The Mycosynth Gardens' own "target nontoken
-        # artifact you control with mana value X" is unreadable by `machines/
-        # targeting.py` with a literal "X" still in it (nothing there resolves
-        # a bare letter to a number), so without this every such target would
-        # be refused outright rather than checked against the real, paid X.
-        #
-        # A **loyalty** ability spells its X differently: CR 107.7's negative
-        # symbol is written "−X", not "{X}", so the `{X}`-in-the-cost test
-        # above does not see it. Tamiyo, Compleated Sage's "−X: Exile target
-        # nonland permanent card with mana value X from your graveyard" is that
-        # shape, and its target clause needs the same substitution for the same
-        # reason - `LoyaltyCost.variable` is what marks the symbol as carrying
-        # a chosen X.
-        has_variable_loyalty = ability.loyalty is not None and ability.loyalty.variable
-        text = (
-            substitute_x(ability.text, x_value)
-            if "{X}" in ability.cost or has_variable_loyalty
-            else ability.text
-        )
-        profile = profile_for_text(text)
-        if profile.understood and profile.requirements:
-            if targets is None:
-                # The caller supplied nothing, so this is not yet a target
-                # announcement (CR 601.2c) at all - ask, the same way a
-                # triggered ability's own announcement is asked
-                # (`_ask_targets`, shared with `_ask_trigger_targets`). An
-                # explicit list, even an empty one, is a real answer already
-                # given and is checked below instead, exactly as before.
-                asked = self._ask_targets(profile, controller, permanent.id, permanent.name, text)
-                if asked is None:
-                    # CR 601.2e, imported wholesale by CR 602.2b: a proposed
-                    # activation that cannot legally be completed - here, a
-                    # mandatory target (CR 601.2c) with no legal object or
-                    # player to name - never happens at all, the same refusal
-                    # `Game.cast_free_from_exile` already gives a spell with
-                    # no legal target for the same reason (CR 601.2c).
-                    raise ValueError(
-                        f"{permanent.name}'s ability requires a target, but no legal "
-                        "target exists, so it cannot be activated (CR 601.2c, CR 602.2b)"
-                    )
-                targets = asked
-            else:
-                profile.check(list(targets), controller, self, source_id=permanent.id)
-
-        key = self._activation_key(permanent, index)
-        self.activations[key] = self.activations.get(key, 0) + 1
-        if ability.loyalty is not None:
-            # CR 606.3's once-per-turn rule is per permanent: having activated
-            # any loyalty ability of this planeswalker this turn, the next one
-            # is refused until a new turn begins.
-            self.loyalty_activations[str(permanent.id)] = (
-                self.loyalty_activations.get(str(permanent.id), 0) + 1
-            )
-
-        if (
-            ability.mana is not None
-            and ability.loyalty is None
-            and not targets
-            and not moves_a_library_card(ability)
-        ):
-            # All four of CR 605.1a's criteria, and the loyalty one is now
-            # checked rather than assumed: a `0: Add {C}{C}{C}.` cost is a
-            # loyalty symbol (CR 606.2), which makes the ability a loyalty
-            # ability, and a loyalty ability is not a mana ability - it goes
-            # on the stack like any other activated ability (CR 602.2,
-            # CR 113.3b). The other three: no target announced, an "Add"
-            # effect, and nothing in the printed cost or effect moves a card
-            # to or from a library. CR 605.3b: no stack at all; the mana lands
-            # in the pool immediately.
-            land_types = self._controlled_land_types(controller)
-            own_counters = frozenset(permanent.counters.counts)
-            has_imprinted_card = self.card_imprinted_on(permanent.id) is not None
-            # CR 700.5's devotion, for Nykthos, Shrine to Nyx's own "Add an
-            # amount of mana of that color equal to your devotion to that
-            # color." Counted here rather than on the `ManaAbility` because
-            # only the game knows the board (`ManaAbility.
-            # amount_from_devotion`'s own docstring), and counted to the
-            # colour the activating player just chose, which is what "that
-            # color" points back at.
-            devotion = (
-                devotion_to(self, controller, color)
-                if ability.mana.amount_from_devotion and color is not None
-                else None
-            )
-            # The two board-derived narrowings `ManaAbility.effective` asks
-            # for. Without them this fast path resolved the ability against
-            # the printed text alone, while `machines/cost.py`'s auto-tap
-            # solver - which calls the same `effective` - already narrowed;
-            # the two disagreed about what the very same source produces.
+            # CR 602.2b: "the remainder of the process for activating an ability is
+            # identical to the process for casting a spell", so CR 601.2c applies -
+            # the targets are announced and checked here, against the ability's own
+            # text rather than the card's spell text (CR 113.1c).
             #
-            # CR 614.12a's chosen colour (Utopia Sprawl's "As this Aura
-            # enters, choose a color", read back by "Add one mana of the
-            # chosen color"), recorded on the permanent as it entered.
-            chosen = permanent.choice
-            chosen_color = (
-                Color(chosen.value)
-                if chosen is not None and chosen.kind is ChoiceKind.COLOR
-                else None
+            # `x_value` is substituted in first when the printed cost carries an
+            # {X} at all (CR 107.3a: X is announced as part of paying the cost,
+            # CR 601.2b/602.2b, a step already finished by the time targets are
+            # announced, CR 601.2c) - The Mycosynth Gardens' own "target nontoken
+            # artifact you control with mana value X" is unreadable by `machines/
+            # targeting.py` with a literal "X" still in it (nothing there resolves
+            # a bare letter to a number), so without this every such target would
+            # be refused outright rather than checked against the real, paid X.
+            #
+            # A **loyalty** ability spells its X differently: CR 107.7's negative
+            # symbol is written "−X", not "{X}", so the `{X}`-in-the-cost test
+            # above does not see it. Tamiyo, Compleated Sage's "−X: Exile target
+            # nonland permanent card with mana value X from your graveyard" is that
+            # shape, and its target clause needs the same substitution for the same
+            # reason - `LoyaltyCost.variable` is what marks the symbol as carrying
+            # a chosen X.
+            has_variable_loyalty = ability.loyalty is not None and ability.loyalty.variable
+            text = (
+                substitute_x(ability.text, x_value)
+                if "{X}" in ability.cost or has_variable_loyalty
+                else ability.text
             )
-            # CR 106.7's survey, for Reflecting Pool and Exotic Orchard.
-            could_produce_colors = (
-                self._could_produce_survey(ability.mana.could_produce, controller)
-                if ability.mana.could_produce is not None
-                else None
-            )
-            produced_mana = ability.mana.resolve(
-                land_types,
-                own_counters,
-                color,
-                has_imprinted_card,
-                count=devotion,
-                could_produce_colors=could_produce_colors,
-                chosen_color=chosen_color,
-            )
-            # CR 106.5, for the third narrowing: "of any color among legendary
-            # creatures and planeswalkers you control" (Mox Amber). The colour
-            # the activating player named has to be one the board actually
-            # defines - an empty board defines none, and an ability that would
-            # produce mana of an undefined type produces no mana instead.
-            # `machines/cost.py` already applies this on the payment path; a
-            # direct activation reached the same ability without it, so the
-            # same Mox Amber made nothing when tapped for a spell and one mana
-            # of any colour when activated on its own.
-            allowed = among_colors(ability.effect, self, controller)
-            if allowed is not None:
-                undefined = [produced for produced in produced_mana if produced not in allowed]
-                if undefined:
-                    raise ValueError(
-                        f"{permanent.name} cannot add "
-                        f"{''.join(f'{{{produced.value}}}' for produced in undefined)}: "
-                        f"no permanent it surveys defines that color, so the ability "
-                        f"produces no mana (CR 106.5)"
+            profile = profile_for_text(text)
+            if profile.understood and profile.requirements:
+                if targets is None:
+                    # The caller supplied nothing, so this is not yet a target
+                    # announcement (CR 601.2c) at all - ask, the same way a
+                    # triggered ability's own announcement is asked
+                    # (`_ask_targets`, shared with `_ask_trigger_targets`). An
+                    # explicit list, even an empty one, is a real answer already
+                    # given and is checked below instead, exactly as before.
+                    asked = self._ask_targets(
+                        profile, controller, permanent.id, permanent.name, text
                     )
-            # CR 106.6: a "Spend this mana only to ..." sentence in this
-            # ability's own effect text restricts the mana it just made. The
-            # tag goes on the mana in the pool, not on `permanent` - the mana
-            # ability has resolved (CR 605.3b) and the mana outlives it, so a
-            # source that leaves the battlefield takes nothing back with it.
-            # `permanent` is passed only to resolve "the chosen type"
-            # (CR 614.12a records the answer on the object that was asked).
-            restriction = spend_restriction(ability.effect, permanent)
-            # CR 106.6's other clause, tagged onto the same mana and for the
-            # same reason: "have an additional effect that affects the spell
-            # or ability that mana is spent on". Arena of Glory's "If that
-            # mana is spent on a creature spell, it gains haste until end of
-            # turn." is read off the ability's own trailing text by
-            # `machines/abilities.parse_mana_abilities`, so there is nothing
-            # to re-parse here - the sentence only has to reach the pool.
-            spend_effect = (
-                ManaSpendEffect(text=ability.mana.spend_effect)
-                if ability.mana.spend_effect
-                else None
-            )
-            for produced in produced_mana:
-                self.player(controller).mana_pool.add(
-                    produced, restriction=restriction, spend_effect=spend_effect
-                )
-            # CR 405.6c: "If a mana ability both produces mana and has
-            # another effect, the mana is produced and the other effect
-            # happens immediately." `why_cannot_activate` already refused
-            # this activation outright when the rider could not be read, so
-            # reaching here means it is either absent or a known shape -
-            # Talisman of Resilience's "This artifact deals 1 damage to
-            # you." is what taught this engine the shape existed at all.
-            if ability.mana.rider is not None:
-                rider = ability.mana.rider
-                if rider.kind == "damage_to_controller":
-                    self.deal_damage(self.player(controller), rider.amount, source=permanent)
-                elif rider.kind == "lose_life":
-                    self.player(controller).lose_life(rider.amount)
-                elif rider.kind == "gain_life":
-                    self.gain_life(controller, rider.amount)
-            # CR 106.12: "to 'tap [a permanent] for mana' is to activate a mana
-            # ability of that permanent that includes the {T} symbol in its
-            # activation cost" - so only a `{T}: ...` ability counts, not
-            # Skirk Prospector's sacrifice-only one. CR 106.12a is the event
-            # Leyline of Abundance and Utopia Sprawl watch for, even though
-            # CR 605.3b means this ability itself never touched the stack
-            # (`tapped_for_mana_event`'s own docstring is the other half of
-            # this: `CostPayment.tap_for_mana` emits the same event when a
-            # source pays for a spell instead of being activated directly).
-            if any(piece.kind is CostKind.TAP for piece in ability.costs):
-                self.emit(tapped_for_mana_event(permanent, self, mana_added=produced_mana))
-            if produced_mana:
-                # Not CR 106.12's tap event but its sibling: an ability caused
-                # this player to add mana. Caged Sun's own condition asks about
-                # the adding, not the tapping, so a mana ability with no `{T}`
-                # in its cost raises this one just the same.
-                triggered = self.emit(mana_added_event(permanent, self, mana_added=produced_mana))
-                # CR 605.4a: a triggered mana ability "doesn't go on the stack
-                # ... It simply resolves immediately after the mana ability
-                # that triggered it, without waiting for priority."
-                self.resolve_triggered_mana_abilities(triggered)
-            self.put_triggers_on_stack()
-            return None
+                    if asked is None:
+                        # CR 601.2e, imported wholesale by CR 602.2b: a proposed
+                        # activation that cannot legally be completed - here, a
+                        # mandatory target (CR 601.2c) with no legal object or
+                        # player to name - never happens at all, the same refusal
+                        # `Game.cast_free_from_exile` already gives a spell with
+                        # no legal target for the same reason (CR 601.2c).
+                        raise ValueError(
+                            f"{permanent.name}'s ability requires a target, but no legal "
+                            "target exists, so it cannot be activated (CR 601.2c, CR 602.2b)"
+                        )
+                    targets = asked
+                else:
+                    profile.check(list(targets), controller, self, source_id=permanent.id)
 
-        on_stack = AbilityOnStack(
-            kind=AbilityKind.ACTIVATED,
-            ability=ability,
-            source_id=permanent.id,
-            source_name=permanent.name,
-            controller=controller,
-            targets=[TargetRef.coerce(target) for target in targets or []],
-            x_value=x_value,
-            cost_exiled_card_id=exiled_for_cost.id if exiled_for_cost is not None else None,
-            cost_sacrificed_card_ids=tuple(state.id for state in (sacrificed_for_cost or [])),
-        )
-        self.stack.append(on_stack)
-        # CR 602.2b's target announcement has settled (CR 601.2c, imported
-        # wholesale), and the ability is on the stack, so anything watching
-        # "becomes the target of ... an ability" now has an event to see.
-        self._emit_ability_becomes_target(on_stack)
-        # CR 117.3c hands priority straight back, so anything that triggered
-        # while the cost was paid goes on the stack now - above the ability.
-        self.put_triggers_on_stack()
-        return on_stack
+            key = self._activation_key(permanent, index)
+            self.activations[key] = self.activations.get(key, 0) + 1
+            if ability.loyalty is not None:
+                # CR 606.3's once-per-turn rule is per permanent: having activated
+                # any loyalty ability of this planeswalker this turn, the next one
+                # is refused until a new turn begins.
+                self.loyalty_activations[str(permanent.id)] = (
+                    self.loyalty_activations.get(str(permanent.id), 0) + 1
+                )
+
+            if (
+                ability.mana is not None
+                and ability.loyalty is None
+                and not targets
+                and not moves_a_library_card(ability)
+            ):
+                # All four of CR 605.1a's criteria, and the loyalty one is now
+                # checked rather than assumed: a `0: Add {C}{C}{C}.` cost is a
+                # loyalty symbol (CR 606.2), which makes the ability a loyalty
+                # ability, and a loyalty ability is not a mana ability - it goes
+                # on the stack like any other activated ability (CR 602.2,
+                # CR 113.3b). The other three: no target announced, an "Add"
+                # effect, and nothing in the printed cost or effect moves a card
+                # to or from a library. CR 605.3b: no stack at all; the mana lands
+                # in the pool immediately.
+                land_types = self._controlled_land_types(controller)
+                own_counters = frozenset(permanent.counters.counts)
+                has_imprinted_card = self.card_imprinted_on(permanent.id) is not None
+                # CR 700.5's devotion, for Nykthos, Shrine to Nyx's own "Add an
+                # amount of mana of that color equal to your devotion to that
+                # color." Counted here rather than on the `ManaAbility` because
+                # only the game knows the board (`ManaAbility.
+                # amount_from_devotion`'s own docstring), and counted to the
+                # colour the activating player just chose, which is what "that
+                # color" points back at.
+                devotion = (
+                    devotion_to(self, controller, color)
+                    if ability.mana.amount_from_devotion and color is not None
+                    else None
+                )
+                # The two board-derived narrowings `ManaAbility.effective` asks
+                # for. Without them this fast path resolved the ability against
+                # the printed text alone, while `machines/cost.py`'s auto-tap
+                # solver - which calls the same `effective` - already narrowed;
+                # the two disagreed about what the very same source produces.
+                #
+                # CR 614.12a's chosen colour (Utopia Sprawl's "As this Aura
+                # enters, choose a color", read back by "Add one mana of the
+                # chosen color"), recorded on the permanent as it entered.
+                chosen = permanent.choice
+                chosen_color = (
+                    Color(chosen.value)
+                    if chosen is not None and chosen.kind is ChoiceKind.COLOR
+                    else None
+                )
+                # CR 106.7's survey, for Reflecting Pool and Exotic Orchard.
+                could_produce_colors = (
+                    self._could_produce_survey(ability.mana.could_produce, controller)
+                    if ability.mana.could_produce is not None
+                    else None
+                )
+                produced_mana = ability.mana.resolve(
+                    land_types,
+                    own_counters,
+                    color,
+                    has_imprinted_card,
+                    count=devotion,
+                    could_produce_colors=could_produce_colors,
+                    chosen_color=chosen_color,
+                )
+                # CR 106.5, for the third narrowing: "of any color among legendary
+                # creatures and planeswalkers you control" (Mox Amber). The colour
+                # the activating player named has to be one the board actually
+                # defines - an empty board defines none, and an ability that would
+                # produce mana of an undefined type produces no mana instead.
+                # `machines/cost.py` already applies this on the payment path; a
+                # direct activation reached the same ability without it, so the
+                # same Mox Amber made nothing when tapped for a spell and one mana
+                # of any colour when activated on its own.
+                allowed = among_colors(ability.effect, self, controller)
+                if allowed is not None:
+                    undefined = [produced for produced in produced_mana if produced not in allowed]
+                    if undefined:
+                        raise ValueError(
+                            f"{permanent.name} cannot add "
+                            f"{''.join(f'{{{produced.value}}}' for produced in undefined)}: "
+                            f"no permanent it surveys defines that color, so the ability "
+                            f"produces no mana (CR 106.5)"
+                        )
+                # CR 106.6: a "Spend this mana only to ..." sentence in this
+                # ability's own effect text restricts the mana it just made. The
+                # tag goes on the mana in the pool, not on `permanent` - the mana
+                # ability has resolved (CR 605.3b) and the mana outlives it, so a
+                # source that leaves the battlefield takes nothing back with it.
+                # `permanent` is passed only to resolve "the chosen type"
+                # (CR 614.12a records the answer on the object that was asked).
+                restriction = spend_restriction(ability.effect, permanent)
+                # CR 106.6's other clause, tagged onto the same mana and for the
+                # same reason: "have an additional effect that affects the spell
+                # or ability that mana is spent on". Arena of Glory's "If that
+                # mana is spent on a creature spell, it gains haste until end of
+                # turn." is read off the ability's own trailing text by
+                # `machines/abilities.parse_mana_abilities`, so there is nothing
+                # to re-parse here - the sentence only has to reach the pool.
+                spend_effect = (
+                    ManaSpendEffect(text=ability.mana.spend_effect)
+                    if ability.mana.spend_effect
+                    else None
+                )
+                for produced in produced_mana:
+                    self.player(controller).mana_pool.add(
+                        produced, restriction=restriction, spend_effect=spend_effect
+                    )
+                # CR 405.6c: "If a mana ability both produces mana and has
+                # another effect, the mana is produced and the other effect
+                # happens immediately." `why_cannot_activate` already refused
+                # this activation outright when the rider could not be read, so
+                # reaching here means it is either absent or a known shape -
+                # Talisman of Resilience's "This artifact deals 1 damage to
+                # you." is what taught this engine the shape existed at all.
+                if ability.mana.rider is not None:
+                    rider = ability.mana.rider
+                    if rider.kind == "damage_to_controller":
+                        self.deal_damage(self.player(controller), rider.amount, source=permanent)
+                    elif rider.kind == "lose_life":
+                        self.player(controller).lose_life(rider.amount)
+                    elif rider.kind == "gain_life":
+                        self.gain_life(controller, rider.amount)
+                # CR 106.12: "to 'tap [a permanent] for mana' is to activate a mana
+                # ability of that permanent that includes the {T} symbol in its
+                # activation cost" - so only a `{T}: ...` ability counts, not
+                # Skirk Prospector's sacrifice-only one. CR 106.12a is the event
+                # Leyline of Abundance and Utopia Sprawl watch for, even though
+                # CR 605.3b means this ability itself never touched the stack
+                # (`tapped_for_mana_event`'s own docstring is the other half of
+                # this: `CostPayment.tap_for_mana` emits the same event when a
+                # source pays for a spell instead of being activated directly).
+                if any(piece.kind is CostKind.TAP for piece in ability.costs):
+                    self.emit(tapped_for_mana_event(permanent, self, mana_added=produced_mana))
+                if produced_mana:
+                    # Not CR 106.12's tap event but its sibling: an ability caused
+                    # this player to add mana. Caged Sun's own condition asks about
+                    # the adding, not the tapping, so a mana ability with no `{T}`
+                    # in its cost raises this one just the same.
+                    triggered = self.emit(
+                        mana_added_event(permanent, self, mana_added=produced_mana)
+                    )
+                    # CR 605.4a: a triggered mana ability "doesn't go on the stack
+                    # ... It simply resolves immediately after the mana ability
+                    # that triggered it, without waiting for priority."
+                    self.resolve_triggered_mana_abilities(triggered)
+                self.put_triggers_on_stack()
+                return None
+
+            on_stack = AbilityOnStack(
+                kind=AbilityKind.ACTIVATED,
+                ability=ability,
+                source_id=permanent.id,
+                source_name=permanent.name,
+                controller=controller,
+                targets=[TargetRef.coerce(target) for target in targets or []],
+                x_value=x_value,
+                cost_exiled_card_id=exiled_for_cost.id if exiled_for_cost is not None else None,
+                cost_sacrificed_card_ids=tuple(state.id for state in (sacrificed_for_cost or [])),
+            )
+            self.stack.append(on_stack)
+            # CR 602.2b's target announcement has settled (CR 601.2c, imported
+            # wholesale), and the ability is on the stack, so anything watching
+            # "becomes the target of ... an ability" now has an event to see.
+            self._emit_ability_becomes_target(on_stack)
+            # CR 117.3c hands priority straight back, so anything that triggered
+            # while the cost was paid goes on the stack now - above the ability.
+            self.put_triggers_on_stack()
+            return on_stack
 
     # -- priority ----------------------------------------------------------
 
@@ -9921,20 +10060,22 @@ class Game(BaseModel):
             # "nobody has priority", because the second answer would be just as
             # true next turn and would send the caller looking in the wrong place.
             self.priority.require(username)
-        # CR 704.3, then CR 603.3: state-based actions, then anything that has
-        # triggered goes on the stack, before the pass is acted on - the next
-        # player (or nobody, if the stack resolves) is about to receive
-        # priority. This is also the check a special action like playing a
-        # land relies on: CR 116.2a hands out no priority of its own, so the
-        # legend rule or any other state-based action it caused is caught here,
-        # the next time anyone would receive priority.
-        self._check_state_based_actions_and_stack_triggers()
-        outcome = self.priority.pass_priority(username, self.stack_is_empty)
-        if outcome is PriorityOutcome.RESOLVE_TOP:
-            self.resolve_top()
-        elif outcome is PriorityOutcome.END_STEP and not self.is_over:
-            self.advance()
-        return outcome
+        with self._id_allocator_scope():
+            # CR 704.3, then CR 603.3: state-based actions, then anything that
+            # has triggered goes on the stack, before the pass is acted on -
+            # the next player (or nobody, if the stack resolves) is about to
+            # receive priority. This is also the check a special action like
+            # playing a land relies on: CR 116.2a hands out no priority of its
+            # own, so the legend rule or any other state-based action it
+            # caused is caught here, the next time anyone would receive
+            # priority.
+            self._check_state_based_actions_and_stack_triggers()
+            outcome = self.priority.pass_priority(username, self.stack_is_empty)
+            if outcome is PriorityOutcome.RESOLVE_TOP:
+                self.resolve_top()
+            elif outcome is PriorityOutcome.END_STEP and not self.is_over:
+                self.advance()
+            return outcome
 
     def retain_priority(self, username: str) -> str:
         """The player who just cast or activated keeps priority (CR 117.3c).
@@ -9948,7 +10089,23 @@ class Game(BaseModel):
         pass. If the check just removed `username`, CR 800.4j has already
         moved priority on to whoever is next seated, so there is nobody left
         to hand it back to.
+
+        Run under `_id_allocator_scope`: `_check_state_based_actions_and_
+        stack_triggers` below both checks state-based actions (a graveyard
+        move's `zone_change_stamp`) and calls `put_triggers_on_stack`, which
+        mints a fresh `AbilityOnStack` id for every trigger it moves off
+        `pending_triggers`. `pass_priority` and `resolve_top` already reach
+        the same helper from inside their own scopes, but the api calls this
+        directly after every `cast_card`, `activate_ability`, `cycle_card`
+        and `declare_attack` (`engine_api.py`, e.g. around lines 375, 440,
+        608, 731), so it needs a scope of its own.
         """
+        with self._id_allocator_scope():
+            return self._retain_priority_impl(username)
+
+    def _retain_priority_impl(self, username: str) -> str:
+        """The rest of `retain_priority` - see its own docstring for why it
+        is split out."""
         assert self.priority is not None
         self._check_state_based_actions_and_stack_triggers()
         if not self.is_in_game(username):
@@ -10209,6 +10366,17 @@ class Game(BaseModel):
                 f"non-empty - pass priority instead (CR 500.2)"
             )
 
+        with self._id_allocator_scope():
+            return self._advance_past_checks()
+
+    def _advance_past_checks(self) -> Step:
+        """The rest of `advance`, run with `_allocate_id` installed.
+
+        Split out only so `advance` can wrap it in `_id_allocator_scope` -
+        see `objects_created`'s docstring for why that installation is scoped
+        to this one call rather than done once for the object's whole life.
+        """
+        assert self.turn is not None
         previous_turns_taken = self.turn.turns_taken
         previous_step = self.turn.step
         step = self.turn.advance()
