@@ -477,6 +477,44 @@ def test_deriving_modes_for_a_card_that_has_none_is_an_error():
         modes("Lightning Bolt", [1])
 
 
+# -- the profile cache must not leak one game's Card into another ----------
+
+
+def test_mutating_a_card_in_one_game_is_not_observed_through_another_games_profile():
+    """`targeting._CACHE` memoises by oracle text (fast: text never changes),
+    but `TargetingProfile.source_card` must be *this call's* `Card`, never
+    whichever `Card` instance happened to populate the cache first.
+
+    Before this fix the cache was keyed on `(card.name, text)` and stamped
+    `source_card` into the cached entry itself, so the first game to ask for
+    a "Lightning Bolt" profile handed its own `Card` to every later game that
+    asked - and `Card` is `ConfigDict(extra="ignore")`, not frozen, so a
+    caller mutating one game's `Card` (a copy effect, a Humility-style
+    characteristic-defining rewrite) would have been visible through a
+    second, unrelated game's cached profile.
+
+    Two distinct `Card` objects with identical oracle text stand in for "the
+    same printing, loaded independently by two different games' decks" -
+    which is the real-world shape this leak would have taken.
+    """
+    first_game_card = card("Lightning Bolt")
+    second_game_card = first_game_card.model_copy(deep=True)
+    assert second_game_card is not first_game_card
+
+    first_profile = targeting_profile(first_game_card)
+    second_profile = targeting_profile(second_game_card)
+
+    assert first_profile.source_card is first_game_card
+    assert second_profile.source_card is second_game_card
+
+    # A change to the first game's Card - standing in for whatever mutated it -
+    # must not be observable through the second game's profile.
+    first_game_card.name = "Mutated in game one"
+
+    assert second_profile.source_card is not None
+    assert second_profile.source_card.name == "Lightning Bolt"
+
+
 def test_too_few_targets_is_rejected():
     """CR 601.2c: every target the spell requires needs a legal choice.
 

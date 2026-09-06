@@ -4539,24 +4539,34 @@ def quoted_ability_grants(
     return grantable, wanted
 
 
-#: Every quoted ability text this module has ever seen a permanent's static
-#: ability offer to grant, accumulated across sweeps.
-#:
-#: It exists for one case that the current battlefield cannot answer on its
-#: own: the source *leaving*. Once Ygra is in the graveyard nothing on the
-#: battlefield prints its quoted ability any more, so a reconciliation scoped
-#: to what is grantable *now* would have no reason to take the line back off
-#: the creatures - and CR 604.2 says it has to come off, because the ability
-#: generating it is no longer on the battlefield. Remembering the vocabulary
-#: separates "nobody is granting this" from "nothing here has ever granted
-#: anything", which is the distinction the removal needs.
-#:
-#: Monotonic, and every entry comes from a permanent's own printed text, so it
-#: is a property of the card pool rather than of any one game.
-_QUOTED_GRANT_VOCABULARY: set[str] = set()
+def _every_card_state_in(game: Game) -> list[CardState]:
+    """Every `CardState` `game` holds, in any zone - not only its battlefield.
+
+    `sync_granted_ability_texts`'s `search_pool`: a source that has left the
+    battlefield still exists as a `CardState` somewhere else in the same
+    game (a graveyard, most often), with its printed text unchanged, so this
+    is what lets that source's grant still be recognised for removal with no
+    memory of its own - on a cold-decoded game exactly as on a live one.
+
+    `game.shared_zones`'s stack can hold an `AbilityOnStack`, which is not a
+    `CardState` and has no quoted text of its own to read; everything else
+    here is a card in some zone of some player, or a shared one.
+    """
+    found: list[CardState] = [
+        state
+        for zone_cards in game.shared_zones.values()
+        for state in zone_cards
+        if isinstance(state, CardState)
+    ]
+    for player in game.players:
+        for zone_cards in player.zones.values():
+            found.extend(zone_cards)
+    return found
 
 
-def sync_granted_ability_texts(permanents: Sequence[CardState]) -> None:
+def sync_granted_ability_texts(
+    permanents: Sequence[CardState], search_pool: Sequence[CardState] | None = None
+) -> None:
     """Keep `CardState.granted_ability_texts` in step with the quoted abilities
     the battlefield's static abilities are granting right now.
 
@@ -4574,17 +4584,43 @@ def sync_granted_ability_texts(permanents: Sequence[CardState]) -> None:
     has the ability"). Only texts this mechanism is known to grant are ever
     removed, so a line put there by something else - Urza's Saga's chapter II
     grant, which is a resolved one-shot and not a static ability at all - is
-    left alone.
+    left alone. That is also why the vocabulary of "texts this mechanism is
+    known to grant" is never read off `CardState.granted_ability_texts`
+    itself: that list mixes both kinds of grant together, and folding it in
+    once made a Construct-making Saga lose its own one-shot line the moment
+    this function next ran.
+
+    So the vocabulary is `source_grantable` alone (below), read fresh off
+    every source's own printed text - which answers "what could this source
+    grant" without needing to remember anything, for as long as the source is
+    still one of `permanents`. It is not, once a source has actually left the
+    battlefield (CR 604.2's own trigger for taking a grant back off): nothing
+    in `permanents` prints that quoted line any more, so a sweep scoped to it
+    alone has no way to tell "nobody is granting this" from "nothing here has
+    ever granted anything", and the still-departed source's own grant would
+    never come off. `search_pool` is where that source is found instead - the
+    whole game, every zone, not just the battlefield - because a card's own
+    text does not change when it changes zones: a destroyed Ygra still prints
+    her quoted ability sitting in the graveyard, cold-decoded or not, which is
+    what lets this need no process- or game-lifetime memory of its own.
+    Defaults to `permanents`, which is what a bare battlefield sweep with no
+    wider game behind it (`static_effects`, used only by tests) can do.
     """
     wanted: dict[UUID, set[str]] = {}
-    for source in permanents:
+    grantable: set[str] = set()
+    on_board = {permanent.id for permanent in permanents}
+    seen: set[UUID] = set()
+    for source in (*permanents, *(search_pool or ())):
+        if source.id in seen:
+            continue
+        seen.add(source.id)
         source_grantable, source_wanted = quoted_ability_grants(source, permanents)
-        _QUOTED_GRANT_VOCABULARY.update(source_grantable)
-        for subject, texts in source_wanted.items():
-            wanted.setdefault(subject, set()).update(texts)
-    if not _QUOTED_GRANT_VOCABULARY:
+        grantable.update(source_grantable)
+        if source.id in on_board:
+            for subject, texts in source_wanted.items():
+                wanted.setdefault(subject, set()).update(texts)
+    if not grantable:
         return
-    grantable = _QUOTED_GRANT_VOCABULARY
     for permanent in permanents:
         mine = wanted.get(permanent.id, set())
         kept = tuple(
@@ -6552,7 +6588,7 @@ class ContinuousEffects(BaseModel):
         """
         self.note(permanents)
         shared = context or LayerContext()
-        sync_granted_ability_texts(permanents)
+        sync_granted_ability_texts(permanents, _every_card_state_in(game) if game else None)
         effects: list[ContinuousEffect] = []
         for permanent in permanents:
             effects.extend(
