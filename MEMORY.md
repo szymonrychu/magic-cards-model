@@ -19,3 +19,4 @@ home of its own memory.
 - [Autonomous playtest loop](memory/autonomous-playtest-loop.md) — play, report, confirm with opus, fix globally with sonnet, repeat until three clean games per deck pair
 - [No commits: git checkout destroys work](memory/no-commits-git-checkout-destroys-work.md) — this repo has zero commits, so git restore/checkout/stash overwrite with an ancient index blob; recover from ~/.claude/file-history
 - [Agent playtest launch](memory/agent-playtest-launch.md) — two AI players as Agent-tool subagents driving seat_cli.py: sonnet, one-session prompts, no curl (seat hides the opponent's hand), vet their reports against the CR
+- [Combat declarations skip the live provider](memory/combat-declarations-skip-the-live-provider.md) — ask_attackers/ask_blockers must never consult DecisionScript.provider until the api's ANSWERABLE_KINDS and mailbox transport grow to match, or every live game's combat stalls for a full decision timeout

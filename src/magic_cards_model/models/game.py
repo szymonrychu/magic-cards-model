@@ -71,13 +71,16 @@ from ..machines.decisions import (
     CardSplit,
     Decision,
     DecisionKind,
+    DecisionPending,
     DecisionScript,
+    PendingDecision,
     ask_attackers,
     ask_blockers,
     ask_mulligan,
     ask_trigger_order,
     default_answer,
     legal_options,
+    rule_for_kind,
 )
 from ..machines.delayed import (
     DelayedEffect,
@@ -1932,7 +1935,7 @@ class Game(BaseModel):
         assert self.turn is not None
         attacks = ask_attackers(self.decisions, self.turn.active_player, prompt="declare attackers")
         if attacks:
-            self.declare_attackers(attacks)
+            self.declare_attackers(self._resolve_declaration(attacks))
 
     def declare_blockers_step(self) -> None:
         """The declare blockers step's turn-based action (CR 703.4j, 509.1).
@@ -1964,15 +1967,61 @@ class Game(BaseModel):
             if username not in attackers_by_defender:
                 continue
             blocks.extend(
-                ask_blockers(
-                    self.decisions,
-                    username,
-                    prompt="declare blockers",
-                    attackers=tuple(attackers_by_defender[username]),
+                self._resolve_declaration(
+                    ask_blockers(
+                        self.decisions,
+                        username,
+                        prompt="declare blockers",
+                        attackers=tuple(attackers_by_defender[username]),
+                    )
                 )
             )
         if blocks:
             self.declare_blockers(blocks)
+
+    def _resolve_declaration(
+        self, pairs: "list[tuple[CardState | UUID, CardState | Player | TargetRef | UUID | str]]"
+    ) -> list[tuple[CardState, "CardState | Player | TargetRef | str"]]:
+        """Turn one `ask_attackers`/`ask_blockers` answer's pairs into the
+        `CardState`/`Player`/`str` objects `declare_attackers`/
+        `declare_blockers` expect.
+
+        A scripted or defaulted answer already names real objects - every
+        scenario in `tests/scenarios/` stages `(CardState, Targetable | str)`
+        pairs directly (see `_ask_declaration`), where `Targetable` is
+        `CardState | Player` - and passes through here unchanged, `Player`
+        included. A recorded `Answer.pairs` entry (a tape of `DeclaredPair`,
+        see `machines/decisions.py`) names cards by id instead, because a
+        `DeclaredPair` cannot hold a live `CardState` reference; those ids are
+        resolved here, against the board as it stands right now.
+        `_ask_declaration` already turns a `DeclaredPair`'s `defender_player`
+        into the plain username `str` this method's passthrough branch
+        already handles, so a recorded attack on a player reaches this method
+        exactly the way a scripted one does.
+
+        An id naming nothing in any zone this game can see is refused rather
+        than dropped or silently skipped (CR 508.1a's/CR 509.1a's declaration
+        is the whole creature or defender named, not whichever of it can be
+        found) - see `memory/silent-default-dispatch-tables.md`.
+        """
+        resolved: list[tuple[CardState, CardState | Player | TargetRef | str]] = []
+        for creature, target in pairs:
+            creature_state = (
+                creature if isinstance(creature, CardState) else self.find_by_id(creature)
+            )
+            if creature_state is None:
+                raise ValueError(f"declaration names {creature!r}, not a card in any zone")
+            if isinstance(target, CardState | Player | TargetRef | str):
+                resolved.append((creature_state, target))
+                continue
+            target_state = self.find_by_id(target)
+            if target_state is None:
+                raise ValueError(
+                    f"declaration names {target!r} as a defender, but no such card exists "
+                    f"in any zone"
+                )
+            resolved.append((creature_state, target_state))
+        return resolved
 
     def draw_step(self) -> list[CardState]:
         """The active player draws a card (CR 504.1, 703.4d).
@@ -4691,10 +4740,14 @@ class Game(BaseModel):
         `affirmative_is_legal` False, because "there was nothing to decide" is a
         fact a scenario may want to assert.
 
-        A scripted answer always wins; only once none matches is a live
-        `decisions.provider` (if one is set) consulted, and only once that
-        also has nothing - `NOT_ANSWERED`, or no provider at all - does
-        `default_answer` speak for the player.
+        A scripted answer always wins; failing that, the replay tape
+        (`decisions.recorded`, see `machines/decisions.py`'s "Pausing instead
+        of blocking") is read next, then a live `decisions.provider` (if one
+        is set) is consulted, and only once none of those has anything -
+        `NOT_ANSWERED`, or no provider at all, and no unconsumed tape entry -
+        does this raise `DecisionPending` (when `decisions.pause_when_
+        unanswered` is set) or, failing that too, let `default_answer` speak
+        for the player.
 
         Every `CHOOSE_CARDS` question is labelled on its way through here - see
         `_with_card_labels` - so a client is never handed a list of ids naming
@@ -4704,10 +4757,20 @@ class Game(BaseModel):
         self.decisions.asked.append(decision)
         allowed = legal_options(decision)
         found, value = self.decisions.take(decision)
+        if not found:
+            found, value = self.decisions.take_from_tape(decision)
         if not found and self.decisions.provider is not None:
             provided = self.decisions.provider.decide(decision)
             if provided is not NOT_ANSWERED:
                 found, value = True, provided
+        if not found and self.decisions.pause_when_unanswered:
+            raise DecisionPending(
+                PendingDecision(
+                    seq=len(self.decisions.asked) - 1,
+                    decision=decision,
+                    rule=rule_for_kind(decision.kind),
+                )
+            )
         if not found:
             return default_answer(decision)
 

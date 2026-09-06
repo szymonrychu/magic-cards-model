@@ -24,8 +24,10 @@ import pytest
 
 from magic_cards_model.machines.decisions import (
     NOT_ANSWERED,
+    Answer,
     Decision,
     DecisionKind,
+    DecisionPending,
     ScriptedAnswer,
 )
 from magic_cards_model.models import Deck, Game, Match, Player, Zone
@@ -801,3 +803,76 @@ def test_the_bottoming_is_asked_after_every_declaration_of_the_round():
         ("alice", DecisionKind.MULLIGAN),
         ("alice", DecisionKind.CHOOSE_CARDS),
     ]
+
+
+# -- pausing instead of blocking: the tape and `DecisionPending` ------------
+#
+# `ask_mulligan` reads the replay tape and can pause exactly like `Game.ask`
+# does (see `machines/decisions.py`'s module docstring) - both new in the same
+# commit that gave `Game.ask` a tape and a pause, and neither had a test until
+# here.
+
+
+def test_a_recorded_tape_answers_the_mulligan_declaration():
+    """`DecisionScript.recorded` answers CR 103.5's declaration the same way
+    `Game.ask` reads it for a resolving effect's choice - one `Answer` per
+    question, in order, matching `test_the_bottoming_is_asked_after_every_
+    declaration_of_the_round`'s own proof of the exact sequence: alice
+    mulligans, bob keeps, then alice keeps and the process ends.
+    """
+    series = match()
+    game = series.start_game()
+    game.decisions.recorded = [
+        Answer(seq=0, kind=DecisionKind.MULLIGAN, player="alice", accept=True),
+        Answer(seq=1, kind=DecisionKind.MULLIGAN, player="bob", accept=False),
+        Answer(seq=2, kind=DecisionKind.MULLIGAN, player="alice", accept=False),
+    ]
+
+    series.run_mulligans()
+
+    alice = game.player("alice")
+    bob = game.player("bob")
+    assert alice.mulligans_taken == 1
+    assert len(alice.hand) == 6
+    assert bob.mulligans_taken == 0
+    assert len(bob.hand) == 7
+    # The bottoming question that follows has no tape entry of its own, so it
+    # falls through to `default_answer` exactly as an unscripted one would -
+    # the tape not fully covering a run is not itself an error.
+    assert game.decisions.consumed == 3
+
+
+def test_a_mulligan_tape_entry_for_the_wrong_player_is_refused():
+    """The same corrupt-tape refusal `Game.ask`'s tape already has - see
+    `tests/scenarios/test_decisions_during_resolution.py::
+    test_a_tape_entry_for_the_wrong_player_raises_a_corrupt_tape_error` -
+    proven here for `ask_mulligan`'s own call to `take_from_tape`."""
+    series = match()
+    game = series.start_game()
+    game.decisions.recorded = [
+        Answer(seq=0, kind=DecisionKind.MULLIGAN, player="bob", accept=True),
+    ]
+
+    with pytest.raises(ValueError, match="corrupt or out of order"):
+        series.run_mulligans()
+
+
+def test_pause_when_unanswered_raises_decision_pending_for_the_mulligan_declaration():
+    """With nothing scripted, no tape, and no provider, `pause_when_unanswered`
+    turns CR 103.5's declaration into a raised `DecisionPending` - the same
+    proof `test_pause_when_unanswered_raises_decision_pending_through_a_
+    resolving_spell` gives for `Game.ask`, given here for `ask_mulligan`,
+    which never goes through `Game.ask` at all.
+    """
+    series = match()
+    game = series.start_game()
+    game.decisions.pause_when_unanswered = True
+
+    with pytest.raises(DecisionPending) as excinfo:
+        series.run_mulligans()
+
+    pending = excinfo.value.pending
+    assert pending.decision.kind is DecisionKind.MULLIGAN
+    assert pending.decision.player == "alice"
+    assert pending.seq == 0
+    assert "103.5" in pending.rule

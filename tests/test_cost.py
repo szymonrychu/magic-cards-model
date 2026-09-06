@@ -3,6 +3,7 @@ import pytest
 from magic_cards_model.machines import CostPayment, CostStep
 from magic_cards_model.machines.cost import (
     ComponentKind,
+    CostComponent,
     TotalCost,
     additional_cost_phrases,
     alternative_cost_phrases,
@@ -13,6 +14,13 @@ from magic_cards_model.machines.cost import (
     remove_counters_cost,
     sacrifice_cost,
     tap_cost,
+)
+from magic_cards_model.machines.decisions import (
+    Decision,
+    DecisionKind,
+    DecisionPending,
+    PendingDecision,
+    rule_for_kind,
 )
 from magic_cards_model.models import CardState, Color, ManaCost, Zone
 from magic_cards_model.models.card_state import Counter
@@ -168,6 +176,51 @@ def test_a_component_with_nothing_chosen_cannot_be_paid():
     assert "needs 1" in (payment.unpayable or "")
     with pytest.raises(ValueError, match="needs 1"):
         payment.pay()
+
+
+def test_a_decision_pending_from_a_component_survives_the_payment_handler(monkeypatch):
+    """`CostPayment.pay`'s bare `except Exception` around each component's own
+    `.pay()` unwinds every component already paid and the mana pool before
+    re-raising - `DecisionPending`'s own docstring names this as one of
+    exactly three bare handlers (`Game.resolve_top` and `Game._resolve_
+    ability` are the other two, proven directly in `tests/scenarios/
+    test_decisions_during_resolution.py` by pausing a real resolving spell
+    and ability) that a paused decision must pass through undisturbed.
+
+    No real card reaches this path today: CR 601.2b puts every cost
+    component's inputs - which permanent to sacrifice, which card to discard
+    - into the announcement step, before `CostPayment.pay()` ever runs (see
+    `CostComponent`'s own docstring), so nothing currently asks a question
+    from inside a component's `.pay()`. `monkeypatch` stands in for "some
+    future component that does", the same way the two `Game` handlers are
+    proven with a real spell rather than an invented one - there being no
+    such spell yet for this one is exactly the gap this test is filling, not
+    a shortcut around finding one.
+    """
+    creature = card_state("Grizzly Bears", Zone.BATTLEFIELD, controller="alice")
+    pending = DecisionPending(
+        PendingDecision(
+            seq=0,
+            decision=Decision(kind=DecisionKind.MAY, player="alice", prompt="a paused question"),
+            rule=rule_for_kind(DecisionKind.MAY),
+        )
+    )
+
+    def _pauses_instead_of_paying(self: CostComponent, game: object) -> None:
+        raise pending
+
+    monkeypatch.setattr(CostComponent, "pay", _pauses_instead_of_paying)
+    payment = CostPayment.for_total(TotalCost.of("{0}", sacrifice_cost(creature, payer="alice")))
+
+    with pytest.raises(DecisionPending) as excinfo:
+        payment.pay()
+
+    assert excinfo.value is pending
+    # The bare `except Exception` never saw a `BaseException` like this one,
+    # so nothing it does - unpaying components, restoring the pool - ran; the
+    # creature this cost would have sacrificed is exactly where it started.
+    assert creature.zone is Zone.BATTLEFIELD
+    assert payment.step is not CostStep.PAID
 
 
 def test_removing_counters_as_a_cost_is_refused_without_enough_of_them():
