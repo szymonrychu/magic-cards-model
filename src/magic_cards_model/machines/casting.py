@@ -2272,6 +2272,24 @@ class Casting(BaseModel):
         """
         return self._refusing(lambda: self._splice(name))
 
+    def splice_by_id(self, card_id: UUID) -> CastingStep:
+        """CR 702.47a's splice, named by id rather than by name.
+
+        The id-keyed twin of `splice(name)`, for a caller that has to name
+        *which* copy of a card to reveal - `splice(name)`'s lookup takes
+        whichever matching card happens to sit first in hand, which cannot
+        distinguish two copies of the same splice card. This is what
+        `Game.cast`'s `splice` parameter drives, matching `Action.
+        splice_options`' own `SpliceOption.card_id`: this library's actions
+        are ids only (see the module docstring), never names, and splice is
+        no exception.
+
+        Same three effects, same refusals, as `splice(name)` - see that
+        docstring - except "not in the caster's hand" and "already spliced"
+        are judged against the id, not the name.
+        """
+        return self._refusing(lambda: self._splice_by_id(card_id))
+
     def _splice(self, name: str) -> CastingStep:
         if self.game is None:
             raise ValueError("splicing needs a game to find the card in hand")
@@ -2285,7 +2303,22 @@ class Casting(BaseModel):
                 # CR 702.47b's second sentence.
                 raise ValueError(f"{name} is already spliced onto {self.spell.name}")
             raise ValueError(f"{self.caster} has no {name} in hand to splice")
-        card = candidates[0]
+        return self._splice_card(candidates[0])
+
+    def _splice_by_id(self, card_id: UUID) -> CastingStep:
+        if self.game is None:
+            raise ValueError("splicing needs a game to find the card in hand")
+        hand = self.game.player(self.caster).hand
+        card = next((candidate for candidate in hand if candidate.id == card_id), None)
+        if card is None:
+            raise ValueError(f"{self.caster} has no card {card_id} in hand to splice")
+        if card_id in self.spliced_card_ids:
+            # CR 702.47b's second sentence.
+            raise ValueError(f"{card.name} is already spliced onto {self.spell.name}")
+        return self._splice_card(card)
+
+    def _splice_card(self, card: CardState) -> CastingStep:
+        name = card.name
         splice = _keyword(card.card, "Splice")
         if splice is None:
             raise ValueError(f"{name} has no splice ability")

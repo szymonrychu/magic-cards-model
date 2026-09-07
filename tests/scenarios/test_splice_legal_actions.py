@@ -134,3 +134,103 @@ def test_splicing_lava_spike_adds_desperate_rituals_text_and_pays_its_cost():
     life_before = bob.life
     scenario.resolve_top()
     assert bob.life == life_before - 3, "Lava Spike's own printed effect still ran"
+
+
+def test_game_cast_splices_via_legal_actions_splice_option():
+    """The library's own guarantee is that `legal_actions`' `Action`s are
+    ids only (module docstring, `machines/legal_actions.py`), and
+    `Action.splice_options` is no exception - `SpliceOption.card_id` is a
+    `UUID`, never a name. This is the direct proof: take the `SpliceOption`
+    `legal_actions` handed back for Lava Spike's `CAST` action and play it
+    straight into one `Game.cast(splice=[...])` call, with no hand-built
+    `Casting` in the middle at all - the shape every other `test_atomic_
+    cast.py` case already gets, now extended to splice."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Lava Spike", "Desperate Ritual"], battlefield=["Mountain"] * 3)
+        .player("bob")
+        .build()
+    )
+    _to_main(scenario)
+    ritual = scenario.find("Desperate Ritual", Zone.HAND, "alice")
+
+    (spike_cast,) = [
+        action
+        for action in _casts(legal_actions(scenario.game, "alice"))
+        if scenario.game.find_by_id(action.card_id).name == "Lava Spike"
+    ]
+    (option,) = spike_cast.splice_options
+    assert option.card_id == ritual.id
+
+    spike = scenario.find("Lava Spike", Zone.HAND, "alice")
+    sources = scenario.untapped_sources("Mountain", "Mountain", "Mountain")
+
+    resolving = scenario.game.cast(
+        spike,
+        "alice",
+        targets=["bob"],
+        splice=[option.card_id],
+        mana_sources=list(sources),
+    )
+
+    assert resolving.zone is Zone.STACK
+    assert resolving.spliced_text == ("Add {R}{R}{R}.",)
+    assert ritual.zone is Zone.HAND, "CR 701.20a: revealed, never moved"
+
+    bob = scenario.game.player("bob")
+    life_before = bob.life
+    scenario.resolve_top()
+    assert bob.life == life_before - 3, "Lava Spike's own printed effect still ran"
+
+
+def test_splice_by_id_names_a_specific_copy_when_two_share_a_name():
+    """`Casting._splice(name)`'s old lookup filters `hand` by name and takes
+    `candidates[0]` - whichever copy happens to sit first in hand order,
+    never the caller's choice. With two Desperate Rituals in hand, that path
+    can never be told to splice the *second* one specifically. The id path
+    can: `Casting.splice_by_id(card_id)` (what `Game.cast(splice=...)`
+    drives) records exactly the id asked for, not whichever same-named
+    card came first.
+
+    CR 701.20a's reveal never moves a spliced card - it stays in hand
+    either way - so what distinguishes "the right card" here is not which
+    zone it ends up in, but which id `Casting.spliced_card_ids` records: the
+    one the caller named, not the accident of hand order.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Lava Spike", "Desperate Ritual", "Desperate Ritual"],
+            battlefield=["Mountain"] * 3,
+        )
+        .player("bob")
+        .build()
+    )
+    _to_main(scenario)
+    first_in_hand, second_in_hand = [
+        card
+        for card in scenario.player("alice").cards_in(Zone.HAND)
+        if card.name == "Desperate Ritual"
+    ]
+    assert first_in_hand.id != second_in_hand.id
+
+    spike = scenario.find("Lava Spike", Zone.HAND, "alice")
+    casting = Casting(spell=spike, caster="alice", origin_zone=Zone.HAND, game=scenario.game)
+    casting.choose_targets(["bob"])
+
+    # Ask, by id, for the copy that is NOT the one name-based `_splice`
+    # would have picked (it always takes `candidates[0]`, i.e. whichever is
+    # first in hand order - `first_in_hand` here).
+    casting.splice_by_id(second_in_hand.id)
+
+    assert casting.spliced_card_ids == [second_in_hand.id]
+    assert first_in_hand.id not in casting.spliced_card_ids
+
+    payment = casting.determine_cost()
+    scenario.pay_with(payment, *scenario.untapped_sources("Mountain", "Mountain", "Mountain"))
+    resolving = scenario.put_on_stack(casting)
+
+    assert resolving.spliced_text == ("Add {R}{R}{R}.",)
+    assert first_in_hand.zone is Zone.HAND
+    assert second_in_hand.zone is Zone.HAND
