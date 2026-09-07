@@ -7,14 +7,27 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    # The suite runs in about 130s locally; this leaves headroom for a colder
+    # runner plus tool installation.
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: jdx/mise-action@v2
+      - uses: jdx/mise-action@v4
 
-      - run: mise install
+      # `mise install` installs the tools pinned in mise.toml. It does NOT run
+      # the repo's own `install` task, which is what syncs the virtualenv. Both
+      # are needed: without the second, `uv run pytest` fails to spawn pytest,
+      # because pytest arrives through an extra that `uv run` does not install
+      # on its own.
+      - name: Install pinned tools
+        run: mise install
 
-      - run: mise run lint
+      - name: Sync the virtualenv
+        run: mise run install
 
-      - run: mise run test
+      - name: Lint
+        run: mise run lint
+
+      - name: Test
+        run: mise run test
