@@ -46,22 +46,46 @@ removes it from the stack when it resolves. So `fire` produces an
 `AbilityOnStack` and hands it to `Game.pending_triggers`, and nothing downstream
 needs to know it was delayed.
 
-**What it does** is a hand-written registry keyed by a string, the same shape
-`machines/effects.py` and `machines/replacement.py` use, and for the same reason:
-the ability has no printed text to read. `DelayedTriggers.on_stack` remembers
-which key each `AbilityOnStack` came from, because `AbilityOnStack` has no field
-for it and `machines/triggers.py` is not this file's to change.
+**What it does** used to be a hand-written registry keyed by a string
+(`DELAYED_EFFECTS`) or a bare Python closure carried on `DelayedTrigger.
+callback` (`exclude=True`, so it never survived a `model_dump`). Both are gone.
+`DelayedTrigger.effect` is now a single `kind`-discriminated union,
+`DelayedEffectSpec` - frozen pydantic models, each carrying the exact body of
+the closure it replaces, moved rather than rewritten, so a decoded trigger
+resolves identically to the one that was dumped. This is the same shape
+commit 739ee2b already gave `machines/layers.py`'s continuous effects
+(`Selector`/`Modification`/`Count`), for the identical reason: a plain Python
+function cannot survive `Game.model_dump(mode="json")`, and a registry keyed by
+a string silently resolves to nothing for any key the registry does not have -
+see `memory/silent-default-dispatch-tables.md`. A discriminated union fails
+loudly instead: an unrecognised `kind` refuses at decode, it does not resolve
+and do nothing.
+
+Every previous factory name survives, as either the class itself or a
+singleton instance of it, so no construction site outside this file has to
+change *except* the handful this task's own requirement 2-4 rewrites.
+`models/game.py`'s three call sites (warp's, dash's, and rebound's) build
+`effect=` directly - `ExileWarped()`, `return_subject_to_hand`,
+`rebound_recast` - the same as everywhere else in the codebase. An earlier
+revision of this module carried a `DelayedTrigger` before-validator that
+translated a `callback=` keyword and a bare-string `effect=` into that shape,
+because `models/game.py` was locked by a concurrent worktree at the time; the
+lock is gone, those three sites were converted, and the validator was deleted
+with them (see `memory/delayed-trigger-serialization-game-py-isolation.md`).
 """
 
 import re
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Any
-from uuid import UUID, uuid4
+from typing import TYPE_CHECKING, Annotated, Literal
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ..ids import new_id
 from ..models.card import Type
-from ..models.card_state import CardState
+from ..models.card_state import CardState, Counter
+from ..models.mana import ManaCost
+from ..models.token import TokenDefinition, create_tokens
 from ..models.zone import Zone
 from .abilities import AbilityKind, TriggeredAbility, TriggerEvent, TriggerWord
 from .triggers import AbilityOnStack, GameEvent
@@ -70,42 +94,759 @@ from .turn import Step
 if TYPE_CHECKING:
     from ..models.game import Game
 
-#: What a delayed triggered ability does when it resolves. Keyed by the string
-#: in `DelayedTrigger.effect`, or carried directly on `DelayedTrigger.callback`.
+#: A callable shaped like a `DelayedEffectSpec`'s own `__call__`. Kept, and
+#: kept meaning exactly this, only because `models/game.py` - off limits to
+#: this task - type-hints `Game.create_reflexive_trigger`'s own `callback`
+#: parameter with this name; every `DelayedEffectSpecBase` subclass satisfies
+#: it structurally (matching `__call__` signature), so that hint stays
+#: accurate without that file changing. New code should type against
+#: `DelayedEffectSpecBase` directly instead.
 DelayedEffect = Callable[["Game", AbilityOnStack, "DelayedTrigger"], None]
+
+
+# ---------------------------------------------------------------------------
+# DelayedEffectSpec - what a delayed (or reflexive) triggered ability does
+# when it resolves, as data rather than as a closure.
+# ---------------------------------------------------------------------------
+
+
+class DelayedEffectSpecBase(BaseModel):
+    """One delayed triggered ability's resolution, as a frozen, serializable
+    value rather than a Python closure.
+
+    Every subclass carries the exact body of the closure or registry entry it
+    replaces - the correctness argument is that decoded behaviour is identical
+    by construction, not by test coverage (see this module's own docstring and
+    `machines/layers.py`'s `SelectorBase`/`ModificationBase`, which this
+    mirrors).
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        raise NotImplementedError
+
+
+class ExileWarped(DelayedEffectSpecBase):
+    """Warp's delayed trigger (CR 702.185a, CR 603.7).
+
+    "If this spell's warp cost was paid, exile the permanent this spell becomes
+    at the beginning of the next end step. Its owner may cast this card after
+    the current turn has ended for as long as it remains exiled."
+
+    CR 603.7c is what makes the zone check part of the rule rather than
+    defensive coding: a warped permanent that died before the end step is no
+    longer on the battlefield, so the ability resolves and affects nothing.
+    """
+
+    kind: Literal["warp:exile"] = "warp:exile"
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        from .casting import exile_warped
+
+        permanent = trigger.still_affects(game)
+        if permanent is None:
+            return
+        exile_warped(game, permanent)
+
+
+class GrantExtraTurn(DelayedEffectSpecBase):
+    """ "After that turn, [a player] takes an extra turn" (CR 500.7, CR 603.7).
+
+    Emrakul, the Promised End's second sentence. It has to be a delayed trigger
+    rather than part of the resolution: CR 500.7 adds an extra turn "directly
+    after the specified turn", so granting it while the cast trigger resolves
+    would insert it before the turn Emrakul's controller is about to steal, and
+    the controlled player would take their extra turn first.
+    """
+
+    kind: Literal["grant_extra_turn"] = "grant_extra_turn"
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        username = trigger.subject_player or trigger.controller
+        if game.is_in_game(username):
+            game.grant_extra_turn(username)
+
+
+class SacrificeSubject(DelayedEffectSpecBase):
+    """ "At the beginning of the next end step, sacrifice it."
+
+    CR 701.21a: "To sacrifice a permanent, its controller moves it from the
+    battlefield directly to its owner's graveyard." CR 603.7c is what stops it
+    reaching a permanent that has already gone somewhere else.
+    """
+
+    kind: Literal["sacrifice"] = "sacrifice"
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        permanent = trigger.still_affects(game)
+        if permanent is not None:
+            game.put_into_graveyard(permanent)
+
+
+class ExileSubjectAtNextEndStep(DelayedEffectSpecBase):
+    """ "Exile it at the beginning of the next end step" - Postmortem Lunge's
+    own delayed exile of the creature it just returned to the battlefield
+    (CR 701.13a: "To exile an object, move it to the exile zone from wherever
+    it is"). CR 603.7c is what stops this reaching a permanent that already
+    left the battlefield some other way - destroyed in response, sacrificed,
+    or bounced - before the delayed step arrived.
+    """
+
+    kind: Literal["exile_subject_at_next_end_step"] = "exile_subject_at_next_end_step"
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        permanent = trigger.still_affects(game)
+        if permanent is not None:
+            game.exile_permanent(permanent)
+
+
+class ReturnSubjectToBattlefieldUnderOwner(DelayedEffectSpecBase):
+    """ "At the beginning of the next end step, return that card to the
+    battlefield under its owner's control" - Phelia, Exuberant Shepherd's
+    shape, and the blink idiom generally (Blizzard Strix, Angel of
+    Condemnation, Astral Drift).
+
+    CR 610.3c: "An object returned to the battlefield this way returns under
+    its owner's control unless otherwise specified" - the owner, not whoever
+    controlled it before it left, which is why this reads `owner` rather than
+    `controller_or_owner`. CR 110.5b: permanents enter untapped by default,
+    and nothing here retaps it - it left `tapped=False` on the way into exile
+    (`CardState.move_to`) and nothing has touched it since. CR 603.7c is what
+    stops this reaching a permanent that is no longer where it was exiled to,
+    or that left and came back as a new object (`expected_stamp`).
+
+    A token never gets here in the first place: `CardState.exile_permanent`
+    already ran without objection to put it into exile, but CR 111.8 refuses a
+    *second* zone change for a token that has already left the battlefield
+    once, so `Game.put_onto_battlefield` (via `enter_the_battlefield`) silently
+    declines and the token stays in exile - where CR 111.7/704.5d already
+    destines it to cease to exist as a state-based action.
+    """
+
+    kind: Literal["return_subject_to_battlefield_under_owner"] = (
+        "return_subject_to_battlefield_under_owner"
+    )
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        permanent = trigger.still_affects(game)
+        if permanent is None or permanent.owner is None:
+            return
+        game.put_onto_battlefield(permanent, permanent.owner, tapped=False)
+
+
+class ReturnSubjectToHand(DelayedEffectSpecBase):
+    """ "Return it to its owner's hand at the beginning of the next end step" -
+    Aether Membrane's and dash's shape. `Game.return_to_hand` already goes to
+    the *owner's* hand, whoever controls it now.
+
+    Dash is **CR 702.109a**: "Dash represents three abilities: two static
+    abilities that function while the card with dash is on the stack, one of
+    which may create a delayed triggered ability, and a static ability that
+    functions while the object with dash is on the battlefield." That delayed
+    triggered ability is this one.
+    """
+
+    kind: Literal["return_subject_to_hand"] = "return_subject_to_hand"
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        permanent = trigger.still_affects(game)
+        if permanent is not None:
+            game.return_to_hand(permanent)
+
+
+class ReboundRecast(DelayedEffectSpecBase):
+    """CR 702.88a's own recast: "At the beginning of your next upkeep, you may
+    cast this card from exile without paying its mana cost."
+
+    Optional (`Game.may`), and only for the exact card this rebound sent to
+    exile: `still_affects` is CR 603.7c's check that it is still there,
+    unmoved by anything else, when this trigger finally resolves - a rebound
+    card someone managed to remove from exile in the meantime is not cast at
+    all, rather than this reaching for whatever else has `subject_id`'s id
+    now (CR 400.7 - once it moves again, it is a new object).
+
+    `Game.cast_free_from_exile` is where CR 702.88b's alternative-cost
+    casting actually happens, and where the card's own new targets (CR
+    601.2c) are chosen; this only asks whether to do it at all.
+    """
+
+    kind: Literal["rebound_recast"] = "rebound_recast"
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        card = trigger.still_affects(game)
+        if card is None:
+            return
+        prompt = f"cast {card.name} from exile without paying its mana cost"
+        if not game.may(trigger.controller, prompt, source=card.name):
+            return
+        game.cast_free_from_exile(card, trigger.controller, keyword="Rebound")
+
+
+class DrawACardForController(DelayedEffectSpecBase):
+    """ "Draw a card at the beginning of the next turn's upkeep" - Mishra's
+    Bauble's second half. No object is named at all (CR 603.7c has nothing to
+    check), so this is the creating ability's controller, drawing on their own
+    behalf (CR 121.2).
+    """
+
+    kind: Literal["draw_a_card_for_controller"] = "draw_a_card_for_controller"
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        if game.is_in_game(trigger.controller):
+            game.draw_cards(trigger.controller, 1)
+
+
+class DestroySubject(DelayedEffectSpecBase):
+    """ "Destroy it at the beginning of the next end step" - CR 701.8a: "To
+    destroy a permanent, move it from the battlefield to its owner's
+    graveyard." Distinct from sacrifice (CR 701.21a) because destruction can
+    be regenerated or replaced and sacrifice cannot; `Game.destroy` is where
+    that difference lives. CR 603.7c is the usual guard on the object still
+    being where the ability expects it.
+    """
+
+    kind: Literal["destroy_subject"] = "destroy_subject"
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        permanent = trigger.still_affects(game)
+        if permanent is not None:
+            game.destroy(permanent)
+
+
+class TapSubject(DelayedEffectSpecBase):
+    """ "Tap it at the beginning of the next turn's upkeep" - CR 701.26a: "To
+    tap a permanent, turn it sideways from an upright position. Only untapped
+    permanents can be tapped." `CardState.tap` is a no-op on a permanent that
+    is already tapped, which is that second sentence.
+    """
+
+    kind: Literal["tap_subject"] = "tap_subject"
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        permanent = trigger.still_affects(game)
+        if permanent is not None:
+            permanent.tap()
+
+
+def _drop_sibling_triggers(game: "Game", trigger: "DelayedTrigger") -> None:
+    """Drop every sibling delayed trigger once one of them has fired - CR
+    603.7a's one-shot spends the whole ability, not just the one event that
+    happened to occur first, and leaving a dead watcher behind risks a second,
+    wrong resolution later. Shared by `StaticPrisonReturn` and
+    `ReturnEarthbentLand`, whose sibling-dropping bodies used to be two
+    identical private functions (`_dismiss_other_static_prison_triggers`,
+    `_dismiss_other_earthbend_trigger`) in `machines/effects.py`.
+    """
+    game.delayed_triggers.triggers = [
+        candidate
+        for candidate in game.delayed_triggers.triggers
+        if candidate.id not in trigger.sibling_ids
+    ]
+
+
+class ReturnEarthbentLand(DelayedEffectSpecBase):
+    """CR 701.66a's own return: tapped, and under the earthbend ability's
+    *controller* - not `ReturnSubjectToBattlefieldUnderOwner`'s owner-and-
+    untapped default, which is CR 610.3c's default for a blink effect that
+    says nothing more specific. Earthbend overrides both halves of that
+    default explicitly, so it needs its own effect rather than the shared one.
+    """
+
+    kind: Literal["return_earthbent_land"] = "return_earthbent_land"
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        permanent = trigger.still_affects(game)
+        _drop_sibling_triggers(game, trigger)
+        if permanent is None:
+            return
+        game.put_onto_battlefield(permanent, trigger.controller, tapped=True)
+
+
+class DevourerOfDestinyFirstUpkeep(DelayedEffectSpecBase):
+    """ "look at the top four cards of your library. You may put one of those
+    cards back on top of your library. Exile the rest." (Devourer of Destiny,
+    its own opening-hand rider - `machines/opening_hand.py`'s
+    `_devourer_of_destiny_rider`.)
+
+    `Game.look_at_top_and_split` asks CR 701.22a's shared look-then-split
+    question; the "moved" half is read here as the card kept on top, so an
+    unscripted player - whose default answer moves nothing - exiles all four,
+    which is what declining a "you may put one back" does. More than one card
+    kept is refused: the card says "one".
+    """
+
+    kind: Literal["devourer_of_destiny_first_upkeep"] = "devourer_of_destiny_first_upkeep"
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        player = game.player(trigger.controller)
+        kept, rest = game.look_at_top_and_split(
+            player,
+            4,
+            source=trigger.source_name,
+            prompt="look at the top four cards; you may put one back on top",
+            moved_label="top of your library",
+            kept_label="exiled",
+        )
+        if len(kept) > 1:
+            raise ValueError(
+                f"{trigger.source_name}: only one of those cards may be put back on top "
+                f"of your library (CR 608.2d)"
+            )
+        for state in rest:
+            player.add(state, Zone.EXILE)
+        for index, state in enumerate(kept):
+            player.library.insert(index, state)
+
+
+class StaticPrisonReturn(DelayedEffectSpecBase):
+    """The delayed trigger's own effect (CR 610.2, CR 603.7): return the one
+    exiled card - not `still_affects`, which reads `DelayedTrigger.subject_id`
+    for both "what event fires this" *and* "what does it affect" alike.
+
+    Those are two different objects here: the trigger's own `subject_id` is
+    the *enchantment* (CR 603.7a's event is "Static Prison leaves the
+    battlefield", not "the exiled card does anything"), but the card this
+    effect has to bring back is whatever was exiled - a different id entirely.
+    `exiled_id`/`expected_stamp` are captured at the moment of exile (CR
+    603.7c's own check: same id, same zone, same incarnation) without forcing
+    the trigger's single `subject_id` field to mean two different things at
+    once.
+    """
+
+    kind: Literal["static_prison_return"] = "static_prison_return"
+
+    exiled_id: UUID
+    expected_stamp: UUID
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        _drop_sibling_triggers(game, trigger)
+        card = game.find_by_id(self.exiled_id)
+        if not isinstance(card, CardState):
+            return
+        if card.zone is not Zone.EXILE or card.zone_change_stamp != self.expected_stamp:
+            return  # CR 603.7c: gone, or a new incarnation - not this card any more.
+        if card.owner is None:
+            return
+        game.put_onto_battlefield(card, card.owner, tapped=False)
+
+
+class ReturnExiledCardAndAddCounters(DelayedEffectSpecBase):
+    """Lagrella, the Magpie's second sentence: "When an exiled card enters
+    under your control this way, put two +1/+1 counters on it."
+
+    `counter_kind`/`amount` are this effect's own data; the controller who has
+    to have regained it ("under **your** control") is `trigger.controller` -
+    the same value the closure this replaces captured, since both were always
+    the creating ability's own controller (CR 603.7d/e).
+    """
+
+    kind: Literal["return_exiled_card_and_add_counters"] = "return_exiled_card_and_add_counters"
+
+    counter_kind: Counter | str
+    amount: int
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        card = trigger.still_affects(game)
+        if card is None:
+            return
+        if card.controller != trigger.controller:
+            return  # "under **your** control": an opponent's creature went home.
+        # `Game.add_counters`, never `CardState.add_counters`: CR 614.16 - "some
+        # replacement effects apply ... 'if an effect would put one or more
+        # counters on a permanent'. These replacement effects apply if the effect
+        # of a resolving spell or ability [does so]" - and this delayed ability
+        # resolving is exactly that, so Vizier of Remedies and a doubling effect
+        # get their say. CR 122.6's "counters being put on an object" event is
+        # raised on the same route, which is what a "whenever one or more +1/+1
+        # counters are put on this creature" ability watches for; the bare
+        # `CardState` call raised neither.
+        game.add_counters(card, self.counter_kind, self.amount)
+
+
+class CreateAttackingTokens(DelayedEffectSpecBase):
+    """Dalkovan Encampment's whole attack trigger: "Whenever you attack this
+    turn, create `<n>` `<token>` tokens that are tapped and attacking.
+    Sacrifice them at the beginning of the next end step."
+
+    `count`/`definition` are this effect's own data; the controller and
+    source are `trigger.controller`/`trigger.source_id`/`trigger.source_name`
+    - the same values the closure this replaces closed over, since both were
+    always the creating ability's own (CR 603.7d/e). Each token created gets
+    its own one-shot `SacrificeSubject` trigger, the same "sacrifice this
+    specific object at the next end step" idiom every other token-then-
+    sacrifice clause in `machines/effects.py` uses.
+    """
+
+    kind: Literal["create_attacking_tokens"] = "create_attacking_tokens"
+
+    count: int
+    definition: TokenDefinition
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        defender = next(
+            (
+                attack.defender
+                for attack in game.combat.attacks
+                if (attacker := game.find_by_id(attack.attacker_id)) is not None
+                and game.controller_of(attacker).username == trigger.controller
+            ),
+            None,
+        )
+        created = create_tokens(
+            game,
+            self.definition,
+            trigger.controller,
+            self.count,
+            tapped=True,
+            attacking=defender,
+        )
+        for token in created:
+            game.create_delayed_trigger(
+                DelayedTrigger(
+                    text="Sacrifice them at the beginning of the next end step.",
+                    effect=SacrificeSubject(),
+                    event=TriggerEvent.BEGINNING_OF_STEP,
+                    step=Step.END_STEP,
+                    controller=trigger.controller,
+                    source_id=trigger.source_id,
+                    source_name=trigger.source_name,
+                    subject_id=token.id,
+                    expected_zone=Zone.BATTLEFIELD,
+                    expected_stamp=token.zone_change_stamp,
+                )
+            )
+
+
+class PayOrLoseTheGame(DelayedEffectSpecBase):
+    """Summoner's Pact's own delayed half: pay `cost` from the pool already
+    floating, or lose the game (CR 104.3e) trying.
+
+    CR 603.7d/e: the controller who owes this is the one who created the
+    delayed trigger, taken as it resolved - `trigger.controller`, not whoever
+    controls anything now. A player already gone by the time this fires (a
+    concession, an earlier loss) owes nothing further; CR 800.4a already took
+    everything of theirs off the board.
+    """
+
+    kind: Literal["pay_or_lose_the_game"] = "pay_or_lose_the_game"
+
+    cost: ManaCost
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        if not game.is_in_game(trigger.controller):
+            return
+        if game.may_pay_mana_cost(trigger.controller, self.cost, source=trigger.source_name):
+            return
+        game.player_loses_the_game(trigger.controller)
+
+
+class CombatDamageToPlayerDraw(DelayedEffectSpecBase):
+    """Captain Howler, Sea Scourge's own delayed half: "Whenever that creature
+    deals combat damage to a player this turn, you draw a card."
+
+    `matches()` only checks the event kind and the subject's id (CR 603.7c);
+    "combat damage" and "to a player" are this delayed trigger's own narrower
+    condition, the same two checks `machines/triggers.condition_matches`'s
+    DEALS_DAMAGE branch makes for a printed version of this shape.
+    """
+
+    kind: Literal["combat_damage_to_player_draw"] = "combat_damage_to_player_draw"
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        event = ability.event
+        if event is None or not event.combat or event.player is None:
+            return
+        if not game.is_in_game(trigger.controller):
+            return
+        game.draw_cards(trigger.controller, 1)
+
+
+class CopyNextSpellYouCast(DelayedEffectSpecBase):
+    """Dargo, the Shipwrecker's - and every "copy the next spell you cast this
+    turn" shape's - own delayed half.
+
+    **The spell is resolved from last known information.** The copy still
+    happens when the original was countered in response: the delayed ability
+    goes on the stack above the spell it is copying, an opponent may then put
+    a counterspell above *that*, and by the time this resolves the original
+    may be in a graveyard. So the object is fetched by `Game.find_by_id` -
+    which searches every zone - rather than off `Game.stack`. CR 608.2b's
+    on-resolution target check does not apply here: it only refuses an object
+    that "specifies targets", and this ability specifies none.
+
+    CR 707.10c is `may_retarget`: "Some effects copy a spell or ability and
+    state that its controller may choose new targets for the copy." It is only
+    offered when the card actually prints it.
+    """
+
+    kind: Literal["copy_next_spell_you_cast"] = "copy_next_spell_you_cast"
+
+    may_retarget: bool
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        event = ability.event
+        if event is None or event.subject_id is None:
+            return
+        spell = game.find_by_id(event.subject_id)
+        if not isinstance(spell, CardState):
+            return
+        copy = game.copy_spell(spell, controller=trigger.controller)
+        if self.may_retarget:
+            game.offer_new_targets_for_copy(
+                copy, trigger.controller, source_name=trigger.source_name
+            )
+
+
+class ReturnRiderCounter(BaseModel):
+    """Phelia, Exuberant Shepherd's third sentence: "If it entered under your
+    control, put a +1/+1 counter on Phelia."
+
+    Not a `DelayedEffectSpecBase` itself - its call shape is the blink idiom's
+    own rider shape (`Game`, the returned card, the creating ability's
+    controller/source id/source name), not a delayed effect's - it only ever
+    appears nested inside `DelayedBlinkReturnWithRider.rider`. Conditional on
+    the delayed return itself (not on anything true when the outer ability
+    resolved), so it has to run as part of the delayed trigger's own
+    resolution, not the attack trigger's.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    amount: int
+    who: str
+    """`<recipient>`, lowercased - checked against the resolving source's own
+    name at run time (its short form, "Phelia", included), never hardcoded, so
+    this reads any card printing the same shape rather than being one more
+    name-keyed table row."""
+
+    def __call__(
+        self,
+        game: "Game",
+        returned: CardState,
+        controller: str,
+        source_id: UUID | None,
+        source_name: str,
+    ) -> None:
+        if returned.controller != controller:
+            return  # "if it entered under your control"
+        recipient = game.find_by_id(source_id) if source_id is not None else None
+        if recipient is None or recipient.zone is not Zone.BATTLEFIELD:
+            return  # the source is gone; CR 608.2b's outcome for no legal target
+        short_name = source_name.split(",")[0].strip().lower()
+        if self.who not in ("this creature", "this permanent", source_name.lower(), short_name):
+            return
+        game.add_counters(recipient, Counter.PLUS_ONE, self.amount)
+
+
+class DelayedBlinkReturnWithRider(DelayedEffectSpecBase):
+    """The blink idiom (`ReturnSubjectToBattlefieldUnderOwner`) plus a rider
+    clause conditional on the return actually happening - Phelia's own three-
+    clause paragraph, via `machines/effects.py`'s `_parse_delayed_blink_
+    clauses`. Used only when a rider clause is present; with none, the plain
+    `ReturnSubjectToBattlefieldUnderOwner` effect is used directly.
+    """
+
+    kind: Literal["delayed_blink_return_with_rider"] = "delayed_blink_return_with_rider"
+
+    rider: ReturnRiderCounter
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        returned = trigger.still_affects(game)
+        if returned is None or returned.owner is None:
+            return
+        game.put_onto_battlefield(returned, returned.owner, tapped=False)
+        if returned.zone is Zone.BATTLEFIELD:
+            self.rider(game, returned, trigger.controller, trigger.source_id, trigger.source_name)
+
+
+# ---------------------------------------------------------------------------
+# CR 603.12 reflexive triggered abilities' own consequences.
+# ---------------------------------------------------------------------------
+#
+# `DelayedTriggers.create_reflexive` (below) stores its trigger in `pending`
+# exactly like an ordinary delayed trigger fired by `fire` does, and `pending`
+# is a persisted field - a reflexive ability sits on the stack, waiting for
+# priority to pass around it, for exactly as long as an ordinary one does, so
+# it can just as easily be serialized mid-resolution. (The task that asked for
+# this file's own rewrite floated the opposite as something to confirm rather
+# than assume; this is that confirmation, and it was wrong - the four
+# `resolve_reflexive` closures `machines/effects.py` used to build inline, and
+# `machines/replacement.py`'s own `exile_that_card`, needed exactly the same
+# treatment as every other `DelayedTrigger.callback`.)
+#
+# Three of the four `resolve_reflexive` shapes need no data of their own at
+# all: each one's `text` argument to `create_reflexive_trigger` is always the
+# very same `consequence_text` the closure re-parses, which is already
+# `DelayedTrigger.text` by the time this runs - so re-reading `trigger.text`
+# needs no field. `parse_mixed_effect`/`_parse_counters_and_becomes_type_
+# clause`/`_parse_if_control_colored_permanent_damage_clause` are re-run here
+# exactly the way this engine already re-derives a printed ability's effect
+# from its oracle text on every resolution rather than caching a closure -
+# `machines/effects.py` imports from here, so the import has to run the other
+# way, inside `__call__`.
+
+
+class ReflexiveConsequence(DelayedEffectSpecBase):
+    """ "You may sacrifice `<restriction>`. When you do, `<consequence>`."
+    (CR 603.12) and "exile target card from a graveyard. When a creature card
+    is exiled this way, `<consequence>`." - `machines/effects.py`'s
+    `_parse_reflexive_sacrifice_clause` and `_parse_exile_target_card_
+    reflexive_creature_counter`.
+    """
+
+    kind: Literal["reflexive_consequence"] = "reflexive_consequence"
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        from .effects import parse_mixed_effect
+
+        consequence_effect = parse_mixed_effect(trigger.text)
+        if consequence_effect is not None:
+            consequence_effect(game, ability)
+
+
+class ReflexivePayEnergyConsequence(DelayedEffectSpecBase):
+    """ "You may pay `{E}{E}{E}`. When you do, `<consequence>`." (CR 603.12,
+    CR 107.14, CR 118.3) - Guide of Souls' attack trigger,
+    `machines/effects.py`'s `_parse_reflexive_pay_energy_clause`.
+    """
+
+    kind: Literal["reflexive_pay_energy_consequence"] = "reflexive_pay_energy_consequence"
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        from .effects import _parse_counters_and_becomes_type_clause, parse_mixed_effect
+
+        consequence_effect = _parse_counters_and_becomes_type_clause(
+            trigger.text
+        ) or parse_mixed_effect(trigger.text)
+        if consequence_effect is not None:
+            consequence_effect(game, ability)
+
+
+class ReflexiveMandatoryTokenDamageConsequence(DelayedEffectSpecBase):
+    """ "Create `<n>` `<token>` token[s]. When you do, if ..., `<damage>`."
+    (CR 603.12, CR 603.4) - Ajani, Nacatl Avenger's `0`,
+    `machines/effects.py`'s `_parse_reflexive_mandatory_token_clause`.
+
+    The intervening *if* (CR 603.4) is already checked, once, before this
+    reflexive ability was even created (CR 603.12's "checked immediately after
+    being created") - only the damage half is left to run here.
+    """
+
+    kind: Literal["reflexive_mandatory_token_damage_consequence"] = (
+        "reflexive_mandatory_token_damage_consequence"
+    )
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        from .effects import _parse_if_control_colored_permanent_damage_clause
+
+        parsed = _parse_if_control_colored_permanent_damage_clause(trigger.text)
+        if parsed is None:
+            return
+        _condition_holds, deal_the_damage = parsed
+        deal_the_damage(game, ability)
+
+
+class ReflexiveExileCopiedCard(DelayedEffectSpecBase):
+    """Superior Spider-Man's "When you do, exile that card." (CR 603.12,
+    `machines/replacement.py`'s `_choose_a_quality`-adjacent copy-choice
+    reflexive), for DDR#986.
+
+    **CR 400.7 is why this re-reads the zone.** "An object that moves from one
+    zone to another becomes a new object with no memory of, or relation to,
+    its previous existence" - so a card that has left `zone_when_copied` by
+    the time this resolves is not "that card" any more and nothing is exiled.
+    """
+
+    kind: Literal["reflexive_exile_copied_card"] = "reflexive_exile_copied_card"
+
+    card_id: UUID
+    zone_when_copied: Zone
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        card = game.find_by_id(self.card_id)
+        if not isinstance(card, CardState):
+            return
+        if card.zone is not self.zone_when_copied or card.owner is None:
+            return  # CR 400.7: no longer the object the ability referred to.
+        owner = game.player(card.owner)
+        pile = owner.cards_in(self.zone_when_copied)
+        if card not in pile:
+            return
+        pile.remove(card)
+        card.move_to(Zone.EXILE)
+        game.exile.append(card)
+
+
+#: What a delayed (or reflexive) triggered ability does when it resolves -
+#: `DelayedTrigger.effect`'s own type. Every string this task's requirement 2
+#: names (`"warp:exile"`, `"grant_extra_turn"`, `"sacrifice"`) is a member's
+#: own `kind` tag, so those exact strings still validate - now into a real,
+#: callable object rather than a `DELAYED_EFFECTS.get` lookup that could miss.
+#: An unrecognised `kind` refuses at decode (`pydantic.ValidationError`)
+#: instead of resolving to nothing; see this module's own docstring.
+DelayedEffectSpec = Annotated[
+    ExileWarped
+    | GrantExtraTurn
+    | SacrificeSubject
+    | ExileSubjectAtNextEndStep
+    | ReturnSubjectToBattlefieldUnderOwner
+    | ReturnSubjectToHand
+    | ReboundRecast
+    | DrawACardForController
+    | DestroySubject
+    | TapSubject
+    | ReturnEarthbentLand
+    | DevourerOfDestinyFirstUpkeep
+    | StaticPrisonReturn
+    | ReturnExiledCardAndAddCounters
+    | CreateAttackingTokens
+    | PayOrLoseTheGame
+    | CombatDamageToPlayerDraw
+    | CopyNextSpellYouCast
+    | DelayedBlinkReturnWithRider
+    | ReflexiveConsequence
+    | ReflexivePayEnergyConsequence
+    | ReflexiveMandatoryTokenDamageConsequence
+    | ReflexiveExileCopiedCard,
+    Field(discriminator="kind"),
+]
+
+#: Singleton instances of every zero-argument member, kept under their old
+#: pre-refactor names so every reference-by-name call site outside this file -
+#: `models/game.py`'s dash and rebound triggers included - keeps working
+#: unedited: passing `return_subject_to_hand` (the name) around used to hand
+#: over a bare function; it now hands over this one frozen, serializable
+#: instance instead, and calling it (`return_subject_to_hand(game, ability,
+#: trigger)`) still works identically because `DelayedEffectSpecBase` defines
+#: `__call__`.
+exile_warped = ExileWarped()
+grant_extra_turn = GrantExtraTurn()
+sacrifice_subject = SacrificeSubject()
+exile_subject_at_next_end_step = ExileSubjectAtNextEndStep()
+return_subject_to_battlefield_under_owner = ReturnSubjectToBattlefieldUnderOwner()
+return_subject_to_hand = ReturnSubjectToHand()
+rebound_recast = ReboundRecast()
+draw_a_card_for_controller = DrawACardForController()
+destroy_subject = DestroySubject()
+tap_subject = TapSubject()
+return_earthbent_land = ReturnEarthbentLand()
+devourer_of_destiny_first_upkeep = DevourerOfDestinyFirstUpkeep()
 
 
 class DelayedTrigger(BaseModel):
     """One delayed triggered ability, waiting for its event (CR 603.7)."""
 
-    id: UUID = Field(default_factory=uuid4)
+    id: UUID = Field(default_factory=new_id)
 
     text: str
     """The ability as it would read on a card, for the stack listing and for a
     failure message. CR 603.7 says the word "when"/"whenever"/"at" is in there
     somewhere even though it does not usually begin the ability."""
 
-    effect: str = ""
-    """The key into `DELAYED_EFFECTS`, for the hand-written entries (warp,
-    Emrakul's extra turn, and the test-only sacrifice helper) that predate
-    `callback`. Left empty when `callback` is set instead."""
-
-    callback: Any = Field(default=None, exclude=True, repr=False)
-    """A `DelayedEffect`, or `None`. Typed `Any` rather than `DelayedEffect`
-    itself for the same reason `AbilityOnStack.keyword_activation` is
-    (`machines/triggers.py`): a `Callable[["Game", ...], None]` field forces
-    pydantic to resolve the forward reference to `Game` when the schema is
-    built, which is before `Game` exists in this module's world.
-
-    What this ability does, read straight off a card's own printed text by
-    `machines/effects.py`'s delayed-trigger clause parser, with no registry
-    row. `DELAYED_EFFECTS` used to be the only way in, and its own docstring's
-    justification - "the ability has no printed text to read" - never held for
-    a delayed trigger a card prints itself (Phelia, Exuberant Shepherd's own
-    "at the beginning of the next end step, return that card ..."), so a
-    parsed clause carries its own callable here instead of adding another
-    name-keyed row. Checked ahead of `effect`/`DELAYED_EFFECTS` in
-    `DelayedTriggers.effect_for`."""
+    effect: DelayedEffectSpec
+    """What this does when it resolves - see the module docstring and
+    `DelayedEffectSpec` above."""
 
     event: TriggerEvent | None = None
     """The event to watch for, in the vocabulary `Game.emit` already speaks.
@@ -130,8 +871,8 @@ class DelayedTrigger(BaseModel):
 
     source_id: UUID | None = None
     source_name: str
-    """CR 603.7d/e again: the *creating* spell or ability's source, not whatever
-    the ability ends up affecting."""
+    """CR 603.7d/e again: the *creating* spell or ability's own source, not
+    whatever the ability ends up affecting."""
 
     subject_id: UUID | None = None
     """The particular object the ability refers to (CR 603.7c), if any."""
@@ -197,9 +938,10 @@ class DelayedTrigger(BaseModel):
     different event but the same underlying CR 603.7a ability - earthbend's
     "when that land dies **or** is put into exile" is one ability watching two
     events, represented as two `DelayedTrigger`s since each of those only
-    watches one. Read by `machines/effects.py`'s earthbend callback to drop
-    the sibling once either half fires, so a one-shot ability does not sit
-    around forever after it has already done its job."""
+    watches one. Read by `ReturnEarthbentLand`/`StaticPrisonReturn`'s shared
+    `_drop_sibling_triggers` to drop the sibling once either half fires, so a
+    one-shot ability does not sit around forever after it has already done its
+    job."""
 
     def matches(self, event: GameEvent) -> bool:
         """Whether this event is the one being waited for (CR 603.2, 603.7b).
@@ -282,180 +1024,6 @@ class DelayedTrigger(BaseModel):
         return found
 
 
-def _exile_warped(game: "Game", ability: AbilityOnStack, trigger: DelayedTrigger) -> None:
-    """Warp's delayed trigger (CR 702.185a, CR 603.7).
-
-    "If this spell's warp cost was paid, exile the permanent this spell becomes
-    at the beginning of the next end step. Its owner may cast this card after
-    the current turn has ended for as long as it remains exiled."
-
-    CR 603.7c is what makes the zone check part of the rule rather than
-    defensive coding: a warped permanent that died before the end step is no
-    longer on the battlefield, so the ability resolves and affects nothing.
-    """
-    from .casting import exile_warped
-
-    permanent = trigger.still_affects(game)
-    if permanent is None:
-        return
-    exile_warped(game, permanent)
-
-
-def _grant_extra_turn(game: "Game", ability: AbilityOnStack, trigger: DelayedTrigger) -> None:
-    """ "After that turn, [a player] takes an extra turn" (CR 500.7, CR 603.7).
-
-    Emrakul, the Promised End's second sentence. It has to be a delayed trigger
-    rather than part of the resolution: CR 500.7 adds an extra turn "directly
-    after the specified turn", so granting it while the cast trigger resolves
-    would insert it before the turn Emrakul's controller is about to steal, and
-    the controlled player would take their extra turn first.
-    """
-    username = trigger.subject_player or trigger.controller
-    if game.is_in_game(username):
-        game.grant_extra_turn(username)
-
-
-def _sacrifice_subject(game: "Game", ability: AbilityOnStack, trigger: DelayedTrigger) -> None:
-    """ "At the beginning of the next end step, sacrifice it."
-
-    CR 701.21a: "To sacrifice a permanent, its controller moves it from the
-    battlefield directly to its owner's graveyard." CR 603.7c is what stops it
-    reaching a permanent that has already gone somewhere else.
-    """
-    permanent = trigger.still_affects(game)
-    if permanent is not None:
-        game.put_into_graveyard(permanent)
-
-
-def exile_subject_at_next_end_step(
-    game: "Game", ability: AbilityOnStack, trigger: DelayedTrigger
-) -> None:
-    """ "Exile it at the beginning of the next end step" - Postmortem Lunge's
-    own delayed exile of the creature it just returned to the battlefield
-    (CR 701.13a: "To exile an object, move it to the exile zone from wherever
-    it is"). CR 603.7c is what stops this reaching a permanent that already
-    left the battlefield some other way - destroyed in response, sacrificed,
-    or bounced - before the delayed step arrived.
-    """
-    permanent = trigger.still_affects(game)
-    if permanent is not None:
-        game.exile_permanent(permanent)
-
-
-def return_subject_to_battlefield_under_owner(
-    game: "Game", ability: AbilityOnStack, trigger: DelayedTrigger
-) -> None:
-    """ "At the beginning of the next end step, return that card to the
-    battlefield under its owner's control" - Phelia, Exuberant Shepherd's
-    shape, and the blink idiom generally (Blizzard Strix, Angel of
-    Condemnation, Astral Drift).
-
-    CR 610.3c: "An object returned to the battlefield this way returns under
-    its owner's control unless otherwise specified" - the owner, not whoever
-    controlled it before it left, which is why this reads `owner` rather than
-    `controller_or_owner`. CR 110.5b: permanents enter untapped by default,
-    and nothing here retaps it - it left `tapped=False` on the way into exile
-    (`CardState.move_to`) and nothing has touched it since. CR 603.7c is what
-    stops this reaching a permanent that is no longer where it was exiled to,
-    or that left and came back as a new object (`expected_stamp`).
-
-    A token never gets here in the first place: `CardState.exile_permanent`
-    already ran without objection to put it into exile, but CR 111.8 refuses a
-    *second* zone change for a token that has already left the battlefield
-    once, so `Game.put_onto_battlefield` (via `enter_the_battlefield`) silently
-    declines and the token stays in exile - where CR 111.7/704.5d already
-    destines it to cease to exist as a state-based action.
-    """
-    permanent = trigger.still_affects(game)
-    if permanent is None or permanent.owner is None:
-        return
-    game.put_onto_battlefield(permanent, permanent.owner, tapped=False)
-
-
-def return_subject_to_hand(game: "Game", ability: AbilityOnStack, trigger: DelayedTrigger) -> None:
-    """ "Return it to its owner's hand at the beginning of the next end step" -
-    Aether Membrane's and dash's shape. `Game.return_to_hand` already goes to
-    the *owner's* hand, whoever controls it now.
-
-    Dash is **CR 702.109a**: "Dash represents three abilities: two static
-    abilities that function while the card with dash is on the stack, one of
-    which may create a delayed triggered ability, and a static ability that
-    functions while the object with dash is on the battlefield." That delayed
-    triggered ability is this one. (This docstring cited CR 701.19a until now,
-    which is Regenerate - a number nobody had looked up.)
-    """
-    permanent = trigger.still_affects(game)
-    if permanent is not None:
-        game.return_to_hand(permanent)
-
-
-def rebound_recast(game: "Game", ability: AbilityOnStack, trigger: DelayedTrigger) -> None:
-    """CR 702.88a's own recast: "At the beginning of your next upkeep, you may
-    cast this card from exile without paying its mana cost."
-
-    Optional (`Game.may`), and only for the exact card this rebound sent to
-    exile: `still_affects` is CR 603.7c's check that it is still there,
-    unmoved by anything else, when this trigger finally resolves - a rebound
-    card someone managed to remove from exile in the meantime is not cast at
-    all, rather than this reaching for whatever else has `subject_id`'s id
-    now (CR 400.7 - once it moves again, it is a new object).
-
-    `Game.cast_free_from_exile` is where CR 702.88b's alternative-cost
-    casting actually happens, and where the card's own new targets (CR
-    601.2c) are chosen; this function only asks whether to do it at all.
-    """
-    card = trigger.still_affects(game)
-    if card is None:
-        return
-    prompt = f"cast {card.name} from exile without paying its mana cost"
-    if not game.may(trigger.controller, prompt, source=card.name):
-        return
-    game.cast_free_from_exile(card, trigger.controller, keyword="Rebound")
-
-
-def draw_a_card_for_controller(
-    game: "Game", ability: AbilityOnStack, trigger: DelayedTrigger
-) -> None:
-    """ "Draw a card at the beginning of the next turn's upkeep" - Mishra's
-    Bauble's second half. No object is named at all (CR 603.7c has nothing to
-    check), so this is the creating ability's controller, drawing on their own
-    behalf (CR 121.2).
-    """
-    if game.is_in_game(trigger.controller):
-        game.draw_cards(trigger.controller, 1)
-
-
-def destroy_subject(game: "Game", ability: AbilityOnStack, trigger: DelayedTrigger) -> None:
-    """ "Destroy it at the beginning of the next end step" - CR 701.8a: "To
-    destroy a permanent, move it from the battlefield to its owner's
-    graveyard." Distinct from the sacrifice above (CR 701.21a) because
-    destruction can be regenerated or replaced and sacrifice cannot;
-    `Game.destroy` is where that difference lives. CR 603.7c is the usual
-    guard on the object still being where the ability expects it.
-    """
-    permanent = trigger.still_affects(game)
-    if permanent is not None:
-        game.destroy(permanent)
-
-
-def tap_subject(game: "Game", ability: AbilityOnStack, trigger: DelayedTrigger) -> None:
-    """ "Tap it at the beginning of the next turn's upkeep" - CR 701.26a: "To
-    tap a permanent, turn it sideways from an upright position. Only untapped
-    permanents can be tapped." `CardState.tap` is a no-op on a permanent that
-    is already tapped, which is that second sentence.
-    """
-    permanent = trigger.still_affects(game)
-    if permanent is not None:
-        permanent.tap()
-
-
-DELAYED_EFFECTS: dict[str, DelayedEffect] = {
-    "warp:exile": _exile_warped,
-    "grant_extra_turn": _grant_extra_turn,
-    "sacrifice": _sacrifice_subject,
-}
-
-
 # ---------------------------------------------------------------------------
 # The anaphoric delayed triggered ability
 # ---------------------------------------------------------------------------
@@ -519,8 +1087,7 @@ DELAYED_EFFECTS: dict[str, DelayedEffect] = {
 #:
 #: Deliberately a duplicate of `machines/effects.py`'s own private
 #: `_DELAYED_TIMING_STEPS` rather than an import: `effects.py` imports this
-#: module, so the dependency can only run one way. When Task 2.11 wires the
-#: call site, `effects.py`'s copy should be deleted in favour of this one.
+#: module, so the dependency can only run one way.
 ANAPHORIC_TIMING_STEPS: dict[str, Step] = {
     "the beginning of the next end step": Step.END_STEP,
     "the beginning of the next turn's upkeep": Step.UPKEEP,
@@ -604,9 +1171,9 @@ _RETURN_RE = re.compile(
 #: exiling the permanent that sentence one put onto the battlefield, and the
 #: whole point of CR 603.7c is that one which has since died is *not* to be
 #: dug out of the graveyard.
-_ANAPHORIC_VERBS: dict[str, tuple[DelayedEffect, Zone]] = {
+_ANAPHORIC_VERBS: dict[str, tuple[DelayedEffectSpecBase, Zone]] = {
     "exile": (exile_subject_at_next_end_step, Zone.BATTLEFIELD),
-    "sacrifice": (_sacrifice_subject, Zone.BATTLEFIELD),
+    "sacrifice": (sacrifice_subject, Zone.BATTLEFIELD),
     "destroy": (destroy_subject, Zone.BATTLEFIELD),
     "tap": (tap_subject, Zone.BATTLEFIELD),
     "return_to_hand": (return_subject_to_hand, Zone.BATTLEFIELD),
@@ -651,7 +1218,7 @@ class AnaphoricDelayedClause(BaseModel):
         return _ANAPHORIC_VERBS[self.verb][1]
 
     @property
-    def callback(self) -> DelayedEffect:
+    def effect(self) -> DelayedEffectSpecBase:
         """What this does when it resolves."""
         return _ANAPHORIC_VERBS[self.verb][0]
 
@@ -687,7 +1254,7 @@ class AnaphoricDelayedClause(BaseModel):
             subject_id=subject.id,
             expected_zone=self.expected_zone,
             expected_stamp=subject.zone_change_stamp,
-            callback=self.callback,
+            effect=self.effect,
         )
 
 
@@ -782,7 +1349,10 @@ class DelayedTriggers(BaseModel):
     delayed ability has no printed text and no card, so the mapping has to live
     somewhere; it lives here, keyed by the ability's own id. It outlives
     `triggers`, because a one-shot ability is spent the moment it triggers and
-    still has to resolve afterwards.
+    still has to resolve afterwards - and, for a reflexive ability
+    (`create_reflexive`), because it is never in `triggers` to begin with. Both
+    halves are ordinary `DelayedTrigger`s with a real `effect:
+    DelayedEffectSpec`, so both round-trip through `model_dump` the same way.
     """
 
     def create(self, trigger: DelayedTrigger) -> DelayedTrigger:
@@ -801,7 +1371,7 @@ class DelayedTriggers(BaseModel):
         controller: str,
         source_id: UUID | None,
         source_name: str,
-        callback: DelayedEffect,
+        callback: DelayedEffectSpec,
     ) -> AbilityOnStack:
         """CR 603.12: create a reflexive triggered ability and hand back the
         stack object it becomes - with no wait, unlike an ordinary delayed
@@ -821,6 +1391,16 @@ class DelayedTriggers(BaseModel):
         construction - there is no event left to wait for, so unlike `create`
         this never touches `self.triggers`, and `fire`/`matches` never see it.
 
+        `callback` keeps its pre-refactor name and its `DelayedEffect`
+        (`Callable`) type, rather than being renamed to `effect: DelayedEffect
+        Spec`, purely so `Game.create_reflexive_trigger` - `models/game.py`,
+        off limits to this task - keeps forwarding its own `callback` keyword
+        through unedited. Every real caller (`machines/effects.py`, `machines/
+        replacement.py`) already passes a genuine `DelayedEffectSpecBase`
+        instance, which satisfies `DelayedEffect`'s `Callable` shape
+        structurally; it is used below exactly the way `effect=` is used
+        everywhere else.
+
         CR 603.7d/e give the source and controller as the creating spell or
         ability's own, as it resolved - the caller's job, since only it knows
         which ability created this one.
@@ -839,7 +1419,7 @@ class DelayedTriggers(BaseModel):
             controller=controller,
             source_id=source_id,
             source_name=source_name,
-            callback=callback,
+            effect=callback,
             remaining=0,  # CR 603.7b/603.12: spent the moment it is created
         )
         ability = AbilityOnStack(
@@ -896,19 +1476,19 @@ class DelayedTriggers(BaseModel):
         """The delayed ability an object on the stack came from, if it came from one."""
         return self.pending.get(ability.id)
 
-    def effect_for(self, ability: AbilityOnStack) -> DelayedEffect | None:
+    def effect_for(self, ability: AbilityOnStack) -> DelayedEffectSpecBase | None:
         """What this ability does, or None if it is not one of ours.
 
-        `callback` wins when a parsed clause carried one - see its docstring
-        on `DelayedTrigger` - and `DELAYED_EFFECTS`'s string key is the
-        fallback for the hand-written triggers that predate it.
+        Used to key off `DelayedTrigger.callback` first and fall back to
+        `DELAYED_EFFECTS.get(trigger.effect)` for the string-keyed entries
+        that predated it - both gone now that `effect` is always a real
+        `DelayedEffectSpec`, so this reduces to the one line CR 603.7 always
+        actually needed.
         """
         trigger = self.pending.get(ability.id)
         if trigger is None:
             return None
-        if trigger.callback is not None:
-            return trigger.callback
-        return DELAYED_EFFECTS.get(trigger.effect)
+        return trigger.effect
 
     def discard(self, ability: AbilityOnStack) -> None:
         """Forget an ability that has finished resolving (CR 608.2n)."""

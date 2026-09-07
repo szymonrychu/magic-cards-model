@@ -499,7 +499,11 @@ def test_fetching_from_the_sideboard_does_not_change_what_deck_legality_counts()
     assert len(alice.outside_the_game) == registered.sideboard_size == 15
 
     (cage, *_) = alice.owned_outside_the_game(lambda state: state.name == "Grafdigger's Cage")
-    alice.bring_into_the_game(cage)
+    # `Player.bring_into_the_game` mints the moved card's own
+    # `zone_change_stamp` with no `Game` method's `_id_allocator_scope`
+    # open around it here.
+    with game._id_allocator_scope():  # noqa: SLF001
+        alice.bring_into_the_game(cage)
 
     assert cage.zone is Zone.HAND
     assert len(alice.outside_the_game) == 14, "the physical sideboard is one card lighter"
@@ -525,7 +529,11 @@ def test_a_card_brought_into_one_game_is_outside_the_game_again_in_the_next():
     first = series.start_game()
     alice = first.player("alice")
     (orb, *_) = alice.owned_outside_the_game(lambda state: state.name == "Torpor Orb")
-    alice.bring_into_the_game(orb)
+    # `Player.bring_into_the_game` mints the moved card's own
+    # `zone_change_stamp` with no `Game` method's `_id_allocator_scope`
+    # open around it here.
+    with first._id_allocator_scope():  # noqa: SLF001
+        alice.bring_into_the_game(orb)
     assert len(alice.outside_the_game) == 14
 
     first.concede("bob")

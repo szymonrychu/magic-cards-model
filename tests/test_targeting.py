@@ -218,7 +218,10 @@ def test_two_chosen_modes_want_one_target_each():
 
 def test_two_chosen_modes_of_different_kinds_reject_the_wrong_pairing():
     bears = card_state("Grizzly Bears", Zone.BATTLEFIELD, controller="bob")
-    game = Game(players=[Player(username="alice"), Player(username="bob")])
+    game = Game(
+        players=[Player(username="alice"), Player(username="bob")],
+        schema_version=Game.CURRENT_SCHEMA_VERSION,
+    )
     game.battlefield.append(bears)
     # X has to reach Grizzly Bears' mana value (2): mode 3 is "Exile target
     # creature with mana value X or less", now actually enforced - and a
@@ -475,6 +478,42 @@ def test_the_spell_profile_of_a_card_does_not_see_its_ability_s_targets():
 def test_deriving_modes_for_a_card_that_has_none_is_an_error():
     with pytest.raises(ValueError, match="not a modal card"):
         modes("Lightning Bolt", [1])
+
+
+# -- the profile cache must not leak one game's Card into another ----------
+
+
+def test_mutating_a_card_in_one_game_is_not_observed_through_another_games_profile():
+    """`targeting._CACHE` memoises by oracle text (fast: text never changes),
+    but `TargetingProfile.source_card` must be *this call's* `Card`, never
+    whichever `Card` instance happened to populate the cache first.
+
+    Before this fix the cache was keyed on `(card.name, text)` and stamped
+    `source_card` into the cached entry itself, so the first game to ask for
+    a "Lightning Bolt" profile handed its own `Card` to every later game that
+    asked - and at the time `Card` was not frozen, so a caller mutating one
+    game's `Card` (a copy effect, a Humility-style characteristic-defining
+    rewrite) would have been visible through a second, unrelated game's
+    cached profile.
+
+    `Card` is `frozen=True` now (see `models/card.py`, and
+    `test_card_immutability.py` for the guarantee itself), which forecloses
+    that particular mutation - but the cache leak this guards against was
+    about *object identity*, not mutability: two distinct `Card` objects with
+    identical oracle text stand in for "the same printing, loaded
+    independently by two different games' decks", and each game's profile
+    must hold its own reference, never one shared with another game's.
+    """
+    first_game_card = card("Lightning Bolt")
+    second_game_card = first_game_card.model_copy(deep=True)
+    assert second_game_card is not first_game_card
+
+    first_profile = targeting_profile(first_game_card)
+    second_profile = targeting_profile(second_game_card)
+
+    assert first_profile.source_card is first_game_card
+    assert second_profile.source_card is second_game_card
+    assert second_profile.source_card is not first_profile.source_card
 
 
 def test_too_few_targets_is_rejected():

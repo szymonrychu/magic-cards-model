@@ -111,6 +111,7 @@ import re
 from collections.abc import Sequence
 from enum import StrEnum
 from typing import Annotated, Literal
+from uuid import UUID
 
 from pydantic import BaseModel, Field
 
@@ -1414,6 +1415,26 @@ Ability = Annotated[
 _CLASS_LEVEL_BAR_EFFECT_RE = re.compile(r"^Level (?P<n>\d+)$")
 
 
+#: `parse_abilities`'s memo, keyed on `Card.id` - the Scryfall id that
+#: identifies one printing uniquely, so two different printings (even two
+#: prints of the same card with the same name) can never collide. Sound only
+#: because `Card` is immutable (`frozen=True`, `models/card.py`): a card that
+#: could still change after construction would make this cache return a stale
+#: parse the moment it did, with nothing to notice. See
+#: `tests/test_card.py::test_card_is_immutable`.
+#:
+#: A real 18-source board asked `_auto_tap_candidates` (`machines/cost.py`)
+#: to re-derive the same handful of cards' abilities thousands of times over
+#: one affordability question; this and `activated_abilities_of`'s own memo
+#: are what stop that from re-running the oracle-text parse every time.
+#:
+#: The returned list, and every `Ability` object in it, is shared by every
+#: caller that asks about the same printing again - nothing here defends
+#: against a caller mutating one, the same trust `tests/cards.py`'s own
+#: `@cache`d card pool already places in callers not mutating a `Card`.
+_ability_cache: dict[UUID, list[Ability]] = {}
+
+
 def parse_abilities(card: Card) -> list[Ability]:
     """Every ability printed on a card, front face and backs, in printed order.
 
@@ -1428,7 +1449,12 @@ def parse_abilities(card: Card) -> list[Ability]:
     `_CLASS_LEVEL_BAR_EFFECT_RE`-shaped `ActivatedAbility` among that face's
     own lines - a face with none is left exactly as before, so this changes
     nothing for the vast majority of cards that print no Class subtype at all.
+
+    Memoised on `card.id` - see `_ability_cache`.
     """
+    cached = _ability_cache.get(card.id)
+    if cached is not None:
+        return cached
     abilities: list[Ability] = []
     for face_name, text in _faces(card):
         face_abilities: list[Ability] = []
@@ -1454,6 +1480,7 @@ def parse_abilities(card: Card) -> list[Ability]:
                 ability.class_level = current_level
 
         abilities.extend(face_abilities)
+    _ability_cache[card.id] = abilities
     return abilities
 
 
@@ -1470,8 +1497,8 @@ def parse_granted_ability_lines(texts: Sequence[str]) -> list[Ability]:
     without changing what card it is (CR 613.1f's own layer-6 "gains an
     ability", generalised here to the whole ability rather than only a
     keyword) - Urza's Saga's own chapter I/II grants, kept on `CardState.
-    granted_ability_texts` rather than on the immutable `Card` (CR 108.1: a
-    card's own printing never changes).
+    granted_ability_texts` rather than on the immutable `Card` (a printing
+    never changes once loaded - see `Card`'s own docstring, `models/card.py`).
 
     No keyword list and no face to filter by: a granted line is not part of
     any card's own keyword-abbreviated line (`Card.keywords` is Scryfall's

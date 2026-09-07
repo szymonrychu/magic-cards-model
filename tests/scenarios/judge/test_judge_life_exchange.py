@@ -45,6 +45,7 @@ not cited, CR 701.12a, CR 701.12c, CR 701.12g.
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.abilities import AbilityKind, parse_abilities
+from magic_cards_model.machines.delayed import SacrificeSubject
 from magic_cards_model.machines.effects import effect_for
 from magic_cards_model.machines.triggers import TriggerEvent, triggered_abilities_of
 from magic_cards_model.models.game import DelayedTrigger
@@ -65,7 +66,7 @@ def _life_watchers(scenario) -> None:
         scenario.game.create_delayed_trigger(
             DelayedTrigger(
                 text=f"Whenever a player {event}, note it.",
-                effect="unmodelled",
+                effect=SacrificeSubject(),
                 event=event,
                 controller="amy",
                 source_name="a resolving spell",

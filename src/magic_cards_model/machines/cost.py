@@ -31,8 +31,11 @@ cancelled.
 """
 
 import re
-from collections.abc import Iterable, Sequence
+from collections import Counter as _MultiSet
+from collections.abc import Hashable, Iterable, Sequence
+from dataclasses import dataclass
 from enum import StrEnum
+from functools import cache
 from itertools import combinations, product
 from typing import Any
 from uuid import UUID
@@ -42,6 +45,8 @@ from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
 from ..models.card import Card, Color, Supertype, Type
 from ..models.card_state import CardState, ChoiceKind, Counter, CounterKind
 from ..models.mana import (
+    NO_SPEND_EFFECT,
+    UNRESTRICTED,
     ManaCost,
     ManaPayment,
     ManaPool,
@@ -53,6 +58,10 @@ from ..models.mana import (
     SpendClause,
     SpendPurpose,
     SymbolKind,
+    _assign_sources,
+    _Bucket,
+    _candidate_options,
+    _demand_list,
 )
 from ..models.zone import Zone
 from .abilities import (
@@ -76,6 +85,31 @@ from .triggers import (
     rewritten_ability_lines,
     tapped_for_mana_event,
 )
+
+
+@dataclass(frozen=True)
+class _SpendContext:
+    """The read-only slice of a `CostPayment` that surveying the board for
+    mana actually needs: which game to read the battlefield from, who is
+    paying, and what the mana is for (CR 106.6's restriction is judged against
+    `spend`).
+
+    `_mana_context`, `_mana_narrowings`, `_auto_tap_candidates`,
+    `_activation_refused`, and `_among_colors` all take one of these - a
+    `CostPayment` satisfies it structurally (it carries the same three
+    attributes), so a real payment still being built can be passed straight
+    through while `auto_tap` executes. `could_pay_mana_cost` passes one of
+    *these* instead: a pure affordability query has nothing to pay with and
+    must build no `CostPayment` at all, because `CostPayment.for_total` seeds
+    its pool through `_seed_payer_pool`, which calls `_register_pool` and
+    publishes that pool into `game.open_payment_pools[payer]` - a write a
+    read-only predicate must never make, whether or not anything ever reads it
+    back out.
+    """
+
+    game: Any = None
+    payer: str | None = None
+    spend: "ManaSpend | None" = None
 
 
 def can_tap_for_mana(source: CardState, game: Any = None) -> bool:
@@ -202,7 +236,9 @@ def tappable_mana_activations(
     ]
 
 
-def _activation_refused(payment: "CostPayment", source: CardState, index: int) -> str | None:
+def _activation_refused(
+    payment: "CostPayment | _SpendContext", source: CardState, index: int
+) -> str | None:
     """Why CR 602.5 forbids activating `source`'s ability number `index` right
     now, or None - `Game.why_cannot_activate`'s answer, asked from the payment.
 
@@ -248,7 +284,7 @@ _ANY_COLOR_AMONG = re.compile(r"\bamong (?P<quality>[a-z ,]+?) you control\b", r
 
 
 def _among_colors(
-    effect: str, payment: "CostPayment", source: CardState
+    effect: str, payment: "CostPayment | _SpendContext", source: CardState
 ) -> frozenset[Color] | None:
     """The colours an "of any color among [quality] you control" clause leaves
     defined right now, or None when the effect prints no such clause at all.
@@ -491,6 +527,24 @@ def spend_restriction(effect: str, source: CardState | None = None) -> ManaRestr
     must not conflate them: None means "this mana is free to spend", an
     unread restriction means "this engine cannot show the restriction was
     honoured, so it refuses".
+
+    `source` itself is not memoisable - it is a mutable `CardState` - but
+    everything the parse actually reads out of it is the one string
+    `_chosen_creature_type` returns, so that is what is memoised on
+    (`_spend_restriction_cached`), not `source`. `auto_tap`'s search calls this
+    once per candidate per combination tried; caching it is one of the two
+    cheap wins this module makes ahead of replacing the search itself.
+    """
+    return _spend_restriction_cached(effect, _chosen_creature_type(source))
+
+
+@cache
+def _spend_restriction_cached(effect: str, chosen_type: str | None) -> ManaRestriction | None:
+    """`spend_restriction`'s memo. `effect` and the chosen creature type
+    (already resolved out of `source`) are the whole of what the parse below
+    depends on, so caching on that pair is exact - no `CardState` identity
+    needed, and no risk of two different sources colliding on one answer that
+    was never about identity in the first place.
     """
     match = _SPEND_RESTRICTION.search(effect)
     if match is None:
@@ -507,7 +561,7 @@ def spend_restriction(effect: str, source: CardState | None = None) -> ManaRestr
         cast = _SPEND_CAST_CLAUSE.match(phrase)
         activate = _SPEND_ACTIVATE_CLAUSE.match(phrase)
         if cast is not None:
-            chosen = _chosen_creature_type(source) if cast.group("chosen") else None
+            chosen = chosen_type if cast.group("chosen") else None
             if cast.group("chosen") and chosen is None:
                 return ManaRestriction(text=text)
             clause = _spend_clause(cast.group("quality"), SpendPurpose.CAST_SPELL, chosen)
@@ -610,7 +664,7 @@ def _flexibility(options: list[list[Color]], any_color: bool) -> int:
 
 
 def _mana_context(
-    payment: "CostPayment", source: CardState
+    payment: "CostPayment | _SpendContext", source: CardState
 ) -> tuple[frozenset[str], frozenset[str], bool]:
     """The board state `source`'s mana ability needs to resolve a CR 605.1a
     conditional "add X instead" clause right now: the land types its
@@ -635,7 +689,9 @@ def _mana_context(
     return payment.game._controlled_land_types(controller), own_counters, has_imprinted_card
 
 
-def _mana_narrowings(payment: "CostPayment", source: CardState, ability: ManaAbility) -> dict:
+def _mana_narrowings(
+    payment: "CostPayment | _SpendContext", source: CardState, ability: ManaAbility
+) -> dict:
     """The two board-derived narrowings `ManaAbility.effective` takes as
     keyword arguments, for a source being tapped through a payment.
 
@@ -670,7 +726,9 @@ def _mana_narrowings(payment: "CostPayment", source: CardState, ability: ManaAbi
 _Candidate = tuple[CardState, list[list[Color]], ManaRestriction | None]
 
 
-def _auto_tap_candidates(payment: "CostPayment", sources: Iterable[CardState]) -> list[_Candidate]:
+def _auto_tap_candidates(
+    payment: "CostPayment | _SpendContext", sources: Iterable[CardState]
+) -> list[_Candidate]:
     """Every source `auto_tap` may consider, paired with what it would
     actually add right now (conditional clauses resolved against the board -
     see `_mana_context`) and with the restriction that mana would carry, least
@@ -697,7 +755,44 @@ def _auto_tap_candidates(payment: "CostPayment", sources: Iterable[CardState]) -
       is not a mana source at present, so Mox Amber is not offered with no
       legendary creature or planeswalker to name a colour among.
     """
-    candidates: list[tuple[CardState, list[list[Color]], ManaRestriction | None, bool]] = []
+    scanned = _scan_mana_candidates(payment, sources)
+    return _filter_candidate_scan(scanned, payment.spend)
+
+
+#: `_scan_mana_candidates`'s own row: a candidate plus the `any_color` flag
+#: `_flexibility` needs to order it, before CR 106.6's restriction is judged
+#: against any particular `ManaSpend`.
+_ScannedCandidate = tuple[CardState, list[list[Color]], ManaRestriction | None, bool]
+
+
+def _scan_mana_candidates(
+    payment: "CostPayment | _SpendContext", sources: Iterable[CardState]
+) -> list[_ScannedCandidate]:
+    """The board-reading half of `_auto_tap_candidates`, with CR 106.6's
+    restriction recorded but not yet judged against any particular spend.
+
+    Every check this makes - `can_tap_for_mana`, CR 602.5's
+    `_activation_refused`, `ability.effective`'s board survey - reads the
+    battlefield and the payer, never `payment.spend`; only the one line this
+    used to end on (`restriction.allows(payment.spend)`) is spend-dependent,
+    and it is deliberately left for `_filter_candidate_scan` to apply
+    afterwards. That split is what makes this list reusable: within one
+    `legal_actions` enumeration the battlefield does not change from one
+    action's cost to the next, so this expensive scan - `Game.computed_board`/
+    `characteristics_of` underneath `can_tap_for_mana`/`_activation_refused`,
+    the dominant cost `memory/flow-based-auto-tap-source-grouping.md`
+    measured at ~80ms per call - runs once via `mana_candidate_scan` and every
+    per-action `could_pay_mana_cost` call reuses it, paying only the cheap
+    restriction filter each time.
+
+    Sorting happens here rather than after filtering: the sort key
+    (`_flexibility`, whether a restriction is present at all) never reads
+    `payment.spend`, so sorting before or after dropping the entries a given
+    spend disallows yields the same relative order for what remains - one
+    scan, one sort, safe to filter as many times as there are spends to ask
+    about.
+    """
+    candidates: list[_ScannedCandidate] = []
     for source in sources:
         if source.zone is not Zone.BATTLEFIELD or source.tapped:
             continue
@@ -714,8 +809,6 @@ def _auto_tap_candidates(payment: "CostPayment", sources: Iterable[CardState]) -
                 continue
             printed = spend_restriction(activation.effect)
             restriction = spend_restriction(printed.text, source) if printed is not None else None
-            if restriction is not None and not restriction.allows(payment.spend):
-                continue
             options, any_color = ability.effective(
                 land_types,
                 own_counters,
@@ -732,7 +825,40 @@ def _auto_tap_candidates(payment: "CostPayment", sources: Iterable[CardState]) -
     # that can do less is the mana spent - the same preference `ManaPool._buckets`
     # applies inside the pool, applied here to which ability is activated.
     candidates.sort(key=lambda item: (_flexibility(item[1], item[3]), item[2] is None))
-    return [(source, options, restriction) for source, options, restriction, _any in candidates]
+    return candidates
+
+
+def _filter_candidate_scan(
+    scanned: list[_ScannedCandidate], spend: "ManaSpend | None"
+) -> list[_Candidate]:
+    """`_scan_mana_candidates`'s rows narrowed to the ones CR 106.6 permits
+    `spend` to draw on, in the `_Candidate` shape `_group_by_source` takes.
+
+    The cheap half of what `_auto_tap_candidates` used to do in one pass -
+    `mana_candidate_scan`/`_scan_mana_candidates` is the half that costs
+    anything.
+    """
+    return [
+        (source, options, restriction)
+        for source, options, restriction, _any in scanned
+        if restriction is None or restriction.allows(spend)
+    ]
+
+
+def mana_candidate_scan(
+    sources: Iterable[CardState], *, game: Any = None, payer: str | None = None
+) -> list[_ScannedCandidate]:
+    """The public entry point for hoisting `_scan_mana_candidates` out of a
+    loop over several costs - `legal_actions` calls this exactly once per
+    enumeration and passes the result to every `could_pay_mana_cost` call it
+    makes for that player, as `candidate_scan`.
+
+    Built with no `spend` at all: as `_scan_mana_candidates` documents, the
+    scan itself never reads `payment.spend`, so one scan serves every action's
+    own spend purpose - `could_pay_mana_cost` applies `_filter_candidate_scan`
+    with its own `spend` against the same rows.
+    """
+    return _scan_mana_candidates(_SpendContext(game=game, payer=payer, spend=None), sources)
 
 
 def _withheld_mana_sources(
@@ -843,6 +969,535 @@ def _solve_colours(
                 for (source, _options, _restriction), colors in zip(combo, chosen, strict=True)
             ]
     return None
+
+
+#: One entry of the plan `_solve_auto_tap` returns: the source to tap, what
+#: colour(s) to make it add, and the CR 106.6 restriction that mana carries -
+#: everything `auto_tap` needs to call `tap_for_mana` and nothing it needs to
+#: work out again.
+_TapPlan = list[tuple[CardState, list[Color], ManaRestriction | None]]
+
+
+def _solve_auto_tap_brute_force(
+    context: "CostPayment | _SpendContext",
+    sources: Iterable[CardState],
+    *,
+    owed: ManaCost,
+    base_floating: dict[Color, int],
+    base_snow: dict[Color, int],
+    base_restricted: list[Any],
+    life_available: int,
+) -> _TapPlan | None:
+    """Find a legal tapping-and-colour plan for `owed` out of `sources`, or
+    None if none exists, by brute-force enumeration of which sources to tap.
+
+    **Kept only as the flow solver's test-only reference oracle** (see
+    `_solve_auto_tap_flow`, which is what `_solve_auto_tap` actually calls
+    now) - `tests/scenarios/test_auto_tap_flow_property.py` generates random
+    boards and costs and asserts the two agree on every one, because this one
+    is slow but has been right for a long time and the flow solver is new.
+    Nothing in production calls this any more: enumerating
+    `combinations(candidates, size)` and then, for each combination, every
+    colour a choice source in it could make, is exponential in the number of
+    untapped sources, and a real board with a dozen or so duals/shocks/any-
+    colour rocks already pushes a `{5}{B}{B}` question into multiple seconds.
+
+    Prefers the fewest sources, and among equally-small choices prefers
+    spending the least flexible ones first - see `_auto_tap_candidates` and
+    `_flexibility`.
+
+    An empty plan (`[]`, not `None`) means `owed` is already covered by
+    `base_floating`/`base_snow`/`base_restricted` alone.
+    """
+    already_paid = ManaPool(
+        floating=dict(base_floating),
+        snow=dict(base_snow),
+        restricted=[entry.model_copy(deep=True) for entry in base_restricted],
+    )
+    if already_paid.can_pay(owed, life_available=life_available, spend=context.spend):
+        return []
+
+    sources = list(sources)
+    candidates = _auto_tap_candidates(context, sources)
+    max_size = min(len(candidates), max(1, owed.converted))
+
+    for size in range(1, max_size + 1):
+        for combo in combinations(candidates, size):
+            if len({id(source) for source, _o, _r in combo}) != len(combo):
+                # A source with both a restricted and an unrestricted ability
+                # appears once per ability; it still has only one `{T}` to
+                # spend (CR 118.3: a permanent already tapped cannot pay a
+                # cost that taps it), so a combination naming it twice is not
+                # a legal plan.
+                continue
+            plan = _solve_colours(
+                combo,
+                base_floating,
+                base_snow,
+                owed,
+                life_available,
+                context.spend,
+                base_restricted,
+            )
+            if plan is not None:
+                chosen = {id(source): restriction for source, _o, restriction in combo}
+                return [(source, colors, chosen[id(source)]) for source, colors in plan]
+    return None
+
+
+# --------------------------------------------------------------------------
+# The flow solver
+# --------------------------------------------------------------------------
+#
+# The exponential in `_solve_auto_tap_brute_force` is entirely in *which
+# sources to tap* - the mana-pool layer underneath it, `ManaPool.can_pay` ->
+# `payment_for` -> `_settle` -> `_assign`, is already a max-flow bipartite
+# b-matching over `source -> demand -> allowed buckets -> sink` and costs
+# fractions of a millisecond. The dominant case - N untapped permanents, each
+# adding one mana from a set of colours it could choose, against a fixed set
+# of demands - is exactly the shape `_assign` already solves, so
+# `models.mana._assign_sources` extends that same network by the one layer
+# `_assign_sources`'s own docstring describes: `demand -> bucket -> permanent
+# -> sink`, with the new permanent -> sink cut (`capacity[permanent]`) the
+# thing that keeps a choice a choice.
+#
+# What that extra cut cannot express is a permanent whose *choice* is between
+# alternatives of more than one mana each - Shang-Chi's `{T}: Add two mana of
+# any one color.` A capacity-2 node with five colour edges would let two units
+# of flow leave by two different edges, which is two colours from one
+# activation and not a choice of one; see `_assign_sources`'s own docstring
+# for the mechanics. Those permanents (`_is_exotic`, below) are branched over
+# explicitly instead, the same way `_solve_auto_tap_brute_force` always did,
+# but only over *them* - on every board seen in this pool that is zero or one
+# permanents, never the whole battlefield.
+
+
+#: One ability's own alternative a permanent could produce if tapped for it -
+#: the colours it would add and the CR 106.6 restriction that mana would
+#: carry. `_auto_tap_candidates` already reads this off the board per
+#: (source, ability) pair; `_group_by_source` below folds a permanent's
+#: several abilities back together, since CR 118.3 gives it only one `{T}` to
+#: spend on at most one of them.
+_Alternative = tuple[list[Color], ManaRestriction | None]
+
+
+def _group_by_source(
+    candidates: list[_Candidate],
+) -> list[tuple[CardState, list[_Alternative]]]:
+    """`_auto_tap_candidates`'s one-entry-per-(source, ability) list, folded
+    back to one entry per physical permanent.
+
+    Eldrazi Temple's free `{T}: Add {C}.` and its restricted `{T}: Add
+    {C}{C}.` arrive as two separate candidate tuples, because a CR 106.6
+    restriction is judged per ability. A permanent can supply at most one of
+    its abilities' worth of mana (CR 118.3: one `{T}` to spend), which is a
+    fact about the *permanent* that the flow network has to see up front -
+    `_is_exotic` and `_bucket_map` both read it off the grouped shape below,
+    not off the flat one.
+
+    Order is preserved from `candidates`, which `_auto_tap_candidates` has
+    already sorted least-flexible-first - the order every provider node is
+    inserted in, and so the order the flow solver prefers when several
+    permanents could equally do.
+    """
+    order: list[int] = []
+    grouped: dict[int, tuple[CardState, list[_Alternative]]] = {}
+    for source, options, restriction in candidates:
+        key = id(source)
+        if key not in grouped:
+            grouped[key] = (source, [])
+            order.append(key)
+        grouped[key][1].extend((option, restriction) for option in options)
+    return [grouped[key] for key in order]
+
+
+def _is_exotic(alternatives: list[_Alternative]) -> bool:
+    """True when a permanent's alternatives cannot be laid into the flow
+    network as ordinary edges - see the module-level notes above and
+    `_assign_sources`'s own docstring for exactly what it can and cannot
+    express.
+
+    Safe whenever there is only one alternative at all, however much mana and
+    however many colours it is (a Tron piece boosted to `{C}{C}{C}` has
+    nothing to choose between), and safe whenever every alternative on offer
+    is a single mana of a single colour (an ordinary dual, or Cavern of
+    Souls's free `{C}` beside its restricted any-colour choice) - a capacity-1
+    provider node already forces "at most one of these", which is CR 118.3's
+    one-`{T}` rule for free.
+
+    Unsafe exactly when a permanent offers a genuine choice **and** at least
+    one option of that choice is more than one mana - Shang-Chi's is the only
+    card in this pool shaped that way.
+    """
+    return len(alternatives) > 1 and any(len(option) > 1 for option, _restriction in alternatives)
+
+
+def _slot_for(restriction: ManaRestriction | None, registry: list[ManaRestriction]) -> int:
+    """`registry`'s index for `restriction`, recording it on first sight.
+
+    `ManaPool._entry_for`'s own by-value matching, reused here so a permanent
+    carrying a restriction already floating in the payer's pool lands in the
+    very same bucket as that floating mana, rather than a second one the
+    demand solver would have to be told to treat as identical.
+    """
+    if restriction is None:
+        return UNRESTRICTED
+    for index, seen in enumerate(registry):
+        if seen == restriction:
+            return index
+    registry.append(restriction)
+    return len(registry) - 1
+
+
+def _bucket_map(
+    source: CardState, alternatives: list[_Alternative], registry: list[ManaRestriction]
+) -> tuple[dict[_Bucket, int], int]:
+    """The buckets one permanent could fill, and its own total capacity - the
+    two things `_assign_sources` needs per provider.
+
+    Only ever called on a permanent `_is_exotic` has cleared, or on one
+    exotic alternative `_best_flow_plan` has already committed to, so every
+    remaining choice is between single mana of single colours - safe to
+    spread across one edge per colour, because the provider's own capacity (1
+    for a real choice between abilities, or the fixed total of the one
+    alternative when there is no choice at all) is what stops more than one
+    of them being spent at once.
+    """
+    snow = is_snow_source(source)
+    if len(alternatives) <= 1:
+        option, restriction = alternatives[0] if alternatives else ([], None)
+        slot = _slot_for(restriction, registry)
+        counts = _MultiSet(option)
+        buckets = {(color, snow, slot, NO_SPEND_EFFECT): amount for color, amount in counts.items()}
+        return buckets, sum(counts.values())
+
+    buckets = {}
+    for option, restriction in alternatives:
+        slot = _slot_for(restriction, registry)
+        buckets[(option[0], snow, slot, NO_SPEND_EFFECT)] = 1
+    return buckets, 1
+
+
+def _chosen_alternative(
+    alternatives: list[_Alternative],
+    used: dict[_Bucket, int],
+    snow: bool,
+    registry: list[ManaRestriction],
+) -> tuple[list[Color], ManaRestriction | None]:
+    """Which of a tapped permanent's alternatives the flow solution actually
+    used, read back from the buckets it put flow into.
+
+    A permanent with only one alternative has nothing to read back - it *is*
+    that alternative, whatever fraction of it the flow chose to spend,
+    because tapping it produces the whole thing at once (CR 605.3b) and the
+    rest just floats unspent (CR 106.4a). A permanent with more than one only
+    ever has flow in the bucket its chosen alternative feeds, because its own
+    capacity-1 cut in `_assign_sources` allows nothing else.
+
+    `registry` must be the very same registry (or a later state of it)
+    `_bucket_map` used to assign this permanent's own bucket slots - it is
+    shared and mutated in place across every source `_best_flow_plan`
+    considers for one flow-network build, seeded from `pool_registry` so a
+    restriction already floating in the payer's pool keeps its slot. Passing
+    a fresh, empty registry here instead - as this function used to - makes
+    `_slot_for` renumber every restriction from 0 relative to this call
+    alone, which only happens to match `used`'s real keys when nothing else
+    (no other source, no floating restricted mana) registered a restriction
+    first. When something did, the slot this recomputes is wrong, `used` has
+    nothing at that key, and the source is silently dropped from the plan
+    even though the flow solution actually spent it.
+    """
+    if len(alternatives) <= 1:
+        if not alternatives:
+            return [], None
+        option, restriction = alternatives[0]
+        return list(option), restriction
+    for option, restriction in alternatives:
+        slot = _slot_for(restriction, registry)
+        if used.get((option[0], snow, slot, NO_SPEND_EFFECT), 0) > 0:
+            return list(option), restriction
+    return [], None
+
+
+def _best_flow_plan(
+    options: Sequence[PaymentOption],
+    simple: list[tuple[CardState, list[_Alternative]]],
+    exotic: list[tuple[CardState, list[_Alternative]]],
+    pool_buckets: dict[_Bucket, int],
+    pool_registry: list[ManaRestriction],
+) -> _TapPlan | None:
+    """The smallest tapping plan that settles `options` (one already-resolved
+    reading of `ManaCost`'s payable-in-multiple-ways symbols) out of `simple`
+    and `exotic` on top of `pool_buckets`, or None if none exists.
+
+    `exotic` permanents are branched over explicitly - "not used" or "used for
+    this one alternative", `product`ed across however many there are, which on
+    every board in this pool is zero or one - and for each combination the
+    rest (`pool_buckets` plus every `simple` permanent plus whichever `exotic`
+    ones this combination commits to) is handed to `_assign_sources` as one
+    flow problem. `None` is always the first choice tried for every exotic
+    permanent, so a board that needs none of them settles in a single flow
+    call and never explores a combination that would tap one unnecessarily -
+    and ties are broken by whichever combination was found first, favouring
+    that same all-`None` reading.
+    """
+    best: _TapPlan | None = None
+    best_size: int | None = None
+    exotic_choices = [[None, *alternatives] for _source, alternatives in exotic]
+    for choice_combo in product(*exotic_choices):
+        registry = list(pool_registry)
+        sources_map: dict[Hashable, dict[_Bucket, int]] = {
+            ("pool", bucket): {bucket: amount} for bucket, amount in pool_buckets.items()
+        }
+        capacity_map: dict[Hashable, int] = dict.fromkeys(sources_map, 0)
+        for key, amounts in sources_map.items():
+            capacity_map[key] = sum(amounts.values())
+
+        considered: list[tuple[CardState, list[_Alternative]]] = []
+        for source, chosen in zip(exotic, choice_combo, strict=True):
+            if chosen is None:
+                continue
+            buckets, capacity = _bucket_map(source[0], [chosen], registry)
+            sources_map[id(source[0])] = buckets
+            capacity_map[id(source[0])] = capacity
+            considered.append((source[0], [chosen]))
+        for source, alternatives in simple:
+            buckets, capacity = _bucket_map(source, alternatives, registry)
+            if not buckets:
+                continue
+            sources_map[id(source)] = buckets
+            capacity_map[id(source)] = capacity
+            considered.append((source, alternatives))
+
+        # Restricted-before-unrestricted, non-snow-before-snow are the actual
+        # preference (see `ManaPool._buckets`'s own reasoning, mirrored here);
+        # `bucket[0].value`/`bucket[2]`/`bucket[3]` are pure tie-breakers with
+        # no preference of their own, but they still have to be there. `_Bucket`
+        # is `(Color, bool, int, int)`, and iterating a `set` of them walks it
+        # in hash order - `Color` is a `StrEnum`, so that hash is
+        # `PYTHONHASHSEED`-salted per CPython process. Without a total key,
+        # every pair of unrestricted non-snow buckets of different colours ties
+        # at `(True, False)` and the sort leaves that hash order showing
+        # through, so which colour (and therefore which land) the flow below
+        # prefers when several would do could vary by process even on an
+        # identical board - the same class of bug `serialization.SortedSet`
+        # fixes for a dumped `set` field, here in a live sort instead.
+        all_buckets = sorted(
+            {bucket for buckets in sources_map.values() for bucket in buckets},
+            key=lambda bucket: (
+                bucket[2] == UNRESTRICTED,
+                bucket[1],
+                bucket[0].value,
+                bucket[2],
+                bucket[3],
+            ),
+        )
+        demands = _demand_list(options, all_buckets)
+        result = _assign_sources(demands, sources_map, capacity_map)
+        if result is None:
+            continue
+
+        plan: _TapPlan = []
+        for source, alternatives in considered:
+            used = result.get(id(source))
+            if not used:
+                continue
+            colors, restriction = _chosen_alternative(
+                alternatives, used, is_snow_source(source), registry
+            )
+            if colors:
+                plan.append((source, colors, restriction))
+
+        if best is None or len(plan) < best_size:  # type: ignore[operator]
+            best, best_size = plan, len(plan)
+    return best
+
+
+def _solve_auto_tap_flow(
+    context: "CostPayment | _SpendContext",
+    sources: Iterable[CardState],
+    *,
+    owed: ManaCost,
+    base_floating: dict[Color, int],
+    base_snow: dict[Color, int],
+    base_restricted: list[Any],
+    life_available: int,
+    candidate_scan: list[_ScannedCandidate] | None = None,
+) -> _TapPlan | None:
+    """The pure half of `auto_tap`: find a legal tapping-and-colour plan for
+    `owed` out of `sources`, or None if none exists. Mutates nothing - no
+    permanent is tapped, no pool is written to, and `context` may be a
+    throwaway `_SpendContext` rather than a real `CostPayment`.
+
+    `auto_tap` is `context._solve_auto_tap(...)` (below) followed by executing
+    the plan this returns through `tap_for_mana`; `could_pay_mana_cost` is
+    this and nothing else. Splitting the search out this way is what
+    guarantees the two can never disagree, the same argument
+    `TargetRequirement.rejects` already makes for `affordances.candidates`
+    (magic-cards-model-api): the predicate and the action that acts on the
+    predicate's answer share one implementation, so there is no second copy of
+    the logic to drift out of sync with the first.
+
+    This is the flow-based solver (see the module notes above
+    `_group_by_source`); `_solve_auto_tap_brute_force` is kept only as its
+    test-only reference oracle.
+
+    An empty plan (`[]`, not `None`) means `owed` is already covered by
+    `base_floating`/`base_snow`/`base_restricted` alone - `CostPayment.
+    shortfall`'s own check, folded in here so both callers get it for free
+    rather than needing their own copy of "is anything left to tap at all".
+
+    `candidate_scan` is `mana_candidate_scan`'s output, hoisted by a caller
+    that is about to ask this question many times over the same battlefield -
+    `Game.legal_actions` is the one that exists today. Passed, the expensive
+    per-source board scan (`_scan_mana_candidates`) is skipped entirely and
+    only the cheap CR 106.6 filter (`_filter_candidate_scan`) runs against
+    `context.spend`; omitted (`None`), the scan runs fresh exactly as before.
+
+    `candidate_scan` is filtered down to `sources` first, rather than trusted
+    outright: a caller that hoisted the scan over a wider battlefield than
+    the `sources` it passes here (a narrower "these permanents only" question
+    asked mid-enumeration) would otherwise get the wider scan's answer
+    silently substituted for the narrower one it actually asked, which can
+    turn a real `False` into a wrong `True`. `Game.legal_actions`'s own usage
+    never triggers this - it always hoists the scan over the same
+    `game.battlefield` it then passes as `sources` - but `could_pay_mana_cost`
+    is a public entry point and nothing enforces that pairing for every future
+    caller, so the filter is applied unconditionally rather than trusted by
+    convention.
+    """
+    pool = ManaPool(
+        floating=dict(base_floating),
+        snow=dict(base_snow),
+        restricted=[entry.model_copy(deep=True) for entry in base_restricted],
+    )
+    if pool.can_pay(owed, life_available=life_available, spend=context.spend):
+        return []
+
+    if candidate_scan is not None:
+        source_ids = {source.id for source in sources}
+        scanned = [entry for entry in candidate_scan if entry[0].id in source_ids]
+    else:
+        scanned = _scan_mana_candidates(context, sources)
+    grouped = _group_by_source(_filter_candidate_scan(scanned, context.spend))
+    simple = [
+        (source, alternatives) for source, alternatives in grouped if not _is_exotic(alternatives)
+    ]
+    exotic = [
+        (source, alternatives) for source, alternatives in grouped if _is_exotic(alternatives)
+    ]
+    pool_registry = [entry.restriction for entry in base_restricted]
+    pool_buckets = pool._spendable_buckets(context.spend)
+
+    for options in _candidate_options(owed, None):
+        life = sum(option.life for option in options)
+        if life > life_available:
+            continue
+        plan = _best_flow_plan(options, simple, exotic, pool_buckets, pool_registry)
+        if plan is not None:
+            return plan
+    return None
+
+
+def _solve_auto_tap(
+    context: "CostPayment | _SpendContext",
+    sources: Iterable[CardState],
+    *,
+    owed: ManaCost,
+    base_floating: dict[Color, int],
+    base_snow: dict[Color, int],
+    base_restricted: list[Any],
+    life_available: int,
+    candidate_scan: list[_ScannedCandidate] | None = None,
+) -> _TapPlan | None:
+    """`auto_tap`/`could_pay_mana_cost`'s actual entry point - see
+    `_solve_auto_tap_flow`, which this calls directly. Kept as its own name so
+    every existing caller and docstring cross-reference stays correct without
+    having to say "flow" - the brute-force predecessor is now
+    `_solve_auto_tap_brute_force`, reachable only from the property test that
+    checks the two still agree.
+    """
+    return _solve_auto_tap_flow(
+        context,
+        sources,
+        owed=owed,
+        base_floating=base_floating,
+        base_snow=base_snow,
+        base_restricted=base_restricted,
+        life_available=life_available,
+        candidate_scan=candidate_scan,
+    )
+
+
+def could_pay_mana_cost(
+    cost: ManaCost,
+    sources: Iterable[CardState],
+    *,
+    game: Any = None,
+    payer: str | None = None,
+    spend: "ManaSpend | None" = None,
+    candidate_scan: list[_ScannedCandidate] | None = None,
+) -> bool:
+    """Whether `cost` could be paid right now from `sources` plus whatever
+    mana `payer` already has floating - the public engine entry point for
+    "could this cost be paid from this player's currently available
+    resources", without paying anything.
+
+    This is what legal-action enumeration should call, potentially many times
+    per priority window, with its answers recorded in an append-only training
+    log: it shares `_solve_auto_tap` with `auto_tap` itself (see that
+    function's docstring), so the predicate and the actual payment can never
+    disagree.
+
+    Deliberately builds no `CostPayment`. `CostPayment.for_total` is the only
+    thing that ever should - it seeds its pool through `_seed_payer_pool`,
+    which calls `_register_pool` and publishes the working pool into
+    `game.open_payment_pools[payer]`. That write belongs to a payment that is
+    actually about to happen; a read-only predicate must never make it, dead
+    pool or not. This reads the payer's floating mana directly instead, through
+    a throwaway `_SpendContext` that carries only `game`, `payer`, and `spend`.
+
+    `game`/`payer` are both optional, the same way `CostPayment` allows a
+    gameless payment for a unit test: omitted, this asks only whether `cost`
+    is payable from `sources` alone, with no floating mana and no life to
+    spend on a Phyrexian symbol.
+
+    `candidate_scan` is `mana_candidate_scan(sources, game=game, payer=payer)`,
+    computed once by a caller asking this question repeatedly over the same
+    battlefield (`Game.legal_actions`) and passed to every call so the
+    expensive board scan behind it runs exactly once per enumeration rather
+    than once per candidate action - see `_solve_auto_tap_flow`.
+    """
+    context = _SpendContext(game=game, payer=payer, spend=spend)
+    floating: dict[Color, int] = {}
+    snow: dict[Color, int] = {}
+    restricted: list[Any] = []
+    life_available = 0
+    if game is not None and payer is not None:
+        try:
+            player = game.player(payer)
+        except (KeyError, ValueError, AttributeError):
+            player = None
+        if player is not None:
+            pool = player.mana_pool
+            floating = dict(pool.floating)
+            snow = dict(pool.snow)
+            restricted = [entry.model_copy(deep=True) for entry in pool.restricted]
+            try:
+                life_available = int(player.life)
+            except (TypeError, ValueError):
+                life_available = 0
+    plan = _solve_auto_tap(
+        context,
+        sources,
+        owed=cost,
+        base_floating=floating,
+        base_snow=snow,
+        base_restricted=restricted,
+        life_available=life_available,
+        candidate_scan=candidate_scan,
+    )
+    return plan is not None
 
 
 class CostStep(StrEnum):
@@ -1071,6 +1726,18 @@ class CostComponent(BaseModel):
     """How many objects this component needs chosen. Zero for paying life."""
 
     cards: list[CardState] = Field(default_factory=list)
+    """The objects chosen to pay this component, held by reference rather than
+    by id. Kept as `CardState` rather than `list[UUID]` (unlike `CostPayment.
+    tapped_for_mana`) because `why_not`/`pay` read a dozen of this object's own
+    fields (`.zone`, `.tapped`, `.controller`, `.counters`, `.mana_value`,
+    `.name`) throughout this class, several of them from call sites that pass
+    no `game` at all (a unit test paying a bare component); reducing this to
+    ids would mean every one of those reads needs a `game` to resolve through,
+    which does not exist everywhere this class is used. `unpay` is the one
+    place that both mutates through a captured reference *and* can run after a
+    dump/decode round trip (a payment resumed from `AbilityOnStack.
+    keyword_activation.payment`/`.unless_payment`), so that is where the
+    re-resolve lives instead - see its own docstring's `_live` helper."""
     description: str = ""
     paid: bool = False
 
@@ -1100,6 +1767,12 @@ class CostComponent(BaseModel):
     """
 
     _undo: list[tuple[CardState, dict[str, Any]]] = PrivateAttr(default_factory=list)
+    """What `pay` changed, so `unpay` can put it back (CR 733.1). A
+    `PrivateAttr`, so - unlike every `Field` above it - it does not survive a
+    dump/decode round trip at all: a decoded `CostComponent` with `paid=True`
+    always comes back with `_undo == []`. `unpay` refuses loudly rather than
+    silently restoring nothing when that state was needed and is gone; see its
+    own docstring."""
 
     def __str__(self) -> str:
         if self.description:
@@ -1529,9 +2202,47 @@ class CostComponent(BaseModel):
         self.paid = True
 
     def unpay(self, game: Any) -> None:
-        """Put back exactly what paying took, in reverse order (CR 733.1)."""
+        """Put back exactly what paying took, in reverse order (CR 733.1).
+
+        Two hazards, both about what a decode leaves behind:
+
+        - `self._undo` is a `PrivateAttr` (see its own docstring) and does not
+          survive a dump/decode round trip at all. A paid component whose
+          `_undo` came back empty cannot be rewound - not "rewound to no
+          effect", genuinely cannot, because the prior state it needs is gone -
+          so this refuses loudly rather than silently doing nothing, the same
+          choice `CostPayment._restore_payer_pool` makes for `_preexisting`.
+          `PAY_LIFE` is exempt: its rewind only ever reads `self.amount` and
+          `self.payer`, both plain fields that do survive.
+        - Even when `_undo` did survive (the ordinary, non-decoded case), the
+          `CardState`s it captured are the ones `self.cards` already held, and
+          those are real, live objects only until the *next* round trip -
+          `self.cards: list[CardState]` is not `Any`/excluded and would decode
+          to copies with the same id as, but not the same identity as, the
+          battlefield object, the identical hazard `_equip_effect`/`_crew_
+          effect` had for `activation.card`. `_live` below re-resolves each
+          one through `game.find_by_id` before mutating it; `game` is `None`
+          only for a component paid outside a `Game` (a unit test), where the
+          captured object is the only real one there is.
+        """
         if not self.paid:
             return
+        if (
+            not self._undo
+            and self.kind is not ComponentKind.PAY_LIFE
+            and (self.cards or self.amount)
+        ):
+            raise RuntimeError(
+                f"{self} was paid but its undo history (CostComponent._undo) "
+                "did not survive a dump/decode round trip, so there is "
+                "nothing left to rewind it from"
+            )
+
+        def _live(card: CardState) -> CardState:
+            if game is None:
+                return card
+            found = game.find_by_id(card.id)
+            return found if isinstance(found, CardState) else card
 
         if self.kind is ComponentKind.PAY_LIFE:
             if self.amount:
@@ -1540,27 +2251,28 @@ class CostComponent(BaseModel):
             # Exerting moves nothing either, and CR 701.43b lets it be exerted
             # more than once, so the rewind is simply putting the flag back.
             for card, _ in reversed(self._undo):
-                card.exerted = False
+                _live(card).exerted = False
         elif self.kind is ComponentKind.TAP:
             # Tapping moves nothing, so untapping is the whole rewind.
             for card, _ in reversed(self._undo):
-                card.untap(exert_applies=False)
+                _live(card).untap(exert_applies=False)
         elif self.kind is ComponentKind.UNTAP:
             # Untapping moves nothing either, so re-tapping is the whole
             # rewind - the mirror of `TAP`'s above.
             for card, _ in reversed(self._undo):
-                card.tap()
+                _live(card).tap()
         elif self.kind is ComponentKind.MILL:
             # CR 733.1: the rewind has to put the cards back *on top*, in the
             # order they were milled in - `_return` appends, which would leave
             # them on the bottom of the library. Walking `self._undo` backwards
             # and inserting each at index 0 restores the original order.
             for card, snapshot in reversed(self._undo):
-                self._return(game, card, snapshot)
+                live = _live(card)
+                self._return(game, live, snapshot)
                 library = game.player(self.payer).cards_in(Zone.LIBRARY)
-                if library and library[-1] is card:
+                if library and library[-1] is live:
                     library.pop()
-                library.insert(0, card)
+                library.insert(0, live)
         elif self.kind in (
             ComponentKind.LOYALTY,
             ComponentKind.REMOVE_COUNTERS,
@@ -1572,10 +2284,10 @@ class CostComponent(BaseModel):
             # its zone list and re-appends it - reordering the battlefield for
             # a payment that moved nothing.
             for card, snapshot in reversed(self._undo):
-                card.counters = snapshot["counters"]
+                _live(card).counters = snapshot["counters"]
         else:
             for card, snapshot in reversed(self._undo):
-                self._return(game, card, snapshot)
+                self._return(game, _live(card), snapshot)
 
         self._undo = []
         self.paid = False
@@ -2931,12 +3643,20 @@ class CostSubstitution(BaseModel):
     rule: str
     """The CR number that keyword expands to, quoted in refusals."""
 
-    card: CardState
+    card_id: UUID
+    card_name: str
+    """The id and name of the object paying this symbol, kept as plain data
+    rather than the `CardState` itself - `component.cards` next door already
+    holds the same object for the actual tap or exile, so a `card: CardState`
+    field here was a second, redundant reference to it, dumping a whole extra
+    copy of the same permanent on every serialization for no reader that
+    needed more than its id and name (`__str__`'s message, and `entry.card.id`
+    in `machines/objects_as_costs.py`'s own-object check)."""
     option: PaymentOption
     component: CostComponent
 
     def __str__(self) -> str:
-        return f"{self.card.name} pays {self.option} ({self.keyword}, {self.rule})"
+        return f"{self.card_name} pays {self.option} ({self.keyword}, {self.rule})"
 
 
 def cost_less(cost: ManaCost, options: Iterable[PaymentOption]) -> ManaCost:
@@ -2984,7 +3704,19 @@ class CostPayment(BaseModel):
     payer: str | None = None
     pool: ManaPool = Field(default_factory=ManaPool)
     step: CostStep = CostStep.PENDING
-    tapped_for_mana: list[CardState] = Field(default_factory=list)
+    tapped_for_mana: list[UUID] = Field(default_factory=list)
+    """The ids of the sources this payment's own `tap_for_mana` calls tapped,
+    matching `triggers_caused` below rather than holding the `CardState`s
+    themselves. It used to be `list[CardState]`, which round-tripped as a full
+    second copy of every tapped permanent (`Game.find_by_id`, `game.battlefield`
+    and this list each dumping their own `CardState` with the same id) - and
+    once `AbilityOnStack.keyword_activation`/`.unless_payment` could survive a
+    round trip at all, `_undo_everything` untapping those decoded copies
+    directly left the real battlefield sources tapped forever with no error,
+    the identical shape `_equip_effect`/`_crew_effect` had for `activation.
+    card`. `_undo_everything` re-resolves each id through `game.find_by_id`
+    now; `_tapped_sources` below is the only place a live object is still kept,
+    and only for the no-`game` path."""
     overflow: ManaPool | None = None
 
     triggers_caused: list[UUID] = Field(default_factory=list)
@@ -3049,7 +3781,21 @@ class CostPayment(BaseModel):
 
     _preexisting: ManaPool | None = PrivateAttr(default=None)
     """The payer's floating mana as it stood when the payment opened, so a
-    rewind (CR 733.1) can put it back after `pay` spent part of it."""
+    rewind (CR 733.1) can put it back after `pay` spent part of it.
+
+    A `PrivateAttr`, so it does not survive a dump/decode round trip -
+    `_restore_payer_pool` refuses loudly rather than silently restoring
+    nothing when that matters (see its own docstring)."""
+
+    _tapped_sources: dict[UUID, CardState] = PrivateAttr(default_factory=dict)
+    """The live objects behind `tapped_for_mana`'s ids, for the one case that
+    still needs them by reference: a `CostPayment` used with no `game` at all
+    (a unit test tapping a bare `CardState` directly). `_undo_everything`
+    resolves through `game.find_by_id` whenever there is a game; this is only
+    the fallback for when there is none to ask. A `PrivateAttr` here is safe -
+    unlike `_preexisting` and `CostComponent._undo` - because a payment with no
+    `game` was never attached to one to be serialized as part of in the first
+    place."""
 
     @classmethod
     def for_total(
@@ -3138,7 +3884,12 @@ class CostPayment(BaseModel):
                 f"has no {option} left to pay ({keyword}, {rule})"
             )
         entry = CostSubstitution(
-            keyword=keyword, rule=rule, card=card, option=option, component=component
+            keyword=keyword,
+            rule=rule,
+            card_id=card.id,
+            card_name=card.name,
+            option=option,
+            component=component,
         )
         self.substitutions.append(entry)
         self.components.append(component)
@@ -3249,7 +4000,28 @@ class CostPayment(BaseModel):
         battlefield front face up (a creature, no mana ability at all) is
         refused here even if a caller asks for Witch-Blessed Meadow's `{T}:
         Add {W}.` by name.
+
+        Run under `Game._id_allocator_scope` whenever there is a game:
+        `_tap_for_mana_impl`'s own `game.emit` below mints a fresh
+        `AbilityOnStack` id for every "tapped for mana" trigger it finds -
+        CR 106.12a. `pay()` already wraps its own `settle_mana`/`pool.pay`
+        path, but this is a separate one: the api's `pay_with` calls this
+        directly, once per hand-picked source, before `pay()` is ever
+        reached, and `auto_tap` below calls it directly too.
         """
+        if self.game is None:
+            return self._tap_for_mana_impl(source, produces, restriction)
+        with self.game._id_allocator_scope():
+            return self._tap_for_mana_impl(source, produces, restriction)
+
+    def _tap_for_mana_impl(
+        self,
+        source: CardState,
+        produces: list[Color],
+        restriction: ManaRestriction | None = INFER_RESTRICTION,
+    ) -> ManaPool:
+        """The rest of `tap_for_mana` - see its own docstring for why it is
+        split out."""
         self._require_open()
         if not can_tap_for_mana(source, self.game):
             raise ValueError(
@@ -3332,7 +4104,8 @@ class CostPayment(BaseModel):
         self._transition(CostStep.TAPPING)
 
         source.tap()
-        self.tapped_for_mana.append(source)
+        self.tapped_for_mana.append(source.id)
+        self._tapped_sources[source.id] = source
         if restriction is INFER_RESTRICTION:
             restriction = restriction_for_production(source, produces, self.game)
         # CR 106.6's additional-effect clause travels with the mana too, and
@@ -3391,44 +4164,28 @@ class CostPayment(BaseModel):
         `_unpayable_cost_message`) rather than just reporting the cost as
         unpayable, which would read as a solver bug rather than as "activate
         that one yourself".
+
+        Solving *which* sources and colours is `_solve_auto_tap` (pure,
+        below); this is the thin remainder - execute the plan it finds, or
+        raise if it found none. `could_pay_mana_cost` is the same solve with
+        no execution at all, which is what makes the two unable to disagree.
         """
         self._require_open()
-        if not self.shortfall:
-            return []
-
         sources = list(sources)
-        candidates = _auto_tap_candidates(self, sources)
-        base_floating = dict(self.pool.floating)
-        base_snow = dict(self.pool.snow)
-        base_restricted = [entry.model_copy(deep=True) for entry in self.pool.restricted]
-        owed = self.mana_owed
-        max_size = min(len(candidates), max(1, owed.converted))
-
-        for size in range(1, max_size + 1):
-            for combo in combinations(candidates, size):
-                if len({id(source) for source, _o, _r in combo}) != len(combo):
-                    # A source with both a restricted and an unrestricted
-                    # ability appears once per ability; it still has only one
-                    # `{T}` to spend (CR 118.3: a permanent already tapped
-                    # cannot pay a cost that taps it), so a combination naming
-                    # it twice is not a legal plan.
-                    continue
-                plan = _solve_colours(
-                    combo,
-                    base_floating,
-                    base_snow,
-                    owed,
-                    self.life_available,
-                    self.spend,
-                    base_restricted,
-                )
-                if plan is not None:
-                    chosen = {id(source): restriction for source, _o, restriction in combo}
-                    for source, colors in plan:
-                        self.tap_for_mana(source, colors, chosen[id(source)])
-                    return [source for source, _ in plan]
-
-        raise ValueError(_unpayable_cost_message(self, sources))
+        plan = _solve_auto_tap(
+            self,
+            sources,
+            owed=self.mana_owed,
+            base_floating=dict(self.pool.floating),
+            base_snow=dict(self.pool.snow),
+            base_restricted=[entry.model_copy(deep=True) for entry in self.pool.restricted],
+            life_available=self.life_available,
+        )
+        if plan is None:
+            raise ValueError(_unpayable_cost_message(self, sources))
+        for source, colors, restriction in plan:
+            self.tap_for_mana(source, colors, restriction)
+        return [source for source, _colors, _restriction in plan]
 
     def add_mana(self, color: Color, amount: int = 1, snow: bool = False) -> ManaPool:
         """Add mana that came from somewhere other than tapping a permanent."""
@@ -3499,7 +4256,22 @@ class CostPayment(BaseModel):
         order." `components_before_mana` is the first sentence's freedom - pay
         the sacrifice before the mana, or after - and the mill components are
         held back to the second sentence's pass regardless of it.
+
+        Run under `Game._id_allocator_scope` whenever there is a game: a
+        sacrifice, discard, exile, or mill component's own `pay(self.game)`
+        below moves a real card (`CardState.move_to` mints a fresh
+        `zone_change_stamp`), and this is called directly by a caller paying a
+        cost - `Casting.cast()` and `Game.activate_ability` are downstream of
+        the announcement, not upstream of this call, so their own allocator
+        scopes do not cover it.
         """
+        if self.game is not None:
+            with self.game._id_allocator_scope():
+                return self._pay_impl()
+        return self._pay_impl()
+
+    def _pay_impl(self) -> ManaPool:
+        """The rest of `pay` - see its own docstring for why it is split out."""
         self._require_open()
         if self.step in {CostStep.PENDING, CostStep.TAPPING}:
             self.finish_tapping()
@@ -3727,9 +4499,27 @@ class CostPayment(BaseModel):
         The PAID half of CR 733.1's reversal: `pay` replaced the pool with the
         remainder, which spent whatever pre-existing mana the payment used, so
         undoing the whole action puts that mana back.
+
+        `game is None or payer is None` is a legitimate no-op: there was never
+        a pool to restore into. `_preexisting is None` while `game` and
+        `payer` are both set is a different thing entirely - in production a
+        `CostPayment` only ever comes from `for_total`, which seeds
+        `_preexisting` whenever it has a `game` and `payer` to seed it from, so
+        reaching PAID with a `game`/`payer` but no `_preexisting` means the
+        snapshot was there once and a dump/decode round trip dropped it
+        (`_preexisting` is a `PrivateAttr`; see its own docstring). Restoring
+        nothing and reporting success would leave a rewound payment's mana
+        gone - the reviewer's exact repro - so this refuses loudly instead.
         """
-        if self._preexisting is None or self.game is None or self.payer is None:
+        if self.game is None or self.payer is None:
             return
+        if self._preexisting is None:
+            raise RuntimeError(
+                f"cannot rewind {self.payer}'s payment: its pre-payment mana "
+                "pool snapshot (CostPayment._preexisting) did not survive a "
+                "dump/decode round trip, so there is nothing to restore it "
+                "from"
+            )
         try:
             pool = self.game.player(self.payer).mana_pool
         except (KeyError, ValueError, AttributeError):
@@ -3741,9 +4531,22 @@ class CostPayment(BaseModel):
     def _undo_everything(self) -> None:
         for component in reversed(self.components):
             component.unpay(self.game)
-        for source in self.tapped_for_mana:
-            source.untap()
+        for source_id in self.tapped_for_mana:
+            # Re-resolved through `game` rather than held by reference (see
+            # `tapped_for_mana`'s own docstring): after a dump/decode round
+            # trip the only object that answers to this id and is actually on
+            # the battlefield is the one `game.find_by_id` finds.
+            # `_tapped_sources` only carries a live object when there is no
+            # `game` to ask at all (a unit test tapping a bare `CardState`).
+            source = (
+                self.game.find_by_id(source_id)
+                if self.game is not None
+                else self._tapped_sources.get(source_id)
+            )
+            if isinstance(source, CardState):
+                source.untap()
         self.tapped_for_mana = []
+        self._tapped_sources = {}
         self.pool.empty()
         self.mana_payment = None
         self._discard_triggers_caused()

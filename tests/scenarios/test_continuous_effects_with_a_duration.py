@@ -58,7 +58,7 @@ def hold_effects(scenario) -> ContinuousEffects:
 
 def computed(scenario, store: ContinuousEffects):
     """The board with static abilities and stored durational effects applied."""
-    return store.board(scenario.game.battlefield)
+    return store.board(scenario.game.battlefield, game=scenario.game)
 
 
 def pump_board() -> Scenario:
@@ -230,7 +230,7 @@ def test_the_pump_wears_off_in_the_cleanup_step():
     scenario.cast_and_resolve("Giant Growth", forest, targets=[bears])
 
     scenario.start_at(Step.CLEANUP)
-    ended = store.end_the_turn()
+    ended = store.end_the_turn(scenario.game)
 
     assert [effect.duration for effect in ended] == [Duration.UNTIL_END_OF_TURN]
     assert store.effects == []
@@ -303,7 +303,7 @@ def test_two_durational_effects_apply_in_the_order_they_were_created():
 
     assert giant.zone is Zone.BATTLEFIELD, "3/3, then +3/+3, then -5/-5, is a 1/1"
 
-    board = compute_board([giant], store.active)
+    board = compute_board([giant], store.active(scenario.game))
     assert board.of(giant).power_toughness == (1, 1)
     assert board.journal.applied == [
         "Giant Growth: Hill Giant gets +3/+3",
@@ -432,7 +432,11 @@ def test_the_permanent_loses_its_abilities_while_the_tidebinder_is_there():
     tidebinder = scenario.cast_and_resolve("Tishana's Tidebinder", *islands, username="bob")
     rites = scenario.creature("Vampiric Rites", "alice")
 
-    assert store.create(tidebinder, targets=[rites]), "the duration has started"
+    # `ContinuousEffects.create` mints the effect's own id with no `Game`
+    # method's `_id_allocator_scope` open around it here.
+    with scenario.game._id_allocator_scope():  # noqa: SLF001
+        created = store.create(tidebinder, targets=[rites], game=scenario.game)
+    assert created, "the duration has started"
     assert not computed(scenario, store).of(rites).has_ability(RITES_ABILITY)
 
 
@@ -451,7 +455,8 @@ def test_the_abilities_come_back_when_the_tidebinder_leaves():
     islands = scenario.untapped_sources("Island", "Island", "Island", username="bob")
     tidebinder = scenario.cast_and_resolve("Tishana's Tidebinder", *islands, username="bob")
     rites = scenario.creature("Vampiric Rites", "alice")
-    store.create(tidebinder, targets=[rites])
+    with scenario.game._id_allocator_scope():  # noqa: SLF001
+        store.create(tidebinder, targets=[rites], game=scenario.game)
 
     scenario.game.destroy(tidebinder)
 
@@ -478,7 +483,8 @@ def test_an_effect_whose_duration_never_starts_does_nothing():
     rites = scenario.creature("Vampiric Rites", "alice")
     scenario.game.destroy(tidebinder)
 
-    assert store.create(tidebinder, targets=[rites]) == []
+    with scenario.game._id_allocator_scope():  # noqa: SLF001
+        assert store.create(tidebinder, targets=[rites], game=scenario.game) == []
     assert store.effects == []
     assert computed(scenario, store).of(rites).has_ability(RITES_ABILITY)
 
@@ -499,11 +505,12 @@ def test_an_expired_for_as_long_as_effect_is_swept_up_at_end_of_turn():
     islands = scenario.untapped_sources("Island", "Island", "Island", username="bob")
     tidebinder = scenario.cast_and_resolve("Tishana's Tidebinder", *islands, username="bob")
     rites = scenario.creature("Vampiric Rites", "alice")
-    store.create(tidebinder, targets=[rites])
+    with scenario.game._id_allocator_scope():  # noqa: SLF001
+        store.create(tidebinder, targets=[rites], game=scenario.game)
     scenario.game.destroy(tidebinder)
 
-    assert store.active == []
-    assert store.end_the_turn()
+    assert store.active(scenario.game) == []
+    assert store.end_the_turn(scenario.game)
     assert store.effects == []
 
 

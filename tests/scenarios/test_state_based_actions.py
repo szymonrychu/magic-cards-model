@@ -91,7 +91,12 @@ def test_drawing_the_last_card_is_not_a_failed_draw():
     scenario = Scenario().player("alice", library=["Mountain"]).player("bob").build()
     alice = scenario.player("alice")
 
-    assert [state.name for state in alice.draw_up_to(1)] == ["Mountain"]
+    # `Player.draw_up_to` has no `Game` to replace a draw or emit an event
+    # with, so it is not `Game.draw_cards`'s door - see that method's own
+    # docstring - but it still moves a card and mints its `zone_change_stamp`
+    # with no `_id_allocator_scope` of its own to open, so this opens one.
+    with scenario.game._id_allocator_scope():  # noqa: SLF001
+        assert [state.name for state in alice.draw_up_to(1)] == ["Mountain"]
     assert not alice.tried_to_draw_from_empty_library
 
     scenario.game.check_state_based_actions()
@@ -104,7 +109,8 @@ def test_a_short_draw_takes_what_is_there_and_still_loses():
     scenario = Scenario().player("alice", library=["Mountain"]).player("bob").build()
     alice = scenario.player("alice")
 
-    drawn = alice.draw_up_to(3)
+    with scenario.game._id_allocator_scope():  # noqa: SLF001
+        drawn = alice.draw_up_to(3)
 
     assert [state.name for state in drawn] == ["Mountain"], "the one card is still drawn"
     scenario.game.check_state_based_actions()

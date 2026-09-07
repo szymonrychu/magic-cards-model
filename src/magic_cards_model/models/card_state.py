@@ -1,12 +1,21 @@
 """A card as it exists in a game, as opposed to the printing it was cut from."""
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from enum import StrEnum
-from typing import Any, Self
-from uuid import UUID, uuid4
+from typing import Any, Literal, Self
+from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, RootModel, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    PrivateAttr,
+    RootModel,
+    model_serializer,
+    model_validator,
+)
 
+from ..ids import new_id
 from .card import Card, Color, Layout, Supertype, Type, subtypes_of, supertypes_of, types_of
 from .zone import Zone
 
@@ -481,7 +490,7 @@ class CardState(BaseModel):
     #: `model_dump`/`model_validate` round trip carries.
     model_config = ConfigDict(populate_by_name=True)
 
-    id: UUID = Field(default_factory=uuid4)
+    id: UUID = Field(default_factory=new_id)
     card: Card
     zone: Zone = Zone.LIBRARY
     stored_controller: str | None = Field(default=None, alias="controller")
@@ -523,6 +532,33 @@ class CardState(BaseModel):
 
     A minimal hook, not a token system: a token's characteristics come from the
     effect that created it (CR 111.3), and nothing here provides them.
+
+    **Not** which Python class built this object - see `state_class` just
+    below for that genuinely different question. `Game.copy_spell` builds a
+    `TokenState` with `token=False` (a copy of a permanent spell on the stack
+    is not yet a token, CR 707.10f), so this flag being false says nothing
+    about whether the object needs `TokenState`'s own CR 111.8 override on
+    decode.
+    """
+    state_class: Literal["CardState"] = "CardState"
+    """Which concrete Python class built this object - decode-time identity,
+    not a rules concept, and never to be confused with `token` above.
+
+    `TokenState` is `CardState`'s only subclass, and every field typed
+    `CardState` (`Player.zones`, `Game`'s stack) erases that at decode time
+    unless something in the data says otherwise (`_resolve_token_subclass`'s
+    own docstring has the full story). The obvious signal to read back was
+    `token`, and that was the defect: `Game.copy_spell` builds a `TokenState`
+    for a copy of a permanent spell while it sits on the stack, with
+    `token=False` on purpose (CR 707.10f - it becomes a token only as it
+    resolves, CR 111.13), so a game dumped mid-priority with that copy on the
+    stack decoded it back as a plain `CardState`, silently losing CR 111.8's
+    protection the moment it later did become a token. `state_class` is a
+    plain field with no meaning beyond "which class am I" - `TokenState`
+    overrides its default to `"TokenState"` - so it says the same thing
+    whether or not the object also happens to be a token, and
+    `_resolve_token_subclass` reads this instead of `token` to choose which
+    class rebuilds a decoded dict.
     """
     is_copy: bool = False
     """CR 112.1a: "A copy of a spell is also a spell, even if it has no card
@@ -793,8 +829,8 @@ class CardState(BaseModel):
     tuple, not by a continuous effect that has to be reapplied every board
     computation.
 
-    Kept apart from `Card.oracle_text` (immutable, CR 108.1 - a game object's
-    printing never changes) and from the layer engine's own `Characteristics.
+    Kept apart from `Card.oracle_text` (the printing, which never changes)
+    and from the layer engine's own `Characteristics.
     abilities` (a *computed*, per-recompute view for text-driven checks like
     `has_ability`): this tuple is what `machines/abilities.granted_abilities_
     of` parses back into real `Ability` objects, and what `Game.
@@ -852,7 +888,7 @@ class CardState(BaseModel):
     `ExileAnnotation.turn_exiled` answers plot's and foretell's "a later turn"
     (CR 702.170d, CR 702.143a)."""
 
-    zone_change_stamp: UUID = Field(default_factory=uuid4)
+    zone_change_stamp: UUID = Field(default_factory=new_id)
     """Which incarnation of this object we are on (CR 400.7).
 
     "An object that moves from one zone to another becomes a new object with
@@ -968,7 +1004,7 @@ class CardState(BaseModel):
         zone CR 613.5 computes.
         """
         effects = getattr(self._board_source, "continuous_effects", None)
-        if effects is not None and not effects.has_control_effect:
+        if effects is not None and not effects.has_control_effect(self._board_source):
             # Nothing in play changes control, so the board would hand back
             # this very value - and computing it is not free. See
             # `ContinuousEffects.has_control_effect` for why that is sound.
@@ -1756,7 +1792,7 @@ class CardState(BaseModel):
         Only what a *continuous effect* was contributing is recorded, which is
         why each half is compared against `_printed_power`/`_printed_toughness`
         and left `None` when they agree. The printing does not change on a
-        zone change (CR 108.1), so it needs no snapshot to survive one; the
+        zone change, so it needs no snapshot to survive one; the
         counters deliberately do not survive it (CR 122.2: "counters on an
         object are not retained if that object moves from one zone to another
         ... they simply cease to exist"), and a card in a graveyard reading
@@ -1804,7 +1840,7 @@ class CardState(BaseModel):
             # cannot be taken from here.
             self.last_known_power = None
             self.last_known_toughness = None
-        self.zone_change_stamp = uuid4()
+        self.zone_change_stamp = new_id()
         self.zone = zone
         if not (origin is Zone.STACK and zone is Zone.BATTLEFIELD):
             # CR 702.103b carries bestowed across exactly one zone change:
@@ -2096,28 +2132,136 @@ class CardState(BaseModel):
         if self.is_saga and self.chapter_numbers:
             self.counters.add(Counter.LORE, 1)
 
-    @model_validator(mode="after")
-    def _planeswalkers_start_loyal(self) -> Self:
-        """A planeswalker built straight onto the battlefield has its loyalty.
+    @model_validator(mode="wrap")
+    @classmethod
+    def _resolve_token_subclass(cls, data: Any, handler: Any) -> "CardState":
+        """A token survives as a `TokenState` across a round trip (CR 111.1).
 
-        The same intrinsic ability as `_enter_with_loyalty` (CR 306.5b), applied
-        where a `CardState` is constructed in place rather than moved. Guarded
-        on having no counters at all, so a permanent whose counters are already
-        known - one being deserialised, or one that has been ticked down - is
-        left exactly as it was.
+        `token.TokenState` is `CardState`'s only subclass, and its whole
+        reason to exist - `move_to`'s CR 111.8 override - depends on staying a
+        `TokenState` instance. Every field that stores one is typed plainly as
+        `CardState` (`Player.zones`, `Game`'s `StackObject`), which is fine for
+        an in-memory game: pydantic leaves an instance that already is the
+        right class alone. It is not fine for a `dict` - the shape a game is
+        in right after a `model_dump`/JSON round trip, with no Python type
+        information left in it anywhere - because there `CardState` is all the
+        field annotation has ever named, and building one throws
+        `TokenState`'s override away even though the dict itself still says
+        `token: true`.
+
+        So `CardState` reads its own subclass off `state_class` rather than
+        trusting the field annotation: a dict payload with `state_class ==
+        "TokenState"` is handed to `TokenState` instead. `cls is CardState`
+        keeps this from firing again once it has - `TokenState.model_validate`
+        reaches this same validator through inheritance, with `cls` bound to
+        `TokenState`, and must fall straight through to `handler`. Anything
+        that is not such a dict (an in-memory instance, a plain permanent, a
+        `TokenState` dict already being validated as `TokenState`) also falls
+        straight through, unchanged.
+
+        Not `token`: that flag is CR 111.1's own "is this a token", a
+        genuinely different question from "which Python class built this" -
+        `state_class`'s own docstring is the defect that conflating the two
+        caused (`Game.copy_spell` builds a `TokenState` with `token=False`
+        while a copy of a permanent spell sits on the stack, not yet a token
+        under CR 707.10f, and used to decode back as a plain `CardState`
+        because `token` was the only signal read here).
         """
-        if self.zone is Zone.BATTLEFIELD and self.is_planeswalker and not self.counters:
-            self._enter_with_loyalty()
-        return self
+        if cls is CardState and isinstance(data, dict) and data.get("state_class") == "TokenState":
+            from .token import TokenState  # deferred: token.py imports CardState
 
-    @model_validator(mode="after")
-    def _sagas_start_with_lore(self) -> Self:
-        """A Saga built straight onto the battlefield has its lore counter
-        (CR 714.3a) - `_enter_with_lore_counter`'s own sibling to
-        `_planeswalkers_start_loyal`, guarded the same way."""
-        if self.zone is Zone.BATTLEFIELD and self.is_saga and not self.counters:
-            self._enter_with_lore_counter()
-        return self
+            return TokenState.model_validate(data)
+        return handler(data)
+
+    @model_serializer(mode="wrap")
+    def _dump_with_subclass_fields(self, handler: Any) -> dict[str, Any]:
+        """A `TokenState`'s own fields survive a dump through a `CardState`-typed
+        container, alongside `_resolve_token_subclass`'s other half of CR 111.1.
+
+        Every field that stores a permanent is typed plainly as `CardState`
+        (`Player.zones`, `Game`'s `StackObject`), so `model_dump` builds each
+        item from *that* schema - `TokenState`'s own fields are simply not
+        part of it. Pydantic's default there is to serialize by the
+        container's declared type rather than the object's actual one, which
+        silently dropped `TokenState.left_the_battlefield` from a dumped
+        token: not merely a class the decoder could not have rebuilt, but a
+        flag CR 111.8 needs that never made it into the dict to rebuild from
+        in the first place.
+
+        `handler(self)` is that default - correct and complete whenever `self`
+        really is a plain `CardState`, and already correct for a subclass
+        serialized under its *own* type (its schema already knows its own
+        fields, so this is then a harmless no-op). It only needs help for the
+        one case in between: a subclass instance reached through a schema
+        built for `CardState`. `type(self).model_fields` there names every
+        field the object actually has; the ones `CardState` itself does not
+        declare are read straight off `self` and added on top, which keeps
+        this correct for any future field `TokenState` (or another
+        `CardState` subclass) adds without needing a matching change here.
+        """
+        data = handler(self)
+        if type(self) is not CardState:
+            own_only = set(type(self).model_fields) - set(CardState.model_fields)
+            for name in own_only:
+                data[name] = getattr(self, name)
+        return data
+
+    @model_validator(mode="wrap")
+    @classmethod
+    def _built_on_the_battlefield_starts_with_its_counters(
+        cls, data: Any, handler: Any
+    ) -> "CardState":
+        """A planeswalker or Saga *built* straight onto the battlefield gets
+        the counters it would have entered with; one being *decoded* does not.
+
+        The same two intrinsic abilities as `_enter_with_loyalty` (CR 306.5b)
+        and `_enter_with_lore_counter` (CR 714.3a), applied where a `CardState`
+        is constructed in place rather than moved onto the battlefield.
+
+        The guard is what makes the engine able to decode any game state. "It
+        has no counters yet" cannot tell the two apart: a planeswalker
+        legitimately sits on the battlefield with zero loyalty (it is about to
+        die to CR 704.5i, or a test transformed a card into one without CR
+        306.5b's entry replacement), and re-seeding those counters on decode
+        silently invents state the dumped game never had. A payload that
+        carries a `counters` key already states what its counters are - zero
+        included - so it is taken at its word and nothing is seeded. Only
+        construction that never mentioned counters at all is treated as an
+        object arriving on the battlefield for the first time.
+        """
+        state = handler(data)
+        if isinstance(data, Mapping) and "counters" in data:
+            return state
+        if state.zone is Zone.BATTLEFIELD and not state.counters:
+            state._enter_with_loyalty()
+            state._enter_with_lore_counter()
+        return state
+
+
+def bind_all_to_game(states: Iterable[CardState], game: Any) -> None:
+    """`bind_to_game` (CR 613.5), over every `CardState` `game` holds.
+
+    `Game.model_post_init` already stamps `player.game = self` on every
+    player so `Player.discard` has a rules engine to ask, but it does not
+    call this - and `bind_to_game` has exactly one production call site,
+    `Game.put_onto_battlefield`. That covers a card *entering* the
+    battlefield during play. It does nothing for a permanent that is already
+    there the moment a `Game` is built from a dict: a cold `model_validate`
+    never routes a single card through `put_onto_battlefield`, so every one
+    of its permanents answers `power`/`toughness` with the printed value plus
+    counters (CR 122.1a) instead of the layer engine's (CR 613.5) - silently
+    different from the same game played continuously, for as long as nothing
+    re-enters the battlefield to get bound.
+
+    This is the loop that closes that gap: hand it every `CardState` the
+    game holds - `Game.shared_zones` and every `Player.zones`, the same two
+    collections `Game`'s own target-candidate sweeps already walk - and
+    `game`, once, from `Game.model_post_init`, right alongside the `player.
+    game = self` loop it already runs. It does not live in `Game` itself
+    only because nothing in this module is allowed to import it.
+    """
+    for state in states:
+        state.bind_to_game(game)
 
 
 def annihilate_counters_on(permanents: Iterable[CardState]) -> list[CardState]:

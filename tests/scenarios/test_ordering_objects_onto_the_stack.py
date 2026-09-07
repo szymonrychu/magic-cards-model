@@ -44,8 +44,9 @@ passes just as well when the answer is thrown away.
 import pytest
 
 from magic_cards_model.machines import Step
-from magic_cards_model.machines.decisions import Decision, DecisionKind
+from magic_cards_model.machines.decisions import Answer, Decision, DecisionKind, DecisionPending
 from magic_cards_model.models import Zone
+from magic_cards_model.models.game import Game
 from magic_cards_model.models.token import TokenState
 from tests.scenarios.harness import PlayedScenario, Scenario
 
@@ -478,3 +479,110 @@ def test_a_spell_cast_on_top_leaves_the_order_below_it_untouched():
 
     assert scenario.resolve_top().source_name == "Psychic Frog"
     assert scenario.resolve_top().source_name == "Ragavan, Nimble Pilferer"
+
+
+# --------------------------------------------------------------------------
+# Pausing instead of blocking: the tape and `DecisionPending` (CR 603.3b)
+# --------------------------------------------------------------------------
+#
+# `ask_trigger_order` reads the replay tape and can pause exactly like
+# `Game.ask` does (see `machines/decisions.py`'s module docstring) - both new
+# in the same commit that gave `Game.ask` a tape and a pause, and neither had
+# a test until here.
+
+
+def _frog_and_ragavan_unblocked() -> PlayedScenario:
+    """The same board `combat_damage_board` builds, stopped one step short of
+    the combat damage step itself so a test can install `pause_when_
+    unanswered` (or take a snapshot) before the ordering question is put.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Psychic Frog", "Ragavan, Nimble Pilferer"],
+            library=["Forest"],
+        )
+        .player("bob", library=list(LIBRARY))
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(
+        scenario.creature("Psychic Frog", "alice"),
+        scenario.creature("Ragavan, Nimble Pilferer", "alice"),
+    )
+    scenario.advance()  # declare blockers
+    scenario.no_blocks()
+    return scenario
+
+
+def test_a_recorded_tape_answers_the_trigger_order():
+    """A committed snapshot taken just before combat damage is dealt, decoded
+    back into a fresh `Game` and given one recorded `Answer` for CR 603.3b's
+    ordering, reaches the same resolution order `test_the_controller_can_put_
+    their_other_trigger_on_top_instead` reaches through a script - proving
+    `ask_trigger_order` reads `DecisionScript.recorded` exactly like `Game.ask`
+    does.
+
+    The tape names ability ids, not printed sources (`will_order_triggers`'s
+    own vocabulary) - `pending.decision.cards` is read here to answer bottom
+    of the stack first, reversing the triggered order (Frog triggered first,
+    so putting it second/on top is what "Ragavan first" means).
+
+    `begin_replay([])` runs before the snapshot is even taken, scoping
+    `PendingDecision.seq` to this one command - CR 703.4i/703.4j's own
+    declarations already asked earlier in this same game would otherwise
+    leave `asked` non-empty and the numbering would not start at 0, exactly
+    the failure mode `begin_replay`'s own docstring and `PendingDecision.
+    seq`'s exist to prevent.
+    """
+    scenario = _frog_and_ragavan_unblocked()
+    scenario.game.decisions.begin_replay([])
+    snapshot = scenario.game.model_dump(mode="json")
+    scenario.game.decisions.pause_when_unanswered = True
+
+    with pytest.raises(DecisionPending) as excinfo:
+        scenario.advance()  # combat damage: pauses on the ordering question
+
+    pending = excinfo.value.pending
+    assert pending.decision.kind is DecisionKind.ORDER_TRIGGERS
+    assert pending.decision.player == "alice"
+    assert len(pending.decision.cards) == 2
+
+    restored = Game.model_validate(snapshot)
+    restored.decisions.begin_replay(
+        [
+            Answer(
+                seq=pending.seq,
+                kind=DecisionKind.ORDER_TRIGGERS,
+                player="alice",
+                card_ids=tuple(reversed(pending.decision.cards)),
+            )
+        ]
+    )
+
+    restored.advance(restored.controller_of_player(restored.turn.active_player))
+    restored.decisions.finish_replay()
+
+    assert restored.resolve_top().source_name == "Psychic Frog"
+    assert [card.name for card in restored.player("alice").hand] == ["Forest"]
+    assert restored.resolve_top().source_name == "Ragavan, Nimble Pilferer"
+
+
+def test_pause_when_unanswered_raises_decision_pending_for_the_trigger_order():
+    """With nothing scripted, no tape, and no provider, `pause_when_unanswered`
+    turns CR 603.3b's ordering into a raised `DecisionPending` - the same proof
+    `test_pause_when_unanswered_raises_decision_pending_through_a_resolving_
+    spell` gives for `Game.ask`, given here for `ask_trigger_order`, which
+    never goes through `Game.ask` at all.
+    """
+    scenario = _frog_and_ragavan_unblocked()
+    scenario.game.decisions.pause_when_unanswered = True
+
+    with pytest.raises(DecisionPending) as excinfo:
+        scenario.advance()
+
+    pending = excinfo.value.pending
+    assert pending.decision.kind is DecisionKind.ORDER_TRIGGERS
+    assert pending.decision.player == "alice"
+    assert "603.3b" in pending.rule

@@ -25,9 +25,25 @@ rule is an `xfail`, never a reshaped scenario. `docs/deck-gaps/hollow-one.md`
 records the archetype's gaps.
 """
 
+#: `id(state.card)` asserts CPython object identity, not game state -
+#: `tests/cards.py`'s `card()` cache handing every physical copy the same
+#: in-memory `Card` is a pure memory optimisation. A JSON decode has no way
+#: to represent "these two value-equal objects were the same object", so the
+#: T10 invariant's replay run - which continues from a genuinely decoded
+#: game - honestly sees four distinct `Card` instances here, not the live
+#: run's cached one. Not an engine defect.
+import pytest
+
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Deck, Game, Match, Player, Zone
 from tests.cards import card
+
+IDENTITY_NOTE = (
+    "T10: id(state.card) is CPython object identity, not game state - a "
+    "decode of value-equal Card printings never shares one Python object, "
+    "so the invariant's replay run legitimately sees 4 distinct ids here, "
+    "not the live run's cached 1. Not an engine defect."
+)
 
 #: hockeybro26, 2026-08-29, source deck videre-58656118. Sixty cards.
 HOLLOW_ONE_SIXTY = {
@@ -158,6 +174,7 @@ def test_the_sideboard_is_set_aside_rather_than_shuffled_in():
     assert "Surgical Extraction" not in {state.name for state in alice.library}
 
 
+@pytest.mark.no_replay(reason=IDENTITY_NOTE)
 def test_the_four_hollow_ones_are_four_separate_cards():
     """Four copies are four objects sharing one immutable printing."""
     game = match().start_game()

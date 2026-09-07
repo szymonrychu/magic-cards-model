@@ -4,6 +4,12 @@ Every count here is checked against a real printing from the pool, because the
 two interesting rules - basic lands are exempt from the four-copy limit, and a
 card can lift the limit in its own text - are properties of the card, not of
 the name.
+
+T10's round-trip/replay invariant does not apply here: nothing in this file
+ever builds a `Game` (only `Deck`, checked in isolation), so `tests/scenarios/
+conftest.py`'s hook has nothing to checkpoint and the pytest_pyfunc_call
+returns before it reaches the assertions - not a silent exclusion, a genuine
+absence of the state the invariant is about.
 """
 
 import pytest

@@ -89,11 +89,24 @@ from .combat import has_keyword
 from .decisions import Decision, DecisionKind
 from .delayed import (
     ANAPHORIC_TIMING_STEPS,
-    DelayedEffect,
+    CombatDamageToPlayerDraw,
+    CopyNextSpellYouCast,
+    CreateAttackingTokens,
+    DelayedBlinkReturnWithRider,
     DelayedTrigger,
+    GrantExtraTurn,
+    PayOrLoseTheGame,
+    ReflexiveConsequence,
+    ReflexiveMandatoryTokenDamageConsequence,
+    ReflexivePayEnergyConsequence,
+    ReturnExiledCardAndAddCounters,
+    ReturnRiderCounter,
+    SacrificeSubject,
+    StaticPrisonReturn,
     anaphoric_delayed_trigger,
     draw_a_card_for_controller,
     parse_anaphoric_delayed_clause,
+    return_earthbent_land,
     return_subject_to_battlefield_under_owner,
     return_subject_to_hand,
 )
@@ -106,6 +119,7 @@ from .layers import (
     LayerContext,
     LayerNotice,
     Sublayer,
+    _only,
     add_subtype,
     add_type,
     count_card_types,
@@ -357,11 +371,21 @@ def create_continuous_effect(game: "Game", spell: CardState) -> None:
     a card printing "cards in your graveyard" means (Violent Urge's delirium).
     Both are read now, as the spell resolves, which is the moment the effect's
     one-off conditions are locked in (CR 611.2c).
+
+    `game=game` on the call below is not optional bookkeeping: `ContinuousEffects.
+    create` calls `effect.holds(game)` on everything it builds, and `holds`
+    raises rather than guessing when a built effect carries a CR 611.2b "for as
+    long as" condition and no `game` was given to check it against. No row in
+    `LAYER_EFFECTS` reaches this generic path with one yet - Tishana's Tidebinder,
+    the only conditioned row today, resolves through its own dedicated function -
+    but the next one that does must not crash resolution outright for a missing
+    keyword (see `tests/test_continuous_effects_create_game_param.py`).
     """
     continuous_effects(game).create(
         spell,
         targets=game.resolve_card_targets(spell),
         context=layer_context_for(game, game.controller_of(spell)),
+        game=game,
     )
 
 
@@ -407,6 +431,11 @@ def create_continuous_effect_of_ability(game: "Game", ability: AbilityOnStack) -
     "Up to one" legally choosing zero, or every chosen target having since
     become illegal (CR 608.2b), both leave `targets` empty and the ability
     resolves doing nothing - never a fallback to `source`.
+
+    `game=game` on the call below matters the same way it does in `create_
+    continuous_effect` just above: without it, `ContinuousEffects.create`
+    crashes rather than resolving the moment this path ever reaches a
+    `LAYER_EFFECTS` row that builds a CR 611.2b "for as long as" condition.
     """
     source = ability.source(game)
     if source is None or source.zone is not Zone.BATTLEFIELD:
@@ -432,6 +461,7 @@ def create_continuous_effect_of_ability(game: "Game", ability: AbilityOnStack) -
         source,
         targets=targets,
         context=layer_context_for(game, game.controller_of(ability)),
+        game=game,
     )
 
 
@@ -500,7 +530,7 @@ def _parse_pump_and_becomes_chosen_color_clause(text: str) -> AbilityEffect | No
                 sublayer=Sublayer.MODIFY,
                 timestamp=timestamp,
                 duration=Duration.UNTIL_END_OF_TURN,
-                selector=_selects_id(source.id),
+                selector=_only(source.id),
                 modification=modify_power_toughness(power, toughness),
             )
         )
@@ -510,7 +540,7 @@ def _parse_pump_and_becomes_chosen_color_clause(text: str) -> AbilityEffect | No
                 layer=Layer.COLOR,
                 timestamp=timestamp,
                 duration=Duration.UNTIL_END_OF_TURN,
-                selector=_selects_id(source.id),
+                selector=_only(source.id),
                 modification=set_colors(color),
             )
         )
@@ -528,18 +558,6 @@ _PROTECTION_FROM_CHOSEN_COLOR_RE = re.compile(
     r"until end of turn\.?$",
     re.IGNORECASE,
 )
-
-
-def _selects_id(card_id: UUID) -> Callable[[Characteristics, object], bool]:
-    """One permanent, by id - the hand-built twin of `machines.layers`'s own
-    private `_only`, needed here because that helper is not exported and this
-    module builds `ContinuousEffect`s outside the text-driven registry.
-    """
-
-    def selector(chars: Characteristics, board: object) -> bool:
-        return chars.card_id == card_id
-
-    return selector
 
 
 def _parse_protection_from_chosen_color_clause(text: str) -> AbilityEffect | None:
@@ -587,7 +605,7 @@ def _parse_protection_from_chosen_color_clause(text: str) -> AbilityEffect | Non
                 layer=Layer.ABILITY,
                 timestamp=store.tick(),
                 duration=Duration.UNTIL_END_OF_TURN,
-                selector=_selects_id(target.id),
+                selector=_only(target.id),
                 modification=grant_ability(f"Protection from {_COLOR_NAME[color]}"),
             )
         )
@@ -1129,7 +1147,7 @@ def _run_mass_pump(
     timestamp = store.tick()
     context = layer_context_for(game, game.player(controller))
     for built in builder(source, timestamp, targets, context):
-        if built.holds:
+        if built.holds(game):
             store.add(built)
 
 
@@ -1221,7 +1239,7 @@ def _parse_where_x_is_continuous_effect(effect_text: str) -> AbilityEffect | Non
         timestamp = store.tick()
         context = layer_context_for(game, game.controller_of(ability))
         for built in builder(source, timestamp, targets, context):
-            if built.holds:
+            if built.holds(game):
                 store.add(built)
 
     return effect
@@ -1293,7 +1311,7 @@ def _parse_untap_and_gain_control_clause(effect_text: str) -> Effect | None:
                 continue
             timestamp = store.tick()
             for built in builder(spell, timestamp, targets, context):
-                if built.holds:
+                if built.holds(game):
                     store.add(built)
 
     return effect
@@ -2560,7 +2578,7 @@ def tishanas_tidebinder(game: "Game", ability: AbilityOnStack) -> None:
         if store is None or tidebinder is None:
             continue
         if permanent is not None and permanent.zone is Zone.BATTLEFIELD:
-            store.create(tidebinder, targets=[permanent])
+            store.create(tidebinder, targets=[permanent], game=game)
 
 
 def damage_ability_targets(amount: int) -> AbilityEffect:
@@ -5582,52 +5600,6 @@ _EXILE_UNTIL_THIS_LEAVES_BATTLEFIELD_RE = re.compile(
 )
 
 
-def _static_prison_return_callback(exiled_id: UUID, expected_stamp: UUID) -> DelayedEffect:
-    """The delayed trigger's own effect (CR 610.2, CR 603.7): return the one
-    exiled card - not `still_affects`, which reads `DelayedTrigger.subject_id`
-    for both "what event fires this" *and* "what does it affect" alike.
-
-    Those are two different objects here: the trigger's own `subject_id` is
-    the *enchantment* (CR 603.7a's event is "Static Prison leaves the
-    battlefield", not "the exiled card does anything"), but the card this
-    callback has to bring back is whatever was exiled - a different id
-    entirely. Closing over `exiled_id`/`expected_stamp` at the moment of
-    exile keeps CR 603.7c's own check (same id, same zone, same incarnation)
-    without forcing the trigger's single `subject_id` field to mean two
-    different things at once.
-    """
-
-    def callback(game: "Game", ability: AbilityOnStack, trigger: DelayedTrigger) -> None:
-        _dismiss_other_static_prison_triggers(game, trigger)
-        card = game.find_by_id(exiled_id)
-        if not isinstance(card, CardState):
-            return
-        if card.zone is not Zone.EXILE or card.zone_change_stamp != expected_stamp:
-            return  # CR 603.7c: gone, or a new incarnation - not this card any more.
-        if card.owner is None:
-            return
-        game.put_onto_battlefield(card, card.owner, tapped=False)
-
-    return callback
-
-
-def _dismiss_other_static_prison_triggers(game: "Game", trigger: DelayedTrigger) -> None:
-    """Drop the sibling delayed triggers for the other two departure routes
-    once one has fired - CR 603.7b's one-shot spends the whole ability, not
-    just the one event that happened to occur first, and leaving a dead
-    watcher behind risks a second, wrong return if the *returned* card is
-    itself later destroyed and its own id happens to be reused... which
-    `CardState.id` never does (this engine mutates rather than recycles), but
-    tidiness matters here the same way it does for `_dismiss_other_earthbend_
-    trigger`, which this mirrors exactly.
-    """
-    game.delayed_triggers.triggers = [
-        candidate
-        for candidate in game.delayed_triggers.triggers
-        if candidate.id not in trigger.sibling_ids
-    ]
-
-
 def _watch_for_departure_and_return_exiled_card(
     game: "Game", source: CardState, exiled: CardState, controller: str
 ) -> None:
@@ -5646,7 +5618,7 @@ def _watch_for_departure_and_return_exiled_card(
     "dies or is put into exile" already uses for two events.
     """
     exile_stamp = exiled.zone_change_stamp
-    callback = _static_prison_return_callback(exiled.id, exile_stamp)
+    effect = StaticPrisonReturn(exiled_id=exiled.id, expected_stamp=exile_stamp)
     text = (
         f"When {source.name} leaves the battlefield, return {exiled.name} to "
         "the battlefield under its owner's control."
@@ -5666,7 +5638,7 @@ def _watch_for_departure_and_return_exiled_card(
                     source_id=source.id,
                     source_name=source.name,
                     subject_id=source.id,
-                    callback=callback,
+                    effect=effect,
                 )
             )
         )
@@ -5753,24 +5725,6 @@ def _watch_for_the_exiled_card_returning_and_add_counters(
     "This way" is what `subject_id` carries - only the card this resolution
     exiled, not any card that happens to enter.
     """
-
-    def callback(game: "Game", ability: AbilityOnStack, trigger: DelayedTrigger) -> None:
-        card = trigger.still_affects(game)
-        if card is None:
-            return
-        if card.controller != controller:
-            return  # "under **your** control": an opponent's creature went home.
-        # `Game.add_counters`, never `CardState.add_counters`: CR 614.16 - "some
-        # replacement effects apply ... 'if an effect would put one or more
-        # counters on a permanent'. These replacement effects apply if the effect
-        # of a resolving spell or ability [does so]" - and this delayed ability
-        # resolving is exactly that, so Vizier of Remedies and a doubling effect
-        # get their say. CR 122.6's "counters being put on an object" event is
-        # raised on the same route, which is what a "whenever one or more +1/+1
-        # counters are put on this creature" ability watches for; the bare
-        # `CardState` call raised neither.
-        game.add_counters(card, kind, amount)
-
     game.create_delayed_trigger(
         DelayedTrigger(
             text=(
@@ -5783,7 +5737,7 @@ def _watch_for_the_exiled_card_returning_and_add_counters(
             source_name=source.name,
             subject_id=exiled.id,
             expected_zone=Zone.BATTLEFIELD,
-            callback=callback,
+            effect=ReturnExiledCardAndAddCounters(counter_kind=kind, amount=amount),
         )
     )
 
@@ -12325,11 +12279,6 @@ def _parse_reflexive_sacrifice_clause(text: str) -> AbilityEffect | None:
         return None
     prompt = f"sacrifice {match.group('restriction').strip()}"
 
-    def resolve_reflexive(
-        game: "Game", reflexive_ability: AbilityOnStack, trigger: DelayedTrigger
-    ) -> None:
-        consequence_effect(game, reflexive_ability)
-
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         player = game.controller_of(ability)
         source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
@@ -12369,7 +12318,7 @@ def _parse_reflexive_sacrifice_clause(text: str) -> AbilityEffect | None:
             controller=player.username,
             source_id=ability.source_id,
             source_name=source_name,
-            callback=resolve_reflexive,
+            callback=ReflexiveConsequence(),
         )
 
     return effect
@@ -12419,14 +12368,8 @@ def _parse_exile_target_card_reflexive_creature_counter(text: str) -> AbilityEff
     if not _targets_understood(match.group("phrase"), count_agnostic=True, battlefield_only=False):
         return None
     consequence_text = match.group("consequence").strip()
-    consequence_effect = parse_mixed_effect(consequence_text)
-    if consequence_effect is None:
+    if parse_mixed_effect(consequence_text) is None:
         return None
-
-    def resolve_reflexive(
-        game: "Game", reflexive_ability: AbilityOnStack, trigger: DelayedTrigger
-    ) -> None:
-        consequence_effect(game, reflexive_ability)
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         exiled_a_creature = False
@@ -12444,7 +12387,7 @@ def _parse_exile_target_card_reflexive_creature_counter(text: str) -> AbilityEff
             controller=ability.controller,
             source_id=ability.source_id,
             source_name=ability.source_name,
-            callback=resolve_reflexive,
+            callback=ReflexiveConsequence(),
         )
 
     return effect
@@ -12533,7 +12476,7 @@ def _parse_counters_and_becomes_type_clause(text: str) -> AbilityEffect | None:
                     layer=Layer.TYPE,
                     timestamp=store.tick(),
                     duration=Duration.INDEFINITE,
-                    selector=lambda chars, board, tid=target.id: chars.card_id == tid,
+                    selector=_only(target.id),
                     modification=add_subtype(subtype),
                 )
             )
@@ -12560,16 +12503,11 @@ def _parse_reflexive_pay_energy_clause(text: str) -> AbilityEffect | None:
         return None
     amount = len(re.findall(r"\{e\}", match.group("energy"), re.IGNORECASE))
     consequence_text = match.group("consequence").strip()
-    consequence_effect = _parse_counters_and_becomes_type_clause(
-        consequence_text
-    ) or parse_mixed_effect(consequence_text)
-    if consequence_effect is None:
+    if (
+        _parse_counters_and_becomes_type_clause(consequence_text)
+        or parse_mixed_effect(consequence_text)
+    ) is None:
         return None
-
-    def resolve_reflexive(
-        game: "Game", reflexive_ability: AbilityOnStack, trigger: DelayedTrigger
-    ) -> None:
-        consequence_effect(game, reflexive_ability)
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         player = game.controller_of(ability)
@@ -12582,7 +12520,7 @@ def _parse_reflexive_pay_energy_clause(text: str) -> AbilityEffect | None:
             controller=player.username,
             source_id=ability.source_id,
             source_name=source_name,
-            callback=resolve_reflexive,
+            callback=ReflexivePayEnergyConsequence(),
         )
 
     return effect
@@ -12689,12 +12627,7 @@ def _parse_reflexive_mandatory_token_clause(text: str) -> AbilityEffect | None:
     condition_and_damage = _parse_if_control_colored_permanent_damage_clause(consequence_text)
     if condition_and_damage is None:
         return None
-    condition_holds, deal_the_damage = condition_and_damage
-
-    def resolve_reflexive(
-        game: "Game", reflexive_ability: AbilityOnStack, trigger: DelayedTrigger
-    ) -> None:
-        deal_the_damage(game, reflexive_ability)
+    condition_holds, _deal_the_damage = condition_and_damage
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         controller = game.controller_of(ability)
@@ -12711,7 +12644,7 @@ def _parse_reflexive_mandatory_token_clause(text: str) -> AbilityEffect | None:
             controller=controller.username,
             source_id=ability.source_id,
             source_name=source_name,
-            callback=resolve_reflexive,
+            callback=ReflexiveMandatoryTokenDamageConsequence(),
         )
 
     return effect
@@ -12874,7 +12807,7 @@ def _parse_undergrowth_pump_and_fight_clause(text: str) -> AbilityEffect | None:
                 sublayer=Sublayer.MODIFY,
                 timestamp=store.tick(),
                 duration=Duration.UNTIL_END_OF_TURN,
-                selector=lambda chars, board, sid=source.id: chars.card_id == sid,
+                selector=_only(source.id),
                 modification=modify_power_toughness(amount, 0),
             )
         )
@@ -12953,43 +12886,6 @@ def _parse_attack_this_turn_create_tapped_attacking_tokens(text: str) -> Ability
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         controller = game.controller_of(ability)
         source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
-
-        def create_attacking_tokens(
-            game: "Game", trigger_ability: AbilityOnStack, trigger: DelayedTrigger
-        ) -> None:
-            defender = next(
-                (
-                    attack.defender
-                    for attack in game.combat.attacks
-                    if (attacker := game.find_by_id(attack.attacker_id)) is not None
-                    and game.controller_of(attacker).username == controller.username
-                ),
-                None,
-            )
-            created = create_tokens(
-                game,
-                definition,
-                controller.username,
-                count,
-                tapped=True,
-                attacking=defender,
-            )
-            for token in created:
-                game.create_delayed_trigger(
-                    DelayedTrigger(
-                        text="Sacrifice them at the beginning of the next end step.",
-                        effect="sacrifice",
-                        event=TriggerEvent.BEGINNING_OF_STEP,
-                        step=Step.END_STEP,
-                        controller=controller.username,
-                        source_id=source_id,
-                        source_name=source_name,
-                        subject_id=token.id,
-                        expected_zone=Zone.BATTLEFIELD,
-                        expected_stamp=token.zone_change_stamp,
-                    )
-                )
-
         game.create_delayed_trigger(
             DelayedTrigger(
                 text=match.group(0),
@@ -13006,7 +12902,7 @@ def _parse_attack_this_turn_create_tapped_attacking_tokens(text: str) -> Ability
                 subjectless_only=True,
                 remaining=None,
                 expires_end_of_turn=True,
-                callback=create_attacking_tokens,
+                effect=CreateAttackingTokens(count=count, definition=definition),
             )
         )
 
@@ -13358,7 +13254,7 @@ def _parse_create_tapped_attacking_tokens_then_sacrifice(text: str) -> AbilityEf
             game.create_delayed_trigger(
                 DelayedTrigger(
                     text="Sacrifice that token at the beginning of the next end step.",
-                    effect="sacrifice",
+                    effect=SacrificeSubject(),
                     event=TriggerEvent.BEGINNING_OF_STEP,
                     step=Step.END_STEP,
                     controller=controller.username,
@@ -13584,7 +13480,7 @@ def _parse_may_cost_then_attacking_token_clause(text: str) -> AbilityEffect | No
             game.create_delayed_trigger(
                 DelayedTrigger(
                     text=sacrifice_text,
-                    effect="sacrifice",
+                    effect=SacrificeSubject(),
                     event=TriggerEvent.BEGINNING_OF_STEP,
                     step=step,
                     controller=controller.username,
@@ -13665,27 +13561,6 @@ _PAY_COST_RE = re.compile(r"^pay (?P<cost>(?:\{[^}]+\})+)$", re.IGNORECASE)
 _PAY_OR_LOSE_SECOND_RE = re.compile(r"^if you don'?t, you lose the game$", re.IGNORECASE)
 
 
-def _pay_or_lose_the_game(cost: ManaCost) -> DelayedEffect:
-    """Summoner's Pact's own delayed half: pay `cost` from the pool already
-    floating, or lose the game (CR 104.3e) trying.
-
-    CR 603.7d/e: the controller who owes this is the one who created the
-    delayed trigger, taken as it resolved - `trigger.controller`, not whoever
-    controls anything now. A player already gone by the time this fires (a
-    concession, an earlier loss) owes nothing further; CR 800.4a already took
-    everything of theirs off the board.
-    """
-
-    def callback(game: "Game", ability: AbilityOnStack, trigger: DelayedTrigger) -> None:
-        if not game.is_in_game(trigger.controller):
-            return
-        if game.may_pay_mana_cost(trigger.controller, cost, source=trigger.source_name):
-            return
-        game.player_loses_the_game(trigger.controller)
-
-    return callback
-
-
 def _parse_delayed_pay_or_lose_clauses(
     clauses: list[str], index: int, *, for_spell: bool
 ) -> tuple[int, TargetedClause] | None:
@@ -13726,7 +13601,7 @@ def _parse_delayed_pay_or_lose_clauses(
                 # Dalkovan Encampment's own "whenever you attack" already
                 # scopes an attack-declaration event to one player).
                 only_when_active=controller.username,
-                callback=_pay_or_lose_the_game(cost),
+                effect=PayOrLoseTheGame(cost=cost),
             )
         )
 
@@ -13935,7 +13810,7 @@ def earthbend(
     TO_EXILE` are two different events, so CR 603.7a's one ability needs one
     `DelayedTrigger` per event it watches. Whichever fires first consumes its
     own one-shot `remaining` (CR 603.7b) and returns the land; the other is
-    dropped by `_dismiss_other_earthbend_trigger` rather than left to spend
+    dropped by `machines/delayed.py`'s shared `_drop_sibling_triggers` rather than left to spend
     itself uselessly (harmlessly, since its `expected_stamp` can never match
     again once the land has moved on - but tidiness, not correctness, is why
     it is dropped). Both watch `still_affects` at *resolution* (CR 603.7c),
@@ -14008,42 +13883,12 @@ def earthbend(
                     # guarantee for this shape: if something else moves the
                     # land out of that zone again first, `still_affects`
                     # correctly stops affecting it.
-                    callback=_return_earthbent_land,
+                    effect=return_earthbent_land,
                 )
             )
         )
     for trigger in siblings:
         trigger.sibling_ids = tuple(other.id for other in siblings if other is not trigger)
-
-
-def _return_earthbent_land(game: "Game", ability: AbilityOnStack, trigger: DelayedTrigger) -> None:
-    """CR 701.66a's own return: tapped, and under the earthbend ability's
-    *controller* - not `delayed.return_subject_to_battlefield_under_owner`'s
-    owner-and-untapped default, which is CR 610.3c's default for a blink
-    effect that says nothing more specific. Earthbend overrides both halves
-    of that default explicitly, so it needs its own callback rather than the
-    shared one.
-    """
-    permanent = trigger.still_affects(game)
-    _dismiss_other_earthbend_trigger(game, trigger)
-    if permanent is None:
-        return
-    game.put_onto_battlefield(permanent, trigger.controller, tapped=True)
-
-
-def _dismiss_other_earthbend_trigger(game: "Game", trigger: DelayedTrigger) -> None:
-    """Drop the sibling delayed trigger for "dies **or** is put into exile"
-    once either half has fired - CR 603.7a describes one ability watching for
-    either event, and this engine represents that as two `DelayedTrigger`s
-    sharing one subject because each watches one event. Not load-bearing for
-    correctness (the sibling's `expected_stamp` can never match again once
-    the land has moved on), only for not leaving a dead watcher behind.
-    """
-    game.delayed_triggers.triggers = [
-        candidate
-        for candidate in game.delayed_triggers.triggers
-        if candidate.id not in trigger.sibling_ids
-    ]
 
 
 def _parse_earthbend_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
@@ -14110,7 +13955,7 @@ def _parse_delayed_single_clause(clause: str, *, for_spell: bool) -> TargetedCla
                     controller=ability.controller,
                     source_id=ability.source_id,
                     source_name=ability.source_name,
-                    callback=draw_a_card_for_controller,
+                    effect=draw_a_card_for_controller,
                 )
             )
 
@@ -14141,7 +13986,7 @@ def _parse_delayed_single_clause(clause: str, *, for_spell: bool) -> TargetedCla
                     subject_id=subject.id,
                     expected_zone=Zone.BATTLEFIELD,
                     expected_stamp=subject.zone_change_stamp,
-                    callback=return_subject_to_hand,
+                    effect=return_subject_to_hand,
                 )
             )
 
@@ -14169,42 +14014,20 @@ _RETURN_RIDER_COUNTER_RE = re.compile(
     re.IGNORECASE,
 )
 
-#: What the rider does once the delayed return has happened: `Callable[[Game,
-#: the returned card, the creating ability's controller username, the
-#: creating source's id, the creating source's name], None]`.
-_ReturnRider = Callable[["Game", CardState, str, UUID | None, str], None]
 
-
-def _parse_return_rider_clause(clause: str) -> _ReturnRider | None:
+def _parse_return_rider_clause(clause: str) -> ReturnRiderCounter | None:
     """Phelia's third sentence: "If it entered under your control, put a
     +1/+1 counter on Phelia." Conditional on the delayed return itself (not on
     anything true when the outer ability resolved), so it has to run as part
-    of the delayed trigger's own resolution, not the attack trigger's.
+    of the delayed trigger's own resolution, not the attack trigger's - see
+    `ReturnRiderCounter.__call__` in `machines/delayed.py`.
     """
     match = _RETURN_RIDER_COUNTER_RE.fullmatch(clause.strip().rstrip("."))
     if match is None:
         return None
     amount = _count(match.group("n"))
     who = match.group("who").strip().lower()
-
-    def rider(
-        game: "Game",
-        returned: CardState,
-        controller: str,
-        source_id: UUID | None,
-        source_name: str,
-    ) -> None:
-        if returned.controller != controller:
-            return  # "if it entered under your control"
-        recipient = game.find_by_id(source_id) if source_id is not None else None
-        if recipient is None or recipient.zone is not Zone.BATTLEFIELD:
-            return  # the source is gone; CR 608.2b's outcome for no legal target
-        short_name = source_name.split(",")[0].strip().lower()
-        if who not in ("this creature", "this permanent", source_name.lower(), short_name):
-            return
-        game.add_counters(recipient, Counter.PLUS_ONE, amount)
-
-    return rider
+    return ReturnRiderCounter(amount=amount, who=who)
 
 
 def _parse_delayed_blink_clauses(
@@ -14242,7 +14065,7 @@ def _parse_delayed_blink_clauses(
         return None
 
     consumed = 2
-    rider: _ReturnRider | None = None
+    rider: ReturnRiderCounter | None = None
     if index + 2 < len(clauses):
         maybe_rider = _parse_return_rider_clause(clauses[index + 2])
         if maybe_rider is not None:
@@ -14267,18 +14090,11 @@ def _parse_delayed_blink_clauses(
             # once) - no delayed return for something that never left.
             return
 
-        if rider is None:
-            callback = return_subject_to_battlefield_under_owner
-        else:
-
-            def callback(game: "Game", ability: AbilityOnStack, trigger: DelayedTrigger) -> None:
-                returned = trigger.still_affects(game)
-                if returned is None or returned.owner is None:
-                    return
-                game.put_onto_battlefield(returned, returned.owner, tapped=False)
-                if returned.zone is Zone.BATTLEFIELD:
-                    rider(game, returned, controller, source_id, source_name)
-
+        blink_effect = (
+            return_subject_to_battlefield_under_owner
+            if rider is None
+            else DelayedBlinkReturnWithRider(rider=rider)
+        )
         game.create_delayed_trigger(
             DelayedTrigger(
                 text=clauses[index + 1],
@@ -14290,7 +14106,7 @@ def _parse_delayed_blink_clauses(
                 subject_id=target.id,
                 expected_zone=Zone.EXILE,
                 expected_stamp=target.zone_change_stamp,
-                callback=callback,
+                effect=blink_effect,
             )
         )
 
@@ -14889,21 +14705,6 @@ def _parse_pump_per_discard_then_delayed_draw_clause(text: str) -> AbilityEffect
     per_power = int(match.group("power"))
     per_toughness = int(match.group("toughness"))
 
-    def combat_damage_to_player_draw(
-        game: "Game", stacked: AbilityOnStack, trigger: "DelayedTrigger"
-    ) -> None:
-        # `matches()` only checks the event kind and the subject's id (CR
-        # 603.7c); "combat damage" and "to a player" are this delayed
-        # trigger's own narrower condition, the same two checks
-        # `machines/triggers.condition_matches`'s DEALS_DAMAGE branch makes
-        # for a printed version of this shape.
-        event = stacked.event
-        if event is None or not event.combat or event.player is None:
-            return
-        if not game.is_in_game(trigger.controller):
-            return
-        game.draw_cards(trigger.controller, 1)
-
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         event = ability.event
         discard_count = event.amount if event is not None and event.amount is not None else 0
@@ -14927,7 +14728,7 @@ def _parse_pump_per_discard_then_delayed_draw_clause(text: str) -> AbilityEffect
                 sublayer=Sublayer.MODIFY,
                 timestamp=store.tick(),
                 duration=Duration.UNTIL_END_OF_TURN,
-                selector=lambda chars, board, tid=target.id: chars.card_id == tid,
+                selector=_only(target.id),
                 modification=modify_power_toughness(magnitude, discard_count * per_toughness),
             )
         )
@@ -14945,7 +14746,7 @@ def _parse_pump_per_discard_then_delayed_draw_clause(text: str) -> AbilityEffect
                 subject_id=target.id,
                 remaining=None,
                 expires_end_of_turn=True,
-                callback=combat_damage_to_player_draw,
+                effect=CombatDamageToPlayerDraw(),
             )
         )
 
@@ -17603,19 +17404,6 @@ def _parse_copy_next_spell_you_cast_clause(text: str) -> AbilityEffect | None:
     may_retarget = match.group("new_targets") is not None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
-        def callback(game: "Game", on_stack: AbilityOnStack, trigger: DelayedTrigger) -> None:
-            event = on_stack.event
-            if event is None or event.subject_id is None:
-                return
-            spell = game.find_by_id(event.subject_id)
-            if not isinstance(spell, CardState):
-                return
-            copy = game.copy_spell(spell, controller=trigger.controller)
-            if may_retarget:
-                game.offer_new_targets_for_copy(
-                    copy, trigger.controller, source_name=trigger.source_name
-                )
-
         game.create_delayed_trigger(
             DelayedTrigger(
                 text="Copy the next spell you cast this turn when you cast it.",
@@ -17626,7 +17414,7 @@ def _parse_copy_next_spell_you_cast_clause(text: str) -> AbilityEffect | None:
                 only_when_active=ability.controller,
                 remaining=1,
                 expires_end_of_turn=True,
-                callback=callback,
+                effect=CopyNextSpellYouCast(may_retarget=may_retarget),
             )
         )
 
@@ -17672,7 +17460,7 @@ def emrakul_cast_trigger(game: "Game", ability: AbilityOnStack) -> None:
         game.create_delayed_trigger(
             DelayedTrigger(
                 text="After that turn, that player takes an extra turn.",
-                effect="grant_extra_turn",
+                effect=GrantExtraTurn(),
                 event=TriggerEvent.BEGINNING_OF_STEP,
                 step=Step.END_STEP,
                 controller=ability.controller,
@@ -19309,7 +19097,7 @@ def _parse_return_target_from_graveyard_gains_then_bounce(text: str) -> AbilityE
                 layer=Layer.ABILITY,
                 timestamp=store.tick(),
                 duration=Duration.INDEFINITE,
-                selector=_selects_id(put.id),
+                selector=_only(put.id),
                 modification=grant_ability(keyword.title()),
             )
         )
@@ -19325,7 +19113,7 @@ def _parse_return_target_from_graveyard_gains_then_bounce(text: str) -> AbilityE
                 only_when_active=controller.username,
                 expected_zone=Zone.BATTLEFIELD,
                 expected_stamp=put.zone_change_stamp,
-                callback=return_subject_to_hand,
+                effect=return_subject_to_hand,
             )
         )
 
@@ -19963,7 +19751,7 @@ def _parse_double_power_target_clause(text: str) -> AbilityEffect | None:
                 sublayer=Sublayer.MODIFY,
                 timestamp=store.tick(),
                 duration=Duration.UNTIL_END_OF_TURN,
-                selector=_selects_id(target.id),
+                selector=_only(target.id),
                 modification=modify_power_toughness(power, 0),
             )
         )

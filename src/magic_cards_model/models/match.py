@@ -25,6 +25,32 @@ from .deck import CardResolver, Deck
 from .game import Game
 from .player import Player
 
+_CARD_RESOLVERS: dict[str, CardResolver] = {}
+"""Resolvers registered by name, for `Match.bind_card_resolver` to find again.
+
+A `CardResolver` (`deck.CardResolver = Callable[[str], Card]`) is a plain
+callable, which is exactly what `Match.card_resolver` being `exclude=True`
+already says pydantic has nothing to serialize it into: a `Match` rebuilt
+from a `model_dump` never had one to begin with, and CR 103.5 needs a real
+one to deal an opening hand. Naming a resolver here, once, wherever it is
+defined, is what lets `Match.card_resolver_name` - a plain string, and
+therefore the one part of "how a decklist name becomes a printing" that
+*does* survive the round trip - stand in for the callable until
+`bind_card_resolver` puts it back.
+"""
+
+
+def register_card_resolver(name: str, resolver: CardResolver) -> None:
+    """Register `resolver` under `name` for `Match.bind_card_resolver` to use.
+
+    Re-registering the same name replaces the resolver rather than refusing,
+    since a resolver is usually a thin wrapper over a card pool that can
+    itself change between runs (a refreshed fixture pool, a different
+    Scryfall snapshot) while the name a `Match` was serialised with should
+    not have to.
+    """
+    _CARD_RESOLVERS[name] = resolver
+
 
 class Match(BaseModel):
     """A best-of-N series. Constructed play is best of three.
@@ -53,7 +79,23 @@ class Match(BaseModel):
     """Registered decklists, by username. A player without one starts with empty zones."""
 
     card_resolver: CardResolver | None = Field(default=None, exclude=True, repr=False)
-    """How a decklist name becomes a printing. Required to deal a real opening hand."""
+    """How a decklist name becomes a printing. Required to deal a real opening hand.
+
+    Excluded from serialization: a plain callable is not something pydantic
+    can write down, so a `Match` rebuilt from a `model_dump`/`model_validate`
+    round trip never has one, even when the one it started with is still
+    registered under `card_resolver_name`. Call `bind_card_resolver` on a
+    decoded `Match` to put it back before `start_game` needs it.
+    """
+
+    card_resolver_name: str | None = Field(default=None)
+    """The name `card_resolver` was registered under (`register_card_resolver`).
+
+    The one part of "how a decklist name becomes a printing" that a
+    `model_dump`/`model_validate` round trip does not throw away, because it
+    is a plain string rather than the callable itself. `bind_card_resolver`
+    reads it back after a decode to re-inject `card_resolver`.
+    """
 
     seed: int | str = 0
     """Base seed for every shuffle in the match.
@@ -142,6 +184,42 @@ class Match(BaseModel):
         (CR 100.6), not a Comprehensive Rules one, so `winner` just stays None.
         """
         return self.winner is not None or len(self.games) >= self.best_of
+
+    # -- card resolver -------------------------------------------------------
+
+    def bind_card_resolver(self, name: str | None = None) -> None:
+        """Put `card_resolver` back after a decode (CR 103.5 needs one to deal).
+
+        `card_resolver` cannot survive `model_dump`/`model_validate` - it is a
+        plain callable, `exclude=True` for exactly that reason - so a `Match`
+        rebuilt from a dict has only `card_resolver_name`, a plain string,
+        left to go on. This looks that name up in `register_card_resolver`'s
+        registry and puts the callable back, which is what lets a decoded
+        `Match` load a deck and deal an opening hand at all.
+
+        `name` overrides `card_resolver_name` rather than requiring the field
+        be set first, so a caller re-homing a decoded `Match` onto a resolver
+        registered under a different name than the one it shipped with still
+        has a way in - and, when given, it is also stored back onto
+        `card_resolver_name`, so the `Match` now names the resolver it is
+        actually carrying.
+        """
+        resolver_name = name if name is not None else self.card_resolver_name
+        if resolver_name is None:
+            raise ValueError(
+                "no card_resolver_name to bind - pass name= or set "
+                "card_resolver_name before calling bind_card_resolver"
+            )
+        try:
+            resolver = _CARD_RESOLVERS[resolver_name]
+        except KeyError:
+            raise KeyError(
+                f"{resolver_name!r} is not a registered card resolver. "
+                f"Registered: {', '.join(sorted(_CARD_RESOLVERS)) or '(none)'}. "
+                "Call register_card_resolver(name, resolver) first."
+            ) from None
+        self.card_resolver = resolver
+        self.card_resolver_name = resolver_name
 
     # -- decks -------------------------------------------------------------
 
@@ -242,7 +320,7 @@ class Match(BaseModel):
             if deal_opening_hands:
                 player.draw_opening_hand()
 
-        game = Game(players=fresh)
+        game = Game(players=fresh, schema_version=Game.CURRENT_SCHEMA_VERSION)
         self.games.append(game)
         self.first_players.append(first_player)
         self.choosers.append(chooser)

@@ -51,8 +51,15 @@ from uuid import uuid4
 import pytest
 
 from magic_cards_model.machines import Step
-from magic_cards_model.machines.decisions import DecisionKind, ScriptedAnswer
+from magic_cards_model.machines.decisions import (
+    Answer,
+    DecisionKind,
+    DecisionPending,
+    DeclaredPair,
+    ScriptedAnswer,
+)
 from magic_cards_model.models import Zone
+from magic_cards_model.models.game import Game
 from tests.scenarios.harness import Scenario
 
 
@@ -559,3 +566,336 @@ def test_the_draw_on_death_still_defaults_to_taking_it():
     scenario.pass_until_resolved()
 
     assert [state.name for state in scenario.player("alice").hand] == ["Forest"]
+
+
+# -- Answer refuses an empty CHOOSE_A_QUALITY/CHOOSE_A_MODE text early -------
+#
+# `Game.ask` already refuses an empty answer for both kinds (CR 614.12a's and
+# CR 700.2a's choices are both mandatory - see `Game.ask`'s own `not value`
+# checks), and the API's `quality_answer`/`mode_answer` refuse one too, before
+# it ever reaches the engine. `Answer._check_one_value_field` refuses it a
+# third time, at construction - not a wrong game either way (`Game.ask` was
+# always going to catch it), but a lost *early* refusal is still a real
+# regression from what a hand-built request already got.
+
+
+def test_an_answer_refuses_an_empty_choose_a_quality_text():
+    with pytest.raises(ValueError, match="non-empty"):
+        Answer(seq=0, kind=DecisionKind.CHOOSE_A_QUALITY, player="alice", text="")
+
+
+def test_an_answer_refuses_an_empty_choose_a_mode_text():
+    with pytest.raises(ValueError, match="non-empty"):
+        Answer(seq=0, kind=DecisionKind.CHOOSE_A_MODE, player="alice", text="")
+
+
+def test_an_answer_allows_empty_text_for_kinds_where_it_is_not_mandatory():
+    """The new check is narrow: it only fires for the two mandatory-choice
+    kinds, so it must not start refusing an empty string anywhere else - there
+    is no other kind whose value field is ever a bare `str`, but `ORDER_
+    TRIGGERS`' `card_ids` being an empty tuple (a single ability, no real
+    choice) must keep working, the same "is None, not falsy" posture `_check_
+    one_value_field` already takes for every other field.
+    """
+    Answer(seq=0, kind=DecisionKind.ORDER_TRIGGERS, player="alice", card_ids=())
+
+
+# -- pausing instead of blocking: the tape and `DecisionPending` ------------
+#
+# `Game.ask` consults, in order: a scripted answer, then `DecisionScript.
+# recorded` (the replay tape - see `machines/decisions.py`'s module docstring,
+# "Pausing instead of blocking"), then `decisions.provider`, then
+# `DecisionPending` if `decisions.pause_when_unanswered`, then `default_
+# answer`. Malevolent Rumble asks two questions in one spell resolution (`MAY`
+# then `CHOOSE_CARDS`, both directly through `game.ask`, `machines/effects.py`
+# ::malevolent_rumble`) and Seasoned Pyromancer asks one while a *triggered
+# ability* resolves rather than a spell - between them they exercise both of
+# `models/game.py`'s bare `except Exception` handlers around effect
+# resolution (`Game.resolve_top`, `Game._resolve_ability`).
+
+
+def test_a_tape_of_answers_is_consulted_in_order_and_fully_consumed():
+    """Two `Answer`s on `DecisionScript.recorded`, oldest first, answer
+    Malevolent Rumble's `MAY` and then its `CHOOSE_CARDS` - the same board and
+    the same two choices `test_choosing_a_different_permanent_than_the_
+    library_order_default` makes through a script, made here through the tape
+    instead, and landing on the identical outcome.
+    """
+    scenario = _malevolent_rumble_board(
+        ["Grizzly Bears", "Wall of Omens", "Forest", "Counterspell"]
+    ).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Forest", "Forest", username="alice")
+    alice = scenario.player("alice")
+    wall = alice.library[1]
+    assert wall.name == "Wall of Omens"
+    scenario.game.decisions.recorded = [
+        Answer(seq=0, kind=DecisionKind.MAY, player="alice", accept=True),
+        Answer(seq=1, kind=DecisionKind.CHOOSE_CARDS, player="alice", card_ids=(wall.id,)),
+    ]
+
+    scenario.cast_and_resolve("Malevolent Rumble", *sources, username="alice")
+
+    assert scenario.game.decisions.consumed == 2, "both recorded answers were read, in order"
+    assert [state.name for state in alice.hand] == ["Wall of Omens"]
+    graveyard_names = {state.name for state in alice.graveyard}
+    assert graveyard_names == {"Grizzly Bears", "Forest", "Counterspell", "Malevolent Rumble"}
+
+
+def test_a_tape_entry_for_the_wrong_kind_raises_a_corrupt_tape_error():
+    """`DecisionScript.take_from_tape` never skips a mismatched entry looking
+    for one that fits - a replayed answer that lands on the wrong question
+    would still run the game to completion, just as the wrong game, which is
+    worse than a crash (`memory/silent-default-dispatch-tables.md`).
+    """
+    scenario = _malevolent_rumble_board(
+        ["Grizzly Bears", "Wall of Omens", "Forest", "Counterspell"]
+    ).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Forest", "Forest", username="alice")
+    scenario.game.decisions.recorded = [
+        # Malevolent Rumble asks MAY first; a CHOOSE_CARDS answer here is for
+        # the wrong question entirely.
+        Answer(seq=0, kind=DecisionKind.CHOOSE_CARDS, player="alice", card_ids=()),
+    ]
+
+    with pytest.raises(ValueError, match="corrupt or out of order"):
+        scenario.cast_and_resolve("Malevolent Rumble", *sources, username="alice")
+
+
+def test_a_tape_entry_for_the_wrong_player_raises_a_corrupt_tape_error():
+    """Same refusal, the other half of `take_from_tape`'s check: the right
+    kind, recorded for somebody who was not asked.
+    """
+    scenario = _malevolent_rumble_board(
+        ["Grizzly Bears", "Wall of Omens", "Forest", "Counterspell"]
+    ).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Forest", "Forest", username="alice")
+    scenario.game.decisions.recorded = [
+        Answer(seq=0, kind=DecisionKind.MAY, player="bob", accept=True),
+    ]
+
+    with pytest.raises(ValueError, match="corrupt or out of order"):
+        scenario.cast_and_resolve("Malevolent Rumble", *sources, username="alice")
+
+
+def test_pause_when_unanswered_raises_decision_pending_through_a_resolving_spell():
+    """With nothing scripted, no tape, and no provider, `decisions.pause_when_
+    unanswered` turns Malevolent Rumble's `MAY` into a raised `DecisionPending`
+    instead of a defaulted answer - and it must reach this test directly out
+    of `Game.resolve_top`, which wraps the spell's own effect in a bare
+    `except Exception` that would otherwise send Malevolent Rumble to the
+    graveyard mid-resolution (see that method's docstring, the Malevolent
+    Rumble regression it already documents). That only happens because
+    `DecisionPending` derives from `BaseException`, not `Exception` - this is
+    the proof, not an assertion about it.
+    """
+    scenario = _malevolent_rumble_board(
+        ["Grizzly Bears", "Wall of Omens", "Forest", "Counterspell"]
+    ).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Forest", "Forest", username="alice")
+    scenario.cast_onto_stack("Malevolent Rumble", *sources, username="alice")
+    rumble = scenario.find("Malevolent Rumble", Zone.STACK)
+    scenario.game.decisions.pause_when_unanswered = True
+
+    with pytest.raises(DecisionPending) as excinfo:
+        scenario.resolve_top()
+
+    pending = excinfo.value.pending
+    assert pending.decision.kind is DecisionKind.MAY
+    assert pending.decision.player == "alice"
+    assert pending.decision.source == "Malevolent Rumble"
+    assert pending.seq == 0
+    assert "608.2d" in pending.rule
+    # `resolve_top`'s `except Exception` handler would have buried Malevolent
+    # Rumble in the graveyard before re-raising - see assertion (b) in
+    # `test_an_empty_choose_cards_answer_is_refused_without_losing_the_spell`
+    # just above, where that same handler catches an ordinary `ValueError`
+    # refusal and does exactly that. It is not there, because a
+    # `BaseException` never reaches that handler at all.
+    assert rumble.zone is not Zone.GRAVEYARD
+
+
+def test_pause_when_unanswered_raises_decision_pending_through_a_resolving_ability():
+    """Same proof, through `Game._resolve_ability`'s own bare `except
+    Exception` instead of `resolve_top`'s: Seasoned Pyromancer's discard is
+    asked while a *triggered ability* resolves, not a spell.
+    """
+    scenario = _seasoned_pyromancer_board("Lightning Bolt").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Mountain", "Mountain", "Mountain", username="alice")
+    scenario.cast_and_resolve("Seasoned Pyromancer", *sources, username="alice")
+    scenario.game.decisions.pause_when_unanswered = True
+
+    with pytest.raises(DecisionPending) as excinfo:
+        scenario.resolve_top()  # the enters trigger, which asks the discard
+
+    pending = excinfo.value.pending
+    assert pending.decision.kind is DecisionKind.CHOOSE_CARDS
+    assert pending.decision.player == "alice"
+    assert pending.decision.source == "Seasoned Pyromancer"
+    assert pending.seq == 0
+    assert "608.2d" in pending.rule
+
+
+def test_a_recorded_tape_replays_the_same_answer_against_a_decoded_snapshot():
+    """A committed snapshot (`Game.model_dump(mode="json")`) decoded back into
+    a fresh `Game` (`Game.model_validate`) carries the tape's own `Answer`
+    with it and reaches the identical outcome a live player reached against
+    the *original* game object - proving `Answer` itself survives the round
+    trip commit 739ee2b's design depends on, and that `take_from_tape` reads
+    it back correctly on a `Game` that never saw the question the first time
+    around.
+
+    The `Answer` is put on `decisions.recorded` **before** the snapshot is
+    taken, not after `model_validate` - attaching it afterwards, as a live
+    Python object, would prove nothing about JSON at all: `Answer` is a
+    pydantic model built exactly so it can round-trip, and the only way to
+    exercise that is to have it actually go through `model_dump`/`model_
+    validate`, which is what makes this the same proof `commit 739ee2b`'s own
+    closures-to-frozen-pydantic-models change needed for `machines/layers.py`.
+    A scripted answer still wins over the tape (see `Game.ask`'s own
+    docstring), so recording the tape before the *original* run does not
+    disturb it - the original is still answered live, via `will_discard`.
+    """
+    scenario = _seasoned_pyromancer_board("Lightning Bolt").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Mountain", "Mountain", "Mountain", username="alice")
+    alice = scenario.player("alice")
+    scenario.cast_and_resolve("Seasoned Pyromancer", *sources, username="alice")
+    bolts = [state for state in alice.hand if state.name == "Lightning Bolt"]
+    assert len(bolts) == 2
+    # The tape is attached before the snapshot, so `model_dump` actually
+    # serializes this `Answer` rather than the test reattaching a fresh one
+    # to the decoded `Game` afterwards.
+    scenario.game.decisions.recorded = [
+        Answer(
+            seq=0,
+            kind=DecisionKind.CHOOSE_CARDS,
+            player="alice",
+            card_ids=tuple(bolt.id for bolt in bolts),
+        )
+    ]
+    # The committed snapshot: the enters trigger is on the stack, unresolved -
+    # nothing about the discard has happened yet in either game built from it.
+    snapshot = scenario.game.model_dump(mode="json")
+
+    scenario.will_discard(*bolts, username="alice")
+    scenario.resolve_top()  # the original run, answered live via a script
+    original_hand = sorted(state.name for state in alice.hand)
+    original_graveyard = sorted(state.name for state in alice.graveyard)
+
+    restored = Game.model_validate(snapshot)
+    # The tape arrived through JSON, not through a second assignment here -
+    # this is the assertion that `Answer` actually made the round trip.
+    assert restored.decisions.recorded == [
+        Answer(
+            seq=0,
+            kind=DecisionKind.CHOOSE_CARDS,
+            player="alice",
+            card_ids=tuple(bolt.id for bolt in bolts),
+        )
+    ]
+
+    restored.resolve_top()  # the replay, answered only from the tape
+
+    assert restored.decisions.consumed == 1
+    replayed_alice = restored.player("alice")
+    assert sorted(state.name for state in replayed_alice.hand) == original_hand
+    assert sorted(state.name for state in replayed_alice.graveyard) == original_graveyard
+
+
+# -- begin_replay / finish_replay -------------------------------------------
+#
+# `consumed` is a persisted field nothing else ever resets, so a caller
+# resuming from a committed snapshot inherits whatever `consumed` that
+# snapshot happened to carry and must zero it by hand; `begin_replay` is the
+# one call that does that, `asked` included. `finish_replay` is the mirror
+# check: nothing before it ever noticed a tape *longer* than the questions a
+# run actually asked - the exact mirror of the mis-ordered tape `take_from_
+# tape` already raises on.
+
+
+def test_begin_replay_zeroes_consumed_and_clears_asked():
+    scenario = _malevolent_rumble_board(
+        ["Grizzly Bears", "Wall of Omens", "Forest", "Counterspell"]
+    ).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Forest", "Forest", username="alice")
+    wall = scenario.player("alice").library[1]
+    scenario.game.decisions.recorded = [
+        Answer(seq=0, kind=DecisionKind.MAY, player="alice", accept=True),
+        Answer(seq=1, kind=DecisionKind.CHOOSE_CARDS, player="alice", card_ids=(wall.id,)),
+    ]
+    scenario.cast_and_resolve("Malevolent Rumble", *sources, username="alice")
+    assert scenario.game.decisions.consumed == 2
+    assert scenario.game.decisions.asked != []
+
+    scenario.game.decisions.begin_replay(
+        [Answer(seq=0, kind=DecisionKind.MAY, player="alice", accept=False)]
+    )
+
+    assert scenario.game.decisions.consumed == 0
+    assert scenario.game.decisions.asked == []
+    assert scenario.game.decisions.recorded == [
+        Answer(seq=0, kind=DecisionKind.MAY, player="alice", accept=False)
+    ]
+
+
+def test_finish_replay_raises_when_the_tape_has_unread_answers_left():
+    """A tape longer than the questions this run actually asked is never
+    noticed by anything else - a run that stops asking questions early looks
+    exactly like one that finished normally. `finish_replay` is what a caller
+    calls to find out.
+    """
+    scenario = _malevolent_rumble_board(
+        ["Grizzly Bears", "Wall of Omens", "Forest", "Counterspell"]
+    ).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Forest", "Forest", username="alice")
+    # A declined MAY means Malevolent Rumble's CHOOSE_CARDS is never asked at
+    # all - see `test_an_empty_choose_cards_answer_is_refused_without_losing_
+    # the_spell`'s sibling tests for that shape - so this tape's second entry
+    # is never read.
+    scenario.game.decisions.recorded = [
+        Answer(seq=0, kind=DecisionKind.MAY, player="alice", accept=False),
+        Answer(seq=1, kind=DecisionKind.CHOOSE_CARDS, player="alice", card_ids=()),
+    ]
+
+    scenario.cast_and_resolve("Malevolent Rumble", *sources, username="alice")
+
+    assert scenario.game.decisions.consumed == 1
+    with pytest.raises(ValueError, match="longer than the questions"):
+        scenario.game.decisions.finish_replay()
+
+
+def test_finish_replay_passes_once_every_recorded_answer_was_read():
+    scenario = _malevolent_rumble_board(
+        ["Grizzly Bears", "Wall of Omens", "Forest", "Counterspell"]
+    ).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Forest", "Forest", username="alice")
+    wall = scenario.player("alice").library[1]
+    scenario.game.decisions.recorded = [
+        Answer(seq=0, kind=DecisionKind.MAY, player="alice", accept=True),
+        Answer(seq=1, kind=DecisionKind.CHOOSE_CARDS, player="alice", card_ids=(wall.id,)),
+    ]
+
+    scenario.cast_and_resolve("Malevolent Rumble", *sources, username="alice")
+
+    scenario.game.decisions.finish_replay()  # does not raise
+
+
+# -- DeclaredPair needs exactly one defender ---------------------------------
+
+
+def test_declared_pair_refuses_both_defenders_set():
+    with pytest.raises(ValueError, match="exactly one"):
+        DeclaredPair(creature=uuid4(), defender_card=uuid4(), defender_player="bob")
+
+
+def test_declared_pair_refuses_neither_defender_set():
+    with pytest.raises(ValueError, match="exactly one"):
+        DeclaredPair(creature=uuid4())

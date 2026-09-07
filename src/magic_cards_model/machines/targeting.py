@@ -103,6 +103,7 @@ from pydantic import BaseModel, ConfigDict
 from ..models.card import Card, Color, Supertype, Type
 from ..models.card_state import CardState, ExileMarker, TargetRef
 from ..models.zone import Zone
+from ..serialization import SortedFrozenSet
 from .abilities import keyword_abilities
 from .combat import has_keyword
 from .layers import BASIC_LAND_TYPES
@@ -209,17 +210,17 @@ class TargetRequirement(BaseModel):
     knows it; this covers reading the card before either has happened.
     """
 
-    card_types: frozenset[Type] = frozenset()
+    card_types: SortedFrozenSet[Type] = frozenset()
     """Acceptable card types. Empty means any card type, as "target spell" does."""
-    excluded_card_types: frozenset[Type] = frozenset()
+    excluded_card_types: SortedFrozenSet[Type] = frozenset()
     """Card types the target must *not* have: the "non-" of "noncreature spell"."""
-    required_supertypes: frozenset[Supertype] = frozenset()
+    required_supertypes: SortedFrozenSet[Supertype] = frozenset()
     """Supertypes the target must have: "basic" in "target basic land"."""
-    excluded_supertypes: frozenset[Supertype] = frozenset()
+    excluded_supertypes: SortedFrozenSet[Supertype] = frozenset()
     """Supertypes the target must *not* have: the "non-" of "target nonbasic
     land" (CR 205.4c: "any land that doesn't have this supertype is a
     nonbasic land, even if it has a basic land type")."""
-    required_colors: frozenset[Color] = frozenset()
+    required_colors: SortedFrozenSet[Color] = frozenset()
     """Which of the five colors would satisfy this (CR 105.1, 105.2b): "target
     black or red permanent" (Celestial Purge) is a disjunction - either color
     is enough, the same way `card_types` already is one for "target artifact
@@ -260,13 +261,13 @@ class TargetRequirement(BaseModel):
     together (each is itself only an OR within one axis), so this gets its
     own field and its own check, `_rejects_historic`, rather than trying to
     fold it into either."""
-    combat_states: frozenset[CombatState] = frozenset()
+    combat_states: SortedFrozenSet[CombatState] = frozenset()
     """Which of attacking and blocking would satisfy this (CR 508.1k, 509.1g).
 
     Empty means the text asked for neither. More than one is a disjunction:
     "target attacking or blocking creature" takes either.
     """
-    required_subtypes: frozenset[str] = frozenset()
+    required_subtypes: SortedFrozenSet[str] = frozenset()
     """A bare CR 205.3m creature-type list used as the target noun itself -
     "target Vampire, Werewolf, or Zombie" (Slayer of the Wicked) - rather than
     "target creature" narrowed by a "with"/"you control" clause. Oracle
@@ -282,7 +283,7 @@ class TargetRequirement(BaseModel):
     allows_abilities: bool = False
     """True for "target activated or triggered ability" (CR 115.2, CR 113.1c)."""
     opponent_only: bool = False
-    zones: frozenset[Zone] = frozenset({Zone.BATTLEFIELD})
+    zones: SortedFrozenSet[Zone] = frozenset({Zone.BATTLEFIELD})
     controller: ControllerRestriction = ControllerRestriction.ANY
     must_be_tapped: bool | None = None
     excludes_source: bool = False
@@ -1449,7 +1450,15 @@ def _read_other_than_exclusion(
     return frozenset(), frozenset(_TYPE_NOUNS[word] for word in type_words)
 
 
-_CACHE: dict[tuple[str, str], TargetingProfile] = {}
+#: Keyed on oracle text alone, not `(card.name, text)`: a card's `Card`
+#: instance must never sit inside this cache, because `Card` is
+#: `ConfigDict(extra="ignore")` rather than frozen, and a cached instance is
+#: shared - unboundedly - across every game the process ever runs. Stamping
+#: one game's `Card` into a profile that a later, unrelated game then reads
+#: back out would let a mutation in the first game leak into the second.
+#: `source_card` is therefore never stored here; `targeting_profile` stamps it
+#: onto a fresh copy of the cached profile on every call instead.
+_CACHE: dict[str, TargetingProfile] = {}
 
 
 def targeting_profile(card: Card) -> TargetingProfile:
@@ -1471,19 +1480,19 @@ def targeting_profile(card: Card) -> TargetingProfile:
     # Turntimber Symbiosis) with no target requirement read from its text at
     # all - same family as `effect_for`'s fix in `Game.resolve_top`.
     text = card.front_oracle_text
-    key = (card.name, text)
-    profile = _CACHE.get(key)
+    profile = _CACHE.get(text)
     if profile is None:
         if modal_profile(card):
             profile = TargetingProfile(understood=False)
         else:
             profile = _parse(text)
             profile = _with_aura_target(card, profile)
-        # Stamped last so every branch above carries it: this is the card whose
-        # qualities CR 702.16b compares against a protected target.
-        profile = profile.model_copy(update={"source_card": card})
-        _CACHE[key] = profile
-    return profile
+        _CACHE[text] = profile
+    # Stamped here, on every call, rather than baked into the cached entry:
+    # this is the card whose qualities CR 702.16b compares against a
+    # protected target, and it must be *this* call's `card`, never whichever
+    # game's `Card` happened to populate the cache first.
+    return profile.model_copy(update={"source_card": card})
 
 
 def _with_aura_target(card: Card, profile: TargetingProfile) -> TargetingProfile:

@@ -16,6 +16,8 @@ a card the pool does not have yet, add its Scryfall json there - do not hand-wri
 card data, since the point of these tests is that they run against real cards.
 """
 
+from typing import Any
+
 from magic_cards_model.machines import Casting, CostPayment, PriorityOutcome, Step, TurnMachine
 from magic_cards_model.machines.abilities import granted_mana_abilities, parse_mana_abilities
 from magic_cards_model.machines.decisions import (
@@ -26,7 +28,7 @@ from magic_cards_model.machines.decisions import (
 )
 from magic_cards_model.machines.objects_as_costs import waterbend
 from magic_cards_model.machines.triggers import AbilityOnStack
-from magic_cards_model.models import CardState, Color, Game, Player, Zone
+from magic_cards_model.models import CardState, Color, Game, Match, Player, Zone
 from magic_cards_model.models.card_state import TargetRef, counter_state_based_actions
 from tests.cards import card_state
 
@@ -34,6 +36,213 @@ from tests.cards import card_state
 #: username. `TargetRef.coerce` works out which was meant, so a test can write
 #: `targets=[bears]` or `targets=["bob"]` and mean the obvious thing.
 Target = CardState | Player | str | TargetRef
+
+
+# ---------------------------------------------------------------------------
+# The round-trip / replay invariant (T10).
+#
+# `tests/scenarios/conftest.py`'s `pytest_pyfunc_call` runs every scenario
+# test function once for real, then - if it built at least one `Game` - a
+# second time with every `Game` construction this file funnels through
+# swapped for a decode of what the first run built at that same point. Two
+# runs of the exact same literal test code is what "replay of a scenario's
+# own commands" means here: nothing has to be recorded call-by-call, because
+# the test function's own body already *is* that command sequence, and
+# `ids.py`'s per-`game_uid` deterministic id allocator is what makes a second
+# run from a decoded snapshot mint the same ids in the same order the first
+# run did - see its own docstring. The conftest hook does the round-trip
+# check (dump, decode, re-dump, compare) after the first run regardless, and
+# the replay comparison after the second.
+#
+# `checkpoint` is the one seam every path that hands a scenario test a
+# playable `Game` has to cross: `Scenario.build` below, `Match.start_game`
+# (wrapped once, just below, since roughly a fifth of `tests/scenarios/`
+# reaches `Match` directly rather than through `Scenario`), and the two
+# scenario files that construct a bare `Game` themselves call it explicitly.
+# A file that never calls it never hands the conftest hook a `Game` to check,
+# which is how the ~24 files with no board at all - a registry-minimality
+# guard, a `Deck` construction test - stay correctly uncovered rather than
+# silently failing.
+#
+# Warming: `Game.computed_board`'s own docstring (and `machines/legal_
+# actions.py`'s) records that the CR 613.7 timestamp registry
+# (`continuous_effects.entered`/`.clock`) is lazily populated on a cold
+# game's first call, so a game dumped before that call and one dumped after
+# differ. `checkpoint` calls `computed_board()` itself, every time, before
+# ever taking a snapshot - the same "warm before you trust a graveyard-
+# reading CDA" rule `computed_board`'s own docstring already states, not a
+# special case invented for this invariant. That is legitimate rather than a
+# quiet exclusion because the registry is real CR 613.7 state a live game
+# would populate the same way on its own first legality check; forcing that
+# to happen at the moment a scenario's board is ready, rather than whenever a
+# test happens to first ask a question, changes *when* the clock starts, not
+# *what* it means once it has.
+#
+# Ids: `ids.py`'s own docstring names a specific, short list of `Game`
+# methods that install its deterministic `uuid5(game_uid, objects_created)`
+# allocator for the span of their own call - `advance`, `destroy`,
+# `check_state_based_actions`, `resolve_top`, and a dozen more - and says nothing
+# else mints one. That list turned out not to be exhaustive: `Game.sacrifice`,
+# `Game.draw_cards`, and a long tail of other public methods also reach
+# `CardState.move_to`, `ContinuousEffectStore.create`, `DelayedTriggers.
+# create`, or a bare `CardState`/`AbilityOnStack` construction, all of which
+# mint an id through the *same* `ids.new_id`, but with no scope open around
+# them - so they fall back to plain `uuid4()`. A live game never notices,
+# because it never compares itself to another run of itself; this invariant
+# does exactly that, and it is the dominant class of finding this task
+# reported - see `MEMORY.md` and the T10 report for the full account and
+# which methods are fixed versus still open.
+#
+# A harness-level fix was tried and reverted: installing `game._allocate_id`
+# as the process-wide default for the rest of a checkpointed test, so every
+# uncovered method's `new_id()` found it instead of `uuid4`. It made
+# `objects_created` advance for ids that were never supposed to be counted at
+# all - `machines/legal_actions.py` builds throwaway `Casting`/`CostPayment`
+# objects to judge affordability without ever touching the real game, and
+# with the default installed those mints became persisted state, breaking
+# `test_legal_actions_mutates_nothing`'s own guarantee on the very first,
+# non-replayed run. Determinism has to be scoped to the specific methods
+# whose ids are actually kept, which only `Game._id_allocator_scope()` -
+# opened per method, in `game.py` - can tell apart from a query that discards
+# what it built. The fix belongs there, not here; this file only detects the
+# gap and reports it.
+# ---------------------------------------------------------------------------
+
+_MODE: str = "off"  # "off" | "record" | "replay"
+_INITIAL_DUMPS: list[dict[str, Any]] = []
+_LIVE_GAMES: list[Game] = []
+_REPLAY_QUEUE: list[dict[str, Any]] = []
+
+
+def checkpoint(game: Game) -> Game:
+    """Warm `game`, then - outside a tracked test - hand it back unchanged.
+
+    Inside `tests/scenarios/conftest.py`'s hook this is where a `Game` a
+    scenario is about to start playing either gets recorded (first run) or
+    swapped for a decode of what the first run recorded at this same call
+    (second run, replaying). Every other caller - a script, a one-off REPL
+    session, `mise run` tooling - sees a plain pass-through, because `_MODE`
+    defaults to `"off"` and only the conftest hook ever changes it.
+
+    This does *not* install `game._allocate_id` as a process-wide default the
+    way an earlier draft of this function did - that draft made every id
+    minted for the rest of the test deterministic, including the throwaway
+    `Casting`/`CostPayment` objects `machines/legal_actions.py` builds to
+    judge affordability without ever mutating the real game, and that made
+    `objects_created` advance on a supposedly pure query -
+    `test_legal_actions_mutates_nothing`'s own guarantee - breaking it on the
+    very first (non-replayed) run. Determinism has to be scoped to the
+    specific `Game` methods whose ids are actually persisted, which is
+    `Game._id_allocator_scope()`'s own job; the fix for the gaps this
+    invariant found belongs there (`game.py`), not here.
+    """
+    game.computed_board()
+    if _MODE == "record":
+        _INITIAL_DUMPS.append(game.model_dump(mode="json"))
+        _LIVE_GAMES.append(game)
+        return game
+    if _MODE == "replay":
+        if not _REPLAY_QUEUE:
+            raise AssertionError(
+                "replay ran out of recorded checkpoints: this scenario built a "
+                "game on its second run that it did not build on its first, "
+                "so it is not deterministic enough for the round-trip/replay "
+                "invariant to judge"
+            )
+        replayed = Game.model_validate(_REPLAY_QUEUE.pop(0))
+        _LIVE_GAMES.append(replayed)
+        return replayed
+    return game
+
+
+def begin_recording() -> None:
+    """Start tracking every `Game` a scenario's first run checkpoints."""
+    global _MODE
+    _MODE = "record"
+    _INITIAL_DUMPS.clear()
+    _LIVE_GAMES.clear()
+    _REPLAY_QUEUE.clear()
+
+
+def end_recording() -> tuple[list[Game], list[dict[str, Any]]]:
+    """Stop tracking and return `(games, initial_dumps)`, in checkpoint order."""
+    global _MODE
+    games, dumps = list(_LIVE_GAMES), list(_INITIAL_DUMPS)
+    _MODE = "off"
+    _LIVE_GAMES.clear()
+    _INITIAL_DUMPS.clear()
+    return games, dumps
+
+
+def begin_replaying(initial_dumps: list[dict[str, Any]]) -> None:
+    """Start the scenario's second run: each checkpoint call now decodes the
+    matching entry of `initial_dumps` instead of using the game it built."""
+    global _MODE
+    _MODE = "replay"
+    _REPLAY_QUEUE.clear()
+    _REPLAY_QUEUE.extend(initial_dumps)
+    _LIVE_GAMES.clear()
+
+
+def end_replaying() -> list[Game]:
+    """Stop replaying and return the decoded games, in checkpoint order."""
+    global _MODE
+    games = list(_LIVE_GAMES)
+    _MODE = "off"
+    _LIVE_GAMES.clear()
+    return games
+
+
+def diff_json(left: Any, right: Any, path: str = "$") -> str | None:
+    """The path to the first place two `model_dump(mode="json")` trees
+    differ, or `None` when they do not - `assert left == right` on a whole
+    game's dump is true or false with no clue which of thousands of fields
+    was the one that moved."""
+    if isinstance(left, dict) and isinstance(right, dict):
+        for key in sorted(set(left) | set(right)):
+            if key not in left:
+                return f"{path}.{key}: missing on the left, {right[key]!r} on the right"
+            if key not in right:
+                return f"{path}.{key}: {left[key]!r} on the left, missing on the right"
+            found = diff_json(left[key], right[key], f"{path}.{key}")
+            if found is not None:
+                return found
+        return None
+    if isinstance(left, list) and isinstance(right, list):
+        if len(left) != len(right):
+            return f"{path}: {len(left)} item(s) on the left, {len(right)} on the right"
+        for index, (left_item, right_item) in enumerate(zip(left, right, strict=True)):
+            found = diff_json(left_item, right_item, f"{path}[{index}]")
+            if found is not None:
+                return found
+        return None
+    if left != right:
+        return f"{path}: {left!r} != {right!r}"
+    return None
+
+
+def _checkpoint_start_game(original: Any) -> Any:
+    """Wrap `Match.start_game` so a deck-loading scenario that never touches
+    `Scenario`/`PlayedScenario` still hands its `Game` through `checkpoint`.
+
+    `Match.games` keeps its own reference to the game `start_game` built, so
+    a replay swap has to overwrite that slot too - otherwise `match.
+    current_game` and the caller's own local would disagree about which
+    `Game` is being played, one the freshly-built original and the other the
+    decoded replacement.
+    """
+
+    def wrapped(self: Match, *args: Any, **kwargs: Any) -> Game:
+        game = original(self, *args, **kwargs)
+        checked = checkpoint(game)
+        if checked is not game and self.games and self.games[-1] is game:
+            self.games[-1] = checked
+        return checked
+
+    return wrapped
+
+
+Match.start_game = _checkpoint_start_game(Match.start_game)
 
 
 def mana_from(source: CardState, color: Color | None = None) -> list[Color]:
@@ -139,6 +348,7 @@ class Scenario:
         game = Game(
             players=self._players,
             automatic_turn_based_actions=self._automatic_turn_based_actions,
+            schema_version=Game.CURRENT_SCHEMA_VERSION,
         )
         for username, names in self._battlefield:
             for name in names:
@@ -156,7 +366,7 @@ class Scenario:
         for username, names in getattr(self, "_exiled", []):
             for name in names:
                 game.exile.append(card_state(name, Zone.EXILE, controller=username, owner=username))
-        return PlayedScenario(game)
+        return PlayedScenario(checkpoint(game))
 
 
 class PlayedScenario:

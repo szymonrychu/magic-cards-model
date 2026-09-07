@@ -193,10 +193,13 @@ def test_a_discarded_card_that_leaves_the_graveyard_is_no_longer_discarded():
     object with no memory of ... its previous existence", so a card that was
     discarded and then left the graveyard is not a card anybody discarded.
     """
-    _, swarm = _discarded_in_the_main_phase()
+    scenario, swarm = _discarded_in_the_main_phase()
     assert swarm.discarded_by == "alice"
 
-    swarm.move_to(Zone.HAND)
+    # `CardState.move_to` mints the card's own `zone_change_stamp` with no
+    # `Game` method's `_id_allocator_scope` open around it here.
+    with scenario.game._id_allocator_scope():  # noqa: SLF001
+        swarm.move_to(Zone.HAND)
 
     assert swarm.discarded_by is None
     assert swarm.discarded_on_turn is None

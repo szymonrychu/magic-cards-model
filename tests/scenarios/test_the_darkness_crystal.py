@@ -61,7 +61,10 @@ def _exile_from_graveyard_with(scenario: Scenario, card_state, linked_to) -> Non
     the module docstring)."""
     owner = scenario.player(card_state.owner or "bob")
     owner.cards_in(Zone.GRAVEYARD).remove(card_state)
-    card_state.move_to(Zone.EXILE)
+    # `CardState.move_to` mints the card's own `zone_change_stamp` with no
+    # `Game` method's `_id_allocator_scope` open around it here.
+    with scenario.game._id_allocator_scope():  # noqa: SLF001
+        card_state.move_to(Zone.EXILE)
     card_state.exile_annotation = ExileAnnotation(
         marker=ExileMarker.IMPRINTED, owner=card_state.owner, linked_permanent_id=linked_to.id
     )

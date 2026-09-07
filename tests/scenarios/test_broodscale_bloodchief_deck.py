@@ -39,10 +39,26 @@ The rules this file asserts, each looked up with `knowledge_search`:
   own two cards going through it.
 """
 
+#: `id(state.card)` asserts CPython object identity, not game state -
+#: `tests/cards.py`'s `card()` cache handing every physical copy the same
+#: in-memory `Card` is a pure memory optimisation. A JSON decode has no way
+#: to represent "these two value-equal objects were the same object", so the
+#: T10 invariant's replay run - which continues from a genuinely decoded
+#: game - honestly sees four distinct `Card` instances here, not the live
+#: run's cached one. Not an engine defect.
+import pytest
+
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.decisions import DecisionKind, ScriptedAnswer
 from magic_cards_model.models import Deck, Game, Match, Player, Zone
 from tests.cards import card
+
+IDENTITY_NOTE = (
+    "T10: id(state.card) is CPython object identity, not game state - a "
+    "decode of value-equal Card printings never shares one Python object, "
+    "so the invariant's replay run legitimately sees 4 distinct ids here, "
+    "not the live run's cached 1. Not an engine defect."
+)
 
 #: Broodscale bloodchief, Modern. Pilot unagieel, 2026-08-30, deck
 #: videre-58656378. Sixty cards; the counts are the registered ones.
@@ -222,6 +238,7 @@ def test_the_sixty_dealt_are_the_sixty_registered_card_for_card():
     assert counts == BROODSCALE_MAIN
 
 
+@pytest.mark.no_replay(reason=IDENTITY_NOTE)
 def test_every_copy_is_its_own_card():
     """Four Basking Broodscales are four cards sharing one printing."""
     alice = started().player("alice")
@@ -294,8 +311,13 @@ def rigged_and_settled(top: str, *, on_the_play: str) -> Game:
     state = next(s for s in alice.library if s.card.name == top)
     alice.library.remove(state)
     alice.library.insert(0, state)
-    for player in game.players:
-        player.draw_opening_hand()
+    # `deal_opening_hands=False` above split the deal in two so the library
+    # could be rigged first; the deferred draw happens with no `Game` method
+    # on the call stack to open `_id_allocator_scope`, so it has to here -
+    # see `tests/scenarios/test_opening_hand_actions.py::dealt`'s own note.
+    with game._id_allocator_scope():  # noqa: SLF001
+        for player in game.players:
+            player.draw_opening_hand()
     game.decisions.add(
         ScriptedAnswer(
             kind=DecisionKind.OPENING_HAND_ACTION, value=True, player="alice", source=top

@@ -17,6 +17,10 @@ handed the parser - `Card.oracle_text` for a spell, the matching
 same fallback chain the dispatcher runs on a miss, and asserts it comes back
 `None`. A row that fails this test is telling you which parser already
 understands it; delete the row.
+
+T10's round-trip/replay invariant does not apply here: this file never builds
+a `Game`, only reads a static registry against parser output, so `tests/
+scenarios/conftest.py`'s hook has nothing to checkpoint.
 """
 
 import pytest

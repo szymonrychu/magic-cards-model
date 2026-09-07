@@ -15,6 +15,10 @@ always *shadows* the parser rather than merely duplicating it.
 For every row this test reads the card's own oracle text and asserts
 `parsed_card_replacements` comes back empty. A row that fails this test is
 telling you which compiled shape already understands it; delete the row.
+
+T10's round-trip/replay invariant does not apply here: this file never builds
+a `Game`, only reads a static registry against parser output, so `tests/
+scenarios/conftest.py`'s hook has nothing to checkpoint.
 """
 
 import pytest

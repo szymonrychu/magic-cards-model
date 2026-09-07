@@ -49,17 +49,59 @@ its siblings.
 A caller that stands behind a *live* player - the API's per-game decision
 mailbox is the first one - sets `DecisionScript.provider` instead of, or on top
 of, scripting answers: `Game.ask` tries a scripted answer first (a test's
-staging always wins), then the provider, and only then `default_answer`.
-`ask_mulligan` follows that same order without going through `Game.ask`, so
-CR 103.5's declaration reaches a live seat too; `ask_attackers` and
-`ask_blockers` still do not, and are the last two questions here a provider
-cannot answer. The
-provider is not a resumable state machine and does not need to be one - it is
-a `Protocol` with one method that blocks the calling thread until a real
-answer arrives or it gives up, exactly the shape a synchronous call stack
-needs.
+staging always wins), then the replay tape (`DecisionScript.recorded`, see
+below), then the provider, then a pause, and only then `default_answer`.
+`ask_mulligan` and `ask_trigger_order` follow that same order without going
+through `Game.ask`, so CR 103.5's declaration and CR 603.3b's ordering both
+reach a live seat too. `_ask_declaration` (the two combat declarations,
+`ask_attackers`/`ask_blockers`) follows the same order **minus the provider
+step** - a scripted answer, then the tape, then a pause if enabled, then
+`default_answer`, never `script.provider`. That is deliberate, not an
+oversight: see `_ask_declaration`'s own docstring for why a live seat still
+cannot answer either combat declaration through this module, and what has to
+land first before one can. The provider is not a resumable state machine and
+does not need to be one - it is a `Protocol` with one method that blocks the
+calling thread until a real answer arrives or it gives up, exactly the shape a
+synchronous call stack needs.
 
-When nobody - script or provider - has anything to say, `default_answer`
+## Pausing instead of blocking: `Answer`, the tape, and `DecisionPending`
+
+A live provider still blocks the thread that is resolving a spell for as long
+as the seat takes to answer - the whole reason `docs/../memory/harness-
+deadlock-defaulted-every-decision.md` exists. The alternative this module now
+also supports is **pausing**: instead of a call that blocks, a caller sets
+`DecisionScript.pause_when_unanswered = True`, and a question nothing can
+answer raises `DecisionPending` rather than defaulting or blocking. The raise
+carries a `PendingDecision` - the question, its sequence number, and the CR
+citation that governs it - for a caller to store however it stores a paused
+game.
+
+Resuming is replay, not a checkpoint: there is no mid-effect state to save, so
+the caller re-runs the same command from the last *committed* snapshot,
+answers included. `DecisionScript.recorded` is that answer tape - a list of
+`Answer`, oldest first - and `DecisionScript.consumed` is how far this run has
+read into it. `DecisionScript.begin_replay` is how a caller starts that
+re-run: it loads the tape, zeroes `consumed`, and clears `asked`, so a resumed
+run's `PendingDecision.seq` numbering starts at 0 exactly like the first
+attempt's did, rather than inheriting a stale, uncleared count from whatever
+this `Game` object happened to carry forward; `DecisionScript.finish_replay`
+is the other half, raising if a command finished without reading the whole
+tape - the mirror image of a tape that runs out too soon.
+
+Every one of the four askers (`Game.ask`, `ask_mulligan`, `ask_trigger_order`,
+`_ask_declaration`) reads the tape positionally, right after a scripted
+answer: `recorded[consumed]` is the next answer, and a tape whose next entry
+names the wrong kind, the wrong player, or the wrong `seq` is corrupt -
+replayed against the wrong question, it would produce a wrong game that still
+runs to completion, which is worse than a crash, so it raises rather than
+being skipped past (see `DecisionScript.take_from_tape`). Three of the four
+then consult `script.provider` next, before falling through to a pause or
+`default_answer`; `_ask_declaration` does not - see its own docstring. The
+mutated `Game` from the paused attempt is discarded, never stored - which is
+what makes double-applying an answer structurally impossible: there is
+nothing left to apply it to twice.
+
+When nobody - script, tape, or provider - has anything to say, `default_answer`
 answers instead, by a rule written down here rather than improvised per card:
 
 - `MAY` - **take it**, which is what the effect registry already did before this
@@ -92,8 +134,10 @@ from collections.abc import Iterable
 from dataclasses import dataclass, field
 from enum import StrEnum
 from itertools import zip_longest
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import TYPE_CHECKING, Annotated, Any, Protocol
 from uuid import UUID
+
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ..models.card_state import TargetRef
 
@@ -102,12 +146,16 @@ if TYPE_CHECKING:  # pragma: no cover - import cycle: the models build on the ma
 
 __all__ = [
     "NOT_ANSWERED",
+    "Answer",
     "CardSplit",
     "Decision",
     "DecisionKind",
+    "DecisionPending",
     "DecisionProvider",
     "DecisionScript",
+    "DeclaredPair",
     "NotAnswered",
+    "PendingDecision",
     "ScriptedAnswer",
     "ask_attackers",
     "ask_blockers",
@@ -115,6 +163,7 @@ __all__ = [
     "ask_trigger_order",
     "default_answer",
     "legal_options",
+    "rule_for_kind",
 ]
 
 
@@ -532,6 +581,315 @@ def default_answer(decision: Decision) -> object:
     return CardSplit()
 
 
+def rule_for_kind(kind: DecisionKind) -> str:
+    """The CR citation that actually governs asking a decision of `kind`.
+
+    Ported from the API's own `rule_for_kind` (previously
+    `magic_cards_model_api.decisions.rule_for_kind`), which verified each of
+    its citations with `knowledge_search(q="...", type="rules")` before
+    writing them - but not verbatim: this version grows two branches the API's
+    does not have, `DECLARE_ATTACKERS` and `DECLARE_BLOCKERS`, because the API
+    version never had to cite them (see `ANSWERABLE_KINDS`'s own docstring in
+    `magic_cards_model_api.decisions`, which explains why those two kinds
+    never reach that module at all). Those two citations - CR 703.4i, CR
+    508.1, CR 703.4j, CR 509.1 - were looked up fresh with
+    `knowledge_search(q="...", type="rules")` in the session that added them
+    here and read whole with `mise run rules:find`; every other branch below
+    is the API's own, carried over rather than re-derived.
+
+    Every `DecisionKind` this module ever asks through `Game.ask` is answered
+    "while applying the effect" of a spell or ability already on the stack,
+    which is CR 608.2d - except `CHOOSE_TARGETS`, which is choosing targets
+    *while putting* the spell or ability on the stack in the first place, the
+    exact case CR 608.2d's own wording excludes ("choices other than choices
+    already made as part of casting the spell, activating the ability, or
+    otherwise putting the spell or ability on the stack"). That step is CR
+    603.3d for a triggered ability, which folds in CR 601.2c ("the player
+    announces their choice of an appropriate object or player for each
+    target") for the spell-casting case 603.3d itself delegates to.
+
+    `MULLIGAN` and `OPENING_HAND_ACTION` are asked before the first turn, not
+    while any effect resolves; `ORDER_TRIGGERS` is asked while a batch of
+    simultaneous triggers goes on the stack, one step before any of them
+    resolves; `DECLARE_ATTACKERS`/`DECLARE_BLOCKERS` are each a turn-based
+    action's own declaration (CR 508.1, CR 509.1), not a resolving effect's
+    choice either. Used by `PendingDecision.rule` so a paused decision carries
+    its own citation, the same one `_log_timeout` used to look up here for a
+    live provider's timeout.
+    """
+    if kind is DecisionKind.CHOOSE_TARGETS:
+        return "CR 603.3d, CR 601.2c (targets chosen while going on the stack)"
+    if kind is DecisionKind.MULLIGAN:
+        # Also before the first turn, and one step earlier than CR 103.6:
+        # the declaration each player makes in the mulligan process itself.
+        return "CR 103.5 (the mulligan declaration, before the first turn)"
+    if kind is DecisionKind.OPENING_HAND_ACTION:
+        # No effect is applying and no spell is going on the stack: this is
+        # CR 103.6's own start-of-game sequence, "once the mulligan process
+        # (see rule 103.5) is complete, the starting player may take any such
+        # actions in any order", before the first turn begins.
+        return "CR 103.6 (an action taken from the opening hand, before the first turn)"
+    if kind is DecisionKind.ORDER_TRIGGERS:
+        # No effect is applying here either: this is the two-part process that
+        # *puts* a batch of simultaneous triggers on the stack, one step
+        # before any of them resolves. CR 603.3b, the same family of exception
+        # `CHOOSE_TARGETS` is - a choice made while going on the stack, which
+        # CR 608.2d's own wording excludes.
+        return "CR 603.3b (the order simultaneous triggers go on the stack)"
+    if kind is DecisionKind.DECLARE_ATTACKERS:
+        return "CR 703.4i, CR 508.1 (declaring attackers, a turn-based action)"
+    if kind is DecisionKind.DECLARE_BLOCKERS:
+        return "CR 703.4j, CR 509.1 (declaring blockers, a turn-based action)"
+    return "CR 608.2d (a choice made while the effect applies)"
+
+
+#: Which single `Answer` field carries a `kind`'s value - the one place that
+#: mapping is written down, so `Answer`'s own validator and `to_engine` cannot
+#: drift apart from each other the way two hand-written `if` chains could.
+_ANSWER_FIELD_FOR_KIND: dict[DecisionKind, str] = {
+    DecisionKind.MAY: "accept",
+    DecisionKind.PAY_LIFE: "accept",
+    DecisionKind.PAY_ENERGY: "accept",
+    DecisionKind.PAY_MANA: "accept",
+    DecisionKind.MULLIGAN: "accept",
+    DecisionKind.OPENING_HAND_ACTION: "accept",
+    DecisionKind.PUT_ON_TOP_OR_BOTTOM: "accept",
+    DecisionKind.PAY_ENERGY_AMOUNT: "amount",
+    DecisionKind.PAY_LIFE_AMOUNT: "amount",
+    DecisionKind.CHOOSE_CARDS: "card_ids",
+    DecisionKind.ORDER_TRIGGERS: "card_ids",
+    DecisionKind.SCRY: "split",
+    DecisionKind.SURVEIL: "split",
+    DecisionKind.CHOOSE_TARGETS: "targets",
+    DecisionKind.CHOOSE_A_QUALITY: "text",
+    DecisionKind.CHOOSE_A_MODE: "text",
+    DecisionKind.DECLARE_ATTACKERS: "pairs",
+    DecisionKind.DECLARE_BLOCKERS: "pairs",
+}
+assert set(_ANSWER_FIELD_FOR_KIND) == set(DecisionKind), (
+    "every DecisionKind needs exactly one Answer field - see _ANSWER_FIELD_FOR_KIND"
+)
+
+#: Every value field `Answer` can carry - exactly one is set, matching
+#: `decision.kind` (see `_ANSWER_FIELD_FOR_KIND`); the rest stay `None`.
+_ANSWER_VALUE_FIELDS = frozenset(_ANSWER_FIELD_FOR_KIND.values())
+
+
+class DeclaredPair(BaseModel):
+    """One `(creature, defender)` pair in a recorded `DECLARE_ATTACKERS` or
+    `DECLARE_BLOCKERS` answer (CR 508.1, CR 509.1).
+
+    Not a bare `(UUID, UUID)` tuple: a blocker's target is always a card (CR
+    509.1a - "one creature for it to block"), but an attacker's is
+    overwhelmingly a player (CR 508.1b's "opponents or planeswalkers"), and a
+    `Player` has no id of its own, only a username - a pair of ids cannot name
+    that at all, which is the whole reason attacking a player used to be
+    unreplayable through the tape. Exactly one of `defender_card`/
+    `defender_player` is set, the same "name what you mean" shape
+    `machines/decisions.py`'s `_ANSWER_FIELD_FOR_KIND` already uses for
+    `Answer` itself - never both, never neither.
+
+    A frozen pydantic model for the same reason `Answer` is one and not a
+    dataclass: it has to survive `Game.model_dump(mode="json")` round-tripping
+    a paused game.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    #: The attacking or blocking creature, by id.
+    creature: UUID
+    #: The defender, when it is a card - a planeswalker or battle attacked
+    #: (CR 508.1b), or the attacker a blocker is assigned to (CR 509.1a).
+    defender_card: UUID | None = None
+    #: The defender, when it is a player - by far the common case for an
+    #: attack, and the case a bare id pair could never express.
+    defender_player: str | None = None
+
+    @model_validator(mode="after")
+    def _exactly_one_defender(self) -> "DeclaredPair":
+        if (self.defender_card is None) == (self.defender_player is None):
+            raise ValueError(
+                "a DeclaredPair needs exactly one of defender_card/defender_player set"
+            )
+        return self
+
+
+class Answer(BaseModel):
+    """One recorded answer to one `Decision` - the tape `DecisionScript.recorded`
+    is made of, and what `Game.ask`/`ask_mulligan`/`ask_trigger_order`/
+    `_ask_declaration` read from it (see the module docstring's "Pausing
+    instead of blocking" section).
+
+    A frozen pydantic model, not the plain dataclass `Decision`/`CardSplit`
+    already in this module are: the tape has to survive `Game.model_dump
+    (mode="json")` round-tripping a paused game, the same reason commit
+    739ee2b turned `machines/layers.py`'s continuous-effect closures into
+    frozen pydantic models instead of plain dataclasses.
+
+    Carries exactly one typed value field per `DecisionKind` - never a bare
+    `object`, so a corrupt or hand-edited tape entry fails to construct rather
+    than reaching `to_engine` and failing later, more confusingly, deep inside
+    whichever asker read it. `_ANSWER_FIELD_FOR_KIND` is the single mapping
+    that says which field a given `kind` uses; `_check_one_value_field` below
+    is what enforces it.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    #: This answer's position in the sequence of decisions asked so far -
+    #: `PendingDecision.seq` when it was first asked (or a test/caller's own
+    #: count, when nothing was ever paused). Not consulted by `take_from_tape`
+    #: to pick which entry to read - the tape is read positionally, oldest
+    #: first - it is audit metadata: evidence of which question this was
+    #: supposed to answer, for a log or an assertion to check against.
+    seq: int
+    kind: DecisionKind
+    #: Whose answer this is - checked against `Decision.player` by
+    #: `DecisionScript.take_from_tape` before the value is used at all.
+    player: str
+    #: Free-text explanation a live seat may have given alongside its answer
+    #: (an AI seat's chain of reasoning, say). Never read by `to_engine` or by
+    #: any rule this engine enforces - CR 608.2d cares what a player chooses,
+    #: never why - so this is pure audit trail, carried on the tape the same
+    #: way it would be carried in a decision log.
+    reasoning: str | None = None
+
+    #: `MAY`, `PAY_LIFE`, `PAY_ENERGY`, `PAY_MANA`, `MULLIGAN`,
+    #: `OPENING_HAND_ACTION`, `PUT_ON_TOP_OR_BOTTOM` - every yes/no question
+    #: this module asks, including the two that are not `Game.ask` questions
+    #: at all (`MULLIGAN`, CR 103.5) and the one whose two options are not
+    #: literally yes/no but are still a plain boolean (`PUT_ON_TOP_OR_BOTTOM`,
+    #: `True` for the top).
+    accept: bool | None = None
+    #: `PAY_ENERGY_AMOUNT`, `PAY_LIFE_AMOUNT` - how much was paid, 0 or more.
+    amount: int | None = None
+    #: `CHOOSE_CARDS` - which candidates were chosen; `ORDER_TRIGGERS` - the
+    #: chosen order's `AbilityOnStack` ids, bottom of the stack first (CR
+    #: 603.3b). Both are "a tuple of ids naming some of `Decision.cards`",
+    #: which is why they share a field rather than each growing its own.
+    card_ids: tuple[UUID, ...] | None = None
+    #: `SCRY`, `SURVEIL` - CR 701.22a's and CR 701.25a's split of the cards
+    #: looked at.
+    split: CardSplit | None = None
+    #: `CHOOSE_TARGETS` - the chosen targets (CR 601.2c, CR 603.3d).
+    targets: tuple[TargetRef, ...] | None = None
+    #: `CHOOSE_A_QUALITY`, `CHOOSE_A_MODE` - the chosen color/name/type or
+    #: printed mode text.
+    text: str | None = None
+    #: `DECLARE_ATTACKERS`, `DECLARE_BLOCKERS` - `DeclaredPair`s, in
+    #: declaration order. A blocker always blocks a creature (CR 509.1a), so
+    #: every `DECLARE_BLOCKERS` pair sets `defender_card`; an attacker's
+    #: target is overwhelmingly a player (CR 508.1b's "opponents or
+    #: planeswalkers" - a player has no id of its own, only a username, which
+    #: is what `defender_player` carries), but can also be a planeswalker or a
+    #: battle, which is `defender_card`. `Game._resolve_declaration` resolves
+    #: each id or username against the game as it stands when the tape is
+    #: replayed.
+    pairs: tuple["DeclaredPair", ...] | None = None
+
+    @model_validator(mode="after")
+    def _check_one_value_field(self) -> "Answer":
+        wanted = _ANSWER_FIELD_FOR_KIND[self.kind]
+        value = getattr(self, wanted)
+        if value is None:
+            raise ValueError(f"a {self.kind.value} answer needs its {wanted!r} field set")
+        if self.kind in (DecisionKind.CHOOSE_A_QUALITY, DecisionKind.CHOOSE_A_MODE) and value == "":
+            # CR 614.12a's and CR 700.2a's choices are both mandatory - there
+            # is no "decline" branch - so an empty string is never a real
+            # answer, only ever a missing one. `Game.ask` refuses it too (see
+            # its own `not value` check), so this is an early refusal, not the
+            # only one; the api's `quality_answer`/`mode_answer` refuse the
+            # same way for the same reason.
+            raise ValueError(f"a {self.kind.value} answer needs a non-empty {wanted!r}")
+        stray = [
+            field_name
+            for field_name in _ANSWER_VALUE_FIELDS
+            if field_name != wanted and getattr(self, field_name) is not None
+        ]
+        if stray:
+            raise ValueError(
+                f"a {self.kind.value} answer only uses {wanted!r}, not {', '.join(stray)}"
+            )
+        return self
+
+    def to_engine(self) -> object:
+        """This answer's value, in the shape `Game.ask` (or `ask_mulligan`/
+        `ask_trigger_order`/`_ask_declaration`) expects back from a
+        consultant - the single kind-to-value mapping every one of the API's
+        old per-kind `*_answer` coercions (`bool_answer`, `card_ids_answer`,
+        ...) used to do by hand, one `DecisionKind` at a time.
+
+        `_check_one_value_field` already guarantees the right field is set, so
+        this is a lookup, not a re-validation.
+        """
+        return getattr(self, _ANSWER_FIELD_FOR_KIND[self.kind])
+
+
+@dataclass(frozen=True)
+class PendingDecision:
+    """A `Decision` nothing could answer, snapshotted for a caller to store and
+    answer later (see the module docstring's "Pausing instead of blocking").
+
+    Not itself the pause state - the "committed state, command, answers so
+    far" tuple a caller persists is built from this plus the `Game` as it
+    stood before the paused command ran, not from anything carried here. This
+    is just the question, its place in the sequence, and the rule that governs
+    it.
+    """
+
+    #: This decision's position among every decision asked in this run so far
+    #: - `len(DecisionScript.asked) - 1` at the moment it was raised. Matches
+    #: `Answer.seq` once a caller answers it and appends the answer to the
+    #: tape, though nothing here enforces that pairing - see `Answer.seq`.
+    #:
+    #: "This run" means what `DecisionScript.begin_replay` scopes it to mean:
+    #: `asked` is a field on the `Game` this decision was raised from, and
+    #: nothing resets it on its own, so this is the semantics fixed here
+    #: rather than the wording - a caller that resumes a paused command
+    #: *must* call `begin_replay` before re-running it, precisely so `asked`
+    #: restarts at empty and this numbering restarts at 0, matching the
+    #: `Answer.seq` values it assigns from a previous `pending.seq`. Skip
+    #: `begin_replay` and this docstring's claim goes back to being false, the
+    #: same way it was found to be before `begin_replay` existed: `asked`
+    #: would carry forward whatever a resumed `Game` already had, and this
+    #: would count from wherever that left off, not from 0.
+    seq: int
+    #: The question itself, already run through `Game._with_card_labels` when
+    #: raised from `Game.ask` (never from the other three askers, which have
+    #: no card labels to add).
+    decision: Decision
+    #: `rule_for_kind(decision.kind)` - the CR citation that governs this
+    #: question, computed once here so a caller does not have to re-derive it.
+    rule: str
+
+
+class DecisionPending(BaseException):
+    """Raised when a decision has no scripted answer, no unconsumed tape entry,
+    and no provider willing to answer it, with `DecisionScript.
+    pause_when_unanswered` set (see the module docstring).
+
+    Deliberately a `BaseException`, not an `Exception`. `models/game.py`'s
+    `Game.resolve_top` and `Game._resolve_ability`, and `machines/cost.py`'s
+    `CostPayment.pay`, each wrap effect resolution in a bare `except
+    Exception` (or `except ValueError`) that unwinds the in-progress
+    resolution - sends the spell to the graveyard, discards the ability,
+    unpays the cost - before re-raising. A `DecisionPending` that is meant to
+    *pause* resolution, not fail it, must pass straight through every one of
+    those handlers undisturbed; the only exception type that no `except
+    Exception`/`except ValueError` anywhere in `machines/` can catch is one
+    that is not an `Exception` at all. `BaseException` is the standard
+    library's own escape hatch for exactly this (`SystemExit`,
+    `KeyboardInterrupt`, `GeneratorExit` are its only other direct
+    subclasses) - a signal meant to unwind past ordinary exception handling,
+    which is precisely what a pause is.
+    """
+
+    def __init__(self, pending: PendingDecision) -> None:
+        super().__init__(pending)
+        #: The paused question, for a caller to catch this and store.
+        self.pending = pending
+
+
 @dataclass
 class ScriptedAnswer:
     """One answer waiting for the question it belongs to.
@@ -621,7 +979,37 @@ class DecisionScript:
     #: dataclass, and a `Protocol` has none to build. The real type callers
     #: should assign is `DecisionProvider | None`; `Any` here is a pydantic
     #: accommodation, not a relaxation of what belongs in this field.
-    provider: Any = None
+    #:
+    #: `exclude=True` (T10): a live provider - the api's per-game mailbox, a
+    #: test's own recording stub - is exactly the shape `Match.card_resolver`
+    #: already carries this same fix for: a plain Python object with no
+    #: pydantic schema of its own, so `Game.model_dump(mode="json")` raised
+    #: `PydanticSerializationError: Unable to serialize unknown type` for any
+    #: game a provider was ever attached to, crashing on the dump rather than
+    #: quietly dropping it. Unlike `card_resolver` this has no name registry
+    #: to bind back by - a decoded game answers from `recorded`/a scripted
+    #: answer instead until a caller sets a live one again, which is already
+    #: `take_from_tape`'s documented order.
+    provider: Annotated[Any, Field(exclude=True)] = None
+    #: The replay tape - every `Answer` a previous, paused attempt at this same
+    #: command already received, oldest first. Consulted after a scripted
+    #: answer and before `provider`, by `take_from_tape`; empty in every
+    #: existing scenario test and every caller that has not paused, so nothing
+    #: about this existing changes anybody's behaviour. See the module
+    #: docstring's "Pausing instead of blocking" section.
+    recorded: list[Answer] = field(default_factory=list)
+    #: How many of `recorded`, from the front, this run has already read.
+    #: `take_from_tape` reads `recorded[consumed]` and advances this by one
+    #: each time it finds a match - positional, not a lookup by `Answer.seq`,
+    #: because the tape is a queue of what happened last time, in order, not
+    #: an index.
+    consumed: int = 0
+    #: Whether a question nothing else can answer raises `DecisionPending`
+    #: (`True`) or falls through to `default_answer` (`False`, the default).
+    #: `False` is what keeps every existing test's behaviour exactly as it
+    #: was - only a caller that opts in by setting this can ever see a
+    #: `DecisionPending` at all.
+    pause_when_unanswered: bool = False
 
     def add(self, answer: ScriptedAnswer) -> ScriptedAnswer:
         self.answers.append(answer)
@@ -646,8 +1034,94 @@ class DecisionScript:
             return True, answer.value
         return False, None
 
+    def take_from_tape(self, decision: Decision) -> tuple[bool, object]:
+        """The next recorded `Answer`, if the tape has one left.
+
+        Read positionally - `recorded[consumed]` - not looked up by kind or
+        player, because the tape is the exact sequence of answers a previous
+        attempt at this same command already received, in the order it asked
+        for them; the next entry is either this question's answer or the tape
+        is corrupt.
+
+        A kind or player mismatch **raises** rather than being skipped: a
+        recorded answer replayed against a different question would still
+        produce a game that runs to completion, just the wrong one, and a
+        wrong game that looks right is worse than a crash (see `memory/
+        silent-default-dispatch-tables.md`). Returning `(False, None)` here
+        would let a caller mistake "the tape has nothing for this" for "the
+        tape is broken", which are not the same fact.
+
+        `answer.seq` is checked too, against `self.consumed` - not read to
+        pick which entry to use (the tape is read positionally, not by seq),
+        but as a second, independent check that this entry really is the one
+        that was asked in this position: kind and player can both coincide by
+        accident (two `MAY`s asked of the same player, one for each of two
+        different cards), and a tape mis-bound that way would pass the checks
+        above and still answer the wrong question - the worst failure mode
+        this mechanism has, and the one `seq` exists to catch. It costs
+        nothing to check, so there is no reason not to.
+        """
+        if self.consumed >= len(self.recorded):
+            return False, None
+        answer = self.recorded[self.consumed]
+        if answer.kind is not decision.kind or answer.player != decision.player:
+            raise ValueError(
+                f"{decision.prompt}: recorded answer #{self.consumed} belongs to "
+                f"{answer.player}'s {answer.kind.value}, not {decision.player}'s "
+                f"{decision.kind.value} - the tape is corrupt or out of order"
+            )
+        if answer.seq != self.consumed:
+            raise ValueError(
+                f"{decision.prompt}: recorded answer #{self.consumed} claims seq={answer.seq} - "
+                f"the tape is corrupt or out of order"
+            )
+        self.consumed += 1
+        return True, answer.to_engine()
+
     def clear(self) -> None:
         self.answers.clear()
+
+    def begin_replay(self, answers: Iterable[Answer]) -> None:
+        """Start replaying a tape from the top, on a `Game` that may already
+        carry state from a different command entirely.
+
+        Sets `recorded` to `answers`, zeroes `consumed`, and clears `asked` -
+        all three, together, because a caller resuming from a committed
+        snapshot (see the module docstring's "Pausing instead of blocking")
+        has no other way to know it must zero them by hand: `consumed` is a
+        persisted field nothing else ever resets, so a stale nonzero value
+        left over from a previous command would silently skip that many
+        entries of the *new* tape before this one is even read; and clearing
+        `asked` is what makes `PendingDecision.seq` (`len(asked) - 1`) start
+        counting at 0 for this run, matching the `Answer.seq` values a caller
+        assigns from `pending.seq` when it built this very tape - see
+        `PendingDecision.seq`'s own docstring.
+
+        Not called automatically by anything in this module: a caller that
+        wants to replay a tape from scratch calls this once, before re-running
+        the command, rather than assigning `recorded`/`consumed` directly.
+        """
+        self.recorded = list(answers)
+        self.consumed = 0
+        self.asked = []
+
+    def finish_replay(self) -> None:
+        """Assert the tape begun by `begin_replay` was read to the end.
+
+        The mirror image of `take_from_tape`'s own refusal: that raises when a
+        tape is read *out of order*; this raises when a command finishes
+        without reading the tape *far enough* - a tape longer than the
+        questions actually asked, which nothing else would ever notice,
+        because a command that stops asking questions before the tape runs
+        out looks exactly like a command that finished normally. A caller that
+        replays a tape and does not call this can silently drop trailing
+        answers a previous attempt already received.
+        """
+        if self.consumed != len(self.recorded):
+            raise ValueError(
+                f"the tape had {len(self.recorded)} answer(s) but only {self.consumed} were "
+                f"asked for - the tape is longer than the questions this run actually asked"
+            )
 
 
 def ask_mulligan(script: DecisionScript, player: str, *, prompt: str = "take a mulligan") -> bool:
@@ -667,12 +1141,14 @@ def ask_mulligan(script: DecisionScript, player: str, *, prompt: str = "take a m
 
     Not going through `Game.ask` does not mean skipping the live player. The
     order of consultation is `Game.ask`'s exactly: a scripted answer wins, then
-    `script.provider` - the same mailbox a `DecisionProvider` behind the API
-    fills in - is asked, and only when neither speaks (no provider, or
-    `NOT_ANSWERED`) does `default_answer` keep the dealt hand. That is what
-    makes CR 103.5's declaration answerable by a human at all; without it the
-    question was asked and recorded but never published anywhere a person could
-    see it.
+    the replay tape (`script.take_from_tape`), then `script.provider` - the
+    same mailbox a `DecisionProvider` behind the API fills in - is asked, then
+    `DecisionPending` if `script.pause_when_unanswered`, and only when nothing
+    speaks (no tape entry, no provider or `NOT_ANSWERED`, no pause) does
+    `default_answer` keep the dealt hand. That is what makes CR 103.5's
+    declaration answerable by a human, or resumable from a paused game, at
+    all; without it the question was asked and recorded but never published
+    anywhere a person - or a resumed run - could see it.
 
     Asking a provider does not disturb the replay: nothing random happens here,
     and the reshuffle seed `Match.run_mulligans` derives is a function of the
@@ -681,10 +1157,18 @@ def ask_mulligan(script: DecisionScript, player: str, *, prompt: str = "take a m
     decision = Decision(kind=DecisionKind.MULLIGAN, player=player, prompt=prompt)
     script.asked.append(decision)
     found, value = script.take(decision)
+    if not found:
+        found, value = script.take_from_tape(decision)
     if not found and script.provider is not None:
         provided = script.provider.decide(decision)
         if provided is not NOT_ANSWERED:
             found, value = True, provided
+    if not found and script.pause_when_unanswered:
+        raise DecisionPending(
+            PendingDecision(
+                seq=len(script.asked) - 1, decision=decision, rule=rule_for_kind(decision.kind)
+            )
+        )
     if not found:
         return bool(default_answer(decision))
     if not isinstance(value, bool):
@@ -718,10 +1202,11 @@ def ask_trigger_order(
     there is no yes-or-no for `legal_options` to narrow.
 
     Consultation order is `Game.ask`'s exactly - a scripted answer first, then
-    `script.provider`, then `default_answer`'s "leave it as it triggered".
-    Fewer than two abilities is not a choice at all (CR 101.4's "if multiple
-    players would make choices"; here, one ability has exactly one order), so
-    nothing is asked and nothing is recorded.
+    the replay tape, then `script.provider`, then `DecisionPending` if
+    `script.pause_when_unanswered`, then `default_answer`'s "leave it as it
+    triggered". Fewer than two abilities is not a choice at all (CR 101.4's
+    "if multiple players would make choices"; here, one ability has exactly
+    one order), so nothing is asked and nothing is recorded.
 
     An answer that is not a permutation of `abilities` is refused outright
     rather than silently repaired: dropping an ability would be CR 603.3's "its
@@ -768,10 +1253,18 @@ def ask_trigger_order(
     )
     script.asked.append(decision)
     found, value = script.take(decision)
+    if not found:
+        found, value = script.take_from_tape(decision)
     if not found and script.provider is not None:
         provided = script.provider.decide(decision)
         if provided is not NOT_ANSWERED:
             found, value = True, provided
+    if not found and script.pause_when_unanswered:
+        raise DecisionPending(
+            PendingDecision(
+                seq=len(script.asked) - 1, decision=decision, rule=rule_for_kind(decision.kind)
+            )
+        )
     if not found:
         value = default_answer(decision)
     if not isinstance(value, (list, tuple)):
@@ -825,7 +1318,7 @@ def _ask_declaration(
     player: str,
     prompt: str,
     attackers: tuple[UUID, ...] = (),
-) -> list[tuple["CardState", "CardState | TargetRef"]]:
+) -> list[tuple["CardState | UUID", "CardState | TargetRef | UUID | str"]]:
     """Put a combat declaration to one player, and return what they declared.
 
     The shared body of `ask_attackers` and `ask_blockers`. Like `ask_mulligan`,
@@ -834,20 +1327,60 @@ def _ask_declaration(
     the mulligan there is no yes-or-no to validate: the answer is a list of
     pairs, and whether the declared creatures may actually attack or block is
     the declaration rules' business, not the answer's. The caller passes the
-    value straight through to `Game.declare_attackers` or
-    `Game.declare_blockers`, which refuse an illegal declaration.
+    value through to `Game.declare_attackers` or `Game.declare_blockers` -
+    `Game._resolve_declaration` first, when a pair might name ids rather than
+    objects - which refuse an illegal declaration.
+
+    **This is the one asker in this module that deliberately does not consult
+    `script.provider`.** A scripted answer first, then the replay tape, then
+    `DecisionPending` if `script.pause_when_unanswered`, then
+    `default_answer`'s "declare nobody" - the same order every other asker
+    here uses, minus the provider step. That gap is real and intentional, not
+    an oversight: the API's own `MailboxProvider.decide` (`magic_cards_model_
+    api.decisions`) publishes the question and *blocks the calling thread* for
+    up to `timeout_seconds` regardless of what kind was asked, while the API's
+    `ANSWERABLE_KINDS` deliberately excludes `DECLARE_ATTACKERS`/
+    `DECLARE_BLOCKERS` - a live seat has no transport to answer either kind
+    through `POST /decide` at all, and the API drives combat through `Game.
+    advance()`, which is exactly what calls this function. Consulting
+    `script.provider` here today would mean every live game's combat stalls
+    for the full timeout at declare-attackers, and again per defending player
+    at declare-blockers, publishing a `pending_decision` no seat's UI can
+    answer and writing a decision-timeout audit record each time - a
+    regression in the running service, not a closed gap. Wiring a live seat to
+    these two declarations is paired work with widening `ANSWERABLE_KINDS`
+    and adding the API's own combat transport to the mailbox, and belongs to
+    the phase that does that, not this one. The replay tape and the pause
+    machinery below are unaffected by this and behave exactly like every
+    other asker's.
     """
     decision = Decision(kind=kind, player=player, prompt=prompt, cards=attackers)
     script.asked.append(decision)
     found, value = script.take(decision)
     if not found:
+        found, value = script.take_from_tape(decision)
+    if not found and script.pause_when_unanswered:
+        raise DecisionPending(
+            PendingDecision(
+                seq=len(script.asked) - 1, decision=decision, rule=rule_for_kind(decision.kind)
+            )
+        )
+    if not found:
         value = default_answer(decision)
     if not isinstance(value, (list, tuple)):
         raise ValueError(f"{decision.prompt}: the answer is a list of pairs")
+    pairs: list[tuple[object, object]] = []
     for pair in value:
+        if isinstance(pair, DeclaredPair):
+            defender = (
+                pair.defender_card if pair.defender_card is not None else pair.defender_player
+            )
+            pairs.append((pair.creature, defender))
+            continue
         if not isinstance(pair, tuple) or len(pair) != 2:
             raise ValueError(f"{decision.prompt}: each answer is a (creature, target) pair")
-    return list(value)
+        pairs.append(pair)
+    return pairs
 
 
 def ask_attackers(
@@ -855,7 +1388,7 @@ def ask_attackers(
     player: str,
     *,
     prompt: str = "declare attackers",
-) -> list[tuple["CardState", "CardState | TargetRef"]]:
+) -> list[tuple["CardState | UUID", "CardState | TargetRef | UUID | str"]]:
     """Put CR 703.4i's declaration to the active player (CR 508.1).
 
     "First, the active player declares which creatures they control, if any,
@@ -873,7 +1406,7 @@ def ask_blockers(
     *,
     prompt: str = "declare blockers",
     attackers: tuple[UUID, ...] = (),
-) -> list[tuple["CardState", "CardState | TargetRef"]]:
+) -> list[tuple["CardState | UUID", "CardState | TargetRef | UUID | str"]]:
     """Put CR 703.4j's declaration to one defending player (CR 509.1).
 
     "The defending player declares which creatures they control, if any, are

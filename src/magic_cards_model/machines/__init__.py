@@ -48,6 +48,7 @@ from .cost import (
     additional_cost_phrases,
     alternative_cost_phrases,
     apply_modifications,
+    could_pay_mana_cost,
     discard_cost,
     exile_cost,
     free_tap_mana_ability,
@@ -76,6 +77,7 @@ from .layers import (
     compute_board,
     printed_characteristics,
 )
+from .legal_actions import decision_answers, legal_actions
 from .modes import ModalProfile, Mode, is_modal, modal_profile, mode_rules_text
 from .priority import PriorityMachine, PriorityOutcome
 from .replacement import (
@@ -178,6 +180,8 @@ __all__ = [
     "alternative_cost_phrases",
     "apply_modifications",
     "compute_board",
+    "could_pay_mana_cost",
+    "decision_answers",
     "discard_cost",
     "effect_for",
     "exile_cost",
@@ -186,6 +190,7 @@ __all__ = [
     "increase",
     "intrinsic_land_ability",
     "is_modal",
+    "legal_actions",
     "modal_profile",
     "mode_rules_text",
     "parse_abilities",

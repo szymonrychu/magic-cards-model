@@ -1194,6 +1194,46 @@ def why_cannot_cast_from(spell: CardState, caster: str, zone: Zone, game: Any = 
 
 
 # --------------------------------------------------------------------------
+# Whether a card is a spell at all (CR 305.1, CR 300.2a)
+# --------------------------------------------------------------------------
+
+
+def why_cannot_cast_a_land(spell: CardState) -> str | None:
+    """CR 305.1: a land is never a spell, so it can never be cast - not even
+    together with another card type that ordinarily could be (CR 300.2a).
+
+    CR 305.1's own closing sentence: "Since the land doesn't go on the
+    stack, it is never a spell, and players can't respond to it with
+    instants or activated abilities." CR 300.2a: "An object that's both a
+    land and another card type (for example, an artifact land) can only be
+    played as a land. It can't be cast as a spell."
+
+    Checked ahead of every other refusal in `Casting.model_post_init`, so a
+    land is refused *before* CR 601.2a would otherwise move it to the
+    stack - a land was never a spell to begin with, so there is nothing for
+    CR 601.2a's own opening sentence ("To propose the casting of a spell...")
+    to be about. Without this, `why_cannot_cast_now`'s CR 117.1a reading
+    passes a land straight through: that check is purely about *when* a
+    cast is timed, never about *what* can be cast at all, so a land sitting
+    in the active player's own main phase with an empty stack satisfies
+    `Game.can_cast_sorcery` exactly the way a real spell would. Left
+    unguarded, `Casting` would go on to build a real announcement - and
+    `Game.cast` would then refuse deep inside cost determination with
+    `_refuse_unless_mana_cost_payable`'s CR 118.6 message, which is a lie
+    for a land: a land's blank mana-cost corner is not an *unpayable cost*
+    CR 118.6a's alternative-cost escape hatch (Suspend, say) could ever
+    make payable - a land was never a spell whose cost that rule could speak
+    to in the first place.
+    """
+    if Type.LAND in spell.card.types:
+        return (
+            f"{spell.name} is a land (CR 305.1); a land never goes on the stack, is "
+            f"never a spell, and cannot be cast"
+        )
+    return None
+
+
+# --------------------------------------------------------------------------
 # When a card may be cast (CR 117.1a, CR 702.8a)
 # --------------------------------------------------------------------------
 
@@ -1371,6 +1411,46 @@ def why_cannot_cast_restriction(spell: CardState, caster: str, game: Any = None)
             f"{spell.zone.value} (CR 601.3, CR 101.2)"
         )
     return None
+
+
+def why_mana_cost_unpayable(
+    name: str, base_cost: ManaCost, alternative_cost: TotalCost | None = None
+) -> str | None:
+    """CR 118.6: a card with no printed mana cost has an unpayable cost, or None.
+
+    "Some objects have no mana cost. This represents an unpayable cost." This
+    is not the same thing as a printed {0}: CR 118.5a's "{0}" is a real, if
+    empty, cost that "must still be cast the same way as one with a cost
+    greater than zero", so it parses to one generic symbol worth zero
+    (`ManaCost.parse("{0}").symbols` is non-empty). A card with no mana
+    symbols at all - Living End's blank corner, `Card.mana_cost == ""` with
+    no `card_faces` to fall back to - parses to no symbols at all, and
+    CR 118.6 says that cost cannot be paid, full stop.
+
+    CR 118.6a is the escape hatch: "If an alternative cost is applied to an
+    unpayable cost, including an effect that allows a player to cast a spell
+    without paying its mana cost, ... the cost becomes payable." - which is
+    what `alternative_cost is not None` reports: CR 118.9's alternative cost
+    machinery having actually run (`Casting.alternative_cost`), or a `CAST`
+    action `legal_actions` already knows is not paying the base cost at all.
+
+    Pure over `(name, base_cost, alternative_cost)` on purpose: `Casting.
+    _refuse_unless_mana_cost_payable` and `legal_actions._cast_action` both
+    ask this identical question - one before raising to unwind an
+    announcement, the other before ever building one - and sharing the one
+    implementation is what keeps a `CAST` action's own `Affordability.NO`
+    from ever disagreeing with what `Game.cast` would actually refuse.
+    """
+    if alternative_cost is not None:
+        return None
+    if base_cost.symbols:
+        return None
+    return (
+        f"{name} has no mana cost, which CR 118.6 makes an unpayable "
+        f"cost - it cannot be cast this way. Some alternative or additional cost "
+        f"permission (a keyword like Suspend, or a resolving effect's permission "
+        f"to cast it without paying its mana cost) must apply instead (CR 118.6a)."
+    )
 
 
 #: Mindbreak Trap's shape of CR 118.9 offer: the same "rather than pay this
@@ -1707,13 +1787,18 @@ class Casting(BaseModel):
     to the stack has already made it a new object that nobody discarded."""
 
     def model_post_init(self, _context: object) -> None:
-        """CR 601.3: the announcement is refused if the timing does not allow it,
-        and CR 601.2a: the card moves to the stack the moment it is not.
+        """CR 305.1: a land is refused outright, before anything else, because
+        it was never a spell to begin with; then CR 601.3: the announcement
+        is refused if the timing does not allow it; then CR 601.2a: the card
+        moves to the stack the moment it is not.
 
         "A player can begin to cast a spell only if a rule or effect allows that
         player to cast it and no rule or effect prohibits that player from
         casting it." The timing rules of CR 117.1a are such a prohibition, so
-        they are checked here rather than after the cost has been paid.
+        they are checked here rather than after the cost has been paid - but
+        both of those questions presuppose a spell in the first place
+        (`why_cannot_cast_a_land`'s own docstring is why that check runs
+        first, not after).
 
         Then CR 601.2a runs: "To propose the casting of a spell, a player first
         moves that card (or that copy of a card) from where it is to the stack.
@@ -1724,13 +1809,29 @@ class Casting(BaseModel):
         itself - and why announcing a cast empties the zone the card came from
         straight away.
         """
+        refusal = why_cannot_cast_a_land(self.spell)
+        if refusal is not None:
+            raise ValueError(refusal)
         refusal = why_cannot_cast_now(self.spell, self.caster, self.game)
         if refusal is not None:
             raise ValueError(refusal)
         refusal = why_cannot_cast_restriction(self.spell, self.caster, self.game)
         if refusal is not None:
             raise ValueError(refusal)
-        self._move_to_the_stack()
+        if self.game is None:
+            # No game to hold a stack, no `_id_allocator_scope` to open - see
+            # `_move_to_the_stack`'s own early return for this same case.
+            self._move_to_the_stack()
+        else:
+            # CR 601.2a's move mints `self.spell`'s new `zone_change_stamp`
+            # (`CardState.move_to`), so it has to run with `Game._allocate_id`
+            # installed - `Game.objects_created`'s own docstring is why every
+            # mutating public entry point needs this, and constructing a
+            # `Casting` with a `game` is exactly that: it is this whole
+            # machine's own CR 601.2a moment, reached before any explicit
+            # method call on the object the caller gets back.
+            with self.game._id_allocator_scope():
+                self._move_to_the_stack()
 
     # -- CR 601.2a: the card is on the stack from here on ------------------
 
@@ -2552,34 +2653,17 @@ class Casting(BaseModel):
         """Omniscience's shape: a permanent the caster controls whose static
         ability applies CR 118.9's alternative cost of nothing to their spells.
 
-        Read line by line and only from a genuine `AbilityKind.STATIC` line
-        (CR 604.1), the same way `Game.static_cost_modifiers_for` reads a
-        board-wide cost modifier - a sentence inside an activated ability's
-        effect is gated on that ability being activated and is not a static
-        ability at all (CR 602.1).
+        Ported to `static_free_cast_grants` below so `Game.alternative_costs_for`
+        can ask this same pure question before any `Casting` exists - it reads
+        only `game.battlefield`/`caster`, nothing an in-flight announcement
+        knows that a `(game, caster)` pair does not already say.
         """
-        if self.game is None:
-            return []
-        found: list[tuple[str, StaticFreeCastGrant]] = []
-        for permanent in getattr(self.game, "battlefield", []):
-            if permanent.controller != self.caster:
-                continue
-            up_face_name = permanent.up_face_name or permanent.card.name
-            static_lines = {
-                ability.raw.strip()
-                for ability in parse_abilities(permanent.card)
-                if ability.face == up_face_name and ability.kind is AbilityKind.STATIC
-            }
-            for line in static_lines:
-                grant = static_free_cast_grant(line)
-                if grant is not None:
-                    found.append((permanent.card.name, grant))
-        return found
+        return static_free_cast_grants(self.game, self.caster)
 
     def _spell_is_type(self, type_word: str) -> bool:
         """Whether the spell has the card type a static grant names
         (CR 205.2b: a card with more than one type has all of them)."""
-        return type_word.lower() in (self.spell.card.type_line or "").lower()
+        return spell_has_type_word(self.spell.card, type_word)
 
     def use_alternative_cost(
         self,
@@ -3426,35 +3510,20 @@ class Casting(BaseModel):
     def _refuse_unless_mana_cost_payable(self) -> None:
         """CR 118.6: a card with no printed mana cost has an unpayable cost.
 
-        "Some objects have no mana cost. This represents an unpayable cost."
-        This is not the same thing as a printed {0}: CR 118.5a's "{0}" is a
-        real, if empty, cost that "must still be cast the same way as one with
-        a cost greater than zero", so it parses to one generic symbol worth
-        zero (`ManaCost.parse("{0}").symbols` is non-empty). A card with no
-        mana symbols at all - Living End's blank corner, `Card.mana_cost ==
-        ""` with no `card_faces` to fall back to - parses to no symbols at
-        all, and CR 118.6 says that cost cannot be paid, full stop.
-
-        CR 118.6a is the escape hatch: "If an alternative cost is applied to
-        an unpayable cost, including an effect that allows a player to cast a
-        spell without paying its mana cost, ... the cost becomes payable."
         `self.alternative_cost` is set exactly when CR 118.9's alternative
         cost machinery ran - `use_keyword` (Suspend's own free cast, once its
         last time counter comes off), `use_permission` (Shardless Agent's
         cascade hit), or `use_pitch_cost` - so this only refuses the *plain*
         hardcast CR 601.2b never grants Living End on its own: no black
-        source on the battlefield, no alternative cost, no announcement.
+        source on the battlefield, no alternative cost, no announcement. See
+        `why_mana_cost_unpayable`, which does the actual check - shared with
+        `legal_actions._cast_action`, which asks the identical question
+        before any `Casting` exists, so a `CAST` action's own `Action.
+        affordable` can never disagree with what this would raise.
         """
-        if self.alternative_cost is not None:
-            return
-        if self.base_cost.symbols:
-            return
-        raise ValueError(
-            f"{self.spell.name} has no mana cost, which CR 118.6 makes an unpayable "
-            f"cost - it cannot be cast this way. Some alternative or additional cost "
-            f"permission (a keyword like Suspend, or a resolving effect's permission "
-            f"to cast it without paying its mana cost) must apply instead (CR 118.6a)."
-        )
+        refusal = why_mana_cost_unpayable(self.spell.name, self.base_cost, self.alternative_cost)
+        if refusal is not None:
+            raise ValueError(refusal)
 
     def _refuse_unless_allowed_from_its_zone(self) -> None:
         """CR 601.3: a spell cast from anywhere but the hand needs permission -
@@ -3587,7 +3656,25 @@ class Casting(BaseModel):
         return None
 
     def cast(self) -> CardState:
-        """Finish casting: the cost is paid and the spell is on the stack."""
+        """Finish casting: the cost is paid and the spell is on the stack.
+
+        Run under `Game._id_allocator_scope` whenever there is a game to
+        install it on: `_cast_impl` moves the spell's face-down turn and
+        stack placement (`CardState.move_to` mints a fresh
+        `zone_change_stamp`) and, once on the stack, may put ward's own
+        trigger there too (`_emit_becomes_target`) - both persisted ids, both
+        minted only here. The no-game path (`Casting` driven as a pure
+        announcement machine, see `_move_to_the_stack`'s own docstring) has
+        no `Game` to install an allocator on and needs none: nothing it does
+        is replayed.
+        """
+        if self.game is None:
+            return self._cast_impl()
+        with self.game._id_allocator_scope():
+            return self._cast_impl()
+
+    def _cast_impl(self) -> CardState:
+        """The rest of `cast` - see its own docstring for why it is split out."""
         if self.payment is None or self.payment.step is not CostStep.PAID:
             raise ValueError("cannot finish casting before the cost is paid")
         self._refuse_unless_modes_satisfied()
@@ -3746,7 +3833,28 @@ class Casting(BaseModel):
         CR 733.1: the entire action is reversed and any payments already made
         are cancelled. The spell goes back where it came from, since a spell
         that cannot be cast legally was never cast at all (CR 601.6).
+
+        Run under `Game._id_allocator_scope` whenever there is a game to
+        install it on: `_cancel_impl` mints a fresh `zone_change_stamp`
+        putting `self.spell` back in `self.origin_zone` (`CardState.move_to`),
+        and `_undo_the_move_to_the_stack` mints another restoring it to
+        `announced_zone` through `Player.add` (immediately overwritten there
+        with the original `announced_stamp`, but the mint still has to come
+        from the installed allocator for `objects_created`'s count to stay
+        deterministic across a replay). The no-game path mirrors `cast()`'s
+        own no-game branch: this is the hottest of the six sites this
+        docstring is one of - the api's `rewind_unfinished` calls it on every
+        refused or dry-run cast attempt, most of which never had a game to
+        hold a stack in the first place.
         """
+        if self.game is None:
+            self._cancel_impl()
+            return
+        with self.game._id_allocator_scope():
+            self._cancel_impl()
+
+    def _cancel_impl(self) -> None:
+        """The rest of `cancel` - see its own docstring for why it is split out."""
         if self.is_settled:
             raise ValueError(f"casting is already {self.step}")
         if self.payment is not None:
@@ -3805,6 +3913,52 @@ class Casting(BaseModel):
 
 def _as_mana(amount: ManaCost | str) -> ManaCost:
     return ManaCost.parse(amount) if isinstance(amount, str) else amount
+
+
+# --------------------------------------------------------------------------
+# CR 118.9's PERMISSION and STATIC alternative-cost sources, pure over
+# `(game, caster, card)` - used by both `Casting.alternative_costs` (an
+# in-flight announcement) and `Game.alternative_costs_for` (before any
+# `Casting` exists). Neither branch reads anything an in-flight proposal
+# knows that the plain `game`/`caster`/`card` triple does not already say:
+# `play_permissions_on` is keyed off the object's own CR 400.7 identity, and
+# `static_free_cast_grants` is a board read gated on `caster` alone.
+# --------------------------------------------------------------------------
+
+
+def static_free_cast_grants(game: Any, caster: str) -> list[tuple[str, StaticFreeCastGrant]]:
+    """Omniscience's shape: a permanent `caster` controls whose static
+    ability applies CR 118.9's alternative cost of nothing to their spells.
+
+    Read line by line and only from a genuine `AbilityKind.STATIC` line
+    (CR 604.1), the same way `Game.static_cost_modifiers_for` reads a
+    board-wide cost modifier - a sentence inside an activated ability's
+    effect is gated on that ability being activated and is not a static
+    ability at all (CR 602.1).
+    """
+    if game is None:
+        return []
+    found: list[tuple[str, StaticFreeCastGrant]] = []
+    for permanent in getattr(game, "battlefield", []):
+        if permanent.controller != caster:
+            continue
+        up_face_name = permanent.up_face_name or permanent.card.name
+        static_lines = {
+            ability.raw.strip()
+            for ability in parse_abilities(permanent.card)
+            if ability.face == up_face_name and ability.kind is AbilityKind.STATIC
+        }
+        for line in static_lines:
+            grant = static_free_cast_grant(line)
+            if grant is not None:
+                found.append((permanent.card.name, grant))
+    return found
+
+
+def spell_has_type_word(card: Card, type_word: str) -> bool:
+    """Whether `card` has the card type a static grant names (CR 205.2b: a
+    card with more than one type has all of them)."""
+    return type_word.lower() in (card.type_line or "").lower()
 
 
 # --------------------------------------------------------------------------
@@ -3991,7 +4145,19 @@ class MarkedExile(BaseModel):
 
         CR 406.3: exiled cards are face up by default; foretell says face down,
         which is what `face_down` carries.
+
+        Run under `Game._id_allocator_scope`: `_take_impl` mints
+        `self.card`'s new `zone_change_stamp` (`CardState.move_to`, CR 400.7),
+        which needs `self.game` and is always present by the time this runs -
+        unlike `Casting.cast()`/`.cancel()`, nothing above dereferences
+        `self.game` without a null check, so there is no pure-announcement
+        path to branch on here.
         """
+        with self.game._id_allocator_scope():
+            return self._take_impl()
+
+    def _take_impl(self) -> CardState:
+        """The rest of `take` - see its own docstring for why it is split out."""
         payment = self.begin_paying()
         if payment.step is not CostStep.PAID:
             raise ValueError("the special action's cost has not been paid yet")
@@ -4013,7 +4179,24 @@ class MarkedExile(BaseModel):
         return self.card
 
     def cancel(self) -> None:
-        """Rewind the cost, leaving the card where it was (CR 733.1)."""
+        """Rewind the cost, leaving the card where it was (CR 733.1).
+
+        Run under `Game._id_allocator_scope` whenever there is a game:
+        `CostPayment.rewind` can itself move a real card - undoing a
+        sacrifice, discard, exile, or mill component's own `pay` - which
+        mints that card's `zone_change_stamp` the same way `take`'s move
+        does. `self.game` can be `None` here even though `take` never
+        reaches this state with one missing, because a caller may build a
+        `MarkedExile` and cancel it before ever calling `take`.
+        """
+        if self.game is None:
+            self._cancel_impl()
+            return
+        with self.game._id_allocator_scope():
+            self._cancel_impl()
+
+    def _cancel_impl(self) -> None:
+        """The rest of `cancel` - see its own docstring for why it is split out."""
         if self.payment is not None:
             self.payment.rewind()
 
@@ -4138,17 +4321,18 @@ def grant_suspend_haste(game: Any, permanent: CardState) -> None:
     shape every other delayed or off-stack trigger in this engine already
     takes.
     """
-    store = game.continuous_effects
-    timestamp = store.tick()
-    store.add(
-        ContinuousEffect(
-            description=f"{permanent.name}: suspend grants haste (CR 702.62a)",
-            layer=Layer.ABILITY,
-            timestamp=timestamp,
-            selector=only_this_incarnation(permanent, permanent.zone_change_stamp),
-            modification=grant_ability("Haste"),
+    with game._id_allocator_scope():  # noqa: SLF001
+        store = game.continuous_effects
+        timestamp = store.tick()
+        store.add(
+            ContinuousEffect(
+                description=f"{permanent.name}: suspend grants haste (CR 702.62a)",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                selector=only_this_incarnation(permanent, permanent.zone_change_stamp),
+                modification=grant_ability("Haste"),
+            )
         )
-    )
 
 
 def exile_warped(game: Any, permanent: CardState) -> CardState:
@@ -4177,15 +4361,16 @@ def exile_adventured(game: Any, spell: CardState, owner: str | None = None) -> C
     A replacement effect on resolution, and `Game.resolve_top` has no hook for
     one, so a scenario applies it itself.
     """
-    player = game.player(owner or spell.controller)
-    if spell in player.cards_in(spell.zone):
-        player.cards_in(spell.zone).remove(spell)
-    for cards in game.shared_zones.values():
-        if spell in cards:
-            cards.remove(spell)
-    spell.move_to(Zone.EXILE)
-    game.exile.append(spell)
-    return annotate_exile(spell, ExileMarker.ADVENTURED, player.username, game)
+    with game._id_allocator_scope():  # noqa: SLF001
+        player = game.player(owner or spell.controller)
+        if spell in player.cards_in(spell.zone):
+            player.cards_in(spell.zone).remove(spell)
+        for cards in game.shared_zones.values():
+            if spell in cards:
+                cards.remove(spell)
+        spell.move_to(Zone.EXILE)
+        game.exile.append(spell)
+        return annotate_exile(spell, ExileMarker.ADVENTURED, player.username, game)
 
 
 #: CR 207.2's reminder text, dropped from a spliced card's rules text the same
@@ -4253,3 +4438,58 @@ def _keyword(card: Card, keyword: str) -> KeywordAbility | None:
         if ability.canonical.lower() == keyword.lower():
             return ability
     return None
+
+
+class SpliceCandidate(BaseModel):
+    """One card in a hand that could be revealed to splice onto `spell`
+    right now (CR 702.47a) - `splice_candidates`'s own return shape, read
+    by `legal_actions` to build `Action.splice_options` without ever
+    opening a `Casting` of its own (`legal_actions`'s module docstring: no
+    in-flight announcement state lives here). `card` is a live `CardState`
+    on purpose, the same as `KeywordCastOption`/`GrantedCastOption` above -
+    this type never crosses a JSON boundary; `legal_actions` reads `card.id`
+    into the id-only `models.action.SpliceOption` before an `Action` is
+    ever built.
+    """
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    card: CardState
+    cost: TotalCost
+    rule: str = "CR 702.47a"
+
+
+def splice_candidates(game: Any, spell: CardState, player: str) -> list[SpliceCandidate]:
+    """CR 702.47a: every card in `player`'s hand whose splice ability could
+    be revealed onto `spell` right now, before any is actually chosen.
+
+    Mirrors the refusals `CastingStep._splice` enforces once a card is
+    named, minus the ones that only make sense for an in-flight `Casting`
+    that has already chosen some (CR 702.47b's "already spliced onto this
+    spell" is about a *second* reveal of the same card on the *same* cast,
+    which cannot have happened yet here) - `spell` can never splice onto
+    itself, since revealing it from hand and casting it are the same event
+    happening to the same object, not two.
+    """
+    candidates: list[SpliceCandidate] = []
+    for card in game.player(player).hand:
+        if card.id == spell.id:
+            continue
+        ability = _keyword(card.card, "Splice")
+        if ability is None:
+            continue
+        quality, cost = _splice_parameter(ability)
+        if quality is None or cost is None:
+            continue
+        if not _matches_splice_quality(spell, quality):
+            continue
+        text = _spliced_rules_text(card.card)
+        if not text:
+            continue
+        profile = profile_for_text(text)
+        if profile.understood and profile.requirements:
+            # CR 702.47b: refused fail-closed, the identical read `Casting.
+            # _splice` gives this same sentence.
+            continue
+        candidates.append(SpliceCandidate(card=card, cost=TotalCost.of(cost)))
+    return candidates

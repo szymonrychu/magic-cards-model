@@ -30,6 +30,11 @@ ability's effect (CR 603.1) and not a static one's (CR 604.1).
 Every CR number in this file was verified with `knowledge_search(q="...",
 type="rules")` in the session that wrote it: CR 613.3, CR 613.8, CR 613.8a,
 CR 613.8b, CR 613.8c.
+
+T10's round-trip/replay invariant does not apply here: every test builds bare
+`CardState`s and calls `compute_board`/`effects_for` directly, with no `Game`
+anywhere in the file, so `tests/scenarios/conftest.py`'s hook has nothing to
+checkpoint.
 """
 
 from magic_cards_model.machines.layers import compute_board, effects_for, static_effects

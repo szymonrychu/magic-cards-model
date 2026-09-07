@@ -116,12 +116,26 @@ def bury(game: Game, username: str, names: set[str]) -> None:
 
 
 def dealt(match: Match, rigged: dict[str, str], **kwargs) -> Game:
-    """Start a game with `rigged`'s cards on top of each named player's library."""
+    """Start a game with `rigged`'s cards on top of each named player's library.
+
+    `Match.start_game`'s own `deal_opening_hands=True` path draws before the
+    `Game` exists at all - there is nothing to open `_id_allocator_scope` on
+    yet - so a `Player.draw_opening_hand` there mints plain, unscoped
+    `uuid4()`s the same way this one does; harmlessly, because a real
+    `start_game` call is what T10's `checkpoint` snapshots, so those ids are
+    already baked into the initial dump a replay decodes rather than
+    reminted. Rigging needs the two steps kept apart - `deal_opening_hands=
+    False` so the library can be reordered before anyone draws from it - and
+    that second draw happens *after* `checkpoint` already took its snapshot
+    of the still-empty-handed game, so it has to open the scope itself or
+    every opening-hand test's dealt cards get a fresh, unreplayable id.
+    """
     game = match.start_game(deal_opening_hands=False, **kwargs)
     for username, name in rigged.items():
         rig(game, username, name)
-    for player in game.players:
-        player.draw_opening_hand()
+    with game._id_allocator_scope():  # noqa: SLF001
+        for player in game.players:
+            player.draw_opening_hand()
     return game
 
 
@@ -274,8 +288,9 @@ def test_a_player_holding_no_such_card_is_never_asked():
     # Bob's seat is the broodscale list, which plays both an opening-hand land
     # and an opening-hand creature; bury them so his seven provably has neither.
     bury(game, "bob", {"Gemstone Caverns", "Devourer of Destiny"})
-    for player in game.players:
-        player.draw_opening_hand()
+    with game._id_allocator_scope():  # noqa: SLF001 - see `dealt`'s own note
+        for player in game.players:
+            player.draw_opening_hand()
 
     match.run_mulligans(game)
 
@@ -658,8 +673,9 @@ def test_no_action_is_offered_for_a_card_that_is_not_in_the_opening_hand():
     match = series(devoted(), devoted())
     game = match.start_game(deal_opening_hands=False)
     bury(game, "alice", {"Leyline of Abundance"})
-    for player in game.players:
-        player.draw_opening_hand()
+    with game._id_allocator_scope():  # noqa: SLF001 - see `dealt`'s own note
+        for player in game.players:
+            player.draw_opening_hand()
 
     match.run_mulligans(game)
     alice = game.player("alice")

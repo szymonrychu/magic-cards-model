@@ -74,8 +74,8 @@ Three of the rules above are only half here, because the other half belongs to
 """
 
 from collections.abc import Iterable, Sequence
-from typing import TYPE_CHECKING, Any
-from uuid import uuid4
+from typing import TYPE_CHECKING, Any, Literal
+from uuid import NAMESPACE_OID, UUID, uuid5
 
 from pydantic import BaseModel, ConfigDict
 
@@ -106,6 +106,55 @@ _TYPE_ORDER: tuple[Type, ...] = (
     Type.INSTANT,
     Type.SORCERY,
 )
+
+#: Namespaces `_token_card_id`'s content hash away from `Game._allocate_id`'s
+#: own `uuid5(NAMESPACE_OID, f"{game_uid}:{n}")` ids: `game_uid` is always a
+#: hyphenated UUID string, which this literal prefix can never equal, so a
+#: token's `Card.id` and any `CardState`/effect id minted by the per-game
+#: allocator can never collide even by coincidence.
+_TOKEN_CARD_ID_PREFIX = "token-card"
+
+
+def _token_card_id(definition: "TokenDefinition") -> UUID:
+    """`Card.id` for a synthesised token, as a pure function of `definition`.
+
+    Deliberately *not* `ids.new_id()`. That allocator is what makes replay
+    deterministic (`ids.py`'s own docstring): inside a `Game._id_allocator_
+    scope()`, it mints `uuid5(game_uid, objects_created)` - a function of
+    *when* something is created, not of *what* it is. That is exactly right
+    for a `CardState`'s or a `ContinuousEffect`'s id, which is this engine's
+    own object identity and has no content of its own to be a function of.
+
+    A token's `Card` is different: CR 111.3 makes its stated characteristics
+    "functionally equivalent to the characteristic values that are printed on
+    a card" - its copiable values, the same thing a Scryfall printing's own,
+    permanently-fixed id identifies. `machines/abilities.py`'s `_ability_cache`
+    and `machines/triggers.py`'s `_activated_abilities_cache` memoise a card's
+    parsed abilities keyed on exactly that id, on the documented strength of
+    `Card` being immutable so "two different printings ... can never collide".
+
+    Minting a token's `Card.id` from the per-game counter broke that strength:
+    two independent decodes of one snapshot share the same `game_uid` and the
+    same starting `objects_created`, so the *first* token either one creates
+    mints the identical id regardless of what characteristics it was given -
+    a Spirit token in one decoded branch and a Goblin token in the other,
+    same id, the second's abilities silently served back as the first's from
+    the process-global cache (see `tests/test_token_card_id_collision.py`).
+
+    Hashing `definition`'s own fields instead keeps the two guarantees this
+    library owes intact where the per-game counter could not: it is still
+    fully deterministic (a pure function of content has only one output, so
+    two replays from the same decoded state - or two decoded branches that
+    happen to create the *same* token - agree without needing to agree on
+    `objects_created` first), and it restores the cache's actual precondition
+    instead of merely working around its symptom, since two tokens with
+    different stated characteristics now always get different ids by
+    construction - the same way two different Scryfall printings do. Two
+    tokens with the *same* stated characteristics sharing an id is not a bug:
+    CR 111.3 makes identical stated characteristics the same copiable values,
+    the same as two physical copies of one printing sharing that printing's id.
+    """
+    return uuid5(NAMESPACE_OID, f"{_TOKEN_CARD_ID_PREFIX}:{definition.model_dump_json()}")
 
 
 class TokenDefinition(BaseModel):
@@ -214,9 +263,14 @@ class TokenDefinition(BaseModel):
 
         `cmc` is 0 by CR 202.3a, since a token has no mana cost. `rarity` and
         `set` are not characteristics (CR 109.3) and mean nothing here.
+
+        `id` is `_token_card_id`, a pure function of these characteristics -
+        deliberately *not* `ids.new_id()`. See that helper's own docstring for
+        why: two tokens with different text must never share an id, no matter
+        which `Game` or which decoded branch of one asked for them.
         """
         return Card(
-            id=uuid4(),
+            id=_token_card_id(self),
             name=self.card_name,
             type_line=self.type_line,
             mana_cost=None,
@@ -243,16 +297,24 @@ class TokenState(CardState):
     does to a permanent - entering, tapping, attacking, dying, layers, counters -
     therefore works on a token without a single special case.
 
-    Two things are its own:
+    Three things are its own:
 
     - `token` is `CardState`'s own flag (CR 111.6, CR 108.2b), defaulted to True
       here so a token cannot be built without it. `machines/targeting.py` reads
       the same flag for CR 111.1's "target token" and "target nontoken
       permanent".
+    - `state_class` overrides `CardState`'s own default so a decode of this
+      class - and only this class, regardless of what `token` says at that
+      moment - rebuilds as `TokenState` (`CardState._resolve_token_subclass`'s
+      own docstring, and `state_class`'s, have the full story: `token=True`
+      or `token=False` on an object that is nonetheless this class, such as a
+      copy of a permanent spell on the stack, must not change which Python
+      class a decode produces).
     - `move_to` enforces CR 111.8, which nothing else in the engine does.
     """
 
     token: bool = True
+    state_class: Literal["TokenState"] = "TokenState"
 
     left_the_battlefield: bool = False
     """True once this token has been on the battlefield and gone (CR 111.8).
@@ -451,64 +513,65 @@ def create_tokens(
     created". That is a check against the rules-modifying continuous effects of
     CR 611.3, which this engine does not have; a token is always created here.
     """
-    if count <= 0:
-        return []
+    with game._id_allocator_scope():
+        if count <= 0:
+            return []
 
-    # Imported here rather than at module scope: `machines/replacement.py` reads
-    # `is_token` off this module, so a top-level import would close the cycle.
-    from ..machines.replacement import EventKind, ReplaceableEvent, apply_replacements
+        # Imported here rather than at module scope: `machines/replacement.py` reads
+        # `is_token` off this module, so a top-level import would close the cycle.
+        from ..machines.replacement import EventKind, ReplaceableEvent, apply_replacements
 
-    creation = ReplaceableEvent(
-        kind=EventKind.CREATE_TOKENS,
-        player=game.player(controller),  # CR 111.2: the creator is the owner
-        amount=count,
-        definition=definition,
-    )
-    apply_replacements(game, creation)
-    count = creation.amount
-    # A replacement effect may add tokens that are not more of `definition` -
-    # Stridehangar Automaton's "those tokens plus an additional 1/1 ... Thopter
-    # ... are created instead". CR 614.6 makes that one modified event, so they
-    # are created here inside the same call and raise no creation event of
-    # their own; a second event would give the same effect a second opportunity
-    # against its own addition, which CR 614.5 refuses and which would not
-    # terminate.
-    extra_definitions = list(creation.extra)
-    if count <= 0 and not extra_definitions:
-        return []
+        creation = ReplaceableEvent(
+            kind=EventKind.CREATE_TOKENS,
+            player=game.player(controller),  # CR 111.2: the creator is the owner
+            amount=count,
+            definition=definition,
+        )
+        apply_replacements(game, creation)
+        count = creation.amount
+        # A replacement effect may add tokens that are not more of `definition` -
+        # Stridehangar Automaton's "those tokens plus an additional 1/1 ... Thopter
+        # ... are created instead". CR 614.6 makes that one modified event, so they
+        # are created here inside the same call and raise no creation event of
+        # their own; a second event would give the same effect a second opportunity
+        # against its own addition, which CR 614.5 refuses and which would not
+        # terminate.
+        extra_definitions = list(creation.extra)
+        if count <= 0 and not extra_definitions:
+            return []
 
-    card = definition.to_card()
-    created: list[TokenState] = []
-    for _ in range(count):
-        token = TokenState(card=card, zone=Zone.STACK, controller=controller)
-        # `zone=Zone.STACK` is only where it is *before* it exists: nothing holds
-        # it, and `enter_the_battlefield` calls `move_to(BATTLEFIELD)` at once.
-        # It is never a token in a zone other than the battlefield for the
-        # purposes of CR 111.7, because no state-based action is checked in
-        # between (CR 704.3 checks only when a player would get priority).
-        game.put_onto_battlefield(token, controller, tapped=tapped)
-        if token.zone is not Zone.BATTLEFIELD:
-            # A replacement effect sent it elsewhere (CR 614.6). CR 111.7 will
-            # have it cease to exist; it is not attacking and takes no counters.
+        card = definition.to_card()
+        created: list[TokenState] = []
+        for _ in range(count):
+            token = TokenState(card=card, zone=Zone.STACK, controller=controller)
+            # `zone=Zone.STACK` is only where it is *before* it exists: nothing holds
+            # it, and `enter_the_battlefield` calls `move_to(BATTLEFIELD)` at once.
+            # It is never a token in a zone other than the battlefield for the
+            # purposes of CR 111.7, because no state-based action is checked in
+            # between (CR 704.3 checks only when a player would get priority).
+            game.put_onto_battlefield(token, controller, tapped=tapped)
+            if token.zone is not Zone.BATTLEFIELD:
+                # A replacement effect sent it elsewhere (CR 614.6). CR 111.7 will
+                # have it cease to exist; it is not attacking and takes no counters.
+                created.append(token)
+                continue
+            if attached_to is not None:
+                token.attach_to(attached_to)  # CR 701.3a
+            for kind, amount in (counters or {}).items():
+                game.add_counters(token, kind, amount)
+            if attacking is not None:
+                _put_onto_the_battlefield_attacking(game, token, attacking)
             created.append(token)
-            continue
-        if attached_to is not None:
-            token.attach_to(attached_to)  # CR 701.3a
-        for kind, amount in (counters or {}).items():
-            game.add_counters(token, kind, amount)
-        if attacking is not None:
-            _put_onto_the_battlefield_attacking(game, token, attacking)
-        created.append(token)
 
-    for extra in extra_definitions:
-        # A different token with its own stated characteristics (CR 111.3), so
-        # none of this call's `tapped`/`attacking`/`counters`/`attached_to`
-        # applies to it: those describe how *these* tokens were asked for, and
-        # the addition was asked for by somebody else's card.
-        addition = TokenState(card=extra.to_card(), zone=Zone.STACK, controller=controller)
-        game.put_onto_battlefield(addition, controller)
-        created.append(addition)
-    return created
+        for extra in extra_definitions:
+            # A different token with its own stated characteristics (CR 111.3), so
+            # none of this call's `tapped`/`attacking`/`counters`/`attached_to`
+            # applies to it: those describe how *these* tokens were asked for, and
+            # the addition was asked for by somebody else's card.
+            addition = TokenState(card=extra.to_card(), zone=Zone.STACK, controller=controller)
+            game.put_onto_battlefield(addition, controller)
+            created.append(addition)
+        return created
 
 
 def create_predefined_tokens(
@@ -546,10 +609,15 @@ def copiable_card_with_added_abilities(printed: Card, added: Sequence[str]) -> C
     what CR 707.9a actually describes: the copy's *text* includes it.
 
     The `Card` this returns is a `model_copy` of a real Scryfall printing with
-    a fresh `id` (CR 108.1 keeps the oracle text authoritative; the id is this
-    engine's own object identity, and two objects with different text must not
-    share one). Nothing is hand-written: every characteristic but the oracle
-    text is the printing's own.
+    a fresh `id` derived from `printed.id` and the new oracle text (CR 108.1
+    keeps the oracle text authoritative; the id is this engine's own object
+    identity, and two objects with different text must not share one) -
+    `_token_card_id`'s own docstring is why this is a content hash rather than
+    `ids.new_id()`: two decoded branches adding different lines to a copy of
+    the same original must never mint the same id for two different results,
+    which the per-game counter cannot promise across branches. Nothing is
+    hand-written: every characteristic but the oracle text is the printing's
+    own.
 
     `added` empty returns `printed` unchanged, so a plain CR 707.2 copy pays
     nothing for this rule existing.
@@ -558,7 +626,8 @@ def copiable_card_with_added_abilities(printed: Card, added: Sequence[str]) -> C
     if not lines:
         return printed
     body = "\n".join([*([printed.oracle_text] if printed.oracle_text else []), *lines])
-    return printed.model_copy(update={"id": uuid4(), "oracle_text": body})
+    new_card_id = uuid5(NAMESPACE_OID, f"{_TOKEN_CARD_ID_PREFIX}:{printed.id}:{body}")
+    return printed.model_copy(update={"id": new_card_id, "oracle_text": body})
 
 
 def token_copy_of(
@@ -605,37 +674,38 @@ def token_copy_of(
     face-down status, and CR 111.12's "a copy of a nonexistent object" - the
     caller has an object in hand, so there is nothing nonexistent to copy.
     """
-    if count <= 0:
-        return []
-    from ..machines.replacement import EventKind, ReplaceableEvent, apply_replacements
+    with game._id_allocator_scope():
+        if count <= 0:
+            return []
+        from ..machines.replacement import EventKind, ReplaceableEvent, apply_replacements
 
-    creation = ReplaceableEvent(
-        kind=EventKind.CREATE_TOKENS,
-        player=game.player(controller),
-        amount=count,
-        # No `TokenDefinition` here: a token copy's characteristics are the
-        # original's copiable values (CR 707.2), not a set of values some
-        # effect stated (CR 111.3). `card` carries the original so a
-        # replacement effect that asks *what kind* of token is being created -
-        # Stridehangar Automaton's "artifact tokens" - has something to read.
-        card=original,
-    )
-    apply_replacements(game, creation)
-    count = creation.amount
-    extra_definitions = list(creation.extra)
+        creation = ReplaceableEvent(
+            kind=EventKind.CREATE_TOKENS,
+            player=game.player(controller),
+            amount=count,
+            # No `TokenDefinition` here: a token copy's characteristics are the
+            # original's copiable values (CR 707.2), not a set of values some
+            # effect stated (CR 111.3). `card` carries the original so a
+            # replacement effect that asks *what kind* of token is being created -
+            # Stridehangar Automaton's "artifact tokens" - has something to read.
+            card=original,
+        )
+        apply_replacements(game, creation)
+        count = creation.amount
+        extra_definitions = list(creation.extra)
 
-    copiable = copiable_card_with_added_abilities(original.card, added_abilities)
+        copiable = copiable_card_with_added_abilities(original.card, added_abilities)
 
-    created: list[TokenState] = []
-    for _ in range(count):
-        copy = TokenState(card=copiable, zone=Zone.STACK, controller=controller)
-        game.put_onto_battlefield(copy, controller, tapped=bool(options.get("tapped")))
-        created.append(copy)
-    for extra in extra_definitions:
-        addition = TokenState(card=extra.to_card(), zone=Zone.STACK, controller=controller)
-        game.put_onto_battlefield(addition, controller)
-        created.append(addition)
-    return created
+        created: list[TokenState] = []
+        for _ in range(count):
+            copy = TokenState(card=copiable, zone=Zone.STACK, controller=controller)
+            game.put_onto_battlefield(copy, controller, tapped=bool(options.get("tapped")))
+            created.append(copy)
+        for extra in extra_definitions:
+            addition = TokenState(card=extra.to_card(), zone=Zone.STACK, controller=controller)
+            game.put_onto_battlefield(addition, controller)
+            created.append(addition)
+        return created
 
 
 def _put_onto_the_battlefield_attacking(

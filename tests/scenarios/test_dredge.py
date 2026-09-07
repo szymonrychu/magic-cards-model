@@ -85,7 +85,11 @@ def test_one_card_short_cannot_dredge_at_all():
 def test_dredge_only_functions_from_a_graveyard():
     """CR 702.52a: "functions only while the card with dredge is in a player's graveyard"."""
     scenario = board("Lightning Bolt", "Forest", graveyard=()).build()
-    scenario.player("alice").add(scenario.game.player("alice").library.pop(), Zone.HAND)
+    # `Player.add` mints the moved card's `zone_change_stamp` with no `Game`
+    # method's `_id_allocator_scope` open around it - see `test_state_based_
+    # actions.py`'s own note on `Player.draw_up_to` for the same shape.
+    with scenario.game._id_allocator_scope():  # noqa: SLF001
+        scenario.player("alice").add(scenario.game.player("alice").library.pop(), Zone.HAND)
     hand_card = scenario.player("alice").hand[0]
 
     assert why_cannot_dredge(scenario.game, hand_card, "alice") is not None
@@ -125,7 +129,8 @@ def test_dredging_twice_needs_the_library_to_hold_out():
     dredge(scenario.game, salvage, "alice")
     assert why_cannot_dredge(scenario.game, salvage, "alice") is not None
 
-    scenario.player("alice").move(salvage, Zone.GRAVEYARD)
+    with scenario.game._id_allocator_scope():  # noqa: SLF001
+        scenario.player("alice").move(salvage, Zone.GRAVEYARD)
     assert why_cannot_dredge(scenario.game, salvage, "alice") is None
     dredge(scenario.game, salvage, "alice")
     assert scenario.player("alice").library == []

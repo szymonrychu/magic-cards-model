@@ -258,7 +258,10 @@ def test_counters_do_not_come_back_when_the_card_returns():
     ballista.add_counters(Counter.PLUS_ONE, 2)
 
     scenario.game.destroy(ballista)
-    scenario.player().move(ballista, Zone.HAND)
+    # `Player.move` mints the moved card's `zone_change_stamp` with no `Game`
+    # method's `_id_allocator_scope` open around it here.
+    with scenario.game._id_allocator_scope():  # noqa: SLF001
+        scenario.player().move(ballista, Zone.HAND)
 
     assert ballista.counters == {}
 

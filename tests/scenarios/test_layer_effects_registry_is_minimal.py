@@ -17,6 +17,10 @@ handed the parser - `Card.oracle_text` for a real card, `MONSTER_ROLE.rules_text
 for the one entry keyed on a token's name rather than a card in the pool - and
 asserts `parsed_layer_effects` comes back `None`. A row that fails this test is
 telling you which shape the parser already understands; delete the row.
+
+T10's round-trip/replay invariant does not apply here: this file never builds
+a `Game`, only reads a static registry against parser output, so `tests/
+scenarios/conftest.py`'s hook has nothing to checkpoint.
 """
 
 import pytest
