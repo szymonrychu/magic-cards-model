@@ -3,7 +3,7 @@ replayed through the same sequence of commands, must dump byte-identically
 both times - and two independently built games must never mint the same id.
 
 A `Game` already round-trips byte-identically through `model_dump(mode="json")`
-/ `model_validate` with no decision provider attached. The gap this covers is
+/ `model_validate`. The gap this covers is
 what happens *after* the round trip: replaying the same commands from the same
 decoded state used to mint a fresh `uuid4()` every time a card changed zones
 (`CardState.zone_change_stamp`, set by `move_to`) and every time some other
@@ -110,8 +110,8 @@ def _replay_cast_trigger_and_token_sequence(game: Game) -> None:
 
     Driven directly against `game` through `PlayedScenario`'s convenience
     methods, which are thin wrappers over the same `Game`/`Casting`/
-    `CostPayment` calls a real caller makes - not through a decision
-    provider, so calling this twice against two independently decoded copies
+    `CostPayment` calls a real caller makes - not through a live seat,
+    so calling this twice against two independently decoded copies
     of the same snapshot takes the identical sequence of engine calls both
     times.
     """

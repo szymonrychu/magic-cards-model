@@ -181,7 +181,7 @@ def test_the_question_offers_every_legal_candidate_at_once():
 
 
 def test_an_unanswered_search_still_finds_in_zone_order():
-    """The default, with nobody scripted and no provider: find, taking the
+    """The default, with nobody scripted: find, taking the
     candidates in zone order. CR 701.23b would let an unscripted seat find
     nothing, but defaulting a fetchland to paying the life, sacrificing itself
     and finding nothing is not a sane thing to do on a player's behalf - and it

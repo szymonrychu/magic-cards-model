@@ -82,18 +82,6 @@ def test_white_orchid_phantom_destroys_the_chosen_nonbasic_land():
 
 def test_a_basic_land_is_not_offered_as_a_candidate():
     """The candidate list for the decision never contains bob's Mountain."""
-    from dataclasses import dataclass, field
-
-    from magic_cards_model.machines.decisions import NOT_ANSWERED, Decision
-
-    @dataclass
-    class Provider:
-        asked: list[Decision] = field(default_factory=list)
-
-        def decide(self, decision):
-            self.asked.append(decision)
-            return NOT_ANSWERED
-
     scenario = (
         Scenario()
         .player("alice", hand=["White Orchid Phantom"])
@@ -102,13 +90,11 @@ def test_a_basic_land_is_not_offered_as_a_candidate():
     )
     mountain = scenario.creature("Mountain", "bob")
     mesa = scenario.creature("Arid Mesa", "bob")
-    provider = Provider()
-    scenario.game.decisions.provider = provider
 
     scenario.put_onto_battlefield("White Orchid Phantom")
     scenario.game.put_triggers_on_stack()
 
-    offered = provider.asked[-1].targets
+    offered = scenario.game.decisions.asked[-1].targets
     assert TargetRef.to_card(mesa) in offered
     assert TargetRef.to_card(mountain) not in offered, "a basic land is never legal here"
 

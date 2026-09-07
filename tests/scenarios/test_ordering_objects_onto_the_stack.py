@@ -570,7 +570,7 @@ def test_a_recorded_tape_answers_the_trigger_order():
 
 
 def test_pause_when_unanswered_raises_decision_pending_for_the_trigger_order():
-    """With nothing scripted, no tape, and no provider, `pause_when_unanswered`
+    """With nothing scripted and no tape, `pause_when_unanswered`
     turns CR 603.3b's ordering into a raised `DecisionPending` - the same proof
     `test_pause_when_unanswered_raises_decision_pending_through_a_resolving_
     spell` gives for `Game.ask`, given here for `ask_trigger_order`, which

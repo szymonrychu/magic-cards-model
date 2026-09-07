@@ -46,7 +46,6 @@ from magic_cards_model.machines import Step
 from magic_cards_model.machines.abilities import TriggerEvent
 from magic_cards_model.machines.decisions import (
     Answer,
-    Decision,
     DecisionKind,
     DecisionPending,
     DeclaredPair,
@@ -469,11 +468,13 @@ def test_a_recorded_tape_declares_a_block():
 
 
 def test_pause_when_unanswered_raises_decision_pending_for_declare_attackers():
-    """With nothing scripted, no tape, and no provider, `pause_when_unanswered`
+    """With nothing scripted and no tape, `pause_when_unanswered`
     turns CR 703.4i's declaration into a raised `DecisionPending` - the same
     proof given for `ask_mulligan` and `ask_trigger_order`, here for `_ask_
-    declaration`, which reaches this point through neither `Game.ask` nor a
-    provider (see the next section).
+    declaration`, which reaches this point through neither `Game.ask` nor
+    (like every other asker in `machines/decisions.py`) any other channel:
+    a scripted answer, then the tape, then a pause, and only then
+    `default_answer`.
     """
     scenario = attacking_board().build()
     scenario.game.decisions.pause_when_unanswered = True
@@ -486,61 +487,3 @@ def test_pause_when_unanswered_raises_decision_pending_for_declare_attackers():
     assert pending.decision.kind is DecisionKind.DECLARE_ATTACKERS
     assert pending.decision.player == "alice"
     assert "703.4i" in pending.rule
-
-
-# -- the live-deployment gate (finding 1): no provider for either declaration -
-#
-# `_ask_declaration` deliberately never consults `script.provider` - see its
-# own docstring for why: the API's `MailboxProvider.decide` blocks the calling
-# thread for the full timeout regardless of kind, and `DECLARE_ATTACKERS`/
-# `DECLARE_BLOCKERS` are absent from the API's own `ANSWERABLE_KINDS`, so a
-# live seat has no transport to answer either through the mailbox `script.
-# provider` stands in for. Consulting it here would stall every live game's
-# combat for the full timeout, twice per combat, for nothing a seat could
-# ever answer. These two tests are the gate: a provider installed here is
-# never asked, for either declaration.
-
-
-class _AnyProviderWouldAnswer:
-    """A decision provider that would happily answer any kind put to it.
-
-    Not a mock of the engine: like `DecisionScript`, it stands in for a real
-    seat and performs no engine behaviour itself - it only records what it was
-    asked, so a test can prove it was never asked anything at all.
-    """
-
-    def __init__(self) -> None:
-        self.seen: list[Decision] = []
-
-    def decide(self, decision: Decision) -> object:
-        self.seen.append(decision)
-        return ()
-
-
-def test_a_provider_is_never_consulted_for_declare_attackers():
-    scenario = attacking_board().build()
-    provider = _AnyProviderWouldAnswer()
-    scenario.game.decisions.provider = provider
-
-    scenario.start_at(Step.BEGINNING_OF_COMBAT)
-    scenario.advance()
-
-    assert provider.seen == [], "DECLARE_ATTACKERS must never reach script.provider"
-    # Nothing scripted, no tape, no provider consulted: `default_answer`'s
-    # "declare nobody" is what actually happened (CR 508.1's "if any").
-    assert scenario.game.combat.attacks == []
-
-
-def test_a_provider_is_never_consulted_for_declare_blockers():
-    scenario = attacking_board().build()
-    bears = scenario.creature("Grizzly Bears", "alice")
-    queue_declaration(scenario, DecisionKind.DECLARE_ATTACKERS, [(bears, "bob")])
-    provider = _AnyProviderWouldAnswer()
-    scenario.game.decisions.provider = provider
-
-    scenario.start_at(Step.BEGINNING_OF_COMBAT)
-    scenario.advance()
-    scenario.advance()  # declare blockers
-
-    assert provider.seen == [], "DECLARE_BLOCKERS must never reach script.provider"
-    assert list(scenario.game.combat.attacks[0].blockers) == []

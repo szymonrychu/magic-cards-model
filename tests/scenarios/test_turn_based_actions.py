@@ -13,7 +13,7 @@ file turns it on, because that is the mechanic under test.
 import pytest
 
 from magic_cards_model.machines import Step
-from magic_cards_model.machines.decisions import NOT_ANSWERED, Decision, DecisionKind
+from magic_cards_model.machines.decisions import Answer, DecisionKind, ScriptedAnswer
 from magic_cards_model.models import Zone
 
 from .harness import PlayedScenario, Scenario
@@ -169,10 +169,10 @@ def test_a_hand_at_maximum_size_discards_nothing():
 def test_a_hand_at_or_under_maximum_size_is_never_asked_to_discard():
     """CR 514.1's turn-based action only fires when the hand has more cards
     than the maximum - at or under it there is nothing to discard and, per CR
-    701.9b, nothing to choose either. A live decision provider (the playtest
-    API) parks a whole decision timeout waiting on an answer to "discard 0
-    card(s)", which cannot be a real choice - so this must never even reach
-    `Game.ask` (`decisions.asked`), not just resolve to an empty discard."""
+    701.9b, nothing to choose either. A live seat behind the api parks a whole
+    decision timeout waiting on an answer to "discard 0 card(s)", which cannot
+    be a real choice - so this must never even reach `Game.ask`
+    (`decisions.asked`), not just resolve to an empty discard."""
     scenario = driven(alice={"hand": ["Mountain"] * 7}, bob={})
     advance_to(scenario, "alice", Step.CLEANUP)
 
@@ -275,8 +275,8 @@ def test_an_illegal_discard_answer_is_refused_and_does_not_corrupt_state():
     assert bob.hand == [bob.hand[0]]
 
 
-def test_no_provider_present_uses_the_old_default():
-    """No script, no provider: the back of the hand, exactly as before this
+def test_nothing_scripted_uses_the_old_default():
+    """No script, no tape: the back of the hand, exactly as before this
     machinery existed (see `test_the_cleanup_step_discards_down_to_maximum_hand_size`
     for the original assertion). This test pins the specific cards, not just
     the count.
@@ -284,7 +284,6 @@ def test_no_provider_present_uses_the_old_default():
     scenario = driven(alice={"hand": ["Island", *(["Mountain"] * 7)]}, bob={})
     alice = scenario.player("alice")
     island, *mountains = alice.hand
-    assert scenario.game.decisions.provider is None
 
     advance_to(scenario, "alice", Step.CLEANUP)
 
@@ -293,69 +292,50 @@ def test_no_provider_present_uses_the_old_default():
     assert len(alice.hand) == 7
 
 
-def test_a_scripted_answer_still_beats_a_provider():
-    """`Game.ask` tries the script before the provider (see its docstring), so
-    a live provider sitting on the game does not get a say once a scenario has
+def test_a_scripted_answer_still_beats_a_recorded_tape_entry():
+    """`Game.ask` tries the script before the replay tape (see its docstring),
+    so a tape entry sitting on the game does not get a say once a scenario has
     scripted the answer itself.
     """
-
-    class AlwaysDiscardsMountains:
-        """A decision provider that always picks the first Mountain offered.
-
-        Not a mock of the engine: like `DecisionScript`, it stands in for a
-        real player and the engine performs every consequence itself. Used
-        here only to prove it is *not* consulted when a script has already
-        answered.
-        """
-
-        def __init__(self, cards_by_id: dict) -> None:
-            self._cards_by_id = cards_by_id
-            self.called = False
-
-        def decide(self, decision: Decision) -> object:
-            self.called = True
-            for card_id in decision.cards:
-                if self._cards_by_id[card_id].name == "Mountain":
-                    return (card_id,)
-            return NOT_ANSWERED
-
     scenario = driven(alice={"hand": ["Island", *(["Mountain"] * 7)]}, bob={})
     alice = scenario.player("alice")
     island, *mountains = alice.hand
-    provider = AlwaysDiscardsMountains({c.id: c for c in alice.hand})
-    scenario.game.decisions.provider = provider
+    # Declaring no attackers is scripted, not taped, so it does not shift the
+    # tape's own position: the cleanup discard below is still the tape's
+    # first entry.
+    scenario.game.decisions.add(
+        ScriptedAnswer(kind=DecisionKind.DECLARE_ATTACKERS, value=(), player="alice")
+    )
+    scenario.game.decisions.recorded = [
+        Answer(seq=0, kind=DecisionKind.CHOOSE_CARDS, player="alice", card_ids=(mountains[0].id,))
+    ]
     scenario.will_discard(island, username="alice")
 
     advance_to(scenario, "alice", Step.CLEANUP)
 
-    assert not provider.called, "a scripted answer must win before the provider is even asked"
+    assert scenario.game.decisions.consumed == 0, "the tape entry was never read"
     assert island.zone is Zone.GRAVEYARD
     assert all(m.zone is Zone.HAND for m in mountains)
 
 
-def test_a_provider_answers_when_nothing_is_scripted():
-    """The provider branch itself: with no script, `Game.ask` falls through to
-    `self.decisions.provider` before it falls through to `default_answer`.
+def test_a_recorded_tape_answers_when_nothing_is_scripted():
+    """The tape branch itself: with no script, `Game.ask` falls through to
+    `decisions.recorded` before it falls through to `default_answer`.
     """
-
-    class DiscardsTheFirstCard:
-        def __init__(self) -> None:
-            self.called = False
-
-        def decide(self, decision: Decision) -> object:
-            self.called = True
-            return (decision.cards[0],)
-
     scenario = driven(alice={"hand": ["Island", *(["Mountain"] * 7)]}, bob={})
     alice = scenario.player("alice")
     island, *mountains = alice.hand
-    provider = DiscardsTheFirstCard()
-    scenario.game.decisions.provider = provider
+    scenario.game.decisions.add(
+        ScriptedAnswer(kind=DecisionKind.DECLARE_ATTACKERS, value=(), player="alice")
+    )
+    scenario.game.decisions.recorded = [
+        Answer(seq=0, kind=DecisionKind.CHOOSE_CARDS, player="alice", card_ids=(island.id,))
+    ]
 
     advance_to(scenario, "alice", Step.CLEANUP)
 
-    assert provider.called
-    assert island.zone is Zone.GRAVEYARD, "the provider chose the front of the hand"
+    assert scenario.game.decisions.consumed == 1
+    assert island.zone is Zone.GRAVEYARD, "the tape named the front of the hand"
     assert all(m.zone is Zone.HAND for m in mountains)
 
 

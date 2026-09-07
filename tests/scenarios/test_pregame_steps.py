@@ -107,7 +107,7 @@ def test_resting_asks_nobody_anything():
     """The whole point: a rested-in step puts no question to anyone.
 
     The old shape ran both pregame sequences inside one call that put every
-    question through `Game.ask`. Behind a live provider that blocks until a human
+    question through `Game.ask`. Behind a live seat that blocks until a human
     answers, that cost one answer timeout per question per seat. A step the game
     rests in has no wait to hold, and the proof is that starting a game records
     no question at all.
@@ -362,9 +362,10 @@ def test_a_whole_pregame_played_live_asks_nothing():
     """End to end, the measurement that motivated this: zero blocking questions.
 
     Both seats declare and both seats take their CR 103.6 turn, and the engine
-    never once puts a question to a `DecisionProvider`. Under the old shape this
-    same game put four - one per seat per sequence - each of which a live
-    provider answered by blocking the thread until a human or a timeout arrived.
+    never once blocks the calling thread on a live seat's answer. Under the old
+    shape this same game asked four questions - one per seat per sequence -
+    each of which a live seat answered by blocking the thread until a human or
+    a timeout arrived.
     """
     game, _ = two_leylines()
 

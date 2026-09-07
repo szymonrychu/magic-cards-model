@@ -34,22 +34,25 @@ fire off one casting, and both used to share the dict entry by name - that
 part of the old behaviour is real and kept), but `put_triggers_on_stack`
 throws the answer away once the batch is done, so a later, separate trigger of
 the same name cannot see a stale one. Telling two *simultaneous* instances of
-the same name apart - the two-copies and controller-respecting cases below -
-is a production capability with no test-harness shorthand, so those tests
-drive `Game.ask` directly through a `DecisionProvider` stub instead, which is
-exactly the shape a live player's answer takes (see `machines/decisions.py`).
+the same name apart - the two-copies case below - is a production capability
+with no test-harness shorthand built on card names, so that test answers
+through `decisions.recorded` (the replay tape) instead of
+`choose_trigger_targets`: the tape is read positionally, not
+by name, so it can hand two same-named, simultaneous instances two different
+answers where a name-keyed script cannot. The controller-respecting case
+answers each player's own question with its own `ScriptedAnswer`, which is
+enough once the two questions are addressed to two different players.
 """
-
-from dataclasses import dataclass, field
 
 import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.abilities import TriggerEvent
 from magic_cards_model.machines.decisions import (
-    NOT_ANSWERED,
+    Answer,
     Decision,
     DecisionKind,
+    ScriptedAnswer,
 )
 from magic_cards_model.machines.delayed import DelayedTrigger, SacrificeSubject
 from magic_cards_model.machines.triggers import GameEvent, TargetingNoticeKind
@@ -58,24 +61,13 @@ from magic_cards_model.models.card_state import TargetRef
 from tests.scenarios.harness import Scenario
 
 
-@dataclass
-class QueueProvider:
-    """A `DecisionProvider` that answers `CHOOSE_TARGETS` questions in order.
-
-    Not a mock: it is a real implementation of the one-method `DecisionProvider`
-    protocol `Game.ask` already calls, standing in for what a live player at a
-    keyboard would be behind. `asked` records every `Decision` it was handed,
-    which is how a test proves *which* controller a question was addressed to.
-    """
-
-    answers: list[tuple[object, ...]] = field(default_factory=list)
-    asked: list[Decision] = field(default_factory=list)
-
-    def decide(self, decision: Decision) -> object:
-        self.asked.append(decision)
-        if decision.kind is not DecisionKind.CHOOSE_TARGETS or not self.answers:
-            return NOT_ANSWERED
-        return self.answers.pop(0)
+def targets_asked(scenario: Scenario) -> list[Decision]:
+    """The `CHOOSE_TARGETS` questions this game has asked, in order."""
+    return [
+        decision
+        for decision in scenario.game.decisions.asked
+        if decision.kind is DecisionKind.CHOOSE_TARGETS
+    ]
 
 
 def _devourer_board() -> Scenario:
@@ -100,22 +92,24 @@ def test_devourer_of_destinys_cast_trigger_exiles_the_chosen_target():
     This is the playtest bug verbatim: previously the trigger went on the
     stack with `targets: []` and resolved exiling nothing, because nobody ever
     populated the name-keyed dict `_targets_for_trigger` read. It is now asked
-    through `Game.ask`, with no script staged, purely through a
-    `DecisionProvider` - the shape a real seat's answer takes.
+    through `Game.ask`, and answered with a `ScriptedAnswer` - the shape a
+    real seat's answer takes.
     """
     scenario = _devourer_board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     bears = scenario.creature("Grizzly Bears", "bob")
-    provider = QueueProvider(answers=[(bears,)])
-    scenario.game.decisions.provider = provider
+    scenario.game.decisions.add(
+        ScriptedAnswer(kind=DecisionKind.CHOOSE_TARGETS, value=(bears,), player="alice")
+    )
 
     sources = scenario.untapped_sources("Sol Ring", *["Forest"] * 5)
     scenario.cast_onto_stack("Devourer of Destiny", *sources)
 
-    assert len(provider.asked) == 1
-    assert provider.asked[0].player == "alice"
-    assert provider.asked[0].kind is DecisionKind.CHOOSE_TARGETS
-    assert TargetRef.to_card(bears) in provider.asked[0].targets, "bears was offered"
+    asked = targets_asked(scenario)
+    assert len(asked) == 1
+    assert asked[0].player == "alice"
+    assert asked[0].kind is DecisionKind.CHOOSE_TARGETS
+    assert TargetRef.to_card(bears) in asked[0].targets, "bears was offered"
 
     scenario.pass_until_resolved()
     assert bears.zone is Zone.EXILE
@@ -125,13 +119,15 @@ def test_choosing_a_different_legal_target_exiles_that_one_instead():
     """The answer actually drives the effect - it is not read back off a default.
 
     Watchwolf is offered too; choosing it rather than the Grizzly Bears is what
-    proves the provider's answer, not some fallback, picked the target.
+    proves the answer, not some fallback, picked the target.
     """
     scenario = _devourer_board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     bears = scenario.creature("Grizzly Bears", "bob")
     watchwolf = scenario.creature("Watchwolf", "bob")
-    scenario.game.decisions.provider = QueueProvider(answers=[(watchwolf,)])
+    scenario.game.decisions.add(
+        ScriptedAnswer(kind=DecisionKind.CHOOSE_TARGETS, value=(watchwolf,), player="alice")
+    )
 
     sources = scenario.untapped_sources("Sol Ring", *["Forest"] * 5)
     scenario.cast_onto_stack("Devourer of Destiny", *sources)
@@ -141,9 +137,9 @@ def test_choosing_a_different_legal_target_exiles_that_one_instead():
     assert bears.zone is Zone.BATTLEFIELD, "only the chosen target moved"
 
 
-def test_no_provider_present_still_chooses_a_legal_target_now():
-    """Nobody scripted an answer and nobody is standing behind the seat -
-    but a legal target exists, so CR 601.2c still requires one to be named.
+def test_nothing_scripted_still_chooses_a_legal_target_now():
+    """Nobody scripted an answer - but a legal target exists, so CR 601.2c
+    still requires one to be named.
 
     This used to assert the opposite ("`default_answer` for `CHOOSE_TARGETS`
     is empty ... this is the 'nothing moves' guarantee the fix was built
@@ -210,7 +206,9 @@ def test_an_empty_answer_is_refused_while_a_legal_target_exists():
 
     (sol_ring_1, sol_ring_2) = scenario.untapped_sources("Sol Ring", "Sol Ring")
 
-    scenario.game.decisions.provider = QueueProvider(answers=[()])
+    scenario.game.decisions.add(
+        ScriptedAnswer(kind=DecisionKind.CHOOSE_TARGETS, value=(), player="alice")
+    )
     with pytest.raises(ValueError, match="601.2c"):
         sources = [sol_ring_1, *scenario.untapped_sources(*["Forest"] * 5)]
         scenario.cast_onto_stack("Devourer of Destiny", *sources)
@@ -221,7 +219,9 @@ def test_an_empty_answer_is_refused_while_a_legal_target_exists():
     # second cast below has an empty stack to be cast into (CR 117.1a).
     scenario.resolve_top()
 
-    scenario.game.decisions.provider = QueueProvider(answers=[(bears,)])
+    scenario.game.decisions.add(
+        ScriptedAnswer(kind=DecisionKind.CHOOSE_TARGETS, value=(bears,), player="alice")
+    )
     sources = [sol_ring_2, *scenario.untapped_sources(*["Forest"] * 5)]
     scenario.cast_onto_stack("Devourer of Destiny", *sources)
     scenario.pass_until_resolved()
@@ -289,7 +289,9 @@ def test_up_to_one_target_trigger_still_accepts_an_empty_answer():
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
     tower = scenario.find("Urza's Tower", Zone.BATTLEFIELD, "bob")
-    scenario.game.decisions.provider = QueueProvider(answers=[()])
+    scenario.game.decisions.add(
+        ScriptedAnswer(kind=DecisionKind.CHOOSE_TARGETS, value=(), player="alice")
+    )
 
     scenario.cast_onto_stack("White Orchid Phantom", *scenario.untapped_sources("Plains", "Plains"))
     scenario.resolve_top()  # the creature itself enters the battlefield, firing the ETB
@@ -302,25 +304,33 @@ def test_up_to_one_target_trigger_still_accepts_an_empty_answer():
     assert tower.zone is Zone.BATTLEFIELD, "nothing chosen, nothing destroyed"
 
 
-def test_a_scripted_answer_still_beats_the_provider():
-    """`Game.ask` tries the `DecisionScript` before the provider, always.
+def test_a_scripted_answer_still_wins_over_the_tape():
+    """`Game.ask` tries the `DecisionScript` before the replay tape, always.
 
-    A provider is staged that would exile Watchwolf; `choose_trigger_targets`
+    A tape entry is staged that would exile Watchwolf; `choose_trigger_targets`
     stages the Grizzly Bears answer on top. The scripted answer wins.
     """
     scenario = _devourer_board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     bears = scenario.creature("Grizzly Bears", "bob")
     watchwolf = scenario.creature("Watchwolf", "bob")
-    scenario.game.decisions.provider = QueueProvider(answers=[(watchwolf,)])
+    scenario.game.decisions.recorded = [
+        Answer(
+            seq=0,
+            kind=DecisionKind.CHOOSE_TARGETS,
+            player="alice",
+            targets=(TargetRef.to_card(watchwolf),),
+        )
+    ]
     scenario.choose_trigger_targets("Devourer of Destiny", [bears])
 
     sources = scenario.untapped_sources("Sol Ring", *["Forest"] * 5)
     scenario.cast_onto_stack("Devourer of Destiny", *sources)
     scenario.pass_until_resolved()
 
-    assert bears.zone is Zone.EXILE, "the script, not the provider, was heard"
+    assert bears.zone is Zone.EXILE, "the script, not the tape, was heard"
     assert watchwolf.zone is Zone.BATTLEFIELD
+    assert scenario.game.decisions.consumed == 0, "the tape entry was never read"
 
 
 def test_an_illegal_target_is_refused_without_corrupting_state():
@@ -359,8 +369,9 @@ def test_two_copies_of_the_same_card_are_targeted_separately():
     copies of the same card shared it. Here both enter in the same batch (the
     two `put_onto_battlefield` calls both just queue a pending trigger; nothing
     puts them on the stack until `put_triggers_on_stack` is called once for
-    both), and a `QueueProvider` hands out two different answers - proving the
-    two ability *instances*, not the shared name, are what get asked.
+    both), and the replay tape - read positionally, not by name - hands out
+    two different answers, proving the two ability *instances*, not the
+    shared name, are what get asked.
     """
     scenario = (
         Scenario()
@@ -374,8 +385,27 @@ def test_two_copies_of_the_same_card_are_targeted_separately():
     scenario.put_onto_battlefield("Ravenous Chupacabra")
     assert len(scenario.pending_triggers) == 2, "both ETBs are waiting in one batch"
 
-    provider = QueueProvider(answers=[(bears,), (watchwolf,)])
-    scenario.game.decisions.provider = provider
+    # CR 603.3b's own ordering question comes first, since both triggers share
+    # a controller - scripted by id (their names collide, so a name cannot
+    # disambiguate them either) so it never touches the tape below.
+    pending_ids = [ability.id for ability in scenario.pending_triggers]
+    scenario.game.decisions.add(
+        ScriptedAnswer(kind=DecisionKind.ORDER_TRIGGERS, value=pending_ids, player="alice")
+    )
+    scenario.game.decisions.recorded = [
+        Answer(
+            seq=0,
+            kind=DecisionKind.CHOOSE_TARGETS,
+            player="alice",
+            targets=(TargetRef.to_card(bears),),
+        ),
+        Answer(
+            seq=1,
+            kind=DecisionKind.CHOOSE_TARGETS,
+            player="alice",
+            targets=(TargetRef.to_card(watchwolf),),
+        ),
+    ]
     scenario.game.put_triggers_on_stack()
 
     while not scenario.game.stack_is_empty:
@@ -455,17 +485,20 @@ def test_the_trigger_is_addressed_to_its_own_controller():
     scenario.start_at(Step.PRECOMBAT_MAIN)
     bears = scenario.creature("Grizzly Bears", "bob")
     mystic = scenario.creature("Elvish Mystic", "alice")
-    provider = QueueProvider(answers=[(bears,)])
-    scenario.game.decisions.provider = provider
+    scenario.game.decisions.add(
+        ScriptedAnswer(kind=DecisionKind.CHOOSE_TARGETS, value=(bears,), player="alice")
+    )
 
     sources = scenario.untapped_sources("Sol Ring", *["Forest"] * 5)
     scenario.cast_onto_stack("Devourer of Destiny", *sources, username="alice")
-    assert provider.asked[-1].player == "alice"
+    assert targets_asked(scenario)[-1].player == "alice"
 
-    provider.answers.append((mystic,))
+    scenario.game.decisions.add(
+        ScriptedAnswer(kind=DecisionKind.CHOOSE_TARGETS, value=(mystic,), player="bob")
+    )
     chupacabra = scenario.put_onto_battlefield("Ravenous Chupacabra", "bob")
     scenario.game.put_triggers_on_stack()
-    assert provider.asked[-1].player == "bob"
+    assert targets_asked(scenario)[-1].player == "bob"
     assert chupacabra.zone is Zone.BATTLEFIELD
 
 
@@ -482,7 +515,7 @@ def test_a_delayed_trigger_does_not_inherit_an_earlier_triggers_targets():
     one - no card in the pool prints a delayed trigger with a target yet), given
     the same source name on purpose, and fired. If it inherited the old dict
     entry it would arrive with Watchwolf already targeted for the *wrong*
-    reason (a stale, name-keyed lookup); a `QueueProvider` is staged fresh for
+    reason (a stale, name-keyed lookup); a fresh `ScriptedAnswer` is staged for
     it instead, and Watchwolf being the only legal target left (Bears is
     already exiled and gone) is what proves it was asked its own question
     rather than handed the earlier trigger's answer.
@@ -490,7 +523,7 @@ def test_a_delayed_trigger_does_not_inherit_an_earlier_triggers_targets():
     "Target creature" is mandatory (CR 601.2c), so this can no longer default
     to no target the way it did before the CR 601.2c/603.3d fix
     (`machines/decisions.py`'s own `CHOOSE_TARGETS` default) - see
-    `test_no_provider_present_still_chooses_a_legal_target_now` above for that
+    `test_nothing_scripted_still_chooses_a_legal_target_now` above for that
     same correction on the ordinary cast trigger.
     """
     scenario = (
@@ -525,8 +558,10 @@ def test_a_delayed_trigger_does_not_inherit_an_earlier_triggers_targets():
             source_name="Devourer of Destiny",
         )
     )
-    provider = QueueProvider(answers=[(watchwolf,)])
-    scenario.game.decisions.provider = provider
+    before = len(targets_asked(scenario))
+    scenario.game.decisions.add(
+        ScriptedAnswer(kind=DecisionKind.CHOOSE_TARGETS, value=(watchwolf,), player="alice")
+    )
     # `.delayed_triggers.fire` is the container's own bare method, called
     # here with no scope open - `Game.emit` is the wrapped, scoped door this
     # bypasses (see its own docstring); it mints the fired `AbilityOnStack`'s
@@ -539,8 +574,9 @@ def test_a_delayed_trigger_does_not_inherit_an_earlier_triggers_targets():
     scenario.game.put_triggers_on_stack()
 
     (delayed_ability,) = scenario.game.abilities_on_stack
-    assert len(provider.asked) == 1, "it was asked fresh, not answered from the earlier batch"
-    assert TargetRef.to_card(bears) not in provider.asked[0].targets, "bears is gone, not offered"
+    asked = targets_asked(scenario)
+    assert len(asked) == before + 1, "it was asked fresh, not answered from the earlier batch"
+    assert TargetRef.to_card(bears) not in asked[-1].targets, "bears is gone, not offered"
     assert delayed_ability.targets == [TargetRef.to_card(watchwolf)], "it did not inherit Bears"
 
 
@@ -555,7 +591,9 @@ def test_the_etb_shape_ravenous_chupacabra():
         .build()
     )
     bears = scenario.creature("Grizzly Bears", "bob")
-    scenario.game.decisions.provider = QueueProvider(answers=[(bears,)])
+    scenario.game.decisions.add(
+        ScriptedAnswer(kind=DecisionKind.CHOOSE_TARGETS, value=(bears,), player="alice")
+    )
     scenario.put_onto_battlefield("Ravenous Chupacabra")
     scenario.game.put_triggers_on_stack()
     while not scenario.game.stack_is_empty:
@@ -567,7 +605,9 @@ def test_the_cast_trigger_shape_devourer_of_destiny():
     scenario = _devourer_board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     bears = scenario.creature("Grizzly Bears", "bob")
-    scenario.game.decisions.provider = QueueProvider(answers=[(bears,)])
+    scenario.game.decisions.add(
+        ScriptedAnswer(kind=DecisionKind.CHOOSE_TARGETS, value=(bears,), player="alice")
+    )
     sources = scenario.untapped_sources("Sol Ring", *["Forest"] * 5)
     scenario.cast_onto_stack("Devourer of Destiny", *sources)
     scenario.pass_until_resolved()
@@ -584,7 +624,9 @@ def test_the_attack_trigger_shape_alaborn_cavalier():
     scenario.start_at(Step.DECLARE_ATTACKERS)
     cavalier = scenario.creature("Alaborn Cavalier", "alice")
     mystic = scenario.creature("Elvish Mystic", "bob")
-    scenario.game.decisions.provider = QueueProvider(answers=[(mystic,)])
+    scenario.game.decisions.add(
+        ScriptedAnswer(kind=DecisionKind.CHOOSE_TARGETS, value=(mystic,), player="alice")
+    )
     scenario.will_take_the_may(True, source="Alaborn Cavalier")
 
     scenario.attack_with(cavalier)

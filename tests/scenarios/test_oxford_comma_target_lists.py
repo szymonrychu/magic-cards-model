@@ -120,18 +120,6 @@ def test_acidic_slime_offers_all_three_nouns_on_a_real_board():
     """A full, playable proof of the comma fix: Acidic Slime's ETB actually
     offers bob's enchantment as a candidate, not just artifacts.
     """
-    from dataclasses import dataclass, field
-
-    from magic_cards_model.machines.decisions import NOT_ANSWERED, Decision
-
-    @dataclass
-    class Provider:
-        asked: list[Decision] = field(default_factory=list)
-
-        def decide(self, decision):
-            self.asked.append(decision)
-            return NOT_ANSWERED
-
     scenario = (
         Scenario()
         .player("alice", hand=["Acidic Slime"])
@@ -140,13 +128,11 @@ def test_acidic_slime_offers_all_three_nouns_on_a_real_board():
     )
     sol_ring = scenario.creature("Sol Ring", "bob")
     mountain = scenario.creature("Mountain", "bob")
-    provider = Provider()
-    scenario.game.decisions.provider = provider
 
     scenario.put_onto_battlefield("Acidic Slime")
     scenario.game.put_triggers_on_stack()
 
-    offered = provider.asked[-1].targets
+    offered = scenario.game.decisions.asked[-1].targets
     assert TargetRef.to_card(sol_ring) in offered, "artifact"
     assert TargetRef.to_card(mountain) in offered, "land - the third, comma-separated item"
 
