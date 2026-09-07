@@ -28,3 +28,14 @@ declarations is paired work with widening the api's `ANSWERABLE_KINDS` and
 giving the mailbox a real combat transport; it belongs to the phase that does
 that, not to this module alone. Before touching `_ask_declaration` again, read
 its own docstring and `magic_cards_model_api.decisions.ANSWERABLE_KINDS`'s.
+
+**Resolved 2026-09-07, T8.** Not by wiring the provider up - by deleting it.
+The api no longer plants a `DecisionScript.provider`; the mailbox transport
+this memory describes is gone (see the api's own history). `DecisionProvider`,
+`DecisionScript.provider`, `NotAnswered`/`NOT_ANSWERED`, and the provider
+consultation step in `Game.ask`, `ask_mulligan`, and `ask_trigger_order` were
+all deleted along with it, so the asymmetry this memory documents no longer
+exists: every asker in `machines/decisions.py` now answers a decision the same
+one way - a scripted answer, then the replay tape, then a pause if enabled,
+then `default_answer`. `_ask_declaration` was never a special case to begin
+with once that step is gone; nothing distinguishes it from `Game.ask` anymore.

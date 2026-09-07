@@ -22,13 +22,14 @@ cards verified Modern-legal with `resolve_cards` before being written here.
 
 import pytest
 
+import magic_cards_model.models.game as game_module
 from magic_cards_model.machines.decisions import (
-    NOT_ANSWERED,
     Answer,
     Decision,
     DecisionKind,
     DecisionPending,
     ScriptedAnswer,
+    ask_mulligan,
 )
 from magic_cards_model.models import Deck, Game, Match, Player, Zone
 from tests.cards import card
@@ -401,268 +402,36 @@ def test_a_game_the_match_did_not_start_is_refused():
         match().run_mulligans(onlookers)
 
 
-# -- a live player answers CR 103.5 (through DecisionScript.provider) --------
-#
-# CR 103.5's declaration is a question the rules put to a player, and until
-# `ask_mulligan` consulted `DecisionScript.provider` nobody outside the engine
-# could ever answer it: the question was recorded on `decisions.asked` and then
-# defaulted away. `ask_mulligan` now follows the same order `Game.ask` uses for
-# CR 608.2d's choices - script, then provider, then `default_answer`.
-
-
-class RecordingProvider:
-    """A real decision provider: a seat that answers mulligan declarations.
-
-    Not a mock. It holds no engine state and fakes no engine behaviour - it is
-    exactly what a human at a keyboard is behind the API, a thing handed a
-    `Decision` that hands back an answer. Every question it sees is recorded so
-    a scenario can assert what it was asked, and when.
-    """
-
-    def __init__(self, answers: dict[str, list[bool]] | None = None):
-        self.answers = answers or {}
-        self.seen: list[Decision] = []
-        #: What the table looked like at the moment each question was put.
-        self.snapshots: list[tuple[str, tuple[tuple[str, int, int], ...]]] = []
-        self.game: Game | None = None
-
-    @property
-    def declarations(self) -> list[str]:
-        """Who was asked to declare a mulligan, in order.
-
-        Narrowed to `MULLIGAN`, because the same provider is also what
-        `Game.ask` consults for CR 103.6's opening-hand actions once the
-        mulligan process is complete - Gemstone Caverns is on this list.
-        """
-        return [d.player for d in self.seen if d.kind is DecisionKind.MULLIGAN]
-
-    def watch(self, game: Game) -> "RecordingProvider":
-        self.game = game
-        game.decisions.provider = self
-        return self
-
-    def decide(self, decision: Decision) -> object:
-        self.seen.append(decision)
-        if self.game is not None and decision.kind is DecisionKind.MULLIGAN:
-            self.snapshots.append(
-                (
-                    decision.player,
-                    tuple((p.username, len(p.hand), p.mulligans_taken) for p in self.game.players),
-                )
-            )
-        if decision.kind is not DecisionKind.MULLIGAN:
-            return NOT_ANSWERED
-        queued = self.answers.get(decision.player)
-        if not queued:
-            return NOT_ANSWERED
-        return queued.pop(0)
-
-
-def test_a_provider_answers_the_mulligan_declaration():
-    """Nothing scripted, a provider installed: the provider's "yes" is taken.
-
-    This is the whole point - CR 103.5's declaration reaching a live seat.
-    """
-    series = match()
-    game = series.start_game()
-    alice = game.player("alice")
-    first_hand = [state.id for state in alice.hand]
-    provider = RecordingProvider({"alice": [True]}).watch(game)
-
-    series.run_mulligans()
-
-    # Bob kept in round one, so "may not take any further mulligans": only
-    # alice is put the question again.
-    assert provider.declarations == ["alice", "bob", "alice"]
-    assert alice.mulligans_taken == 1
-    assert len(alice.hand) == 6
-    assert len(alice.library) == 54
-    assert [state.id for state in alice.hand] != first_hand
-    # The seat that answered nothing keeps what it was dealt.
-    bob = game.player("bob")
-    assert bob.mulligans_taken == 0
-    assert len(bob.hand) == 7
-
-
-def test_a_provider_can_mulligan_a_player_more_than_once():
-    """ "This process is then repeated until no player takes a mulligan" - the
-    provider is asked again each round, exactly as a scripted answer is."""
-    series = match()
-    game = series.start_game()
-    alice = game.player("alice")
-    RecordingProvider({"alice": [True, True]}).watch(game)
-
-    series.run_mulligans()
-
-    assert alice.mulligans_taken == 2
-    assert len(alice.hand) == 5
-    assert alice.cards_to_bottom == 2
-    assert len(asked_of(game, "alice")) == 3
-
-
-def test_a_scripted_answer_still_wins_over_a_provider():
-    """`Game.ask` tries the script first; so does `ask_mulligan`. A provider
-    installed on a scripted game is not consulted for the scripted question."""
-    series = match()
-    game = series.start_game()
-    alice = game.player("alice")
-    will_mulligan(game, "alice")
-    provider = RecordingProvider({"alice": [False]}).watch(game)
-
-    series.run_mulligans()
-
-    assert alice.mulligans_taken == 1, "the script, not the provider, decided"
-    # Round one alice is scripted, so the provider sees only bob; the script is
-    # spent by round two, which is the provider's to answer.
-    assert provider.declarations == ["bob", "alice"]
-
-
-def test_a_provider_that_does_not_answer_falls_through_to_the_default():
-    """`NOT_ANSWERED` is the provider saying it has nothing, and CR 103.5's
-    default stands: the player keeps the hand they were dealt."""
-    series = match()
-    game = series.start_game()
-    dealt = {player.username: [state.id for state in player.hand] for player in game.players}
-    provider = RecordingProvider().watch(game)
-
-    series.run_mulligans()
-
-    assert provider.declarations == ["alice", "bob"]
-    for player in game.players:
-        assert [state.id for state in player.hand] == dealt[player.username]
-        assert player.mulligans_taken == 0
-        assert player.hand_kept
-
-
-def test_no_provider_at_all_keeps_the_engine_default():
-    """The headless path: no script, no provider, nothing consulted, hands kept."""
-    series = match()
-    game = series.start_game()
-
-    assert game.decisions.provider is None
-
-    series.run_mulligans()
-
-    for player in game.players:
-        assert player.mulligans_taken == 0
-        assert len(player.hand) == 7
-        assert player.hand_kept
-
-
-def test_a_provider_answer_replays_exactly_like_a_scripted_one():
-    """Determinism survives: `Match.run_mulligans` derives each reshuffle from
-    the match seed and the count of mulligans taken, so who produced the
-    declaration cannot change the resulting hand or library."""
-
-    def scripted() -> tuple[list[str], list[str]]:
-        series = match(seed="replay")
-        game = series.start_game()
-        will_mulligan(game, "alice", times=2)
-        series.run_mulligans()
-        alice = game.player("alice")
-        return [c.name for c in alice.hand], [c.name for c in alice.library]
-
-    def provided() -> tuple[list[str], list[str]]:
-        series = match(seed="replay")
-        game = series.start_game()
-        RecordingProvider({"alice": [True, True]}).watch(game)
-        series.run_mulligans()
-        alice = game.player("alice")
-        return [c.name for c in alice.hand], [c.name for c in alice.library]
-
-    assert provided() == scripted()
-    assert provided() == provided()
-
-
-def test_every_declaration_is_collected_before_any_mulligan_is_taken():
-    """CR 103.5: "Once each player has made a declaration, all players who
-    decided to take mulligans do so at the same time."
-
-    A provider sees the table at the instant it is asked. Had the engine
-    serialised ask-and-take per player, bob's round-one question would have
-    found alice already on a fresh hand with `mulligans_taken == 1`.
-    """
-    series = match()
-    game = series.start_game()
-    provider = RecordingProvider({"alice": [True], "bob": [True]}).watch(game)
-
-    series.run_mulligans()
-
-    round_one = provider.snapshots[:2]
-    assert [asked for asked, _ in round_one] == ["alice", "bob"]
-    for _, table in round_one:
-        assert table == (("alice", 7, 0), ("bob", 7, 0))
-
-    round_two = provider.snapshots[2:]
-    assert [asked for asked, _ in round_two] == ["alice", "bob"]
-    for _, table in round_two:
-        assert table == (("alice", 7, 1), ("bob", 7, 1))
-
-    assert game.player("alice").mulligans_taken == 1
-    assert game.player("bob").mulligans_taken == 1
-
-
-def test_a_provider_is_not_asked_once_a_player_has_kept():
-    """ "A player who decides not to take a mulligan may not take any further
-    mulligans", so the seat is never put the question again."""
-    series = match()
-    game = series.start_game()
-    provider = RecordingProvider({"alice": [True, False, True], "bob": [True, True]}).watch(game)
-
-    series.run_mulligans()
-
-    assert provider.declarations == ["alice", "bob", "alice", "bob", "bob"]
-    assert game.player("alice").mulligans_taken == 1
-    assert game.player("alice").hand_kept
-    assert game.player("bob").mulligans_taken == 2
-
-
 # -- which cards go to the bottom (CR 103.5, CR 103.5c, CR 800.6) -----------
 #
 # Keeping a hand after a mulligan costs "the number of cards that player will
 # put on the bottom of their library" (CR 103.5c, CR 800.6). The count is the
 # rules'; *which* cards is the player's, and `Match.run_mulligans` now asks it
 # as a `CHOOSE_CARDS` question - the same kind CR 701.9b's cleanup discard
-# uses - instead of silently taking the back of the hand.
+# uses - instead of silently taking the back of the hand. A scripted answer
+# wins first, then the replay tape (see the "pausing instead of blocking"
+# section below), and only then does `default_answer` speak for the player -
+# there is exactly one way to answer a decision from outside the engine.
 
 
-class BottomingProvider:
-    """A real provider that answers CR 103.5's bottoming question.
-
-    Declarations are handled by `answers`, exactly as `RecordingProvider` does;
-    `pick` says which offered index (or indices) to bottom. Returning
-    `NOT_ANSWERED` from `pick` is how a seat declines to choose and lets the
-    documented default stand.
-    """
-
-    def __init__(self, answers: dict[str, list[bool]] | None = None, pick: list[int] | None = None):
-        self.answers = answers or {}
-        self.pick = pick
-        #: The card ids offered for bottoming, per question, in offer order.
-        self.offered: list[tuple[str, tuple, int]] = []
-
-    def decide(self, decision: Decision) -> object:
-        if decision.kind is DecisionKind.MULLIGAN:
-            queued = self.answers.get(decision.player)
-            return queued.pop(0) if queued else NOT_ANSWERED
-        if decision.kind is DecisionKind.CHOOSE_CARDS:
-            self.offered.append((decision.player, decision.cards, decision.amount))
-            if self.pick is None:
-                return NOT_ANSWERED
-            return tuple(decision.cards[index] for index in self.pick)
-        return NOT_ANSWERED
+def bottoming_offers(game: Game, player: str) -> list[Decision]:
+    """The `CHOOSE_CARDS` bottoming questions put to one player, in order."""
+    return [
+        decision
+        for decision in game.decisions.asked
+        if decision.kind is DecisionKind.CHOOSE_CARDS and decision.player == player
+    ]
 
 
 def test_the_bottoming_question_is_not_asked_when_nothing_is_bottomed():
     """No mulligan, no cost: "a choice among zero cards is not a choice"."""
     series = match()
     game = series.start_game()
-    provider = BottomingProvider()
-    game.decisions.provider = provider
 
     series.run_mulligans()
 
-    assert provider.offered == []
+    assert bottoming_offers(game, "alice") == []
+    assert bottoming_offers(game, "bob") == []
 
 
 def test_the_unanswered_bottoming_still_takes_the_back_of_the_hand():
@@ -673,36 +442,18 @@ def test_the_unanswered_bottoming_still_takes_the_back_of_the_hand():
     game = series.start_game()
     alice = game.player("alice")
     will_mulligan(game, "alice")
-    provider = BottomingProvider()
-    game.decisions.provider = provider
 
     series.run_mulligans()
 
-    (asked_player, offered, amount) = provider.offered[0]
-    assert (asked_player, amount) == ("alice", 1)
-    assert len(offered) == 7
-    assert alice.library[-1].id == offered[-1], "the back of the hand went to the bottom"
-    assert [state.id for state in alice.hand] == list(offered[:-1])
+    (offer,) = bottoming_offers(game, "alice")
+    assert offer.amount == 1
+    assert len(offer.cards) == 7
+    assert alice.library[-1].id == offer.cards[-1], "the back of the hand went to the bottom"
+    assert [state.id for state in alice.hand] == list(offer.cards[:-1])
 
 
-def test_a_provider_chooses_which_card_goes_to_the_bottom():
+def test_a_scripted_bottoming_answer_chooses_which_card_goes_to_the_bottom():
     """The whole point of asking: the player picks, and it is not the back."""
-    series = match()
-    game = series.start_game()
-    alice = game.player("alice")
-    provider = BottomingProvider(answers={"alice": [True]}, pick=[0])
-    game.decisions.provider = provider
-
-    series.run_mulligans()
-
-    (_, offered, _) = provider.offered[0]
-    assert alice.library[-1].id == offered[0], "the front of the hand, as chosen"
-    assert [state.id for state in alice.hand] == list(offered[1:])
-    assert len(alice.hand) == 6
-
-
-def test_a_scripted_bottoming_wins_over_a_provider():
-    """Script before provider here too - `Game.ask`'s order, unchanged."""
     series = match()
     game = series.start_game()
     alice = game.player("alice")
@@ -719,33 +470,37 @@ def test_a_scripted_bottoming_wins_over_a_provider():
     game.decisions.add(
         ScriptedAnswer(kind=DecisionKind.CHOOSE_CARDS, value=(chosen.id,), player="alice")
     )
-    provider = BottomingProvider(pick=[0])
-    game.decisions.provider = provider
 
     series.run_mulligans()
 
     assert alice.library[-1] is chosen, "the script named it, not the front and not the back"
     assert chosen not in alice.hand
     assert len(alice.hand) == 6
-    assert provider.offered == [], "a scripted answer is taken before the provider is asked"
 
 
-def test_two_mulligans_offer_the_whole_hand_and_bottom_two():
+def test_two_mulligans_offer_the_whole_hand_and_bottom_two_of_a_scripted_choice():
     """CR 103.5c/CR 800.6's count: two mulligans, two cards on the bottom, and
     both come out of the seven the player is holding when they keep."""
     series = match()
     game = series.start_game()
     alice = game.player("alice")
-    provider = BottomingProvider(answers={"alice": [True, True]}, pick=[0, 1])
-    game.decisions.provider = provider
+    with game._id_allocator_scope():  # noqa: SLF001
+        alice.mulligan(seed="staged-1")
+        alice.mulligan(seed="staged-2")
+    assert alice.cards_to_bottom == 2
+    chosen = (alice.hand[0].id, alice.hand[1].id)
+
+    game.decisions.add(ScriptedAnswer(kind=DecisionKind.CHOOSE_CARDS, value=chosen, player="alice"))
 
     series.run_mulligans()
 
-    (_, offered, amount) = provider.offered[0]
-    assert (len(offered), amount) == (7, 2)
+    (offer,) = bottoming_offers(game, "alice")
+    assert (len(offer.cards), offer.amount) == (7, 2)
     assert len(alice.hand) == 5
-    assert [state.id for state in alice.hand] == list(offered[2:])
-    assert [state.id for state in alice.library[-2:]] == [offered[0], offered[1]]
+    # The hand kept is the offer minus what was chosen, not just five cards
+    # of some size - pinning both halves of the split.
+    assert [state.id for state in alice.hand] == list(offer.cards[2:])
+    assert [state.id for state in alice.library[-2:]] == list(chosen)
 
 
 def test_a_free_first_mulligan_costs_no_bottoming_question():
@@ -754,8 +509,7 @@ def test_a_free_first_mulligan_costs_no_bottoming_question():
     there is nothing to choose and nothing is asked."""
     series = three_player_match()
     game = series.start_game()
-    provider = BottomingProvider(answers={"alice": [True]})
-    game.decisions.provider = provider
+    will_mulligan(game, "alice")
 
     series.run_mulligans()
 
@@ -763,7 +517,7 @@ def test_a_free_first_mulligan_costs_no_bottoming_question():
     assert alice.first_mulligan_free
     assert alice.mulligans_taken == 1
     assert len(alice.hand) == 7
-    assert provider.offered == []
+    assert bottoming_offers(game, "alice") == []
 
 
 def test_a_chosen_bottoming_replays_identically():
@@ -773,9 +527,14 @@ def test_a_chosen_bottoming_replays_identically():
     def run() -> tuple[list[str], list[str]]:
         series = match(seed="replay")
         game = series.start_game()
-        game.decisions.provider = BottomingProvider(answers={"alice": [True, True]}, pick=[0, 1])
-        series.run_mulligans()
         alice = game.player("alice")
+        with game._id_allocator_scope():  # noqa: SLF001
+            alice.mulligan(seed="staged")
+        chosen = alice.hand[0]
+        game.decisions.add(
+            ScriptedAnswer(kind=DecisionKind.CHOOSE_CARDS, value=(chosen.id,), player="alice")
+        )
+        series.run_mulligans()
         return [c.name for c in alice.hand], [c.name for c in alice.library]
 
     assert run() == run()
@@ -784,23 +543,26 @@ def test_a_chosen_bottoming_replays_identically():
 def test_the_bottoming_is_asked_after_every_declaration_of_the_round():
     """The keep, and therefore the bottoming, happens once the round's
     declarations are all in - CR 103.5's "once each player has made a
-    declaration" - never interleaved into the declaration loop."""
+    declaration" - never interleaved into the declaration loop.
+
+    `decisions.asked` records every question in the order it was actually put,
+    whatever answered it, so the round's sequencing is provable straight off
+    it: no `CHOOSE_CARDS` for either player appears between the two rounds'
+    `MULLIGAN` declarations.
+    """
     series = match()
     game = series.start_game()
-    order: list[tuple[str, DecisionKind]] = []
-
-    class Watcher:
-        def decide(self, decision: Decision) -> object:
-            if decision.kind in (DecisionKind.MULLIGAN, DecisionKind.CHOOSE_CARDS):
-                order.append((decision.player, decision.kind))
-            if decision.kind is DecisionKind.MULLIGAN and decision.player == "alice":
-                return len(order) == 1
-            return NOT_ANSWERED
-
-    game.decisions.provider = Watcher()
+    game.decisions.add(
+        ScriptedAnswer(kind=DecisionKind.MULLIGAN, value=True, player="alice", uses=1)
+    )
 
     series.run_mulligans()
 
+    order = [
+        (decision.player, decision.kind)
+        for decision in game.decisions.asked
+        if decision.kind in (DecisionKind.MULLIGAN, DecisionKind.CHOOSE_CARDS)
+    ]
     assert order == [
         # Round one: both declare before anything is taken or bottomed.
         ("alice", DecisionKind.MULLIGAN),
@@ -809,6 +571,66 @@ def test_the_bottoming_is_asked_after_every_declaration_of_the_round():
         ("alice", DecisionKind.MULLIGAN),
         ("alice", DecisionKind.CHOOSE_CARDS),
     ]
+
+
+def test_every_declaration_is_collected_before_any_mulligan_is_taken(monkeypatch):
+    """CR 103.5: "Once each player has made a declaration, all players who
+    decided to take mulligans do so at the same time."
+
+    `test_the_bottoming_is_asked_after_every_declaration_of_the_round` proves
+    the *order* `decisions.asked` records the two rounds' declarations in, but
+    that order is identical whether or not alice's round-one mulligan is
+    applied before bob is asked his - it only orders the questions, never the
+    state each one is asked against. This test proves the engine-ordering half
+    that order alone cannot: it wraps `ask_mulligan` at the one seam
+    `Game.settle_pregame` calls it through -
+    `magic_cards_model.models.game.ask_mulligan`, the name that module binds
+    at import and the name `settle_pregame`'s own `while` loop looks up at
+    call time - recording every player's hand size and `mulligans_taken` at
+    the instant each question is put, then calling straight through to the
+    real `ask_mulligan`. That makes it a spy, not a stand-in: every answer it
+    returns, and every card it moves, is the engine's own; nothing here fakes
+    a rule or a card.
+
+    Had the engine resolved each declaration as it arrived instead of
+    collecting the whole round first, bob's round-one snapshot would have
+    found alice already on a fresh hand with `mulligans_taken == 1` - the
+    exact miss this replaces from `test_every_declaration_is_collected_
+    before_any_mulligan_is_taken` on the deleted `DecisionProvider` version of
+    this file, where a `RecordingProvider.decide` callback took the same
+    snapshot at the same moment. Confirmed by deliberately breaking the
+    engine's round-collection guard and watching this assertion fail on
+    bob's round-one snapshot for exactly that reason, then reverting.
+    """
+    series = match()
+    game = series.start_game()
+    will_mulligan(game, "alice")
+    will_mulligan(game, "bob")
+    snapshots: list[tuple[str, tuple[tuple[str, int, int], ...]]] = []
+    real_ask_mulligan = game_module.ask_mulligan
+
+    def watching_ask_mulligan(script, player, **kwargs):
+        snapshots.append(
+            (player, tuple((p.username, len(p.hand), p.mulligans_taken) for p in game.players))
+        )
+        return real_ask_mulligan(script, player, **kwargs)
+
+    monkeypatch.setattr(game_module, "ask_mulligan", watching_ask_mulligan)
+
+    series.run_mulligans()
+
+    round_one = snapshots[:2]
+    assert [asked for asked, _ in round_one] == ["alice", "bob"]
+    for _, table in round_one:
+        assert table == (("alice", 7, 0), ("bob", 7, 0))
+
+    round_two = snapshots[2:]
+    assert [asked for asked, _ in round_two] == ["alice", "bob"]
+    for _, table in round_two:
+        assert table == (("alice", 7, 1), ("bob", 7, 1))
+
+    assert game.player("alice").mulligans_taken == 1
+    assert game.player("bob").mulligans_taken == 1
 
 
 # -- pausing instead of blocking: the tape and `DecisionPending` ------------
@@ -848,6 +670,25 @@ def test_a_recorded_tape_answers_the_mulligan_declaration():
     assert game.decisions.consumed == 3
 
 
+def test_a_scripted_declaration_still_wins_over_a_recorded_tape_entry():
+    """`ask_mulligan` tries the script before the replay tape, always - the
+    same order `Game.ask` uses for a resolving effect's own choice. Called
+    directly rather than through `Match.run_mulligans`, which would go on to
+    put CR 103.6's opening-hand questions to the same unscripted tape.
+    """
+    series = match()
+    game = series.start_game()
+    game.decisions.recorded = [
+        Answer(seq=0, kind=DecisionKind.MULLIGAN, player="alice", accept=True),
+    ]
+    game.decisions.add(ScriptedAnswer(kind=DecisionKind.MULLIGAN, value=False, player="alice"))
+
+    answer = ask_mulligan(game.decisions, "alice")
+
+    assert answer is False, "the script's keep, not the tape's mulligan, decided"
+    assert game.decisions.consumed == 0, "the tape entry was never read"
+
+
 def test_a_mulligan_tape_entry_for_the_wrong_player_is_refused():
     """The same corrupt-tape refusal `Game.ask`'s tape already has - see
     `tests/scenarios/test_decisions_during_resolution.py::
@@ -864,7 +705,7 @@ def test_a_mulligan_tape_entry_for_the_wrong_player_is_refused():
 
 
 def test_pause_when_unanswered_raises_decision_pending_for_the_mulligan_declaration():
-    """With nothing scripted, no tape, and no provider, `pause_when_unanswered`
+    """With nothing scripted and no tape, `pause_when_unanswered`
     turns CR 103.5's declaration into a raised `DecisionPending` - the same
     proof `test_pause_when_unanswered_raises_decision_pending_through_a_
     resolving_spell` gives for `Game.ask`, given here for `ask_mulligan`,

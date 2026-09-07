@@ -293,7 +293,7 @@ def test_choosing_which_two_cards_are_discarded_changes_the_token_count():
 
 
 def test_the_unscripted_default_still_discards_the_front_of_hand():
-    """No script, no provider: the front-of-hand default from before `Game.ask`
+    """No script: the front-of-hand default from before `Game.ask`
     existed still applies, unchanged - `test_tokens.py` already asserts the
     same board end to end; this asserts on the question itself.
     """
@@ -604,9 +604,9 @@ def test_an_answer_allows_empty_text_for_kinds_where_it_is_not_mandatory():
 #
 # `Game.ask` consults, in order: a scripted answer, then `DecisionScript.
 # recorded` (the replay tape - see `machines/decisions.py`'s module docstring,
-# "Pausing instead of blocking"), then `decisions.provider`, then
-# `DecisionPending` if `decisions.pause_when_unanswered`, then `default_
-# answer`. Malevolent Rumble asks two questions in one spell resolution (`MAY`
+# "Pausing instead of blocking"), then `DecisionPending` if
+# `decisions.pause_when_unanswered`, then `default_answer`. Malevolent Rumble
+# asks two questions in one spell resolution (`MAY`
 # then `CHOOSE_CARDS`, both directly through `game.ask`, `machines/effects.py`
 # ::malevolent_rumble`) and Seasoned Pyromancer asks one while a *triggered
 # ability* resolves rather than a spell - between them they exercise both of
@@ -681,7 +681,7 @@ def test_a_tape_entry_for_the_wrong_player_raises_a_corrupt_tape_error():
 
 
 def test_pause_when_unanswered_raises_decision_pending_through_a_resolving_spell():
-    """With nothing scripted, no tape, and no provider, `decisions.pause_when_
+    """With nothing scripted and no tape, `decisions.pause_when_
     unanswered` turns Malevolent Rumble's `MAY` into a raised `DecisionPending`
     instead of a defaulted answer - and it must reach this test directly out
     of `Game.resolve_top`, which wraps the spell's own effect in a bare

@@ -377,13 +377,12 @@ class Player(BaseModel):
 
         CR 701.9b makes this the player's own choice, so passing None does not
         pick for them: it asks, through `Game.ask_cleanup_discard` (CR 608.2d),
-        which routes to a scripted answer, then a live decision provider, and
-        only then to the back of the hand - the same fallback this method used
-        before that machinery existed, kept as the default so an unscripted,
-        unprovided game is unaffected. A player built outside a game (no
-        `self.game`) has nothing to ask, so it falls straight back to that same
-        default. Returns what was discarded, which is empty when the hand was
-        already small enough.
+        which routes to a scripted answer, then the replay tape, and only then
+        to the back of the hand - the same fallback this method used before
+        that machinery existed, kept as the default so an unscripted game is
+        unaffected. A player built outside a game (no `self.game`) has nothing
+        to ask, so it falls straight back to that same default. Returns what
+        was discarded, which is empty when the hand was already small enough.
 
         CR 514.1's turn-based action only fires "if the active player's hand
         contains more cards than their maximum hand size" - at or under it,
@@ -391,7 +390,7 @@ class Player(BaseModel):
         either (there is exactly one legal answer: discard none). `needed ==
         0` short-circuits before ever calling `Game.ask_cleanup_discard`, so a
         player already within their maximum hand size is never asked a
-        decision with no real choice in it - a live decision provider
+        decision with no real choice in it - a live seat behind the api
         (`magic-cards-model-api`) would otherwise park a request for a whole
         decision timeout only to be answered "discard nothing".
 

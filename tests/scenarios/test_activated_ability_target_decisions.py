@@ -50,36 +50,22 @@ type="rules")` in the session that wrote this file, against the CR release
 sha256 `4381ad1b...423f`).
 """
 
-from dataclasses import dataclass, field
-
 import pytest
 
 from magic_cards_model.machines import Step
-from magic_cards_model.machines.decisions import NOT_ANSWERED, Decision, DecisionKind
+from magic_cards_model.machines.decisions import Decision, DecisionKind, ScriptedAnswer
 from magic_cards_model.models import Color, Zone
 
 from .harness import Scenario
 
 
-@dataclass
-class QueueProvider:
-    """A `DecisionProvider` that answers `CHOOSE_TARGETS` questions in order.
-
-    Not a mock: a real implementation of the one-method `DecisionProvider`
-    protocol `Game.ask` calls, standing in for what a live player at a
-    keyboard would be behind - the same stub
-    `tests/scenarios/test_trigger_target_decisions.py` already uses for the
-    sibling, triggered-ability question.
-    """
-
-    answers: list[tuple[object, ...]] = field(default_factory=list)
-    asked: list[Decision] = field(default_factory=list)
-
-    def decide(self, decision: Decision) -> object:
-        self.asked.append(decision)
-        if decision.kind is not DecisionKind.CHOOSE_TARGETS or not self.answers:
-            return NOT_ANSWERED
-        return self.answers.pop(0)
+def targets_asked(scenario: Scenario) -> list[Decision]:
+    """The `CHOOSE_TARGETS` questions this game has asked, in order."""
+    return [
+        decision
+        for decision in scenario.game.decisions.asked
+        if decision.kind is DecisionKind.CHOOSE_TARGETS
+    ]
 
 
 # --------------------------------------------------------------------------
@@ -108,13 +94,15 @@ def test_karns_plus_one_asks_for_its_target_when_none_is_supplied():
     karn = scenario.creature("Karn, the Great Creator", "alice")
     sol_ring = scenario.creature("Sol Ring", "alice")
 
-    provider = QueueProvider(answers=[(sol_ring,)])
-    scenario.game.decisions.provider = provider
+    scenario.game.decisions.add(
+        ScriptedAnswer(kind=DecisionKind.CHOOSE_TARGETS, value=(sol_ring,), player="alice")
+    )
 
     scenario.activate(karn, index=0)
 
-    assert len(provider.asked) == 1, "the reported defect: this used to be empty"
-    decision = provider.asked[0]
+    asked = targets_asked(scenario)
+    assert len(asked) == 1, "the reported defect: this used to be empty"
+    decision = asked[0]
     assert decision.kind is DecisionKind.CHOOSE_TARGETS
     assert decision.player == "alice"
     assert decision.source == "Karn, the Great Creator"
@@ -140,7 +128,9 @@ def test_karns_plus_one_answered_with_nothing_changes_nothing_and_never_animates
     sol_ring = scenario.creature("Sol Ring", "alice")
     assert karn.loyalty == 5
 
-    scenario.game.decisions.provider = QueueProvider(answers=[()])
+    scenario.game.decisions.add(
+        ScriptedAnswer(kind=DecisionKind.CHOOSE_TARGETS, value=(), player="alice")
+    )
     scenario.activate(karn, index=0)
     assert karn.loyalty == 6, "CR 606.4: the +1 cost is paid on activation regardless"
     scenario.pass_until_resolved()
@@ -164,12 +154,9 @@ def test_an_explicit_target_list_is_still_used_without_being_asked():
     karn = scenario.creature("Karn, the Great Creator", "alice")
     sol_ring = scenario.creature("Sol Ring", "alice")
 
-    provider = QueueProvider()
-    scenario.game.decisions.provider = provider
-
     scenario.activate(karn, index=0, targets=[sol_ring])
 
-    assert provider.asked == [], "an explicit target list is not asked for"
+    assert targets_asked(scenario) == [], "an explicit target list is not asked for"
     scenario.pass_until_resolved()
     computed = scenario.game.computed_board().of(sol_ring)
     assert computed.is_creature
@@ -199,14 +186,16 @@ def test_mother_of_runes_mandatory_target_is_asked_rather_than_raised():
     mother = scenario.find("Mother of Runes", Zone.BATTLEFIELD, "alice")
     bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
 
-    provider = QueueProvider(answers=[(bears,)])
-    scenario.game.decisions.provider = provider
+    scenario.game.decisions.add(
+        ScriptedAnswer(kind=DecisionKind.CHOOSE_TARGETS, value=(bears,), player="alice")
+    )
 
     scenario.will_choose(Color.RED.value, source="Mother of Runes")
     ability = scenario.activate(mother, index=0)
 
-    assert len(provider.asked) == 1, "the reported defect: this used to raise instead"
-    decision = provider.asked[0]
+    asked = targets_asked(scenario)
+    assert len(asked) == 1, "the reported defect: this used to raise instead"
+    decision = asked[0]
     assert decision.kind is DecisionKind.CHOOSE_TARGETS
     assert decision.player == "alice"
     assert decision.target_minimum == 1, "a plain 'target creature' is mandatory"
@@ -225,6 +214,8 @@ def test_mother_of_runes_empty_answer_is_refused_while_a_legal_target_exists():
     scenario.start_at(Step.PRECOMBAT_MAIN)
     mother = scenario.find("Mother of Runes", Zone.BATTLEFIELD, "alice")
 
-    scenario.game.decisions.provider = QueueProvider(answers=[()])
+    scenario.game.decisions.add(
+        ScriptedAnswer(kind=DecisionKind.CHOOSE_TARGETS, value=(), player="alice")
+    )
     with pytest.raises(ValueError, match="601.2c"):
         scenario.activate(mother, index=0)

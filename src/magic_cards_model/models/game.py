@@ -78,7 +78,6 @@ from ..machines.cost import (
     untap_cost,
 )
 from ..machines.decisions import (
-    NOT_ANSWERED,
     CardSplit,
     Decision,
     DecisionKind,
@@ -4540,7 +4539,7 @@ class Game(BaseModel):
         #
         # That is the whole point of the restructure. The previous shape ran both
         # sequences inside one call that put every question through `Game.ask`; with
-        # a live `DecisionProvider` behind an API that blocks until a human answers,
+        # a live seat behind an API that blocks until a human answers,
         # starting a game took one full answer timeout *per question per seat* -
         # measured at 1200 s (4 x 300 s) for two seats across both sequences - while
         # holding the game lock. A step the game rests in has no wait to hold: the
@@ -4734,11 +4733,11 @@ class Game(BaseModel):
 
         The headless path, and the one every scenario that just wants a game to
         play uses. Each declaration goes through `ask_mulligan` and each CR 103.6
-        action through `Game.ask`, so a scripted answer wins, then a live
-        `decisions.provider`, and only when neither speaks does `default_answer`
-        stand - keep the dealt hand, decline every opening-hand action. With no
-        provider that is immediate and deterministic, which is exactly what it
-        was before this became a rested-in step.
+        action through `Game.ask`, so a scripted answer wins, then the replay
+        tape, and only when neither speaks does `default_answer` stand - keep
+        the dealt hand, decline every opening-hand action. That is immediate
+        and deterministic, which is exactly what it was before this became a
+        rested-in step.
 
         Returns the step the game ends in: `Step.UNTAP` of CR 103.8's first turn,
         unless the game was never in the pregame at all.
@@ -4928,7 +4927,7 @@ class Game(BaseModel):
 
         This is the **ask-driven** whole-sequence path: it puts every action to
         its player through `Game.ask`, which is what an unattended game wants and
-        what every scenario here uses. A live seat behind a blocking provider
+        what every scenario here uses. A live seat that blocks on each answer
         should not be driven this way - it is one blocking wait per offer - and
         uses `opening_hand_options`, `take_opening_hand_action` and
         `finish_opening_hand_actions` instead, which ask nobody anything.
@@ -5066,12 +5065,10 @@ class Game(BaseModel):
 
         A scripted answer always wins; failing that, the replay tape
         (`decisions.recorded`, see `machines/decisions.py`'s "Pausing instead
-        of blocking") is read next, then a live `decisions.provider` (if one
-        is set) is consulted, and only once none of those has anything -
-        `NOT_ANSWERED`, or no provider at all, and no unconsumed tape entry -
-        does this raise `DecisionPending` (when `decisions.pause_when_
-        unanswered` is set) or, failing that too, let `default_answer` speak
-        for the player.
+        of blocking") is read next, and only once neither has anything - no
+        unconsumed tape entry either - does this raise `DecisionPending`
+        (when `decisions.pause_when_unanswered` is set) or, failing that too,
+        let `default_answer` speak for the player.
 
         Every `CHOOSE_CARDS` question is labelled on its way through here - see
         `_with_card_labels` - so a client is never handed a list of ids naming
@@ -5083,10 +5080,6 @@ class Game(BaseModel):
         found, value = self.decisions.take(decision)
         if not found:
             found, value = self.decisions.take_from_tape(decision)
-        if not found and self.decisions.provider is not None:
-            provided = self.decisions.provider.decide(decision)
-            if provided is not NOT_ANSWERED:
-                found, value = True, provided
         if not found and self.decisions.pause_when_unanswered:
             raise DecisionPending(
                 PendingDecision(
@@ -5332,9 +5325,9 @@ class Game(BaseModel):
         nothing else - is identical either way.
 
         Returns whether the energy was paid, and pays it. A "no" answer -
-        whether scripted, declined by a live provider, or the fixed-cost
-        default (`default_answer` takes the affirmative when it is legal,
-        same as `PAY_LIFE`) - leaves the player's energy untouched.
+        whether scripted, taped, or the fixed-cost default (`default_answer`
+        takes the affirmative when it is legal, same as `PAY_LIFE`) - leaves
+        the player's energy untouched.
         """
         if isinstance(player, str):
             player = self.player(player)
