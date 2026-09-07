@@ -51,7 +51,7 @@ import operator
 import re
 from collections.abc import Sequence
 from enum import StrEnum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -402,6 +402,19 @@ class AbilityOnStack(BaseModel):
     source_id: UUID | None = None
     source_name: str
     controller: str
+    state_class: Literal["AbilityOnStack"] = "AbilityOnStack"
+    """Which concrete Python class built this object - decode-time identity
+    for `models.game.StackObject`'s discriminated union, the exact
+    counterpart of `CardState.state_class` (see that field's own docstring).
+
+    `StackObject` is `CardState | TokenState | AbilityOnStack`, tagged on
+    this field via `Field(discriminator="state_class")`
+    (`models/game.py:StackObject`) - not a rules concept, just the label
+    pydantic reads to pick the right arm of the union without guessing from
+    shape. An `AbilityOnStack` never changes Python class the way a token
+    does, so unlike `CardState.state_class` this one has nothing else to key
+    off and is always this one literal value.
+    """
     targets: list[TargetRef] = Field(default_factory=list)
     event: GameEvent | None = None
     """The event that triggered it, for an effect that needs to know which
