@@ -57,6 +57,7 @@ from ..models.card import Card, Color, Type
 from ..models.card_state import CardState
 from ..models.mana import PaymentOption
 from ..models.zone import Zone
+from ..serialization import SortedFrozenSet
 from .abilities import keyword_abilities
 from .cost import CostComponent, CostPayment, CostSubstitution, exile_cost, tap_cost
 
@@ -85,7 +86,7 @@ class ObjectOffer(BaseModel):
     """Where an eligible object has to be. CR 702.51a's creatures are on the
     battlefield; CR 702.66a's cards are in a graveyard."""
 
-    permitted_types: frozenset[Type] = frozenset()
+    permitted_types: SortedFrozenSet[Type] = frozenset()
     """The card types an object has to have one of, or empty for "any object".
 
     Convoke and crew take "an untapped **creature**" (CR 702.51a, CR 702.122a),

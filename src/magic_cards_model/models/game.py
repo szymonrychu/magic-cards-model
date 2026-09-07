@@ -196,6 +196,7 @@ from ..machines.turn import (
     Step,
     TurnMachine,
 )
+from ..serialization import SortedFrozenSet, SortedSet
 from .action import Action
 from .card import Card, Color, Layout, Supertype, Type
 from .card_state import (
@@ -900,7 +901,7 @@ class PreventionShield(BaseModel):
     stored as a word and matched against the source at damage time rather than
     resolved to a set of objects when the shield was made."""
 
-    excluded_source_subtypes: frozenset[str] = frozenset()
+    excluded_source_subtypes: SortedFrozenSet[str] = frozenset()
     """CR 609.7b's recheck, stated as an exclusion instead of a match.
 
     Moonmist's "Prevent all combat damage that would be dealt this turn **by
@@ -1478,7 +1479,7 @@ class Game(BaseModel):
     you've cycled or discarded this turn" (CR 601.2f). Cleared when a new turn
     begins, the same reset `spells_cast_this_turn` already gets."""
 
-    life_gained_this_turn: set[str] = Field(default_factory=set)
+    life_gained_this_turn: SortedSet[str] = Field(default_factory=set)
     """Which players have gained life this turn (CR 119.9 treats any source
     of the gain the same way). `Player.gain_life` is the single place a life
     total actually goes up, so it is recorded there rather than only at
@@ -1521,7 +1522,7 @@ class Game(BaseModel):
     place that can. Excluded from serialisation: it is live only for the length
     of one resolution and means nothing in a stored board."""
 
-    turn_ended_exiled_ids: set[UUID] = Field(default_factory=set, exclude=True, repr=False)
+    turn_ended_exiled_ids: SortedSet[UUID] = Field(default_factory=set, exclude=True, repr=False)
     """Spells CR 724.1b exiled while they were resolving.
 
     `end_the_turn` gives the resolving spell a zone (exile) that `resolve_top`

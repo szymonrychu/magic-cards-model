@@ -28,6 +28,7 @@ from itertools import combinations_with_replacement, product
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from ..serialization import SortedFrozenSet
 from .card import Card, Color, Layout, Supertype, Type
 
 _SYMBOL = re.compile(r"\{([^}]+)\}")
@@ -500,11 +501,11 @@ class ManaSpend(BaseModel):
     name: str = ""
     """Whose cost this is, for the message when the mana is refused."""
 
-    types: frozenset[Type] = frozenset()
-    subtypes: frozenset[str] = frozenset()
+    types: SortedFrozenSet[Type] = frozenset()
+    subtypes: SortedFrozenSet[str] = frozenset()
     """Lowercased, since a restriction's chosen creature type is matched
     case-insensitively against a printed subtype."""
-    supertypes: frozenset[Supertype] = frozenset()
+    supertypes: SortedFrozenSet[Supertype] = frozenset()
     colorless: bool = False
 
     @classmethod
@@ -544,12 +545,12 @@ class SpendClause(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     purpose: SpendPurpose
-    types: frozenset[Type] = frozenset()
+    types: SortedFrozenSet[Type] = frozenset()
     """At least one of these card types, "creature spell" style."""
-    subtypes: frozenset[str] = frozenset()
+    subtypes: SortedFrozenSet[str] = frozenset()
     """At least one of these subtypes, lowercased - Cavern of Souls's chosen
     creature type."""
-    supertypes: frozenset[Supertype] = frozenset()
+    supertypes: SortedFrozenSet[Supertype] = frozenset()
     """All of these supertypes - Delighted Halfling's "a legendary spell"."""
     colorless: bool = False
     """Eldrazi Temple's "colorless": the object must have no colours."""

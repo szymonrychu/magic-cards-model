@@ -103,6 +103,7 @@ from pydantic import BaseModel, ConfigDict
 from ..models.card import Card, Color, Supertype, Type
 from ..models.card_state import CardState, ExileMarker, TargetRef
 from ..models.zone import Zone
+from ..serialization import SortedFrozenSet
 from .abilities import keyword_abilities
 from .combat import has_keyword
 from .layers import BASIC_LAND_TYPES
@@ -209,17 +210,17 @@ class TargetRequirement(BaseModel):
     knows it; this covers reading the card before either has happened.
     """
 
-    card_types: frozenset[Type] = frozenset()
+    card_types: SortedFrozenSet[Type] = frozenset()
     """Acceptable card types. Empty means any card type, as "target spell" does."""
-    excluded_card_types: frozenset[Type] = frozenset()
+    excluded_card_types: SortedFrozenSet[Type] = frozenset()
     """Card types the target must *not* have: the "non-" of "noncreature spell"."""
-    required_supertypes: frozenset[Supertype] = frozenset()
+    required_supertypes: SortedFrozenSet[Supertype] = frozenset()
     """Supertypes the target must have: "basic" in "target basic land"."""
-    excluded_supertypes: frozenset[Supertype] = frozenset()
+    excluded_supertypes: SortedFrozenSet[Supertype] = frozenset()
     """Supertypes the target must *not* have: the "non-" of "target nonbasic
     land" (CR 205.4c: "any land that doesn't have this supertype is a
     nonbasic land, even if it has a basic land type")."""
-    required_colors: frozenset[Color] = frozenset()
+    required_colors: SortedFrozenSet[Color] = frozenset()
     """Which of the five colors would satisfy this (CR 105.1, 105.2b): "target
     black or red permanent" (Celestial Purge) is a disjunction - either color
     is enough, the same way `card_types` already is one for "target artifact
@@ -260,13 +261,13 @@ class TargetRequirement(BaseModel):
     together (each is itself only an OR within one axis), so this gets its
     own field and its own check, `_rejects_historic`, rather than trying to
     fold it into either."""
-    combat_states: frozenset[CombatState] = frozenset()
+    combat_states: SortedFrozenSet[CombatState] = frozenset()
     """Which of attacking and blocking would satisfy this (CR 508.1k, 509.1g).
 
     Empty means the text asked for neither. More than one is a disjunction:
     "target attacking or blocking creature" takes either.
     """
-    required_subtypes: frozenset[str] = frozenset()
+    required_subtypes: SortedFrozenSet[str] = frozenset()
     """A bare CR 205.3m creature-type list used as the target noun itself -
     "target Vampire, Werewolf, or Zombie" (Slayer of the Wicked) - rather than
     "target creature" narrowed by a "with"/"you control" clause. Oracle
@@ -282,7 +283,7 @@ class TargetRequirement(BaseModel):
     allows_abilities: bool = False
     """True for "target activated or triggered ability" (CR 115.2, CR 113.1c)."""
     opponent_only: bool = False
-    zones: frozenset[Zone] = frozenset({Zone.BATTLEFIELD})
+    zones: SortedFrozenSet[Zone] = frozenset({Zone.BATTLEFIELD})
     controller: ControllerRestriction = ControllerRestriction.ANY
     must_be_tapped: bool | None = None
     excludes_source: bool = False
