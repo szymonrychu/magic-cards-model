@@ -1,7 +1,7 @@
 """A single game: the players, the shared zones, and where the turn is."""
 
 import re
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import replace
 from enum import StrEnum
@@ -9,7 +9,7 @@ from random import Random
 from typing import Any, ClassVar
 from uuid import NAMESPACE_OID, UUID, uuid4, uuid5
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ..ids import install_id_allocator, reset_id_allocator
 from ..machines import combat as combat_rules
@@ -984,6 +984,32 @@ class ObjectCostOffer(BaseModel):
     candidates: list[CardState] = Field(default_factory=list)
 
 
+class SchemaVersionMismatch(RuntimeError):
+    """A `Game` snapshot's `schema_version` does not match this build's
+    `Game.CURRENT_SCHEMA_VERSION`, or the snapshot has no `schema_version` at
+    all - T9 of the stateless-library plan. See `Game.schema_version`'s own
+    docstring for the policy this enforces and why both cases refuse rather
+    than fall back to a default.
+
+    Raised from `Game._check_schema_version`, a `mode="before"` validator, so
+    it surfaces on every construction path: `Game(...)`, `Game.model_validate
+    (...)`/`model_validate_json(...)`, and `Game` decoded as an element of
+    `Match.games`.
+
+    Deliberately **not** a `ValueError` (unlike `DeckIllegal`, this package's
+    usual convention for "a bad state discovered while building a model"):
+    pydantic-core catches `ValueError`/`TypeError`/`AssertionError` raised
+    inside a validator and rewraps it as a generic `pydantic.ValidationError`,
+    which would bury this behind a string message indistinguishable from any
+    other bad-input error. A future persistence/replay caller needs to catch
+    a version mismatch *specifically* - refuse the load, log which versions
+    disagreed, without also swallowing an unrelated malformed-data bug - so
+    this subclasses `RuntimeError` instead, which pydantic-core does not
+    intercept and lets propagate as-is, verified to do so even when the
+    mismatched `Game` is nested inside a `Match.games` decode.
+    """
+
+
 class Game(BaseModel):
     """One game of Magic, from the first untap step to somebody winning.
 
@@ -1592,6 +1618,133 @@ class Game(BaseModel):
     instead: `flip_coin` seeds each flip from `f"{shuffle_seed}:
     {coin_flips_performed}:coin"`, so a scenario asserting on the result
     stays reproducible and the second flip of a game differs from the first."""
+
+    schema_version: int
+    """The engine schema version this `Game` was built or decoded at - T9 of
+    the stateless-library plan.
+
+    **What this tracks, and why it is not `__version__`.** `magic_cards_model
+    .__version__` (`src/magic_cards_model/__init__.py`) names a package
+    release; it changes for reasons that have nothing to do with whether a
+    decoded snapshot still means what it meant when it was written - a new
+    public helper, a packaging fix, a docstring pass. Gating replay safety on
+    it would force a bump on every irrelevant release and, worse, would not
+    force one on the change that actually matters: correcting an entry in
+    `machines/effects.py`'s `EFFECTS` (card-name-keyed), a mana-ability parse
+    in `machines/abilities.py`, a `DelayedEffectSpec` in `machines/delayed.py`,
+    a continuous-effect spec in `machines/layers.py`, or `machines/triggers.
+    py`'s condition matching - none of which need to move the package version
+    at all. This field is a separate, purpose-built counter, starting at
+    `CURRENT_SCHEMA_VERSION` (see that `ClassVar`'s own docstring for exactly
+    when to bump it), that exists for exactly one question: "does a `Game`
+    dumped by the build that wrote it still mean the same thing decoded here?"
+
+    **Why a bare `int` field with no default, not a defaulted one.** A
+    defaulted field would let a decoded dict that is simply missing this key -
+    every snapshot written before this field existed, and any future decode
+    input nobody stamped - fill in `CURRENT_SCHEMA_VERSION` silently and pass
+    as though it were current. That is exactly the shape `memory/silent-
+    default-dispatch-tables.md` names as this codebase's dominant defect: "a
+    lookup that defaults instead of refusing." `_check_schema_version` below
+    (a `mode="before"` validator, so it sees the raw input before pydantic
+    would apply any default) refuses both a present-but-different version and
+    an absent one, with two distinct messages - **fail closed** is the
+    documented policy for both, deliberately, per this task's own directive.
+    That refusal fires on every construction path alike (`Game(...)`,
+    `Game.model_validate(...)`, and `Game` nested inside `Match.games`, since
+    a `mode="before"` validator is compiled into the type's own core schema
+    rather than being a classmethod override some entry points could route
+    around) - which is exactly why every fresh-construction call site in this
+    repo (`Match.start_game`, the scenario harness, and the handful of bare
+    `Game(players=...)` sites in `tests/`) now passes
+    `schema_version=Game.CURRENT_SCHEMA_VERSION` explicitly rather than
+    relying on a default: nothing builds a `Game` without saying, out loud,
+    what engine version it is built at.
+
+    **The migration answer for pre-versioning data**, stated plainly since the
+    task asked for a deliberate choice rather than an accident: there is no
+    real pre-versioning data anywhere this engine persists to yet (`GameStore`
+    in `magic-cards-model-api` is in-memory only; PostgreSQL persistence is
+    the very next phase this task exists to prepare for), so "migrate it
+    forward" has no data to act on and would be inventing a guarantee nobody
+    can honour - a decoded snapshot's *behaviour*, not just its shape, is what
+    is unknown, and no mechanical upgrade can restore behaviour that was never
+    recorded. A versionless snapshot is therefore refused exactly like a
+    mismatched one, with a message that says so, rather than assumed current.
+    """
+
+    #: The schema version a fresh `Game` is stamped with and the only one
+    #: `_check_schema_version` accepts on decode. Bump this whenever a change
+    #: would make a `Game.model_dump()` produced by the *previous* value mean
+    #: something different decoded under the *new* one - which is a wider set
+    #: of changes than "the dump's shape changed":
+    #:
+    #: - A field added to, removed from, renamed on, or retyped on `Game` or
+    #:   anything reachable from its dump (`Player`, `CardState`,
+    #:   `AbilityOnStack`, a `DelayedEffectSpec` variant's `kind`, a
+    #:   `machines/layers.py` continuous-effect spec, ...), or a changed
+    #:   default for one of those fields.
+    #: - A behavioural change to anything a decoded `Game`'s *own recorded
+    #:   state* could already be pointing at by name or kind: an `EFFECTS`
+    #:   entry in `machines/effects.py` gaining, losing, or changing its
+    #:   resolution (this is the case `docs/engine-coverage.md` calls out by
+    #:   name - a card that resolved as a no-op under the old build and does
+    #:   something under the new one is exactly a state resolving differently
+    #:   with no signal, the failure mode this whole field exists to catch),
+    #:   a `machines/abilities.py` mana-ability parse, a `DelayedEffectSpec`'s
+    #:   resolution, a `machines/triggers.py` condition match, a layer
+    #:   application in `machines/layers.py`, or any other name-/kind-keyed
+    #:   dispatch a `CardState` already on a decoded battlefield, stack, or
+    #:   pending-trigger list could reach.
+    #:
+    #: Not bumped for a change that cannot affect any state that could
+    #: already exist - a docstring, a test, a refactor with no behavioural
+    #: delta, or a wholly new mechanic/keyword no printing in the pool used
+    #: before this change existed to write it. When genuinely unsure whether a
+    #: change qualifies, bump it: a spurious bump costs a discarded stale
+    #: snapshot on the next decode; a missed one costs a wrong game nobody
+    #: detects, which is the entire problem this field exists to solve.
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 1
+
+    @model_validator(mode="before")
+    @classmethod
+    def _check_schema_version(cls, data: Any) -> Any:
+        """Refuse to decode a `Game` snapshot at any schema version other
+        than `CURRENT_SCHEMA_VERSION`, and refuse one with no version at all -
+        see `schema_version`'s own docstring for why both are refusals rather
+        than a silent default. `mode="before"` so this runs on the raw input,
+        before pydantic could fill in a default and make "missing" look like
+        "current", and so it fires uniformly on `Game(...)`, `Game.
+        model_validate(...)`, and `Game` decoded as an element of
+        `Match.games` alike.
+        """
+        if not isinstance(data, Mapping):
+            # Not a mapping decode input - a `Game` instance being re-wrapped,
+            # or another shape pydantic's own validation will reject on its
+            # own terms. Nothing here to check against a raw dict.
+            return data
+        if "schema_version" not in data:
+            raise SchemaVersionMismatch(
+                "Game snapshot carries no schema_version field, so it predates "
+                "engine schema versioning (current: "
+                f"{cls.CURRENT_SCHEMA_VERSION}). Refusing to decode it: engine "
+                "behaviour is a function of (state, engine version), not of "
+                "state alone, and an unversioned snapshot gives no way to know "
+                "which engine version's behaviour it was recorded under."
+            )
+        found = data["schema_version"]
+        if found != cls.CURRENT_SCHEMA_VERSION:
+            raise SchemaVersionMismatch(
+                f"Game snapshot was written at schema_version={found!r}, but "
+                f"this build decodes schema_version={cls.CURRENT_SCHEMA_VERSION}. "
+                "Refusing to decode a mismatched snapshot: a name-keyed "
+                "registry or text parser change between those versions may "
+                "make this state resolve differently than it did when it was "
+                "written, silently. Replay it on the engine version that wrote "
+                "it, or migrate it explicitly - decoding it here unmigrated is "
+                "not safe."
+            )
+        return data
 
     game_uid: UUID = Field(default_factory=uuid4)
     """This `Game`'s own identity, mixed into every id `_allocate_id` mints.

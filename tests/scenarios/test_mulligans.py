@@ -392,7 +392,10 @@ def test_run_mulligans_without_a_started_game_is_refused():
 
 
 def test_a_game_the_match_did_not_start_is_refused():
-    onlookers = Game(players=[Player(username="alice"), Player(username="bob")])
+    onlookers = Game(
+        players=[Player(username="alice"), Player(username="bob")],
+        schema_version=Game.CURRENT_SCHEMA_VERSION,
+    )
 
     with pytest.raises(ValueError, match="not one this match started"):
         match().run_mulligans(onlookers)

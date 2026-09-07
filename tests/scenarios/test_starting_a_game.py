@@ -451,7 +451,7 @@ def test_a_player_who_could_not_draw_their_opening_hand_loses():
     alice.draw_opening_hand()
     bob.draw_opening_hand()
 
-    game = Game(players=[alice, bob])
+    game = Game(players=[alice, bob], schema_version=Game.CURRENT_SCHEMA_VERSION)
     game.check_state_based_actions()
 
     assert game.winner == "bob"

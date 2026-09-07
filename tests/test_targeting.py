@@ -218,7 +218,10 @@ def test_two_chosen_modes_want_one_target_each():
 
 def test_two_chosen_modes_of_different_kinds_reject_the_wrong_pairing():
     bears = card_state("Grizzly Bears", Zone.BATTLEFIELD, controller="bob")
-    game = Game(players=[Player(username="alice"), Player(username="bob")])
+    game = Game(
+        players=[Player(username="alice"), Player(username="bob")],
+        schema_version=Game.CURRENT_SCHEMA_VERSION,
+    )
     game.battlefield.append(bears)
     # X has to reach Grizzly Bears' mana value (2): mode 3 is "Exile target
     # creature with mana value X or less", now actually enforced - and a

@@ -139,6 +139,7 @@ class Scenario:
         game = Game(
             players=self._players,
             automatic_turn_based_actions=self._automatic_turn_based_actions,
+            schema_version=Game.CURRENT_SCHEMA_VERSION,
         )
         for username, names in self._battlefield:
             for name in names:

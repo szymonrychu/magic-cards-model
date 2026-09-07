@@ -320,7 +320,7 @@ class Match(BaseModel):
             if deal_opening_hands:
                 player.draw_opening_hand()
 
-        game = Game(players=fresh)
+        game = Game(players=fresh, schema_version=Game.CURRENT_SCHEMA_VERSION)
         self.games.append(game)
         self.first_players.append(first_player)
         self.choosers.append(chooser)

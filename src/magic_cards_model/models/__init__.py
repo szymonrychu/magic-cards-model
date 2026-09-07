@@ -4,7 +4,7 @@ from .action import Action, ActionKind, Affordability, TargetSlot
 from .card import Card, CardFace, Color, Layout, Legalities, Legality, Rarity, Supertype, Type
 from .card_state import CardState, TargetKind, TargetRef
 from .deck import CardResolver, Deck, DeckIllegal, DeckLimits
-from .game import Game
+from .game import Game, SchemaVersionMismatch
 from .mana import ManaCost, ManaPool
 from .match import Match, register_card_resolver
 from .player import Player
@@ -32,6 +32,7 @@ __all__ = [
     "Player",
     "Rarity",
     "register_card_resolver",
+    "SchemaVersionMismatch",
     "Supertype",
     "TargetKind",
     "TargetRef",
