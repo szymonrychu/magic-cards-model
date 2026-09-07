@@ -468,7 +468,12 @@ def test_devourer_of_destiny_first_upkeep_survives_a_round_trip():
     scenario.start_at(Step.PRECOMBAT_MAIN)
     alice = scenario.player("alice")
     top_four_ids = [state.id for state in alice.library[:4]]
-    scenario.game.delayed_triggers.create(
+    # Through `Game.create_delayed_trigger`, not `.delayed_triggers.create`
+    # directly: the former opens `_id_allocator_scope` and re-mints `trigger.
+    # id` inside it (see its own docstring) - the latter is the container's
+    # own bare method, called here with no scope open at all, which minted a
+    # plain unreplayable `uuid4()` before T10's invariant caught it.
+    scenario.game.create_delayed_trigger(
         DelayedTrigger(
             text=(
                 "At the beginning of your first upkeep, look at the top four cards of "

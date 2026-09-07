@@ -709,7 +709,10 @@ def test_a_scripted_bottoming_wins_over_a_provider():
     # Staging, not mocking: alice takes a real mulligan through the real engine
     # before the process is run, which is the only way to name a card of the
     # post-mulligan hand in a script - card ids are minted per game.
-    alice.mulligan(seed="staged")
+    # `Player.mulligan` mints every moved card's own `zone_change_stamp` with
+    # no `Game` method's `_id_allocator_scope` open around it here.
+    with game._id_allocator_scope():  # noqa: SLF001
+        alice.mulligan(seed="staged")
     assert alice.cards_to_bottom == 1
     chosen = alice.hand[3]
 

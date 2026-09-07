@@ -4321,17 +4321,18 @@ def grant_suspend_haste(game: Any, permanent: CardState) -> None:
     shape every other delayed or off-stack trigger in this engine already
     takes.
     """
-    store = game.continuous_effects
-    timestamp = store.tick()
-    store.add(
-        ContinuousEffect(
-            description=f"{permanent.name}: suspend grants haste (CR 702.62a)",
-            layer=Layer.ABILITY,
-            timestamp=timestamp,
-            selector=only_this_incarnation(permanent, permanent.zone_change_stamp),
-            modification=grant_ability("Haste"),
+    with game._id_allocator_scope():  # noqa: SLF001
+        store = game.continuous_effects
+        timestamp = store.tick()
+        store.add(
+            ContinuousEffect(
+                description=f"{permanent.name}: suspend grants haste (CR 702.62a)",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                selector=only_this_incarnation(permanent, permanent.zone_change_stamp),
+                modification=grant_ability("Haste"),
+            )
         )
-    )
 
 
 def exile_warped(game: Any, permanent: CardState) -> CardState:
@@ -4360,15 +4361,16 @@ def exile_adventured(game: Any, spell: CardState, owner: str | None = None) -> C
     A replacement effect on resolution, and `Game.resolve_top` has no hook for
     one, so a scenario applies it itself.
     """
-    player = game.player(owner or spell.controller)
-    if spell in player.cards_in(spell.zone):
-        player.cards_in(spell.zone).remove(spell)
-    for cards in game.shared_zones.values():
-        if spell in cards:
-            cards.remove(spell)
-    spell.move_to(Zone.EXILE)
-    game.exile.append(spell)
-    return annotate_exile(spell, ExileMarker.ADVENTURED, player.username, game)
+    with game._id_allocator_scope():  # noqa: SLF001
+        player = game.player(owner or spell.controller)
+        if spell in player.cards_in(spell.zone):
+            player.cards_in(spell.zone).remove(spell)
+        for cards in game.shared_zones.values():
+            if spell in cards:
+                cards.remove(spell)
+        spell.move_to(Zone.EXILE)
+        game.exile.append(spell)
+        return annotate_exile(spell, ExileMarker.ADVENTURED, player.username, game)
 
 
 #: CR 207.2's reminder text, dropped from a spliced card's rules text the same

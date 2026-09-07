@@ -221,7 +221,12 @@ def test_a_leyline_in_the_opening_hand_can_begin_the_game_on_the_battlefield():
     leyline = next(state for state in alice.library if state.card.name == "Leyline of Abundance")
     alice.library.remove(leyline)
     alice.library.insert(0, leyline)
-    alice.draw_opening_hand()
+    # `deal_opening_hands=False` above split the deal in two so the library
+    # could be rigged first; the deferred draw happens with no `Game` method
+    # on the call stack to open `_id_allocator_scope`, so it has to here -
+    # see `tests/scenarios/test_opening_hand_actions.py::dealt`'s own note.
+    with game._id_allocator_scope():  # noqa: SLF001
+        alice.draw_opening_hand()
     game.decisions.add(
         ScriptedAnswer(
             kind=DecisionKind.OPENING_HAND_ACTION,
@@ -243,7 +248,12 @@ def test_an_undeclared_leyline_stays_in_hand():
     leyline = next(state for state in alice.library if state.card.name == "Leyline of Abundance")
     alice.library.remove(leyline)
     alice.library.insert(0, leyline)
-    alice.draw_opening_hand()
+    # `deal_opening_hands=False` above split the deal in two so the library
+    # could be rigged first; the deferred draw happens with no `Game` method
+    # on the call stack to open `_id_allocator_scope`, so it has to here -
+    # see `tests/scenarios/test_opening_hand_actions.py::dealt`'s own note.
+    with game._id_allocator_scope():  # noqa: SLF001
+        alice.draw_opening_hand()
     series.run_mulligans(game)
 
     assert leyline.zone is Zone.HAND

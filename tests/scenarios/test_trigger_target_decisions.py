@@ -527,9 +527,14 @@ def test_a_delayed_trigger_does_not_inherit_an_earlier_triggers_targets():
     )
     provider = QueueProvider(answers=[(watchwolf,)])
     scenario.game.decisions.provider = provider
-    fired = scenario.game.delayed_triggers.fire(
-        GameEvent(event=TriggerEvent.BEGINNING_OF_STEP, step=Step.END_STEP, player="alice")
-    )
+    # `.delayed_triggers.fire` is the container's own bare method, called
+    # here with no scope open - `Game.emit` is the wrapped, scoped door this
+    # bypasses (see its own docstring); it mints the fired `AbilityOnStack`'s
+    # id, which is what has to replay identically.
+    with scenario.game._id_allocator_scope():  # noqa: SLF001
+        fired = scenario.game.delayed_triggers.fire(
+            GameEvent(event=TriggerEvent.BEGINNING_OF_STEP, step=Step.END_STEP, player="alice")
+        )
     scenario.game.pending_triggers.extend(fired)
     scenario.game.put_triggers_on_stack()
 

@@ -209,7 +209,7 @@ from .card_state import (
 )
 from .mana import ManaCost, ManaPool, ManaSpend, ManaSpendEffect
 from .player import Player
-from .token import move_refused, tokens_that_cease_to_exist
+from .token import TokenState, move_refused, tokens_that_cease_to_exist
 from .zone import Zone
 
 #: Anything a spell can point at and then affect (CR 115.1).
@@ -2334,34 +2334,35 @@ class Game(BaseModel):
         **Unverified**: `knowledge_search` in this session could not return
         CR 724.1c or CR 724.1e, so neither is implemented or cited here.
         """
-        assert self.turn is not None
-        self.pending_triggers = []  # CR 724.1a
-        for stack_object in list(self.stack):  # CR 724.1b
-            self.stack.remove(stack_object)
-            if isinstance(stack_object, CardState):
-                self._take_out_of_every_zone(stack_object)
-                self.combat.remove(stack_object.id)
-                stack_object.move_to(Zone.EXILE)
-                self.exile.append(stack_object)
-                self.cast_records.pop(stack_object.id, None)
-        resolving = self.resolving
-        if isinstance(resolving, CardState) and resolving not in self.exile:
-            # CR 724.1b's "including the object that's resolving" - already
-            # popped off the stack by `resolve_top`, so it is exiled by name.
-            self._take_out_of_every_zone(resolving)
-            self.combat.remove(resolving.id)
-            resolving.move_to(Zone.EXILE)
-            self.exile.append(resolving)
-            self.turn_ended_exiled_ids.add(resolving.id)
-        # CR 724.1d, the combat half: removing every creature and planeswalker
-        # from combat is `CombatMachine.clear`'s whole job.
-        self.combat.clear()
-        self.turn.advance_to(Step.CLEANUP)
-        # CR 724.1f: "No player gets priority during this process". The pointer
-        # now rests in a cleanup step with an emptied `pending_triggers` and an
-        # exiled stack, so CR 514.3's ordinary "no player receives priority"
-        # is the state to be in, and this is what puts it there.
-        self.sync_priority_with_step()
+        with self._id_allocator_scope():
+            assert self.turn is not None
+            self.pending_triggers = []  # CR 724.1a
+            for stack_object in list(self.stack):  # CR 724.1b
+                self.stack.remove(stack_object)
+                if isinstance(stack_object, CardState):
+                    self._take_out_of_every_zone(stack_object)
+                    self.combat.remove(stack_object.id)
+                    stack_object.move_to(Zone.EXILE)
+                    self.exile.append(stack_object)
+                    self.cast_records.pop(stack_object.id, None)
+            resolving = self.resolving
+            if isinstance(resolving, CardState) and resolving not in self.exile:
+                # CR 724.1b's "including the object that's resolving" - already
+                # popped off the stack by `resolve_top`, so it is exiled by name.
+                self._take_out_of_every_zone(resolving)
+                self.combat.remove(resolving.id)
+                resolving.move_to(Zone.EXILE)
+                self.exile.append(resolving)
+                self.turn_ended_exiled_ids.add(resolving.id)
+            # CR 724.1d, the combat half: removing every creature and planeswalker
+            # from combat is `CombatMachine.clear`'s whole job.
+            self.combat.clear()
+            self.turn.advance_to(Step.CLEANUP)
+            # CR 724.1f: "No player gets priority during this process". The pointer
+            # now rests in a cleanup step with an emptied `pending_triggers` and an
+            # exiled stack, so CR 514.3's ordinary "no player receives priority"
+            # is the state to be in, and this is what puts it there.
+            self.sync_priority_with_step()
 
     def cleanup_step(self) -> list[CardState]:
         """The cleanup step's two turn-based actions, in order (CR 514.1, 514.2).
@@ -2381,51 +2382,52 @@ class Game(BaseModel):
         ends every "this turn" effect here, so an unused shield stops existing
         rather than carrying into the next turn.
         """
-        discarded = self.active_player.discard_to_maximum_hand_size()
-        self.remove_all_damage()
-        self.continuous_effects.end_the_turn(self)  # CR 514.2, the other half
-        self.delayed_triggers.expire_this_turn()  # CR 514.2, the delayed-trigger half
-        self.prevention_shields = [
-            shield
-            for shield in self.prevention_shields
-            if not shield.spent and not shield.until_end_of_turn
-        ]
-        # CR 514.2's same sentence again, for the draw redirections: an
-        # "until end of turn" replacement effect ends here, *after* the
-        # discard above - which is the whole of DDR#957's ruling, since a
-        # draw that happens earlier in this same cleanup step is still
-        # replaced.
-        self.draw_redirections = [
-            redirection
-            for redirection in self.draw_redirections
-            if not redirection.until_end_of_turn
-        ]
-        self._bottom_unused_cascade_permissions()
-        # CR 514.2's same sentence: "all 'until end of turn' ... effects end".
-        # A card exiled by Ugin's −11 stays exiled and stops being castable.
-        # A Wrenn's Resolve/Reckless Impulse grant (`expires_end_of_next_turn`)
-        # is dropped here too, but only once `Game.begin_turn_for` has already
-        # marked `owner_next_turn_started` for it (that player's own next turn
-        # has begun) *and* this cleanup belongs to that same turn - i.e. this
-        # is that turn's own end, not some later one.
-        self.play_permissions = [
-            permission
-            for permission in self.play_permissions
-            if not permission.until_end_of_turn
-            and not (
-                permission.expires_end_of_next_turn
-                and permission.owner_next_turn_started
-                and self.turn.active_player == permission.player
-            )
-        ]
-        # CR 514.2's same sentence, for CR 611.1's "affects the rules of the
-        # game" effects: Ranger-Captain of Eos's "this turn" noncreature ban.
-        self.casting_rule_effects = [
-            effect
-            for effect in self.casting_rule_effects
-            if effect.duration is not Duration.UNTIL_END_OF_TURN
-        ]
-        return discarded
+        with self._id_allocator_scope():
+            discarded = self.active_player.discard_to_maximum_hand_size()
+            self.remove_all_damage()
+            self.continuous_effects.end_the_turn(self)  # CR 514.2, the other half
+            self.delayed_triggers.expire_this_turn()  # CR 514.2, the delayed-trigger half
+            self.prevention_shields = [
+                shield
+                for shield in self.prevention_shields
+                if not shield.spent and not shield.until_end_of_turn
+            ]
+            # CR 514.2's same sentence again, for the draw redirections: an
+            # "until end of turn" replacement effect ends here, *after* the
+            # discard above - which is the whole of DDR#957's ruling, since a
+            # draw that happens earlier in this same cleanup step is still
+            # replaced.
+            self.draw_redirections = [
+                redirection
+                for redirection in self.draw_redirections
+                if not redirection.until_end_of_turn
+            ]
+            self._bottom_unused_cascade_permissions()
+            # CR 514.2's same sentence: "all 'until end of turn' ... effects end".
+            # A card exiled by Ugin's −11 stays exiled and stops being castable.
+            # A Wrenn's Resolve/Reckless Impulse grant (`expires_end_of_next_turn`)
+            # is dropped here too, but only once `Game.begin_turn_for` has already
+            # marked `owner_next_turn_started` for it (that player's own next turn
+            # has begun) *and* this cleanup belongs to that same turn - i.e. this
+            # is that turn's own end, not some later one.
+            self.play_permissions = [
+                permission
+                for permission in self.play_permissions
+                if not permission.until_end_of_turn
+                and not (
+                    permission.expires_end_of_next_turn
+                    and permission.owner_next_turn_started
+                    and self.turn.active_player == permission.player
+                )
+            ]
+            # CR 514.2's same sentence, for CR 611.1's "affects the rules of the
+            # game" effects: Ranger-Captain of Eos's "this turn" noncreature ban.
+            self.casting_rule_effects = [
+                effect
+                for effect in self.casting_rule_effects
+                if effect.duration is not Duration.UNTIL_END_OF_TURN
+            ]
+            return discarded
 
     def _bottom_unused_cascade_permissions(self) -> None:
         """CR 702.85a's own sentence: "Put the exiled cards on the bottom in a
@@ -2952,8 +2954,22 @@ class Game(BaseModel):
         CR 603.7d/e make the controller the controller of the spell or ability
         that created it, taken as that spell or ability resolved. The caller
         fills that in, because only the caller knows which it was.
+
+        `trigger.id` is re-minted here rather than trusted from the caller:
+        `DelayedTrigger.id`'s `default_factory=new_id` runs the moment the
+        caller constructs it, which for `DelayedTrigger(text=..., ...)`
+        written as this call's own argument is *before* the line below ever
+        opens `_id_allocator_scope` - Python builds the argument first. A
+        caller already inside another scope (`machines/effects.py`, mid-
+        resolution) gets an id from that outer scope either way; one with
+        none open - most of `tests/scenarios/`'s own direct `Game.
+        create_delayed_trigger` calls - minted a bare `uuid4()` that survived
+        nowhere else, so overwriting it here is free: nothing has read or
+        stored the pre-mint id yet.
         """
-        return self.delayed_triggers.create(trigger)
+        with self._id_allocator_scope():
+            trigger = trigger.model_copy(update={"id": self._allocate_id()})
+            return self.delayed_triggers.create(trigger)
 
     def create_reflexive_trigger(
         self,
@@ -2980,15 +2996,16 @@ class Game(BaseModel):
         (CR 603.3), asking its own targets then rather than now (CR 603.3d),
         and giving opponents a real stack object to respond to (CR 405.6a).
         """
-        ability = self.delayed_triggers.create_reflexive(
-            text=text,
-            controller=controller,
-            source_id=source_id,
-            source_name=source_name,
-            callback=callback,
-        )
-        self.pending_triggers.append(ability)
-        return ability
+        with self._id_allocator_scope():
+            ability = self.delayed_triggers.create_reflexive(
+                text=text,
+                controller=controller,
+                source_id=source_id,
+                source_name=source_name,
+                callback=callback,
+            )
+            self.pending_triggers.append(ability)
+            return ability
 
     def _create_resolution_delayed_triggers(self, spell: CardState) -> None:
         """Delayed triggered abilities a resolving permanent spell creates (CR 603.7a).
@@ -3183,31 +3200,32 @@ class Game(BaseModel):
         same label unconditionally, which mislabelled a hideaway or
         Isochron-copy cast's `CastRecord` as a rebound it never was.
         """
-        profile = profile_for_text(card.oracle_text or "")
-        targets: list[TargetRef] = []
-        if profile.requirements:
-            candidates = self._legal_target_candidates(profile, controller, card.id)
-            if not candidates:
-                return None  # CR 601.2c: no legal target, casting is illegal.
-            decision = Decision(
-                kind=DecisionKind.CHOOSE_TARGETS,
-                player=controller,
-                prompt=f"choose targets for {card.name}",
-                source=card.name,
-                targets=tuple(TargetRef.coerce(candidate) for candidate in candidates),
-                target_maximum=profile.max_targets,
-                # CR 601.2c: mandatory, capped at how many legal targets
-                # actually exist (`candidates` is truthy here, but may still
-                # be fewer than the printed requirement asks for).
-                target_minimum=min(profile.min_targets, len(candidates)),
-            )
-            chosen = self.ask(decision)
-            assert isinstance(chosen, (list, tuple))
-            targets = list(chosen)
-        card.targets = targets
-        self.note_cast(card, keyword=keyword, origin_zone=Zone.EXILE)
-        self.put_on_stack(card, controller)
-        return card
+        with self._id_allocator_scope():
+            profile = profile_for_text(card.oracle_text or "")
+            targets: list[TargetRef] = []
+            if profile.requirements:
+                candidates = self._legal_target_candidates(profile, controller, card.id)
+                if not candidates:
+                    return None  # CR 601.2c: no legal target, casting is illegal.
+                decision = Decision(
+                    kind=DecisionKind.CHOOSE_TARGETS,
+                    player=controller,
+                    prompt=f"choose targets for {card.name}",
+                    source=card.name,
+                    targets=tuple(TargetRef.coerce(candidate) for candidate in candidates),
+                    target_maximum=profile.max_targets,
+                    # CR 601.2c: mandatory, capped at how many legal targets
+                    # actually exist (`candidates` is truthy here, but may still
+                    # be fewer than the printed requirement asks for).
+                    target_minimum=min(profile.min_targets, len(candidates)),
+                )
+                chosen = self.ask(decision)
+                assert isinstance(chosen, (list, tuple))
+                targets = list(chosen)
+            card.targets = targets
+            self.note_cast(card, keyword=keyword, origin_zone=Zone.EXILE)
+            self.put_on_stack(card, controller)
+            return card
 
     def has_legal_free_cast(self, card: CardState, controller: str) -> bool:
         """Whether `cast_free_from_exile(card, controller)` would actually
@@ -3272,21 +3290,42 @@ class Game(BaseModel):
         session (`docs/engine-coverage.md` records the gap), so the fallback
         picked here is the one no card in the pool exercises differently:
         Alania, Divergent Storm's own copy names no controller of its own.
+
+        CR 707.10f/111.13: a copy of a *permanent* spell becomes a token as
+        it resolves (`token=True`, set below in `_resolve_top_impl` once it
+        does), so the object it becomes has to already be a `TokenState` -
+        `token` alone is not enough. `TokenState.move_to`'s CR 111.8 override
+        ("a token that has left the battlefield can't move ... back onto the
+        battlefield") and its `left_the_battlefield` bookkeeping only exist
+        on that subclass; a plain `CardState` with `token` flipped true reads
+        as a token everywhere `models/token.is_token` is asked, but a second
+        zone change through it never sees CR 111.8 refuse it, and a decode
+        of it - which reads the same `token` flag - builds a real
+        `TokenState` where the live game never had one, so the two disagree
+        about a rule the live game was silently missing all along (T10's own
+        finding). Built `token=False` here regardless, matching the existing
+        comment at the resolution site: while still a copy of a spell on the
+        stack it is not yet a token (CR 707.10f's "as that copy resolves").
+        A copy of a non-permanent spell (an instant or sorcery) never becomes
+        a token at all, so it stays a plain `CardState`.
         """
-        controller = controller or spell.controller or self.controller_of(spell).username
-        copy = CardState(
-            card=spell.card,
-            zone=Zone.STACK,
-            controller=controller,
-            owner=spell.owner,
-            is_copy=True,
-            targets=list(spell.targets),
-            face_played=spell.face_played,
-            land_face_played=spell.land_face_played,
-            division=spell.division,
-        )
-        self.stack.append(copy)
-        return copy
+        with self._id_allocator_scope():
+            controller = controller or spell.controller or self.controller_of(spell).username
+            state_type = TokenState if spell.is_permanent else CardState
+            copy = state_type(
+                card=spell.card,
+                zone=Zone.STACK,
+                controller=controller,
+                owner=spell.owner,
+                is_copy=True,
+                token=False,
+                targets=list(spell.targets),
+                face_played=spell.face_played,
+                land_face_played=spell.land_face_played,
+                division=spell.division,
+            )
+            self.stack.append(copy)
+            return copy
 
     def offer_new_targets_for_copy(
         self, copy: CardState, controller: str, *, source_name: str = ""
@@ -3631,51 +3670,52 @@ class Game(BaseModel):
         being sacrificed and a spell being countered (CR 603.10e), whose
         subjects have also moved by the time the trigger is worked out.
         """
-        sources: list[CardState] = list(self.battlefield)
-        # CR 113.6m: "An ability whose cost or effect specifies that it moves
-        # the object it's on out of a particular zone functions only in that
-        # zone" - Arclight Phoenix's "At the beginning of combat on your turn,
-        # ... return this card from your graveyard to the battlefield" is one,
-        # and a graveyard card was never asked about any event at all, so it
-        # could not fire. Every card in every graveyard is offered here and
-        # `machines/triggers.triggers_for` filters on
-        # `zones_ability_functions_in`, which still answers "battlefield" for
-        # everything that has not earned otherwise - so this widens what is
-        # *asked*, never what triggers.
-        for player in self.players:
-            sources.extend(player.graveyard)
-        if event.event is TriggerEvent.CAST_SPELL:
-            sources = self.spells_on_stack + sources
-        elif (
-            event.event
-            in (
-                TriggerEvent.DIES,
-                TriggerEvent.IS_SACRIFICED,
-                TriggerEvent.SPELL_IS_COUNTERED,
-                TriggerEvent.LEAVES_BATTLEFIELD_TO_EXILE,
-                TriggerEvent.LEAVES_THE_BATTLEFIELD,
-            )
-            and event.subject_id is not None
-        ):
-            gone = self.find_by_id(event.subject_id)
-            if isinstance(gone, CardState) and gone not in sources:
-                sources = [*sources, gone]
+        with self._id_allocator_scope():
+            sources: list[CardState] = list(self.battlefield)
+            # CR 113.6m: "An ability whose cost or effect specifies that it moves
+            # the object it's on out of a particular zone functions only in that
+            # zone" - Arclight Phoenix's "At the beginning of combat on your turn,
+            # ... return this card from your graveyard to the battlefield" is one,
+            # and a graveyard card was never asked about any event at all, so it
+            # could not fire. Every card in every graveyard is offered here and
+            # `machines/triggers.triggers_for` filters on
+            # `zones_ability_functions_in`, which still answers "battlefield" for
+            # everything that has not earned otherwise - so this widens what is
+            # *asked*, never what triggers.
+            for player in self.players:
+                sources.extend(player.graveyard)
+            if event.event is TriggerEvent.CAST_SPELL:
+                sources = self.spells_on_stack + sources
+            elif (
+                event.event
+                in (
+                    TriggerEvent.DIES,
+                    TriggerEvent.IS_SACRIFICED,
+                    TriggerEvent.SPELL_IS_COUNTERED,
+                    TriggerEvent.LEAVES_BATTLEFIELD_TO_EXILE,
+                    TriggerEvent.LEAVES_THE_BATTLEFIELD,
+                )
+                and event.subject_id is not None
+            ):
+                gone = self.find_by_id(event.subject_id)
+                if isinstance(gone, CardState) and gone not in sources:
+                    sources = [*sources, gone]
 
-        triggered = triggers_for(self, event, sources)
-        # CR 603.7: a delayed triggered ability is not printed on any card, so
-        # no source can be asked for it. It watches the event directly, and once
-        # it has triggered it is an ordinary trigger in every other respect -
-        # CR 603.3 puts it on the stack the next time a player would receive
-        # priority, alongside these.
-        triggered = triggered + self.delayed_triggers.fire(event)
-        # CR 603.8: a state trigger watches a game state, not an event, so it
-        # is swept for after every event rather than matched against one. This
-        # is what lets a countered state trigger fire again immediately - the
-        # counter event is emitted from `Game.counter` after the ability has
-        # already been removed from the stack (CR 701.6a).
-        triggered = triggered + state_triggers_for(self)
-        self.pending_triggers.extend(triggered)
-        return triggered
+            triggered = triggers_for(self, event, sources)
+            # CR 603.7: a delayed triggered ability is not printed on any card, so
+            # no source can be asked for it. It watches the event directly, and once
+            # it has triggered it is an ordinary trigger in every other respect -
+            # CR 603.3 puts it on the stack the next time a player would receive
+            # priority, alongside these.
+            triggered = triggered + self.delayed_triggers.fire(event)
+            # CR 603.8: a state trigger watches a game state, not an event, so it
+            # is swept for after every event rather than matched against one. This
+            # is what lets a countered state trigger fire again immediately - the
+            # counter event is emitted from `Game.counter` after the ability has
+            # already been removed from the stack (CR 701.6a).
+            triggered = triggered + state_triggers_for(self)
+            self.pending_triggers.extend(triggered)
+            return triggered
 
     def put_triggers_on_stack(self) -> list[AbilityOnStack]:
         """Put everything that has triggered onto the stack (CR 603.3, 603.3b).
@@ -3715,17 +3755,18 @@ class Game(BaseModel):
         anybody gets priority - so this drains repeatedly rather than leaving
         them for a later call that a scenario may never make.
         """
-        placed: list[AbilityOnStack] = []
-        # CR 603.8 / CR 704.1a: a state trigger is a triggered ability whose
-        # condition is a game state, so it is swept for here too - a state that
-        # became true while an ability was resolving (or that was true before
-        # anything ever happened, so no event was emitted to sweep on) has still
-        # triggered, and CR 603.3 puts it on the stack at this same moment.
-        self.pending_triggers.extend(state_triggers_for(self))
-        while self.pending_triggers:
-            placed.extend(self._put_pending_triggers_on_stack())
+        with self._id_allocator_scope():
+            placed: list[AbilityOnStack] = []
+            # CR 603.8 / CR 704.1a: a state trigger is a triggered ability whose
+            # condition is a game state, so it is swept for here too - a state that
+            # became true while an ability was resolving (or that was true before
+            # anything ever happened, so no event was emitted to sweep on) has still
+            # triggered, and CR 603.3 puts it on the stack at this same moment.
             self.pending_triggers.extend(state_triggers_for(self))
-        return placed
+            while self.pending_triggers:
+                placed.extend(self._put_pending_triggers_on_stack())
+                self.pending_triggers.extend(state_triggers_for(self))
+            return placed
 
     def _put_pending_triggers_on_stack(self) -> list[AbilityOnStack]:
         """One CR 603.3b batch: everything waiting right now, in APNAP order."""
@@ -4339,91 +4380,92 @@ class Game(BaseModel):
         enters, so no replacement effect is consulted and no enters trigger fires
         (CR 603.6a) - the event never happened at all.
         """
-        if move_refused(card_state, Zone.BATTLEFIELD) is not None:
-            return card_state
+        with self._id_allocator_scope():
+            if move_refused(card_state, Zone.BATTLEFIELD) is not None:
+                return card_state
 
-        event = ReplaceableEvent(
-            kind=EventKind.ENTERS_BATTLEFIELD,
-            card=card_state,
-            origin=card_state.zone,
-            destination=Zone.BATTLEFIELD,
-            tapped=tapped,
-            was_cast=was_cast,
-        )
-        card_state.controller = controller
-        apply_replacements(self, event)
+            event = ReplaceableEvent(
+                kind=EventKind.ENTERS_BATTLEFIELD,
+                card=card_state,
+                origin=card_state.zone,
+                destination=Zone.BATTLEFIELD,
+                tapped=tapped,
+                was_cast=was_cast,
+            )
+            card_state.controller = controller
+            apply_replacements(self, event)
 
-        if event.destination is not Zone.BATTLEFIELD:
+            if event.destination is not Zone.BATTLEFIELD:
+                self._take_out_of_every_zone(card_state)
+                if event.destination is Zone.EXILE:
+                    card_state.move_to(Zone.EXILE)
+                    self.exile.append(card_state)
+                else:
+                    self._owner_of(card_state).add(card_state, event.destination or Zone.GRAVEYARD)
+                return card_state
+
+            if (
+                attach_to is not None
+                and isinstance(attach_to, CardState)
+                and attach_to.id == card_state.id
+            ):
+                # CR 303.4d: an Aura can't enchant itself - see the docstring above.
+                self._take_out_of_every_zone(card_state)
+                self._owner_of(card_state).add(card_state, Zone.GRAVEYARD)
+                return card_state
+
             self._take_out_of_every_zone(card_state)
-            if event.destination is Zone.EXILE:
-                card_state.move_to(Zone.EXILE)
-                self.exile.append(card_state)
-            else:
-                self._owner_of(card_state).add(card_state, event.destination or Zone.GRAVEYARD)
+            # CR 712.14a: "if a spell or ability puts a double-faced card onto the
+            # battlefield 'transformed' ..., it enters the battlefield with its
+            # back face up." Set *before* the move, because `move_to` is where
+            # CR 306.5b's intrinsic "enters with loyalty counters equal to its
+            # printed loyalty" is applied, and the printed loyalty a transformed
+            # Ajani, Nacatl Pariah enters with is his back face's 3 - read off
+            # whichever face is up. A card that has no back face is left alone
+            # (CR 701.28c's "nothing happens" for the sibling action).
+            card_state.transformed = transformed and card_state.card.back_face is not None
+            card_state.move_to(Zone.BATTLEFIELD)
+            card_state.tapped = event.tapped
+            # CR 702.131 (ascend): "entered this turn" needs a turn-number stamp,
+            # not just a boolean, the same way `ExileAnnotation.turn_exiled` is -
+            # see `CardState.turn_entered`. Stamped here, the one choke point
+            # every route onto the battlefield runs through.
+            card_state.turn_entered = self.turn.turn_number if self.turn is not None else None
+            # CR 613.5: from here on this permanent's power and toughness are
+            # whatever the layer engine says they are. A characteristic-defining
+            # ability (CR 604.3, 613.4a) gives Tarmogoyf a power the printing does
+            # not have, and an anthem in layer 7d makes a Grizzly Bears a 3/3.
+            # Unbound, `CardState.power` answers with the printed value plus
+            # counters (CR 122.1a), which is the wrong answer for anything a
+            # continuous effect touches - and combat's CR 510.1a assignment and
+            # CR 704.5g's lethal check both read it directly.
+            card_state.bind_to_game(self)
+            self.battlefield.append(card_state)
+
+            if attach_to is not None:
+                card_state.attach_to(attach_to)  # CR 608.3c, 701.3a
+
+            # CR 613.7a: "a continuous effect generated by a static ability has the
+            # same timestamp as the object the static ability is on". Stamped as it
+            # arrives, so a permanent that entered after a spell resolved is
+            # correctly newer than that spell's effect (CR 613.7b).
+            self.continuous_effects.note(self.battlefield)
+
+            for kind, amount in event.counters.items():
+                self.add_counters(card_state, kind, amount)
+
+            extra_loyalty = self._additional_entering_loyalty(card_state)
+            if extra_loyalty:
+                self.add_counters(card_state, Counter.LOYALTY, extra_loyalty)
+
+            self.emit(self._enters_event(card_state))
+            # CR 714.3a's own intrinsic lore counter (`CardState.move_to`, applied
+            # before this point) is not routed through `add_counters` - the same
+            # direct-write choice `_enter_with_loyalty` already makes for a
+            # planeswalker's own entering loyalty - so it needs its own emission
+            # for CR 107.15a's chapter I to trigger the moment the Saga arrives.
+            self._emit_lore_counters_added(card_state, card_state.lore_counters)
             return card_state
-
-        if (
-            attach_to is not None
-            and isinstance(attach_to, CardState)
-            and attach_to.id == card_state.id
-        ):
-            # CR 303.4d: an Aura can't enchant itself - see the docstring above.
-            self._take_out_of_every_zone(card_state)
-            self._owner_of(card_state).add(card_state, Zone.GRAVEYARD)
-            return card_state
-
-        self._take_out_of_every_zone(card_state)
-        # CR 712.14a: "if a spell or ability puts a double-faced card onto the
-        # battlefield 'transformed' ..., it enters the battlefield with its
-        # back face up." Set *before* the move, because `move_to` is where
-        # CR 306.5b's intrinsic "enters with loyalty counters equal to its
-        # printed loyalty" is applied, and the printed loyalty a transformed
-        # Ajani, Nacatl Pariah enters with is his back face's 3 - read off
-        # whichever face is up. A card that has no back face is left alone
-        # (CR 701.28c's "nothing happens" for the sibling action).
-        card_state.transformed = transformed and card_state.card.back_face is not None
-        card_state.move_to(Zone.BATTLEFIELD)
-        card_state.tapped = event.tapped
-        # CR 702.131 (ascend): "entered this turn" needs a turn-number stamp,
-        # not just a boolean, the same way `ExileAnnotation.turn_exiled` is -
-        # see `CardState.turn_entered`. Stamped here, the one choke point
-        # every route onto the battlefield runs through.
-        card_state.turn_entered = self.turn.turn_number if self.turn is not None else None
-        # CR 613.5: from here on this permanent's power and toughness are
-        # whatever the layer engine says they are. A characteristic-defining
-        # ability (CR 604.3, 613.4a) gives Tarmogoyf a power the printing does
-        # not have, and an anthem in layer 7d makes a Grizzly Bears a 3/3.
-        # Unbound, `CardState.power` answers with the printed value plus
-        # counters (CR 122.1a), which is the wrong answer for anything a
-        # continuous effect touches - and combat's CR 510.1a assignment and
-        # CR 704.5g's lethal check both read it directly.
-        card_state.bind_to_game(self)
-        self.battlefield.append(card_state)
-
-        if attach_to is not None:
-            card_state.attach_to(attach_to)  # CR 608.3c, 701.3a
-
-        # CR 613.7a: "a continuous effect generated by a static ability has the
-        # same timestamp as the object the static ability is on". Stamped as it
-        # arrives, so a permanent that entered after a spell resolved is
-        # correctly newer than that spell's effect (CR 613.7b).
-        self.continuous_effects.note(self.battlefield)
-
-        for kind, amount in event.counters.items():
-            self.add_counters(card_state, kind, amount)
-
-        extra_loyalty = self._additional_entering_loyalty(card_state)
-        if extra_loyalty:
-            self.add_counters(card_state, Counter.LOYALTY, extra_loyalty)
-
-        self.emit(self._enters_event(card_state))
-        # CR 714.3a's own intrinsic lore counter (`CardState.move_to`, applied
-        # before this point) is not routed through `add_counters` - the same
-        # direct-write choice `_enter_with_loyalty` already makes for a
-        # planeswalker's own entering loyalty - so it needs its own emission
-        # for CR 107.15a's chapter I to trigger the moment the Saga arrives.
-        self._emit_lore_counters_added(card_state, card_state.lore_counters)
-        return card_state
 
     def put_onto_battlefield(
         self,
@@ -4450,30 +4492,31 @@ class Game(BaseModel):
         creature face like Ajani, Nacatl Pariah becomes a planeswalker with any
         loyalty at all.
         """
-        return self.enter_the_battlefield(
-            card_state, controller, tapped=tapped, transformed=transformed, was_cast=False
-        )
+        with self._id_allocator_scope():
+            return self.enter_the_battlefield(
+                card_state, controller, tapped=tapped, transformed=transformed, was_cast=False
+            )
 
-    # -- the pregame sequence (CR 103.5, CR 103.6) ----------------------------
-    #
-    # A game dealt from decklists *rests* in `Step.MULLIGAN` and then in
-    # `Step.PREGAME_ACTIONS`, and every seat acts through the methods below.
-    # Neither step asks anybody anything: `declare_mulligan`,
-    # `take_opening_hand_action` and `finish_opening_hand_actions` are told an
-    # answer that has already been made, so nothing here ever waits on a person.
-    #
-    # That is the whole point of the restructure. The previous shape ran both
-    # sequences inside one call that put every question through `Game.ask`; with
-    # a live `DecisionProvider` behind an API that blocks until a human answers,
-    # starting a game took one full answer timeout *per question per seat* -
-    # measured at 1200 s (4 x 300 s) for two seats across both sequences - while
-    # holding the game lock. A step the game rests in has no wait to hold: the
-    # game sits there, publishes what it is waiting for, and moves the moment the
-    # last seat has spoken.
-    #
-    # `settle_pregame` is the headless path and keeps the old behaviour exactly:
-    # it asks each seat through the ordinary decision machinery, where an
-    # unanswered question falls through to `default_answer` immediately.
+        # -- the pregame sequence (CR 103.5, CR 103.6) ----------------------------
+        #
+        # A game dealt from decklists *rests* in `Step.MULLIGAN` and then in
+        # `Step.PREGAME_ACTIONS`, and every seat acts through the methods below.
+        # Neither step asks anybody anything: `declare_mulligan`,
+        # `take_opening_hand_action` and `finish_opening_hand_actions` are told an
+        # answer that has already been made, so nothing here ever waits on a person.
+        #
+        # That is the whole point of the restructure. The previous shape ran both
+        # sequences inside one call that put every question through `Game.ask`; with
+        # a live `DecisionProvider` behind an API that blocks until a human answers,
+        # starting a game took one full answer timeout *per question per seat* -
+        # measured at 1200 s (4 x 300 s) for two seats across both sequences - while
+        # holding the game lock. A step the game rests in has no wait to hold: the
+        # game sits there, publishes what it is waiting for, and moves the moment the
+        # last seat has spoken.
+        #
+        # `settle_pregame` is the headless path and keeps the old behaviour exactly:
+        # it asks each seat through the ordinary decision machinery, where an
+        # unanswered question falls through to `default_answer` immediately.
 
     @property
     def in_pregame(self) -> bool:
@@ -4800,22 +4843,23 @@ class Game(BaseModel):
         turn-based actions happen when the game advances out of it, exactly as on
         every later turn.
         """
-        assert self.turn is not None
-        if self.turn.step is not Step.PREGAME_ACTIONS:
-            raise ValueError(
-                f"CR 103.6's opening-hand actions are not under way - "
-                f"the game is at {self.turn.step}"
-            )
-        if username != self.opening_hand_actor:
-            raise ValueError(
-                f"it is {self.opening_hand_actor}'s turn to take opening-hand "
-                f"actions, not {username}'s (CR 103.6)"
-            )
-        self.opening_hand_seat += 1
-        if self.opening_hand_seat >= len(self.players):
-            self.opening_hand_actions_taken = True
-            self.turn.advance()  # CR 103.8: the starting player takes their first turn
-        return self.turn.step
+        with self._id_allocator_scope():
+            assert self.turn is not None
+            if self.turn.step is not Step.PREGAME_ACTIONS:
+                raise ValueError(
+                    f"CR 103.6's opening-hand actions are not under way - "
+                    f"the game is at {self.turn.step}"
+                )
+            if username != self.opening_hand_actor:
+                raise ValueError(
+                    f"it is {self.opening_hand_actor}'s turn to take opening-hand "
+                    f"actions, not {username}'s (CR 103.6)"
+                )
+            self.opening_hand_seat += 1
+            if self.opening_hand_seat >= len(self.players):
+                self.opening_hand_actions_taken = True
+                self.turn.advance()  # CR 103.8: the starting player takes their first turn
+            return self.turn.step
 
     def take_opening_hand_actions(self) -> list[Decision]:
         """CR 103.6's sequence: after the mulligan, before the first turn.
@@ -4862,26 +4906,27 @@ class Game(BaseModel):
         game is resting in `Step.PREGAME_ACTIONS` this finishes every remaining
         seat, so it leaves the game at `Step.UNTAP` of CR 103.8's first turn.
         """
-        if self.opening_hand_actions_taken:
-            return []
+        with self._id_allocator_scope():
+            if self.opening_hand_actions_taken:
+                return []
 
-        asked: list[Decision] = []
-        in_pregame = self.turn is not None and self.turn.step is Step.PREGAME_ACTIONS
+            asked: list[Decision] = []
+            in_pregame = self.turn is not None and self.turn.step is Step.PREGAME_ACTIONS
 
-        if not in_pregame:
-            # No pregame to walk - a game built board-first, which never entered
-            # `Step.MULLIGAN`. The seat-by-seat bookkeeping has nothing to track,
-            # so the sequence is run over the players directly and marked done.
-            self.opening_hand_actions_taken = True
-            for player in list(self.players):
-                asked.extend(self._ask_opening_hand_actions_of(player))
+            if not in_pregame:
+                # No pregame to walk - a game built board-first, which never entered
+                # `Step.MULLIGAN`. The seat-by-seat bookkeeping has nothing to track,
+                # so the sequence is run over the players directly and marked done.
+                self.opening_hand_actions_taken = True
+                for player in list(self.players):
+                    asked.extend(self._ask_opening_hand_actions_of(player))
+                return asked
+
+            while (actor := self.opening_hand_actor) is not None:
+                asked.extend(self._ask_opening_hand_actions_of(self.player(actor)))
+                self.finish_opening_hand_actions(actor)
+
             return asked
-
-        while (actor := self.opening_hand_actor) is not None:
-            asked.extend(self._ask_opening_hand_actions_of(self.player(actor)))
-            self.finish_opening_hand_actions(actor)
-
-        return asked
 
     def _ask_opening_hand_actions_of(self, player: Player) -> list[Decision]:
         """Put every CR 103.6 action on offer to one player, in hand order.
@@ -5173,17 +5218,18 @@ class Game(BaseModel):
         offered cards" lands on the actual back of the hand - the behaviour
         `Player.discard_to_maximum_hand_size` had before this question existed.
         """
-        decision = Decision(
-            kind=DecisionKind.CHOOSE_CARDS,
-            player=player.username,
-            prompt=f"discard {needed} card(s) to maximum hand size",
-            amount=needed,
-            cards=tuple(state.id for state in player.hand),
-        )
-        chosen_ids = self.ask(decision)
-        assert isinstance(chosen_ids, tuple)
-        by_id = {state.id: state for state in player.hand}
-        return [by_id[card_id] for card_id in chosen_ids]
+        with self._id_allocator_scope():
+            decision = Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=player.username,
+                prompt=f"discard {needed} card(s) to maximum hand size",
+                amount=needed,
+                cards=tuple(state.id for state in player.hand),
+            )
+            chosen_ids = self.ask(decision)
+            assert isinstance(chosen_ids, tuple)
+            by_id = {state.id: state for state in player.hand}
+            return [by_id[card_id] for card_id in chosen_ids]
 
     def may(self, player: Player | str, prompt: str, *, source: str | None = None) -> bool:
         """A plain "you may" during resolution (CR 608.2d).
@@ -5467,38 +5513,39 @@ class Game(BaseModel):
         not exercised. CR 701.22d's "whenever a player scries" trigger has no
         event to emit yet - see `docs/engine-coverage.md`.
         """
-        if isinstance(player, str):
-            player = self.player(player)
-        if count <= 0:
-            return CardSplit()
+        with self._id_allocator_scope():
+            if isinstance(player, str):
+                player = self.player(player)
+            if count <= 0:
+                return CardSplit()
 
-        looked_at = self._look_at_top(player, count)
-        answer = self.ask(
-            Decision(
-                kind=DecisionKind.SCRY,
-                player=player.username,
-                prompt=f"scry {count}",
-                source=source,
-                amount=count,
-                cards=tuple(state.id for state in looked_at),
-                # CR 701.22a's own two destinations, quoted above, so a client
-                # does not have to infer them from the kind.
-                moved_label="bottom of your library",
-                kept_label="top of your library",
+            looked_at = self._look_at_top(player, count)
+            answer = self.ask(
+                Decision(
+                    kind=DecisionKind.SCRY,
+                    player=player.username,
+                    prompt=f"scry {count}",
+                    source=source,
+                    amount=count,
+                    cards=tuple(state.id for state in looked_at),
+                    # CR 701.22a's own two destinations, quoted above, so a client
+                    # does not have to infer them from the kind.
+                    moved_label="bottom of your library",
+                    kept_label="top of your library",
+                )
             )
-        )
-        assert isinstance(answer, CardSplit)
-        to_bottom, on_top = self._split_top(player, looked_at, answer)
-        library = player.library
-        for state in looked_at:
-            library.remove(state)
-        for index, state in enumerate(on_top):
-            library.insert(index, state)
-        library.extend(to_bottom)
-        return CardSplit(
-            moved=tuple(state.id for state in to_bottom),
-            top_order=tuple(state.id for state in on_top),
-        )
+            assert isinstance(answer, CardSplit)
+            to_bottom, on_top = self._split_top(player, looked_at, answer)
+            library = player.library
+            for state in looked_at:
+                library.remove(state)
+            for index, state in enumerate(on_top):
+                library.insert(index, state)
+            library.extend(to_bottom)
+            return CardSplit(
+                moved=tuple(state.id for state in to_bottom),
+                top_order=tuple(state.id for state in on_top),
+            )
 
     def surveil(self, player: Player | str, count: int, *, source: str | None = None) -> CardSplit:
         """Surveil N (CR 701.25a).
@@ -5515,39 +5562,40 @@ class Game(BaseModel):
         replacement effect watching that move (Rest in Peace, CR 614.1) gets its
         say - a surveil into a graveyard is a card being put into a graveyard.
         """
-        if isinstance(player, str):
-            player = self.player(player)
-        if count <= 0:
-            return CardSplit()
+        with self._id_allocator_scope():
+            if isinstance(player, str):
+                player = self.player(player)
+            if count <= 0:
+                return CardSplit()
 
-        looked_at = self._look_at_top(player, count)
-        answer = self.ask(
-            Decision(
-                kind=DecisionKind.SURVEIL,
-                player=player.username,
-                prompt=f"surveil {count}",
-                source=source,
-                amount=count,
-                cards=tuple(state.id for state in looked_at),
-                # CR 701.25a's own two destinations, quoted above: the same
-                # "rest on top" as a scry, a different first half.
-                moved_label="your graveyard",
-                kept_label="top of your library",
+            looked_at = self._look_at_top(player, count)
+            answer = self.ask(
+                Decision(
+                    kind=DecisionKind.SURVEIL,
+                    player=player.username,
+                    prompt=f"surveil {count}",
+                    source=source,
+                    amount=count,
+                    cards=tuple(state.id for state in looked_at),
+                    # CR 701.25a's own two destinations, quoted above: the same
+                    # "rest on top" as a scry, a different first half.
+                    moved_label="your graveyard",
+                    kept_label="top of your library",
+                )
             )
-        )
-        assert isinstance(answer, CardSplit)
-        to_graveyard, on_top = self._split_top(player, looked_at, answer)
-        library = player.library
-        for state in looked_at:
-            library.remove(state)
-        for index, state in enumerate(on_top):
-            library.insert(index, state)
-        for state in to_graveyard:
-            self.put_into_graveyard(state)
-        return CardSplit(
-            moved=tuple(state.id for state in to_graveyard),
-            top_order=tuple(state.id for state in on_top),
-        )
+            assert isinstance(answer, CardSplit)
+            to_graveyard, on_top = self._split_top(player, looked_at, answer)
+            library = player.library
+            for state in looked_at:
+                library.remove(state)
+            for index, state in enumerate(on_top):
+                library.insert(index, state)
+            for state in to_graveyard:
+                self.put_into_graveyard(state)
+            return CardSplit(
+                moved=tuple(state.id for state in to_graveyard),
+                top_order=tuple(state.id for state in on_top),
+            )
 
     def look_at_top_and_split(
         self,
@@ -5778,41 +5826,43 @@ class Game(BaseModel):
         caller searching another zone can leave it at its default with no
         effect.
         """
-        if isinstance(player, str):
-            player = self.player(player)
+        with self._id_allocator_scope():
+            if isinstance(player, str):
+                player = self.player(player)
 
-        candidates = [state for state in player.cards_in(zone) if matches(state)]
-        limit = min(count, len(candidates))
-        found: list[CardState] = candidates[:limit]
-        if candidates and (optional or len(candidates) > limit):
-            chosen = self.ask(
-                Decision(
-                    kind=DecisionKind.CHOOSE_CARDS,
-                    player=player.username,
-                    prompt=(
-                        f"choose up to {limit} card(s) to find while searching your {zone.value}"
-                        if optional
-                        else f"choose {limit} card(s) to find while searching your {zone.value}"
-                    ),
-                    source=source,
-                    amount=limit,
-                    cards=tuple(state.id for state in candidates),
-                    card_labels=tuple(state.name for state in candidates),
-                    exact=not optional,
-                    default_cards=tuple(state.id for state in found),
+            candidates = [state for state in player.cards_in(zone) if matches(state)]
+            limit = min(count, len(candidates))
+            found: list[CardState] = candidates[:limit]
+            if candidates and (optional or len(candidates) > limit):
+                chosen = self.ask(
+                    Decision(
+                        kind=DecisionKind.CHOOSE_CARDS,
+                        player=player.username,
+                        prompt=(
+                            f"choose up to {limit} card(s) to find while searching "
+                            f"your {zone.value}"
+                            if optional
+                            else f"choose {limit} card(s) to find while searching your {zone.value}"
+                        ),
+                        source=source,
+                        amount=limit,
+                        cards=tuple(state.id for state in candidates),
+                        card_labels=tuple(state.name for state in candidates),
+                        exact=not optional,
+                        default_cards=tuple(state.id for state in found),
+                    )
                 )
-            )
-            assert isinstance(chosen, tuple)
-            by_id = {state.id: state for state in candidates}
-            found = [by_id[card_id] for card_id in chosen]
+                assert isinstance(chosen, tuple)
+                by_id = {state.id: state for state in candidates}
+                found = [by_id[card_id] for card_id in chosen]
 
-        for state in found:
-            player.cards_in(zone).remove(state)
-        if shuffle and zone is Zone.LIBRARY:
-            self.shuffle_library(player)
-        return found
+            for state in found:
+                player.cards_in(zone).remove(state)
+            if shuffle and zone is Zone.LIBRARY:
+                self.shuffle_library(player)
+            return found
 
-    # -- revealing, and cards outside the game (CR 701.20, CR 400.11) --------
+        # -- revealing, and cards outside the game (CR 701.20, CR 400.11) --------
 
     def reveal(self, card_state: CardState, source: str | None = None) -> CardState:
         """Show one card to all players (CR 701.20a), and record that it was shown.
@@ -5829,16 +5879,17 @@ class Game(BaseModel):
         exactly one entry is appended per card shown, and why that matters for
         anything downstream deciding what an opponent may see.
         """
-        self.reveals.append(
-            Reveal(
-                card_id=card_state.id,
-                card_name=card_state.name,
-                revealed_by=card_state.owner or "",
-                zone=card_state.zone,
-                source=source,
+        with self._id_allocator_scope():
+            self.reveals.append(
+                Reveal(
+                    card_id=card_state.id,
+                    card_name=card_state.name,
+                    revealed_by=card_state.owner or "",
+                    zone=card_state.zone,
+                    source=source,
+                )
             )
-        )
-        return card_state
+            return card_state
 
     def face_up_cards_in_exile(
         self,
@@ -5884,43 +5935,44 @@ class Game(BaseModel):
         why the replacement runs before the library is consulted. `draw_up_to`
         then records the failed draw for CR 704.5b.
         """
-        if isinstance(player, str):
-            player = self.player(player)
+        with self._id_allocator_scope():
+            if isinstance(player, str):
+                player = self.player(player)
 
-        drawn: list[CardState] = []
-        for index in range(count):
-            event = ReplaceableEvent(
-                kind=EventKind.DRAW,
-                player=player,
-                amount=1,
-                draw_step_draw=self._is_draw_step_draw(player) and index == 0,
-            )
-            apply_replacements(self, event)
-            # CR 121.2: each card actually drawn is its own draw, so each is
-            # its own trigger event - a replacement that turns one draw into
-            # two still produces two events. A draw replaced down to nothing
-            # never happened, so it triggers nothing (CR 603.2g).
-            for card in player.draw_up_to(event.amount) if event.amount > 0 else []:
-                drawn.append(card)
-                # CR 121.2's individual draw, counted before it is announced.
-                # `machines/triggers` answers "you draw your third card in a
-                # turn" by reading `cards_drawn_this_turn` *while* the event
-                # below is being dispatched, so the count has to already
-                # include this card or the ordinal would never match.
-                self.cards_drawn_this_turn[player.username] = (
-                    self.cards_drawn_this_turn.get(player.username, 0) + 1
+            drawn: list[CardState] = []
+            for index in range(count):
+                event = ReplaceableEvent(
+                    kind=EventKind.DRAW,
+                    player=player,
+                    amount=1,
+                    draw_step_draw=self._is_draw_step_draw(player) and index == 0,
                 )
-                self.emit(
-                    GameEvent(
-                        event=TriggerEvent.DRAWS_A_CARD,
-                        subject_id=card.id,
-                        subject_name=card.name,
-                        subject_controller=player.username,
-                        subject_card=card.card,
-                        player=player.username,
+                apply_replacements(self, event)
+                # CR 121.2: each card actually drawn is its own draw, so each is
+                # its own trigger event - a replacement that turns one draw into
+                # two still produces two events. A draw replaced down to nothing
+                # never happened, so it triggers nothing (CR 603.2g).
+                for card in player.draw_up_to(event.amount) if event.amount > 0 else []:
+                    drawn.append(card)
+                    # CR 121.2's individual draw, counted before it is announced.
+                    # `machines/triggers` answers "you draw your third card in a
+                    # turn" by reading `cards_drawn_this_turn` *while* the event
+                    # below is being dispatched, so the count has to already
+                    # include this card or the ordinal would never match.
+                    self.cards_drawn_this_turn[player.username] = (
+                        self.cards_drawn_this_turn.get(player.username, 0) + 1
                     )
-                )
-        return drawn
+                    self.emit(
+                        GameEvent(
+                            event=TriggerEvent.DRAWS_A_CARD,
+                            subject_id=card.id,
+                            subject_name=card.name,
+                            subject_controller=player.username,
+                            subject_card=card.card,
+                            player=player.username,
+                        )
+                    )
+            return drawn
 
     def _is_draw_step_draw(self, player: Player) -> bool:
         """Whether this is the active player's draw-step draw (CR 504.1, 703.4d)."""
@@ -6045,20 +6097,21 @@ class Game(BaseModel):
         what lets Doubling Season double a Kalonian Hydra's four printed counters
         as it arrives.
         """
-        if amount <= 0:
-            return permanent.counter_count(kind)
+        with self._id_allocator_scope():
+            if amount <= 0:
+                return permanent.counter_count(kind)
 
-        event = ReplaceableEvent(
-            kind=EventKind.ADD_COUNTERS, card=permanent, counter_kind=kind, amount=amount
-        )
-        apply_replacements(self, event)
-        if event.amount <= 0:
-            return permanent.counter_count(kind)
-        new_total = permanent.add_counters(kind, event.amount)
-        if str(kind) == str(Counter.LORE):
-            self._emit_lore_counters_added(permanent, event.amount)
-        self._emit_counters_put(permanent, str(kind), event.amount)
-        return new_total
+            event = ReplaceableEvent(
+                kind=EventKind.ADD_COUNTERS, card=permanent, counter_kind=kind, amount=amount
+            )
+            apply_replacements(self, event)
+            if event.amount <= 0:
+                return permanent.counter_count(kind)
+            new_total = permanent.add_counters(kind, event.amount)
+            if str(kind) == str(Counter.LORE):
+                self._emit_lore_counters_added(permanent, event.amount)
+            self._emit_counters_put(permanent, str(kind), event.amount)
+            return new_total
 
     def _emit_counters_put(self, permanent: CardState, kind: str, amount: int) -> None:
         """CR 122.6's generic "counters are put on this object" event.
@@ -6118,39 +6171,40 @@ class Game(BaseModel):
         Static Prison is exactly as much a departure as a destroyed or exiled
         one, and nothing watched this path before.
         """
-        if move_refused(permanent, Zone.HAND) is not None:
+        with self._id_allocator_scope():
+            if move_refused(permanent, Zone.HAND) is not None:
+                return permanent
+            was_on_battlefield = permanent in self.battlefield
+            if was_on_battlefield:
+                self._note_left_battlefield(permanent)
+            self._take_out_of_every_zone(permanent)
+            self.combat.remove(permanent.id)  # CR 506.4
+            self._owner_of(permanent).add(permanent, Zone.HAND)
+            if was_on_battlefield:
+                self.emit(
+                    GameEvent(
+                        event=TriggerEvent.LEAVES_BATTLEFIELD_TO_HAND,
+                        subject_id=permanent.id,
+                        subject_name=permanent.name,
+                        subject_controller=permanent.controller,
+                        subject_card=permanent.card,
+                        player=permanent.controller,
+                    )
+                )
+                # CR 603.6c: the generic departure, alongside the destination-
+                # specific event just above - see `Game.put_into_graveyard`'s
+                # matching emit for why both fire.
+                self.emit(
+                    GameEvent(
+                        event=TriggerEvent.LEAVES_THE_BATTLEFIELD,
+                        subject_id=permanent.id,
+                        subject_name=permanent.name,
+                        subject_controller=permanent.controller,
+                        subject_card=permanent.card,
+                        player=permanent.controller,
+                    )
+                )
             return permanent
-        was_on_battlefield = permanent in self.battlefield
-        if was_on_battlefield:
-            self._note_left_battlefield(permanent)
-        self._take_out_of_every_zone(permanent)
-        self.combat.remove(permanent.id)  # CR 506.4
-        self._owner_of(permanent).add(permanent, Zone.HAND)
-        if was_on_battlefield:
-            self.emit(
-                GameEvent(
-                    event=TriggerEvent.LEAVES_BATTLEFIELD_TO_HAND,
-                    subject_id=permanent.id,
-                    subject_name=permanent.name,
-                    subject_controller=permanent.controller,
-                    subject_card=permanent.card,
-                    player=permanent.controller,
-                )
-            )
-            # CR 603.6c: the generic departure, alongside the destination-
-            # specific event just above - see `Game.put_into_graveyard`'s
-            # matching emit for why both fire.
-            self.emit(
-                GameEvent(
-                    event=TriggerEvent.LEAVES_THE_BATTLEFIELD,
-                    subject_id=permanent.id,
-                    subject_name=permanent.name,
-                    subject_controller=permanent.controller,
-                    subject_card=permanent.card,
-                    player=permanent.controller,
-                )
-            )
-        return permanent
 
     def put_cards_into_library(
         self, cards: Sequence[CardState], *, to_bottom: bool = False
@@ -6785,43 +6839,44 @@ class Game(BaseModel):
         Returns the damage actually dealt, which is what CR 702.2b's deathtouch
         and CR 702.15b's lifelink both key off: zero damage is not damage dealt.
         """
-        event = ReplaceableEvent(
-            kind=EventKind.DAMAGE,
-            card=None if isinstance(target, Player) else target,
-            player=target if isinstance(target, Player) else None,
-            amount=amount,
-            combat=self._dealing_combat_damage,
-            source=source,
-        )
-        apply_replacements(self, event)
-        if not event.happens or event.amount <= 0:
-            return 0
-
-        if isinstance(target, Player):
-            self.deal_damage_to_player(target, event.amount)
-        else:
-            target.mark_damage(event.amount)
-        # CR 120.1: "An object that deals damage is the source of that
-        # damage" - the subject is the source, and the player, when there is
-        # one, is who the damage went to. A prevention or replacement that
-        # stopped the damage entirely has stopped the event too (CR 603.2g).
-        self.emit(
-            GameEvent(
-                event=TriggerEvent.DEALS_DAMAGE,
-                subject_id=source.id if source is not None else None,
-                subject_name=source.name if source is not None else None,
-                subject_controller=source.controller if source is not None else None,
-                subject_card=source.card if source is not None else None,
-                subject_types=source.types if source is not None else None,
-                subject_subtypes=source.subtypes if source is not None else None,
-                player=target.username if isinstance(target, Player) else None,
-                combat=event.combat,
-                amount=event.amount,
+        with self._id_allocator_scope():
+            event = ReplaceableEvent(
+                kind=EventKind.DAMAGE,
+                card=None if isinstance(target, Player) else target,
+                player=target if isinstance(target, Player) else None,
+                amount=amount,
+                combat=self._dealing_combat_damage,
+                source=source,
             )
-        )
-        return event.amount
+            apply_replacements(self, event)
+            if not event.happens or event.amount <= 0:
+                return 0
 
-    # -- prevention effects with a duration (CR 615) --------------------------
+            if isinstance(target, Player):
+                self.deal_damage_to_player(target, event.amount)
+            else:
+                target.mark_damage(event.amount)
+            # CR 120.1: "An object that deals damage is the source of that
+            # damage" - the subject is the source, and the player, when there is
+            # one, is who the damage went to. A prevention or replacement that
+            # stopped the damage entirely has stopped the event too (CR 603.2g).
+            self.emit(
+                GameEvent(
+                    event=TriggerEvent.DEALS_DAMAGE,
+                    subject_id=source.id if source is not None else None,
+                    subject_name=source.name if source is not None else None,
+                    subject_controller=source.controller if source is not None else None,
+                    subject_card=source.card if source is not None else None,
+                    subject_types=source.types if source is not None else None,
+                    subject_subtypes=source.subtypes if source is not None else None,
+                    player=target.username if isinstance(target, Player) else None,
+                    combat=event.combat,
+                    amount=event.amount,
+                )
+            )
+            return event.amount
+
+        # -- prevention effects with a duration (CR 615) --------------------------
 
     def create_prevention_shield(self, shield: PreventionShield) -> PreventionShield:
         """Record a prevention effect created by a resolving spell (CR 615.1, 615.4).
@@ -6835,8 +6890,9 @@ class Game(BaseModel):
         activating an ability that generates a prevention effect. Such effects
         last until they're used up or their duration has expired."
         """
-        self.prevention_shields.append(shield)
-        return shield
+        with self._id_allocator_scope():
+            self.prevention_shields.append(shield)
+            return shield
 
     def active_prevention_shields(self) -> list[PreventionShield]:
         """The shields that are neither used up nor expired (CR 615.3)."""
@@ -7013,15 +7069,16 @@ class Game(BaseModel):
         watching "a player loses life" fires for loss by damage the same as
         any other loss. A player who loses none triggers nothing.
         """
-        if amount < 0:
-            raise ValueError("cannot deal negative damage")
-        if isinstance(player, str):
-            player = self.player(player)
-        if amount == 0:
-            return player.life
-        lost = player.lose_life(amount)
-        self.emit(GameEvent(event=TriggerEvent.LOSES_LIFE, player=player.username))
-        return lost
+        with self._id_allocator_scope():
+            if amount < 0:
+                raise ValueError("cannot deal negative damage")
+            if isinstance(player, str):
+                player = self.player(player)
+            if amount == 0:
+                return player.life
+            lost = player.lose_life(amount)
+            self.emit(GameEvent(event=TriggerEvent.LOSES_LIFE, player=player.username))
+            return lost
 
     def counter(self, spell: StackObject, *, to_exile: bool = False) -> StackObject:
         """Counter a spell or an ability on the stack: it never resolves (CR 701.6).
@@ -7066,37 +7123,38 @@ class Game(BaseModel):
         was legally cast and legally resolved (CR 608.2b knows nothing about
         counterability) and simply fails to do the one thing it says.
         """
-        if spell not in self.stack:
-            raise ValueError(f"{spell.name} is not on the stack")
-        if cannot_be_countered(spell):
-            return spell
-        self.stack.remove(spell)
-        if isinstance(spell, CardState):
-            if to_exile:
-                self._take_out_of_every_zone(spell)
-                self.combat.remove(spell.id)  # CR 506.4
-                spell.move_to(Zone.EXILE)
-                self.exile.append(spell)
-            else:
-                self.put_into_graveyard(spell)
-            # Same cleanup `resolve_top` does on every other way off the
-            # stack: a countered spell will not be read again through the
-            # normal fast-forward paths, and a `CastRecord` this module can no
-            # longer answer for now fails an intervening *if* closed
-            # (`machines/triggers._cast_record_for_clause`) instead of a
-            # lingering record being misread as "nothing was spent".
-            self.cast_records.pop(spell.id, None)
-        self.emit(
-            GameEvent(
-                event=TriggerEvent.SPELL_IS_COUNTERED,
-                subject_id=spell.id,
-                subject_name=spell.name,
-                subject_controller=spell.controller,
-                subject_card=spell.card if isinstance(spell, CardState) else None,
-                player=spell.controller,
+        with self._id_allocator_scope():
+            if spell not in self.stack:
+                raise ValueError(f"{spell.name} is not on the stack")
+            if cannot_be_countered(spell):
+                return spell
+            self.stack.remove(spell)
+            if isinstance(spell, CardState):
+                if to_exile:
+                    self._take_out_of_every_zone(spell)
+                    self.combat.remove(spell.id)  # CR 506.4
+                    spell.move_to(Zone.EXILE)
+                    self.exile.append(spell)
+                else:
+                    self.put_into_graveyard(spell)
+                # Same cleanup `resolve_top` does on every other way off the
+                # stack: a countered spell will not be read again through the
+                # normal fast-forward paths, and a `CastRecord` this module can no
+                # longer answer for now fails an intervening *if* closed
+                # (`machines/triggers._cast_record_for_clause`) instead of a
+                # lingering record being misread as "nothing was spent".
+                self.cast_records.pop(spell.id, None)
+            self.emit(
+                GameEvent(
+                    event=TriggerEvent.SPELL_IS_COUNTERED,
+                    subject_id=spell.id,
+                    subject_name=spell.name,
+                    subject_controller=spell.controller,
+                    subject_card=spell.card if isinstance(spell, CardState) else None,
+                    player=spell.controller,
+                )
             )
-        )
-        return spell
+            return spell
 
     def exile_from_stack(self, spell: CardState) -> CardState:
         """Exile a spell straight off the stack - CR 701.13a's exile verb, a
@@ -7137,15 +7195,16 @@ class Game(BaseModel):
         but the stack (CR 400.7), so the exiled spell keeps none - no
         further cleanup is needed for that half.
         """
-        if spell not in self.stack:
-            raise ValueError(f"{spell.name} is not on the stack")
-        self.stack.remove(spell)
-        self._take_out_of_every_zone(spell)
-        self.combat.remove(spell.id)  # CR 506.4
-        spell.move_to(Zone.EXILE)
-        self.exile.append(spell)
-        self.cast_records.pop(spell.id, None)
-        return spell
+        with self._id_allocator_scope():
+            if spell not in self.stack:
+                raise ValueError(f"{spell.name} is not on the stack")
+            self.stack.remove(spell)
+            self._take_out_of_every_zone(spell)
+            self.combat.remove(spell.id)  # CR 506.4
+            spell.move_to(Zone.EXILE)
+            self.exile.append(spell)
+            self.cast_records.pop(spell.id, None)
+            return spell
 
     def destroy(self, permanent: CardState) -> CardState:
         """Put a permanent into its controller's graveyard.
@@ -7240,7 +7299,19 @@ class Game(BaseModel):
         fires on arrival. The two are distinct events about one move, which is
         why a Dragon Appeasement and a "when this creature dies" trigger both
         fire for the same sacrifice.
+
+        Run under `_id_allocator_scope`, the same as `destroy` just above:
+        `put_into_graveyard` mints `permanent`'s new `zone_change_stamp` and
+        may emit a "dies" trigger of its own, both persisted ids - found
+        unscoped by T10's round-trip/replay invariant, which is what a
+        sacrifice minting a plain `uuid4()` here looks like once a decoded
+        replay is asked to reproduce it.
         """
+        with self._id_allocator_scope():
+            return self._sacrifice_impl(permanent)
+
+    def _sacrifice_impl(self, permanent: CardState) -> CardState:
+        """The rest of `sacrifice` - see its own docstring for why it is split out."""
         if permanent not in self.battlefield:
             raise ValueError(f"{permanent.name} is not a permanent on the battlefield")
         # CR 701.21a names the permanent's controller as the player who
@@ -7294,29 +7365,30 @@ class Game(BaseModel):
         (the cleanup step, CR 514.1) is the one remaining discard path that
         does not yet route through here - see `docs/engine-coverage.md`.
         """
-        from ..machines.keywords import discard as discard_one  # avoids an import cycle
+        with self._id_allocator_scope():
+            from ..machines.keywords import discard as discard_one  # avoids an import cycle
 
-        discarded: list[CardState] = []
-        for card in cards:
-            discarded.append(discard_one(self, card, username))
-        if not discarded:
-            return discarded
-        # CR 601.2f's "for each card you've cycled or discarded this turn"
-        # (Hollow One) counts cards, not instructions, so a two-card discard
-        # adds two. `username` may be None for a player-less scenario; there is
-        # nobody to attribute the count to then, and nothing can read it back.
-        if username is not None:
-            self.cards_discarded_this_turn[username] = self.cards_discarded_this_turn.get(
-                username, 0
-            ) + len(discarded)
-        self.emit(
-            GameEvent(
-                event=TriggerEvent.DISCARDS_A_CARD,
-                player=username,
-                amount=len(discarded),
+            discarded: list[CardState] = []
+            for card in cards:
+                discarded.append(discard_one(self, card, username))
+            if not discarded:
+                return discarded
+            # CR 601.2f's "for each card you've cycled or discarded this turn"
+            # (Hollow One) counts cards, not instructions, so a two-card discard
+            # adds two. `username` may be None for a player-less scenario; there is
+            # nobody to attribute the count to then, and nothing can read it back.
+            if username is not None:
+                self.cards_discarded_this_turn[username] = self.cards_discarded_this_turn.get(
+                    username, 0
+                ) + len(discarded)
+            self.emit(
+                GameEvent(
+                    event=TriggerEvent.DISCARDS_A_CARD,
+                    player=username,
+                    amount=len(discarded),
+                )
             )
-        )
-        return discarded
+            return discarded
 
     def put_into_graveyard(self, card_state: CardState, *, resolving: bool = False) -> CardState:
         """Move a card to its owner's graveyard, replacement effects included.
@@ -7340,80 +7412,81 @@ class Game(BaseModel):
         does reach a graveyard and really does fire its dies trigger (CR 700.4).
         A second trip is refused by CR 111.8.
         """
-        if move_refused(card_state, Zone.GRAVEYARD) is not None:
+        with self._id_allocator_scope():
+            if move_refused(card_state, Zone.GRAVEYARD) is not None:
+                return card_state
+
+            origin = card_state.zone
+            was_on_battlefield = card_state in self.battlefield
+            if was_on_battlefield:
+                self._note_left_battlefield(card_state)
+                # CR 603.6c: the generic departure fires regardless of where the
+                # card ends up - a replacement effect redirecting the destination
+                # below still means this permanent left the battlefield.
+                self.emit(
+                    GameEvent(
+                        event=TriggerEvent.LEAVES_THE_BATTLEFIELD,
+                        subject_id=card_state.id,
+                        subject_name=card_state.name,
+                        subject_controller=card_state.controller,
+                        subject_card=card_state.card,
+                        subject_types=card_state.types,
+                        subject_subtypes=card_state.subtypes,
+                        player=card_state.controller,
+                    )
+                )
+
+            event = ReplaceableEvent(
+                kind=EventKind.ZONE_CHANGE,
+                card=card_state,
+                origin=Zone.BATTLEFIELD if was_on_battlefield else origin,
+                destination=Zone.GRAVEYARD,
+                resolving=resolving,
+            )
+            apply_replacements(self, event)
+
+            self._take_out_of_every_zone(card_state)
+            self.combat.remove(card_state.id)  # CR 506.4
+
+            if event.destination is Zone.GRAVEYARD:
+                self._owner_of(card_state).add(card_state, Zone.GRAVEYARD)
+            elif event.destination is Zone.EXILE:
+                card_state.move_to(Zone.EXILE)
+                self.exile.append(card_state)
+            elif event.destination is Zone.LIBRARY:
+                # Green Sun's Zenith's own "Shuffle [this] into its owner's
+                # library" (`machines/replacement.py`'s `_stack_replacements`
+                # redirects the destination here, off that same sentence). CR
+                # 701.24c: the library is shuffled the moment the card lands in
+                # it, even though it arrived straight off the stack rather than
+                # out of a search - there is no separate scripted "then shuffle"
+                # clause for this one the way a search effect prints its own.
+                owner = self._owner_of(card_state)
+                owner.add(card_state, Zone.LIBRARY)
+                self.shuffle_library(owner)
+            else:
+                raise ValueError(f"a graveyard replacement sent {card_state.name} nowhere")
+
+            # CR 700.4: it only died if it actually reached a graveyard from the
+            # battlefield. Exiled instead, the dies event never happened (CR 614.6).
+            if was_on_battlefield and event.destination is Zone.GRAVEYARD:
+                self.emit(
+                    GameEvent(
+                        event=TriggerEvent.DIES,
+                        subject_id=card_state.id,
+                        subject_name=card_state.name,
+                        subject_controller=card_state.controller,
+                        subject_card=card_state.card,
+                        # CR 603.10a: dies is a look-back event, and
+                        # `land_face_played` is not cleared by `move_to`, so this
+                        # still reads the face that was up immediately before the
+                        # permanent left the battlefield.
+                        subject_types=card_state.types,
+                        subject_subtypes=card_state.subtypes,
+                        player=card_state.controller,
+                    )
+                )
             return card_state
-
-        origin = card_state.zone
-        was_on_battlefield = card_state in self.battlefield
-        if was_on_battlefield:
-            self._note_left_battlefield(card_state)
-            # CR 603.6c: the generic departure fires regardless of where the
-            # card ends up - a replacement effect redirecting the destination
-            # below still means this permanent left the battlefield.
-            self.emit(
-                GameEvent(
-                    event=TriggerEvent.LEAVES_THE_BATTLEFIELD,
-                    subject_id=card_state.id,
-                    subject_name=card_state.name,
-                    subject_controller=card_state.controller,
-                    subject_card=card_state.card,
-                    subject_types=card_state.types,
-                    subject_subtypes=card_state.subtypes,
-                    player=card_state.controller,
-                )
-            )
-
-        event = ReplaceableEvent(
-            kind=EventKind.ZONE_CHANGE,
-            card=card_state,
-            origin=Zone.BATTLEFIELD if was_on_battlefield else origin,
-            destination=Zone.GRAVEYARD,
-            resolving=resolving,
-        )
-        apply_replacements(self, event)
-
-        self._take_out_of_every_zone(card_state)
-        self.combat.remove(card_state.id)  # CR 506.4
-
-        if event.destination is Zone.GRAVEYARD:
-            self._owner_of(card_state).add(card_state, Zone.GRAVEYARD)
-        elif event.destination is Zone.EXILE:
-            card_state.move_to(Zone.EXILE)
-            self.exile.append(card_state)
-        elif event.destination is Zone.LIBRARY:
-            # Green Sun's Zenith's own "Shuffle [this] into its owner's
-            # library" (`machines/replacement.py`'s `_stack_replacements`
-            # redirects the destination here, off that same sentence). CR
-            # 701.24c: the library is shuffled the moment the card lands in
-            # it, even though it arrived straight off the stack rather than
-            # out of a search - there is no separate scripted "then shuffle"
-            # clause for this one the way a search effect prints its own.
-            owner = self._owner_of(card_state)
-            owner.add(card_state, Zone.LIBRARY)
-            self.shuffle_library(owner)
-        else:
-            raise ValueError(f"a graveyard replacement sent {card_state.name} nowhere")
-
-        # CR 700.4: it only died if it actually reached a graveyard from the
-        # battlefield. Exiled instead, the dies event never happened (CR 614.6).
-        if was_on_battlefield and event.destination is Zone.GRAVEYARD:
-            self.emit(
-                GameEvent(
-                    event=TriggerEvent.DIES,
-                    subject_id=card_state.id,
-                    subject_name=card_state.name,
-                    subject_controller=card_state.controller,
-                    subject_card=card_state.card,
-                    # CR 603.10a: dies is a look-back event, and
-                    # `land_face_played` is not cleared by `move_to`, so this
-                    # still reads the face that was up immediately before the
-                    # permanent left the battlefield.
-                    subject_types=card_state.types,
-                    subject_subtypes=card_state.subtypes,
-                    player=card_state.controller,
-                )
-            )
-        return card_state
 
     def card_imprinted_on(self, permanent_id: UUID) -> CardState | None:
         """The card exiled *with* `permanent_id`, if any.
@@ -7485,11 +7558,12 @@ class Game(BaseModel):
         `amount=1`; `exile_cards` is the batch door for an instruction that
         moves several at once.
         """
-        origin_graveyard_owner = self._graveyard_owner_of(permanent)
-        self._exile_move(permanent)
-        if origin_graveyard_owner is not None and permanent.zone is Zone.EXILE:
-            self._emit_left_graveyard(origin_graveyard_owner, [permanent])
-        return permanent
+        with self._id_allocator_scope():
+            origin_graveyard_owner = self._graveyard_owner_of(permanent)
+            self._exile_move(permanent)
+            if origin_graveyard_owner is not None and permanent.zone is Zone.EXILE:
+                self._emit_left_graveyard(origin_graveyard_owner, [permanent])
+            return permanent
 
     def _exile_move(self, permanent: CardState) -> CardState:
         """`exile_permanent`'s move and its battlefield events, with the
@@ -7558,34 +7632,35 @@ class Game(BaseModel):
         not playing for ante.' These are the only cards that can add or remove
         cards from the ante zone or change a card's ownership."
         """
-        anteing_player = (
-            anteing_player if anteing_player is not None else card_state.controller_or_owner
-        )
-        owner = card_state.owner
-        if owner is None or anteing_player != owner:
-            return False
-        was_on_battlefield = card_state in self.battlefield
-        if was_on_battlefield:
-            self._note_left_battlefield(card_state)
-            self._detach_dependents(card_state)
-        self._take_out_of_every_zone(card_state)
-        self.combat.remove(card_state.id)  # CR 506.4
-        card_state.move_to(Zone.ANTE)
-        self.ante_zone.append(card_state)
-        if was_on_battlefield:
-            # CR 603.6c's generic departure. There is no ante-specific trigger
-            # event, and nothing in the pool watches for one.
-            self.emit(
-                GameEvent(
-                    event=TriggerEvent.LEAVES_THE_BATTLEFIELD,
-                    subject_id=card_state.id,
-                    subject_name=card_state.name,
-                    subject_controller=card_state.controller,
-                    subject_card=card_state.card,
-                    player=card_state.controller,
-                )
+        with self._id_allocator_scope():
+            anteing_player = (
+                anteing_player if anteing_player is not None else card_state.controller_or_owner
             )
-        return True
+            owner = card_state.owner
+            if owner is None or anteing_player != owner:
+                return False
+            was_on_battlefield = card_state in self.battlefield
+            if was_on_battlefield:
+                self._note_left_battlefield(card_state)
+                self._detach_dependents(card_state)
+            self._take_out_of_every_zone(card_state)
+            self.combat.remove(card_state.id)  # CR 506.4
+            card_state.move_to(Zone.ANTE)
+            self.ante_zone.append(card_state)
+            if was_on_battlefield:
+                # CR 603.6c's generic departure. There is no ante-specific trigger
+                # event, and nothing in the pool watches for one.
+                self.emit(
+                    GameEvent(
+                        event=TriggerEvent.LEAVES_THE_BATTLEFIELD,
+                        subject_id=card_state.id,
+                        subject_name=card_state.name,
+                        subject_controller=card_state.controller,
+                        subject_card=card_state.card,
+                        player=card_state.controller,
+                    )
+                )
+            return True
 
     def exile_cards(self, cards: Sequence[CardState]) -> list[CardState]:
         """Exile several cards as one instruction (CR 406.2).
@@ -7609,17 +7684,18 @@ class Game(BaseModel):
         read off the owner of the zone: two graveyards emptied by one
         instruction are two events, one per graveyard, each with its own count.
         """
-        by_graveyard: dict[str, list[CardState]] = {}
-        exiled: list[CardState] = []
-        for card_state in cards:
-            owner = self._graveyard_owner_of(card_state)
-            self._exile_move(card_state)
-            exiled.append(card_state)
-            if owner is not None and card_state.zone is Zone.EXILE:
-                by_graveyard.setdefault(owner, []).append(card_state)
-        for owner, gone in by_graveyard.items():
-            self._emit_left_graveyard(owner, gone)
-        return exiled
+        with self._id_allocator_scope():
+            by_graveyard: dict[str, list[CardState]] = {}
+            exiled: list[CardState] = []
+            for card_state in cards:
+                owner = self._graveyard_owner_of(card_state)
+                self._exile_move(card_state)
+                exiled.append(card_state)
+                if owner is not None and card_state.zone is Zone.EXILE:
+                    by_graveyard.setdefault(owner, []).append(card_state)
+            for owner, gone in by_graveyard.items():
+                self._emit_left_graveyard(owner, gone)
+            return exiled
 
     def _graveyard_owner_of(self, card_state: CardState) -> str | None:
         """Whose graveyard this card is in right now, if it is in one.
@@ -8550,27 +8626,28 @@ class Game(BaseModel):
         exile-on-leaving-the-stack half still has to apply, and for why
         Underworld Breach (which grants escape, not flashback) is not one.
         """
-        turn = self.turn
-        permission = PlayPermission(
-            card_id=card.id,
-            zone_change_stamp=card.zone_change_stamp,
-            player=player,
-            zone=zone,
-            action=action,
-            pays_mana_cost=pays_mana_cost,
-            flashback=flashback,
-            source_name=source_name,
-            rule=rule,
-            until_end_of_turn=until_end_of_turn and until_next_turn_of is None,
-            granted_turns_taken=None if turn is None else int(turn.turns_taken),
-            bottom_if_unused=bottom_if_unused,
-            immediate=immediate,
-            granted_step=None if turn is None else turn.step,
-            until_next_turn_of=until_next_turn_of,
-            expires_end_of_next_turn=expires_end_of_next_turn,
-        )
-        self.play_permissions.append(permission)
-        return permission
+        with self._id_allocator_scope():
+            turn = self.turn
+            permission = PlayPermission(
+                card_id=card.id,
+                zone_change_stamp=card.zone_change_stamp,
+                player=player,
+                zone=zone,
+                action=action,
+                pays_mana_cost=pays_mana_cost,
+                flashback=flashback,
+                source_name=source_name,
+                rule=rule,
+                until_end_of_turn=until_end_of_turn and until_next_turn_of is None,
+                granted_turns_taken=None if turn is None else int(turn.turns_taken),
+                bottom_if_unused=bottom_if_unused,
+                immediate=immediate,
+                granted_step=None if turn is None else turn.step,
+                until_next_turn_of=until_next_turn_of,
+                expires_end_of_next_turn=expires_end_of_next_turn,
+            )
+            self.play_permissions.append(permission)
+            return permission
 
     def play_permission_for(
         self, card: CardState, player: str, action: PlayAction = PlayAction.CAST
@@ -10373,19 +10450,20 @@ class Game(BaseModel):
         a player would receive priority) - a special action skips the stack
         for *itself*, not for what it triggers.
         """
-        controller = controller or self.controller_of(permanent).username
-        permanent.turn_face_up()
-        self.emit(
-            GameEvent(
-                event=TriggerEvent.TURNED_FACE_UP,
-                subject_id=permanent.id,
-                subject_name=permanent.name,
-                subject_controller=permanent.controller,
-                subject_card=permanent.card,
-                player=controller,
+        with self._id_allocator_scope():
+            controller = controller or self.controller_of(permanent).username
+            permanent.turn_face_up()
+            self.emit(
+                GameEvent(
+                    event=TriggerEvent.TURNED_FACE_UP,
+                    subject_id=permanent.id,
+                    subject_name=permanent.name,
+                    subject_controller=permanent.controller,
+                    subject_card=permanent.card,
+                    player=controller,
+                )
             )
-        )
-        return permanent
+            return permanent
 
     def begin_activating(
         self,
@@ -10895,11 +10973,12 @@ class Game(BaseModel):
 
         A later effect on the same player replaces this one (CR 723.1a).
         """
-        assert self.turn is not None
-        self.player(controller)  # raises if unknown
-        self.player(controlled)
-        self.turn.gain_control_of_player(controller, controlled)
-        self._sync_player_control()
+        with self._id_allocator_scope():
+            assert self.turn is not None
+            self.player(controller)  # raises if unknown
+            self.player(controlled)
+            self.turn.gain_control_of_player(controller, controlled)
+            self._sync_player_control()
 
     def controller_of_player(self, username: str) -> str:
         """Who is making this player's decisions (CR 723.5, 723.8, 723.9).
@@ -11012,15 +11091,16 @@ class Game(BaseModel):
         player-controlling effect never reaches - CR 723.5 hands over every
         choice "the rules or any objects" call for, and conceding is neither.
         """
-        self.player(username)  # raises if unknown
-        if by is not None and by != username:
-            raise ValueError(
-                f"{by} cannot make {username} concede, even while controlling them (CR 723.6)"
-            )
-        if username not in self.conceded:
-            self.conceded.append(username)
-        self._player_left(username)
-        self._check_for_a_winner()
+        with self._id_allocator_scope():
+            self.player(username)  # raises if unknown
+            if by is not None and by != username:
+                raise ValueError(
+                    f"{by} cannot make {username} concede, even while controlling them (CR 723.6)"
+                )
+            if username not in self.conceded:
+                self.conceded.append(username)
+            self._player_left(username)
+            self._check_for_a_winner()
 
     def end_with_winner(self, username: str) -> None:
         self.player(username)  # raises if unknown

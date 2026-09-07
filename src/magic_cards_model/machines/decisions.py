@@ -134,10 +134,10 @@ from collections.abc import Iterable
 from dataclasses import dataclass, field
 from enum import StrEnum
 from itertools import zip_longest
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import TYPE_CHECKING, Annotated, Any, Protocol
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ..models.card_state import TargetRef
 
@@ -979,7 +979,18 @@ class DecisionScript:
     #: dataclass, and a `Protocol` has none to build. The real type callers
     #: should assign is `DecisionProvider | None`; `Any` here is a pydantic
     #: accommodation, not a relaxation of what belongs in this field.
-    provider: Any = None
+    #:
+    #: `exclude=True` (T10): a live provider - the api's per-game mailbox, a
+    #: test's own recording stub - is exactly the shape `Match.card_resolver`
+    #: already carries this same fix for: a plain Python object with no
+    #: pydantic schema of its own, so `Game.model_dump(mode="json")` raised
+    #: `PydanticSerializationError: Unable to serialize unknown type` for any
+    #: game a provider was ever attached to, crashing on the dump rather than
+    #: quietly dropping it. Unlike `card_resolver` this has no name registry
+    #: to bind back by - a decoded game answers from `recorded`/a scripted
+    #: answer instead until a caller sets a live one again, which is already
+    #: `take_from_tape`'s documented order.
+    provider: Annotated[Any, Field(exclude=True)] = None
     #: The replay tape - every `Answer` a previous, paused attempt at this same
     #: command already received, oldest first. Consulted after a scripted
     #: answer and before `provider`, by `take_from_tape`; empty in every

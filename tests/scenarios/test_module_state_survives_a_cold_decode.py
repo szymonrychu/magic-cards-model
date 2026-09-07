@@ -127,7 +127,11 @@ def test_a_token_survives_a_cold_decode_as_a_tokenstate_with_its_override_intact
     # CR 111.7/111.8: the token leaves the battlefield once. `TokenState.
     # move_to`'s own override is what remembers that a second move must be
     # refused.
-    treasure.move_to(Zone.GRAVEYARD)
+    #
+    # Mints the moved card's own `zone_change_stamp` with no `Game` method's
+    # `_id_allocator_scope` open around it here.
+    with scenario.game._id_allocator_scope():  # noqa: SLF001
+        treasure.move_to(Zone.GRAVEYARD)
     assert treasure.left_the_battlefield
 
     decoded = Game.model_validate(scenario.game.model_dump(mode="json"))

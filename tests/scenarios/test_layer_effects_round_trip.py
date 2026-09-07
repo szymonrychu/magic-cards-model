@@ -648,7 +648,10 @@ def test_tishanas_tidebinder_round_trips():
     tidebinder = scenario.creature("Tishana's Tidebinder", "bob")
     rites = scenario.creature("Vampiric Rites", "alice")
     ward_text = "{1}{B}, Sacrifice a creature: You gain 1 life and draw a card."
-    scenario.game.continuous_effects.create(tidebinder, targets=[rites], game=scenario.game)
+    # `ContinuousEffects.create` mints the effect's own id with no `Game`
+    # method's `_id_allocator_scope` open around it here.
+    with scenario.game._id_allocator_scope():  # noqa: SLF001
+        scenario.game.continuous_effects.create(tidebinder, targets=[rites], game=scenario.game)
 
     before = scenario.game.computed_board()
     assert not before.of(rites).has_ability(ward_text)

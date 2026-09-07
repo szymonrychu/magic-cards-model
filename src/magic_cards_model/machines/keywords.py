@@ -937,19 +937,20 @@ def _cycling_effect(activation: KeywordActivation) -> list[CardState]:
     """Cycling's effect: draw a card, or search for one (CR 702.29a, 702.29e)."""
     typed = _typecycling_type(activation.keyword)
     game = activation.game
-    if typed is None:
-        return game.draw_cards(activation.player, 1)
+    with game._id_allocator_scope():  # noqa: SLF001
+        if typed is None:
+            return game.draw_cards(activation.player, 1)
 
-    # CR 702.29e: "Search your library for a [type] card, reveal it, and put it
-    # into your hand. Then shuffle." The shuffle does not happen - a scenario's
-    # rigged library is the point of the scenario - which is the same
-    # concession Solemn Simulacrum's effect entry makes.
-    owner = game.player(activation.player)
-    for state in list(owner.library):
-        if _matches_type(state.card, typed):
-            owner.move(state, Zone.HAND)
-            return [state]
-    return []
+        # CR 702.29e: "Search your library for a [type] card, reveal it, and put it
+        # into your hand. Then shuffle." The shuffle does not happen - a scenario's
+        # rigged library is the point of the scenario - which is the same
+        # concession Solemn Simulacrum's effect entry makes.
+        owner = game.player(activation.player)
+        for state in list(owner.library):
+            if _matches_type(state.card, typed):
+                owner.move(state, Zone.HAND)
+                return [state]
+        return []
 
 
 def _matches_type(card: Card, named: str) -> bool:
@@ -1767,56 +1768,72 @@ def cascade(game: Any, spell: CardState, seed: int | None = None) -> CascadeResu
       offered.
 
     The cards go to the bottom in a random order, which is a real shuffle of a
-    known set rather than the library shuffle the engine does not model; `seed`
-    pins it so a scenario stays reproducible.
+    known set rather than the library shuffle the engine does not model - not
+    CR 701.24's own "shuffle", the same distinction `machines/effects.py`'s
+    graveyard-bottom and hideaway clauses draw, so no shuffle trigger fires
+    here either. `seed` lets a caller pin a literal value; left `None` (every
+    production caller, `_cascade_effect`), the effective seed is `game.
+    shuffle_seed`/`game.shuffles_performed` - the same reproducible-seed
+    convention graveyard-bottom and hideaway already use, and this fell out
+    of following until T10's replay invariant found it: a bare, unseeded
+    `random.Random(None)` reads OS entropy, so two cascades exiling more than
+    one card bottomed them in a different order every process, and a game
+    replayed from its own decoded snapshot put them in an order the original
+    never had.
     """
     from .casting import PlayAction, why_cannot_cast_restriction  # casting imports this module
 
-    controller = spell.controller or game.active_player.username
-    owner = game.player(controller)
-    threshold = spell.card.cmc
+    with game._id_allocator_scope():  # noqa: SLF001
+        controller = spell.controller or game.active_player.username
+        owner = game.player(controller)
+        threshold = spell.card.cmc
 
-    result = CascadeResult()
-    while owner.library:
-        state = owner.library[0]
-        owner.move(state, Zone.EXILE)
-        game.exile.append(state)
-        result.exiled.append(state)
-        if not state.card.is_land and state.card.cmc < threshold:
-            result.hit = state
-            break
+        result = CascadeResult()
+        while owner.library:
+            state = owner.library[0]
+            owner.move(state, Zone.EXILE)
+            game.exile.append(state)
+            result.exiled.append(state)
+            if not state.card.is_land and state.card.cmc < threshold:
+                result.hit = state
+                break
 
-    cast_hit = False
-    if result.hit is not None:
-        restriction = why_cannot_cast_restriction(result.hit, owner.username, game)
-        decision = Decision(
-            kind=DecisionKind.MAY,
-            player=owner.username,
-            prompt=f"cast {result.hit.name} without paying its mana cost (cascade)",
-            source=spell.name,
-            affirmative_is_legal=restriction is None,
+        cast_hit = False
+        if result.hit is not None:
+            restriction = why_cannot_cast_restriction(result.hit, owner.username, game)
+            decision = Decision(
+                kind=DecisionKind.MAY,
+                player=owner.username,
+                prompt=f"cast {result.hit.name} without paying its mana cost (cascade)",
+                source=spell.name,
+                affirmative_is_legal=restriction is None,
+            )
+            cast_hit = bool(game.ask(decision))
+            if cast_hit:
+                result.hit.exile_annotation = ExileAnnotation(
+                    marker=ExileMarker.CASCADE, owner=owner.username
+                )
+                game.grant_play_permission(
+                    result.hit,
+                    owner.username,
+                    action=PlayAction.CAST,
+                    pays_mana_cost=False,
+                    source_name=f"{spell.name}'s cascade",
+                    rule="CR 702.85a",
+                    bottom_if_unused=True,
+                )
+
+        bottomed = [state for state in result.exiled if not (cast_hit and state is result.hit)]
+        effective_seed = (
+            seed if seed is not None else f"{game.shuffle_seed}:{game.shuffles_performed}:cascade"
         )
-        cast_hit = bool(game.ask(decision))
-        if cast_hit:
-            result.hit.exile_annotation = ExileAnnotation(
-                marker=ExileMarker.CASCADE, owner=owner.username
-            )
-            game.grant_play_permission(
-                result.hit,
-                owner.username,
-                action=PlayAction.CAST,
-                pays_mana_cost=False,
-                source_name=f"{spell.name}'s cascade",
-                rule="CR 702.85a",
-                bottom_if_unused=True,
-            )
-
-    bottomed = [state for state in result.exiled if not (cast_hit and state is result.hit)]
-    random.Random(seed).shuffle(bottomed)
-    for state in bottomed:
-        game.exile.remove(state)
-        owner.add(state, Zone.LIBRARY)  # the bottom of the library
-    return result
+        random.Random(effective_seed).shuffle(bottomed)  # noqa: S311
+        if bottomed:
+            game.shuffles_performed += 1
+        for state in bottomed:
+            game.exile.remove(state)
+            owner.add(state, Zone.LIBRARY)  # the bottom of the library
+        return result
 
 
 # --------------------------------------------------------------------------
@@ -1923,20 +1940,21 @@ def dredge(game: Any, card: CardState, player: str) -> list[CardState]:
     by hand, the way a scenario performs the combat turn-based actions: call it
     *instead of* drawing.
     """
-    refusal = why_cannot_dredge(game, card, player)
-    if refusal is not None:
-        raise ValueError(refusal)
-    count = dredge_count(card.card)
-    assert count is not None
+    with game._id_allocator_scope():  # noqa: SLF001
+        refusal = why_cannot_dredge(game, card, player)
+        if refusal is not None:
+            raise ValueError(refusal)
+        count = dredge_count(card.card)
+        assert count is not None
 
-    owner = game.player(player)
-    milled = list(owner.library[:count])
-    for state in milled:
-        owner.move(state, Zone.GRAVEYARD)  # CR 701.17a
-    owner.cards_in(Zone.GRAVEYARD).remove(card)
-    owner.add(card, Zone.HAND)
-    card.move_to(Zone.HAND)
-    return milled
+        owner = game.player(player)
+        milled = list(owner.library[:count])
+        for state in milled:
+            owner.move(state, Zone.GRAVEYARD)  # CR 701.17a
+        owner.cards_in(Zone.GRAVEYARD).remove(card)
+        owner.add(card, Zone.HAND)
+        card.move_to(Zone.HAND)
+        return milled
 
 
 # --------------------------------------------------------------------------
@@ -2067,45 +2085,46 @@ def discard(game: Any, card: CardState, player: str) -> CardState:
     `Player.discard` has no game and so cannot replace anything; see
     `docs/engine-coverage.md` for the hook that would send it here.
     """
-    owner = game.player(player)
-    if card not in owner.cards_in(Zone.HAND):
-        raise ValueError(f"{card.name} is not in {player}'s hand (CR 701.9a)")
+    with game._id_allocator_scope():  # noqa: SLF001
+        owner = game.player(player)
+        if card not in owner.cards_in(Zone.HAND):
+            raise ValueError(f"{card.name} is not in {player}'s hand (CR 701.9a)")
 
-    turn = getattr(getattr(game, "turn", None), "turn_number", None)
+        turn = getattr(getattr(game, "turn", None), "turn_number", None)
 
-    if not madness_replaces_discard(card):
-        owner.move(card, Zone.GRAVEYARD)
-        # CR 702.187b's "as long as you discarded this card this turn", recorded
-        # on the card the far side of the move because that is the object the
-        # clause is about. Not a count - `Game.cards_discarded_this_turn` is
-        # that, and it cannot say *which* card, which is the only thing mayhem
-        # asks. `CardState.move_to` clears it again the moment the card leaves
-        # the graveyard (CR 400.7).
-        card.discarded_by = player
-        card.discarded_on_turn = turn
+        if not madness_replaces_discard(card):
+            owner.move(card, Zone.GRAVEYARD)
+            # CR 702.187b's "as long as you discarded this card this turn", recorded
+            # on the card the far side of the move because that is the object the
+            # clause is about. Not a count - `Game.cards_discarded_this_turn` is
+            # that, and it cannot say *which* card, which is the only thing mayhem
+            # asks. `CardState.move_to` clears it again the moment the card leaves
+            # the graveyard (CR 400.7).
+            card.discarded_by = player
+            card.discarded_on_turn = turn
+            return card
+
+        owner.cards_in(Zone.HAND).remove(card)
+        card.move_to(Zone.EXILE)
+        card.exile_annotation = madness_annotation(card, turn)
+        game.exile.append(card)
+
+        # CR 702.35a's second ability: "When this card is exiled this way ...".
+        # Asked of the exiled card directly rather than through `Game.emit`, which
+        # asks the battlefield and the stack: madness is a triggered ability that
+        # functions in *exile*, so the only object that could ever trigger it is the
+        # card that just got there. CR 603.3 then puts it on the stack with
+        # everything else, the next time a player would receive priority.
+        event = GameEvent(
+            event=TriggerEvent.EXILED,
+            subject_id=card.id,
+            subject_name=card.name,
+            subject_controller=card.controller_or_owner,
+            subject_card=card.card,
+            player=card.owner or player,
+        )
+        game.pending_triggers.extend(triggers_for(game, event, [card]))
         return card
-
-    owner.cards_in(Zone.HAND).remove(card)
-    card.move_to(Zone.EXILE)
-    card.exile_annotation = madness_annotation(card, turn)
-    game.exile.append(card)
-
-    # CR 702.35a's second ability: "When this card is exiled this way ...".
-    # Asked of the exiled card directly rather than through `Game.emit`, which
-    # asks the battlefield and the stack: madness is a triggered ability that
-    # functions in *exile*, so the only object that could ever trigger it is the
-    # card that just got there. CR 603.3 then puts it on the stack with
-    # everything else, the next time a player would receive priority.
-    event = GameEvent(
-        event=TriggerEvent.EXILED,
-        subject_id=card.id,
-        subject_name=card.name,
-        subject_controller=card.controller_or_owner,
-        subject_card=card.card,
-        player=card.owner or player,
-    )
-    game.pending_triggers.extend(triggers_for(game, event, [card]))
-    return card
 
 
 def madness_annotation(card: CardState, turn: int | None = None) -> ExileAnnotation:
@@ -2508,45 +2527,46 @@ def _hideaway_effect(game: Any, ability: AbilityOnStack) -> None:
     source = ability.source(game)
     if source is None or source.zone is not Zone.BATTLEFIELD:
         return
-    printed = ability.ability
-    text = printed.effect if isinstance(printed, TriggeredAbility) else ""
-    match = _HIDEAWAY_COUNT_RE.search(text or "")
-    count = int(match.group("n")) if match is not None else 4
-    controller = game.controller_of(ability)
-    looked = list(controller.library[:count])
-    if not looked:
-        return
-    decision = Decision(
-        kind=DecisionKind.CHOOSE_CARDS,
-        player=controller.username,
-        prompt=f"exile a card face down with {source.name} (hideaway)",
-        source=source.name,
-        amount=1,
-        cards=tuple(state.id for state in looked),
-    )
-    chosen_ids = game.ask(decision)
-    by_id = {state.id: state for state in looked}
-    chosen = by_id[chosen_ids[0]]
-    rest = [state for state in looked if state is not chosen]
-
-    controller.cards_in(Zone.LIBRARY).remove(chosen)
-    chosen.move_to(Zone.EXILE)
-    # CR 702.75a exiles it *face down*, so it stays hidden until the ability
-    # that hid it away lets its controller play it.
-    chosen.face_up = False
-    chosen.exile_annotation = ExileAnnotation(
-        marker=ExileMarker.HIDEAWAY, owner=chosen.owner, linked_permanent_id=source.id
-    )
-    game.exile.append(chosen)
-
-    if rest:
-        rng = random.Random(  # noqa: S311
-            f"{game.shuffle_seed}:{game.shuffles_performed}:hideaway-{source.id}"
+    with game._id_allocator_scope():  # noqa: SLF001
+        printed = ability.ability
+        text = printed.effect if isinstance(printed, TriggeredAbility) else ""
+        match = _HIDEAWAY_COUNT_RE.search(text or "")
+        count = int(match.group("n")) if match is not None else 4
+        controller = game.controller_of(ability)
+        looked = list(controller.library[:count])
+        if not looked:
+            return
+        decision = Decision(
+            kind=DecisionKind.CHOOSE_CARDS,
+            player=controller.username,
+            prompt=f"exile a card face down with {source.name} (hideaway)",
+            source=source.name,
+            amount=1,
+            cards=tuple(state.id for state in looked),
         )
-        rng.shuffle(rest)
-        for state in rest:
-            controller.move(state, Zone.LIBRARY)
-        game.shuffles_performed += 1
+        chosen_ids = game.ask(decision)
+        by_id = {state.id: state for state in looked}
+        chosen = by_id[chosen_ids[0]]
+        rest = [state for state in looked if state is not chosen]
+
+        controller.cards_in(Zone.LIBRARY).remove(chosen)
+        chosen.move_to(Zone.EXILE)
+        # CR 702.75a exiles it *face down*, so it stays hidden until the ability
+        # that hid it away lets its controller play it.
+        chosen.face_up = False
+        chosen.exile_annotation = ExileAnnotation(
+            marker=ExileMarker.HIDEAWAY, owner=chosen.owner, linked_permanent_id=source.id
+        )
+        game.exile.append(chosen)
+
+        if rest:
+            rng = random.Random(  # noqa: S311
+                f"{game.shuffle_seed}:{game.shuffles_performed}:hideaway-{source.id}"
+            )
+            rng.shuffle(rest)
+            for state in rest:
+                controller.move(state, Zone.LIBRARY)
+            game.shuffles_performed += 1
 
 
 #: What one keyword's triggered ability does when it resolves, by keyword.

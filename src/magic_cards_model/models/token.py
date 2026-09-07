@@ -451,64 +451,65 @@ def create_tokens(
     created". That is a check against the rules-modifying continuous effects of
     CR 611.3, which this engine does not have; a token is always created here.
     """
-    if count <= 0:
-        return []
+    with game._id_allocator_scope():
+        if count <= 0:
+            return []
 
-    # Imported here rather than at module scope: `machines/replacement.py` reads
-    # `is_token` off this module, so a top-level import would close the cycle.
-    from ..machines.replacement import EventKind, ReplaceableEvent, apply_replacements
+        # Imported here rather than at module scope: `machines/replacement.py` reads
+        # `is_token` off this module, so a top-level import would close the cycle.
+        from ..machines.replacement import EventKind, ReplaceableEvent, apply_replacements
 
-    creation = ReplaceableEvent(
-        kind=EventKind.CREATE_TOKENS,
-        player=game.player(controller),  # CR 111.2: the creator is the owner
-        amount=count,
-        definition=definition,
-    )
-    apply_replacements(game, creation)
-    count = creation.amount
-    # A replacement effect may add tokens that are not more of `definition` -
-    # Stridehangar Automaton's "those tokens plus an additional 1/1 ... Thopter
-    # ... are created instead". CR 614.6 makes that one modified event, so they
-    # are created here inside the same call and raise no creation event of
-    # their own; a second event would give the same effect a second opportunity
-    # against its own addition, which CR 614.5 refuses and which would not
-    # terminate.
-    extra_definitions = list(creation.extra)
-    if count <= 0 and not extra_definitions:
-        return []
+        creation = ReplaceableEvent(
+            kind=EventKind.CREATE_TOKENS,
+            player=game.player(controller),  # CR 111.2: the creator is the owner
+            amount=count,
+            definition=definition,
+        )
+        apply_replacements(game, creation)
+        count = creation.amount
+        # A replacement effect may add tokens that are not more of `definition` -
+        # Stridehangar Automaton's "those tokens plus an additional 1/1 ... Thopter
+        # ... are created instead". CR 614.6 makes that one modified event, so they
+        # are created here inside the same call and raise no creation event of
+        # their own; a second event would give the same effect a second opportunity
+        # against its own addition, which CR 614.5 refuses and which would not
+        # terminate.
+        extra_definitions = list(creation.extra)
+        if count <= 0 and not extra_definitions:
+            return []
 
-    card = definition.to_card()
-    created: list[TokenState] = []
-    for _ in range(count):
-        token = TokenState(card=card, zone=Zone.STACK, controller=controller)
-        # `zone=Zone.STACK` is only where it is *before* it exists: nothing holds
-        # it, and `enter_the_battlefield` calls `move_to(BATTLEFIELD)` at once.
-        # It is never a token in a zone other than the battlefield for the
-        # purposes of CR 111.7, because no state-based action is checked in
-        # between (CR 704.3 checks only when a player would get priority).
-        game.put_onto_battlefield(token, controller, tapped=tapped)
-        if token.zone is not Zone.BATTLEFIELD:
-            # A replacement effect sent it elsewhere (CR 614.6). CR 111.7 will
-            # have it cease to exist; it is not attacking and takes no counters.
+        card = definition.to_card()
+        created: list[TokenState] = []
+        for _ in range(count):
+            token = TokenState(card=card, zone=Zone.STACK, controller=controller)
+            # `zone=Zone.STACK` is only where it is *before* it exists: nothing holds
+            # it, and `enter_the_battlefield` calls `move_to(BATTLEFIELD)` at once.
+            # It is never a token in a zone other than the battlefield for the
+            # purposes of CR 111.7, because no state-based action is checked in
+            # between (CR 704.3 checks only when a player would get priority).
+            game.put_onto_battlefield(token, controller, tapped=tapped)
+            if token.zone is not Zone.BATTLEFIELD:
+                # A replacement effect sent it elsewhere (CR 614.6). CR 111.7 will
+                # have it cease to exist; it is not attacking and takes no counters.
+                created.append(token)
+                continue
+            if attached_to is not None:
+                token.attach_to(attached_to)  # CR 701.3a
+            for kind, amount in (counters or {}).items():
+                game.add_counters(token, kind, amount)
+            if attacking is not None:
+                _put_onto_the_battlefield_attacking(game, token, attacking)
             created.append(token)
-            continue
-        if attached_to is not None:
-            token.attach_to(attached_to)  # CR 701.3a
-        for kind, amount in (counters or {}).items():
-            game.add_counters(token, kind, amount)
-        if attacking is not None:
-            _put_onto_the_battlefield_attacking(game, token, attacking)
-        created.append(token)
 
-    for extra in extra_definitions:
-        # A different token with its own stated characteristics (CR 111.3), so
-        # none of this call's `tapped`/`attacking`/`counters`/`attached_to`
-        # applies to it: those describe how *these* tokens were asked for, and
-        # the addition was asked for by somebody else's card.
-        addition = TokenState(card=extra.to_card(), zone=Zone.STACK, controller=controller)
-        game.put_onto_battlefield(addition, controller)
-        created.append(addition)
-    return created
+        for extra in extra_definitions:
+            # A different token with its own stated characteristics (CR 111.3), so
+            # none of this call's `tapped`/`attacking`/`counters`/`attached_to`
+            # applies to it: those describe how *these* tokens were asked for, and
+            # the addition was asked for by somebody else's card.
+            addition = TokenState(card=extra.to_card(), zone=Zone.STACK, controller=controller)
+            game.put_onto_battlefield(addition, controller)
+            created.append(addition)
+        return created
 
 
 def create_predefined_tokens(
@@ -605,37 +606,38 @@ def token_copy_of(
     face-down status, and CR 111.12's "a copy of a nonexistent object" - the
     caller has an object in hand, so there is nothing nonexistent to copy.
     """
-    if count <= 0:
-        return []
-    from ..machines.replacement import EventKind, ReplaceableEvent, apply_replacements
+    with game._id_allocator_scope():
+        if count <= 0:
+            return []
+        from ..machines.replacement import EventKind, ReplaceableEvent, apply_replacements
 
-    creation = ReplaceableEvent(
-        kind=EventKind.CREATE_TOKENS,
-        player=game.player(controller),
-        amount=count,
-        # No `TokenDefinition` here: a token copy's characteristics are the
-        # original's copiable values (CR 707.2), not a set of values some
-        # effect stated (CR 111.3). `card` carries the original so a
-        # replacement effect that asks *what kind* of token is being created -
-        # Stridehangar Automaton's "artifact tokens" - has something to read.
-        card=original,
-    )
-    apply_replacements(game, creation)
-    count = creation.amount
-    extra_definitions = list(creation.extra)
+        creation = ReplaceableEvent(
+            kind=EventKind.CREATE_TOKENS,
+            player=game.player(controller),
+            amount=count,
+            # No `TokenDefinition` here: a token copy's characteristics are the
+            # original's copiable values (CR 707.2), not a set of values some
+            # effect stated (CR 111.3). `card` carries the original so a
+            # replacement effect that asks *what kind* of token is being created -
+            # Stridehangar Automaton's "artifact tokens" - has something to read.
+            card=original,
+        )
+        apply_replacements(game, creation)
+        count = creation.amount
+        extra_definitions = list(creation.extra)
 
-    copiable = copiable_card_with_added_abilities(original.card, added_abilities)
+        copiable = copiable_card_with_added_abilities(original.card, added_abilities)
 
-    created: list[TokenState] = []
-    for _ in range(count):
-        copy = TokenState(card=copiable, zone=Zone.STACK, controller=controller)
-        game.put_onto_battlefield(copy, controller, tapped=bool(options.get("tapped")))
-        created.append(copy)
-    for extra in extra_definitions:
-        addition = TokenState(card=extra.to_card(), zone=Zone.STACK, controller=controller)
-        game.put_onto_battlefield(addition, controller)
-        created.append(addition)
-    return created
+        created: list[TokenState] = []
+        for _ in range(count):
+            copy = TokenState(card=copiable, zone=Zone.STACK, controller=controller)
+            game.put_onto_battlefield(copy, controller, tapped=bool(options.get("tapped")))
+            created.append(copy)
+        for extra in extra_definitions:
+            addition = TokenState(card=extra.to_card(), zone=Zone.STACK, controller=controller)
+            game.put_onto_battlefield(addition, controller)
+            created.append(addition)
+        return created
 
 
 def _put_onto_the_battlefield_attacking(
