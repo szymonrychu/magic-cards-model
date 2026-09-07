@@ -1194,6 +1194,46 @@ def why_cannot_cast_from(spell: CardState, caster: str, zone: Zone, game: Any = 
 
 
 # --------------------------------------------------------------------------
+# Whether a card is a spell at all (CR 305.1, CR 300.2a)
+# --------------------------------------------------------------------------
+
+
+def why_cannot_cast_a_land(spell: CardState) -> str | None:
+    """CR 305.1: a land is never a spell, so it can never be cast - not even
+    together with another card type that ordinarily could be (CR 300.2a).
+
+    CR 305.1's own closing sentence: "Since the land doesn't go on the
+    stack, it is never a spell, and players can't respond to it with
+    instants or activated abilities." CR 300.2a: "An object that's both a
+    land and another card type (for example, an artifact land) can only be
+    played as a land. It can't be cast as a spell."
+
+    Checked ahead of every other refusal in `Casting.model_post_init`, so a
+    land is refused *before* CR 601.2a would otherwise move it to the
+    stack - a land was never a spell to begin with, so there is nothing for
+    CR 601.2a's own opening sentence ("To propose the casting of a spell...")
+    to be about. Without this, `why_cannot_cast_now`'s CR 117.1a reading
+    passes a land straight through: that check is purely about *when* a
+    cast is timed, never about *what* can be cast at all, so a land sitting
+    in the active player's own main phase with an empty stack satisfies
+    `Game.can_cast_sorcery` exactly the way a real spell would. Left
+    unguarded, `Casting` would go on to build a real announcement - and
+    `Game.cast` would then refuse deep inside cost determination with
+    `_refuse_unless_mana_cost_payable`'s CR 118.6 message, which is a lie
+    for a land: a land's blank mana-cost corner is not an *unpayable cost*
+    CR 118.6a's alternative-cost escape hatch (Suspend, say) could ever
+    make payable - a land was never a spell whose cost that rule could speak
+    to in the first place.
+    """
+    if Type.LAND in spell.card.types:
+        return (
+            f"{spell.name} is a land (CR 305.1); a land never goes on the stack, is "
+            f"never a spell, and cannot be cast"
+        )
+    return None
+
+
+# --------------------------------------------------------------------------
 # When a card may be cast (CR 117.1a, CR 702.8a)
 # --------------------------------------------------------------------------
 
@@ -1371,6 +1411,46 @@ def why_cannot_cast_restriction(spell: CardState, caster: str, game: Any = None)
             f"{spell.zone.value} (CR 601.3, CR 101.2)"
         )
     return None
+
+
+def why_mana_cost_unpayable(
+    name: str, base_cost: ManaCost, alternative_cost: TotalCost | None = None
+) -> str | None:
+    """CR 118.6: a card with no printed mana cost has an unpayable cost, or None.
+
+    "Some objects have no mana cost. This represents an unpayable cost." This
+    is not the same thing as a printed {0}: CR 118.5a's "{0}" is a real, if
+    empty, cost that "must still be cast the same way as one with a cost
+    greater than zero", so it parses to one generic symbol worth zero
+    (`ManaCost.parse("{0}").symbols` is non-empty). A card with no mana
+    symbols at all - Living End's blank corner, `Card.mana_cost == ""` with
+    no `card_faces` to fall back to - parses to no symbols at all, and
+    CR 118.6 says that cost cannot be paid, full stop.
+
+    CR 118.6a is the escape hatch: "If an alternative cost is applied to an
+    unpayable cost, including an effect that allows a player to cast a spell
+    without paying its mana cost, ... the cost becomes payable." - which is
+    what `alternative_cost is not None` reports: CR 118.9's alternative cost
+    machinery having actually run (`Casting.alternative_cost`), or a `CAST`
+    action `legal_actions` already knows is not paying the base cost at all.
+
+    Pure over `(name, base_cost, alternative_cost)` on purpose: `Casting.
+    _refuse_unless_mana_cost_payable` and `legal_actions._cast_action` both
+    ask this identical question - one before raising to unwind an
+    announcement, the other before ever building one - and sharing the one
+    implementation is what keeps a `CAST` action's own `Affordability.NO`
+    from ever disagreeing with what `Game.cast` would actually refuse.
+    """
+    if alternative_cost is not None:
+        return None
+    if base_cost.symbols:
+        return None
+    return (
+        f"{name} has no mana cost, which CR 118.6 makes an unpayable "
+        f"cost - it cannot be cast this way. Some alternative or additional cost "
+        f"permission (a keyword like Suspend, or a resolving effect's permission "
+        f"to cast it without paying its mana cost) must apply instead (CR 118.6a)."
+    )
 
 
 #: Mindbreak Trap's shape of CR 118.9 offer: the same "rather than pay this
@@ -1707,13 +1787,18 @@ class Casting(BaseModel):
     to the stack has already made it a new object that nobody discarded."""
 
     def model_post_init(self, _context: object) -> None:
-        """CR 601.3: the announcement is refused if the timing does not allow it,
-        and CR 601.2a: the card moves to the stack the moment it is not.
+        """CR 305.1: a land is refused outright, before anything else, because
+        it was never a spell to begin with; then CR 601.3: the announcement
+        is refused if the timing does not allow it; then CR 601.2a: the card
+        moves to the stack the moment it is not.
 
         "A player can begin to cast a spell only if a rule or effect allows that
         player to cast it and no rule or effect prohibits that player from
         casting it." The timing rules of CR 117.1a are such a prohibition, so
-        they are checked here rather than after the cost has been paid.
+        they are checked here rather than after the cost has been paid - but
+        both of those questions presuppose a spell in the first place
+        (`why_cannot_cast_a_land`'s own docstring is why that check runs
+        first, not after).
 
         Then CR 601.2a runs: "To propose the casting of a spell, a player first
         moves that card (or that copy of a card) from where it is to the stack.
@@ -1724,6 +1809,9 @@ class Casting(BaseModel):
         itself - and why announcing a cast empties the zone the card came from
         straight away.
         """
+        refusal = why_cannot_cast_a_land(self.spell)
+        if refusal is not None:
+            raise ValueError(refusal)
         refusal = why_cannot_cast_now(self.spell, self.caster, self.game)
         if refusal is not None:
             raise ValueError(refusal)
@@ -2565,34 +2653,17 @@ class Casting(BaseModel):
         """Omniscience's shape: a permanent the caster controls whose static
         ability applies CR 118.9's alternative cost of nothing to their spells.
 
-        Read line by line and only from a genuine `AbilityKind.STATIC` line
-        (CR 604.1), the same way `Game.static_cost_modifiers_for` reads a
-        board-wide cost modifier - a sentence inside an activated ability's
-        effect is gated on that ability being activated and is not a static
-        ability at all (CR 602.1).
+        Ported to `static_free_cast_grants` below so `Game.alternative_costs_for`
+        can ask this same pure question before any `Casting` exists - it reads
+        only `game.battlefield`/`caster`, nothing an in-flight announcement
+        knows that a `(game, caster)` pair does not already say.
         """
-        if self.game is None:
-            return []
-        found: list[tuple[str, StaticFreeCastGrant]] = []
-        for permanent in getattr(self.game, "battlefield", []):
-            if permanent.controller != self.caster:
-                continue
-            up_face_name = permanent.up_face_name or permanent.card.name
-            static_lines = {
-                ability.raw.strip()
-                for ability in parse_abilities(permanent.card)
-                if ability.face == up_face_name and ability.kind is AbilityKind.STATIC
-            }
-            for line in static_lines:
-                grant = static_free_cast_grant(line)
-                if grant is not None:
-                    found.append((permanent.card.name, grant))
-        return found
+        return static_free_cast_grants(self.game, self.caster)
 
     def _spell_is_type(self, type_word: str) -> bool:
         """Whether the spell has the card type a static grant names
         (CR 205.2b: a card with more than one type has all of them)."""
-        return type_word.lower() in (self.spell.card.type_line or "").lower()
+        return spell_has_type_word(self.spell.card, type_word)
 
     def use_alternative_cost(
         self,
@@ -3439,35 +3510,20 @@ class Casting(BaseModel):
     def _refuse_unless_mana_cost_payable(self) -> None:
         """CR 118.6: a card with no printed mana cost has an unpayable cost.
 
-        "Some objects have no mana cost. This represents an unpayable cost."
-        This is not the same thing as a printed {0}: CR 118.5a's "{0}" is a
-        real, if empty, cost that "must still be cast the same way as one with
-        a cost greater than zero", so it parses to one generic symbol worth
-        zero (`ManaCost.parse("{0}").symbols` is non-empty). A card with no
-        mana symbols at all - Living End's blank corner, `Card.mana_cost ==
-        ""` with no `card_faces` to fall back to - parses to no symbols at
-        all, and CR 118.6 says that cost cannot be paid, full stop.
-
-        CR 118.6a is the escape hatch: "If an alternative cost is applied to
-        an unpayable cost, including an effect that allows a player to cast a
-        spell without paying its mana cost, ... the cost becomes payable."
         `self.alternative_cost` is set exactly when CR 118.9's alternative
         cost machinery ran - `use_keyword` (Suspend's own free cast, once its
         last time counter comes off), `use_permission` (Shardless Agent's
         cascade hit), or `use_pitch_cost` - so this only refuses the *plain*
         hardcast CR 601.2b never grants Living End on its own: no black
-        source on the battlefield, no alternative cost, no announcement.
+        source on the battlefield, no alternative cost, no announcement. See
+        `why_mana_cost_unpayable`, which does the actual check - shared with
+        `legal_actions._cast_action`, which asks the identical question
+        before any `Casting` exists, so a `CAST` action's own `Action.
+        affordable` can never disagree with what this would raise.
         """
-        if self.alternative_cost is not None:
-            return
-        if self.base_cost.symbols:
-            return
-        raise ValueError(
-            f"{self.spell.name} has no mana cost, which CR 118.6 makes an unpayable "
-            f"cost - it cannot be cast this way. Some alternative or additional cost "
-            f"permission (a keyword like Suspend, or a resolving effect's permission "
-            f"to cast it without paying its mana cost) must apply instead (CR 118.6a)."
-        )
+        refusal = why_mana_cost_unpayable(self.spell.name, self.base_cost, self.alternative_cost)
+        if refusal is not None:
+            raise ValueError(refusal)
 
     def _refuse_unless_allowed_from_its_zone(self) -> None:
         """CR 601.3: a spell cast from anywhere but the hand needs permission -
@@ -3857,6 +3913,52 @@ class Casting(BaseModel):
 
 def _as_mana(amount: ManaCost | str) -> ManaCost:
     return ManaCost.parse(amount) if isinstance(amount, str) else amount
+
+
+# --------------------------------------------------------------------------
+# CR 118.9's PERMISSION and STATIC alternative-cost sources, pure over
+# `(game, caster, card)` - used by both `Casting.alternative_costs` (an
+# in-flight announcement) and `Game.alternative_costs_for` (before any
+# `Casting` exists). Neither branch reads anything an in-flight proposal
+# knows that the plain `game`/`caster`/`card` triple does not already say:
+# `play_permissions_on` is keyed off the object's own CR 400.7 identity, and
+# `static_free_cast_grants` is a board read gated on `caster` alone.
+# --------------------------------------------------------------------------
+
+
+def static_free_cast_grants(game: Any, caster: str) -> list[tuple[str, StaticFreeCastGrant]]:
+    """Omniscience's shape: a permanent `caster` controls whose static
+    ability applies CR 118.9's alternative cost of nothing to their spells.
+
+    Read line by line and only from a genuine `AbilityKind.STATIC` line
+    (CR 604.1), the same way `Game.static_cost_modifiers_for` reads a
+    board-wide cost modifier - a sentence inside an activated ability's
+    effect is gated on that ability being activated and is not a static
+    ability at all (CR 602.1).
+    """
+    if game is None:
+        return []
+    found: list[tuple[str, StaticFreeCastGrant]] = []
+    for permanent in getattr(game, "battlefield", []):
+        if permanent.controller != caster:
+            continue
+        up_face_name = permanent.up_face_name or permanent.card.name
+        static_lines = {
+            ability.raw.strip()
+            for ability in parse_abilities(permanent.card)
+            if ability.face == up_face_name and ability.kind is AbilityKind.STATIC
+        }
+        for line in static_lines:
+            grant = static_free_cast_grant(line)
+            if grant is not None:
+                found.append((permanent.card.name, grant))
+    return found
+
+
+def spell_has_type_word(card: Card, type_word: str) -> bool:
+    """Whether `card` has the card type a static grant names (CR 205.2b: a
+    card with more than one type has all of them)."""
+    return type_word.lower() in (card.type_line or "").lower()
 
 
 # --------------------------------------------------------------------------

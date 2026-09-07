@@ -755,7 +755,44 @@ def _auto_tap_candidates(
       is not a mana source at present, so Mox Amber is not offered with no
       legendary creature or planeswalker to name a colour among.
     """
-    candidates: list[tuple[CardState, list[list[Color]], ManaRestriction | None, bool]] = []
+    scanned = _scan_mana_candidates(payment, sources)
+    return _filter_candidate_scan(scanned, payment.spend)
+
+
+#: `_scan_mana_candidates`'s own row: a candidate plus the `any_color` flag
+#: `_flexibility` needs to order it, before CR 106.6's restriction is judged
+#: against any particular `ManaSpend`.
+_ScannedCandidate = tuple[CardState, list[list[Color]], ManaRestriction | None, bool]
+
+
+def _scan_mana_candidates(
+    payment: "CostPayment | _SpendContext", sources: Iterable[CardState]
+) -> list[_ScannedCandidate]:
+    """The board-reading half of `_auto_tap_candidates`, with CR 106.6's
+    restriction recorded but not yet judged against any particular spend.
+
+    Every check this makes - `can_tap_for_mana`, CR 602.5's
+    `_activation_refused`, `ability.effective`'s board survey - reads the
+    battlefield and the payer, never `payment.spend`; only the one line this
+    used to end on (`restriction.allows(payment.spend)`) is spend-dependent,
+    and it is deliberately left for `_filter_candidate_scan` to apply
+    afterwards. That split is what makes this list reusable: within one
+    `legal_actions` enumeration the battlefield does not change from one
+    action's cost to the next, so this expensive scan - `Game.computed_board`/
+    `characteristics_of` underneath `can_tap_for_mana`/`_activation_refused`,
+    the dominant cost `memory/flow-based-auto-tap-source-grouping.md`
+    measured at ~80ms per call - runs once via `mana_candidate_scan` and every
+    per-action `could_pay_mana_cost` call reuses it, paying only the cheap
+    restriction filter each time.
+
+    Sorting happens here rather than after filtering: the sort key
+    (`_flexibility`, whether a restriction is present at all) never reads
+    `payment.spend`, so sorting before or after dropping the entries a given
+    spend disallows yields the same relative order for what remains - one
+    scan, one sort, safe to filter as many times as there are spends to ask
+    about.
+    """
+    candidates: list[_ScannedCandidate] = []
     for source in sources:
         if source.zone is not Zone.BATTLEFIELD or source.tapped:
             continue
@@ -772,8 +809,6 @@ def _auto_tap_candidates(
                 continue
             printed = spend_restriction(activation.effect)
             restriction = spend_restriction(printed.text, source) if printed is not None else None
-            if restriction is not None and not restriction.allows(payment.spend):
-                continue
             options, any_color = ability.effective(
                 land_types,
                 own_counters,
@@ -790,7 +825,40 @@ def _auto_tap_candidates(
     # that can do less is the mana spent - the same preference `ManaPool._buckets`
     # applies inside the pool, applied here to which ability is activated.
     candidates.sort(key=lambda item: (_flexibility(item[1], item[3]), item[2] is None))
-    return [(source, options, restriction) for source, options, restriction, _any in candidates]
+    return candidates
+
+
+def _filter_candidate_scan(
+    scanned: list[_ScannedCandidate], spend: "ManaSpend | None"
+) -> list[_Candidate]:
+    """`_scan_mana_candidates`'s rows narrowed to the ones CR 106.6 permits
+    `spend` to draw on, in the `_Candidate` shape `_group_by_source` takes.
+
+    The cheap half of what `_auto_tap_candidates` used to do in one pass -
+    `mana_candidate_scan`/`_scan_mana_candidates` is the half that costs
+    anything.
+    """
+    return [
+        (source, options, restriction)
+        for source, options, restriction, _any in scanned
+        if restriction is None or restriction.allows(spend)
+    ]
+
+
+def mana_candidate_scan(
+    sources: Iterable[CardState], *, game: Any = None, payer: str | None = None
+) -> list[_ScannedCandidate]:
+    """The public entry point for hoisting `_scan_mana_candidates` out of a
+    loop over several costs - `legal_actions` calls this exactly once per
+    enumeration and passes the result to every `could_pay_mana_cost` call it
+    makes for that player, as `candidate_scan`.
+
+    Built with no `spend` at all: as `_scan_mana_candidates` documents, the
+    scan itself never reads `payment.spend`, so one scan serves every action's
+    own spend purpose - `could_pay_mana_cost` applies `_filter_candidate_scan`
+    with its own `spend` against the same rows.
+    """
+    return _scan_mana_candidates(_SpendContext(game=game, payer=payer, spend=None), sources)
 
 
 def _withheld_mana_sources(
@@ -1218,6 +1286,7 @@ def _solve_auto_tap_flow(
     base_snow: dict[Color, int],
     base_restricted: list[Any],
     life_available: int,
+    candidate_scan: list[_ScannedCandidate] | None = None,
 ) -> _TapPlan | None:
     """The pure half of `auto_tap`: find a legal tapping-and-colour plan for
     `owed` out of `sources`, or None if none exists. Mutates nothing - no
@@ -1241,6 +1310,25 @@ def _solve_auto_tap_flow(
     `base_floating`/`base_snow`/`base_restricted` alone - `CostPayment.
     shortfall`'s own check, folded in here so both callers get it for free
     rather than needing their own copy of "is anything left to tap at all".
+
+    `candidate_scan` is `mana_candidate_scan`'s output, hoisted by a caller
+    that is about to ask this question many times over the same battlefield -
+    `Game.legal_actions` is the one that exists today. Passed, the expensive
+    per-source board scan (`_scan_mana_candidates`) is skipped entirely and
+    only the cheap CR 106.6 filter (`_filter_candidate_scan`) runs against
+    `context.spend`; omitted (`None`), the scan runs fresh exactly as before.
+
+    `candidate_scan` is filtered down to `sources` first, rather than trusted
+    outright: a caller that hoisted the scan over a wider battlefield than
+    the `sources` it passes here (a narrower "these permanents only" question
+    asked mid-enumeration) would otherwise get the wider scan's answer
+    silently substituted for the narrower one it actually asked, which can
+    turn a real `False` into a wrong `True`. `Game.legal_actions`'s own usage
+    never triggers this - it always hoists the scan over the same
+    `game.battlefield` it then passes as `sources` - but `could_pay_mana_cost`
+    is a public entry point and nothing enforces that pairing for every future
+    caller, so the filter is applied unconditionally rather than trusted by
+    convention.
     """
     pool = ManaPool(
         floating=dict(base_floating),
@@ -1250,7 +1338,12 @@ def _solve_auto_tap_flow(
     if pool.can_pay(owed, life_available=life_available, spend=context.spend):
         return []
 
-    grouped = _group_by_source(_auto_tap_candidates(context, list(sources)))
+    if candidate_scan is not None:
+        source_ids = {source.id for source in sources}
+        scanned = [entry for entry in candidate_scan if entry[0].id in source_ids]
+    else:
+        scanned = _scan_mana_candidates(context, sources)
+    grouped = _group_by_source(_filter_candidate_scan(scanned, context.spend))
     simple = [
         (source, alternatives) for source, alternatives in grouped if not _is_exotic(alternatives)
     ]
@@ -1279,6 +1372,7 @@ def _solve_auto_tap(
     base_snow: dict[Color, int],
     base_restricted: list[Any],
     life_available: int,
+    candidate_scan: list[_ScannedCandidate] | None = None,
 ) -> _TapPlan | None:
     """`auto_tap`/`could_pay_mana_cost`'s actual entry point - see
     `_solve_auto_tap_flow`, which this calls directly. Kept as its own name so
@@ -1295,6 +1389,7 @@ def _solve_auto_tap(
         base_snow=base_snow,
         base_restricted=base_restricted,
         life_available=life_available,
+        candidate_scan=candidate_scan,
     )
 
 
@@ -1305,6 +1400,7 @@ def could_pay_mana_cost(
     game: Any = None,
     payer: str | None = None,
     spend: "ManaSpend | None" = None,
+    candidate_scan: list[_ScannedCandidate] | None = None,
 ) -> bool:
     """Whether `cost` could be paid right now from `sources` plus whatever
     mana `payer` already has floating - the public engine entry point for
@@ -1329,6 +1425,12 @@ def could_pay_mana_cost(
     gameless payment for a unit test: omitted, this asks only whether `cost`
     is payable from `sources` alone, with no floating mana and no life to
     spend on a Phyrexian symbol.
+
+    `candidate_scan` is `mana_candidate_scan(sources, game=game, payer=payer)`,
+    computed once by a caller asking this question repeatedly over the same
+    battlefield (`Game.legal_actions`) and passed to every call so the
+    expensive board scan behind it runs exactly once per enumeration rather
+    than once per candidate action - see `_solve_auto_tap_flow`.
     """
     context = _SpendContext(game=game, payer=payer, spend=spend)
     floating: dict[Color, int] = {}
@@ -1357,6 +1459,7 @@ def could_pay_mana_cost(
         base_snow=snow,
         base_restricted=restricted,
         life_available=life_available,
+        candidate_scan=candidate_scan,
     )
     return plan is not None
 

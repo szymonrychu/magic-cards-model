@@ -1,5 +1,6 @@
 """Pydantic data models."""
 
+from .action import Action, ActionKind, Affordability, TargetSlot
 from .card import Card, CardFace, Color, Layout, Legalities, Legality, Rarity, Supertype, Type
 from .card_state import CardState, TargetKind, TargetRef
 from .deck import CardResolver, Deck, DeckIllegal, DeckLimits
@@ -10,6 +11,9 @@ from .player import Player
 from .zone import Zone
 
 __all__ = [
+    "Action",
+    "ActionKind",
+    "Affordability",
     "Card",
     "CardFace",
     "CardResolver",
@@ -31,6 +35,7 @@ __all__ = [
     "Supertype",
     "TargetKind",
     "TargetRef",
+    "TargetSlot",
     "Type",
     "Zone",
 ]

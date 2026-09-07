@@ -25,10 +25,19 @@ from ..machines.abilities import (
     parse_mana_abilities,
 )
 from ..machines.casting import (
+    AlternativeCostOption,
+    AlternativeCostSource,
     Casting,
+    KeywordCastOption,
     PlayAction,
     PlayPermission,
+    _printed_alternative_total_cost,
+    granted_cast_options,
+    keyword_cast_options,
+    marker_cast_options,
     play_permissions_on,
+    spell_has_type_word,
+    static_free_cast_grants,
     usable_play_permission,
     why_cannot_cast_restriction,
 )
@@ -52,6 +61,7 @@ from ..machines.cost import (
     CostModifierNotice,
     CostPayment,
     TotalCost,
+    alternative_cost_offers,
     among_colors,
     cost_component_for_phrase,
     cost_modifier_effect,
@@ -134,7 +144,7 @@ from ..machines.layers import (
     only_this_incarnation,
     spend_effect_effects,
 )
-from ..machines.modes import substitute_x
+from ..machines.modes import modal_profile, substitute_x
 from ..machines.objects_as_costs import convoke as pay_convoke
 from ..machines.objects_as_costs import delve as pay_delve
 from ..machines.opening_hand import (
@@ -156,6 +166,7 @@ from ..machines.replacement import (
 from ..machines.targeting import (
     TargetingProfile,
     profile_for_modes,
+    profile_for_modes_with_owners,
     profile_for_text,
     targeting_profile,
 )
@@ -185,6 +196,7 @@ from ..machines.turn import (
     Step,
     TurnMachine,
 )
+from .action import Action
 from .card import Card, Color, Layout, Supertype, Type
 from .card_state import (
     CardState,
@@ -956,6 +968,20 @@ class PreventionShield(BaseModel):
     @property
     def spent(self) -> bool:
         return self.used_up or (self.kind is ShieldKind.AMOUNT and self.amount <= 0)
+
+
+class ObjectCostOffer(BaseModel):
+    """One convoke/delve/crew offer for a card's cost, and the cards eligible
+    to pay it right now - `Game.object_cost_offers`'s own answer, typed so a
+    caller can read it without importing `machines/objects_as_costs.py`."""
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    rule: str
+    number: int | None = None
+    """Crew's own printed number (CR 702.122a); `None` for convoke and delve,
+    which name no fixed total."""
+    candidates: list[CardState] = Field(default_factory=list)
 
 
 class Game(BaseModel):
@@ -6198,6 +6224,120 @@ class Game(BaseModel):
             return thing
         return None
 
+    def targetable_objects(self) -> list[Any]:
+        """Every object a target could name right now: every player, every
+        card in a public zone (CR 400.2 - the battlefield, every graveyard,
+        every exile), and every spell or ability on the stack.
+
+        This is engine knowledge, not API knowledge - moved out of
+        `magic_cards_model_api.affordances._all_targetables`, which hardcoded
+        the same walk, so `legal_targets` below and any future caller share
+        one answer to "what could a target possibly name" instead of the api
+        maintaining a second copy that could drift from the engine's own
+        rules. A hand or library card is deliberately absent - nothing in
+        this pool targets one, and enumerating a hidden zone is exactly what
+        the visibility layer exists to prevent.
+        """
+        things: list[Any] = list(self.players)
+        for zone in (Zone.BATTLEFIELD, Zone.GRAVEYARD, Zone.EXILE):
+            for state in self.shared_zones.get(zone, []):
+                if isinstance(state, CardState):
+                    things.append(state)
+        for player in self.players:
+            for zone in (Zone.BATTLEFIELD, Zone.GRAVEYARD, Zone.EXILE):
+                things.extend(player.cards_in(zone))
+        things.extend(self.stack)
+        return things
+
+    def _announcement_profile(
+        self,
+        state: CardState,
+        *,
+        ability_index: int | None,
+        modes: list[int] | None,
+        x_value: int | None,
+    ) -> TargetingProfile:
+        """What `state` may legally target, for an announcement that has not
+        happened yet - `legal_targets`'s own reading of CR 601.2c/700.2c,
+        before any `Casting` or `AbilityOnStack` exists to ask.
+
+        The same three-way read `magic_cards_model_api.affordances._profile_for`
+        used to hardcode: an activated ability's own effect text names the
+        profile when `ability_index` is given; a modal card's *chosen* modes
+        name it when `modes` is given (CR 700.2c: an unchosen mode's targets do
+        not apply); the whole card's text, with `x_value` substituted first
+        (CR 107.3a), otherwise. Kept in the engine so `legal_actions` and any
+        other caller ask the same question the api's UI hints already did,
+        rather than the api holding the only copy of how to ask it.
+        """
+        if ability_index is not None:
+            ability = self.activated_abilities(state)[ability_index]
+            effect = getattr(ability, "effect", None) or getattr(ability, "text", "")
+            return profile_for_text(substitute_x(effect, x_value))
+        modal = modal_profile(state.card)
+        if modes and modal is not None:
+            chosen = modal.resolve(modes)
+            profile, _owners = profile_for_modes_with_owners(state.card, chosen, x_value)
+            return profile
+        if modal is None and x_value is not None and state.card.oracle_text:
+            return profile_for_text(substitute_x(state.card.oracle_text, x_value))
+        return targeting_profile(state.card)
+
+    def legal_targets(
+        self,
+        source: CardState,
+        caster: str,
+        *,
+        ability_index: int | None = None,
+        modes: list[int] | None = None,
+        x_value: int | None = None,
+    ) -> tuple[tuple[Any, ...], ...]:
+        """Every legal target for each requirement `source` would announce
+        right now, one tuple per requirement (CR 601.2c) - the enumerating
+        cousin of `legal_target` above, which only rechecks one target already
+        chosen (CR 608.2b).
+
+        `TargetRequirement.rejects` is the single predicate both this and
+        `legal_target` call, so a candidate list built here can never disagree
+        with what an actual announcement would accept or refuse - the same
+        argument `could_pay_mana_cost` already makes for `auto_tap`
+        (`machines/cost.py`).
+
+        Returns `()` when the profile could not be read or names no
+        requirements at all (an unmodelled targeting phrase, or a card with
+        none) - an empty tuple of tuples rather than a tuple of empty ones, so
+        a caller can tell "nothing here targets" from "every requirement
+        happens to have no legal candidate right now".
+        """
+        profile = self._announcement_profile(
+            source, ability_index=ability_index, modes=modes, x_value=x_value
+        )
+        if not profile.understood or not profile.requirements:
+            return ()
+        pool = self.targetable_objects()
+        result: list[tuple[Any, ...]] = []
+        for requirement in profile.requirements:
+            legal = tuple(
+                thing
+                for thing in pool
+                if not (thing is source and source.zone is not Zone.STACK)
+                and requirement.rejects(thing, caster, self, source.id) is None
+            )
+            result.append(legal)
+        return tuple(result)
+
+    def legal_actions(self, player: str, *, pending: PendingDecision | None = None) -> list[Action]:
+        """Every legal action `player` could take right now -
+        `machines.legal_actions.legal_actions` bound here, since three of
+        `machines/cost.py`'s own docstrings already cite it as `Game.
+        legal_actions`. See that module's own docstring for what "legal"
+        means (never gated on affordability), what a pending `Decision` does
+        to the answer, and what is deliberately not enumerated.
+        """
+        from ..machines.legal_actions import legal_actions as _legal_actions
+
+        return _legal_actions(self, player, pending=pending)
+
     def _resolution_profile(self, spell: CardState) -> "TargetingProfile":
         """What this spell may legally be targeting now (CR 608.2b, 700.2c).
 
@@ -8284,6 +8424,192 @@ class Game(BaseModel):
     ) -> PlayPermission | None:
         """The live permission letting `player` take `action` with `card`, or None."""
         return usable_play_permission(self, card, player, action)
+
+    def alternative_costs_for(self, card: CardState, caster: str) -> list[AlternativeCostOption]:
+        """CR 118.9's alternative-cost menu for `card`, answerable before any
+        `Casting` exists.
+
+        `magic_cards_model_api.affordances.alternative_costs` used to build a
+        throw-away `Casting` on a `dry_run_copy(game)` purely to ask this
+        question - CR 601.2a moves the card to the stack as the *first* step
+        of proposing a cast, so answering "what could this be cast for"
+        needed a whole deep copy of the game just to avoid mutating the real
+        one. This is the pure port instead: the same PRINTED and KEYWORD
+        halves `Casting.alternative_costs` builds, read directly off
+        `alternative_cost_offers`, `keyword_cast_options`, `marker_cast_options`,
+        and `granted_cast_options` - none of which need a live announcement,
+        because none of them ask anything a `Casting` in flight would know
+        that `card.zone` does not already say.
+
+        `legal_actions` is what this is for: Force of Negation for `{1}{U}{U}`
+        and pitched are two different cast actions with two different costs,
+        and this is how it finds the second one without ever moving the card.
+
+        All four of `Casting.alternative_costs`'s sources are reproduced,
+        PERMISSION and STATIC included. Both were once thought to need an
+        in-flight `Casting`'s own state - they do not: `play_permissions_on`
+        is keyed off `card`'s own CR 400.7 identity, which `card` already
+        carries before any `Casting` exists, and `static_free_cast_grants`
+        (cascade, Ugin's exiled cards, Omniscience) is a pure read of
+        `self.battlefield`/`caster`. This is the same gap that made a
+        cascade hit or an Omniscience-enabled spell invisible to this menu.
+        """
+        options: list[AlternativeCostOption] = []
+        origin_zone = card.zone
+        for offer in alternative_cost_offers(card.card):
+            cost = _printed_alternative_total_cost(offer.phrase, payer=caster)
+            unavailable: str | None = None
+            if cost is None:
+                unavailable = f"{card.name}'s alternative cost {offer.phrase!r} could not be read"
+            elif offer.requires_not_your_turn and not (
+                self.turn is not None and self.turn.active_player != caster
+            ):
+                unavailable = (
+                    f"{card.name}'s alternative cost can only be paid on an opponent's turn"
+                )
+            options.append(
+                AlternativeCostOption(
+                    index=len(options),
+                    source=AlternativeCostSource.PRINTED,
+                    rule="CR 118.9",
+                    source_name=card.name,
+                    description=offer.phrase,
+                    cost=cost,
+                    requires=sum(component.required for component in cost.components)
+                    if cost
+                    else 0,
+                    unavailable=unavailable,
+                )
+            )
+
+        keyword_options: list[tuple[str, KeywordCastOption]] = [
+            (card.name, option)
+            for option in keyword_cast_options(card.card) + marker_cast_options(card)
+        ]
+        # CR 610.5: a keyword another permanent grants as this spell is cast is
+        # an alternative cost like any other printed one.
+        keyword_options.extend(
+            (granted.source_name, granted.option)
+            for granted in granted_cast_options(self, card, caster, origin_zone)
+        )
+        for offering_card, keyword_option in keyword_options:
+            if keyword_option.pays_mana_cost:
+                # A permission that still charges the mana cost (warp's second
+                # half, flashback still charging a cost) is a zone permission,
+                # not a CR 118.9 alternative cost.
+                continue
+            cost = keyword_option.cost
+            options.append(
+                AlternativeCostOption(
+                    index=len(options),
+                    source=AlternativeCostSource.KEYWORD,
+                    rule=keyword_option.rule,
+                    source_name=offering_card,
+                    keyword=keyword_option.keyword,
+                    description=str(cost) if cost is not None else "nothing",
+                    cost=cost,
+                    requires=sum(component.required for component in cost.components)
+                    if cost
+                    else 0,
+                    unavailable=keyword_option.why_not(card, caster, self, origin=origin_zone),
+                )
+            )
+
+        for permission in play_permissions_on(self, card):
+            if permission.pays_mana_cost:
+                continue
+            options.append(
+                AlternativeCostOption(
+                    index=len(options),
+                    source=AlternativeCostSource.PERMISSION,
+                    rule=permission.rule,
+                    source_name=permission.source_name,
+                    # CR 107.3b keeps "no cost at all" apart from a cost of
+                    # {0}, so this says nothing rather than {0}.
+                    description="nothing",
+                    cost=None,
+                    unavailable=permission.why_not(card, caster, self),
+                )
+            )
+
+        for source_name, grant in static_free_cast_grants(self, caster):
+            unavailable = None
+            if origin_zone is not grant.zone:
+                unavailable = (
+                    f"{source_name} only applies to spells cast from your "
+                    f"{grant.zone.value} (CR 118.9)"
+                )
+            elif grant.type_word and not spell_has_type_word(card.card, grant.type_word):
+                unavailable = (
+                    f"{source_name} only applies to {grant.type_word} spells, and "
+                    f"{card.name} is not one"
+                )
+            options.append(
+                AlternativeCostOption(
+                    index=len(options),
+                    source=AlternativeCostSource.STATIC,
+                    rule="CR 118.9",
+                    source_name=source_name,
+                    description="nothing",
+                    cost=None,
+                    unavailable=unavailable,
+                )
+            )
+        return options
+
+    def object_cost_offers(self, card: CardState, player: str) -> dict[str, "ObjectCostOffer"]:
+        """Which objects could be spent on `card`'s cost, and for what -
+        convoke (CR 702.51a), delve (CR 702.66a), crew (CR 702.122a).
+
+        `magic_cards_model_api.affordances.object_costs` used to import
+        `machines/objects_as_costs.py` directly and walk the battlefield and
+        graveyard itself to answer this; that walk is engine knowledge, not
+        api shaping, so it lives here now. The api keeps `_label`, the dict
+        shaping, and `object_costs`'s own three-key dict - this only answers
+        *which cards are eligible*, the same `ObjectOffer.why_not` predicate
+        the actual payment (`machines/objects_as_costs.convoke`/`delve`) uses,
+        so a candidate list here can never disagree with what paying would
+        accept.
+
+        Only the keys that apply are present - a card with none of the three
+        gets an empty dict.
+        """
+        from ..machines.objects_as_costs import convoke_offer as _convoke_offer
+        from ..machines.objects_as_costs import (
+            crew_number,
+            crew_offer,
+            delve_offer,
+            has_convoke,
+            has_delve,
+            is_vehicle,
+        )
+
+        battlefield = self.battlefield
+        out: dict[str, ObjectCostOffer] = {}
+        if has_convoke(card.card):
+            offer = _convoke_offer()
+            out["convoke"] = ObjectCostOffer(
+                rule="CR 702.51a",
+                candidates=[c for c in battlefield if offer.why_not(c, player, self) is None],
+            )
+        if has_delve(card.card):
+            offer = delve_offer()
+            out["delve"] = ObjectCostOffer(
+                rule="CR 702.66a",
+                candidates=[
+                    c
+                    for c in self.player(player).graveyard
+                    if offer.why_not(c, player, self) is None
+                ],
+            )
+        if is_vehicle(card.card):
+            offer = crew_offer(card)
+            out["crew"] = ObjectCostOffer(
+                rule="CR 702.122a",
+                number=crew_number(card.card),
+                candidates=[c for c in battlefield if offer.why_not(c, player, self) is None],
+            )
+        return out
 
     def assert_quiescent(self) -> None:
         """Raise loudly if the game is sitting mid-announcement or mid-resolution.
