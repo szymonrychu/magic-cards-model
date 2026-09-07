@@ -353,22 +353,6 @@ def test_minus_two_divides_damage_between_two_targets():
     assert second.damage == 1
 
 
-@pytest.mark.xfail(
-    reason=(
-        "T10 round-trip finding, not this test's own bug: `ral` legitimately "
-        "sits on the battlefield as a planeswalker with zero loyalty counters "
-        "here (a bare `.transform()` deliberately skips CR 306.5b's entry "
-        "replacement, which is the whole point of this test), but `CardState."
-        '_planeswalkers_start_loyal` is a `model_validator(mode="after")` '
-        "that cannot tell that construction from a fresh permanent entering "
-        "the battlefield, so `Game.model_validate` re-seeds two loyalty "
-        "counters onto the decoded copy that the live game never had. The "
-        "game genuinely fails to round-trip byte-identically; fixing the "
-        "validator to tell 'decoding' from 'entering' apart is a model-level "
-        "change this task did not make."
-    ),
-    strict=True,
-)
 def test_minus_two_cannot_be_activated_below_two_loyalty():
     """CR 606.6: the counters a negative cost removes have to already be
     there."""

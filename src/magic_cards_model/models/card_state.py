@@ -1,6 +1,6 @@
 """A card as it exists in a game, as opposed to the printing it was cut from."""
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from enum import StrEnum
 from typing import Any, Self
 from uuid import UUID
@@ -2171,28 +2171,36 @@ class CardState(BaseModel):
                 data[name] = getattr(self, name)
         return data
 
-    @model_validator(mode="after")
-    def _planeswalkers_start_loyal(self) -> Self:
-        """A planeswalker built straight onto the battlefield has its loyalty.
+    @model_validator(mode="wrap")
+    @classmethod
+    def _built_on_the_battlefield_starts_with_its_counters(
+        cls, data: Any, handler: Any
+    ) -> "CardState":
+        """A planeswalker or Saga *built* straight onto the battlefield gets
+        the counters it would have entered with; one being *decoded* does not.
 
-        The same intrinsic ability as `_enter_with_loyalty` (CR 306.5b), applied
-        where a `CardState` is constructed in place rather than moved. Guarded
-        on having no counters at all, so a permanent whose counters are already
-        known - one being deserialised, or one that has been ticked down - is
-        left exactly as it was.
+        The same two intrinsic abilities as `_enter_with_loyalty` (CR 306.5b)
+        and `_enter_with_lore_counter` (CR 714.3a), applied where a `CardState`
+        is constructed in place rather than moved onto the battlefield.
+
+        The guard is what makes the engine able to decode any game state. "It
+        has no counters yet" cannot tell the two apart: a planeswalker
+        legitimately sits on the battlefield with zero loyalty (it is about to
+        die to CR 704.5i, or a test transformed a card into one without CR
+        306.5b's entry replacement), and re-seeding those counters on decode
+        silently invents state the dumped game never had. A payload that
+        carries a `counters` key already states what its counters are - zero
+        included - so it is taken at its word and nothing is seeded. Only
+        construction that never mentioned counters at all is treated as an
+        object arriving on the battlefield for the first time.
         """
-        if self.zone is Zone.BATTLEFIELD and self.is_planeswalker and not self.counters:
-            self._enter_with_loyalty()
-        return self
-
-    @model_validator(mode="after")
-    def _sagas_start_with_lore(self) -> Self:
-        """A Saga built straight onto the battlefield has its lore counter
-        (CR 714.3a) - `_enter_with_lore_counter`'s own sibling to
-        `_planeswalkers_start_loyal`, guarded the same way."""
-        if self.zone is Zone.BATTLEFIELD and self.is_saga and not self.counters:
-            self._enter_with_lore_counter()
-        return self
+        state = handler(data)
+        if isinstance(data, Mapping) and "counters" in data:
+            return state
+        if state.zone is Zone.BATTLEFIELD and not state.counters:
+            state._enter_with_loyalty()
+            state._enter_with_lore_counter()
+        return state
 
 
 def bind_all_to_game(states: Iterable[CardState], game: Any) -> None:
