@@ -79,8 +79,44 @@ The verified state of each tool, and its traps, are in `docs/mcp-tools.md`.
 - `src/magic_cards_model/machines/` - state machines. `turn.py` is the turn
   structure, `priority.py` is CR 117, `casting.py` is CR 601.2 announcement,
   `cost.py` is paying, `abilities.py` parses mana abilities off oracle text,
-  `effects.py` is what a spell does when it resolves.
+  `effects.py` is what a spell does when it resolves, `decisions.py` is CR
+  608.2d's mid-resolution questions plus the pause/replay tape, and
+  `legal_actions.py` enumerates every action a player may legally take right
+  now.
+- `src/magic_cards_model/ids.py` - the one place every object id is minted,
+  deterministically per game when a `Game` method opens
+  `_id_allocator_scope()`.
 - `tests/scenarios/` - scenario tests. See below.
+
+## What this library owes its consumers
+
+This is a stateless library (`ROADMAP.md`), and it owes whatever holds a
+`Game` two guarantees plus the invariant that makes both trustworthy.
+
+**Decode any game state.** Every persisted model is data: no callables survive
+on a model. A spell's or ability's stored behaviour - `ContinuousEffect`'s
+`condition`/`selector`/`modification` (`machines/layers.py`),
+`DelayedTrigger.effect` (`machines/delayed.py`), and `AbilityOnStack`'s
+`keyword_activation`/`unless_payment` - is a pydantic discriminated union on
+`kind`, which refuses an unknown tag at decode instead of silently resolving
+to nothing (see `memory/callables-became-discriminated-unions.md` for why a
+name-keyed registry was rejected). `Game.schema_version` refuses to decode a
+game written by a different engine (`SchemaVersionMismatch`) rather than
+defaulting a missing field to current. Object ids are deterministic per
+`game_uid` (`ids.py`), so the same commands replayed from the same decoded
+state mint the same ids.
+
+**Enumerate every legal action.** `legal_actions(game, player, *,
+pending=None)` in `machines/legal_actions.py` returns frozen `Action` records
+(`models/action.py`) - ids only, never a live `CardState`/`Player`/`Card` - what
+`player` may do right now, including while a `Decision` is pending. It never
+gates on affordability (CR 118.6: an unpayable cast is still a legal one) -
+an unaffordable action is still enumerated, carrying an `Affordability`
+verdict alongside it instead of being dropped.
+
+**The round-trip/replay invariant** is what makes trusting either guarantee
+possible instead of merely hoping it holds; see `tests/scenarios/conftest.py`
+below.
 
 ## Two registries that need feeding
 
@@ -133,6 +169,21 @@ When asked to cover a mechanic, an edge case, or a rules interaction, write a
 scenario test, not a unit test. Unit tests in `tests/test_*.py` cover a single
 machine in isolation and are already in place; new rules coverage belongs in
 `tests/scenarios/`.
+
+### Every scenario proves it round-trips and replays
+
+`tests/scenarios/conftest.py`'s `pytest_pyfunc_call` runs every scenario test
+twice: once live, then again with any `harness.checkpoint`ed `Game` swapped
+for a decode of its own initial snapshot, and asserts the two final games are
+byte-identical, as well as that every checkpointed game dumps, decodes, and
+re-dumps identically. This is what actually backs the two guarantees above -
+a decode that merely doesn't crash is not the same claim as a decode that
+replays to the same game. Nothing opts in: a new scenario gets this for free.
+`MTG_SCENARIO_REPLAY=0` drops the replay half only (the round-trip dump/
+decode/re-dump check still runs). A scenario that cannot replay is an engine
+defect, not a test to exempt - the only exemption is `@pytest.mark.no_replay`,
+for an assertion about CPython object identity (`id(x) == id(y)`), which a
+JSON decode can never reproduce and which is not game state to begin with.
 
 ```python
 scenario = Scenario().player("alice", hand=["Lightning Bolt"], battlefield=["Mountain"]).build()

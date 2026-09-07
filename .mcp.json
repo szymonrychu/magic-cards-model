@@ -8,7 +8,7 @@
       "command": "uv",
       "args": [
         "--directory",
-        "/Users/szymonri/Documents/magic-cards-model-api",
+        "../magic-cards-model-api",
         "run",
         "python",
         "-m",
