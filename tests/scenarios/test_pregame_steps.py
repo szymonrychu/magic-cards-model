@@ -165,7 +165,10 @@ def test_no_mulligan_is_taken_until_every_declaration_is_in():
     """CR 103.5: "all players who decided to take mulligans do so at the same time".
 
     Declarations arriving as separate calls is exactly what could have broken
-    this, so it is checked here as well as in `test_mulligans.py`.
+    this, so it is checked here - directly against `Game.declare_mulligan` -
+    as well as against the `ask_mulligan`-driven headless path in
+    `test_mulligans.py::test_every_declaration_is_collected_before_any_
+    mulligan_is_taken`.
     """
     match = series(devoted(), broodscale())
     game = match.start_game()

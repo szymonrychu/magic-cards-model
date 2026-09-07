@@ -6,7 +6,7 @@ metadata:
 ---
 
 **2026-09-07.** `machines/decisions.DecisionPending` (raised when a question has
-no scripted answer, no unconsumed tape entry, no provider, and
+no scripted answer, no unconsumed tape entry, and
 `DecisionScript.pause_when_unanswered` is set) derives from `BaseException`,
 not `Exception`.
 

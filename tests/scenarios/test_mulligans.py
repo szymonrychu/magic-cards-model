@@ -22,6 +22,7 @@ cards verified Modern-legal with `resolve_cards` before being written here.
 
 import pytest
 
+import magic_cards_model.models.game as game_module
 from magic_cards_model.machines.decisions import (
     Answer,
     Decision,
@@ -496,6 +497,9 @@ def test_two_mulligans_offer_the_whole_hand_and_bottom_two_of_a_scripted_choice(
     (offer,) = bottoming_offers(game, "alice")
     assert (len(offer.cards), offer.amount) == (7, 2)
     assert len(alice.hand) == 5
+    # The hand kept is the offer minus what was chosen, not just five cards
+    # of some size - pinning both halves of the split.
+    assert [state.id for state in alice.hand] == list(offer.cards[2:])
     assert [state.id for state in alice.library[-2:]] == list(chosen)
 
 
@@ -567,6 +571,66 @@ def test_the_bottoming_is_asked_after_every_declaration_of_the_round():
         ("alice", DecisionKind.MULLIGAN),
         ("alice", DecisionKind.CHOOSE_CARDS),
     ]
+
+
+def test_every_declaration_is_collected_before_any_mulligan_is_taken(monkeypatch):
+    """CR 103.5: "Once each player has made a declaration, all players who
+    decided to take mulligans do so at the same time."
+
+    `test_the_bottoming_is_asked_after_every_declaration_of_the_round` proves
+    the *order* `decisions.asked` records the two rounds' declarations in, but
+    that order is identical whether or not alice's round-one mulligan is
+    applied before bob is asked his - it only orders the questions, never the
+    state each one is asked against. This test proves the engine-ordering half
+    that order alone cannot: it wraps `ask_mulligan` at the one seam
+    `Game.settle_pregame` calls it through -
+    `magic_cards_model.models.game.ask_mulligan`, the name that module binds
+    at import and the name `settle_pregame`'s own `while` loop looks up at
+    call time - recording every player's hand size and `mulligans_taken` at
+    the instant each question is put, then calling straight through to the
+    real `ask_mulligan`. That makes it a spy, not a stand-in: every answer it
+    returns, and every card it moves, is the engine's own; nothing here fakes
+    a rule or a card.
+
+    Had the engine resolved each declaration as it arrived instead of
+    collecting the whole round first, bob's round-one snapshot would have
+    found alice already on a fresh hand with `mulligans_taken == 1` - the
+    exact miss this replaces from `test_every_declaration_is_collected_
+    before_any_mulligan_is_taken` on the deleted `DecisionProvider` version of
+    this file, where a `RecordingProvider.decide` callback took the same
+    snapshot at the same moment. Confirmed by deliberately breaking the
+    engine's round-collection guard and watching this assertion fail on
+    bob's round-one snapshot for exactly that reason, then reverting.
+    """
+    series = match()
+    game = series.start_game()
+    will_mulligan(game, "alice")
+    will_mulligan(game, "bob")
+    snapshots: list[tuple[str, tuple[tuple[str, int, int], ...]]] = []
+    real_ask_mulligan = game_module.ask_mulligan
+
+    def watching_ask_mulligan(script, player, **kwargs):
+        snapshots.append(
+            (player, tuple((p.username, len(p.hand), p.mulligans_taken) for p in game.players))
+        )
+        return real_ask_mulligan(script, player, **kwargs)
+
+    monkeypatch.setattr(game_module, "ask_mulligan", watching_ask_mulligan)
+
+    series.run_mulligans()
+
+    round_one = snapshots[:2]
+    assert [asked for asked, _ in round_one] == ["alice", "bob"]
+    for _, table in round_one:
+        assert table == (("alice", 7, 0), ("bob", 7, 0))
+
+    round_two = snapshots[2:]
+    assert [asked for asked, _ in round_two] == ["alice", "bob"]
+    for _, table in round_two:
+        assert table == (("alice", 7, 1), ("bob", 7, 1))
+
+    assert game.player("alice").mulligans_taken == 1
+    assert game.player("bob").mulligans_taken == 1
 
 
 # -- pausing instead of blocking: the tape and `DecisionPending` ------------
