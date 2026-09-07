@@ -347,9 +347,9 @@ class Match(BaseModel):
         `Step.PREGAME_ACTIONS` - and this is the headless driver over it:
         `Game.settle_pregame` puts each declaration through `ask_mulligan` and
         each CR 103.6 action through `Game.ask`, so a scripted answer wins, then
-        a live `decisions.provider`, and only when neither speaks does the
-        documented default stand - keep the dealt hand, bottom from the back of
-        it, decline every opening-hand action.
+        the replay tape, and only when neither speaks does the documented
+        default stand - keep the dealt hand, bottom from the back of it,
+        decline every opening-hand action.
 
         That preserves both halves of what this method meant before:
 

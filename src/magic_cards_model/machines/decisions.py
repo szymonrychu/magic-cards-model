@@ -46,30 +46,25 @@ explicit, so that a caller - a test, a UI, a future agent - answers it. That is
 asked. `tests/scenarios/harness.py` fills it in; see `Scenario.scry_bottoms` and
 its siblings.
 
-A caller that stands behind a *live* player - the API's per-game decision
-mailbox is the first one - sets `DecisionScript.provider` instead of, or on top
-of, scripting answers: `Game.ask` tries a scripted answer first (a test's
-staging always wins), then the replay tape (`DecisionScript.recorded`, see
-below), then the provider, then a pause, and only then `default_answer`.
+There is exactly one way to answer a decision from outside the engine, and
+every asker in this module uses it the same way: `Game.ask` tries a scripted
+answer first (a test's staging always wins), then the replay tape
+(`DecisionScript.recorded`, see below), then a pause if
+`DecisionScript.pause_when_unanswered` is set, and only then `default_answer`.
 `ask_mulligan` and `ask_trigger_order` follow that same order without going
-through `Game.ask`, so CR 103.5's declaration and CR 603.3b's ordering both
-reach a live seat too. `_ask_declaration` (the two combat declarations,
-`ask_attackers`/`ask_blockers`) follows the same order **minus the provider
-step** - a scripted answer, then the tape, then a pause if enabled, then
-`default_answer`, never `script.provider`. That is deliberate, not an
-oversight: see `_ask_declaration`'s own docstring for why a live seat still
-cannot answer either combat declaration through this module, and what has to
-land first before one can. The provider is not a resumable state machine and
-does not need to be one - it is a `Protocol` with one method that blocks the
-calling thread until a real answer arrives or it gives up, exactly the shape a
-synchronous call stack needs.
+through `Game.ask`, so CR 103.5's declaration and CR 603.3b's ordering are
+answerable the same way. `_ask_declaration` (the two combat declarations,
+`ask_attackers`/`ask_blockers`) follows it too, with nothing left out - a
+scripted answer, then the tape, then a pause if enabled, then `default_answer`.
+A live seat outside the engine - the API's own transport - answers by staging
+into the script or the tape, never by blocking this module's call stack.
 
 ## Pausing instead of blocking: `Answer`, the tape, and `DecisionPending`
 
-A live provider still blocks the thread that is resolving a spell for as long
-as the seat takes to answer - the whole reason `docs/../memory/harness-
-deadlock-defaulted-every-decision.md` exists. The alternative this module now
-also supports is **pausing**: instead of a call that blocks, a caller sets
+Blocking the thread that is resolving a spell for as long as a live seat takes
+to answer is the whole reason `docs/../memory/harness-deadlock-defaulted-
+every-decision.md` exists. The alternative this module supports instead is
+**pausing**: instead of a call that blocks, a caller sets
 `DecisionScript.pause_when_unanswered = True`, and a question nothing can
 answer raises `DecisionPending` rather than defaulting or blocking. The raise
 carries a `PendingDecision` - the question, its sequence number, and the CR
@@ -94,14 +89,13 @@ answer: `recorded[consumed]` is the next answer, and a tape whose next entry
 names the wrong kind, the wrong player, or the wrong `seq` is corrupt -
 replayed against the wrong question, it would produce a wrong game that still
 runs to completion, which is worse than a crash, so it raises rather than
-being skipped past (see `DecisionScript.take_from_tape`). Three of the four
-then consult `script.provider` next, before falling through to a pause or
-`default_answer`; `_ask_declaration` does not - see its own docstring. The
-mutated `Game` from the paused attempt is discarded, never stored - which is
-what makes double-applying an answer structurally impossible: there is
-nothing left to apply it to twice.
+being skipped past (see `DecisionScript.take_from_tape`). All four then fall
+through to a pause or `default_answer` the same way. The mutated `Game` from
+the paused attempt is discarded, never stored - which is what makes
+double-applying an answer structurally impossible: there is nothing left to
+apply it to twice.
 
-When nobody - script, tape, or provider - has anything to say, `default_answer`
+When nobody - script or tape - has anything to say, `default_answer`
 answers instead, by a rule written down here rather than improvised per card:
 
 - `MAY` - **take it**, which is what the effect registry already did before this
@@ -134,10 +128,10 @@ from collections.abc import Iterable
 from dataclasses import dataclass, field
 from enum import StrEnum
 from itertools import zip_longest
-from typing import TYPE_CHECKING, Annotated, Any, Protocol
+from typing import TYPE_CHECKING
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, model_validator
 
 from ..models.card_state import TargetRef
 
@@ -145,16 +139,13 @@ if TYPE_CHECKING:  # pragma: no cover - import cycle: the models build on the ma
     from ..models.card_state import CardState
 
 __all__ = [
-    "NOT_ANSWERED",
     "Answer",
     "CardSplit",
     "Decision",
     "DecisionKind",
     "DecisionPending",
-    "DecisionProvider",
     "DecisionScript",
     "DeclaredPair",
-    "NotAnswered",
     "PendingDecision",
     "ScriptedAnswer",
     "ask_attackers",
@@ -614,8 +605,7 @@ def rule_for_kind(kind: DecisionKind) -> str:
     resolves; `DECLARE_ATTACKERS`/`DECLARE_BLOCKERS` are each a turn-based
     action's own declaration (CR 508.1, CR 509.1), not a resolving effect's
     choice either. Used by `PendingDecision.rule` so a paused decision carries
-    its own citation, the same one `_log_timeout` used to look up here for a
-    live provider's timeout.
+    its own citation.
     """
     if kind is DecisionKind.CHOOSE_TARGETS:
         return "CR 603.3d, CR 601.2c (targets chosen while going on the stack)"
@@ -864,9 +854,9 @@ class PendingDecision:
 
 
 class DecisionPending(BaseException):
-    """Raised when a decision has no scripted answer, no unconsumed tape entry,
-    and no provider willing to answer it, with `DecisionScript.
-    pause_when_unanswered` set (see the module docstring).
+    """Raised when a decision has no scripted answer and no unconsumed tape
+    entry, with `DecisionScript.pause_when_unanswered` set (see the module
+    docstring).
 
     Deliberately a `BaseException`, not an `Exception`. `models/game.py`'s
     `Game.resolve_top` and `Game._resolve_ability`, and `machines/cost.py`'s
@@ -917,41 +907,6 @@ class ScriptedAnswer:
         return self.uses is not None and self.uses <= 0
 
 
-class NotAnswered:
-    """Sentinel returned by a `DecisionProvider` that has no answer right now.
-
-    Distinct from any real answer (`False`, `CardSplit()`, and `()` are all
-    real answers) so `Game.ask` can tell "asked and heard nothing back" apart
-    from "asked and was told no". A timed-out provider returns this, and
-    `Game.ask` then falls through to `default_answer` exactly as if no
-    provider had been asked at all.
-    """
-
-
-#: The one instance; a provider returns this object, not a fresh one, so a
-#: caller can compare with `is`.
-NOT_ANSWERED = NotAnswered()
-
-
-class DecisionProvider(Protocol):
-    """A live player standing behind a `Decision`, outside the engine.
-
-    One method, deliberately: `Game.ask` (and `ask_mulligan`, for CR 103.5's
-    declaration) already does the asking, the
-    recording (`DecisionScript.asked`), and the validation against
-    `legal_options`. A provider's only job is to produce an answer or say it
-    has none, so that whatever calls it - a human at a keyboard, a UI, a
-    server thread parked on a socket - stays out of the engine's control flow.
-    Nothing here is resumable and nothing needs to be: the call blocks the
-    thread that is resolving the spell until the answer, or a timeout that the
-    provider itself is responsible for enforcing, comes back.
-    """
-
-    def decide(self, decision: Decision) -> object:
-        """Return the player's answer, or `NOT_ANSWERED` if none arrived."""
-        ...
-
-
 @dataclass
 class DecisionScript:
     """The answers a caller has queued up, oldest first.
@@ -966,37 +921,12 @@ class DecisionScript:
     #: can assert that a card asked at all - "scry 0 does not scry" (CR 701.22b)
     #: is only observable here.
     asked: list[Decision] = field(default_factory=list)
-    #: Consulted by `Game.ask` - and by `ask_mulligan`, which puts CR 103.5's
-    #: declaration by the same rules without going through `Game.ask` - when
-    #: nothing is scripted. `None` in every
-    #: scenario test, so a test's behaviour is unaffected by this existing at
-    #: all - a caller that wants live answers (the API's per-game mailbox)
-    #: sets this instead of scripting anything.
-    #:
-    #: Typed as `Any`, not `DecisionProvider | None`, because `Game` is a
-    #: pydantic model and `DecisionScript` is a plain dataclass nested inside
-    #: it: pydantic builds a validation schema for every field of a nested
-    #: dataclass, and a `Protocol` has none to build. The real type callers
-    #: should assign is `DecisionProvider | None`; `Any` here is a pydantic
-    #: accommodation, not a relaxation of what belongs in this field.
-    #:
-    #: `exclude=True` (T10): a live provider - the api's per-game mailbox, a
-    #: test's own recording stub - is exactly the shape `Match.card_resolver`
-    #: already carries this same fix for: a plain Python object with no
-    #: pydantic schema of its own, so `Game.model_dump(mode="json")` raised
-    #: `PydanticSerializationError: Unable to serialize unknown type` for any
-    #: game a provider was ever attached to, crashing on the dump rather than
-    #: quietly dropping it. Unlike `card_resolver` this has no name registry
-    #: to bind back by - a decoded game answers from `recorded`/a scripted
-    #: answer instead until a caller sets a live one again, which is already
-    #: `take_from_tape`'s documented order.
-    provider: Annotated[Any, Field(exclude=True)] = None
     #: The replay tape - every `Answer` a previous, paused attempt at this same
     #: command already received, oldest first. Consulted after a scripted
-    #: answer and before `provider`, by `take_from_tape`; empty in every
-    #: existing scenario test and every caller that has not paused, so nothing
-    #: about this existing changes anybody's behaviour. See the module
-    #: docstring's "Pausing instead of blocking" section.
+    #: answer, by `take_from_tape`; empty in every existing scenario test and
+    #: every caller that has not paused, so nothing about this existing
+    #: changes anybody's behaviour. See the module docstring's "Pausing
+    #: instead of blocking" section.
     recorded: list[Answer] = field(default_factory=list)
     #: How many of `recorded`, from the front, this run has already read.
     #: `take_from_tape` reads `recorded[consumed]` and advances this by one
@@ -1141,28 +1071,21 @@ def ask_mulligan(script: DecisionScript, player: str, *, prompt: str = "take a m
 
     Not going through `Game.ask` does not mean skipping the live player. The
     order of consultation is `Game.ask`'s exactly: a scripted answer wins, then
-    the replay tape (`script.take_from_tape`), then `script.provider` - the
-    same mailbox a `DecisionProvider` behind the API fills in - is asked, then
-    `DecisionPending` if `script.pause_when_unanswered`, and only when nothing
-    speaks (no tape entry, no provider or `NOT_ANSWERED`, no pause) does
-    `default_answer` keep the dealt hand. That is what makes CR 103.5's
-    declaration answerable by a human, or resumable from a paused game, at
-    all; without it the question was asked and recorded but never published
-    anywhere a person - or a resumed run - could see it.
+    the replay tape (`script.take_from_tape`), then `DecisionPending` if
+    `script.pause_when_unanswered`, and only when nothing speaks (no tape
+    entry, no pause) does `default_answer` keep the dealt hand. That is what
+    makes CR 103.5's declaration answerable by a human, or resumable from a
+    paused game, at all; without it the question was asked and recorded but
+    never published anywhere a person - or a resumed run - could see it.
 
-    Asking a provider does not disturb the replay: nothing random happens here,
-    and the reshuffle seed `Match.run_mulligans` derives is a function of the
-    declarations, not of who produced them.
+    Nothing random happens here, and the reshuffle seed `Match.run_mulligans`
+    derives is a function of the declarations, not of who produced them.
     """
     decision = Decision(kind=DecisionKind.MULLIGAN, player=player, prompt=prompt)
     script.asked.append(decision)
     found, value = script.take(decision)
     if not found:
         found, value = script.take_from_tape(decision)
-    if not found and script.provider is not None:
-        provided = script.provider.decide(decision)
-        if provided is not NOT_ANSWERED:
-            found, value = True, provided
     if not found and script.pause_when_unanswered:
         raise DecisionPending(
             PendingDecision(
@@ -1202,9 +1125,9 @@ def ask_trigger_order(
     there is no yes-or-no for `legal_options` to narrow.
 
     Consultation order is `Game.ask`'s exactly - a scripted answer first, then
-    the replay tape, then `script.provider`, then `DecisionPending` if
-    `script.pause_when_unanswered`, then `default_answer`'s "leave it as it
-    triggered". Fewer than two abilities is not a choice at all (CR 101.4's
+    the replay tape, then `DecisionPending` if `script.pause_when_unanswered`,
+    then `default_answer`'s "leave it as it triggered". Fewer than two
+    abilities is not a choice at all (CR 101.4's
     "if multiple players would make choices"; here, one ability has exactly
     one order), so nothing is asked and nothing is recorded.
 
@@ -1255,10 +1178,6 @@ def ask_trigger_order(
     found, value = script.take(decision)
     if not found:
         found, value = script.take_from_tape(decision)
-    if not found and script.provider is not None:
-        provided = script.provider.decide(decision)
-        if provided is not NOT_ANSWERED:
-            found, value = True, provided
     if not found and script.pause_when_unanswered:
         raise DecisionPending(
             PendingDecision(
@@ -1331,28 +1250,12 @@ def _ask_declaration(
     `Game._resolve_declaration` first, when a pair might name ids rather than
     objects - which refuse an illegal declaration.
 
-    **This is the one asker in this module that deliberately does not consult
-    `script.provider`.** A scripted answer first, then the replay tape, then
-    `DecisionPending` if `script.pause_when_unanswered`, then
-    `default_answer`'s "declare nobody" - the same order every other asker
-    here uses, minus the provider step. That gap is real and intentional, not
-    an oversight: the API's own `MailboxProvider.decide` (`magic_cards_model_
-    api.decisions`) publishes the question and *blocks the calling thread* for
-    up to `timeout_seconds` regardless of what kind was asked, while the API's
-    `ANSWERABLE_KINDS` deliberately excludes `DECLARE_ATTACKERS`/
-    `DECLARE_BLOCKERS` - a live seat has no transport to answer either kind
-    through `POST /decide` at all, and the API drives combat through `Game.
-    advance()`, which is exactly what calls this function. Consulting
-    `script.provider` here today would mean every live game's combat stalls
-    for the full timeout at declare-attackers, and again per defending player
-    at declare-blockers, publishing a `pending_decision` no seat's UI can
-    answer and writing a decision-timeout audit record each time - a
-    regression in the running service, not a closed gap. Wiring a live seat to
-    these two declarations is paired work with widening `ANSWERABLE_KINDS`
-    and adding the API's own combat transport to the mailbox, and belongs to
-    the phase that does that, not this one. The replay tape and the pause
-    machinery below are unaffected by this and behave exactly like every
-    other asker's.
+    Consultation order is every other asker's here, unchanged: a scripted
+    answer first, then the replay tape, then `DecisionPending` if
+    `script.pause_when_unanswered`, then `default_answer`'s "declare nobody".
+    There is exactly one way to answer a decision from outside the engine -
+    staging into the script or the tape - and this asker uses it the same way
+    `Game.ask`, `ask_mulligan`, and `ask_trigger_order` do.
     """
     decision = Decision(kind=kind, player=player, prompt=prompt, cards=attackers)
     script.asked.append(decision)
