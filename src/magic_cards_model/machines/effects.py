@@ -371,11 +371,21 @@ def create_continuous_effect(game: "Game", spell: CardState) -> None:
     a card printing "cards in your graveyard" means (Violent Urge's delirium).
     Both are read now, as the spell resolves, which is the moment the effect's
     one-off conditions are locked in (CR 611.2c).
+
+    `game=game` on the call below is not optional bookkeeping: `ContinuousEffects.
+    create` calls `effect.holds(game)` on everything it builds, and `holds`
+    raises rather than guessing when a built effect carries a CR 611.2b "for as
+    long as" condition and no `game` was given to check it against. No row in
+    `LAYER_EFFECTS` reaches this generic path with one yet - Tishana's Tidebinder,
+    the only conditioned row today, resolves through its own dedicated function -
+    but the next one that does must not crash resolution outright for a missing
+    keyword (see `tests/test_continuous_effects_create_game_param.py`).
     """
     continuous_effects(game).create(
         spell,
         targets=game.resolve_card_targets(spell),
         context=layer_context_for(game, game.controller_of(spell)),
+        game=game,
     )
 
 
@@ -421,6 +431,11 @@ def create_continuous_effect_of_ability(game: "Game", ability: AbilityOnStack) -
     "Up to one" legally choosing zero, or every chosen target having since
     become illegal (CR 608.2b), both leave `targets` empty and the ability
     resolves doing nothing - never a fallback to `source`.
+
+    `game=game` on the call below matters the same way it does in `create_
+    continuous_effect` just above: without it, `ContinuousEffects.create`
+    crashes rather than resolving the moment this path ever reaches a
+    `LAYER_EFFECTS` row that builds a CR 611.2b "for as long as" condition.
     """
     source = ability.source(game)
     if source is None or source.zone is not Zone.BATTLEFIELD:
@@ -446,6 +461,7 @@ def create_continuous_effect_of_ability(game: "Game", ability: AbilityOnStack) -
         source,
         targets=targets,
         context=layer_context_for(game, game.controller_of(ability)),
+        game=game,
     )
 
 

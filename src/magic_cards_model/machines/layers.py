@@ -4540,7 +4540,8 @@ def quoted_ability_grants(
 
 
 def _every_card_state_in(game: Game) -> list[CardState]:
-    """Every `CardState` `game` holds, in any zone - not only its battlefield.
+    """Every `CardState` a permanent could actually depart the battlefield to
+    - not literally every zone `game` holds.
 
     `sync_granted_ability_texts`'s `search_pool`: a source that has left the
     battlefield still exists as a `CardState` somewhere else in the same
@@ -4549,8 +4550,34 @@ def _every_card_state_in(game: Game) -> list[CardState]:
     memory of its own - on a cold-decoded game exactly as on a live one.
 
     `game.shared_zones`'s stack can hold an `AbilityOnStack`, which is not a
-    `CardState` and has no quoted text of its own to read; everything else
-    here is a card in some zone of some player, or a shared one.
+    `CardState` and has no quoted text of its own to read; everything else in
+    `shared_zones` (battlefield, exile, command, ante - all small) is kept.
+
+    `player.zones` drops `Zone.LIBRARY` alone, and that is the one exclusion
+    that matters: a real board's two 60-card libraries are the dominant cost
+    of this search (`Game.computed_board` measured it a 2.2x regression, and
+    unlike the battlefield or a graveyard, a library's size scales with deck
+    construction, not with anything that happened in the game), while a
+    permanent this engine actually puts on the battlefield never legitimately
+    lands there.
+
+    That is a claim about this engine's registered effects today, not a CR
+    one - CR 400.7 lets *any* zone change happen to *any* object, given the
+    right effect - so it is checked, not assumed: `Game.put_cards_into_
+    library`'s own battlefield branch is real but has exactly one registered
+    caller, Brainstorm's "put two cards from your hand" clause
+    (`machines/effects.py`), which only ever passes it cards from `player.
+    hand`. The other library-bound path, `Game.put_into_graveyard`'s
+    Green Sun's Zenith-shaped "shuffle it into its owner's library" redirect
+    (`machines/replacement.py`'s `_stack_replacements`), is gated on
+    `event.resolving`, which `put_into_graveyard`'s own docstring says is
+    true only for "a spell's own successful CR 608 resolution" - never for a
+    permanent already on the battlefield being destroyed. So nothing this
+    engine can currently do sends a battlefield permanent to a library, and
+    if a future card effect changes that (a "put target permanent into its
+    owner's library" clause, say), this exclusion has to be revisited before
+    that card's own static quoted grants can be trusted to reconcile away
+    correctly once it leaves.
     """
     found: list[CardState] = [
         state
@@ -4559,7 +4586,9 @@ def _every_card_state_in(game: Game) -> list[CardState]:
         if isinstance(state, CardState)
     ]
     for player in game.players:
-        for zone_cards in player.zones.values():
+        for zone, zone_cards in player.zones.items():
+            if zone is Zone.LIBRARY:
+                continue
             found.extend(zone_cards)
     return found
 
@@ -4598,12 +4627,15 @@ def sync_granted_ability_texts(
     in `permanents` prints that quoted line any more, so a sweep scoped to it
     alone has no way to tell "nobody is granting this" from "nothing here has
     ever granted anything", and the still-departed source's own grant would
-    never come off. `search_pool` is where that source is found instead - the
-    whole game, every zone, not just the battlefield - because a card's own
-    text does not change when it changes zones: a destroyed Ygra still prints
-    her quoted ability sitting in the graveyard, cold-decoded or not, which is
-    what lets this need no process- or game-lifetime memory of its own.
-    Defaults to `permanents`, which is what a bare battlefield sweep with no
+    never come off. `search_pool` is where that source is found instead -
+    every zone a permanent can actually leave the battlefield to, not just
+    the battlefield itself (`_every_card_state_in`'s own docstring has the
+    one deliberate exclusion, a library, and the evidence behind it) -
+    because a card's own text does not change when it changes zones: a
+    destroyed Ygra still prints her quoted ability sitting in the graveyard,
+    cold-decoded or not, which is what lets this need no process- or
+    game-lifetime memory of its own. Defaults to `permanents`, which is what
+    a bare battlefield sweep with no
     wider game behind it (`static_effects`, used only by tests) can do.
     """
     wanted: dict[UUID, set[str]] = {}

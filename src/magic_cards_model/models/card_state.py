@@ -2,7 +2,7 @@
 
 from collections.abc import Iterable, Mapping
 from enum import StrEnum
-from typing import Any, Self
+from typing import Any, Literal, Self
 from uuid import UUID
 
 from pydantic import (
@@ -532,6 +532,33 @@ class CardState(BaseModel):
 
     A minimal hook, not a token system: a token's characteristics come from the
     effect that created it (CR 111.3), and nothing here provides them.
+
+    **Not** which Python class built this object - see `state_class` just
+    below for that genuinely different question. `Game.copy_spell` builds a
+    `TokenState` with `token=False` (a copy of a permanent spell on the stack
+    is not yet a token, CR 707.10f), so this flag being false says nothing
+    about whether the object needs `TokenState`'s own CR 111.8 override on
+    decode.
+    """
+    state_class: Literal["CardState"] = "CardState"
+    """Which concrete Python class built this object - decode-time identity,
+    not a rules concept, and never to be confused with `token` above.
+
+    `TokenState` is `CardState`'s only subclass, and every field typed
+    `CardState` (`Player.zones`, `Game`'s stack) erases that at decode time
+    unless something in the data says otherwise (`_resolve_token_subclass`'s
+    own docstring has the full story). The obvious signal to read back was
+    `token`, and that was the defect: `Game.copy_spell` builds a `TokenState`
+    for a copy of a permanent spell while it sits on the stack, with
+    `token=False` on purpose (CR 707.10f - it becomes a token only as it
+    resolves, CR 111.13), so a game dumped mid-priority with that copy on the
+    stack decoded it back as a plain `CardState`, silently losing CR 111.8's
+    protection the moment it later did become a token. `state_class` is a
+    plain field with no meaning beyond "which class am I" - `TokenState`
+    overrides its default to `"TokenState"` - so it says the same thing
+    whether or not the object also happens to be a token, and
+    `_resolve_token_subclass` reads this instead of `token` to choose which
+    class rebuilds a decoded dict.
     """
     is_copy: bool = False
     """CR 112.1a: "A copy of a spell is also a spell, even if it has no card
@@ -2122,17 +2149,25 @@ class CardState(BaseModel):
         `TokenState`'s override away even though the dict itself still says
         `token: true`.
 
-        So `CardState` reads its own subclass off that flag rather than
-        trusting the field annotation: a dict payload with `token` true is
-        handed to `TokenState` instead. `cls is CardState` keeps this from
-        firing again once it has - `TokenState.model_validate` reaches this
-        same validator through inheritance, with `cls` bound to `TokenState`,
-        and must fall straight through to `handler`. Anything that is not a
-        dict-with-`token`-true (an in-memory instance, a plain permanent, a
-        token dict already being validated as `TokenState`) also falls
+        So `CardState` reads its own subclass off `state_class` rather than
+        trusting the field annotation: a dict payload with `state_class ==
+        "TokenState"` is handed to `TokenState` instead. `cls is CardState`
+        keeps this from firing again once it has - `TokenState.model_validate`
+        reaches this same validator through inheritance, with `cls` bound to
+        `TokenState`, and must fall straight through to `handler`. Anything
+        that is not such a dict (an in-memory instance, a plain permanent, a
+        `TokenState` dict already being validated as `TokenState`) also falls
         straight through, unchanged.
+
+        Not `token`: that flag is CR 111.1's own "is this a token", a
+        genuinely different question from "which Python class built this" -
+        `state_class`'s own docstring is the defect that conflating the two
+        caused (`Game.copy_spell` builds a `TokenState` with `token=False`
+        while a copy of a permanent spell sits on the stack, not yet a token
+        under CR 707.10f, and used to decode back as a plain `CardState`
+        because `token` was the only signal read here).
         """
-        if cls is CardState and isinstance(data, dict) and data.get("token"):
+        if cls is CardState and isinstance(data, dict) and data.get("state_class") == "TokenState":
             from .token import TokenState  # deferred: token.py imports CardState
 
             return TokenState.model_validate(data)

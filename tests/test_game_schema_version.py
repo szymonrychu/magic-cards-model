@@ -92,7 +92,7 @@ def test_decode_refuses_a_mismatched_schema_version() -> None:
     dumped = game.model_dump(mode="json")
     dumped["schema_version"] = Game.CURRENT_SCHEMA_VERSION + 1
 
-    with pytest.raises(SchemaVersionMismatch, match="schema_version=2"):
+    with pytest.raises(SchemaVersionMismatch, match="schema_version=3"):
         Game.model_validate(dumped)
 
 
@@ -134,5 +134,5 @@ def test_a_mismatched_game_nested_inside_a_match_is_also_refused() -> None:
     dumped = match.model_dump(mode="json")
     dumped["games"][0]["schema_version"] = Game.CURRENT_SCHEMA_VERSION + 1
 
-    with pytest.raises(SchemaVersionMismatch, match="schema_version=2"):
+    with pytest.raises(SchemaVersionMismatch, match="schema_version=3"):
         Match.model_validate(dumped)

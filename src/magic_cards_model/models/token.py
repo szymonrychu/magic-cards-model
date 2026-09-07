@@ -74,11 +74,11 @@ Three of the rules above are only half here, because the other half belongs to
 """
 
 from collections.abc import Iterable, Sequence
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
+from uuid import NAMESPACE_OID, UUID, uuid5
 
 from pydantic import BaseModel, ConfigDict
 
-from ..ids import new_id
 from .card import Card, Color, Layout, Legalities, Legality, Rarity, Supertype, Type
 from .card_state import CardState, CounterKind
 from .zone import Zone
@@ -106,6 +106,55 @@ _TYPE_ORDER: tuple[Type, ...] = (
     Type.INSTANT,
     Type.SORCERY,
 )
+
+#: Namespaces `_token_card_id`'s content hash away from `Game._allocate_id`'s
+#: own `uuid5(NAMESPACE_OID, f"{game_uid}:{n}")` ids: `game_uid` is always a
+#: hyphenated UUID string, which this literal prefix can never equal, so a
+#: token's `Card.id` and any `CardState`/effect id minted by the per-game
+#: allocator can never collide even by coincidence.
+_TOKEN_CARD_ID_PREFIX = "token-card"
+
+
+def _token_card_id(definition: "TokenDefinition") -> UUID:
+    """`Card.id` for a synthesised token, as a pure function of `definition`.
+
+    Deliberately *not* `ids.new_id()`. That allocator is what makes replay
+    deterministic (`ids.py`'s own docstring): inside a `Game._id_allocator_
+    scope()`, it mints `uuid5(game_uid, objects_created)` - a function of
+    *when* something is created, not of *what* it is. That is exactly right
+    for a `CardState`'s or a `ContinuousEffect`'s id, which is this engine's
+    own object identity and has no content of its own to be a function of.
+
+    A token's `Card` is different: CR 111.3 makes its stated characteristics
+    "functionally equivalent to the characteristic values that are printed on
+    a card" - its copiable values, the same thing a Scryfall printing's own,
+    permanently-fixed id identifies. `machines/abilities.py`'s `_ability_cache`
+    and `machines/triggers.py`'s `_activated_abilities_cache` memoise a card's
+    parsed abilities keyed on exactly that id, on the documented strength of
+    `Card` being immutable so "two different printings ... can never collide".
+
+    Minting a token's `Card.id` from the per-game counter broke that strength:
+    two independent decodes of one snapshot share the same `game_uid` and the
+    same starting `objects_created`, so the *first* token either one creates
+    mints the identical id regardless of what characteristics it was given -
+    a Spirit token in one decoded branch and a Goblin token in the other,
+    same id, the second's abilities silently served back as the first's from
+    the process-global cache (see `tests/test_token_card_id_collision.py`).
+
+    Hashing `definition`'s own fields instead keeps the two guarantees this
+    library owes intact where the per-game counter could not: it is still
+    fully deterministic (a pure function of content has only one output, so
+    two replays from the same decoded state - or two decoded branches that
+    happen to create the *same* token - agree without needing to agree on
+    `objects_created` first), and it restores the cache's actual precondition
+    instead of merely working around its symptom, since two tokens with
+    different stated characteristics now always get different ids by
+    construction - the same way two different Scryfall printings do. Two
+    tokens with the *same* stated characteristics sharing an id is not a bug:
+    CR 111.3 makes identical stated characteristics the same copiable values,
+    the same as two physical copies of one printing sharing that printing's id.
+    """
+    return uuid5(NAMESPACE_OID, f"{_TOKEN_CARD_ID_PREFIX}:{definition.model_dump_json()}")
 
 
 class TokenDefinition(BaseModel):
@@ -214,9 +263,14 @@ class TokenDefinition(BaseModel):
 
         `cmc` is 0 by CR 202.3a, since a token has no mana cost. `rarity` and
         `set` are not characteristics (CR 109.3) and mean nothing here.
+
+        `id` is `_token_card_id`, a pure function of these characteristics -
+        deliberately *not* `ids.new_id()`. See that helper's own docstring for
+        why: two tokens with different text must never share an id, no matter
+        which `Game` or which decoded branch of one asked for them.
         """
         return Card(
-            id=new_id(),
+            id=_token_card_id(self),
             name=self.card_name,
             type_line=self.type_line,
             mana_cost=None,
@@ -243,16 +297,24 @@ class TokenState(CardState):
     does to a permanent - entering, tapping, attacking, dying, layers, counters -
     therefore works on a token without a single special case.
 
-    Two things are its own:
+    Three things are its own:
 
     - `token` is `CardState`'s own flag (CR 111.6, CR 108.2b), defaulted to True
       here so a token cannot be built without it. `machines/targeting.py` reads
       the same flag for CR 111.1's "target token" and "target nontoken
       permanent".
+    - `state_class` overrides `CardState`'s own default so a decode of this
+      class - and only this class, regardless of what `token` says at that
+      moment - rebuilds as `TokenState` (`CardState._resolve_token_subclass`'s
+      own docstring, and `state_class`'s, have the full story: `token=True`
+      or `token=False` on an object that is nonetheless this class, such as a
+      copy of a permanent spell on the stack, must not change which Python
+      class a decode produces).
     - `move_to` enforces CR 111.8, which nothing else in the engine does.
     """
 
     token: bool = True
+    state_class: Literal["TokenState"] = "TokenState"
 
     left_the_battlefield: bool = False
     """True once this token has been on the battlefield and gone (CR 111.8).
@@ -547,10 +609,15 @@ def copiable_card_with_added_abilities(printed: Card, added: Sequence[str]) -> C
     what CR 707.9a actually describes: the copy's *text* includes it.
 
     The `Card` this returns is a `model_copy` of a real Scryfall printing with
-    a fresh `id` (CR 108.1 keeps the oracle text authoritative; the id is this
-    engine's own object identity, and two objects with different text must not
-    share one). Nothing is hand-written: every characteristic but the oracle
-    text is the printing's own.
+    a fresh `id` derived from `printed.id` and the new oracle text (CR 108.1
+    keeps the oracle text authoritative; the id is this engine's own object
+    identity, and two objects with different text must not share one) -
+    `_token_card_id`'s own docstring is why this is a content hash rather than
+    `ids.new_id()`: two decoded branches adding different lines to a copy of
+    the same original must never mint the same id for two different results,
+    which the per-game counter cannot promise across branches. Nothing is
+    hand-written: every characteristic but the oracle text is the printing's
+    own.
 
     `added` empty returns `printed` unchanged, so a plain CR 707.2 copy pays
     nothing for this rule existing.
@@ -559,7 +626,8 @@ def copiable_card_with_added_abilities(printed: Card, added: Sequence[str]) -> C
     if not lines:
         return printed
     body = "\n".join([*([printed.oracle_text] if printed.oracle_text else []), *lines])
-    return printed.model_copy(update={"id": new_id(), "oracle_text": body})
+    new_card_id = uuid5(NAMESPACE_OID, f"{_TOKEN_CARD_ID_PREFIX}:{printed.id}:{body}")
+    return printed.model_copy(update={"id": new_card_id, "oracle_text": body})
 
 
 def token_copy_of(

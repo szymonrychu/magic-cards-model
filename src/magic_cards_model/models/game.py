@@ -1705,7 +1705,12 @@ class Game(BaseModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 1
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 2
+    """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
+    `engine-stateless-library` review) - a field added to `CardState`, per the
+    bump rule above, and one whose absence would change what a decode of a
+    copy-of-a-permanent-spell mid-stack means (a plain `CardState` loses CR
+    111.8's protection the moment it becomes a token, silently)."""
 
     @model_validator(mode="before")
     @classmethod
