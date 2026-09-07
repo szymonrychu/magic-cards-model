@@ -802,7 +802,8 @@ class CardState(BaseModel):
     tuple, not by a continuous effect that has to be reapplied every board
     computation.
 
-    Kept apart from `Card.oracle_text` (the printing, which never changes) and from the layer engine's own `Characteristics.
+    Kept apart from `Card.oracle_text` (the printing, which never changes)
+    and from the layer engine's own `Characteristics.
     abilities` (a *computed*, per-recompute view for text-driven checks like
     `has_ability`): this tuple is what `machines/abilities.granted_abilities_
     of` parses back into real `Ability` objects, and what `Game.

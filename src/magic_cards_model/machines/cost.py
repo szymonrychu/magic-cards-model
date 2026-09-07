@@ -31,7 +31,8 @@ cancelled.
 """
 
 import re
-from collections.abc import Iterable, Sequence
+from collections import Counter as _MultiSet
+from collections.abc import Hashable, Iterable, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from functools import cache
@@ -44,6 +45,8 @@ from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
 from ..models.card import Card, Color, Supertype, Type
 from ..models.card_state import CardState, ChoiceKind, Counter, CounterKind
 from ..models.mana import (
+    NO_SPEND_EFFECT,
+    UNRESTRICTED,
     ManaCost,
     ManaPayment,
     ManaPool,
@@ -55,6 +58,10 @@ from ..models.mana import (
     SpendClause,
     SpendPurpose,
     SymbolKind,
+    _assign_sources,
+    _Bucket,
+    _candidate_options,
+    _demand_list,
 )
 from ..models.zone import Zone
 from .abilities import (
@@ -903,7 +910,7 @@ def _solve_colours(
 _TapPlan = list[tuple[CardState, list[Color], ManaRestriction | None]]
 
 
-def _solve_auto_tap(
+def _solve_auto_tap_brute_force(
     context: "CostPayment | _SpendContext",
     sources: Iterable[CardState],
     *,
@@ -913,28 +920,26 @@ def _solve_auto_tap(
     base_restricted: list[Any],
     life_available: int,
 ) -> _TapPlan | None:
-    """The pure half of `auto_tap`: find a legal tapping-and-colour plan for
-    `owed` out of `sources`, or None if none exists. Mutates nothing - no
-    permanent is tapped, no pool is written to, and `context` may be a
-    throwaway `_SpendContext` rather than a real `CostPayment`.
+    """Find a legal tapping-and-colour plan for `owed` out of `sources`, or
+    None if none exists, by brute-force enumeration of which sources to tap.
 
-    `auto_tap` is `context._solve_auto_tap(...)` (below) followed by executing
-    the plan this returns through `tap_for_mana`; `could_pay_mana_cost` is
-    this and nothing else. Splitting the search out this way is what
-    guarantees the two can never disagree, the same argument
-    `TargetRequirement.rejects` already makes for `affordances.candidates`
-    (magic-cards-model-api): the predicate and the action that acts on the
-    predicate's answer share one implementation, so there is no second copy of
-    the logic to drift out of sync with the first.
+    **Kept only as the flow solver's test-only reference oracle** (see
+    `_solve_auto_tap_flow`, which is what `_solve_auto_tap` actually calls
+    now) - `tests/scenarios/test_auto_tap_flow_property.py` generates random
+    boards and costs and asserts the two agree on every one, because this one
+    is slow but has been right for a long time and the flow solver is new.
+    Nothing in production calls this any more: enumerating
+    `combinations(candidates, size)` and then, for each combination, every
+    colour a choice source in it could make, is exponential in the number of
+    untapped sources, and a real board with a dozen or so duals/shocks/any-
+    colour rocks already pushes a `{5}{B}{B}` question into multiple seconds.
 
     Prefers the fewest sources, and among equally-small choices prefers
     spending the least flexible ones first - see `_auto_tap_candidates` and
-    `_flexibility`, both unchanged by this split.
+    `_flexibility`.
 
     An empty plan (`[]`, not `None`) means `owed` is already covered by
-    `base_floating`/`base_snow`/`base_restricted` alone - `CostPayment.
-    shortfall`'s own check, folded in here so both callers get it for free
-    rather than needing their own copy of "is anything left to tap at all".
+    `base_floating`/`base_snow`/`base_restricted` alone.
     """
     already_paid = ManaPool(
         floating=dict(base_floating),
@@ -970,6 +975,327 @@ def _solve_auto_tap(
                 chosen = {id(source): restriction for source, _o, restriction in combo}
                 return [(source, colors, chosen[id(source)]) for source, colors in plan]
     return None
+
+
+# --------------------------------------------------------------------------
+# The flow solver
+# --------------------------------------------------------------------------
+#
+# The exponential in `_solve_auto_tap_brute_force` is entirely in *which
+# sources to tap* - the mana-pool layer underneath it, `ManaPool.can_pay` ->
+# `payment_for` -> `_settle` -> `_assign`, is already a max-flow bipartite
+# b-matching over `source -> demand -> allowed buckets -> sink` and costs
+# fractions of a millisecond. The dominant case - N untapped permanents, each
+# adding one mana from a set of colours it could choose, against a fixed set
+# of demands - is exactly the shape `_assign` already solves, so
+# `models.mana._assign_sources` extends that same network by the one layer
+# `_assign_sources`'s own docstring describes: `demand -> bucket -> permanent
+# -> sink`, with the new permanent -> sink cut (`capacity[permanent]`) the
+# thing that keeps a choice a choice.
+#
+# What that extra cut cannot express is a permanent whose *choice* is between
+# alternatives of more than one mana each - Shang-Chi's `{T}: Add two mana of
+# any one color.` A capacity-2 node with five colour edges would let two units
+# of flow leave by two different edges, which is two colours from one
+# activation and not a choice of one; see `_assign_sources`'s own docstring
+# for the mechanics. Those permanents (`_is_exotic`, below) are branched over
+# explicitly instead, the same way `_solve_auto_tap_brute_force` always did,
+# but only over *them* - on every board seen in this pool that is zero or one
+# permanents, never the whole battlefield.
+
+
+#: One ability's own alternative a permanent could produce if tapped for it -
+#: the colours it would add and the CR 106.6 restriction that mana would
+#: carry. `_auto_tap_candidates` already reads this off the board per
+#: (source, ability) pair; `_group_by_source` below folds a permanent's
+#: several abilities back together, since CR 118.3 gives it only one `{T}` to
+#: spend on at most one of them.
+_Alternative = tuple[list[Color], ManaRestriction | None]
+
+
+def _group_by_source(
+    candidates: list[_Candidate],
+) -> list[tuple[CardState, list[_Alternative]]]:
+    """`_auto_tap_candidates`'s one-entry-per-(source, ability) list, folded
+    back to one entry per physical permanent.
+
+    Eldrazi Temple's free `{T}: Add {C}.` and its restricted `{T}: Add
+    {C}{C}.` arrive as two separate candidate tuples, because a CR 106.6
+    restriction is judged per ability. A permanent can supply at most one of
+    its abilities' worth of mana (CR 118.3: one `{T}` to spend), which is a
+    fact about the *permanent* that the flow network has to see up front -
+    `_is_exotic` and `_bucket_map` both read it off the grouped shape below,
+    not off the flat one.
+
+    Order is preserved from `candidates`, which `_auto_tap_candidates` has
+    already sorted least-flexible-first - the order every provider node is
+    inserted in, and so the order the flow solver prefers when several
+    permanents could equally do.
+    """
+    order: list[int] = []
+    grouped: dict[int, tuple[CardState, list[_Alternative]]] = {}
+    for source, options, restriction in candidates:
+        key = id(source)
+        if key not in grouped:
+            grouped[key] = (source, [])
+            order.append(key)
+        grouped[key][1].extend((option, restriction) for option in options)
+    return [grouped[key] for key in order]
+
+
+def _is_exotic(alternatives: list[_Alternative]) -> bool:
+    """True when a permanent's alternatives cannot be laid into the flow
+    network as ordinary edges - see the module-level notes above and
+    `_assign_sources`'s own docstring for exactly what it can and cannot
+    express.
+
+    Safe whenever there is only one alternative at all, however much mana and
+    however many colours it is (a Tron piece boosted to `{C}{C}{C}` has
+    nothing to choose between), and safe whenever every alternative on offer
+    is a single mana of a single colour (an ordinary dual, or Cavern of
+    Souls's free `{C}` beside its restricted any-colour choice) - a capacity-1
+    provider node already forces "at most one of these", which is CR 118.3's
+    one-`{T}` rule for free.
+
+    Unsafe exactly when a permanent offers a genuine choice **and** at least
+    one option of that choice is more than one mana - Shang-Chi's is the only
+    card in this pool shaped that way.
+    """
+    return len(alternatives) > 1 and any(len(option) > 1 for option, _restriction in alternatives)
+
+
+def _slot_for(restriction: ManaRestriction | None, registry: list[ManaRestriction]) -> int:
+    """`registry`'s index for `restriction`, recording it on first sight.
+
+    `ManaPool._entry_for`'s own by-value matching, reused here so a permanent
+    carrying a restriction already floating in the payer's pool lands in the
+    very same bucket as that floating mana, rather than a second one the
+    demand solver would have to be told to treat as identical.
+    """
+    if restriction is None:
+        return UNRESTRICTED
+    for index, seen in enumerate(registry):
+        if seen == restriction:
+            return index
+    registry.append(restriction)
+    return len(registry) - 1
+
+
+def _bucket_map(
+    source: CardState, alternatives: list[_Alternative], registry: list[ManaRestriction]
+) -> tuple[dict[_Bucket, int], int]:
+    """The buckets one permanent could fill, and its own total capacity - the
+    two things `_assign_sources` needs per provider.
+
+    Only ever called on a permanent `_is_exotic` has cleared, or on one
+    exotic alternative `_best_flow_plan` has already committed to, so every
+    remaining choice is between single mana of single colours - safe to
+    spread across one edge per colour, because the provider's own capacity (1
+    for a real choice between abilities, or the fixed total of the one
+    alternative when there is no choice at all) is what stops more than one
+    of them being spent at once.
+    """
+    snow = is_snow_source(source)
+    if len(alternatives) <= 1:
+        option, restriction = alternatives[0] if alternatives else ([], None)
+        slot = _slot_for(restriction, registry)
+        counts = _MultiSet(option)
+        buckets = {(color, snow, slot, NO_SPEND_EFFECT): amount for color, amount in counts.items()}
+        return buckets, sum(counts.values())
+
+    buckets = {}
+    for option, restriction in alternatives:
+        slot = _slot_for(restriction, registry)
+        buckets[(option[0], snow, slot, NO_SPEND_EFFECT)] = 1
+    return buckets, 1
+
+
+def _chosen_alternative(
+    alternatives: list[_Alternative], used: dict[_Bucket, int], snow: bool
+) -> tuple[list[Color], ManaRestriction | None]:
+    """Which of a tapped permanent's alternatives the flow solution actually
+    used, read back from the buckets it put flow into.
+
+    A permanent with only one alternative has nothing to read back - it *is*
+    that alternative, whatever fraction of it the flow chose to spend,
+    because tapping it produces the whole thing at once (CR 605.3b) and the
+    rest just floats unspent (CR 106.4a). A permanent with more than one only
+    ever has flow in the bucket its chosen alternative feeds, because its own
+    capacity-1 cut in `_assign_sources` allows nothing else.
+    """
+    if len(alternatives) <= 1:
+        if not alternatives:
+            return [], None
+        option, restriction = alternatives[0]
+        return list(option), restriction
+    registry: list[ManaRestriction] = []
+    for option, restriction in alternatives:
+        slot = _slot_for(restriction, registry)
+        if used.get((option[0], snow, slot, NO_SPEND_EFFECT), 0) > 0:
+            return list(option), restriction
+    return [], None
+
+
+def _best_flow_plan(
+    options: Sequence[PaymentOption],
+    simple: list[tuple[CardState, list[_Alternative]]],
+    exotic: list[tuple[CardState, list[_Alternative]]],
+    pool_buckets: dict[_Bucket, int],
+    pool_registry: list[ManaRestriction],
+) -> _TapPlan | None:
+    """The smallest tapping plan that settles `options` (one already-resolved
+    reading of `ManaCost`'s payable-in-multiple-ways symbols) out of `simple`
+    and `exotic` on top of `pool_buckets`, or None if none exists.
+
+    `exotic` permanents are branched over explicitly - "not used" or "used for
+    this one alternative", `product`ed across however many there are, which on
+    every board in this pool is zero or one - and for each combination the
+    rest (`pool_buckets` plus every `simple` permanent plus whichever `exotic`
+    ones this combination commits to) is handed to `_assign_sources` as one
+    flow problem. `None` is always the first choice tried for every exotic
+    permanent, so a board that needs none of them settles in a single flow
+    call and never explores a combination that would tap one unnecessarily -
+    and ties are broken by whichever combination was found first, favouring
+    that same all-`None` reading.
+    """
+    best: _TapPlan | None = None
+    best_size: int | None = None
+    exotic_choices = [[None, *alternatives] for _source, alternatives in exotic]
+    for choice_combo in product(*exotic_choices):
+        registry = list(pool_registry)
+        sources_map: dict[Hashable, dict[_Bucket, int]] = {
+            ("pool", bucket): {bucket: amount} for bucket, amount in pool_buckets.items()
+        }
+        capacity_map: dict[Hashable, int] = dict.fromkeys(sources_map, 0)
+        for key, amounts in sources_map.items():
+            capacity_map[key] = sum(amounts.values())
+
+        considered: list[tuple[CardState, list[_Alternative]]] = []
+        for source, chosen in zip(exotic, choice_combo, strict=True):
+            if chosen is None:
+                continue
+            buckets, capacity = _bucket_map(source[0], [chosen], registry)
+            sources_map[id(source[0])] = buckets
+            capacity_map[id(source[0])] = capacity
+            considered.append((source[0], [chosen]))
+        for source, alternatives in simple:
+            buckets, capacity = _bucket_map(source, alternatives, registry)
+            if not buckets:
+                continue
+            sources_map[id(source)] = buckets
+            capacity_map[id(source)] = capacity
+            considered.append((source, alternatives))
+
+        all_buckets = sorted(
+            {bucket for buckets in sources_map.values() for bucket in buckets},
+            key=lambda bucket: (bucket[2] == UNRESTRICTED, bucket[1]),
+        )
+        demands = _demand_list(options, all_buckets)
+        result = _assign_sources(demands, sources_map, capacity_map)
+        if result is None:
+            continue
+
+        plan: _TapPlan = []
+        for source, alternatives in considered:
+            used = result.get(id(source))
+            if not used:
+                continue
+            colors, restriction = _chosen_alternative(alternatives, used, is_snow_source(source))
+            if colors:
+                plan.append((source, colors, restriction))
+
+        if best is None or len(plan) < best_size:  # type: ignore[operator]
+            best, best_size = plan, len(plan)
+    return best
+
+
+def _solve_auto_tap_flow(
+    context: "CostPayment | _SpendContext",
+    sources: Iterable[CardState],
+    *,
+    owed: ManaCost,
+    base_floating: dict[Color, int],
+    base_snow: dict[Color, int],
+    base_restricted: list[Any],
+    life_available: int,
+) -> _TapPlan | None:
+    """The pure half of `auto_tap`: find a legal tapping-and-colour plan for
+    `owed` out of `sources`, or None if none exists. Mutates nothing - no
+    permanent is tapped, no pool is written to, and `context` may be a
+    throwaway `_SpendContext` rather than a real `CostPayment`.
+
+    `auto_tap` is `context._solve_auto_tap(...)` (below) followed by executing
+    the plan this returns through `tap_for_mana`; `could_pay_mana_cost` is
+    this and nothing else. Splitting the search out this way is what
+    guarantees the two can never disagree, the same argument
+    `TargetRequirement.rejects` already makes for `affordances.candidates`
+    (magic-cards-model-api): the predicate and the action that acts on the
+    predicate's answer share one implementation, so there is no second copy of
+    the logic to drift out of sync with the first.
+
+    This is the flow-based solver (see the module notes above
+    `_group_by_source`); `_solve_auto_tap_brute_force` is kept only as its
+    test-only reference oracle.
+
+    An empty plan (`[]`, not `None`) means `owed` is already covered by
+    `base_floating`/`base_snow`/`base_restricted` alone - `CostPayment.
+    shortfall`'s own check, folded in here so both callers get it for free
+    rather than needing their own copy of "is anything left to tap at all".
+    """
+    pool = ManaPool(
+        floating=dict(base_floating),
+        snow=dict(base_snow),
+        restricted=[entry.model_copy(deep=True) for entry in base_restricted],
+    )
+    if pool.can_pay(owed, life_available=life_available, spend=context.spend):
+        return []
+
+    grouped = _group_by_source(_auto_tap_candidates(context, list(sources)))
+    simple = [
+        (source, alternatives) for source, alternatives in grouped if not _is_exotic(alternatives)
+    ]
+    exotic = [
+        (source, alternatives) for source, alternatives in grouped if _is_exotic(alternatives)
+    ]
+    pool_registry = [entry.restriction for entry in base_restricted]
+    pool_buckets = pool._spendable_buckets(context.spend)
+
+    for options in _candidate_options(owed, None):
+        life = sum(option.life for option in options)
+        if life > life_available:
+            continue
+        plan = _best_flow_plan(options, simple, exotic, pool_buckets, pool_registry)
+        if plan is not None:
+            return plan
+    return None
+
+
+def _solve_auto_tap(
+    context: "CostPayment | _SpendContext",
+    sources: Iterable[CardState],
+    *,
+    owed: ManaCost,
+    base_floating: dict[Color, int],
+    base_snow: dict[Color, int],
+    base_restricted: list[Any],
+    life_available: int,
+) -> _TapPlan | None:
+    """`auto_tap`/`could_pay_mana_cost`'s actual entry point - see
+    `_solve_auto_tap_flow`, which this calls directly. Kept as its own name so
+    every existing caller and docstring cross-reference stays correct without
+    having to say "flow" - the brute-force predecessor is now
+    `_solve_auto_tap_brute_force`, reachable only from the property test that
+    checks the two still agree.
+    """
+    return _solve_auto_tap_flow(
+        context,
+        sources,
+        owed=owed,
+        base_floating=base_floating,
+        base_snow=base_snow,
+        base_restricted=base_restricted,
+        life_available=life_available,
+    )
 
 
 def could_pay_mana_cost(

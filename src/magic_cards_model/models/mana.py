@@ -22,7 +22,7 @@ belongs to the payer (CR 118.13a), so it can be pinned with `choices=`.
 
 import re
 from collections import Counter
-from collections.abc import Iterable, Sequence
+from collections.abc import Hashable, Iterable, Sequence
 from enum import StrEnum
 from itertools import combinations_with_replacement, product
 
@@ -727,6 +727,79 @@ UNRESTRICTED = -1
 NO_SPEND_EFFECT = -1
 
 
+def _candidate_options(
+    cost: ManaCost, choices: Sequence[int | None] | None
+) -> Iterable[tuple[PaymentOption, ...]]:
+    """Every distinct assignment of one payment option per symbol of `cost`.
+
+    Module-level rather than a `ManaPool` method - despite living beside it,
+    it reads only `cost`/`choices` and touches no pool state, so a caller that
+    has no pool at all (`machines/cost.py`'s tap-solving, which is choosing
+    *sources*, not settling a payment against a live pool) can enumerate the
+    cost's own payable-in-multiple-ways symbols (CR 118.13a) the same way
+    `ManaPool.payment_for` does, without constructing a throwaway pool just to
+    reach a method that never looks at it.
+
+    Identical symbols are grouped and enumerated as multisets rather than as
+    ordered tuples, so `{2/W}{2/W}{2/W}` is four candidates and not eight. A
+    pinned choice collapses its symbol to one option.
+    """
+    groups: dict[ManaSymbol, list[int]] = {}
+    for index, symbol in enumerate(cost.symbols):
+        groups.setdefault(symbol, []).append(index)
+
+    per_group: list[list[list[tuple[int, PaymentOption]]]] = []
+    for symbol, indexes in groups.items():
+        options = symbol.options
+        pinned = {i: choices[i] for i in indexes if choices and choices[i] is not None}
+        free = [i for i in indexes if i not in pinned]
+        fixed = [(i, options[choice]) for i, choice in pinned.items()]  # type: ignore[index]
+        per_group.append(
+            [
+                fixed + list(zip(free, picks, strict=True))
+                for picks in combinations_with_replacement(options, len(free))
+            ]
+        )
+
+    for combination in product(*per_group):
+        assignment: dict[int, PaymentOption] = {}
+        for group in combination:
+            assignment.update(group)
+        yield tuple(assignment[i] for i in range(len(cost.symbols)))
+
+
+def _demand_list(
+    options: Sequence[PaymentOption], buckets: Iterable[_Bucket]
+) -> list[tuple[int, list[_Bucket]]]:
+    """The demand list `_assign` (and `machines/cost.py`'s source-picking
+    `_assign_sources`) solve against, built from one resolution of a cost's
+    payable-in-multiple-ways symbols (CR 118.13a - `_candidate_options`) and
+    the buckets that exist to pay them.
+
+    Most restrictive demand first: a fixed colour, then snow (CR 107.4h - any
+    colour but only from a snow source), then generic, which takes anything.
+    Each `allowed` list is filtered out of `buckets` rather than rebuilt, so
+    whatever preference order `buckets` already carries (restricted before
+    unrestricted, non-snow before snow - see `ManaPool._buckets`) survives
+    into the demand list unchanged, which is what makes a restricted bucket
+    the one spent when either would do.
+    """
+    buckets = list(buckets)
+    generic = sum(option.generic for option in options)
+    snow_needed = sum(1 for option in options if option.snow)
+    colors: Counter[Color] = Counter(
+        option.color for option in options if option.color is not None and not option.snow
+    )
+    demands: list[tuple[int, list[_Bucket]]] = [
+        (count, [b for b in buckets if b[0] == color]) for color, count in colors.items()
+    ]
+    if snow_needed:
+        demands.append((snow_needed, [b for b in buckets if b[1]]))
+    if generic:
+        demands.append((generic, list(buckets)))
+    return demands
+
+
 class ManaPool(BaseModel):
     """Mana floating in a player's pool.
 
@@ -871,7 +944,7 @@ class ManaPool(BaseModel):
             raise ValueError(f"expected {len(cost.symbols)} choices, got {len(choices)}")
 
         best: ManaPayment | None = None
-        for options in self._candidate_options(cost, choices):
+        for options in _candidate_options(cost, choices):
             life = sum(option.life for option in options)
             if life > life_available:
                 continue
@@ -937,38 +1010,6 @@ class ManaPool(BaseModel):
 
     # -- the search --------------------------------------------------------
 
-    def _candidate_options(
-        self, cost: ManaCost, choices: Sequence[int | None] | None
-    ) -> Iterable[tuple[PaymentOption, ...]]:
-        """Every distinct assignment of one payment option per symbol.
-
-        Identical symbols are grouped and enumerated as multisets rather than
-        as ordered tuples, so `{2/W}{2/W}{2/W}` is four candidates and not
-        eight. A pinned choice collapses its symbol to one option.
-        """
-        groups: dict[ManaSymbol, list[int]] = {}
-        for index, symbol in enumerate(cost.symbols):
-            groups.setdefault(symbol, []).append(index)
-
-        per_group: list[list[list[tuple[int, PaymentOption]]]] = []
-        for symbol, indexes in groups.items():
-            options = symbol.options
-            pinned = {i: choices[i] for i in indexes if choices and choices[i] is not None}
-            free = [i for i in indexes if i not in pinned]
-            fixed = [(i, options[choice]) for i, choice in pinned.items()]  # type: ignore[index]
-            per_group.append(
-                [
-                    fixed + list(zip(free, picks, strict=True))
-                    for picks in combinations_with_replacement(options, len(free))
-                ]
-            )
-
-        for combination in product(*per_group):
-            assignment: dict[int, PaymentOption] = {}
-            for group in combination:
-                assignment.update(group)
-            yield tuple(assignment[i] for i in range(len(cost.symbols)))
-
     def _settle(
         self,
         options: Sequence[PaymentOption],
@@ -976,26 +1017,8 @@ class ManaPool(BaseModel):
         spend_on: ManaSpend | None = None,
     ) -> ManaPayment | None:
         """Can the pool cover these fixed demands? If so, with what mana?"""
-        generic = sum(option.generic for option in options)
-        snow_needed = sum(1 for option in options if option.snow)
-        colors: Counter[Color] = Counter(
-            option.color for option in options if option.color is not None and not option.snow
-        )
-
         buckets = self._spendable_buckets(spend_on)
-        # Most restrictive demand first: a fixed colour, then snow (any colour
-        # but only from a snow source), then generic, which takes anything.
-        # Each `allowed` list is filtered out of `buckets`, which is already in
-        # preference order, so the order survives into the flow solver - that
-        # is what makes a restricted bucket the one spent when either would do.
-        demands: list[tuple[int, list[_Bucket]]] = [
-            (count, [b for b in buckets if b[0] == color]) for color, count in colors.items()
-        ]
-        if snow_needed:
-            demands.append((snow_needed, [b for b in buckets if b[1]]))
-        if generic:
-            demands.append((generic, list(buckets)))
-
+        demands = _demand_list(options, buckets)
         spent = _assign(buckets, demands)
         if spent is None:
             return None
@@ -1120,46 +1143,125 @@ def _assign(
     is solved as a max-flow: source -> demand -> allowed buckets -> sink, with
     the demand feasible exactly when the flow saturates the source.
 
-    Ford-Fulkerson with a BFS augmenting path: O(V * E * F), where F is the
-    mana value of the cost, V is at most 14 and E at most 100. The bucket order
-    decides which mana is spent when several would do.
+    The degenerate case of `_assign_sources` where every bucket is its own
+    sole provider, capped at its own pool amount - which is exactly what a
+    live `ManaPool` already has, mana already produced and just sitting
+    there, with no permanent behind it left to solve for. `machines/cost.py`'s
+    tap-solving needs the extra layer because it is choosing *which
+    permanents to tap*, not settling a payment against mana that already
+    exists; see that function's own docstring for why one bucket can need more
+    than one provider once it is fed by permanents instead.
+    """
+    solved = _assign_sources(
+        demands,
+        {bucket: {bucket: amount} for bucket, amount in buckets.items()},
+        dict(buckets),
+    )
+    if solved is None:
+        return None
+    return {bucket: amounts[bucket] for bucket, amounts in solved.items()}
+
+
+def _assign_sources(
+    demands: list[tuple[int, list[_Bucket]]],
+    sources: dict[Hashable, dict[_Bucket, int]],
+    capacity: dict[Hashable, int],
+) -> dict[Hashable, dict[_Bucket, int]] | None:
+    """Match demands against buckets that are themselves fed by providers with
+    their own total capacity, or return `None` if impossible.
+
+    `_assign`'s own network extended by one layer, as `machines/cost.py`'s
+    auto-tap solver needs it: `source -> demand -> bucket -> sink` becomes
+    `source -> demand -> bucket -> provider -> sink`, with the new provider ->
+    sink edge, capped at `capacity[provider]`, the one thing this adds. A
+    provider is a permanent about to be tapped (or the payer's mana already
+    floating, itself capped at the amount it holds) and `sources[provider]` is
+    how much of each bucket it could contribute if it were the *only* thing
+    spent - a dual land offers 1 into its `{W}` bucket and 1 into its `{U}`
+    bucket, never both, which `capacity[provider] = 1` is what actually
+    enforces; without that separate cut, two colour edges each capped at 1
+    would let the max-flow solver read a one-mana choice as two, the same way
+    it would misread Shang-Chi's own choice of colour if that one were routed
+    through here as ordinary buckets rather than branched over externally (see
+    `machines/cost.py`'s own docstring on which sources this layer can and
+    cannot express).
+
+    A provider whose only way to help is a single fixed multiset - a Tron
+    piece boosted to `{C}{C}`, Eldrazi Temple's *unrestricted* `{T}: Add {C}.`
+    - is never ambiguous even past one mana: it has only one bucket to put
+    that mana in (or, if that one option happens to mix colours, one bucket
+    per colour it is fixed to), so nothing here needs to choose between two
+    ways to spend the same tap. What this layer cannot express, and what a
+    caller must resolve before ever building `sources` for it, is a *choice*
+    among options where not every option is a single mana of a single colour
+    - `machines/cost.py`'s own grouping of a permanent's abilities decides
+    that before this is ever called.
+
+    Ford-Fulkerson with a BFS augmenting path, same as `_assign`: O(V * E * F)
+    where F is the mana value of the cost. `sources`/`capacity` add at most one
+    provider node per permanent under consideration to V, and at most one
+    bucket -> provider edge per (bucket, provider) pair to E - still small
+    enough, on any real board, for this to run in single-digit milliseconds.
+    The order `sources` and each provider's own bucket dict are built in
+    decides which provider is spent when several would do, the same way
+    `buckets`'s order already decides it for `_assign`.
     """
     needed = sum(count for count, _ in demands)
     if needed == 0:
         return {}
-    if needed > sum(buckets.values()):
-        return None
 
-    source, sink = "source", "sink"
-    residual: dict[object, dict[object, int]] = {source: {}, sink: {}}
-    for bucket, amount in buckets.items():
-        residual.setdefault(bucket, {})[sink] = amount
-        residual[sink][bucket] = 0
+    source_alg, sink_alg = "source", "sink"
+    residual: dict[object, dict[object, int]] = {source_alg: {}, sink_alg: {}}
+
+    bucket_nodes: dict[_Bucket, object] = {}
+
+    def bucket_node(bucket: _Bucket) -> object:
+        node = bucket_nodes.get(bucket)
+        if node is None:
+            node = ("bucket", bucket)
+            bucket_nodes[bucket] = node
+            residual[node] = {}
+        return node
+
+    provider_nodes: dict[Hashable, object] = {}
+    for provider, amounts in sources.items():
+        node = ("provider", provider)
+        provider_nodes[provider] = node
+        residual.setdefault(node, {})[sink_alg] = capacity.get(provider, sum(amounts.values()))
+        residual[sink_alg][node] = 0
+        for bucket, amount in amounts.items():
+            if amount <= 0:
+                continue
+            bnode = bucket_node(bucket)
+            residual[bnode][node] = amount
+            residual[node].setdefault(bnode, 0)
+
     for index, (count, allowed) in enumerate(demands):
         node = ("demand", index)
-        residual[source][node] = count
-        residual[node] = {source: 0}
+        residual[source_alg][node] = count
+        residual[node] = {source_alg: 0}
         for bucket in allowed:
-            if bucket in buckets:
-                residual[node][bucket] = count
-                residual.setdefault(bucket, {})[node] = 0
+            if bucket in bucket_nodes:
+                bnode = bucket_nodes[bucket]
+                residual[node][bnode] = count
+                residual[bnode].setdefault(node, 0)
 
     flow = 0
     while True:
-        parents: dict[object, object] = {source: source}
-        queue = [source]
-        while queue and sink not in parents:
+        parents: dict[object, object] = {source_alg: source_alg}
+        queue = [source_alg]
+        while queue and sink_alg not in parents:
             node = queue.pop(0)
-            for neighbour, capacity in residual[node].items():
-                if capacity > 0 and neighbour not in parents:
+            for neighbour, edge_capacity in residual[node].items():
+                if edge_capacity > 0 and neighbour not in parents:
                     parents[neighbour] = node
                     queue.append(neighbour)
-        if sink not in parents:
+        if sink_alg not in parents:
             break
 
         path: list[tuple[object, object]] = []
-        node = sink
-        while node != source:
+        node = sink_alg
+        while node != source_alg:
             path.append((parents[node], node))
             node = parents[node]
         bottleneck = min(residual[a][b] for a, b in path)
@@ -1170,8 +1272,15 @@ def _assign(
 
     if flow < needed:
         return None
-    return {
-        bucket: amount - residual[bucket][sink]
-        for bucket, amount in buckets.items()
-        if amount - residual[bucket][sink] > 0
-    }
+
+    result: dict[Hashable, dict[_Bucket, int]] = {}
+    for provider, amounts in sources.items():
+        node = provider_nodes[provider]
+        used = {
+            bucket: amount - residual[bucket_nodes[bucket]][node]
+            for bucket, amount in amounts.items()
+            if amount > 0 and amount - residual[bucket_nodes[bucket]][node] > 0
+        }
+        if used:
+            result[provider] = used
+    return result
