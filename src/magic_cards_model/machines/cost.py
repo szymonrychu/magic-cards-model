@@ -1179,7 +1179,10 @@ def _bucket_map(
 
 
 def _chosen_alternative(
-    alternatives: list[_Alternative], used: dict[_Bucket, int], snow: bool
+    alternatives: list[_Alternative],
+    used: dict[_Bucket, int],
+    snow: bool,
+    registry: list[ManaRestriction],
 ) -> tuple[list[Color], ManaRestriction | None]:
     """Which of a tapped permanent's alternatives the flow solution actually
     used, read back from the buckets it put flow into.
@@ -1190,13 +1193,25 @@ def _chosen_alternative(
     rest just floats unspent (CR 106.4a). A permanent with more than one only
     ever has flow in the bucket its chosen alternative feeds, because its own
     capacity-1 cut in `_assign_sources` allows nothing else.
+
+    `registry` must be the very same registry (or a later state of it)
+    `_bucket_map` used to assign this permanent's own bucket slots - it is
+    shared and mutated in place across every source `_best_flow_plan`
+    considers for one flow-network build, seeded from `pool_registry` so a
+    restriction already floating in the payer's pool keeps its slot. Passing
+    a fresh, empty registry here instead - as this function used to - makes
+    `_slot_for` renumber every restriction from 0 relative to this call
+    alone, which only happens to match `used`'s real keys when nothing else
+    (no other source, no floating restricted mana) registered a restriction
+    first. When something did, the slot this recomputes is wrong, `used` has
+    nothing at that key, and the source is silently dropped from the plan
+    even though the flow solution actually spent it.
     """
     if len(alternatives) <= 1:
         if not alternatives:
             return [], None
         option, restriction = alternatives[0]
         return list(option), restriction
-    registry: list[ManaRestriction] = []
     for option, restriction in alternatives:
         slot = _slot_for(restriction, registry)
         if used.get((option[0], snow, slot, NO_SPEND_EFFECT), 0) > 0:
@@ -1254,9 +1269,28 @@ def _best_flow_plan(
             capacity_map[id(source)] = capacity
             considered.append((source, alternatives))
 
+        # Restricted-before-unrestricted, non-snow-before-snow are the actual
+        # preference (see `ManaPool._buckets`'s own reasoning, mirrored here);
+        # `bucket[0].value`/`bucket[2]`/`bucket[3]` are pure tie-breakers with
+        # no preference of their own, but they still have to be there. `_Bucket`
+        # is `(Color, bool, int, int)`, and iterating a `set` of them walks it
+        # in hash order - `Color` is a `StrEnum`, so that hash is
+        # `PYTHONHASHSEED`-salted per CPython process. Without a total key,
+        # every pair of unrestricted non-snow buckets of different colours ties
+        # at `(True, False)` and the sort leaves that hash order showing
+        # through, so which colour (and therefore which land) the flow below
+        # prefers when several would do could vary by process even on an
+        # identical board - the same class of bug `serialization.SortedSet`
+        # fixes for a dumped `set` field, here in a live sort instead.
         all_buckets = sorted(
             {bucket for buckets in sources_map.values() for bucket in buckets},
-            key=lambda bucket: (bucket[2] == UNRESTRICTED, bucket[1]),
+            key=lambda bucket: (
+                bucket[2] == UNRESTRICTED,
+                bucket[1],
+                bucket[0].value,
+                bucket[2],
+                bucket[3],
+            ),
         )
         demands = _demand_list(options, all_buckets)
         result = _assign_sources(demands, sources_map, capacity_map)
@@ -1268,7 +1302,9 @@ def _best_flow_plan(
             used = result.get(id(source))
             if not used:
                 continue
-            colors, restriction = _chosen_alternative(alternatives, used, is_snow_source(source))
+            colors, restriction = _chosen_alternative(
+                alternatives, used, is_snow_source(source), registry
+            )
             if colors:
                 plan.append((source, colors, restriction))
 
