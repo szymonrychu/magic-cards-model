@@ -534,8 +534,11 @@ def test_one_card_may_be_put_back_on_top_and_the_rest_exiled():
 
     assert alice.library[0] is kept
     assert len(alice.library) == 50
+    # `Game.exile`, not `alice.cards_in(Zone.EXILE)`: exile is a shared zone
+    # (CR 400.1), and reading a per-player one here is what let this ability
+    # exile into a pile of alice's own for as long as it did.
     assert sorted(state.id for state in top_four if state is not kept) == sorted(
-        state.id for state in alice.cards_in(Zone.EXILE)
+        state.id for state in game.exile
     )
 
 
@@ -578,6 +581,121 @@ def test_the_upkeep_question_says_where_both_halves_of_the_split_go():
     # And the board agrees with the labels.
     assert alice.library[0] is kept
     assert [state.zone for state in top_four if state is not kept] == [Zone.EXILE] * 3
+
+
+def test_the_exiled_cards_land_in_the_games_shared_exile_zone():
+    """The reported bug. "Exile the rest" has to put those cards in *the* exile
+    zone, and CR 400.1 says which one that is: "There are normally seven zones:
+    library, hand, battlefield, graveyard, stack, exile, and command. Each
+    player has their own library, hand, and graveyard. The other zones are
+    shared by all players." CR 406.2: "To exile an object is to put it into the
+    exile zone from whatever zone it's currently in."
+
+    Exiling into a pile of alice's own instead leaves the four cards in a place
+    no shared-zone reader can see - not `Game.exile`, not `Game.all_targetables`
+    (which walks `shared_zones` for the battlefield and exile precisely because
+    "`Player.zones` never holds either one"), and not the board any seat is
+    looking at. From the table, the cards are neither on the library nor in
+    exile: neither of the two outcomes this ability has.
+    """
+    match = series(broodscale(), devoted())
+    game = dealt(match, {"alice": "Devourer of Destiny"}, on_the_play="alice")
+    alice = game.player("alice")
+    will_take(game, "alice", "Devourer of Destiny")
+    match.run_mulligans(game)
+    top_four = list(alice.library[:4])
+
+    game.advance("alice")
+    game.resolve_top()
+
+    assert [state.id for state in game.exile] == [state.id for state in top_four]
+    assert alice.zones.get(Zone.EXILE, []) == [], (
+        "exile is a shared zone (CR 400.1) - a player never has one of their own"
+    )
+
+
+def test_the_three_unchosen_cards_land_in_the_shared_exile_zone():
+    """The same, on the branch where the "you may" is taken: one card back on
+    top (CR 608.2d's announced choice) and the other three in the shared exile
+    zone (CR 400.1, CR 406.2)."""
+    match = series(broodscale(), devoted())
+    game = dealt(match, {"alice": "Devourer of Destiny"}, on_the_play="alice")
+    alice = game.player("alice")
+    will_take(game, "alice", "Devourer of Destiny")
+    match.run_mulligans(game)
+    top_four = list(alice.library[:4])
+    kept = top_four[2]
+    game.decisions.add(
+        ScriptedAnswer(
+            kind=DecisionKind.SCRY,
+            value=CardSplit(moved=(kept.id,)),
+            player="alice",
+            source="Devourer of Destiny",
+        )
+    )
+
+    game.advance("alice")
+    game.resolve_top()
+
+    assert alice.library[0] is kept
+    assert [state.id for state in game.exile] == [
+        state.id for state in top_four if state is not kept
+    ]
+    assert alice.zones.get(Zone.EXILE, []) == []
+
+
+def test_a_library_of_fewer_than_four_cards_exiles_what_is_there():
+    """ "Look at the top four cards" with two left is a look at two (CR 701.20e
+    follows CR 701.20a's reveal, which shows what there is), and "exile the
+    rest" is then those two - not an error, and not a card conjured to make
+    four.
+
+    Alice is milled down to two real cards from her own registered sixty first;
+    every card here is still the printing the list names.
+    """
+    match = series(broodscale(), devoted())
+    game = dealt(match, {"alice": "Devourer of Destiny"}, on_the_play="alice")
+    alice = game.player("alice")
+    will_take(game, "alice", "Devourer of Destiny")
+    match.run_mulligans(game)
+    for state in list(alice.library[2:]):
+        game.put_into_graveyard(state)
+    top_two = list(alice.library)
+    assert len(top_two) == 2
+
+    game.advance("alice")
+    game.resolve_top()
+
+    assert alice.library == []
+    assert [state.id for state in game.exile] == [state.id for state in top_two]
+
+
+def test_a_short_library_still_honours_the_one_card_put_back():
+    """The same short library with the "you may" taken: the one named card is
+    on top and the other is exiled."""
+    match = series(broodscale(), devoted())
+    game = dealt(match, {"alice": "Devourer of Destiny"}, on_the_play="alice")
+    alice = game.player("alice")
+    will_take(game, "alice", "Devourer of Destiny")
+    match.run_mulligans(game)
+    for state in list(alice.library[2:]):
+        game.put_into_graveyard(state)
+    top_two = list(alice.library)
+    kept = top_two[1]
+    game.decisions.add(
+        ScriptedAnswer(
+            kind=DecisionKind.SCRY,
+            value=CardSplit(moved=(kept.id,)),
+            player="alice",
+            source="Devourer of Destiny",
+        )
+    )
+
+    game.advance("alice")
+    game.resolve_top()
+
+    assert alice.library == [kept]
+    assert [state.id for state in game.exile] == [top_two[0].id]
 
 
 def test_the_trigger_waits_for_its_own_controller_s_upkeep():
