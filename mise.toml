@@ -1,6 +1,10 @@
 [tools]
 python = "3.13"
 uv = "latest"
+# Pinned here rather than inherited from the workbench root: this repo is an
+# independent GitHub repo and its own CI clones it alone, with no superrepo
+# .mise.toml above it to supply ruff.
+ruff = "0.15.20"
 
 [env]
 _.python.venv = { path = ".venv", create = true }
