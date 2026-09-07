@@ -1,3 +1,6 @@
+import pytest
+from pydantic import ValidationError
+
 from magic_cards_model.models.card import Layout, Legality, Rarity, Supertype, Type
 from tests.cards import card
 
@@ -41,3 +44,25 @@ def test_parses_a_pre_modern_card():
 
     assert printing.name == "Tinder Farm"
     assert printing.types == [Type.LAND]
+
+
+def test_card_is_immutable():
+    """`Card` is the immutable Scryfall printing - a printing does not change
+    once loaded - `frozen=True` in `models/card.py` makes that a pydantic
+    guarantee, not just a convention in a docstring nobody checks.
+
+    This is the whole reason `machines/abilities.parse_abilities` and
+    `machines/triggers.activated_abilities_of` are safe to memoise on
+    `Card.id`: if a `Card` could still be mutated after construction, either
+    cache would go stale silently the moment something did, and nothing would
+    notice. If this test ever starts failing, both of those caches need to be
+    reconsidered before `Card` is allowed to become mutable again.
+    """
+    printing = card("Ragavan, Nimble Pilferer")
+
+    with pytest.raises(ValidationError, match="frozen"):
+        printing.name = "Mutated Pilferer"
+    with pytest.raises(ValidationError, match="frozen"):
+        printing.oracle_text = "This card now does something else."
+    with pytest.raises(ValidationError, match="frozen"):
+        printing.type_line = "Sorcery"

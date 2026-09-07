@@ -488,14 +488,18 @@ def test_mutating_a_card_in_one_game_is_not_observed_through_another_games_profi
     Before this fix the cache was keyed on `(card.name, text)` and stamped
     `source_card` into the cached entry itself, so the first game to ask for
     a "Lightning Bolt" profile handed its own `Card` to every later game that
-    asked - and `Card` is `ConfigDict(extra="ignore")`, not frozen, so a
-    caller mutating one game's `Card` (a copy effect, a Humility-style
-    characteristic-defining rewrite) would have been visible through a
-    second, unrelated game's cached profile.
+    asked - and at the time `Card` was not frozen, so a caller mutating one
+    game's `Card` (a copy effect, a Humility-style characteristic-defining
+    rewrite) would have been visible through a second, unrelated game's
+    cached profile.
 
-    Two distinct `Card` objects with identical oracle text stand in for "the
-    same printing, loaded independently by two different games' decks" -
-    which is the real-world shape this leak would have taken.
+    `Card` is `frozen=True` now (see `models/card.py`, and
+    `test_card_immutability.py` for the guarantee itself), which forecloses
+    that particular mutation - but the cache leak this guards against was
+    about *object identity*, not mutability: two distinct `Card` objects with
+    identical oracle text stand in for "the same printing, loaded
+    independently by two different games' decks", and each game's profile
+    must hold its own reference, never one shared with another game's.
     """
     first_game_card = card("Lightning Bolt")
     second_game_card = first_game_card.model_copy(deep=True)
@@ -506,13 +510,7 @@ def test_mutating_a_card_in_one_game_is_not_observed_through_another_games_profi
 
     assert first_profile.source_card is first_game_card
     assert second_profile.source_card is second_game_card
-
-    # A change to the first game's Card - standing in for whatever mutated it -
-    # must not be observable through the second game's profile.
-    first_game_card.name = "Mutated in game one"
-
-    assert second_profile.source_card is not None
-    assert second_profile.source_card.name == "Lightning Bolt"
+    assert second_profile.source_card is not first_profile.source_card
 
 
 def test_too_few_targets_is_rejected():

@@ -488,7 +488,7 @@ def test_a_bestowed_spell_is_an_aura_enchantment_and_not_a_creature():
     an Aura enchantment and gains enchant creature."
 
     Asserted against the printed type line, which says Enchantment Creature -
-    Phoenix: the printing is unchanged (CR 108.1) and only the object in the
+    Phoenix: the printing is unchanged and only the object in the
     game is an Aura.
     """
     phoenix = card_state("Detective's Phoenix", zone=Zone.STACK)

@@ -2785,6 +2785,14 @@ def _expand_enters_or_leaves(ability: TriggeredAbility) -> list[TriggeredAbility
     ]
 
 
+#: `activated_abilities_of`'s memo, keyed on `(Card.id, face)` so two
+#: different printings - and the same printing asked about two different
+#: faces - can never collide. Sound for the same reason `_ability_cache` in
+#: `machines/abilities.py` is: `Card` is immutable (`frozen=True`), verified by
+#: `tests/test_card.py::test_card_is_immutable`.
+_activated_abilities_cache: dict[tuple[UUID, str | None], list[ActivatedAbility]] = {}
+
+
 def activated_abilities_of(card: Card, face: str | None = None) -> list[ActivatedAbility]:
     """Every activated ability printed on a card (CR 113.3b, 602.1).
 
@@ -2803,16 +2811,21 @@ def activated_abilities_of(card: Card, face: str | None = None) -> list[Activate
     loyalty abilities and none of his front face's, and an untransformed one has
     neither. `CardState.up_face_name` is what callers pass; `None` - every
     single-faced card - filters nothing.
+
+    Memoised on `(card.id, face)` - see `_activated_abilities_cache`.
     """
+    key = (card.id, face)
+    cached = _activated_abilities_cache.get(key)
+    if cached is not None:
+        return cached
     printed = [
         ability
         for ability in parse_abilities(card)
         if isinstance(ability, ActivatedAbility) and (face is None or ability.face == face)
     ]
-    if printed:
-        return printed
-    intrinsic = intrinsic_land_ability(card, face)
-    return [intrinsic] if intrinsic is not None else []
+    result = printed or ([intrinsic] if (intrinsic := intrinsic_land_ability(card, face)) else [])
+    _activated_abilities_cache[key] = result
+    return result
 
 
 def granted_activated_abilities_of(texts: Sequence[str]) -> list[ActivatedAbility]:

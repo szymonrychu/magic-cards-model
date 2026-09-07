@@ -10,6 +10,7 @@ Reference: https://scryfall.com/docs/api/cards
 """
 
 from enum import StrEnum
+from functools import cache
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
@@ -172,7 +173,19 @@ class CardFace(ScryfallModel):
 
 
 class Card(ScryfallModel):
-    """A card as the rules see it, modern frame era onward."""
+    """A card as the rules see it, modern frame era onward.
+
+    Immutable once loaded - a printing does not change - `frozen=True` makes
+    that a pydantic guarantee rather than a convention nobody checks, and
+    it is not just documentation: `machines/abilities.parse_abilities` and
+    `machines/triggers.activated_abilities_of` memoise their parse of a
+    printing's oracle text keyed on `Card.id`, on the strength of this being
+    true. A `Card` that could still be mutated after construction would make
+    that cache wrong the moment anything did, silently - see
+    `tests/test_card.py::test_card_is_immutable`.
+    """
+
+    model_config = ConfigDict(extra="ignore", frozen=True)
 
     # Identity
     id: UUID
@@ -335,15 +348,37 @@ def types_of(type_line: str) -> list[Type]:
     return [t for t in Type if t.value in words]
 
 
+@cache
+def _supertypes_of_cached(type_line: str) -> tuple[Supertype, ...]:
+    """The precomputed set `supertypes_of` reads from, one entry per distinct
+    `type_line` ever seen.
+
+    A supertype is a printed constant (CR 205.4a) - the same `type_line`
+    string always parses to the same answer - so this is memoised on the
+    string itself rather than on a `Card`: two different printings that happen
+    to share a type line (any two copies of the same land, from different
+    sets) get the same cache hit, correctly, because the question was never
+    about the printing's identity. `is_snow_source` (`machines/cost.py`) is
+    the caller this matters for: a real 18-source board asked it 162,815 times
+    answering one `{3}{W}{W}` affordability question, re-splitting the same
+    handful of type lines every time before this cache existed.
+    """
+    words = _words_before_dash(type_line)
+    return tuple(s for s in Supertype if s.value in words)
+
+
 def supertypes_of(type_line: str) -> list[Supertype]:
     """Supertypes parsed out of a single face's `type_line` (CR 205.4a).
 
     Shared by `Card.supertypes` (the front face) and `CardState.supertypes`,
     which reads whichever face is up (CR 712.8d, 712.8e, 712.8f) - the same
     split `types_of` already makes.
+
+    Always returns a fresh list: the parse itself is memoised
+    (`_supertypes_of_cached`), but nothing here hands a caller the cached
+    tuple to mutate.
     """
-    words = _words_before_dash(type_line)
-    return [s for s in Supertype if s.value in words]
+    return list(_supertypes_of_cached(type_line))
 
 
 def subtypes_of(type_line: str) -> list[str]:

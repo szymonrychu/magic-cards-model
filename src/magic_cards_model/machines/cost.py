@@ -32,7 +32,9 @@ cancelled.
 
 import re
 from collections.abc import Iterable, Sequence
+from dataclasses import dataclass
 from enum import StrEnum
+from functools import cache
 from itertools import combinations, product
 from typing import Any
 from uuid import UUID
@@ -76,6 +78,31 @@ from .triggers import (
     rewritten_ability_lines,
     tapped_for_mana_event,
 )
+
+
+@dataclass(frozen=True)
+class _SpendContext:
+    """The read-only slice of a `CostPayment` that surveying the board for
+    mana actually needs: which game to read the battlefield from, who is
+    paying, and what the mana is for (CR 106.6's restriction is judged against
+    `spend`).
+
+    `_mana_context`, `_mana_narrowings`, `_auto_tap_candidates`,
+    `_activation_refused`, and `_among_colors` all take one of these - a
+    `CostPayment` satisfies it structurally (it carries the same three
+    attributes), so a real payment still being built can be passed straight
+    through while `auto_tap` executes. `could_pay_mana_cost` passes one of
+    *these* instead: a pure affordability query has nothing to pay with and
+    must build no `CostPayment` at all, because `CostPayment.for_total` seeds
+    its pool through `_seed_payer_pool`, which calls `_register_pool` and
+    publishes that pool into `game.open_payment_pools[payer]` - a write a
+    read-only predicate must never make, whether or not anything ever reads it
+    back out.
+    """
+
+    game: Any = None
+    payer: str | None = None
+    spend: "ManaSpend | None" = None
 
 
 def can_tap_for_mana(source: CardState, game: Any = None) -> bool:
@@ -202,7 +229,9 @@ def tappable_mana_activations(
     ]
 
 
-def _activation_refused(payment: "CostPayment", source: CardState, index: int) -> str | None:
+def _activation_refused(
+    payment: "CostPayment | _SpendContext", source: CardState, index: int
+) -> str | None:
     """Why CR 602.5 forbids activating `source`'s ability number `index` right
     now, or None - `Game.why_cannot_activate`'s answer, asked from the payment.
 
@@ -248,7 +277,7 @@ _ANY_COLOR_AMONG = re.compile(r"\bamong (?P<quality>[a-z ,]+?) you control\b", r
 
 
 def _among_colors(
-    effect: str, payment: "CostPayment", source: CardState
+    effect: str, payment: "CostPayment | _SpendContext", source: CardState
 ) -> frozenset[Color] | None:
     """The colours an "of any color among [quality] you control" clause leaves
     defined right now, or None when the effect prints no such clause at all.
@@ -491,6 +520,24 @@ def spend_restriction(effect: str, source: CardState | None = None) -> ManaRestr
     must not conflate them: None means "this mana is free to spend", an
     unread restriction means "this engine cannot show the restriction was
     honoured, so it refuses".
+
+    `source` itself is not memoisable - it is a mutable `CardState` - but
+    everything the parse actually reads out of it is the one string
+    `_chosen_creature_type` returns, so that is what is memoised on
+    (`_spend_restriction_cached`), not `source`. `auto_tap`'s search calls this
+    once per candidate per combination tried; caching it is one of the two
+    cheap wins this module makes ahead of replacing the search itself.
+    """
+    return _spend_restriction_cached(effect, _chosen_creature_type(source))
+
+
+@cache
+def _spend_restriction_cached(effect: str, chosen_type: str | None) -> ManaRestriction | None:
+    """`spend_restriction`'s memo. `effect` and the chosen creature type
+    (already resolved out of `source`) are the whole of what the parse below
+    depends on, so caching on that pair is exact - no `CardState` identity
+    needed, and no risk of two different sources colliding on one answer that
+    was never about identity in the first place.
     """
     match = _SPEND_RESTRICTION.search(effect)
     if match is None:
@@ -507,7 +554,7 @@ def spend_restriction(effect: str, source: CardState | None = None) -> ManaRestr
         cast = _SPEND_CAST_CLAUSE.match(phrase)
         activate = _SPEND_ACTIVATE_CLAUSE.match(phrase)
         if cast is not None:
-            chosen = _chosen_creature_type(source) if cast.group("chosen") else None
+            chosen = chosen_type if cast.group("chosen") else None
             if cast.group("chosen") and chosen is None:
                 return ManaRestriction(text=text)
             clause = _spend_clause(cast.group("quality"), SpendPurpose.CAST_SPELL, chosen)
@@ -610,7 +657,7 @@ def _flexibility(options: list[list[Color]], any_color: bool) -> int:
 
 
 def _mana_context(
-    payment: "CostPayment", source: CardState
+    payment: "CostPayment | _SpendContext", source: CardState
 ) -> tuple[frozenset[str], frozenset[str], bool]:
     """The board state `source`'s mana ability needs to resolve a CR 605.1a
     conditional "add X instead" clause right now: the land types its
@@ -635,7 +682,9 @@ def _mana_context(
     return payment.game._controlled_land_types(controller), own_counters, has_imprinted_card
 
 
-def _mana_narrowings(payment: "CostPayment", source: CardState, ability: ManaAbility) -> dict:
+def _mana_narrowings(
+    payment: "CostPayment | _SpendContext", source: CardState, ability: ManaAbility
+) -> dict:
     """The two board-derived narrowings `ManaAbility.effective` takes as
     keyword arguments, for a source being tapped through a payment.
 
@@ -670,7 +719,9 @@ def _mana_narrowings(payment: "CostPayment", source: CardState, ability: ManaAbi
 _Candidate = tuple[CardState, list[list[Color]], ManaRestriction | None]
 
 
-def _auto_tap_candidates(payment: "CostPayment", sources: Iterable[CardState]) -> list[_Candidate]:
+def _auto_tap_candidates(
+    payment: "CostPayment | _SpendContext", sources: Iterable[CardState]
+) -> list[_Candidate]:
     """Every source `auto_tap` may consider, paired with what it would
     actually add right now (conditional clauses resolved against the board -
     see `_mana_context`) and with the restriction that mana would carry, least
@@ -843,6 +894,145 @@ def _solve_colours(
                 for (source, _options, _restriction), colors in zip(combo, chosen, strict=True)
             ]
     return None
+
+
+#: One entry of the plan `_solve_auto_tap` returns: the source to tap, what
+#: colour(s) to make it add, and the CR 106.6 restriction that mana carries -
+#: everything `auto_tap` needs to call `tap_for_mana` and nothing it needs to
+#: work out again.
+_TapPlan = list[tuple[CardState, list[Color], ManaRestriction | None]]
+
+
+def _solve_auto_tap(
+    context: "CostPayment | _SpendContext",
+    sources: Iterable[CardState],
+    *,
+    owed: ManaCost,
+    base_floating: dict[Color, int],
+    base_snow: dict[Color, int],
+    base_restricted: list[Any],
+    life_available: int,
+) -> _TapPlan | None:
+    """The pure half of `auto_tap`: find a legal tapping-and-colour plan for
+    `owed` out of `sources`, or None if none exists. Mutates nothing - no
+    permanent is tapped, no pool is written to, and `context` may be a
+    throwaway `_SpendContext` rather than a real `CostPayment`.
+
+    `auto_tap` is `context._solve_auto_tap(...)` (below) followed by executing
+    the plan this returns through `tap_for_mana`; `could_pay_mana_cost` is
+    this and nothing else. Splitting the search out this way is what
+    guarantees the two can never disagree, the same argument
+    `TargetRequirement.rejects` already makes for `affordances.candidates`
+    (magic-cards-model-api): the predicate and the action that acts on the
+    predicate's answer share one implementation, so there is no second copy of
+    the logic to drift out of sync with the first.
+
+    Prefers the fewest sources, and among equally-small choices prefers
+    spending the least flexible ones first - see `_auto_tap_candidates` and
+    `_flexibility`, both unchanged by this split.
+
+    An empty plan (`[]`, not `None`) means `owed` is already covered by
+    `base_floating`/`base_snow`/`base_restricted` alone - `CostPayment.
+    shortfall`'s own check, folded in here so both callers get it for free
+    rather than needing their own copy of "is anything left to tap at all".
+    """
+    already_paid = ManaPool(
+        floating=dict(base_floating),
+        snow=dict(base_snow),
+        restricted=[entry.model_copy(deep=True) for entry in base_restricted],
+    )
+    if already_paid.can_pay(owed, life_available=life_available, spend=context.spend):
+        return []
+
+    sources = list(sources)
+    candidates = _auto_tap_candidates(context, sources)
+    max_size = min(len(candidates), max(1, owed.converted))
+
+    for size in range(1, max_size + 1):
+        for combo in combinations(candidates, size):
+            if len({id(source) for source, _o, _r in combo}) != len(combo):
+                # A source with both a restricted and an unrestricted ability
+                # appears once per ability; it still has only one `{T}` to
+                # spend (CR 118.3: a permanent already tapped cannot pay a
+                # cost that taps it), so a combination naming it twice is not
+                # a legal plan.
+                continue
+            plan = _solve_colours(
+                combo,
+                base_floating,
+                base_snow,
+                owed,
+                life_available,
+                context.spend,
+                base_restricted,
+            )
+            if plan is not None:
+                chosen = {id(source): restriction for source, _o, restriction in combo}
+                return [(source, colors, chosen[id(source)]) for source, colors in plan]
+    return None
+
+
+def could_pay_mana_cost(
+    cost: ManaCost,
+    sources: Iterable[CardState],
+    *,
+    game: Any = None,
+    payer: str | None = None,
+    spend: "ManaSpend | None" = None,
+) -> bool:
+    """Whether `cost` could be paid right now from `sources` plus whatever
+    mana `payer` already has floating - the public engine entry point for
+    "could this cost be paid from this player's currently available
+    resources", without paying anything.
+
+    This is what legal-action enumeration should call, potentially many times
+    per priority window, with its answers recorded in an append-only training
+    log: it shares `_solve_auto_tap` with `auto_tap` itself (see that
+    function's docstring), so the predicate and the actual payment can never
+    disagree.
+
+    Deliberately builds no `CostPayment`. `CostPayment.for_total` is the only
+    thing that ever should - it seeds its pool through `_seed_payer_pool`,
+    which calls `_register_pool` and publishes the working pool into
+    `game.open_payment_pools[payer]`. That write belongs to a payment that is
+    actually about to happen; a read-only predicate must never make it, dead
+    pool or not. This reads the payer's floating mana directly instead, through
+    a throwaway `_SpendContext` that carries only `game`, `payer`, and `spend`.
+
+    `game`/`payer` are both optional, the same way `CostPayment` allows a
+    gameless payment for a unit test: omitted, this asks only whether `cost`
+    is payable from `sources` alone, with no floating mana and no life to
+    spend on a Phyrexian symbol.
+    """
+    context = _SpendContext(game=game, payer=payer, spend=spend)
+    floating: dict[Color, int] = {}
+    snow: dict[Color, int] = {}
+    restricted: list[Any] = []
+    life_available = 0
+    if game is not None and payer is not None:
+        try:
+            player = game.player(payer)
+        except (KeyError, ValueError, AttributeError):
+            player = None
+        if player is not None:
+            pool = player.mana_pool
+            floating = dict(pool.floating)
+            snow = dict(pool.snow)
+            restricted = [entry.model_copy(deep=True) for entry in pool.restricted]
+            try:
+                life_available = int(player.life)
+            except (TypeError, ValueError):
+                life_available = 0
+    plan = _solve_auto_tap(
+        context,
+        sources,
+        owed=cost,
+        base_floating=floating,
+        base_snow=snow,
+        base_restricted=restricted,
+        life_available=life_available,
+    )
+    return plan is not None
 
 
 class CostStep(StrEnum):
@@ -3509,44 +3699,28 @@ class CostPayment(BaseModel):
         `_unpayable_cost_message`) rather than just reporting the cost as
         unpayable, which would read as a solver bug rather than as "activate
         that one yourself".
+
+        Solving *which* sources and colours is `_solve_auto_tap` (pure,
+        below); this is the thin remainder - execute the plan it finds, or
+        raise if it found none. `could_pay_mana_cost` is the same solve with
+        no execution at all, which is what makes the two unable to disagree.
         """
         self._require_open()
-        if not self.shortfall:
-            return []
-
         sources = list(sources)
-        candidates = _auto_tap_candidates(self, sources)
-        base_floating = dict(self.pool.floating)
-        base_snow = dict(self.pool.snow)
-        base_restricted = [entry.model_copy(deep=True) for entry in self.pool.restricted]
-        owed = self.mana_owed
-        max_size = min(len(candidates), max(1, owed.converted))
-
-        for size in range(1, max_size + 1):
-            for combo in combinations(candidates, size):
-                if len({id(source) for source, _o, _r in combo}) != len(combo):
-                    # A source with both a restricted and an unrestricted
-                    # ability appears once per ability; it still has only one
-                    # `{T}` to spend (CR 118.3: a permanent already tapped
-                    # cannot pay a cost that taps it), so a combination naming
-                    # it twice is not a legal plan.
-                    continue
-                plan = _solve_colours(
-                    combo,
-                    base_floating,
-                    base_snow,
-                    owed,
-                    self.life_available,
-                    self.spend,
-                    base_restricted,
-                )
-                if plan is not None:
-                    chosen = {id(source): restriction for source, _o, restriction in combo}
-                    for source, colors in plan:
-                        self.tap_for_mana(source, colors, chosen[id(source)])
-                    return [source for source, _ in plan]
-
-        raise ValueError(_unpayable_cost_message(self, sources))
+        plan = _solve_auto_tap(
+            self,
+            sources,
+            owed=self.mana_owed,
+            base_floating=dict(self.pool.floating),
+            base_snow=dict(self.pool.snow),
+            base_restricted=[entry.model_copy(deep=True) for entry in self.pool.restricted],
+            life_available=self.life_available,
+        )
+        if plan is None:
+            raise ValueError(_unpayable_cost_message(self, sources))
+        for source, colors, restriction in plan:
+            self.tap_for_mana(source, colors, restriction)
+        return [source for source, _colors, _restriction in plan]
 
     def add_mana(self, color: Color, amount: int = 1, snow: bool = False) -> ManaPool:
         """Add mana that came from somewhere other than tapping a permanent."""

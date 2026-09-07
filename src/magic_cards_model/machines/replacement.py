@@ -3307,7 +3307,7 @@ def _choose_a_quality(kind: ChoiceKind, card_name: str) -> Apply:
 #: *object*, not specifically a permanent, and CR 400.1 lists the graveyard as
 #: a zone like any other, so "card in a graveyard" needs no special rule -
 #: only a second place to look. The noun is "card" there and "permanent" on
-#: the battlefield, which is CR 108.1's own distinction ("a Magic card ... A
+#: the battlefield, which is CR 108.2/108.2b's own distinction ("a Magic card ... A
 #: token isn't a card"), so the wording is admitted per zone rather than
 #: interchangeably.
 _COPY_CANDIDATES_RE = re.compile(

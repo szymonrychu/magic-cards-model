@@ -802,8 +802,7 @@ class CardState(BaseModel):
     tuple, not by a continuous effect that has to be reapplied every board
     computation.
 
-    Kept apart from `Card.oracle_text` (immutable, CR 108.1 - a game object's
-    printing never changes) and from the layer engine's own `Characteristics.
+    Kept apart from `Card.oracle_text` (the printing, which never changes) and from the layer engine's own `Characteristics.
     abilities` (a *computed*, per-recompute view for text-driven checks like
     `has_ability`): this tuple is what `machines/abilities.granted_abilities_
     of` parses back into real `Ability` objects, and what `Game.
@@ -1765,7 +1764,7 @@ class CardState(BaseModel):
         Only what a *continuous effect* was contributing is recorded, which is
         why each half is compared against `_printed_power`/`_printed_toughness`
         and left `None` when they agree. The printing does not change on a
-        zone change (CR 108.1), so it needs no snapshot to survive one; the
+        zone change, so it needs no snapshot to survive one; the
         counters deliberately do not survive it (CR 122.2: "counters on an
         object are not retained if that object moves from one zone to another
         ... they simply cease to exist"), and a card in a graveyard reading
