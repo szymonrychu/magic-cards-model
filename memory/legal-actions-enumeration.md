@@ -118,3 +118,42 @@ never a spell") - `Game.cast(a_land)` used to fail deep inside cost
 determination with a CR 118.6 message that implied Suspend would make a land
 castable, which is a lie this project's own refusal text cannot afford;
 `why_cannot_cast_a_land` now refuses it first, honestly.
+
+**2026-09-07, second review-fix pass: a whole-diff review found seven more
+defects, all fixed.** (1) `_battlefield_ability_actions` called `Game.
+activation_cost` unguarded - a `CostKind.OTHER` phrase the cost reader
+declines (Relic of Progenitus's "Exile this artifact", six other pool cards)
+raises `ValueError` and used to escape `legal_actions` entirely, costing the
+caller every action including `PASS_PRIORITY`/`CONCEDE`; now caught and
+reported `Affordability.UNKNOWN`, the same treatment `_off_zone_actions`
+already gave an unbuildable off-battlefield activation. (2) The keyword/
+marker/granted cast-option loop and the `alternative_costs_for` loop both
+asked only `option.why_not`/`alternative.available`, never CR 117.1a's
+timing (`why_cannot_cast_now`/`why_cannot_cast_restriction`) - Grief's Evoke
+was offered during the *opponent's* main phase. (3) `_CASTABLE_TYPES` gates
+on `card.card.types` alone, so Dryad Arbor (land + creature) passed it and
+got a `CAST` action with the wrong refusal text; now `why_cannot_cast_a_land`
+is checked in `_cast_actions` too and the card gets no `CAST` action at all.
+(4) `ACTIVATE_MANA` for a choice-offering mana ability (49 pool cards: every
+shock/fast/painland, Birds of Paradise, Mox Amber, Reflecting Pool) was
+reported affordable with no way to actually call `activate_ability` -
+`Action.color_options` (new field) plus `Game.mana_color_options` (new
+method, mirrors `activate_ability`'s own mana fast path including Mox
+Amber's `among_colors` narrowing) close the gap. (5) `CHOOSE_TARGETS`'s
+`decision_candidates` silently dropped every player candidate (`TargetRef`
+for a player carries `username`, not `card_id`) - `Action.
+decision_player_candidates` (new field) is the other half. (6)
+`_candidate_pool_for`'s `EXILE` branch read a cost component's zone through
+`Player.cards_in` unconditionally, wrong for a shared zone (`Zone.
+BATTLEFIELD`/`EXILE`/etc, CR 400.1) - latent in today's pool (every printed
+self-referential exile is filled in before this pool is consulted) but a
+real bug: an always-empty pool plus a spurious `zones` key added as a side
+effect. (7) `Game.targetable_objects` called `player.cards_in(Zone.
+BATTLEFIELD)`/`.cards_in(Zone.EXILE)` for every player - both shared zones,
+never in `Player.zones` - permanently adding two empty keys per player as a
+side effect of a read-only query; fixed by walking only `Zone.GRAVEYARD` per
+player (battlefield/exile are already walked once via `shared_zones`).
+`test_legal_actions_mutates_nothing`'s own warming call (`legal_actions`
+before the snapshot) could never have caught (7), since the mutation would
+already be baked into the "before" snapshot - a new `test_targetable_
+objects_mutates_nothing` snapshots before any call at all instead.

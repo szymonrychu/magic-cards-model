@@ -6451,9 +6451,18 @@ class Game(BaseModel):
             for state in self.shared_zones.get(zone, []):
                 if isinstance(state, CardState):
                     things.append(state)
+        # The battlefield and exile are shared zones (CR 400.1: "The other
+        # zones are shared by all players"), already walked once each above
+        # via `self.shared_zones` - `Player.zones` never holds either one.
+        # Only the graveyard is a real per-player zone. `Player.cards_in` is
+        # `zones.setdefault(zone, [])`, so asking it for `Zone.BATTLEFIELD`/
+        # `Zone.EXILE` here used to both return nothing (every permanent and
+        # exiled card was already added above, so nothing was lost) and
+        # permanently add two spurious empty keys to every player's own
+        # serialized `zones` as a side effect of a read-only query - a
+        # documented pure query mutating the game it was asked about.
         for player in self.players:
-            for zone in (Zone.BATTLEFIELD, Zone.GRAVEYARD, Zone.EXILE):
-                things.extend(player.cards_in(zone))
+            things.extend(player.cards_in(Zone.GRAVEYARD))
         things.extend(self.stack)
         return things
 
@@ -10406,6 +10415,68 @@ class Game(BaseModel):
         )
         amount = reduction.amount * count
         return ManaCost.parse(f"{{{amount}}}") if amount else ManaCost()
+
+    def mana_color_options(
+        self, permanent: CardState, index: int = 0, controller: str | None = None
+    ) -> tuple[Color, ...]:
+        """Every colour `activate_ability`'s own `color=` would accept for
+        this mana ability right now (CR 605.1a), or empty when it makes no
+        real choice - a single fixed colour, or none at all (CR 106.5).
+
+        Read the same way `activate_ability`'s own mana fast path resolves
+        one (CR 605.3b): `ManaAbility.effective`, narrowed by the same
+        board-derived CR 106.7 survey and CR 614.12a chosen-colour reading
+        that path already computes, then Mox Amber's own CR 106.5 "among
+        legendary creatures and planeswalkers you control" narrowing
+        (`among_colors`, read off the ability's printed effect text) - so a
+        pure enumeration caller (`machines/legal_actions.py`) is offered
+        exactly the colours a real activation would accept, not a superset
+        guessed from the printed text alone that `activate_ability` would
+        then refuse.
+
+        `machines/legal_actions.py`'s own `Action` has no field for a live
+        `ManaAbility`, only for ids and plain data - this is what lets it
+        name the choice as `Action.color_options` instead: without it, an
+        `ACTIVATE_MANA` action for a choice-offering ability (a dual land,
+        Birds of Paradise's "any color") was reported affordable with no way
+        for a caller to actually complete the call `activate_ability`
+        demands.
+        """
+        ability = self.activated_abilities(permanent)[index]
+        if ability.mana is None:
+            return ()
+        controller = controller or self.controller_of(permanent).username
+        land_types = self._controlled_land_types(controller)
+        own_counters = frozenset(permanent.counters.counts)
+        has_imprinted_card = self.card_imprinted_on(permanent.id) is not None
+        chosen = permanent.choice
+        chosen_color = (
+            Color(chosen.value) if chosen is not None and chosen.kind is ChoiceKind.COLOR else None
+        )
+        could_produce_colors = (
+            self._could_produce_survey(ability.mana.could_produce, controller)
+            if ability.mana.could_produce is not None
+            else None
+        )
+        options, any_color = ability.mana.effective(
+            land_types,
+            own_counters,
+            has_imprinted_card,
+            could_produce_colors=could_produce_colors,
+            chosen_color=chosen_color,
+        )
+        colors: list[Color] = []
+        if any_color:
+            colors.extend(_COLOR_WORDS.values())
+        elif len(options) > 1:
+            for option in options:
+                for color in option:
+                    if color not in colors:
+                        colors.append(color)
+        allowed = among_colors(ability.effect, self, controller)
+        if allowed is not None:
+            colors = [color for color in colors if color in allowed]
+        return tuple(colors)
 
     def begin_turning_face_up(
         self, permanent: CardState, controller: str | None = None

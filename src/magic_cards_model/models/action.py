@@ -29,6 +29,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
+from .card import Color
 from .zone import Zone
 
 
@@ -198,6 +199,21 @@ class Action(BaseModel):
     `None` for a genuinely open-ended X (nothing caps how much mana could be
     spent on it), never for "not applicable" - `None` for the whole field is
     what says that."""
+    color_options: tuple[Color, ...] = ()
+    """`ACTIVATE_MANA` only: every colour `Game.activate_ability`'s own
+    `color=` would accept for this mana ability right now (CR 605.1a),
+    computed by `Game.mana_color_options` - a dual land's two colours, or
+    an "any color" source's five. Empty when the ability makes no real
+    choice at all (one printed colour, or the choice has already been
+    narrowed to nothing, CR 106.5), in which case `color=None` is what a
+    caller passes through to `activate_ability`. The same parameter-space
+    treatment `modes`/`x_range` already give a choice this module does not
+    enumerate combination by combination - without this field, an
+    `ACTIVATE_MANA` action reported `affordable=YES` for a choice-offering
+    ability with no way for a caller to actually complete the call
+    `Game.activate_ability` demands (`this ability offers [...]; pass the
+    colour chosen`), which made the action unusable despite being reported
+    legal and affordable."""
 
     decision_candidates: tuple[UUID, ...] = ()
     """`ANSWER_DECISION` only, for a kind whose answer names a subset of
@@ -205,7 +221,15 @@ class Action(BaseModel):
     `SCRY`, `SURVEIL`, `ORDER_TRIGGERS`) - the candidate pool, offered as a
     parameter space rather than one `Action` per legal subset or permutation,
     which would be combinatorially unusable for exactly the reason `modes`
-    already is."""
+    already is. Card candidates only - see `decision_player_candidates` for
+    `CHOOSE_TARGETS`'s other kind of legal answer."""
+    decision_player_candidates: tuple[str, ...] = ()
+    """`ANSWER_DECISION`/`CHOOSE_TARGETS` only: the usernames among
+    `Decision.targets` (CR 115.1: "The targets are object(s) and/or
+    player(s)"), which `decision_candidates` above cannot name at all - a
+    `TargetRef` for a player carries a `username` and no `card_id`. Without
+    this, an "any target"/"target player" question's enumerated answer
+    silently dropped every legal player candidate from its own pool."""
     decision_option: str | None = None
     """`ANSWER_DECISION` only, for a kind whose legal answers are few enough
     to enumerate outright: `"true"`/`"false"` for every boolean-shaped kind

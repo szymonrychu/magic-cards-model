@@ -23,10 +23,17 @@ import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.casting import AlternativeCostSource, PlayAction
+from magic_cards_model.machines.cost import ComponentKind, CostComponent
 from magic_cards_model.machines.decisions import Decision, DecisionKind, DecisionPending
-from magic_cards_model.machines.legal_actions import decision_answers, legal_actions
+from magic_cards_model.machines.legal_actions import (
+    _candidate_pool_for,
+    decision_answers,
+    legal_actions,
+)
 from magic_cards_model.models import Zone
 from magic_cards_model.models.action import Action, ActionKind, Affordability
+from magic_cards_model.models.card import Color
+from magic_cards_model.models.card_state import TargetRef
 from tests.scenarios.harness import Scenario
 
 
@@ -917,3 +924,223 @@ def test_action_round_trips_through_json_and_holds_no_nested_card_state():
     payload = json.loads(dumped)
     assert "card" not in payload
     assert isinstance(payload["card_id"], str)
+
+
+# -- review-pass findings: seven defects found against the real card pool ---
+
+
+def test_legal_actions_reports_unbuildable_activation_cost_as_unknown_instead_of_raising():
+    """Finding 1 (highest): Relic of Progenitus's second ability -
+    `{1}, Exile this artifact: Exile all graveyards. Draw a card.` - has a
+    `CostKind.OTHER` piece ("Exile this artifact") `cost_component_for_
+    phrase` declines to read (`_PHRASE_EXILE` only understands "exile this
+    card", never a bare "this <type>"), so `Game.activation_cost` raises
+    `ValueError: cannot build a cost for 'Exile this artifact'`.
+    `why_cannot_activate` returns `None` for this ability, so the loop in
+    `_battlefield_ability_actions` used to reach the unguarded call and let
+    the exception escape `legal_actions` entirely - the caller got no
+    actions at all, not even `PASS_PRIORITY`/`CONCEDE`. CR 118.6:
+    "Attempting to cast a spell or activate an ability that has an unpayable
+    cost is a legal action" - the attempt is still legal even though this
+    enumeration cannot price it, so it must be reported `Affordability.
+    UNKNOWN` with the engine's own reason instead, the same treatment `_off_
+    zone_actions` already gives an unbuildable off-battlefield activation."""
+    scenario = Scenario().player("alice", battlefield=["Relic of Progenitus"]).player("bob").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    actions = legal_actions(scenario.game, "alice")
+
+    assert any(a.kind is ActionKind.PASS_PRIORITY for a in actions)
+    assert any(a.kind is ActionKind.CONCEDE for a in actions)
+    (exile_ability,) = [
+        a for a in actions if a.kind is ActionKind.ACTIVATE and a.ability_index == 1
+    ]
+    assert exile_ability.affordable is Affordability.UNKNOWN
+    assert exile_ability.unaffordable_reason is not None
+    assert "cannot build a cost for" in exile_ability.unaffordable_reason
+
+
+def test_legal_actions_respects_timing_for_a_keyword_cast_option():
+    """Finding 2 (first half): the keyword/marker/granted cast-option loop
+    only asked `option.why_not`, never `why_cannot_cast_now`/`why_cannot_
+    cast_restriction` the way the plain hand branch and `_permission_cast_
+    actions` already do. Grief has no flash, so CR 117.1a's sorcery-speed
+    rule still gates its Evoke option (an alternative *cost*, not an
+    alternative *timing*) exactly as `Game.cast(..., keyword="Evoke")`
+    already enforces (`Casting.model_post_init` runs the same two timing
+    checks unconditionally). With Grief in bob's hand during *alice's* main
+    phase, this used to report `CAST keyword=Evoke affordable=yes`."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Mountain"])
+        .player("bob", hand=["Grief", "Grief"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    assert scenario.turn.active_player == "alice"
+
+    actions = legal_actions(scenario.game, "bob")
+
+    evokes = [a for a in actions if a.kind is ActionKind.CAST and a.keyword == "Evoke"]
+    assert evokes == []
+
+
+def test_legal_actions_respects_timing_for_a_static_alternative_cost():
+    """Finding 2 (second half): the `alternative_costs_for` loop has the
+    identical gap - `alternative.available` never asks CR 117.1a either.
+    Omniscience's STATIC grant (CR 118.9) still only pays for casting the
+    same card, which is still subject to ordinary timing unless the card
+    itself is exempt; a vanilla creature with no flash cast under
+    Omniscience is not castable on an opponent's turn any more than it would
+    be paying its own mana cost."""
+    scenario = (
+        Scenario()
+        .player("bob", battlefield=["Mountain"])
+        .player("alice", hand=["Grizzly Bears"], battlefield=["Omniscience"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    assert scenario.turn.active_player == "bob"
+
+    actions = legal_actions(scenario.game, "alice")
+
+    omniscience_casts = [
+        a for a in actions if a.kind is ActionKind.CAST and a.alternative_cost == "Omniscience"
+    ]
+    assert omniscience_casts == []
+
+
+def test_legal_actions_never_offers_to_cast_a_land_creature():
+    """Finding 3: `_CASTABLE_TYPES` gates on `card.card.types` alone, so
+    Dryad Arbor - a land *and* a creature (CR 300.2a) - passed the gate and
+    got a `CAST` action built for it, with `unaffordable_reason` coming from
+    `why_mana_cost_unpayable` ("no mana cost") rather than the real reason
+    `Game.cast` refuses with (`why_cannot_cast_a_land`'s "is a land"). CR
+    305.1: "the land doesn't go on the stack, it is never a spell" - casting
+    it is never a legal action to attempt in the first place, so it must not
+    appear as a `CAST` action at all, with any reason."""
+    scenario = Scenario().player("alice", hand=["Dryad Arbor"]).player("bob").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    actions = legal_actions(scenario.game, "alice")
+
+    assert _of_kind(actions, ActionKind.CAST) == []
+    assert len(_of_kind(actions, ActionKind.PLAY_LAND)) == 1
+
+
+def test_legal_actions_reports_color_options_for_a_choice_mana_ability():
+    """Finding 4: Steam Vents' `{T}: Add {U} or {R}.` was reported
+    `ACTIVATE_MANA affordable=yes` with nothing telling a caller which
+    colour to pass - `Action` had no field for it at all, so turning the
+    action into `Game.activate_ability(..., color=?)` without already
+    knowing the card's text raised `this ability offers [['U'], ['R']]; pass
+    the colour chosen`. `Action.color_options` names the choice as plain
+    data, and the action, once a colour from it is chosen, is a call
+    `activate_ability` actually accepts."""
+    scenario = Scenario().player("alice", battlefield=["Steam Vents"]).player("bob").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    steam_vents = scenario.find("Steam Vents", Zone.BATTLEFIELD, "alice")
+
+    actions = legal_actions(scenario.game, "alice")
+    (mana_action,) = _of_kind(actions, ActionKind.ACTIVATE_MANA)
+
+    assert set(mana_action.color_options) == {Color.BLUE, Color.RED}
+    assert mana_action.affordable is Affordability.YES
+
+    result = scenario.game.activate_ability(
+        steam_vents, mana_action.ability_index, "alice", color=mana_action.color_options[0]
+    )
+    assert result is None, "a mana ability resolves immediately (CR 605.3b) - nothing on the stack"
+
+
+def test_choose_targets_decision_candidates_include_player_targets():
+    """Finding 5: `decision_candidates` was built as `tuple(target.card_id
+    for target in decision.targets if target.card_id is not None)`, which
+    silently discarded every player candidate - CR 115.1: "The targets are
+    object(s) and/or player(s)", and a `TargetRef` for a player carries a
+    `username` with `card_id=None`. An "any target"/"target player"
+    `CHOOSE_TARGETS` question's enumerated answer therefore advertised an
+    `x_range` over a pool missing every legal player answer.
+    `Action.decision_player_candidates` is the field `decision_candidates`
+    (ids only, cards) could never have named a player through."""
+    scenario = Scenario().player("alice", battlefield=["Mountain"]).player("bob").build()
+    game = scenario.game
+    game.decisions.pause_when_unanswered = True
+    mountain = scenario.find("Mountain", Zone.BATTLEFIELD, "alice")
+    decision = Decision(
+        kind=DecisionKind.CHOOSE_TARGETS,
+        player="alice",
+        prompt="choose targets",
+        targets=(TargetRef.to_card(mountain.id), TargetRef.to_player("bob")),
+        target_maximum=1,
+        target_minimum=1,
+    )
+
+    with pytest.raises(DecisionPending) as excinfo:
+        game.ask(decision)
+
+    pending = excinfo.value.pending
+    (answer,) = decision_answers(pending.decision)
+
+    assert answer.decision_candidates == (mountain.id,)
+    assert answer.decision_player_candidates == ("bob",)
+
+
+def test_candidate_pool_for_exile_from_a_shared_zone_reads_the_shared_zone():
+    """Finding 6: `_candidate_pool_for`'s `ComponentKind.EXILE` branch read
+    `game.player(payer).cards_in(component.zone)` unconditionally - right
+    for `Zone.HAND`/`Zone.GRAVEYARD` (real per-player zones, CR 400.1), wrong
+    for `Zone.BATTLEFIELD` (CR 400.1: "The other zones are shared by all
+    players"), which `exile_cost`'s own `zone` can legitimately be (an
+    "exile a permanent" activation cost - latent in today's pool, since
+    every printed self-referential exile like Abstergo Entertainment's own
+    "Exile Abstergo Entertainment" is filled in before this pool is ever
+    consulted, but wrong all the same). Reading a shared zone through
+    `Player.cards_in` returned an always-empty pool (wrongly reporting the
+    component unpayable) and, because `Player.cards_in` is `zones.setdefault
+    (zone, [])`, permanently mutated the player's own `zones` dict as a side
+    effect of a read-only lookup."""
+    scenario = (
+        Scenario().player("alice", battlefield=["Grizzly Bears", "Mountain"]).player("bob").build()
+    )
+    game = scenario.game
+    bears = scenario.creature("Grizzly Bears", "alice")
+    before_zone_keys = set(game.player("alice").zones)
+
+    component = CostComponent(
+        kind=ComponentKind.EXILE, zone=Zone.BATTLEFIELD, required=1, payer="alice"
+    )
+    pool = _candidate_pool_for(game, "alice", component)
+
+    assert pool is not None
+    assert bears in pool
+    assert set(game.player("alice").zones) == before_zone_keys, (
+        "a read-only pool lookup must not add zone keys to the player it asked about"
+    )
+
+
+def test_targetable_objects_mutates_nothing():
+    """Finding 7: `targetable_objects` called `player.cards_in(Zone.
+    BATTLEFIELD)`/`.cards_in(Zone.EXILE)` for every player, and `Player.
+    cards_in` is `zones.setdefault(zone, [])` - the battlefield and exile are
+    shared zones (CR 400.1), never stored in `Player.zones` at all, so every
+    call permanently added two spurious empty keys to every player's own
+    serialized `zones`: a documented read-only query mutating the game it
+    describes. Snapshotting *before any call at all* - unlike `test_legal_
+    actions_mutates_nothing` above, which warms with one `legal_actions`
+    call first for `Game.computed_board`'s own separate, legitimate reason -
+    is what actually catches this: a warmed snapshot would already carry the
+    mutation from the warming call itself, the same masking `test_legal_
+    actions_mutates_nothing` could not have caught this defect through."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Grizzly Bears"], graveyard=["Mountain"], exile=["Forest"])
+        .player("bob")
+        .build()
+    )
+    game = scenario.game
+    before = game.model_dump_json()
+
+    game.targetable_objects()
+
+    assert game.model_dump_json() == before

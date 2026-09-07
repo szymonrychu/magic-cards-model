@@ -97,6 +97,7 @@ from .casting import (
     keyword_cast_options,
     marker_cast_options,
     play_permissions_on,
+    why_cannot_cast_a_land,
     why_cannot_cast_from,
     why_cannot_cast_now,
     why_cannot_cast_restriction,
@@ -199,6 +200,25 @@ def _candidate_pool_for(game: Any, payer: str, component: CostComponent) -> list
     if kind is ComponentKind.DISCARD:
         return list(game.player(payer).hand)
     if kind is ComponentKind.EXILE:
+        if component.zone.is_shared:
+            # CR 406.2: exile moves an object "from whatever zone it's
+            # currently in" - not only one of `payer`'s own zones. `exile_
+            # cost`'s own `zone` can be `Zone.BATTLEFIELD` (Abstergo
+            # Entertainment's own "Exile Abstergo Entertainment", `cost.py`'s
+            # `CostComponent.pay` docstring on this exact gap), and a shared
+            # zone (CR 400.1) has no entry in `Player.zones` at all - reading
+            # it there returned an always-empty pool (so the component was
+            # wrongly reported unpayable) and, because `Player.cards_in` is
+            # `zones.setdefault(zone, [])`, permanently added a spurious
+            # empty key to the player's own serialized zones as a side
+            # effect. Every card in the shared zone is the real pool; `_
+            # component_affordability`'s own `requirement.why_not` filter
+            # below narrows it to whichever ones this cost can actually name.
+            return [
+                card
+                for card in game.shared_zones.get(component.zone, [])
+                if isinstance(card, CardState)
+            ]
         return list(game.player(payer).cards_in(component.zone))
     if kind in (
         ComponentKind.SACRIFICE,
@@ -502,6 +522,20 @@ def _cast_actions(
 ) -> list[Action]:
     if not set(card.card.types) & _CASTABLE_TYPES:
         return []
+    if why_cannot_cast_a_land(card) is not None:
+        # `_CASTABLE_TYPES` gates on `card.card.types` alone, so a land that
+        # is *also* one of the six other types (Dryad Arbor: land and
+        # creature, CR 300.2a) passes it - CR 305.1: "the land doesn't go on
+        # the stack, it is never a spell", checked here the same way
+        # `Casting.model_post_init` checks it first, ahead of every other
+        # refusal. Without this a CAST action was built anyway and its
+        # `unaffordable_reason` came from `why_mana_cost_unpayable` ("no mana
+        # cost") instead of the real reason `Game.cast` refuses with ("is a
+        # land") - the wrong-message failure `why_cannot_cast_a_land`'s own
+        # docstring exists to prevent. A land is never a legal cast to
+        # attempt in the first place, so this omits the action outright
+        # rather than reporting it with any `Affordability` at all.
+        return []
     actions: list[Action] = []
     zone = card.zone
 
@@ -540,6 +574,19 @@ def _cast_actions(
         if option.zone is not zone:
             continue
         if option.why_not(card, player, game, origin=zone) is not None:
+            continue
+        # `option.why_not` judges the option's own shape (right zone, its own
+        # per-keyword conditions) but never CR 117.1a's timing - unlike the
+        # plain hand branch above (509-513) and `_permission_cast_actions`
+        # (464-466), this loop asked only the one question. Verified live:
+        # with Grief in bob's hand during *alice's* main phase, this used to
+        # report `CAST keyword=Evoke affordable=yes`, while `Game.cast(...,
+        # keyword="Evoke")` refuses on timing (`Casting.model_post_init` runs
+        # `why_cannot_cast_now`/`why_cannot_cast_restriction` unconditionally,
+        # regardless of which keyword or alternative cost pays for the cast).
+        if why_cannot_cast_now(card, player, game) is not None:
+            continue
+        if why_cannot_cast_restriction(card, player, game) is not None:
             continue
         if option.pays_mana_cost:
             for face_name, mana in _base_cost_options(card.card):
@@ -587,6 +634,16 @@ def _cast_actions(
                 # not otherwise let this player cast from where it sits).
                 continue
             if not alternative.available:
+                continue
+            # The identical timing gap the keyword loop above had: a STATIC
+            # or PRINTED alternative cost still pays for casting the same
+            # card, which is still subject to CR 117.1a's timing rule unless
+            # the card itself is exempt (instant, flash, an `immediate`
+            # permission) - `alternative.available` never asked either
+            # question.
+            if why_cannot_cast_now(card, player, game) is not None:
+                continue
+            if why_cannot_cast_restriction(card, player, game) is not None:
                 continue
             # `alternative.cost is None` is a real answer for a STATIC grant
             # (Omniscience: "nothing" is the whole cost, CR 107.3b), not a
@@ -761,8 +818,44 @@ def _battlefield_ability_actions(
     for index, ability in enumerate(game.activated_abilities(permanent)):
         if game.why_cannot_activate(permanent, index, player) is not None:
             continue
-        total = game.activation_cost(permanent, index, player)
         is_mana = getattr(ability, "mana", None) is not None
+        # `Action` has no field for a `CardState`/live object, so the choice a
+        # caller would need to pass to `Game.activate_ability(..., color=...)`
+        # has to be named here as plain data - see `Action.color_options`'s
+        # own docstring for why an `ACTIVATE_MANA` action was unusable
+        # without it (Steam Vents: reported `affordable=YES`, then
+        # `activate_ability` refused with "this ability offers [['U'],
+        # ['R']]; pass the colour chosen").
+        color_options = game.mana_color_options(permanent, index, player) if is_mana else ()
+        try:
+            total = game.activation_cost(permanent, index, player)
+        except ValueError as error:
+            # `CostKind.OTHER` cost pieces `machines/cost.cost_component_for_
+            # phrase` declines to read - Relic of Progenitus's own "Exile
+            # this artifact" - raise here rather than build. CR 118.6:
+            # "Attempting to cast a spell or activate an ability that has an
+            # unpayable cost is a legal action" - the attempt is still legal
+            # even though this enumeration cannot price it, so this reports
+            # `Affordability.UNKNOWN` with the engine's own reason instead of
+            # letting the exception escape `legal_actions` outright, which
+            # used to take every other action - even `PASS_PRIORITY` - down
+            # with it. The same treatment `_off_zone_actions` already gives
+            # an unbuildable off-battlefield activation.
+            actions.append(
+                Action(
+                    kind=ActionKind.ACTIVATE_MANA if is_mana else ActionKind.ACTIVATE,
+                    player=player,
+                    rule="CR 602.5",
+                    card_id=permanent.id,
+                    from_zone=Zone.BATTLEFIELD,
+                    ability_index=index,
+                    keyword=getattr(ability, "ability_word", None),
+                    color_options=color_options,
+                    affordable=Affordability.UNKNOWN,
+                    unaffordable_reason=str(error),
+                )
+            )
+            continue
         spend = ManaSpend.activating(permanent.card)
         affordable, reason = _cost_affordability(game, player, total, candidate_scan, spend=spend)
         cost_str, mana_cost_str = _cost_strings(total)
@@ -777,6 +870,7 @@ def _battlefield_ability_actions(
                 keyword=getattr(ability, "ability_word", None),
                 cost=cost_str,
                 mana_cost=mana_cost_str,
+                color_options=color_options,
                 affordable=affordable,
                 unaffordable_reason=reason,
             )
@@ -1049,8 +1143,22 @@ def decision_answers(decision: Decision, game: Any = None) -> list[Action]:
             if decision.target_maximum is not None
             else len(decision.targets)
         )
-        ids = tuple(target.card_id for target in decision.targets if target.card_id is not None)
-        return [build(decision_candidates=ids, x_range=(decision.target_minimum, maximum))]
+        # CR 115.1: "The targets are object(s) and/or player(s)" - a
+        # `TargetRef` for a player (`.is_player`) carries a `username` and no
+        # `card_id`, so filtering on `card_id is not None` alone silently
+        # dropped every player candidate from an "any target"/"target
+        # player" question's own pool. `decision_candidates` stays ids-only
+        # (cards); `decision_player_candidates` is the other half `Action`
+        # had no field for at all.
+        card_ids = tuple(target.card_id for target in decision.targets if target.is_card)
+        player_names = tuple(target.username for target in decision.targets if target.is_player)
+        return [
+            build(
+                decision_candidates=card_ids,
+                decision_player_candidates=player_names,
+                x_range=(decision.target_minimum, maximum),
+            )
+        ]
 
     if decision.kind is DecisionKind.ORDER_TRIGGERS:
         return [build(decision_candidates=decision.cards)]
