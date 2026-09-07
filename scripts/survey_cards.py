@@ -1,7 +1,7 @@
 #!/usr/bin/env python
-"""Survey any card - not just `tests/fixtures/cards` - for what this engine would
-actually do with it, using the exact same classifier `scripts/sweep_pool.py` runs
-over the fixture pool.
+"""Survey any card - not just `src/magic_cards_model/data/printings` - for what
+this engine would actually do with it, using the exact same classifier
+`scripts/sweep_pool.py` runs over the fixture pool.
 
     uv run python scripts/survey_cards.py "Lightning Bolt" "Fiend Artisan"
     uv run python scripts/survey_cards.py --file names.txt
@@ -11,12 +11,13 @@ over the fixture pool.
 
 Where a card comes from, in order:
 
-1. `tests/fixtures/cards/` - read-only. If the printing is already in the
-   scenario-test pool, it is loaded from there and Scryfall is never touched.
+1. `src/magic_cards_model/data/printings/` - read-only. If the printing is
+   already in the scenario-test pool, it is loaded from there and Scryfall is
+   never touched.
 2. `--cache-dir` (default `.survey-cache/cards/` at the repo root) - a survey's
    own cache, separate from the fixture pool. A card fetched here is written
-   *only* to this directory, never to `tests/fixtures/cards/`, so running this
-   script never changes what the scenario-test suite sees.
+   *only* to this directory, never to `src/magic_cards_model/data/printings/`,
+   so running this script never changes what the scenario-test suite sees.
 3. Scryfall's `/cards/named?exact=` endpoint (the same call `scripts/add_card.py`
    makes), rate-limited the same way (~120ms between live fetches). The result
    is written to the cache directory above and reused on the next run.
@@ -59,10 +60,11 @@ from scripts.sweep_pool import (  # noqa: E402
     targeting_gaps,
 )
 
+import magic_cards_model  # noqa: E402
 from magic_cards_model.models import Card  # noqa: E402
 
 REPO_ROOT = Path(__file__).parent.parent
-FIXTURES_DIR = REPO_ROOT / "tests" / "fixtures" / "cards"
+FIXTURES_DIR = Path(magic_cards_model.__file__).parent / "data" / "printings"
 DEFAULT_CACHE_DIR = REPO_ROOT / ".survey-cache" / "cards"
 
 NOT_FOUND = "not_found"
@@ -81,7 +83,8 @@ def fetch_printing(name: str, cache_dir: Path, rate_limit: float = 0.12) -> Card
     """The exact printing for `name`, preferring the fixture pool, then the
     survey cache, and only hitting Scryfall - via `scripts/add_card.fetch`,
     the same call `add_card.py` itself makes - as a last resort. A live fetch
-    is written to `cache_dir` only; `tests/fixtures/cards/` is never touched.
+    is written to `cache_dir` only; `src/magic_cards_model/data/printings/` is
+    never touched.
     """
     slug = slugify(name)
 
@@ -268,7 +271,7 @@ def main(argv: list[str]) -> int:
         type=Path,
         default=DEFAULT_CACHE_DIR,
         help=f"where a live Scryfall fetch is cached (default: {DEFAULT_CACHE_DIR}). "
-        "tests/fixtures/cards/ is read but never written.",
+        "src/magic_cards_model/data/printings/ is read but never written.",
     )
     parser.add_argument("--csv", action="store_true", help="write CSV to stdout instead of a table")
     parser.add_argument(

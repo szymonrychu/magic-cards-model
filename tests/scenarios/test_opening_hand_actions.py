@@ -44,8 +44,6 @@ rigged so the card in question is dealt - CR 103.3 staging, not a mock: every
 card is the same real Scryfall printing the registered list names.
 """
 
-from pathlib import Path
-
 import pytest
 
 from magic_cards_model.machines import Step
@@ -56,7 +54,7 @@ from magic_cards_model.machines.opening_hand import (
     read_opening_hand_actions,
 )
 from magic_cards_model.models import Card, Deck, Game, Match, Player, Zone
-from tests.cards import card
+from tests.cards import CARD_POOL, card
 from tests.scenarios.test_broodscale_bloodchief_deck import BROODSCALE_MAIN, BROODSCALE_SIDE
 from tests.scenarios.test_devoted_combo_deck import DEVOTED_COMBO_MAIN, DEVOTED_COMBO_SIDE
 
@@ -220,7 +218,7 @@ def test_every_printing_in_the_pool_that_mentions_an_opening_hand_is_readable():
     printing does.
     """
     unreadable: list[tuple[str, str]] = []
-    for path in sorted(Path("tests/fixtures/cards").glob("*.json")):
+    for path in sorted(CARD_POOL.glob("*.json")):
         printing = Card.model_validate_json(path.read_text())
         _, notices = read_opening_hand_actions(printing)
         unreadable.extend((notice.card_name, notice.reason) for notice in notices)
