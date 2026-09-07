@@ -66,24 +66,12 @@ enumerating every legal subset or permutation of it.
   this engine's own `combat.py` does not model banding at all, and the
   defender pool built here is opposing players plus their planeswalkers and
   battles, not a wider multiplayer-attack-target menu.
-- **CR 702.47a's splice.** Revealing a card from hand to splice its text onto
-  a spell is not a top-level action of its own - it is a sub-choice of an
-  *in-flight* `Casting` (`Casting.splice`, called after the main spell is
-  already on the stack), the same "announcement-time choice" category as
-  choosing modes, which this module deliberately does not model in-flight
-  announcement state for (see `Game.alternative_costs_for`'s own docstring on
-  why the PERMISSION/STATIC sources it *does* now reproduce needed no such
-  state). Naming it as a parameter on the main spell's own `CAST` action, the
-  way `modes` names a modal spell's bullets, would need reproducing splice's
-  own quality-matching and additional-cost arithmetic here a second time
-  rather than reading it off `Casting` - out of proportion for what this pass
-  asked for, so it is named here rather than silently dropped.
 """
 
 from collections.abc import Iterable
 from typing import Any
 
-from ..models.action import Action, ActionKind, Affordability, TargetSlot
+from ..models.action import Action, ActionKind, Affordability, SpliceOption, TargetSlot
 from ..models.card import Card, Layout, Type
 from ..models.card_state import CardState
 from ..models.mana import ManaCost, ManaSpend
@@ -97,6 +85,7 @@ from .casting import (
     keyword_cast_options,
     marker_cast_options,
     play_permissions_on,
+    splice_candidates,
     why_cannot_cast_a_land,
     why_cannot_cast_from,
     why_cannot_cast_now,
@@ -310,7 +299,12 @@ def _cost_strings(total: TotalCost) -> tuple[str | None, str | None]:
 
 
 # ---------------------------------------------------------------------------
-# Casting: one Action per cast option (CR 601.2), never one per card.
+# Casting: one Action per cast option (CR 601.2), never one per card. CR
+# 702.47a's splice rides along on every cast option a matching spell has
+# (Action.splice_options) rather than being a further cast option of its
+# own - CR 702.47b lets more than one splice card apply to the same cast at
+# once, so it is a candidate pool, the same treatment Action.modes already
+# gives a modal spell's bullets.
 # ---------------------------------------------------------------------------
 
 
@@ -349,6 +343,7 @@ def _cast_action(
     total: TotalCost,
     candidate_scan: list[_ScannedCandidate],
     spell_face: str | None = None,
+    splice_options: tuple[SpliceOption, ...] = (),
 ) -> Action:
     modal = modal_profile(card.card)
     modes = tuple(mode.text for mode in modal.modes) if modal is not None else ()
@@ -400,6 +395,7 @@ def _cast_action(
         target_slots=target_slots,
         modes=modes,
         x_range=x_range,
+        splice_options=splice_options,
     )
 
 
@@ -456,8 +452,26 @@ def _base_cost_options(card: Card) -> list[tuple[str | None, ManaCost]]:
     return [(None, ManaCost.parse(card.mana_cost or ""))]
 
 
+def _splice_options_for(game: Any, player: str, card: CardState) -> tuple[SpliceOption, ...]:
+    """CR 702.47a's splice pool for casting `card` - every card in `player`'s
+    own hand whose splice ability could be revealed onto it, read straight
+    off `casting.splice_candidates` rather than reproducing its quality-
+    matching and additional-cost arithmetic here a second time. The same
+    pool applies to every cast option this card offers (pitch cost, keyword,
+    face) - CR 702.47a's "as you cast a [quality] spell" is not conditioned
+    on which cost path paid for that cast."""
+    return tuple(
+        SpliceOption(card_id=candidate.card.id, cost=str(candidate.cost))
+        for candidate in splice_candidates(game, card, player)
+    )
+
+
 def _permission_cast_actions(
-    game: Any, player: str, card: CardState, candidate_scan: list[_ScannedCandidate]
+    game: Any,
+    player: str,
+    card: CardState,
+    candidate_scan: list[_ScannedCandidate],
+    splice_options: tuple[SpliceOption, ...] = (),
 ) -> list[Action]:
     """CAST under a live `PlayPermission` (CR 601.3) naming this exact
     object - cascade's hit, Ugin's exiled card, Wrenn's Resolve's Bolt.
@@ -499,6 +513,7 @@ def _permission_cast_actions(
                         total=TotalCost.of(mana),
                         candidate_scan=candidate_scan,
                         spell_face=face_name,
+                        splice_options=splice_options,
                     )
                 )
         else:
@@ -512,6 +527,7 @@ def _permission_cast_actions(
                     alternative_cost=permission.source_name,
                     total=TotalCost(),
                     candidate_scan=candidate_scan,
+                    splice_options=splice_options,
                 )
             )
     return actions
@@ -538,6 +554,10 @@ def _cast_actions(
         return []
     actions: list[Action] = []
     zone = card.zone
+    # CR 702.47a's "as you cast a [quality] spell" is not conditioned on
+    # which cost path pays for that cast, so the same pool is attached to
+    # every cast option below, computed once rather than once per option.
+    splice_options = _splice_options_for(game, player, card)
 
     if zone is Zone.HAND:
         refusal = (
@@ -558,10 +578,11 @@ def _cast_actions(
                         total=TotalCost.of(mana),
                         candidate_scan=candidate_scan,
                         spell_face=face_name,
+                        splice_options=splice_options,
                     )
                 )
     else:
-        actions.extend(_permission_cast_actions(game, player, card, candidate_scan))
+        actions.extend(_permission_cast_actions(game, player, card, candidate_scan, splice_options))
 
     keyword_options: list[tuple[str | None, Any]] = [
         (None, option) for option in keyword_cast_options(card.card) + marker_cast_options(card)
@@ -601,6 +622,7 @@ def _cast_actions(
                         total=TotalCost.of(mana),
                         candidate_scan=candidate_scan,
                         spell_face=face_name,
+                        splice_options=splice_options,
                     )
                 )
         else:
@@ -615,6 +637,7 @@ def _cast_actions(
                     alternative_cost=option.keyword,
                     total=total,
                     candidate_scan=candidate_scan,
+                    splice_options=splice_options,
                 )
             )
 
@@ -662,6 +685,7 @@ def _cast_actions(
                     else alternative.source_name,
                     total=total,
                     candidate_scan=candidate_scan,
+                    splice_options=splice_options,
                 )
             )
     return actions

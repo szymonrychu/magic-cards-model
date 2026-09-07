@@ -4438,3 +4438,58 @@ def _keyword(card: Card, keyword: str) -> KeywordAbility | None:
         if ability.canonical.lower() == keyword.lower():
             return ability
     return None
+
+
+class SpliceCandidate(BaseModel):
+    """One card in a hand that could be revealed to splice onto `spell`
+    right now (CR 702.47a) - `splice_candidates`'s own return shape, read
+    by `legal_actions` to build `Action.splice_options` without ever
+    opening a `Casting` of its own (`legal_actions`'s module docstring: no
+    in-flight announcement state lives here). `card` is a live `CardState`
+    on purpose, the same as `KeywordCastOption`/`GrantedCastOption` above -
+    this type never crosses a JSON boundary; `legal_actions` reads `card.id`
+    into the id-only `models.action.SpliceOption` before an `Action` is
+    ever built.
+    """
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    card: CardState
+    cost: TotalCost
+    rule: str = "CR 702.47a"
+
+
+def splice_candidates(game: Any, spell: CardState, player: str) -> list[SpliceCandidate]:
+    """CR 702.47a: every card in `player`'s hand whose splice ability could
+    be revealed onto `spell` right now, before any is actually chosen.
+
+    Mirrors the refusals `CastingStep._splice` enforces once a card is
+    named, minus the ones that only make sense for an in-flight `Casting`
+    that has already chosen some (CR 702.47b's "already spliced onto this
+    spell" is about a *second* reveal of the same card on the *same* cast,
+    which cannot have happened yet here) - `spell` can never splice onto
+    itself, since revealing it from hand and casting it are the same event
+    happening to the same object, not two.
+    """
+    candidates: list[SpliceCandidate] = []
+    for card in game.player(player).hand:
+        if card.id == spell.id:
+            continue
+        ability = _keyword(card.card, "Splice")
+        if ability is None:
+            continue
+        quality, cost = _splice_parameter(ability)
+        if quality is None or cost is None:
+            continue
+        if not _matches_splice_quality(spell, quality):
+            continue
+        text = _spliced_rules_text(card.card)
+        if not text:
+            continue
+        profile = profile_for_text(text)
+        if profile.understood and profile.requirements:
+            # CR 702.47b: refused fail-closed, the identical read `Casting.
+            # _splice` gives this same sentence.
+            continue
+        candidates.append(SpliceCandidate(card=card, cost=TotalCost.of(cost)))
+    return candidates

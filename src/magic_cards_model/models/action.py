@@ -40,7 +40,9 @@ class ActionKind(StrEnum):
     CAST = "cast"
     """CR 601: cast a spell, for its printed mana cost or for one alternative
     cost - one `Action` per cast option (`Action.alternative_cost` names
-    which, `None` for the printed mana cost)."""
+    which, `None` for the printed mana cost). `Action.splice_options` names
+    CR 702.47's splice pool for this same cast option, not a further cast
+    option of its own - see its own docstring."""
     PLAY_LAND = "play_land"
     """CR 305.1, and CR 712.12 for an MDFC's land face (`Action.land_face`)."""
     TURN_FACE_UP = "turn_face_up"
@@ -117,6 +119,29 @@ class TargetSlot(BaseModel):
     minimum: int
     maximum: int | None
     """`None` for "any number of" (CR 107.1c)."""
+
+
+class SpliceOption(BaseModel):
+    """One card in `player`'s hand that could be revealed to splice its text
+    onto this `CAST` action's spell (CR 702.47a), before any is chosen.
+
+    Unlike `spell_face`/`alternative_cost`, this is not one of a family of
+    mutually exclusive ways to cast the same card - CR 702.47b lets more
+    than one splice card apply to the same spell at once ("If you're
+    splicing more than one card onto a spell, reveal them all at once"), so
+    a `CAST` action carries the whole eligible pool here, the same
+    "parameter space, not an enumeration" treatment `Action.modes` already
+    gives a modal spell's bullets. Choosing one (or several) happens on the
+    in-flight `Casting.splice(name)`, not here."""
+
+    model_config = ConfigDict(frozen=True)
+
+    card_id: UUID
+    cost: str
+    """This card's own splice cost (CR 702.47a's `[cost]`), as `str(TotalCost)`
+    - an *additional* cost on top of whatever `Action.cost` already names,
+    the same way `Action.cost` never folds in `Action.modes`'/`x_range`'s own
+    unresolved cost variance either."""
 
 
 class Action(BaseModel):
@@ -199,6 +224,15 @@ class Action(BaseModel):
     `None` for a genuinely open-ended X (nothing caps how much mana could be
     spent on it), never for "not applicable" - `None` for the whole field is
     what says that."""
+    splice_options: tuple[SpliceOption, ...] = ()
+    """`CAST` only: CR 702.47a's splice, every card in `player`'s hand that
+    could be revealed onto this spell right now - see `SpliceOption`'s own
+    docstring for why this is a pool a caller chooses zero, one, or several
+    from (`Casting.splice(name)`, once for each) rather than a family of
+    `Action`s the way `spell_face`/`alternative_cost` are. Empty for the
+    overwhelming majority of casts, which have no card in hand whose splice
+    ability names this spell's own type or subtype (CR 702.47a's
+    "[quality]")."""
     color_options: tuple[Color, ...] = ()
     """`ACTIVATE_MANA` only: every colour `Game.activate_ability`'s own
     `color=` would accept for this mana ability right now (CR 605.1a),
