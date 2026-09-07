@@ -20,8 +20,10 @@ from magic_cards_model.machines.combat import Keyword, has_keyword
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card import Color, Type
 from magic_cards_model.models.card_state import Counter
+from magic_cards_model.models.game import Game
 from magic_cards_model.models.token import (
     TokenDefinition,
+    TokenState,
     create_predefined_tokens,
     create_tokens,
     is_token,
@@ -281,6 +283,42 @@ def test_a_token_that_dies_reaches_the_graveyard_first():
     scenario.cast_and_resolve("Lightning Bolt", mountain, username="alice", targets=[token])
 
     assert token.zone is Zone.GRAVEYARD, "it died before it ceased to exist"
+
+
+def test_a_token_in_the_graveyard_round_trips_as_a_tokenstate():
+    """`Player.zones` (`models/player.py`) is typed `dict[Zone, list[CardState]]`
+    - plain `CardState`, not the `StackObject` union `Game.shared_zones` uses -
+    because a player's library, hand, and graveyard are never shared or
+    stack objects. `CardState._resolve_token_subclass`'s wrap validator/
+    serializer pair reads `state_class` off the dict regardless of which
+    field's schema it is decoding through, so it should key a `Player.zones`
+    round trip exactly as it keys `Game.shared_zones`'s - but nothing has
+    exercised that claim for `Player.zones` until now.
+
+    Like `test_a_token_in_a_graveyard_ceases_to_exist`, `Game.destroy` alone
+    (not a full `cast_and_resolve`, which also checks state-based actions and
+    would let CR 704.5d remove the token before this test ever got to dump
+    it) is what leaves the token sitting in its owner's graveyard for this
+    test to catch it there.
+    """
+    scenario = Scenario().player("alice").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    spirit = TokenDefinition(subtypes=("Spirit",), colors=(Color.WHITE,), power=1, toughness=1)
+    (token,) = create_tokens(scenario.game, spirit, "alice")
+    scenario.game.destroy(token)
+    assert token in scenario.player("alice").graveyard
+
+    decoded = Game.model_validate(scenario.game.model_dump(mode="json"))
+    decoded_alice = next(player for player in decoded.players if player.username == "alice")
+    (decoded_token,) = [state for state in decoded_alice.graveyard if state.id == token.id]
+
+    assert isinstance(decoded_token, TokenState), (
+        "a token in a player's graveyard decoded back as a plain CardState - "
+        "CR 111.8's protection is gone the moment it left the battlefield, "
+        "because TokenState.move_to's override no longer exists on this object"
+    )
+    assert decoded_token.left_the_battlefield
 
 
 def test_a_token_that_dies_fires_its_own_dies_trigger():

@@ -6,7 +6,7 @@ from contextlib import contextmanager
 from dataclasses import replace
 from enum import StrEnum
 from random import Random
-from typing import Any, ClassVar
+from typing import Annotated, Any, ClassVar
 from uuid import NAMESPACE_OID, UUID, uuid4, uuid5
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -218,7 +218,23 @@ Targetable = CardState | Player
 
 #: What the stack holds. A spell is the card itself (CR 112.1); an ability is a
 #: separate object with no card behind it (CR 405.1, 113.1c).
-StackObject = CardState | AbilityOnStack
+#:
+#: A discriminated union on `state_class` (`CardState.state_class`,
+#: `TokenState.state_class`, `AbilityOnStack.state_class`), not a plain
+#: `CardState | AbilityOnStack`. `TokenState` needs its own explicit arm even
+#: though it is a `CardState` subclass: pydantic builds `shared_zones`'s
+#: schema from the field's declared type, an untagged union tries each arm's
+#: *exact* schema against a `TokenState` instance, matches neither `CardState`
+#: nor `AbilityOnStack`, and warns - `PydanticSerializationUnexpectedValue`,
+#: once per arm per object, every time a dump reaches this field. Naming
+#: `TokenState` as its own tagged arm gives pydantic an exact match to pick
+#: instead of guessing. `CardState._resolve_token_subclass`'s wrap validator/
+#: serializer pair (`models/card_state.py`) stays in place for the one field
+#: that still needs it: `Player.zones` (`models/player.py`) is a bare
+#: `list[CardState]`, not this union, and narrowing that pair to only this
+#: union's shape would break `Player.zones`'s own `TokenState` round trip
+#: silently.
+StackObject = Annotated[CardState | TokenState | AbilityOnStack, Field(discriminator="state_class")]
 
 #: CR 702.16a: "Protection is a static ability, written 'Protection from
 #: [quality]'." CR 702.16g makes "protection from A and from B" two abilities,
@@ -1705,12 +1721,23 @@ class Game(BaseModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 2
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 3
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
     copy-of-a-permanent-spell mid-stack means (a plain `CardState` loses CR
-    111.8's protection the moment it becomes a token, silently)."""
+    111.8's protection the moment it becomes a token, silently).
+
+    Bumped 2 -> 3: `AbilityOnStack` gained `state_class` (T3, the
+    `StackObject`-discriminated-union task) - a field added to a persisted
+    model, per the bump rule above, needed to turn `StackObject` from an
+    untagged `CardState | AbilityOnStack` union into a discriminated one so a
+    `TokenState` in `Game.shared_zones` dumps without a
+    `PydanticSerializationUnexpectedValue` warning. A snapshot written at
+    version 2 has no `state_class` on any `AbilityOnStack` it holds, so
+    decoding it at version 3 would fail the union's own discriminator lookup
+    with no signal beyond a raw pydantic error - refusing it at the schema
+    check instead names the real reason."""
 
     @model_validator(mode="before")
     @classmethod
