@@ -1,19 +1,21 @@
 """The test card pool: real Scryfall printings, loaded by name.
 
-Every card in tests/fixtures/cards is a genuine Scryfall response. To use a card
-the pool does not have, add its json there rather than hand-writing card data -
-tests are only worth anything here if they run against the real shape.
+Every card in src/magic_cards_model/data/printings is a genuine Scryfall
+response. To use a card the pool does not have, add its json there rather than
+hand-writing card data - tests are only worth anything here if they run
+against the real shape.
 
     uv run python - <<'EOF'
     import json, pathlib, urllib.parse, urllib.request
+    import magic_cards_model
     name = "Birds of Paradise"
     url = "https://api.scryfall.com/cards/named?exact=" + urllib.parse.quote(name)
     req = urllib.request.Request(url, headers={"User-Agent": "magic-cards-model/0.1",
                                                "Accept": "*/*"})
     data = json.load(urllib.request.urlopen(req))
     slug = "".join(c if c.isalnum() else "_" for c in data["name"].split("//")[0].strip().lower())
-    pathlib.Path(f"tests/fixtures/cards/{slug.strip('_')}.json").write_text(
-        json.dumps(data, indent=2) + "\n")
+    pool = pathlib.Path(magic_cards_model.__file__).parent / "data" / "printings"
+    (pool / f"{slug.strip('_')}.json").write_text(json.dumps(data, indent=2) + "\n")
     EOF
 """
 
@@ -21,9 +23,10 @@ import json
 from functools import cache
 from pathlib import Path
 
+import magic_cards_model
 from magic_cards_model.models import Card, CardState, Zone
 
-CARD_POOL = Path(__file__).parent / "fixtures" / "cards"
+CARD_POOL = Path(magic_cards_model.__file__).parent / "data" / "printings"
 
 
 @cache
@@ -44,7 +47,7 @@ def card(name: str) -> Card:
         return pool()[name]
     except KeyError:
         raise KeyError(
-            f"{name!r} is not in tests/fixtures/cards. "
+            f"{name!r} is not in src/magic_cards_model/data/printings. "
             f"Available: {', '.join(sorted(pool()))}. "
             f"Add its Scryfall json to the pool to use it."
         ) from None

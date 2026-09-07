@@ -3,7 +3,8 @@
 
     uv run python scripts/add_card.py "Birds of Paradise" "Llanowar Elves"
 
-Fetches the exact printing from Scryfall and writes it to tests/fixtures/cards.
+Fetches the exact printing from Scryfall and writes it to
+src/magic_cards_model/data/printings.
 """
 
 import json
@@ -13,7 +14,9 @@ import time
 import urllib.parse
 import urllib.request
 
-POOL = pathlib.Path(__file__).parent.parent / "tests" / "fixtures" / "cards"
+import magic_cards_model
+
+POOL = pathlib.Path(magic_cards_model.__file__).parent / "data" / "printings"
 HEADERS = {"User-Agent": "magic-cards-model/0.1", "Accept": "*/*"}
 
 
@@ -44,7 +47,7 @@ def main(names: list[str]) -> int:
 
         path = POOL / f"{slugify(card['name'])}.json"
         path.write_text(json.dumps(card, indent=2) + "\n")
-        print(f"{card['name']} -> {path.relative_to(POOL.parent.parent.parent)}")
+        print(f"{card['name']} -> {path.relative_to(POOL.parent.parent.parent.parent)}")
         time.sleep(0.12)  # Scryfall asks for 100ms between requests
     return 0
 

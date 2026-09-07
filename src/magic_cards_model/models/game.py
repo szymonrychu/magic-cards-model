@@ -8900,6 +8900,7 @@ class Game(BaseModel):
         convoke: Sequence[tuple[CardState, Color | None]] | None = None,
         delve: Sequence[CardState] | None = None,
         mana_sources: Sequence[CardState | tuple[CardState, Sequence[Color]]] | None = None,
+        splice: Sequence[UUID] | None = None,
     ) -> CardState:
         """Cast `card` for `caster`, start to finish, as one atomic action.
 
@@ -8956,6 +8957,15 @@ class Game(BaseModel):
         than the announcement; and `mana_sources` are the abilities this call
         may activate on `caster`'s behalf (CR 601.2g) - a bare source lets the
         engine choose what colour it makes, a `(source, colors)` pair pins it.
+
+        `splice` is CR 702.47a: card ids, never names, matching `Action.
+        splice_options`' own `SpliceOption.card_id` - this library's actions
+        are ids only, and a caller holding two copies of the same splice card
+        has to be able to name which one it means. Each id is applied with
+        `Casting.splice_by_id` before `determine_cost`, because folding a
+        splice cost into `additional_costs` changes the total cost CR 601.2f
+        determines (`Casting._splice_card` nulls the announcement's own stale
+        `payment` for exactly that reason).
         """
         origin_zone = card.zone
         # CR 601.3's dynamic half is asked before CR 601.2a's move, exactly
@@ -8979,6 +8989,8 @@ class Game(BaseModel):
                 casting.choose_modes(modes, x_value=x_value)
             if targets:
                 casting.choose_targets(list(targets))
+            for card_id in splice or ():
+                casting.splice_by_id(card_id)
             payment = casting.determine_cost(x_value=x_value)
             if division is not None:
                 casting.announce_division(division)
