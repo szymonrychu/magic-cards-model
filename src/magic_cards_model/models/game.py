@@ -6261,60 +6261,70 @@ class Game(BaseModel):
         departures too, the same events the single-card moves already raise:
         CR 603.6c's `LEAVES_THE_BATTLEFIELD` per permanent, and CR 603.10a's
         `LEAVES_GRAVEYARD` batched per graveyard alongside the library event.
+
+        Run under `_id_allocator_scope`, the same as `put_into_graveyard`/
+        `exile_permanent`/`return_to_hand`/`ante`: `CardState.move_to` mints a
+        fresh `zone_change_stamp` per card and `emit` below may put a
+        triggered ability on `pending_triggers`, both persisted ids that need
+        to be deterministic for a decoded replay to reproduce them - found by
+        T10's own round-trip/replay invariant the moment a scenario actually
+        tucked a permanent off the battlefield through this method, which no
+        earlier scenario had exercised.
         """
-        moved: list[CardState] = []
-        newly_in_library: list[CardState] = []
-        left_battlefield: list[CardState] = []
-        by_graveyard: dict[str, list[CardState]] = {}
-        for card_state in cards:
-            if move_refused(card_state, Zone.LIBRARY) is not None:
-                continue
-            was_in_library = card_state.zone is Zone.LIBRARY
-            graveyard_owner = self._graveyard_owner_of(card_state)
-            if card_state in self.battlefield:
-                self._note_left_battlefield(card_state)
-                self._detach_dependents(card_state)
-                left_battlefield.append(card_state)
-            self._take_out_of_every_zone(card_state)
-            self.combat.remove(card_state.id)  # CR 506.4
-            owner = self._owner_of(card_state)
-            owner.add(card_state, Zone.LIBRARY)
-            moved.append(card_state)
-            if not was_in_library:
-                newly_in_library.append(card_state)
-            if graveyard_owner is not None:
-                by_graveyard.setdefault(graveyard_owner, []).append(card_state)
-        if not to_bottom:
-            # `Player.add` appends, which is the bottom (CR 401.2's single
-            # face-down pile, ordered top-first here). Lift this instruction's
-            # cards back out and put them on the front, keeping the order they
-            # were named in.
-            for card_state in reversed(moved):
-                library = self._owner_of(card_state).library
-                library.remove(card_state)
-                library.insert(0, card_state)
-        for gone in left_battlefield:
-            self.emit(
-                GameEvent(
-                    event=TriggerEvent.LEAVES_THE_BATTLEFIELD,
-                    subject_id=gone.id,
-                    subject_name=gone.name,
-                    subject_controller=gone.controller,
-                    subject_card=gone.card,
-                    player=gone.controller,
+        with self._id_allocator_scope():
+            moved: list[CardState] = []
+            newly_in_library: list[CardState] = []
+            left_battlefield: list[CardState] = []
+            by_graveyard: dict[str, list[CardState]] = {}
+            for card_state in cards:
+                if move_refused(card_state, Zone.LIBRARY) is not None:
+                    continue
+                was_in_library = card_state.zone is Zone.LIBRARY
+                graveyard_owner = self._graveyard_owner_of(card_state)
+                if card_state in self.battlefield:
+                    self._note_left_battlefield(card_state)
+                    self._detach_dependents(card_state)
+                    left_battlefield.append(card_state)
+                self._take_out_of_every_zone(card_state)
+                self.combat.remove(card_state.id)  # CR 506.4
+                owner = self._owner_of(card_state)
+                owner.add(card_state, Zone.LIBRARY)
+                moved.append(card_state)
+                if not was_in_library:
+                    newly_in_library.append(card_state)
+                if graveyard_owner is not None:
+                    by_graveyard.setdefault(graveyard_owner, []).append(card_state)
+            if not to_bottom:
+                # `Player.add` appends, which is the bottom (CR 401.2's single
+                # face-down pile, ordered top-first here). Lift this instruction's
+                # cards back out and put them on the front, keeping the order they
+                # were named in.
+                for card_state in reversed(moved):
+                    library = self._owner_of(card_state).library
+                    library.remove(card_state)
+                    library.insert(0, card_state)
+            for gone in left_battlefield:
+                self.emit(
+                    GameEvent(
+                        event=TriggerEvent.LEAVES_THE_BATTLEFIELD,
+                        subject_id=gone.id,
+                        subject_name=gone.name,
+                        subject_controller=gone.controller,
+                        subject_card=gone.card,
+                        player=gone.controller,
+                    )
                 )
-            )
-        for owner_name, gone_cards in by_graveyard.items():
-            self._emit_left_graveyard(owner_name, gone_cards, exiled=False)
-        if newly_in_library:
-            self.emit(
-                GameEvent(
-                    event=ExtraTriggerEvent.PUT_INTO_LIBRARY,
-                    player=self._owner_of(newly_in_library[0]).username,
-                    amount=len(newly_in_library),
+            for owner_name, gone_cards in by_graveyard.items():
+                self._emit_left_graveyard(owner_name, gone_cards, exiled=False)
+            if newly_in_library:
+                self.emit(
+                    GameEvent(
+                        event=ExtraTriggerEvent.PUT_INTO_LIBRARY,
+                        player=self._owner_of(newly_in_library[0]).username,
+                        amount=len(newly_in_library),
+                    )
                 )
-            )
-        return moved
+            return moved
 
     # -- targeting and effects --------------------------------------------
 
