@@ -1857,10 +1857,28 @@ def _step_matches(condition: str, controller: str, event: GameEvent) -> bool:
 #: CR 603.10a's look-back events: the source is deliberately still asked for
 #: these even though it has already left the battlefield by the time the event
 #: is worked out - `Game.emit` widens `sources` for exactly this reason.
+#:
+#: `LEAVES_THE_BATTLEFIELD` belongs here on CR 603.10a's own say-so - "Some
+#: zone-change triggers look back in time. These are leaves-the-battlefield
+#: abilities, abilities that trigger when a player sacrifices a permanent,
+#: abilities that trigger when a card leaves a graveyard, and abilities that
+#: trigger when an object that all players can see is put into a hand or
+#: library" - not merely by analogy with `DIES`. Its absence was a real
+#: defect: `Game.put_into_graveyard` happens to emit `LEAVES_THE_BATTLEFIELD`
+#: *before* moving the card, so `source.zone` still read BATTLEFIELD when
+#: this was checked and the plain-battlefield default below passed by
+#: accident. `Game.exile_permanent`, `Game.return_to_hand`, `Game.
+#: put_cards_into_library`, and `Game.ante` all emit it *after* the move, so
+#: `source.zone` already read EXILE/HAND/LIBRARY/ANTE and the same default
+#: refused every one of them - a leaves-the-battlefield ability fired for a
+#: destroyed or sacrificed permanent and silently not for one exiled,
+#: bounced, tucked, or anted. Adding it here fixes every route at once,
+#: regardless of which side of its own move each one happens to emit on.
 _LOOK_BACK_EVENTS = (
     TriggerEvent.DIES,
     TriggerEvent.IS_SACRIFICED,
     TriggerEvent.SPELL_IS_COUNTERED,
+    TriggerEvent.LEAVES_THE_BATTLEFIELD,
 )
 
 
@@ -1916,12 +1934,14 @@ def zones_ability_functions_in(ability: TriggeredAbility, source: CardState) -> 
     if ability.event is TriggerEvent.EXILED:
         return frozenset({Zone.EXILE})
 
-    # CR 603.10a: dies, is-sacrificed and countered triggers look back at the
-    # object as it existed immediately beforehand, so they function from the
-    # battlefield the source just left as well as wherever it ended up -
-    # `source.zone` already reflects the post-event location, since these are
-    # exactly the events `Game.emit` widens `sources` for after the move has
-    # already happened.
+    # CR 603.10a: dies, is-sacrificed, countered, and leaves-the-battlefield
+    # triggers look back at the object as it existed immediately beforehand,
+    # so they function from the battlefield the source just left as well as
+    # wherever it ended up - `source.zone` already reflects the post-event
+    # location for a route that emits after the move, and still reads
+    # BATTLEFIELD for one that emits before it (`Game.put_into_graveyard`);
+    # either way the object just left is exactly what `Game.emit` widens
+    # `sources` for.
     if ability.event in _LOOK_BACK_EVENTS:
         return frozenset({Zone.BATTLEFIELD, source.zone})
 
