@@ -374,6 +374,18 @@ class DevourerOfDestinyFirstUpkeep(DelayedEffectSpecBase):
     unscripted player - whose default answer moves nothing - exiles all four,
     which is what declining a "you may put one back" does. More than one card
     kept is refused: the card says "one".
+
+    "Exile the rest" goes through `Game.exile_cards`, never
+    `Player.add(state, Zone.EXILE)`. CR 400.1 lists the seven zones and says
+    which are whose: "Each player has their own library, hand, and graveyard.
+    The other zones are shared by all players" - so there is exactly one exile
+    zone, `Game.shared_zones[Zone.EXILE]`, and CR 406.2's "put it into the
+    exile zone" means that one. Exiling into a per-player pile instead is what
+    this effect used to do, and it left all four cards somewhere no
+    shared-zone reader looks - not `Game.exile`, not `Game.all_targetables`,
+    not the exile pile a seat is shown - so from the table the cards were
+    neither back on the library nor in exile, which is neither outcome this
+    ability has.
     """
 
     kind: Literal["devourer_of_destiny_first_upkeep"] = "devourer_of_destiny_first_upkeep"
@@ -393,8 +405,7 @@ class DevourerOfDestinyFirstUpkeep(DelayedEffectSpecBase):
                 f"{trigger.source_name}: only one of those cards may be put back on top "
                 f"of your library (CR 608.2d)"
             )
-        for state in rest:
-            player.add(state, Zone.EXILE)
+        game.exile_cards(rest)
         for index, state in enumerate(kept):
             player.library.insert(index, state)
 
