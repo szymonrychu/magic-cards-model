@@ -409,6 +409,30 @@ class TargetRequirement(BaseModel):
     unenforced - so a card this narrow reader does not know about does not
     regress from "ignored" to "the whole targeting text refuses to parse"."""
 
+    if_gift_promised: "TargetRequirement | None" = None
+    """CR 702.174m: "If part of a spell's ability has its effect only if its
+    gift was promised, and that part of the ability includes any targets, the
+    spell's controller chooses those targets only if the gift was promised."
+
+    Into the Flood Maw's own "Return target creature an opponent controls to
+    its owner's hand. If the gift was promised, instead return target
+    nonland permanent an opponent controls to its owner's hand." is not a
+    second target of the spell's own - CR 601.2c: "a spell may require
+    alternative targets only if an alternative or additional cost ... was
+    chosen for it" - it is what this same slot asks for *instead*, once
+    gift's cost was paid. `_parse` reads the "if the gift was promised,
+    instead ..." clause into this field on the requirement it replaces,
+    rather than either counting it as a second requirement (which is what
+    used to make the spell demand two targets and be uncastable at anything,
+    CR 601.2c) or discarding the clause outright, which would permanently
+    hardcode the not-promised answer the day gift itself is implemented.
+    `TargetingProfile.for_gift_promise` is what actually chooses between the
+    two. Nothing calls it with `True` today: `machines/casting.py`'s
+    `ADDITIONAL_COST_KEYWORDS` has no "gift" entry, so a spell's gift can
+    never actually be promised yet (see `docs/engine-coverage.md`'s "Not
+    modelled" table) - this field exists so the data is not lost the day it
+    is."""
+
     @property
     def optional(self) -> bool:
         """True when none of these targets has to be chosen (CR 115.6)."""
@@ -847,6 +871,13 @@ class TargetRequirement(BaseModel):
         return None
 
 
+#: `if_gift_promised`'s forward reference resolves once the class itself is
+#: fully defined - explicit rather than relying on pydantic's implicit
+#: first-use resolution, since a self-referencing field is exactly the case
+#: where that can be deferred by surprise.
+TargetRequirement.model_rebuild()
+
+
 class Division(BaseModel):
     """An effect the caster splits among the targets (CR 601.2d).
 
@@ -922,6 +953,33 @@ class TargetingProfile(BaseModel):
     @property
     def targets_anything(self) -> bool:
         return bool(self.requirements)
+
+    def for_gift_promise(self, promised: bool) -> "TargetingProfile":
+        """CR 601.2c/702.174m: which candidate set applies, once whether this
+        spell's gift cost was paid (CR 702.174k) is known.
+
+        Not promised - the only case reachable today, since
+        `machines/casting.py`'s `ADDITIONAL_COST_KEYWORDS` has no "gift"
+        entry and nothing can announce the intention to pay one - leaves
+        every requirement exactly as `_parse` read it: CR 601.2c's "a spell
+        may require alternative targets only if an alternative or additional
+        cost ... was chosen for it", read the other way round. Promised swaps
+        in each requirement's own `TargetRequirement.if_gift_promised`
+        alternate where `_parse` read one off the card's own "If the gift
+        was promised, instead ..." clause, and leaves any requirement
+        without one untouched - a requirement elsewhere on the same card
+        that names no gift-conditional replacement is not affected by the
+        promise at all.
+        """
+        if not promised:
+            return self
+        return self.model_copy(
+            update={
+                "requirements": tuple(
+                    requirement.if_gift_promised or requirement for requirement in self.requirements
+                )
+            }
+        )
 
     def check(
         self, targets: list[Any], caster: str, game: Any = None, source_id: UUID | None = None
@@ -1765,6 +1823,22 @@ def spell_profile_for_text(text: str, card: Card | None = None) -> TargetingProf
     return profile
 
 
+#: "If the gift was promised, instead return target nonland permanent an
+#: opponent controls to its owner's hand." (Into the Flood Maw) - CR 702.174k's
+#: "promised" and CR 702.174m's "the spell's controller chooses those targets
+#: only if the gift was promised". Read generically off the keyword's own
+#: template wording, not off this printing's name: any future gift card
+#: whose replacement clause uses the same "If the gift was promised, instead
+#: ..." shape is read the same way. Spans from the trigger phrase to the
+#: next sentence boundary (or the end of the text), the same "cut to the next
+#: `.`/`;`" convention `_read_phrase`'s own `span` slicing already uses -
+#: which is how `_parse` tells a "target" inside this clause apart from an
+#: ordinary second requirement.
+_GIFT_PROMISED_INSTEAD_CLAUSE = re.compile(
+    r"\bif the gift was promised,\s*instead\b.*?(?=[.;]|$)", re.IGNORECASE | re.DOTALL
+)
+
+
 def _parse(oracle_text: str, spell_only: bool = True) -> TargetingProfile:
     text = _spell_text(oracle_text) if spell_only else oracle_text
     text = _QUOTED_SPAN.sub("", text)
@@ -1790,6 +1864,7 @@ def _parse(oracle_text: str, spell_only: bool = True) -> TargetingProfile:
         for _ in range(any_targets)
     )
     text = _ANY_TARGET.sub(_PLACEHOLDER, text)
+    promised_spans = [match.span() for match in _GIFT_PROMISED_INSTEAD_CLAUSE.finditer(text)]
 
     scan = list(_TARGET_WORD.finditer(text))
     for position, match in enumerate(scan):
@@ -1815,6 +1890,21 @@ def _parse(oracle_text: str, spell_only: bool = True) -> TargetingProfile:
             requirement = requirement.model_copy(
                 update={"comparison_value_if_revolt": revolt_override}
             )
+        # CR 702.174m: a "target" inside a "if the gift was promised, instead
+        # ..." clause is not a second requirement of the spell's own - it is
+        # what the *previous* requirement's own slot asks for instead, once
+        # the gift was promised (`TargetRequirement.if_gift_promised`,
+        # `TargetingProfile.for_gift_promise`). Attached to whichever
+        # requirement was read immediately before it; a promised clause with
+        # nothing preceding it (none in the pool today) has nothing to attach
+        # to and is dropped, the same way an unreadable phrase elsewhere
+        # fails rather than guesses.
+        if any(start <= match.start() < end for start, end in promised_spans):
+            if requirements:
+                requirements[-1] = requirements[-1].model_copy(
+                    update={"if_gift_promised": requirement}
+                )
+            continue
         requirements.append(requirement)
 
     return TargetingProfile(requirements=tuple(requirements), division=division)
