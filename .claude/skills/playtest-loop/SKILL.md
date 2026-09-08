@@ -350,10 +350,20 @@ Every one of these was added after a player failed without it.
 - **An explicit stop condition:** play until `state` shows a `winner`, or until
   you file a report. Stopping for any other reason is not allowed, and a
   partially played game is worthless.
-- **`advance` is ONLY for untap and cleanup.** In a main phase, `play-land` /
-  `cast` then `pass`. Using `advance` in a main phase skips your own turn.
-- **If `pass` is refused with "you do not have priority", wait again — never
-  `advance`.** That strands the stack.
+- **There is no `advance` subcommand. Do not tell a seat to use one.** It was
+  removed: ending a step is not a move a seat makes, it is what CR 117.4 makes
+  happen once both players have passed. The current subcommand list is
+  `state, wait, cast, suspend, plot, foretell, cycle, play-land, activate,
+  attackers, blockers, decide, pass, pass-until, mulligan, opening-hand-done,
+  opening-hand-action, log, report`. In a main phase: `play-land` / `cast`,
+  then `pass`.
+- **If `pass` is refused with "you do not have priority", wait again.** Never
+  reach for another verb to force the game forward; that strands the stack.
+- **Verify this list against `seat_cli --help` before writing a player brief.**
+  This section has gone stale twice now - once claiming `advance` exists after
+  it was deleted, and once claiming `wait --max-seconds` was deleted when it
+  exists. A seat handed a flag or a verb that errors spends its game
+  improvising.
 - **Always bound the wait: `wait --max-seconds 30`, called in a loop.** A bare
   `wait` blocks indefinitely, the shell backgrounds it, and the player's turn
   ends having done nothing. Three seats died this way in one session, each
