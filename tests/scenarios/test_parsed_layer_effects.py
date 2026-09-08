@@ -202,13 +202,16 @@ def test_tower_above_leads_with_its_duration_and_still_fails_closed_with_a_notic
     bears = scenario.creature("Grizzly Bears", "alice")
     forests = scenario.untapped_sources("Forest", "Forest", "Forest")
 
-    # `machines/targeting.py` counts both "target creature" phrases in the
-    # printed text - the real one in the pump sentence, and the one quoted
-    # inside the granted triggered ability's own text - as separate instances
-    # of the word (CR 115.3) needing an announcement, not just the first;
-    # that scan is unrelated to this file's routing fix, so both are aimed at
-    # the same creature here rather than reworking the announcement.
-    tower_above = scenario.cast_and_resolve("Tower Above", *forests, targets=[bears, bears])
+    # Exactly one target, not two: the quoted "target creature" inside the
+    # granted triggered ability's own text (CR 111.3's stated text) is that
+    # ability's target, chosen when *it* triggers and goes on the stack
+    # (CR 113.1c makes it its own object) - not Tower Above's, and not now.
+    # `machines/targeting.py`'s `_parse` strips a quoted span before scanning
+    # for "target" mentions (CR 115.1's template belongs to whichever object's
+    # words print it) precisely so this second "target creature" is never
+    # read as a second instance the caster must announce for; before that fix
+    # this cast legally needed two targets for one printed "target creature".
+    tower_above = scenario.cast_and_resolve("Tower Above", *forests, targets=[bears])
 
     board = scenario.game.continuous_effects.board(scenario.game.battlefield)
     assert board.of(bears).power_toughness == (2, 2), "nothing applied - the printed 2/2 stands"

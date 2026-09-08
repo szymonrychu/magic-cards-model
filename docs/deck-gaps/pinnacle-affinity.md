@@ -78,9 +78,19 @@ static abilities functioning while the card is on the stack, one creating a
 delayed triggered ability - and is not in the deck's critical path for a smoke
 test but is a real alternative cost the engine does not model.
 
-Note the sibling that already works: **Weapons Manufacturing** classifies as
-handled, so the nontoken-artifact-enters trigger shape exists. Pinnacle
-Emissary's trigger is on *casting*, not entering, which is why it falls through.
+Note the sibling that now actually works, but did not when this was first
+written: **Weapons Manufacturing** used to *classify* as handled
+(`scripts/sweep_pool.py` never calls `condition_matches`, only checks that the
+event parsed and the effect returned non-`None`), while its trigger never
+fired in a real game at all - `"nontoken"` contains `"token"` as a substring,
+so the ETB token guard demanded the entering artifact *be* a token, exactly
+inverting the condition, and the effect that never ran was the wrong one
+anyway (a misparsed damage spell, not a Munitions token). Both halves are
+fixed now (`docs/2026-09-08-trigger-findings.md`,
+`memory/nontoken-substring-guard-inverted-triggers.md`), so the
+nontoken-artifact-enters trigger shape genuinely exists as of this fix.
+Pinnacle Emissary's own trigger is still on *casting*, not entering, which is
+why it still falls through.
 
 ---
 
@@ -179,6 +189,12 @@ a real effect, but the keyword itself has no execution path.
 | Handled but with an ignored keyword | 4 | Consign to Memory (Replicate), Emry (Affinity), Engineered Explosives (Sunburst), plus the two improvise cards already counted as silent |
 | Static text read as "no rules text" | 3 | Damping Sphere, Mox Opal, Pithing Needle |
 | Genuinely complete | 15 | Blood Moon, Claws of Gix, Emry (ETB + activated), Engineered Explosives (activated), Experimental Synthesizer, Fiery Islet, Mishra's Bauble, Mystical Dispute, Shadowspear, Sink into Stupor // Soporific Springs, Skateboard, Tormod's Crypt, Urza's Saga, Weapons Manufacturing, Consign to Memory (counter half) |
+
+**Weapons Manufacturing's row was wrong when this table was written**: it
+belonged in "silent", not here - `scripts/sweep_pool.py` classifying its
+clauses as `handled` never meant its trigger actually fired in a game, and it
+did not (the substring collision described above). It is genuinely complete
+now, as of the fix in `docs/2026-09-08-trigger-findings.md`.
 
 The deck loads, shuffles, and starts a game correctly today
 (`tests/scenarios/test_pinnacle_affinity_deck.py`). What it cannot yet do is
