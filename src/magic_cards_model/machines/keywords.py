@@ -32,7 +32,7 @@ import random
 import re
 from collections.abc import Callable, Sequence
 from enum import StrEnum
-from typing import Any
+from typing import Any, NamedTuple
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -1507,6 +1507,151 @@ def off_battlefield_activation(
         targets=[TargetRef.coerce(target) for target in targets or []],
         generic_effect=True,
         game=game,
+    )
+
+
+# --------------------------------------------------------------------------
+# One index space over every off-battlefield activation
+# --------------------------------------------------------------------------
+
+
+class OffZoneAbility(NamedTuple):
+    """One activated ability of a card that functions somewhere other than the
+    battlefield, and where it sits in `off_zone_abilities`' single ordered
+    pool.
+
+    Two different engine entry points build these - `cycling_activation` for
+    a CR 702.29a keyword line, `off_battlefield_activation` for a printed
+    `[Cost]: [Effect]` line whose own words put it in another zone - and each
+    counted its own family from zero. So "off-battlefield activation number
+    0" named two different abilities on a card printing one of each, which
+    made `machines/legal_actions`' own `ACTIVATE_OFF_ZONE` action
+    (`models/action.Action`, "the arguments one engine entry point takes")
+    ambiguous exactly where it promises not to be: a caller holding
+    `(card_id, ability_index)` could not tell which entry point it meant.
+    This pool is the one index space both families share, and
+    `off_zone_activation` is the one call that reads it.
+
+    `family` says which expansion built it, `index` is its position within
+    that family (what `cycling_activation`/`off_battlefield_activation`
+    themselves still take), `keyword` is the CR 702 keyword for a cycling
+    line and the CR 207.2c ability word - `None` for a card like Waker of
+    Waves, which prints neither - for a printed one.
+    """
+
+    family: str
+    """`"cycling"` (CR 702.29a) or `"printed"` (CR 113.6b/113.6j/113.6m)."""
+    index: int
+    """Position within `family`, which is what the family's own builder takes."""
+    keyword: str | None
+    zone: Zone
+    rule: str
+    """The verified CR number that puts this ability in `zone`."""
+    ability: ActivatedAbility
+    """What activating this actually asks for - the card's own printed
+    `ActivatedAbility` for the `"printed"` family, or the rule's own
+    expansion (`_synthetic_ability`, the same one `cycling_activation`
+    builds) for `"cycling"` - so a caller reading "what does this cost, what
+    does it target" (`engine_api.ability_hints` is exactly that caller) does
+    not have to branch on which family built the entry."""
+
+
+def off_zone_abilities(card: Card) -> list[OffZoneAbility]:
+    """Every activated ability of `card` that functions off the battlefield,
+    in one order: cycling first (CR 702.29a - "Cycling is an activated
+    ability that functions only while the card with cycling is in a player's
+    hand"), then each printed ability whose own cost or effect names another
+    zone (CR 113.6j, CR 113.6m, read by `abilities._activated_ability_zone`).
+
+    Cycling first, rather than in printed order across both families, so a
+    card with cycling and nothing else keeps the index its own
+    `cycling_activation`/`actions/cycle` caller already passes - every
+    cycling printing in the pool is exactly that card.
+    """
+    pool: list[OffZoneAbility] = []
+    for index, kw_ability in enumerate(cycling_abilities(card)):
+        typed = _typecycling_type(kw_ability.canonical)
+        pool.append(
+            OffZoneAbility(
+                family="cycling",
+                index=index,
+                keyword=kw_ability.canonical,
+                zone=Zone.HAND,
+                rule=str(KeywordRule.TYPECYCLING if typed else KeywordRule.CYCLING),
+                ability=_synthetic_ability(
+                    kw_ability,
+                    cost_text=f"{kw_ability.cost or ''}, Discard this card".strip(", "),
+                    effect=(
+                        f"Search your library for a {typed} card, reveal it, and put it "
+                        f"into your hand. Then shuffle."
+                        if typed
+                        else "Draw a card."
+                    ),
+                ),
+            )
+        )
+    printed = [ability for ability in activated_abilities_of(card) if ability.zone is not None]
+    for index, ability in enumerate(printed):
+        assert ability.zone is not None and ability.zone_rule is not None
+        pool.append(
+            OffZoneAbility(
+                family="printed",
+                index=index,
+                keyword=ability.ability_word,
+                zone=ability.zone,
+                rule=ability.zone_rule,
+                ability=ability,
+            )
+        )
+    return pool
+
+
+def off_zone_activation(
+    game: Any,
+    card: CardState,
+    player: str,
+    index: int = 0,
+    *,
+    targets: list[Any] | None = None,
+    sacrificing: list[CardState] | None = None,
+    discarding: list[CardState] | None = None,
+) -> KeywordActivation:
+    """Activate `off_zone_abilities(card.card)[index]`, whichever family it
+    is in - the single entry point a caller holding an `ACTIVATE_OFF_ZONE`
+    `Action` calls, so it never has to work out for itself whether the
+    ability came from a CR 702.29a keyword or a printed CR 113.6j line.
+
+    Refuses an index the pool does not have rather than defaulting to
+    anything: a card with one off-zone ability has no number 1, and a card
+    with none has no number 0.
+    """
+    pool = off_zone_abilities(card.card)
+    if index < 0 or index >= len(pool):
+        raise ValueError(
+            f"{card.name} has no activated ability functioning off the battlefield, "
+            f"number {index} (it has {len(pool)})"
+        )
+    entry = pool[index]
+    if entry.family == "cycling":
+        if targets or sacrificing or discarding:
+            # CR 702.29a spells the whole ability out - "[Cost], Discard this
+            # card: Draw a card." - so there is nothing here for a target, a
+            # sacrifice, or a second discard to be *for*. Refused rather than
+            # quietly dropped, per this project's fail-closed rule for a
+            # lookup that would otherwise default.
+            raise ValueError(
+                f"{card.name}'s {entry.keyword} ability takes no targets and no object costs "
+                f"({KeywordRule.CYCLING})"
+            )
+        return cycling_activation(game, card, player, entry.index)
+    return off_battlefield_activation(
+        game,
+        card,
+        player,
+        entry.index,
+        targets=targets,
+        sacrificing=sacrificing,
+        discarding=discarding,
     )
 
 
