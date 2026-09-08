@@ -78,6 +78,8 @@ import argparse
 import re
 import sys
 from collections import defaultdict
+from collections.abc import Callable
+from functools import cache
 from pathlib import Path
 from typing import NamedTuple
 
@@ -122,7 +124,32 @@ from magic_cards_model.machines.layers import (  # noqa: E402
 )
 from magic_cards_model.machines.modes import modal_profile  # noqa: E402
 from magic_cards_model.machines.targeting import profile_for_text  # noqa: E402
+from magic_cards_model.machines.triggers import (  # noqa: E402
+    _ENTERS_TAPPED_RE as _CONDITION_ENTERS_TAPPED_RE,
+)
+from magic_cards_model.machines.triggers import (  # noqa: E402
+    _ENTERS_UNTAPPED_RE as _CONDITION_ENTERS_UNTAPPED_RE,
+)
+from magic_cards_model.machines.triggers import (  # noqa: E402
+    _ENTERS_WITH_COUNTER_RE as _CONDITION_ENTERS_WITH_COUNTER_RE,
+)
+from magic_cards_model.machines.triggers import (  # noqa: E402
+    GameEvent,
+    TriggerEvent,
+    condition_matches,
+)
+from magic_cards_model.machines.triggers import (  # noqa: E402
+    _required_entering_subtype as _condition_required_entering_subtype,
+)
+from magic_cards_model.machines.triggers import (  # noqa: E402
+    _required_subtype as _condition_required_subtype,
+)
+from magic_cards_model.machines.triggers import (  # noqa: E402
+    _required_types as _condition_required_types,
+)
+from magic_cards_model.models import CardState, Game, Player, Zone  # noqa: E402
 from magic_cards_model.models.card import Card, Layout, Type, types_of  # noqa: E402
+from magic_cards_model.models.card_state import Counters  # noqa: E402
 
 #: Keywords that need no code because they change what a card *is*, not what the
 #: engine has to do. Each is inert in the sense that the rules attach no action
@@ -365,9 +392,43 @@ SILENT = "silent"
 #: coverage or a bug.
 STATIC_UNAUDITED = "static_unaudited"
 
+#: A triggered ability whose `event` parsed cleanly but whose printed
+#: *condition* `machines/triggers.condition_matches` can never satisfy for any
+#: real, reachable permanent - Weapons Manufacturing's own "a nontoken
+#: artifact you control enters", inverted by a substring bug into "must be a
+#: token". Distinct from `SILENT` on purpose (see `_condition_can_fire`'s own
+#: docstring): a card that never triggers at all is a different bug from one
+#: that triggers and does nothing, and the two are tracked separately so
+#: neither hides behind the other in the report.
+UNMATCHABLE_CONDITION = "unmatchable_condition"
+
+#: A clause whose dispatcher answer is a real, non-`None` effect only because
+#: a regex read into a *quoted* span of the clause's own text - Weapons
+#: Manufacturing's granted-ability quote, not its own clause, is what
+#: `_DAMAGE_TARGET_RE`'s unanchored `.*` prefix actually matched. A wrong
+#: parse wearing a correct-looking result, so it must not read `HANDLED`
+#: either.
+QUOTED_EFFECT = "quoted_effect"
+
 #: Worst first. `classify_card` returns the worst outcome on the card, so a
-#: dead clause can never hide behind a working one.
-_SEVERITY: dict[str, int] = {SILENT: 0, STATIC_UNAUDITED: 1, NOTICE: 2, HANDLED: 3}
+#: dead clause can never hide behind a working one. The two new buckets sit
+#: below `SILENT`: a clause that can never fire, or whose only "effect" is a
+#: misparse, is at least as broken as one that fires and does nothing.
+_SEVERITY: dict[str, int] = {
+    UNMATCHABLE_CONDITION: 0,
+    QUOTED_EFFECT: 1,
+    SILENT: 2,
+    STATIC_UNAUDITED: 3,
+    NOTICE: 4,
+    HANDLED: 5,
+}
+
+
+def _worse(a: str, b: str) -> str:
+    """The more severe of two clause categories - `_best`'s mirror image,
+    used to fold the quoted-text finding into whatever `_dispatch_category`
+    already decided without ever raising it back to `HANDLED`."""
+    return min((a, b), key=lambda category: _SEVERITY[category])
 
 
 def _layer_category(printing: Card) -> str | None:
@@ -574,6 +635,337 @@ def _dispatch_category(effect: object, printing: Card) -> str:
     return HANDLED
 
 
+# ---------------------------------------------------------------------------
+# The condition-matching closure (docs/2026-09-08-trigger-findings.md, "The
+# sweeper's blind spot, which matters beyond this card"). `classify_clauses`
+# used to ask only whether `trigger_effect_for` produced a callable, never
+# whether `machines/triggers.condition_matches` (CR 603.2) could ever be
+# satisfied by a real permanent. Weapons Manufacturing's "a nontoken artifact
+# you control enters" scored `handled` this way: its event parses, and a
+# fallback parser (see the quoted-text closure below) produced a callable,
+# but the substring guard `condition_matches` uses for "one or more tokens
+# you control enter" also matches "nontoken", inverting the restriction, so
+# no real nontoken artifact entering ever fires it.
+#
+# `_condition_can_fire` answers by building a real, throwaway board and
+# asking the production `condition_matches` about it - never by re-deriving
+# what the condition is supposed to mean and comparing, which would just
+# mirror whatever `condition_matches` itself gets wrong. The one place this
+# module *does* read the condition text on its own is `_intended_token_
+# requirement`, and deliberately: `condition_matches`'s own "token" in
+# lowered check is exactly the known bug, so trusting it to build the very
+# permanent used to test it would hide the bug instead of catching it.
+# ---------------------------------------------------------------------------
+
+#: The event kinds this closure knows how to build a synthetic occurrence
+#: for: every one of them asks about a *permanent* (the source itself, or
+#: another one under some controller), so a real `CardState` on a real
+#: battlefield is all `condition_matches` needs to answer honestly. Every
+#: other `TriggerEvent` (a cast, a draw, damage, life change, a step
+#: beginning...) needs a player- or spell-shaped event this closure does not
+#: attempt to synthesize - `_condition_can_fire` abstains (`None`) for those
+#: rather than guess.
+_SYNTHESIZABLE_EVENTS = frozenset(
+    {
+        TriggerEvent.ENTERS_THE_BATTLEFIELD,
+        TriggerEvent.DIES,
+        TriggerEvent.IS_SACRIFICED,
+        TriggerEvent.ATTACKS,
+        TriggerEvent.BLOCKS,
+        TriggerEvent.BECOMES_TAPPED,
+        TriggerEvent.BECOMES_UNTAPPED,
+    }
+)
+
+_NONTOKEN_WORD_RE = re.compile(r"\bnontoken\b")
+_TOKEN_WORD_RE = re.compile(r"\btokens?\b")
+
+
+def _intended_token_requirement(condition: str) -> bool | None:
+    """What `condition`'s own printed text says about whether its subject
+    must (CR 111.1) be a token, or must not - read independently of
+    `machines/triggers.condition_matches`'s own `"token" in lowered` check,
+    which does not special-case "nontoken" and so ends up demanding the
+    *opposite* of what a "nontoken" condition prints (Weapons Manufacturing,
+    Miirym, Sentinel Wyrm; `docs/2026-09-08-trigger-findings.md`). `None`
+    when the condition names neither word, meaning tokenhood is not
+    restricted at all - a synthetic permanent may be built either way.
+    """
+    lowered = condition.lower()
+    if _NONTOKEN_WORD_RE.search(lowered):
+        return False
+    if _TOKEN_WORD_RE.search(lowered):
+        return True
+    return None
+
+
+@cache
+def _cards_by_subtype() -> dict[str, tuple[Card, ...]]:
+    """A handful of real printings for each subtype the pool has any of, so a
+    condition naming one ("a Mountain you control enters", "another Dragon
+    you control enters") can be tested against a genuine example rather than
+    only the printing under test."""
+    index: dict[str, list[Card]] = defaultdict(list)
+    for printing in pool().values():
+        for subtype in printing.subtypes:
+            if len(index[subtype]) < 5:
+                index[subtype].append(printing)
+    return {subtype: tuple(cards) for subtype, cards in index.items()}
+
+
+@cache
+def _cards_by_type() -> dict[Type, tuple[Card, ...]]:
+    """The same idea as `_cards_by_subtype`, keyed by card type."""
+    index: dict[Type, list[Card]] = defaultdict(list)
+    for printing in pool().values():
+        for card_type in printing.types:
+            if len(index[card_type]) < 5:
+                index[card_type].append(printing)
+    return {card_type: tuple(cards) for card_type, cards in index.items()}
+
+
+def _probe_cards(printing: Card, condition: str, *, entering: bool) -> list[Card] | None:
+    """Real printings plausible enough to stand in for whatever permanent
+    `condition` names, or `None` when this closure has no probe for a named
+    restriction and must abstain rather than guess at reachability.
+
+    `printing` itself is always tried first - the twin of a self-referential
+    condition ("another Dragon you control", printed on a Dragon) is always
+    correct by construction, since it shares every real characteristic the
+    source has. A named subtype or required card type pulls in genuinely
+    different real printings on top of that, from `_cards_by_subtype`/
+    `_cards_by_type`, so a restriction the source itself does not satisfy
+    (Weapons Manufacturing's own "artifact" - it is an Enchantment) is still
+    tested against something that could.
+    """
+    required, forbidden = _condition_required_types(condition)
+    candidates: list[Card] = [printing]
+    subtype = (
+        _condition_required_entering_subtype(condition)
+        if entering
+        else _condition_required_subtype(condition)
+    )
+    if subtype is not None:
+        found = [c for c in _cards_by_subtype().get(subtype, ()) if not forbidden & set(c.types)]
+        if not found and subtype.lower() not in {s.lower() for s in printing.subtypes}:
+            return None
+        candidates.extend(found)
+    for card_type in required:
+        found = [c for c in _cards_by_type().get(card_type, ()) if not forbidden & set(c.types)]
+        if not found and card_type not in printing.types:
+            return None
+        candidates.extend(found)
+    seen: set[str] = set()
+    unique: list[Card] = []
+    for candidate in candidates:
+        if candidate.name in seen:
+            continue
+        seen.add(candidate.name)
+        unique.append(candidate)
+    return unique
+
+
+def _entering_tapped_choices(condition: str) -> list[bool]:
+    """Which `tapped` states (CR 603.6d) a synthetic entering permanent
+    should be tried at, read off `condition`'s own printed "enters tapped" /
+    "enters untapped" qualifier with the same regexes `machines/triggers.
+    _entry_qualifier_matches` reads it with - safe to reuse, unlike the
+    "token" substring check: this is not the known bug, and *not* trying the
+    qualifier's own required state is exactly what let Amulet of Vigor's own
+    "enters tapped" condition read as unmatchable when a real tapped-entering
+    permanent satisfies it every day."""
+    lowered = condition.lower()
+    if _CONDITION_ENTERS_TAPPED_RE.search(lowered) is not None:
+        return [True]
+    if _CONDITION_ENTERS_UNTAPPED_RE.search(lowered) is not None:
+        return [False]
+    return [False, True]
+
+
+def _entering_counter_kind(condition: str) -> str | None:
+    """The counter kind an "enters with a/an ... counter on it" qualifier
+    (CR 603.6d) names, or `None` when the condition names none."""
+    match = _CONDITION_ENTERS_WITH_COUNTER_RE.search(condition.lower())
+    return match.group("kind").strip() if match else None
+
+
+def _synthetic_permanent(
+    card: Card, *, controller: str, token: bool, tapped: bool, counter_kind: str | None
+) -> CardState:
+    """One real, honestly-labelled permanent for the synthetic battlefield -
+    never characteristics this closure invented to make a condition pass,
+    only ones it was told the condition itself names."""
+    return CardState(
+        card=card,
+        zone=Zone.BATTLEFIELD,
+        controller=controller,
+        owner=controller,
+        token=token,
+        tapped=tapped,
+        counters=Counters({counter_kind: 1}) if counter_kind is not None else Counters(),
+    )
+
+
+def _condition_can_fire(printing: Card, ability: TriggeredAbility) -> bool | None:
+    """Whether some real, reachable permanent could satisfy `ability`'s own
+    parsed condition through the production `condition_matches` (CR 603.2) -
+    or `None` when this closure has no synthetic occurrence to try, in which
+    case the caller must not change its verdict on the strength of this
+    answer either way.
+
+    `False` is the finding this closure exists to make possible: an event
+    that parses but a condition that can never be satisfied by any real
+    permanent is a trigger that never fires in a real game, which is a
+    different, more fundamental defect than an effect that fires and does
+    nothing (`SILENT`) - see `UNMATCHABLE_CONDITION`'s own docstring.
+
+    Every axis this module varies - controller, token state, entry
+    qualifier - is tried in every combination and the answers are OR'd
+    together: `False` only when *no* combination this closure knows to try
+    satisfies `condition_matches`, never because one particular combination
+    happened to fail.
+    """
+    if ability.event not in _SYNTHESIZABLE_EVENTS:
+        return None
+    entering = ability.event is TriggerEvent.ENTERS_THE_BATTLEFIELD
+    probes = _probe_cards(printing, ability.condition, entering=entering)
+    if probes is None:
+        return None
+    token_requirement = _intended_token_requirement(ability.condition)
+    token_choices = [token_requirement] if token_requirement is not None else [False, True]
+    tapped_choices = _entering_tapped_choices(ability.condition) if entering else [False]
+    counter_kind = _entering_counter_kind(ability.condition) if entering else None
+
+    game = Game(
+        players=[Player(username="sweep_you"), Player(username="sweep_opp")],
+        schema_version=Game.CURRENT_SCHEMA_VERSION,
+    )
+    states: list[CardState] = []
+    for probe in probes:
+        for controller_name in ("sweep_you", "sweep_opp"):
+            for token in token_choices:
+                for tapped in tapped_choices:
+                    state = _synthetic_permanent(
+                        probe,
+                        controller=controller_name,
+                        token=token,
+                        tapped=tapped,
+                        counter_kind=counter_kind,
+                    )
+                    state.bind_to_game(game)
+                    game.battlefield.append(state)
+                    states.append(state)
+
+    source_variants = [
+        _synthetic_permanent(
+            printing, controller="sweep_you", token=False, tapped=tapped, counter_kind=counter_kind
+        )
+        for tapped in tapped_choices
+    ]
+    for source in source_variants:
+        source.bind_to_game(game)
+        game.battlefield.append(source)
+    source = source_variants[0]
+    controller = "sweep_you"
+
+    def event_for(subject: CardState | None, *, player: str | None = None) -> GameEvent:
+        return GameEvent(
+            event=ability.event,
+            subject_id=subject.id if subject is not None else None,
+            subject_controller=subject.controller if subject is not None else None,
+            subject_types=tuple(subject.types) if subject is not None else None,
+            subject_subtypes=tuple(subject.subtypes) if subject is not None else None,
+            related_id=subject.id if subject is not None else None,
+            player=player,
+        )
+
+    for host in source_variants:
+        # A truly self-referential condition ("when this permanent enters
+        # tapped") needs `event.subject_id == source.id` *exactly* - tried
+        # against each tapped variant of the literal host object, not a twin.
+        if condition_matches(game, ability, host, controller, event_for(host)):
+            return True
+    for subject in states:
+        if condition_matches(game, ability, source, controller, event_for(subject)):
+            return True
+    # CR 508.3d's own playerwide "you attack" event - no subject at all.
+    return ability.event is TriggerEvent.ATTACKS and condition_matches(
+        game, ability, source, controller, event_for(None, player=controller)
+    )
+
+
+# ---------------------------------------------------------------------------
+# The quoted-text closure. `parse_mixed_effect`/`parse_mixed_effect_for_spell`
+# read a clause's raw oracle text, quotes and all, and a card that creates a
+# token or grants an ability with a *quoted* payload can have its own clause
+# misread as whatever shape the quoted text happens to look like -
+# `_DAMAGE_TARGET_RE`'s unanchored `.*` prefix reads "deals 2 damage to any
+# target" out of Weapons Manufacturing's quoted Munitions text, not anything
+# its own clause says, and returns a real callable that "handles" nothing the
+# card actually does.
+# ---------------------------------------------------------------------------
+
+#: A quoted span, replaced rather than deleted - see `_blank_quoted_spans`.
+_QUOTED_SPAN_RE = re.compile(r'"[^"]*"')
+
+
+def _is_sentinel_effect(effect: object) -> bool:
+    """Whether `effect` is one of `_dispatch_category`'s three named stand-
+    ins (`create_continuous_effect`, `create_continuous_effect_of_ability`,
+    `resolve_modal_spell`), whose real verdict is read back off the card's
+    *whole* printed text (`_layer_category`) or its modes (`_modal_category`)
+    - never off whatever raw text happened to produce the sentinel. Hydro-Man,
+    Fluid Felon's "becomes a land and gains '{T}: Add {U}.'" dispatches to
+    `create_continuous_effect_of_ability`; blanking its quote changes what
+    `trigger_effect_for` itself returns for that one string, but not the
+    independent, whole-card verdict `_dispatch_category` actually reports -
+    so the quoted-text closure must never ask about a sentinel's own
+    dispatch answer, only ever about an ordinary callable's."""
+    return effect in (
+        create_continuous_effect,
+        create_continuous_effect_of_ability,
+        resolve_modal_spell,
+    )
+
+
+def _blank_quoted_spans(text: str) -> str:
+    """`text` with every quoted span's own content swapped for a neutral,
+    non-empty placeholder, rather than removed outright.
+
+    Removed outright would misfire on every legitimate "gains '<ability>'" /
+    "with '<ability>'" grant in the pool (CR 113.10, Urza's Saga among
+    others): `_GAINS_ABILITY_RE` and its siblings correctly read the whole of
+    a quote as an opaque payload and refuse an *empty* one, so blanking to
+    nothing breaks them exactly the way an accidental match inside the quote
+    breaks Weapons Manufacturing - both would stop producing an effect, and
+    this closure could not tell a real bug from its own false positive.
+    A placeholder that is present but means nothing keeps every parser that
+    only checks *for content* satisfied, while a parser that read *into* the
+    quote for its own match - the damage regex reading a target and an
+    amount out of the granted ability's text - loses exactly the words it
+    was matching and stops matching.
+    """
+    return _QUOTED_SPAN_RE.sub('"Redacted reminder text"', text)
+
+
+def _effect_matched_inside_quotes(dispatch: Callable[[str], object], text: str) -> bool:
+    """Whether `dispatch(text)` - a real effect dispatcher, called the same
+    way `classify_clauses` calls it - produced a non-`None` effect only
+    because of a quoted span inside `text`.
+
+    `False` whenever `text` carries no quote at all, or `dispatch` already
+    answers `None` for it (nothing to flag - some other bucket already has
+    it), or blanking the quote does not change the answer (a legitimate
+    quote-reading parser, or an effect that never touched the quote to begin
+    with).
+    """
+    if '"' not in text:
+        return False
+    if dispatch(text) is None:
+        return False
+    return dispatch(_blank_quoted_spans(text)) is None
+
+
 #: CR 107.3a's X, substituted into a card's own text before classification so
 #: an X-bounded clause (Green Sun's Zenith's "mana value X or less", Fiend
 #: Artisan's activated ability of the same shape) is judged on what it does
@@ -753,11 +1145,25 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
 
     if not printing.is_land:
         for face in _spell_faces(printing):
-            categories = [
-                _dispatch_category(effect_for(face.name, face.text, x_value=x_value), printing)
-                for x_value in _x_candidates(face.mana_cost)
+            x_candidates = _x_candidates(face.mana_cost)
+            effects = [
+                effect_for(face.name, face.text, x_value=x_value) for x_value in x_candidates
             ]
+            categories = [_dispatch_category(effect, printing) for effect in effects]
             category = _best(categories)
+            # The quoted-text closure only asks about the one dispatch `_best`
+            # could have picked from unambiguously - a face carrying both CR
+            # 107.3a's `{X}` and a quoted span is not in this pool, so that
+            # combination is left untested rather than guessed at.
+            if (
+                x_candidates == (None,)
+                and category == HANDLED
+                and not _is_sentinel_effect(effects[0])
+                and _effect_matched_inside_quotes(
+                    lambda text, name=face.name: effect_for(name, text), face.text
+                )
+            ):
+                category = QUOTED_EFFECT
             if face.is_permanent and category not in (HANDLED, NOTICE):
                 # CR 608.3a - a permanent spell's resolution has no text to
                 # run, so "no effect" is the correct answer for one and is not
@@ -786,22 +1192,44 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
                 # separate clauses and are judged on their own below.
                 clauses.append(ClauseOutcome(HANDLED, ability.text, "activated"))
                 continue
-            categories = [
-                _dispatch_category(
-                    activated_effect_for(printing.name, index, ability.effect, x_value=x_value),
-                    printing,
-                )
-                for x_value in _x_candidates(ability.cost)
+            x_candidates = _x_candidates(ability.cost)
+            activated_effects = [
+                activated_effect_for(printing.name, index, ability.effect, x_value=x_value)
+                for x_value in x_candidates
             ]
-            clauses.append(ClauseOutcome(_best(categories), ability.text, "activated"))
+            categories = [_dispatch_category(effect, printing) for effect in activated_effects]
+            category = _best(categories)
+            if (
+                x_candidates == (None,)
+                and category == HANDLED
+                and not _is_sentinel_effect(activated_effects[0])
+                and _effect_matched_inside_quotes(
+                    lambda text, i=index: activated_effect_for(printing.name, i, text),
+                    ability.effect,
+                )
+            ):
+                category = QUOTED_EFFECT
+            clauses.append(ClauseOutcome(category, ability.text, "activated"))
         elif isinstance(ability, TriggeredAbility):
             if ability.event is None:
                 clauses.append(ClauseOutcome(SILENT, ability.text, "triggered (unread condition)"))
                 continue
             effect = trigger_effect_for(printing.name, ability.event, ability.effect)
-            clauses.append(
-                ClauseOutcome(_dispatch_category(effect, printing), ability.text, "triggered")
-            )
+            category = _dispatch_category(effect, printing)
+            if (
+                category == HANDLED
+                and not _is_sentinel_effect(effect)
+                and _effect_matched_inside_quotes(
+                    lambda text, event=ability.event: trigger_effect_for(
+                        printing.name, event, text
+                    ),
+                    ability.effect,
+                )
+            ):
+                category = QUOTED_EFFECT
+            if _condition_can_fire(printing, ability) is False:
+                category = UNMATCHABLE_CONDITION
+            clauses.append(ClauseOutcome(category, ability.text, "triggered"))
         elif ability.kind is AbilityKind.STATIC and is_permanent:
             clauses.append(
                 ClauseOutcome(
@@ -858,8 +1286,10 @@ def report_keywords(names: list[str]) -> int:
 
 def report_effects(names: list[str]) -> int:
     """Sort every clause of every card with rules text into handled / notice /
-    static_unaudited / silent, and print the two buckets that are not
-    coverage: the dead clauses, and the static abilities nothing here audits.
+    static_unaudited / silent / unmatchable_condition / quoted_effect, and
+    print the buckets that are not coverage: the dead clauses, the static
+    abilities nothing here audits, the triggers whose own condition can never
+    fire, and the clauses whose effect was matched out of quoted text.
 
     A vanilla creature (no rules text at all) is not asked about - it is
     correct for one to have no effect, and `has_rules_text` is the same gate
@@ -868,11 +1298,28 @@ def report_effects(names: list[str]) -> int:
     The counts are **per card, by its worst clause** (`classify_card`), and
     the dead-clause list names the clause, so a card that is 90% working and
     10% dead is listed with the 10% rather than counted as fine.
+
+    `handled` here is a narrower claim than it looks: it means a dispatcher
+    produced a real effect for *some* reading of the clause, not that
+    `machines/triggers.condition_matches` (CR 603.2) can ever actually
+    trigger it, nor that a fallback parser's answer came from the clause's
+    own text rather than a quoted span inside it - both of those are now
+    checked separately, and a clause failing either one is moved out of
+    `handled` into its own bucket rather than counted as coverage.
     """
     with_text = [name for name in names if has_rules_text(card(name))]
-    counts: dict[str, int] = {HANDLED: 0, NOTICE: 0, STATIC_UNAUDITED: 0, SILENT: 0}
+    counts: dict[str, int] = {
+        HANDLED: 0,
+        NOTICE: 0,
+        STATIC_UNAUDITED: 0,
+        SILENT: 0,
+        UNMATCHABLE_CONDITION: 0,
+        QUOTED_EFFECT: 0,
+    }
     silent: list[tuple[str, str]] = []
     unaudited: list[tuple[str, str]] = []
+    unmatchable: list[tuple[str, str]] = []
+    quoted: list[tuple[str, str]] = []
     for name in with_text:
         category, detail = classify_card(card(name))
         counts[category] += 1
@@ -880,6 +1327,10 @@ def report_effects(names: list[str]) -> int:
             silent.append((name, detail))
         elif category == STATIC_UNAUDITED:
             unaudited.append((name, detail))
+        elif category == UNMATCHABLE_CONDITION:
+            unmatchable.append((name, detail))
+        elif category == QUOTED_EFFECT:
+            quoted.append((name, detail))
 
     print("\nCards with a clause that does nothing at all and logs nothing")
     print("-" * 62)
@@ -899,11 +1350,31 @@ def report_effects(names: list[str]) -> int:
         if detail:
             print(f"    {detail[:70]}")
 
+    print("\nTriggers whose own condition (CR 603.2) can never be satisfied")
+    print("-" * 62)
+    if not unmatchable:
+        print("  none - every readable trigger condition matches some real permanent")
+    for name, detail in sorted(unmatchable):
+        print(f"  {name}")
+        if detail:
+            print(f"    {detail[:70]}")
+
+    print("\nClauses whose effect was matched out of a quoted span, not their own text")
+    print("-" * 62)
+    if not quoted:
+        print("  none - no dispatcher answer depends on what a quote happens to say")
+    for name, detail in sorted(quoted):
+        print(f"  {name}")
+        if detail:
+            print(f"    {detail[:70]}")
+
     print(
         f"\n  {len(silent)} of {len(with_text)} cards with rules text have a clause that does "
         f"nothing and logs nothing\n  ({counts[HANDLED]} handled by a registry row or a parser, "
         f"{counts[NOTICE]} fail closed with a notice, "
-        f"{counts[STATIC_UNAUDITED]} rest on a static ability nobody here audits)"
+        f"{counts[STATIC_UNAUDITED]} rest on a static ability nobody here audits, "
+        f"{counts[UNMATCHABLE_CONDITION]} have a trigger condition that can never fire, "
+        f"{counts[QUOTED_EFFECT]} have an effect matched out of quoted text)"
     )
     return len(silent)
 
