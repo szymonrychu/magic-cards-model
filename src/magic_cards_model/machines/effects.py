@@ -10788,6 +10788,9 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     if x_life_mass_debuff is not None:
         return x_life_mass_debuff
     # -- end Wave W6 whole-text additions -----------------------------------
+    gift_promised_return = _parse_gift_promised_return_instead_clause(whole)
+    if gift_promised_return is not None:
+        return gift_promised_return
     if _EACH_PLAYER_EXILE_SACRIFICE_RETURN_RE.fullmatch(whole):
         # Read whole, ahead of `parse_mixed_effect_for_spell`: the sentence's
         # own ", then " joins are CR 608.2c instructions in one breath, not
@@ -10975,6 +10978,52 @@ def _parse_revolt_destroy_or_exile_clause(effect_text: str) -> Effect | None:
         if match.group("verb").lower() == "destroy"
         else exile_ability_targets
     )
+
+
+#: Into the Flood Maw: "Return target creature an opponent controls to its
+#: owner's hand. If the gift was promised, instead return target nonland
+#: permanent an opponent controls to its owner's hand." CR 702.174b/m's gift
+#: keyword template, not this printing's name - any future gift card whose
+#: replacement clause reads "If the gift was promised, instead return
+#: target ... to its owner's hand." matches the same way. Read as one
+#: CR 608.2c instruction, the same reasoning `_REVOLT_DESTROY_OR_EXILE_RE`
+#: already uses for Fatal Push's Revolt line: the conditional half - *which*
+#: candidate set a target had to satisfy - is enforced entirely by
+#: `machines/targeting.py`'s own `TargetRequirement.if_gift_promised` /
+#: `TargetingProfile.for_gift_promise` at CR 601.2c announcement, and by the
+#: time this clause resolves that choice has already been made and checked.
+#: Both branches print the identical verb ("return ... to its owner's
+#: hand"), so there is nothing left for this effect to branch on at
+#: resolution - it only has to recognise the two-sentence shape so the whole
+#: ability is not thrown away as an unreadable second sentence.
+_GIFT_PROMISED_RETURN_INSTEAD_RE = re.compile(
+    r"^return (?P<phrase>target .+?) to (?:its owner'?s hand|their owners'? hands)\."
+    r"\s*if the gift was promised,\s*instead return (?P<promised_phrase>target .+?) to "
+    r"(?:its owner'?s hand|their owners'? hands)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_gift_promised_return_instead_clause(effect_text: str) -> Effect | None:
+    """`_GIFT_PROMISED_RETURN_INSTEAD_RE`'s shape, or `None` if this is not it.
+
+    Both phrases are read through `_targets_understood` - the not-promised
+    one because it is what `return_ability_targets_to_hand` actually acts on,
+    and the promised one so a shape this wave cannot read (an unenforced
+    trailing condition, a phrase naming a player) fails the whole clause
+    closed rather than silently accepting a replacement effect nobody
+    checked.
+    """
+    match = _GIFT_PROMISED_RETURN_INSTEAD_RE.fullmatch(effect_text.strip())
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=True, battlefield_only=False):
+        return None
+    if not _targets_understood(
+        match.group("promised_phrase"), count_agnostic=True, battlefield_only=False
+    ):
+        return None
+    return return_ability_targets_to_hand
 
 
 #: Converge (an ability word - `knowledge_search` found no numbered CR rule

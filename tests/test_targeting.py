@@ -526,3 +526,94 @@ def test_too_few_targets_is_rejected():
     """
     with pytest.raises(ValueError, match="too few targets"):
         profile("Swords to Plowshares").check([], caster="alice")
+
+
+# --------------------------------------------------------------------------
+# Into the Flood Maw: a conditional replacement clause is one target, not two
+# (CR 601.2c, CR 702.174k, CR 702.174m). `tests/scenarios/test_gift_targeting.py`
+# covers the full cast/resolve path; these are the parser-level claims that
+# back it, verified directly against `TargetingProfile` with no `Game` at all.
+# --------------------------------------------------------------------------
+
+
+def test_into_the_flood_maw_reads_one_requirement_not_two():
+    """CR 601.2c: "a spell may require alternative targets only if an
+    alternative or additional cost ... was chosen for it" - so with no gift
+    promised, Into the Flood Maw requires exactly the one target its first
+    sentence names, not a second one for the gift-conditional replacement
+    clause. This is the direct regression test for the reported defect: the
+    engine used to read this as two requirements and refuse a legal
+    single-target cast with "too few targets: 1 chosen where the spell
+    requires 2".
+    """
+    the_profile = profile("Into the Flood Maw")
+
+    assert the_profile.understood
+    (requirement,) = the_profile.requirements
+    assert requirement.phrase == "target creature"
+    assert requirement.card_types == frozenset({Type.CREATURE})
+    assert requirement.controller is ControllerRestriction.OPPONENT
+    assert the_profile.min_targets == 1
+    assert the_profile.max_targets == 1
+
+
+def test_into_the_flood_maw_carries_the_promised_branch_as_data():
+    """Trap: deleting the "If the gift was promised, instead ..." sentence
+    instead of reading it would fix today's symptom and permanently hardcode
+    the not-promised answer - so implementing gift later would silently keep
+    bouncing only creatures. The requirement's `if_gift_promised` is the
+    parsed alternate, kept rather than discarded, even though nothing calls
+    `for_gift_promise(True)` from a real cast yet (gift is not wired up as a
+    payable additional cost - see `docs/engine-coverage.md`).
+    """
+    (requirement,) = profile("Into the Flood Maw").requirements
+
+    assert requirement.if_gift_promised is not None
+    assert requirement.if_gift_promised.phrase == "target nonland permanent"
+
+
+def test_into_the_flood_maw_promised_branch_targets_a_nonland_noncreature_permanent():
+    """CR 702.174m's promised branch has its own, wider candidate set: "target
+    nonland permanent an opponent controls" takes any nonland permanent - an
+    artifact, an enchantment, a planeswalker - not only a creature. Wrong
+    candidate set on this branch (accepting only what the not-promised branch
+    already accepts) would silently narrow gift's whole point the day it is
+    wired up.
+    """
+    promised = profile("Into the Flood Maw").for_gift_promise(True)
+
+    (requirement,) = promised.requirements
+    assert requirement.phrase == "target nonland permanent"
+    assert requirement.card_types == frozenset()
+    assert requirement.excluded_card_types == frozenset({Type.LAND})
+    assert requirement.controller is ControllerRestriction.OPPONENT
+
+
+def test_into_the_flood_maw_not_promised_is_the_default():
+    """`for_gift_promise(False)` - and the profile `targeting_profile` hands
+    back before anyone asks at all - is the not-promised branch: gift cannot
+    currently be promised through a real cast (`machines/casting.py`'s
+    `ADDITIONAL_COST_KEYWORDS` has no "gift" entry), so this is also the only
+    branch a live game can ever actually reach today.
+    """
+    not_promised = profile("Into the Flood Maw").for_gift_promise(False)
+
+    assert not_promised == profile("Into the Flood Maw")
+
+
+@pytest.mark.parametrize(
+    "name", ["Fumarole", "Prey Upon", "Jeskai Revelation", "Practiced Offense"]
+)
+def test_a_genuine_second_target_is_not_collapsed_by_the_gift_reading(name: str):
+    """The trap the gift fix has to avoid: none of these four print "gift" at
+    all, but each prints the word "target" twice for two real, independent
+    requirements (CR 115.1), and each must keep demanding both - the
+    gift-promised clause detector must never fire on an ordinary second
+    "target" that just happens to share a sentence with the first.
+    """
+    the_profile = profile(name)
+
+    assert the_profile.understood
+    assert len(the_profile.requirements) == 2
+    assert the_profile.min_targets == 2
+    assert all(requirement.if_gift_promised is None for requirement in the_profile.requirements)

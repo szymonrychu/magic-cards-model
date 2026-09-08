@@ -670,6 +670,53 @@ _LIFE_GAIN_PROHIBITION_RE = re.compile(
 #: permission, exactly as `_LOOKS_LIKE_ACTIVATION_PROHIBITION_RE` does.
 _LOOKS_LIKE_LIFE_GAIN_PROHIBITION_RE = re.compile(r"\bcan't gain life\b", re.IGNORECASE)
 
+#: "You may activate abilities of creatures you control as though those
+#: creatures had haste." - Tyvar, Jubilant Brawler's and Shang-Chi, Master of
+#: Kung Fu's shared static, the two printings carrying this sentence in the
+#: pool. Read as a shape, not by name.
+#:
+#: CR 609.4: "Some effects state that a player may do something 'as though'
+#: some condition were true or a creature can do something 'as though' some
+#: condition were true. This applies only to the stated effect. For purposes
+#: of that effect, treat the game exactly as if the stated condition were
+#: true. For all other purposes, treat the game normally." The stated effect
+#: here is *activating abilities*, so exactly one of haste's two clauses is
+#: borrowed - CR 702.10c, "its controller can activate its activated abilities
+#: whose cost includes the tap symbol or the untap symbol even if that creature
+#: hasn't been controlled by that player continuously since their most recent
+#: turn began" - and CR 702.10b's attacking clause is not. The creature does
+#: not gain the haste keyword either, so `machines/combat.py`'s `has_keyword`
+#: reads nothing new off the computed board and `can_attack` still refuses.
+#:
+#: Like `_ACTIVATION_PROHIBITION_RE` this is a continuous effect that affects
+#: the rules of the game rather than any object's characteristics (CR 611.1),
+#: so `machines/layers.py` has nothing to write for it (CR 613.11) and the
+#: battlefield is rescanned on every call instead of the answer being cached
+#: (CR 611.3a: not "locked in").
+#:
+#: "Creatures you control" is the whole subject vocabulary read here, with
+#: CR 613's usual "other" exclusion allowed for. A qualified subject - a
+#: subtype, a colour, a count gate - is a subject reader this file does not
+#: have (`machines/layers.py` owns that one, for anthems, and its selectors
+#: are written against a computed `Board` rather than a single permanent), so
+#: such a sentence fails closed through
+#: `_LOOKS_LIKE_HASTE_ACTIVATION_PERMISSION_RE` below with a `LayerNotice`
+#: rather than being granted to every creature its controller has.
+_HASTE_ACTIVATION_PERMISSION_RE = re.compile(
+    r"^you may activate abilities of (?P<other>other )?creatures you control "
+    r"as though (?:those creatures|they) had haste\.?$",
+    re.IGNORECASE,
+)
+
+#: A sentence that grants activation "as though ... haste" but is not the shape
+#: above - matched only to fail closed with a notice rather than let it read as
+#: silence, the mirror of `_LOOKS_LIKE_ACTIVATION_PROHIBITION_RE`. A permission
+#: this engine cannot read costs a legal activation rather than allowing an
+#: illegal one, which is why it is recorded instead of guessed at.
+_LOOKS_LIKE_HASTE_ACTIVATION_PERMISSION_RE = re.compile(
+    r"^you may activate\b.*\bas though\b.*\bhaste\b", re.IGNORECASE
+)
+
 #: Pithing Needle's and Disruptor Flute's "sources with the chosen name", which
 #: name their subjects by a CR 614.12a choice rather than by a quality. Left
 #: alone here on purpose: `machines/replacement.py` already records an
@@ -2563,11 +2610,64 @@ class Game(BaseModel):
         was animated in the same turn is held back. Haste turns the
         restriction off (CR 702.10c) - `has_keyword` is passed this `Game` too,
         so a haste granted by a continuous effect (layer 6) counts, not only
-        one printed on the card.
+        one printed on the card. So does an effect that only says to treat the
+        creature *as though* it had haste, without granting the keyword: see
+        `activation_haste_permission` for why CR 609.4 makes that reach here
+        and nowhere else.
         """
         if not self.characteristics_of(permanent).is_creature:
             return True
-        return not permanent.summoning_sick or has_keyword(permanent, Keyword.HASTE, self)
+        if not permanent.summoning_sick or has_keyword(permanent, Keyword.HASTE, self):
+            return True
+        return self.activation_haste_permission(permanent) is not None
+
+    def activation_haste_permission(self, permanent: CardState) -> str | None:
+        """The permanent granting "activate ... as though it had haste", or None.
+
+        CR 609.4: an "as though" effect applies **only to the stated effect**,
+        and the stated effect on Tyvar, Jubilant Brawler and Shang-Chi, Master
+        of Kung Fu is activating abilities - so this is consulted by
+        `can_activate_tap_ability` (CR 302.6's first sentence, CR 702.10c) and
+        by nothing else. `machines/combat.can_attack` deliberately does not
+        call it: CR 302.6's second sentence and CR 702.10b are a different
+        thing to be treated as true, and this sentence does not state it.
+
+        Read off the printed static lines of everything on the battlefield on
+        every call, never cached (CR 604.2, CR 611.3a), the same scan
+        `_activation_prohibition` makes for the opposite direction, and gated
+        on `_still_has_static_line` so a source that lost its abilities in
+        layer 6 grants nothing (CR 613.1f).
+
+        **Whose creatures.** "Creatures you control" - "you" is the *source's*
+        controller (CR 109.5), so an opponent's Tyvar reaches nothing of yours.
+        The subject has no "other" in it on either printing, which is why
+        Shang-Chi may activate its own `{T}` the turn it arrives; the optional
+        "other" is still read, because a printing that carries it would
+        otherwise be granted a permission it does not print.
+
+        A sentence of this family whose subject this file cannot read is
+        recorded as a `LayerNotice` and grants nothing, rather than being
+        rounded up to every creature its controller has.
+        """
+        for source in list(self.battlefield):
+            for line in parse_abilities(source.card):
+                if line.kind is not AbilityKind.STATIC:
+                    continue
+                text = (line.text or "").strip()
+                if not _LOOKS_LIKE_HASTE_ACTIVATION_PERMISSION_RE.match(text):
+                    continue
+                match = _HASTE_ACTIVATION_PERMISSION_RE.match(text)
+                if match is None:
+                    self._record_unread_static_line(source, text)
+                    continue
+                if not self._still_has_static_line(source, text):
+                    continue
+                if self.controller_of(permanent).username != self.controller_of(source).username:
+                    continue
+                if match.group("other") is not None and permanent.id == source.id:
+                    continue
+                return source.name
+        return None
 
     def note_cast(
         self,
@@ -6106,7 +6206,7 @@ class Game(BaseModel):
                 if not _LOOKS_LIKE_LIFE_GAIN_PROHIBITION_RE.search(text):
                     continue
                 if not _LIFE_GAIN_PROHIBITION_RE.match(text):
-                    self._record_unread_prohibition(source, text)
+                    self._record_unread_static_line(source, text)
                     continue
                 if not self._still_has_static_line(source, text):
                     continue
@@ -10110,7 +10210,7 @@ class Game(BaseModel):
                     continue
                 prohibition = _parse_activation_prohibition(text)
                 if prohibition is None:
-                    self._record_unread_prohibition(source, text)
+                    self._record_unread_static_line(source, text)
                     continue
                 if not self._still_has_static_line(source, text):
                     continue
@@ -10133,14 +10233,17 @@ class Game(BaseModel):
                 )
         return None
 
-    def _record_unread_prohibition(self, source: CardState, text: str) -> None:
-        """Record a prohibition sentence this engine could not read (CR 611.1).
+    def _record_unread_static_line(self, source: CardState, text: str) -> None:
+        """Record a static ability sentence this engine could not read (CR 611.1).
 
         The static ability generates a continuous effect that affects the rules
         of the game, and nothing here built it - which is exactly what
         `LayerNotice` records for a static ability whose continuous effect went
-        unmade. One entry per source, not one per query: `why_cannot_activate`
-        is called constantly.
+        unmade. Both directions land here: a prohibition read as permission
+        would let an illegal activation through, and a *permission* read as
+        silence keeps a legal one out. One entry per source, not one per query:
+        `why_cannot_activate` and `can_activate_tap_ability` are both called
+        constantly.
         """
         already = {
             notice.source_id
