@@ -1,20 +1,78 @@
 """A player: their name, their zones, and the cards in them."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable, Mapping
 from random import Random
-from typing import Any
+from typing import Annotated, Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field
 
 from .card import Card
 from .card_state import CardState, Counter, CounterKind, Counters
 from .deck import CardResolver, Deck
 from .mana import ManaPool
 from .token import move_refused
-from .zone import Zone
+from .zone import Zone, refuse_shared_zone
 
 POISON_TO_LOSE = 10
 """CR 704.5c: ten or more poison counters and the player loses the game."""
+
+
+class PlayerZones(dict[Zone, list[CardState]]):
+    """`Player.zones`: the per-player zones, and only those (CR 400.1).
+
+    "Each player has their own library, hand, and graveyard. The other zones
+    are shared by all players." A plain `dict` let a shared zone be written
+    into a player anyway - `zones[Zone.EXILE] = [...]`, or the
+    `zones.setdefault(zone, [])` inside `Player.cards_in`, which minted an
+    empty per-player exile pile as a side effect of a *read*. Cards put into
+    such a pile are invisible to `Game.exile`, `Game.all_targetables` and
+    every seat's board, and a test asserting on the same read saw nothing
+    wrong. Refusing here is what makes the pile impossible to create rather
+    than merely wrong to create.
+
+    `get` and `in` are deliberately left alone: neither mints anything, and
+    "this player has no exile pile" is a thing a test is allowed to check.
+    """
+
+    __slots__ = ()
+
+    def __getitem__(self, zone: Zone) -> list[CardState]:
+        refuse_shared_zone(zone, doing="read")
+        return super().__getitem__(zone)
+
+    def __setitem__(self, zone: Zone, cards: list[CardState]) -> None:
+        refuse_shared_zone(zone, doing="write")
+        super().__setitem__(zone, cards)
+
+    def __missing__(self, zone: Zone) -> list[CardState]:
+        refuse_shared_zone(zone, doing="read")
+        raise KeyError(zone)
+
+    def setdefault(self, zone: Zone, default: list[CardState] | None = None) -> list[CardState]:
+        refuse_shared_zone(zone, doing="read")
+        return super().setdefault(zone, default if default is not None else [])
+
+    def update(self, other: Any = (), /, **kwargs: list[CardState]) -> None:
+        keys: Iterable[Any] = other.keys() if isinstance(other, Mapping) else ()
+        for zone in keys:
+            refuse_shared_zone(Zone(zone), doing="write")
+        super().update(other, **kwargs)
+
+
+def _per_player_zones(zones: dict[Zone, list[CardState]]) -> PlayerZones:
+    """Refuse a shared zone at decode too, then wrap.
+
+    `PlayerZones(zones)` alone would not catch it: `dict.__init__` fills the
+    mapping at C level without going through `__setitem__`, so a persisted
+    game carrying a bogus `"exile"` pile - written by this defect before it
+    was closed - would decode straight back into one.
+    """
+    for zone in zones:
+        refuse_shared_zone(zone, doing="decode")
+    return PlayerZones(zones)
+
+
+PerPlayerZones = Annotated[dict[Zone, list[CardState]], AfterValidator(_per_player_zones)]
 
 Seed = int | str | bytes | Random
 """What a shuffle takes. Never nothing: an unseeded shuffle is not reproducible."""
@@ -88,14 +146,22 @@ class Player(BaseModel):
     grant is recorded here instead, by `gain_protection_from`."""
 
     mana_pool: ManaPool = Field(default_factory=ManaPool)
-    zones: dict[Zone, list[CardState]] = Field(
-        default_factory=lambda: {
-            Zone.LIBRARY: [],
-            Zone.HAND: [],
-            Zone.GRAVEYARD: [],
-            Zone.SIDEBOARD: [],
-        }
+    zones: PerPlayerZones = Field(
+        default_factory=lambda: PlayerZones(
+            {
+                Zone.LIBRARY: [],
+                Zone.HAND: [],
+                Zone.GRAVEYARD: [],
+                Zone.SIDEBOARD: [],
+            }
+        )
     )
+    """This player's own zones (CR 400.1), and never a shared one.
+
+    A `PlayerZones`, which refuses `Zone.BATTLEFIELD`, `Zone.STACK`,
+    `Zone.EXILE`, `Zone.COMMAND` and `Zone.ANTE` outright - those live in
+    `Game.shared_zones`, one each per game rather than one each per player.
+    """
     starting_hand_size: int = 7
     """CR 103.5. A field because effects can change it, though none do yet."""
 
@@ -186,6 +252,15 @@ class Player(BaseModel):
         return self.zones[Zone.SIDEBOARD]
 
     def cards_in(self, zone: Zone) -> list[CardState]:
+        """The cards in one of *this player's* zones (CR 400.1).
+
+        Raises `SharedZoneError` for the battlefield, the stack, exile, the
+        command zone and the ante zone: those are the game's, not a player's,
+        and asking here used to mint an empty pile of the player's own as a
+        side effect of the read. `Game.battlefield` / `Game.exile` /
+        `Game.stack` / `Game.ante_zone` are the real ones.
+        """
+        refuse_shared_zone(zone, doing="read")
         return self.zones.setdefault(zone, [])
 
     # -- outside the game (CR 400.11) --------------------------------------
@@ -263,6 +338,21 @@ class Player(BaseModel):
             )
         if card_state not in self.outside_the_game:
             raise ValueError(f"{card_state.name} is not among {self.username}'s outside-game cards")
+        if zone is Zone.EXILE:
+            # CR 400.1: a shared zone belongs to the game, so the move into it
+            # is the game's to make - `Player.move` would build a per-player
+            # pile of it instead. Exile is the only shared zone anything in
+            # this pool brings a card in to (Wish), and CR 406.2's door is
+            # `Game.exile_cards`, which lifts the card out of the sideboard
+            # itself. Every other shared zone falls through to `move` below
+            # and is refused there.
+            if self.game is None:
+                raise ValueError(
+                    f"{card_state.name} cannot be brought into the shared exile zone "
+                    f"without a game (CR 400.1, CR 406.2)"
+                )
+            self.game.exile_cards([card_state])
+            return card_state
         self.move(card_state, zone)
         return card_state
 
@@ -287,7 +377,15 @@ class Player(BaseModel):
         zone's list either, or the game state would list a token in a zone its
         own `zone` attribute denies. Ownership is still stamped, because CR 108.3
         is about who brought the object and has nothing to do with where it is.
+
+        `zone` must be one of this player's own (CR 400.1). The battlefield,
+        the stack, exile, the command zone and the ante zone are shared, so
+        putting a card into one of those is the *game*'s move to make -
+        `Game.put_onto_battlefield`, `Game.put_on_stack`, `Game.exile_cards` /
+        `Game.exile_permanent`, `Game.ante`. Naming one here is refused rather
+        than quietly building a per-player pile of it.
         """
+        refuse_shared_zone(zone, doing="put a card into")
         if card_state.owner is None:
             card_state.owner = self.username
         if move_refused(card_state, zone) is not None:
@@ -298,9 +396,16 @@ class Player(BaseModel):
     def move(self, card_state: CardState, to_zone: Zone) -> None:
         """Move a card between this player's zones.
 
+        Both ends have to be this player's own (CR 400.1), and both are
+        checked before anything moves: a card sitting in a shared zone is not
+        a player's to lift out, and a shared zone is not a player's to drop it
+        into. Either way the answer is the same - that move belongs to `Game`.
+
         A move CR 111.8 refuses leaves the card exactly where it is - it is not
         lifted out of its current zone and then dropped, it simply does not move.
         """
+        refuse_shared_zone(card_state.zone, doing="take a card out of")
+        refuse_shared_zone(to_zone, doing="put a card into")
         if move_refused(card_state, to_zone) is not None:
             return
         self.cards_in(card_state.zone).remove(card_state)

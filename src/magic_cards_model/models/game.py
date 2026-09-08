@@ -6479,13 +6479,14 @@ class Game(BaseModel):
         # The battlefield and exile are shared zones (CR 400.1: "The other
         # zones are shared by all players"), already walked once each above
         # via `self.shared_zones` - `Player.zones` never holds either one.
-        # Only the graveyard is a real per-player zone. `Player.cards_in` is
+        # Only the graveyard is a real per-player zone. `Player.cards_in` was
         # `zones.setdefault(zone, [])`, so asking it for `Zone.BATTLEFIELD`/
         # `Zone.EXILE` here used to both return nothing (every permanent and
         # exiled card was already added above, so nothing was lost) and
         # permanently add two spurious empty keys to every player's own
         # serialized `zones` as a side effect of a read-only query - a
-        # documented pure query mutating the game it was asked about.
+        # documented pure query mutating the game it was asked about. It
+        # raises `SharedZoneError` now rather than answering at all.
         for player in self.players:
             things.extend(player.cards_in(Zone.GRAVEYARD))
         things.extend(self.stack)

@@ -343,7 +343,10 @@ def test_gemstone_caverns_can_begin_the_game_on_the_battlefield():
 
     assert caverns.zone is Zone.BATTLEFIELD
     assert caverns.counter_count("luck") == 1
-    assert len(alice.cards_in(Zone.EXILE)) == 1
+    # `Game.exile`: exile is shared (CR 400.1), and reading a pile of alice's
+    # own here is what let the rider exile into one for as long as it did.
+    assert len(game.exile) == 1
+    assert game.exile[0].owner == alice.username
 
 
 def test_the_starting_player_is_never_offered_the_caverns():

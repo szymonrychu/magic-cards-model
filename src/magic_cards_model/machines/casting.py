@@ -4197,9 +4197,12 @@ class MarkedExile(BaseModel):
         if self.taken:
             raise ValueError(f"{self.card.name} has already been exiled")
 
-        owner = self.game.player(self.player)
-        if self.card in owner.cards_in(self.card.zone):
-            owner.cards_in(self.card.zone).remove(self.card)
+        # CR 400.1: `self.card.zone` is whatever zone the special action names
+        # (a hand for foretell and plot, and `SuspendActivation` can name the
+        # battlefield), so the lift-out has to look in the shared zones too -
+        # `Player.cards_in` covers only the player's own three and now refuses
+        # a shared one outright rather than answering with an empty pile.
+        self.game._take_out_of_every_zone(self.card)  # noqa: SLF001
         self.card.move_to(Zone.EXILE)
         self.game.exile.append(self.card)
         if self.face_down:
@@ -4396,11 +4399,10 @@ def exile_adventured(game: Any, spell: CardState, owner: str | None = None) -> C
     """
     with game._id_allocator_scope():  # noqa: SLF001
         player = game.player(owner or spell.controller)
-        if spell in player.cards_in(spell.zone):
-            player.cards_in(spell.zone).remove(spell)
-        for cards in game.shared_zones.values():
-            if spell in cards:
-                cards.remove(spell)
+        # Both halves of what this used to spell out by hand, and shared-zone
+        # safe: `Player.cards_in(spell.zone)` refuses a shared zone now
+        # (CR 400.1), and a resolving Adventure is on the stack, which is one.
+        game._take_out_of_every_zone(spell)  # noqa: SLF001
         spell.move_to(Zone.EXILE)
         game.exile.append(spell)
         return annotate_exile(spell, ExileMarker.ADVENTURED, player.username, game)
