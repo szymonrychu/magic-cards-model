@@ -868,9 +868,21 @@ def _required_subtype(condition: str) -> str | None:
 #: enters" and "a nonland permanent enters" cannot match this. Anchored at the
 #: start so it reads the condition's *subject*, not a qualifier buried later
 #: in the sentence.
+#:
+#: `another` sits alongside `a`/`an`/`one or more` - Miirym, Sentinel Wyrm's
+#: own "another nontoken Dragon you control enters" (CR 205.3a's subtype) -
+#: rather than in a second regex, because it is still the condition's subject,
+#: read the identical way; self-exclusion for "another" is a separate general
+#: rule `condition_matches` already applies to every ENTERS_THE_BATTLEFIELD
+#: condition, not something this regex has to encode. An optional "nontoken"
+#: (lowercase, so it can never itself be mistaken for the capitalized
+#: subtype word right after it - Miirym's own reason to exist) sits between
+#: the lead-in and the subtype for the identical reason: Miirym's subject is
+#: not "a Dragon" but "another **nontoken** Dragon", and without skipping it
+#: the capture would land on "nontoken" itself and fail the `[A-Z]` class.
 _ENTERING_SUBTYPE = re.compile(
-    r"^(?:an?|one or more) (?P<subtype>[A-Z][A-Za-z]*?)s? (?:you control |an opponent controls )?"
-    r"enters?\b"
+    r"^(?:an?|one or more|another) (?:nontoken )?(?P<subtype>[A-Z][A-Za-z]*?)s? "
+    r"(?:you control |an opponent controls )?enters?\b"
 )
 
 
@@ -1190,6 +1202,16 @@ def _entry_qualifier_matches(game: "Game", condition: str, event: "GameEvent") -
     return True
 
 
+#: CR 111.1's token, read off a condition's own printed word rather than
+#: assumed from a card-name table. `\b` word boundaries so `_TOKEN_WORD`
+#: cannot match the "token" inside "nontoken" (a substring, not a word) - see
+#: `condition_matches`'s ENTERS_THE_BATTLEFIELD and IS_SACRIFICED branches for
+#: why both directions are checked, not just the false-positive one a
+#: word-boundary test alone would stop.
+_NONTOKEN_WORD = re.compile(r"\bnontoken\b")
+_TOKEN_WORD = re.compile(r"\btokens?\b")
+
+
 def condition_matches(
     game: "Game",
     ability: TriggeredAbility,
@@ -1333,7 +1355,22 @@ def condition_matches(
         # Talent) - CR 111.1's token, not a card type `_types_match` already
         # reads, so it is checked separately: whatever just entered must be
         # a token, not merely a permanent of some named type.
-        if "token" in lowered:
+        #
+        # "nontoken" contains "token" as a substring, so a plain `"token" in
+        # lowered` test used to match Weapons Manufacturing's "a nontoken
+        # artifact you control enters" and Miirym's "another nontoken Dragon
+        # you control enters" too - and, since the guard demanded the
+        # entering permanent *be* a token, it fired those two conditions on
+        # exactly the class of permanent their own text excludes. `nontoken`
+        # is checked first and enforces the opposite requirement; only when
+        # it is absent does a bare `\btoken\b` (word-boundary, so "nontoken"
+        # itself cannot match it) ask for the Caretaker's Talent/Belladonna
+        # Took shape.
+        if _NONTOKEN_WORD.search(lowered):
+            subject = game.find_by_id(event.subject_id) if event.subject_id else None
+            if subject is None or getattr(subject, "token", False):
+                return False
+        elif _TOKEN_WORD.search(lowered):
             subject = game.find_by_id(event.subject_id) if event.subject_id else None
             if not (subject is not None and getattr(subject, "token", False)):
                 return False
@@ -1566,6 +1603,16 @@ def condition_matches(
     if ability.event is TriggerEvent.IS_SACRIFICED:
         if mine:
             return event.subject_id == source.id
+        # Ashling, the Limitless: "Whenever you sacrifice a nontoken
+        # Elemental, ...". "Elemental" is CR 205.3a's creature subtype, not
+        # one of `_TYPE_WORDS`'s card types, so `_types_match` cannot see
+        # "nontoken" at all - it has to be read the same way
+        # ENTERS_THE_BATTLEFIELD's own guard reads it, off the event's actual
+        # subject rather than a type word.
+        if _NONTOKEN_WORD.search(lowered):
+            subject = game.find_by_id(event.subject_id) if event.subject_id else None
+            if subject is None or getattr(subject, "token", False):
+                return False
         return _controller_clause_holds(
             condition, controller, event.subject_controller
         ) and _types_match(event.subject_types, condition)

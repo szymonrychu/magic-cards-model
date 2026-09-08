@@ -1190,6 +1190,19 @@ class TargetingProfile(BaseModel):
 
 _REMINDER = re.compile(r"\([^)]*\)")
 _TRIGGER = re.compile(r"^(?:when|whenever|at )", re.IGNORECASE)
+#: A quoted granted ability - Weapons Manufacturing's own "create a colorless
+#: artifact token named Munitions with \"When this token leaves the
+#: battlefield, it deals 2 damage to any target.\"" - is CR 111.3's *token's*
+#: stated text, not this ability's own (CR 115.1's "target" template belongs
+#: to whichever object's words print it). Stripped before anything below
+#: scans for "target" so a granted ability quoting one can never be read as
+#: this ability's own targeting requirement - `_TOKEN_KEYWORDS`'s `and`-joined
+#: keyword tail never contains a quote mark, and a granted ability nested a
+#: level deeper (Urza's Saga's own single-quoted "'This token gets +1/+1 for
+#: each artifact you control.'") sits *inside* the outer double-quoted span
+#: this already removes whole, so only the double-quote form needs matching
+#: here.
+_QUOTED_SPAN = re.compile(r'["“].*?["”]', re.DOTALL)
 _ANY_TARGET = re.compile(r"\bany target\b", re.IGNORECASE)
 #: The plural matters: CR 115.4's damage wording is "among one or two targets",
 #: with no noun after it at all.
@@ -1754,6 +1767,7 @@ def spell_profile_for_text(text: str, card: Card | None = None) -> TargetingProf
 
 def _parse(oracle_text: str, spell_only: bool = True) -> TargetingProfile:
     text = _spell_text(oracle_text) if spell_only else oracle_text
+    text = _QUOTED_SPAN.sub("", text)
     text = _RETARGETING.sub("", text)
     text = _SELF_COST_REDUCTION_LINE.sub("", text)
     text = _COPY_TARGETS_DECLARATION.sub("", text)

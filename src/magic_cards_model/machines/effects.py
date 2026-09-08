@@ -5915,9 +5915,22 @@ _GRAVEYARD_TO_BOTTOM_OF_LIBRARY_RE = re.compile(
 _TAP_UNTAP_TARGET_RE = re.compile(r"(?P<verb>tap|untap) (?P<phrase>.*target.+)", re.IGNORECASE)
 #: "<Source> deals N damage to target X." and "... to any target." The source
 #: is never named here - `deal_damage`/`damage_ability_targets` already read
-#: it off whichever of a spell or an ability is resolving (CR 120.2b).
+#: it off whichever of a spell or an ability is resolving (CR 120.2b). The
+#: leading prefix is needed for Lava Dart's own "Lava Dart deals 1 damage to
+#: any target." (the source's literal printed name, not yet self-normalized
+#: away when this is tried), but it must not be able to cross a quote mark:
+#: under `fullmatch`, an unbounded `.*` swallowed Weapons Manufacturing's own
+#: "create a colorless artifact token named Munitions with \"When this token
+#: leaves the battlefield, it deals 2 damage to any target.\"" whole, reading
+#: the *granted* ability's quoted text - the token's own, not the trigger's -
+#: as this ability's entire effect. A quote character (straight or curly,
+#: single or double - `_parse_token_tail` reads a granted ability's text
+#: wrapped in either) blocks the prefix, so a clause whose "deals ... damage"
+#: sits inside quotes fails this match entirely and falls through to
+#: `_parse_token_clause`, which is the one that is supposed to read it.
 _DAMAGE_TARGET_RE = re.compile(
-    rf".*\bdeals? (?P<n>{_COUNT}) damage to (?P<phrase>any target|.*target.+)", re.IGNORECASE
+    rf"[^\"“”'‘’]*\bdeals? (?P<n>{_COUNT}) damage to (?P<phrase>any target|.*target.+)",
+    re.IGNORECASE,
 )
 #: Fling: "<Source> deals damage equal to the sacrificed creature's power to
 #: any target." An additional-cost-bound amount, not `_DAMAGE_TARGET_RE`'s
@@ -6996,12 +7009,19 @@ def parse_targeted_effect(text: str) -> AbilityEffect | None:
 
 #: `desc` is everything between the count and the word "token(s)" - "1/1
 #: white Spirit creature", "3/3 colorless Phyrexian Wurm artifact creature",
-#: or a predefined token's own name ("Food", "tapped Powerstone"). `tail` is
-#: whatever follows "with", read by `_parse_token_tail`. `\btokens?\b` a whole
-#: word so a subtype that merely contains the letters "token" could never
-#: match it - none in the pool do, but the boundary costs nothing.
+#: or a predefined token's own name ("Food", "tapped Powerstone"). `name` is
+#: CR 111.4's own stated name - Weapons Manufacturing's "a colorless artifact
+#: token **named Munitions** with ..." - between the noun phrase and the
+#: tail, since that is where Oracle text always prints it (CR 111.9's
+#: "create [name], a ..." appositive is a different shape this regex does not
+#: read; nothing in the pool needs it). `tail` is whatever follows "with",
+#: read by `_parse_token_tail`. `\btokens?\b` a whole word so a subtype that
+#: merely contains the letters "token" could never match it - none in the
+#: pool do, but the boundary costs nothing.
 _TOKEN_CLAUSE_RE = re.compile(
-    rf"^(?:create )?(?P<n>{_COUNT}) (?P<desc>.+?) \btokens?\b(?:\s+with\s+(?P<tail>.+))?\.?$",
+    rf"^(?:create )?(?P<n>{_COUNT}) (?P<desc>.+?) \btokens?\b"
+    r"(?:\s+named (?P<name>.+?))?"
+    r"(?:\s+with\s+(?P<tail>.+))?\.?$",
     re.IGNORECASE | re.DOTALL,
 )
 
@@ -7100,8 +7120,24 @@ def _parse_token_tail(tail: str | None) -> tuple[tuple[str, ...], str | None] | 
     return tuple(keywords), None
 
 
+#: A bare non-creature type word ending a token's noun phrase with no
+#: "creature" at all - Weapons Manufacturing's own "a colorless **artifact**
+#: token named Munitions" (Munitions is never a creature). CR 205.2a's other
+#: types, for the shapes the pool's quoted-ability tokens actually use;
+#: "creature" itself is handled by the branch above this one and is not
+#: repeated here.
+_BARE_TOKEN_TYPE_WORDS: dict[str, Type] = {
+    "artifact": Type.ARTIFACT,
+    "enchantment": Type.ENCHANTMENT,
+    "land": Type.LAND,
+    "planeswalker": Type.PLANESWALKER,
+    "battle": Type.BATTLE,
+}
+
+
 def _parse_generic_token_descriptor(words: list[str], tail: str | None) -> TokenDefinition | None:
-    """ "[P/T] [color(s)] subtype(s) [artifact] creature", as a `TokenDefinition`.
+    """ "[P/T] [color(s)] subtype(s) [artifact] creature", or "[color(s)]
+    <bare type>" with no subtype at all, as a `TokenDefinition`.
 
     Read right to left, the way the type line itself is built: "creature" -
     CR 205.2a - names the last word, an optional "artifact" ahead of it adds
@@ -7109,17 +7145,32 @@ def _parse_generic_token_descriptor(words: list[str], tail: str | None) -> Token
     Thopters), an optional leading `P/T` sets power and toughness (CR 208.1),
     then zero or more colour words - or the explicit "colorless" CR 105.2
     calls out - and whatever capitalized words are left are the token's
-    subtypes (CR 205.3, CR 111.4). A descriptor ending in anything but
-    "creature", or with no subtype left over once the rest is stripped away,
-    is not a shape this wave reads.
+    subtypes (CR 205.3, CR 111.4).
+
+    A descriptor that does not end in "creature" is read the same way but
+    against `_BARE_TOKEN_TYPE_WORDS` instead - Munitions' own "a colorless
+    artifact token" has no subtype at all (its name is stated separately, by
+    `_TOKEN_CLAUSE_RE`'s own "named" group, not derived from one), so this
+    shape is the one place `words` being empty is not a refusal. A creature
+    token still needs at least one subtype left over once the rest is
+    stripped away, exactly as before - CR 111.4 derives an unnamed token's
+    name from its subtypes, and a creature token naming none would be
+    guessing at a shape nothing in the pool prints.
     """
-    if not words or words[-1].lower() != "creature":
+    if not words:
         return None
-    words = words[:-1]
-    types: tuple[Type, ...] = (Type.CREATURE,)
-    if words and words[-1].lower() == "artifact":
-        types = (Type.ARTIFACT, Type.CREATURE)
+    types: tuple[Type, ...]
+    if words[-1].lower() == "creature":
         words = words[:-1]
+        types = (Type.CREATURE,)
+        if words and words[-1].lower() == "artifact":
+            types = (Type.ARTIFACT, Type.CREATURE)
+            words = words[:-1]
+    elif words[-1].lower() in _BARE_TOKEN_TYPE_WORDS:
+        types = (_BARE_TOKEN_TYPE_WORDS[words[-1].lower()],)
+        words = words[:-1]
+    else:
+        return None
     power = toughness = None
     if words and re.fullmatch(r"\d+/\d+", words[0]):
         power_text, toughness_text = words[0].split("/")
@@ -7132,7 +7183,9 @@ def _parse_generic_token_descriptor(words: list[str], tail: str | None) -> Token
         words = words[1:]
     if words and words[0].lower() == "colorless":
         words = words[1:]
-    if not words or not all(word[:1].isupper() for word in words):
+    if Type.CREATURE in types and not words:
+        return None
+    if words and not all(word[:1].isupper() for word in words):
         return None
     read_tail = _parse_token_tail(tail)
     if read_tail is None:
@@ -7189,6 +7242,7 @@ def _parse_token_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     count = _count(match.group("n"))
     words = match.group("desc").strip().split()
     tail = match.group("tail")
+    name = match.group("name")
 
     tapped = bool(words) and words[0].lower() == "tapped"
     if tapped:
@@ -7197,12 +7251,19 @@ def _parse_token_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
         return None
 
     predefined_name = " ".join(words)
-    if tail is None and predefined_name in PREDEFINED:
+    if tail is None and name is None and predefined_name in PREDEFINED:
         return _token_creation_clause(PREDEFINED[predefined_name], count, tapped=tapped)
 
     definition = _parse_generic_token_descriptor(words, tail)
     if definition is None:
         return None
+    if name is not None:
+        # CR 111.4: "a spell or ability that creates a token sets both its
+        # name and its subtype(s) ... if the spell or ability doesn't specify
+        # the name of the token, its name is the same as its subtype(s)".
+        # Weapons Manufacturing's Munitions states one, so it overrides
+        # whatever `card_name` would otherwise derive.
+        definition = definition.model_copy(update={"name": name.strip()})
     return _token_creation_clause(definition, count, tapped=tapped)
 
 
