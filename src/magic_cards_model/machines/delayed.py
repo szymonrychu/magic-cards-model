@@ -780,13 +780,11 @@ class ReflexiveExileCopiedCard(DelayedEffectSpecBase):
             return
         if card.zone is not self.zone_when_copied or card.owner is None:
             return  # CR 400.7: no longer the object the ability referred to.
-        owner = game.player(card.owner)
-        pile = owner.cards_in(self.zone_when_copied)
-        if card not in pile:
-            return
-        pile.remove(card)
-        card.move_to(Zone.EXILE)
-        game.exile.append(card)
+        # `zone_when_copied` can be a shared one (CR 400.1) - the copy this
+        # ability follows is made on the stack - so the lift-out and the move
+        # both go through `Game`, which owns those. `Player.cards_in` refuses
+        # a shared zone rather than answering with an empty pile of its own.
+        game.exile_permanent(card)
 
 
 #: What a delayed (or reflexive) triggered ability does when it resolves -

@@ -195,10 +195,11 @@ def _candidate_pool_for(game: Any, payer: str, component: CostComponent) -> list
             # `CostComponent.pay` docstring on this exact gap), and a shared
             # zone (CR 400.1) has no entry in `Player.zones` at all - reading
             # it there returned an always-empty pool (so the component was
-            # wrongly reported unpayable) and, because `Player.cards_in` is
-            # `zones.setdefault(zone, [])`, permanently added a spurious
+            # wrongly reported unpayable) and, because `Player.cards_in`
+            # was `zones.setdefault(zone, [])`, permanently added a spurious
             # empty key to the player's own serialized zones as a side
-            # effect. Every card in the shared zone is the real pool; `_
+            # effect. `cards_in` refuses a shared zone outright now.
+            # Every card in the shared zone is the real pool; `_
             # component_affordability`'s own `requirement.why_not` filter
             # below narrows it to whichever ones this cost can actually name.
             return [

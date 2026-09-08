@@ -4814,8 +4814,10 @@ def _possibility_storm_effect(game: "Game", ability: AbilityOnStack) -> None:
     hit: CardState | None = None
     while owner.library:
         state = owner.library[0]
-        owner.move(state, Zone.EXILE)
-        game.exile.append(state)
+        # CR 400.1's one shared exile zone, through CR 406.2's door - not
+        # `owner.move(state, Zone.EXILE)` plus an append, which listed each
+        # dug card in the real exile zone *and* in a pile of its owner's own.
+        game.exile_cards([state])
         state.exile_annotation = ExileAnnotation(
             marker=ExileMarker.IMPRINTED, owner=state.owner, linked_permanent_id=source_id
         )
@@ -16243,7 +16245,22 @@ def _parse_self_return_clause(clause: str, *, for_spell: bool) -> TargetedClause
         owner = game.find_owner(source) or game.player(
             source.controller_or_owner or game.active_player.username
         )
-        owner.move(source, to_zone)
+        # CR 400.1: the battlefield and exile are shared, so a move into
+        # either of them is the game's, not the owner's - `Player.move` would
+        # build a per-player pile of it. `_ZONE_BY_NAME` can name both, so
+        # both are routed to the doors that own them rather than left to
+        # whichever printing reaches this clause first.
+        if to_zone is Zone.BATTLEFIELD:
+            game.put_onto_battlefield(source, owner.username)
+        elif to_zone is Zone.EXILE:
+            game.exile_permanent(source)
+        elif from_zone is Zone.BATTLEFIELD and to_zone is Zone.HAND:
+            game.return_to_hand(source)
+        elif from_zone.is_shared:
+            game._take_out_of_every_zone(source)  # noqa: SLF001
+            owner.add(source, to_zone)
+        else:
+            owner.move(source, to_zone)
 
     return effect
 
@@ -18051,8 +18068,11 @@ def _parse_outside_the_game_play_clause(effect_text: str) -> Effect | None:
         # CR 701.20a/b: reveal makes the pick public without moving it, the
         # same order `_bring_in_from_outside_the_game_or_exile` already uses.
         game.reveal(chosen, source=spell.name)
+        # `bring_into_the_game` keeps CR 108.3b's ownership gate and routes the
+        # move itself through `Game.exile_cards`: CR 400.1's exile zone is the
+        # game's one shared pile, and the old `Player.move` half of this put
+        # the card into a second, per-player one as well.
         controller.bring_into_the_game(chosen, Zone.EXILE)
-        game.exile.append(chosen)
         game.grant_play_permission(
             chosen,
             controller.username,
@@ -18094,9 +18114,11 @@ def _parse_exile_hand_draw_then_play_until_next_turn_clause(effect_text: str) ->
     def effect(game: "Game", spell: CardState) -> None:
         controller = game.controller_of(spell)
         hand_cards = list(controller.hand)
-        for card in hand_cards:
-            controller.move(card, Zone.EXILE)
-            game.exile.append(card)
+        # One instruction, one batch, into CR 400.1's shared exile zone
+        # (CR 406.2) - not `Player.move` plus an append, which listed every
+        # card of the hand in the real exile zone and in a pile of its
+        # controller's own at the same time.
+        game.exile_cards(hand_cards)
         game.draw_cards(controller.username, len(hand_cards))
         for card in hand_cards:
             game.grant_play_permission(
@@ -19166,9 +19188,10 @@ def _parse_exile_top_then_play_until_next_turn(text: str) -> AbilityEffect | Non
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         controller = game.controller_of(ability)
         exiled = list(controller.library[:count])
-        for state in exiled:
-            controller.move(state, Zone.EXILE)
-            game.exile.append(state)
+        # "Exile the top two cards" is one instruction, so one `exile_cards`
+        # batch into CR 400.1's shared exile zone (CR 406.2). The old
+        # `Player.move` plus append put each card in two zones at once.
+        game.exile_cards(exiled)
         for state in exiled:
             game.grant_play_permission(
                 state,

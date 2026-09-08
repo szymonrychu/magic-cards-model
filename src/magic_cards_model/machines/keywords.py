@@ -1936,8 +1936,13 @@ def cascade(game: Any, spell: CardState, seed: int | None = None) -> CascadeResu
         result = CascadeResult()
         while owner.library:
             state = owner.library[0]
-            owner.move(state, Zone.EXILE)
-            game.exile.append(state)
+            # CR 400.1's shared exile zone, through CR 406.2's door. This used
+            # to be `owner.move(state, Zone.EXILE)` followed by the append
+            # below, which put every cascaded card in two zones at once: the
+            # real exile zone and a pile of the caster's own that nothing ever
+            # emptied, so a card bottomed at the end of this ability was still
+            # listed as exiled by that player forever after.
+            game.exile_cards([state])
             result.exiled.append(state)
             if not state.card.is_land and state.card.cmc < threshold:
                 result.hit = state
