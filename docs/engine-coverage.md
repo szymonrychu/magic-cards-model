@@ -549,11 +549,21 @@ parsed and `trigger_effect_for` returned a real callable - it never asked
 whether a text-fallback parser's answer came from the clause's own words or
 from a *quoted* span meant for a different object entirely (a token's own
 granted ability, most often). Weapons Manufacturing's "a nontoken artifact you
-control enters" scored `handled` on both counts: a substring guard in
-`condition_matches` inverts "nontoken" into "must be a token", so no real
-nontoken artifact entering it ever fires it, and the effect it "found" was
-`_DAMAGE_TARGET_RE` reading "deals 2 damage to any target" out of the token's
-own quoted reminder text, not Weapons Manufacturing's own clause.
+control enters" was the finding's original example, scoring `handled` on both
+counts at the time: a substring guard in `condition_matches` inverted
+"nontoken" into "must be a token", so no real nontoken artifact entering it
+ever fired it, and the effect it "found" was `_DAMAGE_TARGET_RE` reading
+"deals 2 damage to any target" out of the token's own quoted reminder text,
+not Weapons Manufacturing's own clause. Both of Weapons Manufacturing's own
+holes are since fixed on `main` (`30f2b07`, independently of this closure) -
+its own condition now fires correctly and its own effect no longer misparses
+- which is exactly what a closure built against the *production* functions is
+supposed to do: track a fix with no code change of its own, rather than keep
+reporting a bug that is gone. `tests/test_sweep_pool.py` pins this directly:
+Weapons Manufacturing and Miirym, Sentinel Wyrm (the finding's second named
+card) both now report their conditions reachable, and the pool's live
+`unmatchable_condition` cards are two others sharing the same escaping shape
+for a different, still-open reason (below).
 
 `unmatchable_condition` is a triggered ability whose event parsed but whose
 condition `_condition_can_fire` (`scripts/sweep_pool.py`) proved can never be
@@ -570,19 +580,27 @@ non-empty placeholder (never removed outright - that would also misfire on
 every legitimate "gains '\<ability\>'" grant, CR 113.10, that genuinely needs
 its own quoted payload, Urza's Saga among them).
 
-Measured at this commit: of 715 cards with rules text, 131 are `silent`, 392
-`handled`, 25 `notice`, 163 `static_unaudited`, 4 `unmatchable_condition`
-(Weapons Manufacturing, Miirym Sentinel Wyrm, Ygra Eater of All, Blade of the
-Bloodchief - the last two by an unrelated gap in `condition_matches`'s `DIES`
-branch: a condition naming neither a self-reference nor "another"/"other"
-never matches anything, which Ygra's "a Food is put into a graveyard from the
-battlefield" and Blade's "a creature dies" both hit), 0 `quoted_effect` (the
-one card with this shape, Weapons Manufacturing, is worse in the more
-fundamental `unmatchable_condition` way and is counted there instead - the
-detector itself is exercised directly by `tests/test_sweep_pool.py`). Two of
-those four were newly found by this closure (Weapons Manufacturing, Ygra -
-both previously `handled`); two were already known broken but for a less
-precise reason (Miirym, Blade of the Bloodchief - both previously `silent`).
+Measured at this commit: of 715 cards with rules text, 133 are `silent`, 391
+`handled`, 26 `notice`, 163 `static_unaudited`, 2 `unmatchable_condition`
+(Ygra, Eater of All and Blade of the Bloodchief, by an unrelated gap in
+`condition_matches`'s `DIES` branch: a condition naming neither a
+self-reference nor "another"/"other" never matches anything, which Ygra's "a
+Food is put into a graveyard from the battlefield" and Blade's "a creature
+dies" both hit - nobody is fixing this one yet), 0 `quoted_effect`. Ygra was
+newly found by this closure (previously `handled`, fully invisible to every
+prior sweep); Blade of the Bloodchief was already known broken but for a less
+precise reason (previously `silent`). On `quoted_effect`: a real search - the
+fixture pool plus over a dozen other real Scryfall printings sharing Weapons
+Manufacturing's own "create a token / gains an ability with a quoted payload"
+shape - found no live card reaching the misparse any more, and inspection of
+the three other unanchored-prefix damage regexes still in `machines/effects.py`
+found they cannot cross a quote boundary at all (their `\.?$` suffix refuses
+the trailing `"` a quoted grant's closing text always carries, unlike the
+old, tail-permissive `_DAMAGE_TARGET_RE` this fix replaced) - there is
+currently no live regex, not just no live card, this specific shape could
+exploit. The detector itself (`_effect_matched_inside_quotes`) is still
+exercised directly by `tests/test_sweep_pool.py`, against its own contract
+rather than a card or regex that is no longer vulnerable.
 Do not quote these counts from here either - re-run the script.
 
 ## Card effects
