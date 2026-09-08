@@ -110,16 +110,14 @@ from .decisions import (
     rule_for_kind,
 )
 from .keywords import (
-    cycling_abilities,
-    cycling_activation,
     dredge_count,
-    off_battlefield_activation,
+    off_zone_abilities,
+    off_zone_activation,
     turn_face_up_cost,
     why_cannot_dredge,
     why_cannot_turn_face_up,
 )
 from .modes import modal_profile
-from .triggers import activated_abilities_of
 from .turn import Step
 
 _BOOLEAN_DECISION_KINDS = frozenset(
@@ -912,62 +910,41 @@ def _battlefield_ability_actions(
 def _off_zone_actions(
     game: Any, player: str, card: CardState, candidate_scan: list[_ScannedCandidate]
 ) -> list[Action]:
+    """One `ACTIVATE_OFF_ZONE` per entry in `off_zone_abilities(card.card)` -
+    cycling (CR 702.29a) and any printed ability whose own text puts it in a
+    zone other than the battlefield (CR 113.6j, CR 113.6m), in the single
+    index space `off_zone_activation` reads, so `Action.ability_index` here
+    is exactly the number a caller passes back to it (and, through it, to
+    `POST .../actions/activate`) - never a second, family-local count a
+    caller would have to guess which entry point resolves.
+    """
     actions: list[Action] = []
     spend = ManaSpend.activating(card.card)
-    for index, kw_ability in enumerate(cycling_abilities(card.card)):
+    for index, entry in enumerate(off_zone_abilities(card.card)):
         try:
-            activation = cycling_activation(game, card, player, index)
-        except ValueError:
-            continue
-        if activation.why_not() is not None:
-            continue
-        affordable, reason = _cost_affordability(
-            game, player, activation.cost, candidate_scan, spend=spend
-        )
-        cost_str, mana_cost_str = _cost_strings(activation.cost)
-        actions.append(
-            Action(
-                kind=ActionKind.ACTIVATE_OFF_ZONE,
-                player=player,
-                rule=activation.rule,
-                card_id=card.id,
-                from_zone=card.zone,
-                ability_index=index,
-                keyword=kw_ability.canonical,
-                cost=cost_str,
-                mana_cost=mana_cost_str,
-                affordable=affordable,
-                unaffordable_reason=reason,
-            )
-        )
-
-    off_battlefield = [
-        ability for ability in activated_abilities_of(card.card) if ability.zone is not None
-    ]
-    for index, ability in enumerate(off_battlefield):
-        try:
-            activation = off_battlefield_activation(game, card, player, index)
+            activation = off_zone_activation(game, card, player, index)
         except ValueError as error:
-            # `off_battlefield_activation` announces and checks targets as
-            # part of *building* the activation (`TargetingProfile.check`,
-            # which raises for too few targets before `.why_not()` is ever
-            # reached) - Boseiju, Who Endures's Channel ("destroy target
-            # artifact, enchantment, or nonbasic land") is exactly this
-            # shape, and it is in the pool. Dropping it here (an earlier
-            # pass did, on the wrong claim that no printing needed this)
-            # would teach a seat the activation does not exist; reporting it
-            # `UNKNOWN` with the engine's own reason is honest instead - this
-            # enumeration has no targets to supply, so it cannot say whether
-            # a legal one exists, only that the activation itself is real.
+            # `off_zone_activation`/`off_battlefield_activation` announce and
+            # check targets as part of *building* the activation
+            # (`TargetingProfile.check`, which raises for too few targets
+            # before `.why_not()` is ever reached) - Boseiju, Who Endures's
+            # Channel ("destroy target artifact, enchantment, or nonbasic
+            # land") is exactly this shape, and it is in the pool. Dropping
+            # it here (an earlier pass did, on the wrong claim that no
+            # printing needed this) would teach a seat the activation does
+            # not exist; reporting it `UNKNOWN` with the engine's own reason
+            # is honest instead - this enumeration has no targets to supply,
+            # so it cannot say whether a legal one exists, only that the
+            # activation itself is real.
             actions.append(
                 Action(
                     kind=ActionKind.ACTIVATE_OFF_ZONE,
                     player=player,
-                    rule=ability.zone_rule or "CR 113.6",
+                    rule=entry.rule,
                     card_id=card.id,
                     from_zone=card.zone,
                     ability_index=index,
-                    keyword=ability.ability_word,
+                    keyword=entry.keyword,
                     affordable=Affordability.UNKNOWN,
                     unaffordable_reason=str(error),
                 )
@@ -987,7 +964,7 @@ def _off_zone_actions(
                 card_id=card.id,
                 from_zone=card.zone,
                 ability_index=index,
-                keyword=ability.ability_word,
+                keyword=entry.keyword,
                 cost=cost_str,
                 mana_cost=mana_cost_str,
                 affordable=affordable,

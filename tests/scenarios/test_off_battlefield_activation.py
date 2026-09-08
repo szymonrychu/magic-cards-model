@@ -54,8 +54,13 @@ import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.decisions import CardSplit, DecisionKind, ScriptedAnswer
-from magic_cards_model.machines.keywords import off_battlefield_activation
+from magic_cards_model.machines.keywords import (
+    off_battlefield_activation,
+    off_zone_abilities,
+    off_zone_activation,
+)
 from magic_cards_model.models import Zone
+from tests.cards import card as card_named
 from tests.scenarios.harness import Scenario, mana_from
 
 
@@ -524,3 +529,188 @@ def test_waker_of_waves_splits_the_top_two_cards_between_hand_and_graveyard():
 
     assert bolt.zone is Zone.HAND
     assert forest.zone is Zone.GRAVEYARD
+
+
+# --------------------------------------------------------------------------
+# One index space over every off-battlefield activation (CR 113.6j, CR 113.6m,
+# CR 702.29a)
+# --------------------------------------------------------------------------
+
+
+def test_the_off_zone_pool_lists_cycling_and_printed_abilities_in_one_index_space():
+    """`off_zone_abilities` is the single ordered pool `off_zone_activation`
+    (and `machines/legal_actions`' own `ACTIVATE_OFF_ZONE` enumeration) count
+    against - cycling first (CR 702.29a), then a printed ability whose own
+    text puts it in another zone (CR 113.6j/CR 113.6m).
+
+    Without it, "off-battlefield activation number 0" named two different
+    abilities on a card that prints one of each, and no caller holding an
+    `Action` could tell which of the two entry points it was supposed to
+    call.
+    """
+    wraith = card_named("Street Wraith")
+    waker = card_named("Waker of Waves")
+    turtle = card_named("Colossal Skyturtle")
+
+    (cycling,) = off_zone_abilities(wraith)
+    assert cycling.family == "cycling"
+    assert cycling.keyword == "Cycling"
+    assert cycling.zone is Zone.HAND
+    assert cycling.rule == "CR 702.29a"
+
+    (plain,) = off_zone_abilities(waker)
+    assert plain.family == "printed"
+    assert plain.keyword is None, "Waker of Waves prints no ability word at all"
+    assert plain.zone is Zone.HAND
+    assert plain.rule == "CR 113.6j"
+
+    both = off_zone_abilities(turtle)
+    assert [ability.keyword for ability in both] == ["Channel", "Channel"]
+    assert [ability.family for ability in both] == ["printed", "printed"]
+
+
+def test_off_zone_activation_reaches_a_printed_ability_by_its_pool_index():
+    """The unkeyworded shape the owner's own game reached for: Waker of Waves
+    at index 0 of its own off-zone pool, activated from hand for
+    `{1}{U}, Discard this card` (CR 113.6j)."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Waker of Waves"],
+            library=["Lightning Bolt", "Forest"],
+            battlefield=["Island", "Island"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    waker = scenario.find("Waker of Waves", Zone.HAND, "alice")
+    islands = scenario.untapped_sources("Island", "Island")
+    bolt, forest = scenario.top_of_library(2)
+    scenario.game.decisions.add(
+        ScriptedAnswer(kind=DecisionKind.SCRY, value=CardSplit(moved=(bolt.id,)), player="alice")
+    )
+
+    activation = off_zone_activation(scenario.game, waker, "alice", 0)
+    assert activation.rule == "CR 113.6j"
+    assert str(activation.cost) == "{1}{U}, Discard this card"
+
+    payment = activation.begin_paying()
+    pay_with(*islands)(payment)
+    payment.pay()
+    activation.activate()
+    activation.resolve()
+
+    assert waker.zone is Zone.GRAVEYARD, "the discard cost was paid"
+    assert bolt.zone is Zone.HAND
+    assert forest.zone is Zone.GRAVEYARD
+
+
+def test_off_zone_activation_reaches_the_second_of_two_printed_abilities():
+    """Colossal Skyturtle prints two Channel abilities, so its pool has a
+    real index 1 - the case that proves the index is read against the pool
+    and not assumed to be 0."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Colossal Skyturtle"], battlefield=["Island", "Island"])
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    turtle = scenario.find("Colossal Skyturtle", Zone.HAND, "alice")
+    bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "bob")
+    islands = scenario.untapped_sources("Island", "Island")
+
+    activation = off_zone_activation(scenario.game, turtle, "alice", 1, targets=[bears])
+    assert str(activation.cost) == "{1}{U}, Discard this card"
+
+    payment = activation.begin_paying()
+    pay_with(*islands)(payment)
+    payment.pay()
+    activation.activate()
+    activation.resolve()
+
+    assert bears.zone is Zone.HAND, "the bounce ran"
+    assert turtle.zone is Zone.GRAVEYARD
+
+
+def test_off_zone_activation_reaches_cycling_through_the_same_call():
+    """Cycling is in the same pool (CR 702.29a makes it an ordinary activated
+    ability), so a caller holding an `ACTIVATE_OFF_ZONE` action never has to
+    work out which of two engine entry points it meant."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Street Wraith"], library=["Lightning Bolt"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    wraith = scenario.find("Street Wraith", Zone.HAND, "alice")
+    activation = off_zone_activation(scenario.game, wraith, "alice", 0)
+    assert activation.rule == "CR 702.29a"
+
+    payment = activation.begin_paying()
+    payment.pay()
+    activation.activate()
+    activation.resolve()
+
+    assert wraith.zone is Zone.GRAVEYARD
+    assert scenario.find("Lightning Bolt", Zone.HAND, "alice") is not None
+
+
+def test_off_zone_activation_refuses_an_index_the_pool_does_not_have():
+    """Fail closed, and in the engine's own words: a card with one off-zone
+    ability has no number 1, and a card with none at all has no number 0."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Waker of Waves", "Lightning Bolt"], battlefield=["Island"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    waker = scenario.find("Waker of Waves", Zone.HAND, "alice")
+    bolt = scenario.find("Lightning Bolt", Zone.HAND, "alice")
+
+    with pytest.raises(ValueError, match="no activated ability functioning off the battlefield"):
+        off_zone_activation(scenario.game, waker, "alice", 1)
+    with pytest.raises(ValueError, match="no activated ability functioning off the battlefield"):
+        off_zone_activation(scenario.game, bolt, "alice", 0)
+
+
+def test_off_zone_abilities_carry_a_display_ready_ability_object():
+    """`OffZoneAbility.ability` is what a caller displaying "what does
+    activating this ask for" reads (the api's `engine_api.list_abilities`
+    is exactly that caller) - a plain `ActivatedAbility` for both families,
+    so cycling's rule-defined text ("[Cost], Discard this card: Draw a
+    card.") and a printed ability's own text (Waker of Waves', Boseiju's
+    Channel) are read the same way, with no branch on which family built it.
+    """
+    wraith = card_named("Street Wraith")
+    waker = card_named("Waker of Waves")
+    boseiju = card_named("Boseiju, Who Endures")
+
+    (cycling,) = off_zone_abilities(wraith)
+    assert cycling.ability.cost == "Pay 2 life, Discard this card"
+    assert cycling.ability.effect == "Draw a card."
+
+    (plain,) = off_zone_abilities(waker)
+    assert plain.ability.cost == "{1}{U}, Discard this card"
+    assert "Look at the top two cards" in plain.ability.effect
+
+    # Boseiju prints its mana ability first ({T}: Add {G}) and Channel
+    # second, but `activated_abilities(boseiju)`'s full battlefield-oriented
+    # list is not what `index` here counts against - only the printings that
+    # have a `zone` at all (`off_battlefield_activation`'s own `candidates`
+    # filter) do, so Channel is family-local index 0 even though it is
+    # `activated_abilities_of(boseiju)`'s raw index 1. A caller that read
+    # the ordinary battlefield ability list for this card's own index would
+    # call the wrong number - see `engine_api.list_abilities`'s zone branch.
+    (channel,) = off_zone_abilities(boseiju)
+    assert channel.index == 0, "its own position within the filtered, zone-having family"
+    assert channel.ability.cost == "{1}{G}, Discard this card"
