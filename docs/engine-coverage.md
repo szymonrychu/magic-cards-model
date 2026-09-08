@@ -536,6 +536,73 @@ mana-ability path reads it; everything else is listed, with the cards carrying
 it. Keep the two exception lists in the script honest, because anything on them
 is a keyword the report will never mention again.
 
+**What `--effects` actually measures, and the hole it had until 2026-09-08.**
+The report sorts every clause into six buckets, not four: `handled`, `notice`,
+`static_unaudited`, `silent` (see W15 below for what each of those four
+means), plus **`unmatchable_condition`** and **`quoted_effect`**. Both are new,
+and both close the same finding
+(`docs/2026-09-08-trigger-findings.md`'s "sweeper's blind spot"): `--effects`
+used to classify a triggered ability as `handled` the moment `ability.event`
+parsed and `trigger_effect_for` returned a real callable - it never asked
+`machines/triggers.condition_matches` (CR 603.2) whether that printed
+*condition* could ever be satisfied by a real permanent, and it never asked
+whether a text-fallback parser's answer came from the clause's own words or
+from a *quoted* span meant for a different object entirely (a token's own
+granted ability, most often). Weapons Manufacturing's "a nontoken artifact you
+control enters" was the finding's original example, scoring `handled` on both
+counts at the time: a substring guard in `condition_matches` inverted
+"nontoken" into "must be a token", so no real nontoken artifact entering it
+ever fired it, and the effect it "found" was `_DAMAGE_TARGET_RE` reading
+"deals 2 damage to any target" out of the token's own quoted reminder text,
+not Weapons Manufacturing's own clause. Both of Weapons Manufacturing's own
+holes are since fixed on `main` (`30f2b07`, independently of this closure) -
+its own condition now fires correctly and its own effect no longer misparses
+- which is exactly what a closure built against the *production* functions is
+supposed to do: track a fix with no code change of its own, rather than keep
+reporting a bug that is gone. `tests/test_sweep_pool.py` pins this directly:
+Weapons Manufacturing and Miirym, Sentinel Wyrm (the finding's second named
+card) both now report their conditions reachable, and the pool's live
+`unmatchable_condition` cards are two others sharing the same escaping shape
+for a different, still-open reason (below).
+
+`unmatchable_condition` is a triggered ability whose event parsed but whose
+condition `_condition_can_fire` (`scripts/sweep_pool.py`) proved can never be
+satisfied by any real, honestly-labelled permanent, tried under both
+controllers, both token states, and every entry qualifier the condition names
+- built and tested against the *production* `condition_matches`, never a
+re-derivation of what the condition is supposed to mean. It is tracked
+separately from `silent` on purpose: a trigger that never registers at all is
+a different, more fundamental defect than one that registers and does
+nothing, and folding the two together would hide exactly the distinction this
+finding is about. `quoted_effect` is a clause whose dispatcher answer changes
+from a real effect to `None` when its quoted span is blanked to a neutral,
+non-empty placeholder (never removed outright - that would also misfire on
+every legitimate "gains '\<ability\>'" grant, CR 113.10, that genuinely needs
+its own quoted payload, Urza's Saga among them).
+
+Measured at this commit: of 715 cards with rules text, 133 are `silent`, 391
+`handled`, 26 `notice`, 163 `static_unaudited`, 2 `unmatchable_condition`
+(Ygra, Eater of All and Blade of the Bloodchief, by an unrelated gap in
+`condition_matches`'s `DIES` branch: a condition naming neither a
+self-reference nor "another"/"other" never matches anything, which Ygra's "a
+Food is put into a graveyard from the battlefield" and Blade's "a creature
+dies" both hit - nobody is fixing this one yet), 0 `quoted_effect`. Ygra was
+newly found by this closure (previously `handled`, fully invisible to every
+prior sweep); Blade of the Bloodchief was already known broken but for a less
+precise reason (previously `silent`). On `quoted_effect`: a real search - the
+fixture pool plus over a dozen other real Scryfall printings sharing Weapons
+Manufacturing's own "create a token / gains an ability with a quoted payload"
+shape - found no live card reaching the misparse any more, and inspection of
+the three other unanchored-prefix damage regexes still in `machines/effects.py`
+found they cannot cross a quote boundary at all (their `\.?$` suffix refuses
+the trailing `"` a quoted grant's closing text always carries, unlike the
+old, tail-permissive `_DAMAGE_TARGET_RE` this fix replaced) - there is
+currently no live regex, not just no live card, this specific shape could
+exploit. The detector itself (`_effect_matched_inside_quotes`) is still
+exercised directly by `tests/test_sweep_pool.py`, against its own contract
+rather than a card or regex that is no longer vulnerable.
+Do not quote these counts from here either - re-run the script.
+
 ## Card effects
 
 `machines/effects.py` is a scripted registry keyed by card name, not a rules
@@ -1692,11 +1759,26 @@ No `DecisionKind` was added - `CHOOSE_A_QUALITY` (already used for CR 614.12a's 
 ## W15: the sweeper's last 25 silent cards
 
 `scripts/sweep_pool.py`'s "cards that would do nothing at all if played right
-now" bucket stood at **25 of 388**. It is now **0 of 387** (the denominator
-moved by one because Nykthos, Shrine to Nyx stopped having any non-mana rules
-text at all - see below). Nothing was closed with a card-name registry row:
-every fix is a parser reading the card's own printed text, so the next card
-with the same shape is covered for free.
+now" bucket stood at **25 of 388**. It went to **0 of 387** at the time (the
+denominator moved by one because Nykthos, Shrine to Nyx stopped having any
+non-mana rules text at all - see below). Nothing was closed with a card-name
+registry row: every fix is a parser reading the card's own printed text, so
+the next card with the same shape is covered for free.
+
+**That "0" is stale on two different axes, and neither is this section's own
+work to close.** The pool has grown since (747 printings today against 388
+here), and the sweep is not tracked as a standing zero anywhere between waves
+- re-run it rather than trusting any number in this file, including this one.
+Separately, and more to the point of this section: "0 silent" was never the
+whole claim it read as. `--effects` classified a triggered ability as
+`handled` from `trigger_effect_for` alone, without ever asking
+`machines/triggers.condition_matches` whether the condition it fired on could
+be satisfied by a real permanent - so a trigger that can never register at
+all still counted as covered, right alongside a trigger that genuinely works.
+That hole (and a second one, an effect matched out of a quoted span rather
+than its own clause) is closed as of 2026-09-08 by two new buckets,
+`unmatchable_condition` and `quoted_effect` - see "Finding the gaps" above for
+what they measure and the current count.
 
 Grouped by the mechanic each one needed, not by card:
 

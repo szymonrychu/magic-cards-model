@@ -25,9 +25,15 @@ import pytest
 from scripts.sweep_pool import (
     HANDLED,
     NOTICE,
+    QUOTED_EFFECT,
     SILENT,
     STATIC_UNAUDITED,
+    UNMATCHABLE_CONDITION,
+    _condition_can_fire,
+    _effect_matched_inside_quotes,
+    _intended_token_requirement,
     _spell_faces,
+    _worse,
     _x_candidates,
     classify_card,
     classify_clauses,
@@ -36,6 +42,12 @@ from scripts.sweep_pool import (
     missed_layer_shape,
 )
 
+from magic_cards_model.machines.abilities import TriggeredAbility, parse_abilities
+from magic_cards_model.machines.effects import (
+    _DAMAGE_EACH_CREATURE_RE,
+    _DAMAGE_EACH_OPPONENT_RE,
+    trigger_effect_for,
+)
 from tests.cards import card
 
 # -- The baseline: a plain card must classify honestly in both directions ---
@@ -368,3 +380,278 @@ def test_spell_faces_records_whether_the_face_is_a_permanent():
     """
     assert not any(face.is_permanent for face in _spell_faces(card("Wear // Tear")))
     assert _spell_faces(card("Grafdigger's Cage"))[0].is_permanent
+
+
+# -- The condition-matching closure (docs/2026-09-08-trigger-findings.md,
+# "The sweeper's blind spot, which matters beyond this card") -------------
+#
+# `classify_clauses` used to ask only whether `trigger_effect_for` produced a
+# callable, never whether `machines/triggers.condition_matches` could ever be
+# satisfied by a real permanent, and never whether that callable's own match
+# came from inside a quoted span rather than the clause's own text. Weapons
+# Manufacturing's "a nontoken artifact you control enters" scored two
+# `handled` clauses this way while doing nothing at all in a real game: the
+# substring guard `machines/triggers.py` uses for "one or more tokens you
+# control enter" also matches "nontoken", inverting the restriction, and the
+# damage effect it "found" is `_DAMAGE_TARGET_RE` reading the tail of the
+# token's own quoted granted ability, not anything Weapons Manufacturing's
+# own trigger clause says.
+
+
+def _triggered_ability(name: str, *, condition_contains: str) -> TriggeredAbility:
+    for ability in parse_abilities(card(name)):
+        if isinstance(ability, TriggeredAbility) and condition_contains in ability.condition:
+            return ability
+    raise AssertionError(
+        f"{name} has no triggered ability whose condition names {condition_contains!r}"
+    )
+
+
+def test_intended_token_requirement_reads_nontoken_before_token():
+    """The interpreter this closure uses to decide whether a synthetic
+    permanent should be a token has to get "nontoken" right on its own -
+    reusing `machines/triggers.py`'s own substring check would just inherit
+    the bug this test exists to catch.
+    """
+    assert _intended_token_requirement("a nontoken artifact you control enters") is False
+    assert _intended_token_requirement("another nontoken Dragon you control enters") is False
+    assert _intended_token_requirement("one or more tokens you control enter") is True
+    assert _intended_token_requirement("a token you control enters") is True
+    assert _intended_token_requirement("a Human you control enters") is None
+
+
+def test_ygras_food_graveyard_condition_can_never_fire():
+    """Ygra, Eater of All's "a Food is put into a graveyard from the
+    battlefield" hits a different bug than Weapons Manufacturing's, in the
+    same `condition_matches` `DIES` branch: a condition naming neither a
+    self-reference nor "another"/"other" never matches anything, self or
+    other (`docs/2026-09-08-trigger-findings.md` traces the same escaping
+    shape - readable event, unmatched condition - to a second, independent
+    cause). Nobody is fixing this one, which is what makes it a stable
+    fixture: Weapons Manufacturing's own condition now fires correctly since
+    `main`'s nontoken substring fix (see the sibling test below), so this
+    closure's fixtures have to point at a gap that is still actually open.
+    """
+    ability = _triggered_ability("Ygra, Eater of All", condition_contains="Food is put into")
+    assert _condition_can_fire(card("Ygra, Eater of All"), ability) is False
+
+
+def test_blade_of_the_bloodchiefs_creature_dies_condition_can_never_fire():
+    """Blade of the Bloodchief's "a creature dies" (no "this", no
+    "another"/"other") hits the identical `DIES`-branch gap Ygra does, on a
+    plainer card - CR 603.10a's own escaping shape again, distinct from and
+    unrelated to the nontoken substring collision.
+    """
+    ability = _triggered_ability("Blade of the Bloodchief", condition_contains="a creature dies")
+    assert _condition_can_fire(card("Blade of the Bloodchief"), ability) is False
+
+
+def test_weapons_manufacturings_condition_now_fires_after_the_nontoken_fix():
+    """The other half of the story: `main`'s nontoken substring fix
+    (`30f2b07`) means a real nontoken artifact entering Weapons Manufacturing
+    now genuinely satisfies its own condition, so this closure - which asks
+    the *production* `condition_matches` directly rather than re-deriving an
+    answer - must track that change with no code change of its own. Pinned
+    so a future regression in either direction is caught: if the engine fix
+    is ever reverted, or if this closure stops calling production code, this
+    test moves.
+    """
+    ability = _triggered_ability("Weapons Manufacturing", condition_contains="nontoken artifact")
+    assert _condition_can_fire(card("Weapons Manufacturing"), ability) is not False
+
+
+def test_miirym_condition_now_fires_after_the_nontoken_fix():
+    """Miirym's "another nontoken Dragon you control enters" is fixed by the
+    same `main` change - the condition hole this closure was built to catch
+    is closed for this card now, even though the card still has no effect
+    reader at all (it still reports `SILENT`, not `HANDLED`; see
+    `test_miirym_still_reports_silent_for_its_missing_effect` below)."""
+    ability = _triggered_ability("Miirym, Sentinel Wyrm", condition_contains="nontoken Dragon")
+    assert _condition_can_fire(card("Miirym, Sentinel Wyrm"), ability) is not False
+
+
+def test_belladonna_tooks_token_condition_is_genuinely_reachable():
+    """The control for the token axis: "a token you control enters" is a
+    condition a real token entering the battlefield satisfies every day, so
+    this closure must not report it unmatchable just because it names
+    "token" at all - only the inverted "nontoken" shape is the bug.
+    """
+    ability = _triggered_ability("Belladonna Took", condition_contains="a token you control enters")
+    assert _condition_can_fire(card("Belladonna Took"), ability) is True
+
+
+def test_amulet_of_vigors_enters_tapped_condition_is_genuinely_reachable():
+    """The control for the entry-qualifier axis (CR 603.6d): "a permanent you
+    control enters tapped" is satisfied by any real permanent that actually
+    does enter tapped, every day - this closure has to build a synthetic
+    permanent that enters *tapped* to prove it, not only an untapped one.
+    """
+    ability = _triggered_ability("Amulet of Vigor", condition_contains="enters tapped")
+    assert _condition_can_fire(card("Amulet of Vigor"), ability) is True
+
+
+def test_caretakers_talents_unread_condition_is_not_reclassified():
+    """`ability.event is None` (CR 603.2's condition this module cannot read
+    at all, `docs/engine-coverage.md`'s own documented gap) is a different,
+    pre-existing hole - `classify_clauses` must keep reporting it through the
+    `"triggered (unread condition)"` source it already has, not fold it into
+    the new `UNMATCHABLE_CONDITION` bucket this closure adds.
+    """
+    by_source = {c.source: c.category for c in classify_clauses(card("Caretaker's Talent"))}
+    assert by_source["triggered (unread condition)"] == SILENT
+
+
+def test_ygra_reports_unmatchable_condition_not_handled():
+    """The requirement, end to end: this card's own triggered clause must
+    stop scoring `handled`, and it must score a bucket distinct from
+    `silent` - the two mean different things to whoever reads the report.
+    Ygra was previously scored fully `handled` - a card the sweeper had
+    never flagged at all, which the condition-matching closure is what
+    finds.
+    """
+    by_source = {c.source: c.category for c in classify_clauses(card("Ygra, Eater of All"))}
+    assert by_source["triggered"] == UNMATCHABLE_CONDITION
+    assert classify_card(card("Ygra, Eater of All"))[0] == UNMATCHABLE_CONDITION
+
+
+def test_blade_of_the_bloodchief_reports_unmatchable_condition_not_silent():
+    """Blade of the Bloodchief used to be caught only as `silent` (no effect
+    reader) - the condition hole underneath it is a distinct, separately
+    tracked bug and must not stay hidden behind the effect one now that both
+    are checked.
+    """
+    assert classify_card(card("Blade of the Bloodchief"))[0] == UNMATCHABLE_CONDITION
+
+
+def test_miirym_still_reports_silent_for_its_missing_effect():
+    """Miirym's *condition* fires correctly since the nontoken fix, but the
+    card still has no `TRIGGER_EFFECTS` entry or parser reading "create a
+    token that's a copy of it" - the two holes are independent, and closing
+    one must not paper over the other still being open.
+    """
+    by_source = {c.source: c.category for c in classify_clauses(card("Miirym, Sentinel Wyrm"))}
+    assert by_source["triggered"] == SILENT
+    assert classify_card(card("Miirym, Sentinel Wyrm"))[0] == SILENT
+
+
+# -- The quoted-text closure: an effect matched out of a granted ability's
+# own quoted reminder text, not the clause's own. --------------------------
+#
+# Weapons Manufacturing was this closure's original example - `main`'s
+# nontoken fix (`30f2b07`) turned out to close *both* of its holes, not just
+# the condition one: it anchored `_DAMAGE_TARGET_RE` to refuse a prefix that
+# crosses into a quote, and added a dedicated `create a ... token named X
+# with "<ability>"` parser, so Weapons Manufacturing's own effect no longer
+# misparses either. A real search (the fixture pool, `--effects`, plus over
+# a dozen other real Scryfall printings sharing the same "create a token /
+# gains an ability with a quoted payload ending in a damage clause" shape -
+# Mysidian Elder, Queen Brahne, Judith Carnage Connoisseur, Circle of Power,
+# and others) found **no card that still reaches the misparse end to end**
+# through `trigger_effect_for`'s own dispatch order: the new parser and the
+# anchored regex intercept every one of them.
+#
+# The three other unanchored-prefix damage regexes still in
+# `machines/effects.py` (`_DAMAGE_EACH_OPPONENT_RE`, `_DAMAGE_EACH_CREATURE_
+# RE`, `_DIVIDED_DAMAGE_RE`) turn out not to be reachable through a quote at
+# all, on inspection: unlike the pre-fix `_DAMAGE_TARGET_RE`, whose
+# `.*target.+` tail could absorb trailing punctuation (the closing `."` a
+# quoted grant always ends with), these three end `\.?$` - an optional
+# single period and then the *literal end of the string*, which a trailing
+# `"` character always breaks. `_DAMAGE_EACH_OPPONENT_RE.fullmatch('...each
+# opponent."')` is `None`, confirmed directly below. There is currently no
+# live regex in this codebase, not just no live card, that this specific
+# quote-crossing shape could still exploit - which is a real, useful finding
+# in its own right, not a reason to weaken the closure's own test coverage.
+# `_effect_matched_inside_quotes` is pinned instead with a direct unit test
+# of its own contract, shaped after the real bug but not claiming any
+# specific card or regex is presently vulnerable.
+
+
+def test_weapons_manufacturings_effect_no_longer_matches_inside_quotes():
+    """The positive regression: Weapons Manufacturing's own trigger no
+    longer misparses, now that `_DAMAGE_TARGET_RE` is anchored and a
+    dedicated token-creation-with-quoted-ability parser exists.
+    """
+    ability = _triggered_ability("Weapons Manufacturing", condition_contains="nontoken artifact")
+
+    def dispatch(text: str) -> object:
+        return trigger_effect_for("Weapons Manufacturing", ability.event, text)
+
+    assert not _effect_matched_inside_quotes(dispatch, ability.effect)
+
+
+def test_the_remaining_unanchored_damage_regexes_cannot_cross_a_quote():
+    """Confirms the claim in the section docstring above with the real regex
+    objects: each of the three still-unanchored-prefix damage regexes
+    refuses to match text a quoted grant's own closing `"` sits after,
+    because each ends `\\.?$` rather than the old, tail-permissive
+    `.*target.+` `_DAMAGE_TARGET_RE` had before it was anchored.
+    """
+    quoted = 'create a token with "it deals 1 damage to each opponent."'
+    assert _DAMAGE_EACH_OPPONENT_RE.fullmatch(quoted) is None
+    quoted_creature = 'create a token with "it deals 1 damage to each creature."'
+    assert _DAMAGE_EACH_CREATURE_RE.fullmatch(quoted_creature) is None
+
+
+def test_effect_matched_inside_quotes_detects_a_dispatcher_reading_into_a_quote():
+    """A direct unit test of the detector's own contract - `dispatch`
+    modelled after the real, now-fixed bug shape (an unanchored match that
+    reads whatever a quoted span says, regardless of what precedes it), but
+    not tied to any specific card or regex, live or otherwise: no printing
+    or regex in the codebase currently exhibits this any more (see the
+    section docstring above), and this closure's own coverage must not
+    depend on one continuing to.
+    """
+    text = 'create a token with "it deals 2 damage to any target."'
+
+    def dispatch(t: str) -> object:
+        return object() if "deals 2 damage to any target" in t else None
+
+    assert _effect_matched_inside_quotes(dispatch, text)
+    assert not _effect_matched_inside_quotes(dispatch, "create a token with no quote at all")
+
+
+def test_urzas_sagas_gains_ability_clause_is_not_flagged():
+    """The negative control: "This Saga gains "{2}, {T}: Create a ... token
+    with '...'"" (CR 113.10) genuinely needs its quoted text - `_GAINS_
+    ABILITY_RE` reads the whole quote as the ability being granted, on
+    purpose, and refuses an empty one. Blanking the quote to a neutral
+    non-empty placeholder must leave this dispatcher's answer non-`None`, so
+    this real, working card is never reported as a quoted-text misparse.
+    """
+    for ability in parse_abilities(card("Urza's Saga")):
+        if not isinstance(ability, TriggeredAbility) or '"' not in ability.effect:
+            continue
+
+        def dispatch(text: str, event=ability.event) -> object:
+            return trigger_effect_for("Urza's Saga", event, text)
+
+        assert not _effect_matched_inside_quotes(dispatch, ability.effect)
+
+
+def test_unmatchable_condition_outranks_quoted_effect():
+    """When a clause is both unreachable *and* its effect was matched out of
+    quoted text, the more fundamental diagnosis wins: nothing else about the
+    clause matters if it can never fire at all. Weapons Manufacturing used to
+    be the one live card exhibiting both at once; now that its own condition
+    and its own effect are both fixed on `main` (see the tests above and
+    below), this pins the precedence rule directly rather than through a
+    card no longer in that state.
+    """
+    assert _worse(UNMATCHABLE_CONDITION, QUOTED_EFFECT) == UNMATCHABLE_CONDITION
+    assert _worse(QUOTED_EFFECT, UNMATCHABLE_CONDITION) == UNMATCHABLE_CONDITION
+
+
+def test_hydro_mans_becomes_a_land_and_gains_clause_is_not_flagged():
+    """A second negative control, of a different shape than Urza's Saga:
+    Hydro-Man's "he becomes a land and gains "{T}: Add {U}."" dispatches to
+    the `create_continuous_effect_of_ability` sentinel, whose real verdict
+    `_dispatch_category` reads back off the *card's whole printed text* via
+    `_layer_category` - never off whatever `dispatch(text)` itself returns
+    for one blanked or unblanked string. Blanking the quote can change that
+    raw dispatch answer without the sentinel path's own verdict being wrong
+    at all, so the quoted-text closure must not ask the question here in the
+    first place.
+    """
+    categories = {c.category for c in classify_clauses(card("Hydro-Man, Fluid Felon"))}
+    assert QUOTED_EFFECT not in categories
