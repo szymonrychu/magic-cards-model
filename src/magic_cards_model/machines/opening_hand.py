@@ -82,7 +82,6 @@ from pydantic import BaseModel, ConfigDict
 
 from ..models.card import Card
 from ..models.card_state import CardState
-from ..models.zone import Zone
 from .abilities import TriggerEvent
 from .decisions import Decision, DecisionKind
 from .delayed import DelayedTrigger, devourer_of_destiny_first_upkeep
@@ -246,6 +245,14 @@ def _gemstone_caverns_rider(game: "Game", card_state: CardState, player: "Player
 
     Nothing here is random, so nothing here needs the match seed: a replay with
     the same declarations and the same scripted choice exiles the same card.
+
+    The exile goes through `Game.exile_cards`, never
+    `Player.move(state, Zone.EXILE)`. CR 400.1: "Each player has their own
+    library, hand, and graveyard. The other zones are shared by all players" -
+    so there is one exile zone, `Game.shared_zones[Zone.EXILE]`, and CR 406.2's
+    "put it into the exile zone" means that one. Exiling into a pile of the
+    holder's own left the card where `Game.exile`, `Game.all_targetables` and
+    every seat's board could not see it: paid, gone from hand, and nowhere.
     """
     hand = list(player.hand)
     if not hand:
@@ -262,8 +269,7 @@ def _gemstone_caverns_rider(game: "Game", card_state: CardState, player: "Player
     )
     assert isinstance(chosen, tuple)
     by_id = {state.id: state for state in hand}
-    for card_id in chosen:
-        player.move(by_id[card_id], Zone.EXILE)
+    game.exile_cards([by_id[card_id] for card_id in chosen])
 
 
 def _devourer_of_destiny_rider(game: "Game", card_state: CardState, player: "Player") -> None:

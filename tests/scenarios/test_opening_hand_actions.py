@@ -405,7 +405,10 @@ def test_gemstone_caverns_begins_the_game_with_a_luck_counter_and_exiles_a_card(
     assert caverns.zone is Zone.BATTLEFIELD
     assert caverns.counter_count("luck") == 1
     assert len(alice.hand) == 5  # seven, less the Caverns, less the exiled card
-    assert len(alice.cards_in(Zone.EXILE)) == 1
+    # `Game.exile` throughout this file: exile is a shared zone (CR 400.1), so
+    # reading it off a `Player` is reading a pile that does not exist - which
+    # is exactly how this rider exiled into one of alice's own undetected.
+    assert len(game.exile) == 1
 
 
 def test_declining_gemstone_caverns_exiles_nothing():
@@ -417,7 +420,7 @@ def test_declining_gemstone_caverns_exiles_nothing():
     match.run_mulligans(game)
 
     assert len(alice.hand) == 7
-    assert alice.cards_in(Zone.EXILE) == []
+    assert game.exile == []
 
 
 def test_which_card_the_caverns_exiles_is_its_holder_s_choice():
@@ -439,7 +442,7 @@ def test_which_card_the_caverns_exiles_is_its_holder_s_choice():
     match.run_mulligans(game)
 
     assert chosen.zone is Zone.EXILE
-    assert alice.cards_in(Zone.EXILE) == [chosen]
+    assert game.exile == [chosen]
 
 
 # -- revealing from the opening hand (Devourer of Destiny, CR 103.6b) ------
@@ -736,7 +739,7 @@ def test_a_seeded_replay_reproduces_the_same_opening_hand_actions():
         return (
             offers(game),
             [state.name for state in game.battlefield],
-            [state.name for state in game.player("alice").cards_in(Zone.EXILE)],
+            [state.name for state in game.exile],
         )
 
     assert played("replay") == played("replay")
@@ -798,7 +801,7 @@ def test_no_action_is_offered_for_a_card_that_is_not_in_the_opening_hand():
 
     assert [state.name for state in alice.library].count("Leyline of Abundance") == 4
     assert offers(game, "alice") == []
-    assert alice.cards_in(Zone.BATTLEFIELD) == []
+    assert game.battlefield == []
 
 
 @pytest.mark.parametrize("name", sorted(RIDERS))

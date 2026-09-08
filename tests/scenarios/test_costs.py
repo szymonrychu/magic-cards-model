@@ -648,11 +648,16 @@ def test_floating_mana_casts_a_spell_with_no_sources_tapped():
 
     assert bears.zone is Zone.BATTLEFIELD
     assert scenario.player("alice").mana_pool.floating == {}
+    # `Game.battlefield`, not `alice.cards_in(Zone.BATTLEFIELD)`: the
+    # battlefield is shared (CR 400.1), so a player has none of their own to
+    # read - asking used to answer with an empty pile it minted on the spot,
+    # which made this list vacuously empty and `all(...)` vacuously true.
     elves = [
         state
-        for state in scenario.player("alice").cards_in(Zone.BATTLEFIELD)
-        if state.name == "Llanowar Elves"
+        for state in scenario.game.battlefield
+        if state.name == "Llanowar Elves" and state.controller == "alice"
     ]
+    assert len(elves) == 2
     assert all(state.tapped for state in elves), (
         "the only taps were the staged activations, none for the spell"
     )

@@ -97,3 +97,51 @@ _HIDDEN = frozenset({Zone.LIBRARY, Zone.HAND, Zone.SIDEBOARD})
 _SHARED = frozenset({Zone.BATTLEFIELD, Zone.STACK, Zone.EXILE, Zone.COMMAND, Zone.ANTE})
 _ORDERED = frozenset({Zone.LIBRARY, Zone.GRAVEYARD, Zone.STACK})
 _OUTSIDE_THE_GAME = frozenset({Zone.SIDEBOARD})
+
+
+class SharedZoneError(RuntimeError):
+    """A `Player` was asked for a zone CR 400.1 gives the game, not a player.
+
+    CR 400.1: "Each player has their own library, hand, and graveyard. The
+    other zones are shared by all players." So there is exactly one
+    battlefield, one stack, one exile zone, one command zone and one ante
+    zone in a game, they live in `Game.shared_zones`, and `Player.zones`
+    never holds any of them.
+
+    Asking a player for one used to be silently answered - `Player.cards_in`
+    was `zones.setdefault(zone, [])`, so a *read* minted an empty per-player
+    pile and handed it back. Anything then written into that pile was
+    invisible to `Game.exile`, to `Game.all_targetables` and to every seat's
+    board view, and a test asserting on the same read saw a perfectly
+    consistent per-player exile zone that does not exist. Refusing is what
+    makes that class of defect impossible rather than merely discouraged.
+
+    A `RuntimeError` rather than a `ValueError` on purpose, the same choice
+    `SchemaVersionMismatch` makes: `machines/` catches `ValueError` in dozens
+    of places around effect resolution, and a shared-zone mistake swallowed
+    there would come back as "the effect did nothing", which is the very
+    symptom this exception exists to stop being silent.
+    """
+
+
+#: Where each shared zone actually lives, named in the refusal so a caller is
+#: told what to use instead of only that this was wrong.
+_SHARED_ZONE_ACCESSOR = {
+    Zone.BATTLEFIELD: "Game.battlefield",
+    Zone.STACK: "Game.stack",
+    Zone.EXILE: "Game.exile",
+    Zone.COMMAND: "Game.shared_zones[Zone.COMMAND]",
+    Zone.ANTE: "Game.ante_zone",
+}
+
+
+def refuse_shared_zone(zone: Zone, *, doing: str) -> None:
+    """Raise `SharedZoneError` if `zone` is one of CR 400.1's shared zones."""
+    if not zone.is_shared:
+        return
+    raise SharedZoneError(
+        f"cannot {doing} a player's {zone.value}: the {zone.value} is shared by all "
+        f'players (CR 400.1: "Each player has their own library, hand, and graveyard. '
+        f'The other zones are shared by all players."), so no player has one of their '
+        f"own - use {_SHARED_ZONE_ACCESSOR[zone]}"
+    )
