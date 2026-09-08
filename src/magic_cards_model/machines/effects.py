@@ -2120,14 +2120,19 @@ def damage_the_attacked_player(amount: int) -> AbilityEffect:
 
     "It" is the creature that attacked, so the damage follows the *triggering*
     creature's defender rather than the source's - which is the whole point of
-    Hellrider triggering once per attacker. Only a player defender is dealt
-    damage; damage to a planeswalker needs loyalty counters, which are not
-    modelled.
+    Hellrider triggering once per attacker.
+
+    Whichever kind of defender that is: the printed text says "the player or
+    planeswalker it's attacking", and `Game.deal_damage` now knows what damage
+    to a planeswalker does (CR 120.3c - that many loyalty counters removed).
+    This used to return without dealing anything for a planeswalker defender,
+    on the grounds that loyalty counters were not modelled, which silently
+    dropped half the card.
     """
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         event = ability.event
-        if event is None or event.defender is None or not event.defender.is_player:
+        if event is None or event.defender is None:
             return
         target = game.resolve_target(event.defender)
         if target is not None:

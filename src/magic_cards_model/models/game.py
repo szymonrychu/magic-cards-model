@@ -6848,13 +6848,69 @@ class Game(BaseModel):
 
     # -- damage and life ---------------------------------------------------
 
+    def _apply_damage_to_permanent(self, permanent: CardState, amount: int) -> None:
+        """What damage does to a permanent, by what the permanent is (CR 120.3).
+
+        CR 120.3 opens with "Damage may have **one or more** of the following
+        results, depending on ... the characteristics of the damage's recipient"
+        - so this is a list of independent results, not a dispatch table with a
+        fallback, and a permanent that is both a creature and a planeswalker
+        (an animated Gideon) takes both.
+
+        - **CR 120.3c** - "Damage dealt to a planeswalker causes that many
+          loyalty counters to be removed from that planeswalker." **CR 306.8**
+          says the same from the planeswalker's side. This is a result of the
+          damage event itself and happens now; no state-based action is
+          involved. The only state-based action here is the one *after* it -
+          CR 306.9 / CR 704.5i put a planeswalker at 0 loyalty into its owner's
+          graveyard, which `check_state_based_actions` already does.
+        - **CR 120.3e** - "Damage dealt to a creature by a source with neither
+          wither nor infect causes that much damage to be marked on that
+          creature." Marking is the *creature* result, which is why it is not
+          this method's default: marking damage on anything else invents
+          bookkeeping the rules never asked for, and it is exactly what hid the
+          missing CR 120.3c - a planeswalker attacked for lethal came out of
+          combat with `damage=9` and its nine loyalty counters intact.
+
+        Anything that is neither takes the damage and nothing happens, which is
+        CR 120.3's own answer: no listed result applies to it. Damage to a
+        battle (CR 120.3h, defense counters) is the one result still missing,
+        because the battle card type is not modelled at all - see
+        `docs/engine-coverage.md`.
+
+        Which types those are is CR 613.5's question, so it is asked of the
+        computed board rather than the printing: an animated planeswalker is a
+        creature only there, and a planeswalker turned into a plain enchantment
+        by Song of the Dryads is no longer one there either.
+        """
+        types = (
+            self.characteristics_of(permanent).types
+            if permanent.zone is Zone.BATTLEFIELD
+            else permanent.types
+        )
+        if Type.PLANESWALKER in types:
+            # CR 120.3c removes "that many" counters, and there may not be that
+            # many: `Counters.remove` refuses to take more than are present
+            # (CR 118.3), so the removal is clamped to what is on the walker.
+            # The excess is not damage that goes anywhere else - CR 702.19f is
+            # explicit that even trample's excess cannot reach the player
+            # unless the attacker has trample over planeswalkers.
+            present = permanent.counter_count(Counter.LOYALTY)
+            if present > 0:
+                permanent.remove_counters(Counter.LOYALTY, min(amount, present))
+        if Type.CREATURE in types:
+            permanent.mark_damage(amount)
+
     def deal_damage(
         self, target: Targetable, amount: int, *, source: "CardState | None" = None
     ) -> int:
         """Deal damage to a permanent or a player, and say how much landed.
 
-        Damage to a permanent is marked on it and waits for state-based
-        actions; damage to a player causes that much life loss immediately.
+        What damage *does* is CR 120.3's list, and it depends on what took it:
+        a player loses that much life (CR 120.3a), a planeswalker has that many
+        loyalty counters removed (CR 120.3c), a creature has that much damage
+        marked on it (CR 120.3e). `_apply_damage_to_permanent` is the whole of
+        the permanent half - see it for why marking is not the default.
 
         CR 120.1: "An object that deals damage is the source of that damage",
         and CR 120.7 says the source is simply "the object that dealt it". That
@@ -6901,7 +6957,7 @@ class Game(BaseModel):
             if isinstance(target, Player):
                 self.deal_damage_to_player(target, event.amount)
             else:
-                target.mark_damage(event.amount)
+                self._apply_damage_to_permanent(target, event.amount)
             # CR 120.1: "An object that deals damage is the source of that
             # damage" - the subject is the source, and the player, when there is
             # one, is who the damage went to. A prevention or replacement that
