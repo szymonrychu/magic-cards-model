@@ -234,3 +234,53 @@ def test_splice_by_id_names_a_specific_copy_when_two_share_a_name():
     assert resolving.spliced_text == ("Add {R}{R}{R}.",)
     assert first_in_hand.zone is Zone.HAND
     assert second_in_hand.zone is Zone.HAND
+
+
+# -- generality: a second, un-named splice printing, with its own target ----
+
+
+def test_evermind_splices_onto_glacial_ray():
+    """Evermind ("Splice onto Arcane {1}{U}", "Draw a card.") is not in the
+    deck pool and not named alongside Desperate Ritual - blue rather than
+    red, and spliced onto a different base spell (Glacial Ray, "deals 2
+    damage to any target") than Desperate Ritual's own Lava Spike pairing.
+    Proves `Casting.splice`/`_spliced_rules_text` read any splice card's own
+    quality and cost, and that the combined two-clause text - Glacial Ray's
+    own targeted damage plus Evermind's own untargeted draw - both actually
+    resolve, not just whichever the parser happens to read first.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Glacial Ray", "Evermind"],
+            library=["Lightning Bolt"],
+            battlefield=["Mountain", "Island", "Island", "Island"],
+        )
+        .player("bob", life=20)
+        .build()
+    )
+    _to_main(scenario)
+    evermind = scenario.find("Evermind", Zone.HAND, "alice")
+    life_before = scenario.player("bob").life
+
+    ray = scenario.find("Glacial Ray", Zone.HAND, "alice")
+    casting = Casting(spell=ray, caster="alice", origin_zone=Zone.HAND, game=scenario.game)
+    casting.choose_targets(["bob"])
+    casting.splice(evermind.name)
+
+    assert casting.spliced_card_ids == [evermind.id]
+    payment = casting.determine_cost()
+    assert str(payment.mana_owed) == "{2}{R}{U}"
+    scenario.pay_with(payment, *scenario.untapped_sources("Mountain", "Island", "Island", "Island"))
+    resolving = scenario.put_on_stack(casting)
+
+    assert resolving.spliced_text == ("Draw a card.",)
+    assert evermind.zone is Zone.HAND, "CR 701.20a: revealed, never moved"
+
+    scenario.resolve_top()
+
+    assert scenario.player("bob").life == life_before - 2, "Glacial Ray's own damage"
+    assert scenario.find("Lightning Bolt", Zone.HAND, "alice").zone is Zone.HAND, (
+        "the spliced text's own draw"
+    )

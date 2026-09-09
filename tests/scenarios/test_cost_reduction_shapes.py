@@ -494,6 +494,25 @@ def test_an_artifact_creature_counts_once_for_affinity():
     assert str(casting.total_cost.mana) == "{1}{U}"
 
 
+def test_frogmite_reads_its_own_affinity_off_a_different_printing():
+    """Frogmite is not in the deck pool and not named alongside Emry - a
+    colourless {4} artifact creature rather than Emry's {2}{U} legendary -
+    proving `Game._affinity_count`/`_AFFINITY_RE` read the keyword generally
+    rather than being keyed to Emry's own printing."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Frogmite"], battlefield=["Mox Opal", "Darksteel Relic"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    casting = scenario.cast("Frogmite")
+    scenario.game.determine_total_cost(casting)
+
+    assert str(casting.total_cost.mana) == "{2}"
+
+
 # -- Gran-Gran: a discount gated on a graveyard count -----------------------
 
 
