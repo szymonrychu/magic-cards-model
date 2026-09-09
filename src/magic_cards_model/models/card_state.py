@@ -49,12 +49,43 @@ class TargetRef(BaseModel):
     kind: TargetKind
     card_id: UUID | None = None
     username: str | None = None
+    zone_change_stamp: UUID | None = None
+    """Which incarnation of `card_id` this reference names (CR 400.7),
+    captured from the live `CardState.zone_change_stamp` at the moment this
+    target was chosen (CR 601.2c/603.3d) - `None` when no live object was on
+    hand to read one from (a bare id or username coerced with nothing else
+    to go on, e.g. `magic_cards_model_api.decisions.targets_answer`'s
+    client-supplied token), in which case `Game.legal_target` cannot judge
+    the zone-change half of CR 608.2b and does not try to.
+
+    Deliberately **not** part of this reference's identity: `__eq__`/
+    `__hash__` below compare only `(kind, card_id, username)`, the triple
+    that already made two `TargetRef`s naming the same thing equal before
+    this field existed. `Game._validate_answer`'s CHOOSE_TARGETS branch and
+    `machines/legal_actions.py` both compare a caller's answer against
+    `decision.targets` by equality to accept it; if the stamp counted too, a
+    caller supplying an unstamped reference for a target the engine already
+    stamped (exactly `targets_answer`'s shape) would be refused as illegal
+    even though it names the same object - the fix would make itself a
+    no-op over the very API surface the bug was reported from. That branch
+    also swaps the caller's reference for its canonical stamped counterpart
+    from `decision.targets`, which is what actually closes that gap.
+    """
 
     @classmethod
     def to_card(cls, card: "CardState | UUID") -> "TargetRef":
-        """Target an object by its `CardState`, or directly by its id."""
+        """Target an object by its `CardState`, or directly by its id.
+
+        A live `CardState` hands over its current `zone_change_stamp` too
+        (CR 400.7) - captured right here, at the moment something reaches
+        for this object to name it as a target, which is CR 601.2c's
+        announcement moment for every caller that already has the object in
+        hand (every internal call site does; see the field's own docstring
+        for the one that does not).
+        """
         card_id = card if isinstance(card, UUID) else card.id
-        return cls(kind=TargetKind.CARD, card_id=card_id)
+        stamp = None if isinstance(card, UUID) else card.zone_change_stamp
+        return cls(kind=TargetKind.CARD, card_id=card_id, zone_change_stamp=stamp)
 
     @classmethod
     def to_player(cls, player: Any) -> "TargetRef":
@@ -111,6 +142,22 @@ class TargetRef(BaseModel):
 
     def __str__(self) -> str:
         return str(self.username) if self.is_player else str(self.card_id)
+
+    def __eq__(self, other: object) -> bool:
+        """Identity is `(kind, card_id, username)` only - see
+        `zone_change_stamp`'s own docstring for why the stamp is deliberately
+        excluded here rather than compared like every other field.
+        """
+        if not isinstance(other, TargetRef):
+            return NotImplemented
+        return (self.kind, self.card_id, self.username) == (
+            other.kind,
+            other.card_id,
+            other.username,
+        )
+
+    def __hash__(self) -> int:
+        return hash((self.kind, self.card_id, self.username))
 
 
 class Counter(StrEnum):
