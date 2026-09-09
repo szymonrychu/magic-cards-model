@@ -55,6 +55,7 @@ from .cost import (
     apply_modifications,
     place_counters_cost,
     static_free_cast_grant,
+    tap_cost,
     total_cost_for_phrase,
 )
 from .keywords import (
@@ -66,6 +67,7 @@ from .keywords import (
 )
 from .layers import ContinuousEffect, Layer, grant_ability, only_this_incarnation
 from .modes import ModalProfile, Mode, modal_profile, substitute_x
+from .objects_as_costs import power_of
 from .targeting import (
     TargetingProfile,
     profile_for_modes,
@@ -300,6 +302,27 @@ def _option_from_keyword(ability: KeywordAbility) -> KeywordCastOption | None:
         return KeywordCastOption(
             keyword=ability.canonical,
             rule="CR 702.138a",
+            zone=Zone.GRAVEYARD,
+            cost=cost,
+            pays_mana_cost=False,
+            understood=cost is not None,
+        )
+
+    if canonical == "harmonize":
+        # CR 702.180a: "Harmonize represents three static abilities: one that
+        # functions while the card is in a player's graveyard and two that
+        # function while the spell with harmonize is on the stack." The
+        # graveyard permission (this option) is structurally flashback's own
+        # shape - an alternative cost cast from the graveyard, exiled instead
+        # of put anywhere else (see `machines/replacement.py`'s check, widened
+        # alongside flashback's own). The other two - the tap-a-creature
+        # discount (CR 702.180b) and the exile itself (CR 702.180a's third
+        # clause) - are `Casting.pay_harmonize` and the same replacement-effect
+        # check, not this option.
+        cost = total_cost_for_phrase(printed) if printed else None
+        return KeywordCastOption(
+            keyword=ability.canonical,
+            rule="CR 702.180a",
             zone=Zone.GRAVEYARD,
             cost=cost,
             pays_mana_cost=False,
@@ -3194,6 +3217,38 @@ class Casting(BaseModel):
                 raise ValueError(f"{opponent} is not an opponent of {self.caster} (CR 102.2)")
         self.gift_promised = True
         self.gift_chosen_player = opponent
+        return self.step
+
+    def pay_harmonize(self, creature: CardState | None) -> CastingStep:
+        """CR 702.180a's second ability, and CR 702.180b's own choice: "You
+        choose which creature to tap as you choose to pay a spell's
+        harmonize cost ... and then tap that creature as you pay the total
+        cost."
+
+        "Up to one" (CR 702.180a) is why `creature` may be `None` - reducing
+        by nothing rather than refusing. The discount lands now, at CR 601.2f
+        (`reduce_cost`, applied before `determine_cost` locks the total
+        cost); the tap itself is deferred to `CostPayment.pay()` through an
+        ordinary `tap_cost` component, exactly as CR 702.180b's own "and then
+        tap" orders the two.
+
+        Only callable once `use_keyword("harmonize")` has already announced
+        the harmonize cast (`self.keyword_used`) - the discount is the
+        keyword's *second* static ability and has no meaning against a plain
+        cast of the same card.
+        """
+        if (self.keyword_used or "").lower() != "harmonize":
+            raise ValueError(f"{self.spell.name} is not being cast using harmonize (CR 702.180a)")
+        if creature is None:
+            return self.step
+        if not creature.is_creature or creature.tapped or creature.zone is not Zone.BATTLEFIELD:
+            raise ValueError(f"{creature.name} is not an untapped creature")
+        if self.game is not None and self.game.controller_of(creature).username != self.caster:
+            raise ValueError(f"{creature.name} is not controlled by {self.caster}")
+        amount = power_of(creature, self.game)
+        if amount > 0:
+            self.reduce_cost(ManaCost(generic=amount))
+        self.add_additional_cost(TotalCost(components=[tap_cost(creature, payer=self.caster)]))
         return self.step
 
     def add_additional_cost(self, cost: TotalCost | ManaCost) -> CastingStep:

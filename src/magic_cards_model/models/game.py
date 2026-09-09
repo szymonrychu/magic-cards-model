@@ -9425,6 +9425,7 @@ class Game(BaseModel):
         offspring: bool = False,
         blight: CardState | None = None,
         gift: str | None = None,
+        harmonize_creature: CardState | None = None,
     ) -> CardState:
         """Cast `card` for `caster`, start to finish, as one atomic action.
 
@@ -9522,6 +9523,8 @@ class Game(BaseModel):
                 casting.pay_blight(blight)
             if gift is not None:
                 casting.pay_gift(gift)
+            if (keyword or "").lower() == "harmonize":
+                casting.pay_harmonize(harmonize_creature)
             payment = casting.determine_cost(x_value=x_value)
             if division is not None:
                 casting.announce_division(division)

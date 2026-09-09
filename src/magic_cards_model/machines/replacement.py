@@ -4061,6 +4061,20 @@ def _stack_replacements(game: "Game", event: ReplaceableEvent) -> list[Applicabl
                 apply=_exile_instead,
             )
         )
+    if record.keyword is not None and record.keyword.lower() == "harmonize":
+        # CR 702.180a's third static ability: "If the harmonize cost was
+        # paid, exile this card instead of putting it anywhere else any
+        # time it would leave the stack." Structurally identical to
+        # flashback's own clause just above - a second `record.keyword`
+        # value reaching the same `_exile_instead`, not a new mechanism.
+        found.append(
+            ApplicableEffect(
+                key=f"{card.id}:harmonize",
+                source=card,
+                label="if the harmonize cost was paid, exile this card instead (CR 702.180a)",
+                apply=_exile_instead,
+            )
+        )
     from .keywords import has_rebound  # imported here: casting imports this module's siblings
 
     if has_rebound(card.card) and record.origin_zone is Zone.HAND and event.resolving:
