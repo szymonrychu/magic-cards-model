@@ -316,10 +316,24 @@ class ReplacementEffect(BaseModel):
     #: in addition to his other types". CR 707.9b: "Some copy effects modify a
     #: characteristic as part of the copying process. The final set of values
     #: for that characteristic becomes part of the copiable values of the copy."
-    #: `None` when the clause has no exception, or when it has one this parser
-    #: cannot read - fail closed, so an unreadable exception leaves the copy
-    #: unmodified rather than half-applied.
+    #: `None` when the clause has no exception at all - never when there was
+    #: one this parser could not read; that case is `copy_exception_unparsed`
+    #: instead, so the two `None`-shaped facts ("nothing was printed" and
+    #: "something was printed and I could not read it") stay distinguishable
+    #: downstream instead of collapsing into the same default.
     copy_exception: CopyException | None = None
+    #: The raw "except ..." text, set only when the clause existed and
+    #: `_parse_copy_exception` could not read it. CR 707.9b treats the copy and
+    #: its exception as one atomic computation of copiable values ("The final
+    #: set of values ... becomes part of the copiable values of the copy"), so
+    #: a caller that cannot compute the exception must not silently apply the
+    #: copy without it either - that would be running half the instruction,
+    #: which CR 608.2c has no notion of. `_enters_as_copy` reads this field to
+    #: fail closed *loudly*: a notice, and the "enter as a copy" replacement
+    #: skipped, rather than the copy silently missing whatever the "except"
+    #: tail was supposed to change. Exclusive with `copy_exception` being set:
+    #: at most one of the two is non-`None`.
+    copy_exception_unparsed: str | None = None
     #: The "When you do, ..." sentence printed immediately after this one, as
     #: printed. CR 603.12: "A resolving spell or ability may allow or instruct
     #: a player to take an action and create a triggered ability that triggers
@@ -498,14 +512,18 @@ _ENTERS_AS_COPY = re.compile(
 #: pronoun for the ones whose characters have them.
 _COPY_EXCEPT_NAME = re.compile(r"^(?:his|her|its|their) name is (?P<name>.+)$", re.IGNORECASE)
 
-#: "he's a 4/4 Spider Human Hero in addition to his other types" - a base P/T
-#: and a run of gained types. "in addition to ... other types" is CR 205.1b's
-#: retaining form, which is why the types are *added* rather than replacing;
-#: a clause without it is refused rather than guessed at, since CR 205.1a's
-#: replacing form would strip the copied object's own types and no card in the
-#: pool prints that shape yet.
+#: "he's a 4/4 Spider Human Hero in addition to his other types" - an optional
+#: base P/T and a run of gained types. "in addition to ... other types" is
+#: CR 205.1b's retaining form, which is why the types are *added* rather than
+#: replacing; a clause without it is refused rather than guessed at, since
+#: CR 205.1a's replacing form would strip the copied object's own types and no
+#: card in the pool prints that shape yet. The power/toughness pair is
+#: optional because a land's own exception - Echoing Deeps' "it's a Cave in
+#: addition to its other types" - has no body to give one: CR 205.1b's
+#: retaining language names only card type/supertype/subtype, and nothing
+#: requires a creature's stats to come along with it.
 _COPY_EXCEPT_PT_AND_TYPES = re.compile(
-    r"^(?:he|she|it|they)(?:'s| is|'re| are) an? (?P<power>\d+)/(?P<toughness>\d+) "
+    r"^(?:he|she|it|they)(?:'s| is|'re| are) an? (?:(?P<power>\d+)/(?P<toughness>\d+) )?"
     r"(?P<types>[A-Za-z][\w'-]*(?: [A-Za-z][\w'-]*)*) in addition to "
     r"(?:his|her|its|their) other types$",
     re.IGNORECASE,
@@ -538,8 +556,9 @@ def _parse_copy_exception(clause: str | None) -> CopyException | None:
             name = match.group("name").strip()
             continue
         if match := _COPY_EXCEPT_PT_AND_TYPES.match(part):
-            power = int(match.group("power"))
-            toughness = int(match.group("toughness"))
+            if match.group("power") is not None:
+                power = int(match.group("power"))
+                toughness = int(match.group("toughness"))
             for word in match.group("types").split():
                 card_type = _CARD_TYPE_WORDS.get(word.lower())
                 if card_type is not None:
@@ -985,13 +1004,24 @@ def _try_enters_as_copy(sentence: str, names: tuple[str, ...]) -> list[Replaceme
     if not match:
         return []
     subject = match.group("subject").strip()
+    raw_exception = match.group("exception")
+    parsed_exception = _parse_copy_exception(raw_exception)
+    # `raw_exception` is only truthy when the card actually printed an
+    # "except ..." tail. `parsed_exception is None` is ambiguous on its own -
+    # see `ReplacementEffect.copy_exception`'s docstring - so the two are
+    # combined here, once, into the distinction every downstream reader needs:
+    # a tail that existed and did not parse, kept as text rather than dropped.
+    unparsed_exception = (
+        raw_exception.strip() if raw_exception and parsed_exception is None else None
+    )
     return [
         _make(
             ReplacementKind.ENTERS_AS_COPY,
             sentence,
             subject=subject,
             copy_of=match.group("copy_of").strip(),
-            copy_exception=_parse_copy_exception(match.group("exception")),
+            copy_exception=parsed_exception,
+            copy_exception_unparsed=unparsed_exception,
             tapped=bool(match.group("tapped")),
             optional=sentence.lower().startswith("you may have"),
             self_replacement=_refers_to_self(subject, names),
@@ -3407,6 +3437,38 @@ def _create_linked_reflexive_trigger(
     )
 
 
+class UnreadableCopyExceptionNotice(BaseModel):
+    """A card's "enter as a copy of X, except ..." tail exists but this parser
+    could not read it - recorded instead of the copy silently applying no
+    exception at all, the same shape `UnwiredChoiceNotice`/`LayerNotice`/
+    `AnaphoricClauseNotice` already use elsewhere in this module for a clause
+    that was read but could not be performed.
+
+    CR 707.9b makes the copy and its exception one computation: "The final set
+    of values for that characteristic becomes part of the copiable values of
+    the copy." An unreadable exception therefore means the *whole* copiable
+    result is unknown, not that the exception happens to be empty - applying
+    the plain copy anyway would be running half of CR 608.2c's single
+    instruction, silently. `_enters_as_copy` records this and skips the entire
+    "enter as a copy" replacement rather than guessing: the permanent enters
+    as itself.
+
+    This is what closes a real defect found live this session: Echoing Deeps
+    - "You may have this land enter tapped as a copy of any land card in a
+    graveyard, except it's a Cave in addition to its other types" - has no
+    power/toughness in its exception, which the parser required before this
+    fix, so `copy_exception` silently defaulted to no modification at all and
+    the land entered as a plain copy with no Cave type. Echoing Deeps' own
+    tail is genuinely readable (see `_COPY_EXCEPT_PT_AND_TYPES`) and no longer
+    reaches this notice; Mockingbird's "... and it has flying" still does,
+    since granting an ability is not a shape this module parses yet.
+    """
+
+    source_id: UUID
+    source_name: str
+    text: str
+
+
 def _enters_as_copy(effect: ReplacementEffect, card_name: str) -> Apply:
     """CR 614.1c's "enters as a copy of", as a thing to do before it enters.
 
@@ -3418,7 +3480,10 @@ def _enters_as_copy(effect: ReplacementEffect, card_name: str) -> Apply:
     the moment the permanent is on the battlefield.
 
     A board with no legal candidate is not an error: CR 707.2 has nothing to
-    copy, so the permanent simply enters as itself.
+    copy, so the permanent simply enters as itself. An unreadable "except ..."
+    tail is different - see `UnreadableCopyExceptionNotice` - and is checked
+    first, ahead of even looking for candidates, because it is a defect in
+    what this card's text says, not a fact about the board.
     """
 
     def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
@@ -3429,6 +3494,15 @@ def _enters_as_copy(effect: ReplacementEffect, card_name: str) -> Apply:
 
         entering = event.card
         if entering is None or entering.controller is None:
+            return
+        if effect.copy_exception_unparsed is not None:
+            game.unreadable_copy_exception_notices.append(
+                UnreadableCopyExceptionNotice(
+                    source_id=entering.id,
+                    source_name=card_name,
+                    text=effect.copy_exception_unparsed,
+                )
+            )
             return
         candidates = _copy_candidates(game, effect.copy_of or "", entering)
         if not candidates:
