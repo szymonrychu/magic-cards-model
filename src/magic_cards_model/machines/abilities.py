@@ -1916,6 +1916,30 @@ _ONLY_SYMBOLS = re.compile(r"^(?:\{[^{}]+\}|\s)+$")
 _PAY_LIFE = re.compile(r"^Pay\s+\S+\s+life$", re.IGNORECASE)
 
 
+def printed_production(effect: str) -> str | None:
+    """The mana an "Add ..." effect *says* it produces, exactly as printed.
+
+    `"Add {C}{C}. Spend this mana only ..."` gives `"{C}{C}"`; Cavern of
+    Souls's gives `"one mana of any color"`; Nykthos, Shrine to Nyx's gives
+    `"an amount of mana of that color equal to your devotion to that color"`
+    once its "Choose a color." preamble is stripped, the same way
+    `parse_mana_abilities` strips it before reading the rest.
+
+    Only the base "Add ..." sentence, never the board: this is the printed
+    claim, not `ManaAbility.produces`/`resolve`'s answer for a particular
+    board and a particular chosen colour. It exists for a caller describing
+    an ability it is *offering* rather than resolving - `machines/legal_
+    actions` fills `Action.produces` from it - where a count that depends on
+    devotion or on a colour nobody has named yet would be a number that is
+    wrong by the time the offer is taken up. `None` when the effect prints
+    no "Add ..." phrase this can read.
+    """
+    match = _ADD.match(_CHOOSE_A_COLOR_PREAMBLE.sub("", effect.strip()))
+    if match is None:
+        return None
+    return match.group("effect").strip() or None
+
+
 def _faces(card: Card) -> list[tuple[str, str]]:
     """Every face's name and oracle text, front first, empty faces dropped."""
     faces = [(card.name, card.oracle_text or "")]

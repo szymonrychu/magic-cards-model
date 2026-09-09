@@ -1180,3 +1180,152 @@ def test_targetable_objects_mutates_nothing():
     game.targetable_objects()
 
     assert game.model_dump_json() == before
+
+
+# -- what an ACTIVATE_MANA action produces, and what it may be spent on -----
+
+
+def test_two_mana_abilities_on_one_permanent_are_told_apart_by_what_they_do():
+    """Eldrazi Temple prints `{T}: Add {C}.` and `{T}: Add {C}{C}. Spend this
+    mana only to cast colorless Eldrazi spells or activate abilities of
+    colorless Eldrazi.` - two `ACTIVATE_MANA` actions that were byte-identical
+    apart from `ability_index`, so a seat holding the list could not tell
+    which one adds the restricted pair.
+
+    `Action.produces`/`restriction`/`restriction_understood` say it in plain
+    data: the printed production of each, and CR 106.6's own sentence on the
+    one that carries it.
+    """
+    scenario = Scenario().player("alice", battlefield=["Eldrazi Temple"]).player("bob").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    actions = legal_actions(scenario.game, "alice")
+    mana_actions = sorted(
+        _of_kind(actions, ActionKind.ACTIVATE_MANA), key=lambda action: action.ability_index or 0
+    )
+
+    assert len(mana_actions) == 2
+    plain, restricted = mana_actions
+    assert plain.produces == "{C}"
+    assert plain.restriction is None
+    assert plain.restriction_understood is None
+    assert restricted.produces == "{C}{C}"
+    assert restricted.restriction == (
+        "Spend this mana only to cast colorless Eldrazi spells or activate "
+        "abilities of colorless Eldrazi."
+    )
+    assert restricted.restriction_understood is True
+    assert plain.produces != restricted.produces, (
+        "two mana abilities on one permanent must differ by what they do"
+    )
+
+
+def test_cavern_of_souls_two_mana_abilities_differ_by_production_and_restriction():
+    """Cavern of Souls is the harder case: `{T}: Add {C}.` and `{T}: Add one
+    mana of any color. Spend this mana only to cast a creature spell of the
+    chosen type, and that spell can't be countered.` - the second ability's
+    colours *include* the first's, so `color_options` alone cannot separate
+    them. The printed production and CR 106.6's sentence can.
+    """
+    scenario = Scenario().player("alice", hand=["Cavern of Souls"]).player("bob").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.will_choose("Zombie", source="Cavern of Souls")
+    scenario.play_land("Cavern of Souls")
+
+    actions = legal_actions(scenario.game, "alice")
+    mana_actions = sorted(
+        _of_kind(actions, ActionKind.ACTIVATE_MANA), key=lambda action: action.ability_index or 0
+    )
+
+    assert len(mana_actions) == 2
+    colorless, any_color = mana_actions
+    assert colorless.produces == "{C}"
+    assert colorless.restriction is None
+    assert any_color.produces == "one mana of any color"
+    assert any_color.restriction == (
+        "Spend this mana only to cast a creature spell of the chosen type, "
+        "and that spell can't be countered."
+    )
+    assert any_color.restriction_understood is True
+
+
+def test_an_unreadable_spend_restriction_is_reported_as_not_understood():
+    """Rosheen Meanderer's `{T}: Add {C}{C}{C}{C}. Spend this mana only on
+    costs that contain {X}.` is a CR 106.6 restriction this engine's clause
+    grammar cannot read at all - it is neither a "cast [quality] spells" nor
+    an "activate abilities of [quality] sources" clause - so `machines/cost.
+    spend_restriction` fails it closed: the mana is produced, and pays for
+    nothing.
+
+    `restriction_understood=False` is what says that out loud. Without it a
+    seat sees four mana it can never spend and no reason why.
+
+    The quoted text is the whole effect rather than the trailing sentence
+    alone, because that is precisely what `ManaRestriction.text` carries when
+    the sentence could not be located: the tag the produced mana will
+    actually wear, and the words a refusal downstream will quote. `Action.
+    restriction` reports the mana's own tag verbatim rather than a prettier
+    substring the engine does not itself hold.
+    """
+    scenario = Scenario().player("alice", battlefield=["Rosheen Meanderer"]).player("bob").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    actions = legal_actions(scenario.game, "alice")
+    (mana_action,) = _of_kind(actions, ActionKind.ACTIVATE_MANA)
+
+    assert mana_action.produces == "{C}{C}{C}{C}"
+    assert mana_action.restriction == (
+        "Add {C}{C}{C}{C}. Spend this mana only on costs that contain {X}."
+    )
+    assert mana_action.restriction_understood is False
+
+
+def test_an_unpriceable_mana_ability_still_describes_what_it_produces():
+    """Servant of the Conduit's `{T}, Pay {E}: Add one mana of any color.` has
+    a cost piece `machines/cost.cost_component_for_phrase` declines to read,
+    so `_battlefield_ability_actions` reports it through the `Affordability.
+    UNKNOWN` fallback rather than the priced branch (CR 118.6: attempting an
+    unpayable cost is still a legal action).
+
+    That fallback is exactly where a descriptor would silently go missing, so
+    it is asserted here: both construction sites fill the same three fields
+    from the same helper.
+    """
+    scenario = (
+        Scenario().player("alice", battlefield=["Servant of the Conduit"]).player("bob").build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    actions = legal_actions(scenario.game, "alice")
+    (mana_action,) = _of_kind(actions, ActionKind.ACTIVATE_MANA)
+
+    assert mana_action.affordable is Affordability.UNKNOWN
+    assert mana_action.produces == "one mana of any color"
+    assert mana_action.restriction is None
+    assert mana_action.restriction_understood is None
+
+
+def test_no_action_but_activate_mana_carries_a_production_descriptor():
+    """All three fields default to `None`, so a non-mana action carries
+    nothing at all - the api's MCP layer strips `None` keys one level deep
+    before an agent ever sees the row, which is why these are three flat
+    fields rather than one nested submodel whose `None` members would
+    survive that strip.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Lightning Bolt", "Mountain"], battlefield=["Mountain"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    actions = legal_actions(scenario.game, "alice")
+
+    assert _of_kind(actions, ActionKind.ACTIVATE_MANA), "the Mountain's own ability is the control"
+    for action in actions:
+        if action.kind is ActionKind.ACTIVATE_MANA:
+            continue
+        assert action.produces is None
+        assert action.restriction is None
+        assert action.restriction_understood is None

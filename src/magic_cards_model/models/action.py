@@ -251,6 +251,52 @@ class Action(BaseModel):
     `Game.activate_ability` demands (`this ability offers [...]; pass the
     colour chosen`), which made the action unusable despite being reported
     legal and affordable."""
+    produces: str | None = None
+    """`ACTIVATE_MANA` only: what this mana ability's printed text **says**
+    it adds, as printed - `"{C}{C}"`, `"one mana of any color"`, `"an amount
+    of mana of that color equal to your devotion to that color"`. Two mana
+    abilities on one permanent were otherwise byte-identical rows apart from
+    `ability_index` (Eldrazi Temple prints `{T}: Add {C}.` and `{T}: Add
+    {C}{C}. Spend this mana only ...`), so a seat holding the list could not
+    tell which one it was choosing.
+
+    **Deliberately not board-resolved**, and that is the promise this field
+    makes: it is what the ability *says* it makes, never what the board would
+    yield right now. Nykthos, Shrine to Nyx's amount is CR 700.5's devotion to
+    a colour that has not been chosen yet, and Mox Amber's CR 106.5 narrowing
+    ("of any color among legendary creatures and planeswalkers you control")
+    is applied against the board at activation - neither is knowable before a
+    colour is named. An `Action` is a snapshot a caller caches and acts on
+    later, so a number that has since gone wrong is worse than no number at
+    all. Counting and colour resolution stay where they already are, in
+    `Game.activate_ability`; `color_options` above is the only choice this
+    row enumerates. `None` when the ability's effect prints no readable
+    "Add ..." phrase at all."""
+    restriction: str | None = None
+    """`ACTIVATE_MANA` only: CR 106.6's "Spend this mana only to ..." sentence
+    as printed, verbatim, so a refusal downstream can quote the card rather
+    than a parser's reading of it. Read with `machines/cost.spend_restriction`
+    - the same call a real activation makes - off this ability's own effect
+    text and this permanent (which "the chosen type" needs, CR 614.12a
+    records the answer on the object that was asked).
+
+    `None` when the ability prints no such sentence, which is the
+    overwhelming majority; `None` here never means "restricted, but we could
+    not read it" - that case carries the sentence and sets
+    `restriction_understood` to False."""
+    restriction_understood: bool | None = None
+    """`ACTIVATE_MANA` only, and only alongside a `restriction`: whether this
+    engine read that sentence into anything it can actually check
+    (`models/mana.ManaRestriction.understood`).
+
+    `False` is the loud case and the reason this field exists: the sentence
+    is present, the mana will be produced and announced (CR 106.4a), and this
+    engine will let it be spent on **nothing at all**, because an unread
+    CR 106.6 restriction fails closed rather than towards permitting. A seat
+    that cannot see this spends a turn discovering four unusable mana by
+    experiment. `True` means the restriction is checkable and ordinary
+    payment will honour it; `None` exactly when `restriction` is `None`, so
+    there is nothing to have understood."""
 
     decision_candidates: tuple[UUID, ...] = ()
     """`ANSWER_DECISION` only, for a kind whose answer names a subset of
