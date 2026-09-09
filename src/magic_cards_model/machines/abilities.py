@@ -129,10 +129,12 @@ _SYMBOL = re.compile(r"\{([WUBRGC])\}")
 #: which is what "any **one** color" says; the count is kept so `resolve` adds
 #: that many rather than always one.
 _ANY_COLOR = re.compile(r"(?P<count>one|two|three|a) mana of any (?:one )?color", re.IGNORECASE)
-#: "Add two mana in any combination of colors." (Interdimensional Web Watch,
-#: Gwenna, Smokebraider). The same amount as `_ANY_COLOR`'s "two mana of any
-#: **one** color" and a different freedom: "any one color" makes every mana the
-#: same colour, "any combination of colors" chooses each one independently.
+#: "Add two mana in any combination of colors." (Interdimensional Web Watch and
+#: Smokebraider, both in the pool and both played in
+#: `tests/scenarios/test_mana_spend_restrictions.py`). The same amount as
+#: `_ANY_COLOR`'s "two mana of any **one** color" and a different freedom: "any
+#: one color" makes every mana the same colour, "any combination of colors"
+#: chooses each one independently.
 #: CR 106.1a's five colors are the universe for both; colorless is a type and
 #: not a color (CR 106.1b), so neither reaches it.
 _ANY_COLOR_COMBINATION = re.compile(
@@ -385,9 +387,10 @@ class ManaAbility(BaseModel):
     #: `resolve` takes a sequence of colours to spell a genuine mixture out;
     #: passing one `Color` still means N of it, which stays a legal
     #: combination, so nothing that only knows how to name one colour breaks.
-    #: `Game.color_options` is where that shows: it enumerates single colours,
-    #: so an enumerated action offers the five monochrome combinations and a
-    #: caller wanting `{W}{U}` names both colours itself. See
+    #: `Game.mana_color_choice_count` is where that shows for a caller with
+    #: no `ManaAbility` in hand: it reports this count, so the enumerated
+    #: `Action.color_choice_count` beside `Action.color_options` says how many
+    #: colours to name and `{W}{U}` is reachable from the action alone. See
     #: `docs/engine-coverage.md`.
     any_color_mixed: bool = False
     #: True if activating it costs mana. CR 605.1a says nothing about the cost

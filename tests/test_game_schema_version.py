@@ -16,7 +16,9 @@ import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.models import CardState, Match, Player
+from magic_cards_model.models.card import Color
 from magic_cards_model.models.game import Game, SchemaVersionMismatch
+from magic_cards_model.models.zone import Zone
 from tests.scenarios.harness import Scenario
 
 
@@ -140,3 +142,72 @@ def test_a_mismatched_game_nested_inside_a_match_is_also_refused() -> None:
         SchemaVersionMismatch, match=f"decodes schema_version={Game.CURRENT_SCHEMA_VERSION}"
     ):
         Match.model_validate(dumped)
+
+
+#: The version this engine build's predecessor stamped: the last one written
+#: before `SpendClause` gained its zone dimension and before
+#: `machines/abilities.py` learned to read "Add two mana in any combination of
+#: colors". Named here rather than written as `CURRENT_SCHEMA_VERSION - 1` so
+#: the test keeps asserting something after the next bump moves the current
+#: value further away from it.
+_SCHEMA_VERSION_BEFORE_ZONE_CLAUSES = 5
+
+
+def _a_game_with_restricted_mana_floating() -> Game:
+    """A real board whose mana pool holds a CR 106.6-restricted mana with a
+    zone clause on it - Interdimensional Web Watch's "Spend this mana only to
+    cast spells from exile", tapped for real rather than hand-built.
+
+    This is the state a version-5 snapshot could already be carrying, and the
+    reason the version has to move: `Player.mana_pool` is a serialised field,
+    so a `RestrictedMana`'s `ManaRestriction` and its `SpendClause`s are all
+    reachable from `Game.model_dump()`.
+    """
+    scenario = (
+        Scenario().player("alice", battlefield=["Interdimensional Web Watch"]).player("bob").build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    watch = scenario.find("Interdimensional Web Watch", Zone.BATTLEFIELD, "alice")
+    watch.summoning_sick = False
+    scenario.game.activate_ability(watch, 0, "alice", color=Color.RED)
+    return scenario.game
+
+
+def test_a_snapshot_written_before_the_zone_clause_existed_is_refused() -> None:
+    """The bump rule's own two bullets, both tripped by this change, so a
+    version-5 snapshot must not decode here.
+
+    A `SpendClause` gained `zone` - a field added to something reachable from
+    `Game.model_dump()`, via `Player.mana_pool.restricted[].restriction.
+    clauses[]` - and a version-5 dump has no `zone` key on any clause it
+    holds. Decoded at the current version that missing key reads as "this
+    clause asks nothing about the origin zone", which is the Web Watch's mana
+    quietly paying for a spell cast from the hand: a recorded state resolving
+    differently with no signal, the exact failure `schema_version` exists to
+    catch.
+
+    The same snapshot is wrong for the second reason too - `machines/
+    abilities.py` now parses "Add two mana in any combination of colors",
+    a mana-ability parse change on a printing that was already in the pool -
+    which is the bump rule's second bullet by name.
+    """
+    dumped = _a_game_with_restricted_mana_floating().model_dump(mode="json")
+
+    clauses = [
+        clause
+        for player in dumped["players"]
+        for entry in player["mana_pool"]["restricted"]
+        for clause in entry["restriction"]["clauses"]
+    ]
+    assert clauses, "the board is supposed to hold restricted mana with a clause on it"
+    for clause in clauses:
+        # What a version-5 dump of this pool actually looked like: the field
+        # did not exist yet, so the key is absent rather than null.
+        del clause["zone"]
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_ZONE_CLAUSES
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_ZONE_CLAUSES}",
+    ):
+        Game.model_validate(dumped)

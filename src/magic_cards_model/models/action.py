@@ -251,6 +251,25 @@ class Action(BaseModel):
     `Game.activate_ability` demands (`this ability offers [...]; pass the
     colour chosen`), which made the action unusable despite being reported
     legal and affordable."""
+    color_choice_count: int = 0
+    """`ACTIVATE_MANA` only: how many colours a caller names from
+    `color_options`, one per mana whose colour is chosen separately -
+    computed by `Game.mana_color_choice_count`. 0 whenever `color_options`
+    is empty (the ability offers no choice, so `color=None`), 1 for nearly
+    every ability that does offer one, and the mana count for "Add N mana in
+    any combination of colors" (Interdimensional Web Watch), where each of
+    the N mana takes its own colour and `Game.activate_ability` accepts a
+    sequence of that many.
+
+    The rest of the parameter space `color_options` alone cannot express:
+    that pool is flat, so a two-colour choice among five reads exactly like
+    a one-colour choice among five, and a caller driving the engine through
+    `legal_actions` could only ever produce the five monochrome combinations
+    - `{W}{U}`, which the printing plainly makes, was unreachable. Note that
+    it counts *colours named*, not mana added: Shang-Chi, Master of Kung
+    Fu's "two mana of any one color" adds two mana and takes one colour,
+    because its own words lock both mana to it (CR 106.1b's colour is still
+    each mana's own type; only this card's wording ties them together)."""
     produces: str | None = None
     """`ACTIVATE_MANA` only: what this mana ability's printed text **says**
     it adds, as printed - `"{C}{C}"`, `"one mana of any color"`, `"an amount

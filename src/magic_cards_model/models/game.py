@@ -1865,7 +1865,7 @@ class Game(BaseModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 5
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 6
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -1903,6 +1903,30 @@ class Game(BaseModel):
     the bump rule's second bullet exactly - and it changes who may block whom
     and how much damage a defending player takes, so a version-4 snapshot is
     refused rather than replayed into a different game.
+
+    Bumped 5 -> 6: the CR 106.6 spend-restriction grammar (`machines/cost.py`)
+    learned two forms, and both bullets of the bump rule are tripped at once.
+
+    *The field.* `SpendClause` gained `zone` - the origin the spell's
+    CR 601.2a move started from, one of CR 400.1's seven zones (all three
+    looked up this session) - and a `SpendClause` is reachable from
+    `Game.model_dump()` through `Player.mana_pool.restricted[].restriction.
+    clauses[]`, so a floating restricted mana carries one. A version-5 dump
+    has no `zone` key on any clause it holds, and decoded at version 6 that
+    absence reads as "this clause asks nothing about the origin zone": the
+    Web Watch's "Spend this mana only to cast spells from exile" quietly
+    paying for a spell cast from the hand. `ManaSpend` gained the same field
+    for the other side of the check.
+
+    *The behaviour.* `machines/abilities.py` now reads "Add two mana in any
+    combination of colors" as a per-mana colour choice, on Interdimensional
+    Web Watch and Smokebraider - printings that were already in the pool, so a
+    version-5 board can already have one on the battlefield with that ability
+    parsed the old way. A `machines/abilities.py` mana-ability parse is the
+    bump rule's second bullet by name. And-joined type lists ("instant and
+    sorcery spells") are a parse that used to fail closed and now permits,
+    which changes what an already-recorded restricted mana in a pool may pay
+    for.
     """
 
     @model_validator(mode="before")
@@ -11313,6 +11337,39 @@ class Game(BaseModel):
         if allowed is not None:
             colors = [color for color in colors if color in allowed]
         return tuple(colors)
+
+    def mana_color_choice_count(
+        self, permanent: CardState, index: int = 0, controller: str | None = None
+    ) -> int:
+        """How many colours `activate_ability`'s own `color=` takes for this
+        mana ability right now - the count that turns `mana_color_options`'
+        flat pool into the choice the card actually offers (CR 605.1a).
+
+        0 when the ability offers no choice at all (and `mana_color_options`
+        is correspondingly empty). 1 for nearly every ability that offers
+        one, including "Add two mana of any one color", whose own words lock
+        both mana to the single colour named. The mana count for "Add N mana
+        in any combination of colors" (`ManaAbility.any_color_mixed`), where
+        each mana's colour is chosen on its own and `activate_ability` takes
+        a sequence of that many - `ManaAbility.resolve` is what enforces the
+        length and refuses a mixture the printed words never offered. No
+        printing combines a mixture with CR 700.5's devotion count
+        (`amount_from_devotion`), which is only knowable once the colour is
+        chosen and so could not be enumerated ahead of the choice at all.
+
+        Split out from `mana_color_options` rather than folded into it
+        because a pool of five colours is the same pool either way: what
+        differs is how many are drawn from it, and without this an enumerated
+        `ACTIVATE_MANA` action (`Action.color_choice_count`) could only ever
+        name one, making every genuine mixture unreachable for a caller
+        driving the engine through `legal_actions`.
+        """
+        ability = self.activated_abilities(permanent)[index]
+        if ability.mana is None:
+            return 0
+        if not self.mana_color_options(permanent, index, controller):
+            return 0
+        return ability.mana.any_color_count if ability.mana.any_color_mixed else 1
 
     def begin_turning_face_up(
         self, permanent: CardState, controller: str | None = None
