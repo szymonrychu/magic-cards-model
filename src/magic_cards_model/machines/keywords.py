@@ -210,6 +210,13 @@ def executes(keyword: str) -> bool:
         # `damage == 0` assertions. Listed so the sweep credits work that
         # already happens rather than reporting a second, separate gap.
         "heal",
+        # CR 701.59a. `machines/cost.py`'s `ComponentKind.COLLECT_EVIDENCE`
+        # (`collect_evidence_cost`, matched by `_PHRASE_COLLECT_EVIDENCE`)
+        # already reads "Collect evidence N" as a real payable cost
+        # component wherever it is printed - Detective's Phoenix's own
+        # `Bestow-{R}, Collect evidence 6` - so this is a bookkeeping
+        # credit, not new behaviour.
+        "collect evidence",
         # CR 701.40a and CR 701.62a, the same shape once more:
         # `machines/effects.manifest`/`manifest_dread` perform them, reached
         # through `_parse_manifest_top_card_clause`/`_parse_manifest_dread_
