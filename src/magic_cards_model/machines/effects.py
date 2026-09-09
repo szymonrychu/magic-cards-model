@@ -2286,6 +2286,29 @@ def exile_all_graveyards(game: "Game", stack_object: "StackObject") -> None:
             game.exile_permanent(card_state)
 
 
+def exile_each_opponents_graveyard(game: "Game", stack_object: "StackObject") -> None:
+    """Soul-Guide Lantern / Ashiok, Dream Render: "exile each opponent's
+    graveyard."
+
+    No target either (CR 115.1 has nothing to target here, the same as
+    `exile_all_graveyards`), but a *player-set qualifier* narrows which
+    graveyards: CR 102.2's "opponent" (the other player, in the two-player
+    case this pool's decks are built for) rather than CR 404.1's every
+    player. This is `exile_all_graveyards`'s filtered twin, not that
+    function reused with a different loop - `exile_all_graveyards` walks
+    `game.players_in_game` unfiltered, and routing "each opponent's
+    graveyard" through it would exile the ability's own controller's
+    graveyard too, which reads as a working card until the controller is the
+    one holding Soul-Guide Lantern's own reflection off their own dead
+    Snapcaster Mage. `_opponents` is the same helper `damage_each_opponent`
+    (Guttersnipe) already uses for this word.
+    """
+    controller = game.controller_of(stack_object)
+    for opponent in _opponents(game, controller.username):
+        for card_state in list(opponent.graveyard):
+            game.exile_permanent(card_state)
+
+
 #: Reused by `_exile_matching_from_all_graveyards`, defined lower in this file
 #: next to `_HAND_EXILE_COLOR_WORDS` - forward reference is fine, since this is
 #: only ever called once the whole module has finished importing.
@@ -4412,6 +4435,29 @@ def return_ability_targets_to_hand(game: "Game", stack_object: "StackObject") ->
             game.return_to_hand(target)
 
 
+def return_ability_targets_to_battlefield(game: "Game", stack_object: "StackObject") -> None:
+    """Return each target this still legally targets onto the battlefield,
+    under the resolving spell or ability's own controller.
+
+    The battlefield twin of `return_ability_targets_to_hand` immediately
+    above, for the same reason: CR 701.19a's "return" names no origin zone,
+    and `game.resolve_targets` has already rechecked each target against the
+    printed restriction's own zones (CR 608.2b), so a card that has already
+    left the graveyard by the time this runs was already filtered out.
+    CR 110.2a: "If an effect instructs a player to put an object onto the
+    battlefield, that object enters the battlefield under that player's
+    control unless the effect states otherwise" - none of the five cards this
+    reads (Unearth, Renegade Rallier, Tameshi, Aftermath Analyst) states
+    otherwise, so it is always the resolving object's own controller, the
+    same read `_parse_mass_return_from_graveyard_to_battlefield_clause` and
+    Greasefang's own reanimation effect already make.
+    """
+    controller = game.controller_of(stack_object)
+    for target in game.resolve_targets(stack_object):
+        if isinstance(target, CardState):
+            game.put_onto_battlefield(target, controller.username)
+
+
 def tap_ability_targets(game: "Game", stack_object: "StackObject") -> None:
     """Tap each permanent this still legally targets (CR 701.26a)."""
     for target in game.resolve_targets(stack_object):
@@ -5576,6 +5622,19 @@ _EXILE_TARGET_PLAYERS_GRAVEYARD_RE = re.compile(
 #: (CR 115.1 has nothing to target here), so neither collides with
 #: `_EXILE_TARGET_RE`'s "target" requirement.
 _EXILE_ALL_GRAVEYARDS_RE = re.compile(r"^exile all graveyards\.?$", re.IGNORECASE)
+#: "Exile each opponent's graveyard." (Soul-Guide Lantern, Ashiok, Dream
+#: Render) - `_EXILE_ALL_GRAVEYARDS_RE`'s own "no target" shape (CR 115.1)
+#: with a player-set qualifier narrowing which graveyards, the way
+#: `_DAMAGE_EACH_OPPONENT_RE` reads "each opponent" for damage. A leading
+#: "then " is kept in the pattern itself rather than stripped by the caller -
+#: `_THEN_EXILE_THAT_PLAYERS_GRAVEYARD_RE` reads Go Blank's own "then exile
+#: that player's graveyard" the same way - because Ashiok's whole ability is
+#: two clauses ("Target player mills four cards. Then exile each opponent's
+#: graveyard.") and the period split leaves "then" as the second clause's own
+#: first word.
+_EXILE_EACH_OPPONENTS_GRAVEYARD_RE = re.compile(
+    r"^(?:then )?exile each opponent'?s graveyards?\.?$", re.IGNORECASE
+)
 _EXILE_QUALITY_FROM_ALL_GRAVEYARDS_RE = re.compile(
     r"^exile all cards that are (?P<quality>.+?) from all graveyards\.?$", re.IGNORECASE
 )
@@ -5903,6 +5962,20 @@ _RETURN_TARGET_RE = re.compile(
 #: elsewhere in this file.
 _RETURN_FROM_YOUR_GRAVEYARD_TO_HAND_RE = re.compile(
     r"return (?P<phrase>.*target.+from your graveyard) to your hand\.?$", re.IGNORECASE
+)
+#: "Return target creature card with mana value 3 or less from your
+#: graveyard to the battlefield." (Unearth), "... target permanent card ...
+#: to the battlefield." (Renegade Rallier's Revolt trigger), and Tameshi,
+#: Reality Architect's own activated ability once `substitute_x` has already
+#: turned its "mana value X or less" into a real number - the same verb as
+#: `_RETURN_FROM_YOUR_GRAVEYARD_TO_HAND_RE` immediately above, with the only
+#: difference being the printed destination. Not Greasefang's shape
+#: (`_RETURN_TARGET_FROM_GRAVEYARD_GAINS_THEN_BOUNCE_RE`): that one is tried
+#: first, against the *whole* unsplit ability text, so a card whose sentence
+#: continues past "to the battlefield." with "It gains ..." never reaches
+#: this fullmatch at all.
+_RETURN_FROM_YOUR_GRAVEYARD_TO_BATTLEFIELD_RE = re.compile(
+    r"return (?P<phrase>.*target.+from your graveyard) to the battlefield\.?$", re.IGNORECASE
 )
 #: "Up to one target player puts all the cards from their graveyard on the
 #: bottom of their library in a random order." (Endurance) - CR 115.6's "up
@@ -6789,6 +6862,9 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
     if _EXILE_ALL_GRAVEYARDS_RE.fullmatch(clause):
         return exile_all_graveyards  # type: ignore[return-value]
 
+    if _EXILE_EACH_OPPONENTS_GRAVEYARD_RE.fullmatch(clause):
+        return exile_each_opponents_graveyard  # type: ignore[return-value]
+
     if match := _EXILE_QUALITY_FROM_ALL_GRAVEYARDS_RE.fullmatch(clause):
         matches = _graveyard_exile_quality_matcher(match.group("quality"))
         if matches is None:
@@ -6812,6 +6888,13 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
         ):
             return None
         return return_ability_targets_to_hand
+
+    if match := _RETURN_FROM_YOUR_GRAVEYARD_TO_BATTLEFIELD_RE.fullmatch(clause):
+        if not _targets_understood(
+            match.group("phrase"), count_agnostic=True, battlefield_only=False
+        ):
+            return None
+        return return_ability_targets_to_battlefield
 
     if match := _RETURN_TARGET_RE.fullmatch(clause):
         if not _targets_understood(
@@ -18426,11 +18509,14 @@ def _parse_return_self_from_graveyard_to_battlefield_clause(
     return effect
 
 
-#: "Return all <description> from your graveyard to the battlefield." -
-#: Raise the Past. CR 608.2f: the whole group moves as one action, so the
-#: candidate set is snapshotted before any of them arrives.
+#: "Return all <description> from your graveyard to the battlefield[ tapped]."
+#: - Raise the Past, and Aftermath Analyst's own "Return all land cards from
+#: your graveyard to the battlefield tapped." CR 608.2f: the whole group
+#: moves as one action, so the candidate set is snapshotted before any of
+#: them arrives.
 _MASS_RETURN_FROM_GRAVEYARD_TO_BATTLEFIELD_RE = re.compile(
-    r"^return all (?P<rest>.+?) from your graveyard to the battlefield\.?$", re.IGNORECASE
+    r"^return all (?P<rest>.+?) from your graveyard to the battlefield(?P<tapped> tapped)?\.?$",
+    re.IGNORECASE,
 )
 
 
@@ -18438,14 +18524,18 @@ def _parse_mass_return_from_graveyard_to_battlefield_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
     """`_MASS_RETURN_FROM_GRAVEYARD_TO_BATTLEFIELD_RE`'s shape - Raise the
-    Past's whole spell.
+    Past's whole spell, and Aftermath Analyst's "... to the battlefield
+    tapped." sacrifice ability.
 
     "Your graveyard" is the resolving object's controller's, and every card
     arrives under that same player's control (CR 110.2a names who controls a
     permanent an effect puts onto the battlefield; with nobody else named it
     is the spell or ability's own controller). Snapshotted first (CR 608.2f),
     so a trigger caused by an early return cannot change what the rest of the
-    group still is.
+    group still is. The trailing "tapped" is CR 110.5b's own instruction on how
+    the permanent enters, threaded straight through to
+    `Game.put_onto_battlefield`'s `tapped=` - the same parameter Aftermath
+    Analyst's own ETB mill trigger has nothing to do with.
     """
     match = _MASS_RETURN_FROM_GRAVEYARD_TO_BATTLEFIELD_RE.fullmatch(clause.strip())
     if match is None:
@@ -18453,13 +18543,14 @@ def _parse_mass_return_from_graveyard_to_battlefield_clause(
     predicate = _parse_card_group_qualifier(match.group("rest"))
     if predicate is None:
         return None
+    tapped = match.group("tapped") is not None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object)
         chosen = [state for state in list(controller.graveyard) if predicate(state)]
         for state in chosen:
             if state.zone is Zone.GRAVEYARD:
-                game.put_onto_battlefield(state, controller.username)
+                game.put_onto_battlefield(state, controller.username, tapped=tapped)
 
     return effect
 

@@ -158,6 +158,7 @@ from ..machines.replacement import (
     DrawRedirection,
     EventKind,
     ReplaceableEvent,
+    UnreadableCopyExceptionNotice,
     UnwiredChoiceNotice,
     apply_replacements,
     draw_redirection_for,
@@ -1288,6 +1289,17 @@ class Game(BaseModel):
     protection grant already gets a `LayerNotice` for free from the existing
     static-ability sweep, so it is not duplicated here either."""
 
+    unreadable_copy_exception_notices: list[UnreadableCopyExceptionNotice] = Field(
+        default_factory=list
+    )
+    """One entry per "enter as a copy of X, except ..." replacement whose
+    exception tail this session's parser could not read - see
+    `UnreadableCopyExceptionNotice`. Recorded instead of silently applying the
+    copy with no exception, which is the fix for a real defect: Echoing Deeps
+    copying a graveyard land without ever becoming a Cave, because a `None`
+    meaning "unreadable" and a `None` meaning "nothing printed" collapsed into
+    the same `effect.copy_exception or CopyException()` default."""
+
     suspend_redirect_notices: list[SuspendRedirectNotice] = Field(default_factory=list)
     """One entry per "counter target spell. If it is countered this way,
     exile it with N time counters ... . If it doesn't have suspend, it gains
@@ -1767,7 +1779,7 @@ class Game(BaseModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 3
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 4
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -1783,7 +1795,18 @@ class Game(BaseModel):
     version 2 has no `state_class` on any `AbilityOnStack` it holds, so
     decoding it at version 3 would fail the union's own discriminator lookup
     with no signal beyond a raw pydantic error - refusing it at the schema
-    check instead names the real reason."""
+    check instead names the real reason.
+
+    Bumped 3 -> 4: `TargetRef` gained `zone_change_stamp` (CR 400.7/608.2b -
+    the blink-versus-removal-spell defect: a target that changed zones and
+    came back is a new object even though `CardState.id` did not change, and
+    nothing previously recorded which incarnation a target reference named).
+    A snapshot written at version 3 has every `TargetRef` on the stack with
+    no stamp at all, which `Game.legal_target` reads as "cannot judge the
+    zone-change half of CR 608.2b" rather than as evidence of anything - a
+    silent fail-open on the exact rule this field exists to enforce, so a
+    version-3 snapshot is refused rather than decoded as if it were current.
+    """
 
     @model_validator(mode="before")
     @classmethod
@@ -5262,10 +5285,23 @@ class Game(BaseModel):
             if not isinstance(value, (tuple, list)):
                 raise ValueError(f"{decision.prompt}: needs a tuple of targets")
             chosen = [TargetRef.coerce(target) for target in value]
-            legal = set(decision.targets)
-            stray = [str(ref) for ref in chosen if ref not in legal]
+            # `decision.targets` is the candidate pool this decision was built
+            # with (`_ask_targets`, `_legal_target_candidates`), each entry
+            # already carrying the `zone_change_stamp` its `CardState` had at
+            # that moment (CR 601.2c/603.3d's announcement). A caller such as
+            # `magic_cards_model_api.decisions.targets_answer` names a target
+            # by a bare id with no stamp of its own - `TargetRef.__eq__`
+            # ignores the stamp, so it still matches here, but swapping it for
+            # its canonical pool entry is what actually carries the stamp
+            # onto `self.targets`/`ability.targets` afterwards. Without this,
+            # a target chosen through that path could never be judged illegal
+            # by CR 608.2b's zone-change clause - the fix would be a no-op
+            # over exactly the surface the bug was reported from.
+            by_identity = {ref: ref for ref in decision.targets}
+            stray = [str(ref) for ref in chosen if ref not in by_identity]
             if stray:
                 raise ValueError(f"{decision.prompt}: not a legal target: {', '.join(stray)}")
+            chosen = [by_identity[ref] for ref in chosen]
             if decision.target_maximum is not None and len(chosen) > decision.target_maximum:
                 raise ValueError(
                     f"{decision.prompt}: too many targets chosen, at most "
@@ -6505,6 +6541,19 @@ class Game(BaseModel):
         spell's own text would no longer accept - a creature that stopped being
         one, or a permanent that changed controller under a "you control" clause.
 
+        The zone-change half of that sentence is CR 400.7: an object that
+        moved to a new zone and back is "a new object with no memory of, or
+        relation to, its previous existence", even though this engine keeps
+        the same `CardState.id` across the move (an Ephemerate-style blink
+        while a single-target removal spell targeting the blinked permanent
+        sits on the stack is the reported shape - `find_by_id` alone cannot
+        tell the two incarnations apart, only `zone_change_stamp` can).
+        `target.zone_change_stamp` is `None` when no live object was on hand
+        to read one from at announcement (`TargetRef.zone_change_stamp`'s own
+        docstring), and a reference this method cannot judge is treated as
+        still legal rather than made to fizzle on a guess - the same posture
+        already taken for an unparsed restriction, just below.
+
         Legality is judged by the same parser that checked it at announcement
         (`machines/targeting.py`), so a card whose text the parser cannot read
         is treated as still legal rather than made to fizzle on a guess.
@@ -6518,6 +6567,15 @@ class Game(BaseModel):
         """
         thing = self.resolve_target(target)
         if thing is None:
+            return None
+
+        if (
+            isinstance(thing, CardState)
+            and target.zone_change_stamp is not None
+            and thing.zone_change_stamp != target.zone_change_stamp
+        ):
+            # CR 608.2b/CR 400.7: the object `find_by_id` just found is a new
+            # object, not the one this reference named at announcement.
             return None
 
         source_card = self._source_card_of(spell)

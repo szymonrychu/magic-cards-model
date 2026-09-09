@@ -48,7 +48,11 @@ from magic_cards_model.machines.effects import (
     _DAMAGE_EACH_OPPONENT_RE,
     trigger_effect_for,
 )
-from tests.cards import card
+from magic_cards_model.machines.triggers import (
+    _STATE_COUNTER_TRIGGER_RE,
+    _unread_trigger_events,
+)
+from tests.cards import card, pool
 
 # -- The baseline: a plain card must classify honestly in both directions ---
 
@@ -655,3 +659,78 @@ def test_hydro_mans_becomes_a_land_and_gains_clause_is_not_flagged():
     """
     categories = {c.category for c in classify_clauses(card("Hydro-Man, Fluid Felon"))}
     assert QUOTED_EFFECT not in categories
+
+
+# -- The sweeper must ask the same readability question the runtime does ---
+#
+# `machines/triggers.triggered_abilities_of` keeps a `TriggeredAbility` whose
+# condition parser left `event=None` as long as `_unread_trigger_events` can
+# still read the condition text (CR 603.1b), and `_state_trigger_abilities`
+# keeps one whose condition matches `_STATE_COUNTER_TRIGGER_RE` (CR 603.8).
+# Both routes reach `condition_matches`/`_state_condition_holds` and go on the
+# stack in a real game. `classify_clauses` used to stamp every `event is
+# None` triggered clause SILENT under `"triggered (unread condition)"`
+# without ever asking either question, so a trigger the runtime actually
+# fires read as dead here - Murktide Regent among them.
+
+
+def test_sweeper_readability_matches_the_runtime_for_every_pooled_card():
+    """Direct parity check, run over the whole pool so the two questions
+    cannot drift apart again: whenever `triggered_abilities_of`'s own gate -
+    `ability.event is not None or _unread_trigger_events(ability.condition)`
+    - or `_state_trigger_abilities`'s `_STATE_COUNTER_TRIGGER_RE` says a
+    triggered ability's condition is readable, the sweeper's clause for it
+    must not be filed as an unread condition.
+    """
+    for printing in pool().values():
+        for ability in parse_abilities(printing):
+            if not isinstance(ability, TriggeredAbility):
+                continue
+            runtime_reads_it = (
+                ability.event is not None
+                or bool(_unread_trigger_events(ability.condition))
+                or _STATE_COUNTER_TRIGGER_RE.match(ability.condition.strip()) is not None
+            )
+            if not runtime_reads_it:
+                continue
+            for clause in classify_clauses(printing):
+                if clause.text.strip() == ability.text.strip():
+                    assert clause.source != "triggered (unread condition)", (
+                        f"{printing.name}: {ability.text!r} reaches the "
+                        "stack in a real game but the sweeper still reports "
+                        "it as an unread condition"
+                    )
+
+
+def test_murktide_regents_leaves_graveyard_condition_is_no_longer_unread():
+    """The marquee case named in the triage: Murktide Regent's "an instant
+    or sorcery card leaves your graveyard" is `_LEAVES_GRAVEYARD_CONDITION`'s
+    own shape inside `_unread_trigger_events`, read by the runtime, and this
+    pins the sweeper's clause for it directly rather than through the
+    whole-pool sweep above.
+    """
+    for clause in classify_clauses(card("Murktide Regent")):
+        if "leaves your graveyard" in clause.text:
+            assert clause.source != "triggered (unread condition)"
+            break
+    else:
+        raise AssertionError("Murktide Regent's leaves-graveyard clause was not found")
+
+
+def test_four_cards_with_no_other_gap_leave_the_silent_list():
+    """Basking Broodscale, Emperor of Bones, Hardened Academic and Murktide
+    Regent each have exactly one dead-looking clause on the card - the
+    misclassified unread-condition trigger - and no other silent clause.
+    Once the sweeper reads the same condition the runtime does,
+    `classify_card`'s worst-clause verdict must stop being SILENT for all
+    four; a card still genuinely broken elsewhere (Caged Sun's dead anthem,
+    say) is not part of this claim and is not asserted here.
+    """
+    for name in (
+        "Basking Broodscale",
+        "Emperor of Bones",
+        "Hardened Academic",
+        "Murktide Regent",
+    ):
+        category, _ = classify_card(card(name))
+        assert category != SILENT, name

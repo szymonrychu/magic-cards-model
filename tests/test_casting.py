@@ -257,6 +257,24 @@ def test_a_mode_that_targets_accepts_its_own_target():
     assert casting.targets[0].card_id == bears.id
 
 
+def test_choose_targets_stamps_from_the_card_state_with_no_game_at_all():
+    """`Casting` runs with `game=None` on this pure-announcement path (every
+    test above), so the CR 400.7 zone-change stamp `TargetRef.to_card`
+    attaches at announcement must come straight off the live `CardState`
+    handed to `choose_targets` - never from a `self.game` lookup, which would
+    raise `AttributeError` here since there is no game to look anything up
+    in. `bears` was never touched by a game either; its own
+    `zone_change_stamp` is exactly what a resolving spell would need to
+    judge this target legal later (CR 608.2b)."""
+    casting = Casting(spell=modal_spell("Abrade"), caster="alice")
+    bears = card_state("Grizzly Bears", Zone.BATTLEFIELD, controller="bob")
+
+    casting.choose_modes([1])
+    casting.choose_targets([bears])  # must not raise AttributeError
+
+    assert casting.targets[0].zone_change_stamp == bears.zone_change_stamp
+
+
 def test_the_other_modes_target_is_still_illegal():
     """Abrade's artifact mode cannot be aimed at a creature."""
     casting = Casting(spell=modal_spell("Abrade"), caster="alice")

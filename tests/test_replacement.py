@@ -212,6 +212,70 @@ def test_entering_tapped_as_a_copy_is_one_effect_not_two():
     assert effect.tapped
 
 
+def test_echoing_deeps_except_clause_reads_as_added_types_with_no_pt():
+    """ "except it's a Cave in addition to its other types" has no body.
+
+    `_COPY_EXCEPT_PT_AND_TYPES` used to require a power/toughness pair before
+    the type list, so this clause fell all the way through to `None` -
+    conflated downstream with "no exception at all" by `effect.copy_exception
+    or CopyException()`, which is what let Echoing Deeps silently copy a
+    graveyard land without ever becoming a Cave. It now reads as a types-only
+    exception: no name, no power/toughness, `added_subtypes=("Cave",)` (CR
+    205.3: "Cave" is not one of CR 300.1's card types, so it lands as a
+    subtype, not a type).
+    """
+    effect = only("Echoing Deeps", ReplacementKind.ENTERS_AS_COPY)
+
+    assert effect.copy_of == "any land card in a graveyard"
+    assert effect.tapped
+    assert effect.copy_exception_unparsed is None
+    exception = effect.copy_exception
+    assert exception is not None
+    assert exception.name is None
+    assert exception.power is None
+    assert exception.toughness is None
+    assert exception.added_types == ()
+    assert exception.added_subtypes == ("Cave",)
+
+
+def test_mockingbirds_except_clause_grants_an_ability_and_stays_unreadable():
+    """ "... and it has flying" is a shape this module does not parse.
+
+    Mockingbird's clause splits on " and " into two parts: "it's a Bird in
+    addition to its other types" (the same types-only shape Echoing Deeps
+    now reads) and "it has flying" (granting an ability as part of the copy,
+    which no branch of `_parse_copy_exception` reads). CR 608.2c has no notion
+    of running half an instruction, so the *whole* clause stays unreadable
+    rather than applying just the Bird type - `copy_exception` is `None` and
+    `copy_exception_unparsed` carries the raw text instead of the two `None`s
+    being indistinguishable, which is what lets `_enters_as_copy` fail closed
+    with a notice instead of silently copying with no Bird type and no
+    flying.
+    """
+    effect = only("Mockingbird", ReplacementKind.ENTERS_AS_COPY)
+
+    assert effect.copy_exception is None
+    assert (
+        effect.copy_exception_unparsed
+        == "it's a Bird in addition to its other types and it has flying"
+    )
+
+
+def test_superior_spider_mans_except_clause_is_unaffected():
+    """A name plus a power/toughness-and-types clause: readable before and
+    after the power/toughness group became optional, and untouched by the new
+    `copy_exception_unparsed` field - it is only ever set when parsing fails.
+    """
+    effect = only("Superior Spider-Man", ReplacementKind.ENTERS_AS_COPY)
+
+    assert effect.copy_exception_unparsed is None
+    exception = effect.copy_exception
+    assert exception is not None
+    assert exception.name == "Superior Spider-Man"
+    assert (exception.power, exception.toughness) == (4, 4)
+    assert exception.added_subtypes == ("Spider", "Human", "Hero")
+
+
 def test_as_this_enters():
     effect = only("Runed Halo", ReplacementKind.AS_ENTERS)
 

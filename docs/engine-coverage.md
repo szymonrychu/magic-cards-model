@@ -15,6 +15,7 @@ test you write should be `xfail` with a reason, not a test bent until it passes.
 | Card data | - | `models/card.py` | `test_card.py` |
 | "See the top N, then optionally move one of them" - a whole family, not a card list | CR 701.17a, 701.17b, 701.17c, 401.2, 608.2d, 609.3, 110.4a, 122.1a, 207.2c, 207.2d | `_SELECT_FROM_TOP_RE` / `_select_from_top_runner` in `machines/effects.py`, dispatched on the ability side (`_parse_select_from_top_clause`), the spell side (`_parse_select_from_top_spell_clause`) and per mode (`parse_mode_effect`). One shape covers a **mill N** or a **look at the top N** opening, an optional "you may put a \[land\|creature\|permanent\|artifact\|enchantment\|instant\|sorcery\|planeswalker\] card from among them" into the hand, onto the battlefield (tapped or not), or into the graveyard, an "If you don't, put a +1/+1 counter on this creature" tail, a "You gain N life" tail, and a "Put the rest ..." tail. `_parse_look_top_card_conditional_clause` is its one-card cousin (Fecund Greenshell). Both halves are real questions: `Game.may` for CR 608.2d's "you may" and `DecisionKind.CHOOSE_CARDS` for *which* card - **no new `DecisionKind` was needed**. Six, Ostrich-Horse, Ainok Wayfarer, Scout the City's "Look Around" mode and Fecund Greenshell all read off this one template, none by name | `scenarios/test_select_from_the_top_of_your_library.py`, `scenarios/test_six.py` |
 | Tokens: what one is, creating one, copying one | CR 111.1-111.4, 111.6, 111.10, 111.13, 701.7a, 707.2, 110.1, 205.2c, 202.3a | `models/token.py` | `scenarios/test_tokens.py`, `scenarios/test_role_tokens.py` |
+| A "enters as a copy of X, except ..." exception that adds types with no power/toughness | CR 614.1c, 707.9b, 205.1b | Echoing Deeps' "it's a Cave in addition to its other types" has no body, which `_COPY_EXCEPT_PT_AND_TYPES` used to require - the whole tail fell through to `None`, and `_enters_as_copy` read that `None` the same as "no exception at all" (`effect.copy_exception or CopyException()`), so the land silently copied without ever becoming a Cave. Fixed two ways: `_COPY_EXCEPT_PT_AND_TYPES`'s power/toughness group is now optional, so the shape reads; and `ReplacementEffect.copy_exception_unparsed` now keeps a genuinely-unreadable tail's raw text separate from "nothing was printed", so `_enters_as_copy` can tell the two `None`s apart and fail closed *loudly* - a new `UnreadableCopyExceptionNotice` plus the whole "enter as a copy" replacement skipped, rather than a plain copy nobody was told was wrong. Blast radius measured by scanning every printing for `"as a copy of"` + `", except"`: three cards. Superior Spider-Man (name + power/toughness + types) was already readable and is untouched. Mockingbird's "... and it has flying" still is not - granting an ability is a different, unbuilt shape - so it now records the new notice instead of silently entering without its Bird type or flying | `scenarios/test_echoing_deeps_copy_exception.py` |
 | A token put onto the battlefield attacking | CR 508.4, 508.4a, 508.4c, 506.3a-c, 508.8 | `token._put_onto_the_battlefield_attacking`, which sets `Combat.attacked_this_combat` for CR 508.8's second clause ("or put onto the battlefield attacking") as well as appending the `Attack`, so such a creature's own declare blockers and combat damage steps are not skipped | `scenarios/test_tokens.py`, `scenarios/test_tokens_created_attacking.py`, `scenarios/judge/test_judge_put_onto_the_battlefield_attacking.py` |
 | A token that has left the battlefield staying gone | CR 111.8 | `TokenState.move_to` refuses the move; `models/token.move_refused` is asked by `Player.add`/`Player.move` and by every zone helper in `models/game.py`, so the token's `zone` and the list it sits in agree | `scenarios/test_tokens.py` |
 | A dead token ceasing to exist, dispatched | CR 704.5d, 111.7, 704.3 | `tokens_that_cease_to_exist`, called at the start of `Game._state_based_actions_once` | `scenarios/test_tokens.py`, `scenarios/test_role_tokens.py` |
@@ -169,7 +170,7 @@ test you write should be `xfail` with a reason, not a test bent until it passes.
 | Exchanging life totals | CR 701.12a, 701.12c, 119.7, 119.8 | `Player.exchange_life_totals` is the all-or-nothing primitive - CR 701.12a's "if the entire exchange can't happen, no part of the exchange occurs", with CR 119.7/119.8's two reasons in `why_cannot_exchange_life_totals` - and `Game.exchange_life_totals` is the wrapper a resolving spell reaches, which also emits the CR 701.12c gain and loss events the primitive does not (one per player who actually moved). It returns the life the first player lost, signed, which is what Mister Negative's "If you lost life this way, draw that many cards" asks. Not modelled: CR 701.12c's "replacement effects may modify these gains and losses" - routing the halves through `Game.gain_life` would re-ask CR 119.7 after the all-or-nothing decision was already made, which is the wrong order - and neither Mister Negative nor Screaming Nemesis has a `machines/effects.py` row to reach any of it | `models/player.py`, `models/game.py` | `scenarios/test_exchanging_life_totals.py`, `scenarios/judge/test_judge_life_exchange.py` |
 | The legend rule | CR 205.4d, 704.5j, 101.4 | `Game.check_state_based_actions`, via `Game._legend_rule_losers`, which **asks**: "that player chooses one of them" is one `DecisionKind.CHOOSE_CARDS` per (controller, name) group, and the groups are walked in `_turn_order_from_active` order so CR 101.4 orders two players' simultaneous choices (active player first). Each group is offered reversed, so `default_answer`'s back-of-list default keeps the longest-standing copy for a scenario that does not care | `scenarios/test_state_based_actions.py`, `scenarios/judge/test_judge_apnap.py` |
 | Countering an ability | CR 113.9, 115.2, 608.2b, 611.2b, 613.1f | `Game.counter`, `Game.find_ability_by_id`/`resolve_target`, Tishana's Tidebinder in `machines/effects.py`, `Game._still_has_ability` for the layer 6 half | `scenarios/test_countering_an_ability.py`, `scenarios/test_targeting_an_ability.py`, `scenarios/test_continuous_effects_with_a_duration.py` |
-| Fizzling | CR 608.2b | `Game.spell_fizzles`, `Game.resolve_top` | `scenarios/test_stack.py` |
+| Fizzling | CR 608.2b, 400.7 | `Game.spell_fizzles`, `Game.resolve_top`. **CR 608.2b's zone-change clause** ("A target that's no longer in the zone it was in when it was targeted is illegal") is now enforced too - reported from real play: a permanent exiled and returned (Ephemerate) while a single-target removal spell targeting it sat on the stack used to resolve and destroy it anyway, because this engine keeps one `CardState` in place across a zone change (`id` never changes) and nothing recorded which incarnation (CR 400.7) a `TargetRef` had named. `TargetRef.zone_change_stamp` (optional, deliberately excluded from `__eq__`/`__hash__`) is filled from the live `CardState.zone_change_stamp` wherever a target is coerced from one - which covers every internal caller - and `Game.legal_target` now rejects a card whose current stamp no longer matches. The one caller with no `CardState` in hand, `magic_cards_model_api.decisions.targets_answer`'s bare-id tokens, is stamped after the fact: `Game._validate_answer`'s `CHOOSE_TARGETS` branch swaps a caller's answer for its canonical, already-stamped counterpart in `decision.targets` rather than trusting the caller's own reference | `scenarios/test_stack.py`, `scenarios/test_target_zone_change_legality.py` |
 | Multiplayer: turn order, priority, leaving the game | CR 104.2a, 800.4, 800.7, 103.8a | `machines/turn.py`, `machines/priority.py`, `Game._player_left` | `scenarios/test_multiplayer.py` |
 | Declaring attackers | CR 508 | `machines/combat.py` | `scenarios/test_declaring_attackers.py` |
 | Summoning sickness | CR 302.6, 508.1a, 602.5a, 702.10c | `CardState.summoning_sick` (the raw entered-this-turn fact, on every permanent - a land that becomes a creature is restricted from when it entered), `CardState.is_summoning_sick` (the rule's answer: sick AND creature), `Game.begin_turn_for`, `Game.can_activate_tap_ability`, consulted by `CostPayment.tap_for_mana` | `scenarios/test_summoning_sickness.py` |
@@ -504,6 +505,7 @@ other work.
 | Emrakul, the Promised End's control duration | CR 723.1 | The cast trigger is fully registered, control half and extra turn both. `Game.gain_control_of_player` takes no duration argument, so control is handed over and never returned. |
 | Imprint clause shapes other than the two now read | CR 207.2c, 607.2a | `_parse_imprint_clause` reads only "you may exile a `<quality>` card ... from your hand"; `_merge_each_player_clauses` reads only "each player exiles the top N cards of their library[ face down]". An "Imprint —" (or plain "exiled with `<name>`") clause shaped some other way - "exile up to one target card" (a targeted exile rather than a `may` choice), "look at the top N cards of your library and exile one" (a choice among a dig rather than a flat count) - leaves no link and no `ImprintNotice` either, since neither parser even matches it to know it failed. No printing in the pool needs one yet; if one does, it should get its own notice the way the two shapes above already have. |
 | Pyxis of Pandemonium's own second ability | CR 406.4 | Only its face-down exile half is modelled (`_EACH_PLAYER_EXILES_TOP_RE`'s `face_down` branch, reusing the shared closure Knowledge Pool's ETB now writes through). "Then each player, in the order starting with you, may play a card exiled with Pyxis of Pandemonium this way" is not built, and the face-down exile is deliberately left **unannotated** (`exile_annotation is None`) so CR 406.3a's "no characteristics" reading survives (see `CardState.has_no_characteristics`'s own docstring) - annotating it the way Knowledge Pool's face-up exile now is would break the DDR#956 face-down-mana-value-zero ruling for a link nothing yet reads. Building the second ability means writing the annotation *and* teaching `has_no_characteristics` to stop reading `exile_annotation is None` as "no pile of its own" once one is written - a `machines/casting.py` change this session did not make. |
+| Persist (the sorcery), and any "return target ... to the battlefield with a counter on it" card | CR 614.1c | Persist's own "Return target nonlegendary creature card from your graveyard to the battlefield with a -1/-1 counter on it" is CR 614.1c's *enters-with* replacement, not a return-then-add-counters sequence - nothing in `Game.put_onto_battlefield`/`enter_the_battlefield` (`models/game.py:4602`, `:4460`) accepts a counter argument, and the entering-with path is driven off the *entering permanent's own printed text* (`game.py:4470-4475`), which a target chosen by another card's ability is not. The nearest precedent, `_parse_put_exiled_target_onto_battlefield_clause`, adds counters **after** the permanent is already on the battlefield, and its own docstring says that ordering is only correct because that card's counters are "additional" rather than part of how the permanent enters - copying it for Persist would let the reanimated creature exist briefly at its full toughness (e.g. a 1/1 alive for an instant) before the counter lands, a wrong event order a state-based action or a "dies as it enters" trigger could observe. Left unread (not shipped, not xfailed as a scenario - the effect registry simply has no entry for this card's clause; not to be confused with the *keyword* Persist, CR 702.79a, which is fully modelled - see the Modelled table's "Persist, and last known counters" row). |
 
 ## Finding the gaps: `scripts/sweep_pool.py`
 
@@ -583,8 +585,8 @@ non-empty placeholder (never removed outright - that would also misfire on
 every legitimate "gains '\<ability\>'" grant, CR 113.10, that genuinely needs
 its own quoted payload, Urza's Saga among them).
 
-Measured at this commit: of 715 cards with rules text, 133 are `silent`, 391
-`handled`, 26 `notice`, 163 `static_unaudited`, 2 `unmatchable_condition`
+Measured at this commit: of 715 cards with rules text, 126 are `silent`, 395
+`handled`, 27 `notice`, 165 `static_unaudited`, 2 `unmatchable_condition`
 (Ygra, Eater of All and Blade of the Bloodchief, by an unrelated gap in
 `condition_matches`'s `DIES` branch: a condition naming neither a
 self-reference nor "another"/"other" never matches anything, which Ygra's "a
@@ -604,6 +606,21 @@ currently no live regex, not just no live card, this specific shape could
 exploit. The detector itself (`_effect_matched_inside_quotes`) is still
 exercised directly by `tests/test_sweep_pool.py`, against its own contract
 rather than a card or regex that is no longer vulnerable.
+
+**The "unread condition" bucket had the same class of measurement bug.**
+`classify_clauses` used to stamp a triggered ability `silent` the instant its
+own `ability.event` was `None`, never asking whether `machines/triggers.py`
+could still read the condition text - but `triggered_abilities_of` and
+`_state_trigger_abilities` both already do, through `_unread_trigger_events`
+(CR 603.1b's multi-condition abilities) and `_STATE_COUNTER_TRIGGER_RE` (CR
+603.8). Re-scoring the 18 clauses this bucket held showed 10 across 9 cards
+already reach the stack in a real game; four (Basking Broodscale, Emperor of
+Bones, Hardened Academic, **Murktide Regent**) had no other silent clause and
+left the `silent` list entirely once the sweeper asked the same two
+questions the runtime does. `tests/test_sweep_pool.py` pins the sweeper's
+readability against `triggered_abilities_of`'s own gate directly, over the
+whole pool, so the two cannot drift apart again.
+
 Do not quote these counts from here either - re-run the script.
 
 ## Card effects
@@ -912,7 +929,23 @@ point of failing closed, not a bug to route around.
   different ability from the one this closes, and remain unattempted - there
   is no home in `machines/effects.py` for a graveyard-redirecting
   replacement the way `machines/replacement.py` already has for "enters
-  tapped".
+  tapped". **A player-set qualifier on that same "no target" shape was still
+  missing** - Soul-Guide Lantern's `{T}, Sacrifice this artifact: Exile each
+  opponent's graveyard.` and Ashiok, Dream Render's `-1` ("Target player
+  mills four cards. Then exile each opponent's graveyard.") both failed on
+  "each opponent's" alone, and the danger was not "does nothing": routing
+  that wording through the unfiltered `exile_all_graveyards` loop would have
+  exiled the controller's own graveyard too, a board that reads as a working
+  card and is not one. `exile_each_opponents_graveyard` is the CR 102.2
+  filtered twin, reusing `_opponents` (`damage_each_opponent`/Guttersnipe's
+  own helper) rather than a copy of the unfiltered loop -
+  `_EXILE_EACH_OPPONENTS_GRAVEYARD_RE`, dispatched next to
+  `_EXILE_ALL_GRAVEYARDS_RE`. Relic of Progenitus's own "target player
+  exiles a card from their graveyard" needs a new decision
+  (`_parse_target_player_discards_clause`'s `CHOOSE_CARDS` shape, not this
+  one) and stays out of scope; Cling to Dust and Lantern of Insight share
+  neither shape and are untouched. See
+  `tests/scenarios/test_graveyard_zone_effects.py`.
 - **A triggered ability's targets, chosen before its source exists, are not
   checked.** `Game.why_cannot_target_with_trigger` looks for the source card
   on the battlefield or the stack (CR 603.6a); an enters-the-battlefield
@@ -1801,7 +1834,32 @@ Grouped by the mechanic each one needed, not by card:
   step. `_parse_each_player_sacrifices_then_mass_reanimate` reads **Bringer of
   the Last Gift**'s pair, whose second sentence's candidate set is defined by
   what the first did ("that weren't put there this way"), so each graveyard is
-  snapshotted before anything is sacrificed (CR 608.2f).
+  snapshotted before anything is sacrificed (CR 608.2f). **A fourth shape,
+  closed 2026-09-09: the bare singular sentence itself had no reader at all.**
+  "Return target `<quality>` card from your graveyard to the battlefield."
+  with no self-reference, no "all", and no trailing decoration - the
+  battlefield twin of `_RETURN_FROM_YOUR_GRAVEYARD_TO_HAND_RE` (Raise Dead's
+  "... to your hand.") that this file's own gap survey had missed - is now
+  `_RETURN_FROM_YOUR_GRAVEYARD_TO_BATTLEFIELD_RE` /
+  `return_ability_targets_to_battlefield`, covering **Unearth**, **Renegade
+  Rallier**'s Revolt ETB, and **Tameshi, Reality Architect**'s `{X}` activated
+  ability. Reanimating **Renegade Rallier** end to end also needed a second,
+  independent fix: `machines/triggers.intervening_if_holds` had no reader for
+  Revolt's own intervening-*if* wording ("a permanent left the battlefield
+  under your control this turn") - CR 207.2c's ability word was enforced for
+  Fatal Push's *target-restriction* reading of Revolt
+  (`comparison_value_if_revolt`, `test_fatal_push_revolt.py`) but never for a
+  *triggered ability's* intervening if, which is a different code path
+  entirely, so Renegade Rallier's ETB failed closed and recorded an
+  `InterveningIfNotice` even with Revolt genuinely active - now read by
+  `_REVOLT_CLAUSES`, sharing `Game.revolt_active_for` with the existing
+  reading. `_MASS_RETURN_FROM_GRAVEYARD_TO_BATTLEFIELD_RE` also gained an
+  optional trailing " tapped" (CR 110.5b), covering **Aftermath Analyst**'s
+  "Return all land cards from your graveyard to the battlefield tapped."
+  **Persist** (the sorcery) is the fifth card of this same template and is
+  deliberately not covered - see the "Not modelled" table's own row, which
+  explains why its trailing "with a -1/-1 counter on it" is a CR 614.1c
+  enters-with replacement rather than another instance of this shape.
 - **Reading a *card's* description, as opposed to a permanent's.**
   `_parse_card_group_qualifier` is the new counterpart to
   `_parse_mass_type_qualifier`: a card in a graveyard, hand or library has only
