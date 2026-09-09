@@ -2833,6 +2833,21 @@ def _quality_word_matcher(word: str) -> Callable[[CardState], bool]:
         if color is None:
             return lambda state: not state.colors and type_matches(state)
         return lambda state: color in state.colors and type_matches(state)
+    if len(parts) == 1 and parts[0] in _HAND_EXILE_COLOR_WORDS:
+        # A colour word standing **alone** is the whole quality, with no type
+        # after it to qualify: Ancient Stirrings' "a colorless card" (CR
+        # 105.2c, "A colorless object has no color") and Unearth's cousins'
+        # "a green card". Without this the bare word fell through to
+        # `_named_type_matcher`, which tried to read "colorless" as a card
+        # type or land type, found neither, and matched **nothing at all** -
+        # so Ancient Stirrings looked at five cards, could legally take none
+        # of them, bottomed all five, and every sweep scored it handled.
+        # Silently offering fewer cards than the card says is a fails-open
+        # answer, not a missed one.
+        lone_color = _HAND_EXILE_COLOR_WORDS[parts[0]]
+        if lone_color is None:
+            return lambda state: not state.colors
+        return lambda state: lone_color in state.colors
     return _named_type_matcher(word)
 
 
@@ -3904,6 +3919,28 @@ _CLAUSE_SEPARATOR = re.compile(r"\.\s+|\n+|,?\s+\bthen\b\s+|\s+\band\b\s+", re.I
 _EXCLUSION_LIST_AND_RE = re.compile(r"other than [^.\n]+", re.IGNORECASE)
 _AND_SENTINEL = "\x00and\x00"
 
+#: A "then" standing at the **head** of its own sentence - "Look at the top
+#: five cards ... Then put the rest on the bottom of your library." (Ancient
+#: Stirrings), "earthbend 2. Then search your library ..." (Earthbender
+#: Ascension), "... deals 1 damage to any target. Then amass Orcs 1."
+#: (Orcish Bowmasters).
+#:
+#: `_CLAUSE_SEPARATOR` eats "then" only where it *joins* two clauses inside
+#: one sentence ("Scry 2, then draw a card"), so this one survives the split
+#: glued to the front of the clause it introduces and no downstream parser
+#: can read what is left. Stripped **after** the split rather than folded
+#: into the separator, because the separator has already found the sentence
+#: boundary by then and there is nothing left for a head-anchored alternative
+#: to match against.
+#:
+#: Dropping the word is sound, not a guess: CR 608.2c is "The controller of
+#: the spell or ability follows its instructions in the order written", and a
+#: sentence-initial "then" is that order stated out loud. It carries no
+#: instruction of its own, and every other ordering the engine reads - the
+#: infix "then" the separator already eats, and the bare sentence break -
+#: runs the clauses in exactly this order anyway.
+_LEADING_THEN_RE = re.compile(r"^then\s+", re.IGNORECASE)
+
 
 def split_effect_clauses(text: str) -> list[str]:
     """Break an effect into the clauses CR 608.2c executes in order.
@@ -3929,11 +3966,11 @@ def split_effect_clauses(text: str) -> list[str]:
     # order. Masked across the split and restored after, so the separator
     # stays the simple thing it is.
     masked = _EXCLUSION_LIST_AND_RE.sub(lambda m: m.group(0).replace(" and ", _AND_SENTINEL), text)
-    return [
-        clause.strip().replace(_AND_SENTINEL, " and ")
+    split = (
+        _LEADING_THEN_RE.sub("", clause.strip()).replace(_AND_SENTINEL, " and ")
         for clause in _CLAUSE_SEPARATOR.split(masked)
-        if clause.strip()
-    ]
+    )
+    return [clause for clause in split if clause.strip()]
 
 
 #: A cost paid before the spell is cast (CR 118.8a) - never part of what the
@@ -15863,16 +15900,21 @@ def _parse_target_player_draws_clause(clause: str, *, for_spell: bool) -> Target
     return effect
 
 
-#: "then exile that player's graveyard" - Go Blank's own second clause,
+#: "Then exile that player's graveyard" - Go Blank's own second clause,
 #: anaphoric to the same target its first clause (`_TARGET_PLAYER_DISCARDS_RE`)
 #: already discarded into that graveyard. Reuses `exile_target_players_
 #: graveyard` outright rather than a copy of it: that function already reads
 #: the player off `game.resolve_targets(stack_object)`, which is exactly the
 #: same target this clause means by "that player" - Go Blank prints only one
 #: target for its whole text, so both clauses resolve it to the same `Player`.
-_THEN_EXILE_THAT_PLAYERS_GRAVEYARD_RE = re.compile(
-    r"^then exile that player'?s graveyard$", re.IGNORECASE
-)
+#:
+#: The printed "Then " is **not** in this pattern any more:
+#: `split_effect_clauses` now strips a sentence-initial "then" for every card
+#: (`_LEADING_THEN_RE`), so anchoring on it here would match nothing. Losing
+#: the word is what generalises the shape - any card printing "Exile that
+#: player's graveyard." as a plain second sentence reads the same way now,
+#: where before only Go Blank's exact "Then exile ..." wording did.
+_EXILE_THAT_PLAYERS_GRAVEYARD_RE = re.compile(r"^exile that player'?s graveyard$", re.IGNORECASE)
 
 #: "you may discard a card" - Formidable Speaker's own first clause, CR
 #: 118.12's optional cost half of "[Do something]. If [a player] does, ...".
@@ -17064,7 +17106,7 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     target_player_draws = _parse_target_player_draws_clause(clause, for_spell=for_spell)
     if target_player_draws is not None:
         return target_player_draws
-    if _THEN_EXILE_THAT_PLAYERS_GRAVEYARD_RE.fullmatch(clause.strip()):
+    if _EXILE_THAT_PLAYERS_GRAVEYARD_RE.fullmatch(clause.strip()):
         return exile_target_players_graveyard
     # -- end Wave W1 single-clause additions -------------------------------
     # -- Wave W11's own single-clause addition (CR 106.4, CR 605.1a) ------
