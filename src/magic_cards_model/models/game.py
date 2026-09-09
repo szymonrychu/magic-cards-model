@@ -1865,7 +1865,7 @@ class Game(BaseModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 5
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 6
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -1903,6 +1903,30 @@ class Game(BaseModel):
     the bump rule's second bullet exactly - and it changes who may block whom
     and how much damage a defending player takes, so a version-4 snapshot is
     refused rather than replayed into a different game.
+
+    Bumped 5 -> 6: the CR 106.6 spend-restriction grammar (`machines/cost.py`)
+    learned two forms, and both bullets of the bump rule are tripped at once.
+
+    *The field.* `SpendClause` gained `zone` - the origin the spell's
+    CR 601.2a move started from, one of CR 400.1's seven zones (all three
+    looked up this session) - and a `SpendClause` is reachable from
+    `Game.model_dump()` through `Player.mana_pool.restricted[].restriction.
+    clauses[]`, so a floating restricted mana carries one. A version-5 dump
+    has no `zone` key on any clause it holds, and decoded at version 6 that
+    absence reads as "this clause asks nothing about the origin zone": the
+    Web Watch's "Spend this mana only to cast spells from exile" quietly
+    paying for a spell cast from the hand. `ManaSpend` gained the same field
+    for the other side of the check.
+
+    *The behaviour.* `machines/abilities.py` now reads "Add two mana in any
+    combination of colors" as a per-mana colour choice, on Interdimensional
+    Web Watch and Smokebraider - printings that were already in the pool, so a
+    version-5 board can already have one on the battlefield with that ability
+    parsed the old way. A `machines/abilities.py` mana-ability parse is the
+    bump rule's second bullet by name. And-joined type lists ("instant and
+    sorcery spells") are a parse that used to fail closed and now permits,
+    which changes what an already-recorded restricted mana in a pool may pay
+    for.
     """
 
     @model_validator(mode="before")
