@@ -175,6 +175,10 @@ def executes(keyword: str) -> bool:
         # another ability's effect text (Orcish Bowmasters' "Then amass Orcs
         # 1."). Listed here for the same reason the two above are.
         "amass",
+        # CR 701.16a, the same shape once more: `machines/effects.investigate`
+        # performs it, reached through `_parse_investigate_clause` from
+        # inside another ability's effect text.
+        "investigate",
         # CR 701.14a, and the same shape once more: `machines/effects._fight`
         # is what performs it, reached from whichever clause parser read the
         # sentence that names it (Kraul Harpooner's own undergrowth shape,

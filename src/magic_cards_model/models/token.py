@@ -412,6 +412,14 @@ FOOD = TokenDefinition(
     rules_text="{2}, {T}, Sacrifice this token: You gain 3 life.",
 )
 
+#: CR 111.10f: "A Clue token is a colorless Clue artifact token with '{2},
+#: {T}, Sacrifice this token: Draw a card.'" - CR 701.16a's "investigate".
+CLUE = TokenDefinition(
+    types=(Type.ARTIFACT,),
+    subtypes=("Clue",),
+    rules_text="{2}, {T}, Sacrifice this token: Draw a card.",
+)
+
 #: CR 111.10h: "A Powerstone token is a colorless Powerstone artifact token
 #: with '{T}: Add {C}. This mana can't be spent to cast a nonartifact
 #: spell.'" - Cityscape Leveler.
@@ -513,6 +521,7 @@ YOUNG_HERO_ROLE = TokenDefinition(
 PREDEFINED: dict[str, TokenDefinition] = {
     "Treasure": TREASURE,
     "Food": FOOD,
+    "Clue": CLUE,
     "Powerstone": POWERSTONE,
     "Monster": MONSTER_ROLE,
     "Cursed": CURSED_ROLE,

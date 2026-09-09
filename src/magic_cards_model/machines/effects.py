@@ -15003,6 +15003,58 @@ def _parse_amass_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     return effect
 
 
+#: CR 701.16a: "'Investigate' means 'Create a Clue token.'" A bare keyword
+#: action, the same shape as amass/fight above - "investigate" alone
+#: (Tamiyo, Inquisitive Student), or "investigate [word] times"/"investigate
+#: [word]" for the fixed-count multiples the pool actually prints (Armed
+#: with Proof's "investigate twice"). Deliberately narrower than every
+#: shape Scryfall prints: "investigate X times, where X is ..." (a
+#: resolution-time count, CR 608.2h) and "[player] investigates" naming a
+#: subject other than the resolving object's own controller (Fateful
+#: Absence's "Its controller investigates.") are both real templates this
+#: does not read - fail closed rather than guess a count or a controller.
+_INVESTIGATE_RE = re.compile(
+    r"^investigate(?:\s+(?P<multiplier>twice|thrice|once|\d+|[a-z]+)(?:\s+times?)?)?$",
+    re.IGNORECASE,
+)
+
+
+def investigate(game: "Game", controller: str, amount: int = 1) -> None:
+    """CR 701.16a, CR 111.10f: create `amount` Clue tokens for `controller`."""
+    create_tokens(game, PREDEFINED["Clue"], controller, amount)
+
+
+def _parse_investigate_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """ "Investigate[, [word] times]." - `_INVESTIGATE_RE`'s shape.
+
+    Investigate targets nothing and names no object of its own (CR 701.16a),
+    so - like amass above - this reads only the stack object's controller,
+    and the same clause works for a spell or an ability alike.
+    """
+    match = _INVESTIGATE_RE.fullmatch(clause.strip().rstrip("."))
+    if match is None:
+        return None
+    word = match.group("multiplier")
+    if word is None:
+        amount = 1
+    elif word.lower() == "twice":
+        amount = 2
+    elif word.lower() == "thrice":
+        amount = 3
+    elif word.lower() == "once":
+        amount = 1
+    else:
+        try:
+            amount = _count(word)
+        except (KeyError, ValueError):
+            return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        investigate(game, game.controller_of(stack_object).username, amount)
+
+    return effect
+
+
 def _parse_delayed_single_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """A whole ability whose *only* clause is a delayed-trigger creation, with
     no antecedent clause of its own to supply "it": either there is no object
@@ -17971,6 +18023,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     amass_clause = _parse_amass_clause(clause, for_spell=for_spell)
     if amass_clause is not None:
         return amass_clause
+    investigate_clause = _parse_investigate_clause(clause, for_spell=for_spell)
+    if investigate_clause is not None:
+        return investigate_clause
     exile_that_players_library = _parse_exile_that_players_library_clause(
         clause, for_spell=for_spell
     )

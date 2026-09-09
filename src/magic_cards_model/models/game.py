@@ -3770,6 +3770,21 @@ class Game(BaseModel):
 
                 return become_level
             index = self._activated_index(ability)
+            if index is None and ability.ability.effect is not None:
+                # CR 111.7/CR 704.5d: a token sacrificed to pay its own
+                # ability's cost (Clue's, Food's) has already ceased to exist
+                # by the time this resolves, so `_activated_index` finds no
+                # live source to enumerate abilities off and cannot answer
+                # its own numbered position (CR 603.10a - this ability's
+                # *effect*, already captured verbatim on `ability.ability`
+                # when it went on the stack, is not looked back for the same
+                # way). `index` only ever keys `ACTIVATED_EFFECTS`, which is
+                # empty by design (every row is now read off printed text
+                # instead, see that dict's own docstring) - so `0` here can
+                # never shadow a real per-card row, today or as the registry
+                # grows, because a token's synthesised name never collides
+                # with a printed card's.
+                index = 0
             if index is not None:
                 # CR 107.3a's X, only when the printed cost actually carries
                 # one (Fiend Artisan's `{X}{B/G}`) - the same "only if {X} is
