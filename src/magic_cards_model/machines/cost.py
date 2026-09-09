@@ -1601,6 +1601,12 @@ class ComponentKind(StrEnum):
     #: all, only the total mana value in `amount`, so the cards chosen are
     #: checked against that threshold rather than against a `required` count.
     COLLECT_EVIDENCE = "collect_evidence"
+    #: CR 702.49a's own cost clause: "Return an unblocked attacking creature
+    #: you control to its owner's hand." Ninjutsu's own cost, not shared with
+    #: any other keyword this pool prints - `_why_not_return_to_hand` checks
+    #: "unblocked attacking", the one restriction no existing object cost
+    #: (SACRIFICE, DISCARD, EXILE) reads.
+    RETURN_TO_HAND = "return_to_hand"
 
 
 _OBJECT_KINDS = frozenset(
@@ -1613,6 +1619,7 @@ _OBJECT_KINDS = frozenset(
         ComponentKind.REMOVE_COUNTERS,
         ComponentKind.PLACE_COUNTERS,
         ComponentKind.EXERT,
+        ComponentKind.RETURN_TO_HAND,
     }
 )
 
@@ -1874,6 +1881,7 @@ class CostComponent(BaseModel):
             ComponentKind.MILL: self._why_not_mill,
             ComponentKind.UNTAP: self._why_not_untap,
             ComponentKind.COLLECT_EVIDENCE: self._why_not_collect_evidence,
+            ComponentKind.RETURN_TO_HAND: self._why_not_return_to_hand,
         }
         return checks[self.kind](game)
 
@@ -1940,6 +1948,30 @@ class CostComponent(BaseModel):
                 f"{self.payer}'s graveyard holds total mana value {available:g}, not the "
                 f"{self.amount} collect evidence {self.amount} asks for (CR 701.59b)"
             )
+        return None
+
+    def _why_not_return_to_hand(self, game: Any) -> str | None:
+        """CR 702.49a's "Return an unblocked attacking creature you control
+        to its owner's hand" - Ninjutsu's own cost restriction.
+
+        CR 509.1h/CR 506.4a are what "unblocked" means: an attacking
+        creature with no blocker assigned to it, checked against the live
+        `Combat` rather than the card's own printed text, since nothing
+        prints "unblocked" on a card.
+        """
+        for card in self.cards:
+            if card.zone is not Zone.BATTLEFIELD:
+                return f"{card.name} is not on the battlefield, so it is not attacking"
+            controlled = self._why_not_controlled()
+            if controlled is not None:
+                return controlled
+            if game is None:
+                return "returning an attacking creature needs a game to check combat"
+            attack = game.combat.attack_by(card.id) if game.combat is not None else None
+            if attack is None:
+                return f"{card.name} is not attacking, so it cannot pay this cost (CR 702.49a)"
+            if attack.blockers:
+                return f"{card.name} is blocked, so it cannot pay this cost (CR 702.49a)"
         return None
 
     def _evidence_to_exile(self, game: Any) -> list[CardState]:
@@ -2175,6 +2207,15 @@ class CostComponent(BaseModel):
                 # combat clean-up - so this delegates outright rather than
                 # special-casing one more zone by hand.
                 game.exile_cards(list(self.cards))
+        elif self.kind is ComponentKind.RETURN_TO_HAND:
+            # CR 702.49a's own cost: the creature leaves combat as it leaves
+            # the battlefield (the zone change is what ends its being an
+            # attacker), through `Game.return_to_hand` rather than a bare
+            # zone move so a leaves-the-battlefield trigger still sees it.
+            for card in self.cards:
+                self._remember(card)
+                if game is not None:
+                    game.return_to_hand(card)
         elif self.kind is ComponentKind.UNTAP:
             for card in self.cards:
                 self._remember(card)
@@ -2508,6 +2549,23 @@ def discard_cost(
     """Discard cards from hand as a cost."""
     return CostComponent(
         kind=ComponentKind.DISCARD,
+        cards=list(cards),
+        required=len(cards) if required is None else required,
+        payer=payer,
+        description=description,
+    )
+
+
+def return_to_hand_cost(
+    *cards: CardState,
+    payer: str | None = None,
+    required: int | None = None,
+    description: str = "",
+) -> CostComponent:
+    """Return an unblocked attacking creature to its owner's hand as a cost
+    (CR 702.49a's ninjutsu). `_why_not_return_to_hand` is the check."""
+    return CostComponent(
+        kind=ComponentKind.RETURN_TO_HAND,
         cards=list(cards),
         required=len(cards) if required is None else required,
         payer=payer,

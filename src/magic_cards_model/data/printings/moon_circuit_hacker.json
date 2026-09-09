@@ -1,0 +1,162 @@
+{
+  "object": "card",
+  "id": "c6e466d1-943d-41e6-a47d-c9d951ca4262",
+  "oracle_id": "7cd8b017-8d59-4b55-bb9a-8d8e492ef1ac",
+  "multiverse_ids": [
+    548365
+  ],
+  "mtgo_id": 97054,
+  "arena_id": 79492,
+  "tcgplayer_id": 262193,
+  "cardmarket_id": 607347,
+  "name": "Moon-Circuit Hacker",
+  "lang": "en",
+  "released_at": "2022-02-18",
+  "uri": "https://api.scryfall.com/cards/c6e466d1-943d-41e6-a47d-c9d951ca4262",
+  "scryfall_uri": "https://scryfall.com/card/neo/67/moon-circuit-hacker?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:25:00Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/c/6/c6e466d1-943d-41e6-a47d-c9d951ca4262.jpg?1783923900",
+    "normal": "https://cards.scryfall.io/normal/front/c/6/c6e466d1-943d-41e6-a47d-c9d951ca4262.jpg?1783923900",
+    "large": "https://cards.scryfall.io/large/front/c/6/c6e466d1-943d-41e6-a47d-c9d951ca4262.jpg?1783923900",
+    "png": "https://cards.scryfall.io/png/front/c/6/c6e466d1-943d-41e6-a47d-c9d951ca4262.png?1783923900",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/c/6/c6e466d1-943d-41e6-a47d-c9d951ca4262.jpg?1783923900",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/c/6/c6e466d1-943d-41e6-a47d-c9d951ca4262.jpg?1783923900",
+    "thumb": "https://cards.scryfall.io/thumb/front/c/6/c6e466d1-943d-41e6-a47d-c9d951ca4262.webp?1783923900",
+    "grid": "https://cards.scryfall.io/grid/front/c/6/c6e466d1-943d-41e6-a47d-c9d951ca4262.webp?1783923900",
+    "display": "https://cards.scryfall.io/display/front/c/6/c6e466d1-943d-41e6-a47d-c9d951ca4262.webp?1783923900",
+    "art": "https://cards.scryfall.io/art/front/c/6/c6e466d1-943d-41e6-a47d-c9d951ca4262.webp?1783923900",
+    "crop": "https://cards.scryfall.io/crop/front/c/6/c6e466d1-943d-41e6-a47d-c9d951ca4262.webp?1783923900"
+  },
+  "mana_cost": "{1}{U}",
+  "cmc": 2.0,
+  "type_line": "Enchantment Creature \u2014 Human Ninja",
+  "oracle_text": "Ninjutsu {U} ({U}, Return an unblocked attacker you control to hand: Put this card onto the battlefield from your hand tapped and attacking.)\nWhenever this creature deals combat damage to a player, you may draw a card. If you do, discard a card unless this creature entered this turn.",
+  "power": "2",
+  "toughness": "1",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Ninjutsu"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "75c43923-7280-4ccb-810b-e8c38dd8a26f",
+      "component": "combo_piece",
+      "name": "Moon-Circuit Hacker",
+      "type_line": "Enchantment Creature \u2014 Human Ninja",
+      "uri": "https://api.scryfall.com/cards/75c43923-7280-4ccb-810b-e8c38dd8a26f"
+    },
+    {
+      "object": "related_card",
+      "id": "38f66d0c-5d03-449f-a056-b97e2ed6a3a1",
+      "component": "combo_piece",
+      "name": "A-Moon-Circuit Hacker",
+      "type_line": "Enchantment Creature \u2014 Human Ninja",
+      "uri": "https://api.scryfall.com/cards/38f66d0c-5d03-449f-a056-b97e2ed6a3a1"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "59a2059f-5482-433f-8761-eb2e17859b71",
+  "set": "neo",
+  "set_name": "Kamigawa: Neon Dynasty",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/59a2059f-5482-433f-8761-eb2e17859b71",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aneo&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/neo?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/c6e466d1-943d-41e6-a47d-c9d951ca4262/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A7cd8b017-8d59-4b55-bb9a-8d8e492ef1ac&unique=prints",
+  "collector_number": "67",
+  "digital": false,
+  "rarity": "common",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Tia Masic",
+  "artist_ids": [
+    "eccd93d5-9f94-461b-8d70-895e723a285e"
+  ],
+  "illustration_id": "b5b94f51-c712-4ab2-bc93-6bba9f18ce4d",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "enchantment"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 3596,
+  "penny_rank": 1724,
+  "preview": {
+    "source": "Ungeek",
+    "source_uri": "https://www.ungeek.ph/2022/01/magic-the-gathering-kamigawa-neon-dynasty-card-preview-moon-circuit-hacker/",
+    "previewed_at": "2022-01-30"
+  },
+  "prices": {
+    "usd": "0.34",
+    "usd_foil": "0.53",
+    "usd_etched": null,
+    "eur": "0.29",
+    "eur_foil": "0.79",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=548365&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMoon-Circuit%2BHacker",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMoon-Circuit%2BHacker",
+    "edhrec": "https://edhrec.com/route/?cc=Moon-Circuit+Hacker"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F262193%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=607347&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/97054?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

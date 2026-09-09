@@ -65,6 +65,7 @@ from .cost import (
     CostStep,
     TotalCost,
     discard_cost,
+    return_to_hand_cost,
     tap_cost,
     total_cost_for_phrase,
 )
@@ -112,6 +113,7 @@ class KeywordRule(StrEnum):
     HIDEAWAY = "CR 702.75a"
     CREW = "CR 702.122a"
     STATION = "CR 702.184a"
+    NINJUTSU = "CR 702.49a"
     EVOKE = "CR 702.74a"
     UNEARTH = "CR 702.84a"
     TRANSMUTE = "CR 702.53a"
@@ -147,6 +149,8 @@ def executes(keyword: str) -> bool:
         "hideaway",
         "crew",
         "station",
+        "ninjutsu",
+        "commander ninjutsu",
         # CR 111.10j-r's Role family. The keyword line itself is Scryfall's
         # "Role token"; the ability it stands for - "Create a(n) [Role] Role
         # token attached to [X]." - is a clause `machines/effects.py`'s
@@ -1779,6 +1783,119 @@ def _station_effect(activation: KeywordActivation) -> CardState | None:
     amount = power_of(tapped, game)
     if amount > 0:
         game.add_counters(permanent, Counter.CHARGE, amount)
+    return permanent
+
+
+# --------------------------------------------------------------------------
+# Ninjutsu (CR 702.49)
+# --------------------------------------------------------------------------
+
+
+def ninjutsu_activation(
+    game: Any, card: CardState, returning: CardState, player: str
+) -> KeywordActivation:
+    """Build the activation for a card's ninjutsu ability (CR 702.49a).
+
+    "Ninjutsu is an activated ability that functions only while the card
+    with ninjutsu is in a player's hand. 'Ninjutsu [cost]' means '[Cost],
+    Reveal this card from your hand, Return an unblocked attacking creature
+    you control to its owner's hand: Put this card onto the battlefield from
+    your hand tapped and attacking.'"
+
+    CR 701.20a/b: revealing changes no game state, so only the mana and the
+    return-to-hand (`return_to_hand_cost`, `_why_not_return_to_hand`) become
+    real cost components - the same "reveal changes nothing" reading
+    `_evoke_ability`'s own docstring and `casting.py`'s `KeywordActivation`
+    module note already rely on elsewhere in this file.
+
+    `commander ninjutsu` (CR 702.49d) reads the same way here: CR 903.10a's
+    command-zone half is a deckbuilding/format rule this engine's board does
+    not model, so the ordinary hand-only activation is what a real game
+    reaches either way.
+    """
+    ability = _keyword(card.card, "ninjutsu") or _keyword(card.card, "commander ninjutsu")
+    if ability is None:
+        raise ValueError(f"{card.name} has no ninjutsu ability ({KeywordRule.NINJUTSU})")
+    if card.zone is not Zone.HAND:
+        raise ValueError(
+            f"{card.name} is not in a hand, so ninjutsu cannot be activated "
+            f"({KeywordRule.NINJUTSU}, CR 702.49b)"
+        )
+    attack = game.combat.attack_by(returning.id) if game.combat is not None else None
+    if attack is None:
+        raise ValueError(
+            f"{returning.name} is not attacking, so it cannot pay ninjutsu's cost "
+            f"({KeywordRule.NINJUTSU})"
+        )
+    # CR 702.49c's own defender has to be captured *now*, before the return
+    # to hand takes the creature out of combat entirely - `Combat.attack_by`
+    # finds nothing for an id no longer on the battlefield, which is exactly
+    # what `_ninjutsu_effect` would be asking after the cost is paid.
+    defender = attack.defender
+    mana = _keyword_cost(ability, player)
+    if mana is None:
+        raise ValueError(
+            f"{card.name}'s ninjutsu cost {ability.cost!r} could not be read, so it cannot be paid"
+        )
+    cost = TotalCost(
+        mana=mana.mana,
+        components=[
+            *mana.components,
+            return_to_hand_cost(
+                returning,
+                payer=player,
+                description="Return an unblocked attacking creature you control to its owner's hand",
+            ),
+        ],
+    )
+    return KeywordActivation(
+        card=card,
+        player=player,
+        keyword=ability.canonical,
+        rule=str(KeywordRule.NINJUTSU),
+        zone=Zone.HAND,
+        cost=cost,
+        targets=[defender],
+        ability=_synthetic_ability(
+            ability,
+            cost_text=(
+                f"{ability.cost or ''}, Reveal this card from your hand, Return an "
+                f"unblocked attacking creature you control to its owner's hand"
+            ).strip(", "),
+            effect="Put this card onto the battlefield from your hand tapped and attacking.",
+        ),
+        game=game,
+    )
+
+
+def _ninjutsu_effect(activation: KeywordActivation) -> CardState | None:
+    """Put the ninja onto the battlefield tapped and attacking the same
+    player, planeswalker, or battle the returned creature was attacking
+    (CR 702.49c).
+
+    The returned creature's own attack is read off `activation.cost`'s
+    return-to-hand component before the return moved it - the object is
+    gone from combat now (`Combat.attack_by` finds nothing for an id that
+    already left the battlefield), so what it was attacking has to be read
+    at *activation* time and carried forward, not re-derived here.
+    """
+    game = activation.game
+    card = game.find_by_id(activation.card.id)
+    if not isinstance(card, CardState) or card.zone is not Zone.HAND:
+        return None
+    defender = activation.targets[0] if activation.targets else None
+    permanent = game.put_onto_battlefield(card, activation.player, tapped=True)
+    if permanent is None or permanent.zone is not Zone.BATTLEFIELD:
+        return None
+    if defender is not None:
+        from ..models.token import _put_onto_the_battlefield_attacking
+
+        # CR 508.4, via the same primitive `machines/effects.py` already
+        # reuses for Sneak's identical "tapped and attacking" shape: it is
+        # annotated for a `TokenState`, but everything it reads -
+        # `is_creature`, `controller`, `id` - is `CardState`'s, and CR 508.4
+        # draws no distinction between a token and a card entering this way.
+        _put_onto_the_battlefield_attacking(game, permanent, defender)  # type: ignore[arg-type]
     return permanent
 
 
@@ -3542,6 +3659,8 @@ KEYWORD_EFFECTS: dict[str, Callable[[KeywordActivation], Any]] = {
     "unearth": _unearth_effect,
     "transmute": _transmute_effect,
     "station": _station_effect,
+    "ninjutsu": _ninjutsu_effect,
+    "commander ninjutsu": _ninjutsu_effect,
 }
 
 for _name in ("cycling", "landcycling", "typecycling"):
