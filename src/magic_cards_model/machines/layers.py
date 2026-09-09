@@ -89,7 +89,7 @@ from ..models.card import Color, Supertype, Type
 from ..models.card_state import CardState, Counter
 from ..models.zone import Zone
 from .abilities import layer_readable_sentences, self_normalized_effect_text
-from .combat import Keyword
+from .combat import KEYWORDS_OUTSIDE_COMBAT, Keyword
 
 if TYPE_CHECKING:
     from ..models.game import Game
@@ -4985,23 +4985,23 @@ def _permanents_with_counters_ward_builder(cost: str, *, line: str) -> EffectBui
 #: keyword outside this set - or a conjunction the pool does not use single
 #: keywords with - fails the match and falls to `looks_like_unparsed_layer_effect`
 #: instead of silently granting the wrong thing.
-_KNOWN_KEYWORDS = frozenset(keyword.value for keyword in Keyword) | {
-    # Keywords no combat rule reads, and so absent from `machines/combat.py`'s
-    # own `Keyword` vocabulary, that a grant still has to be able to name.
-    # `combat.has_keyword` takes the word it is asked about and adds it to the
-    # vocabulary it reads off the computed board, so a granted line is found by
-    # whoever asks for it - `machines/keywords.py::is_indestructible` is
-    # already written that way.
-    #
-    # CR 702.12a: "Indestructible is a static ability." Before this, "gains
-    # flying until end of turn" parsed and "gains indestructible until end of
-    # turn" did not, which made a real grant silently do nothing.
-    "indestructible",
-    # CR 702.11a: "Hexproof is a static ability", CR 702.11b for what it does.
-    # Scion of Draco's colour-conditioned grant names it, and no combat rule
-    # reads it either.
-    "hexproof",
-}
+# Keywords no combat rule reads, and so absent from `machines/combat.py`'s own
+# `Keyword` vocabulary, that a grant still has to be able to name -
+# CR 702.12a's indestructible ("Indestructible is a static ability"; before it
+# was here, "gains flying until end of turn" parsed and "gains indestructible
+# until end of turn" did not, so a real grant silently did nothing) and
+# CR 702.11a's hexproof, which Scion of Draco's colour-conditioned grant names.
+# Named once, in `machines/combat.py`, because the reading vocabulary there
+# needs the same two words.
+#
+# What a granted line is *read* with is a separate question, and the assumption
+# that used to be written here - that `combat.has_keyword` adding the word it
+# is asked about to the vocabulary is enough for a granted line to be found by
+# whoever asks - was wrong wherever a line holds more than one keyword. It held
+# only for a line that is nothing but the single keyword being asked about;
+# `machines/combat.py::_reading_vocabulary` is what makes a shared line work,
+# and `KeywordLineNotice` is what records a line it still cannot read whole.
+_KNOWN_KEYWORDS = frozenset(keyword.value for keyword in Keyword) | KEYWORDS_OUTSIDE_COMBAT
 
 
 def _split_and_validate_keywords(raw: str) -> list[str] | None:

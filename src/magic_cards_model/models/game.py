@@ -51,6 +51,7 @@ from ..machines.combat import (
     CombatMachine,
     EvasionNotice,
     Keyword,
+    KeywordLineNotice,
     UndefinedPowerNotice,
     has_keyword,
 )
@@ -1332,6 +1333,20 @@ class Game(BaseModel):
     the same unreadable-is-not-the-same-as-no-effect record every other
     notice list here keeps."""
 
+    keyword_line_notices: list[KeywordLineNotice] = Field(default_factory=list)
+    """One entry per computed ability line (CR 613.5) that is part CR 702
+    keyword and part something `machines/combat.py`'s reading vocabulary cannot
+    name - Extinguisher Battleship's "5+ | Flying, trample", where CR 721.2a's
+    station symbol makes the whole line conditional, and Nevinyrral, Urborg
+    Tyrant's "Hexproof from artifacts, creatures, and enchantments", which
+    CR 702.11f makes shorthand for several separate abilities. The line is
+    dropped whole rather than half-read, because half-reading it would grant an
+    ability unconditionally that the card grants conditionally; this is the
+    record that it was dropped, the same unreadable-is-not-the-same-as-no-effect
+    entry `EvasionNotice` and `UndefinedPowerNotice` keep. Before this list
+    existed the drop was silent, which is how Emrakul, the Promised End lost
+    flying and trample on the computed board with nothing saying so."""
+
     undefined_power_notices: list[UndefinedPowerNotice] = Field(default_factory=list)
     """One entry per creature `combat._power_of` was asked to assign combat
     damage for but could not compute a power for - a printed `*` with no
@@ -1781,7 +1796,7 @@ class Game(BaseModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 4
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 5
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -1808,6 +1823,17 @@ class Game(BaseModel):
     zone-change half of CR 608.2b" rather than as evidence of anything - a
     silent fail-open on the exact rule this field exists to enforce, so a
     version-3 snapshot is refused rather than decoded as if it were current.
+
+    Bumped 4 -> 5: `Game` gained `keyword_line_notices`, and - the half that
+    actually matters - `machines/combat.py::has_keyword` reads a computed
+    ability line with a wider vocabulary than it used to. A version-4 snapshot
+    is a board on which Emrakul, the Promised End has no flying and no trample,
+    because `protection from instants` sharing their line took them down with
+    it; decoded under version 5 the same board has both. That is a
+    name-keyed dispatch resolving differently on state that already exists -
+    the bump rule's second bullet exactly - and it changes who may block whom
+    and how much damage a defending player takes, so a version-4 snapshot is
+    refused rather than replayed into a different game.
     """
 
     @model_validator(mode="before")
