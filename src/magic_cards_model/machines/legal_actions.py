@@ -742,6 +742,34 @@ def _land_actions(game: Any, player: str, card: CardState) -> list[Action]:
 
 
 # ---------------------------------------------------------------------------
+# Bringing a companion into hand (CR 116.2g, CR 702.139).
+# ---------------------------------------------------------------------------
+
+
+def _companion_action(
+    game: Any, player: str, candidate_scan: list[_ScannedCandidate]
+) -> Action | None:
+    me = game.player(player)
+    if game.why_cannot_bring_companion_to_hand(player) is not None:
+        return None
+    assert me.companion_id is not None
+    total = TotalCost.of("{3}")
+    affordable, reason = _cost_affordability(game, player, total, candidate_scan)
+    cost_str, mana_cost_str = _cost_strings(total)
+    return Action(
+        kind=ActionKind.COMPANION,
+        player=player,
+        rule="CR 116.2g",
+        card_id=me.companion_id,
+        from_zone=Zone.SIDEBOARD,
+        cost=cost_str,
+        mana_cost=mana_cost_str,
+        affordable=affordable,
+        unaffordable_reason=reason,
+    )
+
+
+# ---------------------------------------------------------------------------
 # Turning a face-down permanent face up (CR 702.37e).
 # ---------------------------------------------------------------------------
 
@@ -1250,6 +1278,9 @@ def legal_actions(
             kind=ActionKind.CONCEDE, player=player, rule="CR 104.3a", affordable=Affordability.YES
         ),
     ]
+    companion_action = _companion_action(game, player, candidate_scan)
+    if companion_action is not None:
+        actions.append(companion_action)
 
     me = game.player(player)
     for card in list(me.hand):

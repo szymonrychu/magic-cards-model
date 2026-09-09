@@ -348,6 +348,16 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     if any(k.lower() == "splice" for k in printing.keywords):
         found["splice"] = "machines/casting.py (Casting.splice, splice_candidates)"
 
+    # Companion (CR 702.139a) functions outside the game, not as a
+    # `KeywordCastOption` either: the deck-legality condition is
+    # `machines/companion.py`'s own read of the printed "Companion—
+    # [Condition]." line, and the in-game half is CR 116.2g's special action
+    # (`Game.why_cannot_bring_companion_to_hand`/`begin_bringing_companion_
+    # to_hand`/`bring_companion_to_hand`), so neither shows up in
+    # `keyword_cast_options` output and both are named here by hand.
+    if any(k.lower() == "companion" for k in printing.keywords):
+        found["companion"] = "machines/companion.py, models/game.py (bring_companion_to_hand)"
+
     return found
 
 

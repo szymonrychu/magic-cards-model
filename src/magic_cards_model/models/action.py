@@ -49,6 +49,9 @@ class ActionKind(StrEnum):
     """CR 702.37e's special action."""
     SUSPEND = "suspend"
     """CR 116.2f."""
+    COMPANION = "companion"
+    """CR 116.2g: pay `{3}` to put a chosen companion into hand from outside
+    the game, once per game."""
     FORETELL = "foretell"
     """CR 116.2h."""
     PLOT = "plot"

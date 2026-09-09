@@ -4093,6 +4093,23 @@ def _stack_replacements(game: "Game", event: ReplaceableEvent) -> list[Applicabl
                 apply=_exile_instead,
             )
         )
+    from .keywords import has_paradigm  # imported here: casting imports this module's siblings
+
+    if has_paradigm(card.card) and event.resolving:
+        # CR 702.192a: Paradigm "represents two spell abilities ... 'Exile
+        # this spell.'" Unlike rebound's "if cast from your hand", this half
+        # is unconditional - every resolution of a Paradigm spell is exiled
+        # instead of going to the graveyard, whether it is the original cast
+        # or a later free-cast copy created by `models/game.py`'s own
+        # `_create_paradigm_delayed_trigger`/`ParadigmCopyAndCast`.
+        found.append(
+            ApplicableEffect(
+                key=f"{card.id}:paradigm",
+                source=card,
+                label="Paradigm: exile this spell instead (CR 702.192a)",
+                apply=_exile_instead,
+            )
+        )
     from .casting import adventure_face  # imported here: casting imports this module's siblings
 
     adventure = adventure_face(card.card)

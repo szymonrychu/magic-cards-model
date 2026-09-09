@@ -9581,6 +9581,14 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     resolved and did nothing: no exile, no `Notice`, the gap invisible.
     Possibility Storm shares the identical opening and is read the same way.
     """
+    from .meld import parse_meld_activation_clause, parse_meld_resolution_clause
+
+    meld_activation = parse_meld_activation_clause(effect_text)
+    if meld_activation is not None:
+        return meld_activation
+    meld_resolution = parse_meld_resolution_clause(effect_text)
+    if meld_resolution is not None:
+        return meld_resolution
     cast_from_hand_then_exile = _parse_cast_from_hand_then_exile_clause(effect_text)
     if cast_from_hand_then_exile is not None:
         return cast_from_hand_then_exile

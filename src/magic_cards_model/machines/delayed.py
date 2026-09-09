@@ -283,6 +283,61 @@ class ReboundRecast(DelayedEffectSpecBase):
         game.cast_free_from_exile(card, trigger.controller, keyword="Rebound")
 
 
+class ParadigmCopyAndCast(DelayedEffectSpecBase):
+    """CR 702.192a's own delayed trigger: "at the beginning of each of your
+    precombat main phases for the rest of the game, create a copy of this
+    object in exile. You may cast the copy without paying its mana cost."
+
+    Unlike `ReboundRecast`, which recasts the *same* exiled card, this
+    creates a brand-new copy (CR 707.2) each time it fires - `remaining=None`
+    on the `DelayedTrigger` that carries this ("for the rest of the game"),
+    so one Paradigm spell's first resolution can produce a fresh free cast
+    on every one of its controller's precombat mains from then on.
+
+    `still_affects` (CR 603.7c) is asked about the *original* exiled object,
+    not the copy: if something has removed the original Paradigm spell from
+    exile since it was created, there is nothing left to copy, and the
+    trigger simply produces nothing on that firing (and every one after,
+    since nothing here ever finds the original again) - the trigger itself
+    is not removed, matching CR 603.7b's "for the rest of the game" duration.
+
+    A declined copy does not linger: CR 704.5e/707.10a make "a copy of a
+    card is in any zone other than the stack or the battlefield" a
+    state-based action that erases it, and nothing here ever gives another
+    player a priority window between the copy's creation and the "you may
+    cast it" choice (both happen inside this one ability's resolution), so
+    removing a declined copy immediately is the same outcome that
+    state-based action would produce the next time it is checked - not a
+    substitute for building the general SBA (`docs/engine-coverage.md`
+    still lists it as unmodelled), just the one case this effect can settle
+    on its own without it.
+    """
+
+    kind: Literal["paradigm_copy_and_cast"] = "paradigm_copy_and_cast"
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        original = trigger.still_affects(game)
+        if original is None:
+            return
+        with game._id_allocator_scope():
+            state_type = CardState
+            copy = state_type(
+                card=original.card,
+                zone=Zone.EXILE,
+                controller=trigger.controller,
+                owner=original.owner,
+                is_copy=True,
+            )
+            game.exile.append(copy)
+        prompt = f"cast the copy of {copy.name} without paying its mana cost"
+        if not game.may(trigger.controller, prompt, source=copy.name):
+            # CR 704.5e/707.10a: a declined copy has nowhere to persist.
+            if copy in game.exile:
+                game.exile.remove(copy)
+            return
+        game.cast_free_from_exile(copy, trigger.controller, keyword="Paradigm")
+
+
 class DrawACardForController(DelayedEffectSpecBase):
     """ "Draw a card at the beginning of the next turn's upkeep" - Mishra's
     Bauble's second half. No object is named at all (CR 603.7c has nothing to
@@ -802,6 +857,7 @@ DelayedEffectSpec = Annotated[
     | ReturnSubjectToBattlefieldUnderOwner
     | ReturnSubjectToHand
     | ReboundRecast
+    | ParadigmCopyAndCast
     | DrawACardForController
     | DestroySubject
     | TapSubject
@@ -836,6 +892,7 @@ exile_subject_at_next_end_step = ExileSubjectAtNextEndStep()
 return_subject_to_battlefield_under_owner = ReturnSubjectToBattlefieldUnderOwner()
 return_subject_to_hand = ReturnSubjectToHand()
 rebound_recast = ReboundRecast()
+paradigm_copy_and_cast = ParadigmCopyAndCast()
 draw_a_card_for_controller = DrawACardForController()
 destroy_subject = DestroySubject()
 tap_subject = TapSubject()

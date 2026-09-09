@@ -3,6 +3,7 @@
 from collections.abc import Callable, Iterable, Mapping
 from random import Random
 from typing import Annotated, Any
+from uuid import UUID
 
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field
 
@@ -222,6 +223,20 @@ class Player(BaseModel):
     Set-only: CR 702.131c gives no rule that ever takes it away, so a player
     who drops back under ten permanents keeps it, and this field is never
     cleared on a new turn the way `life_gained_this_turn` is."""
+
+    companion_id: UUID | None = None
+    """The `CardState.id` of this player's chosen companion (CR 702.139a),
+    once `load_deck` has verified its printed condition against the mainboard
+    and stamped it into `Zone.SIDEBOARD` - an id, not the object itself, the
+    same "ids only" convention `models/action.py` documents: the live card is
+    reached through `outside_the_game`/`owned_outside_the_game`, never
+    embedded here a second time. `None` for a player with no revealed
+    companion, which is the default - CR 103.2b's reveal is optional."""
+
+    companion_action_used: bool = False
+    """CR 116.2g: "but only if they haven't done so yet this game" - the
+    special action that pays `{3}` to put the companion into hand may be
+    taken once. Set by `Game.bring_companion_to_hand`."""
 
     game: Any = Field(default=None, exclude=True, repr=False)
     """The game this player is in, set by `Game.model_post_init`.
@@ -811,6 +826,14 @@ class Player(BaseModel):
             self.add(CardState(card=resolve(card_name), controller=self.username), Zone.LIBRARY)
         for card_name in deck.sideboard_names():
             self.add(CardState(card=resolve(card_name), controller=self.username), Zone.SIDEBOARD)
+        if deck.companion is not None:
+            # `check_legality`/`deck.problems` above already refused an
+            # unfulfilled or unreadable condition when `check_legality` is on;
+            # a caller that turned it off (a deliberately illegal scenario) is
+            # trusted the same way it already is for mainboard/sideboard size.
+            companion_state = CardState(card=resolve(deck.companion), controller=self.username)
+            self.add(companion_state, Zone.SIDEBOARD)
+            self.companion_id = companion_state.id
         return self
 
     def shuffle(self, seed: Seed) -> list[CardState]:

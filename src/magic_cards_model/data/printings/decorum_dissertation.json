@@ -1,0 +1,137 @@
+{
+  "object": "card",
+  "id": "f4ab2d9b-c73d-478d-aac7-4d3bb24296d2",
+  "oracle_id": "f4c57454-d36f-4f38-b7ac-76477a516c3e",
+  "multiverse_ids": [],
+  "resource_id": "F5A64CD71E0D3166F3F35DA1B718540C7561BB536F3EC15743E232CB8BA3FFDD",
+  "mtgo_id": 149655,
+  "arena_id": 102537,
+  "tcgplayer_id": 688950,
+  "cardmarket_id": 882671,
+  "name": "Decorum Dissertation",
+  "lang": "en",
+  "released_at": "2026-04-24",
+  "uri": "https://api.scryfall.com/cards/f4ab2d9b-c73d-478d-aac7-4d3bb24296d2",
+  "scryfall_uri": "https://scryfall.com/card/sos/78/decorum-dissertation?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:48:03Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/4/f4ab2d9b-c73d-478d-aac7-4d3bb24296d2.jpg?1783903683",
+    "normal": "https://cards.scryfall.io/normal/front/f/4/f4ab2d9b-c73d-478d-aac7-4d3bb24296d2.jpg?1783903683",
+    "large": "https://cards.scryfall.io/large/front/f/4/f4ab2d9b-c73d-478d-aac7-4d3bb24296d2.jpg?1783903683",
+    "png": "https://cards.scryfall.io/png/front/f/4/f4ab2d9b-c73d-478d-aac7-4d3bb24296d2.png?1783903683",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/4/f4ab2d9b-c73d-478d-aac7-4d3bb24296d2.jpg?1783903683",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/4/f4ab2d9b-c73d-478d-aac7-4d3bb24296d2.jpg?1783903683",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/4/f4ab2d9b-c73d-478d-aac7-4d3bb24296d2.webp?1783903683",
+    "grid": "https://cards.scryfall.io/grid/front/f/4/f4ab2d9b-c73d-478d-aac7-4d3bb24296d2.webp?1783903683",
+    "display": "https://cards.scryfall.io/display/front/f/4/f4ab2d9b-c73d-478d-aac7-4d3bb24296d2.webp?1783903683",
+    "art": "https://cards.scryfall.io/art/front/f/4/f4ab2d9b-c73d-478d-aac7-4d3bb24296d2.webp?1783903683",
+    "crop": "https://cards.scryfall.io/crop/front/f/4/f4ab2d9b-c73d-478d-aac7-4d3bb24296d2.webp?1783903683"
+  },
+  "mana_cost": "{3}{B}{B}",
+  "cmc": 5.0,
+  "type_line": "Sorcery \u2014 Lesson",
+  "oracle_text": "Target player draws two cards and loses 2 life.\nParadigm (Then exile this spell. After you first resolve a spell with this name, you may cast a copy of it from exile without paying its mana cost at the beginning of each of your first main phases.)",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Paradigm"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "e487c9ce-5e76-4756-bcd0-e4b7db5c38a3",
+  "set": "sos",
+  "set_name": "Secrets of Strixhaven",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/e487c9ce-5e76-4756-bcd0-e4b7db5c38a3",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Asos&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/sos?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/f4ab2d9b-c73d-478d-aac7-4d3bb24296d2/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Af4c57454-d36f-4f38-b7ac-76477a516c3e&unique=prints",
+  "collector_number": "78",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Mila Pesic",
+  "artist_ids": [
+    "81c5ec23-220b-4efa-b7df-9e49dd371e8d"
+  ],
+  "illustration_id": "b77afa41-370a-4a20-b70c-6e36677a4980",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 3846,
+  "preview": {
+    "source": "MTG Baron",
+    "source_uri": "https://www.instagram.com/mtg_baron_ttv/p/DW2RFjajZ84/",
+    "previewed_at": "2026-04-07"
+  },
+  "prices": {
+    "usd": "5.62",
+    "usd_foil": "5.79",
+    "usd_etched": null,
+    "eur": "6.19",
+    "eur_foil": "6.32",
+    "tix": "1.15"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDecorum%2BDissertation",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDecorum%2BDissertation",
+    "edhrec": "https://edhrec.com/route/?cc=Decorum+Dissertation"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F688950%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=882671&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/149655?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

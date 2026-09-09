@@ -312,6 +312,7 @@ class Scenario:
         graveyard: list[str] | None = None,
         exile: list[str] | None = None,
         sideboard: list[str] | None = None,
+        companion: str | None = None,
     ) -> "Scenario":
         """Add a player, with the cards they start the scenario holding.
 
@@ -322,6 +323,13 @@ class Scenario:
         (CR 400.11a) - the cards CR 103.2a set aside before the game began, and
         the only place a "from outside the game" ability may reach. See
         `models/zone.py` for why that is not an eighth zone.
+
+        `companion` names a card to place outside the game and stamp as this
+        player's chosen companion (`Player.companion_id`, CR 702.139a) -
+        bypassing `Deck.companion_problems`'s own condition check, the same
+        way a scenario's `battlefield=` bypasses actually casting anything.
+        `tests/scenarios/test_companion.py` covers the condition check itself
+        directly against a `Deck`.
         """
         player = Player(username=username, life=life)
         for zone, names in (
@@ -335,6 +343,10 @@ class Scenario:
                 # where a real deck becomes a library too, so a scenario board
                 # and a loaded decklist agree about who owns what.
                 player.add(card_state(name), zone)
+        if companion is not None:
+            companion_state = card_state(companion)
+            player.add(companion_state, Zone.SIDEBOARD)
+            player.companion_id = companion_state.id
 
         self._players.append(player)
         self._battlefield.append((username, list(battlefield or [])))
@@ -1191,6 +1203,18 @@ class PlayedScenario:
                 payment.tap_for_mana(mana_source, mana_from(mana_source))
 
         return keywords.cycle(self.game, card_state, player, pay, index)
+
+    def bring_companion_to_hand(
+        self, *mana_sources: CardState, username: str | None = None
+    ) -> CardState:
+        """CR 116.2g: pay `{3}` and put `username`'s chosen companion into
+        their hand, paying with `mana_sources`."""
+        player = username or self.game.active_player.username
+        payment = self.game.begin_bringing_companion_to_hand(player)
+        for mana_source in mana_sources:
+            payment.tap_for_mana(mana_source, mana_from(mana_source))
+        payment.pay()
+        return self.game.bring_companion_to_hand(player)
 
     def turn_face_up(
         self, permanent: CardState, *mana_sources: CardState, username: str | None = None

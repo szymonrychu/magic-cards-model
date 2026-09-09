@@ -98,6 +98,8 @@ from ..machines.delayed import (
     DelayedTrigger,
     DelayedTriggers,
     ExileWarped,
+    ParadigmCopyAndCast,
+    paradigm_copy_and_cast,
     rebound_recast,
     return_subject_to_hand,
 )
@@ -123,6 +125,7 @@ from ..machines.keywords import (
     attachment_state_based_actions,
     aura_state_based_actions,
     equipment_state_based_actions,
+    has_paradigm,
     has_rebound,
     is_indestructible,
     keyword_effect_for,
@@ -1698,6 +1701,31 @@ class Game(BaseModel):
     told to wait for. See `machines/delayed.py`.
     """
 
+    melded_pairs: dict[UUID, CardState] = Field(default_factory=dict)
+    """The "held" other half of each melded permanent (CR 712.4a, 712.8g),
+    keyed by the *primary* `CardState.id` (the one still sitting in
+    `Game.battlefield`, carrying `CardState.meld_result`).
+
+    CR 712.4a: "the resulting permanent is a single object represented by two
+    cards." Rather than teach every battlefield-enumerating site in this
+    engine (combat, `legal_actions`, every state-based action) that a melded
+    pair is one permanent, the partner card is lifted out of `Game.
+    battlefield` entirely while melded and held here instead - so every
+    existing reader of `Game.battlefield` already sees exactly one permanent,
+    with no changes of its own needed. `Game.meld` puts a pair in; whichever
+    zone-leaving method the primary goes through next (`put_into_graveyard`,
+    `exile_permanent`, `return_to_hand`, ...) pops it back out through
+    `Game._accompany_meld_partner` and moves it to the same destination
+    (CR 712.21: "one permanent leaves the battlefield and two cards are put
+    into the appropriate zone").
+
+    A real `CardState`, not an id: unlike `Player.companion_id`, this is the
+    partner's *one* true home while melded - it is in no player's zones and
+    no shared zone, so embedding it here does not create the second,
+    independently-mutable copy `models/action.py`'s "ids only" convention
+    guards against.
+    """
+
     cast_records: dict[UUID, "CastRecord"] = Field(default_factory=dict)
     """How each spell now on the stack was cast, keyed by its id (CR 601.2b).
 
@@ -3209,6 +3237,7 @@ class Game(BaseModel):
             cast_from_hand = self.cast_record(spell).origin_zone is Zone.HAND
             self.put_into_graveyard(spell, resolving=True)
             self._create_rebound_delayed_trigger(spell, cast_from_hand)
+            self._create_paradigm_delayed_trigger(spell)
             self.cast_records.pop(spell.id, None)
 
         self._before_priority()
@@ -3423,6 +3452,66 @@ class Game(BaseModel):
                 expected_zone=Zone.EXILE,  # CR 603.7c
                 expected_stamp=spell.zone_change_stamp,  # CR 603.7c parenthetical
                 effect=rebound_recast,
+            )
+        )
+
+    def _create_paradigm_delayed_trigger(self, spell: CardState) -> None:
+        """CR 702.192a's own delayed trigger, the other half of Paradigm:
+        "If this is the first time a spell you control with this spell's
+        name has resolved this game, at the beginning of each of your
+        precombat main phases for the rest of the game, create a copy of
+        this object in exile. You may cast the copy without paying its mana
+        cost."
+
+        Created only once `put_into_graveyard` has already redirected this
+        spell into exile because of its own Paradigm replacement
+        (`machines/replacement._stack_replacements`), the same guard
+        `_create_rebound_delayed_trigger` uses - `spell.zone is Zone.EXILE`
+        confirms the replacement actually fired rather than merely that the
+        card prints the keyword.
+
+        "The first time ... has resolved this game" is read off whether a
+        `ParadigmCopyAndCast` trigger for this exact (controller, name) pair
+        already exists, rather than a separate counter: the trigger this
+        method creates has `remaining=None` ("for the rest of the game"), so
+        its own presence *is* the fact that a spell with this name already
+        resolved once under this controller. A second resolution - a
+        differently-cast, same-named copy from hand, or the delayed
+        trigger's own free-cast copy resolving in turn - finds the existing
+        trigger and creates no second one, which is what stops the number of
+        copies created per turn from doubling every time one resolves.
+        """
+        if not has_paradigm(spell.card) or spell.zone is not Zone.EXILE:
+            return
+        controller = spell.controller or self.active_player.username
+        name = spell.name
+        already_triggered = any(
+            isinstance(trigger.effect, ParadigmCopyAndCast)
+            and trigger.controller == controller
+            and trigger.source_name == name
+            for trigger in self.delayed_triggers.triggers
+        )
+        if already_triggered:
+            return
+        self.delayed_triggers.create(
+            DelayedTrigger(
+                text=(
+                    "At the beginning of each of your precombat main phases "
+                    "for the rest of the game, create a copy of this object "
+                    "in exile. You may cast the copy without paying its mana "
+                    "cost."
+                ),
+                event=TriggerEvent.BEGINNING_OF_STEP,
+                step=Step.PRECOMBAT_MAIN,
+                only_when_active=controller,  # CR 702.192a: "each of *your* ..."
+                remaining=None,  # CR 603.7b: "for the rest of the game"
+                controller=controller,
+                source_id=spell.id,
+                source_name=name,
+                subject_id=spell.id,
+                expected_zone=Zone.EXILE,  # CR 603.7c
+                expected_stamp=spell.zone_change_stamp,  # CR 603.7c parenthetical
+                effect=paradigm_copy_and_cast,
             )
         )
 
@@ -6505,6 +6594,7 @@ class Game(BaseModel):
             self._take_out_of_every_zone(permanent)
             self.combat.remove(permanent.id)  # CR 506.4
             self._owner_of(permanent).add(permanent, Zone.HAND)
+            self._accompany_meld_partner(permanent, Zone.HAND)
             if was_on_battlefield:
                 self.emit(
                     GameEvent(
@@ -6588,6 +6678,7 @@ class Game(BaseModel):
                 self.combat.remove(card_state.id)  # CR 506.4
                 owner = self._owner_of(card_state)
                 owner.add(card_state, Zone.LIBRARY)
+                self._accompany_meld_partner(card_state, Zone.LIBRARY)
                 moved.append(card_state)
                 if not was_in_library:
                     newly_in_library.append(card_state)
@@ -7973,6 +8064,8 @@ class Game(BaseModel):
             else:
                 raise ValueError(f"a graveyard replacement sent {card_state.name} nowhere")
 
+            self._accompany_meld_partner(card_state, event.destination)
+
             # CR 700.4: it only died if it actually reached a graveyard from the
             # battlefield. Exiled instead, the dies event never happened (CR 614.6).
             if was_on_battlefield and event.destination is Zone.GRAVEYARD:
@@ -8045,6 +8138,89 @@ class Game(BaseModel):
             and annotation.linked_permanent_id == permanent_id
         ]
 
+    def meld(self, source: CardState, partner: CardState, result_card: Card) -> CardState:
+        """CR 701.42a/712.4a/712.14c: meld `source` and `partner` into one
+        melded permanent with `result_card`'s combined-back-face
+        characteristics.
+
+        "Meld is a keyword action ... To meld the two cards in a meld pair,
+        put them onto the battlefield with their back faces up and combined.
+        The resulting permanent is a single object represented by two
+        cards." Both requirements this collapses to (CR 701.42b: "Only two
+        cards belonging to the same meld pair can be melded") are the
+        caller's to check before calling this at all - `machines/meld.py`'s
+        clause parser only ever calls it once it has confirmed the
+        controller both owns and controls both named cards on the
+        battlefield - so this itself does not refuse anything; it melds.
+
+        The steps, in CR 712.4a's own order: **exile both** (CR 701.13a,
+        each its own ordinary leaves-the-battlefield event - they are not
+        melded yet), then **put them onto the battlefield combined**
+        (CR 712.14c). `source` survives as the one `CardState` this engine
+        keeps in `Game.battlefield` for the pair - see `meld_result`'s own
+        docstring for why a second, independent object is never created -
+        and `partner` moves into `Game.melded_pairs`, off the battlefield
+        list entirely, until CR 712.21 sends it back out again.
+
+        `meld_combined_mana_value` (CR 202.3c/712.8g) is computed once, here,
+        from both cards' own immutable front-face mana values - it never
+        needs recomputing while melded.
+        """
+        with self._id_allocator_scope():
+            controller = self.controller_of(source).username
+            self.exile_permanent(source)
+            self.exile_permanent(partner)
+            # Both cards are momentarily real exiled objects (CR 701.13a) -
+            # `partner` is about to stop being one of `Game.exile`'s own
+            # cards and become the "held" half `Game.melded_pairs` keeps
+            # instead, so it is lifted back out here rather than left
+            # sitting in exile *and* referenced from `melded_pairs`, which
+            # would be the same double-bookkeeping trap `models/action.py`'s
+            # "ids only" convention exists to avoid.
+            self._take_out_of_every_zone(partner)
+            source.meld_result = result_card
+            source.melded_partner_id = partner.id
+            source.meld_combined_mana_value = source.card.cmc + partner.card.cmc
+            partner.melded_partner_id = source.id
+            self.put_onto_battlefield(source, controller)
+            self.melded_pairs[source.id] = partner
+            return source
+
+    def _accompany_meld_partner(self, primary: CardState, destination: Zone) -> None:
+        """CR 712.21: "If a melded permanent leaves the battlefield, one
+        permanent leaves the battlefield and two cards are put into the
+        appropriate zone." The primary's own move has already happened by
+        the time a caller reaches this - every zone-leaving method
+        (`put_into_graveyard`, `exile_permanent`, `return_to_hand`, `put_
+        cards_into_library`, `ante`) calls this right after appending
+        `primary` to `destination`'s own list - so this only has to bring
+        the partner along and revert `primary` to its own printed identity.
+
+        No second `LEAVES_THE_BATTLEFIELD`/`DIES` event is emitted for the
+        partner: CR 712.21 counts the pair as *one* permanent leaving, which
+        `primary`'s own emit (already done by the caller) already covers.
+        CR 712.21a's owner's-choice ordering for a graveyard or library
+        destination, and CR 712.21b's exile timestamp choice, are both
+        simplified to a fixed order (`primary` then `partner`) rather than a
+        live decision - recorded, not silently dropped, in `docs/engine-
+        coverage.md`'s Not-modelled table.
+        """
+        partner = self.melded_pairs.pop(primary.id, None)
+        if partner is None:
+            return
+        primary.meld_result = None
+        primary.melded_partner_id = None
+        primary.meld_combined_mana_value = None
+        partner.melded_partner_id = None
+        if destination.is_shared:
+            # A shared zone is appended to directly (there is no `Player.add`
+            # for it), so this is the one place that has to call `move_to`
+            # itself - `Player.add` below already does, for a per-player one.
+            partner.move_to(destination)
+            self.shared_zones[destination].append(partner)
+        else:
+            self._owner_of(partner).add(partner, destination)
+
     def exile_permanent(self, permanent: CardState) -> CardState:
         """Move a permanent to the shared exile zone.
 
@@ -8087,6 +8263,7 @@ class Game(BaseModel):
         self.combat.remove(permanent.id)  # CR 506.4
         permanent.move_to(Zone.EXILE)
         self.exile.append(permanent)
+        self._accompany_meld_partner(permanent, Zone.EXILE)
         if was_on_battlefield:
             self.emit(
                 GameEvent(
@@ -8155,6 +8332,7 @@ class Game(BaseModel):
             self.combat.remove(card_state.id)  # CR 506.4
             card_state.move_to(Zone.ANTE)
             self.ante_zone.append(card_state)
+            self._accompany_meld_partner(card_state, Zone.ANTE)
             if was_on_battlefield:
                 # CR 603.6c's generic departure. There is no ante-specific trigger
                 # event, and nothing in the pool watches for one.
@@ -9627,6 +9805,92 @@ class Game(BaseModel):
             self.enter_the_battlefield(land, username, was_cast=False)
             self.put_triggers_on_stack()
         return land
+
+    # -- companion (CR 702.139, CR 116.2g) ----------------------------------
+
+    def why_cannot_bring_companion_to_hand(self, username: str) -> str | None:
+        """Why `username` cannot take CR 116.2g's special action right now,
+        or None.
+
+        CR 116.2g: "A player who has chosen a companion may pay {3} to put
+        that card from outside the game into their hand. This is a special
+        action. A player can take this action any time they have priority
+        and the stack is empty during a main phase of their turn, but only
+        if they haven't done so yet this game."
+
+        `Player.companion_id` is set only once (`Player.load_deck`/
+        `tests.scenarios.harness.Scenario.player`) after CR 702.139a's own
+        condition check already passed, so this never re-checks the
+        condition - only whether the action is available *now*, the same
+        split `why_cannot_play_land` makes between CR 305.1's construction
+        rules and CR 305.2's turn-by-turn ones. Priority itself is not
+        checked, for the identical reason `why_cannot_play_land` does not:
+        this engine has no notion of a priority possession that persists
+        between moves, so the caller is trusted to hold it.
+        """
+        player = self.player(username)
+        if player.companion_id is None:
+            return f"{username} has not chosen a companion (CR 702.139a)"
+        if player.companion_action_used:
+            return (
+                f"{username} has already brought their companion into their hand "
+                f"this game (CR 116.2g)"
+            )
+        assert self.turn is not None
+        if self.turn.step not in MAIN_PHASES:
+            return (
+                f"{username} cannot bring a companion into their hand outside a main "
+                f"phase of their turn (CR 116.2g); the turn is in {self.turn.step.value}"
+            )
+        if not self.stack_is_empty:
+            return (
+                f"{username} cannot bring a companion into their hand while the stack "
+                f"is not empty (CR 116.2g)"
+            )
+        if username != self.turn.active_player:
+            return (
+                f"{username} cannot take this special action outside their own turn "
+                f"(CR 116.2g); it is {self.turn.active_player}'s turn"
+            )
+        return None
+
+    def begin_bringing_companion_to_hand(self, username: str) -> CostPayment:
+        """Announce CR 116.2g's special action and open its `{3}` payment.
+
+        Mirrors `begin_turning_face_up`'s two-call split for the same reason:
+        paying can take more than one priority-free moment, and CR 116.1 lets
+        a special action be taken any time its controller could take one, not
+        only once the whole cost is already in hand. Raises if the action is
+        unavailable at all, before anything has been spent.
+        """
+        refusal = self.why_cannot_bring_companion_to_hand(username)
+        if refusal is not None:
+            raise ValueError(refusal)
+        return CostPayment.for_total(TotalCost.of("{3}"), game=self, payer=username)
+
+    def bring_companion_to_hand(self, username: str) -> CardState:
+        """Finish CR 116.2g: put the chosen companion into hand.
+
+        The `{3}` is paid by the caller through `begin_bringing_companion_to_
+        hand`; this is the half that actually moves the card and spends the
+        once-per-game action. `Player.bring_into_the_game` is CR 400.11b's
+        general "from outside the game" mover - the same one Karn, the Great
+        Creator's `−2` uses (`_bring_in_from_outside_the_game_or_exile`) -
+        so companion gets CR 108.3b's ownership check and CR 400.11a's zone
+        check for free rather than a second copy of either.
+        """
+        refusal = self.why_cannot_bring_companion_to_hand(username)
+        if refusal is not None:
+            raise ValueError(refusal)
+        player = self.player(username)
+        assert player.companion_id is not None
+        companion_state = self.find_by_id(player.companion_id)
+        if not isinstance(companion_state, CardState):
+            raise ValueError(f"{username}'s companion could not be found")
+        with self._id_allocator_scope():
+            player.bring_into_the_game(companion_state, Zone.HAND)
+            player.companion_action_used = True
+        return companion_state
 
     # -- determining a spell's total cost (CR 601.2f) ----------------------
 

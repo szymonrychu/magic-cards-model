@@ -2290,6 +2290,19 @@ def intervening_if_holds(
     if not clause:
         return True
 
+    from .meld import meld_condition_holds
+
+    meld_holds = meld_condition_holds(game, clause, source)
+    if meld_holds is not None:
+        # CR 701.42a's "you both own and control this <type> and a[nother]
+        # <type> named <partner>" - Graf Rats' own triggered meld shape.
+        # Answered directly rather than through `_fail_closed`: this clause
+        # is fully readable (`machines/meld.py`'s regex is generic across
+        # every meld pair, not keyed to a card name), so a `False` here is
+        # a genuine "only one half is present right now", not an unreadable
+        # shape.
+        return meld_holds
+
     if clause == "you cast it":
         # CR 601.2's cast is a defined action distinct from every other way a
         # permanent can reach the battlefield (reanimation, a search-and-put

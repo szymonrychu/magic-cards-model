@@ -1,0 +1,173 @@
+{
+  "object": "card",
+  "id": "f830ede6-ddbf-49b9-80cd-e3dbeccbf208",
+  "oracle_id": "852edc00-9d98-427c-9869-7d0c8c121118",
+  "multiverse_ids": [
+    685945
+  ],
+  "mtgo_id": 135618,
+  "tcgplayer_id": 600515,
+  "cardmarket_id": 806035,
+  "name": "Graf Rats",
+  "lang": "en",
+  "released_at": "2025-01-24",
+  "uri": "https://api.scryfall.com/cards/f830ede6-ddbf-49b9-80cd-e3dbeccbf208",
+  "scryfall_uri": "https://scryfall.com/card/inr/113/graf-rats?utm_source=api",
+  "layout": "meld",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:02:22Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/8/f830ede6-ddbf-49b9-80cd-e3dbeccbf208.jpg?1783908142",
+    "normal": "https://cards.scryfall.io/normal/front/f/8/f830ede6-ddbf-49b9-80cd-e3dbeccbf208.jpg?1783908142",
+    "large": "https://cards.scryfall.io/large/front/f/8/f830ede6-ddbf-49b9-80cd-e3dbeccbf208.jpg?1783908142",
+    "png": "https://cards.scryfall.io/png/front/f/8/f830ede6-ddbf-49b9-80cd-e3dbeccbf208.png?1783908142",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/8/f830ede6-ddbf-49b9-80cd-e3dbeccbf208.jpg?1783908142",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/8/f830ede6-ddbf-49b9-80cd-e3dbeccbf208.jpg?1783908142",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/8/f830ede6-ddbf-49b9-80cd-e3dbeccbf208.webp?1783908142",
+    "grid": "https://cards.scryfall.io/grid/front/f/8/f830ede6-ddbf-49b9-80cd-e3dbeccbf208.webp?1783908142",
+    "display": "https://cards.scryfall.io/display/front/f/8/f830ede6-ddbf-49b9-80cd-e3dbeccbf208.webp?1783908142",
+    "art": "https://cards.scryfall.io/art/front/f/8/f830ede6-ddbf-49b9-80cd-e3dbeccbf208.webp?1783908142",
+    "crop": "https://cards.scryfall.io/crop/front/f/8/f830ede6-ddbf-49b9-80cd-e3dbeccbf208.webp?1783908142"
+  },
+  "mana_cost": "{1}{B}",
+  "cmc": 2.0,
+  "type_line": "Creature \u2014 Rat",
+  "oracle_text": "At the beginning of combat on your turn, if you both own and control this creature and a creature named Midnight Scavengers, exile them, then meld them into Chittering Host.",
+  "power": "2",
+  "toughness": "1",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Meld"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "bc079c81-85e8-4a0d-83fe-533c4feaa343",
+      "component": "meld_part",
+      "name": "Midnight Scavengers",
+      "type_line": "Creature \u2014 Human Rogue",
+      "uri": "https://api.scryfall.com/cards/bc079c81-85e8-4a0d-83fe-533c4feaa343"
+    },
+    {
+      "object": "related_card",
+      "id": "cd8586f9-97e2-438d-b74f-1e53c811f314",
+      "component": "combo_piece",
+      "name": "Eldritch Moon Checklist",
+      "type_line": "Card",
+      "uri": "https://api.scryfall.com/cards/cd8586f9-97e2-438d-b74f-1e53c811f314"
+    },
+    {
+      "object": "related_card",
+      "id": "607d82bd-13b1-499a-9005-0381e716013a",
+      "component": "meld_result",
+      "name": "Chittering Host",
+      "type_line": "Creature \u2014 Eldrazi Horror",
+      "uri": "https://api.scryfall.com/cards/607d82bd-13b1-499a-9005-0381e716013a"
+    },
+    {
+      "object": "related_card",
+      "id": "f830ede6-ddbf-49b9-80cd-e3dbeccbf208",
+      "component": "meld_part",
+      "name": "Graf Rats",
+      "type_line": "Creature \u2014 Rat",
+      "uri": "https://api.scryfall.com/cards/f830ede6-ddbf-49b9-80cd-e3dbeccbf208"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "b9618c8c-9f31-4b42-9798-2991893c27bf",
+  "set": "inr",
+  "set_name": "Innistrad Remastered",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/b9618c8c-9f31-4b42-9798-2991893c27bf",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ainr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/inr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/f830ede6-ddbf-49b9-80cd-e3dbeccbf208/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A852edc00-9d98-427c-9869-7d0c8c121118&unique=prints",
+  "collector_number": "113",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "c3719a8e-3197-4862-8bbb-1c92160aff0c",
+  "artist": "Jason Felix",
+  "artist_ids": [
+    "af42a44c-8ec3-47a7-9047-5d29ddad186d"
+  ],
+  "illustration_id": "d8ca94b1-ffa5-43e2-92c0-5d89156f1e86",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 18764,
+  "penny_rank": 12298,
+  "preview": {
+    "source": "Charles Wickham",
+    "source_uri": "",
+    "previewed_at": "2024-12-03"
+  },
+  "prices": {
+    "usd": "0.22",
+    "usd_foil": "0.31",
+    "usd_etched": null,
+    "eur": "0.16",
+    "eur_foil": "0.20",
+    "tix": "0.04"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=685945&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DGraf%2BRats",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DGraf%2BRats",
+    "edhrec": "https://edhrec.com/route/?cc=Graf+Rats"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F600515%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=806035&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/135618?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

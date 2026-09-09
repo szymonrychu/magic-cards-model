@@ -116,11 +116,30 @@ def _printed_costs() -> list[tuple[str, str, float | None]]:
     for name, printing in sorted(card_pool().items()):
         if printing.name != name:
             continue  # the front-face alias of a multifaced card
+        if _is_meld_result(printing):
+            # CR 202.3c/712.8g: a meld result's own `mana_cost` is blank (it
+            # is never cast on its own, CR 712.8b) while Scryfall's `cmc`
+            # already reports the *combined* value CR 202.3c defines -
+            # `CardState.mana_value` computes that sum itself
+            # (`meld_combined_mana_value`), so there is nothing for
+            # `ManaCost.parse` to agree with here; skipped rather than
+            # asserted, the same way a two-part cost is below.
+            continue
         if printing.mana_cost is not None:
             costs.append((name, printing.mana_cost, printing.cmc))
         for face in printing.card_faces or []:
             costs.append((f"{name} // {face.name}", face.mana_cost, face.cmc))
     return costs
+
+
+def _is_meld_result(printing) -> bool:
+    """Whether `printing` is the combined back face a meld pair forms
+    (CR 712.5), read off Scryfall's own `all_parts` component - the one
+    piece of a meld pair with no printed mana cost of its own."""
+    return any(
+        part.component == "meld_result" and part.name == printing.name
+        for part in printing.all_parts or []
+    )
 
 
 @pytest.mark.parametrize(("label", "mana_cost", "cmc"), _printed_costs())

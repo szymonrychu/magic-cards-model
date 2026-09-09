@@ -119,6 +119,15 @@ class Deck(BaseModel):
     mainboard: dict[str, int] = Field(default_factory=dict)
     sideboard: dict[str, int] = Field(default_factory=dict)
     limits: DeckLimits = Field(default_factory=DeckLimits)
+    companion: str | None = None
+    """A card named here, owned by the deck's player, from outside the game
+    (CR 400.11a) - not part of the mainboard or the fifteen-card sideboard,
+    and not counted toward either's size or copy limit. `problems` checks
+    that it actually has the companion keyword and that its own printed
+    condition (CR 702.139a) is fulfilled by `mainboard` (CR 702.139b: "your
+    starting deck ... after you've set aside any sideboard cards"), read off
+    its oracle text by `machines.companion.companion_condition_satisfied`
+    rather than keyed to the card's name."""
 
     # -- shape -------------------------------------------------------------
 
@@ -207,7 +216,38 @@ class Deck(BaseModel):
             copies = self.total_copies(card_name)
             if allowed is not None and copies > allowed:
                 problems.append(f"{copies} copies of {card.name}, which is limited to {allowed}")
+        problems.extend(self.companion_problems(resolve))
         return problems
+
+    def companion_problems(self, resolve: CardResolver) -> list[str]:
+        """CR 702.139a/b: `self.companion`, checked against the mainboard alone.
+
+        Imported lazily - `machines/` imports `models/`, so the reverse
+        import only resolves at call time, the same convention every other
+        `models/` file that reaches into `machines/` already follows.
+        """
+        if self.companion is None:
+            return []
+        from ..machines.companion import companion_condition_satisfied, has_companion
+
+        try:
+            companion_card = resolve(self.companion)
+        except (KeyError, LookupError) as missing:
+            return [f"companion {self.companion} is not a real card: {missing}"]
+        if not has_companion(companion_card):
+            return [f"{companion_card.name} has no companion ability (CR 702.139a)"]
+        mainboard_cards = []
+        for card_name in self.mainboard_names():
+            try:
+                mainboard_cards.append(resolve(card_name))
+            except (KeyError, LookupError) as missing:
+                return [f"{card_name} is not a real card: {missing}"]
+        result = companion_condition_satisfied(
+            companion_card, mainboard_cards, minimum_deck_size=self.limits.min_mainboard
+        )
+        if result.satisfied is not True:
+            return [f"companion condition not fulfilled: {result.reason}"]
+        return []
 
     def is_legal(self, resolve: CardResolver) -> bool:
         return not self.problems(resolve)

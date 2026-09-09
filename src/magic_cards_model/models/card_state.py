@@ -705,6 +705,50 @@ class CardState(BaseModel):
     ignored by every reader once the card leaves the stack (CR 709.2: "only
     one card" everywhere else), since nothing reads either field there.
     """
+    meld_result: Card | None = None
+    """The combined back face's printed characteristics (CR 712.8g), while
+    this `CardState` is one half of a melded permanent - the surviving,
+    "primary" half; its partner lives in `Game.melded_pairs`, keyed by this
+    object's own `id`.
+
+    CR 712.8g: "While the two cards of a meld pair are on the battlefield as
+    a melded permanent, the object represented by those cards has only the
+    characteristics of the combined back face." `Card` (not `CardFace`) on
+    purpose: `Card` already carries every field `up_face` callers read
+    (`name`, `type_line`, `oracle_text`, `mana_cost`, `colors`, `power`,
+    `toughness`, `loyalty`) with the same names a `CardFace` has, so
+    `CardState.up_face` can hand this straight back and every existing
+    reader - `types`, `subtypes`, `oracle_text`, `power`, `toughness`,
+    `name`, and `machines/layers.printed_characteristics` through them - gets
+    the melded permanent's characteristics for free, the same way `up_face`
+    already gives a transformed permanent its back face's. This is the
+    combined-back-face printing itself (Hanweir, the Writhing Township, say),
+    resolved by name off `Card.all_parts`'s own `meld_result` component
+    (`machines/meld.py`), not a hand-built stand-in.
+
+    `None` for every card that has never been melded, and for the "held"
+    partner half too - only the primary carries this, which is what makes
+    "one object represented by two cards" (CR 712.4a) collapse to one
+    `CardState` on `Game.battlefield` rather than two independent ones combat,
+    legal_actions and every state-based action would otherwise have to be
+    taught to treat as a single permanent by hand.
+    """
+
+    melded_partner_id: UUID | None = None
+    """The `id` of this permanent's other card, while melded - an id, not a
+    live reference, for the same reason `Player.companion_id` is: the actual
+    `CardState` lives in `Game.melded_pairs`, so nothing embeds a second,
+    independently-mutable copy of it (see `memory/keyword-activation-round-
+    trip-identity.md` for the shape of bug that class of embedding causes)."""
+
+    meld_combined_mana_value: float | None = None
+    """CR 202.3c/712.8g: "the mana value of a melded permanent is calculated
+    as though it had the combined mana cost of the front faces of each card
+    that represents it" - computed once, when `Game.meld` forms the pair
+    (both front-face mana values are immutable printed data, so this never
+    needs recomputing), and read by `CardState.mana_value` in place of
+    `self.card.cmc` while `meld_result` is set."""
+
     exerted: bool = False
     """True while this permanent will not untap during its controller's next
     untap step (CR 701.43a).
@@ -1212,6 +1256,14 @@ class CardState(BaseModel):
         already *are* the up face - every caller must keep that fallback, or a
         single-faced permanent ends up with no characteristics at all.
         """
+        if self.meld_result is not None:
+            # CR 712.8g, CR 712.4c: meld cards "cannot be transformed or
+            # converted", so this never competes with the `transformed`/
+            # land-face branches below - it is checked first only for
+            # clarity, not because of an ordering hazard. `Card` mirrors a
+            # `CardFace`'s own fields (see `meld_result`'s docstring), so it
+            # is handed back exactly as a real face would be.
+            return self.meld_result
         land_face = self._land_face
         if land_face is not None:
             return land_face
@@ -1374,6 +1426,14 @@ class CardState(BaseModel):
             return ()  # CR 406.3a
         if self.face_down_characteristics is not None:
             return self.face_down_characteristics.keywords
+        if self.meld_result is not None:
+            # CR 712.8g: the melded permanent's own keywords, not this card's
+            # printed ones - Hanweir Battlements prints only Meld, and the
+            # permanent it becomes has Trample and Haste instead. A meld
+            # result is a whole `Card`, not a `CardFace`, with no faces of
+            # its own to filter by, so this is the "no faces" branch below,
+            # just read off `meld_result` instead of `self.card`.
+            return self._with_bestowed_enchant(tuple(self.meld_result.keywords))
         if not self.card.card_faces:
             return self._with_bestowed_enchant(tuple(self.card.keywords))
         # Imported here: `machines/` imports `models/`, so the reverse import
@@ -1454,6 +1514,12 @@ class CardState(BaseModel):
         if self.has_no_characteristics or self.face_down_characteristics is not None:
             # CR 406.3a / CR 708.2: no mana cost, so CR 202.3a says 0.
             return 0.0
+        if self.meld_result is not None and self.meld_combined_mana_value is not None:
+            # CR 202.3c/712.8g: the *sum* of both cards' own front-face mana
+            # values - not `self.meld_result.cmc`, which is the combined back
+            # face's own printed value and, per CR 712.8b, means nothing off
+            # the battlefield to begin with.
+            return self.meld_combined_mana_value
         land_face = self._land_face
         if land_face is not None:
             from .mana import ManaCost

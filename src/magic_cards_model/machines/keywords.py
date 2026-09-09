@@ -117,6 +117,7 @@ class KeywordRule(StrEnum):
     EVOKE = "CR 702.74a"
     UNEARTH = "CR 702.84a"
     TRANSMUTE = "CR 702.53a"
+    PARADIGM = "CR 702.192a"
 
 
 def executes(keyword: str) -> bool:
@@ -157,6 +158,16 @@ def executes(keyword: str) -> bool:
         # `_parse_create_role_token_clause` reads off the card's own printed
         # text, not something this module dispatches.
         "role token",
+        # CR 702.192a: "Exile this spell" is `machines/replacement.py`'s
+        # `_stack_replacements` entry, the delayed copy-and-cast is
+        # `machines/delayed.ParadigmCopyAndCast`, and both are wired up from
+        # `models/game.py`'s `resolve_top`.
+        "paradigm",
+        # CR 701.42a: `machines/meld.py`'s clause parsers, wired into
+        # `machines/effects.py`'s `_ability_effect_or_notice` (activated and
+        # triggered) and `machines/triggers.intervening_if_holds`
+        # (triggered), and `models/game.py`'s `Game.meld` is the mechanism.
+        "meld",
         # CR 702.74a. Two abilities, executed in two places: the static half is
         # an alternative cost and belongs to `machines/casting.py`
         # (`keyword_cast_options`), the triggered half - "When this permanent
@@ -2835,6 +2846,20 @@ def has_rebound(card: Card) -> bool:
     mistaken for one that prints the ability.
     """
     return any(keyword.lower() == "rebound" for keyword in card.keywords)
+
+
+# --------------------------------------------------------------------------
+# Paradigm (CR 702.192)
+# --------------------------------------------------------------------------
+
+
+def has_paradigm(card: Card) -> bool:
+    """CR 702.192a: "Paradigm represents two spell abilities ... 'Exile this
+    spell.'" Read off Scryfall's own `keywords` list, the same way `has_
+    rebound` is - a card whose reminder text merely mentions the word is
+    never mistaken for one that prints the ability.
+    """
+    return any(keyword.lower() == "paradigm" for keyword in card.keywords)
 
 
 # --------------------------------------------------------------------------
