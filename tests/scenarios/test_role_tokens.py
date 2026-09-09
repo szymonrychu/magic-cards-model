@@ -26,6 +26,45 @@ from magic_cards_model.models.token import (
 )
 from tests.scenarios.harness import Scenario
 
+# --------------------------------------------------------------------------
+# Generality: a second Role card, differently shaped from Monstrous Rage
+# (CR 111.10j's Cursed rather than 111.10k's Monster; a triggered ability
+# naming its own "target creature you control" rather than a spell's
+# anaphoric "it"; a characteristic-setting grant rather than a P/T pump).
+# --------------------------------------------------------------------------
+
+
+def test_spiteful_hexmage_creates_a_cursed_role_on_its_own_target():
+    """Spiteful Hexmage: "When this creature enters, create a Cursed Role token
+    attached to target creature you control." (Enchanted creature is 1/1.)
+
+    Unlike Monstrous Rage, this clause names its own target directly - there is
+    no earlier sentence for "it" to refer back to - and CR 111.10j's grant sets
+    base power and toughness rather than adding to it, so the same generic
+    Role-token reader has to carry a target-word phrase, not just an anaphor,
+    and a different predefined token's own text.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Spiteful Hexmage"], battlefield=["Swamp", "Grizzly Bears"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    (swamp,) = scenario.untapped_sources("Swamp", username="alice")
+
+    scenario.choose_trigger_targets("Spiteful Hexmage", [bears])
+    scenario.cast_and_resolve("Spiteful Hexmage", swamp, username="alice")
+    scenario.pass_until_resolved()
+
+    role = scenario.find("Cursed", Zone.BATTLEFIELD)
+    assert is_token(role)
+    assert role.attached_to == bears.id
+    assert role.card.subtypes == ["Aura", "Role"]
+    assert scenario.game.power_of(bears) == 1
+    assert scenario.game.toughness_of(bears) == 1
+
 
 def board() -> Scenario:
     """A bear to enrage and a Mountain to pay for it."""

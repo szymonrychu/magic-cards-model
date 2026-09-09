@@ -73,7 +73,6 @@ from ..models.card_state import (
 from ..models.mana import ManaCost
 from ..models.player import Player
 from ..models.token import (
-    MONSTER_ROLE,
     PREDEFINED,
     TokenDefinition,
     create_tokens,
@@ -1556,40 +1555,6 @@ def hangarback_dies(game: "Game", ability: AbilityOnStack) -> None:
     create_tokens(game, THOPTER, ability.controller, counters[Counter.PLUS_ONE])
 
 
-def monstrous_rage(game: "Game", spell: CardState) -> None:
-    """Monstrous Rage: "Target creature gets +2/+0 until end of turn. Create a
-    Monster Role token attached to it."
-
-    Both halves, in printed order (CR 608.2c).
-
-    The +2/+0 is a continuous effect from a resolving spell (CR 611.2) in
-    sublayer 7c (CR 613.4c), read off the card's own text by `machines/layers.py`'s
-    `parsed_layer_effects` - the second sentence here, token creation, is not a
-    continuous effect at all and is not something that parser reads.
-
-    The Role is CR 111.10k's predefined token: "a colorless Aura Role enchantment
-    token named Monster with enchant creature and 'Enchanted creature gets +1/+1
-    and has trample.'" It is created **attached** to the target (CR 701.3a), so
-    it never spends a moment unattached and CR 704.5m's state-based action -
-    "if an Aura is attached to an illegal object or player, or is not attached to
-    an object or player, that Aura is put into its owner's graveyard" - has
-    nothing to do. What the Role grants is a static ability of the token, so it
-    is a `LAYER_EFFECTS` entry keyed on the token's name, `"Monster"`.
-
-    CR 303.7a and CR 704.5z are the reminder text in parentheses on the card:
-    "If a permanent has more than one Role controlled by the same player attached
-    to it, each of those Roles except the one with the most recent timestamp is
-    put into its owner's graveyard." That state-based action is **not**
-    dispatched by `Game.check_state_based_actions`; see `docs/engine-coverage.md`.
-    """
-    create_continuous_effect(game, spell)
-    for target in game.resolve_card_targets(spell):
-        if target.zone is Zone.BATTLEFIELD:
-            create_tokens(
-                game, MONSTER_ROLE, game.controller_of(spell).username, attached_to=target
-            )
-
-
 def take_an_extra_turn(game: "Game", spell: CardState) -> None:
     """Savor the Moment: "Take an extra turn after this one. Skip the untap step
     of that turn." Both sentences.
@@ -1941,7 +1906,12 @@ EFFECTS: dict[str, Effect] = {
     # text, so `effect_for`'s fallback reaches it. See
     # `tests/scenarios/test_registry_is_minimal.py`.
     "Malevolent Rumble": malevolent_rumble,
-    "Monstrous Rage": monstrous_rage,
+    # "Monstrous Rage": "Target creature gets +2/+0 until end of turn. Create
+    # a Monster Role token attached to it." is not entered here any more:
+    # the pump is `_CONTINUOUS_PUMP_OR_KEYWORD_RE`'s existing shape and the
+    # token creation is `_parse_create_role_token_clause`'s (CR 111.10j-r),
+    # both read off the card's own printed text, so `effect_for`'s fallback
+    # reaches both clauses. See `tests/scenarios/test_registry_is_minimal.py`.
     # "Take an extra turn after this one" (CR 500.7).
     "Savor the Moment": take_an_extra_turn,
     # Preordain's "Scry 2, then draw a card." is not entered here any more:
@@ -11581,6 +11551,61 @@ _OBJECT_ANAPHOR = (
 )
 _OBJECT_ANAPHOR_RE = re.compile(rf"\b{_OBJECT_ANAPHOR}\b", re.IGNORECASE)
 
+#: CR 111.10j-r: "Create a(n) <Role> Role token attached to <X>." - one shape
+#: shared by every CR 111.10 Role (Monster, Cursed, Royal, Sorcerer, Virtuous,
+#: Wicked, Young Hero), read off the printed sentence rather than by card
+#: name. `X` is either an object anaphor (Monstrous Rage's "attached to it",
+#: referring back to a target an earlier clause of the same spell already
+#: established) or this clause's own "target ..." phrase (Spiteful Hexmage's
+#: "attached to target creature you control") - `_OBJECT_ANAPHOR` above and
+#: the ordinary "target" grammar `_targets_understood` already vets are both
+#: already-built vocabularies, not new ones.
+_CREATE_ROLE_TOKEN_RE = re.compile(
+    rf"create an? (?P<role>[A-Za-z][A-Za-z ]*?) role token attached to "
+    rf"(?P<phrase>{_OBJECT_ANAPHOR}|target .+)",
+    re.IGNORECASE,
+)
+
+
+def _parse_create_role_token_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """ "Create a(n) <Role> Role token attached to <X>." (CR 111.10j-r).
+
+    Not entered by card name: `models/token.PREDEFINED` carries every CR
+    111.10 Role's own text (each an Aura enchantment token, CR 303.7a), and
+    this only has to find the target the Role attaches to - CR 701.3a's
+    "never spends a moment unattached" is what `create_tokens`'s own
+    `attached_to=` already guarantees, so CR 704.5m has nothing to do the
+    instant the token arrives.
+
+    Both the anaphoric shape (a pump clause targets first; this clause's "it"
+    is that same target) and the self-targeting shape (this clause is the
+    whole ability and names its own "target creature you control") resolve
+    through `game.resolve_targets(stack_object)` - CR 601.2c/603.3c settle a
+    spell's or ability's targets once, before any of its clauses run, so it
+    does not matter which clause's own words put the target requirement on
+    the stack object.
+    """
+    match = _CREATE_ROLE_TOKEN_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    definition = PREDEFINED.get(match.group("role").strip().title())
+    if definition is None or definition.subtypes != ("Aura", "Role"):
+        return None
+    phrase = match.group("phrase").strip()
+    if not _OBJECT_ANAPHOR_RE.fullmatch(phrase) and not _targets_understood(
+        phrase, count_agnostic=True
+    ):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        for target in game.resolve_targets(stack_object):
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
+                create_tokens(game, definition, controller, attached_to=target)
+
+    return effect
+
+
 #: What an antecedent clause's own words say its objects are - the three
 #: shapes this wave can answer, and nothing else.
 ReferentReader = Callable[["Game", "StackObject"], list[CardState]]
@@ -17870,6 +17895,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     token = _parse_token_clause(clause, for_spell=for_spell)
     if token is not None:
         return token
+    role_token = _parse_create_role_token_clause(clause, for_spell=for_spell)
+    if role_token is not None:
+        return role_token
     city_blessing_copy = _parse_city_blessing_token_copy_clause(clause, for_spell=for_spell)
     if city_blessing_copy is not None:
         return city_blessing_copy

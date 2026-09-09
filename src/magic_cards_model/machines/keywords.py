@@ -138,6 +138,12 @@ def executes(keyword: str) -> bool:
         "rebound",
         "hideaway",
         "crew",
+        # CR 111.10j-r's Role family. The keyword line itself is Scryfall's
+        # "Role token"; the ability it stands for - "Create a(n) [Role] Role
+        # token attached to [X]." - is a clause `machines/effects.py`'s
+        # `_parse_create_role_token_clause` reads off the card's own printed
+        # text, not something this module dispatches.
+        "role token",
         # CR 702.74a. Two abilities, executed in two places: the static half is
         # an alternative cost and belongs to `machines/casting.py`
         # (`keyword_cast_options`), the triggered half - "When this permanent

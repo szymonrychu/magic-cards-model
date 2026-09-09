@@ -439,6 +439,74 @@ MONSTER_ROLE = TokenDefinition(
     rules_text="Enchant creature\nEnchanted creature gets +1/+1 and has trample.",
 )
 
+#: CR 111.10j-r: the rest of the CR 111.10 Role family, same shape as Monster
+#: above - a colorless Aura Role enchantment token, named by the rule rather
+#: than derived (CR 111.4), each granting its own static (and, for Wicked, a
+#: triggered) ability to whatever it enchants. Spelled out here rather than
+#: waiting for a second named card to need them, because CR 111.10 defines
+#: every one of these the instant "Role token" is a keyword this engine reads
+#: at all - a card printing a Role this dict doesn't have would otherwise
+#: fail closed on a real predefined token the rule already states in full.
+CURSED_ROLE = TokenDefinition(
+    types=(Type.ENCHANTMENT,),
+    subtypes=("Aura", "Role"),
+    name="Cursed",
+    keywords=("Enchant",),
+    rules_text="Enchant creature\nEnchanted creature has base power and toughness 1/1.",
+)
+
+ROYAL_ROLE = TokenDefinition(
+    types=(Type.ENCHANTMENT,),
+    subtypes=("Aura", "Role"),
+    name="Royal",
+    keywords=("Enchant",),
+    rules_text="Enchant creature\nEnchanted creature gets +1/+1 and has ward {1}.",
+)
+
+SORCERER_ROLE = TokenDefinition(
+    types=(Type.ENCHANTMENT,),
+    subtypes=("Aura", "Role"),
+    name="Sorcerer",
+    keywords=("Enchant",),
+    rules_text=(
+        "Enchant creature\n"
+        'Enchanted creature gets +1/+1 and has "Whenever this creature attacks, scry 1."'
+    ),
+)
+
+VIRTUOUS_ROLE = TokenDefinition(
+    types=(Type.ENCHANTMENT,),
+    subtypes=("Aura", "Role"),
+    name="Virtuous",
+    keywords=("Enchant",),
+    rules_text="Enchant creature\nEnchanted creature gets +1/+1 for each enchantment you control.",
+)
+
+WICKED_ROLE = TokenDefinition(
+    types=(Type.ENCHANTMENT,),
+    subtypes=("Aura", "Role"),
+    name="Wicked",
+    keywords=("Enchant",),
+    rules_text=(
+        "Enchant creature\n"
+        "Enchanted creature gets +1/+1.\n"
+        "When this token is put into a graveyard from the battlefield, each opponent "
+        "loses 1 life."
+    ),
+)
+
+YOUNG_HERO_ROLE = TokenDefinition(
+    types=(Type.ENCHANTMENT,),
+    subtypes=("Aura", "Role"),
+    name="Young Hero",
+    keywords=("Enchant",),
+    rules_text=(
+        "Enchant creature\n"
+        'Enchanted creature has "Whenever this creature attacks, if its toughness is 3 '
+        'or less, put a +1/+1 counter on it."'
+    ),
+)
+
 #: The predefined tokens this engine knows, by the name a card calls them
 #: (CR 111.10). The list in the rules is much longer; these are the ones the
 #: card pool reaches for.
@@ -447,6 +515,12 @@ PREDEFINED: dict[str, TokenDefinition] = {
     "Food": FOOD,
     "Powerstone": POWERSTONE,
     "Monster": MONSTER_ROLE,
+    "Cursed": CURSED_ROLE,
+    "Royal": ROYAL_ROLE,
+    "Sorcerer": SORCERER_ROLE,
+    "Virtuous": VIRTUOUS_ROLE,
+    "Wicked": WICKED_ROLE,
+    "Young Hero": YOUNG_HERO_ROLE,
 }
 
 

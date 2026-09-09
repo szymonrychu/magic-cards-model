@@ -1,0 +1,161 @@
+{
+  "object": "card",
+  "id": "40c797b2-db51-4a39-b80e-44d58cd7a07c",
+  "oracle_id": "d07e0d88-8b7f-423d-97b7-cf7b80d8924c",
+  "multiverse_ids": [
+    629609
+  ],
+  "mtgo_id": 116532,
+  "arena_id": 86804,
+  "tcgplayer_id": 512706,
+  "cardmarket_id": 728478,
+  "name": "Spiteful Hexmage",
+  "lang": "en",
+  "released_at": "2023-09-08",
+  "uri": "https://api.scryfall.com/cards/40c797b2-db51-4a39-b80e-44d58cd7a07c",
+  "scryfall_uri": "https://scryfall.com/card/woe/108/spiteful-hexmage?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:58:22Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/4/0/40c797b2-db51-4a39-b80e-44d58cd7a07c.jpg?1783915102",
+    "normal": "https://cards.scryfall.io/normal/front/4/0/40c797b2-db51-4a39-b80e-44d58cd7a07c.jpg?1783915102",
+    "large": "https://cards.scryfall.io/large/front/4/0/40c797b2-db51-4a39-b80e-44d58cd7a07c.jpg?1783915102",
+    "png": "https://cards.scryfall.io/png/front/4/0/40c797b2-db51-4a39-b80e-44d58cd7a07c.png?1783915102",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/4/0/40c797b2-db51-4a39-b80e-44d58cd7a07c.jpg?1783915102",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/4/0/40c797b2-db51-4a39-b80e-44d58cd7a07c.jpg?1783915102",
+    "thumb": "https://cards.scryfall.io/thumb/front/4/0/40c797b2-db51-4a39-b80e-44d58cd7a07c.webp?1783915102",
+    "grid": "https://cards.scryfall.io/grid/front/4/0/40c797b2-db51-4a39-b80e-44d58cd7a07c.webp?1783915102",
+    "display": "https://cards.scryfall.io/display/front/4/0/40c797b2-db51-4a39-b80e-44d58cd7a07c.webp?1783915102",
+    "art": "https://cards.scryfall.io/art/front/4/0/40c797b2-db51-4a39-b80e-44d58cd7a07c.webp?1783915102",
+    "crop": "https://cards.scryfall.io/crop/front/4/0/40c797b2-db51-4a39-b80e-44d58cd7a07c.webp?1783915102"
+  },
+  "mana_cost": "{B}",
+  "cmc": 1.0,
+  "type_line": "Creature \u2014 Human Warlock",
+  "oracle_text": "When this creature enters, create a Cursed Role token attached to target creature you control. (If you control another Role on it, put that one into the graveyard. Enchanted creature is 1/1.)",
+  "power": "3",
+  "toughness": "2",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Role token"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "a9b7040e-cd24-42cc-b043-9af8c557da6a",
+      "component": "token",
+      "name": "Wicked // Cursed",
+      "type_line": "Token Enchantment \u2014 Aura Role // Token Enchantment \u2014 Aura Role",
+      "uri": "https://api.scryfall.com/cards/a9b7040e-cd24-42cc-b043-9af8c557da6a"
+    },
+    {
+      "object": "related_card",
+      "id": "d527d48d-d6f7-4587-955e-de23b80ce0d6",
+      "component": "combo_piece",
+      "name": "Spiteful Hexmage",
+      "type_line": "Creature \u2014 Human Warlock",
+      "uri": "https://api.scryfall.com/cards/d527d48d-d6f7-4587-955e-de23b80ce0d6"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "79139661-13ee-43c4-8bad-a8c069f1a1df",
+  "set": "woe",
+  "set_name": "Wilds of Eldraine",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/79139661-13ee-43c4-8bad-a8c069f1a1df",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Awoe&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/woe?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/40c797b2-db51-4a39-b80e-44d58cd7a07c/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ad07e0d88-8b7f-423d-97b7-cf7b80d8924c&unique=prints",
+  "collector_number": "108",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "\"Who'll never amount to anything now, Father?\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Anna Steinbauer",
+  "artist_ids": [
+    "3516496c-c279-4b56-8239-720683d03ae0"
+  ],
+  "illustration_id": "1a623ef1-fbc4-4a2e-a711-8dca734a6bdd",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 21427,
+  "penny_rank": 3472,
+  "preview": {
+    "source": "Vandal",
+    "source_uri": "https://vandal.elespanol.com/noticia/r21895/magic-desvelamos-en-vandal-cuatro-cartas-exclusivas-de-las-tierras-salvajes-de-eldraine-la-nueva-y-esperada-expansion",
+    "previewed_at": "2023-08-17"
+  },
+  "prices": {
+    "usd": "0.17",
+    "usd_foil": "0.19",
+    "usd_etched": null,
+    "eur": "0.12",
+    "eur_foil": "0.25",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=629609&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSpiteful%2BHexmage",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSpiteful%2BHexmage",
+    "edhrec": "https://edhrec.com/route/?cc=Spiteful+Hexmage"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F512706%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=728478&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/116532?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -4117,6 +4117,12 @@ _ATTACHED_CREATURE_STATIC_RE = re.compile(
     r"(?:gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)"
     r"(?: and has (?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*))?"
     r'|has "(?P<granted>.+)"'
+    # CR 111.10j's Cursed Role: "Enchanted creature has base power and
+    # toughness 1/1." - a *set* (sublayer 7b, CR 613.4b), not the `gets`
+    # branch's *modify* (7c). No "until end of turn": the Role's grant is a
+    # static ability with no stated duration, unlike `_BASE_PT_SET_RE`'s
+    # temporary shape above.
+    r"|has base power and toughness (?P<base_power>\d+)/(?P<base_toughness>\d+)"
     r"|has (?P<only_keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*))\.?$",
     re.IGNORECASE | re.DOTALL,
 )
@@ -4405,6 +4411,8 @@ def _attached_creature_static_builder(
     *,
     subject: str,
     granted: str | None = None,
+    base_power: int | None = None,
+    base_toughness: int | None = None,
     line: str,
 ) -> EffectBuilder:
     """`_ATTACHED_CREATURE_STATIC_RE`'s shape - Cori-Steel Cutter's "Equipped
@@ -4444,6 +4452,22 @@ def _attached_creature_static_builder(
         if attached is None:
             return []
         effects: list[ContinuousEffect] = []
+        if base_power is not None and base_toughness is not None:
+            effects.append(
+                ContinuousEffect(
+                    description=(
+                        f"{source.name}: {subject} creature has base power and "
+                        f"toughness {base_power}/{base_toughness}"
+                    ),
+                    layer=Layer.POWER_TOUGHNESS,
+                    sublayer=Sublayer.SET,
+                    timestamp=timestamp,
+                    source_id=source.id,
+                    source_ability=_source_line_for(source, line),
+                    selector=_only(attached),
+                    modification=set_power_toughness(base_power, base_toughness),
+                )
+            )
         if power or toughness:
             effects.append(
                 ContinuousEffect(
@@ -5311,12 +5335,16 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             if validated is None:
                 return None
             keywords = validated
+        base_power = match.group("base_power")
+        base_toughness = match.group("base_toughness")
         return _attached_creature_static_builder(
             int(match.group("power") or 0),
             int(match.group("toughness") or 0),
             keywords,
             subject=match.group("attachment").lower(),
             granted=(match.group("granted") or "").strip() or None,
+            base_power=int(base_power) if base_power is not None else None,
+            base_toughness=int(base_toughness) if base_toughness is not None else None,
             line=sentence,
         )
     if match := _ATTACHED_CREATURE_LOSES_AND_BECOMES_RE.fullmatch(sentence):
