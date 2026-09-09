@@ -14160,6 +14160,161 @@ def _parse_earthbend_clause(clause: str, *, for_spell: bool) -> TargetedClause |
     return effect
 
 
+# --------------------------------------------------------------------------
+# Amass (CR 701.47) - the same shape as earthbend just above: a CR 701 keyword
+# action embedded in another ability's effect text rather than an ability of
+# its own. Orcish Bowmasters' "... Then amass Orcs 1." is the pool's printing,
+# and it was silent twice over - the sentence-initial "Then" made the clause
+# unreadable, which correctly refused the damage half with it (CR 608.2c), and
+# nothing anywhere in the engine knew what the word meant.
+# --------------------------------------------------------------------------
+
+#: "amass `<subtype>` N" - CR 701.47d is why the subtype is not optional here:
+#: "Some older cards were printed with amass N without including a subtype.
+#: Those cards have received errata in the Oracle card reference so that they
+#: read 'amass Zombies N.'" Every printing this engine can be handed carries
+#: one, so a bare "amass 1" is left unread rather than defaulted to Zombies -
+#: guessing the subtype would be a fails-open answer on a card whose real
+#: subtype is something else.
+#:
+#: The subtype is printed **plural** ("amass Orcs 1") and the token it names
+#: is singular ("Orc Army"), which `_singular_subtype` undoes.
+_AMASS_RE = re.compile(r"^amass (?P<subtype>[A-Za-z][a-z]*) (?P<n>\d+)$", re.IGNORECASE)
+
+
+def _singular_subtype(word: str) -> str:
+    """ "Orcs" -> "Orc". Amass prints its creature type in the plural, and CR
+    205.3m's subtype list is singular ("Orc", "Zombie", "Army"), so the two
+    have to be reconciled before the token is built or the "is it already
+    one" test below would never match.
+
+    Deliberately the narrowest possible rule - drop one trailing "s" - rather
+    than a general English pluraliser: every creature type amass has ever
+    been printed with pluralises that way, and a subtype that does not
+    (there is none in CR 205.3m today) would come out wrong in a way a
+    cleverer rule would only hide.
+    """
+    return word[:-1] if word.endswith(("s", "S")) and len(word) > 1 else word
+
+
+def _armies_controlled_by(game: "Game", controller: str) -> list[CardState]:
+    """Every Army **creature** `controller` controls (CR 701.47a), read off
+    the computed board rather than the printing: an Army is often a token
+    whose subtypes came from a `TokenDefinition`, and a permanent can have
+    become one through layer 4 (this function's own last step does exactly
+    that), neither of which is on `Card`.
+    """
+    armies: list[CardState] = []
+    for permanent in game.battlefield:
+        if game.controller_of(permanent).username != controller:
+            continue
+        characteristics = game.characteristics_of(permanent)
+        if not characteristics.is_creature:
+            continue
+        if any(subtype.lower() == "army" for subtype in characteristics.subtypes):
+            armies.append(permanent)
+    return armies
+
+
+def amass(game: "Game", controller: str, subtype: str, amount: int, source_name: str) -> None:
+    """CR 701.47a: "To amass [subtype] N means 'If you don't control an Army
+    creature, create a 0/0 black [subtype] Army creature token. Choose an Army
+    creature you control. Put N +1/+1 counters on that creature. If it isn't a
+    [subtype], it becomes a [subtype] in addition to its other types.'"
+
+    Four steps in the order the rule writes them, and every one of them is a
+    step this engine can decline to take without the whole thing failing - CR
+    701.47b: "A player 'amassed' after the process described in rule 701.47a
+    is complete, **even if some or all of those actions were impossible**."
+    That is why nothing here raises: an amass with no Army to choose (the
+    token creation was replaced away) simply finishes having done less.
+
+    The choice is CR 608.2d's, and it is only *asked* when there is more than
+    one Army to choose between - a single candidate is not a choice, and
+    asking anyway would put a question on the tape that a decoded replay of
+    the same game would have to answer identically for no reason.
+
+    The last step is a layer 4 addition (CR 205.1b's "in addition to its other
+    types"), scoped to this incarnation of the permanent (CR 400.7, CR 611.2c)
+    exactly as `earthbend` above scopes its own, and `Duration.INDEFINITE`
+    because CR 701.47a states no end (CR 611.2a). It is skipped outright when
+    the chosen Army already has the subtype, which is the ordinary case: the
+    token this same call may have just created is printed with it.
+    """
+    armies = _armies_controlled_by(game, controller)
+    singular = _singular_subtype(subtype)
+    if not armies:
+        create_tokens(
+            game,
+            TokenDefinition(
+                types=(Type.CREATURE,),
+                subtypes=(singular, "Army"),
+                colors=(Color.BLACK,),
+                power=0,
+                toughness=0,
+            ),
+            controller,
+            1,
+        )
+        armies = _armies_controlled_by(game, controller)
+    if not armies:
+        return  # CR 701.47b: the player still amassed.
+    if len(armies) == 1:
+        army = armies[0]
+    else:
+        chosen = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=controller,
+                prompt=f"choose an Army creature to amass {subtype} {amount} onto",
+                source=source_name,
+                amount=1,
+                cards=tuple(state.id for state in armies),
+            )
+        )
+        assert isinstance(chosen, tuple)
+        by_id = {state.id: state for state in armies}
+        army = by_id[chosen[0]]
+    game.add_counters(army, Counter.PLUS_ONE, amount)
+    if any(
+        existing.lower() == singular.lower() for existing in game.characteristics_of(army).subtypes
+    ):
+        return
+    game.continuous_effects.add(
+        ContinuousEffect(
+            description=f"amass {subtype}: {army.name} becomes a {singular}",
+            layer=Layer.TYPE,
+            timestamp=game.continuous_effects.tick(),
+            duration=Duration.INDEFINITE,
+            selector=only_this_incarnation(army, army.zone_change_stamp),
+            modification=add_subtype(singular),
+        )
+    )
+
+
+def _parse_amass_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """ "Amass `<subtype>` N." - `_AMASS_RE`'s shape, as one clause among
+    however many the card prints around it.
+
+    Amass targets nothing (CR 701.47a's "Choose an Army creature you control"
+    is CR 608.2d's choice, not CR 115.1's target), so this reads nothing off
+    the stack object but its controller and its name for the prompt - which
+    means the same clause works identically for a spell and for an ability,
+    unlike earthbend just above.
+    """
+    match = _AMASS_RE.fullmatch(clause.strip().rstrip("."))
+    if match is None:
+        return None
+    subtype = match.group("subtype")
+    amount = int(match.group("n"))
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        amass(game, game.controller_of(stack_object).username, subtype, amount, source)
+
+    return effect
+
+
 def _parse_delayed_single_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """A whole ability whose *only* clause is a delayed-trigger creation, with
     no antecedent clause of its own to supply "it": either there is no object
@@ -17082,6 +17237,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     earthbend_clause = _parse_earthbend_clause(clause, for_spell=for_spell)
     if earthbend_clause is not None:
         return earthbend_clause
+    amass_clause = _parse_amass_clause(clause, for_spell=for_spell)
+    if amass_clause is not None:
+        return amass_clause
     exile_that_players_library = _parse_exile_that_players_library_clause(
         clause, for_spell=for_spell
     )

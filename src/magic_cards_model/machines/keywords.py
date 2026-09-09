@@ -158,6 +158,11 @@ def executes(keyword: str) -> bool:
         # marker_cast_options` reads `ExileMarker.AIRBENT` back into the {2}
         # cast CR 701.65a grants its owner.
         "airbend",
+        # CR 701.47a, the same shape again: `machines/effects.amass` is what
+        # performs it, reached through `_parse_amass_clause` from inside
+        # another ability's effect text (Orcish Bowmasters' "Then amass Orcs
+        # 1."). Listed here for the same reason the two above are.
+        "amass",
     }
 
 
