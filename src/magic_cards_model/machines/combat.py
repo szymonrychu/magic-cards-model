@@ -287,10 +287,17 @@ def _defender_refusal(game: "Game", defender: TargetRef, active: str) -> str | N
     permanent = game.resolve_target(defender)
     if not isinstance(permanent, CardState) or permanent.zone is not Zone.BATTLEFIELD:
         return "that permanent is not on the battlefield"
-    # `permanent.types`, not `permanent.card.types`: a transformed Ajani,
-    # Nacatl Pariah is a planeswalker (CR 712.8e) and may be attacked, and a
-    # modal double-faced permanent played as its land face is not (CR 712.8f).
-    if not set(permanent.types) & ATTACKABLE_PERMANENT_TYPES:
+    # `game.characteristics_of(permanent).types`, not `permanent.types` and
+    # not `permanent.card.types`: a transformed Ajani, Nacatl Pariah is a
+    # planeswalker (CR 712.8e) and may be attacked, and a modal double-faced
+    # permanent played as its land face is not (CR 712.8f) - `permanent.types`
+    # already reads whichever face is up, so it gets both of those right, but
+    # it is still only CR 613.1's *starting point*. CR 613.5 has the layer
+    # system applied "continually", so a layer-4 effect that grants
+    # planeswalker or battle after that starting point is read must be seen
+    # too, the same reasoning `characteristics_of` already gets right for
+    # every other computed read in this file.
+    if not set(game.characteristics_of(permanent).types) & ATTACKABLE_PERMANENT_TYPES:
         return f"{permanent.name} is not a player, planeswalker, or battle"
     if game.controller_of(permanent).username == active:
         return f"{permanent.name} is not controlled by an opponent"
@@ -537,13 +544,22 @@ def landwalk_refusal(game: "Game", attacker: CardState, defending: str | None) -
     """
     if defending is None:
         return None
+    # One computed board for every keyword and every land, not one per land
+    # per keyword (`Game.computed_board` recomputes the whole board each
+    # call) - and computed, not `permanent.subtypes`, because a land's
+    # subtype is layer 4 (CR 613.1d) like anything else CR 613.5 governs:
+    # Urborg, Tomb of Yawgmoth makes every land a Swamp "in addition to its
+    # other land types" and Blood Moon replaces a nonbasic land's types with
+    # Mountain outright (CR 305.7), and swampwalk/mountainwalk have to see
+    # either one.
+    board = game.computed_board()
     for keyword, land_type in LANDWALK_TYPES.items():
         if not has_keyword(attacker, keyword, game):
             continue
         lands = [
             permanent
             for permanent in game.permanents_controlled_by(defending)
-            if land_type in permanent.subtypes
+            if land_type in board.of(permanent).subtypes
         ]
         if lands:
             return (

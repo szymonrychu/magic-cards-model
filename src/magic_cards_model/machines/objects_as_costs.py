@@ -232,6 +232,18 @@ def _colors_of(card: CardState, game: Any = None) -> frozenset[Color]:
     return frozenset(card.colors)
 
 
+def _subtypes_of(card: CardState, game: Any = None) -> frozenset[str]:
+    """An object's subtypes off the computed board when there is one - the
+    same shape `_types_of` and `_colors_of` use for their own characteristics
+    (CR 613.1d puts subtype-changing effects in layer 4 alongside type)."""
+    if game is not None and card.zone is Zone.BATTLEFIELD:
+        try:
+            return frozenset(game.characteristics_of(card).subtypes)
+        except (KeyError, AttributeError):
+            pass
+    return frozenset(card.subtypes)
+
+
 def power_of(card: CardState, game: Any = None) -> int:
     """One creature's power as the crew threshold counts it (CR 702.122a).
 
@@ -380,8 +392,32 @@ def crew_number(card: Card) -> int | None:
 
 
 def is_vehicle(card: Card) -> bool:
-    """CR 301.7: "Some artifacts have the subtype 'Vehicle.'" """
+    """CR 301.7: "Some artifacts have the subtype 'Vehicle.'"
+
+    Reads the printed type line only - use `is_vehicle_permanent` for a
+    `CardState` already on the battlefield, which reads the computed board
+    (CR 613.5) instead.
+    """
     return Type.ARTIFACT in card.types and "Vehicle" in card.subtypes
+
+
+def is_vehicle_permanent(permanent: CardState, game: Any = None) -> bool:
+    """Whether this permanent is a Vehicle right now (CR 301.7), off the
+    computed board (CR 613.5) through `_types_of`/`_subtypes_of` rather than
+    off `is_vehicle`'s printed type line.
+
+    CR 613.1d puts both type- and subtype-changing effects in layer 4, so an
+    artifact that has been granted the Vehicle subtype by some effect this
+    engine does not yet generate would be crewable the instant it is, and a
+    permanent that has lost the subtype in the same layer would stop being
+    one - neither of which the printed read could ever see. Latent rather
+    than live today: nothing in the pool grants or removes "Vehicle" itself,
+    so every Vehicle already in `tests/fixtures/cards/` computes the same
+    answer either way.
+    """
+    return Type.ARTIFACT in _types_of(permanent, game) and "Vehicle" in _subtypes_of(
+        permanent, game
+    )
 
 
 def _has(card: Card, keyword: str) -> bool:

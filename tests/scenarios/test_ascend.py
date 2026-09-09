@@ -43,6 +43,7 @@ end, and the corner cases are the point of it.
 """
 
 from magic_cards_model.machines import Step
+from magic_cards_model.models import Zone
 from magic_cards_model.models.card import Color
 from tests.scenarios.harness import Scenario
 
@@ -115,6 +116,41 @@ def test_a_player_without_ascend_never_gets_the_blessing():
     assert len(scenario.game.permanents_controlled_by("bob")) == 10
     scenario.game.check_state_based_actions()
     assert scenario.player("bob").has_citys_blessing is False
+
+
+def test_ascend_removed_in_layer_6_no_longer_grants_the_blessing():
+    """CR 613.5: "the application of continuous effects as described by the
+    layer system is continually and automatically performed by the game."
+    Humility's "All creatures lose all abilities" is a layer 6 ability-removal
+    effect (CR 613.1f), and Ocelot Pride is a creature - so once Humility is
+    on the battlefield, Ocelot Pride's computed abilities no longer include
+    ascend, whatever its printed keyword list still says.
+
+    `ascend_state_based_actions` used to read `has_ascend(permanent.card)`,
+    the printed keyword, so a player who had ten-plus permanents kept getting
+    the blessing here even though the only ascend on the board had been
+    stripped away. Alice controls exactly ten permanents (Ocelot Pride,
+    Humility, eight Plains), same as `test_ten_permanents_grants_the_blessing`
+    above minus the Humility swapped in for a Plains - the only difference
+    between a board that grants the blessing and one that must not.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Ocelot Pride", "Humility", *["Plains"] * 8])
+        .build()
+    )
+    assert len(scenario.game.permanents_controlled_by("alice")) == 10
+    pride = scenario.find("Ocelot Pride", Zone.BATTLEFIELD, username="alice")
+    assert (
+        scenario.game.characteristics_of(pride).has_ability(
+            "Ascend (If you control ten or more permanents, you get the city's "
+            "blessing for the rest of the game.)"
+        )
+        is False
+    ), "Humility already stripped it before the state-based check even runs"
+
+    scenario.game.check_state_based_actions()
+    assert scenario.player("alice").has_citys_blessing is False
 
 
 # --------------------------------------------------------------------------

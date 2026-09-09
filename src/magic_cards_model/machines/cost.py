@@ -128,12 +128,30 @@ def can_tap_for_mana(source: CardState, game: Any = None) -> bool:
     return not source.summoning_sick or has_keyword(source, Keyword.HASTE)
 
 
-def is_snow_source(source: CardState) -> bool:
+def is_snow_source(source: CardState, game: Any = None) -> bool:
     """Whether mana from this permanent is snow mana (CR 106.3, 205.4g).
 
-    Read off the printed type line, since nothing in this engine grants or
-    removes a supertype yet.
+    With a `game` and the source on the battlefield, read off the computed
+    board (CR 613.5) rather than the printed type line, the same optional-
+    `game` shape `is_indestructible` and `has_keyword` already use for their
+    own layer 6/4 questions - CR 613.1d's layer 4 is where a supertype-
+    changing effect would land. Without one, or off the battlefield, the
+    printed supertype is the only answer there is.
+
+    Latent rather than live today: nothing in `machines/effects.py`'s
+    registry grants or removes the snow supertype, so every board in the
+    current pool computes the same answer either way - this only stops being
+    a silent trap the day a card that does is added. Threaded through only
+    the live auto-tap path (`_bucket_map`, `_best_flow_plan`, `tap_for_mana`);
+    `_solve_colours`, reachable only from `_solve_auto_tap_brute_force`'s
+    property-test oracle, is left reading the printed type - it builds no
+    `CostPayment` and has no board to compute against without one.
     """
+    if game is not None and source.zone is Zone.BATTLEFIELD:
+        try:
+            return Supertype.SNOW in game.characteristics_of(source).supertypes
+        except (AttributeError, KeyError):
+            pass
     return Supertype.SNOW in source.supertypes
 
 
@@ -346,13 +364,23 @@ def among_colors(effect: str, game: Any, controller: str | None) -> frozenset[Co
     if not types:
         return None
 
+    # CR 613.5: the survey is of what each permanent *is* right now, not of
+    # its printed type line - Mox Amber's "legendary creatures and
+    # planeswalkers you control" has to see a Vehicle crewed into an artifact
+    # creature (CR 613.1d, layer 4) the moment it is one, the same way it
+    # would see an ordinary creature. `permanents_controlled_by` only ever
+    # returns battlefield permanents, so every entry is on `board`; one
+    # `computed_board()` is hoisted for the whole survey rather than recomputed
+    # once per permanent.
+    board = game.computed_board()
     colors: set[Color] = set()
     for state in game.permanents_controlled_by(controller):
-        if not any(type_ in state.types for type_ in types):
+        chars = board.of(state)
+        if not any(type_ in chars.types for type_ in types):
             continue
-        if not all(supertype in state.supertypes for supertype in supertypes):
+        if not all(supertype in chars.supertypes for supertype in supertypes):
             continue
-        colors.update(color for color in state.colors if color is not Color.COLORLESS)
+        colors.update(color for color in chars.colors if color is not Color.COLORLESS)
     return frozenset(colors)
 
 
@@ -1150,7 +1178,10 @@ def _slot_for(restriction: ManaRestriction | None, registry: list[ManaRestrictio
 
 
 def _bucket_map(
-    source: CardState, alternatives: list[_Alternative], registry: list[ManaRestriction]
+    source: CardState,
+    alternatives: list[_Alternative],
+    registry: list[ManaRestriction],
+    game: Any = None,
 ) -> tuple[dict[_Bucket, int], int]:
     """The buckets one permanent could fill, and its own total capacity - the
     two things `_assign_sources` needs per provider.
@@ -1163,7 +1194,7 @@ def _bucket_map(
     alternative when there is no choice at all) is what stops more than one
     of them being spent at once.
     """
-    snow = is_snow_source(source)
+    snow = is_snow_source(source, game)
     if len(alternatives) <= 1:
         option, restriction = alternatives[0] if alternatives else ([], None)
         slot = _slot_for(restriction, registry)
@@ -1225,6 +1256,7 @@ def _best_flow_plan(
     exotic: list[tuple[CardState, list[_Alternative]]],
     pool_buckets: dict[_Bucket, int],
     pool_registry: list[ManaRestriction],
+    game: Any = None,
 ) -> _TapPlan | None:
     """The smallest tapping plan that settles `options` (one already-resolved
     reading of `ManaCost`'s payable-in-multiple-ways symbols) out of `simple`
@@ -1257,12 +1289,12 @@ def _best_flow_plan(
         for source, chosen in zip(exotic, choice_combo, strict=True):
             if chosen is None:
                 continue
-            buckets, capacity = _bucket_map(source[0], [chosen], registry)
+            buckets, capacity = _bucket_map(source[0], [chosen], registry, game)
             sources_map[id(source[0])] = buckets
             capacity_map[id(source[0])] = capacity
             considered.append((source[0], [chosen]))
         for source, alternatives in simple:
-            buckets, capacity = _bucket_map(source, alternatives, registry)
+            buckets, capacity = _bucket_map(source, alternatives, registry, game)
             if not buckets:
                 continue
             sources_map[id(source)] = buckets
@@ -1303,7 +1335,7 @@ def _best_flow_plan(
             if not used:
                 continue
             colors, restriction = _chosen_alternative(
-                alternatives, used, is_snow_source(source), registry
+                alternatives, used, is_snow_source(source, game), registry
             )
             if colors:
                 plan.append((source, colors, restriction))
@@ -1393,7 +1425,7 @@ def _solve_auto_tap_flow(
         life = sum(option.life for option in options)
         if life > life_available:
             continue
-        plan = _best_flow_plan(options, simple, exotic, pool_buckets, pool_registry)
+        plan = _best_flow_plan(options, simple, exotic, pool_buckets, pool_registry, context.game)
         if plan is not None:
             return plan
     return None
@@ -1640,27 +1672,60 @@ class CardRequirement(BaseModel):
         board to ask, and that half is skipped - a `CostPayment` with no game
         behind it cannot check any board-dependent requirement, the same
         limitation `_among_colors` documents on the mana side.
+
+        The colour/type/subtype/mana-value checks below used to read
+        `card.card` - the raw printing - unconditionally. That is CR 613.1's
+        *starting point*, "the values of the characteristics printed on that
+        card", never CR 613.5's "the application of continuous effects ... is
+        continually and automatically performed": a card on the battlefield
+        (`sacrifice a creature`, `tap an untapped creature you control`,
+        CR 118.8a's additional costs) has to answer for what it *is*, and an
+        animated land by earthbend (CR 701.66a) is a creature (CR 613.1d,
+        layer 4; CR 205.1b's "in addition to its other types") that
+        `card.card.types` would say is only ever a land. With a `game` and the
+        card on the battlefield, `game.characteristics_of` is that answer.
+        Off the battlefield there is no layer system to ask (CR 613.5 is about
+        objects on the battlefield), so `CardState`'s own properties are read
+        instead of the raw printing: they already resolve which face is up
+        (CR 712.8d) the way `card.card`'s front face alone does not.
         """
-        printed = card.card
-        if self.colors and not set(printed.colors or []) & set(self.colors):
+        if game is not None and card.zone is Zone.BATTLEFIELD:
+            try:
+                characteristics = game.characteristics_of(card)
+            except (AttributeError, KeyError):
+                characteristics = None
+        else:
+            characteristics = None
+        if characteristics is not None:
+            colors = set(characteristics.colors)
+            supertypes = set(characteristics.supertypes)
+            types = set(characteristics.types)
+            subtypes = {subtype.lower() for subtype in characteristics.subtypes}
+            mana_value = characteristics.mana_value
+        else:
+            colors = set(card.colors)
+            supertypes = set(card.supertypes)
+            types = set(card.types)
+            subtypes = {subtype.lower() for subtype in card.subtypes}
+            mana_value = card.mana_value
+
+        if self.colors and not colors & set(self.colors):
             wanted = "/".join(color.value for color in self.colors)
             return f"{card.name} is not {wanted}"
-        if self.supertypes and not set(self.supertypes) <= set(printed.supertypes):
+        if self.supertypes and not set(self.supertypes) <= supertypes:
             wanted = " ".join(supertype.value for supertype in self.supertypes)
             return f"{card.name} is not {wanted}"
-        if self.types and not set(printed.types) & set(self.types):
+        if self.types and not types & set(self.types):
             wanted = "/".join(type_.value for type_ in self.types)
             return f"{card.name} is not a {wanted}"
-        if self.subtypes:
-            printed_subtypes = {subtype.lower() for subtype in printed.subtypes}
-            if not printed_subtypes & self._wanted_subtypes():
-                return f"{card.name} is not a {'/'.join(self.subtypes)}"
-        if self.mana_value is not None and card.mana_value != self.mana_value:
+        if self.subtypes and not subtypes & self._wanted_subtypes():
+            return f"{card.name} is not a {'/'.join(self.subtypes)}"
+        if self.mana_value is not None and mana_value != self.mana_value:
             # CR 202.3: the mana value is read off the object, not off the
-            # printed front face, so a face-down or transformed card answers
-            # for itself - `CardState.mana_value` is what knows that.
+            # printed front face - computed when there is a board to compute
+            # it against, `CardState.mana_value`'s own up-face read otherwise.
             return (
-                f"{card.name} has mana value {card.mana_value:g}, not the "
+                f"{card.name} has mana value {mana_value:g}, not the "
                 f"{self.mana_value} this cost asks for"
             )
         if self.same_name_as is not None and game is not None and payer is not None:
@@ -4115,7 +4180,7 @@ class CostPayment(BaseModel):
         spend_effect = ManaSpendEffect(text=ability.spend_effect) if ability.spend_effect else None
         self.pool.add_all(
             produces,
-            snow=is_snow_source(source),
+            snow=is_snow_source(source, self.game),
             restriction=restriction,
             spend_effect=spend_effect,
         )

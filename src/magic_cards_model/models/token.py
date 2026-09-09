@@ -718,11 +718,20 @@ def _put_onto_the_battlefield_attacking(
     out an attack on a player who has left the game. In each case "that creature
     does enter the battlefield, but it's never considered to be an attacking
     creature", which is why every branch here returns rather than raising.
+
+    `token.is_creature` reads the printed definition (CR 613.1's starting
+    point) - wrong here, because every caller of this function has already
+    verified the token is on the battlefield (`Game.put_onto_battlefield` ran
+    and the zone was checked before this was ever called), which is what
+    makes `game.characteristics_of` the CR 613.5 answer instead: a
+    noncreature token some other permanent's static ability made a creature
+    "in addition to its other types" (CR 205.1b) is still a creature for
+    CR 506.3a's purposes.
     """
     from ..machines.combat import Attack  # local: combat imports the models
     from .card_state import TargetRef
 
-    if not token.is_creature:
+    if not game.characteristics_of(token).is_creature:
         return  # CR 506.3a
     if token.controller != game.active_player.username:
         return  # CR 506.3b

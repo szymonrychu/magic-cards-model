@@ -1507,7 +1507,9 @@ def condition_matches(
             target = game.find_by_id(only_target.card_id)
             if target is None or target.zone is not Zone.BATTLEFIELD:
                 return False
-            if Type.CREATURE not in target.types:
+            # CR 613.5: the target's computed types, not the printed line -
+            # an earthbent land (CR 701.66a) is a creature only there.
+            if not game.characteristics_of(target).is_creature:
                 return False
             if game.controller_of(target).username != controller:
                 return False
@@ -2362,10 +2364,15 @@ def intervening_if_holds(
     if match is not None:
         subtype = match.group(1)
         controller = source.controller or game.active_player.username
+        # CR 613.5: the computed subtypes, not the printed line - hoisted
+        # once for the whole scan rather than asked per permanent (see
+        # `Game._state_based_actions_once`'s own pattern).
+        board = game.computed_board()
         others = [
             state
             for state in game.permanents_controlled_by(controller)
-            if state.id != source.id and any(word.lower() == subtype for word in state.subtypes)
+            if state.id != source.id
+            and any(word.lower() == subtype for word in board.of(state).subtypes)
         ]
         return not others
 
@@ -3199,6 +3206,18 @@ def triggers_for(game: "Game", event: GameEvent, sources: list[CardState]) -> li
         rewritten = rewritten_ability_lines(game, source)
         if rewritten is not None:
             granted = granted_triggered_abilities_of(rewritten)
+        else:
+            # CR 613.1f / CR 613.5: a layer 6 grant ("Other creatures you
+            # control are ... and have '...'") can add a triggered ability
+            # this object neither prints nor carries in
+            # `granted_ability_texts` - `layers.quoted_ability_grants` writes
+            # it onto the computed board only. `added_ability_lines` is the
+            # reader `Game.activated_abilities` already uses for the
+            # identical gap on the activated-ability side (the intrinsic mana
+            # ability a granted basic land type brings with it); mirrored
+            # here so a granted "Whenever ..." is actually found rather than
+            # granted invisibly.
+            granted = granted + granted_triggered_abilities_of(added_ability_lines(game, source))
         granted_ids = {id(ability) for ability in granted}
         printed_abilities = [] if rewritten is not None else triggered_abilities_of(source.card)
         for ability in printed_abilities + granted:

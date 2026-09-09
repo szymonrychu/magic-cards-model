@@ -33,6 +33,7 @@ Every CR number here was looked up with `knowledge_search(type="rules")`.
 
 from magic_cards_model.machines import Step
 from magic_cards_model.models import CardState, Zone
+from magic_cards_model.models.card import Type
 from magic_cards_model.models.card_state import Counter
 
 from .harness import Scenario
@@ -176,3 +177,63 @@ def test_each_opponent_chooses_for_their_own_board_not_ajanis_controller():
     assert bob_wolf.zone is Zone.GRAVEYARD
     assert carol_giant.zone is Zone.BATTLEFIELD
     assert carol_wall.zone is Zone.GRAVEYARD
+
+
+def test_an_artifact_that_is_a_land_is_never_among_the_nonland_permanents():
+    """ "from among the **nonland** permanents they control" is a question
+    about what the permanents are (CR 613.5), not what they print.
+
+    Toph, the First Metalbender's "Nontoken artifacts you control are lands in
+    addition to their other types" is a layer-4 type change (CR 613.1d,
+    CR 205.1b). Under her, bob controls no nonland artifact at all: both
+    Mox Opal and Mind Stone are lands, whatever their printed type lines say,
+    so the ability never asks bob to choose one and never sacrifices the
+    other. Before this was read off the computed board, the pair were two
+    printed artifacts, one kept and one destroyed.
+
+    Toph herself is the creature bob keeps, so the sweep is real - Grizzly
+    Bears still dies in the same resolution.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Ajani, Nacatl Pariah"])
+        .player(
+            "bob",
+            battlefield=[
+                "Toph, the First Metalbender",
+                "Mox Opal",
+                "Mind Stone",
+                "Grizzly Bears",
+            ],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    ajani = _flip_and_charge_ajani(scenario)
+
+    mox = scenario.find("Mox Opal", Zone.BATTLEFIELD, "bob")
+    stone = scenario.find("Mind Stone", Zone.BATTLEFIELD, "bob")
+    toph = scenario.find("Toph, the First Metalbender", Zone.BATTLEFIELD, "bob")
+    bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "bob")
+
+    for artifact in (mox, stone):
+        assert Type.LAND in scenario.game.characteristics_of(artifact).types, "Toph made it a land"
+        assert Type.LAND not in artifact.types, "its printed type line did not change"
+
+    scenario.will_choose_cards(toph, username="bob", source="Ajani, Nacatl Avenger")
+
+    scenario.activate(ajani, index=2)
+    scenario.resolve_top()
+
+    prompts = [
+        decision.prompt
+        for decision in scenario.questions_asked()
+        if decision.source == "Ajani, Nacatl Avenger"
+    ]
+    assert not any("artifact" in prompt for prompt in prompts), (
+        "bob controls no nonland artifact, so CR 107.1a asks nothing about one"
+    )
+    assert mox.zone is Zone.BATTLEFIELD, "a land is not a nonland permanent"
+    assert stone.zone is Zone.BATTLEFIELD
+    assert toph.zone is Zone.BATTLEFIELD, "the creature bob kept"
+    assert bears.zone is Zone.GRAVEYARD, "the sweep did happen"

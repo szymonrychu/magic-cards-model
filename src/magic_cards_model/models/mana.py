@@ -25,11 +25,46 @@ from collections import Counter
 from collections.abc import Hashable, Iterable, Sequence
 from enum import StrEnum
 from itertools import combinations_with_replacement, product
+from typing import Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ..serialization import SortedFrozenSet
 from .card import Card, Color, Layout, Supertype, Type
+
+
+class HasCharacteristics(Protocol):
+    """The four characteristics CR 106.6's restrictions are written against,
+    plus a name for the refusal message.
+
+    A structural type rather than `Card`, because the two things that answer
+    these questions are not related by inheritance and must not be: `Card` is
+    the printing (CR 613.1's starting point, right for a spell on the stack,
+    which `Game.computed_board` does not cover), and `machines/layers.
+    Characteristics` is the layer-computed answer (CR 613.5, right for a
+    permanent). Widening the annotation is the whole change - both already
+    print `name`, `types`, `subtypes`, `supertypes` and `colors` with the same
+    meanings, so `ManaSpend._of` needs no branch.
+
+    `machines` may not be imported from `models` (the dependency runs the other
+    way), which is the other reason this is a Protocol and not a union.
+    """
+
+    @property
+    def name(self) -> str: ...
+
+    @property
+    def types(self) -> tuple[Type, ...]: ...
+
+    @property
+    def subtypes(self) -> tuple[str, ...]: ...
+
+    @property
+    def supertypes(self) -> tuple[Supertype, ...]: ...
+
+    @property
+    def colors(self) -> tuple[Color, ...] | None: ...
+
 
 _SYMBOL = re.compile(r"\{([^}]+)\}")
 
@@ -509,7 +544,7 @@ class ManaSpend(BaseModel):
     colorless: bool = False
 
     @classmethod
-    def _of(cls, purpose: SpendPurpose, card: Card) -> "ManaSpend":
+    def _of(cls, purpose: SpendPurpose, card: "HasCharacteristics") -> "ManaSpend":
         return cls(
             purpose=purpose,
             name=card.name,
@@ -520,13 +555,28 @@ class ManaSpend(BaseModel):
         )
 
     @classmethod
-    def casting(cls, card: Card) -> "ManaSpend":
-        """Mana spent to cast `card` as a spell."""
+    def casting(cls, card: "HasCharacteristics") -> "ManaSpend":
+        """Mana spent to cast `card` as a spell.
+
+        A spell is on the stack, which `Game.computed_board` does not cover, so
+        the caller has only the printed `Card` to give and that is the right
+        answer here.
+        """
         return cls._of(SpendPurpose.CAST_SPELL, card)
 
     @classmethod
-    def activating(cls, card: Card) -> "ManaSpend":
-        """Mana spent to activate an ability whose source is `card`."""
+    def activating(cls, card: "HasCharacteristics") -> "ManaSpend":
+        """Mana spent to activate an ability whose source is `card`.
+
+        Unlike `casting`, the source of an activated ability is normally a
+        permanent, and CR 613.5 makes its card types the layer-computed ones -
+        so a caller with a `Game` in hand passes `Game.characteristics_of(...)`
+        rather than the printing, and a land animated into a creature counts as
+        a creature source for CR 106.6's "spend this mana only to activate
+        abilities of creature sources". `Characteristics` (machines/layers.py)
+        prints the same four names this reads, so no branch is needed here -
+        only the type had to stop saying `Card`.
+        """
         return cls._of(SpendPurpose.ACTIVATE_ABILITY, card)
 
 

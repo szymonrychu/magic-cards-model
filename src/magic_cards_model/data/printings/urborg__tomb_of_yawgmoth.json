@@ -117,12 +117,12 @@
     "previewed_at": "2021-03-04"
   },
   "prices": {
-    "usd": "54.82",
-    "usd_foil": "74.87",
+    "usd": "56.72",
+    "usd_foil": "74.08",
     "usd_etched": null,
-    "eur": "35.33",
+    "eur": "35.51",
     "eur_foil": "48.35",
-    "tix": "0.57"
+    "tix": "0.49"
   },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=509652&printed=false",

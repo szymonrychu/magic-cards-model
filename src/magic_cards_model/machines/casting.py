@@ -35,7 +35,7 @@ from .abilities import (
     KeywordAbility,
     TriggerEvent,
     keyword_abilities,
-    parse_abilities,
+    parse_granted_ability_lines,
 )
 from .casting_restrictions import (
     has_sorcery_speed_flash_grant,
@@ -745,12 +745,23 @@ def granted_cast_options(
     if game is None:
         return []
     found: list[GrantedCastOption] = []
+    # `computed_board()` recomputes the whole battlefield on every call
+    # (CR 613.5 - "continually and automatically"), so one board is hoisted
+    # here rather than one per permanent in the loop below.
+    board = game.computed_board()
     for permanent in getattr(game, "battlefield", []):
         if permanent.controller != caster:
             continue
         up_face_name = permanent.up_face_name or permanent.card.name
-        for ability in parse_abilities(permanent.card):
-            if ability.kind is not AbilityKind.STATIC or ability.face != up_face_name:
+        # A permanent's *computed* ability list (`Characteristics.abilities`,
+        # CR 613.1f), not its printed oracle text: a static ability layer 6
+        # already stripped no longer grants, and one layer 6 granted does.
+        # `parse_granted_ability_lines` reads that list line by line the same
+        # way `parse_abilities` reads a printing, and the result is already
+        # scoped to the face that's up, so there is no separate `.face`
+        # filter to apply here the way there was against `parse_abilities`.
+        for ability in parse_granted_ability_lines(board.of(permanent).abilities):
+            if ability.kind is not AbilityKind.STATIC:
                 continue
             text = (ability.text or "").strip()
             option = _grant_as_you_cast(text, spell, origin_zone, up_face_name, ability.raw)
@@ -3969,18 +3980,25 @@ def static_free_cast_grants(game: Any, caster: str) -> list[tuple[str, StaticFre
     board-wide cost modifier - a sentence inside an activated ability's
     effect is gated on that ability being activated and is not a static
     ability at all (CR 602.1).
+
+    Read off the permanent's *computed* ability list (`Characteristics.
+    abilities`, CR 613.1f), not its printed oracle text - a granting static
+    ability layer 6 already stripped no longer applies, the same fix
+    `granted_cast_options` above needs for CR 610.5's grant.
     """
     if game is None:
         return []
     found: list[tuple[str, StaticFreeCastGrant]] = []
+    # One board, hoisted out of the loop: `computed_board()` recomputes the
+    # whole battlefield every call (CR 613.5).
+    board = game.computed_board()
     for permanent in getattr(game, "battlefield", []):
         if permanent.controller != caster:
             continue
-        up_face_name = permanent.up_face_name or permanent.card.name
         static_lines = {
             ability.raw.strip()
-            for ability in parse_abilities(permanent.card)
-            if ability.face == up_face_name and ability.kind is AbilityKind.STATIC
+            for ability in parse_granted_ability_lines(board.of(permanent).abilities)
+            if ability.kind is AbilityKind.STATIC
         }
         for line in static_lines:
             grant = static_free_cast_grant(line)

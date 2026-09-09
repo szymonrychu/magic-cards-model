@@ -317,3 +317,107 @@ def test_an_equipment_that_is_not_a_creature_is_left_attached():
 
     assert attachment_state_based_actions(scenario.game) == []
     assert equipped_creature(scenario.game, cutter) is bears
+
+
+# --------------------------------------------------------------------------
+# The equip target is read off the computed board (CR 613.5), not the
+# printed type line
+# --------------------------------------------------------------------------
+#
+# `_equip_effect`'s own legality recheck (CR 608.2b) used to ask
+# `CardState.is_creature`, which is CR 613.1's *starting point* - "the values
+# of the characteristics printed on that card" - and not CR 613.5's answer,
+# "the application of continuous effects as described by the layer system ...
+# continually and automatically". Karn, the Great Creator's own "+1: Until
+# your next turn, up to one target noncreature artifact becomes an artifact
+# creature with power and toughness each equal to its mana value" is the
+# pool's route to a permanent whose printed type line and computed types
+# disagree, the same route `test_an_animated_equipment_falls_off_the_creature
+# _it_was_equipping` above already uses on the *host* side of an Equipment.
+# Aimed at Sol Ring instead of at an Equipment, it proves the *target* side:
+# a plain noncreature artifact Karn has animated is CR 301.5's legal creature
+# to equip, and one he has not touched still is not.
+
+
+def _karn_and_a_target_artifact() -> Scenario:
+    return (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            battlefield=[
+                "Karn, the Great Creator",
+                "Sol Ring",
+                "Cori-Steel Cutter",
+                "Mountain",
+                "Mountain",
+            ],
+            library=["Island"] * 10,
+        )
+        .player("bob", library=["Island"] * 10)
+    )
+
+
+def test_a_permanent_karn_animated_can_be_equipped():
+    """CR 613.1d puts Karn's type-changing effect in layer 4, so by the time
+    equip resolves and rechecks its target (CR 608.2b) Sol Ring genuinely is a
+    creature - CR 205.1b's "in addition to its other types", not a fiction the
+    printed type line ("Artifact", no Creature) ever agrees with.
+    """
+    scenario = _karn_and_a_target_artifact().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    karn = scenario.creature("Karn, the Great Creator", "alice")
+    ring = scenario.find("Sol Ring", Zone.BATTLEFIELD, "alice")
+    scenario.activate(karn, index=0, targets=[ring])
+    scenario.pass_until_resolved()
+
+    assert scenario.game.computed_board().of(ring).is_creature
+    assert Type.CREATURE not in ring.types, "the printed type line still says Artifact"
+
+    cutter = scenario.find("Cori-Steel Cutter", Zone.BATTLEFIELD, "alice")
+    activation = equip(scenario, cutter, ring)
+
+    assert activation.resolve() is ring
+    assert equipped_creature(scenario.game, cutter) is ring
+
+
+def test_an_unanimated_noncreature_artifact_cannot_be_equipped():
+    """The inverse of the test above: Sol Ring Karn never touched is still
+    only ever an artifact, so equip's target recheck (CR 608.2b) finds it
+    illegal and the ability does nothing - CR 608.2b's "if all its targets ...
+    are illegal, it doesn't resolve", read for an ability with the one target
+    equip always has. Nothing to unattach, no exception raised: an illegal
+    equip target is a no-op, not an error.
+    """
+    scenario = _karn_and_a_target_artifact().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    ring = scenario.find("Sol Ring", Zone.BATTLEFIELD, "alice")
+    assert not scenario.game.computed_board().of(ring).is_creature
+
+    cutter = scenario.find("Cori-Steel Cutter", Zone.BATTLEFIELD, "alice")
+    activation = equip(scenario, cutter, ring)
+
+    assert activation.resolve() is None
+    assert equipped_creature(scenario.game, cutter) is None
+    assert not cutter.is_attached
+
+
+def test_equipment_state_based_actions_leave_a_karn_animated_host_alone():
+    """CR 704.5n's own sweep (`equipment_state_based_actions`) reads the same
+    computed board through `_host_is_legal_for`: once Sol Ring is equipped
+    while animated, the very next state-based-action check must not treat the
+    printed "not a creature" reading as a reason to unattach the Equipment
+    that just legally attached to it.
+    """
+    scenario = _karn_and_a_target_artifact().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    karn = scenario.creature("Karn, the Great Creator", "alice")
+    ring = scenario.find("Sol Ring", Zone.BATTLEFIELD, "alice")
+    scenario.activate(karn, index=0, targets=[ring])
+    scenario.pass_until_resolved()
+
+    cutter = scenario.find("Cori-Steel Cutter", Zone.BATTLEFIELD, "alice")
+    equip(scenario, cutter, ring).resolve()
+
+    assert equipment_state_based_actions(scenario.game) == []
+    assert equipped_creature(scenario.game, cutter) is ring
