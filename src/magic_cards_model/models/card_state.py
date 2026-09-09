@@ -1461,15 +1461,28 @@ class CardState(BaseModel):
         ability that prints its own "Activate only if this card is
         suspended" restriction (CR 602.5b), Greater Gargadon's own second
         ability being the pool's example - ask the identical question rather
-        than re-deriving it. Not knowing the card prints suspend at all is
-        not asked here; a card can only carry `ExileMarker.SUSPENDED` by way
-        of `MarkedExile.suspend`, which already refused to mark one that has
-        no suspend ability.
+        than re-deriving it.
+
+        **Three clauses, and `ExileMarker.SUSPENDED` is not one of them.**
+        This used to read the marker instead of "has suspend", which is
+        narrower than the rule: CR 702.62b asks what the card *is* and where
+        it *is*, not which action put it there. Suspended Sentence's own last
+        line - "Exile Suspended Sentence with three time counters on it" -
+        makes a suspended card with no suspend special action anywhere in
+        sight, and so would any future effect that puts a time counter on an
+        exiled card with suspend. Reading the marker also made the whole
+        keyword's second ability unreachable for such a card, since
+        `Game.emit` offers a source on this predicate.
+
+        "Has suspend" is read off Scryfall's own `keywords` list, the same
+        way `machines/keywords.has_rebound` and `has_persist` read theirs,
+        rather than by searching the oracle text - Lotus Bloom's only
+        matching string is the reminder text in parentheses, which is not an
+        ability at all.
         """
         if self.zone is not Zone.EXILE:
             return False
-        annotation = self.exile_annotation
-        if annotation is None or annotation.marker is not ExileMarker.SUSPENDED:
+        if not any(keyword.lower() == "suspend" for keyword in self.card.keywords):
             return False
         return self.counter_count(Counter.TIME) > 0
 

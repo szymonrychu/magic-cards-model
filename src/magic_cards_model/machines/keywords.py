@@ -233,7 +233,7 @@ def _expansion(
     word: TriggerWord,
     condition: str,
     effect: str,
-    event: TriggerEvent,
+    event: TriggerEvent | None,
     intervening_if: str | None = None,
 ) -> TriggeredAbility:
     """One keyword line written out as the triggered ability the rule says it is.
@@ -477,20 +477,97 @@ def _hideaway_ability(ability: KeywordAbility) -> TriggeredAbility:
     )
 
 
+def _suspend_abilities(ability: KeywordAbility) -> list[TriggeredAbility]:
+    """CR 702.62a's *second and third* abilities. Suspend is three abilities.
+
+    "Suspend is a keyword that represents three abilities. The first is a
+    static ability that functions while the card with suspend is in a
+    player's hand. The second and third are triggered abilities that function
+    in the exile zone. 'Suspend N-[cost]' means 'If you could begin to cast
+    this card by putting it onto the stack from your hand, you may pay [cost]
+    and exile it with N time counters on it. This action doesn't use the
+    stack,' and 'At the beginning of your upkeep, if this card is suspended,
+    remove a time counter from it,' and 'When the last time counter is
+    removed from this card, if it's exiled, you may play it without paying
+    its mana cost if able. If you don't, it remains exiled. If you cast a
+    creature spell this way, it gains haste until you lose control of the
+    spell or the permanent it becomes.'"
+
+    The first ability is the CR 116.2f special action and belongs to
+    `machines/casting.MarkedExile.suspend`, not here: it does not use the
+    stack, so it is not a triggered ability at all.
+
+    The other two are, and until this existed neither had a dispatcher.
+    `machines/triggers.triggers_for` reads `triggered_abilities_of(source.
+    card)`, and Lotus Bloom's only text matching "at the beginning of your
+    upkeep" is the reminder text in parentheses - which is not an ability -
+    so no `TriggeredAbility` object existed to find and a suspended card's
+    time counters came off only when a caller reached in and removed one by
+    hand. Both are keyed by `TriggeredAbility.keyword`, and
+    `machines/triggers.zones_ability_functions_in` reads the same field for
+    the rule's own "function in the exile zone".
+
+    The third carries `event=None`: no `machines/abilities.TriggerEvent`
+    names "the last time counter is removed", so it is matched from its
+    printed condition through `machines/triggers._unread_condition_matches`
+    against `ExtraTriggerEvent.LAST_TIME_COUNTER_REMOVED`, the same shape
+    Caged Sun's and Wan Shi Tong's unread conditions already take.
+    """
+    return [
+        _expansion(
+            ability,
+            keyword="suspend",
+            word=TriggerWord.AT,
+            condition="the beginning of your upkeep",
+            intervening_if="this card is suspended",
+            effect="remove a time counter from it",
+            event=TriggerEvent.BEGINNING_OF_STEP,
+        ),
+        _expansion(
+            ability,
+            keyword="suspend",
+            word=TriggerWord.WHEN,
+            condition="the last time counter is removed from this card",
+            intervening_if="it's exiled",
+            effect=(
+                "you may play it without paying its mana cost if able. If you don't, it "
+                "remains exiled. If you cast a creature spell this way, it gains haste "
+                "until you lose control of the spell or the permanent it becomes"
+            ),
+            event=None,
+        ),
+    ]
+
+
+def _single(
+    build: Callable[[KeywordAbility], TriggeredAbility],
+) -> Callable[[KeywordAbility], list[TriggeredAbility]]:
+    """Adapt a keyword whose expansion is exactly one triggered ability.
+
+    CR 702.1 calls a keyword "shorthand for one or more abilities", and
+    suspend (CR 702.62a) is the pool's first keyword whose shorthand covers
+    *two* triggered abilities at once - so the registry below answers with a
+    list. Every other entry answers with a list of one, and this is what says
+    so without rewriting ten one-line expansions to build a list each.
+    """
+    return lambda ability: [build(ability)]
+
+
 #: The keyword lines this module can write out as triggered abilities, by the
 #: Scryfall spelling of the keyword. A keyword missing from here is a keyword
 #: `machines/triggers.py` still cannot produce.
-_TRIGGER_EXPANSIONS: dict[str, Callable[[KeywordAbility], TriggeredAbility]] = {
-    "ward": _ward_ability,
-    "prowess": _prowess_ability,
-    "cascade": _cascade_ability,
-    "storm": _storm_ability,
-    "persist": _persist_ability,
-    "mobilize": _mobilize_ability,
-    "firebending": _firebending_ability,
-    "evoke": _evoke_ability,
-    "madness": _madness_ability,
-    "hideaway": _hideaway_ability,
+_TRIGGER_EXPANSIONS: dict[str, Callable[[KeywordAbility], list[TriggeredAbility]]] = {
+    "ward": _single(_ward_ability),
+    "prowess": _single(_prowess_ability),
+    "cascade": _single(_cascade_ability),
+    "storm": _single(_storm_ability),
+    "persist": _single(_persist_ability),
+    "mobilize": _single(_mobilize_ability),
+    "firebending": _single(_firebending_ability),
+    "evoke": _single(_evoke_ability),
+    "madness": _single(_madness_ability),
+    "hideaway": _single(_hideaway_ability),
+    "suspend": _suspend_abilities,
 }
 
 
@@ -511,7 +588,7 @@ def keyword_triggered_abilities(card: Card) -> list[TriggeredAbility]:
     for ability in keyword_abilities(card):
         expand = _TRIGGER_EXPANSIONS.get(ability.canonical.lower())
         if expand is not None:
-            built.append(expand(ability))
+            built.extend(expand(ability))
     return built
 
 
@@ -580,7 +657,7 @@ def granted_keyword_triggered_abilities(texts: Sequence[str]) -> list[TriggeredA
             continue
         expand = _TRIGGER_EXPANSIONS.get(ability.canonical.lower())
         if expand is not None:
-            built.append(expand(ability))
+            built.extend(expand(ability))
     return built
 
 
@@ -2039,6 +2116,19 @@ def persist_return(game: Any, card: CardState) -> CardState | None:
 # --------------------------------------------------------------------------
 
 
+def has_suspend(card: Card) -> bool:
+    """CR 702.62b's middle clause: whether this card "has suspend".
+
+    Read off Scryfall's own `keywords` list for the same reason `has_rebound`
+    is - Lotus Bloom's oracle text contains "At the beginning of your upkeep,
+    remove a time counter" only inside the reminder text in parentheses, which
+    is not an ability (CR 207.2), so a substring search of the text would find
+    the keyword on exactly the cards a `keywords` read already finds it on and
+    on some it should not.
+    """
+    return any(keyword.lower() == "suspend" for keyword in card.keywords)
+
+
 def has_rebound(card: Card) -> bool:
     """CR 702.88a: "Rebound appears on some instants and sorceries." Read the
     same way `has_persist` reads a permanent keyword - off Scryfall's own
@@ -2730,6 +2820,39 @@ def _hideaway_effect(game: Any, ability: AbilityOnStack) -> None:
             game.shuffles_performed += 1
 
 
+def _suspend_effect(game: Any, ability: AbilityOnStack) -> Any:
+    """CR 702.62a's second and third abilities, told apart by which one this is.
+
+    Suspend is the one keyword in this registry that is shorthand for two
+    *triggered* abilities (`_suspend_abilities`), and `KEYWORD_TRIGGER_
+    EFFECTS` is keyed by keyword, so this is the dispatcher between them. It
+    reads the ability's own `event`, which is exactly what tells them apart:
+    the upkeep one is `TriggerEvent.BEGINNING_OF_STEP` and the
+    last-counter one is the unread condition, `event=None`.
+
+    Neither branch re-tests its intervening *if*. Both have already been
+    checked twice by the time this runs - CR 603.4 when the ability
+    triggered, CR 608.2a again as it resolves (`Game._intervening_if_still_
+    true`) - which is what makes the card leaving exile in response stop the
+    tick without anything here asking.
+
+    Both effects live in `machines/casting.py` beside CR 116.2f's special
+    action that puts the counters on in the first place, and both are still
+    callable by hand: Greater Gargadon's own "Sacrifice an artifact,
+    creature, or land: Remove a time counter from this card" is a printed
+    activated ability that removes one outside any upkeep at all.
+    """
+    from .casting import finish_suspend, remove_suspend_time_counter
+
+    source = ability.source(game)
+    if source is None:
+        return None
+    printed = ability.ability
+    if isinstance(printed, TriggeredAbility) and printed.event is TriggerEvent.BEGINNING_OF_STEP:
+        return remove_suspend_time_counter(game, source)
+    return finish_suspend(game, source)
+
+
 #: What one keyword's triggered ability does when it resolves, by keyword.
 #: `Game._effect_of` has to consult this before the card-name registry - see
 #: `docs/engine-coverage.md` for the hook.
@@ -2742,6 +2865,7 @@ KEYWORD_TRIGGER_EFFECTS: dict[str, Callable[[Any, AbilityOnStack], Any]] = {
     "madness": _madness_effect,
     "hideaway": _hideaway_effect,
     "evoke": _evoke_effect,
+    "suspend": _suspend_effect,
 }
 
 

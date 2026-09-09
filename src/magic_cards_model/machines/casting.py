@@ -60,6 +60,7 @@ from .keywords import (
     FACE_DOWN_CAST_COST,
     enchant_restrictions,
     face_down_characteristics,
+    has_suspend,
     why_cannot_enchant,
 )
 from .layers import ContinuousEffect, Layer, grant_ability, only_this_incarnation
@@ -72,7 +73,7 @@ from .targeting import (
     spell_profile_for_text,
     targeting_profile,
 )
-from .triggers import GameEvent
+from .triggers import ExtraTriggerEvent, GameEvent
 from .turn import Step
 
 
@@ -4248,22 +4249,39 @@ def remove_suspend_time_counter(game: Any, card: CardState) -> int:
     rather than raising, the same "the *if* was false, do nothing" shape
     `persist_return` already returns `None` for.
 
-    Not driven automatically: like `exile_warped`'s delayed trigger, nothing
-    in this engine's turn machine dispatches a per-card upkeep trigger (the
-    CR 703.4 actions it does drive - untap, draw, discard, damage-wipe - are
-    listed in `docs/scenario-tests.md`), so a scenario calls this once per
-    upkeep it cares about, the same hand-driven shape combat's own
-    declarations take.
+    **This is the resolution of a real triggered ability now, not a hand-driven
+    helper.** `machines/keywords._suspend_abilities` writes CR 702.62a's second
+    ability out as a `TriggeredAbility`, `Game.emit` offers every suspended
+    card in exile as a source, and `_suspend_effect` calls this when the
+    ability resolves. Both checks below therefore run for the third time by
+    then - CR 603.4 refused the trigger if the card was not suspended, CR
+    608.2a refused the resolution if it had stopped being - and they are kept
+    because this is still callable directly: Greater Gargadon's printed
+    "Sacrifice an artifact, creature, or land: Remove a time counter from this
+    card" is an activated ability that takes one off outside any upkeep, and
+    `machines/effects.py` calls straight in for it.
+
+    Taking the *last* counter off raises CR 702.62a's own third trigger
+    condition (`ExtraTriggerEvent.LAST_TIME_COUNTER_REMOVED`), so the free
+    cast is offered from whichever of the two routes emptied the card - the
+    upkeep trigger or Gargadon's sacrifice - rather than only from a caller
+    that remembered to ask.
     """
-    if card.zone is not Zone.EXILE:
+    if not card.is_suspended:
         return card.counter_count(Counter.TIME)
-    annotation = card.exile_annotation
-    if annotation is None or annotation.marker is not ExileMarker.SUSPENDED:
-        return card.counter_count(Counter.TIME)
-    if card.counter_count(Counter.TIME) <= 0:
-        return 0
     card.remove_counters(Counter.TIME, 1)
-    return card.counter_count(Counter.TIME)
+    remaining = card.counter_count(Counter.TIME)
+    if remaining == 0:
+        game.emit(
+            GameEvent(
+                event=ExtraTriggerEvent.LAST_TIME_COUNTER_REMOVED,
+                subject_id=card.id,
+                subject_name=card.name,
+                subject_card=card.card,
+                player=card.owner,
+            )
+        )
+    return remaining
 
 
 def finish_suspend(game: Any, card: CardState) -> PlayPermission | None:
@@ -4318,14 +4336,22 @@ def finish_suspend(game: Any, card: CardState) -> PlayPermission | None:
     """
     if card.zone is not Zone.EXILE:
         return None
-    annotation = card.exile_annotation
-    if annotation is None or annotation.marker is not ExileMarker.SUSPENDED:
+    if not has_suspend(card.card):
+        # Whose ability this is. CR 702.62a's third ability belongs to a card
+        # with suspend and to nothing else - which used to be read off
+        # `ExileMarker.SUSPENDED` instead, and that is narrower than the rule
+        # in exactly the way CR 702.62b is broader than the marker: a card
+        # exiled with time counters by something other than the suspend
+        # special action (Suspended Sentence's own last line) has the ability
+        # too. Read off the keyword rather than the marker, and the pile the
+        # card happens to sit in stops being the question.
         return None
     if card.counter_count(Counter.TIME) > 0:
         return None
+    annotation = card.exile_annotation
     return game.grant_play_permission(
         card,
-        card.owner or annotation.owner or game.active_player.username,
+        card.owner or (annotation.owner if annotation else None) or game.active_player.username,
         action=PlayAction.CAST,
         pays_mana_cost=False,
         source_name=f"{card.name}'s suspend",
