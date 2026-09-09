@@ -504,6 +504,7 @@ other work.
 | Emrakul, the Promised End's control duration | CR 723.1 | The cast trigger is fully registered, control half and extra turn both. `Game.gain_control_of_player` takes no duration argument, so control is handed over and never returned. |
 | Imprint clause shapes other than the two now read | CR 207.2c, 607.2a | `_parse_imprint_clause` reads only "you may exile a `<quality>` card ... from your hand"; `_merge_each_player_clauses` reads only "each player exiles the top N cards of their library[ face down]". An "Imprint —" (or plain "exiled with `<name>`") clause shaped some other way - "exile up to one target card" (a targeted exile rather than a `may` choice), "look at the top N cards of your library and exile one" (a choice among a dig rather than a flat count) - leaves no link and no `ImprintNotice` either, since neither parser even matches it to know it failed. No printing in the pool needs one yet; if one does, it should get its own notice the way the two shapes above already have. |
 | Pyxis of Pandemonium's own second ability | CR 406.4 | Only its face-down exile half is modelled (`_EACH_PLAYER_EXILES_TOP_RE`'s `face_down` branch, reusing the shared closure Knowledge Pool's ETB now writes through). "Then each player, in the order starting with you, may play a card exiled with Pyxis of Pandemonium this way" is not built, and the face-down exile is deliberately left **unannotated** (`exile_annotation is None`) so CR 406.3a's "no characteristics" reading survives (see `CardState.has_no_characteristics`'s own docstring) - annotating it the way Knowledge Pool's face-up exile now is would break the DDR#956 face-down-mana-value-zero ruling for a link nothing yet reads. Building the second ability means writing the annotation *and* teaching `has_no_characteristics` to stop reading `exile_annotation is None` as "no pile of its own" once one is written - a `machines/casting.py` change this session did not make. |
+| Persist (the sorcery), and any "return target ... to the battlefield with a counter on it" card | CR 614.1c | Persist's own "Return target nonlegendary creature card from your graveyard to the battlefield with a -1/-1 counter on it" is CR 614.1c's *enters-with* replacement, not a return-then-add-counters sequence - nothing in `Game.put_onto_battlefield`/`enter_the_battlefield` (`models/game.py:4602`, `:4460`) accepts a counter argument, and the entering-with path is driven off the *entering permanent's own printed text* (`game.py:4470-4475`), which a target chosen by another card's ability is not. The nearest precedent, `_parse_put_exiled_target_onto_battlefield_clause`, adds counters **after** the permanent is already on the battlefield, and its own docstring says that ordering is only correct because that card's counters are "additional" rather than part of how the permanent enters - copying it for Persist would let the reanimated creature exist briefly at its full toughness (e.g. a 1/1 alive for an instant) before the counter lands, a wrong event order a state-based action or a "dies as it enters" trigger could observe. Left unread (not shipped, not xfailed as a scenario - the effect registry simply has no entry for this card's clause; not to be confused with the *keyword* Persist, CR 702.79a, which is fully modelled - see the Modelled table's "Persist, and last known counters" row). |
 
 ## Finding the gaps: `scripts/sweep_pool.py`
 
@@ -1801,7 +1802,32 @@ Grouped by the mechanic each one needed, not by card:
   step. `_parse_each_player_sacrifices_then_mass_reanimate` reads **Bringer of
   the Last Gift**'s pair, whose second sentence's candidate set is defined by
   what the first did ("that weren't put there this way"), so each graveyard is
-  snapshotted before anything is sacrificed (CR 608.2f).
+  snapshotted before anything is sacrificed (CR 608.2f). **A fourth shape,
+  closed 2026-09-09: the bare singular sentence itself had no reader at all.**
+  "Return target `<quality>` card from your graveyard to the battlefield."
+  with no self-reference, no "all", and no trailing decoration - the
+  battlefield twin of `_RETURN_FROM_YOUR_GRAVEYARD_TO_HAND_RE` (Raise Dead's
+  "... to your hand.") that this file's own gap survey had missed - is now
+  `_RETURN_FROM_YOUR_GRAVEYARD_TO_BATTLEFIELD_RE` /
+  `return_ability_targets_to_battlefield`, covering **Unearth**, **Renegade
+  Rallier**'s Revolt ETB, and **Tameshi, Reality Architect**'s `{X}` activated
+  ability. Reanimating **Renegade Rallier** end to end also needed a second,
+  independent fix: `machines/triggers.intervening_if_holds` had no reader for
+  Revolt's own intervening-*if* wording ("a permanent left the battlefield
+  under your control this turn") - CR 207.2c's ability word was enforced for
+  Fatal Push's *target-restriction* reading of Revolt
+  (`comparison_value_if_revolt`, `test_fatal_push_revolt.py`) but never for a
+  *triggered ability's* intervening if, which is a different code path
+  entirely, so Renegade Rallier's ETB failed closed and recorded an
+  `InterveningIfNotice` even with Revolt genuinely active - now read by
+  `_REVOLT_CLAUSES`, sharing `Game.revolt_active_for` with the existing
+  reading. `_MASS_RETURN_FROM_GRAVEYARD_TO_BATTLEFIELD_RE` also gained an
+  optional trailing " tapped" (CR 110.5b), covering **Aftermath Analyst**'s
+  "Return all land cards from your graveyard to the battlefield tapped."
+  **Persist** (the sorcery) is the fifth card of this same template and is
+  deliberately not covered - see the "Not modelled" table's own row, which
+  explains why its trailing "with a -1/-1 counter on it" is a CR 614.1c
+  enters-with replacement rather than another instance of this shape.
 - **Reading a *card's* description, as opposed to a permanent's.**
   `_parse_card_group_qualifier` is the new counterpart to
   `_parse_mass_type_qualifier`: a card in a graveyard, hand or library has only

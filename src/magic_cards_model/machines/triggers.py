@@ -2097,6 +2097,17 @@ _KICKED_CLAUSE = re.compile(r"^it was kicked$")
 _NO_MANA_SPENT_CLAUSE = re.compile(r"^no mana was spent to cast it$")
 _MANA_SPENT_CLAUSE = re.compile(r"^(?P<symbols>(?:\{[wubrgc]\})+) was spent to cast it$")
 _MANA_SYMBOL_LETTER = re.compile(r"\{([wubrgc])\}")
+
+#: CR 207.2c's Revolt ability word, both printed phrasings in the pool:
+#: Renegade Rallier's and Fatal Push's own "a permanent left the battlefield
+#: under your control this turn", and the generic reminder-text order
+#: "a permanent you controlled left the battlefield this turn".
+_REVOLT_CLAUSES = frozenset(
+    {
+        "a permanent left the battlefield under your control this turn",
+        "a permanent you controlled left the battlefield this turn",
+    }
+)
 _COLOR_LETTERS: dict[str, Color] = {
     "w": Color.WHITE,
     "u": Color.BLUE,
@@ -2196,7 +2207,10 @@ def intervening_if_holds(
 
     Clause shapes read: persist's "it had no -1/-1 counters on it"
     (CR 702.79a), Thopter Assembly's "you control no [subtype]s other than
-    this creature", Ocelot Pride's "you gained life this turn", Alania,
+    this creature", Ocelot Pride's "you gained life this turn", Renegade
+    Rallier's own Revolt clause "a permanent left the battlefield under your
+    control this turn" (CR 207.2c, `_REVOLT_CLAUSES`, `Game.
+    revolt_active_for`), Alania,
     Divergent Storm's "it's the first [type] spell ... you've cast this turn",
     kicker's "if it was kicked" (CR 702.33a, 702.33d), CR 601.2h's "if no
     mana was spent to cast it" / "if [mana symbols] was spent to cast it"
@@ -2301,6 +2315,19 @@ def intervening_if_holds(
     if clause == "you gained life this turn":
         controller = source.controller or game.active_player.username
         return controller in game.life_gained_this_turn
+
+    if clause in _REVOLT_CLAUSES:
+        # CR 207.2c: Revolt is an ability word, so no numbered rule spells out
+        # the condition itself; the wording is the card's own. Renegade
+        # Rallier's own ETB prints "a permanent left the battlefield under
+        # your control this turn" - the identical clause Fatal Push carries,
+        # except Fatal Push's is read directly by `machines/targeting.py`'s
+        # `comparison_value_if_revolt` because it modifies a *target
+        # restriction* rather than gating a triggered ability at all
+        # (`test_fatal_push_revolt.py`). `Game.revolt_active_for` is the one
+        # shared answer both readings ask.
+        controller = source.controller or game.active_player.username
+        return game.revolt_active_for(controller)
 
     power_control = _control_creature_with_power_holds(game, clause, source)
     if power_control is not None:
