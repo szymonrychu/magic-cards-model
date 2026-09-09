@@ -134,8 +134,10 @@ from magic_cards_model.machines.triggers import (  # noqa: E402
     _ENTERS_WITH_COUNTER_RE as _CONDITION_ENTERS_WITH_COUNTER_RE,
 )
 from magic_cards_model.machines.triggers import (  # noqa: E402
+    _STATE_COUNTER_TRIGGER_RE,
     GameEvent,
     TriggerEvent,
+    _unread_trigger_events,
     condition_matches,
 )
 from magic_cards_model.machines.triggers import (  # noqa: E402
@@ -1211,7 +1213,21 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
                 category = QUOTED_EFFECT
             clauses.append(ClauseOutcome(category, ability.text, "activated"))
         elif isinstance(ability, TriggeredAbility):
-            if ability.event is None:
+            # `ability.event is None` is not on its own "nobody can ever fire
+            # this" - `triggers.triggered_abilities_of` keeps such an ability
+            # anyway when `_unread_trigger_events` can still read its printed
+            # condition (CR 603.1b), and `_state_trigger_abilities` keeps one
+            # whose condition is CR 603.8's own shape
+            # (`_STATE_COUNTER_TRIGGER_RE`). Both routes reach
+            # `condition_matches`/`_state_condition_holds` and go on the stack
+            # in a real game, so asking only about `event` here reported
+            # Murktide Regent and eight other cards' triggers SILENT for a
+            # measurement gap, not an engine one.
+            if (
+                ability.event is None
+                and not _unread_trigger_events(ability.condition)
+                and _STATE_COUNTER_TRIGGER_RE.match(ability.condition.strip()) is None
+            ):
                 clauses.append(ClauseOutcome(SILENT, ability.text, "triggered (unread condition)"))
                 continue
             effect = trigger_effect_for(printing.name, ability.event, ability.effect)

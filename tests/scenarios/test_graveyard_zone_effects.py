@@ -187,6 +187,113 @@ def test_sanctifier_en_vec_exiles_only_black_or_red_cards_from_every_graveyard()
 
 
 # --------------------------------------------------------------------------
+# "Exile each opponent's graveyard" (Soul-Guide Lantern, Ashiok, Dream
+# Render) - `exile_all_graveyards`'s player-set-filtered twin. CR 102.2:
+# "opponent" is the other player, not "every player" the way Rest in Peace's
+# unqualified "all graveyards" reads - so the ability's own controller's
+# graveyard must survive untouched, unlike `exile_all_graveyards`.
+# --------------------------------------------------------------------------
+
+
+def test_soul_guide_lantern_exiles_only_its_controllers_opponents_graveyard():
+    """The happy path and the danger both at once: bob's graveyard empties
+    into exile, and alice's own graveyard - sitting right there on the same
+    activation - is untouched. Routing "each opponent's graveyard" through
+    the unfiltered `exile_all_graveyards` loop would have exiled alice's own
+    Grizzly Bears too.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Soul-Guide Lantern"],
+            graveyard=["Grizzly Bears"],
+        )
+        .player("bob", graveyard=["Lightning Bolt", "Thoughtseize"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    lantern = scenario.find("Soul-Guide Lantern", Zone.BATTLEFIELD, "alice")
+    bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
+    bolt = scenario.find("Lightning Bolt", Zone.GRAVEYARD, "bob")
+    thoughtseize = scenario.find("Thoughtseize", Zone.GRAVEYARD, "bob")
+
+    scenario.activate(lantern, sacrificing=[lantern])
+    scenario.pass_until_resolved()
+
+    assert bolt.zone is Zone.EXILE
+    assert thoughtseize.zone is Zone.EXILE
+    assert scenario.player("bob").graveyard == []
+    assert bears.zone is Zone.GRAVEYARD, "the controller's own graveyard must survive"
+    assert lantern.zone is Zone.GRAVEYARD, "its own sacrifice cost, not this ability's own exile"
+
+
+def test_soul_guide_lantern_exiles_every_opponents_graveyard_in_a_multiplayer_game():
+    """Three players, no teams (CR 800.1): both of alice's opponents lose
+    their whole graveyard, and alice's own is still untouched. `_opponents`
+    reads "every other player still in the game", not a fixed two-player
+    pair.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Soul-Guide Lantern"],
+            graveyard=["Grizzly Bears"],
+        )
+        .player("bob", graveyard=["Lightning Bolt"])
+        .player("carol", graveyard=["Thoughtseize"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    lantern = scenario.find("Soul-Guide Lantern", Zone.BATTLEFIELD, "alice")
+    bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
+    bolt = scenario.find("Lightning Bolt", Zone.GRAVEYARD, "bob")
+    thoughtseize = scenario.find("Thoughtseize", Zone.GRAVEYARD, "carol")
+
+    scenario.activate(lantern, sacrificing=[lantern])
+    scenario.pass_until_resolved()
+
+    assert bolt.zone is Zone.EXILE
+    assert thoughtseize.zone is Zone.EXILE
+    assert scenario.player("bob").graveyard == []
+    assert scenario.player("carol").graveyard == []
+    assert bears.zone is Zone.GRAVEYARD, "the controller's own graveyard must survive"
+
+
+def test_ashiok_dream_renders_minus_one_exiles_the_milled_opponent_but_not_ashioks_controller():
+    """Ashiok, Dream Render's `-1`: "Target player mills four cards. Then
+    exile each opponent's graveyard." Two different player-selection rules on
+    one ability - the mill is targeted at whoever alice chooses (CR 115.1),
+    while the exile that follows is `_opponents`'s untargeted "every other
+    player" and always spares alice's own graveyard, even though she already
+    had a card sitting in it before the ability resolved.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Ashiok, Dream Render"],
+            graveyard=["Grizzly Bears"],
+        )
+        .player("bob", library=["Mountain", "Forest", "Island", "Swamp", "Plains"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    ashiok = scenario.find("Ashiok, Dream Render", Zone.BATTLEFIELD, "alice")
+    bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
+
+    scenario.activate(ashiok, index=0, targets=["bob"])
+    scenario.pass_until_resolved()
+
+    bob = scenario.player("bob")
+    assert [state.name for state in bob.library] == ["Plains"], "the mill actually happened"
+    assert bob.graveyard == [], "bob's own freshly-milled cards were exiled too"
+    assert bears.zone is Zone.GRAVEYARD, "alice's own graveyard, sitting there beforehand, survives"
+    assert scenario.player("alice").graveyard == [bears]
+
+
+# --------------------------------------------------------------------------
 # "Return target ... card from your graveyard to your hand"
 # (Eternal Witness, Raise Dead)
 # --------------------------------------------------------------------------

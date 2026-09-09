@@ -2286,6 +2286,29 @@ def exile_all_graveyards(game: "Game", stack_object: "StackObject") -> None:
             game.exile_permanent(card_state)
 
 
+def exile_each_opponents_graveyard(game: "Game", stack_object: "StackObject") -> None:
+    """Soul-Guide Lantern / Ashiok, Dream Render: "exile each opponent's
+    graveyard."
+
+    No target either (CR 115.1 has nothing to target here, the same as
+    `exile_all_graveyards`), but a *player-set qualifier* narrows which
+    graveyards: CR 102.2's "opponent" (the other player, in the two-player
+    case this pool's decks are built for) rather than CR 404.1's every
+    player. This is `exile_all_graveyards`'s filtered twin, not that
+    function reused with a different loop - `exile_all_graveyards` walks
+    `game.players_in_game` unfiltered, and routing "each opponent's
+    graveyard" through it would exile the ability's own controller's
+    graveyard too, which reads as a working card until the controller is the
+    one holding Soul-Guide Lantern's own reflection off their own dead
+    Snapcaster Mage. `_opponents` is the same helper `damage_each_opponent`
+    (Guttersnipe) already uses for this word.
+    """
+    controller = game.controller_of(stack_object)
+    for opponent in _opponents(game, controller.username):
+        for card_state in list(opponent.graveyard):
+            game.exile_permanent(card_state)
+
+
 #: Reused by `_exile_matching_from_all_graveyards`, defined lower in this file
 #: next to `_HAND_EXILE_COLOR_WORDS` - forward reference is fine, since this is
 #: only ever called once the whole module has finished importing.
@@ -5599,6 +5622,19 @@ _EXILE_TARGET_PLAYERS_GRAVEYARD_RE = re.compile(
 #: (CR 115.1 has nothing to target here), so neither collides with
 #: `_EXILE_TARGET_RE`'s "target" requirement.
 _EXILE_ALL_GRAVEYARDS_RE = re.compile(r"^exile all graveyards\.?$", re.IGNORECASE)
+#: "Exile each opponent's graveyard." (Soul-Guide Lantern, Ashiok, Dream
+#: Render) - `_EXILE_ALL_GRAVEYARDS_RE`'s own "no target" shape (CR 115.1)
+#: with a player-set qualifier narrowing which graveyards, the way
+#: `_DAMAGE_EACH_OPPONENT_RE` reads "each opponent" for damage. A leading
+#: "then " is kept in the pattern itself rather than stripped by the caller -
+#: `_THEN_EXILE_THAT_PLAYERS_GRAVEYARD_RE` reads Go Blank's own "then exile
+#: that player's graveyard" the same way - because Ashiok's whole ability is
+#: two clauses ("Target player mills four cards. Then exile each opponent's
+#: graveyard.") and the period split leaves "then" as the second clause's own
+#: first word.
+_EXILE_EACH_OPPONENTS_GRAVEYARD_RE = re.compile(
+    r"^(?:then )?exile each opponent'?s graveyards?\.?$", re.IGNORECASE
+)
 _EXILE_QUALITY_FROM_ALL_GRAVEYARDS_RE = re.compile(
     r"^exile all cards that are (?P<quality>.+?) from all graveyards\.?$", re.IGNORECASE
 )
@@ -6825,6 +6861,9 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
 
     if _EXILE_ALL_GRAVEYARDS_RE.fullmatch(clause):
         return exile_all_graveyards  # type: ignore[return-value]
+
+    if _EXILE_EACH_OPPONENTS_GRAVEYARD_RE.fullmatch(clause):
+        return exile_each_opponents_graveyard  # type: ignore[return-value]
 
     if match := _EXILE_QUALITY_FROM_ALL_GRAVEYARDS_RE.fullmatch(clause):
         matches = _graveyard_exile_quality_matcher(match.group("quality"))

@@ -585,8 +585,8 @@ non-empty placeholder (never removed outright - that would also misfire on
 every legitimate "gains '\<ability\>'" grant, CR 113.10, that genuinely needs
 its own quoted payload, Urza's Saga among them).
 
-Measured at this commit: of 715 cards with rules text, 133 are `silent`, 391
-`handled`, 26 `notice`, 163 `static_unaudited`, 2 `unmatchable_condition`
+Measured at this commit: of 715 cards with rules text, 126 are `silent`, 395
+`handled`, 27 `notice`, 165 `static_unaudited`, 2 `unmatchable_condition`
 (Ygra, Eater of All and Blade of the Bloodchief, by an unrelated gap in
 `condition_matches`'s `DIES` branch: a condition naming neither a
 self-reference nor "another"/"other" never matches anything, which Ygra's "a
@@ -606,6 +606,21 @@ currently no live regex, not just no live card, this specific shape could
 exploit. The detector itself (`_effect_matched_inside_quotes`) is still
 exercised directly by `tests/test_sweep_pool.py`, against its own contract
 rather than a card or regex that is no longer vulnerable.
+
+**The "unread condition" bucket had the same class of measurement bug.**
+`classify_clauses` used to stamp a triggered ability `silent` the instant its
+own `ability.event` was `None`, never asking whether `machines/triggers.py`
+could still read the condition text - but `triggered_abilities_of` and
+`_state_trigger_abilities` both already do, through `_unread_trigger_events`
+(CR 603.1b's multi-condition abilities) and `_STATE_COUNTER_TRIGGER_RE` (CR
+603.8). Re-scoring the 18 clauses this bucket held showed 10 across 9 cards
+already reach the stack in a real game; four (Basking Broodscale, Emperor of
+Bones, Hardened Academic, **Murktide Regent**) had no other silent clause and
+left the `silent` list entirely once the sweeper asked the same two
+questions the runtime does. `tests/test_sweep_pool.py` pins the sweeper's
+readability against `triggered_abilities_of`'s own gate directly, over the
+whole pool, so the two cannot drift apart again.
+
 Do not quote these counts from here either - re-run the script.
 
 ## Card effects
@@ -914,7 +929,23 @@ point of failing closed, not a bug to route around.
   different ability from the one this closes, and remain unattempted - there
   is no home in `machines/effects.py` for a graveyard-redirecting
   replacement the way `machines/replacement.py` already has for "enters
-  tapped".
+  tapped". **A player-set qualifier on that same "no target" shape was still
+  missing** - Soul-Guide Lantern's `{T}, Sacrifice this artifact: Exile each
+  opponent's graveyard.` and Ashiok, Dream Render's `-1` ("Target player
+  mills four cards. Then exile each opponent's graveyard.") both failed on
+  "each opponent's" alone, and the danger was not "does nothing": routing
+  that wording through the unfiltered `exile_all_graveyards` loop would have
+  exiled the controller's own graveyard too, a board that reads as a working
+  card and is not one. `exile_each_opponents_graveyard` is the CR 102.2
+  filtered twin, reusing `_opponents` (`damage_each_opponent`/Guttersnipe's
+  own helper) rather than a copy of the unfiltered loop -
+  `_EXILE_EACH_OPPONENTS_GRAVEYARD_RE`, dispatched next to
+  `_EXILE_ALL_GRAVEYARDS_RE`. Relic of Progenitus's own "target player
+  exiles a card from their graveyard" needs a new decision
+  (`_parse_target_player_discards_clause`'s `CHOOSE_CARDS` shape, not this
+  one) and stays out of scope; Cling to Dust and Lantern of Insight share
+  neither shape and are untouched. See
+  `tests/scenarios/test_graveyard_zone_effects.py`.
 - **A triggered ability's targets, chosen before its source exists, are not
   checked.** `Game.why_cannot_target_with_trigger` looks for the source card
   on the battlefield or the stack (CR 603.6a); an enters-the-battlefield
