@@ -362,7 +362,11 @@ def _cast_action(
         if profile.understood
         else ()
     )
-    spend = ManaSpend.casting(card.card)
+    # CR 106.6 read against the zone this cast would start from - the card has
+    # not moved yet here (CR 601.2a happens when the cast is actually
+    # announced), so `card.zone` is that zone and is the same answer
+    # `from_zone` below reports.
+    spend = ManaSpend.casting(card.card, zone=card.zone)
     unpayable = (
         None if alternative_cost is not None else why_mana_cost_unpayable(card.name, total.mana)
     )

@@ -122,7 +122,7 @@ def test_shang_chis_restricted_mana_is_withheld_from_a_creature_spell():
     game = scenario.game
     sources = game.permanents_controlled_by("alice")
     llanowar = scenario.find("Llanowar Elves", Zone.HAND, "alice")
-    spend = ManaSpend.casting(llanowar.card)
+    spend = ManaSpend.casting(llanowar.card, zone=Zone.HAND)
     cost = ManaCost.parse("{G}")
 
     assert could_pay_mana_cost(cost, sources, game=game, payer="alice", spend=spend) is False
@@ -151,7 +151,7 @@ def test_eldrazi_temple_never_sums_its_two_abilities():
     game = scenario.game
     sources = game.permanents_controlled_by("alice")
     fleshraker = scenario.find("Glaring Fleshraker", Zone.HAND, "alice")
-    spend = ManaSpend.casting(fleshraker.card)
+    spend = ManaSpend.casting(fleshraker.card, zone=Zone.HAND)
     cost = ManaCost.parse("{2}{C}")
 
     assert could_pay_mana_cost(cost, sources, game=game, payer="alice", spend=spend) is False
@@ -168,7 +168,7 @@ def test_eldrazi_temple_pays_the_two_its_restricted_ability_actually_makes():
     game = scenario.game
     sources = game.permanents_controlled_by("alice")
     mind_stone = scenario.find("Mind Stone", Zone.HAND, "alice")
-    spend = ManaSpend.casting(mind_stone.card)
+    spend = ManaSpend.casting(mind_stone.card, zone=Zone.HAND)
     cost = ManaCost.parse("{2}")
 
     # Mind Stone is colourless but not an Eldrazi spell, so the restricted

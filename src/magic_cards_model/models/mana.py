@@ -31,6 +31,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ..serialization import SortedFrozenSet
 from .card import Card, Color, Layout, Supertype, Type
+from .zone import Zone
 
 
 class HasCharacteristics(Protocol):
@@ -542,9 +543,22 @@ class ManaSpend(BaseModel):
     case-insensitively against a printed subtype."""
     supertypes: SortedFrozenSet[Supertype] = frozenset()
     colorless: bool = False
+    zone: Zone | None = None
+    """CR 601.2a's "moves that card ... from where it is to the stack": the
+    zone the spell is being cast **from**, which is a question about the cast
+    and not about the card - the same printing cast from the hand and from
+    exile is the same object with two different answers here.
+
+    `None` means the caller could not say, and a clause that names a zone
+    refuses it for the same reason `ManaRestriction.allows(None)` refuses an
+    unknown spend: the engine cannot show the restriction was honoured. It is
+    always `None` for an activation, where no card moves anywhere.
+    """
 
     @classmethod
-    def _of(cls, purpose: SpendPurpose, card: "HasCharacteristics") -> "ManaSpend":
+    def _of(
+        cls, purpose: SpendPurpose, card: "HasCharacteristics", zone: Zone | None
+    ) -> "ManaSpend":
         return cls(
             purpose=purpose,
             name=card.name,
@@ -552,17 +566,28 @@ class ManaSpend(BaseModel):
             subtypes=frozenset(subtype.lower() for subtype in card.subtypes),
             supertypes=frozenset(card.supertypes),
             colorless=not card.colors,
+            zone=zone,
         )
 
     @classmethod
-    def casting(cls, card: "HasCharacteristics") -> "ManaSpend":
-        """Mana spent to cast `card` as a spell.
+    def casting(cls, card: "HasCharacteristics", *, zone: Zone | None) -> "ManaSpend":
+        """Mana spent to cast `card` as a spell, out of `zone`.
 
         A spell is on the stack, which `Game.computed_board` does not cover, so
         the caller has only the printed `Card` to give and that is the right
         answer here.
+
+        `zone` is keyword-only and has **no default** on purpose. CR 601.2a
+        moves the card to the stack as the very first step of the
+        announcement, so by the time a cost is being paid `spell.zone` is
+        always `Zone.STACK` and the origin has to be carried from before the
+        move (`Casting.origin_zone`, `CardState.zone` at the moment
+        `legal_actions` enumerates the cast). A default here would be that
+        answer guessed rather than carried, and "usually the hand"
+        (CR 701.18a's own hedge) is exactly the guess Interdimensional Web
+        Watch's "cast spells from exile" is about.
         """
-        return cls._of(SpendPurpose.CAST_SPELL, card)
+        return cls._of(SpendPurpose.CAST_SPELL, card, zone)
 
     @classmethod
     def activating(cls, card: "HasCharacteristics") -> "ManaSpend":
@@ -577,7 +602,7 @@ class ManaSpend(BaseModel):
         prints the same four names this reads, so no branch is needed here -
         only the type had to stop saying `Card`.
         """
-        return cls._of(SpendPurpose.ACTIVATE_ABILITY, card)
+        return cls._of(SpendPurpose.ACTIVATE_ABILITY, card, None)
 
 
 class SpendClause(BaseModel):
@@ -604,6 +629,10 @@ class SpendClause(BaseModel):
     """All of these supertypes - Delighted Halfling's "a legendary spell"."""
     colorless: bool = False
     """Eldrazi Temple's "colorless": the object must have no colours."""
+    zone: Zone | None = None
+    """Interdimensional Web Watch's "from exile": the spell's CR 601.2a move
+    must have started in this one of CR 400.1's zones. `None` asks nothing,
+    like every other empty field here."""
 
     def accepts(self, spend: ManaSpend) -> bool:
         if spend.purpose is not self.purpose:
@@ -613,6 +642,11 @@ class SpendClause(BaseModel):
         if self.types and not (self.types & spend.types):
             return False
         if self.subtypes and not (self.subtypes & spend.subtypes):
+            return False
+        # An unknown origin (`ManaSpend.zone` None) fails this the same way a
+        # wrong one does, which is the fail-closed direction: a clause that
+        # names a zone is not satisfied by a caller who could not say.
+        if self.zone is not None and spend.zone is not self.zone:
             return False
         return self.supertypes <= spend.supertypes
 

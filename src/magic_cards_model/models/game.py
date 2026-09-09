@@ -11433,7 +11433,7 @@ class Game(BaseModel):
         controller: str | None = None,
         *,
         targets: list[object] | None = None,
-        color: Color | None = None,
+        color: Color | Sequence[Color] | None = None,
         x_value: int = 0,
         exiled_for_cost: CardState | None = None,
         sacrificed_for_cost: list[CardState] | None = None,
@@ -11577,7 +11577,7 @@ class Game(BaseModel):
                 # color" points back at.
                 devotion = (
                     devotion_to(self, controller, color)
-                    if ability.mana.amount_from_devotion and color is not None
+                    if ability.mana.amount_from_devotion and isinstance(color, Color)
                     else None
                 )
                 # The two board-derived narrowings `ManaAbility.effective` asks

@@ -7,16 +7,37 @@ session. Only the first of the three is modelled; the "additional effect" half
 (Cavern of Souls's and Delighted Halfling's "and that spell can't be countered")
 is still not.
 
-Four printings in the pool carry one, and between them they cover both
-purposes a restriction can name:
+Eight printings in the pool carry one, and between them they cover both
+purposes a restriction can name and every shape of clause the grammar reads:
 
   Shang-Chi, Master of Kung Fu  "... only to activate abilities of creature
+                                 sources."
+  Sunken Citadel                "... only to activate abilities of land
                                  sources."
   Eldrazi Temple                "... only to cast colorless Eldrazi spells or
                                  activate abilities of colorless Eldrazi."
   Cavern of Souls               "... only to cast a creature spell of the
                                  chosen type, ..."
   Delighted Halfling            "... only to cast a legendary spell, ..."
+  Tablet of Discovery           "... only to cast instant and sorcery spells."
+  Fíli and Kíli, Joyous         "... only to cast Dwarf, Equipment, and Saga
+                                 spells."
+  Interdimensional Web Watch    "... only to cast spells from exile."
+
+The last three are the two clause shapes beyond a single quality word. An
+and-joined **type list** is one clause offering several types, not several
+clauses - CR 205.2b, looked up this session, makes an object "satisfy the
+criteria for any effect that applies to any of their card types", and no
+spell is ever both an instant and a sorcery. A **zone tail** narrows the
+clause to one of CR 400.1's seven zones, checked against the zone the cast
+started in (CR 601.2a moves the card to the stack before any cost is paid, so
+that zone is carried, never read back off the spell).
+
+Fíli and Kíli, Joyous was added to the pool for this file: it is the second
+and-joined list in print and shares none of Tablet of Discovery's wording - a
+three-item list of subtypes with an Oxford comma, on a creature rather than an
+artifact - so it is what proves the parser reads the mechanic and not the one
+sentence it was built against.
 
 The restriction lives on the mana in the pool, not on its source: the mana
 ability has already resolved (CR 605.3b) by the time the mana is spent, so the
@@ -34,9 +55,10 @@ import pytest
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.cost import spend_restriction
 from magic_cards_model.models import Zone
-from magic_cards_model.models.card import Color
+from magic_cards_model.models.card import Color, Type
+from magic_cards_model.models.card_state import Choice, ChoiceKind
 from magic_cards_model.models.mana import ManaSpend, SpendPurpose
-from tests.cards import card
+from tests.cards import card, card_state, pool
 from tests.scenarios.harness import Scenario
 
 # --------------------------------------------------------------------------
@@ -423,24 +445,80 @@ def test_delighted_halflings_mana_refuses_a_nonlegendary_spell():
 
 
 def test_every_printed_restriction_in_the_pool_is_read():
-    """A restriction the parser cannot read permits nothing at all, which is
-    safe but is not coverage. These four are the whole of the pool and all four
-    are genuinely parsed - Cavern of Souls only once its chosen type is on the
-    permanent, which is why it is asked for here with a source."""
+    """Every "Spend this mana only" printing in the pool parses into clauses.
+
+    A restriction the parser cannot read permits nothing at all, which is safe
+    but is not coverage, so this sweeps the whole pool rather than naming the
+    printings it happened to be written against: a card added later that opens
+    a new grammar shape fails here instead of quietly failing closed in a game.
+
+    Cavern of Souls is the one printing whose sentence cannot be read off the
+    card alone - "of the chosen type" is CR 614.12a's answer, recorded on the
+    permanent - so it is asked with a source carrying that answer, which is the
+    only state that makes the sentence checkable.
+    """
+    unread: list[str] = []
+    seen = 0
+    for name, printing in sorted(pool().items()):
+        text = printing.oracle_text or ""
+        if "Spend this mana only" not in text:
+            continue
+        seen += 1
+        source = None
+        if "of the chosen type" in text:
+            source = card_state(name, Zone.BATTLEFIELD)
+            source.choice = Choice(kind=ChoiceKind.CREATURE_TYPE, value="Elf")
+        restriction = spend_restriction(text, source)
+        if restriction is None or not restriction.understood:
+            unread.append(name)
+
+    assert seen >= 7, f"the pool sweep found only {seen} spend restrictions"
+    assert unread == []
+
+
+def test_the_clauses_each_printed_restriction_is_read_into():
+    """The shapes behind the sweep above, one assertion each - a sweep that
+    only counts would pass on a parser that read every sentence into the same
+    wrong clause."""
     shang_chi = spend_restriction(card("Shang-Chi, Master of Kung Fu").oracle_text)
-    assert shang_chi is not None and shang_chi.understood
+    assert shang_chi is not None
     assert [clause.purpose for clause in shang_chi.clauses] == [SpendPurpose.ACTIVATE_ABILITY]
 
+    citadel = spend_restriction(card("Sunken Citadel").oracle_text)
+    assert citadel is not None
+    assert [clause.purpose for clause in citadel.clauses] == [SpendPurpose.ACTIVATE_ABILITY]
+    assert citadel.clauses[0].types == frozenset({Type.LAND})
+
     temple = spend_restriction(card("Eldrazi Temple").oracle_text)
-    assert temple is not None and temple.understood
+    assert temple is not None
     assert [clause.purpose for clause in temple.clauses] == [
         SpendPurpose.CAST_SPELL,
         SpendPurpose.ACTIVATE_ABILITY,
     ]
 
     halfling = spend_restriction(card("Delighted Halfling").oracle_text)
-    assert halfling is not None and halfling.understood
+    assert halfling is not None
     assert halfling.clauses[0].supertypes == frozenset({"legendary"})
+
+    # PART A: an and-joined type list is ONE clause offering both types, not a
+    # second alternative clause - no spell is ever both an instant and a
+    # sorcery, so two clauses would be two ways of saying the same thing.
+    tablet = spend_restriction(card("Tablet of Discovery").oracle_text)
+    assert tablet is not None
+    assert [clause.purpose for clause in tablet.clauses] == [SpendPurpose.CAST_SPELL]
+    assert tablet.clauses[0].types == frozenset({Type.INSTANT, Type.SORCERY})
+
+    dwarves = spend_restriction(card("Fíli and Kíli, Joyous").oracle_text)
+    assert dwarves is not None
+    assert len(dwarves.clauses) == 1
+    assert dwarves.clauses[0].subtypes == frozenset({"dwarf", "equipment", "saga"})
+
+    # PART B: the zone dimension, and nothing else narrowed with it.
+    watch = spend_restriction(card("Interdimensional Web Watch").oracle_text)
+    assert watch is not None
+    assert len(watch.clauses) == 1
+    assert watch.clauses[0].zone is Zone.EXILE
+    assert watch.clauses[0].types == frozenset()
 
 
 def test_a_chosen_type_nobody_chose_leaves_the_restriction_unread_and_unspendable():
@@ -452,5 +530,267 @@ def test_a_chosen_type_nobody_chose_leaves_the_restriction_unread_and_unspendabl
 
     assert unread is not None
     assert unread.understood is False
-    assert unread.allows(ManaSpend.casting(card("Llanowar Elves"))) is False
+    assert unread.allows(ManaSpend.casting(card("Llanowar Elves"), zone=Zone.HAND)) is False
     assert unread.allows(None) is False
+
+
+# --------------------------------------------------------------------------
+# An and-joined type list: one clause, not two alternatives
+# --------------------------------------------------------------------------
+
+
+def _float_tablet(scenario):
+    """Tap Tablet of Discovery for its restricted `{R}{R}`.
+
+    The Tablet prints two mana abilities and only the second carries the
+    CR 106.6 sentence, so the index is the whole point of the helper: index 0
+    is the unrestricted `{T}: Add {R}`.
+    """
+    tablet = _ready(scenario, "Tablet of Discovery")
+    scenario.game.activate_ability(tablet, 1, "alice")
+    return tablet
+
+
+def test_tablet_of_discoverys_mana_pays_for_an_instant():
+    """ "instant and sorcery spells" is one type list, not one type.
+
+    CR 205.2b, looked up this session: "Some objects have more than one card
+    type... Such objects satisfy the criteria for any effect that applies to
+    any of their card types." No single spell is both an instant and a
+    sorcery, so the printed "and" joins a *list of qualifying types* inside
+    one clause - the mana pays for either.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Lightning Bolt"], battlefield=["Tablet of Discovery"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    _float_tablet(scenario)
+    assert scenario.player().mana_pool.floating == {Color.RED: 2}
+
+    casting = scenario.cast("Lightning Bolt", "alice", targets=["bob"])
+    casting.begin_paying().pay()
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    assert scenario.find("Lightning Bolt", Zone.GRAVEYARD).zone is Zone.GRAVEYARD
+    assert scenario.game.player("bob").life == 17
+
+
+def test_tablet_of_discoverys_mana_pays_for_a_sorcery():
+    """The other half of the same list, on the same restriction. Lava Spike is
+    a sorcery, and the mana that just paid for an instant pays for it too."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Lava Spike"], battlefield=["Tablet of Discovery"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    _float_tablet(scenario)
+
+    casting = scenario.cast("Lava Spike", "alice", targets=["bob"])
+    casting.begin_paying().pay()
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    assert scenario.game.player("bob").life == 17
+
+
+def test_tablet_of_discoverys_mana_refuses_a_creature_spell():
+    """The refusal that makes the list a list and not "any spell": Goblin Guide
+    is a creature spell costing exactly the `{R}` the Tablet made, and the
+    restriction still turns it down."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Goblin Guide"], battlefield=["Tablet of Discovery"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    _float_tablet(scenario)
+
+    # The restriction has to be *read* for this refusal to prove anything: an
+    # unparsed sentence refuses everything, this one included, while saying
+    # nothing about the type list.
+    (restricted,) = scenario.player().mana_pool.restricted
+    assert restricted.restriction.understood is True
+
+    casting = scenario.cast("Goblin Guide", "alice")
+    payment = casting.begin_paying()
+
+    assert payment.shortfall is True
+    with pytest.raises(ValueError, match="Spend this mana only to cast instant and sorcery"):
+        payment.pay()
+
+    # CR 733.1: a refused payment spends nothing.
+    assert scenario.player().mana_pool.floating == {Color.RED: 2}
+    casting.cancel()
+    assert scenario.find("Goblin Guide", Zone.HAND).zone is Zone.HAND
+
+
+def test_an_and_joined_list_of_subtypes_is_read_on_a_different_printing():
+    """Generality, proved on a card that is not the reported one.
+
+    Fíli and Kíli, Joyous prints "Spend this mana only to cast Dwarf,
+    Equipment, and Saga spells." - a three-item list of *subtypes* (CR 205.3),
+    comma-separated with an Oxford "and", on a creature rather than an
+    artifact. Nothing about Tablet of Discovery's sentence is reused: if the
+    parser were fitted to "instant and sorcery", this would fail closed.
+
+    Cori-Steel Cutter is an Artifact - Equipment costing `{1}{R}`, which the
+    `{R}{R}` covers exactly.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Cori-Steel Cutter", "Lightning Bolt"],
+            battlefield=["Fíli and Kíli, Joyous"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    dwarves = _ready(scenario, "Fíli and Kíli, Joyous")
+    scenario.game.activate_ability(dwarves, 0, "alice")
+    assert _restrictions(scenario) == [
+        "Spend this mana only to cast Dwarf, Equipment, and Saga spells."
+    ]
+
+    # An instant is not on the list, even though it is the right colour.
+    bolt = scenario.cast("Lightning Bolt", "alice", targets=["bob"])
+    with pytest.raises(ValueError, match="Spend this mana only to cast Dwarf, Equipment, and Saga"):
+        bolt.begin_paying().pay()
+    bolt.cancel()
+
+    casting = scenario.cast("Cori-Steel Cutter", "alice")
+    casting.begin_paying().pay()
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    assert scenario.find("Cori-Steel Cutter", Zone.BATTLEFIELD).zone is Zone.BATTLEFIELD
+
+
+# --------------------------------------------------------------------------
+# A zone clause: where the spell is being cast from
+# --------------------------------------------------------------------------
+
+
+def test_interdimensional_web_watchs_mana_pays_for_a_spell_cast_from_exile():
+    """CR 400.1 names the seven zones; "from exile" narrows the clause to one
+    of them, and the mana pays for a spell whose CR 601.2a move started there.
+
+    The whole card drives it: its own enters trigger exiles the top two cards
+    and hands out CR 601.3's permission to play them, and the mana its second
+    ability makes is what pays for one of them. Nothing here reaches for
+    `Game.grant_play_permission` behind the printing's back.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Interdimensional Web Watch"],
+            library=["Mind Stone", "Forest"],
+            battlefield=["Forest", "Forest", "Forest", "Forest"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    forests = scenario.untapped_sources("Forest", "Forest", "Forest", "Forest")
+    scenario.cast_and_resolve("Interdimensional Web Watch", *forests)
+    scenario.pass_until_resolved()  # the enters trigger, and the exile it does
+    mind_stone = scenario.find("Mind Stone", Zone.EXILE, "alice")
+
+    watch = _ready(scenario, "Interdimensional Web Watch")
+    scenario.game.activate_ability(watch, 0, "alice", color=Color.RED)
+    assert scenario.player().mana_pool.floating == {Color.RED: 2}
+
+    casting = scenario.cast("Mind Stone", "alice", from_zone=Zone.EXILE)
+    casting.use_permission()
+    casting.begin_paying().pay()
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    assert mind_stone.zone is Zone.BATTLEFIELD
+
+
+def test_interdimensional_web_watchs_mana_refuses_the_same_spell_from_hand():
+    """The refusal is the point: the identical printing, the identical cost,
+    cast from the hand instead. Only the origin zone differs, and it is the
+    whole of what the clause asks about."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Mind Stone"], battlefield=["Interdimensional Web Watch"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    watch = _ready(scenario, "Interdimensional Web Watch")
+    scenario.game.activate_ability(watch, 0, "alice", color=Color.RED)
+
+    casting = scenario.cast("Mind Stone", "alice")
+    payment = casting.begin_paying()
+
+    assert payment.shortfall is True
+    with pytest.raises(ValueError, match="Spend this mana only to cast spells from exile"):
+        payment.pay()
+
+    assert scenario.player().mana_pool.floating == {Color.RED: 2}
+    casting.cancel()
+    assert scenario.find("Mind Stone", Zone.HAND).zone is Zone.HAND
+
+
+def test_a_zone_the_grammar_does_not_know_leaves_the_restriction_unread():
+    """The fail-closed direction for the new dimension, matching what an
+    unrecorded chosen type already does.
+
+    The sentence is Mm'menon, the Right Hand's - "Spend this mana only to cast
+    a spell from anywhere other than your hand." - read off Scryfall this
+    session. "anywhere" is not one of CR 400.1's seven zones, so the clause
+    cannot be checked; the restriction is kept, quoted, and permits nothing at
+    all rather than being quietly widened to every zone. The sentence is handed
+    to the parser as text rather than added to the pool because the sweep below
+    asserts every printing *in* the pool is read.
+    """
+    unread = spend_restriction(
+        "{T}: Add {U}. Spend this mana only to cast a spell from anywhere other than your hand."
+    )
+
+    assert unread is not None
+    assert unread.understood is False
+    assert unread.allows(ManaSpend.casting(card("Mind Stone"), zone=Zone.EXILE)) is False
+    assert unread.allows(ManaSpend.casting(card("Mind Stone"), zone=Zone.HAND)) is False
+
+
+def test_the_web_watch_makes_two_mana_of_different_colors():
+    """ "In any combination of colors" is not "of any one color".
+
+    CR 106.1a's five colors are the universe for both, but Shang-Chi's "two
+    mana of any **one** color" locks both mana to one of them and this does
+    not - so the pair may be `{W}{U}`, and asking Shang-Chi for the same pair
+    is asking for mana that card never offered. Both halves are asserted here,
+    because a model that only knew how to make two of one colour would pass a
+    test that only ever asked for two of one colour.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Interdimensional Web Watch", "Shang-Chi, Master of Kung Fu"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    watch = _ready(scenario, "Interdimensional Web Watch")
+    scenario.game.activate_ability(watch, 0, "alice", color=[Color.WHITE, Color.BLUE])
+    assert scenario.player().mana_pool.floating == {Color.WHITE: 1, Color.BLUE: 1}
+
+    shang_chi = _ready(scenario, "Shang-Chi, Master of Kung Fu")
+    with pytest.raises(ValueError, match="any one color"):
+        scenario.game.activate_ability(shang_chi, 0, "alice", color=[Color.WHITE, Color.BLUE])

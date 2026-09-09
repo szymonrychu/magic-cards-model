@@ -439,10 +439,13 @@ def _narrow_to_defined_colors(
 # countered", Arena of Glory's haste grant) is a separate clause of the same
 # sentence and remains unmodelled - see `docs/engine-coverage.md`.
 #
-# Four printings in `tests/fixtures/cards/` carry one:
+# Eight printings in the card pool carry one, and between them they are the
+# whole of the grammar below:
 #
 #   Shang-Chi, Master of Kung Fu
 #     "Spend this mana only to activate abilities of creature sources."
+#   Sunken Citadel
+#     "Spend this mana only to activate abilities of land sources."
 #   Eldrazi Temple
 #     "Spend this mana only to cast colorless Eldrazi spells or activate
 #      abilities of colorless Eldrazi."
@@ -452,6 +455,35 @@ def _narrow_to_defined_colors(
 #   Delighted Halfling
 #     "Spend this mana only to cast a legendary spell, and that spell can't be
 #      countered."
+#   Tablet of Discovery
+#     "Spend this mana only to cast instant and sorcery spells."
+#   Fíli and Kíli, Joyous
+#     "Spend this mana only to cast Dwarf, Equipment, and Saga spells."
+#   Interdimensional Web Watch
+#     "Spend this mana only to cast spells from exile."
+#
+# The last three are the two shapes this grammar grew for, and both are read
+# generally rather than per card:
+#
+#   * A **type list**, joined with "and", "or" or "and/or" and optionally
+#     comma-separated, is one clause offering several qualifying types - not
+#     several clauses. CR 205.2b, looked up this session: "Some objects have
+#     more than one card type... Such objects satisfy the criteria for any
+#     effect that applies to any of their card types." No spell is both an
+#     instant and a sorcery, so "instant and sorcery spells" can only mean
+#     either, and reading it as two alternatives would say the same thing
+#     twice while claiming the sentence had two halves it does not have.
+#   * A **zone tail**, "from <zone>", narrows the clause to one of CR 400.1's
+#     zones: "There are normally seven zones: library, hand, battlefield,
+#     graveyard, stack, exile, and command." CR 601.2a moves the card to the
+#     stack as the first step of the announcement, so the zone a clause is
+#     checked against is the one the cast *started* in and has to be carried
+#     from before that move - `ManaSpend.casting`'s `zone` argument.
+#
+# A zone phrase that names an owner ("from your graveyard") is deliberately
+# **not** read: `ManaSpend` carries the origin zone and not whose it was, so
+# reading it would produce a restriction quietly wider than the card. It falls
+# through to the fail-closed branch below like any other unread sentence.
 #
 # Anything else that opens "Spend this mana only" and does not fit the grammar
 # below produces a restriction with **no** clauses, which permits nothing at
@@ -463,9 +495,15 @@ _SPEND_RESTRICTION = re.compile(r"Spend this mana only to (?P<what>[^.]+)\.")
 #: below could read it - the signal a caller uses to fail closed rather than
 #: silently treat the sentence as absent.
 _SPEND_RESTRICTION_SIGNAL = re.compile(r"[Ss]pend this mana only")
-#: "cast a creature spell of the chosen type", "cast colorless Eldrazi spells".
+#: "cast a creature spell of the chosen type", "cast colorless Eldrazi spells",
+#: "cast instant and sorcery spells", "cast spells from exile". `quality` is
+#: lazy so the shortest reading wins - "cast spells from exile" leaves it empty
+#: and puts "exile" in `zone` rather than swallowing the tail.
 _SPEND_CAST_CLAUSE = re.compile(
-    r"^cast (?P<quality>.*?) ?spells?(?P<chosen> of the chosen type)?$", re.IGNORECASE
+    r"^cast (?P<quality>.*?) ?spells?"
+    r"(?P<chosen> of the chosen type)?"
+    r"(?: from (?P<zone>.+))?$",
+    re.IGNORECASE,
 )
 #: "activate abilities of creature sources", "activate abilities of colorless
 #: Eldrazi". The trailing "sources" is WOTC's own word for "the object the
@@ -474,27 +512,68 @@ _SPEND_ACTIVATE_CLAUSE = re.compile(
     r"^activate abilities of (?P<quality>.+?)(?: sources)?$", re.IGNORECASE
 )
 #: A rider joined onto the restriction sentence with ", and" - the
-#: can't-be-countered half of Cavern of Souls and Delighted Halfling. No
-#: printing joins two *alternatives* that way (they use "or"), so everything
-#: from the first ", and" onwards is a different clause of the ability and not
-#: part of what the mana may pay for.
+#: can't-be-countered half of Cavern of Souls and Delighted Halfling.
+#:
+#: It is **not** an unambiguous marker, and cutting on it unconditionally is a
+#: bug: Fíli and Kíli, Joyous prints "cast Dwarf, Equipment, and Saga spells",
+#: where the same three characters are the Oxford comma of a type list and
+#: cutting there loses the last type. So the whole phrase is read first and
+#: this cut is only tried when that fails - which is exactly when a rider is
+#: present, because a rider ends the sentence on a verb ("can't be countered")
+#: and no clause pattern below can end there.
 _SPEND_RIDER = ", and "
 
 _SUPERTYPE_WORDS = {supertype.value: supertype for supertype in Supertype}
 _TYPE_WORDS = {type_.value: type_ for type_ in Type}
+#: The words that join a printed list of qualifying types into one clause.
+#: MTG templates the same list three ways - "instant and sorcery spells",
+#: "a Knight or Equipment spell", "Aura and/or Equipment spells" - and all
+#: three mean the same thing, so all three are joiners rather than one being
+#: privileged. Commas are already stripped off each word.
+_TYPE_LIST_JOINERS = {"and", "or", "and/or"}
+#: CR 400.1's zones, by the word a card prints for each. The sideboard is not
+#: one ("Cards in a player's sideboard are outside the game", CR 400.11a) and
+#: is left out so a "from the sideboard" sentence fails closed.
+_SPEND_ZONE_WORDS = {zone.value: zone for zone in Zone if zone is not Zone.SIDEBOARD}
+
+
+def _spend_zone(phrase: str) -> Zone | None:
+    """The CR 400.1 zone a "from ..." tail names, or None if it names none.
+
+    An article is dropped; anything else - a possessive ("your graveyard"), a
+    quality ("anywhere other than your hand"), a second word of any kind -
+    returns None and so fails the clause. `ManaSpend` carries which zone a
+    spell was cast from and not whose it was, so a phrase that narrows by
+    owner is one this engine cannot check and must not silently widen.
+    """
+    words = phrase.strip().rstrip(".").lower().split()
+    if words and words[0] in {"a", "an", "the"}:
+        words = words[1:]
+    if words == ["command", "zone"]:
+        words = ["command"]
+    if len(words) != 1:
+        return None
+    return _SPEND_ZONE_WORDS.get(words[0])
 
 
 def _spend_clause(
-    phrase: str, purpose: SpendPurpose, chosen_type: str | None
+    phrase: str,
+    purpose: SpendPurpose,
+    chosen_type: str | None,
+    zone: Zone | None = None,
 ) -> SpendClause | None:
     """Turn one quality phrase into a `SpendClause`, or None if unreadable.
 
-    The vocabulary is deliberately closed: an article, "colorless", a printed
-    supertype, a printed card type, or a capitalised noun read as a subtype
-    (CR 205.3 subtypes are always capitalised on a type line, which is what
-    tells "Eldrazi" apart from "colorless"). A word outside it fails the whole
-    clause rather than being dropped, because a dropped word is a restriction
-    that is quietly broader than the card.
+    The vocabulary is deliberately closed: an article, a list joiner,
+    "colorless", a printed supertype, a printed card type, or a capitalised
+    noun read as a subtype (CR 205.3 subtypes are always capitalised on a type
+    line, which is what tells "Eldrazi" apart from "colorless"). A word outside
+    it fails the whole clause rather than being dropped, because a dropped word
+    is a restriction that is quietly broader than the card.
+
+    Several types collected out of one phrase are alternatives *within* the
+    clause: `SpendClause.accepts` already asks for "at least one of these card
+    types", which is what "instant and sorcery spells" means (CR 205.2b).
     """
     types: set[Type] = set()
     subtypes: set[str] = set()
@@ -504,7 +583,7 @@ def _spend_clause(
     for word in phrase.split():
         stripped = word.strip(",")
         lowered = stripped.lower()
-        if lowered in {"a", "an", "the"}:
+        if lowered in {"a", "an", "the"} or lowered in _TYPE_LIST_JOINERS:
             continue
         if lowered == "colorless":
             colorless = True
@@ -526,6 +605,7 @@ def _spend_clause(
         subtypes=frozenset(subtypes),
         supertypes=frozenset(supertypes),
         colorless=colorless,
+        zone=zone,
     )
 
 
@@ -581,27 +661,64 @@ def _spend_restriction_cached(effect: str, chosen_type: str | None) -> ManaRestr
         return None
 
     text = match.group(0)
-    what = match.group("what").partition(_SPEND_RIDER)[0].strip()
+    what = match.group("what").strip()
 
-    clauses: list[SpendClause] = []
-    for alternative in what.split(" or "):
-        phrase = alternative.strip()
-        cast = _SPEND_CAST_CLAUSE.match(phrase)
-        activate = _SPEND_ACTIVATE_CLAUSE.match(phrase)
-        if cast is not None:
-            chosen = chosen_type if cast.group("chosen") else None
-            if cast.group("chosen") and chosen is None:
-                return ManaRestriction(text=text)
-            clause = _spend_clause(cast.group("quality"), SpendPurpose.CAST_SPELL, chosen)
-        elif activate is not None:
-            clause = _spend_clause(activate.group("quality"), SpendPurpose.ACTIVATE_ABILITY, None)
-        else:
-            return ManaRestriction(text=text)
-        if clause is None:
-            return ManaRestriction(text=text)
-        clauses.append(clause)
-
+    clauses = _spend_clauses(what, chosen_type)
+    if clauses is None and _SPEND_RIDER in what:
+        clauses = _spend_clauses(what.partition(_SPEND_RIDER)[0].strip(), chosen_type)
+    if clauses is None:
+        return ManaRestriction(text=text)
     return ManaRestriction(text=text, clauses=tuple(clauses))
+
+
+def _spend_clauses(what: str, chosen_type: str | None) -> list[SpendClause] | None:
+    """Every clause the "only to ..." phrase permits, or None if any of it is
+    unreadable.
+
+    The whole phrase is offered to the grammar first and only split on " or "
+    if that fails. Order matters both ways: "cast a Knight or Equipment spell"
+    is one clause whose type list happens to be joined with "or", and would be
+    torn into two unreadable halves by splitting first; Eldrazi Temple's "cast
+    colorless Eldrazi spells or activate abilities of colorless Eldrazi" is
+    genuinely two clauses and fails the whole-phrase read (neither clause
+    pattern matches a phrase that starts "cast" and ends "Eldrazi"), so it
+    reaches the split.
+    """
+    whole = _one_spend_clause(what, chosen_type)
+    if whole is not None:
+        return [whole]
+
+    alternatives = what.split(" or ")
+    if len(alternatives) == 1:
+        return None
+    clauses: list[SpendClause] = []
+    for alternative in alternatives:
+        clause = _one_spend_clause(alternative.strip(), chosen_type)
+        if clause is None:
+            return None
+        clauses.append(clause)
+    return clauses
+
+
+def _one_spend_clause(phrase: str, chosen_type: str | None) -> SpendClause | None:
+    """One "cast ..." or "activate abilities of ..." phrase as a clause, or
+    None when this grammar cannot read it."""
+    cast = _SPEND_CAST_CLAUSE.match(phrase)
+    if cast is not None:
+        chosen = chosen_type if cast.group("chosen") else None
+        if cast.group("chosen") and chosen is None:
+            return None
+        zone = None
+        if cast.group("zone") is not None:
+            zone = _spend_zone(cast.group("zone"))
+            if zone is None:
+                return None
+        return _spend_clause(cast.group("quality"), SpendPurpose.CAST_SPELL, chosen, zone)
+
+    activate = _SPEND_ACTIVATE_CLAUSE.match(phrase)
+    if activate is not None:
+        return _spend_clause(activate.group("quality"), SpendPurpose.ACTIVATE_ABILITY, None)
+    return None
 
 
 def free_tap_mana_abilities(

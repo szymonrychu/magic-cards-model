@@ -129,6 +129,15 @@ _SYMBOL = re.compile(r"\{([WUBRGC])\}")
 #: which is what "any **one** color" says; the count is kept so `resolve` adds
 #: that many rather than always one.
 _ANY_COLOR = re.compile(r"(?P<count>one|two|three|a) mana of any (?:one )?color", re.IGNORECASE)
+#: "Add two mana in any combination of colors." (Interdimensional Web Watch,
+#: Gwenna, Smokebraider). The same amount as `_ANY_COLOR`'s "two mana of any
+#: **one** color" and a different freedom: "any one color" makes every mana the
+#: same colour, "any combination of colors" chooses each one independently.
+#: CR 106.1a's five colors are the universe for both; colorless is a type and
+#: not a color (CR 106.1b), so neither reaches it.
+_ANY_COLOR_COMBINATION = re.compile(
+    r"(?P<count>one|two|three|a) mana in any combination of colors", re.IGNORECASE
+)
 #: Nykthos, Shrine to Nyx: "Choose a color. Add an amount of mana of that
 #: color equal to your devotion to that color." Still a mana ability under
 #: every one of CR 605.1a's criteria - no target, it could add mana, it is
@@ -365,10 +374,22 @@ class ManaAbility(BaseModel):
     options: list[list[Color]]
     #: True if the ability can add mana of any colour.
     any_color: bool = False
-    #: How much mana an `any_color` ability adds, all of the one chosen colour.
-    #: 1 for "Add one mana of any color"; 2 for Shang-Chi's "Add two mana of
-    #: any one color."
+    #: How much mana an `any_color` ability adds. All of the one chosen colour
+    #: unless `any_color_mixed` says otherwise: 1 for "Add one mana of any
+    #: color"; 2 for Shang-Chi's "Add two mana of any one color."
     any_color_count: int = 1
+    #: True for "Add N mana in any combination of colors", where each of the N
+    #: is a colour of its own (Interdimensional Web Watch). False for "of any
+    #: one color", which is the same count locked to a single colour.
+    #:
+    #: `resolve` takes a sequence of colours to spell a genuine mixture out;
+    #: passing one `Color` still means N of it, which stays a legal
+    #: combination, so nothing that only knows how to name one colour breaks.
+    #: `Game.color_options` is where that shows: it enumerates single colours,
+    #: so an enumerated action offers the five monochrome combinations and a
+    #: caller wanting `{W}{U}` names both colours itself. See
+    #: `docs/engine-coverage.md`.
+    any_color_mixed: bool = False
     #: True if activating it costs mana. CR 605.1a says nothing about the cost
     #: containing mana - such an ability is still a mana ability - so this is
     #: shape information for callers that need to know what there is to pay,
@@ -529,7 +550,7 @@ class ManaAbility(BaseModel):
         self,
         controlled_land_types: frozenset[str] = frozenset(),
         own_counters: frozenset[str] = frozenset(),
-        color: Color | None = None,
+        color: "Color | Sequence[Color] | None" = None,
         has_imprinted_card: bool = False,
         count: int | None = None,
         *,
@@ -573,16 +594,37 @@ class ManaAbility(BaseModel):
         if any_color:
             if color is None:
                 raise ValueError("this ability adds any colour; pass the colour chosen")
-            # `count` is CR 700.5's devotion for `amount_from_devotion`, which
-            # nothing on this object can work out for itself - see that
-            # field's own docstring. Zero is a real answer (no permanent with
-            # a mana symbol of that colour) and produces no mana at all,
-            # which CR 605.2 already allows: "A mana ability remains a mana
-            # ability even if the game state doesn't allow it to produce
-            # mana."
-            if self.amount_from_devotion and count is not None:
-                return [color] * max(count, 0)
-            return [color] * self.any_color_count
+            if isinstance(color, Color):
+                # `count` is CR 700.5's devotion for `amount_from_devotion`,
+                # which nothing on this object can work out for itself - see
+                # that field's own docstring. Zero is a real answer (no
+                # permanent with a mana symbol of that colour) and produces no
+                # mana at all, which CR 605.2 already allows: "A mana ability
+                # remains a mana ability even if the game state doesn't allow
+                # it to produce mana."
+                if self.amount_from_devotion and count is not None:
+                    return [color] * max(count, 0)
+                return [color] * self.any_color_count
+            # A spelled-out combination, one colour per mana. Legal only where
+            # the printed words allow the mana to differ ("in any combination
+            # of colors"); "of any one color" is one colour by its own
+            # wording, so a mixture there would be mana the card never offered.
+            chosen_colors = list(color)
+            wanted = (
+                max(count, 0)
+                if self.amount_from_devotion and count is not None
+                else self.any_color_count
+            )
+            if len(chosen_colors) != wanted:
+                raise ValueError(
+                    f"this ability adds {wanted} mana; {len(chosen_colors)} colours were chosen"
+                )
+            if not self.any_color_mixed and len(set(chosen_colors)) > 1:
+                raise ValueError(
+                    "this ability adds mana of any one color, so every mana it adds is the "
+                    "same colour"
+                )
+            return chosen_colors
 
         if len(options) == 1:
             only = options[0]
@@ -707,6 +749,16 @@ def _parse_effect(effect: str) -> ManaAbility | None:
             options=[[color] * count for color in _COLORS],
             any_color_count=count,
             uses_chosen_color=True,
+        )
+
+    combination = _ANY_COLOR_COMBINATION.search(effect)
+    if combination:
+        count = _ANY_COLOR_COUNTS[combination.group("count").lower()]
+        return ManaAbility(
+            options=[[color] * count for color in _COLORS],
+            any_color=True,
+            any_color_count=count,
+            any_color_mixed=True,
         )
 
     any_color = _ANY_COLOR.search(effect)
