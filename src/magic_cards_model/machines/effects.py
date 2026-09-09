@@ -4412,6 +4412,29 @@ def return_ability_targets_to_hand(game: "Game", stack_object: "StackObject") ->
             game.return_to_hand(target)
 
 
+def return_ability_targets_to_battlefield(game: "Game", stack_object: "StackObject") -> None:
+    """Return each target this still legally targets onto the battlefield,
+    under the resolving spell or ability's own controller.
+
+    The battlefield twin of `return_ability_targets_to_hand` immediately
+    above, for the same reason: CR 701.19a's "return" names no origin zone,
+    and `game.resolve_targets` has already rechecked each target against the
+    printed restriction's own zones (CR 608.2b), so a card that has already
+    left the graveyard by the time this runs was already filtered out.
+    CR 110.2a: "If an effect instructs a player to put an object onto the
+    battlefield, that object enters the battlefield under that player's
+    control unless the effect states otherwise" - none of the five cards this
+    reads (Unearth, Renegade Rallier, Tameshi, Aftermath Analyst) states
+    otherwise, so it is always the resolving object's own controller, the
+    same read `_parse_mass_return_from_graveyard_to_battlefield_clause` and
+    Greasefang's own reanimation effect already make.
+    """
+    controller = game.controller_of(stack_object)
+    for target in game.resolve_targets(stack_object):
+        if isinstance(target, CardState):
+            game.put_onto_battlefield(target, controller.username)
+
+
 def tap_ability_targets(game: "Game", stack_object: "StackObject") -> None:
     """Tap each permanent this still legally targets (CR 701.26a)."""
     for target in game.resolve_targets(stack_object):
@@ -5904,6 +5927,20 @@ _RETURN_TARGET_RE = re.compile(
 _RETURN_FROM_YOUR_GRAVEYARD_TO_HAND_RE = re.compile(
     r"return (?P<phrase>.*target.+from your graveyard) to your hand\.?$", re.IGNORECASE
 )
+#: "Return target creature card with mana value 3 or less from your
+#: graveyard to the battlefield." (Unearth), "... target permanent card ...
+#: to the battlefield." (Renegade Rallier's Revolt trigger), and Tameshi,
+#: Reality Architect's own activated ability once `substitute_x` has already
+#: turned its "mana value X or less" into a real number - the same verb as
+#: `_RETURN_FROM_YOUR_GRAVEYARD_TO_HAND_RE` immediately above, with the only
+#: difference being the printed destination. Not Greasefang's shape
+#: (`_RETURN_TARGET_FROM_GRAVEYARD_GAINS_THEN_BOUNCE_RE`): that one is tried
+#: first, against the *whole* unsplit ability text, so a card whose sentence
+#: continues past "to the battlefield." with "It gains ..." never reaches
+#: this fullmatch at all.
+_RETURN_FROM_YOUR_GRAVEYARD_TO_BATTLEFIELD_RE = re.compile(
+    r"return (?P<phrase>.*target.+from your graveyard) to the battlefield\.?$", re.IGNORECASE
+)
 #: "Up to one target player puts all the cards from their graveyard on the
 #: bottom of their library in a random order." (Endurance) - CR 115.6's "up
 #: to one" prefix sits before "target player", which is why `phrase` starts
@@ -6812,6 +6849,13 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
         ):
             return None
         return return_ability_targets_to_hand
+
+    if match := _RETURN_FROM_YOUR_GRAVEYARD_TO_BATTLEFIELD_RE.fullmatch(clause):
+        if not _targets_understood(
+            match.group("phrase"), count_agnostic=True, battlefield_only=False
+        ):
+            return None
+        return return_ability_targets_to_battlefield
 
     if match := _RETURN_TARGET_RE.fullmatch(clause):
         if not _targets_understood(
@@ -18426,11 +18470,14 @@ def _parse_return_self_from_graveyard_to_battlefield_clause(
     return effect
 
 
-#: "Return all <description> from your graveyard to the battlefield." -
-#: Raise the Past. CR 608.2f: the whole group moves as one action, so the
-#: candidate set is snapshotted before any of them arrives.
+#: "Return all <description> from your graveyard to the battlefield[ tapped]."
+#: - Raise the Past, and Aftermath Analyst's own "Return all land cards from
+#: your graveyard to the battlefield tapped." CR 608.2f: the whole group
+#: moves as one action, so the candidate set is snapshotted before any of
+#: them arrives.
 _MASS_RETURN_FROM_GRAVEYARD_TO_BATTLEFIELD_RE = re.compile(
-    r"^return all (?P<rest>.+?) from your graveyard to the battlefield\.?$", re.IGNORECASE
+    r"^return all (?P<rest>.+?) from your graveyard to the battlefield(?P<tapped> tapped)?\.?$",
+    re.IGNORECASE,
 )
 
 
@@ -18438,14 +18485,18 @@ def _parse_mass_return_from_graveyard_to_battlefield_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
     """`_MASS_RETURN_FROM_GRAVEYARD_TO_BATTLEFIELD_RE`'s shape - Raise the
-    Past's whole spell.
+    Past's whole spell, and Aftermath Analyst's "... to the battlefield
+    tapped." sacrifice ability.
 
     "Your graveyard" is the resolving object's controller's, and every card
     arrives under that same player's control (CR 110.2a names who controls a
     permanent an effect puts onto the battlefield; with nobody else named it
     is the spell or ability's own controller). Snapshotted first (CR 608.2f),
     so a trigger caused by an early return cannot change what the rest of the
-    group still is.
+    group still is. The trailing "tapped" is CR 110.5b's own instruction on how
+    the permanent enters, threaded straight through to
+    `Game.put_onto_battlefield`'s `tapped=` - the same parameter Aftermath
+    Analyst's own ETB mill trigger has nothing to do with.
     """
     match = _MASS_RETURN_FROM_GRAVEYARD_TO_BATTLEFIELD_RE.fullmatch(clause.strip())
     if match is None:
@@ -18453,13 +18504,14 @@ def _parse_mass_return_from_graveyard_to_battlefield_clause(
     predicate = _parse_card_group_qualifier(match.group("rest"))
     if predicate is None:
         return None
+    tapped = match.group("tapped") is not None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object)
         chosen = [state for state in list(controller.graveyard) if predicate(state)]
         for state in chosen:
             if state.zone is Zone.GRAVEYARD:
-                game.put_onto_battlefield(state, controller.username)
+                game.put_onto_battlefield(state, controller.username, tapped=tapped)
 
     return effect
 

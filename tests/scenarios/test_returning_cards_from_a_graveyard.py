@@ -18,9 +18,64 @@ Five cards and four parsers, all of them "put onto the battlefield" rather than
   reanimates what was already in their graveyard
   (`_parse_each_player_sacrifices_then_mass_reanimate`).
 
+Below (`# -- The bare "target ... to the battlefield" sentence --`) are four
+more cards, closing the gap the five above never actually covered: the *bare*
+singular "Return target `<quality>` card ... from your graveyard to the
+battlefield." sentence, with no self-reference, no mass "all", and no trailing
+haste-and-bounce decoration, had no reader at all - the same verb already
+worked for Raise Dead's own "... to your hand." twin
+(`_RETURN_FROM_YOUR_GRAVEYARD_TO_HAND_RE`), and the fix is the same regex with
+the one word swapped: `_RETURN_FROM_YOUR_GRAVEYARD_TO_BATTLEFIELD_RE`, running
+`return_ability_targets_to_battlefield`.
+
+- **Unearth** - "Return target creature card with mana value 3 or less from
+  your graveyard to the battlefield." A sorcery, cast and resolved the
+  ordinary way.
+- **Renegade Rallier** - "Revolt - When this creature enters, if a permanent
+  left the battlefield under your control this turn, return target permanent
+  card with mana value 2 or less from your graveyard to the battlefield." A
+  triggered ability behind CR 207.2c's Revolt ability word (see
+  `test_fatal_push_revolt.py` for Revolt itself).
+- **Tameshi, Reality Architect** - "{X}{W}, Return a land you control to its
+  owner's hand: Return target artifact or enchantment card with mana value X
+  or less from your graveyard to the battlefield. Activate only as a sorcery."
+  `substitute_x` turns the printed "X" into a real number before this file's
+  regex ever sees it (same as every other X-cost activated ability in this
+  engine). **Tameshi's own activation cost cannot be paid by this engine at
+  all** - "Return a land you control to its owner's hand" is a non-mana,
+  non-tap, non-sacrifice additional cost, and no `CostKind` branch or
+  `cost_component_for_phrase` compiler reads "return ... to its owner's hand"
+  as a payable component (`machines/cost.py`), so `Game.activation_cost`
+  raises `ValueError` before an activation of the real printed ability can
+  even begin. That is a pre-existing, unrelated gap - not this wave's "return
+  ... to the battlefield" destination word, and not touched here - so
+  Tameshi's own tests below call `activated_effect_for` and `Game.
+  resolve_targets`/`Game.legal_target` directly against a hand-built
+  `AbilityOnStack`, the same narrower-but-still-real-engine technique
+  `test_token_effect_parser.py`'s Drowner of Truth test and
+  `test_mass_counter_placement.py`'s Ouroboroid/Ocelot Pride tests already use
+  when a full game path is blocked by a mechanic outside what the test is
+  actually proving.
+- **Aftermath Analyst** - "{3}{G}, Sacrifice this creature: Return all land
+  cards from your graveyard to the battlefield tapped." The existing mass
+  regex (`_MASS_RETURN_FROM_GRAVEYARD_TO_BATTLEFIELD_RE`) plus an optional
+  trailing " tapped", threaded through to `Game.put_onto_battlefield`'s
+  `tapped=` (CR 110.5b).
+
+**Persist is deliberately not covered here or anywhere in this wave.**
+"Return target nonlegendary creature card from your graveyard to the
+battlefield with a -1/-1 counter on it" is an *enters-with* replacement
+(CR 614.1c), not a return-then-add-counters-after sequence: nothing on
+`Game.put_onto_battlefield`/`enter_the_battlefield` accepts counters, and the
+entering-with path is driven off the entering permanent's own printed text
+(`game.py:4470-4475`), which a target chosen by another card's ability is not.
+Recorded in `docs/engine-coverage.md`'s "Not modelled" table instead of
+shipped wrong.
+
 Every CR number below was looked up with `knowledge_search(q="...",
-type="rules")` in the session that wrote this file, and every card's oracle
-text was read back with `resolve_cards`:
+type="rules")` in the session that wrote this file, or with `mise run
+rules:find <number>` when that tool was unavailable, and every card's oracle
+text was read back from `src/magic_cards_model/data/printings/`:
 
 - **CR 110.2a** - "If an effect instructs a player to put an object onto the
   battlefield, that object enters the battlefield under that player's control
@@ -68,6 +123,16 @@ text was read back with `resolve_cards`:
   {T}, Sacrifice this token: You gain 3 life.'"
 - **CR 608.2c** - "The controller of the spell or ability follows its
   instructions in the order written" - Greasefang's three sentences.
+- **CR 302.6** - "A creature can't attack unless it has been under its
+  controller's control continuously since their most recent turn began" -
+  informally, summoning sickness. Proof that a reanimated creature is a real
+  new object (CR 400.7), not the same permanent quietly relabelled.
+- **CR 601.2c** - "The player announces their choice of an appropriate object
+  or player for each target the spell requires" - Unearth's and Renegade
+  Rallier's own illegal-announcement refusals.
+- **CR 110.5b** - "Permanents enter the battlefield untapped, unflipped, face
+  up, and phased in unless a spell or ability says otherwise" - Aftermath
+  Analyst's own "tapped" is that "otherwise".
 
 Arclight Phoenix needed two engine gaps closed before it could work at all,
 and both are asserted here rather than left as `xfail`: CR 113.6m now reads
@@ -77,10 +142,17 @@ the *effect*'s named zone (`machines/triggers.zones_ability_functions_in`) and
 spells this turn" instead of failing closed.
 """
 
+import pytest
+
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.abilities import ActivatedAbility, parse_abilities
+from magic_cards_model.machines.effects import activated_effect_for
 from magic_cards_model.machines.keywords import off_battlefield_activation
+from magic_cards_model.machines.triggers import AbilityKind, AbilityOnStack
 from magic_cards_model.models import Zone
+from magic_cards_model.models.card_state import TargetRef
 from magic_cards_model.models.token import create_predefined_tokens
+from tests.cards import card
 from tests.scenarios.harness import Scenario
 
 
@@ -650,3 +722,318 @@ def test_the_phoenixs_three_spell_clause_is_read_rather_than_failing_closed():
     assert scenario.game.intervening_if_notices == [], (
         "the clause was read for real, not failed closed"
     )
+
+
+# --------------------------------------------------------------------------
+# The bare "target ... to the battlefield" sentence
+# --------------------------------------------------------------------------
+#
+# Unearth, Renegade Rallier, Tameshi and Aftermath Analyst - see the module
+# docstring for what each one needed.
+
+
+def test_unearth_reanimates_a_creature_within_the_mana_value_bound():
+    """Unearth: "Return target creature card with mana value 3 or less from
+    your graveyard to the battlefield." Grizzly Bears is mana value 2
+    (CR 202.3) - well inside the bound.
+    """
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Unearth"],
+            graveyard=["Grizzly Bears"],
+            battlefield=["Swamp"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
+
+    (swamp,) = scenario.untapped_sources("Swamp")
+    scenario.cast_and_resolve("Unearth", swamp, targets=[bears])
+
+    assert bears.zone is Zone.BATTLEFIELD
+    assert bears.controller == "alice"
+
+
+def test_unearth_cannot_target_a_creature_over_the_mana_value_bound():
+    """Questing Beast is mana value 4 (`{2}{G}{G}`) - one over Unearth's
+    "mana value 3 or less" restriction. CR 601.2c refuses the announcement
+    itself with the engine's own reason, the same target-legality machinery
+    Fatal Push's own mana-value bound already goes through
+    (`test_fatal_push_revolt.py`).
+    """
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Unearth"],
+            graveyard=["Questing Beast"],
+            battlefield=["Swamp"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    beast = scenario.find("Questing Beast", Zone.GRAVEYARD, "alice")
+    assert beast.card.cmc == 4.0, "picked for its mana value; adjust if the fixture changes"
+
+    casting = scenario.cast("Unearth")
+    with pytest.raises(ValueError):
+        casting.choose_targets([beast])
+
+    assert beast.zone is Zone.GRAVEYARD, "the illegal announcement never went through"
+
+
+def test_unearths_reanimated_creature_is_a_new_object_with_summoning_sickness():
+    """CR 400.7: "An object that moves from one zone to another becomes a new
+    object with no memory of, or relation to, its previous existence." The
+    proof that this really is a new arrival and not a relabelled graveyard
+    card is CR 302.6: it cannot attack, exactly as any other creature that
+    just entered under alice's control would not be able to.
+    """
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Unearth"],
+            graveyard=["Grizzly Bears"],
+            battlefield=["Swamp"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
+
+    (swamp,) = scenario.untapped_sources("Swamp")
+    scenario.cast_and_resolve("Unearth", swamp, targets=[bears])
+
+    assert bears.zone is Zone.BATTLEFIELD
+    assert scenario.can_attack(bears) is False, "summoning sickness (CR 302.6)"
+
+
+def _revolt_board() -> Scenario:
+    """alice with Renegade Rallier in hand, enough mana to cast it, an
+    Elvish Mystic to destroy for Revolt, and two graveyard candidates either
+    side of the mana-value-2 bound; bob with nothing that acts on its own."""
+    return (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Renegade Rallier"],
+            graveyard=["Grizzly Bears", "Wood Elves"],
+            battlefield=["Forest", "Plains", "Swamp", "Elvish Mystic"],
+        )
+        .player("bob")
+    )
+
+
+def test_renegade_ralliers_revolt_trigger_returns_a_permanent_within_the_bound():
+    """Renegade Rallier: "Revolt - When this creature enters, if a permanent
+    left the battlefield under your control this turn, return target
+    permanent card with mana value 2 or less from your graveyard to the
+    battlefield." Grizzly Bears is mana value 2 - exactly at the bound.
+
+    Revolt is turned on the same way `test_fatal_push_revolt.py` turns it on:
+    a permanent alice controlled (Elvish Mystic) is destroyed before the
+    Rallier ever enters. The target is pre-declared with `choose_trigger_
+    targets` *before* the Rallier is even cast, the same order Eternal
+    Witness's own ETB test uses (`test_graveyard_zone_effects.py`) - CR 603.6a
+    puts an enters-the-battlefield trigger's source on the battlefield only
+    once the creature actually arrives, so there is no ability object to
+    check the announcement against until this trigger fires mid-resolution;
+    the choice is recorded blind and read back once the Rallier's own ETB
+    condition (Revolt) is checked for real.
+    """
+    scenario = _revolt_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    mystic = scenario.creature("Elvish Mystic", "alice")
+    bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
+
+    scenario.game.destroy(mystic)
+    assert scenario.game.revolt_active_for("alice")
+
+    scenario.choose_trigger_targets("Renegade Rallier", [bears])
+    sources = scenario.untapped_sources("Forest", "Plains", "Swamp")
+    scenario.cast_and_resolve("Renegade Rallier", *sources)
+    scenario.pass_until_resolved()
+
+    assert bears.zone is Zone.BATTLEFIELD
+    assert bears.controller == "alice"
+
+
+def test_renegade_rallier_cannot_target_a_permanent_over_the_mana_value_bound():
+    """Wood Elves is mana value 3 - one over the "mana value 2 or less"
+    restriction. Choosing it as the trigger's target is refused with the
+    engine's own reason: `will_choose_targets` queues an answer for CR
+    601.2c's live announcement decision, and `Game.ask` "still checks the
+    answer against the legal candidates it offered, so naming something
+    illegal raises rather than being silently accepted" (that method's own
+    docstring) - the same mechanism `test_cast_from_hand_exile_and_free_
+    cast.py`'s own targeted-trigger scenario goes through. The refusal
+    surfaces while the Rallier's own spell is still resolving: CR 603.3d puts
+    the trigger on the stack (and so asks for its target) the moment the
+    creature that generated it enters, which happens inside that very
+    `resolve_top`.
+    """
+    scenario = _revolt_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    mystic = scenario.creature("Elvish Mystic", "alice")
+    elves = scenario.find("Wood Elves", Zone.GRAVEYARD, "alice")
+    assert elves.card.cmc == 3.0, "picked for its mana value; adjust if the fixture changes"
+
+    scenario.game.destroy(mystic)
+    assert scenario.game.revolt_active_for("alice")
+
+    scenario.will_choose_targets(elves, source="Renegade Rallier")
+    sources = scenario.untapped_sources("Forest", "Plains", "Swamp")
+
+    with pytest.raises(ValueError):
+        scenario.cast_and_resolve("Renegade Rallier", *sources)
+
+    assert elves.zone is Zone.GRAVEYARD, "the illegal announcement never went through"
+
+
+def _tameshi_ability() -> ActivatedAbility:
+    (ability,) = [
+        a
+        for a in parse_abilities(card("Tameshi, Reality Architect"))
+        if isinstance(a, ActivatedAbility)
+    ]
+    return ability
+
+
+def test_tameshi_reanimates_an_artifact_within_x():
+    """Tameshi, Reality Architect: "Return target artifact or enchantment
+    card with mana value X or less from your graveyard to the battlefield."
+    Expedition Map is mana value 1, so X = 1 reaches it.
+
+    Called directly against a hand-built `AbilityOnStack` rather than through
+    a full activation - see the module docstring for why: this engine has no
+    way to pay Tameshi's own "Return a land you control to its owner's hand"
+    additional cost at all, a separate and pre-existing gap. `x_value=1` on
+    the stack object is what `activated_effect_for` substitutes into the
+    printed "X" before this file's regex is ever tried
+    (`machines/abilities.substitute_x`), and what `Game.legal_target` (inside
+    `resolve_targets`) substitutes again when it rechecks the target's mana
+    value on resolution (CR 608.2b) - the identical two-substitution path a
+    real activation would use.
+    """
+    ability = _tameshi_ability()
+    effect = activated_effect_for("Tameshi, Reality Architect", 0, ability.effect, x_value=1)
+    assert effect is not None
+
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            battlefield=["Tameshi, Reality Architect"],
+            graveyard=["Expedition Map"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    tameshi = scenario.find("Tameshi, Reality Architect", Zone.BATTLEFIELD, "alice")
+    expedition_map = scenario.find("Expedition Map", Zone.GRAVEYARD, "alice")
+
+    stack_object = AbilityOnStack(
+        kind=AbilityKind.ACTIVATED,
+        ability=ability,
+        source_id=tameshi.id,
+        source_name="Tameshi, Reality Architect",
+        controller="alice",
+        targets=[TargetRef.coerce(expedition_map)],
+        x_value=1,
+    )
+    effect(scenario.game, stack_object)
+
+    assert expedition_map.zone is Zone.BATTLEFIELD
+    assert expedition_map.controller == "alice"
+
+
+def test_tameshi_cannot_target_an_artifact_over_x():
+    """Mind Stone is mana value 2 - over X = 1. `Game.legal_target` is the
+    same function a real announcement and a real resolution both call
+    (`legal_target`'s own docstring), so asking it directly is asking the
+    engine's real target-legality answer, not a stand-in for it.
+    """
+    ability = _tameshi_ability()
+
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            battlefield=["Tameshi, Reality Architect"],
+            graveyard=["Mind Stone"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    tameshi = scenario.find("Tameshi, Reality Architect", Zone.BATTLEFIELD, "alice")
+    mind_stone = scenario.find("Mind Stone", Zone.GRAVEYARD, "alice")
+    assert mind_stone.card.cmc == 2.0, "picked for its mana value; adjust if the fixture changes"
+
+    stack_object = AbilityOnStack(
+        kind=AbilityKind.ACTIVATED,
+        ability=ability,
+        source_id=tameshi.id,
+        source_name="Tameshi, Reality Architect",
+        controller="alice",
+        targets=[TargetRef.coerce(mind_stone)],
+        x_value=1,
+    )
+    assert scenario.game.legal_target(stack_object, TargetRef.coerce(mind_stone)) is None, (
+        "mana value 2 is over X = 1"
+    )
+
+    effect = activated_effect_for("Tameshi, Reality Architect", 0, ability.effect, x_value=1)
+    assert effect is not None
+    effect(scenario.game, stack_object)
+    assert mind_stone.zone is Zone.GRAVEYARD, "an illegal target does not come back"
+
+
+def test_aftermath_analyst_returns_only_lands_and_taps_them():
+    """Aftermath Analyst: "{3}{G}, Sacrifice this creature: Return all land
+    cards from your graveyard to the battlefield tapped." Forest and Mountain
+    come back tapped (CR 110.5b); Lightning Bolt is not a land card and stays
+    in the graveyard, the same "only the matching group" edge Raise the Past
+    already proves above.
+    """
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            battlefield=["Aftermath Analyst", "Forest", "Plains", "Plains", "Plains"],
+            graveyard=["Forest", "Mountain", "Lightning Bolt"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    analyst = scenario.find("Aftermath Analyst", Zone.BATTLEFIELD, "alice")
+    forest = scenario.find("Forest", Zone.GRAVEYARD, "alice")
+    mountain = scenario.find("Mountain", Zone.GRAVEYARD, "alice")
+    bolt = scenario.find("Lightning Bolt", Zone.GRAVEYARD, "alice")
+
+    sources = scenario.untapped_sources("Forest", "Plains", "Plains", "Plains")
+    scenario.activate(analyst, *sources, sacrificing=[analyst])
+    scenario.resolve_top()
+
+    assert forest.zone is Zone.BATTLEFIELD
+    assert forest.tapped is True
+    assert mountain.zone is Zone.BATTLEFIELD
+    assert mountain.tapped is True
+    assert bolt.zone is Zone.GRAVEYARD, "not a land card"
+    assert analyst.zone is Zone.GRAVEYARD, "sacrificed as the cost was paid"
