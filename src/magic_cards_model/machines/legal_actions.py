@@ -886,8 +886,14 @@ def _battlefield_ability_actions(
         # own docstring for why an `ACTIVATE_MANA` action was unusable
         # without it (Steam Vents: reported `affordable=YES`, then
         # `activate_ability` refused with "this ability offers [['U'],
-        # ['R']]; pass the colour chosen").
+        # ['R']]; pass the colour chosen"). `color_choice_count` is the other
+        # half of that parameter space: how many of those colours are named,
+        # one per mana for "Add N mana in any combination of colors", which
+        # the flat pool cannot say by itself.
         color_options = game.mana_color_options(permanent, index, player) if is_mana else ()
+        color_choice_count = (
+            game.mana_color_choice_count(permanent, index, player) if is_mana else 0
+        )
         try:
             total = game.activation_cost(permanent, index, player)
         except ValueError as error:
@@ -912,6 +918,7 @@ def _battlefield_ability_actions(
                     ability_index=index,
                     keyword=getattr(ability, "ability_word", None),
                     color_options=color_options,
+                    color_choice_count=color_choice_count,
                     affordable=Affordability.UNKNOWN,
                     unaffordable_reason=str(error),
                 )
@@ -938,6 +945,7 @@ def _battlefield_ability_actions(
                 cost=cost_str,
                 mana_cost=mana_cost_str,
                 color_options=color_options,
+                color_choice_count=color_choice_count,
                 affordable=affordable,
                 unaffordable_reason=reason,
             )

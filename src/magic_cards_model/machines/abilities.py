@@ -385,9 +385,10 @@ class ManaAbility(BaseModel):
     #: `resolve` takes a sequence of colours to spell a genuine mixture out;
     #: passing one `Color` still means N of it, which stays a legal
     #: combination, so nothing that only knows how to name one colour breaks.
-    #: `Game.color_options` is where that shows: it enumerates single colours,
-    #: so an enumerated action offers the five monochrome combinations and a
-    #: caller wanting `{W}{U}` names both colours itself. See
+    #: `Game.mana_color_choice_count` is where that shows for a caller with
+    #: no `ManaAbility` in hand: it reports this count, so the enumerated
+    #: `Action.color_choice_count` beside `Action.color_options` says how many
+    #: colours to name and `{W}{U}` is reachable from the action alone. See
     #: `docs/engine-coverage.md`.
     any_color_mixed: bool = False
     #: True if activating it costs mana. CR 605.1a says nothing about the cost

@@ -11314,6 +11314,39 @@ class Game(BaseModel):
             colors = [color for color in colors if color in allowed]
         return tuple(colors)
 
+    def mana_color_choice_count(
+        self, permanent: CardState, index: int = 0, controller: str | None = None
+    ) -> int:
+        """How many colours `activate_ability`'s own `color=` takes for this
+        mana ability right now - the count that turns `mana_color_options`'
+        flat pool into the choice the card actually offers (CR 605.1a).
+
+        0 when the ability offers no choice at all (and `mana_color_options`
+        is correspondingly empty). 1 for nearly every ability that offers
+        one, including "Add two mana of any one color", whose own words lock
+        both mana to the single colour named. The mana count for "Add N mana
+        in any combination of colors" (`ManaAbility.any_color_mixed`), where
+        each mana's colour is chosen on its own and `activate_ability` takes
+        a sequence of that many - `ManaAbility.resolve` is what enforces the
+        length and refuses a mixture the printed words never offered. No
+        printing combines a mixture with CR 700.5's devotion count
+        (`amount_from_devotion`), which is only knowable once the colour is
+        chosen and so could not be enumerated ahead of the choice at all.
+
+        Split out from `mana_color_options` rather than folded into it
+        because a pool of five colours is the same pool either way: what
+        differs is how many are drawn from it, and without this an enumerated
+        `ACTIVATE_MANA` action (`Action.color_choice_count`) could only ever
+        name one, making every genuine mixture unreachable for a caller
+        driving the engine through `legal_actions`.
+        """
+        ability = self.activated_abilities(permanent)[index]
+        if ability.mana is None:
+            return 0
+        if not self.mana_color_options(permanent, index, controller):
+            return 0
+        return ability.mana.any_color_count if ability.mana.any_color_mixed else 1
+
     def begin_turning_face_up(
         self, permanent: CardState, controller: str | None = None
     ) -> CostPayment:

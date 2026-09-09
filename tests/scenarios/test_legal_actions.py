@@ -1087,6 +1087,65 @@ def test_legal_actions_reports_color_options_for_a_choice_mana_ability():
         steam_vents, mana_action.ability_index, "alice", color=mana_action.color_options[0]
     )
     assert result is None, "a mana ability resolves immediately (CR 605.3b) - nothing on the stack"
+    assert mana_action.color_choice_count == 1, "one colour named, one mana added"
+
+
+def test_legal_actions_reports_a_color_per_mana_for_a_combination_ability():
+    """Interdimensional Web Watch's `{T}: Add two mana in any combination of
+    colors.` chooses a colour for *each* of the two mana, and
+    `Action.color_options` alone cannot say so: it is one flat pool of the
+    five colours, exactly what a dual land's two-colour pool looks like, so a
+    caller driving the engine through `legal_actions` had no way to learn it
+    may name two and no way to reach `{W}{U}` - only the five monochrome
+    pairs a single `color=` produces. `Game.activate_ability` accepted the
+    mixture all along; nothing in the enumerated action said it existed.
+
+    `Action.color_choice_count` is the rest of that parameter space, the same
+    treatment `modes`/`x_range` get: name this many colours from
+    `color_options`, one per mana. It is per-ability and not a constant -
+    Shang-Chi, Master of Kung Fu's "two mana of any **one** color" adds the
+    same two mana from the same five-colour pool but takes one colour, and a
+    Forest's single printed `{G}` takes none.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=[
+                "Interdimensional Web Watch",
+                "Shang-Chi, Master of Kung Fu",
+                "Forest",
+            ],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    watch = scenario.find("Interdimensional Web Watch", Zone.BATTLEFIELD, "alice")
+    shang_chi = scenario.find("Shang-Chi, Master of Kung Fu", Zone.BATTLEFIELD, "alice")
+    shang_chi.summoning_sick = False
+    forest = scenario.find("Forest", Zone.BATTLEFIELD, "alice")
+
+    actions = legal_actions(scenario.game, "alice")
+    by_card = {action.card_id: action for action in _of_kind(actions, ActionKind.ACTIVATE_MANA)}
+
+    watch_action = by_card[watch.id]
+    assert watch_action.color_choice_count == 2
+    assert len(watch_action.color_options) == 5
+    assert by_card[shang_chi.id].color_choice_count == 1
+    assert len(by_card[shang_chi.id].color_options) == 5
+    assert by_card[forest.id].color_choice_count == 0
+    assert by_card[forest.id].color_options == ()
+
+    # The whole point: a caller that knows nothing but this action's own
+    # fields reaches a genuine mixture.
+    chosen = watch_action.color_options[: watch_action.color_choice_count]
+    scenario.game.activate_ability(
+        watch, watch_action.ability_index, watch_action.player, color=list(chosen)
+    )
+
+    assert scenario.player().mana_pool.floating == {chosen[0]: 1, chosen[1]: 1}
+    assert chosen[0] is not chosen[1], "the pair the five monochrome options could not make"
 
 
 def test_choose_targets_decision_candidates_include_player_targets():
