@@ -51,7 +51,9 @@ def test_ancient_silverback_regenerates_itself():
     """
     scenario = (
         Scenario()
-        .player("alice", hand=["Supreme Verdict"], battlefield=["Plains", "Plains", "Plains", "Island"])
+        .player(
+            "alice", hand=["Supreme Verdict"], battlefield=["Plains", "Plains", "Plains", "Island"]
+        )
         .player("bob", battlefield=["Ancient Silverback", "Forest"])
         .build()
     )

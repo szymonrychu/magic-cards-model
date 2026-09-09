@@ -1844,7 +1844,9 @@ def ninjutsu_activation(
             return_to_hand_cost(
                 returning,
                 payer=player,
-                description="Return an unblocked attacking creature you control to its owner's hand",
+                description=(
+                    "Return an unblocked attacking creature you control to its owner's hand"
+                ),
             ),
         ],
     )

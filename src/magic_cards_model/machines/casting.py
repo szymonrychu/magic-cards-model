@@ -3210,11 +3210,11 @@ class Casting(BaseModel):
             raise ValueError(f"{self.spell.name} has no gift ability (CR 702.174a)")
         if self.gift_promised:
             raise ValueError(f"{self.spell.name}'s gift was already promised")
-        if self.game is not None:
-            if opponent == self.caster or opponent not in (
-                p.username for p in self.game.players_in_game
-            ):
-                raise ValueError(f"{opponent} is not an opponent of {self.caster} (CR 102.2)")
+        if self.game is not None and (
+            opponent == self.caster
+            or opponent not in (p.username for p in self.game.players_in_game)
+        ):
+            raise ValueError(f"{opponent} is not an opponent of {self.caster} (CR 102.2)")
         self.gift_promised = True
         self.gift_chosen_player = opponent
         return self.step
