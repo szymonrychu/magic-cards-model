@@ -68,6 +68,7 @@ from ..models.card_state import (
     Counter,
     ExileAnnotation,
     ExileMarker,
+    FaceDownCharacteristics,
     TargetRef,
 )
 from ..models.mana import ManaCost
@@ -15127,6 +15128,109 @@ def _parse_learn_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     return effect
 
 
+#: CR 701.40a: "To manifest a card, turn it face down. It becomes a 2/2
+#: face-down creature card with no text, no name, no subtypes, and no mana
+#: cost. Put that card onto the battlefield face down." "Manifest the top
+#: card of your library." (Mastery of the Unseen, Arashin War Beast) is the
+#: shape read here; CR 701.62a's "manifest dread" below reuses this function
+#: rather than re-implementing CR 701.40a a second time.
+_MANIFEST_TOP_CARD_RE = re.compile(r"^manifest the top card of your library$", re.IGNORECASE)
+
+
+def manifest(game: "Game", controller: str, card_state: CardState) -> CardState:
+    """CR 701.40a: turn `card_state` face down and put it onto the battlefield.
+
+    CR 708.2a's default 2/2 vanilla is what `FaceDownCharacteristics()`'s own
+    empty constructor already is - the same shape `machines/casting.py` gives
+    a morph or disguise spell cast face down, reused rather than duplicated.
+    Turning it face down before the zone change (not after) is deliberate,
+    mirroring `Casting._apply_face_down`'s own ordering: `CardState.move_to`
+    does not touch `face_down_characteristics`, so setting it first is what
+    keeps a caller from ever observing the card face up on the battlefield,
+    even for one line.
+    """
+    card_state.turn_face_down(FaceDownCharacteristics())
+    return game.put_onto_battlefield(card_state, controller)
+
+
+def _parse_manifest_top_card_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """ "Manifest the top card of your library." - `_MANIFEST_TOP_CARD_RE`'s
+    shape, as one clause among however many the card prints around it.
+    """
+    if _MANIFEST_TOP_CARD_RE.fullmatch(clause.strip().rstrip(".")) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        player = game.controller_of(stack_object)
+        if player.library:
+            top = player.library[0]
+            player.zones[Zone.LIBRARY].remove(top)
+            manifest(game, player.username, top)
+
+    return effect
+
+
+#: CR 701.62a: "'Manifest dread' means 'Look at the top two cards of your
+#: library. Manifest one of them, then put the cards you looked at that were
+#: not manifested this way into your graveyard.'" A bare keyword action, the
+#: same shape as investigate/learn/amass above.
+_MANIFEST_DREAD_RE = re.compile(r"^manifest dread$", re.IGNORECASE)
+
+
+def manifest_dread(game: "Game", controller: str, source: str) -> None:
+    """CR 701.62a, in full: look at the top two, manifest a choice among
+    them, mill the rest.
+
+    The choice among two candidates is CR 608.2d's - only asked when there
+    really are two, the same shape `malevolent_rumble`'s own "which
+    permanent to keep" question already takes - and CR 701.62b's own "even
+    if some or all of those actions were impossible" is why a library with
+    zero or one card left still manifests what it can rather than raising.
+    """
+    player = game.player(controller)
+    top_two = list(player.library[:2])
+    if not top_two:
+        return
+    if len(top_two) == 1:
+        chosen = top_two[0]
+    else:
+        chosen_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=controller,
+                prompt="choose a card to manifest",
+                source=source,
+                amount=1,
+                cards=tuple(state.id for state in top_two),
+            )
+        )
+        assert isinstance(chosen_ids, tuple)
+        by_id = {state.id: state for state in top_two}
+        chosen = by_id[chosen_ids[0]]
+    for state in top_two:
+        player.zones[Zone.LIBRARY].remove(state)
+    manifest(game, controller, chosen)
+    for state in top_two:
+        if state is not chosen:
+            game.put_into_graveyard(state)
+
+
+def _parse_manifest_dread_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """ "Manifest dread." - `_MANIFEST_DREAD_RE`'s shape.
+
+    Names no object of its own (CR 701.62a), so - like amass, investigate and
+    learn above - the same clause works for a spell or an ability alike.
+    """
+    if _MANIFEST_DREAD_RE.fullmatch(clause.strip().rstrip(".")) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        manifest_dread(game, game.controller_of(stack_object).username, source)
+
+    return effect
+
+
 def _parse_delayed_single_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """A whole ability whose *only* clause is a delayed-trigger creation, with
     no antecedent clause of its own to supply "it": either there is no object
@@ -18104,6 +18208,12 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     learn_clause = _parse_learn_clause(clause, for_spell=for_spell)
     if learn_clause is not None:
         return learn_clause
+    manifest_top_clause = _parse_manifest_top_card_clause(clause, for_spell=for_spell)
+    if manifest_top_clause is not None:
+        return manifest_top_clause
+    manifest_dread_clause = _parse_manifest_dread_clause(clause, for_spell=for_spell)
+    if manifest_dread_clause is not None:
+        return manifest_dread_clause
     exile_that_players_library = _parse_exile_that_players_library_clause(
         clause, for_spell=for_spell
     )

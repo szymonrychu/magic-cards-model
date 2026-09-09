@@ -190,6 +190,12 @@ def executes(keyword: str) -> bool:
         # perform it (`Game.regenerate` creates the shield), reached from
         # whichever clause parser read the sentence that names it.
         "regenerate",
+        # CR 701.40a and CR 701.62a, the same shape once more:
+        # `machines/effects.manifest`/`manifest_dread` perform them, reached
+        # through `_parse_manifest_top_card_clause`/`_parse_manifest_dread_
+        # clause` from inside another ability's effect text.
+        "manifest",
+        "manifest dread",
         # CR 701.14a, and the same shape once more: `machines/effects._fight`
         # is what performs it, reached from whichever clause parser read the
         # sentence that names it (Kraul Harpooner's own undergrowth shape,

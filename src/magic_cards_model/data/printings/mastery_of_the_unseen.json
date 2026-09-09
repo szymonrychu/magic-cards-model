@@ -1,0 +1,150 @@
+{
+  "object": "card",
+  "id": "b27f4217-881d-401d-860e-d3d8689ca1e4",
+  "oracle_id": "ae0701c1-7a99-46fe-bcb1-ea33ad2a0fc9",
+  "multiverse_ids": [
+    650168
+  ],
+  "mtgo_id": 122288,
+  "tcgplayer_id": 535859,
+  "cardmarket_id": 753329,
+  "name": "Mastery of the Unseen",
+  "lang": "en",
+  "released_at": "2024-02-09",
+  "uri": "https://api.scryfall.com/cards/b27f4217-881d-401d-860e-d3d8689ca1e4",
+  "scryfall_uri": "https://scryfall.com/card/mkc/74/mastery-of-the-unseen?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:23:48Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/b/2/b27f4217-881d-401d-860e-d3d8689ca1e4.jpg?1783913028",
+    "normal": "https://cards.scryfall.io/normal/front/b/2/b27f4217-881d-401d-860e-d3d8689ca1e4.jpg?1783913028",
+    "large": "https://cards.scryfall.io/large/front/b/2/b27f4217-881d-401d-860e-d3d8689ca1e4.jpg?1783913028",
+    "png": "https://cards.scryfall.io/png/front/b/2/b27f4217-881d-401d-860e-d3d8689ca1e4.png?1783913028",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/b/2/b27f4217-881d-401d-860e-d3d8689ca1e4.jpg?1783913028",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/b/2/b27f4217-881d-401d-860e-d3d8689ca1e4.jpg?1783913028",
+    "thumb": "https://cards.scryfall.io/thumb/front/b/2/b27f4217-881d-401d-860e-d3d8689ca1e4.webp?1783913028",
+    "grid": "https://cards.scryfall.io/grid/front/b/2/b27f4217-881d-401d-860e-d3d8689ca1e4.webp?1783913028",
+    "display": "https://cards.scryfall.io/display/front/b/2/b27f4217-881d-401d-860e-d3d8689ca1e4.webp?1783913028",
+    "art": "https://cards.scryfall.io/art/front/b/2/b27f4217-881d-401d-860e-d3d8689ca1e4.webp?1783913028",
+    "crop": "https://cards.scryfall.io/crop/front/b/2/b27f4217-881d-401d-860e-d3d8689ca1e4.webp?1783913028"
+  },
+  "mana_cost": "{1}{W}",
+  "cmc": 2.0,
+  "type_line": "Enchantment",
+  "oracle_text": "Whenever a permanent you control is turned face up, you gain 1 life for each creature you control.\n{3}{W}: Manifest the top card of your library. (Put it onto the battlefield face down as a 2/2 creature. Turn it face up any time for its mana cost if it's a creature card.)",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Manifest"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "b27f4217-881d-401d-860e-d3d8689ca1e4",
+      "component": "combo_piece",
+      "name": "Mastery of the Unseen",
+      "type_line": "Enchantment",
+      "uri": "https://api.scryfall.com/cards/b27f4217-881d-401d-860e-d3d8689ca1e4"
+    },
+    {
+      "object": "related_card",
+      "id": "7b010eeb-1304-4e0b-9eff-3e4561b67396",
+      "component": "combo_piece",
+      "name": "Manifest",
+      "type_line": "Creature",
+      "uri": "https://api.scryfall.com/cards/7b010eeb-1304-4e0b-9eff-3e4561b67396"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "286c37ca-ba65-4d3e-8c5d-d1878d88fd95",
+  "set": "mkc",
+  "set_name": "Murders at Karlov Manor Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/286c37ca-ba65-4d3e-8c5d-d1878d88fd95",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amkc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mkc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/b27f4217-881d-401d-860e-d3d8689ca1e4/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aae0701c1-7a99-46fe-bcb1-ea33ad2a0fc9&unique=prints",
+  "collector_number": "74",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Daniel Ljunggren",
+  "artist_ids": [
+    "0fbd4798-76eb-46d5-a5d4-1e3a25870e34"
+  ],
+  "illustration_id": "828fcd3a-a255-4787-8dd6-fb197bcb062f",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 16491,
+  "penny_rank": 4501,
+  "prices": {
+    "usd": "0.14",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.12",
+    "eur_foil": null,
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=650168&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMastery%2Bof%2Bthe%2BUnseen",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMastery%2Bof%2Bthe%2BUnseen",
+    "edhrec": "https://edhrec.com/route/?cc=Mastery+of+the+Unseen"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F535859%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=753329&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/122288?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
