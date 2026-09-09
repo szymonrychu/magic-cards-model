@@ -1365,6 +1365,24 @@ class ReplaceableEvent:
     #: `_stack_replacements` does not gate on this at all and rebound's does.
     resolving: bool = False
 
+    #: False when the effect causing this `DESTROY` printed "can't be
+    #: regenerated" (Wrath of God's "Destroy all creatures. They can't be
+    #: regenerated.").
+    #:
+    #: CR 701.19c states the prohibition in exactly these terms: "Effects that
+    #: say that a permanent can't be regenerated don't preclude such abilities
+    #: from being activated or such spells from being cast; rather, they cause
+    #: regeneration shields to **not be applied**." So it belongs on the
+    #: destruction event, not on the permanent - a shield the sweeper ignored
+    #: is still standing afterwards for the next destruction this turn, which
+    #: a flag stamped on the creature would silently have spent.
+    #:
+    #: This is CR 608.2c's own worked example of a rider modifying its
+    #: antecedent rather than running after it: "In some cases, later text on
+    #: the card may modify the meaning of earlier text (for example, 'Destroy
+    #: target creature. It can't be regenerated' ...)".
+    regeneration_allowed: bool = True
+
     #: What the tokens being created are, for `CREATE_TOKENS` (CR 111.3).
     #:
     #: Without it the event says only *how many*, which is enough for Doubling
@@ -4009,6 +4027,59 @@ def _shield_effects(game: "Game", event: ReplaceableEvent) -> list[ApplicableEff
     ]
 
 
+def _regeneration_effects(game: "Game", event: ReplaceableEvent) -> list[ApplicableEffect]:
+    """The regeneration shields waiting on this destruction (CR 701.19a).
+
+    CR 701.19a: "If the effect of a resolving spell or ability regenerates a
+    permanent, it creates a replacement effect that protects the permanent the
+    next time it would be destroyed this turn. In this case, 'Regenerate
+    [permanent]' means 'The next time [permanent] would be destroyed this
+    turn, instead remove all damage marked on it and its controller taps it.
+    If it's an attacking or blocking creature, remove it from combat.'"
+
+    Gathered here rather than checked inside `Game.destroy` so that CR 616.1's
+    ordering applies to it exactly as it does to umbra armor and to the
+    prevention shields just above - two destruction-replacements on one
+    permanent is a choice the rules give somebody, not a fixed precedence this
+    function gets to invent.
+
+    Like a prevention shield (and unlike umbra armor) it has no source
+    permanent: CR 701.19a's effect outlives whatever created it, right up to
+    the end of the turn. `controller_username` is the permanent's own
+    controller, since CR 701.19a names them as the player who taps it.
+
+    `event.regeneration_allowed` is CR 701.19c's prohibition - see that field.
+    """
+    if event.kind is not EventKind.DESTROY or event.replaced:
+        return []
+    if not event.regeneration_allowed:
+        return []
+    permanent = event.card
+    if permanent is None or permanent.regeneration_shields <= 0:
+        return []
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        card = event.card
+        if card is None:
+            return
+        card.regeneration_shields -= 1
+        card.damage = 0
+        if not card.tapped:
+            card.tap()
+        game.combat.remove(card.id)  # CR 506.4
+        event.replaced = True
+
+    return [
+        ApplicableEffect(
+            key=f"regeneration:{permanent.id}",
+            source=None,
+            label="regeneration shield: tap it and remove it from combat instead (CR 701.19a)",
+            apply=apply,
+            controller_username=game.controller_of(permanent).username,
+        )
+    ]
+
+
 class DrawRedirection(BaseModel):
     """One player's draws taken by another, for a duration (CR 614.1a).
 
@@ -4123,6 +4194,7 @@ def applicable_effects(game: "Game", event: ReplaceableEvent) -> list[Applicable
 
     found.extend(_protection_effects(game, event))
     found.extend(_shield_effects(game, event))
+    found.extend(_regeneration_effects(game, event))
     found.extend(_draw_redirection_effects(game, event))
 
     if event.kind is EventKind.ENTERS_BATTLEFIELD and event.card is not None:

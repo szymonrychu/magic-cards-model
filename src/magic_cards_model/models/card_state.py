@@ -182,6 +182,12 @@ class Counter(StrEnum):
       CR 704.5c).
     - `energy` is on a player and is what `{E}` pays with (CR 107.14).
     - `experience` is on a player.
+    - `stun` stops the permanent untapping (CR 122.1d): "One or more stun
+      counters on a permanent create a single replacement effect that stops
+      the permanent from untapping. That effect is 'If a permanent with a
+      stun counter on it would become untapped, instead remove a stun counter
+      from it.'" `untap` is where that replacement lives, since every route
+      to untapping passes through it.
     - `charge` is the common named counter with no rules of its own.
     - `time` sits on a card in exile with suspend (CR 702.62a, 702.62b) or a
       permanent with vanishing/fading (CR 702.63a, 702.32a); "at the beginning
@@ -201,6 +207,7 @@ class Counter(StrEnum):
     POISON = "poison"
     ENERGY = "energy"
     EXPERIENCE = "experience"
+    STUN = "stun"
     TIME = "time"
     CHARGE = "charge"
 
@@ -689,6 +696,21 @@ class CardState(BaseModel):
     expires during the same untap step."
 
     `untap` is what clears it, since that is the moment the effect expires.
+    """
+    regeneration_shields: int = 0
+    """How many CR 701.19a regeneration shields are standing on this permanent.
+
+    "If the effect of a resolving spell or ability regenerates a permanent, it
+    creates a replacement effect that protects the permanent the next time it
+    would be destroyed this turn." A count rather than a flag, because CR
+    701.19a's effect is "the **next** time" - each regeneration is its own
+    one-shot shield, and two of them survive two destructions.
+
+    `machines/replacement._regeneration_effects` is what spends one, through
+    the same CR 616.1 ordering every other destruction-replacement goes
+    through. Cleared by `move_to` (CR 400.7: what comes back is a new object
+    with no memory of this one) and by the cleanup step (CR 514.2: "this
+    turn").
     """
     damage: int = 0
     dealt_deathtouch_damage: bool = False
@@ -1722,9 +1744,28 @@ class CardState(BaseModel):
         `exert_applies=False` is for a caller that is *not* the untap step: an
         effect or a `{Q}` cost that untaps a permanent does so regardless of
         exert, and leaves the exert in place for the step it was aimed at.
+
+        A stun counter is checked here and **not** through `exert_applies`,
+        because CR 122.1d is not the untap step's business at all: "One or
+        more stun counters on a permanent create a single replacement effect
+        that stops the permanent from untapping. That effect is 'If a
+        permanent with a stun counter on it would become untapped, instead
+        remove a stun counter from it.'" Every route to untapping is "would
+        become untapped" - the untap step, an effect, a `{Q}` cost - so the
+        check sits at the one place all of them pass through, and one counter
+        is spent per attempt rather than per turn.
+
+        It is checked *after* exert for the same reason exert is checked
+        first at all: an exerted permanent's untap never happens, so there is
+        no "would become untapped" event for a stun counter to replace, and
+        spending one there would burn a counter on an untap that was already
+        called off.
         """
         if exert_applies and self.exerted:
             self.exerted = False
+            return
+        if self.counters[Counter.STUN] > 0:
+            self.counters.remove(Counter.STUN, 1)  # CR 122.1d
             return
         self.tapped = False
 
@@ -1916,6 +1957,10 @@ class CardState(BaseModel):
         # CR 701.43a exerts a *permanent*; the object that leaves the
         # battlefield is not the one that comes back (CR 400.7).
         self.exerted = False
+        # CR 701.19a's shield protects *this* permanent, and CR 400.7 makes
+        # what comes back a different object with no memory of it - so a
+        # creature regenerated, then bounced and recast, is not still shielded.
+        self.regeneration_shields = 0
         if zone is not Zone.EXILE:
             # CR 400.7: it is a new object now, so which pile of exile it used
             # to sit in means nothing. Kept when the destination *is* exile, so

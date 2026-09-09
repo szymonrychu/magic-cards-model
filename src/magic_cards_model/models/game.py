@@ -2565,9 +2565,16 @@ class Game(BaseModel):
             owner.add(card, Zone.LIBRARY)  # the bottom of the library
 
     def remove_all_damage(self) -> None:
-        """Wipe damage marked on every permanent (CR 514.2, 703.4p)."""
+        """Wipe damage marked on every permanent (CR 514.2, 703.4p).
+
+        The unspent regeneration shields go with it, for the same reason and
+        in the same breath: CR 701.19a's shield protects a permanent "the next
+        time it would be destroyed **this turn**", so one nobody spent expires
+        exactly when every other "until end of turn" effect does.
+        """
         for permanent in self.battlefield:
             permanent.damage = 0
+            permanent.regeneration_shields = 0
 
     def begin_turn_for(self, username: str) -> None:
         """This player's turn has begun, so their permanents lose summoning sickness.
@@ -7466,8 +7473,17 @@ class Game(BaseModel):
             self.cast_records.pop(spell.id, None)
             return spell
 
-    def destroy(self, permanent: CardState) -> CardState:
+    def destroy(self, permanent: CardState, *, regeneration_allowed: bool = True) -> CardState:
         """Put a permanent into its controller's graveyard.
+
+        `regeneration_allowed=False` is CR 701.19c's prohibition, which a
+        caller passes when the effect doing the destroying printed "can't be
+        regenerated" (Wrath of God's "Destroy all creatures. They can't be
+        regenerated."). CR 701.19c: such effects "cause regeneration shields
+        to not be applied" - they do not remove the shield, so an unspent one
+        is still standing for the next destruction this turn, which is why
+        this is an argument to the destruction rather than a flag stamped on
+        the permanent.
 
         CR 700.4: "dies" means "is put into a graveyard from the battlefield", so
         a permanent that was on the battlefield when this was called has died and
@@ -7508,17 +7524,42 @@ class Game(BaseModel):
         (`engine_api.py` around line 861).
         """
         with self._id_allocator_scope():
-            return self._destroy_impl(permanent)
+            return self._destroy_impl(permanent, regeneration_allowed=regeneration_allowed)
 
-    def _destroy_impl(self, permanent: CardState) -> CardState:
+    def _destroy_impl(
+        self, permanent: CardState, *, regeneration_allowed: bool = True
+    ) -> CardState:
         """The rest of `destroy` - see its own docstring for why it is split out."""
         if is_indestructible(permanent, self):
             return permanent  # CR 702.12b
-        if not self.destruction_happens(permanent):
+        if not self.destruction_happens(permanent, regeneration_allowed=regeneration_allowed):
             return permanent
         return self.put_into_graveyard(permanent)
 
-    def destruction_happens(self, permanent: CardState) -> bool:
+    def regenerate(self, permanent: CardState) -> None:
+        """Create a CR 701.19a regeneration shield on `permanent`.
+
+        "If the effect of a resolving spell or ability regenerates a
+        permanent, it creates a replacement effect that protects the permanent
+        the next time it would be destroyed this turn." Creating the shield is
+        all that happens now - CR 701.19c is explicit that "neither activating
+        an ability that creates a regeneration shield nor casting a spell that
+        creates a regeneration shield is the same as regenerating a
+        permanent", so nothing is tapped, no damage is removed, and nothing is
+        taken out of combat until the shield is actually spent
+        (`machines/replacement._regeneration_effects`).
+
+        A permanent that is no longer on the battlefield gets no shield: CR
+        701.19a protects it against being *destroyed*, and CR 701.8a's
+        destruction only ever happens there.
+        """
+        if permanent.zone is not Zone.BATTLEFIELD:
+            return
+        permanent.regeneration_shields += 1
+
+    def destruction_happens(
+        self, permanent: CardState, *, regeneration_allowed: bool = True
+    ) -> bool:
         """Whether this destruction survives CR 614's replacement effects.
 
         CR 701.8c: "A regeneration effect replaces a destruction event", and
@@ -7536,7 +7577,10 @@ class Game(BaseModel):
         event = apply_replacements(
             self,
             ReplaceableEvent(
-                kind=EventKind.DESTROY, card=permanent, player=self.controller_of(permanent)
+                kind=EventKind.DESTROY,
+                card=permanent,
+                player=self.controller_of(permanent),
+                regeneration_allowed=regeneration_allowed,
             ),
         )
         return event.happens
