@@ -2185,6 +2185,7 @@ class Casting(BaseModel):
             chosen = list(modal.resolve(modes, entwined=entwined))
             self.chosen_modes = [mode.text for mode in chosen]
             self.chosen_mode_numbers = [mode.number for mode in chosen]
+            self._charge_mode_costs(chosen)
 
         if entwined and not self.entwined:
             self._charge_entwine(modal)
@@ -2209,6 +2210,24 @@ class Casting(BaseModel):
                 f"read, so it cannot be paid"
             )
         self.additional_costs.append(cost.assign_payer(self.caster))
+
+    def _charge_mode_costs(self, chosen: Sequence[Mode]) -> None:
+        """CR 700.2h: a chosen mode's own printed cost is a mandatory
+        additional cost, paid as the spell is cast (CR 601.2b, CR 601.2f-h) -
+        unlike kicker or escalate, there is no separate "may pay" step: the
+        cost is owed the instant the mode is chosen, so it is charged here,
+        the same way `_charge_entwine` charges CR 702.42a's cost.
+        """
+        for mode in chosen:
+            if mode.cost is None:
+                continue
+            cost = total_cost_for_phrase(mode.cost, self.caster)
+            if cost is None:
+                raise ValueError(
+                    f"{self.spell.name}'s mode {mode.number} cost {mode.cost!r} could not "
+                    f"be read, so it cannot be paid (CR 700.2h)"
+                )
+            self.add_additional_cost(cost)
 
     def choose_alternative_cost(self, cost: TotalCost | ManaCost | None) -> CastingStep:
         """CR 118.9: pay this instead of the spell's mana cost.

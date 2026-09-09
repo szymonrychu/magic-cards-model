@@ -26,12 +26,25 @@ The sub-rules this module implements, all looked up rather than remembered:
   the first". `escalate_cost` records it. Cards with escalate print
   "Choose one or more -", so the mode *count* needs nothing special; what
   escalate changes is what the caster pays, which is the caller's job.
+- **CR 700.2h** - a mode with its own cost printed before its effect: Tiered
+  (CR 702.183a, `•` bullets, a tier label before the cost) is read this way.
+  Its keyword introduces the modal list with a reminder-text parenthetical
+  rather than a bare "Choose ..." line (`Tiered (Choose one additional
+  cost.)`), so the instruction line is read out of that parenthetical when
+  the line itself does not start with "Choose" - a shape rule, not a
+  keyword-name check, so any future keyword using the same reminder-text
+  convention is covered for free. Each mode's own cost is read into
+  `Mode.cost`; `machines/casting.py`'s `choose_modes` charges it
+  automatically, the same way `_charge_entwine` already does for CR 702.42a.
+  Spree (CR 702.172a) shares this same "cost before effect" shape and the
+  parenthetical-instruction reading now covers it too, but its `+`-symbol
+  bullets (CR 702.172b) are not - `BULLET` still only recognizes `•`, and no
+  Spree printing is in this pool to prove a `+` reading against real data, so
+  that half is left for whoever adds one, not guessed at here.
 
 Deliberately not handled, each of them leaving `understood=False` rather than a
 confident wrong answer:
 
-- **CR 700.2h** - a mode with its own cost printed before its effect (Spree,
-  CR 702.172a; Tiered, CR 702.183a).
 - **CR 700.2i** - pawprint modes, chosen by paying `{P}` worth of modes rather
   than by counting bullets.
 - **CR 700.2e / CR 601.7** - a mode chosen by a player other than the
@@ -56,10 +69,26 @@ _UP_TO = re.compile(r"^\s*up to (?P<count>[\w]+)\b")
 _OR_MORE = re.compile(r"^\s*(?P<count>[\w]+)\s+or\s+(?:more|both)\b", re.IGNORECASE)
 _PLAIN = re.compile(r"^\s*(?P<count>[\w]+)\b")
 
-#: CR 700.2h: a mode whose effect is preceded by a cost, as Spree prints it.
-_MODE_WITH_COST = re.compile(r"^\s*(?:\{[^{}]+\}|\+\s*\{[^{}]+\})+\s*[-—]")
+#: CR 700.2h: a mode whose effect is preceded by a cost. An optional short
+#: label (Tiered's tier name: "Fire", "Fira", "Firaga") followed by a dash,
+#: then a mandatory brace-delimited cost, then the dash that introduces the
+#: effect. Spree's own shape ("+ {1} — effect") is the same pattern with no
+#: label at all - the leading "+" is CR 702.172b's bullet, already stripped
+#: before this runs. The label is capped at 20 characters and may not itself
+#: contain a brace or a dash, so this cannot swallow an ordinary mode whose
+#: effect text happens to mention a mana symbol partway through the line.
+_MODE_WITH_COST = re.compile(
+    r"^\s*(?:(?P<label>[^{}\-—]{1,20}?)\s*[-—]\s*)?"
+    r"(?P<cost>(?:\{[^{}]+\})+)\s*[-—]\s*(?P<effect>.+)$"
+)
 #: CR 700.2i: pawprint modes are not counted in bullets at all.
 _PAWPRINT = re.compile(r"\{P\}")
+#: CR 700.2h keywords (Spree, Tiered) print their modal instruction inside a
+#: reminder-text parenthetical after the keyword name, not as a bare "Choose
+#: ..." line: `Tiered (Choose one additional cost.)`. This reads the shape
+#: of that parenthetical, not the keyword name in front of it, so any future
+#: keyword using the same reminder-text convention is covered for free.
+_PARENTHETICAL_INSTRUCTION = re.compile(r"\((?P<inner>Choose\b[^()]*)\)", re.IGNORECASE)
 
 _ENTWINE = re.compile(r"^Entwine\s*[-—]?\s*(?P<cost>[^(]+)", re.IGNORECASE)
 _ESCALATE = re.compile(r"^Escalate\s*[-—]?\s*(?P<cost>[^(]+)", re.IGNORECASE)
@@ -90,6 +119,10 @@ class Mode(BaseModel):
     number: int
     #: The bullet's text exactly as printed, bullet character removed.
     text: str
+    #: CR 700.2h: this mode's own additional cost, printed before its effect
+    #: (Spree, Tiered), or None for an ordinary mode. Mandatory once the mode
+    #: is chosen (CR 700.2h, CR 601.2f-h) - not an optional cost like kicker.
+    cost: str | None = None
 
     def __str__(self) -> str:
         return f"{self.number}. {self.text}"
@@ -288,6 +321,19 @@ def mode_rules_text(mode: Mode, x_value: int | None = None) -> str:
     return substitute_x(text, x_value)
 
 
+def mode_effect_text(mode: Mode) -> str:
+    """One mode's own effect text, its CR 700.2h cost-before-effect prefix
+    (Tiered's tier label and cost, Spree's cost) stripped off - what a
+    resolution-time parser (`machines/effects.py::parse_mode_effect`) should
+    read, since paying the cost already happened during casting (CR 601.2f).
+    A mode with no such prefix (`mode.cost is None`) is returned unchanged.
+    """
+    if mode.cost is None:
+        return mode.text
+    match = _MODE_WITH_COST.match(mode.text)
+    return mode.text if match is None else match.group("effect")
+
+
 # --------------------------------------------------------------------------
 # Parsing
 # --------------------------------------------------------------------------
@@ -300,29 +346,45 @@ def _parse(oracle_text: str, keywords: Iterable[str]) -> ModalProfile | None:
         return None
 
     first = bullets[0]
-    instruction_line = next(
+    raw_instruction_line = next(
         (lines[index] for index in range(first - 1, -1, -1) if lines[index]),
         None,
     )
+    # CR 700.2h keywords (Tiered, Spree) print their "Choose ..." instruction
+    # inside a reminder-text parenthetical after the keyword's own name,
+    # rather than as a bare instruction line - read the parenthetical's own
+    # words as the instruction when the line itself does not already start
+    # with "Choose".
+    instruction_line = raw_instruction_line
+    if instruction_line is not None and _INSTRUCTION.match(instruction_line) is None:
+        parenthetical = _PARENTHETICAL_INSTRUCTION.search(instruction_line)
+        if parenthetical is not None:
+            instruction_line = parenthetical.group("inner").strip()
+
     if instruction_line is None or _INSTRUCTION.match(instruction_line) is None:
         # A bulleted list with no "Choose ..." in front of it is not the
         # templating CR 700.2 describes. Say so rather than guess at it.
         return ModalProfile(
-            instruction=instruction_line or "",
+            instruction=raw_instruction_line or "",
             modes=(),
             minimum=0,
             maximum=0,
             understood=False,
         )
 
+    mode_texts = [lines[index].removeprefix(BULLET).strip() for index in bullets]
+    mode_costs: list[str | None] = []
+    for text in mode_texts:
+        match = _MODE_WITH_COST.match(text)
+        mode_costs.append(match.group("cost") if match is not None else None)
     modes = tuple(
-        Mode(number=number, text=lines[index].removeprefix(BULLET).strip())
-        for number, index in enumerate(bullets, start=1)
+        Mode(number=number, text=text, cost=cost)
+        for number, (text, cost) in enumerate(zip(mode_texts, mode_costs, strict=True), start=1)
     )
 
     keyword_set = {keyword.lower() for keyword in keywords}
     profile_kwargs = {
-        "instruction": instruction_line,
+        "instruction": raw_instruction_line or "",
         "modes": modes,
         "repeatable": bool(_REPEATABLE.search(instruction_line)),
         "entwine_cost": _keyword_cost(lines, _ENTWINE, "entwine", keyword_set),
@@ -330,11 +392,7 @@ def _parse(oracle_text: str, keywords: Iterable[str]) -> ModalProfile | None:
     }
 
     counted = _read_counts(instruction_line, len(modes))
-    unreadable = (
-        counted is None
-        or _PAWPRINT.search(instruction_line) is not None
-        or any(_MODE_WITH_COST.match(mode.text) for mode in modes)
-    )
+    unreadable = counted is None or _PAWPRINT.search(instruction_line) is not None
     if unreadable:
         minimum, maximum = counted or (0, 0)
         return ModalProfile(**profile_kwargs, minimum=minimum, maximum=maximum, understood=False)

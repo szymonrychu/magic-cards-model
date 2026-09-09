@@ -135,7 +135,14 @@ from .layers import (
     set_colors,
     set_power_toughness,
 )
-from .modes import Mode, is_modal_text, modal_profile, modal_profile_from_text, substitute_x
+from .modes import (
+    Mode,
+    is_modal_text,
+    modal_profile,
+    modal_profile_from_text,
+    mode_effect_text,
+    substitute_x,
+)
 from .targeting import TargetRequirement, profile_for_text
 from .triggers import AbilityOnStack, is_ability
 from .turn import Step
@@ -2109,6 +2116,22 @@ def damage_each_creature(amount: int) -> AbilityEffect:
         for creature in list(game.battlefield):
             if Type.CREATURE in board.of(creature).types:
                 game.deal_damage(creature, amount, source=source)
+
+    return effect
+
+
+def damage_each_creature_spell(amount: int) -> Effect:
+    """The spell-side twin of `damage_each_creature`: "[This spell] deals N
+    damage to each creature" (CR 119.3), source is the spell itself (CR
+    120.1, CR 120.2b) rather than an `AbilityOnStack` - Fire Magic's Tiered
+    modes are the first pool printing to reach this shape from a spell.
+    """
+
+    def effect(game: "Game", spell: CardState) -> None:
+        board = game.computed_board()
+        for creature in list(game.battlefield):
+            if Type.CREATURE in board.of(creature).types:
+                game.deal_damage(creature, amount, source=spell)
 
     return effect
 
@@ -7101,13 +7124,10 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
         return damage_each_opponent(amount)  # type: ignore[return-value]
 
     if match := _DAMAGE_EACH_CREATURE_RE.fullmatch(clause):
-        # No target either (every creature on the battlefield, CR 119.3), and
-        # `damage_each_creature` reads `ability.source`, which only an
-        # `AbilityOnStack` has - the same ability-side-only shape as the
-        # each-opponent clause just above.
-        if for_spell:
-            return None
+        # No target either (every creature on the battlefield, CR 119.3).
         amount = _count(match.group("n"))
+        if for_spell:
+            return damage_each_creature_spell(amount)
         return damage_each_creature(amount)  # type: ignore[return-value]
 
     if _PLAIN_END_THE_TURN_RE.fullmatch(clause):
@@ -7625,7 +7645,7 @@ def parse_mode_effect(mode: Mode, x_value: int) -> Effect | None:
     once it is standing on its own, X already substituted and no bulleted
     list left for `is_modal_text` to trip over.
     """
-    text = _strip_non_effect_preamble(substitute_x(mode.text, x_value)).strip()
+    text = _strip_non_effect_preamble(substitute_x(mode_effect_text(mode), x_value)).strip()
     if not text:
         return None
     token_for_player = _parse_target_player_token_mode(text)

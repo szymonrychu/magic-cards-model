@@ -1,0 +1,139 @@
+{
+  "object": "card",
+  "id": "415ff6a5-61ef-4b37-ae08-e44476300d4a",
+  "oracle_id": "c87db803-3490-41bc-af7a-78f99bcd77c8",
+  "multiverse_ids": [],
+  "resource_id": "F246F7260B9430EA6BB79D5E865CBE6A47A6155BFAD06DA4C6C20427F4FBA434",
+  "mtgo_id": 141209,
+  "arena_id": 96001,
+  "tcgplayer_id": 630969,
+  "cardmarket_id": 824144,
+  "name": "Fire Magic",
+  "lang": "en",
+  "released_at": "2025-06-13",
+  "uri": "https://api.scryfall.com/cards/415ff6a5-61ef-4b37-ae08-e44476300d4a",
+  "scryfall_uri": "https://scryfall.com/card/fin/136/fire-magic?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T01:36:44Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/4/1/415ff6a5-61ef-4b37-ae08-e44476300d4a.jpg?1783906604",
+    "normal": "https://cards.scryfall.io/normal/front/4/1/415ff6a5-61ef-4b37-ae08-e44476300d4a.jpg?1783906604",
+    "large": "https://cards.scryfall.io/large/front/4/1/415ff6a5-61ef-4b37-ae08-e44476300d4a.jpg?1783906604",
+    "png": "https://cards.scryfall.io/png/front/4/1/415ff6a5-61ef-4b37-ae08-e44476300d4a.png?1783906604",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/4/1/415ff6a5-61ef-4b37-ae08-e44476300d4a.jpg?1783906604",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/4/1/415ff6a5-61ef-4b37-ae08-e44476300d4a.jpg?1783906604",
+    "thumb": "https://cards.scryfall.io/thumb/front/4/1/415ff6a5-61ef-4b37-ae08-e44476300d4a.webp?1783906604",
+    "grid": "https://cards.scryfall.io/grid/front/4/1/415ff6a5-61ef-4b37-ae08-e44476300d4a.webp?1783906604",
+    "display": "https://cards.scryfall.io/display/front/4/1/415ff6a5-61ef-4b37-ae08-e44476300d4a.webp?1783906604",
+    "art": "https://cards.scryfall.io/art/front/4/1/415ff6a5-61ef-4b37-ae08-e44476300d4a.webp?1783906604",
+    "crop": "https://cards.scryfall.io/crop/front/4/1/415ff6a5-61ef-4b37-ae08-e44476300d4a.webp?1783906604"
+  },
+  "mana_cost": "{R}",
+  "cmc": 1.0,
+  "type_line": "Instant",
+  "oracle_text": "Tiered (Choose one additional cost.)\n\u2022 Fire \u2014 {0} \u2014 Fire Magic deals 1 damage to each creature.\n\u2022 Fira \u2014 {2} \u2014 Fire Magic deals 2 damage to each creature.\n\u2022 Firaga \u2014 {5} \u2014 Fire Magic deals 3 damage to each creature.",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Fire",
+    "Firaga",
+    "Fira",
+    "Tiered"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "d7beb4b7-e1ff-4d35-ab07-5700f17ea1ea",
+  "set": "fin",
+  "set_name": "Final Fantasy",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/d7beb4b7-e1ff-4d35-ab07-5700f17ea1ea",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afin&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fin?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/415ff6a5-61ef-4b37-ae08-e44476300d4a/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ac87db803-3490-41bc-af7a-78f99bcd77c8&unique=prints",
+  "collector_number": "136",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Toni Infante",
+  "artist_ids": [
+    "958bbc4a-3420-439a-b261-c988b8e4b580"
+  ],
+  "illustration_id": "2a3a9dd3-08b1-4c07-ac2f-31d46eb68662",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "triangle",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond",
+    "ffix"
+  ],
+  "edhrec_rank": 3823,
+  "prices": {
+    "usd": "0.64",
+    "usd_foil": "0.94",
+    "usd_etched": null,
+    "eur": "0.59",
+    "eur_foil": "2.03",
+    "tix": "2.16"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DFire%2BMagic",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DFire%2BMagic",
+    "edhrec": "https://edhrec.com/route/?cc=Fire+Magic"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F630969%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=824144&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/141209?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
