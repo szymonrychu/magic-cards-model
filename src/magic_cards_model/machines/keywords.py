@@ -185,6 +185,11 @@ def executes(keyword: str) -> bool:
         # the game" zone this engine does not have; see
         # `docs/engine-coverage.md`.
         "learn",
+        # CR 701.19a, the same shape once more: `machines/effects.
+        # regenerate_ability_targets`/`_parse_regenerate_self_clause`
+        # perform it (`Game.regenerate` creates the shield), reached from
+        # whichever clause parser read the sentence that names it.
+        "regenerate",
         # CR 701.14a, and the same shape once more: `machines/effects._fight`
         # is what performs it, reached from whichever clause parser read the
         # sentence that names it (Kraul Harpooner's own undergrowth shape,

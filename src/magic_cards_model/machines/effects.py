@@ -6124,6 +6124,32 @@ _TAP_UNTAP_TARGET_RE = re.compile(r"(?P<verb>tap|untap) (?P<phrase>.*target.+)",
 #: regenerating a permanent", so nothing is tapped and no damage removed until
 #: the shield is actually spent.
 _REGENERATE_TARGET_RE = re.compile(r"regenerate (?P<phrase>.*target.+)", re.IGNORECASE)
+
+#: "Regenerate this creature/permanent/artifact." - Ancient Silverback's
+#: `{G}` ability, the same self-reference shape `_COUNTER_ON_SELF_RE` reads
+#: (CR 201.5, CR 700.7), rather than a target at all (CR 115.1a: a permanent
+#: naming itself is never targeting). Ability-only, like that shape - a spell
+#: is never itself a permanent on the battlefield to regenerate.
+_REGENERATE_SELF_RE = re.compile(
+    r"^regenerate this (?:creature|permanent|artifact)\.?$", re.IGNORECASE
+)
+
+
+def _parse_regenerate_self_clause(clause: str) -> AbilityEffect | None:
+    """`_REGENERATE_SELF_RE`'s shape - CR 701.19a's shield, on the ability's
+    own source rather than on something it targets.
+    """
+    if _REGENERATE_SELF_RE.fullmatch(clause.strip()) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is not None and source.zone is Zone.BATTLEFIELD:
+            game.regenerate(source)
+
+    return effect
+
+
 #: "<Source> deals N damage to target X." and "... to any target." The source
 #: is never named here - `deal_damage`/`damage_ability_targets` already read
 #: it off whichever of a spell or an ability is resolving (CR 120.2b). The
@@ -18019,6 +18045,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
         counters_on_self = _parse_put_counters_on_self_clause(clause)
         if counters_on_self is not None:
             return counters_on_self  # type: ignore[return-value]
+        regenerate_self = _parse_regenerate_self_clause(clause)
+        if regenerate_self is not None:
+            return regenerate_self  # type: ignore[return-value]
     transform_all = _parse_transform_all_subtype_clause(clause, for_spell=for_spell)
     if transform_all is not None:
         return transform_all
