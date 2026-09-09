@@ -891,6 +891,12 @@ class CastRecord(BaseModel):
     `Casting.replicated` - what `machines/keywords._replicate_effect` copies
     the spell for and `machines/triggers.intervening_if_holds`'s "a
     replicate cost was paid for it" clause reads."""
+    offspring_paid: bool = False
+    """Whether this spell's offspring cost was paid (CR 702.175a), copied
+    from `Casting.offspring_paid`. Bool rather than a count: CR 702.175b's
+    "multiple instances of offspring" each get their own linked ability and
+    their own payment, which is not a pool printing yet - see
+    `docs/engine-coverage.md`."""
     additional_cost_cards: list[UUID] = Field(default_factory=list)
     """Every card consumed paying one of `Casting.additional_costs`'
     components - Fling's "sacrifice a creature" (CR 118.8a), read here by
@@ -2754,6 +2760,7 @@ class Game(BaseModel):
         spend_effects: list[str] | None = None,
         kicked: int = 0,
         replicated: int = 0,
+        offspring_paid: bool = False,
         additional_cost_cards: list[UUID] | None = None,
     ) -> "CastRecord":
         """Record how a spell was cast, for the rules that ask afterwards.
@@ -2795,6 +2802,7 @@ class Game(BaseModel):
             spend_effects=tuple(spend_effects or ()),
             kicked=kicked,
             replicated=replicated,
+            offspring_paid=offspring_paid,
             additional_cost_cards=list(additional_cost_cards or []),
         )
         self.cast_records[spell.id] = record
@@ -9373,6 +9381,7 @@ class Game(BaseModel):
         improvise: Sequence[CardState] | None = None,
         mana_sources: Sequence[CardState | tuple[CardState, Sequence[Color]]] | None = None,
         splice: Sequence[UUID] | None = None,
+        offspring: bool = False,
     ) -> CardState:
         """Cast `card` for `caster`, start to finish, as one atomic action.
 
@@ -9464,6 +9473,8 @@ class Game(BaseModel):
                 casting.choose_targets(list(targets))
             for card_id in splice or ():
                 casting.splice_by_id(card_id)
+            if offspring:
+                casting.pay_offspring()
             payment = casting.determine_cost(x_value=x_value)
             if division is not None:
                 casting.announce_division(division)

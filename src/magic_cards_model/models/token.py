@@ -719,6 +719,8 @@ def token_copy_of(
     controller: str,
     count: int = 1,
     added_abilities: Sequence[str] = (),
+    power: int | None = None,
+    toughness: int | None = None,
     **options: Any,
 ) -> list[TokenState]:
     """ "Create a token that's a copy of [something]" (CR 701.7a, CR 707.2).
@@ -753,9 +755,18 @@ def token_copy_of(
     `copiable_card_with_added_abilities` for why that distinction decides
     whether the added trigger ever fires.
 
-    **Not modelled**: CR 707.2's "as ... enters" power-and-toughness setting and
-    face-down status, and CR 111.12's "a copy of a nonexistent object" - the
-    caller has an object in hand, so there is nothing nonexistent to copy.
+    `power`/`toughness` is CR 707.9a's other "except" channel - Offspring's
+    own "create a token that's a copy of it, except it's 1/1" (CR 702.175a).
+    Unlike `added_abilities`, which only ever adds a line, this *replaces*
+    the printed values - the copy's copiable P/T is 1/1, not "1/1 in
+    addition to its own".
+
+    **Not modelled**: CR 707.2's "as ... enters" power-and-toughness setting
+    (a *different* rule from the "except" override above - that one reads a
+    characteristic off the object as it arrives, this one is stated by the
+    copy effect itself) and face-down status, and CR 111.12's "a copy of a
+    nonexistent object" - the caller has an object in hand, so there is
+    nothing nonexistent to copy.
     """
     with game._id_allocator_scope():
         if count <= 0:
@@ -778,6 +789,17 @@ def token_copy_of(
         extra_definitions = list(creation.extra)
 
         copiable = copiable_card_with_added_abilities(original.card, added_abilities)
+        if power is not None or toughness is not None:
+            update: dict[str, Any] = {}
+            if power is not None:
+                update["power"] = str(power)
+            if toughness is not None:
+                update["toughness"] = str(toughness)
+            new_card_id = uuid5(
+                NAMESPACE_OID,
+                f"{_TOKEN_CARD_ID_PREFIX}:{copiable.id}:pt:{power}/{toughness}",
+            )
+            copiable = copiable.model_copy(update={"id": new_card_id, **update})
 
         created: list[TokenState] = []
         for _ in range(count):

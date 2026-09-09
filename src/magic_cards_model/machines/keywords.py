@@ -150,6 +150,13 @@ def executes(keyword: str) -> bool:
         # enters, if its evoke cost was paid, its controller sacrifices it" -
         # is `_evoke_ability`/`_evoke_effect` here.
         "evoke",
+        # CR 702.175a. The same two-places shape as evoke just above: the
+        # additional-cost half is `machines/casting.py`'s `Casting.
+        # pay_offspring` (`ADDITIONAL_COST_KEYWORDS`), the triggered half -
+        # "When this permanent enters, if its offspring cost was paid,
+        # create a token that's a copy of it, except it's 1/1" - is
+        # `_offspring_ability` here.
+        "offspring",
         # CR 702.51a and CR 702.66a. Static abilities that function while the
         # spell is on the stack and change *how* one symbol of its already
         # determined total cost is paid - executed by
@@ -439,6 +446,33 @@ def _evoke_ability(ability: KeywordAbility) -> TriggeredAbility:
     )
 
 
+def _offspring_ability(ability: KeywordAbility) -> TriggeredAbility:
+    """CR 702.175a's second half: "Offspring [cost]" means "You may pay an
+    additional [cost] as you cast this spell" and "When this permanent
+    enters, if its offspring cost was paid, create a token that's a copy of
+    it, except it's 1/1."
+
+    The first half is an additional cost (CR 118.8a) and is executed by
+    `machines/casting.py`'s `Casting.pay_offspring`; only the second half is
+    an ability that goes on the stack, so only the second half is expanded
+    here - the same evoke-shaped split `_evoke_ability` above documents.
+
+    "If its offspring cost was paid" is an intervening *if* (CR 603.4),
+    answered by `machines/triggers.intervening_if_holds` off
+    `CastRecord.offspring_paid`, mirroring evoke's own `CastRecord.keyword`
+    read exactly.
+    """
+    return _expansion(
+        ability,
+        keyword="offspring",
+        word=TriggerWord.WHEN,
+        condition="this permanent enters",
+        intervening_if="its offspring cost was paid",
+        effect="create a token that's a copy of it, except it's 1/1",
+        event=TriggerEvent.ENTERS_THE_BATTLEFIELD,
+    )
+
+
 def _mobilize_ability(ability: KeywordAbility) -> TriggeredAbility:
     """CR 702.181a: "Mobilize N" means "Whenever this creature attacks, create N
     1/1 red Warrior creature tokens. Those tokens enter tapped and attacking.
@@ -623,6 +657,7 @@ _TRIGGER_EXPANSIONS: dict[str, Callable[[KeywordAbility], list[TriggeredAbility]
     "replicate": _single(_replicate_ability),
     "persist": _single(_persist_ability),
     "mobilize": _single(_mobilize_ability),
+    "offspring": _single(_offspring_ability),
     "firebending": _single(_firebending_ability),
     "evoke": _single(_evoke_ability),
     "madness": _single(_madness_ability),

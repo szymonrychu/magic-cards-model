@@ -1313,7 +1313,7 @@ _COLOR_WORDS: dict[str, Color] = {
 
 #: Keywords that are an optional additional cost on a spell being cast
 #: (CR 118.8a). `Casting.pay_kicker` charges these.
-ADDITIONAL_COST_KEYWORDS = frozenset({"kicker", "multikicker", "replicate"})
+ADDITIONAL_COST_KEYWORDS = frozenset({"kicker", "multikicker", "replicate", "offspring"})
 
 
 def has_flash(card: Card) -> bool:
@@ -1813,6 +1813,10 @@ class Casting(BaseModel):
     plain-kicker-style single-payment restriction the way CR 702.33a/c
     distinguishes kicker from multikicker.
     """
+    offspring_paid: bool = False
+    """Whether this spell's offspring cost was paid (CR 702.175a), set by
+    `pay_offspring`. A flag rather than `kicked`'s count: offspring has no
+    "multi" variant to pay more than once."""
     payment: CostPayment | None = None
     announced_zone: Zone | None = None
     """The zone this cast was announced from, recorded as CR 601.2a moved the
@@ -3071,6 +3075,38 @@ class Casting(BaseModel):
             self.replicated += 1
         return self.step
 
+    def pay_offspring(self) -> CastingStep:
+        """CR 702.175a: pay this spell's offspring cost as an additional cost.
+
+        "Offspring [cost]" means "You may pay an additional [cost] as you
+        cast this spell" and "When this permanent enters, if its offspring
+        cost was paid, create a token that's a copy of it, except it's
+        1/1."" The first half is this method, an ordinary CR 118.8a
+        additional cost exactly like kicker's own `pay_kicker` above; the
+        second is `machines/keywords._offspring_ability`'s triggered-ability
+        expansion, reached through `CastRecord.offspring_paid` the same way
+        evoke's own intervening *if* reads `CastRecord.keyword`.
+
+        CR 702.175b's "multiple instances of offspring" (each paid and
+        triggering separately) is not modelled - no pool printing carries
+        two - so this refuses a second payment rather than silently
+        recharging the same cost.
+        """
+        ability = _keyword(self.spell.card, "offspring")
+        if ability is None:
+            raise ValueError(f"{self.spell.name} has no offspring ability (CR 702.175a)")
+        if self.offspring_paid:
+            raise ValueError(f"{self.spell.name}'s offspring cost was already paid")
+        cost = total_cost_for_phrase(ability.cost or "", self.caster)
+        if cost is None:
+            raise ValueError(
+                f"{self.spell.name}'s offspring cost {ability.cost!r} could not be read, "
+                f"so it cannot be paid"
+            )
+        self.add_additional_cost(cost)
+        self.offspring_paid = True
+        return self.step
+
     def add_additional_cost(self, cost: TotalCost | ManaCost) -> CastingStep:
         """CR 118.8a: any number of additional costs may be applied to a spell.
 
@@ -3955,6 +3991,7 @@ class Casting(BaseModel):
                 ],
                 kicked=self.kicked,
                 replicated=self.replicated,
+                offspring_paid=self.offspring_paid,
                 # CR 400.7 makes the spell a new object the moment CR 601.2a
                 # moves it off the exile pile, so the annotation that pile
                 # carried is gone by now - `announced_exile_annotation` is the

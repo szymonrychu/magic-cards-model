@@ -2318,6 +2318,18 @@ def intervening_if_holds(
         record = _cast_record_for_clause(game, ability, source, event)
         return record is not None and (record.keyword or "").lower() == "evoke"
 
+    if clause == "its offspring cost was paid":
+        # CR 702.175a: "'Offspring [cost]' means 'You may pay an additional
+        # [cost] as you cast this spell' and 'When this permanent enters, if
+        # its offspring cost was paid, create a token that's a copy of it,
+        # except it's 1/1.'" Offspring is an *additional* cost (CR 118.8a),
+        # not an alternative one, so unlike evoke this reads
+        # `CastRecord.offspring_paid` rather than `.keyword` - a spell can be
+        # both kicked and offspring-paid at once, and each linked ability
+        # only ever asks about its own cost (CR 702.175b).
+        record = _cast_record_for_clause(game, ability, source, event)
+        return record is not None and record.offspring_paid
+
     if _KICKED_CLAUSE.match(clause):
         record = _cast_record_for_clause(game, ability, source, event)
         if record is None:

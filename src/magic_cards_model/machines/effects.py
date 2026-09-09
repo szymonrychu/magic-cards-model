@@ -6136,6 +6136,32 @@ _REGENERATE_SELF_RE = re.compile(
 )
 
 
+#: CR 702.175a's own second half, written out verbatim by `machines/
+#: keywords._offspring_ability`: "create a token that's a copy of it, except
+#: it's 1/1." Self-referential ("it" is the entering permanent, CR 607.1's
+#: within-one-ability anaphora), not a target - the same reason
+#: `_parse_regenerate_self_clause` above is ability-only.
+_OFFSPRING_TOKEN_COPY_RE = re.compile(
+    r"^create a token that'?s a copy of it, except it'?s 1/1\.?$", re.IGNORECASE
+)
+
+
+def _parse_offspring_token_copy_clause(clause: str) -> AbilityEffect | None:
+    """`_OFFSPRING_TOKEN_COPY_RE`'s shape - CR 702.175a's own token, 1/1
+    regardless of the original's printed power and toughness (CR 707.9a's
+    "except" override, `token_copy_of`'s own `power=`/`toughness=`).
+    """
+    if _OFFSPRING_TOKEN_COPY_RE.fullmatch(clause.strip()) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is not None and source.zone is Zone.BATTLEFIELD:
+            token_copy_of(game, source, ability.controller, power=1, toughness=1)
+
+    return effect
+
+
 def _parse_regenerate_self_clause(clause: str) -> AbilityEffect | None:
     """`_REGENERATE_SELF_RE`'s shape - CR 701.19a's shield, on the ability's
     own source rather than on something it targets.
@@ -18152,6 +18178,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
         regenerate_self = _parse_regenerate_self_clause(clause)
         if regenerate_self is not None:
             return regenerate_self  # type: ignore[return-value]
+        offspring_copy = _parse_offspring_token_copy_clause(clause)
+        if offspring_copy is not None:
+            return offspring_copy  # type: ignore[return-value]
     transform_all = _parse_transform_all_subtype_clause(clause, for_spell=for_spell)
     if transform_all is not None:
         return transform_all
