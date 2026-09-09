@@ -310,16 +310,17 @@ def _cost_strings(total: TotalCost) -> tuple[str | None, str | None]:
 def _widen_for_object_costs(
     game: Any, player: str, card: CardState, affordable: Affordability, reason: str | None
 ) -> tuple[Affordability, str | None]:
-    """Convoke (CR 702.51a), delve (CR 702.66a), and crew (CR 702.122a) all
-    pay part of a cost by spending objects rather than mana - `_cost_
-    affordability` only ever asked `could_pay_mana_cost`/`CostComponent.
-    why_not`, neither of which knows a tapped creature or an exiled graveyard
-    card could have covered part of what looked unpayable. Never used to
-    *narrow* a `NO` into a `YES` (this function does not replicate `machines/
-    objects_as_costs.py`'s own reduction arithmetic - that would be
-    reimplementing the machine, not reading it), only to say the honest
-    thing instead of a wrong one: a `NO` in front of a real convoke/delve/crew
-    offer becomes `UNKNOWN`, naming which offer this check did not evaluate.
+    """Convoke (CR 702.51a), delve (CR 702.66a), improvise (CR 702.126a) and
+    crew (CR 702.122a) all pay part of a cost by spending objects rather than
+    mana - `_cost_affordability` only ever asked `could_pay_mana_cost`/
+    `CostComponent.why_not`, neither of which knows a tapped creature, an
+    exiled graveyard card, or a tapped artifact could have covered part of
+    what looked unpayable. Never used to *narrow* a `NO` into a `YES` (this
+    function does not replicate `machines/objects_as_costs.py`'s own
+    reduction arithmetic - that would be reimplementing the machine, not
+    reading it), only to say the honest thing instead of a wrong one: a `NO`
+    in front of a real convoke/delve/improvise/crew offer becomes `UNKNOWN`,
+    naming which offer this check did not evaluate.
     """
     if affordable is not Affordability.NO:
         return affordable, reason

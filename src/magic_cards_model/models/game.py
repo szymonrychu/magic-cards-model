@@ -146,6 +146,7 @@ from ..machines.layers import (
 from ..machines.modes import modal_profile, substitute_x
 from ..machines.objects_as_costs import convoke as pay_convoke
 from ..machines.objects_as_costs import delve as pay_delve
+from ..machines.objects_as_costs import improvise as pay_improvise
 from ..machines.opening_hand import (
     RIDERS,
     OpeningHandAction,
@@ -1035,16 +1036,17 @@ class PreventionShield(BaseModel):
 
 
 class ObjectCostOffer(BaseModel):
-    """One convoke/delve/crew offer for a card's cost, and the cards eligible
-    to pay it right now - `Game.object_cost_offers`'s own answer, typed so a
-    caller can read it without importing `machines/objects_as_costs.py`."""
+    """One convoke/delve/improvise/crew offer for a card's cost, and the
+    cards eligible to pay it right now - `Game.object_cost_offers`'s own
+    answer, typed so a caller can read it without importing
+    `machines/objects_as_costs.py`."""
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     rule: str
     number: int | None = None
-    """Crew's own printed number (CR 702.122a); `None` for convoke and delve,
-    which name no fixed total."""
+    """Crew's own printed number (CR 702.122a); `None` for convoke, delve and
+    improvise, which name no fixed total."""
     candidates: list[CardState] = Field(default_factory=list)
 
 
@@ -9093,7 +9095,8 @@ class Game(BaseModel):
 
     def object_cost_offers(self, card: CardState, player: str) -> dict[str, "ObjectCostOffer"]:
         """Which objects could be spent on `card`'s cost, and for what -
-        convoke (CR 702.51a), delve (CR 702.66a), crew (CR 702.122a).
+        convoke (CR 702.51a), delve (CR 702.66a), improvise (CR 702.126a),
+        crew (CR 702.122a).
 
         `magic_cards_model_api.affordances.object_costs` used to import
         `machines/objects_as_costs.py` directly and walk the battlefield and
@@ -9101,11 +9104,11 @@ class Game(BaseModel):
         api shaping, so it lives here now. The api keeps `_label`, the dict
         shaping, and `object_costs`'s own three-key dict - this only answers
         *which cards are eligible*, the same `ObjectOffer.why_not` predicate
-        the actual payment (`machines/objects_as_costs.convoke`/`delve`) uses,
-        so a candidate list here can never disagree with what paying would
-        accept.
+        the actual payment (`machines/objects_as_costs.convoke`/`delve`/
+        `improvise`) uses, so a candidate list here can never disagree with
+        what paying would accept.
 
-        Only the keys that apply are present - a card with none of the three
+        Only the keys that apply are present - a card with none of these
         gets an empty dict.
         """
         from ..machines.objects_as_costs import convoke_offer as _convoke_offer
@@ -9115,6 +9118,8 @@ class Game(BaseModel):
             delve_offer,
             has_convoke,
             has_delve,
+            has_improvise,
+            improvise_offer,
             is_vehicle,
         )
 
@@ -9135,6 +9140,12 @@ class Game(BaseModel):
                     for c in self.player(player).graveyard
                     if offer.why_not(c, player, self) is None
                 ],
+            )
+        if has_improvise(card.card):
+            offer = improvise_offer()
+            out["improvise"] = ObjectCostOffer(
+                rule="CR 702.126a",
+                candidates=[c for c in battlefield if offer.why_not(c, player, self) is None],
             )
         if is_vehicle(card.card):
             offer = crew_offer(card)
@@ -9188,6 +9199,7 @@ class Game(BaseModel):
         choosing: list[CardState] | None = None,
         convoke: Sequence[tuple[CardState, Color | None]] | None = None,
         delve: Sequence[CardState] | None = None,
+        improvise: Sequence[CardState] | None = None,
         mana_sources: Sequence[CardState | tuple[CardState, Sequence[Color]]] | None = None,
         splice: Sequence[UUID] | None = None,
     ) -> CardState:
@@ -9241,11 +9253,12 @@ class Game(BaseModel):
         two ways CR 601.3's permission to cast can be claimed, alongside a
         live `PlayPermission` this method checks for automatically wherever
         `keyword` and `alternative_cost` are both left unclaimed; `convoke`
-        (CR 702.51a/b) and `delve` (CR 702.66a/b) apply "only after the total
-        cost ... is determined", so they run against the open payment rather
-        than the announcement; and `mana_sources` are the abilities this call
-        may activate on `caster`'s behalf (CR 601.2g) - a bare source lets the
-        engine choose what colour it makes, a `(source, colors)` pair pins it.
+        (CR 702.51a/b), `delve` (CR 702.66a/b) and `improvise` (CR 702.126a/b)
+        apply "only after the total cost ... is determined", so they run
+        against the open payment rather than the announcement; and
+        `mana_sources` are the abilities this call may activate on `caster`'s
+        behalf (CR 601.2g) - a bare source lets the engine choose what colour
+        it makes, a `(source, colors)` pair pins it.
 
         `splice` is CR 702.47a: card ids, never names, matching `Action.
         splice_options`' own `SpliceOption.card_id` - this library's actions
@@ -9287,6 +9300,8 @@ class Game(BaseModel):
                 pay_convoke(payment, casting.spell, creature, color)
             if delve:
                 pay_delve(payment, casting.spell, *delve)
+            if improvise:
+                pay_improvise(payment, casting.spell, *improvise)
             unpinned: list[CardState] = []
             for entry in mana_sources or ():
                 if isinstance(entry, tuple):
