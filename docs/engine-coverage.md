@@ -1108,6 +1108,176 @@ it is now modelled, not a gap).
 Scenario coverage: `tests/scenarios/test_anaphoric_referent_clauses.py`. Unit
 coverage for the parser and the notice: `tests/test_mixed_effects.py`.
 
+### Sentence-initial "Then ...", and the quality word it was hiding
+
+`_CLAUSE_SEPARATOR` eats "then" only where it *joins* two clauses inside one
+sentence ("Scry 2, then draw a card"), so a "Then" standing at the head of its
+own sentence survived `split_effect_clauses` glued to the front of the clause
+it introduces, and no downstream parser could read what was left. The whole
+card was then refused - correctly, CR 608.2c has no notion of running half an
+effect - but silently. Measured:
+
+```
+'earthbend 2. Then search your library for a basic land card, ...' -> None
+'earthbend 2. search your library for a basic land card, ...'      -> parses
+```
+
+`split_effect_clauses` now strips it after the split (`_LEADING_THEN_RE`),
+which is sound rather than a guess: CR 608.2c's "in the order written" is what
+the word states, it carries no instruction of its own, and every ordering the
+engine already reads runs the clauses in exactly that order anyway. Go Blank's
+`_THEN_EXILE_THAT_PLAYERS_GRAVEYARD_RE` was compensating for the defect and
+lost its "then", which generalises the shape to any card printing "Exile that
+player's graveyard." as a plain second sentence.
+
+**Ancient Stirrings needed a second, independent fix to actually work rather
+than merely parse.** `_quality_word_matcher` read a colour word only as an
+adjective in front of a type ("a colorless creature card"), so a bare
+"colorless" fell through to `_named_type_matcher`, matched **nothing at all**,
+and the card looked at five cards, could legally take none of them, bottomed
+all five, and scored `handled` in every sweep. CR 105.2c - "A colorless object
+has no color" - is a whole quality on its own, and a lone colour word is now
+read as one.
+
+Cards this closed, with what each also needed:
+
+| Card | Also needed |
+|---|---|
+| Ancient Stirrings | the bare-colour quality matcher above |
+| Earthbender Ascension | nothing - the leading "Then" was the whole blocker |
+| Orcish Bowmasters | **amass** (CR 701.47), built from scratch |
+| Ashiok, Dream Render | "Exile each opponent's graveyard" as a player clause (CR 102.2's opponents of the *ability's* controller, not the milled player) |
+| Kaito, Bane of Nightmares' `0` | "Draw a card for each opponent who lost life this turn" - opponents, not points, off `Player.life_lost_this_turn`, counted once (CR 608.2h) |
+| Birthing Ritual | **still refused**, for three reasons all outside this wave: CR 603.4's unread intervening *if* (which is what stops it live, already noisy with an `InterveningIfNotice`), CR 118.12's "If you do, ..." consequence, and reading a value off a creature sacrificed *during resolution* rather than as a CR 118.8a cost. The effect body now records an `AnaphoricClauseNotice` instead of nothing - `_unreadable_cost_reference_clause` had been wired into the spell dispatcher only |
+
+Amass is a CR 701 keyword action embedded in another ability's effect text,
+the same shape earthbend and airbend already are. CR 701.47a's four steps run
+in the order the rule writes them, the "choose an Army creature you control"
+question is only *asked* when there is more than one candidate (CR 608.2d),
+and nothing raises, because CR 701.47b says a player amassed "even if some or
+all of those actions were impossible". The subtype is required rather than
+defaulted: CR 701.47d errata'd every older bare "amass N" to name one, so
+guessing Zombies would be a fails-open answer on a card whose real subtype is
+something else.
+
+Scenario coverage: `tests/scenarios/test_sentence_initial_then_clauses.py`,
+`tests/scenarios/test_amass.py`.
+
+### Object anaphors: "It ...", "They ...", "... on it"
+
+The section above reads a **player** anaphor ("its controller", "that
+player"). A rider whose subject or object is the *thing itself* reached no
+parser at all, so the clause failed and CR 608.2c's fail-closed guard threw
+the readable half away with it - silently, which is the defect. Measured:
+
+```
+Tap target creature.                                -> parses
+Put two stun counters on target creature.           -> parses
+Tap target creature. Put two stun counters on it.   -> None      (Kaito -2)
+```
+
+CR 608.2c names the shape outright: "In some cases, later text on the card may
+modify the meaning of earlier text (for example, 'Destroy target creature. It
+can't be regenerated' ...). Don't just apply effects step by step without
+thinking in these cases - read the whole text and apply the rules of English
+to the text." That sentence also splits the work in two:
+
+- **Sequential riders** run after their antecedent on the objects it found -
+  `_parse_object_anaphor_clause_pair`, whose rider grammar is
+  `_parse_referent_object_clause` (counters on it; a pump or keyword grant;
+  "can't be blocked this turn").
+- **A modifying rider** changes how the antecedent happens and has nothing
+  left to say once it has finished - `_parse_cant_be_regenerated_clause_pair`,
+  which re-runs the destruction with CR 701.19c's prohibition attached.
+
+**The referent comes from the antecedent's own subject phrase**
+(`_referent_reader`), not from its parser, which is what keeps this general:
+every existing clause parser is reused untouched and this only answers "which
+objects did that sentence act on" - its targets, a named group ("all
+creatures"), or CR 109.2's self-reference ("this creature"). An antecedent
+matching more than one of the three is refused rather than guessed at. The
+referent is read before the antecedent runs (CR 608.2h) and every rider
+re-checks `zone is Zone.BATTLEFIELD` afterwards, because CR 400.7 makes a
+referent that changed zones a different object. CR 400.7j's exception ("other
+parts of that effect can find that object") is not needed here: no rider in
+this wave acts on a moved object, and the one shape that does
+(`_parse_exile_then_return_clause_pair`) already carries its referent across
+the move itself.
+
+**`machines/layers._SUBJECT` is deliberately not widened to accept "it".**
+`_is_layer_effect_text` is an any-sentence test over the *whole* ability, so
+teaching the layer parser the pronoun would route The Wandering Emperor's
+entire `+1` to `create_continuous_effect_of_ability`: first strike granted,
+the +1/+1 counter never placed, and the card scoring `handled`. The pair is
+merged ahead of that fallback and the rider's layer effect is built off a
+canonical rewrite of its own sentence alone ("It gains first strike until end
+of turn." becomes "Target creature gains first strike until end of turn."),
+applied to the referent `parsed_layer_effects` is handed as `targets`.
+
+Bridgeworks Battle gets its own pair parser
+(`_parse_pump_then_fight_clause_pair`) because it is the one shape here whose
+**rider names a target of its own**: the general referent reader hands back
+every legal target and would pump the opponent's creature too. The two are
+told apart by controller, not by position in `targets` - "you control"/"you
+don't control" is what the card says, and a positional read would pump the
+wrong creature the moment CR 608.2b removed one.
+
+Two subsystems the riders needed, both of which would otherwise have shipped
+as untestable no-ops:
+
+- **Stun counters (CR 122.1d)** - "One or more stun counters on a permanent
+  create a single replacement effect that stops the permanent from untapping.
+  That effect is 'If a permanent with a stun counter on it would become
+  untapped, instead remove a stun counter from it.'" Implemented inside
+  `CardState.untap`, the one place every route to untapping passes through
+  (the untap step, an effect, a `{Q}` cost), and checked *after* exert because
+  an untap already called off is not a "would become untapped" event for a
+  counter to replace.
+- **Regeneration (CR 701.19a)** - a shield count on `CardState`, spent through
+  `applicable_effects` so CR 616.1 orders it against umbra armor and the
+  prevention shields rather than this inventing a precedence. Cleared by
+  `move_to` (CR 400.7) and by `remove_all_damage` (CR 514.2's "this turn").
+  CR 701.19c's prohibition rides on the *destruction event*
+  (`ReplaceableEvent.regeneration_allowed`), not on the permanent: it causes
+  shields "to not be applied" rather than spending them, so an unspent shield
+  still stands for the next destruction this turn. "Regenerate target X"
+  (`regenerate_ability_targets`) now parses, which is what makes Wrath of
+  God's rider testable at all, and closes Asceticism and Welding Jar too.
+
+Cards this closed: **Kaito, Bane of Nightmares'** `-2`, **The Wandering
+Emperor's** `+1`, **Wrath of God**, **Kappa Cannoneer**, **Bridgeworks
+Battle**, **Inquisition of Kozilek**, plus **Asceticism**, **Welding Jar** and
+**Supreme Verdict** off the regeneration work. Two antecedent fixes were
+needed on the way and are generalisations rather than special cases: "Put a
++1/+1 counter on this creature." is now reachable from `_parse_mixed_clause`
+(it was a whole-ability effect only, so Kappa Cannoneer's rider had nothing to
+attach to), and `_CHOOSE_CARD_FROM_REVEALED_RE` gained an optional "with mana
+value N or less" tail - CR 202.3 makes mana value a characteristic, so the
+bound is a real narrowing and a card above it is CR 608.2d's "option that's
+illegal", never offered.
+
+Still refused, and now on the record rather than silent -
+`_unreadable_anaphoric_clause` used to inspect only pairs whose first clause
+was a destroy or an exile, and now reports an unread object-anaphor rider too:
+
+- **Firebending Lesson** - "If this spell was kicked, it deals 5 damage to
+  that creature instead." The anaphor is read; the condition around it is not,
+  and needs a "was this spell kicked" reader that is its own wave. The card
+  does **not** deal its base 2 and skip the kicker line.
+- **Eluge, the Shoreless Sea's** flood-counter trigger - "It's an Island in
+  addition to its other types for as long as it has a flood counter on it" is
+  a CR 611.2b "for as long as" conditioned type change, which nothing here
+  builds. (Eluge's *other* silent clause is a characteristic-defining ability,
+  an unrelated gap.)
+- **Combustion Technique** - deliberately left silent rather than mis-blamed.
+  Its rider is a replacement effect ("If that creature would die this turn,
+  exile it instead"), but the sentence that fails first is the *antecedent*:
+  "deals damage equal to 2 plus the number of Lesson cards in your graveyard"
+  is a count expression no clause parser reads, so a notice pointed at the
+  rider would name the wrong sentence.
+
+Scenario coverage: `tests/scenarios/test_object_anaphoric_riders.py`.
+
 ## Token creation (wave 4)
 
 `_parse_token_clause` in `machines/effects.py` reads CR 701.7a's "create ...

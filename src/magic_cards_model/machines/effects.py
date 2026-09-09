@@ -2833,6 +2833,21 @@ def _quality_word_matcher(word: str) -> Callable[[CardState], bool]:
         if color is None:
             return lambda state: not state.colors and type_matches(state)
         return lambda state: color in state.colors and type_matches(state)
+    if len(parts) == 1 and parts[0] in _HAND_EXILE_COLOR_WORDS:
+        # A colour word standing **alone** is the whole quality, with no type
+        # after it to qualify: Ancient Stirrings' "a colorless card" (CR
+        # 105.2c, "A colorless object has no color") and Unearth's cousins'
+        # "a green card". Without this the bare word fell through to
+        # `_named_type_matcher`, which tried to read "colorless" as a card
+        # type or land type, found neither, and matched **nothing at all** -
+        # so Ancient Stirrings looked at five cards, could legally take none
+        # of them, bottomed all five, and every sweep scored it handled.
+        # Silently offering fewer cards than the card says is a fails-open
+        # answer, not a missed one.
+        lone_color = _HAND_EXILE_COLOR_WORDS[parts[0]]
+        if lone_color is None:
+            return lambda state: not state.colors
+        return lambda state: lone_color in state.colors
     return _named_type_matcher(word)
 
 
@@ -3685,6 +3700,16 @@ _GAIN_LIFE_EQUAL_TO_LIFE_LOST_THIS_TURN_RE = re.compile(
     r"you gains? life equal to the life you'?(?:ve|’ve)? lost this turn",
     re.IGNORECASE,
 )
+#: "Draw a card for each opponent who lost life this turn." - Kaito, Bane of
+#: Nightmares' `0`. The count is one card **per opponent**, not per point of
+#: life, and "lost life this turn" is `Player.life_lost_this_turn` - the same
+#: gross per-turn ledger `_GAIN_LIFE_EQUAL_TO_LIFE_LOST_THIS_TURN_RE` above
+#: already reads for Children of Korlis, which counts every route down
+#: (CR 119.2/120.3a's damage, CR 118.3b's paid life) rather than the net
+#: change in a life total.
+_DRAW_FOR_EACH_OPPONENT_WHO_LOST_LIFE_RE = re.compile(
+    r"^draws? a card for each opponent who lost life this turn$", re.IGNORECASE
+)
 
 
 def _discard_cards(game: "Game", player: Player, count: int, source: str) -> list[CardState]:
@@ -3783,6 +3808,23 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
                 opponent.lose_life(amount)
 
         return each_opponent_loses
+
+    if _DRAW_FOR_EACH_OPPONENT_WHO_LOST_LIFE_RE.fullmatch(clause):
+
+        def draw_for_each_opponent_who_lost_life(game: "Game", player: Player, source: str) -> None:
+            # CR 608.2h: "If an effect requires information from the game ...
+            # the answer is determined only once, when the effect is applied" -
+            # so the count is taken here, in one pass, and every card is drawn
+            # against that one number rather than re-counting between draws.
+            count = sum(
+                1
+                for opponent in _opponents(game, player.username)
+                if opponent.life_lost_this_turn > 0
+            )
+            if count:
+                game.draw_cards(player.username, count)
+
+        return draw_for_each_opponent_who_lost_life
 
     if match := _ENERGY_RE.fullmatch(clause):
         amount = len(re.findall(r"\{e\}", match.group("e"), re.IGNORECASE))
@@ -3904,6 +3946,28 @@ _CLAUSE_SEPARATOR = re.compile(r"\.\s+|\n+|,?\s+\bthen\b\s+|\s+\band\b\s+", re.I
 _EXCLUSION_LIST_AND_RE = re.compile(r"other than [^.\n]+", re.IGNORECASE)
 _AND_SENTINEL = "\x00and\x00"
 
+#: A "then" standing at the **head** of its own sentence - "Look at the top
+#: five cards ... Then put the rest on the bottom of your library." (Ancient
+#: Stirrings), "earthbend 2. Then search your library ..." (Earthbender
+#: Ascension), "... deals 1 damage to any target. Then amass Orcs 1."
+#: (Orcish Bowmasters).
+#:
+#: `_CLAUSE_SEPARATOR` eats "then" only where it *joins* two clauses inside
+#: one sentence ("Scry 2, then draw a card"), so this one survives the split
+#: glued to the front of the clause it introduces and no downstream parser
+#: can read what is left. Stripped **after** the split rather than folded
+#: into the separator, because the separator has already found the sentence
+#: boundary by then and there is nothing left for a head-anchored alternative
+#: to match against.
+#:
+#: Dropping the word is sound, not a guess: CR 608.2c is "The controller of
+#: the spell or ability follows its instructions in the order written", and a
+#: sentence-initial "then" is that order stated out loud. It carries no
+#: instruction of its own, and every other ordering the engine reads - the
+#: infix "then" the separator already eats, and the bare sentence break -
+#: runs the clauses in exactly this order anyway.
+_LEADING_THEN_RE = re.compile(r"^then\s+", re.IGNORECASE)
+
 
 def split_effect_clauses(text: str) -> list[str]:
     """Break an effect into the clauses CR 608.2c executes in order.
@@ -3929,11 +3993,11 @@ def split_effect_clauses(text: str) -> list[str]:
     # order. Masked across the split and restored after, so the separator
     # stays the simple thing it is.
     masked = _EXCLUSION_LIST_AND_RE.sub(lambda m: m.group(0).replace(" and ", _AND_SENTINEL), text)
-    return [
-        clause.strip().replace(_AND_SENTINEL, " and ")
+    split = (
+        _LEADING_THEN_RE.sub("", clause.strip()).replace(_AND_SENTINEL, " and ")
         for clause in _CLAUSE_SEPARATOR.split(masked)
-        if clause.strip()
-    ]
+    )
+    return [clause for clause in split if clause.strip()]
 
 
 #: A cost paid before the spell is cast (CR 118.8a) - never part of what the
@@ -4470,6 +4534,22 @@ def untap_ability_targets(game: "Game", stack_object: "StackObject") -> None:
     for target in game.resolve_targets(stack_object):
         if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
             target.untap()
+
+
+def regenerate_ability_targets(game: "Game", stack_object: "StackObject") -> None:
+    """Create a CR 701.19a regeneration shield on each permanent this still
+    legally targets - Asceticism's `{1}{G}`, Welding Jar's sacrifice ability.
+
+    `Game.regenerate` is the whole of it. CR 701.19c: "Neither activating an
+    ability that creates a regeneration shield nor casting a spell that
+    creates a regeneration shield is the same as regenerating a permanent" -
+    the tapping, the damage removal and the removal from combat all happen
+    when the shield is *spent*, in `machines/replacement._regeneration_
+    effects`, and never here.
+    """
+    for target in game.resolve_targets(stack_object):
+        if isinstance(target, CardState):
+            game.regenerate(target)
 
 
 #: Tamiyo, Compleated Sage's `+1`: "Tap up to one target artifact or
@@ -5625,15 +5705,16 @@ _EXILE_ALL_GRAVEYARDS_RE = re.compile(r"^exile all graveyards\.?$", re.IGNORECAS
 #: "Exile each opponent's graveyard." (Soul-Guide Lantern, Ashiok, Dream
 #: Render) - `_EXILE_ALL_GRAVEYARDS_RE`'s own "no target" shape (CR 115.1)
 #: with a player-set qualifier narrowing which graveyards, the way
-#: `_DAMAGE_EACH_OPPONENT_RE` reads "each opponent" for damage. A leading
-#: "then " is kept in the pattern itself rather than stripped by the caller -
-#: `_THEN_EXILE_THAT_PLAYERS_GRAVEYARD_RE` reads Go Blank's own "then exile
-#: that player's graveyard" the same way - because Ashiok's whole ability is
-#: two clauses ("Target player mills four cards. Then exile each opponent's
-#: graveyard.") and the period split leaves "then" as the second clause's own
-#: first word.
+#: `_DAMAGE_EACH_OPPONENT_RE` reads "each opponent" for damage.
+#:
+#: The leading "then " this pattern used to carry is gone, and so is the
+#: sibling comment that justified it: Ashiok's whole ability is two clauses
+#: ("Target player mills four cards. Then exile each opponent's graveyard.")
+#: and `split_effect_clauses` now strips a sentence-initial "then" for every
+#: card (`_LEADING_THEN_RE`), so the word never reaches a clause parser and
+#: keeping it here would leave a branch nothing can match.
 _EXILE_EACH_OPPONENTS_GRAVEYARD_RE = re.compile(
-    r"^(?:then )?exile each opponent'?s graveyards?\.?$", re.IGNORECASE
+    r"^exile each opponent'?s graveyards?\.?$", re.IGNORECASE
 )
 _EXILE_QUALITY_FROM_ALL_GRAVEYARDS_RE = re.compile(
     r"^exile all cards that are (?P<quality>.+?) from all graveyards\.?$", re.IGNORECASE
@@ -5991,6 +6072,15 @@ _GRAVEYARD_TO_BOTTOM_OF_LIBRARY_RE = re.compile(
 #: "target" and is part of the captured phrase so a count word there is not
 #: silently thrown away.
 _TAP_UNTAP_TARGET_RE = re.compile(r"(?P<verb>tap|untap) (?P<phrase>.*target.+)", re.IGNORECASE)
+#: "Regenerate target X." - Asceticism's `{1}{G}` and Welding Jar's sacrifice
+#: ability. CR 701.19a: "If the effect of a resolving spell or ability
+#: regenerates a permanent, it creates a replacement effect that protects the
+#: permanent the next time it would be destroyed this turn." Creating the
+#: shield is the whole of what happens now - CR 701.19c says in as many words
+#: that activating an ability which creates a shield "is not the same as
+#: regenerating a permanent", so nothing is tapped and no damage removed until
+#: the shield is actually spent.
+_REGENERATE_TARGET_RE = re.compile(r"regenerate (?P<phrase>.*target.+)", re.IGNORECASE)
 #: "<Source> deals N damage to target X." and "... to any target." The source
 #: is never named here - `deal_damage`/`damage_ability_targets` already read
 #: it off whichever of a spell or an ability is resolving (CR 120.2b). The
@@ -6916,6 +7006,11 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
         return (
             tap_ability_targets if match.group("verb").lower() == "tap" else untap_ability_targets
         )
+
+    if match := _REGENERATE_TARGET_RE.fullmatch(clause):
+        if not _targets_understood(match.group("phrase"), count_agnostic=True):
+            return None
+        return regenerate_ability_targets  # type: ignore[return-value]
 
     if match := _COUNTER_TARGET_RE.fullmatch(clause):
         if not _targets_understood(match.group("phrase"), count_agnostic=True):
@@ -8018,6 +8113,37 @@ def _unreadable_anaphoric_clause(text: str, *, for_spell: bool) -> str | None:
             _LOOKS_LIKE_RETURN_TO_BATTLEFIELD_RE.match(second_stripped)
             and _parse_exile_then_return_clause_pair(first, second, for_spell=for_spell) is None
         ):
+            return second
+    # The object-anaphor half (CR 400.7's "it"/"they"/"that creature", not CR
+    # 400.7's player anaphors above). Reported for *any* antecedent whose
+    # referent this wave can name, not only a destroy or an exile, because
+    # that is what an object anaphor is printed on: Eluge's "It's an Island
+    # ... for as long as it has a flood counter on it", Firebending Lesson's
+    # "it deals 5 damage to that creature instead", Combustion Technique's "If
+    # that creature would die this turn, exile it instead".
+    #
+    # Gated on `_referent_reader` answering, for the same reason the pairs
+    # above are gated on their own parser rather than on a shape test: without
+    # it, a sentence that merely contains the word "it" ("put it into your
+    # hand") would be blamed for a failure belonging to some other clause
+    # entirely, which is the wrong sentence exactly as often as the right one.
+    for first, second in zip(clauses, clauses[1:], strict=False):
+        second_stripped = second.strip()
+        if not _OBJECT_ANAPHOR_RE.search(second_stripped):
+            continue
+        if _ANAPHORIC_SUBJECT_RE.fullmatch(second_stripped):
+            # A *player* anaphor that happens to contain the word "it" further
+            # in - Boseiju's "That player may search their library ..., put
+            # **it** onto the battlefield, then shuffle." The pair above owns
+            # this shape, and blaming this sentence for a failure somewhere
+            # else in the card is the wrong sentence exactly as often as the
+            # right one.
+            continue
+        if _referent_reader(first) is None:
+            continue
+        if _parse_mixed_clause(first, for_spell=for_spell) is None:
+            continue
+        if _parse_object_anaphor_clause_pair(first, second, for_spell=for_spell) is None:
             return second
     return None
 
@@ -9579,7 +9705,16 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
 
         return conditional_notice_only
 
-    unread_anaphoric = _unreadable_anaphoric_clause(effect_text, for_spell=False)
+    # `_unreadable_cost_reference_clause` is on this side too, not only the
+    # spell side: Birthing Ritual reads back "the sacrificed creature's mana
+    # value" out of a *triggered* ability, and without this half of the pair
+    # the ability was refused (correctly) in complete silence, which is the
+    # exact failure mode `AnaphoricClauseNotice` exists to end. The asymmetry
+    # was an oversight, not a decision - the notice's own docstring already
+    # describes the shape without restricting it to spells.
+    unread_anaphoric = _unreadable_anaphoric_clause(
+        effect_text, for_spell=False
+    ) or _unreadable_cost_reference_clause(effect_text)
     if unread_anaphoric is not None:
 
         def anaphoric_notice_only(game: "Game", ability: AbilityOnStack) -> None:
@@ -11305,6 +11440,457 @@ _RETURN_TO_BATTLEFIELD_RE = re.compile(
 _LOOKS_LIKE_RETURN_TO_BATTLEFIELD_RE = re.compile(
     r"^return (?:it|that \w+) to the battlefield", re.IGNORECASE
 )
+
+
+# --------------------------------------------------------------------------
+# OBJECT anaphors: "It ...", "They ...", "... on it" (CR 400.7, CR 608.2c)
+# --------------------------------------------------------------------------
+#
+# `_ANAPHORIC_SUBJECT_RE` above reads only **player** anaphors - "its
+# controller", "that X's controller", "that player". A rider whose subject or
+# object is the *thing itself* reached no parser at all, so the clause failed
+# and CR 608.2c's fail-closed guard correctly threw the readable half away
+# with it - silently, which is the defect. Measured:
+#
+#     Tap target creature.                                -> parses
+#     Put two stun counters on target creature.           -> parses
+#     Tap target creature. Put two stun counters on it.   -> None
+#
+# CR 608.2c names this shape outright: "In some cases, later text on the card
+# may modify the meaning of earlier text (for example, 'Destroy target
+# creature. It can't be regenerated' ...). Don't just apply effects step by
+# step without thinking in these cases - read the whole text and apply the
+# rules of English to the text."
+#
+# **The referent is derived from the antecedent's own subject phrase**, not
+# from the antecedent's parser. That is what keeps this general: every
+# existing clause parser is reused untouched, and this only has to answer the
+# separate question "which objects did that sentence act on".
+#
+# **`_SUBJECT` in `machines/layers.py` is deliberately not widened to accept
+# "it".** `_is_layer_effect_text` is an any-sentence test over the *whole*
+# ability, so teaching the layer parser the pronoun would route The Wandering
+# Emperor's entire `+1` to `create_continuous_effect_of_ability`: first strike
+# granted, the +1/+1 counter never placed, and the card scoring HANDLED. The
+# pair is merged here instead, ahead of that fallback, and the rider's layer
+# effect is built off a canonical rewrite of its own sentence alone.
+
+#: The object pronouns this wave reads, wherever they sit in the rider - "It
+#: gains first strike" (subject) and "Put two stun counters on it" (object)
+#: are the same anaphor in two syntactic positions, so a subject-anchored
+#: regex like `_ANAPHORIC_SUBJECT_RE`'s cannot serve.
+#:
+#: "That player" is **not** here: it is a player anaphor and
+#: `_ANAPHORIC_SUBJECT_RE`/`_parse_referent_clause` already own it.
+_OBJECT_ANAPHOR = (
+    r"(?:it|they|them|that (?:creature|permanent|artifact|enchantment|land|token|card))"
+)
+_OBJECT_ANAPHOR_RE = re.compile(rf"\b{_OBJECT_ANAPHOR}\b", re.IGNORECASE)
+
+#: What an antecedent clause's own words say its objects are - the three
+#: shapes this wave can answer, and nothing else.
+ReferentReader = Callable[["Game", "StackObject"], list[CardState]]
+
+#: "this creature", "this permanent", "this artifact" - CR 109.2's
+#: self-reference, which is the resolving object's own source.
+_SELF_SUBJECT_RE = re.compile(
+    r"\bthis (?:creature|permanent|artifact|enchantment|land|card)\b", re.IGNORECASE
+)
+#: "all creatures", "each creature" - the antecedent acted on a whole group.
+_MASS_CREATURE_SUBJECT_RE = re.compile(r"\b(?:all|each) creatures?\b", re.IGNORECASE)
+
+
+def _referent_reader(first: str) -> ReferentReader | None:
+    """How to find "it"/"they" for an antecedent clause reading `first`, or
+    `None` when this wave cannot say - in which case the pair is refused and
+    the card fails closed, exactly as it did before.
+
+    Three shapes, in the order they are tested:
+
+    - **the antecedent targets** ("Tap target creature.") - the referent is
+      what CR 608.2b still leaves legal now, read through `resolve_targets`,
+      which is the same list the antecedent's own parser is about to act on.
+      **Not** re-resolved as a second target: CR 400.7's anaphora is not
+      CR 115.1's targeting, and the rider is never a fresh instance of the
+      word "target".
+    - **a group** ("Destroy all creatures.") - every creature on the
+      battlefield right now, snapshotted before the antecedent runs
+      (CR 608.2f: the action is processed simultaneously, so the set cannot
+      change under it).
+    - **the source itself** ("put a +1/+1 counter on this creature.") -
+      CR 109.2's self-reference.
+
+    An antecedent that is more than one of these is refused rather than
+    guessed at: "Destroy all creatures and target land" names two groups and
+    "it" would be ambiguous, which is a question for whoever writes that
+    card's wave, not a coin to flip here.
+    """
+    lowered = first.lower()
+    matches = [
+        "target" in lowered,
+        bool(_MASS_CREATURE_SUBJECT_RE.search(lowered)),
+        bool(_SELF_SUBJECT_RE.search(lowered)),
+    ]
+    if sum(matches) != 1:
+        return None
+    if matches[0]:
+
+        def from_targets(game: "Game", stack_object: "StackObject") -> list[CardState]:
+            return [
+                target
+                for target in game.resolve_targets(stack_object)
+                if isinstance(target, CardState)
+            ]
+
+        return from_targets
+    if matches[1]:
+
+        def from_all_creatures(game: "Game", stack_object: "StackObject") -> list[CardState]:
+            return [
+                permanent
+                for permanent in list(game.battlefield)
+                if game.characteristics_of(permanent).is_creature
+            ]
+
+        return from_all_creatures
+
+    def from_source(game: "Game", stack_object: "StackObject") -> list[CardState]:
+        source = (
+            stack_object if isinstance(stack_object, CardState) else stack_object.source(game)  # type: ignore[union-attr]
+        )
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return []
+        return [source]
+
+    return from_source
+
+
+#: What a rider does to the objects its antecedent found. `stack_object` is
+#: passed through for the source name a prompt or a continuous effect needs.
+ReferentObjectClause = Callable[["Game", list[CardState], "StackObject"], None]
+
+#: "Put N `<kind>` counters on it/them/that creature." - Kaito, Bane of
+#: Nightmares' `-2`. The counter kind is any single word, exactly as
+#: `_COUNTER_TARGET_RE` reads it, because CR 122.1 leaves the set open.
+_RIDER_PUT_COUNTERS_RE = re.compile(
+    rf"^put (?P<n>{_COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on {_OBJECT_ANAPHOR}$",
+    re.IGNORECASE,
+)
+
+#: "It gains `<keyword>` until end of turn." / "It gets +N/+N until end of
+#: turn." / "They gain ... " - The Wandering Emperor's `+1`.
+#:
+#: Read by **rewriting the subject** to "Target creature" and handing the
+#: rewritten sentence to `machines/layers.parsed_layer_effects`, rather than
+#: by teaching that module the pronoun. Two reasons, and the first is the
+#: sharper: `_is_layer_effect_text` is an any-sentence test over the whole
+#: ability, so a layer parser that recognised "It gains first strike until end
+#: of turn." would swallow The Wandering Emperor's *whole* `+1` and skip the
+#: counter (see this section's header). The second is that "target creature"
+#: is not a claim about targeting here at all - `parsed_layer_effects` never
+#: re-derives who was targeted, it only recognises which shape of sentence it
+#: has, and the objects it applies to are handed in as `targets`.
+_RIDER_LAYER_SUBJECT_RE = re.compile(
+    rf"^(?P<pronoun>{_OBJECT_ANAPHOR})\s+(?P<predicate>(?:gain|get)s?\s+.+)$", re.IGNORECASE
+)
+
+#: "It can't be blocked this turn." - Kappa Cannoneer's own rider. Granted as
+#: a layer 6 ability (CR 613.1f) whose text is the self-referential sentence
+#: `machines/combat._evasion_restriction_sentences` already reads off the
+#: computed board ("this creature can't be blocked"), so the restriction is
+#: enforced by the existing CR 509.1a machinery rather than a second copy of
+#: it. "This turn" is `Duration.UNTIL_END_OF_TURN` (CR 611.2a).
+_RIDER_CANT_BE_BLOCKED_RE = re.compile(
+    rf"^{_OBJECT_ANAPHOR} can'?t be blocked this turn$", re.IGNORECASE
+)
+
+#: "They can't be regenerated." / "It can't be regenerated." - Wrath of God,
+#: and CR 608.2c's own worked example of a rider that *modifies its
+#: antecedent* rather than running after it. Handled separately from every
+#: rider above for exactly that reason: see
+#: `_parse_cant_be_regenerated_clause_pair`.
+_RIDER_CANT_BE_REGENERATED_RE = re.compile(
+    rf"^{_OBJECT_ANAPHOR} can'?t be regenerated$", re.IGNORECASE
+)
+
+
+def _parse_referent_object_clause(rider: str) -> ReferentObjectClause | None:
+    """A rider sentence read as something to do to the objects its antecedent
+    found, or `None` when this wave cannot read it - in which case the pair is
+    refused and the whole effect fails closed (CR 608.2c), which is what
+    `_unreadable_anaphoric_clause` then records a notice for.
+    """
+    rider = rider.strip().rstrip(".").strip()
+
+    if match := _RIDER_PUT_COUNTERS_RE.fullmatch(rider):
+        amount = _count(match.group("n"))
+        kind = _counter_kind(match.group("kind"))
+        if amount is None:
+            return None
+
+        def put_counters(
+            game: "Game", referents: list[CardState], stack_object: "StackObject"
+        ) -> None:
+            for referent in referents:
+                if referent.zone is Zone.BATTLEFIELD:
+                    game.add_counters(referent, kind, amount)
+
+        return put_counters
+
+    if _RIDER_CANT_BE_BLOCKED_RE.fullmatch(rider):
+
+        def cant_be_blocked(
+            game: "Game", referents: list[CardState], stack_object: "StackObject"
+        ) -> None:
+            effects = game.continuous_effects
+            for referent in referents:
+                if referent.zone is not Zone.BATTLEFIELD:
+                    continue
+                effects.add(
+                    ContinuousEffect(
+                        description=f"{referent.name} can't be blocked this turn",
+                        layer=Layer.ABILITY,
+                        timestamp=effects.tick(),
+                        duration=Duration.UNTIL_END_OF_TURN,
+                        selector=only_this_incarnation(referent, referent.zone_change_stamp),
+                        modification=grant_ability("This creature can't be blocked."),
+                    )
+                )
+
+        return cant_be_blocked
+
+    if match := _RIDER_LAYER_SUBJECT_RE.fullmatch(rider):
+        rewritten = f"Target creature {match.group('predicate').strip()}."
+        builder = parsed_layer_effects(rewritten)
+        if builder is None:
+            return None
+
+        def layer_rider(
+            game: "Game", referents: list[CardState], stack_object: "StackObject"
+        ) -> None:
+            standing = [referent for referent in referents if referent.zone is Zone.BATTLEFIELD]
+            if not standing:
+                return
+            source = (
+                stack_object if isinstance(stack_object, CardState) else stack_object.source(game)  # type: ignore[union-attr]
+            )
+            if source is None:
+                return
+            effects = game.continuous_effects
+            for effect in builder(
+                source,
+                effects.tick(),
+                standing,
+                layer_context_for(game, game.controller_of(stack_object)),
+            ):
+                effects.add(effect, game)
+
+        return layer_rider
+
+    return None
+
+
+def _parse_object_anaphor_clause_pair(
+    first: str, second: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """ "`<antecedent>`. `<rider naming what the antecedent acted on>`." as one
+    CR 608.2c instruction, or `None` if either half cannot be read.
+
+    The antecedent is run by whatever parser already reads it
+    (`_parse_mixed_clause`), so nothing existing has to change to gain a
+    rider; this only adds the two things that were missing - *which* objects
+    "it" means (`_referent_reader`) and what the rider does to them
+    (`_parse_referent_object_clause`).
+
+    **The referent is read before the antecedent runs, and re-checked
+    after.** Before, because that is the only moment the antecedent's own
+    subject still describes them - CR 608.2h's "the effect uses the current
+    information of that object if it's in the public zone it was expected to
+    be in". After, because CR 400.7 says an object that changed zones in
+    between "becomes a new object with no memory of, or relation to, its
+    previous existence", and acting on a stale one is the wrong-but-plausible
+    board this whole wave exists to avoid. Every rider here therefore checks
+    `zone is Zone.BATTLEFIELD` for itself.
+
+    CR 400.7j is the exception this wave does not need - "If an effect causes
+    an object to move to a public zone, other parts of that effect can find
+    that object" - because no rider read here acts on a moved object. A rider
+    that did (returning something the antecedent exiled) belongs to
+    `_parse_exile_then_return_clause_pair`, which already carries the referent
+    across the move itself.
+    """
+    if not _OBJECT_ANAPHOR_RE.search(second):
+        return None
+    referent_of = _referent_reader(first)
+    if referent_of is None:
+        return None
+    antecedent = _parse_mixed_clause(first, for_spell=for_spell)
+    if antecedent is None:
+        return None
+    rider = _parse_referent_object_clause(second)
+    if rider is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        referents = referent_of(game, stack_object)
+        antecedent(game, stack_object)
+        if not referents:
+            # CR 115.6's "up to one" choosing none, or CR 608.2b leaving
+            # nothing legal: the rider has nothing to refer back to and does
+            # not run either (CR 608.2c - one instruction, not two
+            # independent ones). Never a fallback to the resolving object's
+            # own source, which is the bug Karn, the Great Creator's +1 had.
+            return
+        rider(game, referents, stack_object)
+
+    return effect
+
+
+#: "Target creature you control gets +N/+N until end of turn." followed by
+#: "It fights up to one target creature you don't control." - Bridgeworks
+#: Battle's whole front face.
+#:
+#: Its own pair parser rather than a rider in `_parse_referent_object_clause`,
+#: because this is the one shape in this wave where the **rider names a target
+#: of its own**. `_referent_reader`'s "the antecedent targets" branch hands
+#: back every legal target of the resolving object, which is right when the
+#: rider adds none and wrong here: the pump would land on the opponent's
+#: creature too.
+#:
+#: The two are told apart by controller rather than by their order in
+#: `targets`, because that is what the card's own restrictions say ("you
+#: control" / "you don't control") - reading `targets[0]`/`targets[1]`
+#: positionally would quietly pump the wrong creature the moment CR 608.2b
+#: removed one of them.
+_PUMP_TARGET_YOU_CONTROL_RE = re.compile(
+    r"^target creature you control gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) "
+    r"until end of turn$",
+    re.IGNORECASE,
+)
+_RIDER_FIGHTS_TARGET_RE = re.compile(
+    rf"^{_OBJECT_ANAPHOR} fights (?P<phrase>(?:up to \S+ )?target .+)$", re.IGNORECASE
+)
+
+
+def _parse_pump_then_fight_clause_pair(
+    first: str, second: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """Bridgeworks Battle's two sentences as one CR 608.2c instruction.
+
+    CR 701.14a: "Each of those creatures deals damage equal to its power to
+    the other creature", and CR 701.14b: "If one or both creatures instructed
+    to fight are no longer on the battlefield or are no longer creatures,
+    neither of them fights or deals damage" - both checked here before
+    `_fight` is called, the same division of labour every other caller draws.
+
+    CR 115.6's "up to one" is why an absent second target is not a failure:
+    the pump still happened, and nothing fights.
+
+    The pump is created before the fight, in the printed order (CR 608.2c),
+    which is the whole point of the sequencing - a +2/+2 creature deals 2 more
+    damage in the fight than the printed body would.
+    """
+    pump = _PUMP_TARGET_YOU_CONTROL_RE.fullmatch(first.strip().rstrip(".").strip())
+    if pump is None:
+        return None
+    fight = _RIDER_FIGHTS_TARGET_RE.fullmatch(second.strip().rstrip(".").strip())
+    if fight is None:
+        return None
+    if not _targets_understood("target creature you control", count_agnostic=True):
+        return None
+    if not _targets_understood(fight.group("phrase"), count_agnostic=True):
+        return None
+    builder = parsed_layer_effects(
+        f"Target creature gets {pump.group('power')}/{pump.group('toughness')} until end of turn."
+    )
+    if builder is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object)
+        targets = [
+            target
+            for target in game.resolve_targets(stack_object)
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
+        ]
+        mine = [t for t in targets if game.controller_of(t).username == controller.username]
+        theirs = [t for t in targets if game.controller_of(t).username != controller.username]
+        if not mine:
+            return
+        source = (
+            stack_object if isinstance(stack_object, CardState) else stack_object.source(game)  # type: ignore[union-attr]
+        )
+        if source is None:
+            return
+        effects = game.continuous_effects
+        for built in builder(source, effects.tick(), mine[:1], layer_context_for(game, controller)):
+            effects.add(built, game)
+        if not theirs:
+            return  # CR 115.6: "up to one" chose none, so nothing fights.
+        fighter, opponent = mine[0], theirs[0]
+        if not game.characteristics_of(fighter).is_creature:
+            return  # CR 701.14b
+        if not game.characteristics_of(opponent).is_creature:
+            return  # CR 701.14b
+        _fight(game, fighter, opponent)
+
+    return effect
+
+
+def _parse_cant_be_regenerated_clause_pair(
+    first: str, second: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """ "`<destroy ...>`. It/They can't be regenerated." as one instruction.
+
+    This is CR 608.2c's own worked example, and it is the reason this rider
+    cannot go through `_parse_object_anaphor_clause_pair` with the others:
+    "In some cases, later text on the card may modify the meaning of earlier
+    text (for example, 'Destroy target creature. It can't be regenerated'
+    ...)." The rider does not run *after* the destruction - it changes how the
+    destruction happens, and by the time the antecedent has finished there is
+    nothing left to say it to.
+
+    So the destruction is re-run here with the prohibition attached
+    (`Game.destroy(..., regeneration_allowed=False)`) rather than by calling
+    the antecedent's own parser, which has no channel for it. CR 701.19c is
+    what that flag means: such effects "don't preclude such abilities from
+    being activated or such spells from being cast; rather, they cause
+    regeneration shields to not be applied" - the shield is skipped, not
+    spent, and is still standing for the next destruction this turn.
+
+    Only the two mass shapes and the targeted destroy are read, because those
+    are the antecedents the prohibition is ever printed under. Anything else
+    is refused and the card fails closed.
+    """
+    if _RIDER_CANT_BE_REGENERATED_RE.fullmatch(second.strip().rstrip(".").strip()) is None:
+        return None
+    stripped = first.strip().rstrip(".").strip()
+
+    if _MASS_CREATURE_SUBJECT_RE.search(stripped) and stripped.lower().startswith("destroy"):
+
+        def destroy_all(game: "Game", stack_object: "StackObject") -> None:
+            for permanent in [
+                candidate
+                for candidate in list(game.battlefield)
+                if game.characteristics_of(candidate).is_creature
+            ]:
+                if permanent.zone is Zone.BATTLEFIELD:
+                    game.destroy(permanent, regeneration_allowed=False)
+
+        return destroy_all
+
+    verb_match = _DESTROY_TARGET_RE.fullmatch(stripped)
+    if verb_match is None:
+        return None
+    if not _targets_understood(verb_match.group("phrase"), count_agnostic=True):
+        return None
+
+    def destroy_targets(game: "Game", stack_object: "StackObject") -> None:
+        for target in game.resolve_targets(stack_object):
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
+                game.destroy(target, regeneration_allowed=False)
+
+    return destroy_targets
 
 
 def _parse_exile_then_return_clause_pair(
@@ -14123,6 +14709,161 @@ def _parse_earthbend_clause(clause: str, *, for_spell: bool) -> TargetedClause |
     return effect
 
 
+# --------------------------------------------------------------------------
+# Amass (CR 701.47) - the same shape as earthbend just above: a CR 701 keyword
+# action embedded in another ability's effect text rather than an ability of
+# its own. Orcish Bowmasters' "... Then amass Orcs 1." is the pool's printing,
+# and it was silent twice over - the sentence-initial "Then" made the clause
+# unreadable, which correctly refused the damage half with it (CR 608.2c), and
+# nothing anywhere in the engine knew what the word meant.
+# --------------------------------------------------------------------------
+
+#: "amass `<subtype>` N" - CR 701.47d is why the subtype is not optional here:
+#: "Some older cards were printed with amass N without including a subtype.
+#: Those cards have received errata in the Oracle card reference so that they
+#: read 'amass Zombies N.'" Every printing this engine can be handed carries
+#: one, so a bare "amass 1" is left unread rather than defaulted to Zombies -
+#: guessing the subtype would be a fails-open answer on a card whose real
+#: subtype is something else.
+#:
+#: The subtype is printed **plural** ("amass Orcs 1") and the token it names
+#: is singular ("Orc Army"), which `_singular_subtype` undoes.
+_AMASS_RE = re.compile(r"^amass (?P<subtype>[A-Za-z][a-z]*) (?P<n>\d+)$", re.IGNORECASE)
+
+
+def _singular_subtype(word: str) -> str:
+    """ "Orcs" -> "Orc". Amass prints its creature type in the plural, and CR
+    205.3m's subtype list is singular ("Orc", "Zombie", "Army"), so the two
+    have to be reconciled before the token is built or the "is it already
+    one" test below would never match.
+
+    Deliberately the narrowest possible rule - drop one trailing "s" - rather
+    than a general English pluraliser: every creature type amass has ever
+    been printed with pluralises that way, and a subtype that does not
+    (there is none in CR 205.3m today) would come out wrong in a way a
+    cleverer rule would only hide.
+    """
+    return word[:-1] if word.endswith(("s", "S")) and len(word) > 1 else word
+
+
+def _armies_controlled_by(game: "Game", controller: str) -> list[CardState]:
+    """Every Army **creature** `controller` controls (CR 701.47a), read off
+    the computed board rather than the printing: an Army is often a token
+    whose subtypes came from a `TokenDefinition`, and a permanent can have
+    become one through layer 4 (this function's own last step does exactly
+    that), neither of which is on `Card`.
+    """
+    armies: list[CardState] = []
+    for permanent in game.battlefield:
+        if game.controller_of(permanent).username != controller:
+            continue
+        characteristics = game.characteristics_of(permanent)
+        if not characteristics.is_creature:
+            continue
+        if any(subtype.lower() == "army" for subtype in characteristics.subtypes):
+            armies.append(permanent)
+    return armies
+
+
+def amass(game: "Game", controller: str, subtype: str, amount: int, source_name: str) -> None:
+    """CR 701.47a: "To amass [subtype] N means 'If you don't control an Army
+    creature, create a 0/0 black [subtype] Army creature token. Choose an Army
+    creature you control. Put N +1/+1 counters on that creature. If it isn't a
+    [subtype], it becomes a [subtype] in addition to its other types.'"
+
+    Four steps in the order the rule writes them, and every one of them is a
+    step this engine can decline to take without the whole thing failing - CR
+    701.47b: "A player 'amassed' after the process described in rule 701.47a
+    is complete, **even if some or all of those actions were impossible**."
+    That is why nothing here raises: an amass with no Army to choose (the
+    token creation was replaced away) simply finishes having done less.
+
+    The choice is CR 608.2d's, and it is only *asked* when there is more than
+    one Army to choose between - a single candidate is not a choice, and
+    asking anyway would put a question on the tape that a decoded replay of
+    the same game would have to answer identically for no reason.
+
+    The last step is a layer 4 addition (CR 205.1b's "in addition to its other
+    types"), scoped to this incarnation of the permanent (CR 400.7, CR 611.2c)
+    exactly as `earthbend` above scopes its own, and `Duration.INDEFINITE`
+    because CR 701.47a states no end (CR 611.2a). It is skipped outright when
+    the chosen Army already has the subtype, which is the ordinary case: the
+    token this same call may have just created is printed with it.
+    """
+    armies = _armies_controlled_by(game, controller)
+    singular = _singular_subtype(subtype)
+    if not armies:
+        create_tokens(
+            game,
+            TokenDefinition(
+                types=(Type.CREATURE,),
+                subtypes=(singular, "Army"),
+                colors=(Color.BLACK,),
+                power=0,
+                toughness=0,
+            ),
+            controller,
+            1,
+        )
+        armies = _armies_controlled_by(game, controller)
+    if not armies:
+        return  # CR 701.47b: the player still amassed.
+    if len(armies) == 1:
+        army = armies[0]
+    else:
+        chosen = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=controller,
+                prompt=f"choose an Army creature to amass {subtype} {amount} onto",
+                source=source_name,
+                amount=1,
+                cards=tuple(state.id for state in armies),
+            )
+        )
+        assert isinstance(chosen, tuple)
+        by_id = {state.id: state for state in armies}
+        army = by_id[chosen[0]]
+    game.add_counters(army, Counter.PLUS_ONE, amount)
+    if any(
+        existing.lower() == singular.lower() for existing in game.characteristics_of(army).subtypes
+    ):
+        return
+    game.continuous_effects.add(
+        ContinuousEffect(
+            description=f"amass {subtype}: {army.name} becomes a {singular}",
+            layer=Layer.TYPE,
+            timestamp=game.continuous_effects.tick(),
+            duration=Duration.INDEFINITE,
+            selector=only_this_incarnation(army, army.zone_change_stamp),
+            modification=add_subtype(singular),
+        )
+    )
+
+
+def _parse_amass_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """ "Amass `<subtype>` N." - `_AMASS_RE`'s shape, as one clause among
+    however many the card prints around it.
+
+    Amass targets nothing (CR 701.47a's "Choose an Army creature you control"
+    is CR 608.2d's choice, not CR 115.1's target), so this reads nothing off
+    the stack object but its controller and its name for the prompt - which
+    means the same clause works identically for a spell and for an ability,
+    unlike earthbend just above.
+    """
+    match = _AMASS_RE.fullmatch(clause.strip().rstrip("."))
+    if match is None:
+        return None
+    subtype = match.group("subtype")
+    amount = int(match.group("n"))
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        amass(game, game.controller_of(stack_object).username, subtype, amount, source)
+
+    return effect
+
+
 def _parse_delayed_single_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """A whole ability whose *only* clause is a delayed-trigger creation, with
     no antecedent clause of its own to supply "it": either there is no object
@@ -15450,8 +16191,16 @@ _REVEAL_HAND_RE = re.compile(r"^target (?:player|opponent) reveals their hand$",
 #: `split_effect_clauses` already cuts across that bare "and" the same way it
 #: does everywhere else, so this clause and its consequence clause
 #: (`_DISCARD_THAT_CARD_RE`/`_EXILE_THAT_CARD_RE`) always arrive separately.
+#:
+#: The trailing "with mana value N or less" is Inquisition of Kozilek's own,
+#: and is a real narrowing of the choice rather than flavour - CR 202.3 makes
+#: mana value a characteristic, so a card above the bound is CR 608.2d's
+#: "option that's illegal" and must not be offered. Left optional so
+#: Thoughtseize, Grief and Thought-Knot Seer read exactly as before.
 _CHOOSE_CARD_FROM_REVEALED_RE = re.compile(
-    r"^you choose (?:a|an) (?P<quality>.+?) card from it$", re.IGNORECASE
+    r"^you choose (?:a|an) (?P<quality>.+?) card from it"
+    r"(?: with mana value (?P<max_mv>\d+) or less)?$",
+    re.IGNORECASE,
 )
 #: "that player discards that card" (Thoughtseize, Grief) - the anaphoric
 #: tail naming the same player `_REVEAL_HAND_RE` targeted and the same card
@@ -15720,9 +16469,19 @@ def _merge_reveal_hand_choose_discard_clauses(
     choose_match = _CHOOSE_CARD_FROM_REVEALED_RE.fullmatch(clauses[index + 1].strip())
     if choose_match is None:
         return None
-    matches = _nonland_or_typed_card_matcher(choose_match.group("quality"))
-    if matches is None:
+    quality_matches = _nonland_or_typed_card_matcher(choose_match.group("quality"))
+    if quality_matches is None:
         return None
+    max_mv = int(choose_match.group("max_mv")) if choose_match.group("max_mv") else None
+
+    def matches(state: CardState) -> bool:
+        # CR 202.3: mana value is a characteristic of the card, so the bound
+        # narrows which cards may legally be chosen (CR 608.2d) rather than
+        # only which one a well-behaved player would pick.
+        if not quality_matches(state):
+            return False
+        return max_mv is None or state.mana_value <= max_mv
+
     consequence_clause = clauses[index + 2].strip()
     to_exile = _EXILE_THAT_CARD_RE.fullmatch(consequence_clause) is not None
     if not to_exile and _DISCARD_THAT_CARD_RE.fullmatch(consequence_clause) is None:
@@ -15736,6 +16495,8 @@ def _merge_reveal_hand_choose_discard_clauses(
             consumed = 4
 
     quality_description = choose_match.group("quality").strip()
+    if max_mv is not None:
+        quality_description = f"{quality_description} (mana value {max_mv} or less)"
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object)
@@ -15863,16 +16624,21 @@ def _parse_target_player_draws_clause(clause: str, *, for_spell: bool) -> Target
     return effect
 
 
-#: "then exile that player's graveyard" - Go Blank's own second clause,
+#: "Then exile that player's graveyard" - Go Blank's own second clause,
 #: anaphoric to the same target its first clause (`_TARGET_PLAYER_DISCARDS_RE`)
 #: already discarded into that graveyard. Reuses `exile_target_players_
 #: graveyard` outright rather than a copy of it: that function already reads
 #: the player off `game.resolve_targets(stack_object)`, which is exactly the
 #: same target this clause means by "that player" - Go Blank prints only one
 #: target for its whole text, so both clauses resolve it to the same `Player`.
-_THEN_EXILE_THAT_PLAYERS_GRAVEYARD_RE = re.compile(
-    r"^then exile that player'?s graveyard$", re.IGNORECASE
-)
+#:
+#: The printed "Then " is **not** in this pattern any more:
+#: `split_effect_clauses` now strips a sentence-initial "then" for every card
+#: (`_LEADING_THEN_RE`), so anchoring on it here would match nothing. Losing
+#: the word is what generalises the shape - any card printing "Exile that
+#: player's graveyard." as a plain second sentence reads the same way now,
+#: where before only Go Blank's exact "Then exile ..." wording did.
+_EXILE_THAT_PLAYERS_GRAVEYARD_RE = re.compile(r"^exile that player'?s graveyard$", re.IGNORECASE)
 
 #: "you may discard a card" - Formidable Speaker's own first clause, CR
 #: 118.12's optional cost half of "[Do something]. If [a player] does, ...".
@@ -16993,6 +17759,18 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     counter_on_additional_cost_card = _parse_counter_on_additional_cost_card_clause(clause)
     if counter_on_additional_cost_card is not None:
         return counter_on_additional_cost_card
+    if not for_spell:
+        # "Put a +1/+1 counter on this creature." was reachable only as a
+        # *whole* ability's effect (`_ability_effect_or_notice`), never as one
+        # clause among several - so Kappa Cannoneer's "put a +1/+1 counter on
+        # this creature. It can't be blocked this turn." had no readable
+        # antecedent for its rider to attach to, and the pair failed on the
+        # half that was already built. Spells are excluded because the effect
+        # reads `AbilityOnStack.source`, and a sorcery is not a permanent that
+        # can carry a counter anyway (CR 122.1).
+        counters_on_self = _parse_put_counters_on_self_clause(clause)
+        if counters_on_self is not None:
+            return counters_on_self  # type: ignore[return-value]
     transform_all = _parse_transform_all_subtype_clause(clause, for_spell=for_spell)
     if transform_all is not None:
         return transform_all
@@ -17040,6 +17818,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     earthbend_clause = _parse_earthbend_clause(clause, for_spell=for_spell)
     if earthbend_clause is not None:
         return earthbend_clause
+    amass_clause = _parse_amass_clause(clause, for_spell=for_spell)
+    if amass_clause is not None:
+        return amass_clause
     exile_that_players_library = _parse_exile_that_players_library_clause(
         clause, for_spell=for_spell
     )
@@ -17064,7 +17845,7 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     target_player_draws = _parse_target_player_draws_clause(clause, for_spell=for_spell)
     if target_player_draws is not None:
         return target_player_draws
-    if _THEN_EXILE_THAT_PLAYERS_GRAVEYARD_RE.fullmatch(clause.strip()):
+    if _EXILE_THAT_PLAYERS_GRAVEYARD_RE.fullmatch(clause.strip()):
         return exile_target_players_graveyard
     # -- end Wave W1 single-clause additions -------------------------------
     # -- Wave W11's own single-clause addition (CR 106.4, CR 605.1a) ------
@@ -17337,6 +18118,34 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
                 index += consumed
                 continue
             paired = _parse_anaphoric_clause_pair(
+                clauses[index], clauses[index + 1], for_spell=for_spell
+            )
+            if paired is not None:
+                parsed.append(paired)
+                index += 2
+                continue
+            # CR 608.2c's own worked example, tried before the general object
+            # anaphor below because it is not the same shape: this rider
+            # modifies the destruction rather than running after it, so the
+            # pair cannot be split into "antecedent, then rider".
+            paired = _parse_cant_be_regenerated_clause_pair(
+                clauses[index], clauses[index + 1], for_spell=for_spell
+            )
+            if paired is not None:
+                parsed.append(paired)
+                index += 2
+                continue
+            # Ahead of the general object anaphor: this is the one shape
+            # here whose rider names a target of its own, which the general
+            # referent reader cannot tell apart from the antecedent's.
+            paired = _parse_pump_then_fight_clause_pair(
+                clauses[index], clauses[index + 1], for_spell=for_spell
+            )
+            if paired is not None:
+                parsed.append(paired)
+                index += 2
+                continue
+            paired = _parse_object_anaphor_clause_pair(
                 clauses[index], clauses[index + 1], for_spell=for_spell
             )
             if paired is not None:
