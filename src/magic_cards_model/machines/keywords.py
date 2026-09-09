@@ -60,7 +60,14 @@ from .abilities import (
     keyword_abilities,
 )
 from .combat import has_keyword
-from .cost import CostPayment, CostStep, TotalCost, discard_cost, total_cost_for_phrase
+from .cost import (
+    CostPayment,
+    CostStep,
+    TotalCost,
+    discard_cost,
+    tap_cost,
+    total_cost_for_phrase,
+)
 from .decisions import Decision, DecisionKind
 from .delayed import anaphoric_delayed_trigger
 from .layers import (
@@ -104,6 +111,7 @@ class KeywordRule(StrEnum):
     REBOUND = "CR 702.88a"
     HIDEAWAY = "CR 702.75a"
     CREW = "CR 702.122a"
+    STATION = "CR 702.184a"
     EVOKE = "CR 702.74a"
     UNEARTH = "CR 702.84a"
     TRANSMUTE = "CR 702.53a"
@@ -138,6 +146,7 @@ def executes(keyword: str) -> bool:
         "rebound",
         "hideaway",
         "crew",
+        "station",
         # CR 111.10j-r's Role family. The keyword line itself is Scryfall's
         # "Role token"; the ability it stands for - "Create a(n) [Role] Role
         # token attached to [X]." - is a clause `machines/effects.py`'s
@@ -1671,6 +1680,106 @@ def _crew_effect(activation: KeywordActivation) -> list[ContinuousEffect]:
         for added in (Type.ARTIFACT, Type.CREATURE)
     ]
     return created
+
+
+# --------------------------------------------------------------------------
+# Station (CR 702.184) and Station cards (CR 721)
+# --------------------------------------------------------------------------
+
+
+def station_activation(
+    game: Any, permanent: CardState, tapped: CardState, player: str
+) -> KeywordActivation:
+    """Build the activation for a Station card's own ability (CR 702.184a).
+
+    "Station is an activated ability. 'Station' means 'Tap another untapped
+    creature you control: Put a number of charge counters on this permanent
+    equal to the tapped creature's power. Activate only as a sorcery.'"
+
+    `tapped` is the creature paying the cost, checked the same three ways
+    `crew_activation` checks each of its own creatures before the cost is
+    even built: it must actually be a creature (read off the computed board,
+    CR 613.5, the same as `_equip_effect`'s host check - an animated land
+    stations just as well as a printed creature), it must not be the Station
+    permanent itself ("another"), and it must be under `player`'s control.
+    `tap_cost`'s own `_why_not_tap`/`_why_not_controlled` still cover
+    "untapped" and "controlled" again at payment time; the checks here are
+    what make an *illegal* choice raise before a cost object is ever built,
+    the same division `crew_activation`'s docstring draws.
+
+    CR 721.2b: "Each station card has one or more station abilities, but
+    each one is identical other than the station symbol." Since this pool's
+    printings each carry exactly one `Station` line, this reads the sole
+    `"station"` keyword rather than a numbered one - a future card with more
+    than one would need `ability.count`/`.parameter` threaded through the
+    same way multikicker distinguishes its own repeats.
+    """
+    ability = _keyword(permanent.card, "station")
+    if ability is None:
+        raise ValueError(f"{permanent.name} has no station ability ({KeywordRule.STATION})")
+    if tapped.id == permanent.id:
+        raise ValueError(
+            f"{tapped.name} must be another creature, not {permanent.name} itself "
+            f"({KeywordRule.STATION})"
+        )
+    try:
+        is_creature = game.characteristics_of(tapped).is_creature
+    except (AttributeError, KeyError):
+        is_creature = tapped.is_creature
+    if not is_creature:
+        raise ValueError(
+            f"{tapped.name} is not a creature, so it cannot be tapped to station "
+            f"{permanent.name} ({KeywordRule.STATION})"
+        )
+    if game.controller_of(tapped).username != player:
+        raise ValueError(f"{tapped.name} is not controlled by {player} ({KeywordRule.STATION})")
+    cost = TotalCost(components=[tap_cost(tapped, payer=player)])
+    return KeywordActivation(
+        card=permanent,
+        player=player,
+        keyword="Station",
+        rule=str(KeywordRule.STATION),
+        zone=Zone.BATTLEFIELD,
+        cost=cost,
+        sorcery_only=True,
+        ability=_synthetic_ability(
+            ability,
+            cost_text="Tap another untapped creature you control",
+            effect=(
+                "Put a number of charge counters on this permanent equal to the tapped "
+                "creature's power."
+            ),
+        ),
+        game=game,
+    )
+
+
+def _station_effect(activation: KeywordActivation) -> CardState | None:
+    """Put charge counters on the station equal to the tapped creature's
+    power (CR 702.184a), read at resolution time (CR 608.2h) - a pump spell
+    cast in response changes how many counters land, the same live-read
+    `_equip_effect`'s target check and `_crew_effect`'s zone check already
+    take, both off the current board rather than a decoded snapshot.
+
+    Both objects are re-read off `game` by id for the identical reason those
+    two functions already document: `activation.card`/`.cost` are frozen at
+    the moment the ability was activated, and only `game.find_by_id` sees
+    what changed on the stack in between.
+    """
+    game = activation.game
+    permanent = game.find_by_id(activation.card.id)
+    if not isinstance(permanent, CardState) or permanent.zone is not Zone.BATTLEFIELD:
+        return None
+    paid = activation.cost.components[0].cards
+    if not paid:
+        return None
+    tapped = game.find_by_id(paid[0].id)
+    if not isinstance(tapped, CardState):
+        return None
+    amount = power_of(tapped, game)
+    if amount > 0:
+        game.add_counters(permanent, Counter.CHARGE, amount)
+    return permanent
 
 
 #: The subtypes CR 704.5n names, and the host each one may legally be on.
@@ -3432,6 +3541,7 @@ KEYWORD_EFFECTS: dict[str, Callable[[KeywordActivation], Any]] = {
     "crew": _crew_effect,
     "unearth": _unearth_effect,
     "transmute": _transmute_effect,
+    "station": _station_effect,
 }
 
 for _name in ("cycling", "landcycling", "typecycling"):
