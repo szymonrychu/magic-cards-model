@@ -54,6 +54,7 @@ from magic_cards_model.machines.combat import (
     evasion_restriction_refusal,
     has_keyword,
 )
+from magic_cards_model.machines.keywords import executes
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card_state import Counter
 
@@ -375,6 +376,16 @@ def test_bridgeworks_battle_pumps_first_then_fights():
     assert mine.zone is Zone.BATTLEFIELD
     assert mine.damage == 2
     assert theirs.zone is Zone.GRAVEYARD
+
+
+def test_fight_is_reported_as_executed_by_the_pool_sweeper():
+    """CR 701.14's keyword action, the same shape earthbend, airbend and amass
+    already are: `machines/effects._fight` performs it, but
+    `scripts/sweep_pool.py` reads `machines/keywords.executes` and reported
+    Fight as IGNORED - indistinguishable from "unknown" - despite `_fight`
+    having existed all along."""
+    assert executes("Fight") is True
+    assert executes("fight") is True
 
 
 # -- Inquisition of Kozilek: the anaphoric chain plus a real bound ---------
