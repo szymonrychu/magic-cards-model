@@ -150,6 +150,10 @@ def executes(keyword: str) -> bool:
         # enters, if its evoke cost was paid, its controller sacrifices it" -
         # is `_evoke_ability`/`_evoke_effect` here.
         "evoke",
+        # CR 702.189a. The triggered half is `_firebending_ability` above
+        # (`_TRIGGER_EXPANSIONS`), and `machines/effects._parse_firebending_
+        # add_mana` reads the "add N {R}" effect it puts on the stack.
+        "firebending",
         # CR 702.175a. The same two-places shape as evoke just above: the
         # additional-cost half is `machines/casting.py`'s `Casting.
         # pay_offspring` (`ADDITIONAL_COST_KEYWORDS`), the triggered half -
@@ -197,6 +201,15 @@ def executes(keyword: str) -> bool:
         # perform it (`Game.regenerate` creates the shield), reached from
         # whichever clause parser read the sentence that names it.
         "regenerate",
+        # CR 701.69a. Every printing in the pool that carries this word
+        # carries it inside regeneration's own reminder text ("... heal all
+        # damage on it"), never as a standalone instruction - and
+        # `machines/replacement._regeneration_effects` already removes the
+        # marked damage as part of CR 701.19a's own shield
+        # (`Game.regenerate`), proved by `test_regenerate.py`'s own
+        # `damage == 0` assertions. Listed so the sweep credits work that
+        # already happens rather than reporting a second, separate gap.
+        "heal",
         # CR 701.40a and CR 701.62a, the same shape once more:
         # `machines/effects.manifest`/`manifest_dread` perform them, reached
         # through `_parse_manifest_top_card_clause`/`_parse_manifest_dread_
