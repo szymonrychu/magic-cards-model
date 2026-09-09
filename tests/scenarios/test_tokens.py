@@ -583,8 +583,12 @@ def test_a_predefined_token_gets_the_characteristics_the_rules_give_it():
 
     # CR 111.11 sends an unknown name to the Oracle card reference, which nothing
     # here can consult at runtime, so it refuses rather than inventing a token.
+    # "Blood" is a real CR 111.10g predefined token this engine does not carry
+    # (unlike "Clue", CR 111.10f, added alongside `machines/effects.investigate`
+    # - `models/token.PREDEFINED` now has it) - pick a name genuinely still
+    # missing rather than one this wave just taught the engine.
     with pytest.raises(ValueError, match="CR 111.10"):
-        create_predefined_tokens(scenario.game, "Clue", "alice")
+        create_predefined_tokens(scenario.game, "Blood", "alice")
 
 
 # --------------------------------------------------------------------------
