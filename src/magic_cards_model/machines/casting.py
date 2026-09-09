@@ -53,6 +53,7 @@ from .cost import (
     additional_cost_phrases,
     alternative_cost_offers,
     apply_modifications,
+    place_counters_cost,
     static_free_cast_grant,
     total_cost_for_phrase,
 )
@@ -1313,7 +1314,7 @@ _COLOR_WORDS: dict[str, Color] = {
 
 #: Keywords that are an optional additional cost on a spell being cast
 #: (CR 118.8a). `Casting.pay_kicker` charges these.
-ADDITIONAL_COST_KEYWORDS = frozenset({"kicker", "multikicker", "replicate", "offspring"})
+ADDITIONAL_COST_KEYWORDS = frozenset({"kicker", "multikicker", "replicate", "offspring", "blight"})
 
 
 def has_flash(card: Card) -> bool:
@@ -1643,6 +1644,12 @@ class AlternativeCostOption(BaseModel):
         return self.unavailable is None
 
 
+#: CR 701.68a's own inline shape - "you may blight N" - printed inside the
+#: card's "As an additional cost to cast this spell, ..." sentence rather
+#: than as a keyword-cost line, which is why this is read off `additional_
+#: cost_phrases` rather than `_keyword`.
+_BLIGHT_PHRASE = re.compile(r"^you may blight (?P<n>\d+)$", re.IGNORECASE)
+
 #: CR 118.8b: "Some additional costs are optional." An optional one is printed
 #: as a "you may ..." inside the additional-cost sentence - March of
 #: Otherworldly Light's "you may exile any number of white cards from your
@@ -1817,6 +1824,10 @@ class Casting(BaseModel):
     """Whether this spell's offspring cost was paid (CR 702.175a), set by
     `pay_offspring`. A flag rather than `kicked`'s count: offspring has no
     "multi" variant to pay more than once."""
+    blight_paid: bool = False
+    """Whether this spell's blight cost was paid (CR 701.68a), set by
+    `pay_blight` - read by whatever linked ability the card's own printed
+    text carries ("If this spell's additional cost was paid, ...")."""
     payment: CostPayment | None = None
     announced_zone: Zone | None = None
     """The zone this cast was announced from, recorded as CR 601.2a moved the
@@ -3107,6 +3118,49 @@ class Casting(BaseModel):
         self.offspring_paid = True
         return self.step
 
+    def pay_blight(self, creature: CardState) -> CastingStep:
+        """CR 701.68a: put N -1/-1 counters on a creature you control, as
+        this spell's optional additional cost.
+
+        Printed inline ("As an additional cost to cast this spell, you may
+        blight 1.") rather than as a keyword-cost line, so `_charge_printed_
+        additional_costs` reads the sentence but - per CR 118.8b, matched by
+        `_OPTIONAL_ADDITIONAL_COST` - never charges it on its own; this is
+        the explicit opt-in, the same shape `pay_kicker`/`pay_offspring`
+        already are for their own optional costs.
+
+        `place_counters_cost` is CR 118.3's general put-a-counter-on-as-a-
+        cost primitive (Devoted Druid's self-referential "-1/-1 counter:
+        untap this creature" already uses it); CR 701.68a's own "a creature
+        you control" is enforced the same way any other object cost is -
+        `CostComponent._why_not_controlled` - once a real `creature` is
+        passed in, rather than by the phrase parser, which only reads the
+        self-referential "this creature" shape.
+        """
+        phrase = next(
+            (p for p in additional_cost_phrases(self.spell.card) if _BLIGHT_PHRASE.match(p)),
+            None,
+        )
+        if phrase is None:
+            raise ValueError(f"{self.spell.name} has no blight cost (CR 701.68a)")
+        if self.blight_paid:
+            raise ValueError(f"{self.spell.name}'s blight cost was already paid")
+        if not creature.is_creature:
+            raise ValueError(f"{creature.name} is not a creature, so it cannot be blighted")
+        match = _BLIGHT_PHRASE.match(phrase)
+        assert match is not None
+        amount = int(match.group("n"))
+        component = place_counters_cost(
+            creature,
+            amount,
+            counter_kind=Counter.MINUS_ONE,
+            payer=self.caster,
+            description=phrase,
+        )
+        self.add_additional_cost(TotalCost(components=[component]))
+        self.blight_paid = True
+        return self.step
+
     def add_additional_cost(self, cost: TotalCost | ManaCost) -> CastingStep:
         """CR 118.8a: any number of additional costs may be applied to a spell.
 
@@ -3992,6 +4046,7 @@ class Casting(BaseModel):
                 kicked=self.kicked,
                 replicated=self.replicated,
                 offspring_paid=self.offspring_paid,
+                blight_paid=self.blight_paid,
                 # CR 400.7 makes the spell a new object the moment CR 601.2a
                 # moves it off the exile pile, so the annotation that pile
                 # carried is gone by now - `announced_exile_annotation` is the

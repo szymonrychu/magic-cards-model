@@ -15257,6 +15257,43 @@ def _parse_manifest_dread_clause(clause: str, *, for_spell: bool) -> TargetedCla
     return effect
 
 
+#: "If this spell's additional cost was paid, <consequence>." - Requiting
+#: Hex's own linked ability (CR 607, CR 118.8b's optional additional cost).
+#: The condition names no keyword, so `CastRecord.optional_additional_cost_
+#: paid` is what this reads - any optional additional cost, not blight by
+#: name - the same genericity `Game.optional_additional_cost_paid`'s own
+#: docstring argues for.
+_IF_ADDITIONAL_COST_PAID_RE = re.compile(
+    r"^if this spell'?s additional cost was paid, (?P<rest>.+)$", re.IGNORECASE
+)
+
+
+def _parse_if_additional_cost_paid_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_IF_ADDITIONAL_COST_PAID_RE`'s shape - a resolution-time conditional
+    on the spell's own announcement (CR 608.2b), not a triggered ability's
+    intervening *if*, so this is read here rather than through
+    `machines/triggers.intervening_if_holds`. Spell-only: an activated or
+    triggered ability has no `CastRecord` of its own to ask.
+    """
+    if not for_spell:
+        return None
+    match = _IF_ADDITIONAL_COST_PAID_RE.fullmatch(clause.strip().rstrip("."))
+    if match is None:
+        return None
+    rest = match.group("rest").strip()
+    clause_effect = parse_clause_effect(rest) or parse_clause_effect(f"you {rest}")
+    if clause_effect is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        record = game.cast_record(stack_object)
+        if record.optional_additional_cost_paid:
+            player = game.controller_of(stack_object)
+            clause_effect(game, player, stack_object.name)  # type: ignore[union-attr]
+
+    return effect
+
+
 def _parse_delayed_single_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """A whole ability whose *only* clause is a delayed-trigger creation, with
     no antecedent clause of its own to supply "it": either there is no object
@@ -18243,6 +18280,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     manifest_dread_clause = _parse_manifest_dread_clause(clause, for_spell=for_spell)
     if manifest_dread_clause is not None:
         return manifest_dread_clause
+    if_additional_cost_paid = _parse_if_additional_cost_paid_clause(clause, for_spell=for_spell)
+    if if_additional_cost_paid is not None:
+        return if_additional_cost_paid
     exile_that_players_library = _parse_exile_that_players_library_clause(
         clause, for_spell=for_spell
     )

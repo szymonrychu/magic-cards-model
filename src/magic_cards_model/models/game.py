@@ -897,6 +897,28 @@ class CastRecord(BaseModel):
     "multiple instances of offspring" each get their own linked ability and
     their own payment, which is not a pool printing yet - see
     `docs/engine-coverage.md`."""
+    blight_paid: bool = False
+    """Whether this spell's blight cost was paid (CR 701.68a), copied from
+    `Casting.blight_paid`. Requiting Hex's own linked "if this spell's
+    additional cost was paid, you gain 2 life" reads this generically -
+    `optional_additional_cost_paid` below is the field that clause's own
+    reader actually asks, so a future card whose optional additional cost is
+    something other than blight is not left unreadable."""
+
+    @property
+    def optional_additional_cost_paid(self) -> bool:
+        """Whether *any* of this spell's own optional additional costs were
+        paid - CR 118.8b's "you may ..." kind, kicker/offspring/blight alike.
+
+        The generic reader for a card's own "if this spell's additional cost
+        was paid" clause (`machines/effects._parse_if_additional_cost_paid_
+        clause`) asks this rather than any one keyword's flag, because the
+        clause names no keyword itself - only one card in the pool has more
+        than one such cost to begin with, and CR 607's "linked ability"
+        shape assumes exactly one antecedent per card.
+        """
+        return self.kicked > 0 or self.offspring_paid or self.blight_paid
+
     additional_cost_cards: list[UUID] = Field(default_factory=list)
     """Every card consumed paying one of `Casting.additional_costs`'
     components - Fling's "sacrifice a creature" (CR 118.8a), read here by
@@ -2761,6 +2783,7 @@ class Game(BaseModel):
         kicked: int = 0,
         replicated: int = 0,
         offspring_paid: bool = False,
+        blight_paid: bool = False,
         additional_cost_cards: list[UUID] | None = None,
     ) -> "CastRecord":
         """Record how a spell was cast, for the rules that ask afterwards.
@@ -2803,6 +2826,7 @@ class Game(BaseModel):
             kicked=kicked,
             replicated=replicated,
             offspring_paid=offspring_paid,
+            blight_paid=blight_paid,
             additional_cost_cards=list(additional_cost_cards or []),
         )
         self.cast_records[spell.id] = record
@@ -9382,6 +9406,7 @@ class Game(BaseModel):
         mana_sources: Sequence[CardState | tuple[CardState, Sequence[Color]]] | None = None,
         splice: Sequence[UUID] | None = None,
         offspring: bool = False,
+        blight: CardState | None = None,
     ) -> CardState:
         """Cast `card` for `caster`, start to finish, as one atomic action.
 
@@ -9475,6 +9500,8 @@ class Game(BaseModel):
                 casting.splice_by_id(card_id)
             if offspring:
                 casting.pay_offspring()
+            if blight is not None:
+                casting.pay_blight(blight)
             payment = casting.determine_cost(x_value=x_value)
             if division is not None:
                 casting.announce_division(division)
