@@ -1314,7 +1314,9 @@ _COLOR_WORDS: dict[str, Color] = {
 
 #: Keywords that are an optional additional cost on a spell being cast
 #: (CR 118.8a). `Casting.pay_kicker` charges these.
-ADDITIONAL_COST_KEYWORDS = frozenset({"kicker", "multikicker", "replicate", "offspring", "blight"})
+ADDITIONAL_COST_KEYWORDS = frozenset(
+    {"kicker", "multikicker", "replicate", "offspring", "blight", "gift"}
+)
 
 
 def has_flash(card: Card) -> bool:
@@ -1828,6 +1830,13 @@ class Casting(BaseModel):
     """Whether this spell's blight cost was paid (CR 701.68a), set by
     `pay_blight` - read by whatever linked ability the card's own printed
     text carries ("If this spell's additional cost was paid, ...")."""
+    gift_promised: bool = False
+    """Whether this spell's gift was promised (CR 702.174k), set by
+    `pay_gift`."""
+    gift_chosen_player: str | None = None
+    """The opponent chosen when the gift was promised (CR 702.174a's own
+    additional cost, "you may choose an opponent") - who "the chosen player"
+    (CR 702.174d-i) refers to."""
     payment: CostPayment | None = None
     announced_zone: Zone | None = None
     """The zone this cast was announced from, recorded as CR 601.2a moved the
@@ -3161,6 +3170,32 @@ class Casting(BaseModel):
         self.blight_paid = True
         return self.step
 
+    def pay_gift(self, opponent: str) -> CastingStep:
+        """CR 702.174a: "The first ability is always 'As an additional cost
+        to cast this spell, you may choose an opponent.'"
+
+        The whole cost is the choice itself - CR 118.8a's additional cost
+        with no resource behind it at all, unlike kicker/offspring/blight,
+        which is why this neither reads a keyword cost nor touches
+        `additional_costs`: there is nothing for `CostPayment` to pay.
+        `opponent` must actually be an opponent (CR 102.2) once a `game` is
+        attached; a caller building a `Casting` with no `game` (a unit test)
+        is trusted, the same way `crew_activation`'s own no-game path is.
+        """
+        ability = _keyword(self.spell.card, "gift")
+        if ability is None:
+            raise ValueError(f"{self.spell.name} has no gift ability (CR 702.174a)")
+        if self.gift_promised:
+            raise ValueError(f"{self.spell.name}'s gift was already promised")
+        if self.game is not None:
+            if opponent == self.caster or opponent not in (
+                p.username for p in self.game.players_in_game
+            ):
+                raise ValueError(f"{opponent} is not an opponent of {self.caster} (CR 102.2)")
+        self.gift_promised = True
+        self.gift_chosen_player = opponent
+        return self.step
+
     def add_additional_cost(self, cost: TotalCost | ManaCost) -> CastingStep:
         """CR 118.8a: any number of additional costs may be applied to a spell.
 
@@ -4047,6 +4082,8 @@ class Casting(BaseModel):
                 replicated=self.replicated,
                 offspring_paid=self.offspring_paid,
                 blight_paid=self.blight_paid,
+                gift_promised=self.gift_promised,
+                gift_chosen_player=self.gift_chosen_player,
                 # CR 400.7 makes the spell a new object the moment CR 601.2a
                 # moves it off the exile pile, so the annotation that pile
                 # carried is gone by now - `announced_exile_annotation` is the

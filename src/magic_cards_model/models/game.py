@@ -113,6 +113,7 @@ from ..machines.effects import (
     SuspendRedirectNotice,
     UnmodeledTriggerEffectNotice,
     activated_effect_for,
+    apply_gift_if_promised,
     devotion_to,
     effect_for,
     trigger_effect_for,
@@ -918,6 +919,13 @@ class CastRecord(BaseModel):
         shape assumes exactly one antecedent per card.
         """
         return self.kicked > 0 or self.offspring_paid or self.blight_paid
+
+    gift_promised: bool = False
+    """Whether this spell's gift was promised (CR 702.174k), copied from
+    `Casting.gift_promised`."""
+    gift_chosen_player: str | None = None
+    """The opponent chosen when the gift was promised (CR 702.174a), copied
+    from `Casting.gift_chosen_player`."""
 
     additional_cost_cards: list[UUID] = Field(default_factory=list)
     """Every card consumed paying one of `Casting.additional_costs`'
@@ -2784,6 +2792,8 @@ class Game(BaseModel):
         replicated: int = 0,
         offspring_paid: bool = False,
         blight_paid: bool = False,
+        gift_promised: bool = False,
+        gift_chosen_player: str | None = None,
         additional_cost_cards: list[UUID] | None = None,
     ) -> "CastRecord":
         """Record how a spell was cast, for the rules that ask afterwards.
@@ -2827,6 +2837,8 @@ class Game(BaseModel):
             replicated=replicated,
             offspring_paid=offspring_paid,
             blight_paid=blight_paid,
+            gift_promised=gift_promised,
+            gift_chosen_player=gift_chosen_player,
             additional_cost_cards=list(additional_cost_cards or []),
         )
         self.cast_records[spell.id] = record
@@ -3020,6 +3032,11 @@ class Game(BaseModel):
             ]
         else:
             faces_to_resolve = [(spell.name, spell.oracle_text)]
+        # CR 702.174j: an instant or sorcery's gift effect happens before any
+        # of the spell's other abilities - ahead of `effect_for`'s own
+        # dispatch, not folded into it, because gift is never a clause of
+        # the card's own printed text (it lives on the keyword line alone).
+        apply_gift_if_promised(self, spell)
         effects = [
             effect
             for effect in (
@@ -9407,6 +9424,7 @@ class Game(BaseModel):
         splice: Sequence[UUID] | None = None,
         offspring: bool = False,
         blight: CardState | None = None,
+        gift: str | None = None,
     ) -> CardState:
         """Cast `card` for `caster`, start to finish, as one atomic action.
 
@@ -9502,6 +9520,8 @@ class Game(BaseModel):
                 casting.pay_offspring()
             if blight is not None:
                 casting.pay_blight(blight)
+            if gift is not None:
+                casting.pay_gift(gift)
             payment = casting.determine_cost(x_value=x_value)
             if division is not None:
                 casting.announce_division(division)

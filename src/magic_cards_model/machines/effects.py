@@ -82,7 +82,12 @@ from ..models.token import (
 )
 from ..models.zone import Zone
 from . import combat as combat_rules
-from .abilities import ActivatedAbility, TriggerEvent, self_normalized_effect_text
+from .abilities import (
+    ActivatedAbility,
+    TriggerEvent,
+    keyword_abilities,
+    self_normalized_effect_text,
+)
 from .casting import PlayAction, annotate_exile, remove_suspend_time_counter
 from .casting_restrictions import create_targeted_cant_cast_restriction, parse_casting_rule_clause
 from .combat import has_keyword
@@ -1446,6 +1451,62 @@ THOPTER = TokenDefinition(
     toughness=1,
     keywords=("Flying",),
 )
+
+#: CR 702.174f: "'Gift a tapped Fish' means the effect is 'The chosen player
+#: creates a tapped 1/1 blue Fish creature token.'" - Into the Flood Maw.
+FISH = TokenDefinition(subtypes=("Fish",), colors=(Color.BLUE,), power=1, toughness=1)
+
+#: CR 702.174i: "'Gift an Octopus' means the effect is 'The chosen player
+#: creates an 8/8 blue Octopus creature token.'"
+OCTOPUS = TokenDefinition(subtypes=("Octopus",), colors=(Color.BLUE,), power=8, toughness=8)
+
+#: CR 702.174d-i: the six "Gift a [something]" effects, keyed by the
+#: keyword's own printed parameter ("Gift a tapped Fish" -> "a tapped
+#: Fish"). Every shape the rule states, not only Into the Flood Maw's own -
+#: a future gift card whose parameter is one of the other five reads
+#: through the same table with no new code.
+_GIFT_EFFECTS: dict[str, Callable[["Game", str], None]] = {
+    "a food": lambda game, chosen: create_tokens(game, PREDEFINED["Food"], chosen),
+    "a card": lambda game, chosen: game.draw_cards(chosen, 1),
+    "a tapped fish": lambda game, chosen: create_tokens(game, FISH, chosen, tapped=True),
+    "an extra turn": lambda game, chosen: game.grant_extra_turn(chosen),
+    "a treasure": lambda game, chosen: create_tokens(game, PREDEFINED["Treasure"], chosen),
+    "an octopus": lambda game, chosen: create_tokens(game, OCTOPUS, chosen),
+}
+
+
+def gift_effect_for(parameter: str | None) -> Callable[["Game", str], None] | None:
+    """CR 702.174d-i's effect for a gift keyword's own printed "[something]",
+    or `None` for a shape this wave does not read (fails closed rather than
+    guessing - CR 702.174 lists no others as of this writing).
+    """
+    if parameter is None:
+        return None
+    return _GIFT_EFFECTS.get(parameter.strip().lower())
+
+
+def apply_gift_if_promised(game: "Game", spell: CardState) -> None:
+    """CR 702.174j: "For instant and sorcery spells, the effect of a gift
+    ability always happens before any other spell abilities of the card."
+
+    Called from `Game.resolve_top` immediately before the spell's own
+    `effect` runs, and only for an instant or sorcery - CR 702.174b's other
+    half, a *permanent's* "when this permanent enters, if its gift cost was
+    paid" trigger, is not modelled; see `docs/engine-coverage.md`.
+    """
+    if spell.is_permanent:
+        return
+    ability = next(
+        (a for a in keyword_abilities(spell.card) if a.canonical.lower() == "gift"), None
+    )
+    if ability is None:
+        return
+    record = game.cast_record(spell)
+    if not record.gift_promised or record.gift_chosen_player is None:
+        return
+    effect = gift_effect_for(ability.parameter)
+    if effect is not None:
+        effect(game, record.gift_chosen_player)
 
 
 def seasoned_pyromancer(game: "Game", ability: AbilityOnStack) -> None:
