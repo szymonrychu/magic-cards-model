@@ -11736,6 +11736,97 @@ def _parse_object_anaphor_clause_pair(
     return effect
 
 
+#: "Target creature you control gets +N/+N until end of turn." followed by
+#: "It fights up to one target creature you don't control." - Bridgeworks
+#: Battle's whole front face.
+#:
+#: Its own pair parser rather than a rider in `_parse_referent_object_clause`,
+#: because this is the one shape in this wave where the **rider names a target
+#: of its own**. `_referent_reader`'s "the antecedent targets" branch hands
+#: back every legal target of the resolving object, which is right when the
+#: rider adds none and wrong here: the pump would land on the opponent's
+#: creature too.
+#:
+#: The two are told apart by controller rather than by their order in
+#: `targets`, because that is what the card's own restrictions say ("you
+#: control" / "you don't control") - reading `targets[0]`/`targets[1]`
+#: positionally would quietly pump the wrong creature the moment CR 608.2b
+#: removed one of them.
+_PUMP_TARGET_YOU_CONTROL_RE = re.compile(
+    r"^target creature you control gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) "
+    r"until end of turn$",
+    re.IGNORECASE,
+)
+_RIDER_FIGHTS_TARGET_RE = re.compile(
+    rf"^{_OBJECT_ANAPHOR} fights (?P<phrase>(?:up to \S+ )?target .+)$", re.IGNORECASE
+)
+
+
+def _parse_pump_then_fight_clause_pair(
+    first: str, second: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """Bridgeworks Battle's two sentences as one CR 608.2c instruction.
+
+    CR 701.14a: "Each of those creatures deals damage equal to its power to
+    the other creature", and CR 701.14b: "If one or both creatures instructed
+    to fight are no longer on the battlefield or are no longer creatures,
+    neither of them fights or deals damage" - both checked here before
+    `_fight` is called, the same division of labour every other caller draws.
+
+    CR 115.6's "up to one" is why an absent second target is not a failure:
+    the pump still happened, and nothing fights.
+
+    The pump is created before the fight, in the printed order (CR 608.2c),
+    which is the whole point of the sequencing - a +2/+2 creature deals 2 more
+    damage in the fight than the printed body would.
+    """
+    pump = _PUMP_TARGET_YOU_CONTROL_RE.fullmatch(first.strip().rstrip(".").strip())
+    if pump is None:
+        return None
+    fight = _RIDER_FIGHTS_TARGET_RE.fullmatch(second.strip().rstrip(".").strip())
+    if fight is None:
+        return None
+    if not _targets_understood("target creature you control", count_agnostic=True):
+        return None
+    if not _targets_understood(fight.group("phrase"), count_agnostic=True):
+        return None
+    builder = parsed_layer_effects(
+        f"Target creature gets {pump.group('power')}/{pump.group('toughness')} until end of turn."
+    )
+    if builder is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object)
+        targets = [
+            target
+            for target in game.resolve_targets(stack_object)
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
+        ]
+        mine = [t for t in targets if game.controller_of(t).username == controller.username]
+        theirs = [t for t in targets if game.controller_of(t).username != controller.username]
+        if not mine:
+            return
+        source = (
+            stack_object if isinstance(stack_object, CardState) else stack_object.source(game)  # type: ignore[union-attr]
+        )
+        if source is None:
+            return
+        effects = game.continuous_effects
+        for built in builder(source, effects.tick(), mine[:1], layer_context_for(game, controller)):
+            effects.add(built, game)
+        if not theirs:
+            return  # CR 115.6: "up to one" chose none, so nothing fights.
+        fighter, opponent = mine[0], theirs[0]
+        if not game.characteristics_of(fighter).is_creature:
+            return  # CR 701.14b
+        if not game.characteristics_of(opponent).is_creature:
+            return  # CR 701.14b
+        _fight(game, fighter, opponent)
+
+    return effect
+
+
 def _parse_cant_be_regenerated_clause_pair(
     first: str, second: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -16090,8 +16181,16 @@ _REVEAL_HAND_RE = re.compile(r"^target (?:player|opponent) reveals their hand$",
 #: `split_effect_clauses` already cuts across that bare "and" the same way it
 #: does everywhere else, so this clause and its consequence clause
 #: (`_DISCARD_THAT_CARD_RE`/`_EXILE_THAT_CARD_RE`) always arrive separately.
+#:
+#: The trailing "with mana value N or less" is Inquisition of Kozilek's own,
+#: and is a real narrowing of the choice rather than flavour - CR 202.3 makes
+#: mana value a characteristic, so a card above the bound is CR 608.2d's
+#: "option that's illegal" and must not be offered. Left optional so
+#: Thoughtseize, Grief and Thought-Knot Seer read exactly as before.
 _CHOOSE_CARD_FROM_REVEALED_RE = re.compile(
-    r"^you choose (?:a|an) (?P<quality>.+?) card from it$", re.IGNORECASE
+    r"^you choose (?:a|an) (?P<quality>.+?) card from it"
+    r"(?: with mana value (?P<max_mv>\d+) or less)?$",
+    re.IGNORECASE,
 )
 #: "that player discards that card" (Thoughtseize, Grief) - the anaphoric
 #: tail naming the same player `_REVEAL_HAND_RE` targeted and the same card
@@ -16360,9 +16459,19 @@ def _merge_reveal_hand_choose_discard_clauses(
     choose_match = _CHOOSE_CARD_FROM_REVEALED_RE.fullmatch(clauses[index + 1].strip())
     if choose_match is None:
         return None
-    matches = _nonland_or_typed_card_matcher(choose_match.group("quality"))
-    if matches is None:
+    quality_matches = _nonland_or_typed_card_matcher(choose_match.group("quality"))
+    if quality_matches is None:
         return None
+    max_mv = int(choose_match.group("max_mv")) if choose_match.group("max_mv") else None
+
+    def matches(state: CardState) -> bool:
+        # CR 202.3: mana value is a characteristic of the card, so the bound
+        # narrows which cards may legally be chosen (CR 608.2d) rather than
+        # only which one a well-behaved player would pick.
+        if not quality_matches(state):
+            return False
+        return max_mv is None or state.mana_value <= max_mv
+
     consequence_clause = clauses[index + 2].strip()
     to_exile = _EXILE_THAT_CARD_RE.fullmatch(consequence_clause) is not None
     if not to_exile and _DISCARD_THAT_CARD_RE.fullmatch(consequence_clause) is None:
@@ -16376,6 +16485,8 @@ def _merge_reveal_hand_choose_discard_clauses(
             consumed = 4
 
     quality_description = choose_match.group("quality").strip()
+    if max_mv is not None:
+        quality_description = f"{quality_description} (mana value {max_mv} or less)"
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object)
@@ -17638,6 +17749,18 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     counter_on_additional_cost_card = _parse_counter_on_additional_cost_card_clause(clause)
     if counter_on_additional_cost_card is not None:
         return counter_on_additional_cost_card
+    if not for_spell:
+        # "Put a +1/+1 counter on this creature." was reachable only as a
+        # *whole* ability's effect (`_ability_effect_or_notice`), never as one
+        # clause among several - so Kappa Cannoneer's "put a +1/+1 counter on
+        # this creature. It can't be blocked this turn." had no readable
+        # antecedent for its rider to attach to, and the pair failed on the
+        # half that was already built. Spells are excluded because the effect
+        # reads `AbilityOnStack.source`, and a sorcery is not a permanent that
+        # can carry a counter anyway (CR 122.1).
+        counters_on_self = _parse_put_counters_on_self_clause(clause)
+        if counters_on_self is not None:
+            return counters_on_self  # type: ignore[return-value]
     transform_all = _parse_transform_all_subtype_clause(clause, for_spell=for_spell)
     if transform_all is not None:
         return transform_all
@@ -17996,6 +18119,16 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             # modifies the destruction rather than running after it, so the
             # pair cannot be split into "antecedent, then rider".
             paired = _parse_cant_be_regenerated_clause_pair(
+                clauses[index], clauses[index + 1], for_spell=for_spell
+            )
+            if paired is not None:
+                parsed.append(paired)
+                index += 2
+                continue
+            # Ahead of the general object anaphor: this is the one shape
+            # here whose rider names a target of its own, which the general
+            # referent reader cannot tell apart from the antecedent's.
+            paired = _parse_pump_then_fight_clause_pair(
                 clauses[index], clauses[index + 1], for_spell=for_spell
             )
             if paired is not None:

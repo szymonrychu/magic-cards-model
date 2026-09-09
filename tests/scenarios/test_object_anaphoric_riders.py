@@ -49,7 +49,11 @@ session with `mise run rules:find <number>`:
 """
 
 from magic_cards_model.machines import Step
-from magic_cards_model.machines.combat import Keyword, has_keyword
+from magic_cards_model.machines.combat import (
+    Keyword,
+    evasion_restriction_refusal,
+    has_keyword,
+)
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card_state import Counter
 
@@ -283,3 +287,128 @@ def test_wrath_of_god_destroys_everything_with_no_shield_in_sight():
 
     assert first.zone is Zone.GRAVEYARD
     assert second.zone is Zone.GRAVEYARD
+
+
+# -- Kappa Cannoneer: a rider on a self-referential antecedent -------------
+
+
+def test_kappa_cannoneer_counters_itself_and_becomes_unblockable():
+    """`Whenever this creature or another artifact you control enters, put a
+    +1/+1 counter on this creature. It can't be blocked this turn.`
+
+    "It" here is CR 109.2's self-reference carried forward from the antecedent,
+    not a target - the antecedent names no target at all. The restriction is
+    granted as a layer 6 ability (CR 613.1f) whose text is the sentence
+    `machines/combat._evasion_restriction_sentences` already reads off the
+    *computed* board, so CR 509.1a's existing refusal enforces it rather than
+    a second copy of the same rule - which is what
+    `evasion_restriction_refusal` answering here proves.
+
+    The antecedent needed its own fix to be readable as *one clause among
+    several*: "Put a +1/+1 counter on this creature." was reachable only as a
+    whole ability's effect, so the rider had nothing to attach to and the pair
+    failed on the half that was already built.
+
+    Asserted through `evasion_restriction_refusal` rather than a declared
+    block, because the Kappa is summoning sick the turn it enters (CR 302.6)
+    and the grant expires at end of turn - there is no turn in which it can
+    both have the restriction and attack. (Its other trigger half, "or another
+    artifact you control enters", does not fire at all; that is a separate
+    `machines/triggers.condition_matches` gap, not this one.)
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Kappa Cannoneer"], battlefield=["Island"] * 6)
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.cast_and_resolve("Kappa Cannoneer", *scenario.untapped_sources(*["Island"] * 6))
+    scenario.pass_until_resolved()
+
+    kappa = scenario.creature("Kappa Cannoneer", "alice")
+    bears = scenario.creature("Grizzly Bears", "bob")
+
+    assert kappa.counters[Counter.PLUS_ONE] == 1
+    assert evasion_restriction_refusal(scenario.game, kappa, bears) is not None
+    assert scenario.game.evasion_notices == []
+
+
+# -- Bridgeworks Battle: a rider that names a target of its own ------------
+
+
+def test_bridgeworks_battle_pumps_first_then_fights():
+    """`Target creature you control gets +2/+2 until end of turn. It fights up
+    to one target creature you don't control.`
+
+    Two targets, and the printed order matters (CR 608.2c): the pump is
+    created before the fight, so the creature deals 2 more damage in it than
+    its printed body would. Grizzly Bears is 2/2, so pumped it is a 4/4 and
+    kills the opposing 2/2 while surviving on 4 toughness with 2 damage.
+
+    The two targets are told apart by controller, not by their position in
+    `targets` - "you control" and "you don't control" are what the card
+    actually says, and a positional read would pump the wrong creature the
+    moment CR 608.2b removed one of them.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Bridgeworks Battle"],
+            battlefield=["Grizzly Bears", "Forest", "Forest", "Forest"],
+        )
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    mine = scenario.creature("Grizzly Bears", "alice")
+    theirs = scenario.creature("Grizzly Bears", "bob")
+
+    scenario.cast_and_resolve(
+        "Bridgeworks Battle",
+        *scenario.untapped_sources("Forest", "Forest", "Forest"),
+        targets=[mine, theirs],
+    )
+
+    assert scenario.game.power_of(mine) == 4
+    assert mine.zone is Zone.BATTLEFIELD
+    assert mine.damage == 2
+    assert theirs.zone is Zone.GRAVEYARD
+
+
+# -- Inquisition of Kozilek: the anaphoric chain plus a real bound ---------
+
+
+def test_inquisition_of_kozilek_only_offers_cards_within_the_mana_value_bound():
+    """`Target player reveals their hand. You choose a nonland card from it
+    with mana value 3 or less. That player discards that card.`
+
+    The three-sentence chain was already read - "it" is the revealed hand and
+    "that card" is the one just chosen - but only without a mana value bound,
+    so the whole card was refused. CR 202.3 makes mana value a characteristic,
+    which makes the bound a real narrowing of the choice: a card above it is
+    CR 608.2d's "option that's illegal" and must never be offered.
+
+    Bob's hand holds one legal card and one that is over the bound; the choice
+    offered has to be exactly the legal one.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Inquisition of Kozilek"], battlefield=["Swamp"])
+        .player("bob", hand=["Lightning Bolt", "Wurmcoil Engine", "Forest"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bolt = scenario.find("Lightning Bolt", Zone.HAND, "bob")
+    scenario.will_choose_cards(bolt)
+
+    (swamp,) = scenario.untapped_sources("Swamp")
+    scenario.cast_and_resolve("Inquisition of Kozilek", swamp, targets=["bob"])
+
+    assert bolt.zone is Zone.GRAVEYARD
+    (offer,) = [
+        decision for decision in scenario.questions_asked() if decision.source.startswith("Inquis")
+    ]
+    # The 6-drop and the land are both illegal choices and are not offered.
+    assert offer.cards == (bolt.id,)
