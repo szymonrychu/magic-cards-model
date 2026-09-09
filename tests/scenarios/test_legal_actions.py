@@ -658,6 +658,42 @@ def test_object_cost_offers_reads_convoke_eligibility():
     assert bear.id in {candidate.id for candidate in offers["convoke"].candidates}
 
 
+def test_improvise_widens_a_no_into_an_honest_unknown():
+    """CR 702.126a: Kappa Cannoneer's improvise could pay part of `{5}{U}` by
+    tapping an untapped artifact, but this affordability check does not
+    replicate `objects_as_costs.improvise`'s own reduction - `Game.
+    object_cost_offers` says the offer exists, so a plain mana-only `NO` (one
+    Island cannot pay `{5}{U}` alone) is widened to `UNKNOWN` naming
+    improvise, rather than a wrong `NO`. The same shape as `test_convoke_
+    widens_a_no_into_an_honest_unknown` above."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Kappa Cannoneer"], battlefield=["Mishra's Bauble", "Island"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    (cast,) = _of_kind(legal_actions(scenario.game, "alice"), ActionKind.CAST)
+    assert cast.affordable is Affordability.UNKNOWN
+    assert "improvise" in (cast.unaffordable_reason or "")
+
+
+def test_object_cost_offers_reads_improvise_eligibility():
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Kappa Cannoneer"], battlefield=["Mishra's Bauble", "Island"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    card = scenario.find("Kappa Cannoneer", Zone.HAND, "alice")
+    bauble = scenario.creature("Mishra's Bauble", "alice")
+
+    offers = scenario.game.object_cost_offers(card, "alice")
+
+    assert "improvise" in offers
+    assert bauble.id in {candidate.id for candidate in offers["improvise"].candidates}
+
+
 def test_alternative_costs_for_finds_the_permission_and_static_sources_too():
     """Finding 9: `play_permissions_on`'s PERMISSION options (cascade, Ugin's
     exiled cards) and `_static_free_cast_grants`'s STATIC options

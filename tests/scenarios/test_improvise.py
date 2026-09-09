@@ -409,3 +409,117 @@ def test_a_summoning_sick_artifact_creature_still_improvises():
     scenario.pay_with(payment, *scenario.untapped_sources("Island"))
 
     assert fresh.tapped
+
+
+# -- driven through Game.cast, the seat-facing atomic entry point ---------
+#
+# Everything above drives `objects_as_costs.improvise` directly against a
+# hand-opened `CostPayment`, the same low-level API `Casting`/`CostPayment`
+# always exposed. A seat never calls that: it calls `Game.cast(...)`
+# (`models/game.py`), the one atomic entry point `magic_cards_model_api`
+# drives, and that method only ever knew about convoke and delve - it had no
+# `improvise` parameter and `Game.object_cost_offers` never named improvise as
+# a candidate offer either, so a seat with a settled affinity board (a land
+# plus five untapped artifacts, exactly enough to improvise Kappa Cannoneer's
+# `{5}{U}`) was refused with "no combination of the available mana sources can
+# pay {5}{U}" - the improvise machinery below existed and was fully tested,
+# but nothing on the seat-facing path ever reached it.
+
+
+def test_game_cast_kappa_cannoneer_with_a_land_and_five_artifacts():
+    """The reported repro: one Island for `{U}`, Mox Opal tapped for one
+    generic mana ability, and four more artifacts improvised for the
+    remaining four generic - `{5}{U}` exactly, from a land plus five untapped
+    artifacts (Mox Opal among them) and nothing else."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Kappa Cannoneer"],
+            battlefield=["Island", "Mox Opal", *ARTIFACTS[:4]],
+        )
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    cannoneer = scenario.find("Kappa Cannoneer", Zone.HAND, "alice")
+    (island,) = scenario.untapped_sources("Island")
+    (mox_opal,) = scenario.creatures("Mox Opal")
+    junk = artifacts_of(scenario, 4)
+
+    spell = scenario.game.cast(cannoneer, "alice", mana_sources=[island, mox_opal], improvise=junk)
+
+    assert spell.zone is Zone.STACK
+    assert island.tapped
+    assert mox_opal.tapped
+    assert all(artifact.tapped for artifact in junk)
+    assert scenario.player("alice").mana_pool.total == 0
+    scenario.game.assert_quiescent()
+
+
+def test_game_cast_reports_improvise_could_have_paid_it():
+    """The other half of the seat's report: with no `improvise=` named at all,
+    the plain dry run - `legal_actions`' own affordability check - refused
+    the same board outright instead of naming improvise as the honest
+    `UNKNOWN` it names for convoke and delve (`test_legal_actions.py::
+    test_improvise_widens_a_no_into_an_honest_unknown` covers this in full;
+    this is the same fact from inside this file, on the exact reported
+    board)."""
+    from magic_cards_model.machines.legal_actions import legal_actions  # noqa: PLC0415
+    from magic_cards_model.models.action import ActionKind, Affordability  # noqa: PLC0415
+
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Kappa Cannoneer"],
+            battlefield=["Island", "Mox Opal", *ARTIFACTS[:4]],
+        )
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    (cast,) = [
+        action for action in legal_actions(scenario.game, "alice") if action.kind is ActionKind.CAST
+    ]
+    assert cast.affordable is Affordability.UNKNOWN
+    assert "improvise" in (cast.unaffordable_reason or "")
+
+
+def test_game_cast_refuses_with_too_few_artifacts_and_leaves_no_trace():
+    """Two artifacts only reduce `{5}{U}` to `{3}{U}`; one Island cannot cover
+    the rest, and `Game.cast` refuses in its own words (CR 733.1: nothing
+    tapped, the card stays in hand)."""
+    scenario = board(artifacts=2).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    cannoneer = scenario.find("Kappa Cannoneer", Zone.HAND, "alice")
+    (island,) = scenario.untapped_sources("Island")
+    junk = artifacts_of(scenario, 2)
+
+    with pytest.raises(ValueError, match="no combination of the available mana sources can pay"):
+        scenario.game.cast(cannoneer, "alice", mana_sources=[island], improvise=junk)
+
+    assert cannoneer.zone is Zone.HAND
+    assert island.untapped
+    assert all(artifact.untapped for artifact in junk)
+    scenario.game.assert_quiescent()
+
+
+def test_game_cast_refuses_an_already_tapped_artifact():
+    """One of the five is already tapped when the seat tries to improvise it -
+    `Game.cast` surfaces `objects_as_costs.improvise`'s own refusal rather
+    than silently skipping it, and leaves the game untouched."""
+    scenario = board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    cannoneer = scenario.find("Kappa Cannoneer", Zone.HAND, "alice")
+    (island,) = scenario.untapped_sources("Island")
+    junk = artifacts_of(scenario)
+    junk[0].tap()
+
+    with pytest.raises(ValueError, match="already tapped"):
+        scenario.game.cast(cannoneer, "alice", mana_sources=[island], improvise=junk)
+
+    assert cannoneer.zone is Zone.HAND
+    assert island.untapped
+    scenario.game.assert_quiescent()
