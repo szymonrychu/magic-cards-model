@@ -412,3 +412,41 @@ def test_inquisition_of_kozilek_only_offers_cards_within_the_mana_value_bound():
     ]
     # The 6-drop and the land are both illegal choices and are not offered.
     assert offer.cards == (bolt.id,)
+
+
+# -- What is still refused, and now says so --------------------------------
+
+
+def test_firebending_lesson_fails_closed_with_an_anaphoric_notice():
+    """`Firebending Lesson deals 2 damage to target creature. If this spell
+    was kicked, it deals 5 damage to that creature instead.`
+
+    "That creature" is this wave's object anaphor and is read; the sentence
+    around it is not, and deliberately so - "If `<condition>`, `<bonus>` ...
+    instead" needs a condition reader (was this spell kicked?), which is its
+    own wave. So the card is still refused whole (CR 608.2c: no notion of
+    running half an effect - it does **not** deal the base 2 and skip the
+    kicker line) and now leaves an `AnaphoricClauseNotice` naming the sentence
+    it could not read.
+
+    `_unreadable_anaphoric_clause` inspected only pairs whose first clause was
+    a destroy or an exile before this, so every object-anaphor card in the
+    pool failed in silence rather than on the record.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Firebending Lesson"], battlefield=["Mountain", "Mountain"])
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "bob")
+
+    scenario.cast_and_resolve(
+        "Firebending Lesson", *scenario.untapped_sources("Mountain", "Mountain"), targets=[bears]
+    )
+
+    notices = scenario.game.anaphoric_clause_notices
+    assert [notice.source_name for notice in notices] == ["Firebending Lesson"]
+    assert "that creature" in notices[0].text.lower()
+    assert bears.damage == 0  # not the readable half on its own

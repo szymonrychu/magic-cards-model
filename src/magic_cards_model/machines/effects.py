@@ -8135,6 +8135,37 @@ def _unreadable_anaphoric_clause(text: str, *, for_spell: bool) -> str | None:
             and _parse_exile_then_return_clause_pair(first, second, for_spell=for_spell) is None
         ):
             return second
+    # The object-anaphor half (CR 400.7's "it"/"they"/"that creature", not CR
+    # 400.7's player anaphors above). Reported for *any* antecedent whose
+    # referent this wave can name, not only a destroy or an exile, because
+    # that is what an object anaphor is printed on: Eluge's "It's an Island
+    # ... for as long as it has a flood counter on it", Firebending Lesson's
+    # "it deals 5 damage to that creature instead", Combustion Technique's "If
+    # that creature would die this turn, exile it instead".
+    #
+    # Gated on `_referent_reader` answering, for the same reason the pairs
+    # above are gated on their own parser rather than on a shape test: without
+    # it, a sentence that merely contains the word "it" ("put it into your
+    # hand") would be blamed for a failure belonging to some other clause
+    # entirely, which is the wrong sentence exactly as often as the right one.
+    for first, second in zip(clauses, clauses[1:], strict=False):
+        second_stripped = second.strip()
+        if not _OBJECT_ANAPHOR_RE.search(second_stripped):
+            continue
+        if _ANAPHORIC_SUBJECT_RE.fullmatch(second_stripped):
+            # A *player* anaphor that happens to contain the word "it" further
+            # in - Boseiju's "That player may search their library ..., put
+            # **it** onto the battlefield, then shuffle." The pair above owns
+            # this shape, and blaming this sentence for a failure somewhere
+            # else in the card is the wrong sentence exactly as often as the
+            # right one.
+            continue
+        if _referent_reader(first) is None:
+            continue
+        if _parse_mixed_clause(first, for_spell=for_spell) is None:
+            continue
+        if _parse_object_anaphor_clause_pair(first, second, for_spell=for_spell) is None:
+            return second
     return None
 
 
