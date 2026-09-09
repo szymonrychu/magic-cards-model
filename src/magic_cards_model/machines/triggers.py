@@ -2132,6 +2132,10 @@ def _first_spell_this_turn_holds(
 #: form.
 _KICKED_CLAUSE = re.compile(r"^it was kicked$")
 
+#: CR 702.56a's own intervening *if*, written out by
+#: `machines/keywords._replicate_ability` - "a replicate cost was paid for it".
+_REPLICATE_CLAUSE = re.compile(r"^a replicate cost was paid for it$")
+
 #: CR 601.2h's "no mana was spent to cast it" (Vexing Bauble) and "[mana
 #: symbols] was spent to cast it" (Wistfulness's "{G}{G}", Drowner of Truth's
 #: "{C}") - both always phrased as "... to cast it" in the pool, never "...
@@ -2254,7 +2258,8 @@ def intervening_if_holds(
     control this turn" (CR 207.2c, `_REVOLT_CLAUSES`, `Game.
     revolt_active_for`), Alania,
     Divergent Storm's "it's the first [type] spell ... you've cast this turn",
-    kicker's "if it was kicked" (CR 702.33a, 702.33d), CR 601.2h's "if no
+    kicker's "if it was kicked" (CR 702.33a, 702.33d), replicate's "a
+    replicate cost was paid for it" (CR 702.56a), CR 601.2h's "if no
     mana was spent to cast it" / "if [mana symbols] was spent to cast it"
     (Vexing Bauble, Wistfulness, Drowner of Truth), Transcendent Dragon's
     plain "if you cast it" (CR 601.2's cast, as opposed to any other way a
@@ -2318,6 +2323,12 @@ def intervening_if_holds(
         if record is None:
             return _fail_closed(game, ability, source)
         return record.kicked > 0
+
+    if _REPLICATE_CLAUSE.match(clause):
+        record = _cast_record_for_clause(game, ability, source, event)
+        if record is None:
+            return _fail_closed(game, ability, source)
+        return record.replicated > 0
 
     if _NO_MANA_SPENT_CLAUSE.match(clause):
         record = _cast_record_for_clause(game, ability, source, event)

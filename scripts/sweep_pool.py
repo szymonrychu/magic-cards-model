@@ -123,6 +123,7 @@ from magic_cards_model.machines.layers import (  # noqa: E402
     parsed_layer_effects,
 )
 from magic_cards_model.machines.modes import modal_profile  # noqa: E402
+from magic_cards_model.machines.objects_as_costs import has_improvise  # noqa: E402
 from magic_cards_model.machines.targeting import profile_for_text  # noqa: E402
 from magic_cards_model.machines.triggers import (  # noqa: E402
     _ENTERS_TAPPED_RE as _CONDITION_ENTERS_TAPPED_RE,
@@ -287,6 +288,65 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     # by hand instead of falling through to "ignored".
     if any(k.lower() == "suspend" for k in printing.keywords):
         found["suspend"] = "machines/casting.py (MarkedExile.suspend, finish_suspend)"
+
+    # Fuse (CR 702.102a) is a choice made *before* announcing which half of a
+    # split card to cast, not a `KeywordCastOption` (it grants no new zone or
+    # cost, just a different `Casting.cast_as_split_half` step -
+    # `Casting.cast_fused`) - so it never shows up in `keyword_cast_options`
+    # output either. Named here by hand, the same way suspend is above.
+    if any(k.lower() == "fuse" for k in printing.keywords):
+        found["fuse"] = "machines/casting.py (Casting.cast_fused, CR 702.102)"
+
+    # Unearth (CR 702.84a) and transmute (CR 702.53a) are activated abilities
+    # that function off the battlefield (CR 113.6j/113.6m), same as cycling -
+    # `machines/keywords.off_zone_abilities` is the one index space all three
+    # share (`ACTIVATE_OFF_ZONE`'s own seat-facing entry point), so it is read
+    # directly here instead of the weaker "any unrelated activated ability
+    # plus this keyword name" heuristic further down, which never actually
+    # asked whether *this* keyword's own ability existed.
+    for entry in keyword_machine.off_zone_abilities(printing):
+        if entry.keyword is not None:
+            found[entry.keyword.lower()] = (
+                f"machines/keywords.py (off_zone_abilities: {entry.family})"
+            )
+
+    # Sunburst (CR 702.44a) is a replacement effect that applies as the
+    # object is *entering* the battlefield, not a resolution instruction, so
+    # it is read off the keyword by `machines/replacement.py`'s
+    # `_self_enters_modifiers`/`_sunburst_modifier` alongside every other
+    # CR 614.1c "enters with N counters" clause - a different module from
+    # every other keyword this sweep already knows how to find.
+    if any(k.lower() == "sunburst" for k in printing.keywords):
+        found["sunburst"] = "machines/replacement.py (_sunburst_modifier, CR 702.44a)"
+
+    # Affinity (CR 702.41a) is a cost *reduction* read off the spell's own
+    # text ("Affinity for [text]") - `Game.cost_reduction_for`'s `_AFFINITY_RE`
+    # counts matching permanents and folds the result into `Casting.
+    # total_cost` for every ordinary cast, so nothing in `keyword_cast_options`
+    # (a *way to cast*, not a discount) or `ADDITIONAL_COST_KEYWORDS` (an
+    # additional cost, not a reduction) was ever going to name it. Named here
+    # by hand, the same way suspend is above.
+    if any(k.lower() == "affinity" for k in printing.keywords):
+        found["affinity"] = "models/game.py (Game.cost_reduction_for, CR 702.41a)"
+
+    # Improvise (CR 702.126a) changes *what pays* {1} of an already-determined
+    # total cost - the same "not an additional or alternative cost" shape as
+    # convoke/delve (`machines/keywords.executes`), except improvise's own
+    # machinery lives in `machines/objects_as_costs.py`, a module this sweep
+    # otherwise never asks about. `Game.cast(improvise=...)` and `Game.
+    # object_cost_offers["improvise"]` are the two seat-facing entry points
+    # (`tests/scenarios/test_improvise.py` exercises both end to end).
+    if has_improvise(printing):
+        found["improvise"] = "machines/objects_as_costs.py (improvise)"
+
+    # Splice (CR 702.47a) is a static ability of a card sitting in *hand*,
+    # revealed while casting a *different* spell - so it never shows up on
+    # its own `keyword_cast_options` (it grants nothing to spliced-onto card
+    # itself) and it is not an additional cost of the card that carries it
+    # either. `Casting.splice`/`.splice_by_id` and `Game.cast(splice=...)`
+    # are the real machinery; named here for the same reason suspend is.
+    if any(k.lower() == "splice" for k in printing.keywords):
+        found["splice"] = "machines/casting.py (Casting.splice, splice_candidates)"
 
     return found
 
@@ -1212,7 +1272,27 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
             ):
                 category = QUOTED_EFFECT
             clauses.append(ClauseOutcome(category, ability.text, "activated"))
-        elif isinstance(ability, TriggeredAbility):
+        elif isinstance(ability, TriggeredAbility) and is_permanent:
+            # Gated on `is_permanent` the same way the static branch below
+            # already is, and for the identical reason: `trigger_effect_for`
+            # is called from exactly one place in the real engine,
+            # `Game._effect_of`, and only for an `AbilityOnStack` - which only
+            # a *permanent's* own triggered ability ever becomes (CR 603.2,
+            # CR 113.6). A non-permanent card's printed "When/Whenever/At ..."
+            # paragraph (the Pact cycle's own "At the beginning of your next
+            # upkeep, pay [cost]. If you don't, you lose the game.") is never
+            # put on the stack as its own object - it is part of the spell's
+            # *resolution text*, already read whole (both paragraphs) by the
+            # `effect_for`/"[spell]" clause above, which is what
+            # `machines/effects._parse_delayed_pay_or_lose_clauses` and
+            # `Game.create_delayed_trigger` actually answer to in a real game.
+            # Asking `trigger_effect_for` about it anyway found no row keyed
+            # under a permanent's own dispatch (there is none: nothing here
+            # is ever an `AbilityOnStack`) and reported Summoner's Pact and
+            # Pact of Negation SILENT for a mechanism that plays correctly -
+            # `tests/scenarios/test_pact_delayed_upkeep_cost.py` already
+            # proves it end to end. This is the same "measured the wrong
+            # dispatcher" shape as the two entries above it in this loop.
             # `ability.event is None` is not on its own "nobody can ever fire
             # this" - `triggers.triggered_abilities_of` keeps such an ability
             # anyway when `_unread_trigger_events` can still read its printed

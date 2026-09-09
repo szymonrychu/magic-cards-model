@@ -281,6 +281,30 @@ def _option_from_keyword(ability: KeywordAbility) -> KeywordCastOption | None:
             understood=cost is not None,
         )
 
+    if canonical == "escape":
+        # CR 702.138a: "Escape represents a static ability that functions
+        # while the card with escape is in a player's graveyard. 'Escape
+        # [cost]' means 'You may cast this card from your graveyard by paying
+        # [cost] rather than paying its mana cost.'" Structurally flashback
+        # (CR 702.34a) with a different rule number - the graveyard half is
+        # what makes this permission, not the discount - and unlike flashback
+        # or mayhem, escape carries no "only as a sorcery" restriction of its
+        # own: whatever timing the card's own type would normally allow
+        # applies (`why_cannot_cast_now` reads that off the card as always).
+        # `total_cost_for_phrase` already reads the "exile N **other** cards
+        # from your graveyard" additional-cost half of the printed cost
+        # (`machines/cost.py`'s `_QUALITY_CONNECTORS`), so nothing escape-
+        # specific is needed here beyond the zone and the rule number.
+        cost = total_cost_for_phrase(printed) if printed else None
+        return KeywordCastOption(
+            keyword=ability.canonical,
+            rule="CR 702.138a",
+            zone=Zone.GRAVEYARD,
+            cost=cost,
+            pays_mana_cost=False,
+            understood=cost is not None,
+        )
+
     if canonical == "mayhem":
         # CR 702.187a: "Mayhem is a static ability that functions while the card
         # with mayhem is in a player's graveyard." CR 702.187b: "'Mayhem
@@ -1289,7 +1313,7 @@ _COLOR_WORDS: dict[str, Color] = {
 
 #: Keywords that are an optional additional cost on a spell being cast
 #: (CR 118.8a). `Casting.pay_kicker` charges these.
-ADDITIONAL_COST_KEYWORDS = frozenset({"kicker", "multikicker"})
+ADDITIONAL_COST_KEYWORDS = frozenset({"kicker", "multikicker", "replicate"})
 
 
 def has_flash(card: Card) -> bool:
@@ -1697,6 +1721,10 @@ class Casting(BaseModel):
     rather than let that mismatch through silently."""
     face: str | None = None
     """The name of the face being cast, for a card with more than one (CR 715.3)."""
+    fuse: bool = False
+    """True once `cast_fused` has announced both halves of a split card with
+    fuse as one spell (CR 702.102a). `self.face` still names the left half
+    while this is set - see `cast_fused`'s own docstring."""
     keyword_used: str | None = None
     """The keyword this spell is being cast with, if any (CR 601.2b).
 
@@ -1775,6 +1803,15 @@ class Casting(BaseModel):
     "If a spell's controller declares the intention to pay any of that spell's
     kicker costs, that spell has been 'kicked.'" Kept as a count rather than a
     flag because CR 702.33c's multikicker may be paid any number of times.
+    """
+    replicated: int = 0
+    """How many times this spell's replicate cost was paid (CR 702.56a).
+
+    "'Replicate [cost]' means 'As an additional cost to cast this spell, you
+    may pay [cost] any number of times.'" `pay_replicate` is `pay_kicker`'s
+    own shape - always the "multi" branch, since CR 702.56a has no
+    plain-kicker-style single-payment restriction the way CR 702.33a/c
+    distinguishes kicker from multikicker.
     """
     payment: CostPayment | None = None
     announced_zone: Zone | None = None
@@ -1979,7 +2016,14 @@ class Casting(BaseModel):
         one. No face is ever explicitly chosen for these (`Casting.cast_as_adventure`
         is Adventure-only, CR 715.3), so the front face is the only one this
         reaches for.
+
+        CR 702.102c/709.4b: a **fused** split spell's cost is both halves'
+        mana costs added together, not either one alone - `ManaCost.plus`
+        combines them symbol for symbol the same way a cost increase does.
         """
+        if self.fuse and self.spell.card.card_faces:
+            left, right = self.spell.card.card_faces[0], self.spell.card.card_faces[1]
+            return ManaCost.parse(left.mana_cost or "").plus(ManaCost.parse(right.mana_cost or ""))
         face = self.chosen_face
         if face is not None:
             return ManaCost.parse(face.mana_cost or "")
@@ -2029,8 +2073,8 @@ class Casting(BaseModel):
         Adventure's own equivalent gap is a separate, still-open limitation
         (`docs/engine-coverage.md`).
 
-        Fuse (CR 702.102) - casting *both* halves as one spell - is not
-        offered here: this always names exactly one.
+        Fuse (CR 702.102) - casting *both* halves as one spell - is
+        `cast_fused` instead: this always names exactly one.
         """
         if self.spell.card.layout is not Layout.SPLIT:
             raise ValueError(f"{self.spell.name} is not a split card (CR 709)")
@@ -2039,6 +2083,35 @@ class Casting(BaseModel):
                 self.face = face_name
                 return self.step
         raise ValueError(f"{self.spell.name} has no half called {face_name}")
+
+    def cast_fused(self) -> CastingStep:
+        """CR 702.102a: cast both halves of a split card with fuse as one spell.
+
+        "Fuse is a static ability found on some split cards ... that applies
+        while the card with fuse is in a player's hand. If a player casts a
+        split card with fuse from their hand, the player may choose to cast
+        both halves of that split card rather than choose one half. This
+        choice is made before putting the split card with fuse onto the
+        stack. The resulting spell is a fused split spell."
+
+        Sets `self.face` to the **left** half (CR 702.102d orders its own
+        resolution "the left half and then ... the right half", so "left"
+        is not an arbitrary choice of which name to keep) and `self.fuse`,
+        which `base_cost`/`targeting` below and `cast()`'s own
+        `CardState.fused` stamp all read. Unlike `cast_as_split_half`, both
+        `card_faces` entries are in play at once - CR 702.102b: "A fused
+        split spell has the combined characteristics of its two halves."
+        """
+        if self.spell.card.layout is not Layout.SPLIT:
+            raise ValueError(f"{self.spell.name} is not a split card (CR 709)")
+        faces = self.spell.card.card_faces or []
+        if len(faces) != 2:
+            raise ValueError(f"{self.spell.name} does not have two halves to fuse")
+        if _keyword(self.spell.card, "fuse") is None:
+            raise ValueError(f"{self.spell.name} does not have fuse (CR 702.102a)")
+        self.face = faces[0].name
+        self.fuse = True
+        return self.step
 
     @property
     def modal(self) -> ModalProfile | None:
@@ -2081,6 +2154,21 @@ class Casting(BaseModel):
         both announcement and `Game.legal_target`'s CR 608.2b recheck.
         """
         if self.modal is None or not self.chosen_mode_numbers:
+            if self.fuse and self.spell.card.card_faces:
+                # CR 702.102b/709.4b: a fused spell's characteristics are
+                # both halves combined, so it may need targets for *both* -
+                # Wear // Tear fused needs one artifact and one enchantment,
+                # not just Wear's own. `understood` is the conjunction: a
+                # spell this cannot fully read for *either* half is not one
+                # CR 601.2c can safely check announced targets against.
+                left, right = self.spell.card.card_faces[0], self.spell.card.card_faces[1]
+                left_profile = profile_for_text(left.oracle_text or "")
+                right_profile = profile_for_text(right.oracle_text or "")
+                combined = TargetingProfile(
+                    requirements=(*left_profile.requirements, *right_profile.requirements),
+                    understood=left_profile.understood and right_profile.understood,
+                )
+                return self._with_bestowed_target(combined)
             if self.spell.card.layout is Layout.SPLIT and self.face is not None:
                 face = self.chosen_face
                 if face is not None:
@@ -2940,6 +3028,49 @@ class Casting(BaseModel):
             self.kicked += 1
         return self.step
 
+    def pay_replicate(
+        self, times: int = 1, *, choosing: list[CardState] | None = None
+    ) -> CastingStep:
+        """CR 702.56a: pay this spell's replicate cost as an additional cost,
+        any number of times.
+
+        "Replicate is a keyword that represents two abilities. The first is a
+        static ability that functions while the spell with replicate is on
+        the stack ... 'Replicate [cost]' means 'As an additional cost to cast
+        this spell, you may pay [cost] any number of times' and 'When you
+        cast this spell, if a replicate cost was paid for it, copy it for
+        each time its replicate cost was paid. If the spell has any targets,
+        you may choose new targets for any of the copies.'"
+
+        Structurally `pay_kicker`'s own "multi" branch (CR 702.33c) with no
+        plain-kicker restriction to enforce, since CR 702.56a's own "any
+        number of times" is unconditional. The count this records is read
+        back by `machines/triggers.intervening_if_holds`'s "a replicate cost
+        was paid for it" clause and by `machines/keywords._replicate_effect`,
+        the same way `kicked` is read by "if it was kicked".
+        """
+        ability = _keyword(self.spell.card, "replicate")
+        if ability is None:
+            raise ValueError(f"{self.spell.name} has no replicate ability (CR 702.56a)")
+        if times < 1:
+            raise ValueError("replicate is paid at least once or not at all")
+
+        remaining = list(choosing or [])
+        for _ in range(times):
+            cost = total_cost_for_phrase(ability.cost or "", self.caster)
+            if cost is None:
+                raise ValueError(
+                    f"{self.spell.name}'s replicate cost {ability.cost!r} could not be read, "
+                    f"so it cannot be paid"
+                )
+            for component in cost.components:
+                if component.required and not component.cards:
+                    component.cards = remaining[: component.required]
+                    remaining = remaining[component.required :]
+            self.add_additional_cost(cost)
+            self.replicated += 1
+        return self.step
+
     def add_additional_cost(self, cost: TotalCost | ManaCost) -> CastingStep:
         """CR 118.8a: any number of additional costs may be applied to a spell.
 
@@ -3775,6 +3906,7 @@ class Casting(BaseModel):
             # CR 715.4 answer - "while on the stack not as an Adventure, an
             # adventurer card has only its normal characteristics."
             self.spell.face_played = self.face
+            self.spell.fused = self.fuse
         if self.game is not None:
             self._emit_becomes_target()
             # CR 601.2b announced the keyword, the face and the modes, and
@@ -3822,6 +3954,7 @@ class Casting(BaseModel):
                     )
                 ],
                 kicked=self.kicked,
+                replicated=self.replicated,
                 # CR 400.7 makes the spell a new object the moment CR 601.2a
                 # moves it off the exile pile, so the annotation that pile
                 # carried is gone by now - `announced_exile_annotation` is the

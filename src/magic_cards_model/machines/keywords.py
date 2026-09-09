@@ -62,6 +62,7 @@ from .abilities import (
 from .combat import has_keyword
 from .cost import CostPayment, CostStep, TotalCost, discard_cost, total_cost_for_phrase
 from .decisions import Decision, DecisionKind
+from .delayed import anaphoric_delayed_trigger
 from .layers import (
     ComputedBoard,
     ContinuousEffect,
@@ -70,7 +71,9 @@ from .layers import (
     Sublayer,
     _only,
     add_type,
+    grant_ability,
     modify_power_toughness,
+    only_this_incarnation,
 )
 from .objects_as_costs import crew_number, crew_offer, power_of, total_power
 from .triggers import AbilityOnStack, GameEvent, activated_abilities_of, triggers_for
@@ -102,6 +105,8 @@ class KeywordRule(StrEnum):
     HIDEAWAY = "CR 702.75a"
     CREW = "CR 702.122a"
     EVOKE = "CR 702.74a"
+    UNEARTH = "CR 702.84a"
+    TRANSMUTE = "CR 702.53a"
 
 
 def executes(keyword: str) -> bool:
@@ -321,6 +326,32 @@ def _storm_ability(ability: KeywordAbility) -> TriggeredAbility:
         effect=(
             "copy it for each other spell that was cast before it this turn. If the spell "
             "has any targets, you may choose new targets for the copies"
+        ),
+        event=TriggerEvent.CAST_SPELL,
+    )
+
+
+def _replicate_ability(ability: KeywordAbility) -> TriggeredAbility:
+    """CR 702.56a: "Replicate" means "... and 'When you cast this spell, if a
+    replicate cost was paid for it, copy it for each time its replicate cost
+    was paid. If the spell has any targets, you may choose new targets for
+    any of the copies.'"
+
+    The intervening *if* is what keeps an *un*replicated cast of the same
+    card from copying itself zero times as though it were storm's unrelated
+    count - `machines/triggers.intervening_if_holds`'s "a replicate cost was
+    paid for it" clause reads `CastRecord.replicated` the same way kicker's
+    own "if it was kicked" reads `CastRecord.kicked`.
+    """
+    return _expansion(
+        ability,
+        keyword="replicate",
+        word=TriggerWord.WHEN,
+        condition="you cast this spell",
+        intervening_if="a replicate cost was paid for it",
+        effect=(
+            "copy it for each time its replicate cost was paid. If the spell has any "
+            "targets, you may choose new targets for any of the copies"
         ),
         event=TriggerEvent.CAST_SPELL,
     )
@@ -562,6 +593,7 @@ _TRIGGER_EXPANSIONS: dict[str, Callable[[KeywordAbility], list[TriggeredAbility]
     "prowess": _single(_prowess_ability),
     "cascade": _single(_cascade_ability),
     "storm": _single(_storm_ability),
+    "replicate": _single(_replicate_ability),
     "persist": _single(_persist_ability),
     "mobilize": _single(_mobilize_ability),
     "firebending": _single(_firebending_ability),
@@ -1080,6 +1112,227 @@ def cycle(
     payment.pay()
     activation.activate()
     return activation.resolve()
+
+
+# --------------------------------------------------------------------------
+# Unearth (CR 702.84)
+# --------------------------------------------------------------------------
+
+
+def unearth_abilities(card: Card) -> list[KeywordAbility]:
+    """Every unearth ability printed on this card, in printed order (CR 702.84)."""
+    return [
+        ability for ability in keyword_abilities(card) if ability.canonical.lower() == "unearth"
+    ]
+
+
+def unearth_activation(
+    game: Any, card: CardState, player: str, index: int = 0
+) -> KeywordActivation:
+    """Build the activation for a card's unearth ability (CR 702.84a).
+
+    "Unearth is an activated ability that functions while the card with
+    unearth is in a graveyard. 'Unearth [cost]' means '[Cost]: Return this
+    card from your graveyard to the battlefield. It gains haste. Exile it at
+    the beginning of the next end step. If it would leave the battlefield,
+    exile it instead of putting it anywhere else. Activate only as a
+    sorcery.'"
+
+    The same `cycling_activation`/`_synthetic_ability` shape as cycling
+    (CR 702.29a) - the card prints only "Unearth [cost]", never the sentence
+    it expands to, so the ability run on the stack is built from the rule's
+    own wording rather than parsed off the printing.
+
+    The delayed "exile it at the beginning of the next end step" half is
+    `_unearth_effect`'s business, not this builder's: CR 602.2's activation
+    only puts the ability on the stack and takes its cost, and the delayed
+    trigger is created when the ability *resolves* (CR 603.7a), which for
+    every other delayed-creating ability in this engine happens inside the
+    effect, not the activation (`_parse_delayed_reanimate_haste_exile_
+    clauses`, `machines/casting.exile_warped`).
+
+    **Deliberately narrower than CR 702.84a's own second sentence.** "If it
+    would leave the battlefield, exile it instead of putting it anywhere
+    else" is a replacement effect scoped to this one permanent for as long
+    as it is out there, independent of and in addition to the delayed
+    end-step exile - this engine has no general "redirect any zone change of
+    this object" replacement to hang that on yet, and building one is out of
+    scope for a cost/casting-keywords wave. Recorded in
+    `docs/engine-coverage.md`'s Not-modelled table rather than built halfway.
+    """
+    printed = unearth_abilities(card.card)
+    if index >= len(printed):
+        raise ValueError(
+            f"{card.name} has no unearth ability number {index} ({KeywordRule.UNEARTH})"
+        )
+    ability = printed[index]
+
+    cost = _keyword_cost(ability, player)
+    if cost is None:
+        raise ValueError(
+            f"{card.name}'s {ability.keyword} cost {ability.cost!r} could not be read, "
+            f"so it cannot be paid"
+        )
+    return KeywordActivation(
+        card=card,
+        player=player,
+        keyword=ability.canonical,
+        rule=str(KeywordRule.UNEARTH),
+        zone=Zone.GRAVEYARD,
+        cost=cost,
+        sorcery_only=True,
+        ability=_synthetic_ability(
+            ability,
+            cost_text=ability.cost or "",
+            effect=(
+                "Return this card from your graveyard to the battlefield. It gains haste. "
+                "Exile it at the beginning of the next end step."
+            ),
+        ),
+        game=game,
+    )
+
+
+def _unearth_effect(activation: KeywordActivation) -> CardState | None:
+    """CR 702.84a's effect: return the card, grant it haste, and create the
+    delayed trigger that exiles it again.
+
+    `game.put_onto_battlefield` is the same primitive `machines/effects.
+    _parse_delayed_reanimate_haste_exile_clauses` already uses for Postmortem
+    Lunge and Goryo's Vengeance's own "return ... It gains haste. Exile it at
+    the beginning of the next end step." shape - unearth is that same
+    template, expanded from a keyword instead of read off a printed
+    sentence, so it is built the identical way: haste through a
+    `only_this_incarnation`-scoped `ContinuousEffect` (CR 611.2a's default
+    duration, since nothing states one), and the delayed exile through
+    `anaphoric_delayed_trigger`/`Game.create_delayed_trigger` (CR 603.7a).
+    """
+    game = activation.game
+    card = activation.card
+    if game is None or card.zone is not Zone.GRAVEYARD:
+        return None
+    with game._id_allocator_scope():  # noqa: SLF001
+        entered = game.put_onto_battlefield(card, activation.player, tapped=False)
+        if entered.zone is not Zone.BATTLEFIELD:
+            return entered  # CR 614.6: a replacement sent it elsewhere.
+        store = game.continuous_effects
+        timestamp = store.tick()
+        store.add(
+            ContinuousEffect(
+                description=f"{entered.name}: unearth grants haste (CR 702.84a)",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                selector=only_this_incarnation(entered, entered.zone_change_stamp),
+                modification=grant_ability("Haste"),
+            )
+        )
+        trigger = anaphoric_delayed_trigger(
+            "Exile it at the beginning of the next end step.",
+            subject=entered,
+            controller=activation.player,
+            source_id=entered.id,
+            source_name=entered.name,
+            game=game,
+        )
+        if trigger is not None:
+            game.create_delayed_trigger(trigger)
+        return entered
+
+
+# --------------------------------------------------------------------------
+# Transmute (CR 702.53)
+# --------------------------------------------------------------------------
+
+
+def transmute_abilities(card: Card) -> list[KeywordAbility]:
+    """Every transmute ability printed on this card, in printed order (CR 702.53)."""
+    return [
+        ability for ability in keyword_abilities(card) if ability.canonical.lower() == "transmute"
+    ]
+
+
+def transmute_activation(
+    game: Any, card: CardState, player: str, index: int = 0
+) -> KeywordActivation:
+    """Build the activation for a card's transmute ability (CR 702.53a).
+
+    "Transmute is an activated ability that functions only while the card
+    with transmute is in a player's hand. 'Transmute [cost]' means '[Cost],
+    Discard this card: Search your library for a card with the same mana
+    value as the discarded card, reveal that card, and put it into your
+    hand. Then shuffle your library. Activate only as a sorcery.'"
+
+    Structurally cycling's own typecycling variant (CR 702.29e) with a
+    different search predicate - "the same mana value as the **discarded**
+    card" rather than a named type - so the discard is folded into the cost
+    exactly the way `cycling_activation` folds discarding the cycled card
+    into *its* cost, and `_transmute_effect` reads the mana value off the
+    just-discarded `CardState` rather than off `card` (CR 707.3: a discarded
+    card is a new object once it changes zones, but its own mana value is a
+    copiable characteristic that never depended on being in hand).
+    """
+    printed = transmute_abilities(card.card)
+    if index >= len(printed):
+        raise ValueError(
+            f"{card.name} has no transmute ability number {index} ({KeywordRule.TRANSMUTE})"
+        )
+    ability = printed[index]
+
+    cost = _keyword_cost(ability, player)
+    if cost is None:
+        raise ValueError(
+            f"{card.name}'s {ability.keyword} cost {ability.cost!r} could not be read, "
+            f"so it cannot be paid"
+        )
+    cost = TotalCost(
+        mana=cost.mana,
+        components=[
+            *cost.components,
+            discard_cost(card, payer=player, required=1, description="Discard this card"),
+        ],
+    )
+    return KeywordActivation(
+        card=card,
+        player=player,
+        keyword=ability.canonical,
+        rule=str(KeywordRule.TRANSMUTE),
+        zone=Zone.HAND,
+        cost=cost,
+        sorcery_only=True,
+        ability=_synthetic_ability(
+            ability,
+            cost_text=f"{ability.cost or ''}, Discard this card".strip(", "),
+            effect=(
+                "Search your library for a card with the same mana value as the discarded "
+                "card, reveal that card, and put it into your hand. Then shuffle your library."
+            ),
+        ),
+        game=game,
+    )
+
+
+def _transmute_effect(activation: KeywordActivation) -> CardState | None:
+    """CR 702.53a's search: a library card whose mana value equals the
+    mana value of the card transmute just discarded.
+
+    The discarded card is `activation.card` - `_activate_impl` already
+    charged the discard as part of paying the cost before this ever runs
+    (CR 602.2b/CR 118.8a), so by the time the effect resolves `activation.
+    card.zone` is the graveyard, exactly what CR 702.53a's own "the
+    discarded card" refers to. No shuffle happens here, the same declared
+    concession `_cycling_effect`'s own typecycling search makes: a rigged
+    library is the scenario's own staging, not something this effect should
+    randomise away.
+    """
+    game = activation.game
+    target_value = activation.card.mana_value
+    owner = game.player(activation.player)
+    for state in list(owner.library):
+        if state.mana_value == target_value:
+            with game._id_allocator_scope():  # noqa: SLF001
+                owner.move(state, Zone.HAND)
+            return state
+    return None
 
 
 # --------------------------------------------------------------------------
@@ -1756,6 +2009,43 @@ def off_zone_abilities(card: Card) -> list[OffZoneAbility]:
                 ),
             )
         )
+    for index, kw_ability in enumerate(unearth_abilities(card)):
+        pool.append(
+            OffZoneAbility(
+                family="unearth",
+                index=index,
+                keyword=kw_ability.canonical,
+                zone=Zone.GRAVEYARD,
+                rule=str(KeywordRule.UNEARTH),
+                ability=_synthetic_ability(
+                    kw_ability,
+                    cost_text=kw_ability.cost or "",
+                    effect=(
+                        "Return this card from your graveyard to the battlefield. It gains "
+                        "haste. Exile it at the beginning of the next end step."
+                    ),
+                ),
+            )
+        )
+    for index, kw_ability in enumerate(transmute_abilities(card)):
+        pool.append(
+            OffZoneAbility(
+                family="transmute",
+                index=index,
+                keyword=kw_ability.canonical,
+                zone=Zone.HAND,
+                rule=str(KeywordRule.TRANSMUTE),
+                ability=_synthetic_ability(
+                    kw_ability,
+                    cost_text=f"{kw_ability.cost or ''}, Discard this card".strip(", "),
+                    effect=(
+                        "Search your library for a card with the same mana value as the "
+                        "discarded card, reveal that card, and put it into your hand. Then "
+                        "shuffle your library."
+                    ),
+                ),
+            )
+        )
     printed = [ability for ability in activated_abilities_of(card) if ability.zone is not None]
     for index, ability in enumerate(printed):
         assert ability.zone is not None and ability.zone_rule is not None
@@ -1810,6 +2100,18 @@ def off_zone_activation(
                 f"({KeywordRule.CYCLING})"
             )
         return cycling_activation(game, card, player, entry.index)
+    if entry.family in ("unearth", "transmute"):
+        if targets or sacrificing or discarding:
+            # Same fail-closed refusal as cycling above: CR 702.84a and
+            # CR 702.53a each spell their whole ability out too, so there is
+            # nothing here for a target, a sacrifice, or a second discard to
+            # be for.
+            raise ValueError(
+                f"{card.name}'s {entry.keyword} ability takes no targets and no object costs "
+                f"({entry.rule})"
+            )
+        builder = unearth_activation if entry.family == "unearth" else transmute_activation
+        return builder(game, card, player, entry.index)
     return off_battlefield_activation(
         game,
         card,
@@ -2785,6 +3087,34 @@ def _storm_effect(game: Any, ability: AbilityOnStack) -> list[CardState]:
     return copies
 
 
+def _replicate_effect(game: Any, ability: AbilityOnStack) -> list[CardState]:
+    """CR 702.56a's copy half: one copy for each time the replicate cost was
+    paid.
+
+    Same shape as `_storm_effect` - the replicate trigger sits directly above
+    the spell it copies (CR 603.3b) and resolves first, so `ability.source`
+    is still that spell on the stack. The count is `CastRecord.replicated`
+    rather than a board-wide tally: CR 702.56a's own intervening *if*
+    ("if a replicate cost was paid for it") already gated this trigger from
+    firing at all when the count is zero, so by the time this runs the
+    record exists and its `replicated` is what was actually paid, read the
+    same way `_cast_record_for_clause`/`intervening_if_holds` already read
+    it to decide whether to trigger in the first place.
+    """
+    source = ability.source(game)
+    if source is None or source not in game.stack:
+        return []
+    controller = ability.controller
+    record = game.cast_records.get(source.id)
+    count = record.replicated if record is not None else 0
+    copies: list[CardState] = []
+    for _ in range(max(count, 0)):
+        copy = game.copy_spell(source, controller=controller)
+        game.offer_new_targets_for_copy(copy, controller, source_name=source.name)
+        copies.append(copy)
+    return copies
+
+
 def _ward_effect(game: Any, ability: AbilityOnStack) -> bool:
     """CR 702.21a's effect: "counter that spell or ability unless that player pays".
 
@@ -2955,6 +3285,7 @@ KEYWORD_TRIGGER_EFFECTS: dict[str, Callable[[Any, AbilityOnStack], Any]] = {
     "persist": _persist_effect,
     "cascade": _cascade_effect,
     "storm": _storm_effect,
+    "replicate": _replicate_effect,
     "ward": _ward_effect,
     "madness": _madness_effect,
     "hideaway": _hideaway_effect,
@@ -3017,6 +3348,8 @@ def keyword_effect_for(ability: AbilityOnStack) -> Callable[[Any, AbilityOnStack
 KEYWORD_EFFECTS: dict[str, Callable[[KeywordActivation], Any]] = {
     "equip": _equip_effect,
     "crew": _crew_effect,
+    "unearth": _unearth_effect,
+    "transmute": _transmute_effect,
 }
 
 for _name in ("cycling", "landcycling", "typecycling"):

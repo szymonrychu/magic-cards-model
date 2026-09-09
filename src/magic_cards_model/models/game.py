@@ -886,6 +886,11 @@ class CastRecord(BaseModel):
     kicked: int = 0
     """How many times a kicker cost was paid (CR 702.33d), copied from
     `Casting.kicked`."""
+    replicated: int = 0
+    """How many times a replicate cost was paid (CR 702.56a), copied from
+    `Casting.replicated` - what `machines/keywords._replicate_effect` copies
+    the spell for and `machines/triggers.intervening_if_holds`'s "a
+    replicate cost was paid for it" clause reads."""
     additional_cost_cards: list[UUID] = Field(default_factory=list)
     """Every card consumed paying one of `Casting.additional_costs`'
     components - Fling's "sacrifice a creature" (CR 118.8a), read here by
@@ -2748,6 +2753,7 @@ class Game(BaseModel):
         mana_spent: dict[Color, int] | None = None,
         spend_effects: list[str] | None = None,
         kicked: int = 0,
+        replicated: int = 0,
         additional_cost_cards: list[UUID] | None = None,
     ) -> "CastRecord":
         """Record how a spell was cast, for the rules that ask afterwards.
@@ -2788,6 +2794,7 @@ class Game(BaseModel):
             mana_spent=dict(mana_spent or {}),
             spend_effects=tuple(spend_effects or ()),
             kicked=kicked,
+            replicated=replicated,
             additional_cost_cards=list(additional_cost_cards or []),
         )
         self.cast_records[spell.id] = record
@@ -2969,10 +2976,30 @@ class Game(BaseModel):
         # substitution at all, which is `effect_for`'s own `x_value=None`
         # default. `spell.mana_cost` already reads the up face of a DFC.
         x_value = self.cast_record(spell).x_value if "{X}" in (spell.mana_cost or "") else None
-        effect = effect_for(spell.name, spell.oracle_text, x_value=x_value)
-        if effect is not None:
+        # CR 702.102d: a fused split spell resolves the left half's
+        # instructions and then the right half's - two independent texts,
+        # neither of which is `spell.oracle_text` (that property reads
+        # `up_face`, which is undefined for "both faces at once" the same
+        # way `base_cost`/`targeting` bypass it for a fused `Casting`).
+        # Ordinary resolution stays exactly what it was: one name, one text.
+        if spell.fused and spell.card.card_faces and len(spell.card.card_faces) == 2:
+            faces_to_resolve = [
+                (face.name, face.oracle_text or "") for face in spell.card.card_faces
+            ]
+        else:
+            faces_to_resolve = [(spell.name, spell.oracle_text)]
+        effects = [
+            effect
+            for effect in (
+                effect_for(face_name, face_text, x_value=x_value)
+                for face_name, face_text in faces_to_resolve
+            )
+            if effect is not None
+        ]
+        if effects:
             try:
-                effect(self, spell)
+                for effect in effects:
+                    effect(self, spell)
             except Exception:
                 # CR 400.1: "a zone is a place where objects can be during a
                 # game" and every object not outside the game is in exactly
@@ -6871,6 +6898,19 @@ class Game(BaseModel):
             except ValueError:
                 # Not a modal card after all; fall through to its plain text.
                 pass
+        if spell.fused and spell.card.card_faces and len(spell.card.card_faces) == 2:
+            # CR 702.102b/709.4b: the same combined-profile shape `Casting.
+            # targeting` builds at announcement, rebuilt here for CR 608.2b's
+            # recheck - a fused Wear // Tear's artifact target is judged
+            # against Wear's own restriction and its enchantment target
+            # against Tear's, never against just one half's text.
+            left, right = spell.card.card_faces[0], spell.card.card_faces[1]
+            left_profile = profile_for_text(left.oracle_text or "")
+            right_profile = profile_for_text(right.oracle_text or "")
+            return TargetingProfile(
+                requirements=(*left_profile.requirements, *right_profile.requirements),
+                understood=left_profile.understood and right_profile.understood,
+            )
         if spell.card.layout is Layout.SPLIT and spell.face_played is not None:
             return profile_for_text(spell.oracle_text)
         if record is not None and "{X}" in (spell.mana_cost or ""):

@@ -3943,7 +3943,78 @@ def _self_enters_modifiers(
             performable.append(
                 (f"self:{index}", _apply_self_enters(effect, amount), effect.text, False)
             )
+
+    sunburst = _sunburst_modifier(game, card_state, up_face_name)
+    if sunburst is not None:
+        performable.append(sunburst)
+
     return performable
+
+
+def _sunburst_counter_amount(game: "Game", entering: CardState) -> int | None:
+    """CR 702.44b's own count: distinct colors of mana spent paying the total
+    cost of the spell that is resolving into `entering` - `None` when this is
+    not that (Sunburst adds nothing to an object that reaches the battlefield
+    some other way, and CR 702.44b says so in as many words: "only if the
+    object with sunburst is entering the battlefield from the stack as a
+    resolving spell").
+
+    `CastRecord.mana_spent` already carries exactly this (CR 601.2h,
+    `machines/cost.ManaPayment.spend`), "including additional or alternative
+    costs" per the same rule - it is filled once, at payment, from whatever
+    was actually spent, with no notion of which symbol on the printed cost
+    each mana went to. `Color.COLORLESS` is excluded: CR 105.1 lists five
+    colors and colorless mana is explicitly "not a color" (CR 105.2c).
+    """
+    record = game.cast_records.get(entering.id)
+    if record is None:
+        return None
+    return sum(
+        1
+        for color, amount in record.mana_spent.items()
+        if color is not Color.COLORLESS and amount > 0
+    )
+
+
+def _sunburst_modifier(
+    game: "Game", card_state: CardState, up_face_name: str | None
+) -> tuple[str, Apply, str, bool] | None:
+    """Sunburst (CR 702.44a), read off the keyword rather than off a parsed
+    sentence - its own CR 702.44a expansion is reminder text (CR 207.2),
+    never a rules-text sentence `_ENTERS_WITH` could match, so it is handled
+    here directly rather than through `parse_replacement_effects`.
+
+    No printing in the pool carries Sunburst on a multifaced card, so
+    `up_face_name` is accepted only to keep this call symmetric with the
+    parsed-sentence loop above rather than to filter anything yet - `Card.
+    keywords` is Scryfall's own per-printing summary and is already scoped to
+    whichever card this `CardState` actually is.
+
+    "If this object is entering **as a creature**, ignoring any type-changing
+    effects that would affect it" (CR 702.44a) reads `Card.types` - the
+    printed type, before any layer effect - which is exactly what CR 613.1's
+    "ignoring type-changing effects" means and is why this never asks
+    `Game.characteristics_of` the way an ordinary battlefield query would.
+    """
+    del up_face_name
+    keywords = {k.lower() for k in card_state.card.keywords}
+    if "sunburst" not in keywords:
+        return None
+    amount = _sunburst_counter_amount(game, card_state)
+    if amount is None:
+        return None
+    is_creature = Type.CREATURE in card_state.card.types
+    counter_kind = "+1/+1" if is_creature else "charge"
+    effect = _make(
+        ReplacementKind.ENTERS_WITH,
+        "Sunburst",
+        subject=card_state.card.name,
+        replacement=f"{amount} {counter_kind} counters",
+        amount=amount,
+        counter_kind=counter_kind,
+        self_replacement=True,
+    )
+    return ("self:sunburst", _apply_self_enters(effect, amount), "Sunburst (CR 702.44a)", False)
 
 
 def _leaving_the_stack(event: ReplaceableEvent) -> bool:

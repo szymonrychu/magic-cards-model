@@ -682,8 +682,28 @@ class CardState(BaseModel):
     (`Casting.face`/`chosen_face`), for `Layout.SPLIT` and `Layout.ADVENTURE`
     alike, and set *unconditionally* - an announcement that named no face
     clears it, which is CR 715.4's answer for an adventurer card recast as its
-    creature half after CR 715.3d exiled it. Fuse (CR 702.102) - casting *both*
-    halves as one spell - is not modelled: this only ever names one half.
+    creature half after CR 715.3d exiled it. When `fused` (below) is set,
+    this still names the **left** half (CR 702.102d's own resolution order),
+    for every reader that only ever expected one name here.
+    """
+    fused: bool = False
+    """True while this fused split spell (CR 702.102) is on the stack as
+    *both* halves cast together, rather than the ordinary one CR 709.3
+    names.
+
+    CR 702.102a: "If a player casts a split card with fuse from their hand,
+    the player may choose to cast both halves of that split card rather than
+    choose one half." Set by `Casting.cast_fused`/`cast`, alongside
+    `face_played` (which keeps naming the left half so a caller reading only
+    that still gets a real, on-card name rather than `None`). CR 702.102b/d:
+    while this is set, `CardState.up_face`'s single-face reads are no longer
+    the whole truth of the spell's cost or effect - `Casting.base_cost`/
+    `.targeting` and `Game._resolve_top` read both faces directly instead
+    of going through this flag, the same way a modal spell's chosen bullets
+    are read directly rather than forced through `up_face`. Never explicitly
+    cleared, the same as `face_played` itself is not - both are simply
+    ignored by every reader once the card leaves the stack (CR 709.2: "only
+    one card" everywhere else), since nothing reads either field there.
     """
     exerted: bool = False
     """True while this permanent will not untap during its controller's next

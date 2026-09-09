@@ -29,8 +29,8 @@ type="rules")` in the session that wrote this file:
   being cast exist. The other half's characteristics are treated as though
   they didn't exist."
 - **CR 702.102a/702.102d** - Fuse: casting both halves as one spell,
-  resolving the left half's instructions and then the right half's. Not
-  modelled by this engine (its own reminder line is stripped, not read).
+  resolving the left half's instructions and then the right half's. Built
+  and tested in `tests/scenarios/test_fuse.py` - `Casting.cast_fused`.
 - **CR 701.8a** - "To destroy a permanent, move it from the battlefield to
   its owner's graveyard."
 """
