@@ -54,7 +54,7 @@ travel.
 """
 
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from random import Random
 from typing import TYPE_CHECKING
 from uuid import UUID
@@ -150,6 +150,42 @@ AbilityEffect = Callable[["Game", AbilityOnStack], None]
 #: `Game.resolve_targets`/`Game.controller_of` already take either, so one
 #: function serves both `Effect` and `AbilityEffect`.
 TargetedClause = Callable[["Game", "StackObject"], None]
+
+
+def computed_permanents(
+    game: "Game",
+    permanents: Iterable[CardState],
+    predicate: Callable[[Characteristics], bool],
+) -> list[CardState]:
+    """Every permanent in `permanents` whose *computed* characteristics satisfy
+    `predicate` - the one way this module is allowed to select battlefield
+    permanents by what they are.
+
+    `CardState.types`, `.subtypes`, `.supertypes`, `.colors` and `.mana_value`
+    are CR 613.1's *starting point*: "the values of the characteristics printed
+    on that card", read off whichever face is up (CR 712.8d). They are not the
+    object's characteristics. CR 613.5 has the layer system applied
+    "continually and automatically", so a land animated by earthbend (CR
+    701.66a) is a creature by CR 613.1d's layer 4 - "in addition to its other
+    types", CR 205.1b - with mana value 0, since CR 202.3a gives an object with
+    no mana cost mana value 0. Filtering that board on the printed reads walks
+    straight past it, which is exactly how Wrath of the Skies used to spare an
+    animated land it should have swept.
+
+    `Game.characteristics_of` recomputes the whole board per call (deliberately
+    - see its docstring on what "continually" means), so a filter over N
+    permanents that called it N times would run the layer stack N times. One
+    `computed_board()` is taken here and every candidate read out of it, which
+    is also what makes the whole filter see one consistent board rather than N
+    successive ones.
+
+    Only for permanents. `ComputedBoard.of` raises `KeyError` for anything not
+    on the battlefield, and correctly so: no continuous effect reaches a card
+    in a hand, graveyard, library or exile, so the printed read is the only
+    answer there is for those and remains the right one.
+    """
+    board = game.computed_board()
+    return [permanent for permanent in permanents if predicate(board.of(permanent))]
 
 
 def deal_damage(amount: int) -> Effect:
@@ -3400,7 +3436,12 @@ _DRAW_THEN_PUT_LAND_CAVE_BONUS_RE = re.compile(
 def _parse_draw_then_put_land_cave_bonus_clause(text: str) -> AbilityEffect | None:
     """`_DRAW_THEN_PUT_LAND_CAVE_BONUS_RE`'s shape - Spelunking's whole enters
     trigger. CR 305.6: "Cave" is a land subtype like any other, so `has_land_
-    type("Cave")` is the same check a search naming a land type would use.
+    type("Cave")` is the same check a search naming a land type would use -
+    except that the question is asked of the *permanent* the land has just
+    become, so it reads the computed board (CR 613.5) rather than the card's
+    printed type line. "If you put a Cave onto the battlefield this way" is
+    about what arrived: a Blood Moon (CR 305.7 sets a nonbasic land's subtype)
+    makes it a Mountain the instant it does, Cave or not in hand.
     """
     whole = _strip_non_effect_preamble(text).strip()
     match = _DRAW_THEN_PUT_LAND_CAVE_BONUS_RE.fullmatch(whole)
@@ -3410,7 +3451,9 @@ def _parse_draw_then_put_land_cave_bonus_clause(text: str) -> AbilityEffect | No
         life = _count(match.group("life"))
     except KeyError:
         return None
-    is_cave = has_land_type("Cave")
+
+    def is_cave(chars: Characteristics) -> bool:
+        return "cave" in {subtype.lower() for subtype in chars.subtypes}
 
     def effect(game: "Game", ability: "AbilityOnStack") -> None:
         controller = game.controller_of(ability)
@@ -3424,7 +3467,7 @@ def _parse_draw_then_put_land_cave_bonus_clause(text: str) -> AbilityEffect | No
             return
         chosen = _choose_land_from_hand(game, controller, source)
         game.put_onto_battlefield(chosen, controller.username, tapped=False)
-        if is_cave(chosen):
+        if is_cave(game.characteristics_of(chosen)):
             game.gain_life(controller, life)
 
     return effect
@@ -3466,11 +3509,11 @@ def _parse_sacrifice_lands_then_search_that_many_clause(text: str) -> Effect | N
 
     def effect(game: "Game", spell: CardState) -> None:
         controller = game.controller_of(spell)
-        lands = [
-            state
-            for state in game.permanents_controlled_by(controller.username)
-            if Type.LAND in state.types
-        ]
+        lands = computed_permanents(
+            game,
+            game.permanents_controlled_by(controller.username),
+            lambda chars: Type.LAND in chars.types,
+        )
         if not lands:
             return
         decision = Decision(
@@ -4726,10 +4769,15 @@ def _parse_hideaway_play_clause(text: str) -> AbilityEffect | None:
         if source is None:
             return
         controller = game.controller_of(ability)
+        # CR 613.5 twice over: which permanents are creatures is layer 4's
+        # answer (an animated land is one), and each one's power is layer 7's
+        # (an anthem or a characteristic-defining ability counts). One board
+        # for both, so the sum is taken against a single consistent state.
+        board = game.computed_board()
         total_power = sum(
-            state.power or 0
+            board.of(state).numeric_power
             for state in game.permanents_controlled_by(controller.username)
-            if state.is_creature
+            if board.of(state).is_creature
         )
         if total_power < threshold:
             return
@@ -5425,9 +5473,11 @@ def _parse_return_a_land_you_control_clause(text: str) -> AbilityEffect | None:
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         controller = ability.controller
-        candidates = [
-            state for state in game.permanents_controlled_by(controller) if Type.LAND in state.types
-        ]
+        candidates = computed_permanents(
+            game,
+            game.permanents_controlled_by(controller),
+            lambda chars: Type.LAND in chars.types,
+        )
         if not candidates:
             return
         source_name = ability.source_name
@@ -9045,7 +9095,9 @@ def _parse_transform_all_subtype_clause(clause: str, *, for_spell: bool) -> Targ
         return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
-        turning = [state for state in game.battlefield if subtype in state.subtypes]
+        turning = computed_permanents(
+            game, game.battlefield, lambda chars: subtype in chars.subtypes
+        )
         for state in turning:
             state.transform()
 
@@ -9314,17 +9366,21 @@ def _parse_each_opponent_choose_one_of_each_type_then_sacrifice(
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         for opponent in _opponents(game, ability.controller):
-            nonland = [
-                permanent
-                for permanent in game.permanents_controlled_by(opponent.username)
-                if Type.LAND not in permanent.types
-            ]
+            nonland = computed_permanents(
+                game,
+                game.permanents_controlled_by(opponent.username),
+                lambda chars: Type.LAND not in chars.types,
+            )
             keep: set[UUID] = set()
             for card_type in types:
                 candidates = [
                     permanent
-                    for permanent in nonland
-                    if card_type in permanent.types and permanent.id not in keep
+                    for permanent in computed_permanents(
+                        game,
+                        nonland,
+                        lambda chars, wanted=card_type: wanted in chars.types,
+                    )
+                    if permanent.id not in keep
                 ]
                 if not candidates:
                     # CR 107.1a: no such permanent to choose, so none of this
@@ -9875,9 +9931,14 @@ def _parse_target_get_energy_pay_damage(text: str) -> Effect | None:
 #: or equal to the amount of {E} paid this way." (Wrath of the Skies) - the
 #: same variable-amount energy payment as Galvanic Discharge, referenced by a
 #: mass-destruction clause keyed off the amount paid instead of a target.
+#: The qualifier is captured rather than spelled out, and handed to
+#: `_parse_mass_type_qualifier` - the same grammar every other mass-destroy
+#: clause in this module is read with. Keying the type list to this one card's
+#: wording is what let the printed-vs-computed defect in below, and it would
+#: not generalise to the next card printed with an energy-bounded sweep.
 _X_ENERGY_PAY_DESTROY_BY_MANA_VALUE_RE = re.compile(
     r"^you get x \{e\}\s*(?:\([^()]*\))?,\s*then you may pay any amount of \{e\}\.\s*"
-    r"destroy each artifact, creature, and enchantment with mana value less than or "
+    r"destroy each (?P<qualifier>.+?) with mana value less than or "
     r"equal to the amount of \{e\} paid this way\.$",
     re.IGNORECASE | re.DOTALL,
 )
@@ -9889,16 +9950,32 @@ def _parse_x_energy_pay_destroy_by_mana_value(text: str) -> Effect | None:
 
     `X` is fixed once for the whole spell at announcement (CR 107.3a) and read
     back off `Game.cast_record` the same way `parse_mode_effect` already reads
-    it for a modal card's own `X` mode. `game.battlefield` is snapshotted into
-    a plain list before anything is destroyed, so destroying one permanent
-    (and whatever state-based or triggered consequence that causes) cannot
-    change what this loop is still iterating over; each permanent's zone is
-    rechecked immediately before it is destroyed for the same reason CR
-    608.2b targets get rechecked - a permanent already gone by the time its
-    turn comes cannot be destroyed again.
+    it for a modal card's own `X` mode.
+
+    The sweep itself is `_destroy_matching` over a `_parse_mass_type_qualifier`
+    predicate - the shared mass-destruction path, not a private loop. That is
+    the fix for a real defect: this clause used to filter on `CardState.types`
+    and `CardState.mana_value`, which are CR 613.1's *starting point* (the
+    printed type line of whichever face is up, CR 712.8d), not the object's
+    characteristics. CR 613.5 has the layer system applied "continually and
+    automatically", so a land animated by earthbend (CR 701.66a) is a creature
+    in layer 4 (CR 613.1d) whose mana value is 0 (CR 202.3a, "an object with
+    no mana cost"), squarely inside any "2 or less" window - and it walked out
+    of the sweep untouched. `game.characteristics_of`, which
+    `_parse_mass_type_qualifier` reads, is the only right answer for anything
+    on the battlefield.
+
+    `_destroy_matching` also carries CR 608.2f's simultaneity: the candidate
+    set is snapshotted before anything is destroyed, and each permanent's zone
+    is rechecked immediately before its own destroy for the same reason CR
+    608.2b rechecks a target.
     """
     whole = _strip_non_effect_preamble(text).strip()
-    if _X_ENERGY_PAY_DESTROY_BY_MANA_VALUE_RE.fullmatch(whole) is None:
+    match = _X_ENERGY_PAY_DESTROY_BY_MANA_VALUE_RE.fullmatch(whole)
+    if match is None:
+        return None
+    type_matches = _parse_mass_type_qualifier(match.group("qualifier"))
+    if type_matches is None:
         return None
 
     def effect(game: "Game", spell: CardState) -> None:
@@ -9909,15 +9986,12 @@ def _parse_x_energy_pay_destroy_by_mana_value(text: str) -> Effect | None:
         paid = game.pay_any_amount_of_energy(player, source=spell.card.name)
         if paid <= 0:
             return
-        candidates = [
-            permanent
-            for permanent in list(game.battlefield)
-            if set(permanent.types) & {Type.ARTIFACT, Type.CREATURE, Type.ENCHANTMENT}
-            and permanent.mana_value <= paid
-        ]
-        for permanent in candidates:
-            if permanent.zone is Zone.BATTLEFIELD:
-                game.destroy(permanent)
+
+        def matches(game: "Game", permanent: CardState, source: CardState | None) -> bool:
+            chars = game.characteristics_of(permanent)
+            return type_matches(chars) and chars.mana_value <= paid
+
+        _destroy_matching(game, matches, spell)
 
     return effect
 
@@ -12127,8 +12201,14 @@ def _parse_counter_unless_pays_then_condition_upgrade_pair(
 
     def effect(game: "Game", spell: CardState) -> None:
         controller = game.controller_of(spell)
+        # CR 613.5: "creature" is layer 4's answer, not the printed type line -
+        # an animated land with power 4 satisfies ferocious. One board for the
+        # whole sweep; `Game.power_of` recomputes it per call.
+        board = game.computed_board()
         big = any(
-            state.is_creature and (power := game.power_of(state)) is not None and power >= threshold
+            (chars := board.of(state)).is_creature
+            and chars.power is not None
+            and chars.power >= threshold
             for state in game.permanents_controlled_by(controller.username)
         )
         if not big:
@@ -12568,7 +12648,10 @@ def _sacrifice_restriction(
     self-exclusion - Grist, the Hunger Tide's "-2") - each paired with a
     function that reads the actual legal candidates off the battlefield at
     resolution time - never at parse time, since what is on the battlefield
-    changes between then and resolution.
+    changes between then and resolution. Off the *computed* battlefield
+    (`computed_permanents`, CR 613.5): "sacrifice a creature" may be paid with
+    a land animated into one, and may not be paid with a creature some layer-4
+    effect has stopped being one.
 
     Returns `(is_self, candidates)`: `is_self` says whether there is a real
     CR 608.2d choice of *which* permanent to sacrifice (false for "this
@@ -12603,13 +12686,15 @@ def _sacrifice_restriction(
             return None
 
         def other_candidates(game: "Game", player: Player, source_id: UUID) -> list[CardState]:
-            return [
-                permanent
-                for permanent in game.battlefield
-                if permanent.controller == player.username
-                and permanent.id != source_id
-                and card_type in permanent.types
-            ]
+            return computed_permanents(
+                game,
+                (
+                    permanent
+                    for permanent in game.battlefield
+                    if permanent.controller == player.username and permanent.id != source_id
+                ),
+                lambda chars: card_type in chars.types,
+            )
 
         return False, other_candidates
 
@@ -12624,11 +12709,15 @@ def _sacrifice_restriction(
         def any_candidates(
             game: "Game", player: Player, source_id: UUID, card_type: Type = card_type
         ) -> list[CardState]:
-            return [
-                permanent
-                for permanent in game.battlefield
-                if permanent.controller == player.username and card_type in permanent.types
-            ]
+            return computed_permanents(
+                game,
+                (
+                    permanent
+                    for permanent in game.battlefield
+                    if permanent.controller == player.username
+                ),
+                lambda chars: card_type in chars.types,
+            )
 
         return False, any_candidates
 
@@ -14141,13 +14230,18 @@ def _attacking_token_sacrifice_candidates(
         return None
 
     def candidates(game: "Game", player: Player, source_id: UUID | None) -> list[CardState]:
-        return [
-            state
-            for state in game.battlefield
-            if state.controller == player.username
-            and (not excludes_source or state.id != source_id)
-            and (set(state.types) & wanted)
-        ]
+        # CR 613.5: the type test is the computed one, so an animated land is
+        # a legal "another creature" to sacrifice here.
+        return computed_permanents(
+            game,
+            (
+                state
+                for state in game.battlefield
+                if state.controller == player.username
+                and (not excludes_source or state.id != source_id)
+            ),
+            lambda chars: bool(set(chars.types) & wanted),
+        )
 
     return candidates
 
@@ -17689,11 +17783,19 @@ def _parse_draw_if_you_control_color_permanent_clause(clause: str) -> TargetedCl
         assert isinstance(stack_object, AbilityOnStack)
         player = game.controller_of(stack_object)
         source = stack_object.source(game)
-        controlled = game.permanents_controlled_by(player.username)
-        qualifies = any(
-            color in state.colors
-            and not (excludes_self and source is not None and state.id == source.id)
-            for state in controlled
+        # CR 613.5 / CR 613.1e: colour is layer 5's answer, not the printed
+        # mana cost's - a permanent an effect has made red counts, and one a
+        # "becomes colorless" effect has drained does not.
+        qualifies = bool(
+            computed_permanents(
+                game,
+                (
+                    state
+                    for state in game.permanents_controlled_by(player.username)
+                    if not (excludes_self and source is not None and state.id == source.id)
+                ),
+                lambda chars: color in chars.colors,
+            )
         )
         if qualifies:
             game.draw_cards(player.username, count)

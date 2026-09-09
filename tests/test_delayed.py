@@ -23,6 +23,7 @@ from magic_cards_model.machines.delayed import (
 )
 from magic_cards_model.machines.triggers import GameEvent
 from magic_cards_model.machines.turn import Step
+from magic_cards_model.models.card import Type
 from magic_cards_model.models.zone import Zone
 from tests.cards import card
 from tests.scenarios.harness import Scenario
@@ -343,6 +344,119 @@ def test_that_creature_refuses_a_noncreature_subject():
             controller="alice",
             source_id=None,
             source_name="Goryo's Vengeance",
+        )
+        is None
+    )
+
+
+def test_agreement_reads_the_printed_type_line_without_a_game():
+    """The regression this defect class fixed: `agrees_with` used to read only
+    `CardState.types`/`is_creature`/`is_permanent` - CR 613.1's *starting
+    point* (the printed line), not CR 613.5's continually-applied computed
+    board. Earthbend (CR 701.66a) animates a land into "a 0/0 land creature
+    ... in addition to its other types" - CR 205.1b - so an earthbent Forest
+    is a creature on the computed board while its printed type line still
+    says only Land. Without a `game` to ask, agreement can only see the
+    printed line and refuses "that creature" for it - the same refusal a
+    plain, unanimated Mountain gets in the test above.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Badgermole Cub"], battlefield=["Forest"] * 3)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    # `untapped_sources` returns distinct permanents in call order, so a
+    # single three-name call is what tells the two payment sources apart from
+    # the one left over to be earthbend's target.
+    forests = scenario.untapped_sources("Forest", "Forest", "Forest")
+    pay_sources, target_forest = forests[:2], forests[2]
+    scenario.choose_trigger_targets("Badgermole Cub", [target_forest])
+    scenario.cast_and_resolve("Badgermole Cub", *pay_sources)
+    scenario.pass_until_resolved()
+
+    assert Type.CREATURE not in target_forest.types, "the printed type line is still just Land"
+    assert scenario.game.characteristics_of(target_forest).is_creature, "CR 205.1b"
+
+    assert (
+        anaphoric_delayed_trigger(
+            "Sacrifice that creature at the beginning of the next end step.",
+            subject=target_forest,
+            controller="alice",
+            source_id=None,
+            source_name="test",
+        )
+        is None
+    ), "no game to ask, so agreement falls back to the printed type line and refuses"
+
+
+def test_agreement_reads_the_computed_board_when_a_game_is_given():
+    """The fix: with `game`, agreement asks `game.characteristics_of` for a
+    battlefield referent (CR 613.5), and the same earthbent Forest above
+    agrees with "that creature" - and, CR 205.1b's "in addition to", still
+    agrees with "that land" too.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Badgermole Cub"], battlefield=["Forest"] * 3)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    forests = scenario.untapped_sources("Forest", "Forest", "Forest")
+    pay_sources, target_forest = forests[:2], forests[2]
+    scenario.choose_trigger_targets("Badgermole Cub", [target_forest])
+    scenario.cast_and_resolve("Badgermole Cub", *pay_sources)
+    scenario.pass_until_resolved()
+
+    creature_trigger = anaphoric_delayed_trigger(
+        "Sacrifice that creature at the beginning of the next end step.",
+        subject=target_forest,
+        controller="alice",
+        source_id=None,
+        source_name="test",
+        game=scenario.game,
+    )
+    assert creature_trigger is not None, "CR 613.5: the computed board says creature"
+
+    land_trigger = anaphoric_delayed_trigger(
+        "Sacrifice that land at the beginning of the next end step.",
+        subject=target_forest,
+        controller="alice",
+        source_id=None,
+        source_name="test",
+        game=scenario.game,
+    )
+    assert land_trigger is not None, "CR 205.1b: still a land, in addition to its other types"
+
+    permanent_trigger = anaphoric_delayed_trigger(
+        "Sacrifice that permanent at the beginning of the next end step.",
+        subject=target_forest,
+        controller="alice",
+        source_id=None,
+        source_name="test",
+        game=scenario.game,
+    )
+    assert permanent_trigger is not None, "a land is a permanent type either way"
+
+
+def test_agreement_still_refuses_an_ordinary_land_as_a_creature_with_a_game():
+    """The inverse: passing `game` must not turn every land into a creature -
+    the *other* Forest, never earthbent, still refuses "that creature" even
+    when a game is available to ask.
+    """
+    scenario = _board()
+    mountain = scenario.find("Mountain", Zone.BATTLEFIELD, "alice")
+
+    assert (
+        anaphoric_delayed_trigger(
+            "Exile that creature at the beginning of the next end step.",
+            subject=mountain,
+            controller="alice",
+            source_id=None,
+            source_name="Goryo's Vengeance",
+            game=scenario.game,
         )
         is None
     )

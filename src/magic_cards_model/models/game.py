@@ -2130,12 +2130,19 @@ class Game(BaseModel):
         already reads "Urza's Mine" as the two words "Urza's" and "Mine" -
         the same words `machines/abilities.py` reads off the condition's own
         printed sentence - so nothing further needs parsing here.
+
+        CR 613.5: read off the computed board, not the printed line - Blood
+        Moon (CR 305.7's set-a-land's-subtype path) replaces a nonbasic
+        land's subtypes with Mountain, and a permanent controlled by
+        `_controlled_land_types` is the one every consumer here means to ask
+        about right now, not the printed card underneath it.
         """
+        board = self.computed_board()
         return frozenset(
             subtype
             for state in self.permanents_controlled_by(controller)
-            if Type.LAND in state.types
-            for subtype in state.subtypes
+            if state.zone is Zone.BATTLEFIELD and Type.LAND in board.of(state).types
+            for subtype in board.of(state).subtypes
         )
 
     def untap_step(self) -> None:
@@ -6337,6 +6344,10 @@ class Game(BaseModel):
         """
         if amount <= 0 or permanent.zone is not Zone.BATTLEFIELD:
             return
+        # CR 613.5: the object's characteristics for this event are the
+        # computed ones, not the printed type line (CR 613.1's starting
+        # point) - a land animated by earthbend is a creature only there.
+        chars = self.characteristics_of(permanent)
         self.emit(
             GameEvent(
                 event=ExtraTriggerEvent.COUNTERS_PUT,
@@ -6344,8 +6355,8 @@ class Game(BaseModel):
                 subject_name=permanent.name,
                 subject_controller=permanent.controller,
                 subject_card=permanent.card,
-                subject_types=permanent.types,
-                subject_subtypes=permanent.subtypes,
+                subject_types=chars.types,
+                subject_subtypes=chars.subtypes,
                 counter_kind=kind,
                 amount=amount,
                 player=permanent.controller,
@@ -7151,6 +7162,17 @@ class Game(BaseModel):
                 self.deal_damage_to_player(target, event.amount)
             else:
                 self._apply_damage_to_permanent(target, event.amount)
+            # CR 613.5: the source's characteristics for this event are the
+            # computed ones while it is still a permanent - a land animated
+            # by earthbend is a creature only there - and the printed type
+            # line otherwise (a spell or ability off the battlefield has
+            # nothing for the layer system to compute).
+            source_types = source.types if source is not None else None
+            source_subtypes = source.subtypes if source is not None else None
+            if source is not None and source.zone is Zone.BATTLEFIELD:
+                source_chars = self.characteristics_of(source)
+                source_types = source_chars.types
+                source_subtypes = source_chars.subtypes
             # CR 120.1: "An object that deals damage is the source of that
             # damage" - the subject is the source, and the player, when there is
             # one, is who the damage went to. A prevention or replacement that
@@ -7162,8 +7184,8 @@ class Game(BaseModel):
                     subject_name=source.name if source is not None else None,
                     subject_controller=source.controller if source is not None else None,
                     subject_card=source.card if source is not None else None,
-                    subject_types=source.types if source is not None else None,
-                    subject_subtypes=source.subtypes if source is not None else None,
+                    subject_types=source_types,
+                    subject_subtypes=source_subtypes,
                     player=target.username if isinstance(target, Player) else None,
                     combat=event.combat,
                     amount=event.amount,
@@ -7296,16 +7318,24 @@ class Game(BaseModel):
         Colours and card types are read; anything else returns False rather than
         being guessed at, and is listed in `docs/engine-coverage.md`.
 
-        A permanent's own types and colours are the ones asked about, so this
-        reads the `CardState` rather than the printing behind it.
+        A permanent's own types and colours are the ones asked about - CR
+        613.5's computed board while `source` is still on the battlefield (a
+        land animated by earthbend is a creature only there), and the
+        printed `CardState` for anything else, which is CR 702.16a's own
+        second clause: "any sources not on the battlefield that are of that
+        card type" reads the printed characteristics by name.
         """
         wanted = quality.strip().lower()
+        types, colors = source.types, source.colors
+        if source.zone is Zone.BATTLEFIELD:
+            chars = self.characteristics_of(source)
+            types, colors = chars.types, chars.colors
         card_type = _card_type_named(wanted)
         if card_type is not None:
-            return card_type in source.types
+            return card_type in types
         color = _COLOR_WORDS.get(wanted)
         if color is not None:
-            return color in source.colors
+            return color in colors
         return False
 
     def protection_from_damage(self, event: ReplaceableEvent) -> str | None:
@@ -7657,6 +7687,10 @@ class Game(BaseModel):
             self.permanents_sacrificed_this_turn[sacrificer] = (
                 self.permanents_sacrificed_this_turn.get(sacrificer, 0) + 1
             )
+        # CR 613.5: the sacrificed permanent's characteristics for this event
+        # are the computed ones (a land animated by earthbend is a creature
+        # only there), taken while it is still on the battlefield above.
+        chars = self.characteristics_of(permanent)
         self.emit(
             GameEvent(
                 event=TriggerEvent.IS_SACRIFICED,
@@ -7664,8 +7698,8 @@ class Game(BaseModel):
                 subject_name=permanent.name,
                 subject_controller=permanent.controller,
                 subject_card=permanent.card,
-                subject_types=permanent.types,
-                subject_subtypes=permanent.subtypes,
+                subject_types=chars.types,
+                subject_subtypes=chars.subtypes,
                 player=permanent.controller,
             )
         )
@@ -7750,8 +7784,18 @@ class Game(BaseModel):
 
             origin = card_state.zone
             was_on_battlefield = card_state in self.battlefield
+            # CR 613.5 / CR 608.2h: the permanent's characteristics for both
+            # emitters below are the computed ones - a land animated by
+            # earthbend is a creature only there - snapshotted here, while it
+            # is still on the battlefield, because the DIES emitter fires
+            # after `_take_out_of_every_zone` below, once `characteristics_of`
+            # would `KeyError` on it.
+            left_battlefield_chars = (
+                self.characteristics_of(card_state) if was_on_battlefield else None
+            )
             if was_on_battlefield:
                 self._note_left_battlefield(card_state)
+                assert left_battlefield_chars is not None
                 # CR 603.6c: the generic departure fires regardless of where the
                 # card ends up - a replacement effect redirecting the destination
                 # below still means this permanent left the battlefield.
@@ -7762,8 +7806,8 @@ class Game(BaseModel):
                         subject_name=card_state.name,
                         subject_controller=card_state.controller,
                         subject_card=card_state.card,
-                        subject_types=card_state.types,
-                        subject_subtypes=card_state.subtypes,
+                        subject_types=left_battlefield_chars.types,
+                        subject_subtypes=left_battlefield_chars.subtypes,
                         player=card_state.controller,
                     )
                 )
@@ -7802,6 +7846,7 @@ class Game(BaseModel):
             # CR 700.4: it only died if it actually reached a graveyard from the
             # battlefield. Exiled instead, the dies event never happened (CR 614.6).
             if was_on_battlefield and event.destination is Zone.GRAVEYARD:
+                assert left_battlefield_chars is not None
                 self.emit(
                     GameEvent(
                         event=TriggerEvent.DIES,
@@ -7809,12 +7854,13 @@ class Game(BaseModel):
                         subject_name=card_state.name,
                         subject_controller=card_state.controller,
                         subject_card=card_state.card,
-                        # CR 603.10a: dies is a look-back event, and
-                        # `land_face_played` is not cleared by `move_to`, so this
-                        # still reads the face that was up immediately before the
-                        # permanent left the battlefield.
-                        subject_types=card_state.types,
-                        subject_subtypes=card_state.subtypes,
+                        # CR 603.10a: dies is a look-back event - the
+                        # snapshot taken above, while the permanent was still
+                        # on the battlefield, is that look-back: a live
+                        # `characteristics_of` here would `KeyError` on an
+                        # object `_take_out_of_every_zone` has already moved.
+                        subject_types=left_battlefield_chars.types,
+                        subject_subtypes=left_battlefield_chars.subtypes,
                         player=card_state.controller,
                     )
                 )
@@ -8333,12 +8379,12 @@ class Game(BaseModel):
             # Great Creator's +1) is a creature on the computed board only.
             if board.of(state).is_creature and self._dies_to_state_based_action(state, board)
         ]
-        leaving += [state for state in self._legend_rule_losers() if state not in leaving]
+        leaving += [state for state in self._legend_rule_losers(board) if state not in leaving]
         # CR 704.5m, read off the Aura's own enchant ability (CR 702.5a) by
         # `machines/keywords.py`, which owns the reader `Casting` uses for the
         # announcement half of the same sentence.
         leaving += [state for state in aura_state_based_actions(self) if state not in leaving]
-        leaving += [state for state in self._roles_beyond_the_newest() if state not in leaving]
+        leaving += [state for state in self._roles_beyond_the_newest(board) if state not in leaving]
         # CR 704.5i: "If a planeswalker has loyalty 0, it's put into its owner's
         # graveyard." Loyalty is the counter count (CR 306.5c), which is what
         # `planeswalkers_with_zero_loyalty` reads.
@@ -8395,7 +8441,7 @@ class Game(BaseModel):
         ascend_state_based_actions(self)
         return leaving + gone_tokens
 
-    def _roles_beyond_the_newest(self) -> list[CardState]:
+    def _roles_beyond_the_newest(self, board: ComputedBoard) -> list[CardState]:
         """The Roles CR 704.5z puts into their owners' graveyards.
 
         "If a permanent has more than one Role controlled by the same player
@@ -8409,14 +8455,17 @@ class Game(BaseModel):
 
         The timestamp is CR 613.7a's, the one the permanent got as it entered the
         battlefield, which `machines/layers.ContinuousEffects` already keeps in
-        `entered`. `computed_board` is called immediately before this in
-        `_state_based_actions_once`, and it stamps anything unseen, so every Role
-        on the battlefield has one by the time this reads them.
+        `entered`. `board` is the one `_state_based_actions_once` already
+        computed one frame earlier - CR 613.5's computed subtypes, not the
+        printed `CardState.subtypes`, threaded in rather than recomputed so a
+        board read from `.types`/`.subtypes` here never risks the exponential
+        nested-computation trap a plain `CardState` read would (see
+        `_asking_the_board`'s own docstring).
         """
         stamps = self.continuous_effects.entered
         groups: dict[tuple[UUID, str], list[CardState]] = {}
         for permanent in self.battlefield:
-            if "Role" not in permanent.subtypes or permanent.attached_to is None:
+            if "Role" not in board.of(permanent).subtypes or permanent.attached_to is None:
                 continue
             groups.setdefault((permanent.attached_to, permanent.controller or ""), []).append(
                 permanent
@@ -8526,7 +8575,7 @@ class Game(BaseModel):
             toughness = state.toughness
         return toughness is not None and toughness <= 0
 
-    def _legend_rule_losers(self) -> list[CardState]:
+    def _legend_rule_losers(self, board: ComputedBoard) -> list[CardState]:
         """The legendary permanents the legend rule puts into graveyards (CR 704.5j).
 
         "If two or more legendary permanents with the same name are controlled
@@ -8549,13 +8598,20 @@ class Game(BaseModel):
         been on the battlefield longest - the behaviour every scenario that
         does not care about the choice was already relying on. A scenario that
         does care answers the question instead.
+
+        CR 613.5: grouped by the computed supertypes and name, not the
+        printed ones - `BecomeACopy` (CR 707.2, 707.4) writes both, so a
+        clone copying a legendary permanent has to be seen as sharing that
+        legend's name and Legendary supertype, or the collision this rule
+        exists for goes unnoticed.
         """
         groups: dict[str, dict[str, list[CardState]]] = {}
         for state in self.battlefield:
-            if Supertype.LEGENDARY not in state.supertypes:
+            chars = board.of(state)
+            if Supertype.LEGENDARY not in chars.supertypes:
                 continue
             controller = self.controller_of(state).username
-            groups.setdefault(controller, {}).setdefault(state.name, []).append(state)
+            groups.setdefault(controller, {}).setdefault(chars.name, []).append(state)
 
         losers: list[CardState] = []
         for username in self._turn_order_from_active():
@@ -8682,6 +8738,10 @@ class Game(BaseModel):
         `declare_attackers` opens that window once the whole attack is declared.
         """
         attack = combat_rules.declare_attacker(self, creature, self.attack_target(defender))
+        # CR 613.5: the attacker's characteristics for this event are the
+        # computed ones - a land animated by earthbend is a creature only
+        # there - and it is still on the battlefield here (CR 508.1a).
+        chars = self.characteristics_of(creature)
         self.emit(
             GameEvent(
                 event=TriggerEvent.ATTACKS,
@@ -8689,8 +8749,8 @@ class Game(BaseModel):
                 subject_name=creature.name,
                 subject_controller=self.controller_of(creature).username,
                 subject_card=creature.card,
-                subject_types=creature.types,
-                subject_subtypes=creature.subtypes,
+                subject_types=chars.types,
+                subject_subtypes=chars.subtypes,
                 defender=attack.defender,
                 player=self.controller_of(creature).username,
             )
@@ -9146,7 +9206,7 @@ class Game(BaseModel):
             has_delve,
             has_improvise,
             improvise_offer,
-            is_vehicle,
+            is_vehicle_permanent,
         )
 
         battlefield = self.battlefield
@@ -9173,7 +9233,11 @@ class Game(BaseModel):
                 rule="CR 702.126a",
                 candidates=[c for c in battlefield if offer.why_not(c, player, self) is None],
             )
-        if is_vehicle(card.card):
+        # CR 613.5: whether this permanent is a Vehicle is the computed
+        # answer, not the printed type line - Toph, the First Metalbender's
+        # "nontoken artifacts you control are lands" and any layer-4 subtype
+        # change both reach it, and a crewed Vehicle stays one.
+        if is_vehicle_permanent(card, self):
             offer = crew_offer(card)
             out["crew"] = ObjectCostOffer(
                 rule="CR 702.122a",
@@ -9679,10 +9743,16 @@ class Game(BaseModel):
         "a land an opponent controls" - `CouldProduce` is which. Every surveyed
         land is asked with the recursion guard on, so a survey never consults
         another survey (see `colors_could_produce`).
+
+        CR 613.5: "land" here is the computed board, not the printed line -
+        Toph, the First Metalbender's "Nontoken artifacts you control are
+        lands in addition to their other types" makes an artifact a land the
+        survey has to see, and the printed `CardState.types` never would.
         """
         colors: set[Color] = set()
+        board = self.computed_board()
         for land in self.battlefield:
-            if Type.LAND not in land.types:
+            if Type.LAND not in board.of(land).types:
                 continue
             land_controller = self.controller_of(land).username
             if which is CouldProduce.LANDS_YOU_CONTROL:
@@ -10264,23 +10334,31 @@ class Game(BaseModel):
         unparsed restriction refusing every activation would trade a narrow,
         documented gap (see `docs/engine-coverage.md`) for a much louder
         wrong one, on cards this restriction was never meant to touch.
+
+        CR 613.5: every count below is read off the computed board - a card
+        type (Liquimetal Coating's "becomes an artifact"), a creature's
+        power, or whether it is a creature at all (an earthbent land) can
+        each be true only there.
         """
         instructions = ability.instructions or ""
         controlled = self.permanents_controlled_by(controller)
+        board = self.computed_board()
 
         match = _ACTIVATE_ONLY_IF_CONTROL.search(instructions)
         if match is not None:
             needed = _CONDITION_COUNT_WORDS.get(match.group("count").lower())
             card_type = _card_type_named(match.group("quality"))
             if needed is not None and card_type is not None:
-                count = sum(1 for state in controlled if card_type in state.types)
+                count = sum(1 for state in controlled if card_type in board.of(state).types)
                 return count >= needed
 
         match = _ACTIVATE_ONLY_IF_POWER.search(instructions)
         if match is not None:
             threshold = int(match.group("power"))
             return any(
-                state.is_creature and state.power is not None and state.power >= threshold
+                board.of(state).is_creature
+                and board.of(state).power is not None
+                and board.of(state).power >= threshold
                 for state in controlled
             )
 
@@ -10294,7 +10372,7 @@ class Game(BaseModel):
                 entered = sum(
                     1
                     for state in controlled
-                    if state.is_creature and state.turn_entered == turn_number
+                    if board.of(state).is_creature and state.turn_entered == turn_number
                 )
                 return entered >= needed
 
@@ -10715,9 +10793,9 @@ class Game(BaseModel):
         the same way `_activation_condition_holds`'s "Activate only if you
         control ..." already counts a quality, so a future card printing this
         exact sentence with a different quality needs no table row either.
-        Reads printed characteristics only (`state.card.types`/`.supertypes`),
-        the same simplification `_activation_condition_holds` already makes,
-        not the layer-computed board.
+        CR 613.5: read off the computed board, not the printed
+        `state.card.types`/`.supertypes` - a clone (`BecomeACopy`, CR 707.2,
+        707.4) that has become a legendary creature is one only there.
 
         A quality this cannot read at all records a `CostModifierNotice`
         rather than quietly reducing by nothing - the same "unreadable is not
@@ -10757,11 +10835,13 @@ class Game(BaseModel):
                 )
             return ManaCost()
 
+        board = self.computed_board()
         count = sum(
             1
             for state in self.permanents_controlled_by(controller)
-            if all(t in state.card.types for t in types)
-            and all(s in state.card.supertypes for s in supertypes)
+            if state.zone is Zone.BATTLEFIELD
+            and all(t in board.of(state).types for t in types)
+            and all(s in board.of(state).supertypes for s in supertypes)
         )
         amount = reduction.amount * count
         return ManaCost.parse(f"{{{amount}}}") if amount else ManaCost()
@@ -10927,8 +11007,17 @@ class Game(BaseModel):
         # Halfling's is restricted *from*, so the payment is told which it is
         # and whose ability it belongs to (the source's characteristics are
         # what "abilities of creature sources" asks about, not the ability's).
+        # ...and those characteristics are the *computed* ones (CR 613.5): a
+        # land animated into a creature is a creature source, so Shang-Chi's
+        # mana pays for its abilities. `permanent.card` here was the printed
+        # front face, wrong for a transformed permanent even before layers.
+        # `machines/legal_actions.py` asks the identical question when it
+        # enumerates the same activation, and the two must not disagree.
         return CostPayment.for_total(
-            total, game=self, payer=controller, spend=ManaSpend.activating(permanent.card)
+            total,
+            game=self,
+            payer=controller,
+            spend=ManaSpend.activating(self.characteristics_of(permanent)),
         )
 
     def activate_ability(

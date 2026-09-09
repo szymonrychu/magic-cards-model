@@ -550,14 +550,18 @@ class TargetRequirement(BaseModel):
             if self.excluded_card_types and (current_types & self.excluded_card_types):
                 unwanted = " or ".join(sorted(kind.value for kind in self.excluded_card_types))
                 return f"{self.phrase} cannot target a {unwanted}, and {target.name} is one"
-        if self.required_supertypes and not (set(target.supertypes) & self.required_supertypes):
+        if self.required_supertypes and not (
+            set(self._current_supertypes(target, game)) & self.required_supertypes
+        ):
             wanted = " or ".join(sorted(kind.value for kind in self.required_supertypes))
             return f"{self.phrase} needs a {wanted} permanent, and {target.name} is not one"
-        if self.excluded_supertypes and (set(target.supertypes) & self.excluded_supertypes):
+        if self.excluded_supertypes and (
+            set(self._current_supertypes(target, game)) & self.excluded_supertypes
+        ):
             unwanted = " or ".join(sorted(kind.value for kind in self.excluded_supertypes))
             return f"{self.phrase} cannot target a {unwanted} permanent, and {target.name} is one"
         if self.required_subtypes and not any(
-            word.lower() in self.required_subtypes for word in target.subtypes
+            word.lower() in self.required_subtypes for word in self._current_subtypes(target, game)
         ):
             wanted = " or ".join(sorted(self.required_subtypes))
             return f"{self.phrase} needs a {wanted}, and {target.name} is not one"
@@ -579,7 +583,7 @@ class TargetRequirement(BaseModel):
                     f"{self.phrase} needs a {self.color_count} permanent, "
                     f"and {target.name} is not one"
                 )
-        historic = self._rejects_historic(target)
+        historic = self._rejects_historic(target, game)
         if historic is not None:
             return historic
         if self.must_be_tapped is not None and target.tapped is not self.must_be_tapped:
@@ -629,20 +633,31 @@ class TargetRequirement(BaseModel):
             f"and {name} was put on the stack with {len(targets)}"
         )
 
-    def _rejects_historic(self, target: CardState) -> str | None:
-        """CR 700.6: legendary, artifact, or Saga - checked off the card's own
-        printed characteristics, the same way `required_supertypes` reads
-        `target.card.supertypes` directly rather than through a layer-6
-        recompute; nothing in the pool grants "historic" itself with a
-        continuous effect.
+    def _rejects_historic(self, target: CardState, game: Any = None) -> str | None:
+        """CR 700.6: legendary, artifact, or Saga.
+
+        Was checked off `target.card` - doubly printed, since that bypasses
+        both the layer system (CR 613.5) and `CardState`'s own up-face read
+        (CR 712.8d), so a transformed or face-down permanent answered off its
+        front face rather than what it actually is right now. Mishra's
+        Factory's own "This land becomes a 2/2 Assembly-Worker artifact
+        creature" is the real case: nothing in this engine's pool grants
+        Legendary or Saga through a continuous effect yet, but Type.ARTIFACT
+        through layer 4 is exactly what that ability does, and "historic"
+        has to see it the moment it does.
+
+        A card in a graveyard or library reaches no layer (CR 611.2c: layers
+        only apply on the battlefield), so `_current_types`/`_current_
+        supertypes`/`_current_subtypes` already fall back to `target.types`/
+        `.supertypes`/`.subtypes` there - the same up-face-respecting read
+        `target.card` never gave, just without a layer stack to run on top of.
         """
         if not self.historic:
             return None
-        card = target.card
         is_historic = (
-            Supertype.LEGENDARY in card.supertypes
-            or Type.ARTIFACT in card.types
-            or "Saga" in card.subtypes
+            Supertype.LEGENDARY in self._current_supertypes(target, game)
+            or Type.ARTIFACT in self._current_types(target, game)
+            or "saga" in {subtype.lower() for subtype in self._current_subtypes(target, game)}
         )
         if is_historic:
             return None
@@ -717,6 +732,34 @@ class TargetRequirement(BaseModel):
         if target.zone is Zone.BATTLEFIELD and characteristics_of is not None:
             return characteristics_of(target).types
         return target.types
+
+    def _current_supertypes(self, target: CardState, game: Any) -> tuple[Supertype, ...]:
+        """This target's supertypes right now, layers included (CR 613.5,
+        613.1d) - the same `characteristics_of` reasoning `_current_types`
+        already uses, for the supertype half of the same layer instead of the
+        card-type half. No printed static ability in this engine's pool grants
+        a supertype through a continuous effect yet, but the read has to be
+        right the day one does, the same way `_current_types` was fixed ahead
+        of a real disagreeing card existing for every one of its cases.
+        """
+        characteristics_of = getattr(game, "characteristics_of", None)
+        if target.zone is Zone.BATTLEFIELD and characteristics_of is not None:
+            return characteristics_of(target).supertypes
+        return target.supertypes
+
+    def _current_subtypes(self, target: CardState, game: Any) -> tuple[str, ...]:
+        """This target's subtypes right now, layers included (CR 613.5,
+        613.1d) - the same `characteristics_of` reasoning `_current_types`
+        already uses, for the subtype half. Mishra's Factory's own "This land
+        becomes a 2/2 Assembly-Worker artifact creature" is exactly this case:
+        the printed card has no creature type at all, and "Target Assembly-
+        Worker creature" (its own second ability) has to see the one the
+        first ability's continuous effect just granted.
+        """
+        characteristics_of = getattr(game, "characteristics_of", None)
+        if target.zone is Zone.BATTLEFIELD and characteristics_of is not None:
+            return characteristics_of(target).subtypes
+        return target.subtypes
 
     def _current_colors(self, target: CardState, game: Any) -> tuple[Color, ...]:
         """This target's colors right now (CR 105.1), layers included (CR

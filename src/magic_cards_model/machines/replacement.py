@@ -120,12 +120,15 @@ from ..models.card import Card, Color, Type
 from ..models.card_state import CardState, Choice, ChoiceKind, ExileMarker
 from ..models.token import TokenDefinition, is_token
 from ..models.zone import Zone
+from .abilities import keywords_in_lines
+from .combat import Keyword
 from .decisions import Decision, DecisionKind
 from .delayed import ReflexiveExileCopiedCard
 
 if TYPE_CHECKING:
     from ..models.game import Game
     from ..models.player import Player
+    from .layers import ComputedBoard
 
 # --------------------------------------------------------------------------
 # Kinds
@@ -1564,7 +1567,17 @@ def _your_graveyard(game: "Game", source: CardState, card: CardState) -> bool:
 
 
 def _black_or_red(game: "Game", source: CardState, card: CardState) -> bool:
-    colors = card.colors
+    """ "...a black or red permanent...would be put into a graveyard...".
+
+    A permanent still on the battlefield at this point (`card.zone` has not
+    moved yet - the event it is part of has not happened, CR 614.6) reads its
+    *computed* colours (CR 613.5, CR 613.1e): a layer-5 effect can make a
+    permanent red or black on the way to its own death just as easily as one
+    can make a land a creature (CR 613.1d). A card anywhere else - a spell on
+    the stack, a card in a library - has no continuous effect to ask about, so
+    its printed colours are the only answer there is.
+    """
+    colors = game.characteristics_of(card).colors if card.zone is Zone.BATTLEFIELD else card.colors
     return Color.BLACK in colors or Color.RED in colors
 
 
@@ -1577,14 +1590,22 @@ def _kalitas_applies(game: "Game", source: CardState, event: ReplaceableEvent) -
     and it matters: a token creature that Kalitas exiled instead of letting it
     die would never trigger a dies trigger, and CR 111.7's parenthesis says it
     should.
+
+    The dying object is still on the battlefield at this point (the move to
+    the graveyard is exactly the event being checked, CR 614.6), so its
+    *computed* types (CR 613.5, CR 613.1d) are what "creature" asks about - a
+    land earthbend (CR 701.66a) already made a creature is a creature dying
+    here, whatever its printed type line still says.
     """
     card = event.card
+    if card is None:
+        return False
+    types = game.characteristics_of(card).types if card.zone is Zone.BATTLEFIELD else card.types
     return (
         _to_graveyard(event)
         and event.origin is Zone.BATTLEFIELD
-        and card is not None
         and not is_token(card)
-        and Type.CREATURE in card.types
+        and Type.CREATURE in types
         and _is_opponent(game, card.controller, source.controller)
     )
 
@@ -2524,8 +2545,18 @@ def _counter_reducer_applies(
             return False
         if event.card is None or event.card.controller != source.controller:
             return False
-        if creature_only and not event.card.is_creature:
-            return False
+        if creature_only:
+            # "a creature you control" (CR 613.5): a permanent already on the
+            # battlefield when its counters would be placed reads its
+            # computed types - a land earthbend (CR 701.66a) made a creature
+            # is a creature you control, whatever it prints.
+            is_creature = (
+                game.characteristics_of(event.card).is_creature
+                if event.card.zone is Zone.BATTLEFIELD
+                else event.card.is_creature
+            )
+            if not is_creature:
+                return False
         return (event.counter_kind or "").strip().lower() == kind
 
     return applies
@@ -2688,15 +2719,45 @@ def _umbra_armor(game: "Game", source: CardState | None, event: ReplaceableEvent
         game.destroy(source)
 
 
-def _keyword_replacements(card: Card) -> list[CardReplacement]:
+def _has_umbra_armor_in_lines(abilities: tuple[str, ...]) -> bool:
+    """Whether `abilities` - a live permanent's *computed* ability-text lines
+    (`Characteristics.abilities`, CR 613.1f) - still carry umbra armor.
+
+    Reads the same vocabulary `machines/combat.py::_computed_keywords` builds
+    for a layer-aware `has_keyword` check (CR 702's own combat keywords, plus
+    the one this call cares about) rather than a single-keyword vocabulary:
+    `keywords_in_lines`' own line classifier refuses a whole comma-separated
+    keyword line the moment one token in it is not in `known` - "Flying, umbra
+    armor" would silently lose *both* keywords to a narrower vocabulary, not
+    just the one this function was not asked about.
+    """
+    vocabulary = [keyword.value for keyword in Keyword] + [_UMBRA_ARMOR]
+    return _UMBRA_ARMOR in keywords_in_lines(list(abilities), vocabulary)
+
+
+def _keyword_replacements(
+    card: Card, *, computed_abilities: tuple[str, ...] | None = None
+) -> list[CardReplacement]:
     """The replacement effects a card's *keywords* generate (CR 702).
 
     Only umbra armor so far. Read off `Card.keywords` rather than the oracle
     text because the text says nothing a parser could use - the keyword's
     meaning lives in CR 702.89a and the card's own parenthesis is reminder
     text (CR 207.2a).
+
+    `computed_abilities`, when given, is a live battlefield permanent's
+    computed ability list (CR 613.5, CR 613.1f) - a static ability layer 6
+    already stripped no longer grants umbra armor's replacement, whatever
+    `Card.keywords` still says. `None` (every caller with no permanent behind
+    the card - a spell on the stack, `parsed_card_replacements`' generic
+    path) keeps the printed-only reading, unchanged.
     """
-    if any(keyword.strip().lower() == _UMBRA_ARMOR for keyword in card.keywords):
+    has_umbra_armor = (
+        _has_umbra_armor_in_lines(computed_abilities)
+        if computed_abilities is not None
+        else any(keyword.strip().lower() == _UMBRA_ARMOR for keyword in card.keywords)
+    )
+    if has_umbra_armor:
         return [
             CardReplacement(
                 label="umbra armor: destroy this Aura instead (CR 702.89a)",
@@ -2901,25 +2962,44 @@ def replacements_of(card: Card) -> list[CardReplacement]:
     return parsed_card_replacements(card)
 
 
-def replacements_of_state(permanent: CardState) -> list[CardReplacement]:
+def replacements_of_state(
+    game: "Game", permanent: CardState, board: "ComputedBoard | None" = None
+) -> list[CardReplacement]:
     """Like `replacements_of`, but reads a *live permanent's* level-gated
-    text (CR 716.2a) rather than its printed card wholesale.
+    text (CR 716.2a) rather than its printed card wholesale, and its computed
+    ability list (CR 613.5, CR 613.1f) rather than its printed keywords.
 
-    Only a Class needs this: `CardState.class_ability_text` is exactly
+    A Class needs the level gate: `CardState.class_ability_text` is exactly
     `oracle_text` for anything else, so this is a safe, behaviour-preserving
     substitute for `replacements_of(permanent.card)` at every battlefield
     scan - Artist's Talent's own level 3 must not double as a level 1's
     damage-plus-2, before the Class has actually reached level 3.
+
+    Every permanent needs the computed ability list: `_keyword_replacements`
+    would otherwise grant umbra armor's replacement off `Card.keywords` alone,
+    missing a layer-6 removal of it.
+
+    `board`, when the caller already has one (`applicable_effects`'s own
+    battlefield sweep), is reused rather than asking `game.characteristics_of`
+    again - `Game.computed_board` recomputes the whole battlefield on every
+    call, so a caller looping over it must hoist one board rather than pay for
+    N of them.
     """
     explicit = REPLACEMENTS.get(permanent.card.name)
     if explicit is not None:
         return explicit
-    if not permanent.is_class:
-        return parsed_card_replacements(permanent.card)
-    names = _names_of(permanent.card)
-    found: list[CardReplacement] = _keyword_replacements(permanent.card) + _cant_enter_replacements(
-        permanent.card
-    )
+    card = permanent.card
+    chars = (board or game.computed_board()).of(permanent)
+    found: list[CardReplacement] = _keyword_replacements(
+        card, computed_abilities=chars.abilities
+    ) + _cant_enter_replacements(card)
+    if "Class" not in chars.subtypes:
+        for effect in parse_replacement_effects(card):
+            compiled = _compile(effect)
+            if compiled is not None:
+                found.append(compiled)
+        return found
+    names = _names_of(card)
     for effect in _parse_oracle_text(permanent.class_ability_text, face=None, names=names):
         compiled = _compile(effect)
         if compiled is not None:
@@ -3025,11 +3105,17 @@ def _controls_a_subtype(subtypes: frozenset[str]) -> EntersCondition:
         controller = entering.controller
         if controller is None:
             return False
+        # One board, hoisted out of the loop below (CR 613.5: `computed_board`
+        # recomputes the whole battlefield every call) - a permanent's
+        # *computed* subtypes are what "you control a Mountain" asks about, so
+        # a nonbasic land Blood Moon (CR 305.7) already made a Mountain counts
+        # even though it prints no subtype at all.
+        board = game.computed_board()
         return any(
             subtype in subtypes
             for permanent in game.battlefield
             if permanent.controller == controller
-            for subtype in permanent.subtypes
+            for subtype in board.of(permanent).subtypes
         )
 
     return holds
@@ -3049,11 +3135,15 @@ def _controls_other_lands(count: int, at_least: bool) -> EntersCondition:
         controller = entering.controller
         if controller is None:
             return False
+        # One board, hoisted the same way `_controls_a_subtype` does: a
+        # permanent's *computed* types (CR 613.5) decide "land" here, so a
+        # creature a layer-4 effect already made a land (CR 205.1b) counts.
+        board = game.computed_board()
         lands = sum(
             1
             for permanent in game.battlefield
             if permanent.controller == controller
-            and Type.LAND in permanent.types
+            and Type.LAND in board.of(permanent).types
             and permanent.id != entering.id
         )
         return lands >= count if at_least else lands <= count
@@ -3387,15 +3477,28 @@ def _copy_candidates(game: "Game", phrase: str, entering: CardState) -> list[Car
     if wanted is None and word != "permanent":
         return None
     if _COPY_FROM_GRAVEYARD_RE.search(cleaned):
+        # A graveyard card has no continuous effect reaching it (CR 613.5
+        # applies to the battlefield), so its printed types are the only
+        # answer there is.
         pool: list[CardState] = []
         for player in game.players_in_game:
             pool.extend(player.graveyard)
-    else:
-        pool = list(game.battlefield)
+        return [
+            candidate
+            for candidate in pool
+            if candidate.id != entering.id and (wanted is None or wanted in candidate.types)
+        ]
+    # The battlefield half: the *selection* of what may be copied reads the
+    # computed board (CR 613.5) - a land earthbend (CR 701.66a) already made
+    # a creature is a candidate for "any creature on the battlefield", even
+    # though the values actually copied stay the copiable ones (CR 707.2,
+    # unaffected by this - `Game.enter_the_battlefield` copies the chosen
+    # candidate's printed card, not its computed characteristics).
+    board = game.computed_board()
     return [
         candidate
-        for candidate in pool
-        if candidate.id != entering.id and (wanted is None or wanted in candidate.types)
+        for candidate in game.battlefield
+        if candidate.id != entering.id and (wanted is None or wanted in board.of(candidate).types)
     ]
 
 
@@ -4212,8 +4315,12 @@ def applicable_effects(game: "Game", event: ReplaceableEvent) -> list[Applicable
 
     found.extend(_stack_replacements(game, event))
 
+    # One board, hoisted out of the loop below: `computed_board()` recomputes
+    # the whole battlefield on every call (CR 613.5), and `replacements_of_
+    # state` now asks it once per permanent for its computed abilities.
+    board = game.computed_board()
     for permanent in list(game.battlefield):
-        for index, printed in enumerate(replacements_of_state(permanent)):
+        for index, printed in enumerate(replacements_of_state(game, permanent, board)):
             if printed.applies(game, permanent, event):
                 found.append(
                     ApplicableEffect(

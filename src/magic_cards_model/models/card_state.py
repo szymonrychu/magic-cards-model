@@ -2044,7 +2044,18 @@ class CardState(BaseModel):
 
     @property
     def is_planeswalker(self) -> bool:
-        return Type.PLANESWALKER in self.types
+        """CR 205.2a: this object has the planeswalker card type.
+
+        Layer-aware (CR 613.5, CR 613.1d), the same shape `is_saga` uses: the
+        type is asked of the *computed* characteristics on the battlefield and
+        of the printing everywhere else. A permanent a layer-4 effect made a
+        planeswalker (or made not one) has to answer this the same way
+        everything else that reads `is_planeswalker` does - `loyalty`,
+        `has_zero_loyalty`, `_enter_with_loyalty` just below all gate on it.
+        """
+        computed = self.computed_characteristics
+        types = self.types if computed is None else computed.types
+        return Type.PLANESWALKER in types
 
     @property
     def is_saga(self) -> bool:
@@ -2065,7 +2076,34 @@ class CardState(BaseModel):
 
     @property
     def is_class(self) -> bool:
-        """CR 303.6, 716: an enchantment with the Class subtype."""
+        """CR 303.6, 716: an enchantment with the Class subtype.
+
+        NOT made layer-aware, unlike `is_saga` right above it, even though the
+        same CR 613.5 argument applies to it in principle. `class_ability_text`
+        below reads `self.is_class`, and `class_ability_text` is itself read
+        from *inside* board computation: `machines/layers.py`'s
+        `ContinuousEffects.all_effects` calls `effects_for` for every
+        permanent on the battlefield while building the effect list
+        `compute_board` is about to apply, and `effects_for`
+        (`machines/layers.py:6356`) and `quoted_ability_grants`
+        (`machines/layers.py:4510`) both call `source.class_ability_text` as
+        part of that same pass. Making `is_class` ask `computed_characteristics`
+        would make it ask `Game.characteristics_of`, which recomputes the
+        *entire* board (`Game.computed_board` is never cached) - and unlike
+        `is_saga`'s callers, this one is called while a board computation for
+        every permanent on the battlefield is already in flight. The
+        re-entrancy guard (`_asking_the_board`) only protects the one object
+        currently being asked about; a second, unflagged permanent's
+        `class_ability_text` on the same sweep would kick off a fresh full
+        recompute of its own, which reads every permanent's `class_ability_
+        text` again, which starts another recompute, unbounded - the
+        exponential blowup `CardState.computed_characteristics`'s own
+        docstring warns a call-site-only fix must not reintroduce.
+
+        Left printed. A permanent whose Class-ness a layer-4 effect changed
+        (there is no such printed card in Magic today) would misread here;
+        nothing in the current pool exercises that gap.
+        """
         return "Class" in self.subtypes
 
     @property
@@ -2083,6 +2121,24 @@ class CardState(BaseModel):
         same single parse `machines.triggers` gates triggered abilities on,
         so a Class's level structure is read once, off the printed level
         bars, and every consumer of it agrees.
+
+        NOT made layer-aware (CR 613.5), unlike the handful of other
+        `CardState` properties this defect class fixed. `machines/layers.py`'s
+        `effects_for` (`:6356`) and `quoted_ability_grants` (`:4510`) both call
+        this property, directly on `source`, as part of `ContinuousEffects.
+        all_effects` - the pass that builds the effect list *for*
+        `compute_board`, run once per permanent on the battlefield before a
+        single layer has been applied. Reading `computed_characteristics` from
+        here would call back into `Game.characteristics_of` - a full,
+        uncached board recompute - while a board computation is already
+        running, for a permanent other than (necessarily) the one the
+        `_asking_the_board` guard is watching. That is exactly the
+        "branching n deep" exponential case `computed_characteristics`'s own
+        docstring and this defect's own hard constraint warn against, not a
+        hypothetical: this property has two verified call sites inside that
+        exact pass. Left printed, with the same gap `is_class` above notes -
+        a Class whose level-gated text a layer-4/6 effect changed independent
+        of its own level counter would misread; no printed card does that.
         """
         text = self.oracle_text
         if not self.is_class:

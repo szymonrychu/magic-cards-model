@@ -83,7 +83,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ..ids import new_id
 from ..models.card import Type
-from ..models.card_state import CardState, Counter
+from ..models.card_state import PERMANENT_TYPES, CardState, Counter
 from ..models.mana import ManaCost
 from ..models.token import TokenDefinition, create_tokens
 from ..models.zone import Zone
@@ -1116,6 +1116,7 @@ _TIMING_TRAILING_RE = re.compile(
     rf"^(?P<instruction>.+?)\s+at (?P<timing>{_TIMING_PATTERN})$", re.IGNORECASE
 )
 
+
 #: The pronouns a delayed clause uses for the object its own paragraph just
 #: acted on, mapped to what the referent must actually be for the pronoun to
 #: agree with it.
@@ -1132,16 +1133,37 @@ _TIMING_TRAILING_RE = re.compile(
 #: resolves. CR 603.7c is explicit that the object may change characteristics
 #: afterwards and still be affected, so re-checking "that creature" at
 #: resolution would be wrong.
-_ANAPHOR_AGREEMENT: dict[str, Callable[[CardState], bool]] = {
-    "it": lambda state: True,
-    "that permanent": lambda state: state.is_permanent,
-    "that card": lambda state: not state.token,  # CR 108.2b
-    "that token": lambda state: state.token,  # CR 111.1
-    "that creature": lambda state: state.is_creature,
-    "that creature token": lambda state: state.token and state.is_creature,
-    "that artifact": lambda state: Type.ARTIFACT in state.types,
-    "that land": lambda state: Type.LAND in state.types,
-    "that enchantment": lambda state: Type.ENCHANTMENT in state.types,
+#:
+#: Timing is CR 603.7c's business, not CR 613.5's: the referent is normally
+#: already on the battlefield when this runs (Goryo's Vengeance returns it,
+#: then names it in the same sentence), and CR 613.5 says the layer system's
+#: answer is what the game asks about a permanent, "continually and
+#: automatically" - a land earthbend (CR 701.66a) already made a creature "in
+#: addition to its other types" (CR 205.1b) agrees with "that creature" even
+#: though its printed type line still says only Land. `game` is the same
+#: optional context every other call site in this defect class threads
+#: through: `None` (no caller has been updated yet, or the referent is not on
+#: the battlefield) falls back to the printed reading below, unchanged.
+def _agreement_types(state: CardState, game: "Game | None") -> tuple[Type, ...]:
+    if game is not None and state.zone is Zone.BATTLEFIELD:
+        return game.characteristics_of(state).types
+    return state.types
+
+
+_ANAPHOR_AGREEMENT: dict[str, Callable[[CardState, "Game | None"], bool]] = {
+    "it": lambda state, game: True,
+    "that permanent": lambda state, game: bool(
+        set(_agreement_types(state, game)) & PERMANENT_TYPES
+    ),
+    "that card": lambda state, game: not state.token,  # CR 108.2b
+    "that token": lambda state, game: state.token,  # CR 111.1
+    "that creature": lambda state, game: Type.CREATURE in _agreement_types(state, game),
+    "that creature token": lambda state, game: (
+        state.token and Type.CREATURE in _agreement_types(state, game)
+    ),
+    "that artifact": lambda state, game: Type.ARTIFACT in _agreement_types(state, game),
+    "that land": lambda state, game: Type.LAND in _agreement_types(state, game),
+    "that enchantment": lambda state, game: Type.ENCHANTMENT in _agreement_types(state, game),
 }
 
 _ANAPHOR_PATTERN = "|".join(
@@ -1213,13 +1235,18 @@ class AnaphoricDelayedClause(BaseModel):
     verb: str
     """A key of `_ANAPHORIC_VERBS`: what this does when it resolves."""
 
-    def agrees_with(self, subject: CardState) -> bool:
+    def agrees_with(self, subject: CardState, game: "Game | None" = None) -> bool:
         """Whether `subject` is the kind of object this clause's pronoun names.
 
         Checked at creation time only - CR 603.7c lets the object change
         characteristics afterwards and still be affected.
+
+        `game`, when given, is what lets a type-word pronoun ("that creature",
+        "that land", ...) read the computed board for a battlefield referent
+        (CR 613.5) rather than only the printing (CR 613.1's starting point).
+        `None` keeps the printed-only behaviour every caller had before this.
         """
-        return _ANAPHOR_AGREEMENT[self.anaphor](subject)
+        return _ANAPHOR_AGREEMENT[self.anaphor](subject, game)
 
     @property
     def expected_zone(self) -> Zone:
@@ -1238,6 +1265,7 @@ class AnaphoricDelayedClause(BaseModel):
         controller: str,
         source_id: UUID | None,
         source_name: str,
+        game: "Game | None" = None,
     ) -> DelayedTrigger | None:
         """The delayed triggered ability this clause creates about `subject`
         (CR 603.7a: it exists from now, and not one moment earlier).
@@ -1250,8 +1278,11 @@ class AnaphoricDelayedClause(BaseModel):
         CR 603.7d/e: `controller`, `source_id` and `source_name` are the
         creating spell or ability's own, taken as it resolved, which is why
         they are the caller's to supply and not inferred from `subject`.
+
+        `game`, when given, is forwarded to `agrees_with` so a battlefield
+        referent's *computed* characteristics decide agreement (CR 613.5).
         """
-        if not self.agrees_with(subject):
+        if not self.agrees_with(subject, game):
             return None
         return DelayedTrigger(
             text=self.text,
@@ -1315,6 +1346,7 @@ def anaphoric_delayed_trigger(
     controller: str,
     source_id: UUID | None,
     source_name: str,
+    game: "Game | None" = None,
 ) -> DelayedTrigger | None:
     """`parse_anaphoric_delayed_clause` and `trigger_for` in one call - the
     whole primitive, for a caller that has just moved or created `subject` and
@@ -1323,6 +1355,11 @@ def anaphoric_delayed_trigger(
     The result is not registered anywhere: CR 603.7a's creation is
     `Game.create_delayed_trigger`, which the caller does once it is satisfied
     the rest of its paragraph succeeded.
+
+    `game`, when the caller has one, is forwarded to `trigger_for` so
+    agreement reads `subject`'s computed characteristics on the battlefield
+    (CR 613.5) rather than only its printed type line. `None` (the default)
+    keeps every existing caller's behaviour unchanged.
     """
     parsed = parse_anaphoric_delayed_clause(clause)
     if parsed is None:
@@ -1332,6 +1369,7 @@ def anaphoric_delayed_trigger(
         controller=controller,
         source_id=source_id,
         source_name=source_name,
+        game=game,
     )
     if trigger is None:
         return None

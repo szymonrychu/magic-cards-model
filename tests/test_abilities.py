@@ -14,6 +14,7 @@ from magic_cards_model.machines import (
     TriggerEvent,
     TriggerWord,
     abilities_of_kind,
+    intrinsic_land_ability,
     parse_abilities,
     parse_mana_abilities,
 )
@@ -488,6 +489,45 @@ def test_a_basic_land_prints_no_abilities_but_still_makes_mana():
     it."""
     assert parse_abilities(card("Forest")) == []
     assert parse_mana_abilities(card("Forest"))[0].produces() == [Color.GREEN]
+
+
+def test_intrinsic_land_ability_reads_the_printed_type_line_by_default():
+    """CR 305.6 grants the mana ability to a land with a basic land type. Urborg,
+    Tomb of Yawgmoth's own printed type line is "Legendary Land" with no basic
+    land type on it - it prints its own real rules text ("Each land is a Swamp
+    in addition to its other land types") instead of reminder text, which is
+    exactly why it needs no intrinsic ability of its own off the printing.
+    """
+    assert intrinsic_land_ability(card("Urborg, Tomb of Yawgmoth")) is None
+
+
+def test_intrinsic_land_ability_reads_computed_subtypes_when_given():
+    """The fix: a `computed_subtypes` override reads CR 613's layer-4 answer
+    instead of the printed type line - Urborg's own ability applies to every
+    land, itself included, so a land Urborg is the source of gains {T}: Add
+    {B} even though its printed line carries no basic land type at all.
+    Nothing here builds the layer effect that would produce this override in
+    a real game (`cost.py`/`triggers.py`'s own call sites do that, and they
+    are out of this file's scope) - only that the primitive itself reads the
+    override it is given.
+    """
+    ability = intrinsic_land_ability(card("Urborg, Tomb of Yawgmoth"), computed_subtypes=("Swamp",))
+    assert ability is not None
+    assert ability.mana is not None
+    assert ability.mana.produces() == [Color.BLACK]
+    assert ability.cost == "{T}"
+
+
+def test_intrinsic_land_ability_ignores_a_stale_printed_subtype_when_overridden():
+    """The inverse: a real basic land's own printed subtype must not leak
+    through once a caller supplies a computed override - a Forest Blood Moon
+    (CR 305.7) turned into "just a Mountain" gains {T}: Add {R}, never a
+    second, phantom {T}: Add {G} alongside it.
+    """
+    ability = intrinsic_land_ability(card("Forest"), computed_subtypes=("Mountain",))
+    assert ability is not None
+    assert ability.mana is not None
+    assert ability.mana.produces() == [Color.RED]
 
 
 def test_reminder_text_is_stripped_but_kept():

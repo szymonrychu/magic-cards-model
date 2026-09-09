@@ -63,6 +63,7 @@ from .combat import has_keyword
 from .cost import CostPayment, CostStep, TotalCost, discard_cost, total_cost_for_phrase
 from .decisions import Decision, DecisionKind
 from .layers import (
+    ComputedBoard,
     ContinuousEffect,
     Duration,
     Layer,
@@ -1147,6 +1148,15 @@ def _equip_effect(activation: KeywordActivation) -> CardState | None:
     the ability still resolves after its source is gone, and attaching a
     permanent that exists nowhere the game can see is indistinguishable from
     doing nothing).
+
+    "Creature" is read off the computed board (CR 613.5), not off
+    `CardState.is_creature`'s printed type line: CR 613.1d puts type-changing
+    effects in layer 4, so a land animated by earthbend (CR 701.66a) is a
+    creature "in addition to its other types" (CR 205.1b) and a legal host,
+    which the printed read would refuse forever since a land's own type line
+    never says creature. One target only, so no board is hoisted here - the
+    hoisting rule is for a loop over the whole battlefield, and this loop is
+    over `activation.targets`, which CR 601.2c already narrowed to at most one.
     """
     game = activation.game
     equipment = game.find_by_id(activation.card.id)
@@ -1156,7 +1166,13 @@ def _equip_effect(activation: KeywordActivation) -> CardState | None:
         creature = game.resolve_target(target)
         if not isinstance(creature, CardState):
             continue
-        if creature.zone is not Zone.BATTLEFIELD or not creature.is_creature:
+        if creature.zone is not Zone.BATTLEFIELD:
+            continue
+        try:
+            is_creature = game.characteristics_of(creature).is_creature
+        except (AttributeError, KeyError):
+            is_creature = creature.is_creature
+        if not is_creature:
             continue  # CR 301.5: an Equipment can't legally be attached to a noncreature
         if game.controller_of(creature).username != activation.player:
             continue
@@ -1329,13 +1345,29 @@ def _crew_effect(activation: KeywordActivation) -> list[ContinuousEffect]:
 _ATTACHES_TO: dict[str, str] = {"Equipment": "creature", "Fortification": "land"}
 
 
-def _host_is_legal_for(attached: CardState, host: CardState | None, wanted: str) -> bool:
-    """Whether CR 704.5n's host is a legal one for this Equipment or Fortification."""
+def _host_is_legal_for(
+    game: Any,
+    attached: CardState,
+    host: CardState | None,
+    wanted: str,
+    board: ComputedBoard | None = None,
+) -> bool:
+    """Whether CR 704.5n's host is a legal one for this Equipment or Fortification.
+
+    Computed types (CR 613.5), not `host.is_creature`/`Type.LAND in host.types`'s
+    printed read: CR 613.1d's layer 4 is what makes Karn, the Great Creator's
+    animated noncreature artifact a legal Equipment host, and what makes an
+    earthbent land (CR 701.66a) - land "in addition to" creature, CR 205.1b -
+    a legal one too. `board` lets a caller looping the whole battlefield hoist
+    one `computed_board()` instead of paying for a fresh one per host asked
+    about here.
+    """
     if host is None or host.zone is not Zone.BATTLEFIELD:
         return False
     if host.id == attached.id:
         return False  # CR 301.5c: "An Equipment can't equip itself."
-    return host.is_creature if wanted == "creature" else Type.LAND in host.types
+    types, _subtypes = _computed_types_and_subtypes(game, host, board)
+    return Type.CREATURE in types if wanted == "creature" else Type.LAND in types
 
 
 def equipment_state_based_actions(game: Any) -> list[CardState]:
@@ -1364,20 +1396,29 @@ def equipment_state_based_actions(game: Any) -> list[CardState]:
     Legality is read off the subtype rather than assumed: CR 301.5a and
     CR 702.6a put an Equipment on a creature, CR 301.6 puts a Fortification on
     a land, and CR 301.5c adds that an Equipment cannot equip itself.
+
+    Both the attached permanent's own subtype and its host's types are read
+    off the computed board (CR 613.5) rather than the printed line, through
+    `_computed_types_and_subtypes` - the same helper `attachment_state_based_
+    actions` next to this one already uses - and one `computed_board()` is
+    hoisted for the whole loop rather than recomputed per permanent, since
+    `characteristics_of` reruns the entire layer stack on every call.
     """
     unattached: list[CardState] = []
+    board = game.computed_board()
     for permanent in list(game.battlefield):
         if permanent.attached_to is None:
             continue
+        _types, subtypes = _computed_types_and_subtypes(game, permanent, board)
         wanted = next(
-            (host_kind for name, host_kind in _ATTACHES_TO.items() if name in permanent.subtypes),
+            (host_kind for name, host_kind in _ATTACHES_TO.items() if name in subtypes),
             None,
         )
         if wanted is None:
             continue  # CR 704.5m's Aura, or CR 704.5p's everything else.
         host = game.find_by_id(permanent.attached_to)
         host = host if isinstance(host, CardState) else None
-        if not _host_is_legal_for(permanent, host, wanted):
+        if not _host_is_legal_for(game, permanent, host, wanted, board):
             permanent.unattach()
             unattached.append(permanent)
     return unattached
@@ -1386,6 +1427,28 @@ def equipment_state_based_actions(game: Any) -> list[CardState]:
 def has_ascend(card: Card) -> bool:
     """Whether this card's own printed text grants *ascend* (CR 702.131)."""
     return any(keyword.lower() == "ascend" for keyword in card.keywords)
+
+
+_ASCEND_LINE = re.compile(r"^ascend\b", re.IGNORECASE)
+
+
+def _has_computed_ascend(board: ComputedBoard, permanent: CardState) -> bool:
+    """Whether this permanent currently has ascend (CR 613.5), off `board`
+    rather than `has_ascend`'s printed keyword read.
+
+    `Characteristics.abilities` is oracle-text lines (one per line, reminder
+    text included - `machines/layers.py`'s `_ability_lines`), not the parsed
+    Scryfall keyword list `has_ascend` reads, so this matches the line by its
+    first word rather than by exact membership: a card removed of all
+    abilities in layer 6 (CR 613.1f) - Humility, Dress Down - has no line
+    starting `ascend` left to match, even though its printed keyword list
+    still says it has one.
+    """
+    try:
+        abilities = board.of(permanent).abilities
+    except KeyError:
+        return has_ascend(permanent.card)
+    return any(_ASCEND_LINE.match(line) for line in abilities)
 
 
 def ascend_state_based_actions(game: Any) -> list[str]:
@@ -1420,15 +1483,23 @@ def ascend_state_based_actions(game: Any) -> list[str]:
     consequence would be a trigger that itself depends on already having the
     blessing seeing it one instant later than CR 702.131d demands, which
     nothing in the pool exercises.
+
+    Ascend is read off the computed board (`_has_computed_ascend`), not off
+    `has_ascend`'s printed keyword: CR 613.5's layer 6 (CR 613.1f) can remove
+    the ability, and a printed-only read would keep granting the blessing to
+    a player whose only ascend permanent has had it stripped - Humility and
+    Dress Down are the cards in the pool that strip it. One `computed_board()`
+    is hoisted for every player this checks, rather than one per permanent.
     """
     blessed: list[str] = []
+    board = game.computed_board()
     for player in game.players_in_game:
         if player.has_citys_blessing:
             continue
         permanents = game.permanents_controlled_by(player.username)
         if len(permanents) < 10:
             continue
-        if not any(has_ascend(permanent.card) for permanent in permanents):
+        if not any(_has_computed_ascend(board, permanent) for permanent in permanents):
             continue
         player.has_citys_blessing = True
         blessed.append(player.username)
@@ -1490,13 +1561,20 @@ def attachment_state_based_actions(game: Any) -> list[CardState]:
 
 
 def _computed_types_and_subtypes(
-    game: Any, permanent: CardState
+    game: Any, permanent: CardState, board: ComputedBoard | None = None
 ) -> tuple[tuple[Type, ...], tuple[str, ...]]:
     """This permanent's card types and subtypes with the layers applied
     (CR 613.5), falling back to the printed ones when there is no layer engine
-    behind `game` or it has nothing computed for this object."""
+    behind `game` or it has nothing computed for this object.
+
+    `board`, when given, is read instead of asking `game.characteristics_of`
+    fresh - which reruns the whole layer stack (`Game.computed_board`'s own
+    docstring on why it is not cached) - so a caller looping the battlefield
+    can hoist one `computed_board()` and pass it in here per permanent rather
+    than paying for a full recompute each time.
+    """
     try:
-        computed = game.characteristics_of(permanent)
+        computed = board.of(permanent) if board is not None else game.characteristics_of(permanent)
     except (AttributeError, KeyError):
         return tuple(permanent.types), tuple(permanent.subtypes)
     return tuple(computed.types), tuple(computed.subtypes)
@@ -1894,14 +1972,22 @@ def prowess_triggers(game: Any, spell: CardState) -> list[CardState]:
     on the stack (CR 603.3), and `_prowess_effect` applies the +1/+1 when one
     resolves. This is the shape a test or a caller uses to ask the question
     directly.
+
+    "Creature" is the computed board (CR 613.5), not `CardState.is_creature`'s
+    printed read: a permanent animated into a creature only in layer 4
+    (CR 613.1d) - a land by earthbend (CR 701.66a) - still owes prowess to
+    whatever printed or granted it the ability, and the printed read would
+    skip it forever. One `computed_board()` is hoisted for the whole
+    `game.battlefield` scan rather than recomputed per candidate.
     """
     if Type.CREATURE in spell.card.types:
         return []
     controller = spell.controller or game.active_player.username
+    board = game.computed_board()
     return [
         permanent
         for permanent in game.battlefield
-        if permanent.is_creature
+        if board.of(permanent).is_creature
         and has_prowess(permanent.card)
         and game.controller_of(permanent).username == controller
     ]
@@ -2465,10 +2551,18 @@ def aura_state_based_actions(game: Any) -> list[CardState]:
     test pool - is read off `attachment` directly here rather than through that
     property, which would otherwise read every Aura on a player as attached to
     nothing and bin it every check.
+
+    The "Aura" subtype check is read off the computed board (CR 613.5) through
+    `_computed_types_and_subtypes` - the same helper `equipment_state_based_
+    actions` uses for the same reason - rather than off `permanent.subtypes`'s
+    printed line, with one `computed_board()` hoisted for the whole battlefield
+    loop.
     """
     doomed: list[CardState] = []
+    board = game.computed_board()
     for permanent in list(game.battlefield):
-        if "Aura" not in permanent.subtypes:
+        _types, subtypes = _computed_types_and_subtypes(game, permanent, board)
+        if "Aura" not in subtypes:
             continue
         attachment = permanent.attachment
         if attachment is None:

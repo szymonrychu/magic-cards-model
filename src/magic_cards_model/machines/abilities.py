@@ -893,7 +893,12 @@ def _type_line_and_name_for_face(card: Card, face: str | None) -> tuple[str, str
     return card.front_type_line, card.name
 
 
-def intrinsic_land_ability(card: Card, face: str | None = None) -> "ActivatedAbility | None":
+def intrinsic_land_ability(
+    card: Card,
+    face: str | None = None,
+    *,
+    computed_subtypes: tuple[str, ...] | None = None,
+) -> "ActivatedAbility | None":
     """The unwritten `{T}: Add [colour(s)].` a basic land type carries (CR 305.6).
 
     CR 305.6 grants the mana ability to "an object with the land card type and
@@ -921,15 +926,46 @@ def intrinsic_land_ability(card: Card, face: str | None = None) -> "ActivatedAbi
     a land back face that does, while its creature front sits on the top-level
     fields. `None` keeps the old front-face-only behaviour for a single-faced
     card or a caller with no face resolved.
+
+    `computed_subtypes`, when given, overrides the printed subtype line CR 613
+    would otherwise start from - a land Blood Moon (CR 305.7) set to "just a
+    Mountain", or one Urborg, Tomb of Yawgmoth made a Swamp "in addition to
+    its other types", still needs CR 305.6's intrinsic ability, and the
+    printed line alone can never see either effect. `None` (the default)
+    keeps every existing caller's printed-only behaviour: this function has
+    no `game` and no live permanent of its own to ask, so a caller with a
+    battlefield permanent in hand is the one that has to read `Characteristics.
+    subtypes` (guarded the same way every other computed-vs-printed call site
+    in this defect class is) and pass the answer in. Land *type* (whether it
+    is a land at all) is still read off the printed line either way - nothing
+    in this pool's subtype-changing effects also strips the land type itself.
+
+    **No in-game caller passes it, and none should.** That is a deliberate
+    conclusion, checked against the running engine rather than assumed: both
+    paths that ask a live permanent for its activated abilities -
+    `Game.activated_abilities` and `machines/cost._abilities_of` - already
+    reach the layer-4 answer by a different, correct route.
+    `layers.rewritten_ability_lines` replaces the whole printed line list when
+    CR 305.7 has set a land's subtype (Blood Moon over Steam Vents computes to
+    exactly `{T}: Add {R}`), and `layers.added_ability_lines` appends the
+    intrinsic ability of a basic land type granted additively (Urborg over a
+    Forest computes to `{T}: Add {G}` *and* `{T}: Add {B}`). Both were
+    verified live before this note was written.
+
+    Wiring `computed_subtypes` through `triggers.activated_abilities_of` to
+    "finish the job" would therefore change no answer, and would break one:
+    that function is memoised on `(card.id, face)` alone, so a per-permanent
+    override would both survive a subtype change and leak across every other
+    permanent sharing the printed card. The parameter stays because it makes
+    this function answerable for a caller that genuinely has only computed
+    subtypes and no game (`tests/test_abilities.py` covers exactly that), not
+    because the engine needs a second route to an answer it already has.
     """
     type_line, name = _type_line_and_name_for_face(card, face)
     if Type.LAND not in types_of(type_line):
         return None
-    colors = [
-        _BASIC_LAND_COLORS[subtype]
-        for subtype in subtypes_of(type_line)
-        if subtype in _BASIC_LAND_COLORS
-    ]
+    subtypes = subtypes_of(type_line) if computed_subtypes is None else computed_subtypes
+    colors = [_BASIC_LAND_COLORS[subtype] for subtype in subtypes if subtype in _BASIC_LAND_COLORS]
     if not colors:
         return None
     # One basic land type is one option with no choice (Forest: only {G}).

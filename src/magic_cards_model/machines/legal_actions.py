@@ -92,6 +92,7 @@ from .casting import (
     why_cannot_cast_restriction,
     why_mana_cost_unpayable,
 )
+from .combat import ATTACKABLE_PERMANENT_TYPES
 from .cost import (
     ComponentKind,
     CostComponent,
@@ -834,7 +835,11 @@ def _dredge_action(game: Any, player: str, card: CardState) -> Action | None:
 
 
 def _battlefield_ability_actions(
-    game: Any, player: str, permanent: CardState, candidate_scan: list[_ScannedCandidate]
+    game: Any,
+    player: str,
+    permanent: CardState,
+    candidate_scan: list[_ScannedCandidate],
+    board: Any,
 ) -> list[Action]:
     if permanent.controller != player:
         return []
@@ -880,7 +885,13 @@ def _battlefield_ability_actions(
                 )
             )
             continue
-        spend = ManaSpend.activating(permanent.card)
+        # CR 106.6's restrictions ("only to activate abilities of creature
+        # sources") ask what the source *is*, which CR 613.5 makes the
+        # layer-computed answer - a land animated into a creature is a creature
+        # source. `ManaSpend.activating` takes either shape (see its
+        # `HasCharacteristics` protocol); `permanent.card` here was the printed
+        # front face, wrong for a transformed permanent even before layers.
+        spend = ManaSpend.activating(board.of(permanent))
         affordable, reason = _cost_affordability(game, player, total, candidate_scan, spend=spend)
         cost_str, mana_cost_str = _cost_strings(total)
         actions.append(
@@ -999,16 +1010,27 @@ def _attacker_actions(game: Any, player: str) -> list[Action]:
     if not opponents:
         return []
     opponent_names = {p.username for p in opponents}
+    # One computed board for the whole enumeration (`Game.computed_board`
+    # recomputes on every call) - both loops below read a permanent's
+    # *computed* types (CR 613.5), not `CardState.types`'s printed starting
+    # point (CR 613.1), so a layer-4 type change is seen the same way
+    # `why_cannot_attack`/`combat_rules.attack_refusal` already sees it.
+    board = game.computed_board()
     defenders: list[tuple[str, Any]] = [(p.username, p.username) for p in opponents]
     for permanent in game.battlefield:
         if permanent.controller in opponent_names and (
-            Type.PLANESWALKER in permanent.types or Type.BATTLE in permanent.types
+            set(board.of(permanent).types) & ATTACKABLE_PERMANENT_TYPES
         ):
             defenders.append((str(permanent.id), permanent))
     already_attacking = {attack.attacker_id for attack in game.combat.attacks}
     actions: list[Action] = []
     for creature in game.permanents_controlled_by(player):
-        if Type.CREATURE not in creature.types or creature.id in already_attacking:
+        # Computed, not printed: an animated land (Badgermole Cub's
+        # earthbend, CR 701.66a) is a creature by CR 613.1d, and
+        # `why_cannot_attack` already answers `None` for it - this
+        # enumeration must offer the same `DECLARE_ATTACKER` action or the
+        # two disagree about what may attack.
+        if not board.of(creature).is_creature or creature.id in already_attacking:
             continue
         for label, target in defenders:
             if game.why_cannot_attack(creature, target) is None:
@@ -1037,11 +1059,17 @@ def _blocker_actions(game: Any, player: str) -> list[Action]:
         return []
     actions: list[Action] = []
     attackers = [game.find_by_id(attack.attacker_id) for attack in game.combat.attacks]
+    # One computed board for every attacker's inner loop, not one per
+    # `permanents_controlled_by` scan - see `_attacker_actions`'s identical
+    # reasoning. An animated land can block just as legally as it can attack
+    # (`why_cannot_block` already answers `None` for it), so this enumeration
+    # has to offer it too.
+    board = game.computed_board()
     for attacker in attackers:
         if attacker is None:
             continue
         for creature in game.permanents_controlled_by(player):
-            if Type.CREATURE not in creature.types:
+            if not board.of(creature).is_creature:
                 continue
             if game.why_cannot_block(creature, attacker) is None:
                 actions.append(
@@ -1243,8 +1271,13 @@ def legal_actions(
         actions.extend(_land_actions(game, player, card))
         actions.extend(_off_zone_actions(game, player, card, candidate_scan))
 
+    # One board for the whole battlefield sweep (CR 613.5's answer is the same
+    # for every permanent in it): `Game.computed_board` re-runs the entire
+    # layer stack per call, so asking it once per permanent would make this
+    # enumeration quadratic in the board size.
+    board = game.computed_board()
     for permanent in game.permanents_controlled_by(player):
-        actions.extend(_battlefield_ability_actions(game, player, permanent, candidate_scan))
+        actions.extend(_battlefield_ability_actions(game, player, permanent, candidate_scan, board))
         if not permanent.face_up:
             turn_up = _turn_face_up_action(game, player, permanent, candidate_scan)
             if turn_up is not None:

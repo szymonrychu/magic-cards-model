@@ -34,6 +34,7 @@ import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.keywords import crew_activation
+from magic_cards_model.machines.objects_as_costs import is_vehicle, is_vehicle_permanent
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card import Type
 from tests.scenarios.harness import Scenario
@@ -406,3 +407,35 @@ def test_a_vehicle_that_left_the_battlefield_is_not_made_a_creature():
     activation.resolve()
 
     assert vehicle.zone is Zone.GRAVEYARD
+
+
+# --------------------------------------------------------------------------
+# `is_vehicle_permanent` (CR 301.7): a permanent asking whether it is a
+# Vehicle right now, off the computed board, rather than `is_vehicle`'s
+# printed-only read used before it existed
+# --------------------------------------------------------------------------
+#
+# Nothing in the pool grants or removes the Vehicle subtype, so there is no
+# board where this and `is_vehicle` disagree; what these two tests pin down
+# is that the new computed read did not accidentally narrow or widen who
+# counts as one - a Vehicle is still a Vehicle, crewed or not, and an
+# ordinary artifact never becomes one just by being one.
+
+
+def test_a_vehicle_is_recognised_before_and_after_crewing():
+    scenario = board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    vehicle = scenario.find("Consulate Dreadnought", Zone.BATTLEFIELD)
+    assert is_vehicle(vehicle.card)
+    assert is_vehicle_permanent(vehicle, scenario.game)
+
+    bears = scenario.creatures("Grizzly Bears", "Grizzly Bears", "Grizzly Bears", username="alice")
+    crew(scenario, vehicle, *bears)
+    assert is_vehicle_permanent(vehicle, scenario.game), "crewing adds creature, not Vehicle"
+
+
+def test_an_ordinary_artifact_is_not_a_vehicle():
+    scenario = Scenario().player("alice", battlefield=["Sol Ring"]).player("bob").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    ring = scenario.find("Sol Ring", Zone.BATTLEFIELD)
+    assert not is_vehicle_permanent(ring, scenario.game)
