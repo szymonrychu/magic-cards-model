@@ -219,8 +219,17 @@ def test_the_ability_is_refused_once_the_last_counter_is_already_gone():
 def test_removing_the_last_time_counter_this_way_reaches_the_free_cast_path():
     """The brief's own bar: removing the *last* counter through this
     ability, not the upkeep route, must still reach CR 702.62a's third
-    ability - `finish_suspend`, chained straight out of the effect - so the
-    card is actually castable for free and actually comes down."""
+    ability, so the card is actually castable for free and actually comes
+    down.
+
+    It reaches it as a **trigger** rather than as a call chained out of this
+    effect. CR 702.62a's third ability is written "When the last time counter
+    is removed from this card, ..." - a trigger condition, so CR 603.3 puts
+    it on the stack the next time a player would receive priority and CR
+    702.62b's own counting is what decides whether it fired at all. The
+    activated ability's resolution raises that condition; it does not carry
+    out the other ability's instruction itself.
+    """
     scenario = _new_game()
     gargadon = _suspend_gargadon(scenario)
 
@@ -233,10 +242,13 @@ def test_removing_the_last_time_counter_this_way_reaches_the_free_cast_path():
     _activate_sacrificing(scenario, gargadon, sol_ring)
 
     assert gargadon.counter_count(Counter.TIME) == 0
-    assert len(scenario.game.play_permissions) == 1, (
-        "the ability's own resolution should have granted the free-cast permission "
-        "(chained through finish_suspend), the same way the upkeep route does"
-    )
+    # CR 603.3: it triggered as the last counter came off, and goes on the
+    # stack at the next priority. Resolving it is what grants the free cast.
+    assert len(scenario.pending_triggers) + len(scenario.game.abilities_on_stack) == 1
+    scenario.game.put_triggers_on_stack()
+    while not scenario.game.stack_is_empty:
+        scenario.resolve_top()
+    assert len(scenario.game.play_permissions) == 1
 
     casting = Casting(spell=gargadon, caster="alice", origin_zone=Zone.EXILE, game=scenario.game)
     casting.use_permission()

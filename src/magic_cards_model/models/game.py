@@ -3846,6 +3846,22 @@ class Game(BaseModel):
             # *asked*, never what triggers.
             for player in self.players:
                 sources.extend(player.graveyard)
+            # CR 702.62a: "The second and third [suspend abilities] are
+            # triggered abilities that function in the exile zone." Nothing in
+            # exile was ever offered here, so a suspended card was never asked
+            # about `TriggerEvent.BEGINNING_OF_STEP` and its time counters
+            # only ever came off when a caller removed one by hand.
+            #
+            # Deliberately *not* the whole exile pile the way the graveyards
+            # above are. Exile is one shared zone (`Game.shared_zones`) holding
+            # every foretold, plotted, madness-discarded, cascaded and
+            # hidden-away card in the game, and offering all of them would ask
+            # each about every event that ever happens. CR 702.62b's own
+            # three-clause definition of "suspended" - "in the exile zone, has
+            # suspend, and has a time counter on it", which is exactly
+            # `CardState.is_suspended` - is the filter, so the widening stays
+            # the size of the rule that needed it.
+            sources.extend(card for card in self.exile if card.is_suspended)
             if event.event is TriggerEvent.CAST_SPELL:
                 sources = self.spells_on_stack + sources
             elif (
@@ -3856,6 +3872,16 @@ class Game(BaseModel):
                     TriggerEvent.SPELL_IS_COUNTERED,
                     TriggerEvent.LEAVES_BATTLEFIELD_TO_EXILE,
                     TriggerEvent.LEAVES_THE_BATTLEFIELD,
+                    # CR 702.62a's third ability, "When the last time counter
+                    # is removed from this card": by the time the event is
+                    # raised the card has no time counters left, so CR
+                    # 702.62b no longer calls it suspended and the widening
+                    # above has already stopped offering it. The card is
+                    # named as the event's own subject and asked here for the
+                    # same reason the four departures above are - the state
+                    # the condition is about is the state it was in a moment
+                    # ago.
+                    ExtraTriggerEvent.LAST_TIME_COUNTER_REMOVED,
                 )
                 and event.subject_id is not None
             ):

@@ -83,9 +83,10 @@ from magic_cards_model.machines.casting import (
     remove_suspend_time_counter,
     usable_play_permission,
 )
+from magic_cards_model.machines.decisions import DecisionKind
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card import Color, Type
-from magic_cards_model.models.card_state import Counter, ExileMarker
+from magic_cards_model.models.card_state import CardState, Counter, ExileAnnotation, ExileMarker
 from tests.scenarios.harness import PlayedScenario, Scenario
 
 
@@ -93,10 +94,22 @@ def _advance_to_owners_next_upkeep(scenario: PlayedScenario, owner: str) -> None
     """Walk the real turn machine forward to `owner`'s own next upkeep step -
     CR 702.62a says "at the beginning of *your* upkeep", so this steps clean
     through any other player's turn in between rather than firing on it.
+
+    Whatever is on the stack is resolved on the way (CR 500.2 refuses to
+    advance past a step with a non-empty stack), and whatever went on it *at*
+    the upkeep reached is deliberately left there unresolved, so a test can
+    assert on the triggers before choosing to resolve them.
     """
     scenario.advance()
     while not (scenario.step is Step.UPKEEP and scenario.turn.active_player == owner):
+        _resolve_everything(scenario)
         scenario.advance()
+
+
+def _resolve_everything(scenario: PlayedScenario) -> None:
+    """Resolve the whole stack, top down."""
+    while not scenario.game.stack_is_empty:
+        scenario.resolve_top()
 
 
 def test_living_end_cannot_be_hardcast_from_hand_with_no_mana_cost():
@@ -248,10 +261,17 @@ def test_time_counters_come_off_one_per_upkeep_and_the_free_cast_reanimates():
 
     for expected_remaining in (2, 1, 0):
         _advance_to_owners_next_upkeep(scenario, "alice")
-        remaining = remove_suspend_time_counter(scenario.game, living_end)
-        assert remaining == expected_remaining
+        # Nothing is driven by hand any more: the upkeep trigger is a real
+        # object on the stack (CR 500.6, 603.3) and resolving it is what takes
+        # the counter off.
+        _resolve_everything(scenario)
+        assert living_end.counter_count(Counter.TIME) == expected_remaining
 
-    permission = finish_suspend(scenario.game, living_end)
+    # Resolving the third upkeep's trigger emptied the card, which triggered
+    # CR 702.62a's *third* ability in turn - and `_resolve_everything` above
+    # already resolved that too, granting the free cast without anybody
+    # calling `finish_suspend`.
+    permission = usable_play_permission(scenario.game, living_end, "alice")
     assert permission is not None
     assert permission.pays_mana_cost is False
     assert permission.immediate is True
@@ -362,12 +382,17 @@ def test_the_free_cast_window_does_not_outlive_the_upkeep_trigger():
 
     for _ in range(3):
         _advance_to_owners_next_upkeep(scenario, "alice")
-        remove_suspend_time_counter(scenario.game, living_end)
+        _resolve_everything(scenario)
 
     assert scenario.step is Step.UPKEEP
-    permission = finish_suspend(scenario.game, living_end)
+    assert living_end.counter_count(Counter.TIME) == 0
+    # `granted_step` is the upkeep the third ability *resolved* in, which is
+    # this one - the window is scoped to the resolution that opened it, not
+    # to whichever step a caller later remembers to ask in.
+    permission = usable_play_permission(scenario.game, living_end, "alice")
     assert permission is not None
     assert permission.immediate is True
+    assert permission.granted_step is Step.UPKEEP
 
     # Still in the same upkeep step the trigger fired in: the window is open.
     # `usable_play_permission` is what `Casting.use_permission` itself checks
@@ -433,11 +458,24 @@ def test_greater_gargadon_a_second_real_suspend_card_proves_the_parse_is_general
     gargadon = scenario.find("Greater Gargadon", Zone.EXILE)
     assert gargadon.counter_count(Counter.TIME) == 10
 
+    # Ten counters off by hand - Greater Gargadon's own printed "Sacrifice an
+    # artifact, creature, or land: Remove a time counter from this card" is an
+    # activated ability, not the upkeep trigger, so this is the route
+    # `machines/effects.py` takes for it. Taking the *last* one off raises CR
+    # 702.62a's third trigger condition all the same, wherever the removal
+    # came from, so the free cast is granted by that ability resolving rather
+    # than by a `finish_suspend` call.
     for _ in range(10):
         remove_suspend_time_counter(scenario.game, gargadon)
     assert gargadon.counter_count(Counter.TIME) == 0
 
-    permission = finish_suspend(scenario.game, gargadon)
+    # CR 603.3 puts it on the stack "the next time a player would receive
+    # priority"; nothing here has passed priority since, so that moment is
+    # asked for explicitly rather than waited for.
+    assert len(scenario.pending_triggers) == 1
+    scenario.game.put_triggers_on_stack()
+    _resolve_everything(scenario)
+    permission = usable_play_permission(scenario.game, gargadon, "alice")
     assert permission is not None
 
     casting = Casting(spell=gargadon, caster="alice", origin_zone=Zone.EXILE, game=scenario.game)
@@ -457,3 +495,335 @@ def test_greater_gargadon_a_second_real_suspend_card_proves_the_parse_is_general
     assert scenario.can_attack(permanent) is True
     scenario.attack_with(permanent)
     assert permanent in scenario.attackers()
+
+
+# --------------------------------------------------------------------------
+# CR 702.62a's second ability, dispatched by the engine itself
+#
+# The defect this half of the file was written from: a seat suspended two
+# Lotus Blooms and the time counters never came off. `Game.emit` never
+# offered an exiled card as a source, so nothing was ever asked about
+# `TriggerEvent.BEGINNING_OF_STEP`, and suspend's second ability - which CR
+# 702.62a says "function[s] in the exile zone" - had no dispatcher at all.
+# Every counter that ever came off in this engine came off because a caller
+# reached in and called `remove_suspend_time_counter` by hand.
+# --------------------------------------------------------------------------
+
+
+def _suspend_from_hand(scenario: PlayedScenario, name: str, player: str) -> CardState:
+    """Take the CR 116.2f special action on `name` in `player`'s hand.
+
+    Lotus Bloom's suspend cost is `{0}`, so there is nothing to tap - the
+    payment is opened and paid with no sources at all.
+    """
+    card = scenario.find(name, Zone.HAND, player)
+    action = MarkedExile.suspend(scenario.game, card, player)
+    action.begin_paying().pay()
+    return action.take()
+
+
+def _two_blooms() -> PlayedScenario:
+    return (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Lotus Bloom", "Lotus Bloom"], library=["Forest"] * 12)
+        .player("bob", library=["Forest"] * 12)
+        .build()
+    )
+
+
+def test_two_suspended_lotus_blooms_each_lose_exactly_one_time_counter():
+    """The reported defect, reproduced and fixed, with nothing driven by hand.
+
+    CR 702.62a's second ability: "At the beginning of your upkeep, if this
+    card is suspended, remove a time counter from it." Two Lotus Blooms
+    suspended for `{0}` (CR 116.2f's special action), then alice's own next
+    upkeep - and the engine, not the test, takes exactly one counter off each.
+
+    **Exactly one.** This is the assertion that catches the double tick: the
+    api repo drives `remove_suspend_time_counter` itself once per upkeep
+    (`engine_api.drive_suspend_upkeep`), so the moment the engine dispatches
+    the trigger as well, both run and two counters come off per upkeep. That
+    driver has to be deleted in the same landing as this fix.
+    """
+    scenario = _two_blooms()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    first = _suspend_from_hand(scenario, "Lotus Bloom", "alice")
+    second = _suspend_from_hand(scenario, "Lotus Bloom", "alice")
+    assert [first.counter_count(Counter.TIME), second.counter_count(Counter.TIME)] == [3, 3]
+
+    _advance_to_owners_next_upkeep(scenario, "alice")
+
+    # CR 500.6/503.1a: both triggered at the beginning of the upkeep and are
+    # already on the stack, waiting - they are real stack objects (CR 603.3),
+    # not a state change the step performed.
+    assert len(scenario.game.abilities_on_stack) == 2
+    assert [first.counter_count(Counter.TIME), second.counter_count(Counter.TIME)] == [3, 3]
+
+    _resolve_everything(scenario)
+
+    assert [first.counter_count(Counter.TIME), second.counter_count(Counter.TIME)] == [2, 2]
+
+    # And the next one, to prove it is per-upkeep rather than a one-shot.
+    _advance_to_owners_next_upkeep(scenario, "alice")
+    _resolve_everything(scenario)
+    assert [first.counter_count(Counter.TIME), second.counter_count(Counter.TIME)] == [1, 1]
+
+
+def test_two_simultaneous_suspend_triggers_are_ordered_by_their_controller():
+    """CR 603.3b: "each player, in APNAP order, puts each triggered ability
+    they control ... on the stack in any order they choose." Two suspended
+    cards are two abilities alice controls, so the ordering choice is
+    actually put to her - which only happens because these are triggered
+    abilities going on the stack, and not a counter the upkeep step took off
+    by itself.
+    """
+    scenario = _two_blooms()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    _suspend_from_hand(scenario, "Lotus Bloom", "alice")
+    _suspend_from_hand(scenario, "Lotus Bloom", "alice")
+
+    _advance_to_owners_next_upkeep(scenario, "alice")
+
+    ordering = [
+        question
+        for question in scenario.questions_asked()
+        if question.kind is DecisionKind.ORDER_TRIGGERS
+    ]
+    assert len(ordering) == 1
+    assert ordering[0].player == "alice"
+    assert len(ordering[0].cards) == 2
+
+
+def test_the_upkeep_belongs_to_the_owner_and_not_to_whoever_exiled_the_card():
+    """CR 109.5 with CR 108.3/108.4a: "the words 'you' and 'your' on an object
+    refer to the object's controller, its would-be controller ..., or its
+    owner (if it has no controller)", and CR 108.4a - "if anything asks for
+    the controller of a card that doesn't have one ... use its owner instead".
+    A card in exile is neither a permanent nor a spell, so "your upkeep" is
+    the **owner's** upkeep.
+
+    Staged as the shape CR 702.62b actually describes and nothing in this
+    engine can yet produce on its own: a card alice owns, sitting in exile
+    with time counters on it, exiled by bob. (Suspended Sentence's own final
+    clause - "Exile Suspended Sentence with three time counters on it" - is
+    exactly this and has no `machines/effects.py` entry, so it cannot be used
+    to stage it.) `ExileAnnotation.owner` is the player who took the exiling
+    action, which is what the api repo's own driver filtered on; keying on
+    that instead of `CardState.owner` ticks this card on the wrong player's
+    turn.
+    """
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", exile=["Lotus Bloom"], library=["Forest"] * 12)
+        .player("bob", library=["Forest"] * 12)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bloom = scenario.find("Lotus Bloom", Zone.EXILE)
+    bloom.exile_annotation = ExileAnnotation(marker=ExileMarker.SUSPENDED, owner="bob")
+    # CR 108.4: a card in exile is neither a permanent nor a spell, so it has
+    # no controller at all - and `CardState.move_to` does not clear the field,
+    # so bob's name sitting there is exactly the stale value CR 108.4a says to
+    # ignore in favour of the owner. Both wrong answers point at bob; only the
+    # right one points at alice.
+    bloom.controller = "bob"
+    scenario.game.add_counters(bloom, Counter.TIME, 3)
+    assert bloom.owner == "alice"
+
+    # bob's whole turn, the exiler's own upkeep included: nothing comes off.
+    _advance_to_owners_next_upkeep(scenario, "bob")
+    _resolve_everything(scenario)
+    assert bloom.counter_count(Counter.TIME) == 3
+
+    _advance_to_owners_next_upkeep(scenario, "alice")
+    _resolve_everything(scenario)
+    assert bloom.counter_count(Counter.TIME) == 2
+
+
+def test_nothing_ticks_anywhere_in_the_opponents_turn():
+    """CR 702.62a says "your upkeep", not "each upkeep" - and the whole of an
+    opponent's turn passes without a single counter moving, step by step, not
+    merely at its upkeep."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Lotus Bloom"], library=["Forest"] * 12)
+        .player("bob", library=["Forest"] * 12)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bloom = _suspend_from_hand(scenario, "Lotus Bloom", "alice")
+
+    # The rest of alice's own turn (her upkeep is already behind her) and then
+    # the whole of bob's, every single step of both: nothing moves.
+    while not (scenario.step is Step.UPKEEP and scenario.turn.active_player == "alice"):
+        _resolve_everything(scenario)
+        scenario.advance()
+        assert bloom.counter_count(Counter.TIME) == 3
+
+    # alice's own upkeep, reached at last: exactly one counter.
+    _resolve_everything(scenario)
+    assert bloom.counter_count(Counter.TIME) == 2
+
+
+def test_a_foretold_and_a_plotted_card_in_exile_trigger_nothing_all_turn():
+    """The line `Game.emit`'s own comment draws: widening what is *asked*
+    must never widen what triggers.
+
+    Exile is one shared pile (`Game.shared_zones`), so an unqualified
+    widening would start asking every foretold, plotted, madness, cascade and
+    hideaway card in it about every event in the game. Only a card CR 702.62b
+    calls *suspended* - "in the exile zone, has suspend, and has a time
+    counter on it" - is offered as a source, and a full turn cycle with a
+    foretold card and a plotted card sitting in exile produces no pending
+    trigger at all.
+    """
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Lupine Harbingers", "Slickshot Show-Off"],
+            battlefield=["Mountain", "Mountain", "Forest", "Forest"],
+            library=["Forest"] * 12,
+        )
+        .player("bob", library=["Forest"] * 12)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    harbingers = scenario.find("Lupine Harbingers", Zone.HAND, "alice")
+    foretell = MarkedExile.foretell(scenario.game, harbingers, "alice")
+    scenario.pay_with(
+        foretell.begin_paying(), *scenario.untapped_sources("Forest", "Forest", username="alice")
+    )
+    foretell.take()
+
+    showoff = scenario.find("Slickshot Show-Off", Zone.HAND, "alice")
+    plot = MarkedExile.plot(scenario.game, showoff, "alice")
+    scenario.pay_with(
+        plot.begin_paying(), *scenario.untapped_sources("Mountain", "Mountain", username="alice")
+    )
+    plot.take()
+
+    assert len(scenario.game.exile) == 2
+
+    # A whole turn cycle, back around to alice's own upkeep.
+    _advance_to_owners_next_upkeep(scenario, "alice")
+    assert scenario.pending_triggers == []
+    assert scenario.game.abilities_on_stack == []
+
+
+def test_an_exiled_death_trigger_does_not_fire_from_the_exile_pile():
+    """The half of the previous test that a too-wide widening actually
+    breaks, and the reason the filter is CR 702.62b and not "exile".
+
+    `zones_ability_functions_in` answers `{BATTLEFIELD, source.zone}` for CR
+    603.10a's look-back events - "Some zone-change triggers look back in
+    time. These are leaves-the-battlefield abilities, abilities that trigger
+    when a player sacrifices a permanent, abilities that trigger when a card
+    leaves a graveyard, and abilities that trigger when an object that all
+    players can see is put into a hand or library" - so a card sitting in
+    exile *would* function for a dies trigger the moment it were offered as a
+    source. Blood Artist's "Whenever this creature or another creature dies"
+    names no particular creature, so it is not the self-referential form
+    `condition_matches` refuses either: offering the whole exile pile fires it
+    from exile, off a creature dying somewhere else entirely.
+
+    CR 113.6 is what says it must not: "Abilities of all other objects
+    usually function only while that object is on the battlefield." A Blood
+    Artist card in exile is not on the battlefield and has no ability in play
+    at all.
+    """
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            exile=["Blood Artist"],
+            hand=["Lightning Bolt"],
+            battlefield=["Grizzly Bears", "Mountain"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears")
+    (mountain,) = scenario.untapped_sources("Mountain", username="alice")
+
+    scenario.cast_and_resolve("Lightning Bolt", mountain, targets=[bears])
+
+    assert bears.zone is Zone.GRAVEYARD  # it really died (CR 700.4)
+    assert scenario.pending_triggers == []
+    assert scenario.game.abilities_on_stack == []
+    assert scenario.player("alice").life == 20
+    assert scenario.player("bob").life == 20
+
+
+def test_removing_the_card_from_exile_in_response_stops_the_tick():
+    """CR 603.4's intervening *if* is checked twice - once when the ability
+    triggers, and again by CR 608.2a as it resolves: "if the condition isn't
+    true at that time, the ability is removed from the stack and does
+    nothing."
+
+    Two Lotus Blooms so the point is visible rather than merely absent: both
+    triggers go on the stack, one card leaves exile before they resolve, and
+    the other one still ticks. The one that left is untouched by its own
+    ability - which is the only way to see this, since CR 400.7 makes a card
+    that changes zones a new object and CR 122.2 takes its counters off on the
+    way out regardless of what the ability would have done.
+    """
+    scenario = _two_blooms()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    leaving = _suspend_from_hand(scenario, "Lotus Bloom", "alice")
+    staying = _suspend_from_hand(scenario, "Lotus Bloom", "alice")
+
+    _advance_to_owners_next_upkeep(scenario, "alice")
+    assert len(scenario.game.abilities_on_stack) == 2
+    assert leaving.counter_count(Counter.TIME) == 3
+
+    # One leaves exile while both abilities are still on the stack - the card
+    # goes to its owner's graveyard, which is a zone CR 702.62b's "in the
+    # exile zone" is simply not true of.
+    scenario.game.put_into_graveyard(leaving)
+
+    _resolve_everything(scenario)
+
+    assert scenario.game.stack_is_empty
+    assert leaving.zone is Zone.GRAVEYARD
+    # Its own ability was removed from the stack and did nothing: no free-cast
+    # permission was ever granted, which is what CR 702.62a's third ability
+    # would have handed out had the second one been allowed to take its last
+    # counter off.
+    assert usable_play_permission(scenario.game, leaving, "alice") is None
+    # And the batch resolved perfectly normally around it.
+    assert staying.counter_count(Counter.TIME) == 2
+
+
+def test_a_card_at_zero_time_counters_is_no_longer_suspended_and_never_ticks_again():
+    """CR 702.62b: "A card is 'suspended' if it's in the exile zone, has
+    suspend, **and has a time counter on it**." A card sitting in exile at
+    zero counters fails the last clause, so the second ability does not
+    trigger at all on any later upkeep - it does not go on the stack, and
+    there is nothing to remove.
+    """
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", exile=["Lotus Bloom"], library=["Forest"] * 12)
+        .player("bob", library=["Forest"] * 12)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bloom = scenario.find("Lotus Bloom", Zone.EXILE)
+    bloom.exile_annotation = ExileAnnotation(marker=ExileMarker.SUSPENDED, owner="alice")
+    assert bloom.counter_count(Counter.TIME) == 0
+    assert bloom.is_suspended is False
+
+    _advance_to_owners_next_upkeep(scenario, "alice")
+
+    assert scenario.pending_triggers == []
+    assert scenario.game.abilities_on_stack == []
+    assert bloom.counter_count(Counter.TIME) == 0

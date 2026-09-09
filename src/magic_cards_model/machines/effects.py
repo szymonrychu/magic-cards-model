@@ -83,7 +83,7 @@ from ..models.token import (
 from ..models.zone import Zone
 from . import combat as combat_rules
 from .abilities import ActivatedAbility, TriggerEvent, self_normalized_effect_text
-from .casting import PlayAction, annotate_exile, finish_suspend, remove_suspend_time_counter
+from .casting import PlayAction, annotate_exile, remove_suspend_time_counter
 from .casting_restrictions import create_targeted_cant_cast_restriction, parse_casting_rule_clause
 from .combat import has_keyword
 from .decisions import Decision, DecisionKind
@@ -5520,18 +5520,19 @@ def _parse_remove_time_counter_from_self_clause(text: str) -> AbilityEffect | No
     suspended (already cast, already left exile, already at zero counters) is
     left untouched rather than erroring, the same "the *if* was false" shape.
 
-    Chains straight into `machines.casting.finish_suspend`: removing the
-    *last* time counter is CR 702.62a's third ability firing, and unlike the
-    upkeep route (which nothing in this engine's turn machine dispatches
-    automatically, so a scenario calls it by hand once per upkeep) this
-    ability's own resolution *is* the concrete event that just happened, so
-    there is no reason to leave the very next question - is this now the last
-    counter? - for a caller to re-ask. `finish_suspend` is a no-op (returns
-    `None`) whenever a counter remains, so this costs nothing on every
-    activation but the last, and on the last it hands the card's owner the
-    same `PlayPermission` (recorded on `Game.play_permissions`) the upkeep
-    path already grants - "you may cast it without paying its mana cost" is
-    still a choice the permission's own consumer makes, never forced here.
+    It does **not** call `machines.casting.finish_suspend` itself any more.
+    CR 702.62a's third ability - "When the last time counter is removed from
+    this card, ..." - is a triggered ability like any other now, and
+    `remove_suspend_time_counter` raises its trigger condition
+    (`ExtraTriggerEvent.LAST_TIME_COUNTER_REMOVED`) when the count reaches
+    zero, whichever route emptied the card. Calling `finish_suspend` here as
+    well would grant the same `PlayPermission` twice: once immediately, in
+    the middle of this ability's own resolution, and once again when the
+    triggered ability that actually owns that instruction resolves. CR 603.3
+    is the reason the trigger is the right one of the two - it goes on the
+    stack the next time a player would receive priority, so it can be
+    responded to, rather than happening invisibly inside somebody else's
+    resolution.
     """
     if _REMOVE_TIME_COUNTER_SELF_RE.fullmatch(text.strip()) is None:
         return None
@@ -5541,7 +5542,6 @@ def _parse_remove_time_counter_from_self_clause(text: str) -> AbilityEffect | No
         if source is None:
             return
         remove_suspend_time_counter(game, source)
-        finish_suspend(game, source)
 
     return effect
 

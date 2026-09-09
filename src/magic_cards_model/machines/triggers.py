@@ -96,11 +96,9 @@ class ExtraTriggerEvent(StrEnum):
     `_unread_trigger_events`), so a `TriggeredAbility` still carries
     `event=None` and nothing about the parser's own output changes.
 
-    **Nothing in the engine emits any of these yet.** Every emitter lives in
-    `models/game.py` - the one place that puts counters on a permanent
-    (`Game.add_counters`), moves a card out of a graveyard, or puts a card into
-    a library - so the matchers here are complete and the events they watch are
-    not raised. Each is marked with the emit that is missing.
+    **Not all of these are emitted yet.** Each member below says either where
+    it is raised from or which emit is still missing; a member with no emitter
+    has a complete matcher here watching an event nothing raises.
     """
 
     #: CR 122.6: "Some spells and abilities refer to counters being put on an
@@ -148,6 +146,17 @@ class ExtraTriggerEvent(StrEnum):
     #: added it. Emitted by `Game.activate_ability`'s CR 605.3b fast path and
     #: by `Game.resolve_triggered_mana_abilities`.
     MANA_ADDED = "mana_added"
+    #: CR 702.62a's third ability: "When the last time counter is removed from
+    #: this card, if it's exiled, you may play it without paying its mana cost
+    #: if able." The *last* one specifically - a suspended card going from one
+    #: time counter to none - which is why this is its own event rather than a
+    #: generic counters-removed one: the count reaching zero is the whole
+    #: trigger condition. Emitted by `machines/casting.remove_suspend_time_
+    #: counter`, the one place in the engine that takes a time counter off a
+    #: suspended card, so both routes into it - suspend's own upkeep trigger
+    #: and Greater Gargadon's printed "Sacrifice an artifact, creature, or
+    #: land: Remove a time counter from this card" - raise it alike.
+    LAST_TIME_COUNTER_REMOVED = "last_time_counter_removed"
 
 
 class GameEvent(BaseModel):
@@ -1752,6 +1761,12 @@ _LAND_ADDED_CHOSEN_MANA_CONDITION = re.compile(
 #: ordinal over CR 121.2's individual card draws, which are one event each.
 _NTH_DRAW_CONDITION = re.compile(r"^you draw your (?P<ordinal>[a-z]+) card in a turn$")
 
+#: CR 702.62a's third ability, as `machines/keywords._suspend_abilities`
+#: writes it out: "the last time counter is removed from this card". Never
+#: printed as a line of condition text on any card - suspend prints it as one
+#: word, and the only text on Lotus Bloom that resembles it is reminder text.
+_LAST_TIME_COUNTER_CONDITION = re.compile(r"^the last time counter is removed from this card$")
+
 
 def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTriggerEvent]:
     """The events a condition `machines/abilities._trigger_event` left unread
@@ -1780,6 +1795,8 @@ def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTrig
         return frozenset({TriggerEvent.DRAWS_A_CARD})
     if _LAND_ADDED_CHOSEN_MANA_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.MANA_ADDED})
+    if _LAST_TIME_COUNTER_CONDITION.match(lowered):
+        return frozenset({ExtraTriggerEvent.LAST_TIME_COUNTER_REMOVED})
     return frozenset()
 
 
@@ -1886,6 +1903,17 @@ def _unread_condition_matches(
             return False
         return any(color.value == chosen.value for color in event.mana_added)
 
+    if _LAST_TIME_COUNTER_CONDITION.match(condition):
+        # CR 702.62a's third ability. "This card" is the source itself and
+        # nothing else - `machines/casting.remove_suspend_time_counter` raises
+        # the event only for the card it just took the last counter off, so
+        # two suspended cards reaching zero in the same upkeep each match only
+        # their own.
+        return (
+            event.event is ExtraTriggerEvent.LAST_TIME_COUNTER_REMOVED
+            and event.subject_id == source.id
+        )
+
     return False
 
 
@@ -1979,6 +2007,18 @@ def zones_ability_functions_in(ability: TriggeredAbility, source: CardState) -> 
     # CR 702.35a: madness watches its own exile, which can only be observed
     # while the card is, in fact, being exiled that way.
     if ability.event is TriggerEvent.EXILED:
+        return frozenset({Zone.EXILE})
+
+    # CR 702.62a says it in as many words: "Suspend is a keyword that
+    # represents three abilities. The first is a static ability that functions
+    # while the card with suspend is in a player's hand. The second and third
+    # are triggered abilities that function in the exile zone." Read off
+    # `TriggeredAbility.keyword` rather than off the condition text, because
+    # neither of the two is printed as a line at all - `machines/keywords.
+    # _suspend_abilities` writes both out from the rule, and the keyword is
+    # what says which rule they came from. Both are covered by the one branch:
+    # CR 702.62a scopes the sentence to the pair, not to either one.
+    if ability.keyword is not None and ability.keyword.lower() == "suspend":
         return frozenset({Zone.EXILE})
 
     # CR 603.10a: dies, is-sacrificed, countered, and leaves-the-battlefield
@@ -2293,6 +2333,23 @@ def intervening_if_holds(
             color = _COLOR_LETTERS[letter]
             required[color] = required.get(color, 0) + 1
         return all(record.mana_of_color_spent(color) >= count for color, count in required.items())
+
+    if clause == "this card is suspended":
+        # CR 702.62a's second ability, and CR 702.62b is its whole definition:
+        # "A card is 'suspended' if it's in the exile zone, has suspend, and
+        # has a time counter on it." `CardState.is_suspended` is that rule,
+        # word for word, so a card already cast, already gone from exile some
+        # other way, or already down to zero counters answers False here -
+        # on the event (CR 603.4) and again on resolution (CR 608.2a).
+        return source.is_suspended
+
+    if clause == "it's exiled":
+        # CR 702.62a's third ability. "It" is the card the last time counter
+        # came off, which is this ability's own source; CR 406.1's exile zone
+        # is the only thing asked about, not the marker that put it there -
+        # by this point the card has no time counters left, so CR 702.62b's
+        # "suspended" is deliberately *not* what the rule reaches for here.
+        return source.zone is Zone.EXILE
 
     if clause == "it had no -1/-1 counters on it":
         # CR 702.79a asks about the permanent as it last existed on the
@@ -3085,6 +3142,41 @@ def granted_triggered_abilities_of(texts: Sequence[str]) -> list[TriggeredAbilit
     return expanded + granted_keyword_triggered_abilities(texts)
 
 
+def controller_of_source(game: "Game", source: CardState) -> str:
+    """Whose "you" a trigger on `source` means (CR 109.5, 108.4, 108.4a).
+
+    CR 109.5: "The words 'you' and 'your' on an object refer to the object's
+    controller, its would-be controller (if a player is attempting to play,
+    cast, or activate it), or its owner (if it has no controller)."
+
+    CR 108.4: "A card doesn't have a controller unless that card represents a
+    permanent or spell", and CR 108.4a: "If anything asks for the controller
+    of a card that doesn't have one (because it's not a permanent or spell),
+    use its owner instead."
+
+    So the zone is what decides, not whether `CardState.controller` happens
+    to be filled in: a card on the battlefield is a permanent and a card on
+    the stack is a spell, and each has a real controller. A card anywhere
+    else - in exile, in a graveyard, in a hand or a library - has none, and
+    its owner answers instead. `CardState.controller` is not cleared by
+    `move_to` and a scenario can stage an exiled card with one still on it,
+    so reading it first would have quietly kept the stale value.
+
+    This is what makes CR 702.62a's "at the beginning of *your* upkeep" the
+    **owner's** upkeep for a suspended card - a card another player exiled
+    with time counters (Suspended Sentence's own last line, cast by somebody
+    else) still ticks on its owner's turn, exactly as `machines/casting.
+    finish_suspend` already reads "you" for the third ability.
+
+    The active player is the last resort, for a card with neither: nothing in
+    a real game reaches it, since CR 108.3 gives every card in the game an
+    owner.
+    """
+    if source.zone in (Zone.BATTLEFIELD, Zone.STACK):
+        return source.controller or game.active_player.username
+    return source.owner or source.controller or game.active_player.username
+
+
 def triggers_for(game: "Game", event: GameEvent, sources: list[CardState]) -> list[AbilityOnStack]:
     """Every ability `sources` have that this event triggers (CR 603.2).
 
@@ -3094,7 +3186,7 @@ def triggers_for(game: "Game", event: GameEvent, sources: list[CardState]) -> li
     """
     triggered: list[AbilityOnStack] = []
     for source in sources:
-        controller = source.controller or game.active_player.username
+        controller = controller_of_source(game, source)
         # CR 400.7b / CR 611.3d: an ability granted to this object is had by
         # this object, so it is asked here alongside the card's own printed
         # ones. Never *instead* of them - a grant adds.
