@@ -205,3 +205,111 @@ def test_earthbender_ascension_searches_after_earthbending():
     assert fetched.zone is Zone.BATTLEFIELD
     assert fetched.tapped
     assert [state.name for state in alice.library] == ["Grizzly Bears"]
+
+
+# -- Ashiok, Dream Render: the same defect on a loyalty ability -------------
+
+
+def test_ashiok_mills_then_exiles_every_opponents_graveyard():
+    """`-1: Target player mills four cards. Then exile each opponent's
+    graveyard.`
+
+    "Each opponent" is each opponent of the *ability's controller* (CR 102.1),
+    which is not the same set as "the milled player": Alice mills herself here
+    and Bob's graveyard is still the one exiled.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Ashiok, Dream Render"],
+            library=[
+                "Forest",
+                "Mountain",
+                "Grizzly Bears",
+                "Lightning Bolt",
+                "Chalice of the Void",
+            ],
+            graveyard=["Swamp"],
+        )
+        .player("bob", graveyard=["Grizzly Bears", "Lightning Bolt"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice = scenario.player("alice")
+    bob = scenario.player("bob")
+    ashiok = scenario.find("Ashiok, Dream Render", Zone.BATTLEFIELD)
+
+    scenario.activate(ashiok, index=0, targets=["alice"])
+    scenario.pass_until_resolved()
+
+    assert len(alice.library) == 1
+    # Alice's own graveyard is untouched - she is not her own opponent.
+    assert [state.name for state in alice.graveyard] == [
+        "Swamp",
+        "Forest",
+        "Mountain",
+        "Grizzly Bears",
+        "Lightning Bolt",
+    ]
+    assert bob.graveyard == []
+
+
+# -- Kaito, Bane of Nightmares' 0: a count read off the turn's ledger -------
+
+
+def test_kaitos_zero_draws_one_card_per_opponent_who_lost_life():
+    """`0: Surveil 2. Then draw a card for each opponent who lost life this
+    turn.`
+
+    The count is `Player.life_lost_this_turn`, the gross per-turn ledger the
+    engine already keeps for Children of Korlis - one card *per opponent*, not
+    per point of life. Bob has lost life this turn (Lightning Bolt), so Kaito
+    draws exactly one.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Lightning Bolt"],
+            battlefield=["Kaito, Bane of Nightmares", "Mountain"],
+            library=["Forest", "Grizzly Bears", "Chalice of the Void"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice = scenario.player("alice")
+    (mountain,) = scenario.untapped_sources("Mountain")
+    scenario.cast_and_resolve("Lightning Bolt", mountain, targets=["bob"])
+    assert scenario.player("bob").life == 17
+
+    kaito = scenario.find("Kaito, Bane of Nightmares", Zone.BATTLEFIELD)
+    scenario.surveil_keeping_everything_on_top()
+    scenario.activate(kaito, index=1)
+    scenario.pass_until_resolved()
+
+    assert len(alice.hand) == 1
+
+
+def test_kaitos_zero_draws_nothing_when_no_opponent_has_lost_life():
+    """The same ability with an untouched opponent draws zero - the count is a
+    real count, not "at least one"."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Kaito, Bane of Nightmares"],
+            library=["Forest", "Grizzly Bears", "Chalice of the Void"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice = scenario.player("alice")
+    kaito = scenario.find("Kaito, Bane of Nightmares", Zone.BATTLEFIELD)
+    scenario.surveil_keeping_everything_on_top()
+    scenario.activate(kaito, index=1)
+    scenario.pass_until_resolved()
+
+    assert alice.hand == []

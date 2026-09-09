@@ -3700,6 +3700,29 @@ _GAIN_LIFE_EQUAL_TO_LIFE_LOST_THIS_TURN_RE = re.compile(
     r"you gains? life equal to the life you'?(?:ve|’ve)? lost this turn",
     re.IGNORECASE,
 )
+#: "Exile each opponent's graveyard." - Ashiok, Dream Render's own second
+#: sentence. CR 102.2 makes "each opponent" the resolving ability's
+#: controller's opponents, which is deliberately **not** the same set as the
+#: player the first sentence targeted: Ashiok may legally mill its own
+#: controller, and the graveyards exiled are still the opponents'.
+#:
+#: The player-clause twin of `exile_target_players_graveyard` (Bojuka Bog),
+#: which reads a *targeted* player off the stack object instead. CR 404.1's
+#: graveyard is a per-player zone, and CR 701.13a's exile moves an object
+#: "from wherever it is", so a graveyard card is as reachable as a permanent.
+_EXILE_EACH_OPPONENTS_GRAVEYARD_RE = re.compile(
+    r"^exile each opponent'?s graveyard$", re.IGNORECASE
+)
+#: "Draw a card for each opponent who lost life this turn." - Kaito, Bane of
+#: Nightmares' `0`. The count is one card **per opponent**, not per point of
+#: life, and "lost life this turn" is `Player.life_lost_this_turn` - the same
+#: gross per-turn ledger `_GAIN_LIFE_EQUAL_TO_LIFE_LOST_THIS_TURN_RE` above
+#: already reads for Children of Korlis, which counts every route down
+#: (CR 119.2/120.3a's damage, CR 118.3b's paid life) rather than the net
+#: change in a life total.
+_DRAW_FOR_EACH_OPPONENT_WHO_LOST_LIFE_RE = re.compile(
+    r"^draws? a card for each opponent who lost life this turn$", re.IGNORECASE
+)
 
 
 def _discard_cards(game: "Game", player: Player, count: int, source: str) -> list[CardState]:
@@ -3798,6 +3821,32 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
                 opponent.lose_life(amount)
 
         return each_opponent_loses
+
+    if _EXILE_EACH_OPPONENTS_GRAVEYARD_RE.fullmatch(clause):
+
+        def exile_each_opponents_graveyard(game: "Game", player: Player, source: str) -> None:
+            for opponent in _opponents(game, player.username):
+                for card_state in list(opponent.graveyard):
+                    game.exile_permanent(card_state)
+
+        return exile_each_opponents_graveyard
+
+    if _DRAW_FOR_EACH_OPPONENT_WHO_LOST_LIFE_RE.fullmatch(clause):
+
+        def draw_for_each_opponent_who_lost_life(game: "Game", player: Player, source: str) -> None:
+            # CR 608.2h: "If an effect requires information from the game ...
+            # the answer is determined only once, when the effect is applied" -
+            # so the count is taken here, in one pass, and every card is drawn
+            # against that one number rather than re-counting between draws.
+            count = sum(
+                1
+                for opponent in _opponents(game, player.username)
+                if opponent.life_lost_this_turn > 0
+            )
+            if count:
+                game.draw_cards(player.username, count)
+
+        return draw_for_each_opponent_who_lost_life
 
     if match := _ENERGY_RE.fullmatch(clause):
         amount = len(re.findall(r"\{e\}", match.group("e"), re.IGNORECASE))
