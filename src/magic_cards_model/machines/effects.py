@@ -9665,7 +9665,16 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
 
         return conditional_notice_only
 
-    unread_anaphoric = _unreadable_anaphoric_clause(effect_text, for_spell=False)
+    # `_unreadable_cost_reference_clause` is on this side too, not only the
+    # spell side: Birthing Ritual reads back "the sacrificed creature's mana
+    # value" out of a *triggered* ability, and without this half of the pair
+    # the ability was refused (correctly) in complete silence, which is the
+    # exact failure mode `AnaphoricClauseNotice` exists to end. The asymmetry
+    # was an oversight, not a decision - the notice's own docstring already
+    # describes the shape without restricting it to spells.
+    unread_anaphoric = _unreadable_anaphoric_clause(
+        effect_text, for_spell=False
+    ) or _unreadable_cost_reference_clause(effect_text)
     if unread_anaphoric is not None:
 
         def anaphoric_notice_only(game: "Game", ability: AbilityOnStack) -> None:

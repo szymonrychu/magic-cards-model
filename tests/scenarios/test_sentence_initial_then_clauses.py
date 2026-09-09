@@ -313,3 +313,72 @@ def test_kaitos_zero_draws_nothing_when_no_opponent_has_lost_life():
     scenario.pass_until_resolved()
 
     assert alice.hand == []
+
+
+# -- Birthing Ritual: still refused, and now on the record ----------------
+
+
+def test_birthing_ritual_is_refused_by_its_intervening_if_and_says_so():
+    """`At the beginning of your end step, if you control a creature, look at
+    the top seven cards of your library. Then you may sacrifice a creature. If
+    you do, you may put a creature card with mana value X or less from among
+    those cards onto the battlefield, where X is 1 plus the sacrificed
+    creature's mana value. Put the rest on the bottom of your library in a
+    random order.`
+
+    The sentence-initial "Then" was never this card's only blocker, and this
+    test says so out loud. Three remain and all three are outside this wave:
+    CR 603.4's intervening *if* clause ("if you control a creature") that
+    nothing reads, CR 118.12's "If you do, ..." consequence clause, and
+    reading a value back off a creature sacrificed **during resolution**
+    rather than as a CR 118.8a cost - `AbilityOnStack.cost_sacrificed_card_
+    ids` records the cost's sacrifice, and there is no equivalent record for
+    one an effect made mid-resolution.
+
+    The first of the three is what stops the ability live: the trigger never
+    reaches the stack at all, and an `InterveningIfNotice` records why. Alice
+    plainly does control a creature, so this is the engine failing closed on
+    text it cannot read, not the condition being false.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Birthing Ritual", "Grizzly Bears"],
+            library=["Forest"] * 7,
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.POSTCOMBAT_MAIN)
+    scenario.advance()  # the end step begins
+
+    notices = scenario.game.intervening_if_notices
+    assert [notice.source_name for notice in notices] == ["Birthing Ritual"]
+    assert notices[0].clause == "you control a creature"
+    # Nothing ran: the library is untouched and no creature was sacrificed.
+    assert len(scenario.player("alice").library) == 7
+    assert scenario.creature("Grizzly Bears", "alice").zone is Zone.BATTLEFIELD
+
+
+def test_birthing_ritual_effect_body_leaves_a_notice_rather_than_nothing():
+    """Behind the intervening *if*, the effect body was refused in silence
+    too: `_unreadable_cost_reference_clause` was wired into the **spell**
+    dispatcher only, so Neoform and Eldritch Evolution recorded an
+    `AnaphoricClauseNotice` for "the sacrificed creature's mana value" while
+    the identical phrase inside a *triggered* ability recorded nothing at all.
+
+    `trigger_effect_for` answering a callable rather than `None` is what that
+    fix looks like from outside: the ability now resolves into a notice
+    instead of vanishing.
+    """
+    from magic_cards_model.machines import AbilityKind, abilities_of_kind
+    from magic_cards_model.machines.abilities import TriggerEvent
+    from magic_cards_model.machines.effects import trigger_effect_for
+    from tests.cards import card
+
+    (trigger,) = abilities_of_kind(card("Birthing Ritual"), AbilityKind.TRIGGERED)
+    assert (
+        trigger_effect_for("Birthing Ritual", TriggerEvent.BEGINNING_OF_STEP, trigger.effect)
+        is not None
+    )
