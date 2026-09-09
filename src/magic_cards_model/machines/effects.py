@@ -3700,19 +3700,6 @@ _GAIN_LIFE_EQUAL_TO_LIFE_LOST_THIS_TURN_RE = re.compile(
     r"you gains? life equal to the life you'?(?:ve|’ve)? lost this turn",
     re.IGNORECASE,
 )
-#: "Exile each opponent's graveyard." - Ashiok, Dream Render's own second
-#: sentence. CR 102.2 makes "each opponent" the resolving ability's
-#: controller's opponents, which is deliberately **not** the same set as the
-#: player the first sentence targeted: Ashiok may legally mill its own
-#: controller, and the graveyards exiled are still the opponents'.
-#:
-#: The player-clause twin of `exile_target_players_graveyard` (Bojuka Bog),
-#: which reads a *targeted* player off the stack object instead. CR 404.1's
-#: graveyard is a per-player zone, and CR 701.13a's exile moves an object
-#: "from wherever it is", so a graveyard card is as reachable as a permanent.
-_EXILE_EACH_OPPONENTS_GRAVEYARD_RE = re.compile(
-    r"^exile each opponent'?s graveyard$", re.IGNORECASE
-)
 #: "Draw a card for each opponent who lost life this turn." - Kaito, Bane of
 #: Nightmares' `0`. The count is one card **per opponent**, not per point of
 #: life, and "lost life this turn" is `Player.life_lost_this_turn` - the same
@@ -3821,15 +3808,6 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
                 opponent.lose_life(amount)
 
         return each_opponent_loses
-
-    if _EXILE_EACH_OPPONENTS_GRAVEYARD_RE.fullmatch(clause):
-
-        def exile_each_opponents_graveyard(game: "Game", player: Player, source: str) -> None:
-            for opponent in _opponents(game, player.username):
-                for card_state in list(opponent.graveyard):
-                    game.exile_permanent(card_state)
-
-        return exile_each_opponents_graveyard
 
     if _DRAW_FOR_EACH_OPPONENT_WHO_LOST_LIFE_RE.fullmatch(clause):
 
@@ -5727,15 +5705,16 @@ _EXILE_ALL_GRAVEYARDS_RE = re.compile(r"^exile all graveyards\.?$", re.IGNORECAS
 #: "Exile each opponent's graveyard." (Soul-Guide Lantern, Ashiok, Dream
 #: Render) - `_EXILE_ALL_GRAVEYARDS_RE`'s own "no target" shape (CR 115.1)
 #: with a player-set qualifier narrowing which graveyards, the way
-#: `_DAMAGE_EACH_OPPONENT_RE` reads "each opponent" for damage. A leading
-#: "then " is kept in the pattern itself rather than stripped by the caller -
-#: `_THEN_EXILE_THAT_PLAYERS_GRAVEYARD_RE` reads Go Blank's own "then exile
-#: that player's graveyard" the same way - because Ashiok's whole ability is
-#: two clauses ("Target player mills four cards. Then exile each opponent's
-#: graveyard.") and the period split leaves "then" as the second clause's own
-#: first word.
+#: `_DAMAGE_EACH_OPPONENT_RE` reads "each opponent" for damage.
+#:
+#: The leading "then " this pattern used to carry is gone, and so is the
+#: sibling comment that justified it: Ashiok's whole ability is two clauses
+#: ("Target player mills four cards. Then exile each opponent's graveyard.")
+#: and `split_effect_clauses` now strips a sentence-initial "then" for every
+#: card (`_LEADING_THEN_RE`), so the word never reaches a clause parser and
+#: keeping it here would leave a branch nothing can match.
 _EXILE_EACH_OPPONENTS_GRAVEYARD_RE = re.compile(
-    r"^(?:then )?exile each opponent'?s graveyards?\.?$", re.IGNORECASE
+    r"^exile each opponent'?s graveyards?\.?$", re.IGNORECASE
 )
 _EXILE_QUALITY_FROM_ALL_GRAVEYARDS_RE = re.compile(
     r"^exile all cards that are (?P<quality>.+?) from all graveyards\.?$", re.IGNORECASE
