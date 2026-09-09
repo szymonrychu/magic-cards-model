@@ -118,14 +118,52 @@ verdict alongside it instead of being dropped.
 possible instead of merely hoping it holds; see `tests/scenarios/conftest.py`
 below.
 
-## Two registries that need feeding
+## Target the mechanic, never the card
 
-- **`machines/effects.py`** keys a spell's effect by card name. A card with no
-  entry resolves and does nothing. Adding a card to the test pool does not teach
-  the model its text - add the effect too, or the scenario passes for the wrong
-  reason.
-- **`machines/abilities.py`** parses `{T}: Add ...` from oracle text, covering
-  mana abilities only. Triggered, activated, and static abilities are not parsed.
+**Every ability is parsed from oracle text.** MTG uses a strict templating
+language: the same mechanic is printed with the same words on every card that
+carries it. That is what makes this tractable, and it is the whole design.
+
+A fix aims at **every card sharing a characteristic**, not at the specific card
+that exposed the gap. The card named in a bug report is a symptom, never the
+specification. Implement "exile a card from your hand as an additional cost",
+not "Solitude"; implement the `Investigate` keyword action once, and every
+current and future card that says the word gets it for free.
+
+**Banned, without exception:**
+
+- A card-name-to-behaviour dictionary. Rows keyed by card name in
+  `EFFECTS` / `TRIGGER_EFFECTS` / `ACTIVATED_EFFECTS` - read each registry's own
+  docstring in `machines/effects.py`. Most of their old rows are **gone on
+  purpose**, now read by a parser instead. Never push that count back up.
+- Any `if card.name == "..."` or name-set membership test that gates behaviour.
+- A regex written so tightly around one card's exact printed sentence that a
+  differently-worded card with the same mechanic misses it.
+
+**Prove generality, do not assert it.** A wave that closes a mechanic
+demonstrates it on a card that was *not* the reported one and is *not* in the
+deck pool - added with `scripts/add_card.py` as a genuine Scryfall printing, and
+played through the engine in a scenario test. Pick one whose wording differs
+(different cost shape, zone, count or rider) so the test exercises the parser
+rather than re-confirming the one sentence it was built against.
+
+**The narrow, documented exception.** A handful of cards genuinely resist
+templating - Emrakul, the Promised End's "control your opponent's next turn" is
+the canonical example. Those are allowed as *documented* special cases: argued
+explicitly, with the reason it resists templating, and a row in
+`docs/engine-coverage.md`. "It was quicker this way" is not a reason. Failing
+closed with a notice plus a coverage row is the honest alternative to a
+hardcode, and is always the better of the two.
+
+`machines/abilities.py` parses `{T}: Add ...` from oracle text, covering mana
+abilities only. Triggered, activated, and static abilities are read by the
+dispatchers in `machines/effects.py` (`effect_for`, `trigger_effect_for`,
+`activated_effect_for`) and their parsers.
+
+`scripts/sweep_pool.py` is how this is measured: `--effects` sorts every clause
+into handled / notice / static_unaudited / **silent**, and `--keywords` lists
+keywords that parse but that no machine executes. Silent falling while notice
+climbs to meet it is not progress.
 
 ## No mocks. Ever.
 
