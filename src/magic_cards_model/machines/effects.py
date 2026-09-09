@@ -15055,6 +15055,52 @@ def _parse_investigate_clause(clause: str, *, for_spell: bool) -> TargetedClause
     return effect
 
 
+#: CR 701.48a: "'Learn' means 'You may discard a card. If you do, draw a
+#: card. If you didn't discard a card, you may reveal a Lesson card you own
+#: from outside the game and put it into your hand.'" A bare keyword action,
+#: read off the printed line rather than by card name - Divide by Zero's
+#: capitalised, sentence-final "Learn." and Eyetwitch's lowercase, mid-clause
+#: "learn" ("When this creature dies, learn.") are the same word in two
+#: printed shapes, both matched here.
+_LEARN_RE = re.compile(r"^learn$", re.IGNORECASE)
+
+
+def learn(game: "Game", player: Player, source: str) -> None:
+    """CR 701.48a's discard-to-draw half.
+
+    The Lesson-reveal half ("you may reveal a Lesson card you own from
+    outside the game") is not performed: this engine has no "outside the
+    game" zone at all (see `docs/engine-coverage.md`'s Companion row for the
+    same gap from a different keyword), so a player who declines or cannot
+    discard simply learns nothing further - fewer options than CR 701.48a
+    grants, never a fabricated one.
+    """
+    if not player.hand:
+        return
+    if not game.may(player, "discard a card, then draw a card", source=source):
+        return
+    if _discard_cards(game, player, 1, source):
+        game.draw_cards(player, 1)
+
+
+def _parse_learn_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """ "Learn." - `_LEARN_RE`'s shape, as one clause among however many the
+    card prints around it.
+
+    Learn targets nothing and names no object of its own (CR 701.48a), so -
+    like amass and investigate above - the same clause works for a spell or
+    an ability alike, reading only the stack object's controller.
+    """
+    if _LEARN_RE.fullmatch(clause.strip().rstrip(".")) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        learn(game, game.controller_of(stack_object), source)
+
+    return effect
+
+
 def _parse_delayed_single_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """A whole ability whose *only* clause is a delayed-trigger creation, with
     no antecedent clause of its own to supply "it": either there is no object
@@ -18026,6 +18072,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     investigate_clause = _parse_investigate_clause(clause, for_spell=for_spell)
     if investigate_clause is not None:
         return investigate_clause
+    learn_clause = _parse_learn_clause(clause, for_spell=for_spell)
+    if learn_clause is not None:
+        return learn_clause
     exile_that_players_library = _parse_exile_that_players_library_clause(
         clause, for_spell=for_spell
     )

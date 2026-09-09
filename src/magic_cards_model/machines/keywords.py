@@ -179,6 +179,12 @@ def executes(keyword: str) -> bool:
         # performs it, reached through `_parse_investigate_clause` from
         # inside another ability's effect text.
         "investigate",
+        # CR 701.48a, the same shape once more: `machines/effects.learn`
+        # performs its discard-to-draw half, reached through
+        # `_parse_learn_clause`. Its Lesson-reveal half needs an "outside
+        # the game" zone this engine does not have; see
+        # `docs/engine-coverage.md`.
+        "learn",
         # CR 701.14a, and the same shape once more: `machines/effects._fight`
         # is what performs it, reached from whichever clause parser read the
         # sentence that names it (Kraul Harpooner's own undergrowth shape,
