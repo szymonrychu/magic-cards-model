@@ -2074,16 +2074,69 @@ def _parse_keywords(text: str, keywords: list[str], common: dict) -> list[Abilit
     if parameterised is not None:
         return [parameterised]
 
-    if "." in text or ":" in text:
+    split = _split_keyword_line(text, known)
+    if split is None:
         return []
+    matched, unread = split
+    if unread:
+        # One token nobody knows discards the whole line, and deliberately so.
+        # Extinguisher Battleship's "5+ | Flying, trample" is CR 721.2a's
+        # station symbol - "As long as this permanent has N or more charge
+        # counters on it, it has [abilities]" - so keeping the `trample` this
+        # reader can match would grant unconditionally what the card grants
+        # only at five counters. `unread_keyword_tokens` below is how a caller
+        # sees that the line went unread instead of it being silent.
+        return []
+    return [KeywordAbility(**common, **match) for match in matched]
 
-    parsed: list[Ability] = []
+
+def _split_keyword_line(text: str, known: list[str]) -> tuple[list[dict], tuple[str, ...]] | None:
+    """A comma line split into the keywords `known` matches and what it did not.
+
+    None when the line is not that shape at all - a full stop or a colon means
+    a sentence rather than CR 702.1's "only the name of the ability", which is
+    what keeps `Flying creatures you control get +1/+1.` from reading as
+    flying. `known` is expected sorted longest-first by the caller.
+    """
+    if "." in text or ":" in text:
+        return None
+    matched: list[dict] = []
+    unread: list[str] = []
     for token in _split_top_level(text.replace(";", ","), ","):
         match = _match_keyword(token, known)
         if match is None:
-            return []
-        parsed.append(KeywordAbility(**common, **match))
-    return parsed
+            unread.append(token)
+        else:
+            matched.append(match)
+    return matched, tuple(unread)
+
+
+def unread_keyword_tokens(line: str, known: list[str]) -> tuple[str, ...]:
+    """The tokens that stopped an otherwise keyword-shaped line being read.
+
+    Empty when the line parsed whole, when it is not a keyword line at all, and
+    when nothing on it matched - a line with no keyword on it is prose, not a
+    keyword line with unread tokens, and reporting every sentence on the board
+    would drown the real gap.
+
+    Non-empty is the case worth recording: some of the line is CR 702.1
+    keywords and some of it is not, so `_parse_keywords` discarded the keywords
+    too. Whoever asked gets to say so rather than reading a permanent that has
+    fewer abilities than the text in front of it says - see
+    `machines/combat.py::KeywordLineNotice`.
+    """
+    text, reminder = _strip_reminder(line)
+    if not text:
+        return ()
+    ranked = sorted(known, key=len, reverse=True)
+    common = {"raw": line.strip(), "text": text, "reminder": reminder, "face": ""}
+    if _parse_keywords(text, ranked, common):
+        return ()
+    split = _split_keyword_line(text, ranked)
+    if split is None:
+        return ()
+    matched, unread = split
+    return unread if matched else ()
 
 
 #: `Keyword X, where X is ...` - Firebending Student's own "Firebending X,

@@ -49,7 +49,12 @@ from pydantic import BaseModel, ConfigDict, Field
 from ..models.card import Type
 from ..models.card_state import CardState, TargetRef
 from ..models.zone import Zone
-from .abilities import TriggerEvent, keywords_in_lines, layer_readable_sentences
+from .abilities import (
+    TriggerEvent,
+    keywords_in_lines,
+    layer_readable_sentences,
+    unread_keyword_tokens,
+)
 from .triggers import GameEvent
 
 #: What a creature may attack besides a player (CR 306.6, 310.5).
@@ -93,6 +98,26 @@ class Keyword(StrEnum):
     FORESTWALK = "forestwalk"
 
 
+#: Keywords no combat rule reads, that a permanent may still have and a caller
+#: may still ask about.
+#:
+#: Deliberately not members of `Keyword`: that enum is the combat vocabulary and
+#: is iterated elsewhere as "every keyword a grant or a counter can name" -
+#: `machines/layers.py::_keyword_counter_lines` turns each member into CR 122.1b
+#: keyword-counter text, and none of these is a counter this engine mints. They
+#: belong to the reading vocabulary (`_computed_keywords`) and to
+#: `machines/layers.py::_KNOWN_KEYWORDS`'s grant whitelist, which is why they are
+#: named here once instead of twice.
+KEYWORDS_OUTSIDE_COMBAT: frozenset[str] = frozenset(
+    {
+        # CR 702.12a: "Indestructible is a static ability."
+        "indestructible",
+        # CR 702.11a: "Hexproof is a static ability."
+        "hexproof",
+    }
+)
+
+
 #: Which land type each landwalk ability looks for (CR 702.14a, CR 305.6).
 LANDWALK_TYPES: dict[Keyword, str] = {
     Keyword.PLAINSWALK: "Plains",
@@ -126,26 +151,108 @@ def has_keyword(state: CardState, keyword: Keyword | str, game: "Game | None" = 
     return any(printed.lower() == wanted for printed in state.keywords)
 
 
+class KeywordLineNotice(BaseModel):
+    """One computed ability line that is part CR 702 keywords and part something
+    this engine's keyword reader cannot name.
+
+    `machines/abilities.py::_parse_keywords` is all-or-nothing on purpose: a
+    line is CR 702.1's "only the name of the ability as a keyword" repeated, or
+    it is not a keyword line at all, and reading half of one would grant an
+    ability the card does not have unconditionally. Extinguisher Battleship's
+    "5+ | Flying, trample" is exactly that trap - CR 721.2a makes the whole line
+    conditional on five charge counters, so keeping the `trample` off it would
+    be a fabricated grant.
+
+    Dropping the line is therefore right; dropping it silently is not. This is
+    the record that says which tokens went unread, the same "unreadable is not
+    the same as no effect" record `EvasionNotice`, `UndefinedPowerNotice`, and
+    `LayerNotice` already keep. Its absence is what made the defect that
+    produced this class invisible: Emrakul, the Promised End's
+    "Flying, trample, protection from instants" read as no keywords at all
+    because `protection` was outside the reading vocabulary, and a 13/13 flier
+    with trample quietly became blockable by a ground creature and dealt its
+    defending player nothing.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    source_id: UUID | None
+    source_name: str
+    text: str
+    """The computed line, as the layer system left it (CR 613.5)."""
+    unread: tuple[str, ...]
+    """The tokens on it that matched no keyword in the reading vocabulary."""
+
+
+def _reading_vocabulary(state: CardState, wanted: tuple[str, ...]) -> list[str]:
+    """Every keyword name a computed line of `state` may be read with.
+
+    `keywords_in_lines` has no keyword table of its own: the caller says which
+    keywords it cares about, and getting that list wrong is not a missed
+    keyword but a lost line, because `_parse_keywords` discards a comma line
+    with one token it cannot match.
+
+    Three sources, and the permanent's own is the one that was missing. This
+    module's `Keyword` is the combat vocabulary; `KEYWORDS_OUTSIDE_COMBAT` adds
+    what a grant may name that no combat rule reads; `state.keywords` adds what
+    this printing actually says, which is how `protection from instants` and
+    `ward {2}` stop taking flying down with them. `wanted` adds whatever is
+    being asked about, so a keyword granted by an effect and named by nobody
+    else is still found.
+
+    `state.keywords` is the computed list, not `state.card.keywords`: a
+    face-down permanent has no text (CR 702.37c, CR 708.2) and contributes
+    nothing here, which is what keeps its printed flying unreadable rather than
+    smuggling it back in as vocabulary. Vocabulary is only ever permission to
+    *recognise* a word the computed text already says - it grants nothing.
+    """
+    return (
+        [keyword.value for keyword in Keyword]
+        + sorted(KEYWORDS_OUTSIDE_COMBAT)
+        + [printed.lower() for printed in state.keywords]
+        + [word for word in wanted if word]
+    )
+
+
+def _record_keyword_line_notices(
+    game: "Game", state: CardState, lines: list[str], vocabulary: list[str]
+) -> None:
+    """Record every line of `lines` that went unread for want of one token.
+
+    Deduped by source and line text, mirroring `attack_refusal`'s dedup of
+    `EvasionNotice` by `source_id`: `has_keyword` is asked dozens of times a
+    combat and the gap is a property of the line, not of the question.
+    """
+    for line in lines:
+        unread = unread_keyword_tokens(line, vocabulary)
+        if not unread:
+            continue
+        if any(
+            notice.source_id == state.id and notice.text == line
+            for notice in game.keyword_line_notices
+        ):
+            continue
+        game.keyword_line_notices.append(
+            KeywordLineNotice(source_id=state.id, source_name=state.name, text=line, unread=unread)
+        )
+
+
 def _computed_keywords(state: CardState, game: "Game | None", *wanted: str) -> set[str] | None:
     """The keywords the layer system leaves this permanent with, or None.
 
     None means there is nothing to compute against - no game, or a card that is
     not a permanent, since CR 613 applies to objects on the battlefield and a
     card in a hand has only what is printed on it.
-
-    `keywords_in_lines` has no keyword table of its own: the caller says which
-    keywords it cares about. This module's own `Keyword` list is the combat
-    vocabulary, and `wanted` adds whatever else is being asked about - CR 702.12a's
-    indestructible is a static ability that changes no combat rule and is still a
-    keyword a caller may need read off the computed board (CR 613.5).
     """
     if game is None or state.zone is not Zone.BATTLEFIELD:
         return None
     characteristics = game.characteristics_of(state)
     if characteristics is None:
         return None
-    vocabulary = [keyword.value for keyword in Keyword] + [word for word in wanted if word]
-    return keywords_in_lines(list(characteristics.abilities), vocabulary)
+    vocabulary = _reading_vocabulary(state, wanted)
+    lines = list(characteristics.abilities)
+    _record_keyword_line_notices(game, state, lines, vocabulary)
+    return keywords_in_lines(lines, vocabulary)
 
 
 class Attack(BaseModel):
