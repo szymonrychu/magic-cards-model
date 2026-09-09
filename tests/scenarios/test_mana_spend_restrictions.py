@@ -444,8 +444,28 @@ def test_delighted_halflings_mana_refuses_a_nonlegendary_spell():
 # --------------------------------------------------------------------------
 
 
+#: The spend restrictions in the pool this grammar knowingly does not read,
+#: each with the reason. A row here is a **deliberate** fail-closed case that
+#: something else in the suite depends on being unread - not a to-do list and
+#: not somewhere to park a card whose sentence is merely inconvenient. The
+#: sweep below asserts the unread set is exactly this, in both directions, so
+#: a printing added later that opens a new grammar shape still fails, and a
+#: row that the grammar has since learned to read fails too rather than
+#: quietly outliving its reason.
+KNOWN_UNREAD_RESTRICTIONS = {
+    # CR 106.6's clause is neither a "cast <quality> spells" nor an "activate
+    # abilities of <quality> sources" purpose - it qualifies the *cost*, by a
+    # symbol appearing in it. `scenarios/test_legal_actions.py` uses this
+    # printing as the standing proof that `Action.restriction_understood` is
+    # published as `False` rather than filtered away, so making the grammar
+    # read it means finding that test another card, not deleting the row.
+    "Rosheen Meanderer": "Spend this mana only on costs that contain {X}.",
+}
+
+
 def test_every_printed_restriction_in_the_pool_is_read():
-    """Every "Spend this mana only" printing in the pool parses into clauses.
+    """Every "Spend this mana only" printing in the pool parses into clauses,
+    bar the documented fail-closed rows above.
 
     A restriction the parser cannot read permits nothing at all, which is safe
     but is not coverage, so this sweeps the whole pool rather than naming the
@@ -473,7 +493,7 @@ def test_every_printed_restriction_in_the_pool_is_read():
             unread.append(name)
 
     assert seen >= 7, f"the pool sweep found only {seen} spend restrictions"
-    assert unread == []
+    assert unread == sorted(KNOWN_UNREAD_RESTRICTIONS)
 
 
 def test_the_clauses_each_printed_restriction_is_read_into():
