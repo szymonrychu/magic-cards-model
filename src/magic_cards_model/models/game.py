@@ -158,6 +158,7 @@ from ..machines.replacement import (
     DrawRedirection,
     EventKind,
     ReplaceableEvent,
+    UnreadableCopyExceptionNotice,
     UnwiredChoiceNotice,
     apply_replacements,
     draw_redirection_for,
@@ -1287,6 +1288,17 @@ class Game(BaseModel):
     excluded from this list entirely, and Voice of All's permanent-targeted
     protection grant already gets a `LayerNotice` for free from the existing
     static-ability sweep, so it is not duplicated here either."""
+
+    unreadable_copy_exception_notices: list[UnreadableCopyExceptionNotice] = Field(
+        default_factory=list
+    )
+    """One entry per "enter as a copy of X, except ..." replacement whose
+    exception tail this session's parser could not read - see
+    `UnreadableCopyExceptionNotice`. Recorded instead of silently applying the
+    copy with no exception, which is the fix for a real defect: Echoing Deeps
+    copying a graveyard land without ever becoming a Cave, because a `None`
+    meaning "unreadable" and a `None` meaning "nothing printed" collapsed into
+    the same `effect.copy_exception or CopyException()` default."""
 
     suspend_redirect_notices: list[SuspendRedirectNotice] = Field(default_factory=list)
     """One entry per "counter target spell. If it is countered this way,
