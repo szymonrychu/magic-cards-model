@@ -129,10 +129,12 @@ _SYMBOL = re.compile(r"\{([WUBRGC])\}")
 #: which is what "any **one** color" says; the count is kept so `resolve` adds
 #: that many rather than always one.
 _ANY_COLOR = re.compile(r"(?P<count>one|two|three|a) mana of any (?:one )?color", re.IGNORECASE)
-#: "Add two mana in any combination of colors." (Interdimensional Web Watch,
-#: Gwenna, Smokebraider). The same amount as `_ANY_COLOR`'s "two mana of any
-#: **one** color" and a different freedom: "any one color" makes every mana the
-#: same colour, "any combination of colors" chooses each one independently.
+#: "Add two mana in any combination of colors." (Interdimensional Web Watch and
+#: Smokebraider, both in the pool and both played in
+#: `tests/scenarios/test_mana_spend_restrictions.py`). The same amount as
+#: `_ANY_COLOR`'s "two mana of any **one** color" and a different freedom: "any
+#: one color" makes every mana the same colour, "any combination of colors"
+#: chooses each one independently.
 #: CR 106.1a's five colors are the universe for both; colorless is a type and
 #: not a color (CR 106.1b), so neither reaches it.
 _ANY_COLOR_COMBINATION = re.compile(

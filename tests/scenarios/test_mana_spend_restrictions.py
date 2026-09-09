@@ -7,7 +7,7 @@ session. Only the first of the three is modelled; the "additional effect" half
 (Cavern of Souls's and Delighted Halfling's "and that spell can't be countered")
 is still not.
 
-Eight printings in the pool carry one, and between them they cover both
+Nine printings in the pool carry one, and between them they cover both
 purposes a restriction can name and every shape of clause the grammar reads:
 
   Shang-Chi, Master of Kung Fu  "... only to activate abilities of creature
@@ -23,8 +23,12 @@ purposes a restriction can name and every shape of clause the grammar reads:
   Fíli and Kíli, Joyous         "... only to cast Dwarf, Equipment, and Saga
                                  spells."
   Interdimensional Web Watch    "... only to cast spells from exile."
+  Smokebraider                  "... only to cast Elemental spells or
+                                 activate abilities of Elementals."
 
-The last three are the two clause shapes beyond a single quality word. An
+Tablet of Discovery, Fíli and Kíli and the Web Watch are the two clause shapes
+beyond a single quality word; Smokebraider prints Eldrazi Temple's shape on a
+different creature type. An
 and-joined **type list** is one clause offering several types, not several
 clauses - CR 205.2b, looked up this session, makes an object "satisfy the
 criteria for any effect that applies to any of their card types", and no
@@ -38,6 +42,13 @@ and-joined list in print and shares none of Tablet of Discovery's wording - a
 three-item list of subtypes with an Oxford comma, on a creature rather than an
 artifact - so it is what proves the parser reads the mechanic and not the one
 sentence it was built against.
+
+Smokebraider was added for the same reason on the other side of the printing:
+it is the second card in print with "Add two mana in any combination of colors",
+the mana ability the Web Watch needed read before its restriction could be
+tested at all, and it carries a restriction sentence that shares nothing with
+the Web Watch's zone tail. Two printings, no shared wording - the parser reads
+the template, not the card.
 
 The restriction lives on the mana in the pool, not on its source: the mana
 ability has already resolved (CR 605.3b) by the time the mana is spent, so the
@@ -53,6 +64,7 @@ this engine did before.
 import pytest
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.abilities import parse_mana_abilities
 from magic_cards_model.machines.cost import spend_restriction
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card import Color, Type
@@ -794,3 +806,82 @@ def test_the_web_watch_makes_two_mana_of_different_colors():
     shang_chi = _ready(scenario, "Shang-Chi, Master of Kung Fu")
     with pytest.raises(ValueError, match="any one color"):
         scenario.game.activate_ability(shang_chi, 0, "alice", color=[Color.WHITE, Color.BLUE])
+
+
+# --------------------------------------------------------------------------
+# The same two shapes on a second printing that shares neither sentence
+# --------------------------------------------------------------------------
+
+
+def test_smokebraider_reads_the_same_combination_ability_and_a_type_restriction():
+    """Smokebraider is the second printing of "Add two mana in any combination
+    of colors" - "{T}: Add two mana in any combination of colors. Spend this
+    mana only to cast Elemental spells or activate abilities of Elementals.",
+    read off Scryfall this session and added to the pool for this file.
+
+    It is what makes the mixed-colour ability a mechanic rather than one card:
+    a creature instead of an artifact, and a restriction sentence that shares
+    nothing with Interdimensional Web Watch's zone tail. Both halves of the
+    printing are asserted here - the ability's shape, and the two clauses the
+    CR 106.6 sentence reads into (CR 205.3m, looked up this session: Elemental
+    is one of the creature types creatures and kindreds share).
+    """
+    smokebraider = card("Smokebraider")
+    (ability,) = parse_mana_abilities(smokebraider)
+
+    assert ability.any_color_mixed is True
+    assert ability.any_color_count == 2
+
+    restriction = spend_restriction(smokebraider.oracle_text)
+    assert restriction is not None
+    assert restriction.understood is True
+    assert [clause.purpose for clause in restriction.clauses] == [
+        SpendPurpose.CAST_SPELL,
+        SpendPurpose.ACTIVATE_ABILITY,
+    ]
+    assert restriction.clauses[0].subtypes == frozenset({"elemental"})
+
+
+def test_smokebraiders_mana_pays_for_an_elemental_spell_of_two_colors():
+    """The mixture is what pays: Voice of Resurgence costs `{G}{W}`, and one
+    activation of Smokebraider covers it only because each of its two mana
+    chooses its own colour. A model that read the ability as "two mana of any
+    one color" would make `{G}{G}` and come up a white short."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Voice of Resurgence"], battlefield=["Smokebraider"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    smokebraider = _ready(scenario, "Smokebraider")
+    scenario.game.activate_ability(smokebraider, 0, "alice", color=[Color.GREEN, Color.WHITE])
+    assert scenario.player().mana_pool.floating == {Color.GREEN: 1, Color.WHITE: 1}
+
+    voice = scenario.cast_and_resolve("Voice of Resurgence")
+
+    assert voice.zone is Zone.BATTLEFIELD
+
+
+def test_smokebraiders_mana_refuses_a_spell_that_is_not_an_elemental():
+    """The refusal half, on the same board: Llanowar Elves is a green creature
+    spell the floating `{G}` would otherwise pay for, and an Elf is not an
+    Elemental."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Llanowar Elves"], battlefield=["Smokebraider"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    smokebraider = _ready(scenario, "Smokebraider")
+    scenario.game.activate_ability(smokebraider, 0, "alice", color=[Color.GREEN, Color.WHITE])
+
+    casting = scenario.cast("Llanowar Elves", "alice")
+    with pytest.raises(ValueError, match="Spend this mana only to cast Elemental spells"):
+        casting.begin_paying().pay()
+
+    casting.cancel()  # CR 601.6, undoing CR 601.2a's move
+    assert scenario.find("Llanowar Elves", Zone.HAND).zone is Zone.HAND
