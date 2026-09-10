@@ -4380,7 +4380,14 @@ class CostPayment(BaseModel):
             )
         land_types, own_counters, has_imprinted_card = _mana_context(self, source)
         refusals: list[str] = []
-        payable = False
+        # The ability this tap is treated as having activated - the first one
+        # that offers `produces`, unless the caller named which restriction the
+        # mana carries and a *later* one is the ability carrying it. Both of
+        # CR 106.6's tags are read off this one object, so they can never come
+        # from two different abilities of the same permanent; see where the
+        # spend effect is tagged below.
+        activated: ManaAbility | None = None
+        named_restriction = restriction is not INFER_RESTRICTION
         for ability in abilities:
             behind = _activation_behind(activations, ability)
             effect = behind[1].effect if behind is not None else ""
@@ -4412,9 +4419,20 @@ class CostPayment(BaseModel):
                 offered, any_color, _among_colors(effect, self, source)
             )
             if ability.offers(produces, options, any_color):
-                payable = True
-                break
-        if not payable:
+                if activated is None:
+                    activated = ability
+                # A caller that named the restriction named the ability with
+                # it. Every printing in this pool that has two mana abilities
+                # has two *different* productions on them, so the first match
+                # is already the named one and this never has a second
+                # candidate to prefer - but "the caller told us" outranks "the
+                # production happened to match" wherever the two could differ,
+                # and reading one tag from the caller and the other from a
+                # guess is how they would come to disagree.
+                if not named_restriction or spend_restriction(effect, source) == restriction:
+                    activated = ability
+                    break
+        if activated is None:
             made = "".join(f"{{{color.value}}}" for color in produces) or "no mana"
             if refusals:
                 raise ValueError(
@@ -4428,11 +4446,26 @@ class CostPayment(BaseModel):
         self._tapped_sources[source.id] = source
         if restriction is INFER_RESTRICTION:
             restriction = restriction_for_production(source, produces, self.game)
-        # CR 106.6's additional-effect clause travels with the mana too, and
-        # unlike the restriction it needs no inference: `ability` is the one
-        # this loop matched to `produces`, and the sentence is already parsed
-        # onto it by `machines/abilities.parse_mana_abilities`.
-        spend_effect = ManaSpendEffect(text=ability.spend_effect) if ability.spend_effect else None
+        # CR 106.6's additional-effect clause travels with the mana too, and it
+        # is read off the **same** ability the restriction above belongs to.
+        # `activated` is the ability this tap counts as having activated: the
+        # one the caller named where it named one, and otherwise the one whose
+        # production matched. Reading the restriction from the caller and this
+        # sentence from whichever ability the production loop broke on is how
+        # one tap would come to carry two abilities' worth of CR 106.6.
+        #
+        # Not exercisable end to end today, and deliberately not faked: it
+        # takes a printing with two mana abilities that produce the *same*
+        # mana and carry different CR 106.6 sentences, and no card in Magic
+        # does that - every multi-ability printing in the pool (Eldrazi
+        # Temple's `{C}` beside `{C}{C}`, Cavern of Souls's `{C}` beside one
+        # mana of any colour) differs in what it adds. So this is a
+        # correct-by-construction fix rather than a tested one, and the note
+        # is here rather than in a commit message because the next reader
+        # needs the reason the asymmetry was closed with no test beside it.
+        spend_effect = (
+            ManaSpendEffect(text=activated.spend_effect) if activated.spend_effect else None
+        )
         self.pool.add_all(
             produces,
             snow=is_snow_source(source, self.game),
