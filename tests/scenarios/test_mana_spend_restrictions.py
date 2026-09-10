@@ -7,7 +7,7 @@ session. Only the first of the three is modelled; the "additional effect" half
 (Cavern of Souls's and Delighted Halfling's "and that spell can't be countered")
 is still not.
 
-Nine printings in the pool carry one, and between them they cover both
+Fourteen printings in the pool carry one, and between them they cover both
 purposes a restriction can name and every shape of clause the grammar reads:
 
   Shang-Chi, Master of Kung Fu  "... only to activate abilities of creature
@@ -25,17 +25,40 @@ purposes a restriction can name and every shape of clause the grammar reads:
   Interdimensional Web Watch    "... only to cast spells from exile."
   Smokebraider                  "... only to cast Elemental spells or
                                  activate abilities of Elementals."
+  Orb of Dragonkind             "... only to cast Dragon spells or activate
+                                 abilities of Dragons."
+  Woodland Weavemaster          "... only to cast Elf spells and activate
+                                 abilities of Elf sources."
+  Codsworth, Handy Helper       "... only to cast Aura and/or Equipment
+                                 spells."
+  Séance Board                  "... only to cast instant, sorcery, Demon,
+                                 and Spirit spells."
+  Rivaz of the Claw             "... only to cast Dragon creature spells."
 
-Tablet of Discovery, Fíli and Kíli and the Web Watch are the two clause shapes
-beyond a single quality word; Smokebraider prints Eldrazi Temple's shape on a
-different creature type. An
-and-joined **type list** is one clause offering several types, not several
-clauses - CR 205.2b, looked up this session, makes an object "satisfy the
-criteria for any effect that applies to any of their card types", and no
-spell is ever both an instant and a sorcery. A **zone tail** narrows the
-clause to one of CR 400.1's seven zones, checked against the zone the cast
-started in (CR 601.2a moves the card to the stack before any cost is paid, so
-that zone is carried, never read back off the spell).
+Tablet of Discovery, Fíli and Kíli and the Web Watch are the first clause
+shapes beyond a single quality word; Smokebraider prints Eldrazi Temple's
+shape on a different creature type, and Orb of Dragonkind prints
+Smokebraider's on a different one again.
+
+A **joined list of qualities** is one clause offering each of them as an
+alternative, not several clauses and not a conjunction - CR 205.2b, looked up
+this session, makes an object "satisfy the criteria for any effect that
+applies to any of their card types", and no spell is ever both an instant and
+a sorcery. **Juxtaposition** is the other reading of the same grammar: "Dragon
+creature spells" describes one object that is both, so both are required. The
+joining word is the only thing that tells them apart, which is why "and", "or"
+and "and/or" all count as one, and why all three also split two whole clauses
+where a phrase cannot be read as one.
+
+A **printed plural** ("abilities of Elementals", "of Dragons") names the
+subtype a type line prints in the singular, and is read back to it against the
+whole of CR 205.3's list (`magic_cards_model/data/subtypes.py`) rather than by
+guessing at English morphology.
+
+A **zone tail** narrows the clause to one of CR 400.1's seven zones, checked
+against the zone the cast started in (CR 601.2a moves the card to the stack
+before any cost is paid, so that zone is carried, never read back off the
+spell).
 
 Fíli and Kíli, Joyous was added to the pool for this file: it is the second
 and-joined list in print and shares none of Tablet of Discovery's wording - a
