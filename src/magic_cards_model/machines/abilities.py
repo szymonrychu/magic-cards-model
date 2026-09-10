@@ -122,13 +122,40 @@ from ..models.zone import Zone
 # Mana abilities (CR 605)
 # --------------------------------------------------------------------------
 
+#: The number words a printed "Add ..." can put in front of "mana", and what
+#: each is worth. Magic spells its counts out - "Add five mana in any
+#: combination of colors" (Cascading Cataracts), "Add four mana in any
+#: combination of colors" (Baxter Building) - and stops well short of ten, so
+#: the vocabulary is the numbers rather than the handful the first printings
+#: read here happened to need. "a" is the article standing in for one, which is
+#: how the singular is templated ("Add a mana of any color" does not print, but
+#: "a" reaches the shared `_COUNT` alternation through the same table).
+_ANY_COLOR_COUNTS = {
+    "a": 1,
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+    "ten": 10,
+}
+#: The alternation those words make, longest first so a word that is a prefix
+#: of another can never win the match short. Every "Add <count> mana ..."
+#: pattern below is built from this one string, so a count word is learned
+#: once rather than once per shape.
+_COUNT = "|".join(sorted(_ANY_COLOR_COUNTS, key=len, reverse=True))
+
 _SYMBOL = re.compile(r"\{([WUBRGC])\}")
 #: "Add one mana of any color." (Cavern of Souls, Delighted Halfling) and
 #: "Add two mana of any one color." (Shang-Chi, Master of Kung Fu). The second
 #: shape adds more than one mana and requires them all to be the same colour,
 #: which is what "any **one** color" says; the count is kept so `resolve` adds
 #: that many rather than always one.
-_ANY_COLOR = re.compile(r"(?P<count>one|two|three|a) mana of any (?:one )?color", re.IGNORECASE)
+_ANY_COLOR = re.compile(rf"(?P<count>{_COUNT}) mana of any (?:one )?color", re.IGNORECASE)
 #: "Add two mana in any combination of colors." (Interdimensional Web Watch and
 #: Smokebraider, both in the pool and both played in
 #: `tests/scenarios/test_mana_spend_restrictions.py`). The same amount as
@@ -138,7 +165,7 @@ _ANY_COLOR = re.compile(r"(?P<count>one|two|three|a) mana of any (?:one )?color"
 #: CR 106.1a's five colors are the universe for both; colorless is a type and
 #: not a color (CR 106.1b), so neither reaches it.
 _ANY_COLOR_COMBINATION = re.compile(
-    r"(?P<count>one|two|three|a) mana in any combination of colors", re.IGNORECASE
+    rf"(?P<count>{_COUNT}) mana in any combination of colors", re.IGNORECASE
 )
 #: Nykthos, Shrine to Nyx: "Choose a color. Add an amount of mana of that
 #: color equal to your devotion to that color." Still a mana ability under
@@ -155,7 +182,6 @@ _DEVOTION_AMOUNT = re.compile(
 #: `Game.activate_ability` already takes for any `any_color` ability is
 #: chosen - so it is stripped before `_ADD` reads the rest.
 _CHOOSE_A_COLOR_PREAMBLE = re.compile(r"^Choose a color\.\s*", re.IGNORECASE)
-_ANY_COLOR_COUNTS = {"a": 1, "one": 1, "two": 2, "three": 3}
 _MANA_COST_IN_COST = re.compile(r"\{(\d+|[WUBRGCX])\}")
 
 #: CR 106.7: "Some abilities produce mana based on the type of mana another
@@ -179,7 +205,7 @@ _MANA_COST_IN_COST = re.compile(r"\{(\d+|[WUBRGCX])\}")
 #: CR 106.1a has five colors of mana, CR 106.1b six *types*, colorless
 #: included. So Reflecting Pool can copy a Wastes and Exotic Orchard cannot.
 _COULD_PRODUCE = re.compile(
-    r"(?P<count>one|two|three|a) mana of any (?P<kind>type|color) that a land "
+    rf"(?P<count>{_COUNT}) mana of any (?P<kind>type|color) that a land "
     r"(?P<whose>you control|an opponent controls) could produce",
     re.IGNORECASE,
 )
@@ -190,9 +216,7 @@ _COULD_PRODUCE = re.compile(
 #: five colors, so colorless is never an answer. Until the choice is known
 #: the ability's type is undefined and CR 106.5 makes it produce no mana -
 #: see `ManaAbility.effective`.
-_CHOSEN_COLOR_MANA = re.compile(
-    r"(?P<count>one|two|three|a) mana of the chosen color", re.IGNORECASE
-)
+_CHOSEN_COLOR_MANA = re.compile(rf"(?P<count>{_COUNT}) mana of the chosen color", re.IGNORECASE)
 
 #: `Add {G}, {R}, or {W}` is a choice; `Add {C}{C}` is both at once. The comma
 #: is what separates them in WOTC templating.

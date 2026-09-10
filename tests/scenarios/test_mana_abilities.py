@@ -36,7 +36,9 @@ only way to catch a regression back to that silent failure.
 import pytest
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.abilities import parse_mana_abilities
 from magic_cards_model.models import Color, Zone
+from tests.cards import card
 from tests.scenarios.harness import Scenario
 
 # --------------------------------------------------------------------------
@@ -263,6 +265,66 @@ def test_activating_a_dual_for_a_colour_it_cannot_make_is_refused():
 
     with pytest.raises(ValueError, match="not one of this ability's options"):
         scenario.activate(vents, color=Color.GREEN)
+
+
+# --------------------------------------------------------------------------
+# How many mana the printed word says
+# --------------------------------------------------------------------------
+
+
+def test_a_count_word_past_three_is_still_a_count():
+    """Cascading Cataracts, added to the pool for this: "Indestructible /
+    {T}: Add {C}. / {5}, {T}: Add five mana in any combination of colors."
+    - read off Scryfall this session.
+
+    The number is printed as a word, and the vocabulary that read it stopped
+    at "three", so a printing that says "five" was not recognised as a mana
+    ability **at all**: the land tapped for `{C}` and its second ability did
+    not exist. Magic prints these counts as far as ten, and none of them is a
+    different mechanic from "two" - so the vocabulary is the numbers, not the
+    two of them the first cards needed.
+    """
+    abilities = parse_mana_abilities(card("Cascading Cataracts"))
+
+    assert len(abilities) == 2
+    colorless, combination = abilities
+    assert colorless.amount == 1
+    assert combination.any_color_mixed is True
+    assert combination.any_color_count == 5
+
+
+def test_five_mana_in_any_combination_is_five_colours_of_the_players_choosing():
+    """And it is played, not only parsed: the `{5}` half is a real cost
+    (CR 602.1a), paid here with five Forests, and the five mana that come back
+    are five different colours because "in any combination of colors" lets each
+    of them choose its own."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Cascading Cataracts", "Forest", "Forest", "Forest", "Forest", "Forest"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (cataracts,) = scenario.untapped_sources("Cascading Cataracts")
+    forests = scenario.untapped_sources("Forest", "Forest", "Forest", "Forest", "Forest")
+
+    scenario.activate(
+        cataracts,
+        *forests,
+        index=1,
+        color=[Color.WHITE, Color.BLUE, Color.BLACK, Color.RED, Color.GREEN],
+    )
+
+    assert scenario.player().mana_pool.floating == {
+        Color.WHITE: 1,
+        Color.BLUE: 1,
+        Color.BLACK: 1,
+        Color.RED: 1,
+        Color.GREEN: 1,
+    }
+    assert scenario.stack_names() == []
 
 
 # --------------------------------------------------------------------------
