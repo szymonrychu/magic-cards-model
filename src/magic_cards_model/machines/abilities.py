@@ -122,13 +122,51 @@ from ..models.zone import Zone
 # Mana abilities (CR 605)
 # --------------------------------------------------------------------------
 
+#: The number words a printed "Add ..." can put in front of "mana", and what
+#: each is worth. Magic spells its counts out - "Add five mana in any
+#: combination of colors" (Cascading Cataracts), "Add four mana in any
+#: combination of colors" (Baxter Building) - and stops well short of ten, so
+#: the vocabulary is the numbers rather than the handful the first printings
+#: read here happened to need. "a" is the article standing in for one, which is
+#: how the singular is templated ("Add a mana of any color" does not print, but
+#: "a" reaches the shared `_COUNT` alternation through the same table).
+_ANY_COLOR_COUNTS = {
+    "a": 1,
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+    "ten": 10,
+}
+#: The alternation those words make, longest first so a word that is a prefix
+#: of another can never win the match short. Every "Add <count> mana ..."
+#: pattern below is built from this one string, so a count word is learned
+#: once rather than once per shape.
+_COUNT = "|".join(sorted(_ANY_COLOR_COUNTS, key=len, reverse=True))
+
 _SYMBOL = re.compile(r"\{([WUBRGC])\}")
 #: "Add one mana of any color." (Cavern of Souls, Delighted Halfling) and
 #: "Add two mana of any one color." (Shang-Chi, Master of Kung Fu). The second
 #: shape adds more than one mana and requires them all to be the same colour,
 #: which is what "any **one** color" says; the count is kept so `resolve` adds
 #: that many rather than always one.
-_ANY_COLOR = re.compile(r"(?P<count>one|two|three|a) mana of any (?:one )?color", re.IGNORECASE)
+_ANY_COLOR = re.compile(rf"(?P<count>{_COUNT}) mana of any (?:one )?color", re.IGNORECASE)
+#: "Add two mana in any combination of colors." (Interdimensional Web Watch and
+#: Smokebraider, both in the pool and both played in
+#: `tests/scenarios/test_mana_spend_restrictions.py`). The same amount as
+#: `_ANY_COLOR`'s "two mana of any **one** color" and a different freedom: "any
+#: one color" makes every mana the same colour, "any combination of colors"
+#: chooses each one independently.
+#: CR 106.1a's five colors are the universe for both; colorless is a type and
+#: not a color (CR 106.1b), so neither reaches it.
+_ANY_COLOR_COMBINATION = re.compile(
+    rf"(?P<count>{_COUNT}) mana in any combination of colors", re.IGNORECASE
+)
 #: Nykthos, Shrine to Nyx: "Choose a color. Add an amount of mana of that
 #: color equal to your devotion to that color." Still a mana ability under
 #: every one of CR 605.1a's criteria - no target, it could add mana, it is
@@ -144,7 +182,6 @@ _DEVOTION_AMOUNT = re.compile(
 #: `Game.activate_ability` already takes for any `any_color` ability is
 #: chosen - so it is stripped before `_ADD` reads the rest.
 _CHOOSE_A_COLOR_PREAMBLE = re.compile(r"^Choose a color\.\s*", re.IGNORECASE)
-_ANY_COLOR_COUNTS = {"a": 1, "one": 1, "two": 2, "three": 3}
 _MANA_COST_IN_COST = re.compile(r"\{(\d+|[WUBRGCX])\}")
 
 #: CR 106.7: "Some abilities produce mana based on the type of mana another
@@ -168,7 +205,7 @@ _MANA_COST_IN_COST = re.compile(r"\{(\d+|[WUBRGCX])\}")
 #: CR 106.1a has five colors of mana, CR 106.1b six *types*, colorless
 #: included. So Reflecting Pool can copy a Wastes and Exotic Orchard cannot.
 _COULD_PRODUCE = re.compile(
-    r"(?P<count>one|two|three|a) mana of any (?P<kind>type|color) that a land "
+    rf"(?P<count>{_COUNT}) mana of any (?P<kind>type|color) that a land "
     r"(?P<whose>you control|an opponent controls) could produce",
     re.IGNORECASE,
 )
@@ -179,9 +216,7 @@ _COULD_PRODUCE = re.compile(
 #: five colors, so colorless is never an answer. Until the choice is known
 #: the ability's type is undefined and CR 106.5 makes it produce no mana -
 #: see `ManaAbility.effective`.
-_CHOSEN_COLOR_MANA = re.compile(
-    r"(?P<count>one|two|three|a) mana of the chosen color", re.IGNORECASE
-)
+_CHOSEN_COLOR_MANA = re.compile(rf"(?P<count>{_COUNT}) mana of the chosen color", re.IGNORECASE)
 
 #: `Add {G}, {R}, or {W}` is a choice; `Add {C}{C}` is both at once. The comma
 #: is what separates them in WOTC templating.
@@ -205,6 +240,53 @@ class CouldProduce(StrEnum):
 
     LANDS_YOU_CONTROL = "lands_you_control"
     LANDS_AN_OPPONENT_CONTROLS = "lands_an_opponent_controls"
+
+
+def named_colors(color: "Color | Sequence[Color] | str | None") -> list[Color] | None:
+    """The colours a caller named, as a list, or None if they named none.
+
+    One colour may be named either way and means the same thing both times: a
+    bare `Color`, or a sequence holding it. A longer sequence is one colour per
+    mana, which is what "N mana in any combination of colors" asks for and what
+    `Action.color_choice_count` counts out for a caller working from an
+    enumerated action alone.
+
+    A bare `str` is refused rather than iterated. `Color` is a `StrEnum`, so
+    "WU" satisfies `Sequence[Color]` at runtime and comes apart into "W" and
+    "U" - plain strings, not `Color` members, which would reach the mana pool
+    as keys nothing else in the engine can match. Anything in the sequence that
+    is not a `Color` is refused for the same reason: this is the engine's one
+    chance to say what was wrong with the request, and a `ManaPool` keyed by a
+    stray string says nothing at all.
+    """
+    if color is None:
+        return None
+    if isinstance(color, Color):
+        return [color]
+    if isinstance(color, str):
+        raise ValueError(
+            f"a colour is a Color or a sequence of them, not a string ({color!r}) - "
+            "name each colour as its own Color"
+        )
+    named = list(color)
+    unknown = [entry for entry in named if not isinstance(entry, Color)]
+    if unknown:
+        raise ValueError(f"{unknown!r} is not a colour (CR 105.1's five, as Color members)")
+    return named
+
+
+def one_named_color(color: "Color | Sequence[Color] | str | None") -> Color | None:
+    """The single colour a caller named, or None if they named none or several.
+
+    `Game.activate_ability` needs it before `ManaAbility.resolve` is reached:
+    CR 700.5's devotion is counted to the colour the player chose, and a caller
+    that named that colour as a one-element list has still named exactly one.
+    Reading the bare `Color` alone made the same choice, spelled the other way,
+    count as no choice at all - and then quietly add one mana where devotion
+    said several.
+    """
+    named = named_colors(color)
+    return named[0] if named is not None and len(named) == 1 else None
 
 
 class ManaCondition(BaseModel):
@@ -365,10 +447,23 @@ class ManaAbility(BaseModel):
     options: list[list[Color]]
     #: True if the ability can add mana of any colour.
     any_color: bool = False
-    #: How much mana an `any_color` ability adds, all of the one chosen colour.
-    #: 1 for "Add one mana of any color"; 2 for Shang-Chi's "Add two mana of
-    #: any one color."
+    #: How much mana an `any_color` ability adds. All of the one chosen colour
+    #: unless `any_color_mixed` says otherwise: 1 for "Add one mana of any
+    #: color"; 2 for Shang-Chi's "Add two mana of any one color."
     any_color_count: int = 1
+    #: True for "Add N mana in any combination of colors", where each of the N
+    #: is a colour of its own (Interdimensional Web Watch). False for "of any
+    #: one color", which is the same count locked to a single colour.
+    #:
+    #: `resolve` takes a sequence of colours to spell a genuine mixture out;
+    #: passing one `Color` still means N of it, which stays a legal
+    #: combination, so nothing that only knows how to name one colour breaks.
+    #: `Game.mana_color_choice_count` is where that shows for a caller with
+    #: no `ManaAbility` in hand: it reports this count, so the enumerated
+    #: `Action.color_choice_count` beside `Action.color_options` says how many
+    #: colours to name and `{W}{U}` is reachable from the action alone. See
+    #: `docs/engine-coverage.md`.
+    any_color_mixed: bool = False
     #: True if activating it costs mana. CR 605.1a says nothing about the cost
     #: containing mana - such an ability is still a mana ability - so this is
     #: shape information for callers that need to know what there is to pay,
@@ -525,11 +620,47 @@ class ManaAbility(BaseModel):
             options, any_color = _narrow(options, any_color, allowed)
         return options, any_color
 
+    def offers(
+        self, produces: "Sequence[Color]", options: list[list[Color]], any_color: bool
+    ) -> bool:
+        """Whether this ability could add exactly `produces` right now, given
+        the `options`/`any_color` `effective` already worked out for the board.
+
+        The question a caller who names its own mana asks: `CostPayment.
+        tap_for_mana(source, colors)` is handed a production rather than
+        choosing one, and has to know whether the ability actually offers it
+        before the mana reaches the pool.
+
+        `options` enumerates a choice as one entry per colour - "Add two mana
+        of any one color" is `[[W,W], [U,U], ...]`, which is exactly what that
+        printing offers. **"N mana in any combination of colors" is not that**:
+        each of the N chooses its own colour (CR 106.1a's five are the
+        universe), so the productions it offers are every multiset of N of
+        them, and the enumeration would be `combinations_with_replacement` -
+        126 entries for Cascading Cataracts' five mana, and an ability whose
+        count comes from the board (a devotion, an X) has no bound at all. So
+        the mixture is checked against the rule instead of materialised: the
+        right number of mana, every one of them a colour the narrowed options
+        still offer. Nothing needs the list, and no caller pays for building
+        it.
+
+        The narrowing is what keeps that from being "any five colours": a
+        CR 106.5 survey that came back with two colours leaves `options`
+        holding those two, and a mixture naming a third is not offered.
+        """
+        wanted = sorted(produces)
+        if any(sorted(option) == wanted for option in options):
+            return True
+        if not (any_color and self.any_color_mixed):
+            return False
+        offered = {color for option in options for color in option}
+        return len(wanted) == self.any_color_count and all(color in offered for color in wanted)
+
     def resolve(
         self,
         controlled_land_types: frozenset[str] = frozenset(),
         own_counters: frozenset[str] = frozenset(),
-        color: Color | None = None,
+        color: "Color | Sequence[Color] | None" = None,
         has_imprinted_card: bool = False,
         count: int | None = None,
         *,
@@ -570,34 +701,70 @@ class ManaAbility(BaseModel):
                 "(CR 106.5)"
             )
 
+        chosen_colors = named_colors(color)
+        # One colour, however it was named. A caller reading `color_options`
+        # and `color_choice_count` off an enumerated action hands back a list
+        # of the length that field gave it, which is 1 for every ability but
+        # "N mana in any combination of colors" - so a list of one is the same
+        # choice a bare `Color` is, on every branch below rather than only on
+        # the one that was written with a list in mind.
+        single = chosen_colors[0] if chosen_colors is not None and len(chosen_colors) == 1 else None
+
         if any_color:
-            if color is None:
+            if chosen_colors is None:
                 raise ValueError("this ability adds any colour; pass the colour chosen")
             # `count` is CR 700.5's devotion for `amount_from_devotion`, which
-            # nothing on this object can work out for itself - see that
-            # field's own docstring. Zero is a real answer (no permanent with
-            # a mana symbol of that colour) and produces no mana at all,
-            # which CR 605.2 already allows: "A mana ability remains a mana
-            # ability even if the game state doesn't allow it to produce
-            # mana."
-            if self.amount_from_devotion and count is not None:
-                return [color] * max(count, 0)
-            return [color] * self.any_color_count
+            # nothing on this object can work out for itself - see that field's
+            # own docstring. Zero is a real answer (no permanent with a mana
+            # symbol of that colour) and produces no mana at all, which
+            # CR 605.2 already allows: "A mana ability remains a mana ability
+            # even if the game state doesn't allow it to produce mana."
+            wanted = (
+                max(count, 0)
+                if self.amount_from_devotion and count is not None
+                else self.any_color_count
+            )
+            if single is not None:
+                return [single] * wanted
+            # A spelled-out combination, one colour per mana. Legal only where
+            # the printed words allow the mana to differ ("in any combination
+            # of colors"); "of any one color" is one colour by its own
+            # wording, so a mixture there would be mana the card never offered.
+            if len(chosen_colors) != wanted:
+                raise ValueError(
+                    f"this ability adds {wanted} mana; {len(chosen_colors)} colours were chosen"
+                )
+            if not self.any_color_mixed and len(set(chosen_colors)) > 1:
+                raise ValueError(
+                    "this ability adds mana of any one color, so every mana it adds is the "
+                    "same colour"
+                )
+            return chosen_colors
+
+        # Every remaining branch is a choice *between* printed options, one of
+        # which is picked whole - so exactly one colour names it, and a longer
+        # list is a caller mistake this refuses in its own words rather than
+        # reaching for `.value` on a list.
+        if chosen_colors is not None and single is None:
+            raise ValueError(
+                f"this ability chooses one colour from what it prints; "
+                f"{len(chosen_colors)} colours were chosen"
+            )
 
         if len(options) == 1:
             only = options[0]
-            if color is not None and color not in only:
-                raise ValueError(f"this ability adds {[c.value for c in only]}, not {color.value}")
+            if single is not None and single not in only:
+                raise ValueError(f"this ability adds {[c.value for c in only]}, not {single.value}")
             return list(only)
 
-        if color is None:
+        if single is None:
             choices = [[c.value for c in option] for option in options]
             raise ValueError(f"this ability offers {choices}; pass the colour chosen")
 
         for option in options:
-            if option == [color]:
+            if option == [single]:
                 return list(option)
-        raise ValueError(f"{color.value} is not one of this ability's options")
+        raise ValueError(f"{single.value} is not one of this ability's options")
 
 
 def parse_mana_abilities(card: Card, face: str | None = None) -> list[ManaAbility]:
@@ -707,6 +874,16 @@ def _parse_effect(effect: str) -> ManaAbility | None:
             options=[[color] * count for color in _COLORS],
             any_color_count=count,
             uses_chosen_color=True,
+        )
+
+    combination = _ANY_COLOR_COMBINATION.search(effect)
+    if combination:
+        count = _ANY_COLOR_COUNTS[combination.group("count").lower()]
+        return ManaAbility(
+            options=[[color] * count for color in _COLORS],
+            any_color=True,
+            any_color_count=count,
+            any_color_mixed=True,
         )
 
     any_color = _ANY_COLOR.search(effect)
@@ -1862,6 +2039,30 @@ _MANA_SHAPED = re.compile(r"^(?:\{[^{}]+\}\s*)+$|^\d+$|^X$")
 _ADD = re.compile(r"^Add\s+(?P<effect>[^.]+)\.?\s*(?P<rest>.*)$", re.DOTALL)
 _ONLY_SYMBOLS = re.compile(r"^(?:\{[^{}]+\}|\s)+$")
 _PAY_LIFE = re.compile(r"^Pay\s+\S+\s+life$", re.IGNORECASE)
+
+
+def printed_production(effect: str) -> str | None:
+    """The mana an "Add ..." effect *says* it produces, exactly as printed.
+
+    `"Add {C}{C}. Spend this mana only ..."` gives `"{C}{C}"`; Cavern of
+    Souls's gives `"one mana of any color"`; Nykthos, Shrine to Nyx's gives
+    `"an amount of mana of that color equal to your devotion to that color"`
+    once its "Choose a color." preamble is stripped, the same way
+    `parse_mana_abilities` strips it before reading the rest.
+
+    Only the base "Add ..." sentence, never the board: this is the printed
+    claim, not `ManaAbility.produces`/`resolve`'s answer for a particular
+    board and a particular chosen colour. It exists for a caller describing
+    an ability it is *offering* rather than resolving - `machines/legal_
+    actions` fills `Action.produces` from it - where a count that depends on
+    devotion or on a colour nobody has named yet would be a number that is
+    wrong by the time the offer is taken up. `None` when the effect prints
+    no "Add ..." phrase this can read.
+    """
+    match = _ADD.match(_CHOOSE_A_COLOR_PREAMBLE.sub("", effect.strip()))
+    if match is None:
+        return None
+    return match.group("effect").strip() or None
 
 
 def _faces(card: Card) -> list[tuple[str, str]]:

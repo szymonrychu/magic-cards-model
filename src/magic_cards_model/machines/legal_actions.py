@@ -69,13 +69,14 @@ enumerating every legal subset or permutation of it.
 """
 
 from collections.abc import Iterable
-from typing import Any
+from typing import Any, NamedTuple
 
 from ..models.action import Action, ActionKind, Affordability, SpliceOption, TargetSlot
 from ..models.card import Card, Layout, Type
 from ..models.card_state import CardState
 from ..models.mana import ManaCost, ManaSpend
 from ..models.zone import Zone
+from .abilities import printed_production
 from .casting import (
     AlternativeCostSource,
     MarkedExile,
@@ -102,6 +103,7 @@ from .cost import (
     _withheld_mana_sources,
     could_pay_mana_cost,
     mana_candidate_scan,
+    spend_restriction,
 )
 from .decisions import (
     Decision,
@@ -362,7 +364,11 @@ def _cast_action(
         if profile.understood
         else ()
     )
-    spend = ManaSpend.casting(card.card)
+    # CR 106.6 read against the zone this cast would start from - the card has
+    # not moved yet here (CR 601.2a happens when the cast is actually
+    # announced), so `card.zone` is that zone and is the same answer
+    # `from_zone` below reports.
+    spend = ManaSpend.casting(card.card, zone=card.zone)
     unpayable = (
         None if alternative_cost is not None else why_mana_cost_unpayable(card.name, total.mana)
     )
@@ -862,6 +868,56 @@ def _dredge_action(game: Any, player: str, card: CardState) -> Action | None:
 # ---------------------------------------------------------------------------
 
 
+class _ManaDescriptor(NamedTuple):
+    """What an `ACTIVATE_MANA` action says about itself beyond its index.
+
+    Built once per ability by `_mana_descriptor` and read by *both* `Action`
+    construction sites below - the `Affordability.UNKNOWN` fallback for an
+    activation cost this module cannot price, and the priced branch. One
+    value read twice, rather than two constructions that could drift: the
+    fallback is exactly where a descriptor would otherwise be quietly
+    dropped, since an unpriceable mana ability is the one whose text a caller
+    can least afford to be guessing at.
+    """
+
+    produces: str | None = None
+    restriction: str | None = None
+    restriction_understood: bool | None = None
+
+
+_NO_MANA_DESCRIPTOR = _ManaDescriptor()
+
+
+def _mana_descriptor(ability: Any, permanent: CardState) -> _ManaDescriptor:
+    """The three `Action` fields that say what a mana ability *does*.
+
+    See `Action.produces`/`Action.restriction`/`Action.restriction_understood`
+    for what each promises. Two calls do the work:
+
+    - `machines/abilities.printed_production` reads the printed "Add ..."
+      phrase. Not `ManaAbility.produces()`, which resolves against a board
+      this row deliberately does not consult - see `Action.produces`.
+    - `machines/cost.spend_restriction(ability.effect, permanent)` reads
+      CR 106.6's sentence. That is the same call a real activation makes
+      (`Game.activate_ability`), so what an agent is told here and what the
+      mana actually carries come from one reading. Not `restriction_for_
+      production`, which reverse-infers a restriction from mana already in a
+      pool and resolves ambiguity towards *unrestricted* - the wrong
+      direction entirely for an offer a caller has yet to accept.
+
+    Every field is `None` for an ability that is not a mana ability, which is
+    what keeps a non-mana `Action` carrying nothing at all.
+    """
+    if getattr(ability, "mana", None) is None:
+        return _NO_MANA_DESCRIPTOR
+    restriction = spend_restriction(ability.effect, permanent)
+    return _ManaDescriptor(
+        produces=printed_production(ability.effect),
+        restriction=None if restriction is None else restriction.text,
+        restriction_understood=None if restriction is None else restriction.understood,
+    )
+
+
 def _battlefield_ability_actions(
     game: Any,
     player: str,
@@ -882,8 +938,20 @@ def _battlefield_ability_actions(
         # own docstring for why an `ACTIVATE_MANA` action was unusable
         # without it (Steam Vents: reported `affordable=YES`, then
         # `activate_ability` refused with "this ability offers [['U'],
-        # ['R']]; pass the colour chosen").
+        # ['R']]; pass the colour chosen"). `color_choice_count` is the other
+        # half of that parameter space: how many of those colours are named,
+        # one per mana for "Add N mana in any combination of colors", which
+        # the flat pool cannot say by itself.
         color_options = game.mana_color_options(permanent, index, player) if is_mana else ()
+        color_choice_count = (
+            game.mana_color_choice_count(permanent, index, player) if is_mana else 0
+        )
+        # What the ability *does*, as plain data, for the same reason
+        # `color_options` above is here: `ability_index` alone made Eldrazi
+        # Temple's two mana abilities byte-identical rows. Computed once,
+        # ahead of the `try`, so both `Action`s below are filled from the one
+        # value and cannot drift apart.
+        descriptor = _mana_descriptor(ability, permanent)
         try:
             total = game.activation_cost(permanent, index, player)
         except ValueError as error:
@@ -908,6 +976,10 @@ def _battlefield_ability_actions(
                     ability_index=index,
                     keyword=getattr(ability, "ability_word", None),
                     color_options=color_options,
+                    color_choice_count=color_choice_count,
+                    produces=descriptor.produces,
+                    restriction=descriptor.restriction,
+                    restriction_understood=descriptor.restriction_understood,
                     affordable=Affordability.UNKNOWN,
                     unaffordable_reason=str(error),
                 )
@@ -934,6 +1006,10 @@ def _battlefield_ability_actions(
                 cost=cost_str,
                 mana_cost=mana_cost_str,
                 color_options=color_options,
+                color_choice_count=color_choice_count,
+                produces=descriptor.produces,
+                restriction=descriptor.restriction,
+                restriction_understood=descriptor.restriction_understood,
                 affordable=affordable,
                 unaffordable_reason=reason,
             )

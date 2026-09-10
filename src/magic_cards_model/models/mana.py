@@ -25,12 +25,13 @@ from collections import Counter
 from collections.abc import Hashable, Iterable, Sequence
 from enum import StrEnum
 from itertools import combinations_with_replacement, product
-from typing import Protocol
+from typing import Any, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ..serialization import SortedFrozenSet
 from .card import Card, Color, Layout, Supertype, Type
+from .zone import Zone
 
 
 class HasCharacteristics(Protocol):
@@ -542,9 +543,22 @@ class ManaSpend(BaseModel):
     case-insensitively against a printed subtype."""
     supertypes: SortedFrozenSet[Supertype] = frozenset()
     colorless: bool = False
+    zone: Zone | None = None
+    """CR 601.2a's "moves that card ... from where it is to the stack": the
+    zone the spell is being cast **from**, which is a question about the cast
+    and not about the card - the same printing cast from the hand and from
+    exile is the same object with two different answers here.
+
+    `None` means the caller could not say, and a clause that names a zone
+    refuses it for the same reason `ManaRestriction.allows(None)` refuses an
+    unknown spend: the engine cannot show the restriction was honoured. It is
+    always `None` for an activation, where no card moves anywhere.
+    """
 
     @classmethod
-    def _of(cls, purpose: SpendPurpose, card: "HasCharacteristics") -> "ManaSpend":
+    def _of(
+        cls, purpose: SpendPurpose, card: "HasCharacteristics", zone: Zone | None
+    ) -> "ManaSpend":
         return cls(
             purpose=purpose,
             name=card.name,
@@ -552,17 +566,28 @@ class ManaSpend(BaseModel):
             subtypes=frozenset(subtype.lower() for subtype in card.subtypes),
             supertypes=frozenset(card.supertypes),
             colorless=not card.colors,
+            zone=zone,
         )
 
     @classmethod
-    def casting(cls, card: "HasCharacteristics") -> "ManaSpend":
-        """Mana spent to cast `card` as a spell.
+    def casting(cls, card: "HasCharacteristics", *, zone: Zone | None) -> "ManaSpend":
+        """Mana spent to cast `card` as a spell, out of `zone`.
 
         A spell is on the stack, which `Game.computed_board` does not cover, so
         the caller has only the printed `Card` to give and that is the right
         answer here.
+
+        `zone` is keyword-only and has **no default** on purpose. CR 601.2a
+        moves the card to the stack as the very first step of the
+        announcement, so by the time a cost is being paid `spell.zone` is
+        always `Zone.STACK` and the origin has to be carried from before the
+        move (`Casting.origin_zone`, `CardState.zone` at the moment
+        `legal_actions` enumerates the cast). A default here would be that
+        answer guessed rather than carried, and "usually the hand"
+        (CR 701.18a's own hedge) is exactly the guess Interdimensional Web
+        Watch's "cast spells from exile" is about.
         """
-        return cls._of(SpendPurpose.CAST_SPELL, card)
+        return cls._of(SpendPurpose.CAST_SPELL, card, zone)
 
     @classmethod
     def activating(cls, card: "HasCharacteristics") -> "ManaSpend":
@@ -577,7 +602,7 @@ class ManaSpend(BaseModel):
         prints the same four names this reads, so no branch is needed here -
         only the type had to stop saying `Card`.
         """
-        return cls._of(SpendPurpose.ACTIVATE_ABILITY, card)
+        return cls._of(SpendPurpose.ACTIVATE_ABILITY, card, None)
 
 
 class SpendClause(BaseModel):
@@ -596,25 +621,73 @@ class SpendClause(BaseModel):
 
     purpose: SpendPurpose
     types: SortedFrozenSet[Type] = frozenset()
-    """At least one of these card types, "creature spell" style."""
+    """The card types the sentence printed - "creature spell" style. Whether
+    the object needs one of them or all of them is `joined`'s answer."""
     subtypes: SortedFrozenSet[str] = frozenset()
-    """At least one of these subtypes, lowercased - Cavern of Souls's chosen
-    creature type."""
+    """The subtypes the sentence printed, lowercased and singular (the printed
+    word is read back to the subtype it names by `data/subtypes.py`) - plus
+    Cavern of Souls's chosen creature type (CR 614.12a), which every printing
+    that names one attaches to a single quality rather than to a list."""
     supertypes: SortedFrozenSet[Supertype] = frozenset()
-    """All of these supertypes - Delighted Halfling's "a legendary spell"."""
+    """The supertypes the sentence printed - Delighted Halfling's "a legendary
+    spell"."""
+    joined: bool = False
+    """Whether the printed qualities were a **list** - and so alternatives -
+    rather than one description of one object.
+
+    The joining word is the whole discriminator, and Magic's templating is
+    consistent about it. A list is joined ("instant and sorcery spells", "a
+    Knight or Equipment spell", "Aura and/or Equipment spells", "instant,
+    sorcery, Demon, and Spirit spells") and means **any one of them**: CR
+    205.2b makes an object "satisfy the criteria for any effect that applies to
+    any of their card types", and no spell is ever both an instant and a
+    sorcery, so a joined list read as a conjunction would permit nothing at
+    all. Juxtaposition is not joined ("Dragon creature spells", "colorless
+    Eldrazi spells", "an Elf creature spell") and means **all of them**,
+    because those words describe one object that is every one of them at once -
+    which is what makes "artifact creature spells" refuse a plain creature.
+
+    The two readings only differ when a clause names more than one quality, so
+    every single-quality clause carries the default. A sentence that mixes the
+    two ("artifact creature or enchantment spells") is not read at all: see
+    `machines/cost._spend_clause`, which fails it closed rather than choosing
+    one of the two readings for it."""
     colorless: bool = False
     """Eldrazi Temple's "colorless": the object must have no colours."""
+    zone: Zone | None = None
+    """Interdimensional Web Watch's "from exile": the spell's CR 601.2a move
+    must have started in this one of CR 400.1's zones. `None` asks nothing,
+    like every other empty field here."""
 
     def accepts(self, spend: ManaSpend) -> bool:
+        # `colorless` and `zone` are never alternatives: no printing offers
+        # "colorless or ..." and a zone tail ("from exile") narrows the clause
+        # it is attached to rather than adding a way to satisfy it. Both are
+        # asked whichever reading `joined` gives the qualities.
         if spend.purpose is not self.purpose:
             return False
         if self.colorless and not spend.colorless:
             return False
-        if self.types and not (self.types & spend.types):
+        # An unknown origin (`ManaSpend.zone` None) fails this the same way a
+        # wrong one does, which is the fail-closed direction: a clause that
+        # names a zone is not satisfied by a caller who could not say.
+        if self.zone is not None and spend.zone is not self.zone:
             return False
-        if self.subtypes and not (self.subtypes & spend.subtypes):
-            return False
-        return self.supertypes <= spend.supertypes
+
+        printed: list[tuple[frozenset[Any], frozenset[Any]]] = [
+            (asked, held)
+            for asked, held in (
+                (self.types, spend.types),
+                (self.subtypes, spend.subtypes),
+                (self.supertypes, spend.supertypes),
+            )
+            if asked
+        ]
+        if not printed:
+            return True
+        if self.joined:
+            return any(asked & held for asked, held in printed)
+        return all(asked <= held for asked, held in printed)
 
 
 class ManaRestriction(BaseModel):

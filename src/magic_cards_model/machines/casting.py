@@ -3775,7 +3775,12 @@ class Casting(BaseModel):
             # carrying a spend restriction cannot be judged against it. This is
             # a *cast*, which is what tells Cavern of Souls's mana apart from
             # Shang-Chi's - the latter pays for no spell at all.
-            spend=ManaSpend.casting(self.spell.card),
+            #
+            # `origin_zone` and not `self.spell.zone`: CR 601.2a moved the card
+            # to the stack five steps ago, so the stack is the only answer the
+            # object itself still has, and Interdimensional Web Watch's "cast
+            # spells from exile" asks about where the cast *started*.
+            spend=ManaSpend.casting(self.spell.card, zone=self.origin_zone),
         )
         if choices is not None:
             self.payment.choose(choices)

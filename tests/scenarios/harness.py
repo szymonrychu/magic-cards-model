@@ -16,6 +16,7 @@ a card the pool does not have yet, add its Scryfall json there - do not hand-wri
 card data, since the point of these tests is that they run against real cards.
 """
 
+from collections.abc import Sequence
 from typing import Any
 
 from magic_cards_model.machines import Casting, CostPayment, PriorityOutcome, Step, TurnMachine
@@ -1104,7 +1105,7 @@ class PlayedScenario:
         exiling: list[CardState] | None = None,
         tapping: list[CardState] | None = None,
         targets: list[Target] | None = None,
-        color: Color | None = None,
+        color: Color | Sequence[Color] | str | None = None,
         auto: bool = False,
         x_value: int = 0,
     ) -> AbilityOnStack | None:

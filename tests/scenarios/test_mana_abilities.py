@@ -36,7 +36,9 @@ only way to catch a regression back to that silent failure.
 import pytest
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.abilities import parse_mana_abilities
 from magic_cards_model.models import Color, Zone
+from tests.cards import card
 from tests.scenarios.harness import Scenario
 
 # --------------------------------------------------------------------------
@@ -263,6 +265,159 @@ def test_activating_a_dual_for_a_colour_it_cannot_make_is_refused():
 
     with pytest.raises(ValueError, match="not one of this ability's options"):
         scenario.activate(vents, color=Color.GREEN)
+
+
+# --------------------------------------------------------------------------
+# How many mana the printed word says
+# --------------------------------------------------------------------------
+
+
+def test_a_count_word_past_three_is_still_a_count():
+    """Cascading Cataracts, added to the pool for this: "Indestructible /
+    {T}: Add {C}. / {5}, {T}: Add five mana in any combination of colors."
+    - read off Scryfall this session.
+
+    The number is printed as a word, and the vocabulary that read it stopped
+    at "three", so a printing that says "five" was not recognised as a mana
+    ability **at all**: the land tapped for `{C}` and its second ability did
+    not exist. Magic prints these counts as far as ten, and none of them is a
+    different mechanic from "two" - so the vocabulary is the numbers, not the
+    two of them the first cards needed.
+    """
+    abilities = parse_mana_abilities(card("Cascading Cataracts"))
+
+    assert len(abilities) == 2
+    colorless, combination = abilities
+    assert colorless.amount == 1
+    assert combination.any_color_mixed is True
+    assert combination.any_color_count == 5
+
+
+def test_five_mana_in_any_combination_is_five_colours_of_the_players_choosing():
+    """And it is played, not only parsed: the `{5}` half is a real cost
+    (CR 602.1a), paid here with five Forests, and the five mana that come back
+    are five different colours because "in any combination of colors" lets each
+    of them choose its own."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Cascading Cataracts", "Forest", "Forest", "Forest", "Forest", "Forest"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (cataracts,) = scenario.untapped_sources("Cascading Cataracts")
+    forests = scenario.untapped_sources("Forest", "Forest", "Forest", "Forest", "Forest")
+
+    scenario.activate(
+        cataracts,
+        *forests,
+        index=1,
+        color=[Color.WHITE, Color.BLUE, Color.BLACK, Color.RED, Color.GREEN],
+    )
+
+    assert scenario.player().mana_pool.floating == {
+        Color.WHITE: 1,
+        Color.BLUE: 1,
+        Color.BLACK: 1,
+        Color.RED: 1,
+        Color.GREEN: 1,
+    }
+    assert scenario.stack_names() == []
+
+
+def test_a_named_five_colour_mixture_is_a_production_the_printing_offers():
+    """The same question `CostPayment.tap_for_mana` asks of a hand-picked
+    production, at the count that says why it is asked as a rule rather than
+    enumerated: five mana over CR 106.1a's five colours is 126 multisets, and a
+    count the board decides (a devotion, an X) has no bound at all.
+
+    Cascading Cataracts is the larger-N printing; Shang-Chi is the control,
+    because "two mana of any **one** color" is the same count locked to one
+    colour and a mixture there is mana the card never offered.
+    """
+    _colorless, combination = parse_mana_abilities(card("Cascading Cataracts"))
+    options, any_color = combination.effective()
+
+    five = [Color.WHITE, Color.BLUE, Color.BLACK, Color.RED, Color.GREEN]
+    assert combination.offers(five, options, any_color) is True
+    # Five of one colour is a combination too - "any combination" does not
+    # require them to differ.
+    assert combination.offers([Color.RED] * 5, options, any_color) is True
+    # Four is not five, however legal the colours are.
+    assert combination.offers(five[:4], options, any_color) is False
+
+    (shang_chi,) = parse_mana_abilities(card("Shang-Chi, Master of Kung Fu"))
+    options, any_color = shang_chi.effective()
+    assert shang_chi.offers([Color.WHITE, Color.WHITE], options, any_color) is True
+    assert shang_chi.offers([Color.WHITE, Color.BLUE], options, any_color) is False
+
+
+# --------------------------------------------------------------------------
+# One colour, named as a sequence
+# --------------------------------------------------------------------------
+#
+# `Action.color_options` says which colours an ability offers and
+# `Action.color_choice_count` how many of them to name - one per mana whose
+# colour is chosen separately, which is 1 for every ability except "N mana in
+# any combination of colors". A caller driving the engine through
+# `legal_actions` alone reads those two fields together and names a *list* of
+# that length, so the one-element list has to mean exactly what the bare
+# colour means, everywhere, rather than only on the branch that was written
+# with a list in mind.
+
+
+def test_a_one_element_colour_sequence_is_the_colour_it_names():
+    """Steam Vents reports `color_options=(U, R)` and `color_choice_count=1`.
+    A caller that honours those two fields together hands back `[U]`, and it
+    means the same choice `Color.BLUE` does."""
+    scenario = Scenario().player("alice", battlefield=["Steam Vents"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (vents,) = scenario.untapped_sources("Steam Vents")
+
+    scenario.activate(vents, color=[Color.BLUE])
+
+    assert scenario.player().mana_pool.floating == {Color.BLUE: 1}
+    assert scenario.stack_names() == []
+
+
+def test_a_one_element_colour_sequence_reaches_an_any_colour_ability_too():
+    """The same on the other branch, so the two cannot drift apart: Birds of
+    Paradise's `{T}: Add one mana of any color.`"""
+    scenario = Scenario().player("alice", battlefield=["Birds of Paradise"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (bird,) = scenario.untapped_sources("Birds of Paradise")
+
+    scenario.activate(bird, color=[Color.BLACK])
+
+    assert scenario.player().mana_pool.floating == {Color.BLACK: 1}
+
+
+def test_naming_two_colours_for_one_mana_is_refused_in_the_engines_own_words():
+    """The wrong-length sequence is a refusal, not a crash. Steam Vents adds
+    one mana, so two colours is a caller mistake the engine has to name - it
+    used to reach `color.value` on a list and raise `AttributeError` from
+    inside the mana model, which tells a seat nothing about what it did."""
+    scenario = Scenario().player("alice", battlefield=["Steam Vents"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (vents,) = scenario.untapped_sources("Steam Vents")
+
+    with pytest.raises(ValueError, match="chooses one colour"):
+        scenario.activate(vents, color=[Color.BLUE, Color.RED])
+
+
+def test_a_bare_string_is_not_a_sequence_of_colours():
+    """`Color` is a `StrEnum`, so a plain `str` satisfies `Sequence[Color]` and
+    "WU" iterates into the characters "W" and "U" - which are not `Color`
+    members, and which used to be added to the pool as raw strings. It is
+    refused by name instead."""
+    scenario = Scenario().player("alice", battlefield=["Birds of Paradise"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (bird,) = scenario.untapped_sources("Birds of Paradise")
+
+    with pytest.raises(ValueError, match="not a string"):
+        scenario.activate(bird, color="WU")
 
 
 # --------------------------------------------------------------------------

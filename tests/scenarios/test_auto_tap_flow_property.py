@@ -40,7 +40,7 @@ from magic_cards_model.machines.cost import (
     _SpendContext,
     could_pay_mana_cost,
 )
-from magic_cards_model.models import Color
+from magic_cards_model.models import Color, Zone
 from magic_cards_model.models.card_state import Choice, ChoiceKind
 from magic_cards_model.models.mana import (
     ManaCost,
@@ -329,9 +329,9 @@ def test_flow_solver_agrees_with_brute_force_when_exotic_sources_are_in_play():
     llanowar_elves = card("Llanowar Elves")
     spends: list[ManaSpend | None] = [
         None,
-        ManaSpend.casting(glaring_fleshraker),
+        ManaSpend.casting(glaring_fleshraker, zone=Zone.HAND),
         ManaSpend.activating(basking_rootwalla),
-        ManaSpend.casting(llanowar_elves),
+        ManaSpend.casting(llanowar_elves, zone=Zone.HAND),
     ]
     for _ in range(50):
         filler_size = rng.randint(0, 5)
@@ -383,7 +383,7 @@ def test_flow_solver_finds_a_plan_when_pool_already_holds_a_different_restrictio
     sources = scenario.game.permanents_controlled_by("alice")
 
     goblin_guide = card("Goblin Guide")
-    spend = ManaSpend.casting(goblin_guide)
+    spend = ManaSpend.casting(goblin_guide, zone=Zone.HAND)
     cost = ManaCost.parse("{R}")
 
     unrelated_restriction = ManaRestriction(

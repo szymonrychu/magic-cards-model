@@ -1087,6 +1087,65 @@ def test_legal_actions_reports_color_options_for_a_choice_mana_ability():
         steam_vents, mana_action.ability_index, "alice", color=mana_action.color_options[0]
     )
     assert result is None, "a mana ability resolves immediately (CR 605.3b) - nothing on the stack"
+    assert mana_action.color_choice_count == 1, "one colour named, one mana added"
+
+
+def test_legal_actions_reports_a_color_per_mana_for_a_combination_ability():
+    """Interdimensional Web Watch's `{T}: Add two mana in any combination of
+    colors.` chooses a colour for *each* of the two mana, and
+    `Action.color_options` alone cannot say so: it is one flat pool of the
+    five colours, exactly what a dual land's two-colour pool looks like, so a
+    caller driving the engine through `legal_actions` had no way to learn it
+    may name two and no way to reach `{W}{U}` - only the five monochrome
+    pairs a single `color=` produces. `Game.activate_ability` accepted the
+    mixture all along; nothing in the enumerated action said it existed.
+
+    `Action.color_choice_count` is the rest of that parameter space, the same
+    treatment `modes`/`x_range` get: name this many colours from
+    `color_options`, one per mana. It is per-ability and not a constant -
+    Shang-Chi, Master of Kung Fu's "two mana of any **one** color" adds the
+    same two mana from the same five-colour pool but takes one colour, and a
+    Forest's single printed `{G}` takes none.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=[
+                "Interdimensional Web Watch",
+                "Shang-Chi, Master of Kung Fu",
+                "Forest",
+            ],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    watch = scenario.find("Interdimensional Web Watch", Zone.BATTLEFIELD, "alice")
+    shang_chi = scenario.find("Shang-Chi, Master of Kung Fu", Zone.BATTLEFIELD, "alice")
+    shang_chi.summoning_sick = False
+    forest = scenario.find("Forest", Zone.BATTLEFIELD, "alice")
+
+    actions = legal_actions(scenario.game, "alice")
+    by_card = {action.card_id: action for action in _of_kind(actions, ActionKind.ACTIVATE_MANA)}
+
+    watch_action = by_card[watch.id]
+    assert watch_action.color_choice_count == 2
+    assert len(watch_action.color_options) == 5
+    assert by_card[shang_chi.id].color_choice_count == 1
+    assert len(by_card[shang_chi.id].color_options) == 5
+    assert by_card[forest.id].color_choice_count == 0
+    assert by_card[forest.id].color_options == ()
+
+    # The whole point: a caller that knows nothing but this action's own
+    # fields reaches a genuine mixture.
+    chosen = watch_action.color_options[: watch_action.color_choice_count]
+    scenario.game.activate_ability(
+        watch, watch_action.ability_index, watch_action.player, color=list(chosen)
+    )
+
+    assert scenario.player().mana_pool.floating == {chosen[0]: 1, chosen[1]: 1}
+    assert chosen[0] is not chosen[1], "the pair the five monochrome options could not make"
 
 
 def test_choose_targets_decision_candidates_include_player_targets():
@@ -1180,3 +1239,152 @@ def test_targetable_objects_mutates_nothing():
     game.targetable_objects()
 
     assert game.model_dump_json() == before
+
+
+# -- what an ACTIVATE_MANA action produces, and what it may be spent on -----
+
+
+def test_two_mana_abilities_on_one_permanent_are_told_apart_by_what_they_do():
+    """Eldrazi Temple prints `{T}: Add {C}.` and `{T}: Add {C}{C}. Spend this
+    mana only to cast colorless Eldrazi spells or activate abilities of
+    colorless Eldrazi.` - two `ACTIVATE_MANA` actions that were byte-identical
+    apart from `ability_index`, so a seat holding the list could not tell
+    which one adds the restricted pair.
+
+    `Action.produces`/`restriction`/`restriction_understood` say it in plain
+    data: the printed production of each, and CR 106.6's own sentence on the
+    one that carries it.
+    """
+    scenario = Scenario().player("alice", battlefield=["Eldrazi Temple"]).player("bob").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    actions = legal_actions(scenario.game, "alice")
+    mana_actions = sorted(
+        _of_kind(actions, ActionKind.ACTIVATE_MANA), key=lambda action: action.ability_index or 0
+    )
+
+    assert len(mana_actions) == 2
+    plain, restricted = mana_actions
+    assert plain.produces == "{C}"
+    assert plain.restriction is None
+    assert plain.restriction_understood is None
+    assert restricted.produces == "{C}{C}"
+    assert restricted.restriction == (
+        "Spend this mana only to cast colorless Eldrazi spells or activate "
+        "abilities of colorless Eldrazi."
+    )
+    assert restricted.restriction_understood is True
+    assert plain.produces != restricted.produces, (
+        "two mana abilities on one permanent must differ by what they do"
+    )
+
+
+def test_cavern_of_souls_two_mana_abilities_differ_by_production_and_restriction():
+    """Cavern of Souls is the harder case: `{T}: Add {C}.` and `{T}: Add one
+    mana of any color. Spend this mana only to cast a creature spell of the
+    chosen type, and that spell can't be countered.` - the second ability's
+    colours *include* the first's, so `color_options` alone cannot separate
+    them. The printed production and CR 106.6's sentence can.
+    """
+    scenario = Scenario().player("alice", hand=["Cavern of Souls"]).player("bob").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.will_choose("Zombie", source="Cavern of Souls")
+    scenario.play_land("Cavern of Souls")
+
+    actions = legal_actions(scenario.game, "alice")
+    mana_actions = sorted(
+        _of_kind(actions, ActionKind.ACTIVATE_MANA), key=lambda action: action.ability_index or 0
+    )
+
+    assert len(mana_actions) == 2
+    colorless, any_color = mana_actions
+    assert colorless.produces == "{C}"
+    assert colorless.restriction is None
+    assert any_color.produces == "one mana of any color"
+    assert any_color.restriction == (
+        "Spend this mana only to cast a creature spell of the chosen type, "
+        "and that spell can't be countered."
+    )
+    assert any_color.restriction_understood is True
+
+
+def test_an_unreadable_spend_restriction_is_reported_as_not_understood():
+    """Rosheen Meanderer's `{T}: Add {C}{C}{C}{C}. Spend this mana only on
+    costs that contain {X}.` is a CR 106.6 restriction this engine's clause
+    grammar cannot read at all - it is neither a "cast [quality] spells" nor
+    an "activate abilities of [quality] sources" clause - so `machines/cost.
+    spend_restriction` fails it closed: the mana is produced, and pays for
+    nothing.
+
+    `restriction_understood=False` is what says that out loud. Without it a
+    seat sees four mana it can never spend and no reason why.
+
+    The quoted text is the whole effect rather than the trailing sentence
+    alone, because that is precisely what `ManaRestriction.text` carries when
+    the sentence could not be located: the tag the produced mana will
+    actually wear, and the words a refusal downstream will quote. `Action.
+    restriction` reports the mana's own tag verbatim rather than a prettier
+    substring the engine does not itself hold.
+    """
+    scenario = Scenario().player("alice", battlefield=["Rosheen Meanderer"]).player("bob").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    actions = legal_actions(scenario.game, "alice")
+    (mana_action,) = _of_kind(actions, ActionKind.ACTIVATE_MANA)
+
+    assert mana_action.produces == "{C}{C}{C}{C}"
+    assert mana_action.restriction == (
+        "Add {C}{C}{C}{C}. Spend this mana only on costs that contain {X}."
+    )
+    assert mana_action.restriction_understood is False
+
+
+def test_an_unpriceable_mana_ability_still_describes_what_it_produces():
+    """Servant of the Conduit's `{T}, Pay {E}: Add one mana of any color.` has
+    a cost piece `machines/cost.cost_component_for_phrase` declines to read,
+    so `_battlefield_ability_actions` reports it through the `Affordability.
+    UNKNOWN` fallback rather than the priced branch (CR 118.6: attempting an
+    unpayable cost is still a legal action).
+
+    That fallback is exactly where a descriptor would silently go missing, so
+    it is asserted here: both construction sites fill the same three fields
+    from the same helper.
+    """
+    scenario = (
+        Scenario().player("alice", battlefield=["Servant of the Conduit"]).player("bob").build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    actions = legal_actions(scenario.game, "alice")
+    (mana_action,) = _of_kind(actions, ActionKind.ACTIVATE_MANA)
+
+    assert mana_action.affordable is Affordability.UNKNOWN
+    assert mana_action.produces == "one mana of any color"
+    assert mana_action.restriction is None
+    assert mana_action.restriction_understood is None
+
+
+def test_no_action_but_activate_mana_carries_a_production_descriptor():
+    """All three fields default to `None`, so a non-mana action carries
+    nothing at all - the api's MCP layer strips `None` keys one level deep
+    before an agent ever sees the row, which is why these are three flat
+    fields rather than one nested submodel whose `None` members would
+    survive that strip.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Lightning Bolt", "Mountain"], battlefield=["Mountain"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    actions = legal_actions(scenario.game, "alice")
+
+    assert _of_kind(actions, ActionKind.ACTIVATE_MANA), "the Mountain's own ability is the control"
+    for action in actions:
+        if action.kind is ActionKind.ACTIVATE_MANA:
+            continue
+        assert action.produces is None
+        assert action.restriction is None
+        assert action.restriction_understood is None
