@@ -527,11 +527,21 @@ _SPEND_RIDER = ", and "
 _SUPERTYPE_WORDS = {supertype.value: supertype for supertype in Supertype}
 _TYPE_WORDS = {type_.value: type_ for type_ in Type}
 #: The words that join a printed list of qualifying types into one clause.
-#: MTG templates the same list three ways - "instant and sorcery spells",
-#: "a Knight or Equipment spell", "Aura and/or Equipment spells" - and all
-#: three mean the same thing, so all three are joiners rather than one being
+#: MTG templates the same list three ways - "instant and sorcery spells"
+#: (Tablet of Discovery), "a Knight or Equipment spell" (Tournament Grounds),
+#: "Aura and/or Equipment spells" (Codsworth, Handy Helper, in the pool; also
+#: Cormela, Glamour Thief's "instant and/or sorcery spells") - and all three
+#: mean the same thing, so all three are joiners rather than one being
 #: privileged. Commas are already stripped off each word.
 _TYPE_LIST_JOINERS = {"and", "or", "and/or"}
+#: The same three words in their other role: joining two whole **clauses**
+#: rather than two qualities inside one. "cast Elf spells and activate
+#: abilities of Elf sources" (Woodland Weavemaster), "cast colorless Eldrazi
+#: spells or activate abilities of colorless Eldrazi" (Eldrazi Temple) - the
+#: printed word does not say which of the two roles it is in, so this split is
+#: only ever tried on a phrase the grammar has already failed to read as a
+#: single clause. See `_spend_clauses`.
+_SPEND_CLAUSE_SPLIT = re.compile(r" and/or | and | or ")
 #: CR 400.1's zones, by the word a card prints for each. The sideboard is not
 #: one ("Cards in a player's sideboard are outside the game", CR 400.11a) and
 #: is left out so a "from the sideboard" sentence fails closed.
@@ -689,20 +699,28 @@ def _spend_clauses(what: str, chosen_type: str | None) -> list[SpendClause] | No
     """Every clause the "only to ..." phrase permits, or None if any of it is
     unreadable.
 
-    The whole phrase is offered to the grammar first and only split on " or "
-    if that fails. Order matters both ways: "cast a Knight or Equipment spell"
-    is one clause whose type list happens to be joined with "or", and would be
-    torn into two unreadable halves by splitting first; Eldrazi Temple's "cast
+    The whole phrase is offered to the grammar first and only split if that
+    fails. Order matters both ways: "cast a Knight or Equipment spell" is one
+    clause whose type list happens to be joined with "or", and would be torn
+    into two unreadable halves by splitting first; Eldrazi Temple's "cast
     colorless Eldrazi spells or activate abilities of colorless Eldrazi" is
     genuinely two clauses and fails the whole-phrase read (neither clause
     pattern matches a phrase that starts "cast" and ends "Eldrazi"), so it
     reaches the split.
+
+    All three joining words split, because all three are printed in this role:
+    "or" (Eldrazi Temple, Smokebraider), "and" (Woodland Weavemaster's "cast
+    Elf spells and activate abilities of Elf sources", Smoky Lounge's "cast
+    Room spells and unlock doors") and "and/or". Splitting on one of them and
+    not the others left a real printing reading as nothing at all - a
+    restriction with no clauses, which permits nothing - while the identical
+    sentence with "or" in it worked.
     """
     whole = _one_spend_clause(what, chosen_type)
     if whole is not None:
         return [whole]
 
-    alternatives = what.split(" or ")
+    alternatives = _SPEND_CLAUSE_SPLIT.split(what)
     if len(alternatives) == 1:
         return None
     clauses: list[SpendClause] = []

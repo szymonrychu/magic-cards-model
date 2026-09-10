@@ -554,6 +554,64 @@ def test_the_clauses_each_printed_restriction_is_read_into():
     assert watch.clauses[0].types == frozenset()
 
 
+def test_and_splits_two_clauses_the_way_or_does():
+    """Woodland Weavemaster, added to the pool for this: "{T}: Add X mana of
+    any one color, where X is this creature's power. Spend this mana only to
+    cast Elf spells and activate abilities of Elf sources." - read off Scryfall
+    this session.
+
+    It is Eldrazi Temple's two-clause sentence with "and" where the Temple
+    prints "or", and it is the commoner of the two templates: "cast Room spells
+    and unlock doors" (Smoky Lounge) prints it too. Alternatives were split on
+    " or " alone, so this sentence read as nothing at all and the mana paid for
+    neither of the two things it names.
+
+    The whole phrase is still offered to the grammar before any split, which is
+    what keeps "cast instant and sorcery spells" one clause: a joining word
+    between two *clauses* only gets to split when the sentence cannot be read
+    as one clause in the first place.
+    """
+    restriction = spend_restriction(card("Woodland Weavemaster").oracle_text)
+
+    assert restriction is not None
+    assert restriction.understood is True
+    assert [clause.purpose for clause in restriction.clauses] == [
+        SpendPurpose.CAST_SPELL,
+        SpendPurpose.ACTIVATE_ABILITY,
+    ]
+    assert [clause.subtypes for clause in restriction.clauses] == [
+        frozenset({"elf"}),
+        frozenset({"elf"}),
+    ]
+    assert restriction.allows(ManaSpend.casting(card("Elvish Mystic"), zone=Zone.HAND)) is True
+    assert restriction.allows(ManaSpend.activating(card("Elvish Mystic"))) is True
+    assert restriction.allows(ManaSpend.casting(card("Mind Stone"), zone=Zone.HAND)) is False
+
+
+def test_and_or_joins_a_type_list_inside_one_clause():
+    """The same two words in the other role, on a printing that really says
+    them: Codsworth, Handy Helper's "{T}: Add {W}{W}. Spend this mana only to
+    cast Aura and/or Equipment spells." - read off Scryfall this session, and
+    added to the pool because the joiner list named it as an example without
+    anything in the repo proving the printing exists. It does; Cormela, Glamour
+    Thief ("instant and/or sorcery spells") and Master of Dark Rites
+    ("Vampire, Cleric, and/or Demon spells") print it too.
+
+    "and/or" between two qualities is one clause offering both, exactly as
+    "and" and "or" are - no spell is an Aura and an Equipment at once - and
+    that is why the whole phrase is read before anything is split on it.
+    """
+    restriction = spend_restriction(card("Codsworth, Handy Helper").oracle_text)
+
+    assert restriction is not None
+    assert restriction.understood is True
+    assert len(restriction.clauses) == 1
+    assert restriction.clauses[0].subtypes == frozenset({"aura", "equipment"})
+    assert restriction.allows(ManaSpend.casting(card("Hyena Umbra"), zone=Zone.HAND)) is True
+    assert restriction.allows(ManaSpend.casting(card("Shadowspear"), zone=Zone.HAND)) is True
+    assert restriction.allows(ManaSpend.casting(card("Mind Stone"), zone=Zone.HAND)) is False
+
+
 def test_a_chosen_type_nobody_chose_leaves_the_restriction_unread_and_unspendable():
     """Cavern of Souls with no recorded choice: the sentence is present and
     cannot be checked, so it is kept, quoted, and permits nothing. Mana that
