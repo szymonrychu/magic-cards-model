@@ -25,7 +25,7 @@ from collections import Counter
 from collections.abc import Hashable, Iterable, Sequence
 from enum import StrEnum
 from itertools import combinations_with_replacement, product
-from typing import Protocol
+from typing import Any, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -621,12 +621,37 @@ class SpendClause(BaseModel):
 
     purpose: SpendPurpose
     types: SortedFrozenSet[Type] = frozenset()
-    """At least one of these card types, "creature spell" style."""
+    """The card types the sentence printed - "creature spell" style. Whether
+    the object needs one of them or all of them is `joined`'s answer."""
     subtypes: SortedFrozenSet[str] = frozenset()
-    """At least one of these subtypes, lowercased - Cavern of Souls's chosen
-    creature type."""
+    """The subtypes the sentence printed, lowercased and singular (the printed
+    word is read back to the subtype it names by `data/subtypes.py`) - plus
+    Cavern of Souls's chosen creature type (CR 614.12a), which every printing
+    that names one attaches to a single quality rather than to a list."""
     supertypes: SortedFrozenSet[Supertype] = frozenset()
-    """All of these supertypes - Delighted Halfling's "a legendary spell"."""
+    """The supertypes the sentence printed - Delighted Halfling's "a legendary
+    spell"."""
+    joined: bool = False
+    """Whether the printed qualities were a **list** - and so alternatives -
+    rather than one description of one object.
+
+    The joining word is the whole discriminator, and Magic's templating is
+    consistent about it. A list is joined ("instant and sorcery spells", "a
+    Knight or Equipment spell", "Aura and/or Equipment spells", "instant,
+    sorcery, Demon, and Spirit spells") and means **any one of them**: CR
+    205.2b makes an object "satisfy the criteria for any effect that applies to
+    any of their card types", and no spell is ever both an instant and a
+    sorcery, so a joined list read as a conjunction would permit nothing at
+    all. Juxtaposition is not joined ("Dragon creature spells", "colorless
+    Eldrazi spells", "an Elf creature spell") and means **all of them**,
+    because those words describe one object that is every one of them at once -
+    which is what makes "artifact creature spells" refuse a plain creature.
+
+    The two readings only differ when a clause names more than one quality, so
+    every single-quality clause carries the default. A sentence that mixes the
+    two ("artifact creature or enchantment spells") is not read at all: see
+    `machines/cost._spend_clause`, which fails it closed rather than choosing
+    one of the two readings for it."""
     colorless: bool = False
     """Eldrazi Temple's "colorless": the object must have no colours."""
     zone: Zone | None = None
@@ -635,20 +660,34 @@ class SpendClause(BaseModel):
     like every other empty field here."""
 
     def accepts(self, spend: ManaSpend) -> bool:
+        # `colorless` and `zone` are never alternatives: no printing offers
+        # "colorless or ..." and a zone tail ("from exile") narrows the clause
+        # it is attached to rather than adding a way to satisfy it. Both are
+        # asked whichever reading `joined` gives the qualities.
         if spend.purpose is not self.purpose:
             return False
         if self.colorless and not spend.colorless:
-            return False
-        if self.types and not (self.types & spend.types):
-            return False
-        if self.subtypes and not (self.subtypes & spend.subtypes):
             return False
         # An unknown origin (`ManaSpend.zone` None) fails this the same way a
         # wrong one does, which is the fail-closed direction: a clause that
         # names a zone is not satisfied by a caller who could not say.
         if self.zone is not None and spend.zone is not self.zone:
             return False
-        return self.supertypes <= spend.supertypes
+
+        printed: list[tuple[frozenset[Any], frozenset[Any]]] = [
+            (asked, held)
+            for asked, held in (
+                (self.types, spend.types),
+                (self.subtypes, spend.subtypes),
+                (self.supertypes, spend.supertypes),
+            )
+            if asked
+        ]
+        if not printed:
+            return True
+        if self.joined:
+            return any(asked & held for asked, held in printed)
+        return all(asked <= held for asked, held in printed)
 
 
 class ManaRestriction(BaseModel):

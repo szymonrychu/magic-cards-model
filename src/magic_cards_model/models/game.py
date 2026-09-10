@@ -1866,7 +1866,7 @@ class Game(BaseModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 6
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 7
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -1928,6 +1928,29 @@ class Game(BaseModel):
     sorcery spells") are a parse that used to fail closed and now permits,
     which changes what an already-recorded restricted mana in a pool may pay
     for.
+
+    Bumped 6 -> 7: the same grammar again, and the same two bullets.
+
+    *The field.* `SpendClause` gained `joined` - whether the qualities it
+    holds were printed as a list (alternatives) or juxtaposed (all required),
+    which is what tells "instant and sorcery spells" from "Dragon creature
+    spells". A version-6 dump has no `joined` key, and every clause it holds
+    was written by a parse that asked for one card type from its list *and*
+    one subtype from it; decoded at version 7 the missing key reads as
+    `False`, "all of them required", which is the right answer for the
+    juxtaposed clauses and the wrong one for every joined list - Séance
+    Board's "instant, sorcery, Demon, and Spirit spells" would go on paying
+    for nothing.
+
+    *The behaviour.* `machines/cost.py` reads three things it used to read
+    differently, all of them on printings already in the pool: a printed
+    plural is read back to the subtype it names ("activate abilities of
+    Elementals", Smokebraider - a clause that permitted nothing now permits
+    what the card says), "and" and "and/or" split two clauses the way "or"
+    already did, and `machines/abilities.py` reads a printed count of mana up
+    to ten rather than three. Each changes what an already-recorded restricted
+    mana in a pool may pay for, or what an already-recorded permanent's mana
+    ability produces.
     """
 
     @model_validator(mode="before")

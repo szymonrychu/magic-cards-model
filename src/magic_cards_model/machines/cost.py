@@ -592,20 +592,36 @@ def _spend_clause(
     English morphology, and resolves nothing at all for a word it cannot place
     - which fails the clause, like any other unread word.
 
-    Several types collected out of one phrase are alternatives *within* the
-    clause: `SpendClause.accepts` already asks for "at least one of these card
-    types", which is what "instant and sorcery spells" means (CR 205.2b).
+    Whether several qualities out of one phrase are **alternatives** or all
+    required is decided by the joining word, not by which field they land in -
+    see `SpendClause.joined`. A joined list is alternatives ("instant and
+    sorcery spells", "instant, sorcery, Demon, and Spirit spells"), because no
+    object is every item of such a list at once; juxtaposition is a single
+    description that must hold whole ("Dragon creature spells", "colorless
+    Eldrazi spells"). A phrase that does both at once is refused: no printing
+    templates one, and choosing a reading for it would be a guess in a place
+    where being wrong permits the wrong spells.
     """
     types: set[Type] = set()
     subtypes: set[str] = set()
     supertypes: set[Supertype] = set()
     colorless = False
+    #: Whether a joiner or a comma stood between each pair of adjacent
+    #: qualities. One consistent answer is the clause's reading; both answers
+    #: in one phrase is the mixed shape above, and fails closed.
+    separations: set[bool] = set()
+    qualities = 0
+    separator_pending = False
 
     for word in phrase.split():
         stripped = word.strip(",")
         lowered = stripped.lower()
-        if lowered in {"a", "an", "the"} or lowered in _TYPE_LIST_JOINERS:
+        if lowered in {"a", "an", "the"}:
             continue
+        if lowered in _TYPE_LIST_JOINERS:
+            separator_pending = True
+            continue
+
         if lowered == "colorless":
             colorless = True
         elif lowered in _SUPERTYPE_WORDS:
@@ -620,6 +636,21 @@ def _spend_clause(
         else:
             return None
 
+        if qualities:
+            separations.add(separator_pending)
+        qualities += 1
+        separator_pending = word.endswith(",")
+
+    if len(separations) > 1:
+        return None
+    joined = separations == {True}
+    if joined and colorless:
+        # "colorless" is a colour and not a type, so it narrows the clause
+        # rather than offering another way to satisfy it - which is the one
+        # thing a joined list cannot express. No printing joins it; the day one
+        # does, this refuses rather than reading it either way.
+        return None
+
     if chosen_type is not None:
         subtypes.add(chosen_type.lower())
 
@@ -628,6 +659,7 @@ def _spend_clause(
         types=frozenset(types),
         subtypes=frozenset(subtypes),
         supertypes=frozenset(supertypes),
+        joined=joined,
         colorless=colorless,
         zone=zone,
     )

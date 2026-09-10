@@ -612,6 +612,63 @@ def test_and_or_joins_a_type_list_inside_one_clause():
     assert restriction.allows(ManaSpend.casting(card("Mind Stone"), zone=Zone.HAND)) is False
 
 
+def test_a_joined_list_is_alternatives_even_where_it_crosses_card_types_and_subtypes():
+    """Séance Board, added to the pool for this: "{T}: Add X mana of any one
+    color, where X is the number of soul counters on this artifact. Spend this
+    mana only to cast instant, sorcery, Demon, and Spirit spells." - read off
+    Scryfall this session.
+
+    One list, joined by commas and "and", holding two card types and two
+    creature types. It is four alternatives: CR 205.2b (looked up this session)
+    makes an object "satisfy the criteria for any effect that applies to any of
+    their card types", and no spell is ever an instant *and* a Demon. Asking
+    for a card type from the list **and** a subtype from it meant this mana
+    paid for nothing at all - a printing whose whole purpose is to pay for four
+    kinds of spell.
+    """
+    restriction = spend_restriction(card("Séance Board").oracle_text)
+
+    assert restriction is not None
+    assert restriction.understood is True
+    (clause,) = restriction.clauses
+    assert clause.types == frozenset({Type.INSTANT, Type.SORCERY})
+    assert clause.subtypes == frozenset({"demon", "spirit"})
+
+    # A Demon that is not an instant, and an instant that is not a Demon.
+    assert restriction.allows(ManaSpend.casting(card("Griselbrand"), zone=Zone.HAND)) is True
+    assert restriction.allows(ManaSpend.casting(card("Lightning Bolt"), zone=Zone.HAND)) is True
+    # And a creature spell that is none of the four.
+    assert restriction.allows(ManaSpend.casting(card("Grizzly Bears"), zone=Zone.HAND)) is False
+
+
+def test_juxtaposed_qualities_are_all_required_where_a_joined_list_is_alternatives():
+    """The other half of the same rule, and the joining word is the whole
+    discriminator: Rivaz of the Claw's "{T}: Add two mana in any combination of
+    colors. Spend this mana only to cast Dragon creature spells." - read off
+    Scryfall this session, added to the pool for this.
+
+    Nothing joins "Dragon" to "creature" there, because they are not
+    alternatives: they describe one object that is both, and a spell that is
+    only one of them is not what the card names. The same reading is what makes
+    "artifact creature spells" refuse a plain creature - a shape no printing
+    uses today, which is exactly why the rule has to come from the templating
+    rather than from a list of the sentences seen so far.
+    """
+    restriction = spend_restriction(card("Rivaz of the Claw").oracle_text)
+
+    assert restriction is not None
+    assert restriction.understood is True
+    (clause,) = restriction.clauses
+    assert clause.types == frozenset({Type.CREATURE})
+    assert clause.subtypes == frozenset({"dragon"})
+
+    assert restriction.allows(ManaSpend.casting(card("Clarion Conqueror"), zone=Zone.HAND)) is True
+    # A creature that is not a Dragon, and a Dragon card that is not a creature
+    # spell - neither is a Dragon creature spell.
+    assert restriction.allows(ManaSpend.casting(card("Grizzly Bears"), zone=Zone.HAND)) is False
+    assert restriction.allows(ManaSpend.casting(card("Mind Stone"), zone=Zone.HAND)) is False
+
+
 def test_a_chosen_type_nobody_chose_leaves_the_restriction_unread_and_unspendable():
     """Cavern of Souls with no recorded choice: the sentence is present and
     cannot be checked, so it is kept, quoted, and permits nothing. Mana that
