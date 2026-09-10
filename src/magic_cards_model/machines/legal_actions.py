@@ -71,7 +71,14 @@ enumerating every legal subset or permutation of it.
 from collections.abc import Iterable
 from typing import Any, NamedTuple
 
-from ..models.action import Action, ActionKind, Affordability, SpliceOption, TargetSlot
+from ..models.action import (
+    Action,
+    ActionKind,
+    Affordability,
+    ManaPlanEntry,
+    SpliceOption,
+    TargetSlot,
+)
 from ..models.card import Card, Layout, Type
 from ..models.card_state import CardState
 from ..models.mana import ManaCost, ManaSpend
@@ -97,12 +104,14 @@ from .combat import ATTACKABLE_PERMANENT_TYPES
 from .cost import (
     ComponentKind,
     CostComponent,
+    TapPlan,
     TotalCost,
     _ScannedCandidate,
     _SpendContext,
     _withheld_mana_sources,
-    could_pay_mana_cost,
+    mana_ability_index,
     mana_candidate_scan,
+    plan_mana_payment,
     spend_restriction,
 )
 from .decisions import (
@@ -158,17 +167,26 @@ def _mana_affordability(
     mana: ManaCost,
     spend: ManaSpend | None,
     candidate_scan: list[_ScannedCandidate],
-) -> tuple[Affordability, str | None]:
-    """Whether `payer` could pay `mana` right now - `could_pay_mana_cost`,
-    with the enumeration's own `candidate_scan` threaded through so this
-    never re-runs the board scan `mana_candidate_scan` already paid for once.
+) -> tuple[Affordability, str | None, TapPlan | None]:
+    """Whether `payer` could pay `mana` right now, **and how** -
+    `plan_mana_payment`, with the enumeration's own `candidate_scan` threaded
+    through so this never re-runs the board scan `mana_candidate_scan` already
+    paid for once.
+
+    The plan is what `could_pay_mana_cost` used to compute and reduce to a
+    bool: which sources get tapped and for what, reported alongside the
+    verdict instead of thrown away and solved a second time when the action is
+    actually taken. `None` whenever there is no verdict to plan against (an
+    unannounced X) or the cost cannot be paid at all - see `Action.pays_with`
+    for the two gates that decide whether it reaches the record.
     """
     if mana.x_count:
-        return Affordability.UNKNOWN, "X has not been announced yet (CR 107.3a)"
-    if could_pay_mana_cost(
+        return Affordability.UNKNOWN, "X has not been announced yet (CR 107.3a)", None
+    plan = plan_mana_payment(
         mana, game.battlefield, game=game, payer=payer, spend=spend, candidate_scan=candidate_scan
-    ):
-        return Affordability.YES, None
+    )
+    if plan is not None:
+        return Affordability.YES, None, plan
     context = _SpendContext(game=game, payer=payer, spend=spend)
     withheld = _withheld_mana_sources(context, game.battlefield)
     reason = f"no combination of the available mana sources can pay {mana}"
@@ -179,7 +197,7 @@ def _mana_affordability(
             for source, ability in withheld
         )
         reason = f"{reason}; {named}"
-    return Affordability.NO, reason
+    return Affordability.NO, reason, None
 
 
 def _candidate_pool_for(game: Any, payer: str, component: CostComponent) -> list[CardState] | None:
@@ -275,11 +293,18 @@ def _cost_affordability(
     candidate_scan: list[_ScannedCandidate],
     *,
     spend: ManaSpend | None = None,
-) -> tuple[Affordability, str | None]:
+) -> tuple[Affordability, str | None, tuple[ManaPlanEntry, ...]]:
     """The combined affordability of a `TotalCost`'s mana and every
     non-mana component, worst answer wins (`NO` over `UNKNOWN` over `YES`),
-    every reason kept rather than only the first."""
-    status, reason = _mana_affordability(game, payer, total.mana, spend, candidate_scan)
+    every reason kept rather than only the first - plus the mana half's own
+    tap plan, ready for `Action.pays_with`.
+
+    The plan is dropped whenever a component drags the combined verdict off
+    `YES`: the mana would indeed be payable, but the action as a whole is not,
+    and reporting how a cost that is not going to be paid would have been paid
+    is a plan for something that never happens. `Action.pays_with`'s two gates
+    are exactly this and the "has a mana cost at all" one below."""
+    status, reason, plan = _mana_affordability(game, payer, total.mana, spend, candidate_scan)
     reasons = [reason] if reason else []
     for component in total.components:
         ok, component_reason = _component_affordability(game, payer, component)
@@ -289,7 +314,53 @@ def _cost_affordability(
             status = Affordability.UNKNOWN
         if component_reason:
             reasons.append(component_reason)
-    return status, ("; ".join(reasons) if reasons else None)
+    return (
+        status,
+        ("; ".join(reasons) if reasons else None),
+        _pays_with(game, payer, total, status, plan, candidate_scan),
+    )
+
+
+def _pays_with(
+    game: Any,
+    payer: str,
+    total: TotalCost,
+    affordable: Affordability,
+    plan: TapPlan | None,
+    candidate_scan: list[_ScannedCandidate],
+) -> tuple[ManaPlanEntry, ...]:
+    """`plan` in the shape `Action.pays_with` records, or `()`.
+
+    The two gates its docstring names are applied here and nowhere else: the
+    action has to owe mana at all (`total.mana.symbols` - the same test
+    `_cost_strings` uses to decide whether `Action.mana_cost` is even set),
+    and the engine has to have said the whole cost is payable. A plan for an
+    unaffordable action would be a plan for something that cannot happen.
+
+    `mana_ability_index` supplies each entry's ability index, reading it back
+    off the same hoisted `candidate_scan` every plan entry was solved out of -
+    so the number reported is the ability the solver chose, and costs no
+    further board survey per entry.
+    """
+    if affordable is not Affordability.YES or not total.mana.symbols or not plan:
+        return ()
+    return tuple(
+        ManaPlanEntry(
+            card_id=source.id,
+            name=source.name,
+            ability_index=mana_ability_index(
+                source,
+                colors,
+                restriction,
+                game=game,
+                payer=payer,
+                candidate_scan=candidate_scan,
+            ),
+            adds="".join(color.value for color in colors),
+            restriction=restriction.text if restriction is not None else None,
+        )
+        for source, colors, restriction in plan
+    )
 
 
 def _cost_strings(total: TotalCost) -> tuple[str | None, str | None]:
@@ -372,6 +443,7 @@ def _cast_action(
     unpayable = (
         None if alternative_cost is not None else why_mana_cost_unpayable(card.name, total.mana)
     )
+    pays_with: tuple[ManaPlanEntry, ...] = ()
     if x_range is not None:
         affordable, reason = Affordability.UNKNOWN, "X has not been announced yet (CR 107.3a)"
     elif unpayable is not None:
@@ -383,7 +455,9 @@ def _cast_action(
         # `YES` from a naive "nothing owed" reading of an empty `ManaCost`.
         affordable, reason = Affordability.NO, unpayable
     else:
-        affordable, reason = _cost_affordability(game, player, total, candidate_scan, spend=spend)
+        affordable, reason, pays_with = _cost_affordability(
+            game, player, total, candidate_scan, spend=spend
+        )
         affordable, reason = _widen_for_object_costs(game, player, card, affordable, reason)
     cost_str, mana_cost_str = _cost_strings(total)
     return Action(
@@ -399,6 +473,7 @@ def _cast_action(
         mana_cost=mana_cost_str,
         affordable=affordable,
         unaffordable_reason=reason,
+        pays_with=pays_with,
         target_slots=target_slots,
         modes=modes,
         x_range=x_range,
@@ -760,7 +835,7 @@ def _companion_action(
         return None
     assert me.companion_id is not None
     total = TotalCost.of("{3}")
-    affordable, reason = _cost_affordability(game, player, total, candidate_scan)
+    affordable, reason, pays_with = _cost_affordability(game, player, total, candidate_scan)
     cost_str, mana_cost_str = _cost_strings(total)
     return Action(
         kind=ActionKind.COMPANION,
@@ -772,6 +847,7 @@ def _companion_action(
         mana_cost=mana_cost_str,
         affordable=affordable,
         unaffordable_reason=reason,
+        pays_with=pays_with,
     )
 
 
@@ -786,7 +862,7 @@ def _turn_face_up_action(
     if why_cannot_turn_face_up(permanent) is not None:
         return None
     total = turn_face_up_cost(permanent, player) or TotalCost()
-    affordable, reason = _cost_affordability(game, player, total, candidate_scan)
+    affordable, reason, pays_with = _cost_affordability(game, player, total, candidate_scan)
     cost_str, mana_cost_str = _cost_strings(total)
     return Action(
         kind=ActionKind.TURN_FACE_UP,
@@ -798,6 +874,7 @@ def _turn_face_up_action(
         mana_cost=mana_cost_str,
         affordable=affordable,
         unaffordable_reason=reason,
+        pays_with=pays_with,
     )
 
 
@@ -827,7 +904,9 @@ def _marked_exile_actions(
             # which `MarkedExile.suspend`'s own docstring is explicit never
             # blocks the *build* - only affordability, reported below.
             continue
-        affordable, reason = _cost_affordability(game, player, marked.cost, candidate_scan)
+        affordable, reason, pays_with = _cost_affordability(
+            game, player, marked.cost, candidate_scan
+        )
         cost_str, mana_cost_str = _cost_strings(marked.cost)
         actions.append(
             Action(
@@ -840,6 +919,7 @@ def _marked_exile_actions(
                 mana_cost=mana_cost_str,
                 affordable=affordable,
                 unaffordable_reason=reason,
+                pays_with=pays_with,
             )
         )
     return actions
@@ -992,7 +1072,9 @@ def _battlefield_ability_actions(
         # `HasCharacteristics` protocol); `permanent.card` here was the printed
         # front face, wrong for a transformed permanent even before layers.
         spend = ManaSpend.activating(board.of(permanent))
-        affordable, reason = _cost_affordability(game, player, total, candidate_scan, spend=spend)
+        affordable, reason, pays_with = _cost_affordability(
+            game, player, total, candidate_scan, spend=spend
+        )
         cost_str, mana_cost_str = _cost_strings(total)
         actions.append(
             Action(
@@ -1012,6 +1094,7 @@ def _battlefield_ability_actions(
                 restriction_understood=descriptor.restriction_understood,
                 affordable=affordable,
                 unaffordable_reason=reason,
+                pays_with=pays_with,
             )
         )
     return actions
@@ -1068,7 +1151,7 @@ def _off_zone_actions(
             continue
         if activation.why_not() is not None:
             continue
-        affordable, reason = _cost_affordability(
+        affordable, reason, pays_with = _cost_affordability(
             game, player, activation.cost, candidate_scan, spend=spend
         )
         cost_str, mana_cost_str = _cost_strings(activation.cost)
@@ -1085,6 +1168,7 @@ def _off_zone_actions(
                 mana_cost=mana_cost_str,
                 affordable=affordable,
                 unaffordable_reason=reason,
+                pays_with=pays_with,
             )
         )
     return actions

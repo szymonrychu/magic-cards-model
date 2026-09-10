@@ -1,6 +1,6 @@
 """Pydantic data models."""
 
-from .action import Action, ActionKind, Affordability, TargetSlot
+from .action import Action, ActionKind, Affordability, ManaPlanEntry, TargetSlot
 from .card import Card, CardFace, Color, Layout, Legalities, Legality, Rarity, Supertype, Type
 from .card_state import CardState, TargetKind, TargetRef
 from .deck import CardResolver, Deck, DeckIllegal, DeckLimits
@@ -27,6 +27,7 @@ __all__ = [
     "Legalities",
     "Legality",
     "ManaCost",
+    "ManaPlanEntry",
     "ManaPool",
     "Match",
     "Player",

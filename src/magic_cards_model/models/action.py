@@ -25,9 +25,10 @@ what is supposed to be a plain record.
 """
 
 from enum import StrEnum
+from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, model_serializer
 
 from .card import Color
 from .zone import Zone
@@ -147,6 +148,63 @@ class SpliceOption(BaseModel):
     unresolved cost variance either."""
 
 
+class ManaPlanEntry(BaseModel):
+    """One tap in the plan `Action.pays_with` carries: which permanent, which
+    of its mana abilities, what that adds, and CR 106.6's restriction on the
+    mana if it has one.
+
+    `Action.pays_with`'s own docstring has why this exists at all. What it is
+    *not* is a set of instructions: nothing reads one of these back in, and no
+    entry point takes one. It is a report of what the engine has already
+    decided it would do, so a seat can spend its thinking on the consequence
+    ("that is the land I wanted for the counterspell") rather than on the
+    mechanics of paying, which the engine does for it either way.
+
+    An id and a name together, unlike everywhere else in this module where an
+    id travels alone: this rides on an enumeration a seat reads in one pass to
+    decide what to do, and re-resolving a dozen uuids against the board to
+    find out that one of them is a Cavern of Souls is exactly the round trip
+    the enumeration exists to avoid. The id remains the identity - the name is
+    a label, and never what a caller matches on.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    card_id: UUID
+    """The permanent that gets tapped."""
+    name: str
+    """That permanent's name, so the plan reads without a second lookup."""
+    ability_index: int | None
+    """Which of `Game.activated_abilities(card_id)`'s entries produces this
+    mana - the same index `Game.activate_ability` takes, and the difference
+    between Cavern of Souls's free `{C}` (index 0) and its restricted mana of
+    any colour (index 1). `None` only for an intrinsic ability with no
+    enumerable activated ability behind it."""
+    adds: str
+    """The mana this tap adds, as bare colour letters in the order the ability
+    produces them - `"R"`, `"W"`, `"RR"`, `"C"`. Not `ManaCost`'s braced
+    notation: this is what a source *makes*, not a cost, and the two read
+    differently on purpose."""
+    restriction: str | None = None
+    """CR 106.6's "Spend this mana only to ..." sentence, verbatim off the
+    card, when this ability's mana carries one - the engine will enforce
+    exactly this. Absent from the serialized entry entirely when there is
+    none: a plan rides on every affordable action in an enumeration, so a
+    null here is pure weight on every unrestricted land in the game."""
+
+    @model_serializer(mode="wrap")
+    def _drop_absent_restriction(self, handler: Any) -> dict[str, Any]:
+        """Serialize without a `restriction` key when there is no restriction.
+
+        Decoding is untouched - the field defaults to `None`, so a dumped
+        entry still round-trips back to an equal object.
+        """
+        dumped = handler(self)
+        if dumped.get("restriction") is None:
+            dumped.pop("restriction", None)
+        return dumped
+
+
 class Action(BaseModel):
     """The arguments one engine entry point takes - a serializable call spec.
 
@@ -196,10 +254,17 @@ class Action(BaseModel):
     half."""
 
     cost: str | None = None
-    """The determined total cost (`str(TotalCost)`), in the engine's own
-    words - never the `TotalCost` object itself, which can hold live
-    `CardState` references (`CostComponent.cards`) that must not leak into a
-    serializable record. `None` when nothing is paid at all (CR 107.3b)."""
+    """The determined total cost (CR 601.2f, `str(TotalCost)`), in the
+    engine's own words - never the `TotalCost` object itself, which can hold
+    live `CardState` references (`CostComponent.cards`) that must not leak
+    into a serializable record. `None` when there is no cost at all - a land
+    drop, passing priority.
+
+    The rule here read CR 107.3b until 2026-09-10, cited from memory by an
+    earlier pass and looked up (`mise run rules:find`) by a later one: 107.3b
+    is "the only legal choice for X is 0" when a spell with {X} is cast
+    without paying its mana cost, which is a different subject entirely.
+    CR 601.2f is the sentence that defines a total cost."""
     mana_cost: str | None = None
     """Just the mana portion of `cost`, as `ManaCost.parse` can read it back -
     kept separate so a reader does not have to parse `cost`'s prose to check
@@ -209,6 +274,23 @@ class Action(BaseModel):
     """The engine's own refusal, in its own words - never a synthesized
     message. This is the load-bearing field: a boolean says an action failed,
     this says why, and that difference is the reason this project exists."""
+    pays_with: tuple[ManaPlanEntry, ...] = ()
+    """Which permanents this action's mana cost would tap, and for what -
+    `machines/cost.plan_mana_payment`'s answer, the plan `auto_tap` would
+    execute if the action were taken.
+
+    Present only on an action that owes mana (`mana_cost` is not `None`) and
+    that the engine has said is payable (`affordable` is `YES`); empty
+    everywhere else, including on a payable cost the payer's floating mana
+    already covers, where the honest answer is that nothing gets tapped.
+
+    Purely informational, and deliberately so. Nothing asks a seat to name
+    mana sources - `auto_tap` chooses, offers every untapped source, and stops
+    as soon as the pool can pay (CR 118.3c). What this answers is the question
+    the seat cannot otherwise ask without casting the spell: *which* of its
+    sources this particular cost eats. "This Bolt takes the Cavern of Souls I
+    was holding for the counterspell" is a strategic fact about the board that
+    a bare `affordable=yes` hides."""
 
     target_slots: tuple[TargetSlot, ...] = ()
     """One entry per targeting requirement this action would announce, in
