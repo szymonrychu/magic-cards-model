@@ -65,6 +65,7 @@ import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.abilities import parse_mana_abilities
+from magic_cards_model.machines.combat import Keyword, has_keyword
 from magic_cards_model.machines.cost import spend_restriction
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card import Color, Type
@@ -845,6 +846,12 @@ def test_smokebraider_reads_the_same_combination_ability_and_a_type_restriction(
     printing are asserted here - the ability's shape, and the two clauses the
     CR 106.6 sentence reads into (CR 205.3m, looked up this session: Elemental
     is one of the creature types creatures and kindreds share).
+
+    Both halves of the *sentence* are asserted too, and that is not pedantry:
+    the cast half prints the subtype as the singular adjective "Elemental" and
+    the activate half prints the plural noun "Elementals", and only the first
+    of the two matches a printed type line as it stands. A test that asserted
+    the first clause alone passed while the second permitted nothing at all.
     """
     smokebraider = card("Smokebraider")
     (ability,) = parse_mana_abilities(smokebraider)
@@ -860,6 +867,8 @@ def test_smokebraider_reads_the_same_combination_ability_and_a_type_restriction(
         SpendPurpose.ACTIVATE_ABILITY,
     ]
     assert restriction.clauses[0].subtypes == frozenset({"elemental"})
+    assert restriction.clauses[1].subtypes == frozenset({"elemental"})
+    assert restriction.allows(ManaSpend.activating(card("Smokebraider"))) is True
 
 
 def test_smokebraiders_mana_pays_for_an_elemental_spell_of_two_colors():
@@ -882,6 +891,108 @@ def test_smokebraiders_mana_pays_for_an_elemental_spell_of_two_colors():
     voice = scenario.cast_and_resolve("Voice of Resurgence")
 
     assert voice.zone is Zone.BATTLEFIELD
+
+
+def test_smokebraiders_mana_activates_an_elementals_ability():
+    """The activate half of the same sentence, played rather than parsed.
+
+    "Activate abilities of Elementals" prints the subtype as a plural noun,
+    which no type line ever says: Thornling's type line reads "Creature -
+    Elemental Shapeshifter", singular, like every printed type line (CR 205.3b,
+    looked up this session: subtypes "are listed after a long dash", one word
+    each). So the clause is only checkable if the plural is read back to the
+    subtype it names, and until it was, this activation - one of
+    Smokebraider's two mana, spent on the `{G}` ability of an Elemental
+    standing next to it - was refused by the card that exists to pay for it.
+    """
+    scenario = (
+        Scenario().player("alice", battlefield=["Smokebraider", "Thornling"]).player("bob").build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    smokebraider = _ready(scenario, "Smokebraider")
+    scenario.game.activate_ability(smokebraider, 0, "alice", color=[Color.GREEN, Color.RED])
+    assert scenario.player().mana_pool.floating == {Color.GREEN: 1, Color.RED: 1}
+
+    thornling = _ready(scenario, "Thornling")
+    scenario.activate(thornling, index=0)
+
+    # The `{G}` half of the pool paid for it; the `{R}` is still floating and
+    # still restricted (CR 733.1: only what was spent leaves the pool).
+    assert scenario.player().mana_pool.floating == {Color.RED: 1}
+    scenario.resolve_top()
+    assert has_keyword(thornling, Keyword.HASTE, scenario.game)
+
+
+def test_smokebraiders_mana_refuses_an_ability_of_a_source_that_is_not_an_elemental():
+    """The other direction of the plural clause, so reading "Elementals" back
+    to a subtype cannot have widened it to every source: Icy Manipulator's
+    `{1}, {T}:` is an activated ability whose generic mana Smokebraider's would
+    otherwise pay, and an Artifact is not an Elemental."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Smokebraider", "Icy Manipulator", "Forest"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    smokebraider = _ready(scenario, "Smokebraider")
+    scenario.game.activate_ability(smokebraider, 0, "alice", color=[Color.RED, Color.GREEN])
+
+    manipulator = _ready(scenario, "Icy Manipulator")
+    forest = scenario.find("Forest", Zone.BATTLEFIELD)
+    with pytest.raises(ValueError, match="Spend this mana only"):
+        scenario.activate(manipulator, index=0, targets=[forest])
+
+
+def test_a_plural_subtype_is_read_on_a_printing_that_shares_nothing_with_smokebraider():
+    """Orb of Dragonkind, added to the pool for this: "{1}, {T}: Add two mana
+    in any combination of colors. Spend this mana only to cast Dragon spells or
+    activate abilities of Dragons." - read off Scryfall this session.
+
+    A different subtype, a different card type, a different cost, and the same
+    two clause shapes. It is what says the plural is read as a mechanic rather
+    than as one word learned from the card that exposed it: nothing here is
+    Smokebraider's, and Clarion Conqueror is a Dragon that was never in either
+    printing's own sentence.
+    """
+    orb = card("Orb of Dragonkind")
+    restriction = spend_restriction(orb.oracle_text)
+
+    assert restriction is not None
+    assert restriction.understood is True
+    assert [clause.purpose for clause in restriction.clauses] == [
+        SpendPurpose.CAST_SPELL,
+        SpendPurpose.ACTIVATE_ABILITY,
+    ]
+    assert [clause.subtypes for clause in restriction.clauses] == [
+        frozenset({"dragon"}),
+        frozenset({"dragon"}),
+    ]
+    assert restriction.allows(ManaSpend.activating(card("Clarion Conqueror"))) is True
+    assert restriction.allows(ManaSpend.activating(card("Icy Manipulator"))) is False
+
+
+def test_a_capitalised_word_that_names_no_subtype_leaves_the_restriction_unread():
+    """The fail-closed direction of the subtype vocabulary.
+
+    The sentence is Gallifrey Council Chamber's - "Spend this mana only to cast
+    a Time Lord or Alien spell or activate an ability of a Time Lord or Alien."
+    - read off Scryfall this session. "Time Lord" is one subtype printed as two
+    words, and this grammar reads one word at a time, so "Time" names no
+    subtype at all. A word it cannot resolve fails the whole clause rather than
+    being dropped: the restriction is kept, quoted, and permits nothing, which
+    is the same direction an unknown zone already fails in.
+    """
+    unread = spend_restriction(
+        "{T}: Add one mana of any color. Spend this mana only to cast a Time Lord or "
+        "Alien spell or activate an ability of a Time Lord or Alien."
+    )
+
+    assert unread is not None
+    assert unread.understood is False
+    assert unread.allows(ManaSpend.casting(card("Mind Stone"), zone=Zone.HAND)) is False
 
 
 def test_smokebraiders_mana_refuses_a_spell_that_is_not_an_elemental():

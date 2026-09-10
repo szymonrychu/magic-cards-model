@@ -42,6 +42,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
 
+from ..data.subtypes import canonical_subtype
 from ..models.card import Card, Color, Supertype, Type
 from ..models.card_state import CardState, ChoiceKind, Counter, CounterKind
 from ..models.mana import (
@@ -571,6 +572,16 @@ def _spend_clause(
     it fails the whole clause rather than being dropped, because a dropped word
     is a restriction that is quietly broader than the card.
 
+    A card type or a subtype is read through the **plural** it is printed with
+    here, because rules text names the objects and a type line names the card:
+    "activate abilities of Elementals" is about the same subtype "Creature -
+    Elemental Shaman" prints, and "abilities of artifacts" the same card type
+    (CR 205.3b, looked up this session). Card types are a closed enum and lose
+    a trailing "s"; subtypes go through `canonical_subtype`, which resolves the
+    printed word against every subtype WOTC has printed rather than guessing at
+    English morphology, and resolves nothing at all for a word it cannot place
+    - which fails the clause, like any other unread word.
+
     Several types collected out of one phrase are alternatives *within* the
     clause: `SpendClause.accepts` already asks for "at least one of these card
     types", which is what "instant and sorcery spells" means (CR 205.2b).
@@ -589,10 +600,13 @@ def _spend_clause(
             colorless = True
         elif lowered in _SUPERTYPE_WORDS:
             supertypes.add(_SUPERTYPE_WORDS[lowered])
-        elif lowered.rstrip("s") in _TYPE_WORDS:
-            types.add(_TYPE_WORDS[lowered.rstrip("s")])
+        elif lowered.removesuffix("s") in _TYPE_WORDS:
+            types.add(_TYPE_WORDS[lowered.removesuffix("s")])
         elif stripped[:1].isupper():
-            subtypes.add(lowered)
+            subtype = canonical_subtype(stripped)
+            if subtype is None:
+                return None
+            subtypes.add(subtype)
         else:
             return None
 
