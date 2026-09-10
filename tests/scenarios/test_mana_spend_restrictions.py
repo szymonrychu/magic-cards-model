@@ -563,6 +563,11 @@ def test_the_clauses_each_printed_restriction_is_read_into():
     assert tablet is not None
     assert [clause.purpose for clause in tablet.clauses] == [SpendPurpose.CAST_SPELL]
     assert tablet.clauses[0].types == frozenset({Type.INSTANT, Type.SORCERY})
+    # ... and the list is alternatives, which is what the joining word says.
+    assert tablet.clauses[0].joined is True
+    # Juxtaposition is the other reading: Eldrazi Temple's mana wants a spell
+    # that is colorless *and* an Eldrazi, not either of the two.
+    assert temple.clauses[0].joined is False
 
     dwarves = spend_restriction(card("Fíli and Kíli, Joyous").oracle_text)
     assert dwarves is not None
@@ -1056,7 +1061,8 @@ def test_smokebraiders_mana_activates_an_elementals_ability():
     scenario.activate(thornling, index=0)
 
     # The `{G}` half of the pool paid for it; the `{R}` is still floating and
-    # still restricted (CR 733.1: only what was spent leaves the pool).
+    # still restricted (CR 118.3a, looked up this session: paying mana removes
+    # "the indicated mana", and the rest is still there to be announced).
     assert scenario.player().mana_pool.floating == {Color.RED: 1}
     scenario.resolve_top()
     assert has_keyword(thornling, Keyword.HASTE, scenario.game)
