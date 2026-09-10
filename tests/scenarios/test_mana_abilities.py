@@ -327,6 +327,33 @@ def test_five_mana_in_any_combination_is_five_colours_of_the_players_choosing():
     assert scenario.stack_names() == []
 
 
+def test_a_named_five_colour_mixture_is_a_production_the_printing_offers():
+    """The same question `CostPayment.tap_for_mana` asks of a hand-picked
+    production, at the count that says why it is asked as a rule rather than
+    enumerated: five mana over CR 106.1a's five colours is 126 multisets, and a
+    count the board decides (a devotion, an X) has no bound at all.
+
+    Cascading Cataracts is the larger-N printing; Shang-Chi is the control,
+    because "two mana of any **one** color" is the same count locked to one
+    colour and a mixture there is mana the card never offered.
+    """
+    _colorless, combination = parse_mana_abilities(card("Cascading Cataracts"))
+    options, any_color = combination.effective()
+
+    five = [Color.WHITE, Color.BLUE, Color.BLACK, Color.RED, Color.GREEN]
+    assert combination.offers(five, options, any_color) is True
+    # Five of one colour is a combination too - "any combination" does not
+    # require them to differ.
+    assert combination.offers([Color.RED] * 5, options, any_color) is True
+    # Four is not five, however legal the colours are.
+    assert combination.offers(five[:4], options, any_color) is False
+
+    (shang_chi,) = parse_mana_abilities(card("Shang-Chi, Master of Kung Fu"))
+    options, any_color = shang_chi.effective()
+    assert shang_chi.offers([Color.WHITE, Color.WHITE], options, any_color) is True
+    assert shang_chi.offers([Color.WHITE, Color.BLUE], options, any_color) is False
+
+
 # --------------------------------------------------------------------------
 # One colour, named as a sequence
 # --------------------------------------------------------------------------

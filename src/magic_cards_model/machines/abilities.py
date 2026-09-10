@@ -620,6 +620,42 @@ class ManaAbility(BaseModel):
             options, any_color = _narrow(options, any_color, allowed)
         return options, any_color
 
+    def offers(
+        self, produces: "Sequence[Color]", options: list[list[Color]], any_color: bool
+    ) -> bool:
+        """Whether this ability could add exactly `produces` right now, given
+        the `options`/`any_color` `effective` already worked out for the board.
+
+        The question a caller who names its own mana asks: `CostPayment.
+        tap_for_mana(source, colors)` is handed a production rather than
+        choosing one, and has to know whether the ability actually offers it
+        before the mana reaches the pool.
+
+        `options` enumerates a choice as one entry per colour - "Add two mana
+        of any one color" is `[[W,W], [U,U], ...]`, which is exactly what that
+        printing offers. **"N mana in any combination of colors" is not that**:
+        each of the N chooses its own colour (CR 106.1a's five are the
+        universe), so the productions it offers are every multiset of N of
+        them, and the enumeration would be `combinations_with_replacement` -
+        126 entries for Cascading Cataracts' five mana, and an ability whose
+        count comes from the board (a devotion, an X) has no bound at all. So
+        the mixture is checked against the rule instead of materialised: the
+        right number of mana, every one of them a colour the narrowed options
+        still offer. Nothing needs the list, and no caller pays for building
+        it.
+
+        The narrowing is what keeps that from being "any five colours": a
+        CR 106.5 survey that came back with two colours leaves `options`
+        holding those two, and a mixture naming a third is not offered.
+        """
+        wanted = sorted(produces)
+        if any(sorted(option) == wanted for option in options):
+            return True
+        if not (any_color and self.any_color_mixed):
+            return False
+        offered = {color for option in options for color in option}
+        return len(wanted) == self.any_color_count and all(color in offered for color in wanted)
+
     def resolve(
         self,
         controlled_land_types: frozenset[str] = frozenset(),

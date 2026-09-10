@@ -4379,7 +4379,6 @@ class CostPayment(BaseModel):
                 "and cannot be tapped for mana"
             )
         land_types, own_counters, has_imprinted_card = _mana_context(self, source)
-        wanted = sorted(produces)
         refusals: list[str] = []
         payable = False
         for ability in abilities:
@@ -4395,17 +4394,24 @@ class CostPayment(BaseModel):
                 if refused is not None:
                     refusals.append(refused)
                     continue
-            options, _any_color = _narrow_to_defined_colors(
-                ability.effective(
-                    land_types,
-                    own_counters,
-                    has_imprinted_card,
-                    **_mana_narrowings(self, source, ability),
-                )[0],
-                False,
-                _among_colors(effect, self, source),
+            # `any_color` is carried through rather than dropped: it is what
+            # tells "N mana in any combination of colors" apart from a choice
+            # between printed options, and `ManaAbility.offers` needs it to
+            # know that a genuine mixture - `{G}{W}` out of Smokebraider - is a
+            # production the printing names. Enumerating the mixtures instead
+            # would be `combinations_with_replacement` over five colours, which
+            # is 126 entries at five mana and unbounded for a count the board
+            # decides; see that method.
+            offered, any_color = ability.effective(
+                land_types,
+                own_counters,
+                has_imprinted_card,
+                **_mana_narrowings(self, source, ability),
             )
-            if any(sorted(option) == wanted for option in options):
+            options, any_color = _narrow_to_defined_colors(
+                offered, any_color, _among_colors(effect, self, source)
+            )
+            if ability.offers(produces, options, any_color):
                 payable = True
                 break
         if not payable:

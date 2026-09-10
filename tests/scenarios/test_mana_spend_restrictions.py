@@ -1110,6 +1110,96 @@ def test_a_capitalised_word_that_names_no_subtype_leaves_the_restriction_unread(
     assert unread.allows(ManaSpend.casting(card("Mind Stone"), zone=Zone.HAND)) is False
 
 
+def test_a_hand_picked_mixture_pays_the_spell_it_was_made_for():
+    """The mixture has to survive being *named* by the caller, not only being
+    chosen inside `Game.activate_ability`.
+
+    A seat that picks its own mana sources - the api's `pay_with`, the
+    harness's own hand-picked path - reaches `CostPayment.tap_for_mana(source,
+    colors)` with the colours it wants, and that call re-checks the production
+    against what the ability offers. "Add two mana in any combination of
+    colors" was checked against one colour repeated per colour, so `{G}{W}` -
+    the whole point of the printing - was refused by the very card that makes
+    it, and Voice of Resurgence's `{G}{W}` could not be paid at all.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Voice of Resurgence"], battlefield=["Smokebraider"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    smokebraider = _ready(scenario, "Smokebraider")
+
+    casting = scenario.cast("Voice of Resurgence", "alice")
+    payment = casting.begin_paying()
+    payment.tap_for_mana(smokebraider, [Color.GREEN, Color.WHITE])
+    payment.pay()
+    scenario.put_on_stack(casting)
+    voice = scenario.resolve_top()
+
+    assert voice.zone is Zone.BATTLEFIELD
+    assert scenario.player().mana_pool.is_empty
+
+
+def test_a_hand_picked_mixture_is_read_on_a_printing_that_is_not_smokebraiders():
+    """The same on Rivaz of the Claw, whose restriction and cost share nothing
+    with Smokebraider's: `{T}: Add two mana in any combination of colors. Spend
+    this mana only to cast Dragon creature spells.`
+
+    North Wind Avatar is `{2}{U}{U}{R}`, so the mixture is not a convenience
+    here - one blue and one red out of the same activation is the only way this
+    card's mana helps pay for it at all.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["North Wind Avatar"],
+            battlefield=["Rivaz of the Claw", "Island", "Island", "Island"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    rivaz = _ready(scenario, "Rivaz of the Claw")
+    islands = scenario.untapped_sources("Island", "Island", "Island")
+
+    casting = scenario.cast("North Wind Avatar", "alice")
+    payment = casting.begin_paying()
+    payment.tap_for_mana(rivaz, [Color.BLUE, Color.RED])
+    for island in islands:
+        payment.tap_for_mana(island, [Color.BLUE])
+    payment.pay()
+    scenario.put_on_stack(casting)
+    avatar = scenario.resolve_top()
+
+    assert avatar.zone is Zone.BATTLEFIELD
+
+
+def test_any_one_color_still_refuses_a_mixture_in_the_engines_own_words():
+    """The mixture is licensed by the printed words and by nothing else.
+    Shang-Chi's "Add two mana of any **one** color" is the same count locked to
+    a single colour, so naming two colours there is asking for mana the card
+    never offered - and it is refused with the reason, not with a bare "cannot
+    be tapped"."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Llanowar Elves"], battlefield=["Shang-Chi, Master of Kung Fu"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    shang_chi = _ready(scenario, "Shang-Chi, Master of Kung Fu")
+
+    casting = scenario.cast("Llanowar Elves", "alice")
+    payment = casting.begin_paying()
+    with pytest.raises(ValueError, match="cannot be tapped to add"):
+        payment.tap_for_mana(shang_chi, [Color.GREEN, Color.WHITE])
+
+    casting.cancel()
+
+
 def test_smokebraiders_mana_refuses_a_spell_that_is_not_an_elemental():
     """The refusal half, on the same board: Llanowar Elves is a green creature
     spell the floating `{G}` would otherwise pay for, and an Elf is not an
