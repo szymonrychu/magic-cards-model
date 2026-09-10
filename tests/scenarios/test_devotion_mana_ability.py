@@ -84,6 +84,27 @@ def test_devotion_mana_pays_for_a_spell():
     assert scenario.player("alice").mana_pool.floating == {}
 
 
+def test_a_one_element_colour_sequence_is_the_same_choice_as_a_bare_colour():
+    """The colour may be named as a list of one, and it still means "that
+    colour" rather than "one mana of it".
+
+    `Action.color_choice_count` is 1 for this ability - the count of colours to
+    name, not the count of mana it makes, which CR 700.5's devotion decides
+    only at activation - so a caller that reads that field and hands back a
+    list of that length is doing exactly what the enumeration asked of it. It
+    used to be handed one green mana on a board with devotion 2, silently: the
+    worst answer available, since nothing about it looks like a refusal.
+    """
+    scenario = board(alice_battlefield=[NYKTHOS, "Forest", "Forest", "Kitchen Finks"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    nykthos = scenario.creature(NYKTHOS, "alice")
+    forests = scenario.untapped_sources("Forest", "Forest")
+    scenario.activate(nykthos, *forests, index=DEVOTION_ABILITY, color=[Color.GREEN])
+
+    assert scenario.player("alice").mana_pool.floating == {Color.GREEN: 2}
+
+
 def test_the_ability_never_goes_on_the_stack():
     """CR 605.3b: an activated mana ability does not go on the stack at all,
     so there is nothing to respond to and `activate` hands back no ability."""

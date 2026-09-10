@@ -266,6 +266,72 @@ def test_activating_a_dual_for_a_colour_it_cannot_make_is_refused():
 
 
 # --------------------------------------------------------------------------
+# One colour, named as a sequence
+# --------------------------------------------------------------------------
+#
+# `Action.color_options` says which colours an ability offers and
+# `Action.color_choice_count` how many of them to name - one per mana whose
+# colour is chosen separately, which is 1 for every ability except "N mana in
+# any combination of colors". A caller driving the engine through
+# `legal_actions` alone reads those two fields together and names a *list* of
+# that length, so the one-element list has to mean exactly what the bare
+# colour means, everywhere, rather than only on the branch that was written
+# with a list in mind.
+
+
+def test_a_one_element_colour_sequence_is_the_colour_it_names():
+    """Steam Vents reports `color_options=(U, R)` and `color_choice_count=1`.
+    A caller that honours those two fields together hands back `[U]`, and it
+    means the same choice `Color.BLUE` does."""
+    scenario = Scenario().player("alice", battlefield=["Steam Vents"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (vents,) = scenario.untapped_sources("Steam Vents")
+
+    scenario.activate(vents, color=[Color.BLUE])
+
+    assert scenario.player().mana_pool.floating == {Color.BLUE: 1}
+    assert scenario.stack_names() == []
+
+
+def test_a_one_element_colour_sequence_reaches_an_any_colour_ability_too():
+    """The same on the other branch, so the two cannot drift apart: Birds of
+    Paradise's `{T}: Add one mana of any color.`"""
+    scenario = Scenario().player("alice", battlefield=["Birds of Paradise"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (bird,) = scenario.untapped_sources("Birds of Paradise")
+
+    scenario.activate(bird, color=[Color.BLACK])
+
+    assert scenario.player().mana_pool.floating == {Color.BLACK: 1}
+
+
+def test_naming_two_colours_for_one_mana_is_refused_in_the_engines_own_words():
+    """The wrong-length sequence is a refusal, not a crash. Steam Vents adds
+    one mana, so two colours is a caller mistake the engine has to name - it
+    used to reach `color.value` on a list and raise `AttributeError` from
+    inside the mana model, which tells a seat nothing about what it did."""
+    scenario = Scenario().player("alice", battlefield=["Steam Vents"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (vents,) = scenario.untapped_sources("Steam Vents")
+
+    with pytest.raises(ValueError, match="chooses one colour"):
+        scenario.activate(vents, color=[Color.BLUE, Color.RED])
+
+
+def test_a_bare_string_is_not_a_sequence_of_colours():
+    """`Color` is a `StrEnum`, so a plain `str` satisfies `Sequence[Color]` and
+    "WU" iterates into the characters "W" and "U" - which are not `Color`
+    members, and which used to be added to the pool as raw strings. It is
+    refused by name instead."""
+    scenario = Scenario().player("alice", battlefield=["Birds of Paradise"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (bird,) = scenario.untapped_sources("Birds of Paradise")
+
+    with pytest.raises(ValueError, match="not a string"):
+        scenario.activate(bird, color="WU")
+
+
+# --------------------------------------------------------------------------
 # The ability's own cost is actually paid (defect 4)
 # --------------------------------------------------------------------------
 

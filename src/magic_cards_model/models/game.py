@@ -21,6 +21,7 @@ from ..machines.abilities import (
     TriggeredAbility,
     TriggerEvent,
     granted_mana_abilities,
+    one_named_color,
     parse_abilities,
     parse_mana_abilities,
 )
@@ -11632,9 +11633,16 @@ class Game(BaseModel):
                 # amount_from_devotion`'s own docstring), and counted to the
                 # colour the activating player just chose, which is what "that
                 # color" points back at.
+                # `one_named_color` and not `isinstance(color, Color)`: the
+                # colour may be named as a one-element sequence, which is what
+                # a caller reading `Action.color_choice_count` (1, here) hands
+                # back, and that is still one colour chosen. Reading only the
+                # bare `Color` left `count` at None on that path and quietly
+                # added a single mana where devotion said several.
+                devotion_color = one_named_color(color)
                 devotion = (
-                    devotion_to(self, controller, color)
-                    if ability.mana.amount_from_devotion and isinstance(color, Color)
+                    devotion_to(self, controller, devotion_color)
+                    if ability.mana.amount_from_devotion and devotion_color is not None
                     else None
                 )
                 # The two board-derived narrowings `ManaAbility.effective` asks

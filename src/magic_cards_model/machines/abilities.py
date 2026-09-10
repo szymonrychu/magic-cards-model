@@ -218,6 +218,53 @@ class CouldProduce(StrEnum):
     LANDS_AN_OPPONENT_CONTROLS = "lands_an_opponent_controls"
 
 
+def named_colors(color: "Color | Sequence[Color] | str | None") -> list[Color] | None:
+    """The colours a caller named, as a list, or None if they named none.
+
+    One colour may be named either way and means the same thing both times: a
+    bare `Color`, or a sequence holding it. A longer sequence is one colour per
+    mana, which is what "N mana in any combination of colors" asks for and what
+    `Action.color_choice_count` counts out for a caller working from an
+    enumerated action alone.
+
+    A bare `str` is refused rather than iterated. `Color` is a `StrEnum`, so
+    "WU" satisfies `Sequence[Color]` at runtime and comes apart into "W" and
+    "U" - plain strings, not `Color` members, which would reach the mana pool
+    as keys nothing else in the engine can match. Anything in the sequence that
+    is not a `Color` is refused for the same reason: this is the engine's one
+    chance to say what was wrong with the request, and a `ManaPool` keyed by a
+    stray string says nothing at all.
+    """
+    if color is None:
+        return None
+    if isinstance(color, Color):
+        return [color]
+    if isinstance(color, str):
+        raise ValueError(
+            f"a colour is a Color or a sequence of them, not a string ({color!r}) - "
+            "name each colour as its own Color"
+        )
+    named = list(color)
+    unknown = [entry for entry in named if not isinstance(entry, Color)]
+    if unknown:
+        raise ValueError(f"{unknown!r} is not a colour (CR 105.1's five, as Color members)")
+    return named
+
+
+def one_named_color(color: "Color | Sequence[Color] | str | None") -> Color | None:
+    """The single colour a caller named, or None if they named none or several.
+
+    `Game.activate_ability` needs it before `ManaAbility.resolve` is reached:
+    CR 700.5's devotion is counted to the colour the player chose, and a caller
+    that named that colour as a one-element list has still named exactly one.
+    Reading the bare `Color` alone made the same choice, spelled the other way,
+    count as no choice at all - and then quietly add one mana where devotion
+    said several.
+    """
+    named = named_colors(color)
+    return named[0] if named is not None and len(named) == 1 else None
+
+
 class ManaCondition(BaseModel):
     """CR 605.1a's ability still, but a later ``instead`` clause overrides what
     the base effect adds when the board matches (Urza's Tower, Gemstone
@@ -594,30 +641,35 @@ class ManaAbility(BaseModel):
                 "(CR 106.5)"
             )
 
+        chosen_colors = named_colors(color)
+        # One colour, however it was named. A caller reading `color_options`
+        # and `color_choice_count` off an enumerated action hands back a list
+        # of the length that field gave it, which is 1 for every ability but
+        # "N mana in any combination of colors" - so a list of one is the same
+        # choice a bare `Color` is, on every branch below rather than only on
+        # the one that was written with a list in mind.
+        single = chosen_colors[0] if chosen_colors is not None and len(chosen_colors) == 1 else None
+
         if any_color:
-            if color is None:
+            if chosen_colors is None:
                 raise ValueError("this ability adds any colour; pass the colour chosen")
-            if isinstance(color, Color):
-                # `count` is CR 700.5's devotion for `amount_from_devotion`,
-                # which nothing on this object can work out for itself - see
-                # that field's own docstring. Zero is a real answer (no
-                # permanent with a mana symbol of that colour) and produces no
-                # mana at all, which CR 605.2 already allows: "A mana ability
-                # remains a mana ability even if the game state doesn't allow
-                # it to produce mana."
-                if self.amount_from_devotion and count is not None:
-                    return [color] * max(count, 0)
-                return [color] * self.any_color_count
-            # A spelled-out combination, one colour per mana. Legal only where
-            # the printed words allow the mana to differ ("in any combination
-            # of colors"); "of any one color" is one colour by its own
-            # wording, so a mixture there would be mana the card never offered.
-            chosen_colors = list(color)
+            # `count` is CR 700.5's devotion for `amount_from_devotion`, which
+            # nothing on this object can work out for itself - see that field's
+            # own docstring. Zero is a real answer (no permanent with a mana
+            # symbol of that colour) and produces no mana at all, which
+            # CR 605.2 already allows: "A mana ability remains a mana ability
+            # even if the game state doesn't allow it to produce mana."
             wanted = (
                 max(count, 0)
                 if self.amount_from_devotion and count is not None
                 else self.any_color_count
             )
+            if single is not None:
+                return [single] * wanted
+            # A spelled-out combination, one colour per mana. Legal only where
+            # the printed words allow the mana to differ ("in any combination
+            # of colors"); "of any one color" is one colour by its own
+            # wording, so a mixture there would be mana the card never offered.
             if len(chosen_colors) != wanted:
                 raise ValueError(
                     f"this ability adds {wanted} mana; {len(chosen_colors)} colours were chosen"
@@ -629,20 +681,30 @@ class ManaAbility(BaseModel):
                 )
             return chosen_colors
 
+        # Every remaining branch is a choice *between* printed options, one of
+        # which is picked whole - so exactly one colour names it, and a longer
+        # list is a caller mistake this refuses in its own words rather than
+        # reaching for `.value` on a list.
+        if chosen_colors is not None and single is None:
+            raise ValueError(
+                f"this ability chooses one colour from what it prints; "
+                f"{len(chosen_colors)} colours were chosen"
+            )
+
         if len(options) == 1:
             only = options[0]
-            if color is not None and color not in only:
-                raise ValueError(f"this ability adds {[c.value for c in only]}, not {color.value}")
+            if single is not None and single not in only:
+                raise ValueError(f"this ability adds {[c.value for c in only]}, not {single.value}")
             return list(only)
 
-        if color is None:
+        if single is None:
             choices = [[c.value for c in option] for option in options]
             raise ValueError(f"this ability offers {choices}; pass the colour chosen")
 
         for option in options:
-            if option == [color]:
+            if option == [single]:
                 return list(option)
-        raise ValueError(f"{color.value} is not one of this ability's options")
+        raise ValueError(f"{single.value} is not one of this ability's options")
 
 
 def parse_mana_abilities(card: Card, face: str | None = None) -> list[ManaAbility]:
