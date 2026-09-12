@@ -422,7 +422,13 @@ def _cast_action(
     modal = modal_profile(card.card)
     modes = tuple(mode.text for mode in modal.modes) if modal is not None else ()
     x_range = (0, None) if "{X}" in (card.card.mana_cost or "") and modal is None else None
-    profile = game._announcement_profile(card, ability_index=None, modes=None, x_value=None)
+    # CR 709.3b/715.3b: the row is about one face, so the phrase it reports
+    # has to be that face's own. `_announcement_profile` took no face and fell
+    # through to `targeting_profile(card)`, which reads the *front* half - so
+    # the Tear row of Wear // Tear advertised Wear's "target artifact".
+    profile = game._announcement_profile(
+        card, ability_index=None, modes=None, x_value=None, spell_face=spell_face
+    )
     target_slots = (
         tuple(
             TargetSlot(
@@ -577,13 +583,15 @@ def _permission_cast_actions(
         # other way round.
         if permission.why_not(card, player, game, action=PlayAction.CAST) is not None:
             continue
-        refusal = why_cannot_cast_now(card, player, game) or why_cannot_cast_restriction(
-            card, player, game
-        )
-        if refusal is not None:
+        if why_cannot_cast_restriction(card, player, game) is not None:
             continue
         if permission.pays_mana_cost:
             for face_name, mana in _base_cost_options(card.card):
+                # CR 709.3a/715.3a: timing is the *named* face's question -
+                # see the plain-hand branch in `_cast_actions` for what the
+                # face-blind version of this call used to report.
+                if why_cannot_cast_now(card, player, game, face=face_name) is not None:
+                    continue
                 actions.append(
                     _cast_action(
                         game,
@@ -598,7 +606,7 @@ def _permission_cast_actions(
                         splice_options=splice_options,
                     )
                 )
-        else:
+        elif why_cannot_cast_now(card, player, game) is None:
             actions.append(
                 _cast_action(
                     game,
@@ -642,13 +650,21 @@ def _cast_actions(
     splice_options = _splice_options_for(game, player, card)
 
     if zone is Zone.HAND:
-        refusal = (
-            why_cannot_cast_from(card, player, Zone.HAND, game)
-            or why_cannot_cast_now(card, player, game)
-            or why_cannot_cast_restriction(card, player, game)
-        )
+        refusal = why_cannot_cast_from(
+            card, player, Zone.HAND, game
+        ) or why_cannot_cast_restriction(card, player, game)
         if refusal is None:
             for face_name, mana in _base_cost_options(card.card):
+                # CR 709.3a/715.3a: "only the chosen half is evaluated to see
+                # if it can be cast", CR 117.1a's timing included - so this
+                # is asked once per face, not once for the card. Asked for
+                # the card it reads `Card.types`, the *front* face's type
+                # line, and measured live that reported both halves of
+                # Repudiate // Replicate (`Instant // Sorcery`) as castable
+                # during an upkeep step and neither half of Incubation //
+                # Incongruity (`Sorcery // Instant`) as castable at all.
+                if why_cannot_cast_now(card, player, game, face=face_name) is not None:
+                    continue
                 actions.append(
                     _cast_action(
                         game,
@@ -687,12 +703,14 @@ def _cast_actions(
         # keyword="Evoke")` refuses on timing (`Casting.model_post_init` runs
         # `why_cannot_cast_now`/`why_cannot_cast_restriction` unconditionally,
         # regardless of which keyword or alternative cost pays for the cast).
-        if why_cannot_cast_now(card, player, game) is not None:
-            continue
+        # Timing is asked per face below wherever this option enumerates
+        # faces at all (CR 709.3a/715.3a) and once for the card otherwise.
         if why_cannot_cast_restriction(card, player, game) is not None:
             continue
         if option.pays_mana_cost:
             for face_name, mana in _base_cost_options(card.card):
+                if why_cannot_cast_now(card, player, game, face=face_name) is not None:
+                    continue
                 actions.append(
                     _cast_action(
                         game,
@@ -707,7 +725,7 @@ def _cast_actions(
                         splice_options=splice_options,
                     )
                 )
-        else:
+        elif why_cannot_cast_now(card, player, game) is None:
             total = option.cost if option.cost is not None else TotalCost()
             actions.append(
                 _cast_action(

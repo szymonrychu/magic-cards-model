@@ -76,10 +76,10 @@ def test_a_spell_on_the_stack_as_an_adventure_reads_the_adventure_face():
     "While on the stack as an Adventure, the spell has only its alternative
     characteristics." `CardState.face_played` is where the announced half is
     recorded and `CardState.up_face` is what reads it - the same field and the
-    same read a split card's chosen half already goes through (CR 709.3b), now
-    that both are one mechanism. Set here directly, because the remaining gap
-    is that `machines/casting.py` records the choice on the `Casting` and not
-    on the `CardState`; everything downstream of the field works.
+    same read a split card's chosen half already goes through (CR 709.3b),
+    both being one mechanism. Set here directly to pin the field's own
+    behaviour in isolation; `machines/casting.Casting.cast` is what writes it
+    in a real announcement, and the tests below drive that path.
     """
     stomp = card_state("Bonecrusher Giant", zone=Zone.STACK, controller="alice")
     stomp.face_played = "Stomp"
@@ -142,6 +142,12 @@ def test_the_adventure_reaches_the_stack_for_two_mana():
     sources = scenario.untapped_sources("Mountain", "Mountain")
     casting = scenario.cast("Bonecrusher Giant")
     casting.cast_as_adventure()
+    # CR 715.3b: on the stack as an Adventure the spell has only Stomp's
+    # characteristics, and Stomp's own text is "Stomp deals 2 damage to any
+    # target." - so CR 601.2c requires a target announced for it. This cast
+    # used to go through with none, because the announcement was read against
+    # the whole printing, whose front face names no target at all.
+    casting.choose_targets([scenario.creature("Grizzly Bears", "bob")])
     scenario.pay_with(casting.begin_paying(), *sources)
     stomp = scenario.put_on_stack(casting)
 
@@ -175,6 +181,12 @@ def test_an_exiled_adventure_is_marked_and_can_be_cast_as_the_creature():
     sources = scenario.untapped_sources("Mountain", "Mountain")
     casting = scenario.cast("Bonecrusher Giant")
     casting.cast_as_adventure()
+    # CR 715.3b: on the stack as an Adventure the spell has only Stomp's
+    # characteristics, and Stomp's own text is "Stomp deals 2 damage to any
+    # target." - so CR 601.2c requires a target announced for it. This cast
+    # used to go through with none, because the announcement was read against
+    # the whole printing, whose front face names no target at all.
+    casting.choose_targets([scenario.creature("Grizzly Bears", "bob")])
     scenario.pay_with(casting.begin_paying(), *sources)
     scenario.put_on_stack(casting)
     stomp = scenario.resolve_top()
@@ -217,6 +229,12 @@ def test_casting_the_adventured_creature_without_announcing_adventure_is_refused
     sources = scenario.untapped_sources("Mountain", "Mountain")
     casting = scenario.cast("Bonecrusher Giant")
     casting.cast_as_adventure()
+    # CR 715.3b: on the stack as an Adventure the spell has only Stomp's
+    # characteristics, and Stomp's own text is "Stomp deals 2 damage to any
+    # target." - so CR 601.2c requires a target announced for it. This cast
+    # used to go through with none, because the announcement was read against
+    # the whole printing, whose front face names no target at all.
+    casting.choose_targets([scenario.creature("Grizzly Bears", "bob")])
     scenario.pay_with(casting.begin_paying(), *sources)
     scenario.put_on_stack(casting)
     stomp = scenario.resolve_top()
@@ -263,6 +281,12 @@ def test_an_adventure_exiles_itself_on_resolution():
     sources = scenario.untapped_sources("Mountain", "Mountain")
     casting = scenario.cast("Bonecrusher Giant")
     casting.cast_as_adventure()
+    # CR 715.3b: on the stack as an Adventure the spell has only Stomp's
+    # characteristics, and Stomp's own text is "Stomp deals 2 damage to any
+    # target." - so CR 601.2c requires a target announced for it. This cast
+    # used to go through with none, because the announcement was read against
+    # the whole printing, whose front face names no target at all.
+    casting.choose_targets([scenario.creature("Grizzly Bears", "bob")])
     scenario.pay_with(casting.begin_paying(), *sources)
     scenario.put_on_stack(casting)
     stomp = scenario.resolve_top()
@@ -278,7 +302,189 @@ def test_an_adventure_on_the_stack_is_an_instant_and_not_a_creature():
     sources = scenario.untapped_sources("Mountain", "Mountain")
     casting = scenario.cast("Bonecrusher Giant")
     casting.cast_as_adventure()
+    # CR 715.3b: on the stack as an Adventure the spell has only Stomp's
+    # characteristics, and Stomp's own text is "Stomp deals 2 damage to any
+    # target." - so CR 601.2c requires a target announced for it. This cast
+    # used to go through with none, because the announcement was read against
+    # the whole printing, whose front face names no target at all.
+    casting.choose_targets([scenario.creature("Grizzly Bears", "bob")])
     scenario.pay_with(casting.begin_paying(), *sources)
     stomp = scenario.put_on_stack(casting)
 
     assert stomp.is_permanent is False
+
+
+# -- CR 715.3a/715.3b: the Adventure half's own characteristics -------------
+#
+# `Casting.targeting`, `Game._announcement_profile` and
+# `Game._resolution_profile` were all scoped to `Layout.SPLIT`, so an
+# Adventure spell was announced against the *whole printing's* profile. For
+# Bonecrusher Giant that profile is the Giant's own trigger text, which names
+# no target at all - so a targetless Stomp was cast happily and resolved
+# dealing no damage, and a targeted one was refused "too many targets: 1
+# chosen where the spell takes at most 0". CR 715.3a is word for word CR
+# 709.3a's test ("only the alternative characteristics are evaluated to see if
+# it can be cast") and CR 715.3b word for word CR 709.3b's, so the two layouts
+# get the same reading.
+
+
+def test_the_adventure_half_announces_its_own_target_requirement():
+    """CR 715.3b: on the stack as an Adventure the spell has only Stomp's
+    characteristics, and Stomp's text is "Stomp deals 2 damage to any target."
+    """
+    scenario = board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    casting = scenario.cast("Bonecrusher Giant")
+    casting.cast_as_adventure()
+
+    profile = casting.targeting
+    assert profile.understood
+    assert [requirement.phrase for requirement in profile.requirements] == ["any target"]
+
+
+def test_the_adventure_half_refuses_a_cast_with_no_target():
+    """CR 601.2c: a spell that requires a target may not be cast without one.
+    This used to be allowed, and the spell then resolved doing nothing.
+    """
+    scenario = board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    casting = scenario.cast("Bonecrusher Giant")
+    casting.cast_as_adventure()
+    scenario.pay_with(casting.begin_paying(), *scenario.untapped_sources("Mountain", "Mountain"))
+
+    with pytest.raises(ValueError, match="target"):
+        casting.cast()
+    casting.cancel()
+
+
+@pytest.mark.xfail(
+    reason="Stomp's own first clause, \"Damage can't be prevented this turn.\", is a "
+    "prevention-effect sentence no machine reads, and `machines/effects.effect_for` "
+    "returns None for the whole text rather than for that clause alone - so the "
+    "damage clause beside it never runs either. Nothing to do with faces: the same "
+    "text on a single-faced card parses the same way, and `effect_for('Stomp', "
+    "'Stomp deals 2 damage to any target.')` on its own does parse. The Adventure "
+    "half's resolution is proved end to end on Swift End below instead.",
+    strict=True,
+)
+def test_the_adventure_half_deals_its_damage_to_the_chosen_target():
+    scenario = board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "bob")
+
+    casting = scenario.cast("Bonecrusher Giant")
+    casting.cast_as_adventure()
+    casting.choose_targets([bears])
+    scenario.pay_with(casting.begin_paying(), *scenario.untapped_sources("Mountain", "Mountain"))
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    assert bears.zone is Zone.GRAVEYARD, "2 damage to a 2/2 (CR 704.5g)"
+
+
+def test_the_adventure_row_reports_the_adventure_halfs_own_slots():
+    """`Action.target_slots` on the Stomp row is Stomp's requirement; the
+    plain creature row (`spell_face=None`) carries none.
+    """
+    scenario = board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    rows = {
+        action.spell_face: tuple(slot.phrase for slot in action.target_slots)
+        for action in scenario.game.legal_actions("alice")
+        if action.card_id == scenario.find("Bonecrusher Giant", Zone.HAND, "alice").id
+    }
+
+    assert rows["Stomp"] == ("any target",)
+    assert rows[None] == ()
+
+
+def test_legal_targets_for_the_adventure_face_is_the_adventure_halfs_own():
+    scenario = board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    giant = scenario.find("Bonecrusher Giant", Zone.HAND, "alice")
+    bears = scenario.creature("Grizzly Bears", "bob")
+
+    (candidates,) = scenario.game.legal_targets(giant, "alice", spell_face="Stomp")
+
+    assert bears in candidates
+    assert scenario.game.legal_targets(giant, "alice") == ()
+
+
+def test_an_instant_adventure_half_may_be_cast_at_instant_speed():
+    """CR 715.3a: only the alternative characteristics are evaluated to see if
+    it can be cast, and Stomp's is `Instant - Adventure`. The creature half
+    is a Creature with no flash and stays sorcery-speed, so the enumeration
+    at upkeep offers the Stomp row and no plain-creature row at all.
+
+    Bonecrusher Giant's own front-face Creature type used to answer for both:
+    Stomp, a plain Instant, was refused during an upkeep step.
+    """
+    scenario = board().build()
+    scenario.start_at(Step.UPKEEP)
+    giant = scenario.find("Bonecrusher Giant", Zone.HAND, "alice")
+
+    faces = {
+        action.spell_face
+        for action in scenario.game.legal_actions("alice")
+        if action.card_id == giant.id
+    }
+    assert faces == {"Stomp"}, "the Giant itself is a Creature (CR 302.1)"
+
+    casting = scenario.cast("Bonecrusher Giant")
+    casting.cast_as_adventure()
+    assert casting.face == "Stomp"
+    casting.cancel()
+
+    # The creature half proposes fine - CR 601.2a's move is allowed because
+    # *some* face of this card is castable right now - and is refused at
+    # CR 601.2i, against the answer frozen at the proposal.
+    giant_casting = scenario.cast("Bonecrusher Giant")
+    scenario.pay_with(
+        giant_casting.begin_paying(), *scenario.untapped_sources("Mountain", "Mountain", "Mountain")
+    )
+    with pytest.raises(ValueError, match="CR 117.1a"):
+        giant_casting.cast()
+    giant_casting.cancel()
+
+
+# -- generality: an adventurer card this wave did not motivate -------------
+
+
+def test_another_adventurer_cards_adventure_half_reads_its_own_text():
+    """Murderous Rider // Swift End - not the card either defect was found
+    on, in no decklist here, and a different phrase, cost shape and effect:
+    Swift End is `{1}{B}{B}` "Destroy target creature or planeswalker. You
+    lose 2 life." against Stomp's `{1}{R}` "any target" damage.
+    """
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Murderous Rider"], battlefield=["Swamp"] * 3)
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.UPKEEP)
+    bears = scenario.creature("Grizzly Bears", "bob")
+
+    rider = scenario.find("Murderous Rider", Zone.HAND, "alice")
+    rows = {
+        action.spell_face: tuple(slot.phrase for slot in action.target_slots)
+        for action in scenario.game.legal_actions("alice")
+        if action.card_id == rider.id
+    }
+    assert rows["Swift End"] == ("target creature or planeswalker",)
+    assert None not in rows, "the Zombie Knight is a Creature, not castable at upkeep"
+
+    casting = scenario.cast("Murderous Rider")
+    casting.cast_as_adventure()
+    casting.choose_targets([bears])
+    scenario.pay_with(casting.begin_paying(), *scenario.untapped_sources("Swamp", "Swamp", "Swamp"))
+    stack = scenario.put_on_stack(casting)
+    assert Type.INSTANT in stack.types, "CR 715.3b"
+    scenario.resolve_top()
+
+    assert bears.zone is Zone.GRAVEYARD
+    assert scenario.player("alice").life == 18, "Swift End's own rider"
