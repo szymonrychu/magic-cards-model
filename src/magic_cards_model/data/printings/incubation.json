@@ -1,0 +1,171 @@
+{
+  "object": "card",
+  "id": "2c1ace2e-b3eb-4e60-adfd-9f40b8cd4416",
+  "oracle_id": "363edb16-009f-4cc2-99e3-2b15db84e7af",
+  "multiverse_ids": [
+    651932
+  ],
+  "mtgo_id": 123186,
+  "tcgplayer_id": 534643,
+  "cardmarket_id": 752698,
+  "name": "Incubation // Incongruity",
+  "lang": "en",
+  "released_at": "2024-02-23",
+  "uri": "https://api.scryfall.com/cards/2c1ace2e-b3eb-4e60-adfd-9f40b8cd4416",
+  "scryfall_uri": "https://scryfall.com/card/clu/197/incubation-incongruity?utm_source=api",
+  "layout": "split",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:15:18Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/2/c/2c1ace2e-b3eb-4e60-adfd-9f40b8cd4416.jpg?1783912518",
+    "normal": "https://cards.scryfall.io/normal/front/2/c/2c1ace2e-b3eb-4e60-adfd-9f40b8cd4416.jpg?1783912518",
+    "large": "https://cards.scryfall.io/large/front/2/c/2c1ace2e-b3eb-4e60-adfd-9f40b8cd4416.jpg?1783912518",
+    "png": "https://cards.scryfall.io/png/front/2/c/2c1ace2e-b3eb-4e60-adfd-9f40b8cd4416.png?1783912518",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/2/c/2c1ace2e-b3eb-4e60-adfd-9f40b8cd4416.jpg?1783912518",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/2/c/2c1ace2e-b3eb-4e60-adfd-9f40b8cd4416.jpg?1783912518",
+    "thumb": "https://cards.scryfall.io/thumb/front/2/c/2c1ace2e-b3eb-4e60-adfd-9f40b8cd4416.webp?1783912518",
+    "grid": "https://cards.scryfall.io/grid/front/2/c/2c1ace2e-b3eb-4e60-adfd-9f40b8cd4416.webp?1783912518",
+    "display": "https://cards.scryfall.io/display/front/2/c/2c1ace2e-b3eb-4e60-adfd-9f40b8cd4416.webp?1783912518",
+    "art": "https://cards.scryfall.io/art/front/2/c/2c1ace2e-b3eb-4e60-adfd-9f40b8cd4416.webp?1783912518",
+    "crop": "https://cards.scryfall.io/crop/front/2/c/2c1ace2e-b3eb-4e60-adfd-9f40b8cd4416.webp?1783912518"
+  },
+  "mana_cost": "{G/U} // {1}{G}{U}",
+  "cmc": 4.0,
+  "type_line": "Sorcery // Instant",
+  "colors": [
+    "G",
+    "U"
+  ],
+  "color_identity": [
+    "G",
+    "U"
+  ],
+  "keywords": [],
+  "card_faces": [
+    {
+      "object": "card_face",
+      "name": "Incubation",
+      "mana_cost": "{G/U}",
+      "type_line": "Sorcery",
+      "oracle_text": "Look at the top five cards of your library. You may reveal a creature card from among them and put it into your hand. Put the rest on the bottom of your library in a random order.",
+      "watermark": "simic",
+      "artist": "Mike Bierek",
+      "artist_id": "e5f52ef5-1a2e-4128-90b0-ccc71cd47ea7",
+      "illustration_id": "eb2c9029-6963-4729-815b-40f035476f02"
+    },
+    {
+      "object": "card_face",
+      "name": "Incongruity",
+      "mana_cost": "{1}{G}{U}",
+      "type_line": "Instant",
+      "oracle_text": "Exile target creature. That creature's controller creates a 3/3 green Frog Lizard creature token.",
+      "watermark": "simic",
+      "artist": "Mike Bierek",
+      "artist_id": "e5f52ef5-1a2e-4128-90b0-ccc71cd47ea7"
+    }
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "2c1ace2e-b3eb-4e60-adfd-9f40b8cd4416",
+      "component": "combo_piece",
+      "name": "Incubation // Incongruity",
+      "type_line": "Sorcery // Instant",
+      "uri": "https://api.scryfall.com/cards/2c1ace2e-b3eb-4e60-adfd-9f40b8cd4416"
+    },
+    {
+      "object": "related_card",
+      "id": "42e98a20-325e-476f-8297-cbe8e09d85b2",
+      "component": "token",
+      "name": "Frog Lizard",
+      "type_line": "Token Creature \u2014 Frog Lizard",
+      "uri": "https://api.scryfall.com/cards/42e98a20-325e-476f-8297-cbe8e09d85b2"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "d4bfabcf-a859-43a4-9d8a-665533c8b174",
+  "set": "clu",
+  "set_name": "Ravnica: Clue Edition",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/d4bfabcf-a859-43a4-9d8a-665533c8b174",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aclu&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/clu?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/2c1ace2e-b3eb-4e60-adfd-9f40b8cd4416/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A363edb16-009f-4cc2-99e3-2b15db84e7af&unique=prints",
+  "collector_number": "197",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Mike Bierek",
+  "artist_ids": [
+    "e5f52ef5-1a2e-4128-90b0-ccc71cd47ea7"
+  ],
+  "illustration_id": "eb2c9029-6963-4729-815b-40f035476f02",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 11397,
+  "penny_rank": 1693,
+  "prices": {
+    "usd": "0.17",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.22",
+    "eur_foil": null,
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=651932&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DIncubation%2B%252F%252F%2BIncongruity",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DIncubation%2B%252F%252F%2BIncongruity",
+    "edhrec": "https://edhrec.com/route/?cc=Incubation+%2F%2F+Incongruity"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F534643%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=752698&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/123186?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

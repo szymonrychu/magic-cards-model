@@ -33,6 +33,7 @@ from ..machines.casting import (
     PlayAction,
     PlayPermission,
     _printed_alternative_total_cost,
+    face_being_cast,
     granted_cast_options,
     keyword_cast_options,
     marker_cast_options,
@@ -6969,6 +6970,7 @@ class Game(BaseModel):
         ability_index: int | None,
         modes: list[int] | None,
         x_value: int | None,
+        spell_face: str | None = None,
     ) -> TargetingProfile:
         """What `state` may legally target, for an announcement that has not
         happened yet - `legal_targets`'s own reading of CR 601.2c/700.2c,
@@ -6982,6 +6984,23 @@ class Game(BaseModel):
         (CR 107.3a), otherwise. Kept in the engine so `legal_actions` and any
         other caller ask the same question the api's UI hints already did,
         rather than the api holding the only copy of how to ask it.
+
+        **`spell_face` is the fourth read**, and the one this method had no
+        answer for at all: a cast that names a half of a split card (CR 709.3)
+        or an adventurer card's Adventure (CR 715.3) is announced against
+        *that* face's own text (CR 709.3b, CR 715.3b), not the printing's.
+        Without it every row `legal_actions` emitted for a multi-faced card
+        carried the **front** half's targeting phrase on both halves, because
+        `targeting_profile` reads `Card.front_oracle_text`: the Tear row of
+        Wear // Tear said "target artifact", which is Wear's requirement, and
+        the Incongruity row of Incubation // Incongruity said nothing at all,
+        because Incubation targets nothing. This is the same read
+        `machines/casting.Casting.targeting` already does once a face has been
+        named, and `_resolution_profile` does at CR 608.2b's recheck - three
+        paths, one reading, rather than two that agree and one that does not.
+        It sits *below* `ability_index` and `modes` in precedence, because an
+        activated ability's own effect text and a chosen mode's own text are
+        both narrower than the face the mode or ability is printed on.
         """
         if ability_index is not None:
             ability = self.activated_abilities(state)[ability_index]
@@ -6992,6 +7011,9 @@ class Game(BaseModel):
             chosen = modal.resolve(modes)
             profile, _owners = profile_for_modes_with_owners(state.card, chosen, x_value)
             return profile
+        face = face_being_cast(state.card, spell_face)
+        if face is not None:
+            return profile_for_text(substitute_x(face.oracle_text or "", x_value))
         if modal is None and x_value is not None and state.card.oracle_text:
             return profile_for_text(substitute_x(state.card.oracle_text, x_value))
         return targeting_profile(state.card)
@@ -7004,11 +7026,18 @@ class Game(BaseModel):
         ability_index: int | None = None,
         modes: list[int] | None = None,
         x_value: int | None = None,
+        spell_face: str | None = None,
     ) -> tuple[tuple[Any, ...], ...]:
         """Every legal target for each requirement `source` would announce
         right now, one tuple per requirement (CR 601.2c) - the enumerating
         cousin of `legal_target` above, which only rechecks one target already
         chosen (CR 608.2b).
+
+        `spell_face` names the half being cast (CR 709.3, CR 715.3), and is
+        forwarded untouched to `_announcement_profile` so the candidate list
+        can never disagree with the `Action.target_slots` built from the same
+        call - which is the whole point of a candidate list. Without it, both
+        halves of Wear // Tear offered the same artifacts.
 
         `TargetRequirement.rejects` is the single predicate both this and
         `legal_target` call, so a candidate list built here can never disagree
@@ -7023,7 +7052,11 @@ class Game(BaseModel):
         happens to have no legal candidate right now".
         """
         profile = self._announcement_profile(
-            source, ability_index=ability_index, modes=modes, x_value=x_value
+            source,
+            ability_index=ability_index,
+            modes=modes,
+            x_value=x_value,
+            spell_face=spell_face,
         )
         if not profile.understood or not profile.requirements:
             return ()
@@ -7088,11 +7121,16 @@ class Game(BaseModel):
         control.") against Wear // Tear's own front-face-only "target
         artifact" requirement. `spell.oracle_text` already reads the chosen
         half while the spell is on the stack (`CardState.up_face`), so this
-        only has to stop *discarding* that in favour of the combined
-        printing - `spell.card.layout is Layout.SPLIT` scopes it the same
-        way `CardState.face_played`'s own docstring does, so a modal-DFC or
-        Adventure spell (already read correctly through `spell.mana_cost`'s
-        `{X}` branch or the plain fallback) is untouched.
+        only has to stop *discarding* that in favour of the printing's front
+        half.
+
+        An **Adventure** spell reads the same way and for the same reason:
+        CR 715.3b ("while on the stack as an Adventure, the spell has only
+        its alternative characteristics") is CR 709.3b word for word, and
+        `CardState.up_face` already covers both layouts. `face_played` is set
+        only for those two (`machines/casting.Casting.cast`), so it is the
+        whole discriminator here - a modal-DFC or transforming spell never
+        reaches this branch.
         """
         record = self.cast_records.get(spell.id)
         if record is not None and record.modes:
@@ -7114,7 +7152,10 @@ class Game(BaseModel):
                 requirements=(*left_profile.requirements, *right_profile.requirements),
                 understood=left_profile.understood and right_profile.understood,
             )
-        if spell.card.layout is Layout.SPLIT and spell.face_played is not None:
+        if spell.face_played is not None and spell.card.layout in (
+            Layout.SPLIT,
+            Layout.ADVENTURE,
+        ):
             return profile_for_text(spell.oracle_text)
         if record is not None and "{X}" in (spell.mana_cost or ""):
             return profile_for_text(substitute_x(spell.oracle_text, record.x_value))

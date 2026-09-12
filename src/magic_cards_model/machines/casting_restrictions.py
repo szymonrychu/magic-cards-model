@@ -61,7 +61,7 @@ anything to Supreme Verdict.
 """
 
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from typing import Any
 from uuid import UUID
 
@@ -476,25 +476,40 @@ def sorcery_speed_restriction_source(game: Any, caster: str) -> str | None:
     return None
 
 
-def _matches_type_filter(card: Card, type_filter: str | None) -> bool:
-    """Whether `card` is caught by a zone prohibition's optional type word.
+def _matches_type_filter(types: Sequence[Type], type_filter: str | None) -> bool:
+    """Whether a spell with these card types is caught by a zone
+    prohibition's optional type word.
 
     No word at all catches every spell (Grafdigger's Cage). "noncreature" is
-    Soulless Jailer's, and the negatives are read off `Card.types` (CR 205.2a)
-    rather than off the type line, because a card with several types - a
+    Soulless Jailer's, and the negatives are read off the *types* (CR 205.2a)
+    rather than off a type line, because a card with several types - a
     creature artifact, a land creature - has to answer for all of them.
+
+    Takes the types rather than the `Card` so the caller can supply the
+    **chosen face's** types instead of the printing's (CR 601.3e: "Some rules
+    and effects state that an alternative set of characteristics or a subset
+    of characteristics are considered to determine if a card or copy of a card
+    is legal to cast. These alternative characteristics replace the object's
+    characteristics for this determination."). `Card.types` reads
+    `Card.front_type_line`, so asking the card would have an adventurer card's
+    Adventure half answer with its creature front's types - measured live,
+    Stomp was castable out of a graveyard under Soulless Jailer's "Players
+    can't cast noncreature spells from graveyards or exile". The substitution
+    belongs to the caller because only it knows which face is being cast, and
+    because this module cannot import `machines/casting.py` - the dependency
+    runs the other way.
     """
     if type_filter is None:
         return True
     word = type_filter.lower()
     if word == "creature":
-        return Type.CREATURE in card.types
+        return Type.CREATURE in types
     if word == "noncreature":
-        return Type.CREATURE not in card.types
+        return Type.CREATURE not in types
     if word == "land":
-        return Type.LAND in card.types
+        return Type.LAND in types
     if word == "nonland":
-        return Type.LAND not in card.types
+        return Type.LAND not in types
     return False
 
 
@@ -516,7 +531,9 @@ def _prohibited_zones(printed: str) -> frozenset[Zone]:
     return frozenset(zones)
 
 
-def zone_cast_prohibition_source(game: Any, card: Card, origin: Zone) -> str | None:
+def zone_cast_prohibition_source(
+    game: Any, card: Card, origin: Zone, *, types: Sequence[Type] | None = None
+) -> str | None:
     """The name of a live permanent whose static text forbids casting `card`
     from `origin`, or None (CR 601.3).
 
@@ -536,7 +553,17 @@ def zone_cast_prohibition_source(game: Any, card: Card, origin: Zone) -> str | N
 
     No player argument: "players" is every player, the Cage's own controller
     included.
+
+    `types` is the CR 601.3e substitution: the card types actually being
+    evaluated for this cast, which for a split half (CR 709.3a) or an
+    Adventure (CR 715.3a) are the chosen face's and not the printing's.
+    Defaults to `card.types` - correct for every single-faced card and for
+    any cast that named no face - and `_matches_type_filter`'s own docstring
+    carries the printing that measured the difference. The `card` argument
+    stays, because the zone scan and the CR 113.6f note below are about the
+    object rather than its types.
     """
+    evaluated = tuple(card.types) if types is None else tuple(types)
     for source in list(getattr(game, "battlefield", [])):
         for line in parse_abilities(source.card):
             if line.kind is not AbilityKind.STATIC:
@@ -544,7 +571,7 @@ def zone_cast_prohibition_source(game: Any, card: Card, origin: Zone) -> str | N
             match = _ZONE_CAST_PROHIBITION_RE.match((line.text or "").strip())
             if match is None:
                 continue
-            if not _matches_type_filter(card, match.group("filter")):
+            if not _matches_type_filter(evaluated, match.group("filter")):
                 continue
             if origin in _prohibited_zones(match.group("zones")):
                 return source.name
