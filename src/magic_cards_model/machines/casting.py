@@ -1417,7 +1417,12 @@ def types_being_cast(card: Card, face_name: str | None = None) -> tuple[Type, ..
     Only that half is considered to be put onto the stack." CR 715.3a says it
     again for an adventurer card: "When casting an adventurer card as an
     Adventure, only the alternative characteristics are evaluated to see if it
-    can be cast."
+    can be cast." CR 601.3e is the general rule both are instances of, and it
+    is explicit about what the substitution means: "Some rules and effects
+    state that an alternative set of characteristics or a subset of
+    characteristics are considered to determine if a card or copy of a card is
+    legal to cast. **These alternative characteristics replace the object's
+    characteristics for this determination.**"
 
     `Card.types` cannot answer this. It reads `Card.front_type_line`, which
     splits `type_line` on `//` and keeps the **left** half, so for a split or

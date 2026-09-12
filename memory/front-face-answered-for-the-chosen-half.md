@@ -12,7 +12,7 @@ question.** `Card.types` goes through `Card.front_type_line`, which splits
 `type_line` on `//` and keeps the left half; `targeting_profile(card)` reads
 `Card.front_oracle_text` the same way. CR 709.3a and CR 715.3a both say only
 the *chosen* half is evaluated to see if a cast is legal, and CR 709.3b/715.3b
-say only that half's characteristics exist once it is on the stack.
+say only that half's characteristics exist once it is on the stack. CR 601.3e is the general rule both are instances of: "These alternative characteristics replace the object's characteristics for this determination."
 
 Two defects found by probing the seat API, 2026-09-12, both established by
 running the engine rather than reading it:
