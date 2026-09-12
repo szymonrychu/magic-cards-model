@@ -37,7 +37,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from functools import cache
 from itertools import combinations, product
-from typing import Any
+from typing import Any, NamedTuple
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
@@ -969,9 +969,16 @@ def _auto_tap_candidates(
 
 
 #: `_scan_mana_candidates`'s own row: a candidate plus the `any_color` flag
-#: `_flexibility` needs to order it, before CR 106.6's restriction is judged
-#: against any particular `ManaSpend`.
-_ScannedCandidate = tuple[CardState, list[list[Color]], ManaRestriction | None, bool]
+#: `_flexibility` needs to order it and the index `Game.activated_abilities`
+#: knows the ability by, before CR 106.6's restriction is judged against any
+#: particular `ManaSpend`.
+#:
+#: The index is carried for reporting, never for solving - `_filter_candidate_
+#: scan` drops it again on the way into `_Candidate`, so nothing in the solver
+#: sees it. `mana_ability_index` reads it back off a scan a caller already
+#: hoisted, which is how a `TapPlan` entry says *which* ability makes its mana
+#: without a second board survey per entry.
+_ScannedCandidate = tuple[CardState, list[list[Color]], ManaRestriction | None, bool, int]
 
 
 def _scan_mana_candidates(
@@ -1029,7 +1036,7 @@ def _scan_mana_candidates(
             )
             if not options:
                 continue
-            candidates.append((source, options, restriction, any_color))
+            candidates.append((source, options, restriction, any_color, index))
     # A restricted ability first among a source's own abilities, so the mana
     # that can do less is the mana spent - the same preference `ManaPool._buckets`
     # applies inside the pool, applied here to which ability is activated.
@@ -1049,7 +1056,7 @@ def _filter_candidate_scan(
     """
     return [
         (source, options, restriction)
-        for source, options, restriction, _any in scanned
+        for source, options, restriction, _any, _index in scanned
         if restriction is None or restriction.allows(spend)
     ]
 
@@ -1184,7 +1191,17 @@ def _solve_colours(
 #: colour(s) to make it add, and the CR 106.6 restriction that mana carries -
 #: everything `auto_tap` needs to call `tap_for_mana` and nothing it needs to
 #: work out again.
-_TapPlan = list[tuple[CardState, list[Color], ManaRestriction | None]]
+#:
+#: Public, because `plan_mana_payment` returns one: the solve used to be run
+#: twice for every enumerated action and its answer thrown away both times
+#: (once by `could_pay_mana_cost`, which reduced it to a bool, and again by
+#: `auto_tap` when the action was actually taken). It is the same object in
+#: both places now, and `machines/legal_actions` reports it on
+#: `Action.pays_with` rather than discarding it.
+#:
+#: An empty list is a real answer and is not `None`: the cost is already
+#: covered by floating mana, so no source needs tapping at all.
+TapPlan = list[tuple[CardState, list[Color], ManaRestriction | None]]
 
 
 def _solve_auto_tap_brute_force(
@@ -1196,7 +1213,7 @@ def _solve_auto_tap_brute_force(
     base_snow: dict[Color, int],
     base_restricted: list[Any],
     life_available: int,
-) -> _TapPlan | None:
+) -> TapPlan | None:
     """Find a legal tapping-and-colour plan for `owed` out of `sources`, or
     None if none exists, by brute-force enumeration of which sources to tap.
 
@@ -1438,7 +1455,7 @@ def _best_flow_plan(
     pool_buckets: dict[_Bucket, int],
     pool_registry: list[ManaRestriction],
     game: Any = None,
-) -> _TapPlan | None:
+) -> TapPlan | None:
     """The smallest tapping plan that settles `options` (one already-resolved
     reading of `ManaCost`'s payable-in-multiple-ways symbols) out of `simple`
     and `exotic` on top of `pool_buckets`, or None if none exists.
@@ -1454,7 +1471,7 @@ def _best_flow_plan(
     and ties are broken by whichever combination was found first, favouring
     that same all-`None` reading.
     """
-    best: _TapPlan | None = None
+    best: TapPlan | None = None
     best_size: int | None = None
     exotic_choices = [[None, *alternatives] for _source, alternatives in exotic]
     for choice_combo in product(*exotic_choices):
@@ -1510,7 +1527,7 @@ def _best_flow_plan(
         if result is None:
             continue
 
-        plan: _TapPlan = []
+        plan: TapPlan = []
         for source, alternatives in considered:
             used = result.get(id(source))
             if not used:
@@ -1536,7 +1553,7 @@ def _solve_auto_tap_flow(
     base_restricted: list[Any],
     life_available: int,
     candidate_scan: list[_ScannedCandidate] | None = None,
-) -> _TapPlan | None:
+) -> TapPlan | None:
     """The pure half of `auto_tap`: find a legal tapping-and-colour plan for
     `owed` out of `sources`, or None if none exists. Mutates nothing - no
     permanent is tapped, no pool is written to, and `context` may be a
@@ -1622,7 +1639,7 @@ def _solve_auto_tap(
     base_restricted: list[Any],
     life_available: int,
     candidate_scan: list[_ScannedCandidate] | None = None,
-) -> _TapPlan | None:
+) -> TapPlan | None:
     """`auto_tap`/`could_pay_mana_cost`'s actual entry point - see
     `_solve_auto_tap_flow`, which this calls directly. Kept as its own name so
     every existing caller and docstring cross-reference stays correct without
@@ -1642,7 +1659,7 @@ def _solve_auto_tap(
     )
 
 
-def could_pay_mana_cost(
+def plan_mana_payment(
     cost: ManaCost,
     sources: Iterable[CardState],
     *,
@@ -1650,25 +1667,38 @@ def could_pay_mana_cost(
     payer: str | None = None,
     spend: "ManaSpend | None" = None,
     candidate_scan: list[_ScannedCandidate] | None = None,
-) -> bool:
-    """Whether `cost` could be paid right now from `sources` plus whatever
-    mana `payer` already has floating - the public engine entry point for
-    "could this cost be paid from this player's currently available
-    resources", without paying anything.
+) -> TapPlan | None:
+    """*How* `cost` would be paid right now from `sources` plus whatever mana
+    `payer` already has floating - which permanents get tapped, what colour
+    each is made to add, and the CR 106.6 restriction that mana carries - or
+    `None` if it could not be paid at all.
 
-    This is what legal-action enumeration should call, potentially many times
-    per priority window, with its answers recorded in an append-only training
-    log: it shares `_solve_auto_tap` with `auto_tap` itself (see that
-    function's docstring), so the predicate and the actual payment can never
-    disagree.
+    This is the whole of what `could_pay_mana_cost` (below) does; the
+    predicate is now literally `plan_mana_payment(...) is not None`, so there
+    is exactly one implementation of "can this be paid" left and no second
+    copy to drift. The same argument `_solve_auto_tap_flow`'s own docstring
+    makes for splitting the search out of `auto_tap`, made once more one
+    level up: the plan, the predicate, and the tapping `auto_tap` actually
+    performs are all the same answer.
+
+    **Purely informational.** Nothing about this asks a caller to name mana
+    sources, and nothing consumes it on the way in - `auto_tap` still solves
+    its own plan from every source offered and still stops as soon as the
+    pool can pay (CR 118.3c). What it answers is a question a seat otherwise
+    has to cast the spell to learn: *which* of its sources this cost eats.
+    "This Bolt takes the Cavern of Souls I was holding" is a strategic fact
+    about the board; "how do I pay for a Bolt" never was.
+
+    An empty plan (`[]`) is a real, payable answer - `payer`'s floating mana
+    already covers `cost` and no source needs tapping (see `TapPlan`).
 
     Deliberately builds no `CostPayment`. `CostPayment.for_total` is the only
     thing that ever should - it seeds its pool through `_seed_payer_pool`,
     which calls `_register_pool` and publishes the working pool into
     `game.open_payment_pools[payer]`. That write belongs to a payment that is
-    actually about to happen; a read-only predicate must never make it, dead
-    pool or not. This reads the payer's floating mana directly instead, through
-    a throwaway `_SpendContext` that carries only `game`, `payer`, and `spend`.
+    actually about to happen; a read-only query must never make it, dead pool
+    or not. This reads the payer's floating mana directly instead, through a
+    throwaway `_SpendContext` that carries only `game`, `payer`, and `spend`.
 
     `game`/`payer` are both optional, the same way `CostPayment` allows a
     gameless payment for a unit test: omitted, this asks only whether `cost`
@@ -1700,7 +1730,7 @@ def could_pay_mana_cost(
                 life_available = int(player.life)
             except (TypeError, ValueError):
                 life_available = 0
-    plan = _solve_auto_tap(
+    return _solve_auto_tap(
         context,
         sources,
         owed=cost,
@@ -1710,7 +1740,44 @@ def could_pay_mana_cost(
         life_available=life_available,
         candidate_scan=candidate_scan,
     )
-    return plan is not None
+
+
+def could_pay_mana_cost(
+    cost: ManaCost,
+    sources: Iterable[CardState],
+    *,
+    game: Any = None,
+    payer: str | None = None,
+    spend: "ManaSpend | None" = None,
+    candidate_scan: list[_ScannedCandidate] | None = None,
+) -> bool:
+    """Whether `cost` could be paid right now from `sources` plus whatever
+    mana `payer` already has floating - the public engine entry point for
+    "could this cost be paid from this player's currently available
+    resources", without paying anything.
+
+    This is what legal-action enumeration calls, potentially many times per
+    priority window, with its answers recorded in an append-only training
+    log. It is `plan_mana_payment(...) is not None` and nothing else, so the
+    predicate, the plan reported alongside the action, and the tapping
+    `auto_tap` performs when the action is taken can never disagree - see
+    `plan_mana_payment` for every argument, all of which are forwarded
+    unchanged.
+
+    A caller that wants the plan rather than the verdict should call
+    `plan_mana_payment` directly rather than call this and then solve again.
+    """
+    return (
+        plan_mana_payment(
+            cost,
+            sources,
+            game=game,
+            payer=payer,
+            spend=spend,
+            candidate_scan=candidate_scan,
+        )
+        is not None
+    )
 
 
 class CostStep(StrEnum):
@@ -3903,6 +3970,187 @@ def restriction_for_production(
     return spend_restriction(matches[0].text, source)
 
 
+class _ActivatedMana(NamedTuple):
+    """Which of a permanent's mana abilities a `tap_for_mana` is activating.
+
+    `index` is the position `Game.activated_abilities`/`Game.activate_ability`
+    know that ability by, or `None` when the ability came from somewhere with
+    no printed activated ability behind it (`_activation_behind`'s own miss -
+    an intrinsic ability granted with a basic land type in layer 4, which
+    nothing enumerates as an activation).
+    """
+
+    index: int | None
+    ability: ManaAbility
+
+
+def _activated_mana_ability(
+    context: "CostPayment | _SpendContext",
+    source: CardState,
+    produces: Sequence[Color],
+    restriction: Any = INFER_RESTRICTION,
+) -> tuple[_ActivatedMana | None, list[str]]:
+    """Which of `source`'s mana abilities a tap that adds `produces` counts as
+    having activated, and the CR 602.5 refusals collected along the way.
+
+    Pure: reads the computed board and nothing else, taps nothing, and takes a
+    `_SpendContext` as happily as a live `CostPayment`. That is what lets the
+    two callers share it - `_tap_for_mana_impl`, which then executes the tap,
+    and `mana_ability_index`, which only wants to *report* which ability a
+    planned tap would activate. Splitting it out is the same argument
+    `_solve_auto_tap_flow` makes for splitting the search out of `auto_tap`:
+    the reported ability and the activated one are one answer, so there is no
+    second copy of the matching to disagree with the first.
+
+    Both of CR 106.6's tags (the spend restriction and the additional-effect
+    sentence) are read off the one ability this returns, so they can never
+    come from two different abilities of the same permanent.
+
+    `restriction` is `INFER_RESTRICTION` when the caller did not say which
+    restriction the mana carries. Named, it outranks "the production happened
+    to match" wherever the two could differ.
+
+    Raises `ValueError` when `source` has no `{T}` mana ability at all on the
+    face that is up - a fact about the permanent, identical for both callers.
+    Returns `(None, refusals)` when it has one but none of them offers
+    `produces`.
+    """
+    # Printed abilities plus `CardState.granted_ability_texts`'s own -
+    # Urza's Saga chapter I's own "This Saga gains '{T}: Add {C}.'" is
+    # what makes this second half necessary; see `granted_mana_
+    # abilities`'s own docstring.
+    game = context.game
+    activations = _activations_of(source, game)
+    rewritten = (rewritten_ability_lines(game, source) if game is not None else None) is not None
+    if rewritten:
+        # CR 613.5 / CR 707.2: the computed text is the only text this
+        # permanent has, so the printed card is not consulted at all - the
+        # `{T}` filter `parse_mana_abilities` applies is applied to the
+        # copied lines instead. See `_activations_of`.
+        abilities = [
+            activation.mana
+            for activation in activations
+            if activation.mana is not None
+            and any(piece.kind is CostKind.TAP for piece in activation.costs)
+        ]
+    else:
+        # Plus the intrinsic mana ability that came with a basic land type
+        # granted in layer 4 (CR 305.6, CR 613.1d) - Urborg's Swamp,
+        # Yavimaya's Forest, Dryad's all five. Without it the type showed on
+        # the computed board and the land still refused to be tapped for it.
+        added = added_ability_lines(game, source) if game is not None else ()
+        abilities = (
+            parse_mana_abilities(source.card, source.up_face_name)
+            + granted_mana_abilities(source.granted_ability_texts)
+            + granted_mana_abilities(added)
+        )
+    if not abilities:
+        raise ValueError(
+            f"{source.name} has no {{T}} mana ability on the face that is up "
+            "and cannot be tapped for mana"
+        )
+    land_types, own_counters, has_imprinted_card = _mana_context(context, source)
+    refusals: list[str] = []
+    # The ability this tap is treated as having activated - the first one
+    # that offers `produces`, unless the caller named which restriction the
+    # mana carries and a *later* one is the ability carrying it.
+    activated: _ActivatedMana | None = None
+    named_restriction = restriction is not INFER_RESTRICTION
+    for ability in abilities:
+        behind = _activation_behind(activations, ability)
+        effect = behind[1].effect if behind is not None else ""
+        if behind is not None and [piece.kind for piece in behind[1].costs] == [CostKind.TAP]:
+            # CR 602.5, asked of the ability actually being activated: a
+            # prohibited activation is refused however the source was
+            # chosen. Only a bare-`{T}` ability is asked, because that is
+            # the only shape this path claims to be activating in full -
+            # anything with a further cost was never paid for here.
+            refused = _activation_refused(context, source, behind[0])
+            if refused is not None:
+                refusals.append(refused)
+                continue
+        # `any_color` is carried through rather than dropped: it is what
+        # tells "N mana in any combination of colors" apart from a choice
+        # between printed options, and `ManaAbility.offers` needs it to
+        # know that a genuine mixture - `{G}{W}` out of Smokebraider - is a
+        # production the printing names. Enumerating the mixtures instead
+        # would be `combinations_with_replacement` over five colours, which
+        # is 126 entries at five mana and unbounded for a count the board
+        # decides; see that method.
+        offered, any_color = ability.effective(
+            land_types,
+            own_counters,
+            has_imprinted_card,
+            **_mana_narrowings(context, source, ability),
+        )
+        options, any_color = _narrow_to_defined_colors(
+            offered, any_color, _among_colors(effect, context, source)
+        )
+        if ability.offers(list(produces), options, any_color):
+            match = _ActivatedMana(behind[0] if behind is not None else None, ability)
+            if activated is None:
+                activated = match
+            # A caller that named the restriction named the ability with
+            # it. Every printing in this pool that has two mana abilities
+            # has two *different* productions on them, so the first match
+            # is already the named one and this never has a second
+            # candidate to prefer - but "the caller told us" outranks "the
+            # production happened to match" wherever the two could differ,
+            # and reading one tag from the caller and the other from a
+            # guess is how they would come to disagree.
+            if not named_restriction or spend_restriction(effect, source) == restriction:
+                activated = match
+                break
+    return activated, refusals
+
+
+def mana_ability_index(
+    source: CardState,
+    produces: Sequence[Color],
+    restriction: ManaRestriction | None,
+    *,
+    game: Any = None,
+    payer: str | None = None,
+    candidate_scan: list[_ScannedCandidate] | None = None,
+) -> int | None:
+    """Which of `source`'s abilities `Game.activate_ability` would be told to
+    use for one entry of a `TapPlan` - the index `Game.activated_abilities`
+    knows it by (CR 605.1a), or `None` when nothing enumerable is behind it.
+
+    This is the reporting half of `plan_mana_payment`: a plan entry says
+    *which permanent* and *what it adds*, and this says *which of its
+    abilities does that*, which is the difference between Cavern of Souls's
+    free `{C}` (index 0) and its CR 106.6-restricted mana of any colour
+    (index 1).
+
+    `candidate_scan` is the fast path, and the one `machines/legal_actions`
+    always takes: every plan entry was built out of exactly one of that scan's
+    rows, so the row whose source, restriction and offered options match this
+    entry *is* the ability the solver chose, read back for free. Without it -
+    or on a miss, which a scan hoisted over a wider board than the plan was
+    solved from could produce - the question is put to
+    `_activated_mana_ability`, the same function `tap_for_mana` uses to decide
+    which ability a tap activates. That survey costs a board read per entry,
+    which is why the enumeration hands its scan down rather than paying it
+    once per action.
+
+    `None` rather than a raise when nothing matches: this is a report, and a
+    plan entry that cannot be attributed to a printed ability is still a true
+    statement about which permanent gets tapped and what it adds.
+    """
+    wanted = list(produces)
+    if candidate_scan is not None:
+        for scanned, options, scanned_restriction, _any, index in candidate_scan:
+            if scanned.id == source.id and scanned_restriction == restriction and wanted in options:
+                return index
+    context = _SpendContext(game=game, payer=payer, spend=None)
+    try:
+        activated, _refusals = _activated_mana_ability(context, source, wanted, restriction)
+    except ValueError:
+        return None
+    return activated.index if activated is not None else None
+
+
 def _copy_pool(pool: ManaPool) -> ManaPool:
     """A detached copy of a pool, restrictions included (CR 106.6).
 
@@ -4343,95 +4591,11 @@ class CostPayment(BaseModel):
                 "control since their most recent turn began, so its {T} ability "
                 "cannot be activated"
             )
-        # Printed abilities plus `CardState.granted_ability_texts`'s own -
-        # Urza's Saga chapter I's own "This Saga gains '{T}: Add {C}.'" is
-        # what makes this second half necessary; see `granted_mana_
-        # abilities`'s own docstring.
-        activations = _activations_of(source, self.game)
-        rewritten = (
-            rewritten_ability_lines(self.game, source) if self.game is not None else None
-        ) is not None
-        if rewritten:
-            # CR 613.5 / CR 707.2: the computed text is the only text this
-            # permanent has, so the printed card is not consulted at all - the
-            # `{T}` filter `parse_mana_abilities` applies is applied to the
-            # copied lines instead. See `_activations_of`.
-            abilities = [
-                activation.mana
-                for activation in activations
-                if activation.mana is not None
-                and any(piece.kind is CostKind.TAP for piece in activation.costs)
-            ]
-        else:
-            # Plus the intrinsic mana ability that came with a basic land type
-            # granted in layer 4 (CR 305.6, CR 613.1d) - Urborg's Swamp,
-            # Yavimaya's Forest, Dryad's all five. Without it the type showed on
-            # the computed board and the land still refused to be tapped for it.
-            added = added_ability_lines(self.game, source) if self.game is not None else ()
-            abilities = (
-                parse_mana_abilities(source.card, source.up_face_name)
-                + granted_mana_abilities(source.granted_ability_texts)
-                + granted_mana_abilities(added)
-            )
-        if not abilities:
-            raise ValueError(
-                f"{source.name} has no {{T}} mana ability on the face that is up "
-                "and cannot be tapped for mana"
-            )
-        land_types, own_counters, has_imprinted_card = _mana_context(self, source)
-        refusals: list[str] = []
-        # The ability this tap is treated as having activated - the first one
-        # that offers `produces`, unless the caller named which restriction the
-        # mana carries and a *later* one is the ability carrying it. Both of
-        # CR 106.6's tags are read off this one object, so they can never come
-        # from two different abilities of the same permanent; see where the
-        # spend effect is tagged below.
-        activated: ManaAbility | None = None
-        named_restriction = restriction is not INFER_RESTRICTION
-        for ability in abilities:
-            behind = _activation_behind(activations, ability)
-            effect = behind[1].effect if behind is not None else ""
-            if behind is not None and [piece.kind for piece in behind[1].costs] == [CostKind.TAP]:
-                # CR 602.5, asked of the ability actually being activated: a
-                # prohibited activation is refused however the source was
-                # chosen. Only a bare-`{T}` ability is asked, because that is
-                # the only shape this path claims to be activating in full -
-                # anything with a further cost was never paid for here.
-                refused = _activation_refused(self, source, behind[0])
-                if refused is not None:
-                    refusals.append(refused)
-                    continue
-            # `any_color` is carried through rather than dropped: it is what
-            # tells "N mana in any combination of colors" apart from a choice
-            # between printed options, and `ManaAbility.offers` needs it to
-            # know that a genuine mixture - `{G}{W}` out of Smokebraider - is a
-            # production the printing names. Enumerating the mixtures instead
-            # would be `combinations_with_replacement` over five colours, which
-            # is 126 entries at five mana and unbounded for a count the board
-            # decides; see that method.
-            offered, any_color = ability.effective(
-                land_types,
-                own_counters,
-                has_imprinted_card,
-                **_mana_narrowings(self, source, ability),
-            )
-            options, any_color = _narrow_to_defined_colors(
-                offered, any_color, _among_colors(effect, self, source)
-            )
-            if ability.offers(produces, options, any_color):
-                if activated is None:
-                    activated = ability
-                # A caller that named the restriction named the ability with
-                # it. Every printing in this pool that has two mana abilities
-                # has two *different* productions on them, so the first match
-                # is already the named one and this never has a second
-                # candidate to prefer - but "the caller told us" outranks "the
-                # production happened to match" wherever the two could differ,
-                # and reading one tag from the caller and the other from a
-                # guess is how they would come to disagree.
-                if not named_restriction or spend_restriction(effect, source) == restriction:
-                    activated = ability
-                    break
+        # Which of `source`'s abilities this tap counts as having activated,
+        # and the CR 602.5 refusals collected on the way - `_activated_mana_
+        # ability`, shared with `mana_ability_index` so the ability a
+        # `TapPlan` entry reports is the ability the tap actually activates.
+        activated, refusals = _activated_mana_ability(self, source, produces, restriction)
         if activated is None:
             made = "".join(f"{{{color.value}}}" for color in produces) or "no mana"
             if refusals:
@@ -4464,7 +4628,9 @@ class CostPayment(BaseModel):
         # is here rather than in a commit message because the next reader
         # needs the reason the asymmetry was closed with no test beside it.
         spend_effect = (
-            ManaSpendEffect(text=activated.spend_effect) if activated.spend_effect else None
+            ManaSpendEffect(text=activated.ability.spend_effect)
+            if activated.ability.spend_effect
+            else None
         )
         self.pool.add_all(
             produces,

@@ -206,7 +206,7 @@ def _assert_plan_is_payable(
     *,
     label: str,
 ) -> None:
-    """Confirm `plan` - a real `_TapPlan`, either solver's - is one `pay()`
+    """Confirm `plan` - a real `TapPlan`, either solver's - is one `pay()`
     actually accepts for `cost`, on a fresh, independently-built copy of the
     same board (so validating one solver's plan never taps a source the
     other solver's plan also wanted to use).
