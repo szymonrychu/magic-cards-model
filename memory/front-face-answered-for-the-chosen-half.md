@@ -43,7 +43,7 @@ is already false **because of this very spell**, and re-asking the timing
 question there answers it wrongly for every half. A naive recheck in those
 methods refused a main-phase Sorcery half. So the question is asked once, at
 the proposal, for every option `castable_faces` offers, and frozen onto
-`Casting.face_timing_refusals` for whichever face the caller names later. The
+`Casting.face_cast_refusals` for whichever face the caller names later. The
 proposal is refused only when *every* option is refused, or a `Sorcery //
 Instant` card's legal half becomes unreachable; and `cast` spends the no-face
 answer at CR 601.2i, or a caller that names no half at all smuggles the front
@@ -62,3 +62,41 @@ one through.
   identical rule silently unimplemented: an Adventure was announced
   against its whole printing's profile, so a targetless Stomp resolved dealing
   nothing. Make the chosen face the discriminator, not the layout.
+
+**The third instance, found by taking the same probe one step further
+(2026-09-12).** `why_cannot_cast_restriction` read `spell.card.types` too, for
+CR 611.1's noncreature prohibitions, so the creature front face answered for
+the Adventure half there as well: **Stomp was cast freely under Ranger-Captain
+of Eos's "Your opponents can't cast noncreature spells this turn"**, and again
+out of a graveyard under **Soulless Jailer's "Players can't cast noncreature
+spells from graveyards or exile"**. Both measured by running the engine. This
+is what made it a family rather than a pair, and it is why the answer is frozen
+on one dict (`Casting.face_cast_refusals`) under CR 601.3's umbrella rather
+than a per-question field: the *next* per-face question gets the mechanism for
+free, and a caller cannot spend one answer and forget the other.
+
+The zone prohibition also gave the second half of the ordering argument. CR
+601.2a's move makes `spell.zone` the **stack**, so a zone prohibition asked
+after the move is asked about the wrong zone - the same reason the timing
+question cannot be asked there, arriving from a different direction. Anything
+CR 601.3 wants to know must be asked before the move.
+
+**How to apply, added to the list above:**
+- When two questions are asked at the same point about the same thing, bundle
+  them into one call (`legal_actions._why_cannot_cast_face`). Both used to sit
+  above the per-face loop; fixing one and leaving the other hoisted would have
+  looked like a fix and shipped the same bug.
+- `machines/casting_restrictions.py` must not import `machines/casting.py` -
+  the dependency runs the other way. A characteristic substitution it needs is
+  passed **in** by the caller that knows the face, never re-derived there.
+- Before claiming a read is safely face-blind, name the printing that would
+  distinguish it. `why_cannot_cast_a_land` (CR 305.1) and
+  `legal_actions._CASTABLE_TYPES` were both checked and left: no printed split
+  or adventurer card has a land half, and an MDFC's land face is never named
+  as a `Casting.face`. Recorded rather than silently skipped.
+- An earlier version of this note claimed "no split or adventurer printing has
+  flash on one half only". **Wrong** - Brazen Borrower prints Flash on its
+  creature front and Petty Theft does not. Corrected by sweeping every
+  `split`/`adventure` printing in the pool for the keyword rather than by
+  reasoning about it. It stays unobservable only because the half without the
+  keyword is an Instant anyway.

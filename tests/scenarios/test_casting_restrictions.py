@@ -32,7 +32,9 @@ bug this file exists to catch.
 import pytest
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.casting import Casting
 from magic_cards_model.models import Zone
+from magic_cards_model.models.action import ActionKind
 from tests.scenarios.harness import Scenario
 
 
@@ -373,3 +375,144 @@ def test_the_plus_one_grant_ends_at_the_controllers_own_next_turn():
     scenario.advance()  # begin combat: past alice's new main phase, no grant left
     with pytest.raises(ValueError, match="during their own main phase"):
         scenario.cast("Preordain", username="alice")
+
+
+# --------------------------------------------------------------------------
+# CR 611.1's restriction judged against the *chosen* face (CR 601.3e, 715.3a)
+# --------------------------------------------------------------------------
+#
+# `why_cannot_cast_restriction` asked `spell.card.types`, which reads
+# `Card.front_type_line` - the front half's type line. For an adventurer card
+# that is the creature, so the Adventure half inherited "is a creature spell"
+# from a face nobody was casting: **Stomp, an `Instant - Adventure`, was cast
+# freely under "your opponents can't cast noncreature spells this turn"**, and
+# so was Petty Theft.
+#
+# CR 601.3e is the rule this is an instance of, and it says what the
+# substitution means: "Some rules and effects state that an alternative set of
+# characteristics or a subset of characteristics are considered to determine if
+# a card or copy of a card is legal to cast. These alternative characteristics
+# replace the object's characteristics for this determination." CR 715.3a is
+# one such rule ("only the alternative characteristics are evaluated to see if
+# it can be cast") and CR 709.3a is the other. Read in full off
+# `.rules/MagicCompRules.txt` (effective August 7, 2026) with `mise run
+# rules:find` in the session that wrote this block, along with CR 611.1
+# ("A continuous effect ... affects players or the rules of the game"),
+# CR 101.2 ("the 'can't' effect takes precedence"), CR 302.1 and CR 304.1.
+
+
+def test_an_adventure_half_is_a_noncreature_spell_and_is_refused():
+    """CR 715.3a with CR 611.1: Stomp is an Instant, so the restriction
+    catches it - even though the card it is printed on is a creature.
+
+    Staged in bob's own main phase so that CR 117.1a's timing, which is the
+    *other* per-face CR 601.3 question and unrelated to this one, leaves both
+    halves legal - the restriction is then the only thing that can refuse
+    Stomp, and it has to refuse Stomp alone.
+    """
+    scenario = _board(
+        alice_battlefield=["Ranger-Captain of Eos"],
+        bob_battlefield=["Mountain", "Mountain", "Mountain"],
+        bob_hand=["Bonecrusher Giant"],
+    )
+    _advance_to_bobs_precombat_main(scenario)
+    _sacrifice_ranger_captain(scenario)
+
+    casting = scenario.cast("Bonecrusher Giant", username="bob")
+
+    with pytest.raises(ValueError, match="can't cast noncreature spells"):
+        casting.cast_as_adventure()
+
+
+def test_the_creature_half_of_the_same_card_is_still_castable():
+    """The other side of the same printing, and the reason this cannot be
+    fixed by refusing the whole card: Bonecrusher Giant itself is a creature
+    spell (CR 302.1) and the restriction does not reach it.
+    """
+    scenario = _board(
+        alice_battlefield=["Ranger-Captain of Eos"],
+        bob_battlefield=["Mountain", "Mountain", "Mountain"],
+        bob_hand=["Bonecrusher Giant"],
+    )
+    _advance_to_bobs_precombat_main(scenario)
+    _sacrifice_ranger_captain(scenario)
+
+    casting = scenario.cast("Bonecrusher Giant", username="bob")
+
+    assert casting is not None
+    assert casting.face is None, "no face named is the creature half"
+
+
+def test_an_adventure_half_named_at_the_proposal_is_refused_too():
+    """CR 709.3/715.3 put the choice before CR 601.2a's move, which is the
+    order `Casting`'s constructor takes - the restriction has to read a face
+    handed in there as well as one named afterwards.
+    """
+    scenario = _board(
+        alice_battlefield=["Ranger-Captain of Eos"],
+        bob_battlefield=["Mountain", "Mountain", "Mountain"],
+        bob_hand=["Bonecrusher Giant"],
+    )
+    _advance_to_bobs_precombat_main(scenario)
+    _sacrifice_ranger_captain(scenario)
+    giant = scenario.find("Bonecrusher Giant", Zone.HAND, "bob")
+
+    with pytest.raises(ValueError, match="can't cast noncreature spells"):
+        Casting(
+            spell=giant,
+            caster="bob",
+            origin_zone=Zone.HAND,
+            game=scenario.game,
+            face="Stomp",
+        )
+
+    assert giant.zone is Zone.HAND, "CR 601.3: a refused proposal moves nothing"
+
+
+def test_the_enumeration_drops_the_adventure_row_under_the_restriction():
+    """`legal_actions` asked `why_cannot_cast_restriction` once per card,
+    above its own loop over the faces, so it offered `CAST spell_face=Stomp`
+    while the restriction was live - the same hoisting shape the timing check
+    had.
+    """
+    scenario = _board(
+        alice_battlefield=["Ranger-Captain of Eos"],
+        bob_battlefield=["Mountain", "Mountain", "Mountain"],
+        bob_hand=["Bonecrusher Giant"],
+    )
+    _advance_to_bobs_precombat_main(scenario)
+    _sacrifice_ranger_captain(scenario)
+    if scenario.priority_holder != "bob":
+        scenario.pass_priority(scenario.priority_holder)
+    giant = scenario.find("Bonecrusher Giant", Zone.HAND, "bob")
+
+    faces = {
+        action.spell_face
+        for action in scenario.game.legal_actions("bob")
+        if action.kind is ActionKind.CAST and action.card_id == giant.id
+    }
+
+    assert faces == {None}, "the creature half only - Stomp is a noncreature spell"
+
+
+def test_another_adventurer_cards_adventure_half_is_refused_as_well():
+    """Generality, on a printing this defect was not found on and no decklist
+    here uses: Brazen Borrower // Petty Theft. Different colour, different
+    cost shape (`{1}{U}{U} // {1}{U}`), and its creature half carries flash,
+    so neither half depends on sorcery-speed timing to reach the restriction.
+    """
+    scenario = _board(
+        alice_battlefield=["Ranger-Captain of Eos"],
+        bob_battlefield=["Island", "Island", "Island"],
+        bob_hand=["Brazen Borrower"],
+    )
+    _advance_to_bobs_precombat_main(scenario)
+    _sacrifice_ranger_captain(scenario)
+
+    casting = scenario.cast("Brazen Borrower", username="bob")
+    with pytest.raises(ValueError, match="can't cast noncreature spells"):
+        casting.cast_as_adventure()
+    casting.cancel()
+
+    # The creature half still goes through, flash and all (CR 702.8a).
+    assert scenario.cast("Brazen Borrower", username="bob") is not None

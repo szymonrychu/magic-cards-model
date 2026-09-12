@@ -1499,9 +1499,18 @@ def why_cannot_cast_now(
     rather than of `spell.card.types`, which is the *front* face's. See
     `types_being_cast` for the two printings that measured the difference.
     `has_flash` is left reading the whole printing's Scryfall `keywords`,
-    which carry no face attribution - no split or adventurer printing has
-    flash on one half only, and inventing a per-face keyword parser for a
-    case with no card is not worth the second reading to disagree with.
+    which carry no face attribution. **Brazen Borrower // Petty Theft does
+    print flash on one half only** - it is on the creature front face, not on
+    Petty Theft - so the earlier claim in this docstring that no such printing
+    exists was simply wrong, and was corrected by sweeping every `split`/
+    `adventure` printing in the pool for the keyword. It is still
+    unobservable: the half that does not print flash is an Instant, which
+    CR 304.1 already lets its controller cast at any time, so the card-level
+    read reaches the right answer for both halves. The reading that *would*
+    be wrong - a card-level flash granting instant speed to a **noninstant**
+    half that prints none - has no printing in the pool to prove it on, and
+    `CLAUDE.md` is explicit that generality is demonstrated on a real card
+    rather than asserted, so a per-face keyword read is not built here.
     """
     if game is None:
         return None
@@ -1538,7 +1547,9 @@ def why_cannot_cast_now(
     )
 
 
-def why_cannot_cast_restriction(spell: CardState, caster: str, game: Any = None) -> str | None:
+def why_cannot_cast_restriction(
+    spell: CardState, caster: str, game: Any = None, *, face: str | None = None
+) -> str | None:
     """CR 611.1: why a rules-modifying continuous effect refuses this cast
     outright, or None.
 
@@ -1546,11 +1557,27 @@ def why_cannot_cast_restriction(spell: CardState, caster: str, game: Any = None)
     Eos's "Your opponents can't cast noncreature spells this turn" is a flat
     prohibition that holds at any timing, so it is checked separately rather
     than folded into the sorcery-speed logic above.
+
+    **`face` is the half being cast**, and both type-reading prohibitions
+    below are asked of *that* face's types (CR 601.3e, with CR 709.3a and
+    CR 715.3a as its two instances here). `spell.card.types` reads
+    `Card.front_type_line`, so an adventurer card's front creature answered
+    for its Adventure half: measured live, **Stomp was cast freely under
+    "your opponents can't cast noncreature spells this turn"**, and again out
+    of a graveyard under Soulless Jailer's "Players can't cast noncreature
+    spells from graveyards or exile". Both are noncreature spells; the card
+    they are printed on is not.
+
+    Nothing else here is type-scoped. `targeted_cant_cast_restriction` is
+    Orim's Chant's "can't cast spells at all", and a zone prohibition with no
+    type word (Grafdigger's Cage) catches every spell whichever face is named,
+    so neither can disagree with itself across the halves of one card.
     """
     if game is None:
         return None
+    types = types_being_cast(spell.card, face)
     restriction = restricted_from_noncreature_casting(game, caster)
-    if restriction is not None and Type.CREATURE not in spell.card.types:
+    if restriction is not None and Type.CREATURE not in types:
         return (
             f"{restriction.source_name} says {caster} can't cast noncreature spells "
             f"this turn (CR 611.1)"
@@ -1558,7 +1585,7 @@ def why_cannot_cast_restriction(spell: CardState, caster: str, game: Any = None)
     targeted = targeted_cant_cast_restriction(game, caster)
     if targeted is not None:
         return f"{targeted.source_name} says {caster} can't cast spells this turn (CR 611.1)"
-    prohibited_from = zone_cast_prohibition_source(game, spell.card, spell.zone)
+    prohibited_from = zone_cast_prohibition_source(game, spell.card, spell.zone, types=types)
     if prohibited_from is not None:
         # Grafdigger's Cage's "Players can't cast spells from graveyards or
         # libraries." and Soulless Jailer's "Players can't cast noncreature
@@ -1855,29 +1882,44 @@ class Casting(BaseModel):
     rather than let that mismatch through silently."""
     face: str | None = None
     """The name of the face being cast, for a card with more than one (CR 715.3)."""
-    face_timing_refusals: dict[str, str] = Field(default_factory=dict)
-    """Which faces CR 117.1a refuses this proposal, keyed by face name.
+    face_cast_refusals: dict[str, str] = Field(default_factory=dict)
+    """Why CR 601.3 refuses this proposal for each face, keyed by face name.
 
-    CR 709.3a and CR 715.3a both say only the *chosen* half is evaluated to
-    see if it can be cast, and CR 709.3/715.3 both put that choice **before**
-    the card goes onto the stack. This engine drives CR 601.2 a step at a
-    time, so a caller reaches `cast_as_split_half`/`cast_as_adventure` only
-    after `model_post_init` has already run CR 601.2a's move - at which point
-    CR 307.1's "when the stack is empty" is false because of this very spell,
-    and the question can no longer be asked honestly. So it is asked once, at
-    the proposal, for every option `castable_faces` offers, and the answers
-    are frozen here for whichever face the caller goes on to name.
+    CR 601.3 is the umbrella - "A player can begin to cast a spell only if a
+    rule or effect allows that player to cast it and no rule or effect
+    prohibits that player from casting it" - and two independent questions
+    live under it: CR 117.1a's timing (`why_cannot_cast_now`) and CR 611.1's
+    rules-modifying prohibitions (`why_cannot_cast_restriction`). Both read
+    card types, and CR 601.3e makes that a per-face read: "Some rules and
+    effects state that an alternative set of characteristics or a subset of
+    characteristics are considered to determine if a card or copy of a card
+    is legal to cast. These alternative characteristics replace the object's
+    characteristics for this determination." CR 709.3a and CR 715.3a are its
+    two instances here, and CR 709.3/715.3 both put the choice of face
+    **before** the card goes onto the stack.
+
+    This engine drives CR 601.2 a step at a time, so a caller reaches
+    `cast_as_split_half`/`cast_as_adventure` only after `model_post_init` has
+    already run CR 601.2a's move - at which point CR 307.1's "when the stack
+    is empty" is false because of this very spell, and `spell.zone` is the
+    stack rather than the zone a zone-prohibition (Soulless Jailer) must be
+    asked about. Neither question can be asked honestly from there. So both
+    are asked once, at the proposal, for every option `castable_faces`
+    offers, and the answers are frozen here for whichever face the caller
+    goes on to name.
 
     Only the refused faces are stored; a face absent from this dict is one
-    the timing rules allow. `""` is the key for "no face named" - the card's
-    own characteristics, which is how a single-faced card and an adventurer
+    CR 601.3 allows. `""` is the key for "no face named" - the card's own
+    characteristics, which is how a single-faced card and an adventurer
     card's own creature half are cast. No printed face is named `""`.
 
     A proposal is refused outright only when *every* option is refused
     (`model_post_init`): Incubation // Incongruity is `Sorcery // Instant`,
     so at instant speed the front half is illegal and the back half legal,
     and refusing the proposal on the front half's answer would put Incongruity
-    - a plain Instant - out of reach.
+    - a plain Instant - out of reach. The same holds for a restriction: under
+    "your opponents can't cast noncreature spells this turn", Bonecrusher
+    Giant's creature half is legal while Stomp is not.
     """
     fuse: bool = False
     """True once `cast_fused` has announced both halves of a split card with
@@ -2035,13 +2077,17 @@ class Casting(BaseModel):
         chooses which half of a split card they are casting before putting it
         onto the stack", and CR 715.3 says the same for an adventurer card.
         CR 709.3a/715.3a then evaluate only that chosen half to see if it can
-        be cast - CR 117.1a's timing included. This is therefore the only
-        moment the timing question can be asked honestly for each half: once
-        CR 601.2a's move below has run, CR 307.1's "when the stack is empty"
-        is false because of this very spell.
+        be cast - CR 117.1a's timing and CR 611.1's prohibitions both
+        included, since CR 601.3e makes the chosen face's characteristics
+        *replace* the object's for exactly this determination. This is
+        therefore the only moment either question can be asked honestly for
+        each half: once CR 601.2a's move below has run, CR 307.1's "when the
+        stack is empty" is false because of this very spell, and `spell.zone`
+        is the stack rather than the zone Soulless Jailer must be asked
+        about.
 
-        So it is asked here for every option `castable_faces` offers and the
-        answers are frozen onto `face_timing_refusals`, which
+        So both are asked here for every option `castable_faces` offers and
+        the answers are frozen onto `face_cast_refusals`, which
         `cast_as_split_half`, `cast_as_adventure` and `cast` then read. The
         proposal itself is refused only when **every** option is refused: a
         `Sorcery // Instant` split card at instant speed has one illegal half
@@ -2054,15 +2100,14 @@ class Casting(BaseModel):
         options = castable_faces(self.spell.card) if self.face is None else (self.face,)
         refusals: dict[str, str] = {}
         for option in options:
-            reason = why_cannot_cast_now(self.spell, self.caster, self.game, face=option)
+            reason = why_cannot_cast_now(
+                self.spell, self.caster, self.game, face=option
+            ) or why_cannot_cast_restriction(self.spell, self.caster, self.game, face=option)
             if reason is not None:
                 refusals[option or ""] = reason
         if len(refusals) == len(options):
             raise ValueError(next(iter(refusals.values())))
-        self.face_timing_refusals = refusals
-        refusal = why_cannot_cast_restriction(self.spell, self.caster, self.game)
-        if refusal is not None:
-            raise ValueError(refusal)
+        self.face_cast_refusals = refusals
         if self.game is None:
             # No game to hold a stack, no `_id_allocator_scope` to open - see
             # `_move_to_the_stack`'s own early return for this same case.
@@ -2251,19 +2296,22 @@ class Casting(BaseModel):
         face's own text for CR 601.2c (CR 715.3a: "only the alternative
         characteristics are evaluated to see if it can be cast").
 
-        CR 715.3a is also why the timing rule applies to Stomp's own type
-        line: Stomp is an `Instant - Adventure` printed on a Creature card,
-        and reading Bonecrusher Giant's own front-face Creature type refused
-        it at instant speed. `model_post_init` froze that answer per face
-        (`face_timing_refusals`) before CR 601.2a's move, and this is where
-        it is spent. The refusal leaves the proposal open for the caller to
+        CR 715.3a is also why both CR 601.3 questions are asked of Stomp's
+        own type line rather than the card's. Stomp is an `Instant -
+        Adventure` printed on a Creature card, so reading Bonecrusher Giant's
+        front-face Creature type refused it at instant speed (CR 117.1a) and
+        let it through under "your opponents can't cast noncreature spells
+        this turn" (CR 611.1) and under Soulless Jailer's "Players can't cast
+        noncreature spells from graveyards or exile". `model_post_init` froze
+        both answers per face (`face_cast_refusals`) before CR 601.2a's move,
+        and this is where they are spent. The refusal leaves the proposal open for the caller to
         `cancel` (CR 601.6, CR 733.1), exactly as every other refusal in this
         machine does.
         """
         face = adventure_face(self.spell.card)
         if face is None:
             raise ValueError(f"{self.spell.name} has no Adventure (CR 715.1)")
-        refusal = self.face_timing_refusals.get(face.name)
+        refusal = self.face_cast_refusals.get(face.name)
         if refusal is not None:
             raise ValueError(refusal)
         self._enter_modes()
@@ -2286,17 +2334,21 @@ class Casting(BaseModel):
         Fuse (CR 702.102) - casting *both* halves as one spell - is
         `cast_fused` instead: this always names exactly one.
 
-        **CR 709.3a's timing belongs to the half just named.** "Only the
-        chosen half is evaluated to see if it can be cast" - and CR 117.1a is
-        part of that evaluation. `why_cannot_cast_now` used to be asked once,
+        **CR 709.3a's whole evaluation belongs to the half just named.**
+        "Only the chosen half is evaluated to see if it can be cast" - and
+        CR 117.1a's timing and CR 611.1's prohibitions are both part of that
+        evaluation, CR 601.3e being the rule that substitutes the face's
+        characteristics for the object's. `why_cannot_cast_now` used to be asked once,
         in `model_post_init`, before any half existed to name, where it could
         only read `Card.types` - i.e. the *front* face's type line. Measured
         live, that let Replicate, the **Sorcery** half of Repudiate //
         Replicate (`Instant // Sorcery`), be announced during an upkeep step,
         and refused Incongruity, the **Instant** half of Incubation //
         Incongruity (`Sorcery // Instant`), during one. `model_post_init` now
-        freezes the answer per half (`face_timing_refusals`) before CR 601.2a
-        moves the card, and this is where it is spent; a refusal leaves the
+        freezes the answer per half (`face_cast_refusals`) before CR 601.2a
+        moves the card - which is also the only moment a zone prohibition can
+        be asked about the zone the cast actually comes from, since the move
+        makes `spell.zone` the stack - and this is where it is spent; a refusal leaves the
         proposal open for the caller to `cancel` (CR 601.6, CR 733.1), the
         same as every other refusal in this machine.
         """
@@ -2304,7 +2356,7 @@ class Casting(BaseModel):
             raise ValueError(f"{self.spell.name} is not a split card (CR 709)")
         for face in self.spell.card.card_faces or []:
             if face.name == face_name:
-                refusal = self.face_timing_refusals.get(face_name)
+                refusal = self.face_cast_refusals.get(face_name)
                 if refusal is not None:
                     raise ValueError(refusal)
                 self.face = face_name
@@ -4219,16 +4271,17 @@ class Casting(BaseModel):
             f"announcing a keyword that allows it: {names}"
         )
 
-    def _refuse_unless_face_timing_allows(self) -> None:
+    def _refuse_unless_face_cast_allowed(self) -> None:
         """CR 709.3a/715.3a: refuse at CR 601.2i if the face this cast ended
-        up on is one CR 117.1a never allowed.
+        up on is one CR 601.3 never allowed - CR 117.1a's timing or CR 611.1's
+        prohibitions alike.
 
         `cast_as_split_half` and `cast_as_adventure` each check the face they
         name, but a caller can also name **none**: propose Incubation //
         Incongruity during an upkeep step (allowed, because Incongruity is an
         Instant), then finish the cast without ever choosing a half, and the
         spell would go through as Incubation - a Sorcery, at instant speed.
-        `face_timing_refusals` holds that answer under `""`, frozen at the
+        `face_cast_refusals` holds that answer under `""`, frozen at the
         proposal, so this is the one place it can be spent.
 
         A **fused** split spell (CR 702.102b, CR 709.4d) has both halves'
@@ -4239,7 +4292,7 @@ class Casting(BaseModel):
         `Sorcery // Sorcery`), which is what makes that reading exact here
         rather than merely close.
         """
-        refusal = self.face_timing_refusals.get("" if self.fuse else (self.face or ""))
+        refusal = self.face_cast_refusals.get("" if self.fuse else (self.face or ""))
         if refusal is not None:
             raise ValueError(refusal)
 
@@ -4280,7 +4333,7 @@ class Casting(BaseModel):
         if self.payment is None or self.payment.step is not CostStep.PAID:
             raise ValueError("cannot finish casting before the cost is paid")
         self._refuse_unless_modes_satisfied()
-        self._refuse_unless_face_timing_allows()
+        self._refuse_unless_face_cast_allowed()
         self._refuse_unless_targets_announced()
         self._refuse_if_x_changed_since_targets()
         self._refuse_unless_allowed_from_its_zone()

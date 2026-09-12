@@ -504,6 +504,40 @@ _CASTABLE_TYPES = frozenset(
 ) | frozenset({Type.INSTANT})
 
 
+def _why_cannot_cast_face(
+    game: Any, player: str, card: CardState, face_name: str | None
+) -> str | None:
+    """Both of CR 601.3's per-face questions as one, for one enumerated row,
+    or None if this face may be cast right now.
+
+    CR 601.3: "A player can begin to cast a spell only if a rule or effect
+    allows that player to cast it and no rule or effect prohibits that player
+    from casting it." CR 117.1a's timing (`why_cannot_cast_now`) and CR 611.1's
+    rules-modifying prohibitions (`why_cannot_cast_restriction`) are the two
+    halves of that, and both read card types - which CR 601.3e makes a read of
+    the *chosen* face's characteristics, not the printing's ("These
+    alternative characteristics replace the object's characteristics for this
+    determination"), with CR 709.3a and CR 715.3a as the two instances.
+
+    Bundled into one function because every call site needs both and because
+    asking them together is what stops one from being hoisted above a per-face
+    loop while the other stays inside it. Both used to sit above the loop over
+    `_base_cost_options`, so one answer - the front face's - was reported for
+    every row: both halves of Repudiate // Replicate (`Instant // Sorcery`)
+    were offered during an upkeep step, neither half of Incubation //
+    Incongruity (`Sorcery // Instant`) was offered at all, and
+    `spell_face=Stomp` was offered while "your opponents can't cast
+    noncreature spells this turn" was live.
+
+    `face_name=None` is "no face named", which is every single-faced card, an
+    adventurer card's own creature half, and every option that enumerates no
+    faces at all - the same value `Action.spell_face` carries for those rows.
+    """
+    return why_cannot_cast_now(card, player, game, face=face_name) or why_cannot_cast_restriction(
+        card, player, game, face=face_name
+    )
+
+
 def _base_cost_options(card: Card) -> list[tuple[str | None, ManaCost]]:
     """Every face this card could announce a plain cast for (CR 709.3's
     split-card choice, CR 715.3's Adventure), as `(face name to record via
@@ -583,14 +617,12 @@ def _permission_cast_actions(
         # other way round.
         if permission.why_not(card, player, game, action=PlayAction.CAST) is not None:
             continue
-        if why_cannot_cast_restriction(card, player, game) is not None:
-            continue
         if permission.pays_mana_cost:
             for face_name, mana in _base_cost_options(card.card):
-                # CR 709.3a/715.3a: timing is the *named* face's question -
-                # see the plain-hand branch in `_cast_actions` for what the
-                # face-blind version of this call used to report.
-                if why_cannot_cast_now(card, player, game, face=face_name) is not None:
+                # CR 709.3a/715.3a: both of CR 601.3's questions belong to the
+                # *named* face - see the plain-hand branch in `_cast_actions`
+                # for what the face-blind versions of these calls reported.
+                if _why_cannot_cast_face(game, player, card, face_name) is not None:
                     continue
                 actions.append(
                     _cast_action(
@@ -606,7 +638,7 @@ def _permission_cast_actions(
                         splice_options=splice_options,
                     )
                 )
-        elif why_cannot_cast_now(card, player, game) is None:
+        elif _why_cannot_cast_face(game, player, card, None) is None:
             actions.append(
                 _cast_action(
                     game,
@@ -650,20 +682,20 @@ def _cast_actions(
     splice_options = _splice_options_for(game, player, card)
 
     if zone is Zone.HAND:
-        refusal = why_cannot_cast_from(
-            card, player, Zone.HAND, game
-        ) or why_cannot_cast_restriction(card, player, game)
-        if refusal is None:
+        if why_cannot_cast_from(card, player, Zone.HAND, game) is None:
             for face_name, mana in _base_cost_options(card.card):
                 # CR 709.3a/715.3a: "only the chosen half is evaluated to see
-                # if it can be cast", CR 117.1a's timing included - so this
-                # is asked once per face, not once for the card. Asked for
-                # the card it reads `Card.types`, the *front* face's type
-                # line, and measured live that reported both halves of
-                # Repudiate // Replicate (`Instant // Sorcery`) as castable
-                # during an upkeep step and neither half of Incubation //
-                # Incongruity (`Sorcery // Instant`) as castable at all.
-                if why_cannot_cast_now(card, player, game, face=face_name) is not None:
+                # if it can be cast", and CR 601.3e makes that substitution
+                # cover CR 117.1a's timing and CR 611.1's prohibitions alike -
+                # so both are asked once per face, not once for the card.
+                # Asked for the card they read `Card.types`, the *front*
+                # face's type line, and measured live that reported both
+                # halves of Repudiate // Replicate (`Instant // Sorcery`) as
+                # castable during an upkeep step, neither half of Incubation
+                # // Incongruity (`Sorcery // Instant`) as castable at all,
+                # and `spell_face=Stomp` as castable while "your opponents
+                # can't cast noncreature spells this turn" was live.
+                if _why_cannot_cast_face(game, player, card, face_name) is not None:
                     continue
                 actions.append(
                     _cast_action(
@@ -703,13 +735,12 @@ def _cast_actions(
         # keyword="Evoke")` refuses on timing (`Casting.model_post_init` runs
         # `why_cannot_cast_now`/`why_cannot_cast_restriction` unconditionally,
         # regardless of which keyword or alternative cost pays for the cast).
-        # Timing is asked per face below wherever this option enumerates
-        # faces at all (CR 709.3a/715.3a) and once for the card otherwise.
-        if why_cannot_cast_restriction(card, player, game) is not None:
-            continue
+        # Both CR 601.3 questions are asked per face below wherever this
+        # option enumerates faces at all (CR 709.3a/715.3a/601.3e) and once
+        # for the card otherwise.
         if option.pays_mana_cost:
             for face_name, mana in _base_cost_options(card.card):
-                if why_cannot_cast_now(card, player, game, face=face_name) is not None:
+                if _why_cannot_cast_face(game, player, card, face_name) is not None:
                     continue
                 actions.append(
                     _cast_action(
@@ -725,7 +756,7 @@ def _cast_actions(
                         splice_options=splice_options,
                     )
                 )
-        elif why_cannot_cast_now(card, player, game) is None:
+        elif _why_cannot_cast_face(game, player, card, None) is None:
             total = option.cost if option.cost is not None else TotalCost()
             actions.append(
                 _cast_action(
@@ -764,9 +795,7 @@ def _cast_actions(
             # the card itself is exempt (instant, flash, an `immediate`
             # permission) - `alternative.available` never asked either
             # question.
-            if why_cannot_cast_now(card, player, game) is not None:
-                continue
-            if why_cannot_cast_restriction(card, player, game) is not None:
+            if _why_cannot_cast_face(game, player, card, None) is not None:
                 continue
             # `alternative.cost is None` is a real answer for a STATIC grant
             # (Omniscience: "nothing" is the whole cost, CR 107.3b), not a
