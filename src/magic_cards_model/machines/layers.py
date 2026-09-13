@@ -79,10 +79,10 @@ from __future__ import annotations
 import re
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from enum import IntEnum, StrEnum
-from typing import TYPE_CHECKING, Annotated, Literal
+from typing import TYPE_CHECKING, Annotated, Literal, cast
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, model_validator
 
 from ..ids import new_id
 from ..models.card import Color, Supertype, Type
@@ -6505,6 +6505,8 @@ class ContinuousEffects(BaseModel):
     later than that spell's effect, which is what CR 613.7 means by order.
     """
 
+    _game: object = PrivateAttr(default=None)
+
     effects: list[ContinuousEffect] = Field(default_factory=list)
     """Effects created by resolution, oldest first. Static abilities are not
     stored: they are rebuilt from the battlefield every time (CR 611.3b)."""
@@ -6575,6 +6577,7 @@ class ContinuousEffects(BaseModel):
         )
         kept = [effect for effect in built if effect.holds(game)]
         self.effects.extend(kept)
+        self._note_control_change(kept, game)
         return kept
 
     def add(self, effect: ContinuousEffect, game: Game | None = None) -> ContinuousEffect:
@@ -6582,7 +6585,26 @@ class ContinuousEffects(BaseModel):
         the registry. Subject to CR 611.2b just the same."""
         if effect.holds(game):
             self.effects.append(effect)
+            self._note_control_change([effect], game)
         return effect
+
+    def bind_to_game(self, game: Game) -> None:
+        """Remember the `Game` holding this store, so a stored control effect
+        can reach it even from a caller that did not pass `game`.
+
+        Excluded from serialisation, the same back-reference shape as
+        `CardState.bind_to_game`; `Game.model_post_init` binds it.
+        """
+        self._game = game
+
+    def _note_control_change(self, stored: Sequence[ContinuousEffect], game: Game | None) -> None:
+        """A layer 2 control effect was stored (CR 613.1b): a new controller of
+        a hideaway permanent may look at its face-down card (CR 702.75a)."""
+        if not any(effect.layer is Layer.CONTROL for effect in stored):
+            return
+        bound = game if game is not None else cast("Game | None", self._game)
+        if bound is not None:
+            bound.note_hideaway_viewers()
 
     def has_control_effect(self, game: Game | None = None) -> bool:
         """Whether any stored effect is a layer 2 control change (CR 613.1b).
