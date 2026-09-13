@@ -122,7 +122,7 @@ from ..models.token import TokenDefinition, is_token
 from ..models.zone import Zone
 from .abilities import keywords_in_lines
 from .combat import Keyword
-from .decisions import Decision, DecisionKind
+from .decisions import Decision, DecisionKind, source_id_of
 from .delayed import ReflexiveExileCopiedCard
 
 if TYPE_CHECKING:
@@ -3040,7 +3040,7 @@ def _pay_life_or_tapped(amount: int, card_name: str) -> Apply:
         if who is None:
             event.tapped = True
             return
-        if not game.may_pay_life(who, amount, source=card_name):
+        if not game.may_pay_life(who, amount, source=card_name, source_id=source_id_of(source)):
             event.tapped = True
 
     return apply
@@ -3401,6 +3401,7 @@ def _choose_a_quality(kind: ChoiceKind, card_name: str) -> Apply:
             player=who,
             prompt=f"choose a {kind.value.replace('_', ' ')}",
             source=card_name,
+            source_id=source_id_of(source),
             options=_COLOR_OPTIONS if kind is ChoiceKind.COLOR else (),
         )
         value = game.ask(decision)
@@ -3632,6 +3633,7 @@ def _enters_as_copy(effect: ReplacementEffect, card_name: str) -> Apply:
             entering.controller,
             f"have {card_name} enter as a copy of {effect.copy_of}",
             source=card_name,
+            source_id=source_id_of(source),
         ):
             # CR 614.12a's choice, declined. The permanent enters as itself.
             return
@@ -3641,6 +3643,7 @@ def _enters_as_copy(effect: ReplacementEffect, card_name: str) -> Apply:
                 player=entering.controller,
                 prompt=f"choose {effect.copy_of} for {card_name} to enter as a copy of",
                 source=card_name,
+                source_id=source_id_of(source),
                 amount=1,
                 cards=tuple(candidate.id for candidate in candidates),
             )

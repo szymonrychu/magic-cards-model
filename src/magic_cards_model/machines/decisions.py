@@ -137,6 +137,7 @@ from ..models.card_state import TargetRef
 
 if TYPE_CHECKING:  # pragma: no cover - import cycle: the models build on the machines
     from ..models.card_state import CardState
+    from .triggers import AbilityOnStack
 
 __all__ = [
     "Answer",
@@ -155,6 +156,7 @@ __all__ = [
     "default_answer",
     "legal_options",
     "rule_for_kind",
+    "source_id_of",
 ]
 
 
@@ -365,6 +367,18 @@ class Decision:
     #: The card whose text is asking, by name. `None` for a question the rules
     #: ask rather than a card - the mulligan declaration (CR 103.5) is the one.
     source: str | None = None
+    #: The game object asking, by id: the `CardState`/`TokenState` whose spell,
+    #: ability, trigger, replacement effect or cost produced this question -
+    #: for an ability on the stack, the card behind it (`AbilityOnStack.
+    #: source_id`). A name cannot tell two Steam Vents apart; this can, which
+    #: is what lets a client point at the card asking. `None` when no object
+    #: asks - a turn-based action (the combat declarations, CR 508.1/509.1;
+    #: the cleanup discard, CR 514.1), a state-based action (the legend rule,
+    #: CR 704.5j), the pregame (CR 103.5), or CR 603.3b's ordering, which is
+    #: about several abilities at once. A string so it serializes as itself;
+    #: build it with `source_id_of`. Like `card`, not part of
+    #: `ScriptedAnswer.matches`.
+    source_id: str | None = None
     #: The specific card this question is about, when a name is not enough to
     #: identify it. Set for CR 103.6's opening-hand actions, where a hand can
     #: hold two copies of the card offering the action and the answer has to say
@@ -461,6 +475,23 @@ class Decision:
     #: (see the module docstring), and this field is where a caller writes the
     #: deviation down rather than hiding it in a reversed candidate list.
     default_cards: tuple[UUID, ...] | None = None
+
+
+def source_id_of(obj: "CardState | AbilityOnStack | UUID | None") -> str | None:
+    """The `Decision.source_id` naming `obj` as the object asking.
+
+    A `CardState` (a `TokenState` included) is its own id. An `AbilityOnStack`
+    is an object of its own (CR 113.1c) but not a card, so it names the card
+    behind it, or nothing when it has none. A bare id is taken as given;
+    `None` stays `None`.
+    """
+    if obj is None:
+        return None
+    if isinstance(obj, UUID):
+        return str(obj)
+    if obj.state_class == "AbilityOnStack":
+        return None if obj.source_id is None else str(obj.source_id)
+    return str(obj.id)
 
 
 def legal_options(decision: Decision) -> tuple[bool, ...]:
@@ -1081,7 +1112,7 @@ def ask_mulligan(script: DecisionScript, player: str, *, prompt: str = "take a m
     Nothing random happens here, and the reshuffle seed `Match.run_mulligans`
     derives is a function of the declarations, not of who produced them.
     """
-    decision = Decision(kind=DecisionKind.MULLIGAN, player=player, prompt=prompt)
+    decision = Decision(kind=DecisionKind.MULLIGAN, player=player, prompt=prompt, source_id=None)
     script.asked.append(decision)
     found, value = script.take(decision)
     if not found:
@@ -1173,6 +1204,9 @@ def ask_trigger_order(
         prompt=prompt,
         cards=ids,
         card_labels=labels,
+        # CR 603.3b's question is about several abilities, each with a source
+        # of its own, so no one object asks it.
+        source_id=None,
     )
     script.asked.append(decision)
     found, value = script.take(decision)
@@ -1257,7 +1291,7 @@ def _ask_declaration(
     staging into the script or the tape - and this asker uses it the same way
     `Game.ask`, `ask_mulligan`, and `ask_trigger_order` do.
     """
-    decision = Decision(kind=kind, player=player, prompt=prompt, cards=attackers)
+    decision = Decision(kind=kind, player=player, prompt=prompt, cards=attackers, source_id=None)
     script.asked.append(decision)
     found, value = script.take(decision)
     if not found:

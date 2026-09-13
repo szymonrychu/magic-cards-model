@@ -94,6 +94,7 @@ from ..machines.decisions import (
     default_answer,
     legal_options,
     rule_for_kind,
+    source_id_of,
 )
 from ..machines.delayed import (
     DelayedEffectSpec,
@@ -1867,7 +1868,7 @@ class Game(BaseModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 7
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 8
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -1952,6 +1953,15 @@ class Game(BaseModel):
     to ten rather than three. Each changes what an already-recorded restricted
     mana in a pool may pay for, or what an already-recorded permanent's mana
     ability produces.
+
+    Bumped 7 -> 8: `Decision` gained `source_id` - the id of the object asking
+    each question - and a `Decision` is reachable from `Game.model_dump()`
+    through `decisions.asked`. A version-7 dump has no `source_id` on any
+    question it recorded, and decoded at version 8 that absence would read as
+    "no object asked this" - the claim this field makes only for a turn-based
+    action, a state-based action or the pregame - on every shockland's,
+    fetchland's and scry spell's question alike. Refused rather than decoded
+    into a record that says the wrong thing about who asked.
     """
 
     @model_validator(mode="before")
@@ -3623,6 +3633,7 @@ class Game(BaseModel):
                     player=controller,
                     prompt=f"choose targets for {card.name}",
                     source=card.name,
+                    source_id=source_id_of(card),
                     targets=tuple(TargetRef.coerce(candidate) for candidate in candidates),
                     target_maximum=profile.max_targets,
                     # CR 601.2c: mandatory, capped at how many legal targets
@@ -3739,7 +3750,7 @@ class Game(BaseModel):
             return copy
 
     def offer_new_targets_for_copy(
-        self, copy: CardState, controller: str, *, source_name: str = ""
+        self, copy: CardState, controller: str, *, source_name: str = "", source_id: str | None
     ) -> None:
         """CR 707.10c-shaped permission: "you may choose new targets for the
         copy" (Alania, Divergent Storm being the only printing in the pool).
@@ -3760,7 +3771,10 @@ class Game(BaseModel):
         if not candidates:
             return
         if not self.may(
-            self.player(controller), "choose new targets for the copy", source=source_name
+            self.player(controller),
+            "choose new targets for the copy",
+            source=source_name,
+            source_id=source_id,
         ):
             return
         decision = Decision(
@@ -3768,6 +3782,7 @@ class Game(BaseModel):
             player=controller,
             prompt=f"choose new targets for the copy of {copy.name}",
             source=source_name,
+            source_id=source_id,
             targets=tuple(TargetRef.coerce(candidate) for candidate in candidates),
             target_maximum=profile.max_targets,
             # Deliberately 0, not `profile.min_targets`: CR 707.10c is "you may
@@ -4485,6 +4500,7 @@ class Game(BaseModel):
             player=controller,
             prompt=f"choose targets for {source_name}",
             source=source_name,
+            source_id=source_id_of(source_id),
             targets=tuple(TargetRef.coerce(candidate) for candidate in candidates),
             target_maximum=profile.max_targets,
             target_minimum=min(profile.min_targets, len(candidates)),
@@ -5138,6 +5154,7 @@ class Game(BaseModel):
                 kind=DecisionKind.CHOOSE_CARDS,
                 player=player.username,
                 prompt=f"put {needed} card(s) on the bottom of your library",
+                source_id=None,  # CR 103.5: the rules ask, not an object.
                 amount=needed,
                 cards=tuple(state.id for state in hand),
             )
@@ -5235,6 +5252,7 @@ class Game(BaseModel):
                             player=player.username,
                             prompt=action.text,
                             source=card_state.name,
+                            source_id=source_id_of(card_state),
                             card=card_state.id,
                         ),
                         action,
@@ -5682,6 +5700,7 @@ class Game(BaseModel):
                 kind=DecisionKind.CHOOSE_CARDS,
                 player=player.username,
                 prompt=f"discard {needed} card(s) to maximum hand size",
+                source_id=None,  # CR 514.1: a turn-based action, not an object's.
                 amount=needed,
                 cards=tuple(state.id for state in player.hand),
             )
@@ -5690,7 +5709,14 @@ class Game(BaseModel):
             by_id = {state.id: state for state in player.hand}
             return [by_id[card_id] for card_id in chosen_ids]
 
-    def may(self, player: Player | str, prompt: str, *, source: str | None = None) -> bool:
+    def may(
+        self,
+        player: Player | str,
+        prompt: str,
+        *,
+        source: str | None = None,
+        source_id: str | None = None,
+    ) -> bool:
         """A plain "you may" during resolution (CR 608.2d).
 
         Both branches are always legal, so this is the one question where the
@@ -5698,11 +5724,24 @@ class Game(BaseModel):
         """
         username = player if isinstance(player, str) else player.username
         answer = self.ask(
-            Decision(kind=DecisionKind.MAY, player=username, prompt=prompt, source=source)
+            Decision(
+                kind=DecisionKind.MAY,
+                player=username,
+                prompt=prompt,
+                source=source,
+                source_id=source_id,
+            )
         )
         return bool(answer)
 
-    def may_pay_life(self, player: Player | str, amount: int, *, source: str | None = None) -> bool:
+    def may_pay_life(
+        self,
+        player: Player | str,
+        amount: int,
+        *,
+        source: str | None = None,
+        source_id: str | None = None,
+    ) -> bool:
         """ "You may pay N life", asked and then paid (CR 119.4, CR 608.2d).
 
         CR 119.4: "If a cost or effect allows a player to pay an amount of life
@@ -5727,6 +5766,7 @@ class Game(BaseModel):
                 player=player.username,
                 prompt=f"pay {amount} life",
                 source=source,
+                source_id=source_id,
                 amount=amount,
                 affirmative_is_legal=payable,
             )
@@ -5738,7 +5778,12 @@ class Game(BaseModel):
         return True
 
     def may_pay_energy(
-        self, player: Player | str, amount: int, *, source: str | None = None
+        self,
+        player: Player | str,
+        amount: int,
+        *,
+        source: str | None = None,
+        source_id: str | None = None,
     ) -> bool:
         """ "You may pay {E}{E}..." / "...unless you pay {E}", asked and then
         paid (CR 107.14, CR 118.3, CR 608.2d).
@@ -5771,6 +5816,7 @@ class Game(BaseModel):
                 player=player.username,
                 prompt=f"pay {amount} energy",
                 source=source,
+                source_id=source_id,
                 amount=amount,
                 affirmative_is_legal=payable,
             )
@@ -5781,7 +5827,14 @@ class Game(BaseModel):
             player.remove_counters(Counter.ENERGY, amount)
         return True
 
-    def may_pay_mana(self, player: Player | str, amount: int, *, source: str | None = None) -> bool:
+    def may_pay_mana(
+        self,
+        player: Player | str,
+        amount: int,
+        *,
+        source: str | None = None,
+        source_id: str | None = None,
+    ) -> bool:
         """ "Unless its controller pays {N}", asked and then paid (CR 118.12a,
         CR 608.2d) - Censor's and Mystical Dispute's shape.
 
@@ -5808,6 +5861,7 @@ class Game(BaseModel):
                 player=player.username,
                 prompt=f"pay {{{amount}}} or the spell is countered",
                 source=source,
+                source_id=source_id,
                 amount=amount,
                 affirmative_is_legal=payable,
             )
@@ -5819,7 +5873,12 @@ class Game(BaseModel):
         return True
 
     def may_pay_mana_cost(
-        self, player: Player | str, cost: ManaCost, *, source: str | None = None
+        self,
+        player: Player | str,
+        cost: ManaCost,
+        *,
+        source: str | None = None,
+        source_id: str | None = None,
     ) -> bool:
         """ "Pay {cost}. If you don't, ..." with a real (possibly colored) mana
         cost rather than `may_pay_mana`'s bare generic amount - the Pact
@@ -5843,6 +5902,7 @@ class Game(BaseModel):
                 player=player.username,
                 prompt=f"pay {cost}",
                 source=source,
+                source_id=source_id,
                 amount=cost.converted,
                 affirmative_is_legal=payable,
             )
@@ -5857,6 +5917,7 @@ class Game(BaseModel):
         player: Player | str,
         *,
         source: str | None = None,
+        source_id: str | None = None,
         prompt: str = "pay any amount of {E}",
     ) -> int:
         """ "You may pay any amount of {E}" (Galvanic Discharge, Wrath of the
@@ -5887,6 +5948,7 @@ class Game(BaseModel):
             player=player.username,
             prompt=prompt,
             source=source,
+            source_id=source_id,
             amount=available,
         )
         paid = self.ask(decision)
@@ -5900,6 +5962,7 @@ class Game(BaseModel):
         player: Player | str,
         *,
         source: str | None = None,
+        source_id: str | None = None,
         prompt: str = "pay any amount of life",
     ) -> int:
         """ "You may pay any amount of life" (Necrodominance) - CR 119.4's
@@ -5922,6 +5985,7 @@ class Game(BaseModel):
             player=player.username,
             prompt=prompt,
             source=source,
+            source_id=source_id,
             amount=available,
         )
         paid = self.ask(decision)
@@ -5956,7 +6020,14 @@ class Game(BaseModel):
             rest.sort(key=lambda state: ranked.get(state.id, len(ranked)))
         return moved, rest
 
-    def scry(self, player: Player | str, count: int, *, source: str | None = None) -> CardSplit:
+    def scry(
+        self,
+        player: Player | str,
+        count: int,
+        *,
+        source: str | None = None,
+        source_id: str | None = None,
+    ) -> CardSplit:
         """Scry N (CR 701.22a).
 
         "To 'scry N' means to look at the top N cards of your library, then put
@@ -5985,6 +6056,7 @@ class Game(BaseModel):
                     player=player.username,
                     prompt=f"scry {count}",
                     source=source,
+                    source_id=source_id,
                     amount=count,
                     cards=tuple(state.id for state in looked_at),
                     # CR 701.22a's own two destinations, quoted above, so a client
@@ -6006,7 +6078,14 @@ class Game(BaseModel):
                 top_order=tuple(state.id for state in on_top),
             )
 
-    def surveil(self, player: Player | str, count: int, *, source: str | None = None) -> CardSplit:
+    def surveil(
+        self,
+        player: Player | str,
+        count: int,
+        *,
+        source: str | None = None,
+        source_id: str | None = None,
+    ) -> CardSplit:
         """Surveil N (CR 701.25a).
 
         "To 'surveil N' means to look at the top N cards of your library, then
@@ -6034,6 +6113,7 @@ class Game(BaseModel):
                     player=player.username,
                     prompt=f"surveil {count}",
                     source=source,
+                    source_id=source_id,
                     amount=count,
                     cards=tuple(state.id for state in looked_at),
                     # CR 701.25a's own two destinations, quoted above: the same
@@ -6064,6 +6144,7 @@ class Game(BaseModel):
         moved_label: str,
         kept_label: str,
         source: str | None = None,
+        source_id: str | None = None,
         prompt: str | None = None,
     ) -> tuple[list[CardState], list[CardState]]:
         """Look at the top `count` cards and split them into two groups, the
@@ -6127,6 +6208,7 @@ class Game(BaseModel):
                 player=player.username,
                 prompt=prompt or f"look at the top {count} card(s)",
                 source=source,
+                source_id=source_id,
                 amount=count,
                 cards=tuple(state.id for state in looked_at),
                 moved_label=moved_label,
@@ -6204,6 +6286,7 @@ class Game(BaseModel):
         optional: bool = False,
         shuffle: bool = True,
         source: str | None = None,
+        source_id: str | None = None,
         zone: Zone = Zone.LIBRARY,
     ) -> list[CardState]:
         """Search one of a player's zones, take what was found out of it, and
@@ -6304,6 +6387,7 @@ class Game(BaseModel):
                             else f"choose {limit} card(s) to find while searching your {zone.value}"
                         ),
                         source=source,
+                        source_id=source_id,
                         amount=limit,
                         cards=tuple(state.id for state in candidates),
                         card_labels=tuple(state.name for state in candidates),
@@ -9028,6 +9112,7 @@ class Game(BaseModel):
             kind=DecisionKind.CHOOSE_CARDS,
             player=username,
             prompt=f"choose which {name} to keep (CR 704.5j)",
+            source_id=None,  # CR 704.5j: a state-based action, not an object's.
             amount=1,
             exact=True,
             cards=tuple(state.id for state in offered),
