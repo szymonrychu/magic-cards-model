@@ -748,16 +748,14 @@ def enchant_a_forest(scenario: PlayedScenario):
 
 def test_tapping_the_enchanted_land_once_adds_exactly_one_bonus_mana():
     """CR 106.12a: Utopia Sprawl's trigger fires once for the one real tap,
-    and resolving it is the only thing that adds its bonus mana - passing
-    priority afterwards, with nothing further tapped, adds nothing more.
+    and resolving it - at once, off the stack (CR 605.4a) - is the only thing
+    that adds its bonus mana; passing priority afterwards, with nothing
+    further tapped, adds nothing more.
     """
     scenario = utopia_board().build()
     forest = enchant_a_forest(scenario)
 
     scenario.activate(forest)
-    assert scenario.stack_names() == ["Utopia Sprawl's triggered ability"]
-    scenario.pass_priority("alice")
-    scenario.pass_priority("bob")
 
     assert scenario.stack_names() == []
     assert scenario.player("alice").mana_pool.floating == {Color.GREEN: 2}
@@ -812,10 +810,8 @@ def test_a_cancelled_payments_tap_does_not_leave_its_trigger_behind():
     )
 
     # The land is still fully functional: a real, uncancelled tap still
-    # queues and resolves the trigger exactly once.
+    # resolves the trigger exactly once.
     scenario.activate(forest)
-    scenario.pass_priority("alice")
-    scenario.pass_priority("bob")
     assert scenario.player("alice").mana_pool.floating == {Color.GREEN: 2}
 
 
@@ -838,7 +834,10 @@ def test_rewinding_a_completed_payment_also_withdraws_its_trigger():
     payment = casting.begin_paying()
     payment.tap_for_mana(forest, [Color.GREEN])
     payment.pay()
-    assert len(scenario.pending_triggers) == 1
+    assert scenario.pending_triggers == [], "CR 605.4a: it resolved into the payment"
+    assert scenario.player("alice").mana_pool.floating == {Color.GREEN: 1}, (
+        "the bonus mana the {G} did not need floats (CR 106.4a)"
+    )
     casting.cancel()
 
     assert scenario.pending_triggers == []

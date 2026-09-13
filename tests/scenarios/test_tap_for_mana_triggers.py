@@ -23,10 +23,11 @@ Three cards in the pool read this condition:
   adds an additional one mana of the chosen color." - only the land the Aura
   is attached to, read off `attached_to`.
 
-None of these have an `EFFECTS` entry ("add an additional" mana is not itself
-wired up), and a *triggered* mana ability is not modelled as skipping the
-stack the way CR 605.4a says it should (see `docs/engine-coverage.md`), so
-every assertion here is "the ability reached the stack", not what it produces.
+None of these have an `EFFECTS` entry; `machines/abilities.parse_triggered_mana`
+reads the mana. CR 605.4a: "A triggered mana ability doesn't go on the stack
+... Rather, it resolves immediately after the mana ability that triggered it,
+without waiting for priority" - so a trigger here shows as mana in the pool
+with nothing on the stack, and a trigger that did not happen as neither.
 """
 
 from magic_cards_model.machines import Step
@@ -48,7 +49,8 @@ def test_tapping_your_own_creature_for_its_own_mana_ability_triggers_leyline():
 
     scenario.activate(elves)
 
-    assert scenario.stack_names() == ["Leyline of Abundance's triggered ability"]
+    assert scenario.stack_names() == []
+    assert scenario.player("alice").mana_pool.floating == {Color.GREEN: 2}
 
 
 def test_tapping_a_land_for_mana_does_not_trigger_leyline():
@@ -88,7 +90,10 @@ def test_tapping_a_creature_to_pay_for_a_spell_triggers_badgermole_cub():
 
     scenario.cast_onto_stack("Llanowar Elves", tapper, username="alice")
 
-    assert scenario.stack_names() == ["Llanowar Elves", "Badgermole Cub's triggered ability"]
+    assert scenario.stack_names() == ["Llanowar Elves"]
+    assert scenario.player("alice").mana_pool.floating == {Color.GREEN: 1}, (
+        "Badgermole Cub's {G} resolved into the payment and was not needed, so it floats"
+    )
 
 
 def test_an_opponents_creature_tapped_for_mana_does_not_trigger_badgermole_cub():
@@ -132,7 +137,8 @@ def test_the_enchanted_land_being_tapped_for_mana_triggers_utopia_sprawl():
 
     scenario.activate(forest)
 
-    assert scenario.stack_names() == ["Utopia Sprawl's triggered ability"]
+    assert scenario.stack_names() == []
+    assert scenario.player("alice").mana_pool.total == 2
 
 
 def test_tapping_a_plain_noncreature_land_does_not_trigger_badgermole_cub():
@@ -172,7 +178,8 @@ def test_tapping_a_mana_producing_creature_triggers_badgermole_cub():
 
     scenario.activate(halfling)
 
-    assert scenario.stack_names() == ["Badgermole Cub's triggered ability"]
+    assert scenario.stack_names() == []
+    assert scenario.player("alice").mana_pool.floating == {Color.COLORLESS: 1, Color.GREEN: 1}
 
 
 def test_tapping_a_land_animated_into_a_creature_triggers_badgermole_cub():
@@ -200,10 +207,12 @@ def test_tapping_a_land_animated_into_a_creature_triggers_badgermole_cub():
     # Still plain `Land` on the printed/up-face read - only the computed board
     # (Game.characteristics_of) knows earthbend made it a creature too.
     assert Type.CREATURE not in target_forest.types
+    green_before = scenario.player("alice").mana_pool.floating.get(Color.GREEN, 0)
 
     scenario.activate(target_forest)
 
-    assert scenario.stack_names() == ["Badgermole Cub's triggered ability"]
+    assert scenario.stack_names() == []
+    assert scenario.player("alice").mana_pool.floating.get(Color.GREEN, 0) == green_before + 2
 
 
 def test_a_different_land_being_tapped_does_not_trigger_utopia_sprawl():

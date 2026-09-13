@@ -25,6 +25,7 @@ from ..machines.abilities import (
     one_named_color,
     parse_abilities,
     parse_mana_abilities,
+    parse_triggered_mana,
 )
 from ..machines.casting import (
     AlternativeCostOption,
@@ -2057,7 +2058,7 @@ class Game(BaseModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 15
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 16
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -2219,6 +2220,19 @@ class Game(BaseModel):
     decoded here would replay against a question that build never asked.
     Refused instead. Battle 4 was stamped 11 -> 12 on its own line of
     development; landed after battles 3, 5 and 6, it moved on to 15.
+
+    Bumped 15 -> 16: battle 7. No field was added, but existing state now
+    resolves differently, the bump rule's second bullet: a triggered mana
+    ability (CR 605.1b) resolves at once instead of from the stack (CR
+    605.4a), so a version-15 dump can hold Leyline of Abundance's trigger on
+    the stack that no version-16 game could have put there; a scry that
+    bottoms two or more cards asks CR 401.4's order, so a version-15 tape
+    replays one question short; "Put one of them into your hand and the
+    other/the rest ..." looks and the attacks-each-combat requirement (CR
+    508.1d) are read now, so a recorded declaration or spell on the stack can
+    decode into a different game. Refused instead. Battles 6 and 4 landed
+    first as 14 and 15 on their own lines of development, so this took the next
+    number.
     """
 
     @model_validator(mode="before")
@@ -2316,6 +2330,18 @@ class Game(BaseModel):
     outlive their source and have a duration, so the game writes them down -
     the same reason `continuous_effects` is a field.
     """
+
+    _mana_hints_planned: bool = False
+    """True while a payment's solver planned the tap now resolving its
+    triggered mana abilities: a "may add" the plan did not count is declined
+    rather than asked (`CostPayment.auto_tap`)."""
+
+    _mana_color_hints: tuple[Color, ...] = ()
+    """Colours a payment's solver already chose for the triggered mana
+    abilities (CR 605.1b) the tap it is making sets off, consumed by
+    `take_mana_color_hint` - the way `CostPayment.auto_tap` picks a dual land's
+    colour instead of asking. Empty everywhere else, so an unpicked colour is
+    asked (CR 608.2d)."""
 
     _dealing_combat_damage: bool = False
     """True only while a combat damage step is running (CR 510.2).
@@ -2726,9 +2752,18 @@ class Game(BaseModel):
         here always runs, and is the one combat step that never skips.
         """
         assert self.turn is not None
-        attacks = ask_attackers(self.decisions, self.turn.active_player, prompt="declare attackers")
-        if attacks:
-            self.declare_attackers(self._resolve_declaration(attacks))
+        active = self.turn.active_player
+        attacks = ask_attackers(
+            self.decisions,
+            active,
+            prompt="declare attackers",
+            default=self._required_attack_declaration(active),
+        )
+        resolved = self._resolve_declaration(attacks)
+        if resolved:
+            self.declare_attackers(resolved)
+        else:
+            self._refuse_unobeyed_attack_requirements(resolved)
 
     def declare_blockers_step(self) -> None:
         """The declare blockers step's turn-based action (CR 703.4j, 509.1).
@@ -4097,7 +4132,50 @@ class Game(BaseModel):
     #: separates the two. See `resolve_triggered_mana_abilities`.
     TRIGGERED_MANA_ABILITY_LOOP_BOUND: ClassVar[int] = 64
 
-    def resolve_triggered_mana_abilities(self, triggered: Sequence[AbilityOnStack]) -> None:
+    def mana_pool_receiving(self, username: str) -> ManaPool:
+        """The pool mana `username` adds goes into right now (CR 106.4).
+
+        An open payment's working pool while one is being paid (CR 601.2g:
+        mana abilities are activated during the payment, and what they make is
+        spent from it), else the player's own.
+        """
+        pool = self.open_payment_pools.get(username)
+        return pool if pool is not None else self.player(username).mana_pool
+
+    @property
+    def mana_hints_planned(self) -> bool:
+        """Whether the colour hints now in force are a payment plan's."""
+        return self._mana_hints_planned
+
+    def take_mana_color_hints(self, colors: Sequence[Color]) -> bool:
+        """Consume every one of `colors` from the hints when all are there,
+        else consume nothing; True when they were taken."""
+        remaining = list(self._mana_color_hints)
+        for color in colors:
+            if color not in remaining:
+                return False
+            remaining.remove(color)
+        if colors:
+            self._mana_color_hints = tuple(remaining)
+        return bool(colors)
+
+    def take_mana_color_hint(self, options: Sequence[Color]) -> Color | None:
+        """Consume the first hinted colour that is one of `options`, if any."""
+        for index, color in enumerate(self._mana_color_hints):
+            if color in options:
+                self._mana_color_hints = (
+                    self._mana_color_hints[:index] + self._mana_color_hints[index + 1 :]
+                )
+                return color
+        return None
+
+    def resolve_triggered_mana_abilities(
+        self,
+        triggered: Sequence[AbilityOnStack],
+        *,
+        color_hints: Sequence[Color] = (),
+        planned: bool = False,
+    ) -> None:
         """Resolve CR 605.1b's triggered mana abilities inline (CR 605.4a).
 
         CR 605.1b: "A triggered ability is a mana ability if it meets all of the
@@ -4106,10 +4184,18 @@ class Game(BaseModel):
         ...". CR 605.4a then keeps it off the stack: it "resolves immediately
         after the mana ability that triggered it, without waiting for priority".
 
-        Everything handed here already triggered off `ExtraTriggerEvent.
-        MANA_ADDED`, which is raised only by a mana ability resolving, so the
-        remaining criteria are the two checked below: no target, and an effect
-        that could add mana.
+        Everything handed here triggered off a mana ability resolving: CR
+        106.12a's tap (`tapped_for_mana_event`, Leyline of Abundance) or the
+        adding (`ExtraTriggerEvent.MANA_ADDED`, Caged Sun), raised by
+        `activate_ability`'s fast path and by `CostPayment.tap_for_mana` alike.
+        So the remaining criteria are the two checked below: no target, and an
+        effect that could add mana (`parse_triggered_mana`). Anything else
+        stays pending for the stack (CR 605.5a).
+
+        `color_hints` are colours a payment's solver already chose for this
+        mana (`take_mana_color_hint`); a colour not hinted is asked. `planned`
+        says the hints are a payment plan's, so a "may add" the plan left out
+        is declined instead of asked (CR 608.2d); otherwise it is asked.
 
         Each resolution that actually puts mana in the pool re-raises the same
         event from the same source, because a triggered mana ability's own
@@ -4123,7 +4209,17 @@ class Game(BaseModel):
         `TRIGGERED_MANA_ABILITY_LOOP_BOUND` consecutive inline resolutions off
         one activation, `Game.drawn` is set and the chain stops.
         """
-        pending = list(triggered)
+        previous_hints = self._mana_color_hints
+        previous_planned = self._mana_hints_planned
+        self._mana_color_hints = tuple(color_hints)
+        self._mana_hints_planned = planned
+        try:
+            self._resolve_triggered_mana_abilities(list(triggered))
+        finally:
+            self._mana_color_hints = previous_hints
+            self._mana_hints_planned = previous_planned
+
+    def _resolve_triggered_mana_abilities(self, pending: list[AbilityOnStack]) -> None:
         resolved = 0
         while pending:
             ability = pending.pop(0)
@@ -4132,8 +4228,11 @@ class Game(BaseModel):
             printed = ability.ability
             if not isinstance(printed, TriggeredAbility):
                 continue
-            if ability.targets or not printed.effect.lower().strip().startswith("add "):
-                continue  # CR 605.5: not a mana ability.
+            effect = printed.effect.lower().strip()
+            if ability.targets or (
+                parse_triggered_mana(printed.effect) is None and not effect.startswith("add ")
+            ):
+                continue  # CR 605.5a: not a mana ability.
             if resolved >= self.TRIGGERED_MANA_ABILITY_LOOP_BOUND:
                 # CR 104.4b. See `Game.drawn`'s own docstring for what this
                 # detection does and does not cover.
@@ -4141,16 +4240,24 @@ class Game(BaseModel):
                 return
             self.pending_triggers.remove(ability)
             source = ability.source(self)
-            before = dict(self.player(ability.controller).mana_pool.floating)
-            self._resolve_ability(ability)
+            before = {
+                player.username: dict(self.mana_pool_receiving(player.username).floating)
+                for player in self.players
+            }
+            # CR 605.4a: no stack and no priority, so none of `_resolve_ability`'s
+            # before-priority work (state-based actions, putting other waiting
+            # triggers on the stack) happens between one mana ability and the
+            # next - only the CR 603.4 recheck and the effect itself.
+            if self._intervening_if_still_true(ability):
+                effect = self._effect_of(ability)
+                if effect is not None:
+                    effect(self, ability)
             resolved += 1
-            after = self.player(ability.controller).mana_pool.floating
-            added = [
-                color
-                for color, count in after.items()
-                for _ in range(count - before.get(color, 0))
-                if count > before.get(color, 0)
-            ]
+            added: list[Color] = []
+            for username, was in before.items():
+                now = self.mana_pool_receiving(username).floating
+                for color, count in now.items():
+                    added.extend([color] * max(0, count - was.get(color, 0)))
             if added and source is not None:
                 pending.extend(self.emit(mana_added_event(source, self, mana_added=added)))
 
@@ -6700,6 +6807,12 @@ class Game(BaseModel):
             )
             assert isinstance(answer, CardSplit)
             to_bottom, on_top = self._split_top(player, looked_at, answer)
+            # CR 701.22a's "on the bottom of your library in any order" is
+            # CR 401.4's arrangement, asked as its own question while the
+            # look is still live; an unscripted seat keeps the named order.
+            to_bottom = self.ask_library_bottom_order(
+                player, to_bottom, source=source, source_id=source_id
+            )
             self._end_looks(pending_looks)
             library = player.library
             for state in looked_at:
@@ -10434,10 +10547,44 @@ class Game(BaseModel):
         )
         return attack
 
+    def _refuse_unobeyed_attack_requirements(
+        self, attacks: "Sequence[tuple[CardState, Targetable | str]]"
+    ) -> None:
+        """CR 508.1d: "If the number of requirements that are being obeyed is
+        fewer than the maximum possible number of requirements that could be
+        obeyed without disobeying any restrictions, the declaration of
+        attackers is illegal." Checked on the whole declaration, before any
+        creature is declared, so a refused one taps nothing."""
+        skipped = combat_rules.unobeyed_attack_requirement(
+            self, {creature.id for creature, _defender in attacks}
+        )
+        if skipped is not None:
+            raise ValueError(
+                f"{skipped.name} attacks each combat if able and can attack, so a "
+                "declaration without it obeys fewer requirements than it could (CR 508.1d)"
+            )
+
+    def _required_attack_declaration(self, active: str) -> list[tuple[UUID, str]]:
+        """The fewest attackers that obey every requirement that can be obeyed
+        (CR 508.1d), each attacking the first opponent in turn order - what an
+        unscripted seat declares instead of nobody."""
+        opponent = next(
+            (player.username for player in self.players_in_game if player.username != active),
+            None,
+        )
+        if opponent is None:
+            return []
+        return [
+            (creature.id, opponent)
+            for creature in combat_rules.attack_requirement_holders(self, active)
+            if self.why_cannot_attack(creature, opponent) is None
+        ]
+
     def declare_attackers(self, attacks: list[tuple[CardState, "Targetable | str"]]) -> None:
         """Declare a whole attack at once, in order (CR 508.1, 508.2b)."""
         self._refuse_if_over()
         with self._id_allocator_scope():
+            self._refuse_unobeyed_attack_requirements(attacks)
             for creature, defender in attacks:
                 self.declare_attacker(creature, defender)
             if attacks:
@@ -13196,20 +13343,26 @@ class Game(BaseModel):
                 # (`tapped_for_mana_event`'s own docstring is the other half of
                 # this: `CostPayment.tap_for_mana` emits the same event when a
                 # source pays for a spell instead of being activated directly).
+                set_off: list[AbilityOnStack] = []
                 if any(piece.kind is CostKind.TAP for piece in ability.costs):
-                    self.emit(tapped_for_mana_event(permanent, self, mana_added=produced_mana))
+                    set_off.extend(
+                        self.emit(tapped_for_mana_event(permanent, self, mana_added=produced_mana))
+                    )
                 if produced_mana:
                     # Not CR 106.12's tap event but its sibling: an ability caused
                     # this player to add mana. Caged Sun's own condition asks about
                     # the adding, not the tapping, so a mana ability with no `{T}`
                     # in its cost raises this one just the same.
-                    triggered = self.emit(
-                        mana_added_event(permanent, self, mana_added=produced_mana)
+                    set_off.extend(
+                        self.emit(mana_added_event(permanent, self, mana_added=produced_mana))
                     )
-                    # CR 605.4a: a triggered mana ability "doesn't go on the stack
-                    # ... It simply resolves immediately after the mana ability
-                    # that triggered it, without waiting for priority."
-                    self.resolve_triggered_mana_abilities(triggered)
+                # CR 605.4a: a triggered mana ability "doesn't go on the stack,
+                # so it can't be targeted, countered, or otherwise responded to.
+                # Rather, it resolves immediately after the mana ability that
+                # triggered it, without waiting for priority" - the tap's own
+                # triggers (Leyline of Abundance, battle 7 B7-02) as much as the
+                # adding's.
+                self.resolve_triggered_mana_abilities(set_off)
                 self.put_triggers_on_stack()
                 return None
 

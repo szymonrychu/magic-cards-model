@@ -103,7 +103,7 @@ from magic_cards_model.machines.casting import (  # noqa: E402
     adventure_face,
     keyword_cast_options,
 )
-from magic_cards_model.machines.combat import Keyword  # noqa: E402
+from magic_cards_model.machines.combat import Keyword, is_attack_requirement_line  # noqa: E402
 from magic_cards_model.machines.cost import (  # noqa: E402
     cost_announces_x,
     cost_modifier_effect,
@@ -686,6 +686,9 @@ def _static_ability_category(printing: Card, text: str) -> str:
         return NOTICE
     if missed_layer_shape(text) is not None:
         return SILENT
+    if is_attack_requirement_line(text, printing.name):
+        # CR 508.1d: `Game.declare_attackers` enforces it.
+        return HANDLED
     return STATIC_UNAUDITED
 
 

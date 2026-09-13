@@ -1110,3 +1110,69 @@ def _attacker_assignment(
         if recipient is not None and amount > 0:
             chosen.append((recipient, amount))
     return chosen
+
+
+# -- attack requirements (CR 508.1d) -----------------------------------------
+
+#: CR 508.1d's requirement as a creature's own ability line: "This creature
+#: attacks each combat if able." (Juggernaut) and the same words granted with
+#: no subject (Dragon's Rage Channeler's delirium grants "Attacks each combat if
+#: able"). The whole line has to be the requirement, so the delirium static
+#: that merely mentions the words is not one while its condition is false.
+_ATTACKS_EACH_COMBAT_RE = re.compile(
+    r"^(?:(?P<subject>.+?) )?attacks each (?:combat|turn) if able\.?$", re.IGNORECASE
+)
+
+
+def is_attack_requirement_line(line: str, name: str) -> bool:
+    """Whether one computed ability line of a creature named `name` is its own
+    "attacks each combat if able" requirement (CR 508.1d)."""
+    match = _ATTACKS_EACH_COMBAT_RE.fullmatch(line.strip())
+    if match is None:
+        return False
+    subject = (match.group("subject") or "").strip().lower()
+    return subject in ("", "this creature", "this permanent", name.lower())
+
+
+def attack_requirement_holders(game: "Game", player: str) -> list[CardState]:
+    """The creatures `player` controls that a requirement says attack each
+    combat if able (CR 508.1d), read off the computed board (CR 613.5)."""
+    board = game.computed_board()
+    holders: list[CardState] = []
+    for creature in game.permanents_controlled_by(player):
+        characteristics = board.of(creature)
+        if not characteristics.is_creature:
+            continue
+        if any(
+            is_attack_requirement_line(line, creature.name) for line in characteristics.abilities
+        ):
+            holders.append(creature)
+    return holders
+
+
+def unobeyed_attack_requirement(game: "Game", declared: set[UUID]) -> CardState | None:
+    """A creature whose requirement a declaration of `declared` disobeys
+    although it could be obeyed, or `None` (CR 508.1d).
+
+    Each requirement read here binds only its own creature, and CR 508.1a/c's
+    checks are per creature, so the maximum number obeyable is every holder
+    that could attack at all: a declaration leaving one of those out obeys
+    fewer than the maximum. A creature that cannot attack - tapped, summoning
+    sick without haste, under a restriction - carries no obeyable requirement.
+    No "can't attack unless a player pays" cost is modelled, so CR 508.1d's
+    unpaid-cost clause has nothing to exempt.
+    """
+    if game.turn is None:
+        return None
+    active = game.turn.active_player
+    defenders = [
+        TargetRef.coerce(player.username)
+        for player in game.players_in_game
+        if player.username != active
+    ]
+    for creature in attack_requirement_holders(game, active):
+        if creature.id in declared:
+            continue
+        if any(attack_refusal(game, creature, defender) is None for defender in defenders):
+            return creature
+    return None

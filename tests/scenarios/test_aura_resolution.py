@@ -95,7 +95,6 @@ def test_utopia_sprawl_adds_the_chosen_color_when_the_forest_is_tapped():
 
     pool_before = dict(scenario.player("alice").mana_pool.floating)
     scenario.activate(forest)
-    scenario.pass_until_resolved()
 
     pool_after = scenario.player("alice").mana_pool.floating
     assert pool_after.get(Color.GREEN, 0) == pool_before.get(Color.GREEN, 0) + 1, (
@@ -111,16 +110,12 @@ def test_utopia_sprawls_bonus_mana_pays_for_a_spell():
     pay a real cost, or a fix that only wrote to the wrong pool during a cast
     would still pass a pool-only check.
 
-    `CostPayment.tap_for_mana` (paying a spell's total cost) puts base land mana
-    into the *payment's* own pool, not `player.mana_pool` - but CR 605.4a's
-    triggered mana ability still goes through the ordinary stack in this engine
-    (a documented simplification, see `docs/engine-coverage.md`), so the bonus
-    mana from resolving Utopia Sprawl's trigger cannot land in time to help pay
-    for the very cast that tapped the enchanted Forest. It lands in
-    `player.mana_pool` instead, floating, exactly where a mana ability's output
-    always goes (CR 106.1) - and `CostPayment.begin` opens a *later* payment's
-    pool as a copy of that same floating mana, so tapping ahead of resolving a
-    spell and then casting it is a legal way to spend it, not a workaround.
+    CR 605.4a resolves Utopia Sprawl's triggered mana ability the moment the
+    Forest's own mana ability does, off the stack, so tapping the Forest ahead
+    of casting leaves both mana floating in `player.mana_pool` (CR 106.4), and
+    `CostPayment.begin` opens the later payment's pool as a copy of it. Tapping
+    it during the payment instead puts both into that payment's pool
+    (`scenarios/test_triggered_mana_abilities.py`).
     """
     scenario = (
         Scenario()
@@ -133,10 +128,9 @@ def test_utopia_sprawls_bonus_mana_pays_for_a_spell():
     scenario.will_choose(Color.BLUE.value, source="Utopia Sprawl")
     scenario.cast_and_resolve("Utopia Sprawl", payer, targets=[forest])
 
-    # Tap the enchanted Forest and let the trigger resolve *before* casting
-    # anything - not as part of Grizzly Bears' own payment.
+    # Tap the enchanted Forest *before* casting anything - not as part of
+    # Grizzly Bears' own payment. Its trigger has already resolved (CR 605.4a).
     scenario.activate(forest)
-    scenario.pass_until_resolved()
     assert scenario.player("alice").mana_pool.floating == {Color.GREEN: 1, Color.BLUE: 1}
 
     # Grizzly Bears costs {1}{G}: the floating {G} pays the colored symbol,

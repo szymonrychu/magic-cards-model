@@ -31,10 +31,56 @@ from typing import Any
 
 import pytest
 
+from magic_cards_model.machines.decisions import DecisionPending
+from magic_cards_model.models.card_state import CardState
 from magic_cards_model.models.game import Game
 from tests.scenarios import harness
 
 REPLAY = os.environ.get("MTG_SCENARIO_REPLAY", "1") != "0"
+
+
+def objects_in_several_zones(game: Game) -> list[str]:
+    """Every card object id listed in more than one zone, with the zones.
+
+    CR 400.1 puts every object in a zone and CR 400.7 makes a card that moves
+    a new object in its new zone, so one id listed twice - Expressive
+    Iteration's card left in the library after it went to hand (battle 7,
+    B7-01) - is a corrupt game whatever else a scenario asserts. Checked by
+    id, not identity: a decoded game holds distinct objects for one card.
+    """
+    places: dict[str, list[str]] = {}
+    for zone, objects in game.shared_zones.items():
+        for obj in objects:
+            if isinstance(obj, CardState):
+                places.setdefault(str(obj.id), []).append(f"shared:{zone.value}")
+    for player in game.players:
+        for zone, cards in player.zones.items():
+            for card in cards:
+                places.setdefault(str(card.id), []).append(f"{player.username}:{zone.value}")
+    return [f"{card_id} in {found}" for card_id, found in places.items() if len(found) > 1]
+
+
+def _assert_each_object_in_one_zone(game: Game, when: str) -> None:
+    duplicates = objects_in_several_zones(game)
+    assert not duplicates, f"{when}, an object is in two zones (CR 400.1, CR 400.7): {duplicates}"
+
+
+@pytest.fixture(autouse=True)
+def _every_resolution_leaves_each_object_in_one_zone(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Run the zone invariant after every resolution any scenario performs,
+    finished or paused on a CR 608.2d question, not only on the final game."""
+    resolve_top = Game.resolve_top
+
+    def checked(self: Game) -> Any:
+        try:
+            resolved = resolve_top(self)
+        except DecisionPending:
+            _assert_each_object_in_one_zone(self, "paused mid-resolution")
+            raise
+        _assert_each_object_in_one_zone(self, f"after {resolved.name} resolved")
+        return resolved
+
+    monkeypatch.setattr(Game, "resolve_top", checked)
 
 
 def _assert_round_trips(game: Game, dumped: dict[str, Any]) -> None:
@@ -70,6 +116,7 @@ def pytest_pyfunc_call(pyfuncitem: pytest.Function) -> bool | None:
     final_dumps = [game.model_dump(mode="json") for game in games]
     for game, dumped in zip(games, final_dumps, strict=True):
         _assert_round_trips(game, dumped)
+        _assert_each_object_in_one_zone(game, "at the end of the scenario")
 
     if not REPLAY:
         return True

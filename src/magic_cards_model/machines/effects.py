@@ -89,11 +89,13 @@ from .abilities import (
     ActivatedAbility,
     TriggerEvent,
     keyword_abilities,
+    parse_triggered_mana,
     self_normalized_effect_text,
 )
 from .casting import PlayAction, annotate_exile, remove_suspend_time_counter
 from .casting_restrictions import create_targeted_cant_cast_restriction, parse_casting_rule_clause
 from .combat import has_keyword
+from .cost import is_snow_source, spend_restriction
 from .decisions import Decision, DecisionKind, source_id_of
 from .delayed import (
     ANAPHORIC_TIMING_STEPS,
@@ -153,7 +155,12 @@ from .modes import (
     substitute_x,
 )
 from .targeting import TargetRequirement, profile_for_text
-from .triggers import AbilityOnStack, is_ability
+from .triggers import (
+    AbilityOnStack,
+    is_ability,
+    triggered_mana_count,
+    triggered_mana_recipient,
+)
 from .turn import Step
 
 if TYPE_CHECKING:
@@ -9068,103 +9075,134 @@ def _is_layer_effect_text(text: str) -> bool:
     return is_resolution_layer_effect_text(text)
 
 
-#: "[its controller ]add[s] an additional <mana>." - the resolution half of
-#: CR 605.1b's triggered mana ability: "an ability that triggers whenever a
-#: permanent 'is tapped for mana' ... triggers whenever such a mana ability
-#: resolves and produces mana" (CR 106.12a), and this is what that trigger
-#: itself does when it resolves. Three pool cards share exactly this
-#: template - Utopia Sprawl's "its controller adds an additional one mana of
-#: the chosen color", Leyline of Abundance's and Badgermole Cub's "add an
-#: additional {G}" - and this is a text-template parser reached through
-#: `_ability_effect_or_notice`'s fallback, not a per-card row: keying this on
-#: card name would make Utopia Sprawl's own defect report pass while Leyline
-#: and Badgermole stayed silent, which is exactly the shadowing
-#: `test_registry_is_minimal.py` exists to catch elsewhere in this file.
-#:
-#: "its controller" is **not** this ability's own controller - it is the
-#: *enchanted permanent's* controller (CR 303.4e lets an Aura's controller and
-#: the enchanted permanent's controller differ), read off `attached_to` on the
-#: ability's source. An implicit subject ("add an additional {G}.") means the
-#: ability's own controller instead, which is what Leyline of Abundance and
-#: Badgermole Cub - creatures with no "enchanted" anything to point at - both
-#: rely on.
-_MANA_ADD_RE = re.compile(
-    r"^(?:(?P<subject>its controller)\s+)?adds? an additional (?P<mana>.+?)\.?$",
-    re.IGNORECASE,
-)
-#: "one mana of the chosen color" - CR 614.12a's choice, read back by name
-#: (Utopia Sprawl). Distinct from a literal mana symbol, which names its color
-#: outright and needs no choice recorded anywhere.
-#:
-#: "one mana of **that** color" is the same colour reached by CR 607.1's
-#: within-one-ability anaphora instead of by name: Caged Sun's "Whenever a
-#: land's ability causes you to add one or more mana of the chosen color, add
-#: an additional one mana of that color." The only antecedent an "adds an
-#: additional ..." clause can have is the colour its own trigger condition
-#: named, and every printing of that shape in the pool names the chosen colour
-#: - so both spellings resolve through `CardState.choice`, and a card whose
-#: condition names some *other* colour would have no choice recorded and add
-#: nothing rather than guess.
-_CHOSEN_COLOR_MANA_RE = re.compile(r"^one mana of (?:the chosen|that) color$", re.IGNORECASE)
-#: A literal mana symbol or run of them - "{G}" (Leyline of Abundance,
-#: Badgermole Cub). `findall` plus a round-trip check (rather than trusting
-#: `findall` alone) is what refuses "{G} or {U}" - a choice this template does
-#: not carry - instead of silently reading it as both colors at once.
+#: A literal mana symbol or run of them - "{G}". Read by several clause
+#: parsers below; a triggered mana ability's own mana is read by
+#: `machines/abilities.parse_triggered_mana`.
 _MANA_SYMBOL_RE = re.compile(r"\{([WUBRGC])\}", re.IGNORECASE)
 
 
-def _parse_mana_adding_trigger(text: str) -> AbilityEffect | None:
-    """CR 605.1b's mana-adding trigger, read off its own printed text.
+def _choose_mana_color(
+    game: "Game",
+    player: str,
+    ability: AbilityOnStack,
+    options: tuple[Color, ...],
+    prompt: str,
+) -> Color:
+    """One mana a resolving triggered mana ability adds, of a colour or type
+    the player adding it chooses (CR 608.2d).
 
-    Returns `None` for anything that is not exactly this template, so a card
-    this does not cover (a variable amount, a choice of colors rather than one
-    chosen ahead of time) falls through to the ordinary clause parsers below
-    rather than being half-read.
+    A payment's solver may already have picked it (`Game.take_mana_color_hint`),
+    the way it picks a dual land's colour; a single option needs no question.
     """
-    match = _MANA_ADD_RE.fullmatch(text.strip())
-    if match is None:
-        return None
-    mana_spec = match.group("mana").strip()
-    from_enchanted = match.group("subject") is not None
+    hinted = game.take_mana_color_hint(options)
+    if hinted is not None:
+        return hinted
+    if len(options) == 1:
+        return options[0]
+    value = game.ask(
+        Decision(
+            kind=DecisionKind.CHOOSE_A_QUALITY,
+            player=player,
+            prompt=prompt,
+            source=ability.source_name,
+            options=tuple(color.value for color in options),
+            source_id=source_id_of(ability),
+        )
+    )
+    assert isinstance(value, str)
+    return Color(value)
 
-    chosen_color = bool(_CHOSEN_COLOR_MANA_RE.fullmatch(mana_spec))
-    literal_colors: list[Color] | None = None
-    if not chosen_color:
-        symbols = _MANA_SYMBOL_RE.findall(mana_spec)
-        round_trip = "".join(f"{{{symbol}}}" for symbol in symbols)
-        if not symbols or round_trip.lower() != mana_spec.lower().replace(" ", ""):
-            return None
-        literal_colors = [Color(symbol.upper()) for symbol in symbols]
+
+def _parse_mana_adding_trigger(text: str) -> AbilityEffect | None:
+    """CR 605.1b's triggered mana ability, resolving: the mana
+    `parse_triggered_mana` reads off the effect text goes into the recipient's
+    pool - "add an additional {G}" (Leyline of Abundance, Nirkana Revenant), "its
+    controller adds an additional one mana of any color" (Fertile Ground),
+    "one mana of the chosen color" (Utopia Sprawl), "one mana of any type that
+    land produced" (Zendikar Resurgent).
+
+    A text-template parser reached through `trigger_effect_for`'s fallback,
+    not a per-card row. The recipient is `triggered_mana_recipient`'s: "its
+    controller" is the controller of the permanent that was tapped (CR 303.4e
+    lets it differ from the Aura's). The pool is `Game.mana_pool_receiving`'s,
+    which is an open payment's own pool while one is being paid (CR 601.2g),
+    so the mana pays that cost. Returns `None` for anything else.
+    """
+    shape = parse_triggered_mana(text)
+    if shape is None:
+        return None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         source = ability.source(game)
-        if source is None:
+        recipient = triggered_mana_recipient(shape.recipient, ability.controller, ability.event)
+        if recipient is None and source is not None and source.attached_to is not None:
+            enchanted = game.find_by_id(source.attached_to)
+            recipient = enchanted.controller if enchanted is not None else None
+        if recipient is None:
             return
-        if from_enchanted:
-            enchanted = (
-                game.find_by_id(source.attached_to) if source.attached_to is not None else None
+        # CR 608.2h: a "for each" count is taken now, as the mana is added.
+        times = (
+            triggered_mana_count(game, shape.count, ability.controller)
+            if shape.count is not None
+            else 1
+        )
+        if times <= 0:
+            return
+        colors = shape.colors
+        if shape.snow_colors is not None and ability.event is not None:
+            tapped = (
+                game.find_by_id(ability.event.subject_id)
+                if ability.event.subject_id is not None
+                else None
             )
-            controller = enchanted.controller if enchanted is not None else None
+            if isinstance(tapped, CardState) and is_snow_source(tapped, game):
+                colors = shape.snow_colors  # "If that Island is snow, ... instead"
+        literal = list(colors) * times
+        if shape.optional:
+            # CR 608.2d: "may add" is the recipient's choice, asked in place -
+            # unless a payment's own plan already named this mana, which is
+            # the plan's answer (`Game.mana_hints_planned`).
+            planned = game.take_mana_color_hints(literal)
+            if not planned:
+                if game.mana_hints_planned:
+                    return
+                if not game.may(
+                    recipient,
+                    f"add {''.join(f'{{{color.value}}}' for color in literal)}",
+                    source=ability.source_name,
+                    source_id=source_id_of(ability),
+                ):
+                    return
         else:
-            controller = ability.controller
-        if controller is None:
-            return
-
-        if chosen_color:
-            choice = source.choice
+            game.take_mana_color_hints(literal)
+        produced = literal
+        if shape.chosen_color:
+            choice = source.choice if source is not None else None
             if choice is None or choice.kind is not ChoiceKind.COLOR:
                 return
             try:
-                produced = [Color(choice.value)]
+                produced.extend([Color(choice.value)] * times)
             except ValueError:
                 return
-        else:
-            assert literal_colors is not None
-            produced = literal_colors
-
-        pool = game.player(controller).mana_pool
+        five = tuple(Color(letter) for letter in _COLOR_LETTERS)
+        for _ in range(shape.any_color * times):
+            produced.append(
+                _choose_mana_color(game, recipient, ability, five, "add one mana of any color")
+            )
+        if shape.produced_type:
+            made = tuple(dict.fromkeys(ability.event.mana_added)) if ability.event else ()
+            for _ in range(times if made else 0):
+                produced.append(
+                    _choose_mana_color(
+                        game, recipient, ability, made, "add one mana of any type it produced"
+                    )
+                )
+        restriction = (
+            spend_restriction(shape.restriction, source) if shape.restriction is not None else None
+        )
+        pool = game.mana_pool_receiving(recipient)
         for color in produced:
-            pool.add(color)
+            pool.add(color, restriction=restriction)
 
     return effect
 
@@ -18498,8 +18536,17 @@ _PUT_ONE_OF_THEM_INTO_YOUR_HAND_RE = re.compile(
 #: Duskwatch Recruiter's own third/fourth clauses are. English ellipsis drops
 #: the repeated verb ("put"), so it is optional here, unlike
 #: `_PUT_REST_ON_BOTTOM_ANY_ORDER_RE`'s fully spelled-out sentence.
-_THE_OTHER_INTO_YOUR_GRAVEYARD_RE = re.compile(
-    r"^(?:put )?the other into your graveyard$", re.IGNORECASE
+#: Sleight of Hand and Sea Gate Oracle print "the other on the bottom of your
+#: library" in the same place, and Forbidden Alchemy, Anticipate and Shimmer of
+#: Possibility "the rest into your graveyard" / "the rest on the bottom of your
+#: library in any order" / "... in a random order": the same one-to-hand split,
+#: a different second destination. "In any order" is CR 401.4's arrangement,
+#: asked; "in a random order" is nobody's, seeded as
+#: `_PUT_REST_ON_BOTTOM_ANY_ORDER_RE`'s own random tail is.
+_THE_OTHER_INTO_A_DESTINATION_RE = re.compile(
+    r"^(?:put )?the (?:other|rest) (?P<destination>into your graveyard|on the bottom of "
+    r"your library(?: in (?:(?P<random>a random)|any) order)?)$",
+    re.IGNORECASE,
 )
 
 
@@ -18534,8 +18581,12 @@ def _merge_look_top_split_hand_graveyard_clauses(
             return None
     if _PUT_ONE_OF_THEM_INTO_YOUR_HAND_RE.fullmatch(clauses[index + 1].strip()) is None:
         return None
-    if _THE_OTHER_INTO_YOUR_GRAVEYARD_RE.fullmatch(clauses[index + 2].strip()) is None:
+    other = _THE_OTHER_INTO_A_DESTINATION_RE.fullmatch(clauses[index + 2].strip())
+    if other is None:
         return None
+    to_bottom = other.group("destination").lower().startswith("on the bottom")
+    randomised = other.group("random") is not None
+    rest_label = "bottom of your library" if to_bottom else "your graveyard"
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         player = game.controller_of(stack_object)
@@ -18544,22 +18595,39 @@ def _merge_look_top_split_hand_graveyard_clauses(
             player,
             count,
             source=source,
-            prompt="put one into your hand, the other into your graveyard",
+            prompt=f"put one into your hand, the other to {rest_label}",
             moved_label="your hand",
-            kept_label="your graveyard",
+            kept_label=rest_label,
+            rest_in_random_order=randomised,
             source_id=source_id_of(stack_object),
             moved_amount=1,
             moved_exact=True,
         )
-        if len(moved) != 1 or len(rest) != count - 1:
+        if (moved or rest) and len(moved) != 1:
             raise ValueError(
-                f"{source}: exactly one of the {count} must go to hand, the rest to the "
-                "graveyard (CR 608.2d)"
+                f"{source}: exactly one of the {count} must go to hand, the rest to "
+                f"{rest_label} (CR 608.2d)"
             )
         for state in moved:
             player.add(state, Zone.HAND)
-        for state in rest:
-            player.add(state, Zone.GRAVEYARD)
+        if to_bottom and randomised and rest:
+            rng = Random(f"{game.shuffle_seed}:{game.shuffles_performed}:top-{count}-bottom")  # noqa: S311
+            rng.shuffle(rest)
+            game.shuffles_performed += 1
+        elif to_bottom:
+            # CR 401.4: "in any order" is the player's own arrangement.
+            rest = game.ask_library_bottom_order(
+                player, rest, source=source, source_id=source_id_of(stack_object)
+            )
+        if to_bottom:
+            # Under every card already there (CR 401.2), each looked-at card
+            # once (CR 400.7); the look is pinned to this one put-back.
+            player.library.extend(rest)
+            if rest:
+                player.note_library_changed(placed=rest)
+        else:
+            for state in rest:
+                player.add(state, Zone.GRAVEYARD)
 
     return 3, effect
 
@@ -18582,6 +18650,59 @@ _EXILE_ONE_OF_THEM_RE = re.compile(r"^exile one of them$", re.IGNORECASE)
 _YOU_MAY_PLAY_THE_EXILED_CARD_THIS_TURN_RE = re.compile(
     r"^you may play the exiled cards? this turn$", re.IGNORECASE
 )
+
+
+#: "Look at the top five cards of your library, put one of them into your
+#: hand, and exile the rest." (Browse) - the same one-to-hand split with the
+#: look and the first put in one comma-joined clause, so it is split
+#: differently and read by its own merge.
+_LOOK_AT_TOP_PUT_ONE_INTO_HAND_RE = re.compile(
+    r"^look at the top (?P<count>\w+) cards? of your library, put one of them into your hand,?$",
+    re.IGNORECASE,
+)
+_EXILE_THE_REST_RE = re.compile(r"^(?:and )?exile the rest$", re.IGNORECASE)
+
+
+def _merge_look_top_one_to_hand_exile_rest_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """Browse's "Look at the top N cards of your library, put one of them
+    into your hand, and exile the rest." - `Game.look_at_top_and_split`'s
+    question, one card to hand and every other looked-at card exiled, each
+    card moved once (CR 400.7)."""
+    if index + 1 >= len(clauses):
+        return None
+    look_match = _LOOK_AT_TOP_PUT_ONE_INTO_HAND_RE.fullmatch(clauses[index].strip())
+    if look_match is None or _EXILE_THE_REST_RE.fullmatch(clauses[index + 1].strip()) is None:
+        return None
+    count_text = look_match.group("count").lower()
+    count = _NUMBER_WORDS.get(count_text)
+    if count is None:
+        try:
+            count = int(count_text)
+        except ValueError:
+            return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        player = game.controller_of(stack_object)
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        moved, rest = game.look_at_top_and_split(
+            player,
+            count,
+            source=source,
+            prompt="put one into your hand, exile the rest",
+            moved_label="your hand",
+            kept_label="exile",
+            source_id=source_id_of(stack_object),
+            moved_amount=1,
+            moved_exact=True,
+        )
+        for state in moved:
+            player.add(state, Zone.HAND)
+        if rest:
+            game.exile_cards(rest)
+
+    return 2, effect
 
 
 def _merge_look_top_hand_bottom_exile_play_clauses(
@@ -18620,9 +18741,12 @@ def _merge_look_top_hand_bottom_exile_play_clauses(
 
     def effect(game: "Game", spell: CardState) -> None:
         player = game.controller_of(spell)
-        looked = list(player.library[:count])
+        looked = game._look_at_top(player, count)
         if not looked:
             return
+        # CR 701.20e: the looker knows the cards where they sit while each
+        # destination is still being chosen; the put-back ends that record.
+        pending_looks = game._look_before_choosing(player, looked, spell.name)
 
         def choose_one(prompt: str, pool: list[CardState]) -> CardState:
             chosen_ids = game.ask(
@@ -18641,13 +18765,29 @@ def _merge_look_top_hand_bottom_exile_play_clauses(
 
         to_hand = choose_one("put one of the looked-at cards into your hand", looked)
         remaining = [state for state in looked if state is not to_hand]
-        to_bottom = choose_one(
-            "put one of the remaining looked-at cards on the bottom of your library", remaining
+        to_bottom = (
+            choose_one(
+                "put one of the remaining looked-at cards on the bottom of your library",
+                remaining,
+            )
+            if remaining
+            else None
         )
         to_exile = [state for state in remaining if state is not to_bottom]
 
+        # CR 400.7: every looked-at card leaves the top at once and lands in
+        # exactly one destination - the card put into hand used to be left
+        # in the library as well (battle 7, B7-01).
+        game._end_looks(pending_looks)
+        for state in looked:
+            player.library.remove(state)
         player.add(to_hand, Zone.HAND)
-        player.move(to_bottom, Zone.LIBRARY)
+        if to_bottom is not None:
+            player.library.append(to_bottom)
+            # CR 401.2: the cards it goes under keep their order and records;
+            # the looker knows where the bottomed card went (CR 701.20e).
+            player.note_library_changed(placed=[to_bottom])
+            game.look(to_bottom, player.username, source=spell.name)
         for state in to_exile:
             exiled = game.exile_permanent(state)
             game.grant_play_permission(
@@ -19744,6 +19884,12 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             index += consumed
             continue
         merged = _merge_look_top_split_hand_graveyard_clauses(clauses, index, for_spell=for_spell)
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_look_top_one_to_hand_exile_rest_clauses(clauses, index, for_spell=for_spell)
         if merged is not None:
             consumed, effect = merged
             parsed.append(effect)

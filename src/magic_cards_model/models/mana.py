@@ -517,6 +517,11 @@ class SpendPurpose(StrEnum):
 
     CAST_SPELL = "cast_spell"
     ACTIVATE_ABILITY = "activate_ability"
+    #: Snowfall's "Spend this mana only to pay cumulative upkeep costs"
+    #: (CR 702.24a): neither a cast nor an activation. Nothing in this engine
+    #: pays cumulative upkeep yet, so no spend carries this purpose and such
+    #: mana pays for nothing - for the reason the card gives.
+    PAY_CUMULATIVE_UPKEEP = "pay_cumulative_upkeep"
 
 
 class ManaSpend(BaseModel):

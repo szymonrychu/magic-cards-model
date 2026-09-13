@@ -105,7 +105,10 @@ def test_earthbend_keeps_the_lands_own_types_and_mana_ability():
     from magic_cards_model.models.card import Color
 
     scenario.activate(forest)
-    assert scenario.player("alice").mana_pool.floating.get(Color.GREEN) == 1
+    # The Forest's own {G}, plus Badgermole Cub's "Whenever you tap a creature
+    # for mana, add an additional {G}" - the earthbent Forest is a creature,
+    # and the triggered mana ability resolves at once (CR 605.4a).
+    assert scenario.player("alice").mana_pool.floating.get(Color.GREEN) == 2
     assert forest.tapped is True
 
 
