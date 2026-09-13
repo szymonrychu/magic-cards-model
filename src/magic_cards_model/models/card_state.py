@@ -1654,10 +1654,10 @@ class CardState(BaseModel):
             return computed.toughness
         if self.zone is not Zone.BATTLEFIELD and self.last_known_toughness is not None:
             return self.last_known_toughness  # CR 608.2h, as for `power`
-        return self._printed_toughness
+        return self.printed_toughness
 
     @property
-    def _printed_toughness(self) -> int | None:
+    def printed_toughness(self) -> int | None:
         """`toughness` with neither the layer engine nor CR 608.2h's snapshot
         consulted - the printing plus counters, and nothing else."""
         if self.has_no_characteristics:
@@ -1695,10 +1695,10 @@ class CardState(BaseModel):
             # for an object that has actually left the battlefield, so nothing
             # that never was a permanent is affected.
             return self.last_known_power
-        return self._printed_power
+        return self.printed_power
 
     @property
-    def _printed_power(self) -> int | None:
+    def printed_power(self) -> int | None:
         """`power` with neither the layer engine nor CR 608.2h's snapshot
         consulted - the printing plus counters, and nothing else."""
         if self.has_no_characteristics:
@@ -1997,7 +1997,7 @@ class CardState(BaseModel):
         be answering with what it was on the battlefield two zones ago.
 
         Only what a *continuous effect* was contributing is recorded, which is
-        why each half is compared against `_printed_power`/`_printed_toughness`
+        why each half is compared against `printed_power`/`printed_toughness`
         and left `None` when they agree. The printing does not change on a
         zone change, so it needs no snapshot to survive one; the
         counters deliberately do not survive it (CR 122.2: "counters on an
@@ -2015,8 +2015,8 @@ class CardState(BaseModel):
         computed = self.computed_characteristics
         power = None if computed is None else computed.power
         toughness = None if computed is None else computed.toughness
-        self.last_known_power = None if power == self._printed_power else power
-        self.last_known_toughness = None if toughness == self._printed_toughness else toughness
+        self.last_known_power = None if power == self.printed_power else power
+        self.last_known_toughness = None if toughness == self.printed_toughness else toughness
 
     def move_to(self, zone: Zone) -> None:
         """Move to another zone, resetting the state a card loses on the way.
