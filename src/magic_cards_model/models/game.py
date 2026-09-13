@@ -6098,6 +6098,10 @@ class Game(BaseModel):
             library.extend(to_bottom)
             if on_top or to_bottom:
                 player.note_library_changed()  # CR 701.20d: put back is reordered
+            # CR 701.20e: the scrier knows where each card went, against the
+            # order the put-back just made - the next reordering ends it.
+            for state in (*on_top, *to_bottom):
+                self.look(state, player.username, source=source)
             return CardSplit(
                 moved=tuple(state.id for state in to_bottom),
                 top_order=tuple(state.id for state in on_top),
@@ -6148,6 +6152,10 @@ class Game(BaseModel):
                 library.insert(index, state)
             if on_top:
                 player.note_library_changed()  # CR 701.20d: put back is reordered
+            # CR 701.20e for the cards kept on top; a card put into the
+            # graveyard is in a public zone (CR 400.2) and needs no record.
+            for state in on_top:
+                self.look(state, player.username, source=source)
             for state in to_graveyard:
                 self.put_into_graveyard(state)
             return CardSplit(
@@ -6206,6 +6214,18 @@ class Game(BaseModel):
         on both halves - so the destinations now travel with the question,
         stamped onto `Decision.moved_label` / `Decision.kept_label`.
 
+        **What the chooser knows afterwards** (CR 701.20e) is recorded here,
+        although the put-back is the caller's. Every looked-at card gets a
+        look for the chooser, pinned to the library epoch *one reordering
+        on*: the epoch the caller's single put-back produces
+        (`note_library_changed` after its direct list writes, CR 701.20d), so
+        a card put back is known against the order the chooser made and the
+        next reordering ends it. Every other outcome fails closed: a card that
+        went to a hand, graveyard or exile has changed zones (CR 400.7), and a
+        card put back through `Player.add` carries a new stamp. A caller that
+        writes cards back into the library must move the epoch exactly once,
+        which is already the rule every direct library write follows.
+
         Which half is `moved` is the caller's choice and is *not* fixed to
         "the half that leaves the library": `moved` is the pile the player
         actively opts into. For a scry that is the bottomed cards; for
@@ -6234,6 +6254,9 @@ class Game(BaseModel):
         )
         assert isinstance(answer, CardSplit)
         moved, rest = self._split_top(player, looked_at, answer)
+        put_back_epoch = player.library_epoch + 1
+        for state in looked_at:
+            self._record_shown(state, [player.username], source, library_epoch=put_back_epoch)
         library = player.library
         for state in looked_at:
             if state in library:
@@ -6457,17 +6480,26 @@ class Game(BaseModel):
         return next((player for player in self.players if player.username == username), None)
 
     def _record_shown(
-        self, card_state: CardState, viewers: list[str] | None, source: str | None
+        self,
+        card_state: CardState,
+        viewers: list[str] | None,
+        source: str | None,
+        *,
+        library_epoch: int | None = None,
     ) -> CardState:
         """Append the `Reveal` both `reveal` and `look` record.
 
         The stamp and, for a library card, the owner's library epoch are read
         now, because they are what `known_to` compares later: CR 400.7 for
-        the card, CR 701.20d for the order it sat in.
+        the card, CR 701.20d for the order it sat in. `library_epoch` pins a
+        library record to a later order instead - `look_at_top_and_split`'s,
+        whose caller puts the cards back.
         """
         with self._id_allocator_scope():
             owner = self._seat(card_state.owner)
             in_library = card_state.zone is Zone.LIBRARY and owner is not None
+            if in_library and owner and library_epoch is None:
+                library_epoch = owner.library_epoch
             self.reveals.append(
                 Reveal(
                     card_id=card_state.id,
@@ -6478,7 +6510,7 @@ class Game(BaseModel):
                     viewers=None if viewers is None else list(viewers),
                     zone_change_stamp=card_state.zone_change_stamp,
                     turn=self._turns_taken(),
-                    library_epoch=owner.library_epoch if in_library and owner else None,
+                    library_epoch=library_epoch if in_library else None,
                 )
             )
             return card_state

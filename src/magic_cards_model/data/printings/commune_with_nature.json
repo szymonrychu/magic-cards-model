@@ -1,0 +1,133 @@
+{
+  "object": "card",
+  "id": "5224eec3-2941-4d16-a713-099e34e93eee",
+  "oracle_id": "d4ed4260-5f38-4b55-ba6e-9f54f04d2360",
+  "multiverse_ids": [
+    629667
+  ],
+  "mtgo_id": 116668,
+  "arena_id": 86872,
+  "tcgplayer_id": 513883,
+  "cardmarket_id": 730016,
+  "name": "Commune with Nature",
+  "lang": "en",
+  "released_at": "2023-09-08",
+  "uri": "https://api.scryfall.com/cards/5224eec3-2941-4d16-a713-099e34e93eee",
+  "scryfall_uri": "https://scryfall.com/card/woe/166/commune-with-nature?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:58:04Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/5/2/5224eec3-2941-4d16-a713-099e34e93eee.jpg?1783915084",
+    "normal": "https://cards.scryfall.io/normal/front/5/2/5224eec3-2941-4d16-a713-099e34e93eee.jpg?1783915084",
+    "large": "https://cards.scryfall.io/large/front/5/2/5224eec3-2941-4d16-a713-099e34e93eee.jpg?1783915084",
+    "png": "https://cards.scryfall.io/png/front/5/2/5224eec3-2941-4d16-a713-099e34e93eee.png?1783915084",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/5/2/5224eec3-2941-4d16-a713-099e34e93eee.jpg?1783915084",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/5/2/5224eec3-2941-4d16-a713-099e34e93eee.jpg?1783915084",
+    "thumb": "https://cards.scryfall.io/thumb/front/5/2/5224eec3-2941-4d16-a713-099e34e93eee.webp?1783915084",
+    "grid": "https://cards.scryfall.io/grid/front/5/2/5224eec3-2941-4d16-a713-099e34e93eee.webp?1783915084",
+    "display": "https://cards.scryfall.io/display/front/5/2/5224eec3-2941-4d16-a713-099e34e93eee.webp?1783915084",
+    "art": "https://cards.scryfall.io/art/front/5/2/5224eec3-2941-4d16-a713-099e34e93eee.webp?1783915084",
+    "crop": "https://cards.scryfall.io/crop/front/5/2/5224eec3-2941-4d16-a713-099e34e93eee.webp?1783915084"
+  },
+  "mana_cost": "{G}",
+  "cmc": 1.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Look at the top five cards of your library. You may reveal a creature card from among them and put it into your hand. Put the rest on the bottom of your library in any order.",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "79139661-13ee-43c4-8bad-a8c069f1a1df",
+  "set": "woe",
+  "set_name": "Wilds of Eldraine",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/79139661-13ee-43c4-8bad-a8c069f1a1df",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Awoe&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/woe?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/5224eec3-2941-4d16-a713-099e34e93eee/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ad4ed4260-5f38-4b55-ba6e-9f54f04d2360&unique=prints",
+  "collector_number": "166",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "Agatha befriended the beasts of the wilds, and under her influence they grew bolder ... and more savage. Some herbivores developed a taste for flesh.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Jodie Muir",
+  "artist_ids": [
+    "b09e6cd1-0257-425a-9bbb-5cac3f803443"
+  ],
+  "illustration_id": "fd523901-4a57-4c89-9148-2d357ce1efae",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 13808,
+  "penny_rank": 4447,
+  "prices": {
+    "usd": "0.21",
+    "usd_foil": "0.21",
+    "usd_etched": null,
+    "eur": "0.06",
+    "eur_foil": "0.21",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=629667&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCommune%2Bwith%2BNature",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCommune%2Bwith%2BNature",
+    "edhrec": "https://edhrec.com/route/?cc=Commune+with+Nature"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F513883%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=730016&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/116668?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
