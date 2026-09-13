@@ -540,6 +540,13 @@ def test_the_clauses_each_printed_restriction_is_read_into():
     assert shang_chi is not None
     assert [clause.purpose for clause in shang_chi.clauses] == [SpendPurpose.ACTIVATE_ABILITY]
 
+    # CR 106.6 on a triggered mana ability: "Spend this mana only to pay
+    # cumulative upkeep costs" (CR 702.24a) is neither a cast nor an
+    # activation, so it reads into its own purpose and pays for neither.
+    snowfall = spend_restriction("Spend this mana only to pay cumulative upkeep costs.")
+    assert snowfall is not None
+    assert [clause.purpose for clause in snowfall.clauses] == [SpendPurpose.PAY_CUMULATIVE_UPKEEP]
+
     citadel = spend_restriction(card("Sunken Citadel").oracle_text)
     assert citadel is not None
     assert [clause.purpose for clause in citadel.clauses] == [SpendPurpose.ACTIVATE_ABILITY]

@@ -508,6 +508,9 @@ _SPEND_RESTRICTION_SIGNAL = re.compile(r"[Ss]pend this mana only")
 #: "cast instant and sorcery spells", "cast spells from exile". `quality` is
 #: lazy so the shortest reading wins - "cast spells from exile" leaves it empty
 #: and puts "exile" in `zone` rather than swallowing the tail.
+#: "pay cumulative upkeep costs" (Snowfall) - CR 702.24a's cost as the thing
+#: the mana may pay.
+_SPEND_CUMULATIVE_UPKEEP_CLAUSE = re.compile(r"^pay cumulative upkeep costs?$", re.IGNORECASE)
 _SPEND_CAST_CLAUSE = re.compile(
     r"^cast (?P<quality>.*?) ?spells?"
     r"(?P<chosen> of the chosen type)?"
@@ -790,6 +793,9 @@ def _one_spend_clause(phrase: str, chosen_type: str | None) -> SpendClause | Non
     activate = _SPEND_ACTIVATE_CLAUSE.match(phrase)
     if activate is not None:
         return _spend_clause(activate.group("quality"), SpendPurpose.ACTIVATE_ABILITY, None)
+    if _SPEND_CUMULATIVE_UPKEEP_CLAUSE.match(phrase):
+        # CR 702.24a's cost, not a spell or an ability: no quality to read.
+        return SpendClause(purpose=SpendPurpose.PAY_CUMULATIVE_UPKEEP)
     return None
 
 
