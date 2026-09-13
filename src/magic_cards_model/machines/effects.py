@@ -1494,7 +1494,7 @@ _GAIN_CONTROL_THEN_UNTAP_RE = re.compile(
 )
 
 #: Reminder text and an activated ability's own timing instruction are not
-#: part of the effect (CR 207.2 reminder text; CR 602.5d "Activate only as a
+#: part of the effect (CR 207.2a reminder text; CR 602.5d "Activate only as a
 #: sorcery").
 _REMINDER_OR_ACTIVATION_RULE_RE = re.compile(r"\([^)]*\)|\bactivate only [^.]*\.", re.IGNORECASE)
 
