@@ -1954,7 +1954,7 @@ class Game(BaseModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 9
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 10
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -2062,6 +2062,14 @@ class Game(BaseModel):
     without the other: known information with no `source_id`, or `source_id`
     with no stamp or epoch on any reveal. 9 is the first version that means
     both, and every 8 is refused.
+
+    Bumped 9 -> 10: `CardState` gained `cast_with_keyword` (CR 702.176a's
+    impending asks "if this permanent's impending cost was paid" of the
+    permanent on every later end step), and `machines/layers.py`'s
+    `Modification` union gained `RemoveType`. A version-9 dump of a permanent
+    cast for its impending cost records no paid cost on the permanent, so
+    decoded here it would read as a hardcast creature that happens to carry
+    time counters - refused instead.
     """
 
     @model_validator(mode="before")
@@ -4996,6 +5004,14 @@ class Game(BaseModel):
             # (CR 701.28c's "nothing happens" for the sibling action).
             card_state.transformed = transformed and card_state.card.back_face is not None
             card_state.move_to(Zone.BATTLEFIELD)
+            if was_cast:
+                # CR 702.176a asks "if this permanent's impending cost was paid"
+                # of the permanent - see `CardState.cast_with_keyword`. Read off
+                # the spell's own `CastRecord`, which `resolve_top` has not
+                # popped yet; a permanent arriving any other way was never cast
+                # for any cost (CR 400.7) and `move_to` has just cleared it.
+                record = self.cast_records.get(card_state.id)
+                card_state.cast_with_keyword = record.keyword if record is not None else None
             card_state.tapped = event.tapped
             # CR 702.131 (ascend): "entered this turn" needs a turn-number stamp,
             # not just a boolean, the same way `ExileAnnotation.turn_exiled` is -

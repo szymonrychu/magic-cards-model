@@ -118,6 +118,7 @@ class KeywordRule(StrEnum):
     UNEARTH = "CR 702.84a"
     TRANSMUTE = "CR 702.53a"
     PARADIGM = "CR 702.192a"
+    IMPENDING = "CR 702.176a"
 
 
 def executes(keyword: str) -> bool:
@@ -174,6 +175,13 @@ def executes(keyword: str) -> bool:
         # enters, if its evoke cost was paid, its controller sacrifices it" -
         # is `_evoke_ability`/`_evoke_effect` here.
         "evoke",
+        # CR 702.176a. Four abilities in four places: the alternative cost is
+        # `machines/casting.py`'s `keyword_cast_options`, the entering time
+        # counters are `machines/replacement._impending_entering_counters`, the
+        # "it's not a creature" is `machines/layers._impending_not_a_creature`,
+        # and the end step trigger is `_impending_ability`/`_impending_effect`
+        # here.
+        "impending",
         # CR 702.189a. The triggered half is `_firebending_ability` above
         # (`_TRIGGER_EXPANSIONS`), and `machines/effects._parse_firebending_
         # add_mana` reads the "add N {R}" effect it puts on the stack.
@@ -517,6 +525,31 @@ def _offspring_ability(ability: KeywordAbility) -> TriggeredAbility:
     )
 
 
+def _impending_ability(ability: KeywordAbility) -> TriggeredAbility:
+    """CR 702.176a's fourth ability: "At the beginning of your end step, if this
+    permanent's impending cost was paid and it has a time counter on it,
+    remove a time counter from it."
+
+    The other three are the alternative cost (`machines/casting.py`), the
+    entering counters (`machines/replacement.py`) and the layer 4 "it's not a
+    creature" (`machines/layers.py`); only this one goes on the stack.
+
+    The *if* is an intervening *if* (CR 603.4), answered by
+    `machines/triggers.intervening_if_holds` off `CardState.cast_with_keyword`
+    and the time counter count - so a hardcast Overlord, a blinked one, and one
+    whose last counter is already gone never trigger at all.
+    """
+    return _expansion(
+        ability,
+        keyword="impending",
+        word=TriggerWord.AT,
+        condition="the beginning of your end step",
+        intervening_if="this permanent's impending cost was paid and it has a time counter on it",
+        effect="remove a time counter from it",
+        event=TriggerEvent.BEGINNING_OF_STEP,
+    )
+
+
 def _mobilize_ability(ability: KeywordAbility) -> TriggeredAbility:
     """CR 702.181a: "Mobilize N" means "Whenever this creature attacks, create N
     1/1 red Warrior creature tokens. Those tokens enter tapped and attacking.
@@ -707,6 +740,7 @@ _TRIGGER_EXPANSIONS: dict[str, Callable[[KeywordAbility], list[TriggeredAbility]
     "madness": _single(_madness_ability),
     "hideaway": _single(_hideaway_ability),
     "suspend": _suspend_abilities,
+    "impending": _single(_impending_ability),
 }
 
 
@@ -3659,6 +3693,22 @@ def _suspend_effect(game: Any, ability: AbilityOnStack) -> Any:
     return finish_suspend(game, source)
 
 
+def _impending_effect(game: Any, ability: AbilityOnStack) -> int | None:
+    """CR 702.176a's fourth ability resolving: "remove a time counter from it."
+
+    Its intervening *if* was checked as it triggered (CR 603.4) and again as it
+    resolves (CR 608.2a), which is what stops a blinked Overlord - a new object,
+    CR 400.7 - losing a counter it never had. Guarded anyway against a source
+    that is gone, so a direct call cannot raise on an empty count.
+    """
+    source = ability.source(game)
+    if source is None or source.zone is not Zone.BATTLEFIELD:
+        return None
+    if not source.can_remove_counters(Counter.TIME):
+        return None
+    return source.remove_counters(Counter.TIME, 1)
+
+
 #: What one keyword's triggered ability does when it resolves, by keyword.
 #: `Game._effect_of` has to consult this before the card-name registry - see
 #: `docs/engine-coverage.md` for the hook.
@@ -3673,6 +3723,7 @@ KEYWORD_TRIGGER_EFFECTS: dict[str, Callable[[Any, AbilityOnStack], Any]] = {
     "hideaway": _hideaway_effect,
     "evoke": _evoke_effect,
     "suspend": _suspend_effect,
+    "impending": _impending_effect,
 }
 
 

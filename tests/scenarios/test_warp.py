@@ -67,6 +67,10 @@ def test_warp_offers_two_options_one_from_hand_and_one_from_exile():
     assert str(from_hand.cost) == "{3}"
 
     assert from_exile.zone is Zone.EXILE
+    # CR 702.185a holds the permission ("Its owner may cast this card after
+    # the current turn has ended for as long as it remains exiled"); 702.185b
+    # only defines what a warped card is. Battle-test D17.
+    assert from_exile.rule == "CR 702.185a"
     assert from_exile.marker is ExileMarker.WARPED
     assert from_exile.pays_mana_cost is True
     assert from_exile.later_turn is True
@@ -142,7 +146,7 @@ def test_a_warped_card_cannot_be_cast_again_the_same_turn():
 
 
 def test_a_warped_card_is_cast_from_exile_later_for_its_full_mana_cost():
-    """CR 702.185b hands out permission, not a discount: {9} is still {9}."""
+    """CR 702.185a hands out permission, not a discount: {9} is still {9}."""
     scenario = board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
@@ -170,7 +174,7 @@ def test_a_warped_card_is_cast_from_exile_later_for_its_full_mana_cost():
 
 def test_casting_the_warped_card_from_exile_without_announcing_warp_is_refused():
     """The `test_flashback.py` live-game defect, generalized to warp's own
-    second half: CR 702.185b's exile permission is still tied to the warp
+    second half: CR 702.185a's exile permission is still tied to the warp
     keyword even though `pays_mana_cost=True` there (the printed mana cost
     *is* the right cost, unlike flashback) - a caster who never calls
     `use_keyword("Warp")` must still be refused, because the permission to

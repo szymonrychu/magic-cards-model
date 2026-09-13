@@ -5739,6 +5739,43 @@ def _parse_remove_time_counter_from_self_clause(text: str) -> AbilityEffect | No
     return effect
 
 
+#: Vampire Hexmage: "Remove all counters from target permanent." - and the
+#: same sentence narrowed to one kind ("Remove all +1/+1 counters from target
+#: creature."). Every counter of the kind named, or of every kind, comes off
+#: the target; removing what is not there is simply nothing to remove.
+_REMOVE_ALL_COUNTERS_FROM_TARGET_RE = re.compile(
+    r"^remove all (?:(?P<kind>\+1/\+1|-1/-1|[a-z]+) )?counters from (?P<phrase>target .+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_remove_all_counters_from_target_clause(text: str) -> AbilityEffect | None:
+    """`_REMOVE_ALL_COUNTERS_FROM_TARGET_RE`'s shape.
+
+    Counters are removed from the object itself, so whatever reads them next
+    - a layer 4 "as long as it has a time counter on it" (impending, CR
+    702.176a), a +1/+1 counter's layer 7c bonus - reads the empty count the
+    next time the board is computed.
+    """
+    match = _REMOVE_ALL_COUNTERS_FROM_TARGET_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=False):
+        return None
+    kind = _counter_kind(match.group("kind")) if match.group("kind") else None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        for target in game.resolve_targets(ability):
+            if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
+                continue
+            for each in [kind] if kind is not None else list(target.counters):
+                present = target.counter_count(each)
+                if present:
+                    target.remove_counters(each, present)
+
+    return effect
+
+
 #: "double the number of `<kind>` counters on `<group>`" - Kalonian Hydra's
 #: own attack trigger doubles them on *every* creature its controller
 #: controls, not only itself, which is why this is a group shape
@@ -9870,6 +9907,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     remove_time_counter_self = _parse_remove_time_counter_from_self_clause(effect_text)
     if remove_time_counter_self is not None:
         return remove_time_counter_self
+    remove_all_counters_from_target = _parse_remove_all_counters_from_target_clause(effect_text)
+    if remove_all_counters_from_target is not None:
+        return remove_all_counters_from_target
     whole_text_token = _parse_whole_text_token_clause(effect_text)
     if whole_text_token is not None:
         return whole_text_token

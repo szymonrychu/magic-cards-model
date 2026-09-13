@@ -805,6 +805,106 @@ class AddType(ModificationBase):
         return chars.with_(types=chars.types + (self.card_type,))
 
 
+#: The card types whose subtypes are a closed list of their own: artifact
+#: types (CR 205.3g), enchantment types (CR 205.3h), land types (CR 205.3i),
+#: the spell types instants and sorceries share (CR 205.3k), and the battle
+#: type (CR 205.3q). Creature types are shared with kindred (CR 205.3m) and
+#: planeswalker types are their own long list (CR 205.3j); neither is spelled
+#: out here, which `RemoveType` accounts for.
+_ARTIFACT_TYPES = frozenset(
+    {
+        "Attraction", "Blood", "Bobblehead", "Book", "Clue", "Contraption", "Equipment",
+        "Food", "Fortification", "Gold", "Incubator", "Infinity", "Junk", "Lander", "Map",
+        "Mutagen", "Powerstone", "Spacecraft", "Stone", "Treasure", "Vehicle", "Vibranium",
+    }
+)  # fmt: skip
+_SPELL_TYPES = frozenset({"Adventure", "Arcane", "Lesson", "Omen", "Trap"})
+_CLOSED_SUBTYPE_LISTS: dict[Type, frozenset[str]] = {
+    Type.ARTIFACT: _ARTIFACT_TYPES,
+    Type.ENCHANTMENT: frozenset(
+        {
+            "Aura",
+            "Background",
+            "Cartouche",
+            "Case",
+            "Class",
+            "Curse",
+            "Plan",
+            "Role",
+            "Room",
+            "Rune",
+            "Saga",
+            "Shard",
+            "Shrine",
+        }
+    ),  # fmt: skip
+    Type.LAND: frozenset(
+        {
+            "Cave",
+            "Desert",
+            "Forest",
+            "Gate",
+            "Island",
+            "Lair",
+            "Locus",
+            "Mine",
+            "Mountain",
+            "Plains",
+            "Planet",
+            "Power-Plant",
+            "Sphere",
+            "Swamp",
+            "Tower",
+            "Town",
+            "Urza's",
+            "Urza\u2019s",
+        }
+    ),  # fmt: skip
+    Type.INSTANT: _SPELL_TYPES,
+    Type.SORCERY: _SPELL_TYPES,
+    Type.BATTLE: frozenset({"Siege"}),
+}
+
+
+class RemoveType(ModificationBase):
+    """Layer 4 (CR 613.1d): stop having one card type - impending's "it's not a
+    creature" (CR 702.176a).
+
+    CR 205.1a: "If an object's card type is removed, the subtypes correlated
+    with that card type will remain if they are also the subtypes of a card
+    type the object currently has; otherwise, they are also removed for the
+    entire time the object's card type is removed." So an Enchantment Creature
+    - Avatar Horror that stops being a creature is an Enchantment with no
+    subtypes: Avatar and Horror are creature types, and no enchantment type.
+
+    A subtype is kept when some type the object still has lists it. A remaining
+    type whose list is not spelled out in `_CLOSED_SUBTYPE_LISTS` - a kindred,
+    which shares creature types (CR 205.3m), or a planeswalker - keeps every
+    subtype rather than guessing which of them it correlates with.
+    """
+
+    kind: Literal["remove_type"] = "remove_type"
+    card_type: Type
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        if self.card_type not in chars.types:
+            return chars
+        remaining = tuple(kind for kind in chars.types if kind is not self.card_type)
+        removed_list = _CLOSED_SUBTYPE_LISTS.get(self.card_type)
+
+        def kept(subtype: str) -> bool:
+            for kind in remaining:
+                listed = _CLOSED_SUBTYPE_LISTS.get(kind)
+                if listed is None or subtype in listed:
+                    return True
+            return removed_list is not None and subtype not in removed_list
+
+        return chars.with_(
+            types=remaining,
+            subtypes=tuple(subtype for subtype in chars.subtypes if kept(subtype)),
+        )
+
+
 class AddSubtype(ModificationBase):
     """Layer 4: gain a land type "in addition to" the ones already there.
 
@@ -1042,6 +1142,7 @@ Modification = Annotated[
     | GrantAbility
     | GrantAbilityInstance
     | AddType
+    | RemoveType
     | AddSubtype
     | AddBasicLandTypes
     | SetBasicLandType
@@ -6382,6 +6483,9 @@ def effects_for(
     # "Permanents you control with counters on them have ward {1}" would be
     # read off a level-1 Class that does not have the ability yet.
     text = source.class_ability_text
+    # A keyword's own static ability has no printed sentence for the parser to
+    # read, so it is added beside whatever the text produced.
+    keyword_statics = _impending_not_a_creature(source, timestamp) if static_only else []
     if builder is None:
         builder = parsed_layer_effects(text, static_only=static_only, card_name=source.name)
     if builder is None:
@@ -6398,14 +6502,55 @@ def effects_for(
             notices.append(
                 LayerNotice(source_id=source.id, source_name=source.name, text=text or "")
             )
-        return []
-    built = builder(source, timestamp, targets, context or LayerContext())
+        return keyword_statics
+    built = [*builder(source, timestamp, targets, context or LayerContext()), *keyword_statics]
     # `order` is this call's own answer to "which of these came first" - set
     # here, once, on the builder's actual output order, rather than trusting
     # every builder (a `LAYER_EFFECTS` row, the generic parser's per-sentence
     # `combined`, a granted-ability grant) to have stamped it itself. See
     # `ContinuousEffect.order`.
     return [effect.model_copy(update={"order": index}) for index, effect in enumerate(built)]
+
+
+def _impending_not_a_creature(source: CardState, timestamp: int) -> list[ContinuousEffect]:
+    """CR 702.176a's third ability: "As long as this permanent's impending cost
+    was paid and it has a time counter on it, it's not a creature."
+
+    A static ability that functions on the battlefield, so a type-changing
+    effect in layer 4 (CR 613.1d) with the permanent's own timestamp (CR
+    613.7a). The "as long as" needs no stored condition: static effects are
+    rebuilt every time the board is computed (CR 613.5), so the moment the
+    last time counter comes off - the end step trigger, or anything else that
+    removes it - this is simply not built any more. The paid half is
+    `CardState.cast_with_keyword`, which belongs to this object only (CR
+    400.7), so a blinked Overlord is a creature again.
+
+    The keyword is read off the printing, not off the computed abilities: an
+    ability-removing effect is layer 6, and CR 613.6 keeps a layer 4 effect
+    that has already started applying from being switched off by it.
+    """
+    from .abilities import keyword_abilities  # imported here: kept beside its one use
+
+    if source.zone is not Zone.BATTLEFIELD:
+        return []
+    if (source.cast_with_keyword or "").lower() != "impending":
+        return []
+    if source.counter_count(Counter.TIME) <= 0:
+        return []
+    if not any(
+        ability.canonical.lower() == "impending" for ability in keyword_abilities(source.card)
+    ):
+        return []
+    return [
+        ContinuousEffect(
+            description=f"{source.name}: not a creature while it has a time counter (CR 702.176a)",
+            layer=Layer.TYPE,
+            timestamp=timestamp,
+            source_id=source.id,
+            selector=_only(source.id),
+            modification=RemoveType(card_type=Type.CREATURE),
+        )
+    ]
 
 
 def static_effects(

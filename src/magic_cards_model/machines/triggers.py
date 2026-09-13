@@ -2239,6 +2239,18 @@ def _control_creature_with_power_holds(game: "Game", clause: str, source: CardSt
     return False
 
 
+#: CR 702.176a's own intervening *if*, read over the keyword and the counter
+#: kind rather than over one card: "this permanent's impending cost was paid
+#: and it has a time counter on it". The paid half is
+#: `CardState.cast_with_keyword`, which belongs to this object only (CR
+#: 400.7); `Game.cast_records` survives a blink under the same id and would
+#: answer for the object that left.
+_PERMANENT_KEYWORD_COST_PAID_WITH_COUNTER = re.compile(
+    r"^this permanent's (?P<keyword>[a-z]+) cost was paid and it has an? "
+    r"(?P<kind>\+1/\+1|-1/-1|[a-z]+) counter on it$"
+)
+
+
 def intervening_if_holds(
     game: "Game",
     ability: TriggeredAbility,
@@ -2316,6 +2328,16 @@ def intervening_if_holds(
         # directly rather than through `_fail_closed`.
         record = _cast_record_for_clause(game, ability, source, event)
         return record is not None
+
+    paid_with_counter = _PERMANENT_KEYWORD_COST_PAID_WITH_COUNTER.fullmatch(clause)
+    if paid_with_counter is not None:
+        # CR 702.176a, see the regex above. Fully readable, so a False here is
+        # a real "not paid" or "no counter left", never a fail-closed notice.
+        return (
+            source.zone is Zone.BATTLEFIELD
+            and (source.cast_with_keyword or "").lower() == paid_with_counter.group("keyword")
+            and source.counter_count(paid_with_counter.group("kind")) > 0
+        )
 
     if clause == "its evoke cost was paid":
         # CR 702.74a's own intervening *if*, written out by

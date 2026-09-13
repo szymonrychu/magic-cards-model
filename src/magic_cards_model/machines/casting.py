@@ -474,6 +474,27 @@ def _option_from_keyword(ability: KeywordAbility) -> KeywordCastOption | None:
             understood=cost is not None,
         )
 
+    if canonical == "impending":
+        # CR 702.176a: "'Impending N-[cost]' means 'You may choose to pay
+        # [cost] rather than pay this spell's mana cost,'" - the first of its
+        # four abilities, "a static ability that functions while the spell with
+        # impending is on the stack", and an alternative cost (CR 118.9) cast
+        # like evoke's. The rule names no zone, so the zone is the one a card
+        # is cast from by default, the hand - the same reading bestow's option
+        # above makes. The other three abilities are the entering time counters
+        # (`machines/replacement._impending_entering_counters`), the layer 4
+        # "it's not a creature" (`machines/layers._impending_not_a_creature`)
+        # and the end step trigger (`machines/keywords._impending_ability`).
+        cost = total_cost_for_phrase(printed) if printed else None
+        return KeywordCastOption(
+            keyword=ability.canonical,
+            rule="CR 702.176a",
+            zone=Zone.HAND,
+            cost=cost,
+            pays_mana_cost=False,
+            understood=cost is not None,
+        )
+
     if canonical == "warp":
         # CR 702.185a: warp is two static abilities that function while the card
         # is on the stack, one of which may create a delayed triggered ability.
@@ -493,11 +514,13 @@ def _option_from_keyword(ability: KeywordAbility) -> KeywordCastOption | None:
 
 
 #: The second option warp hands out: a warped card in exile may be cast later,
-#: for its own mana cost (CR 702.185b).
+#: for its own mana cost. The permission is CR 702.185a's own last sentence -
+#: "Its owner may cast this card after the current turn has ended for as long
+#: as it remains exiled" - while CR 702.185b only defines what a warped card is.
 def _warp_from_exile(ability: KeywordAbility) -> KeywordCastOption:
     return KeywordCastOption(
         keyword=ability.canonical,
-        rule="CR 702.185b",
+        rule="CR 702.185a",
         zone=Zone.EXILE,
         cost=None,
         pays_mana_cost=True,
