@@ -2201,6 +2201,9 @@ class Game(BaseModel):
 
     def model_post_init(self, _context: object) -> None:
         usernames = [player.username for player in self.players]
+        # A stored layer 2 control effect asks the game who may now look at a
+        # hideaway card (CR 702.75a), from callers that do not pass `game`.
+        self.continuous_effects.bind_to_game(self)
         for player in self.players:
             # CR 701.9a's discard has to be able to consult the game, because
             # CR 702.35a's madness replaces where the discarded card lands. A
@@ -6514,6 +6517,50 @@ class Game(BaseModel):
                 )
             )
             return card_state
+
+    def note_hideaway_viewers(self) -> None:
+        """Record a look for whoever controls a hideaway permanent now, on
+        each face-down card it exiled (CR 702.75a, CR 406.3).
+
+        CR 702.75a's exiled card gains "The player who controls the permanent
+        that exiled this card may look at this card in the exile zone" - the
+        controller *now*, so a player who gains control of that permanent
+        gains the look. CR 406.3 then keeps it: "once a player is allowed to
+        look at a card exiled face down, that player may continue to look at
+        that card until it leaves the exile zone", so the look is recorded at
+        the moment control arrives rather than computed by `known_to`, and a
+        player who later loses control keeps it until the card leaves exile.
+
+        Called by `_hideaway_effect` as the card is exiled and by
+        `ContinuousEffects.create`/`add` (through the store's bound game)
+        whenever a layer 2 control effect is stored - the only way control of
+        a permanent changes after it enters in this engine
+        (`ContinuousEffects.has_control_effect`). A viewer who already has a
+        live record of the card gets no second one.
+        """
+        for card_state in list(self.exile):
+            annotation = card_state.exile_annotation
+            if (
+                card_state.face_up
+                or annotation is None
+                or annotation.marker is not ExileMarker.HIDEAWAY
+                or annotation.linked_permanent_id is None
+            ):
+                continue
+            permanent = next(
+                (state for state in self.battlefield if state.id == annotation.linked_permanent_id),
+                None,
+            )
+            viewer = permanent.controller if permanent is not None else None
+            if permanent is None or viewer is None:
+                continue
+            if any(
+                self._live_reveal(reveal, viewer)
+                for reveal in self.reveals
+                if reveal.card_id == card_state.id
+            ):
+                continue
+            self.look(card_state, viewer, source=permanent.name)
 
     def known_to(self, viewer: str) -> list[KnownCard]:
         """Every card `viewer` knows from a reveal, a look, or a carry, right now.

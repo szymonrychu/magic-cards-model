@@ -3574,10 +3574,13 @@ def _hideaway_effect(game: Any, ability: AbilityOnStack) -> None:
             marker=ExileMarker.HIDEAWAY, owner=chosen.owner, linked_permanent_id=source.id
         )
         game.exile.append(chosen)
-        # CR 702.75a's granted "may look at this card in the exile zone" and
-        # CR 406.3's "may continue to look at that card until it leaves the
-        # exile zone": a look against the exiled object's own stamp.
+        # CR 406.3: a player "instructed to look at a card and then exile it
+        # face down ... may continue to look at that card until it leaves the
+        # exile zone" - a look against the exiled object's own stamp. CR
+        # 702.75a's granted look belongs to whoever controls this permanent,
+        # now and after any later control change (`Game.note_hideaway_viewers`).
         game.look(chosen, controller.username, source=source.name)
+        game.note_hideaway_viewers()
 
         if rest:
             rng = random.Random(  # noqa: S311

@@ -220,3 +220,57 @@ def test_fight_rigging_hidden_card_stays_known_through_a_shuffle_until_it_leaves
     assert bolt.zone is Zone.HAND
     assert known(scenario.game, "alice") == [], "CR 400.7: it left the exile zone"
     assert known(scenario.game, "bob") == []
+
+
+def test_a_player_who_gains_control_of_the_hideaway_permanent_may_look_at_the_hidden_card():
+    """CR 702.75a: the exiled card gains "The player who controls the permanent
+    that exiled this card may look at this card in the exile zone" - whoever
+    controls it now, not whoever controlled it when the ability resolved. And
+    CR 406.3: "once a player is allowed to look at a card exiled face down,
+    that player may continue to look at that card until it leaves the exile
+    zone", so the thief keeps knowing it after control goes back.
+
+    Watcher for Tomorrow and Threaten are in neither deck pool."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Threaten"], battlefield=["Mountain"] * 3)
+        .player(
+            "bob",
+            hand=["Watcher for Tomorrow"],
+            library=["Lightning Bolt", "Opt", "Goblin Guide", "Craterous Stomp", "Island"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    hidden = scenario.find("Goblin Guide", Zone.LIBRARY, "bob")
+    scenario.will_choose_cards(hidden, source="Watcher for Tomorrow")
+    watcher = scenario.put_onto_battlefield("Watcher for Tomorrow", "bob")
+    scenario.game.put_triggers_on_stack()
+    scenario.resolve_top()
+
+    assert hidden.zone is Zone.EXILE and hidden.face_up is False
+    assert known(scenario.game, "bob") == [("Goblin Guide", Zone.EXILE, None, False)]
+    assert known(scenario.game, "alice") == []
+
+    sources = scenario.untapped_sources("Mountain", "Mountain", "Mountain", username="alice")
+    scenario.cast_and_resolve("Threaten", *sources, targets=[watcher])
+
+    assert scenario.game.controller_of(watcher).username == "alice"
+    assert known(scenario.game, "alice") == [("Goblin Guide", Zone.EXILE, None, False)], (
+        "CR 702.75a: the permanent's controller may look at the hidden card"
+    )
+    assert known(scenario.game, "bob") == [("Goblin Guide", Zone.EXILE, None, False)], (
+        "CR 406.3: the first controller keeps looking"
+    )
+
+    scenario.game.cleanup_step()
+
+    assert scenario.game.controller_of(watcher).username == "bob"
+    assert known(scenario.game, "alice") == [("Goblin Guide", Zone.EXILE, None, False)], (
+        "CR 406.3: a player once allowed to look keeps looking after control goes back"
+    )
+
+    scenario.game.return_to_hand(hidden)
+
+    assert known(scenario.game, "alice") == []
+    assert known(scenario.game, "bob") == []
