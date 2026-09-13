@@ -49,18 +49,14 @@ enumerating every legal subset or permutation of it.
   which this engine models at all (`grep`-confirmed empty for "companion",
   "planechase", "unlock cost", "locked half" across `src/`), so there is
   nothing here to enumerate a refusal for.
-- **A targeted off-battlefield activation.** `keywords.off_battlefield_
-  activation` announces and checks targets as part of *building* the
-  activation (`TargetingProfile.check`, which raises for too few targets
-  before `.why_not()` is ever reached), and this enumeration has no targets
-  to give it - nowhere here sources one the way `_cast_action`'s own
-  `target_slots` does for a spell. Boseiju, Who Endures's Channel is exactly
-  this shape ("destroy target artifact, enchantment, or nonbasic land"), and
-  it is in the pool; an earlier pass here claimed no printing was, which was
-  wrong. Rather than drop it, the activation still appears - `_off_zone_
-  actions` catches the `ValueError` and reports `affordable=UNKNOWN` with the
-  engine's own reason, instead of silently vanishing from the list the way a
-  caught-and-ignored exception used to make it.
+- **A targeted off-battlefield activation with no legal target to name.**
+  `keywords.off_battlefield_activation` checks targets while it builds, so
+  `_off_zone_actions` hands it the first legal candidates of the row's own
+  `target_slots` (cost and timing do not depend on which legal target is
+  named). When a requirement has too few - Boseiju, Who Endures's Channel
+  with no artifact, enchantment, or nonbasic land an opponent controls - the
+  build still refuses, and the row is reported `affordable=UNKNOWN` with the
+  engine's own reason rather than dropped.
 - **Multiplayer attack-declaration wrinkles** CR 508.1e (banding) and the
   CR 508.1b "multiple defending players" case beyond planeswalkers/battles -
   this engine's own `combat.py` does not model banding at all, and the
@@ -82,6 +78,7 @@ from ..models.action import (
 from ..models.card import Card, Layout, Type
 from ..models.card_state import CardState
 from ..models.mana import ManaCost, ManaSpend
+from ..models.player import Player
 from ..models.zone import Zone
 from .abilities import printed_production
 from .casting import (
@@ -122,14 +119,18 @@ from .decisions import (
     rule_for_kind,
 )
 from .keywords import (
+    EQUIP_EFFECT,
     dredge_count,
+    has_equip,
     off_zone_abilities,
     off_zone_activation,
     turn_face_up_cost,
+    unannounced_equip_activation,
     why_cannot_dredge,
     why_cannot_turn_face_up,
 )
 from .modes import modal_profile
+from .targeting import profile_for_text
 from .turn import Step
 
 _BOOLEAN_DECISION_KINDS = frozenset(
@@ -406,6 +407,62 @@ def _widen_for_object_costs(
     return Affordability.UNKNOWN, f"{reason}; {extra}" if reason else extra
 
 
+def _target_candidates(
+    game: Any, player: str, source: CardState, profile: Any, *, source_is_spell: bool
+) -> list[tuple[Any, list[Any]]]:
+    """Each requirement of `profile` with every object and player it could
+    legally name right now (CR 601.2c, and CR 602.2b for an activation).
+
+    The per-target half of `TargetingProfile.check`: `TargetRequirement.
+    rejects`, plus CR 702.16b's protection refusal when the profile knows its
+    source card. CR 115.5 makes a spell an illegal target for itself, so a
+    cast leaves its own card out; an activated ability is a different object
+    from its source, so a permanent may be a candidate for its own ability
+    unless the phrase says "other" (`excludes_source`, checked by `rejects`).
+    """
+    if not profile.understood or not profile.requirements:
+        return []
+    pool = game.targetable_objects()
+    source_card = getattr(profile, "source_card", None)
+    refusal_of = getattr(game, "protection_refusal", None) if source_card is not None else None
+    found: list[tuple[Any, list[Any]]] = []
+    for requirement in profile.requirements:
+        legal = [
+            thing
+            for thing in pool
+            if not (source_is_spell and thing is source)
+            and requirement.rejects(thing, player, game, source.id) is None
+            and (refusal_of is None or refusal_of(thing, source_card) is None)
+        ]
+        found.append((requirement, legal))
+    return found
+
+
+def _slots_from(found: list[tuple[Any, list[Any]]]) -> tuple[TargetSlot, ...]:
+    """`Action.target_slots` from `_target_candidates`' answer: each
+    requirement's phrase, bounds and current candidates, as ids and usernames
+    only."""
+    return tuple(
+        TargetSlot(
+            phrase=requirement.phrase,
+            minimum=requirement.minimum,
+            maximum=requirement.maximum,
+            candidates=tuple(thing.id for thing in legal if not isinstance(thing, Player)),
+            player_candidates=tuple(thing.username for thing in legal if isinstance(thing, Player)),
+        )
+        for requirement, legal in found
+    )
+
+
+def _target_slots(
+    game: Any, player: str, source: CardState, profile: Any, *, source_is_spell: bool
+) -> tuple[TargetSlot, ...]:
+    """`Action.target_slots` for one announcement of `source`."""
+    return _slots_from(
+        _target_candidates(game, player, source, profile, source_is_spell=source_is_spell)
+    )
+
+
 def _cast_action(
     game: Any,
     player: str,
@@ -423,24 +480,11 @@ def _cast_action(
     modes = tuple(mode.text for mode in modal.modes) if modal is not None else ()
     x_range = (0, None) if "{X}" in (card.card.mana_cost or "") and modal is None else None
     # CR 709.3b/715.3b: the row is about one face, so the phrase it reports
-    # has to be that face's own. `_announcement_profile` took no face and fell
+    # has to be that face's own. `announcement_profile` took no face and fell
     # through to `targeting_profile(card)`, which reads the *front* half - so
     # the Tear row of Wear // Tear advertised Wear's "target artifact".
-    profile = game._announcement_profile(
-        card, ability_index=None, modes=None, x_value=None, spell_face=spell_face
-    )
-    target_slots = (
-        tuple(
-            TargetSlot(
-                phrase=requirement.phrase,
-                minimum=requirement.minimum,
-                maximum=None if requirement.unbounded else requirement.count,
-            )
-            for requirement in profile.requirements
-        )
-        if profile.understood
-        else ()
-    )
+    profile = game.announcement_profile(card, spell_face=spell_face)
+    target_slots = _target_slots(game, player, card, profile, source_is_spell=True)
     # CR 106.6 read against the zone this cast would start from - the card has
     # not moved yet here (CR 601.2a happens when the cast is actually
     # announced), so `card.zone` is that zone and is the same answer
@@ -1079,6 +1123,19 @@ def _battlefield_ability_actions(
         # ahead of the `try`, so both `Action`s below are filled from the one
         # value and cannot drift apart.
         descriptor = _mana_descriptor(ability, permanent)
+        # CR 602.2b: an activation announces its targets as a cast does
+        # (CR 601.2c). A mana ability never targets (CR 605.1a).
+        target_slots = (
+            ()
+            if is_mana
+            else _target_slots(
+                game,
+                player,
+                permanent,
+                game.announcement_profile(permanent, ability_index=index),
+                source_is_spell=False,
+            )
+        )
         try:
             total = game.activation_cost(permanent, index, player)
         except ValueError as error:
@@ -1109,6 +1166,7 @@ def _battlefield_ability_actions(
                     restriction_understood=descriptor.restriction_understood,
                     affordable=Affordability.UNKNOWN,
                     unaffordable_reason=str(error),
+                    target_slots=target_slots,
                 )
             )
             continue
@@ -1142,9 +1200,72 @@ def _battlefield_ability_actions(
                 affordable=affordable,
                 unaffordable_reason=reason,
                 pays_with=pays_with,
+                target_slots=target_slots,
             )
         )
     return actions
+
+
+def _equip_action(
+    game: Any,
+    player: str,
+    permanent: CardState,
+    candidate_scan: list[_ScannedCandidate],
+    board: Any,
+) -> Action | None:
+    """CR 702.6a's equip, as an `ACTIVATE` row with `keyword="Equip"` and no
+    `ability_index`.
+
+    Equip is a keyword ability, so `Game.activated_abilities` has no entry for
+    it and `_battlefield_ability_actions` never offered it. A caller takes it
+    with `keywords.equip_activation(game, equipment, target, player)`. CR
+    115.1e puts its target in the keyword's rule, so the slot is read off
+    `EQUIP_EFFECT`. Omitted outside its CR 307.5 sorcery window, the way
+    `_battlefield_ability_actions` omits a refused activation.
+    """
+    if permanent.controller != player or not has_equip(permanent.card):
+        return None
+    target_slots = _target_slots(
+        game, player, permanent, profile_for_text(EQUIP_EFFECT), source_is_spell=False
+    )
+    try:
+        activation = unannounced_equip_activation(game, permanent, player)
+    except ValueError as error:
+        return Action(
+            kind=ActionKind.ACTIVATE,
+            player=player,
+            rule="CR 702.6a",
+            card_id=permanent.id,
+            from_zone=Zone.BATTLEFIELD,
+            keyword="Equip",
+            affordable=Affordability.UNKNOWN,
+            unaffordable_reason=str(error),
+            target_slots=target_slots,
+        )
+    if activation.why_not() is not None:
+        return None
+    affordable, reason, pays_with = _cost_affordability(
+        game,
+        player,
+        activation.cost,
+        candidate_scan,
+        spend=ManaSpend.activating(board.of(permanent)),
+    )
+    cost_str, mana_cost_str = _cost_strings(activation.cost)
+    return Action(
+        kind=ActionKind.ACTIVATE,
+        player=player,
+        rule=activation.rule,
+        card_id=permanent.id,
+        from_zone=Zone.BATTLEFIELD,
+        keyword=activation.keyword,
+        cost=cost_str,
+        mana_cost=mana_cost_str,
+        affordable=affordable,
+        unaffordable_reason=reason,
+        pays_with=pays_with,
+        target_slots=target_slots,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -1167,21 +1288,24 @@ def _off_zone_actions(
     actions: list[Action] = []
     spend = ManaSpend.activating(card.card)
     for index, entry in enumerate(off_zone_abilities(card.card)):
+        # CR 602.2b: announced like any activation. Only a printed line can
+        # target; cycling, unearth and transmute spell out untargeted effects.
+        found = _target_candidates(
+            game,
+            player,
+            card,
+            profile_for_text(entry.ability.text if entry.family == "printed" else ""),
+            source_is_spell=False,
+        )
+        target_slots = _slots_from(found)
+        targets = [thing for requirement, legal in found for thing in legal[: requirement.minimum]]
         try:
-            activation = off_zone_activation(game, card, player, index)
+            activation = off_zone_activation(game, card, player, index, targets=targets or None)
         except ValueError as error:
-            # `off_zone_activation`/`off_battlefield_activation` announce and
-            # check targets as part of *building* the activation
-            # (`TargetingProfile.check`, which raises for too few targets
-            # before `.why_not()` is ever reached) - Boseiju, Who Endures's
-            # Channel ("destroy target artifact, enchantment, or nonbasic
-            # land") is exactly this shape, and it is in the pool. Dropping
-            # it here (an earlier pass did, on the wrong claim that no
-            # printing needed this) would teach a seat the activation does
-            # not exist; reporting it `UNKNOWN` with the engine's own reason
-            # is honest instead - this enumeration has no targets to supply,
-            # so it cannot say whether a legal one exists, only that the
-            # activation itself is real.
+            # A requirement with too few legal candidates still refuses the
+            # build (CR 601.2c), and so does a cost this module cannot read.
+            # The activation is real either way (CR 118.6), so it is reported
+            # `UNKNOWN` with the engine's own reason rather than dropped.
             actions.append(
                 Action(
                     kind=ActionKind.ACTIVATE_OFF_ZONE,
@@ -1192,6 +1316,7 @@ def _off_zone_actions(
                     ability_index=index,
                     keyword=entry.keyword,
                     affordable=Affordability.UNKNOWN,
+                    target_slots=target_slots,
                     unaffordable_reason=str(error),
                 )
             )
@@ -1216,6 +1341,7 @@ def _off_zone_actions(
                 affordable=affordable,
                 unaffordable_reason=reason,
                 pays_with=pays_with,
+                target_slots=target_slots,
             )
         )
     return actions
@@ -1543,6 +1669,9 @@ def legal_actions(
     board = game.computed_board()
     for permanent in game.permanents_controlled_by(player):
         actions.extend(_battlefield_ability_actions(game, player, permanent, candidate_scan, board))
+        equip = _equip_action(game, player, permanent, candidate_scan, board)
+        if equip is not None:
+            actions.append(equip)
         if not permanent.face_up:
             turn_up = _turn_face_up_action(game, player, permanent, candidate_scan)
             if turn_up is not None:

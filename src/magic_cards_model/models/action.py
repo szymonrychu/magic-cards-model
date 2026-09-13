@@ -110,12 +110,16 @@ class Affordability(StrEnum):
 
 
 class TargetSlot(BaseModel):
-    """One targeting requirement's shape, without naming its candidates -
-    `legal_targets` (`Game.legal_targets`) is where the actual candidate
-    objects for one specific requirement are enumerated; this is the summary
-    that says how many requirements there are and how many targets each
-    wants, so a caller can tell "this action targets" from "this action does
-    not" without a second round trip."""
+    """One targeting requirement of a cast or an activation (CR 601.2c, and
+    CR 602.2b for an activation): its phrase, how many targets it takes, and
+    which objects and players it could legally name right now.
+
+    The candidates are ids and usernames only, like `decision_candidates`/
+    `decision_player_candidates`, and come from the same predicate the
+    announcement checks with (`TargetRequirement.rejects`), so a candidate
+    list cannot disagree with what announcing that target would accept. They
+    are a snapshot of this moment, not a promise: CR 608.2b rechecks on
+    resolution."""
 
     model_config = ConfigDict(frozen=True)
 
@@ -123,6 +127,12 @@ class TargetSlot(BaseModel):
     minimum: int
     maximum: int | None
     """`None` for "any number of" (CR 107.1c)."""
+    candidates: tuple[UUID, ...] = ()
+    """Every object (a card in a public zone, or a spell or ability on the
+    stack) this requirement could name right now."""
+    player_candidates: tuple[str, ...] = ()
+    """Every player (CR 115.1: targets are objects and/or players) this
+    requirement could name right now."""
 
 
 class SpliceOption(BaseModel):
@@ -229,7 +239,9 @@ class Action(BaseModel):
     from_zone: Zone | None = None
     ability_index: int | None = None
     """Which of `Game.activated_abilities(source)`'s entries this activates -
-    `ACTIVATE`/`ACTIVATE_MANA` only."""
+    `ACTIVATE`/`ACTIVATE_MANA` only. `None` on an equip row (`keyword="Equip"`),
+    which is a keyword ability with no entry there; it is taken with
+    `keywords.equip_activation`."""
     keyword: str | None = None
     """The keyword this cast option or activation reads from - `Evoke`,
     `Flashback`, `Cycling` - or `None` for a plain mana-cost cast or a

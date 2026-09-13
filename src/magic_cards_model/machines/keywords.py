@@ -1630,6 +1630,17 @@ def _transmute_effect(activation: KeywordActivation) -> CardState | None:
 # --------------------------------------------------------------------------
 
 
+#: CR 702.6a's expansion of "Equip [cost]", after the colon. CR 115.1e: the
+#: target lives in the keyword's rule, not in printed text, so this is the
+#: text every equip target is announced and checked against.
+EQUIP_EFFECT = "Attach this permanent to target creature you control."
+
+
+def has_equip(card: Card) -> bool:
+    """Whether this card prints an equip ability (CR 702.6a)."""
+    return _keyword(card, "equip") is not None
+
+
 def equip_activation(
     game: Any, equipment: CardState, target: CardState, player: str
 ) -> KeywordActivation:
@@ -1642,7 +1653,25 @@ def equip_activation(
     CR 301.5b is why this is needed at all: "Equipment enter the battlefield
     like other artifacts. They don't enter the battlefield attached to a
     creature. The equip keyword ability attaches" it.
+
+    The target is announced and checked here (CR 601.2c, via CR 602.2b), the
+    way `off_battlefield_activation` checks its own: an opponent's creature or
+    a noncreature is refused before anything is paid. `_equip_effect` still
+    rechecks on resolution (CR 608.2b) for a target that became illegal since.
     """
+    from .targeting import profile_for_text
+
+    activation = unannounced_equip_activation(game, equipment, player)
+    profile_for_text(EQUIP_EFFECT).check([target], player, game, source_id=equipment.id)
+    activation.targets = [TargetRef.to_card(target)]
+    return activation
+
+
+def unannounced_equip_activation(game: Any, equipment: CardState, player: str) -> KeywordActivation:
+    """An equip activation with no target announced yet: its cost, timing and
+    rule, for a caller that asks about the activation before choosing
+    (`legal_actions`). Never put this on the stack; `equip_activation` is the
+    one that announces a target."""
     ability = _keyword(equipment.card, "equip")
     if ability is None:
         raise ValueError(f"{equipment.name} has no equip ability ({KeywordRule.EQUIP})")
@@ -1660,12 +1689,7 @@ def equip_activation(
         zone=Zone.BATTLEFIELD,
         cost=cost,
         sorcery_only=True,
-        targets=[TargetRef.to_card(target)],
-        ability=_synthetic_ability(
-            ability,
-            cost_text=ability.cost or "",
-            effect="Attach this permanent to target creature you control.",
-        ),
+        ability=_synthetic_ability(ability, cost_text=ability.cost or "", effect=EQUIP_EFFECT),
         game=game,
     )
 
