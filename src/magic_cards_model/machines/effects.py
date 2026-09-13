@@ -6625,7 +6625,9 @@ def _parse_reveal_until_land_damage_clause(text: str) -> AbilityEffect | None:
     """`_REVEAL_UNTIL_LAND_DAMAGE_RE`'s shape - see above.
 
     CR 701.20a's reveal moves nothing; the cards stay on top of the library
-    until the last sentence puts them on the bottom. A library with no land in
+    until the last sentence puts them on the bottom. Each card is recorded
+    through `Game.reveal` as it is shown, and putting them on the bottom ends
+    those records (CR 701.20d). A library with no land in
     it at all reveals the whole library and stops - "until" has no more cards
     to look at - and the damage is then the number of nonland cards seen,
     which is the entire library.
@@ -6651,6 +6653,7 @@ def _parse_reveal_until_land_damage_clause(text: str) -> AbilityEffect | None:
         revealed: list[CardState] = []
         stopper: CardState | None = None
         for state in list(controller.library):
+            game.reveal(state, source=ability.source_name)
             revealed.append(state)
             if Type.LAND in state.types:
                 stopper = state
@@ -6701,8 +6704,9 @@ _REVEAL_TOP_N_ONE_PER_CARD_TYPE_RE = re.compile(
 def _parse_reveal_top_n_one_per_card_type_clause(text: str) -> AbilityEffect | None:
     """`_REVEAL_TOP_N_ONE_PER_CARD_TYPE_RE`'s shape - see above.
 
-    CR 701.20a's reveal changes no state this model tracks; what matters is
-    which of the revealed cards end up in hand and which go to the bottom.
+    CR 701.20a's reveal moves nothing; each revealed card is recorded through
+    `Game.reveal`, and what matters beyond that is which of them end up in
+    hand and which go to the bottom (where CR 701.20d ends their records).
 
     **The loop is over the card types actually present among the revealed
     cards**, not over CR 300.1's full list. That is the same set of
@@ -6735,6 +6739,8 @@ def _parse_reveal_top_n_one_per_card_type_clause(text: str) -> AbilityEffect | N
         revealed = list(controller.library[:n])
         if not revealed:
             return
+        for state in revealed:
+            game.reveal(state, source=ability.source_name)
         remaining = list(revealed)
         kept: list[CardState] = []
         # A stable order over the types present, so the questions are asked
@@ -17336,6 +17342,10 @@ def _merge_look_top_reveal_to_hand_clauses(
     def effect(game: "Game", stack_object: "StackObject") -> None:
         player = game.controller_of(stack_object)
         source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        # "Look at" (CR 701.20e) shows the cards to the controller alone; the
+        # chosen card is then revealed (CR 701.20a) to everyone.
+        for state in player.library[:count]:
+            game.look(state, player.username, source=source)
         moved, rest = game.look_at_top_and_split(
             player,
             count,
@@ -17349,6 +17359,7 @@ def _merge_look_top_reveal_to_hand_clauses(
                 f"{source}: may reveal at most one {quality_description} card this way (CR 608.2d)"
             )
         for state in moved:
+            game.reveal(state, source=source)
             player.add(state, Zone.HAND)
         if randomised and rest:
             # Not CR 701.24a's shuffle - see `_PUT_REST_ON_BOTTOM_ANY_ORDER_RE`.
