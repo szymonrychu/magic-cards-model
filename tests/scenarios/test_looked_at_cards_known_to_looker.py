@@ -22,8 +22,14 @@ leaves every seat knowing less than the table does.
 - **CR 701.20d** - "If cards in a player's library are shuffled or otherwise
   reordered, any revealed cards that are reordered stop being revealed and
   become new objects." A fetchland's shuffle (CR 701.24a), a card put on top,
-  and "put the rest on the bottom of your library" in any or a random order
-  all end a library record.
+  and "put the rest on the bottom of your library in a random order" all end
+  a library record.
+- **CR 401.4** - "If an effect puts two or more cards in a specific position
+  in a library at the same time, the owner of those cards may arrange them in
+  any order." Duskwatch Recruiter's "in any order" is that arrangement, so the
+  controller still knows where each card went until the next reordering;
+  Narset, Parter of Veils's and Thundertrap Trainer's "in a random order" is
+  nobody's, so their bottomed cards are known to no one.
 - **CR 400.7** - a card that changes zones is a new object, so a revealed card
   that leaves the library for a graveyard is no longer the card that was shown.
 - **CR 121.1** - a draw puts the top card of a library into its owner's hand;
@@ -382,7 +388,7 @@ def test_atraxa_reveals_all_ten_publicly_and_the_kept_cards_stay_known_in_hand()
         ), "kept cards are carried; the rest went to the bottom in a random order"
 
 
-# -- look at the top three, reveal one (CR 701.20e, then CR 701.20a) ------------
+# -- look at the top N, reveal one, bottom the rest (CR 701.20e, CR 701.20a) ----
 
 
 def _duskwatch_board() -> PlayedScenario:
@@ -400,14 +406,26 @@ def _duskwatch_board() -> PlayedScenario:
     return scenario
 
 
-def _activate_recruiter(scenario: PlayedScenario, moved) -> None:
+def _script_split(scenario: PlayedScenario, moved) -> None:
     scenario.game.decisions.add(
         ScriptedAnswer(kind=DecisionKind.SCRY, value=CardSplit(moved=tuple(moved)), player="alice")
     )
+
+
+def _activate_recruiter(scenario: PlayedScenario, moved) -> None:
+    _script_split(scenario, moved)
     recruiter = scenario.creature("Duskwatch Recruiter")
     mana = scenario.untapped_sources("Forest", "Forest", "Forest")
     scenario.activate(recruiter, *mana, index=0)
     scenario.resolve_top()
+
+
+def _one_look_each(game: Game, source: str, looked) -> list:
+    """Every looked-at card has exactly one look for alice - never a second
+    record of the same act of looking."""
+    looks = [r for r in game.reveals if r.source == source and r.viewers == ["alice"]]
+    assert sorted(str(r.card_id) for r in looks) == sorted(str(state.id) for state in looked)
+    return looks
 
 
 def test_duskwatch_looks_at_three_privately_and_reveals_the_creature_it_takes():
@@ -420,32 +438,111 @@ def test_duskwatch_looks_at_three_privately_and_reveals_the_creature_it_takes():
 
     _activate_recruiter(scenario, [bears.id])
 
-    records = [r for r in scenario.game.reveals if r.source == "Duskwatch Recruiter"]
-    looks = [r for r in records if r.viewers == ["alice"]]
-    reveals = [r for r in records if r.viewers is None]
-    assert {r.card_id for r in looks} == {state.id for state in looked}
+    looks = _one_look_each(scenario.game, "Duskwatch Recruiter", looked)
     for look in looks:
         assert look.zone is Zone.LIBRARY
-        assert look.library_epoch == epoch
         assert look.zone_change_stamp == stamps[look.card_id]
+        # "In any order" is alice's own arrangement (CR 401.4): the look is
+        # pinned to the order her one put-back makes.
+        assert look.library_epoch == epoch + 1
+    reveals = [
+        r for r in scenario.game.reveals if r.source == "Duskwatch Recruiter" and r.viewers is None
+    ]
     assert [r.card_id for r in reveals] == [bears.id]
     assert reveals[0].zone is Zone.LIBRARY
     assert reveals[0].zone_change_stamp == stamps[bears.id]
+    assert reveals[0].library_epoch == epoch
 
     assert bears.zone is Zone.HAND
+    assert [state.name for state in alice.library] == ["Swamp", "Forest", "Mountain"]
     assert known(scenario.game, "bob") == [("Grizzly Bears", Zone.HAND, None, True)]
-    assert known(scenario.game, "alice") == [("Grizzly Bears", Zone.HAND, None, True)]
+    assert sorted(known(scenario.game, "alice")) == sorted(
+        [
+            ("Grizzly Bears", Zone.HAND, None, True),
+            ("Forest", Zone.LIBRARY, 1, False),
+            ("Mountain", Zone.LIBRARY, 2, False),
+        ]
+    )
 
 
-def test_duskwatch_declining_reveals_nothing_and_the_bottomed_looks_end():
+def test_duskwatch_declining_reveals_nothing_and_alice_alone_knows_the_bottom():
     scenario = _duskwatch_board()
     looked = scenario.top_of_library(3)
 
     _activate_recruiter(scenario, [])
 
     records = [r for r in scenario.game.reveals if r.source == "Duskwatch Recruiter"]
-    assert {r.card_id for r in records} == {state.id for state in looked}
     assert all(r.viewers == ["alice"] for r in records), "nothing was revealed"
+    _one_look_each(scenario.game, "Duskwatch Recruiter", looked)
+    assert known(scenario.game, "alice") == [
+        ("Grizzly Bears", Zone.LIBRARY, 1, False),
+        ("Forest", Zone.LIBRARY, 2, False),
+        ("Mountain", Zone.LIBRARY, 3, False),
+    ]
+    assert known(scenario.game, "bob") == []
+
+
+def _narset_board() -> PlayedScenario:
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Narset, Parter of Veils", "Island"],
+            library=["Opt", "Forest", "Mountain", "Swamp", "Island"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_narset_random_order_bottom_ends_the_looks_and_keeps_the_revealed_card():
+    """A random order is nobody's arrangement, so nothing alice saw tells
+    her where any of the rest went (CR 701.20d): only the card she revealed
+    and took is still known, in hand."""
+    scenario = _narset_board()
+    alice = scenario.player("alice")
+    looked = scenario.top_of_library(4)
+    opt = looked[0]
+    epoch = alice.library_epoch
+    _script_split(scenario, [opt.id])
+
+    scenario.activate(scenario.find("Narset, Parter of Veils", Zone.BATTLEFIELD), index=0)
+    scenario.resolve_top()
+
+    looks = _one_look_each(scenario.game, "Narset, Parter of Veils", looked)
+    assert all(look.library_epoch == epoch for look in looks)
+    assert alice.library_epoch != epoch
+    assert opt.zone is Zone.HAND
+    assert known(scenario.game, "alice") == [("Opt", Zone.HAND, None, True)]
+    assert known(scenario.game, "bob") == [("Opt", Zone.HAND, None, True)]
+
+
+def test_thundertrap_trainer_declining_leaves_nothing_known_after_the_random_bottom():
+    """The same family on an enters trigger rather than a loyalty ability,
+    proving the random-order reading is the clause's and not Narset's."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Thundertrap Trainer"],
+            library=["Opt", "Forest", "Mountain", "Swamp", "Island"],
+            battlefield=["Island"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    looked = scenario.top_of_library(4)
+    _script_split(scenario, [])
+
+    scenario.put_onto_battlefield("Thundertrap Trainer", "alice")
+    scenario.game.put_triggers_on_stack()
+    scenario.resolve_top()
+
+    _one_look_each(scenario.game, "Thundertrap Trainer", looked)
+    assert [r for r in scenario.game.reveals if r.viewers is None] == []
     assert known(scenario.game, "alice") == []
     assert known(scenario.game, "bob") == []
 

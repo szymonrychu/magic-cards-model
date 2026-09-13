@@ -286,8 +286,13 @@ def test_commune_with_nature_rest_on_the_bottom_is_known_to_the_caster_only():
         ("Island", 4),
     ]
     assert known_in_library(scenario.game, "bob") == []
-    looks = [look for look in scenario.game.reveals if look.zone is Zone.LIBRARY]
+    # The creature taken was revealed to everyone (CR 701.20a); every other
+    # card was only looked at, by alice (CR 701.20e).
+    shown = [look for look in scenario.game.reveals if look.zone is Zone.LIBRARY]
+    assert [r.card_id for r in shown if r.viewers is None] == [bears.id]
+    looks = [look for look in shown if look.viewers is not None]
     assert looks and all(look.viewers == ["alice"] for look in looks)
+    assert len(looks) == len({look.card_id for look in looks}), "one look per card"
 
 
 def test_duskwatch_recruiter_rest_on_the_bottom_is_known_until_a_shuffle():

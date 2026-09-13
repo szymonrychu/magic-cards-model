@@ -17342,10 +17342,10 @@ def _merge_look_top_reveal_to_hand_clauses(
     def effect(game: "Game", stack_object: "StackObject") -> None:
         player = game.controller_of(stack_object)
         source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
-        # "Look at" (CR 701.20e) shows the cards to the controller alone; the
-        # chosen card is then revealed (CR 701.20a) to everyone.
-        for state in player.library[:count]:
-            game.look(state, player.username, source=source)
+        # "Look at" (CR 701.20e) shows the cards to the controller alone, and
+        # `look_at_top_and_split` records that look once per card; "in a
+        # random order" leaves the controller nothing to know about the rest.
+        # The chosen card is then revealed (CR 701.20a) to everyone.
         moved, rest = game.look_at_top_and_split(
             player,
             count,
@@ -17353,6 +17353,7 @@ def _merge_look_top_reveal_to_hand_clauses(
             prompt=f"reveal a {quality_description} card from the top {count}",
             moved_label="your hand",
             kept_label="bottom of your library",
+            rest_in_random_order=randomised,
         )
         if len(moved) > 1 or any(not matches(state) for state in moved):
             raise ValueError(

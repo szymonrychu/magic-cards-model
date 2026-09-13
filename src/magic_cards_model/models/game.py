@@ -6175,6 +6175,7 @@ class Game(BaseModel):
         kept_label: str,
         source: str | None = None,
         prompt: str | None = None,
+        rest_in_random_order: bool = False,
     ) -> tuple[list[CardState], list[CardState]]:
         """Look at the top `count` cards and split them into two groups, the
         same CR 608.2d question `scry` and `surveil` already ask (CR 701.22a,
@@ -6229,6 +6230,16 @@ class Game(BaseModel):
         writes cards back into the library must move the epoch exactly once,
         which is already the rule every direct library write follows.
 
+        `rest_in_random_order` is for a caller that puts the rest back "in a
+        random order" (Narset, Parter of Veils; Thundertrap Trainer). That
+        order is nobody's arrangement, unlike CR 401.4's "may arrange them in
+        any order", so the chooser learns nothing about where the cards went:
+        each look is pinned to the current epoch instead, and the caller's one
+        put-back ends it (CR 701.20d). The look itself still happened
+        (CR 701.20e), so a card taken to hand before the put-back is carried.
+        Every looked-at card gets exactly one look either way; a caller never
+        records its own.
+
         Which half is `moved` is the caller's choice and is *not* fixed to
         "the half that leaves the library": `moved` is the pile the player
         actively opts into. For a scry that is the bottomed cards; for
@@ -6257,7 +6268,7 @@ class Game(BaseModel):
         )
         assert isinstance(answer, CardSplit)
         moved, rest = self._split_top(player, looked_at, answer)
-        put_back_epoch = player.library_epoch + 1
+        put_back_epoch = player.library_epoch + (0 if rest_in_random_order else 1)
         for state in looked_at:
             self._record_shown(state, [player.username], source, library_epoch=put_back_epoch)
         library = player.library
