@@ -24,8 +24,8 @@ Card-level totals for the 33 distinct names:
 
 | category | count |
 |---|---|
-| handled | 19 |
-| notice (fail-closed) | 2 |
+| handled | 21 |
+| notice (fail-closed) | 0 |
 | silent | 7 |
 | no_rules_text | 5 |
 
@@ -79,27 +79,6 @@ Missing primitive: **strip keyword-ability lines before spell dispatch** (or the
 same `_spell_faces`-style split `classify_card` already does for faces). Note
 islandcycling itself *is* executed (`machines/keywords.py`) - this is purely the
 dispatcher's text handling, and it is the cheapest fix in this file.
-
-### Fail-closed notices - recognised, refused, not executed
-
-These are not silent, but nothing happens either. Both are modal (CR 700.2: two
-or more bulleted options preceded by a "choose" instruction; CR 700.2a: modes
-are chosen as part of casting).
-
-- **Sheoldred's Edict** - "Choose one — • Each opponent sacrifices a nontoken
-  creature of their choice. • Each opponent sacrifices a creature token of their
-  choice. • Each opponent sacrifices a planeswalker of their choice."
-  Missing primitive: **each-opponent sacrifice filtered by token-ness / by
-  permanent type, chosen by the sacrificing player**.
-- **Drown in the Loch** - "Choose one — • Counter target spell with mana value
-  less than or equal to the number of cards in its controller's graveyard.
-  • Destroy target creature with mana value less than or equal to the number of
-  cards in its controller's graveyard."
-  Also the deck's only **unreadable targeting** (3 phrases, all the same shape):
-  `machines/targeting.py` cannot read a target restriction whose bound is a
-  *count of another zone*. Missing primitive: **a target legality bound computed
-  from the target controller's graveyard size**. This is the same mana-value-bound
-  family as Spell Snare, one step harder.
 
 ---
 

@@ -55,7 +55,6 @@ import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.casting import (
-    Casting,
     MarkedExile,
     finish_suspend,
     remove_suspend_time_counter,
@@ -246,17 +245,9 @@ def test_removing_the_last_time_counter_this_way_reaches_the_free_cast_path():
     # stack at the next priority. Resolving it is what grants the free cast.
     assert len(scenario.pending_triggers) + len(scenario.game.abilities_on_stack) == 1
     scenario.game.put_triggers_on_stack()
-    while not scenario.game.stack_is_empty:
-        scenario.resolve_top()
-    assert len(scenario.game.play_permissions) == 1
-
-    casting = Casting(spell=gargadon, caster="alice", origin_zone=Zone.EXILE, game=scenario.game)
-    casting.use_permission()
-    assert casting.total_cost.mana.converted == 0
-    payment = casting.begin_paying()
-    payment.pay()
-    spell = casting.cast()
-    scenario.game.put_on_stack(spell, "alice")
+    scenario.resolve_top()  # the last-counter trigger casts it (CR 608.2g)
+    assert gargadon.zone is Zone.STACK
+    assert scenario.game.play_permissions == []
     permanent = scenario.resolve_top()
 
     assert permanent.zone is Zone.BATTLEFIELD

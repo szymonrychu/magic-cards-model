@@ -453,9 +453,7 @@ def test_mosswort_bridges_hideaway_counts_an_animated_lands_power():
     scenario.activate(bridge, activate_with, index=1)
     scenario.resolve_top()
 
-    permission = scenario.game.play_permission_for(goblin_guide, "alice")
-    assert permission is not None, "a 1/1 animated land is a creature with power 1"
-    assert not permission.pays_mana_cost
+    assert goblin_guide.zone is Zone.STACK, "a 1/1 animated land is a creature with power 1"
 
 
 def test_mosswort_bridge_still_refuses_when_the_animated_land_is_not_enough():

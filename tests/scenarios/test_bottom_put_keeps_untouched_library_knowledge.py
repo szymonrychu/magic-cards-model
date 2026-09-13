@@ -85,7 +85,9 @@ def test_a_second_scry_bottoming_other_cards_keeps_the_first_bottomed_card_known
 
 def test_a_card_put_on_the_bottom_keeps_an_opponent_s_look_at_the_top_card():
     """Mishra's Bauble shows alice bob's top card; a card then put on the bottom
-    of bob's library goes under it and changes nothing about the top."""
+    of bob's library goes under it and changes nothing about the top. The
+    Bears came from bob's graveyard, a public zone (CR 400.2), so alice knows
+    them at the bottom as well (battle 8, B8-03)."""
     scenario = (
         Scenario()
         .player("alice", battlefield=["Mishra's Bauble"])
@@ -103,7 +105,10 @@ def test_a_card_put_on_the_bottom_keeps_an_opponent_s_look_at_the_top_card():
 
     bob = scenario.player("bob")
     assert bob.library[-1] is bears
-    assert known_in_library(scenario.game, "alice") == [("Lightning Bolt", 0)]
+    assert sorted(known_in_library(scenario.game, "alice")) == [
+        ("Grizzly Bears", 2),
+        ("Lightning Bolt", 0),
+    ]
 
 
 def test_bottoming_cards_for_a_mulligan_keeps_a_record_of_the_card_left_on_top():

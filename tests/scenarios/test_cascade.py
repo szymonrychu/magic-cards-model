@@ -26,11 +26,10 @@ source, which is why `Game.emit` asking the spells on the stack matters. What it
 does when it resolves - the exile-and-bottom half - is also automatic now:
 `Game._effect_of` asks `machines/keywords.keyword_effect_for` before the
 card-name registries, so the trigger resolving on the stack really does call
-`cascade`. The "you may cast it" half stays a scenario's own decision, the same
-concession every optional trigger in this engine makes (CR 608.2d has nobody
-here to ask) - see `test_the_hit_may_be_cast_from_exile_without_paying_its_
-mana_cost` and `tests/scenarios/test_living_end.py`'s cascade-into-Living-End
-test for the free cast actually happening and actually resolving.
+`cascade`. The "you may cast it" half is asked (CR 608.2d) and, taken, casts the
+hit while the trigger is still resolving (CR 608.2g) - an unscripted player
+takes it, so every test below that does not decline sees the hit on the stack.
+`tests/scenarios/test_cascade_casts_during_resolution.py` covers that cast.
 
 The exiling here is checked against the current wording of CR 702.85a, which
 says "a nonland card **whose mana value is less than this spell's mana value**".
@@ -40,7 +39,6 @@ is the authority.
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.abilities import TriggerEvent
-from magic_cards_model.machines.casting import Casting
 from magic_cards_model.machines.decisions import DecisionKind
 from magic_cards_model.machines.keywords import cascade, has_cascade, keyword_triggered_abilities
 from magic_cards_model.models import Zone
@@ -83,7 +81,7 @@ def test_cascade_stops_at_the_first_cheaper_nonland_card():
 
     assert result.hit is not None
     assert result.hit.name == "Lightning Bolt"
-    assert result.hit.zone is Zone.EXILE
+    assert result.hit.zone is Zone.STACK  # cast during resolution (CR 608.2g)
 
 
 def test_lands_are_never_the_hit():
@@ -112,7 +110,7 @@ def test_a_card_costing_the_same_is_not_cheaper():
 
 
 def test_everything_passed_on_the_way_goes_to_the_bottom():
-    """The misses go back to the library, and only the hit stays in exile."""
+    """The misses go back to the library, and only the hit, cast, leaves it."""
     scenario = board("Forest", "Kitchen Finks", "Lightning Bolt", "Island").build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     agent = cast_the_agent(scenario)
@@ -122,7 +120,8 @@ def test_everything_passed_on_the_way_goes_to_the_bottom():
     library = scenario.player("alice").library
     assert result.hit is not None and result.hit.name == "Lightning Bolt"
     assert sorted(state.name for state in library) == ["Forest", "Island", "Kitchen Finks"]
-    assert scenario.game.exile == [result.hit]
+    assert scenario.game.exile == []
+    assert result.hit.zone is Zone.STACK
 
 
 def test_an_empty_library_finds_nothing_and_loses_nobody_the_game():
@@ -152,45 +151,10 @@ def test_a_library_with_nothing_cheap_exiles_the_whole_thing():
     assert len(scenario.player("alice").library) == 3
 
 
-def test_the_hit_may_be_cast_from_exile_without_paying_its_mana_cost():
-    """ "You may cast it without paying its mana cost" - the free half.
-
-    Casting from exile is permission the cascade *effect* grants, not something
-    the card's own text does, so the spell is put on the stack directly rather
-    than through `Casting` - `machines/casting.keyword_cast_options` reads
-    permission printed on the card, and cascade prints it on a different card.
-    """
-    scenario = board("Lightning Bolt").build()
-    scenario.start_at(Step.PRECOMBAT_MAIN)
-    agent = cast_the_agent(scenario)
-    result = cascade(scenario.game, agent, seed=0)
-
-    assert result.hit is not None
-    scenario.game.exile.remove(result.hit)
-    scenario.game.put_on_stack(result.hit, "alice")
-    result.hit.targets = []
-
-    assert result.hit.zone is Zone.STACK
-    assert all(source.tapped for source in scenario.game.battlefield)
-
-
-def test_accepting_the_cascade_permission_casts_the_hit_through_the_real_engine():
-    """The reported defect, end to end: a real game log
-    (09d1f97f605c4eada0021ed441306e81, seq 150-157) showed Shardless Agent
-    cascade into Living End - the trigger resolved, the exile zone showed
-    exactly `["Living End"]` afterward - and then nothing: no "you may cast it
-    without paying its mana cost" choice was ever offered, and no route back
-    to any zone existed either, so Living End sat exiled forever.
-
-    `cascade` now asks (`DecisionKind.MAY`, CR 608.2d, "the player announces
-    these while applying the effect") and, on "yes", hands out a
-    `PlayPermission` (CR 601.3) the same way `machines/casting.finish_suspend`
-    already does for suspend's own free cast. This test drives the permission
-    through the *real* `Casting` machinery - `use_permission()`, paying the
-    (empty) cost, casting, resolving - rather than the manual `put_on_stack`
-    every other cascade test in this file uses as a shortcut, so it actually
-    proves the offered choice is usable, not just that a flag got set.
-    """
+def test_the_hit_is_cast_from_exile_without_paying_its_mana_cost():
+    """ "You may cast that card without paying its mana cost" - the free half,
+    through the real `Casting` machine while the trigger resolves (CR 608.2g).
+    Nothing is left behind: no permission, nothing in exile."""
     scenario = (
         Scenario()
         .manual_turn_based_actions()
@@ -208,37 +172,22 @@ def test_accepting_the_cascade_permission_casts_the_hit_through_the_real_engine(
     scenario.will_take_the_may(True, source="Shardless Agent")
     cast_the_agent(scenario)
 
-    # Both stack objects resolve through the real engine - the cascade
-    # trigger (which asks the question and grants the permission), then
-    # Shardless Agent itself, so the stack is genuinely empty before Living
-    # End - a sorcery with no flash - is cast under CR 117.1a's own timing.
-    scenario.resolve_top()
-    scenario.resolve_top()
+    scenario.resolve_top()  # the cascade trigger casts Living End
 
-    living_end = scenario.find("Living End", Zone.EXILE)
-    assert living_end.zone is Zone.EXILE
-
-    # The choice really was offered, not silently skipped (CR 608.2d).
     asked = scenario.questions_asked()
     assert any(
         question.kind is DecisionKind.MAY and question.source == "Shardless Agent"
         for question in asked
     )
+    assert scenario.stack_names() == ["Shardless Agent", "Living End"]
+    assert scenario.game.exile == []
+    assert scenario.game.play_permissions == []
 
-    casting = Casting(spell=living_end, caster="alice", origin_zone=Zone.EXILE, game=scenario.game)
-    casting.use_permission()
-    assert casting.total_cost.mana.converted == 0
-    payment = casting.begin_paying()
-    payment.pay()
-    spell = casting.cast()
-    scenario.game.put_on_stack(spell, "alice")
-    spell.targets = []
-
+    living_end = scenario.find("Living End", Zone.STACK)
     scenario.resolve_top()  # Living End resolves
 
-    assert scenario.game.exile == []
     assert "Grizzly Bears" in [state.name for state in scenario.game.battlefield]
-    assert spell.zone is Zone.GRAVEYARD
+    assert living_end.zone is Zone.GRAVEYARD
 
 
 def test_declining_the_cascade_permission_bottoms_the_hit_and_empties_exile():
@@ -266,53 +215,6 @@ def test_declining_the_cascade_permission_bottoms_the_hit_and_empties_exile():
         question.kind is DecisionKind.MAY and question.source == "Shardless Agent"
         for question in asked
     )
-    assert scenario.game.exile == []
-    assert result.hit.zone is Zone.LIBRARY
-    assert result.hit in scenario.player("alice").library
-    assert result.hit.exile_annotation is None
-    assert scenario.game.play_permissions == []
-
-
-def test_accepting_the_permission_but_never_using_it_still_bottoms_the_hit():
-    """The other half of the same real-game defect, arriving by a different
-    road: a live seat can answer "yes" to cascade's "you may cast it" - the
-    `PlayPermission` gets granted - and then simply never get around to
-    actually calling `Casting.use_permission()`. Priority moves on, the turn
-    ends, and nobody drove the cast through.
-
-    CR 702.85a's own sentence gives the exiled hit exactly two resting
-    places: cast, or "on the bottom... in a random order" - never "still in
-    exile because the permission that would have let it be cast simply
-    expired". That third outcome *is* legal for Ugin, Eye of the Storms'
-    "−11", Ragavan, Nimble Pilferer's trigger, and Suspend (CR 702.62a's own
-    "if you don't, it remains exiled") - each of those prints either an
-    "until end of turn" duration with no further instruction, or a named
-    "remains exiled" fallback. Cascade prints neither, so
-    `Game._bottom_unused_cascade_permissions` - run from `cleanup_step` right
-    before this same step drops the expiring permission (CR 514.2) - sweeps
-    the still-unclaimed hit to the bottom instead of letting it vanish along
-    with the dropped permission.
-    """
-    scenario = board("Living End").build()
-    scenario.start_at(Step.PRECOMBAT_MAIN)
-    scenario.will_take_the_may(True, source="Shardless Agent")
-    agent = cast_the_agent(scenario)
-
-    result = cascade(scenario.game, agent, seed=0)
-
-    assert result.hit is not None
-    assert result.hit.name == "Living End"
-    assert result.hit.zone is Zone.EXILE
-    assert scenario.game.exile == [result.hit]
-    granted = scenario.game.play_permissions
-    assert len(granted) == 1
-    assert granted[0].source_name == "Shardless Agent's cascade"
-    assert granted[0].bottom_if_unused is True
-
-    # Run the game forward past the point the permission would expire
-    # (CR 514.2) - nothing in this test ever calls `Casting.use_permission()`.
-    scenario.game.cleanup_step()
-
     assert scenario.game.exile == []
     assert result.hit.zone is Zone.LIBRARY
     assert result.hit in scenario.player("alice").library
@@ -372,7 +274,7 @@ def test_an_instant_with_cascade_triggers_the_same_way():
     ]
 
 
-def test_the_cascade_trigger_exiles_when_it_resolves():
+def test_the_cascade_trigger_exiles_and_casts_when_it_resolves():
     """CR 702.85a's effect half, run by the game rather than by the test."""
     scenario = board("Lightning Bolt", "Counterspell").build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
@@ -380,8 +282,9 @@ def test_the_cascade_trigger_exiles_when_it_resolves():
 
     scenario.resolve_top()  # the cascade trigger
 
-    bolt = scenario.find("Lightning Bolt", Zone.EXILE)
-    assert bolt.zone is Zone.EXILE
+    bolt = scenario.find("Lightning Bolt", Zone.STACK)
+    assert scenario.stack_names() == ["Shardless Agent", "Lightning Bolt"]
+    assert bolt.zone is Zone.STACK
 
 
 def test_violent_outbursts_own_pump_actually_pumps():
@@ -415,6 +318,8 @@ def test_violent_outbursts_own_pump_actually_pumps():
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
+    # About the pump, not the hit: declined, so the Bolt is not cast at the Bears.
+    scenario.will_take_the_may(False, source="Violent Outburst")
     scenario.cast_onto_stack(
         "Violent Outburst", *scenario.untapped_sources("Mountain", "Forest", "Forest")
     )

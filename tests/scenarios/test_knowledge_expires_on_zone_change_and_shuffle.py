@@ -126,7 +126,9 @@ def test_revealing_the_same_card_again_after_a_shuffle_makes_it_known_again():
 def test_a_looked_at_top_card_stops_being_known_when_a_spell_is_put_on_top_of_that_library():
     """Subtlety puts bob's Grizzly Bears spell on top of his library. The
     looked-at Bolt never moved, but it is no longer the top card, and no
-    record of "the top card" survives an insertion above it."""
+    record of "the top card" survives an insertion above it. The Bears came
+    from the stack, a public zone (CR 400.2), so they are what alice knows
+    now (battle 8, B8-03)."""
     scenario = (
         Scenario()
         .player(
@@ -158,7 +160,7 @@ def test_a_looked_at_top_card_stops_being_known_when_a_spell_is_put_on_top_of_th
     bob = scenario.player("bob")
     assert bob.library[0] is bears
     assert bob.library[1].name == "Lightning Bolt"
-    assert known(scenario.game, "alice") == []
+    assert known(scenario.game, "alice") == [("Grizzly Bears", Zone.LIBRARY, 0, False)]
 
 
 def test_a_scry_that_keeps_the_card_on_top_still_ends_the_record():

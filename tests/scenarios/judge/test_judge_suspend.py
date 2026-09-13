@@ -85,14 +85,14 @@ def test_the_owner_who_suspended_their_own_card_gets_the_free_cast():
     that card." When the player who takes that special action is also the
     card's owner - the only way CR 116.2f can ever fire - CR 109.5's "owner
     (if it has no controller)" and "whoever exiled it" name the same person,
-    so `finish_suspend` hands the CR 702.62a permission to bob either way.
+    so `finish_suspend` casts it for bob either way (CR 608.2g).
     This is what makes the next test's failure a real disagreement rather
     than suspend being broken outright.
     """
     scenario = (
         Scenario()
         .manual_turn_based_actions()
-        .player("alice")
+        .player("alice", battlefield=["Grizzly Bears"])
         .player("bob", hand=["Suspended Sentence"], battlefield=["Swamp", "Swamp"])
         .build()
     )
@@ -104,10 +104,10 @@ def test_the_owner_who_suspended_their_own_card_gets_the_free_cast():
     for _ in range(3):
         sentence.remove_counters(Counter.TIME, 1)
 
-    permission = finish_suspend(scenario.game, sentence)
-    assert permission is not None
-    assert permission.player == "bob"
-    assert permission.pays_mana_cost is False
+    spell = finish_suspend(scenario.game, sentence)
+    assert spell is not None
+    assert scenario.game.controller_of(spell).username == "bob"
+    assert scenario.game.cast_record_of(spell).keyword == "Suspend"
 
 
 def test_the_owner_casts_a_card_someone_else_suspended():
@@ -133,7 +133,7 @@ def test_the_owner_casts_a_card_someone_else_suspended():
     scenario = (
         Scenario()
         .manual_turn_based_actions()
-        .player("alice", battlefield=["Swamp"])
+        .player("alice", battlefield=["Swamp", "Grizzly Bears"])
         .player("bob", exile=["Suspended Sentence"])
         .build()
     )
@@ -151,9 +151,11 @@ def test_the_owner_casts_a_card_someone_else_suspended():
     for _ in range(3):
         sentence.remove_counters(Counter.TIME, 1)
 
-    permission = finish_suspend(scenario.game, sentence)
-    assert permission is not None
-    assert permission.player == "bob", "CR 109.5: the owner, not the player who exiled it"
+    spell = finish_suspend(scenario.game, sentence)
+    assert spell is not None
+    assert scenario.game.controller_of(spell).username == "bob", (
+        "CR 109.5: the owner, not the player who exiled it"
+    )
 
 
 def test_the_answer_is_the_owner_whichever_side_of_the_table_exiled_it():
@@ -171,7 +173,7 @@ def test_the_answer_is_the_owner_whichever_side_of_the_table_exiled_it():
         Scenario()
         .manual_turn_based_actions()
         .player("alice", exile=["Suspended Sentence"])
-        .player("bob", battlefield=["Swamp"])
+        .player("bob", battlefield=["Swamp", "Grizzly Bears"])
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
@@ -183,7 +185,8 @@ def test_the_answer_is_the_owner_whichever_side_of_the_table_exiled_it():
     for _ in range(3):
         sentence.remove_counters(Counter.TIME, 1)
 
-    permission = finish_suspend(scenario.game, sentence)
-    assert permission is not None
-    assert permission.player == "alice", "CR 109.5: the owner, not the player who exiled it"
-    assert permission.pays_mana_cost is False
+    spell = finish_suspend(scenario.game, sentence)
+    assert spell is not None
+    assert scenario.game.controller_of(spell).username == "alice", (
+        "CR 109.5: the owner, not the player who exiled it"
+    )

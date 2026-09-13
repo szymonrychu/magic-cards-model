@@ -177,10 +177,7 @@ def test_cascading_into_living_end_actually_reanimates():
     result = cascade(scenario.game, agent, seed=0)
     assert result.hit is not None
     assert result.hit.name == "Living End"
-
-    scenario.game.exile.remove(result.hit)
-    scenario.game.put_on_stack(result.hit, "alice")
-    result.hit.targets = []
+    assert result.hit.zone is Zone.STACK  # cast during resolution (CR 608.2g)
 
     scenario.resolve_top()  # Living End resolves
 

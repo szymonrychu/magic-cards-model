@@ -413,6 +413,13 @@ class AbilityOnStack(BaseModel):
     source_id: UUID | None = None
     source_name: str
     controller: str
+    source_stamp: UUID | None = None
+    """The source's `CardState.zone_change_stamp` when the ability triggered,
+    so a recheck on resolution reads the object it came from (CR 113.7a: "if
+    the source is no longer in the zone it's expected to be in at that time,
+    its last known information is used"; CR 608.2h) rather than whatever new
+    object the card has since become (CR 400.7). `None` for an ability that
+    records no source object."""
     state_class: Literal["AbilityOnStack"] = "AbilityOnStack"
     """Which concrete Python class built this object - decode-time identity
     for `models.game.StackObject`'s discriminated union, the exact
@@ -2258,7 +2265,11 @@ _COLOR_LETTERS: dict[str, Color] = {
 
 
 def _cast_record_for_clause(
-    game: "Game", ability: TriggeredAbility, source: CardState, event: "GameEvent | None"
+    game: "Game",
+    ability: TriggeredAbility,
+    source: CardState,
+    event: "GameEvent | None",
+    source_stamp: UUID | None = None,
 ) -> "CastRecord | None":
     """The `CastRecord` a mana-spent or kicked clause's "it" refers to, or
     `None` if there is no longer one to read.
@@ -2266,11 +2277,12 @@ def _cast_record_for_clause(
     A self-referential clause - Sowing Mycospawn's "if it was kicked" ("it" is
     "this spell"), Wistfulness's and Drowner of Truth's "if ... was spent to
     cast it" ("it" is "this creature"/"this spell") - means the ability's own
-    source, whose id is unchanged whether it is still a spell on the stack or
-    has since resolved onto the battlefield (CR 400.7 moves the object, not its
-    identity). Vexing Bauble's "Whenever a player casts a spell, if no mana was
-    spent to cast it" is not self-referential at all: "it" is *that* spell, the
-    trigger event's own subject, not Vexing Bauble itself.
+    source, whose record follows it from the stack onto the battlefield (CR
+    400.7d) and no further: `Game.cast_record_of` keys it by the object, so a
+    permanent that left and returned is a new object with no record (CR 400.7).
+    Vexing Bauble's "Whenever a player casts a spell, if no mana was spent to
+    cast it" is not self-referential at all: "it" is *that* spell, the trigger
+    event's own subject, not Vexing Bauble itself.
 
     CR 601.2h's spend is recorded by `Game.note_cast` before the CAST_SPELL
     event that reaches this is ever emitted (`Game.put_on_stack`), so the
@@ -2291,8 +2303,12 @@ def _cast_record_for_clause(
         subject = game.find_by_id(event.subject_id) if event.subject_id else None
         if subject is None:
             return None
-        return game.cast_records.get(subject.id)
-    return game.cast_records.get(source.id)
+        return game.cast_record_of(subject)
+    if source_stamp is not None:
+        # CR 113.7a, CR 608.2h: the recheck on resolution reads the object
+        # the ability came from, even if that object has since moved on.
+        return game.cast_record_as_last_known(source_stamp)
+    return game.cast_record_of(source)
 
 
 #: Ruby, Daring Tracker's own clause, split off `condition` into
@@ -2336,8 +2352,7 @@ def _control_creature_with_power_holds(game: "Game", clause: str, source: CardSt
 #: kind rather than over one card: "this permanent's impending cost was paid
 #: and it has a time counter on it". The paid half is
 #: `CardState.cast_with_keyword`, which belongs to this object only (CR
-#: 400.7); `Game.cast_records` survives a blink under the same id and would
-#: answer for the object that left.
+#: 400.7), the same way `Game.cast_record_of` answers only for this object.
 _PERMANENT_KEYWORD_COST_PAID_WITH_COUNTER = re.compile(
     r"^this permanent's (?P<keyword>[a-z]+) cost was paid and it has an? "
     r"(?P<kind>\+1/\+1|-1/-1|[a-z]+) counter on it$"
@@ -2349,6 +2364,7 @@ def intervening_if_holds(
     ability: TriggeredAbility,
     source: CardState,
     event: "GameEvent | None" = None,
+    source_stamp: UUID | None = None,
 ) -> bool:
     """Whether an intervening *if* clause is true right now (CR 603.4, 608.2a).
 
@@ -2419,7 +2435,7 @@ def intervening_if_holds(
         # shape to fail closed on - it is the legitimate, expected answer for
         # a creature that entered some other way, so this returns `False`
         # directly rather than through `_fail_closed`.
-        record = _cast_record_for_clause(game, ability, source, event)
+        record = _cast_record_for_clause(game, ability, source, event, source_stamp)
         return record is not None
 
     paid_with_counter = _PERMANENT_KEYWORD_COST_PAID_WITH_COUNTER.fullmatch(clause)
@@ -2443,7 +2459,7 @@ def intervening_if_holds(
         # its evoke cost was not paid - not an unreadable clause, so this
         # returns False directly rather than through `_fail_closed`, exactly as
         # "you cast it" above does.
-        record = _cast_record_for_clause(game, ability, source, event)
+        record = _cast_record_for_clause(game, ability, source, event, source_stamp)
         return record is not None and (record.keyword or "").lower() == "evoke"
 
     if clause == "its offspring cost was paid":
@@ -2455,30 +2471,30 @@ def intervening_if_holds(
         # `CastRecord.offspring_paid` rather than `.keyword` - a spell can be
         # both kicked and offspring-paid at once, and each linked ability
         # only ever asks about its own cost (CR 702.175b).
-        record = _cast_record_for_clause(game, ability, source, event)
+        record = _cast_record_for_clause(game, ability, source, event, source_stamp)
         return record is not None and record.offspring_paid
 
     if _KICKED_CLAUSE.match(clause):
-        record = _cast_record_for_clause(game, ability, source, event)
+        record = _cast_record_for_clause(game, ability, source, event, source_stamp)
         if record is None:
             return _fail_closed(game, ability, source)
         return record.kicked > 0
 
     if _REPLICATE_CLAUSE.match(clause):
-        record = _cast_record_for_clause(game, ability, source, event)
+        record = _cast_record_for_clause(game, ability, source, event, source_stamp)
         if record is None:
             return _fail_closed(game, ability, source)
         return record.replicated > 0
 
     if _NO_MANA_SPENT_CLAUSE.match(clause):
-        record = _cast_record_for_clause(game, ability, source, event)
+        record = _cast_record_for_clause(game, ability, source, event, source_stamp)
         if record is None:
             return _fail_closed(game, ability, source)
         return not record.any_mana_spent
 
     mana_match = _MANA_SPENT_CLAUSE.match(clause)
     if mana_match is not None:
-        record = _cast_record_for_clause(game, ability, source, event)
+        record = _cast_record_for_clause(game, ability, source, event, source_stamp)
         if record is None:
             return _fail_closed(game, ability, source)
         required: dict[Color, int] = {}
@@ -3450,6 +3466,7 @@ def triggers_for(game: "Game", event: GameEvent, sources: list[CardState]) -> li
             source_id=source.id,
             source_name=source.name,
             controller=controller,
+            source_stamp=source.zone_change_stamp,
             event=event,
         )
         triggered.append(on_stack)
@@ -3640,6 +3657,7 @@ def state_triggers_for(game: "Game") -> list[AbilityOnStack]:
                 source_id=source.id,
                 source_name=source.name,
                 controller=controller,
+                source_stamp=source.zone_change_stamp,
             )
             game.state_trigger_latches[key] = on_stack.id
             triggered.append(on_stack)

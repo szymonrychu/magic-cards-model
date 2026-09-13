@@ -153,7 +153,9 @@ def test_the_owner_drawing_the_looked_at_card_carries_it_to_the_looker():
 def test_a_card_put_on_top_above_the_looked_at_card_voids_the_look():
     """Subtlety puts bob's Grizzly Bears spell on top. The looked-at Bolt is
     second from the top now, not "known at index 1": the library it was on
-    top of was reordered, so the record ends (CR 701.20d)."""
+    top of was reordered, so the record ends (CR 701.20d). The Bears were a
+    spell every player saw (CR 400.2), so they are known on top instead
+    (battle 8, B8-03)."""
     scenario = (
         Scenario()
         .player(
@@ -183,7 +185,7 @@ def test_a_card_put_on_top_above_the_looked_at_card_voids_the_look():
     bob = scenario.player("bob")
     assert bob.library[0] is bears
     assert bob.library[1].name == "Lightning Bolt"
-    assert known(scenario.game, "alice") == []
+    assert known(scenario.game, "alice") == [("Grizzly Bears", Zone.LIBRARY, 0, False)]
 
 
 # -- replay and round trip -----------------------------------------------------

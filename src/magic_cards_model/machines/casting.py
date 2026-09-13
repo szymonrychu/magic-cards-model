@@ -1124,30 +1124,12 @@ class PlayPermission(BaseModel):
     has no notion of *whose* turn is next. A permission with this set also
     carries `until_end_of_turn=False`, so `Game.cleanup_step`'s own "until
     end of turn" sweep leaves it alone on the turn it was granted."""
-    bottom_if_unused: bool = False
-    """Whether `Game.cleanup_step` must sweep this card to the bottom of its
-    owner's library, rather than just dropping the permission, if it is still
-    sitting unclaimed in `zone` the moment this permission expires.
 
-    Cascade (CR 702.85a) is the one grant this is true for, and the reason is
-    textual, not a house rule: Ugin, Eye of the Storms' "−11" and Ragavan,
-    Nimble Pilferer's trigger both print "**Until end of turn**, you may cast
-    [it]" - an explicit standing permission whose own rule never says what
-    happens to a card nobody got around to casting, so CR 514.2 dropping the
-    permission and leaving the card wherever it sits is the whole of what
-    those rules require. Suspend's own third ability (CR 702.62a) is the same
-    shape again - no "until end of turn", and its own sentence names the
-    resting state itself: "if you don't, it remains exiled." Cascade's single
-    sentence is the one exception: "Put the exiled cards on the bottom in a
-    random order" is not a fallback for a *declined* hit only, it is what CR
-    702.85a's own resolution does with *every* card that "weren't cast" -
-    the accepted-but-never-actually-cast case included. Nothing else in this
-    engine can finish that cast synchronously inside `cascade`'s own
-    resolution (a live seat's actual `Casting.use_permission()` call is a
-    separate, later step - see `machines/keywords.cascade`), so this flag is
-    what keeps CR 702.85a's own "exiled forever" outcome from becoming a
-    legal resting state for cascade the way it legitimately is for Ugin,
-    Ragavan, and Suspend."""
+    bottom_if_unused: bool = False
+    """Always `False` now, kept because consumers read it. Cascade used to set
+    it for a hit left in exile under a permission; cascade now casts the hit
+    during its own resolution (`Game.cast_during_resolution`, CR 608.2g) and
+    bottoms what was not cast at once (CR 702.85a), so no grant sets it."""
 
     def names(self, card: CardState) -> bool:
         """Whether this permission is about that exact object (CR 400.7)."""
@@ -4991,79 +4973,47 @@ def remove_suspend_time_counter(game: Any, card: CardState) -> int:
     return remaining
 
 
-def finish_suspend(game: Any, card: CardState) -> PlayPermission | None:
+def finish_suspend(game: Any, card: CardState) -> CardState | None:
     """CR 702.62a's third ability: once the last time counter comes off a
     suspended card, its owner may cast it without paying its mana cost.
 
     "'When the last time counter is removed from this card, if it's exiled,
     you may play it without paying its mana cost if able. If you don't, it
-    remains exiled.'" The player that "you" names is the card's **owner**
-    (CR 108.3: "the player who started the game with it in their deck"), never
-    whoever performed the exile: CR 109.5 says "the words 'you' and 'your' on an
-    object refer to the object's controller, its would-be controller (if a
-    player is attempting to play, cast, or activate it), or its owner (if it has
-    no controller)", and a card in exile has no controller at all. So a card
-    another player exiled with time counters - Suspended Sentence's own last
-    line, cast by somebody else - still comes off suspend into its owner's
-    hands. `ExileAnnotation.owner` is the player who took the exiling action and
-    is only the fallback here, for a card whose owner nothing recorded.
+    remains exiled. If you cast a creature spell this way, it gains haste
+    until you lose control of the spell or the permanent it becomes.'" The
+    player that "you" names is the card's **owner** (CR 108.3): CR 109.5 says
+    "you" on an object with no controller is its owner, and a card in exile
+    has no controller at all, so a card another player exiled with time
+    counters (Suspended Sentence) still comes off suspend into its owner's
+    hands. `ExileAnnotation.owner` is only the fallback.
 
-    The intervening *if* ("if it's exiled") is read against
-    the card's *current* zone, not the zone it was in when the last counter
-    came off - CR 603.10's ordinary "check now" shape for a triggered
-    ability's own condition.
-
-    Returns the granted `PlayPermission` (CR 601.3's dynamic half - the same
-    primitive Ugin, Eye of the Storms' -11 and Ragavan's trigger already use,
-    via `Game.grant_play_permission`), or `None` when the *if* is false or
-    the card still has a time counter on it (the ability has not actually
-    triggered). The "may" itself is left to the caller: nobody here to ask
-    (CR 608.2d) - the caller's choice **is** whether it ever calls
-    `Casting.use_permission()` on the permission this hands back; never
-    calling it is CR 702.62a's own "if you don't, it remains exiled."
-
-    That fallback is what makes leaving the permission to expire on its own
-    (`bottom_if_unused` left at its default `False`) correct here, rather
-    than the gap it turned out to be for `machines.keywords.cascade`: CR
-    702.62a's own sentence names "remains exiled" as the resting state for a
-    suspended card nobody plays, so `Game.cleanup_step` dropping an unused
-    permission and leaving the card exactly where it sits already matches the
-    rule. Cascade's own sentence names no such fallback - "put the exiled
-    cards... that weren't cast on the bottom" is the fallback, for every card
-    that "weren't cast" - which is why only cascade's grant carries `bottom_
-    if_unused=True`. See `PlayPermission.bottom_if_unused`'s own docstring.
-
-    `immediate=True`: unlike Ugin's and Ragavan's grants, CR 702.62a's third
-    ability never prints "until end of turn" - it is CR 117.2e's "resolving
-    spells and abilities may instruct players to take actions... no player has
-    priority while [it] is resolving" shape instead, so the "you may play it"
-    is only good for as long as that instruction is still being carried out,
-    not for the rest of the turn. See `PlayPermission.immediate`'s own
-    docstring.
+    The intervening *if* ("if it's exiled") is read against the card's
+    *current* zone (CR 603.10). The cast is made while this ability resolves
+    (CR 608.2g, CR 702.62d's alternative cost) through `Game.
+    may_cast_during_resolution`, labelled "Suspend" so CR 702.62a's haste is
+    granted as the creature enters (`Game._create_resolution_delayed_triggers`).
+    Declining, or a cast that is not legal, is "If you don't, it remains
+    exiled." Returns the spell cast, or `None`.
     """
     if card.zone is not Zone.EXILE:
         return None
     if not has_suspend(card.card):
-        # Whose ability this is. CR 702.62a's third ability belongs to a card
-        # with suspend and to nothing else - which used to be read off
-        # `ExileMarker.SUSPENDED` instead, and that is narrower than the rule
-        # in exactly the way CR 702.62b is broader than the marker: a card
-        # exiled with time counters by something other than the suspend
-        # special action (Suspended Sentence's own last line) has the ability
-        # too. Read off the keyword rather than the marker, and the pile the
-        # card happens to sit in stops being the question.
+        # CR 702.62b is broader than the suspend special action's own marker:
+        # a card exiled with time counters by something else has the ability.
         return None
     if card.counter_count(Counter.TIME) > 0:
         return None
     annotation = card.exile_annotation
-    return game.grant_play_permission(
+    owner = card.owner or (annotation.owner if annotation else None) or game.active_player.username
+    return game.may_cast_during_resolution(
         card,
-        card.owner or (annotation.owner if annotation else None) or game.active_player.username,
-        action=PlayAction.CAST,
-        pays_mana_cost=False,
+        owner,
+        prompt=f"cast {card.name} without paying its mana cost (suspend)",
+        source=card.name,
+        source_id=source_id_of(card),
         source_name=f"{card.name}'s suspend",
         rule="CR 702.62a",
-        immediate=True,
+        keyword="Suspend",
     )
 
 

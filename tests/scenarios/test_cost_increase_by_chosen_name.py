@@ -27,6 +27,10 @@ direction:
   way that weren't cast on the bottom of your library in a random order", which
   is where a Living End that could not be paid for actually goes. It does *not*
   stay in exile.
+- **CR 608.2g** - the cast happens while the cascade trigger resolves, and "If
+  an effect gives a player the option to pay mana, they may activate mana
+  abilities before taking that action", so the {3} is asked for right there
+  (`Game.cast_during_resolution`, battle 8 B8-01).
 
 So Disruptor Flute stops a cascaded Living End without prohibiting anything: it
 is a tax, and the player who tapped out for Shardless Agent simply cannot pay
@@ -45,10 +49,9 @@ resolved for free with a Flute naming it on the battlefield.
 (`CardState.choice`) against the spell's name.
 """
 
-import pytest
-
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.cost import CostModifierKind, cost_modifier_effect
+from magic_cards_model.machines.decisions import DecisionKind
 from magic_cards_model.models import Zone
 from tests.cards import card
 from tests.scenarios.harness import PlayedScenario, Scenario
@@ -87,17 +90,26 @@ def flute_naming(scenario: PlayedScenario, name: str) -> None:
 
 
 def cascade_into_living_end(scenario: PlayedScenario) -> tuple[object, object]:
-    """Bob taps his three lands for Shardless Agent, the cascade trigger
-    resolves, and the Agent resolves behind it. Returns (agent, the hit)."""
+    """Bob taps his three lands for Shardless Agent and the cascade trigger
+    resolves, casting Living End if Bob can pay for it (CR 608.2g). Returns
+    (agent, the hit), wherever the hit went."""
     agent = scenario.cast_onto_stack(
         "Shardless Agent",
         *scenario.untapped_sources("Island", "Island", "Forest", username="bob"),
         username="bob",
     )
     scenario.resolve_top()  # the cascade trigger (CR 702.85a)
-    scenario.resolve_top()  # Shardless Agent itself
-    hit = next(state for state in scenario.game.exile if state.name == "Living End")
+    hit = next(state for state in scenario.all_card_states() if state.name == "Living End")
     return agent, hit
+
+
+def tax_question(scenario: PlayedScenario):
+    """The mana payment asked while the cascade trigger resolved, if any."""
+    return [
+        question
+        for question in scenario.questions_asked()
+        if question.kind is DecisionKind.PAY_MANA and question.source == "Living End"
+    ]
 
 
 # -- the printed line, read on its own ------------------------------------
@@ -130,24 +142,18 @@ def test_living_end_has_no_mana_cost_at_all():
 
 
 def test_the_cascaded_living_end_costs_exactly_three():
-    """CR 118.9d and CR 601.2f: the {3} is applied *to the alternative cost*.
-
-    Both halves are asserted, because only the pair distinguishes a correct
-    engine from two plausible wrong ones - `base_cost` still empty is
-    CR 118.9c ("an alternative cost doesn't change a spell's mana cost"), and
-    the total reading exactly {3} is the increase landing on the empty
-    alternative cost rather than being swallowed by "without paying its mana
-    cost".
-    """
+    """CR 118.9d and CR 601.2f: the {3} is applied *to the alternative cost*,
+    and it is the whole of what the cast asks to be paid. Living End's own
+    mana cost stays blank (CR 118.9c, `test_living_end_has_no_mana_cost_at_all`),
+    so the {3} is the increase landing on the empty alternative cost rather
+    than being swallowed by "without paying its mana cost"."""
     scenario = board().build()
     flute_naming(scenario, "Living End")
-    _, hit = cascade_into_living_end(scenario)
+    cascade_into_living_end(scenario)
 
-    casting = scenario.cast("Living End", username="bob", from_zone=Zone.EXILE)
-    casting.use_permission()
-
-    assert str(casting.base_cost) == ""
-    assert str(casting.total_cost.mana) == "{3}"
+    (question,) = tax_question(scenario)
+    assert question.amount == 3
+    assert "{3}" in question.prompt
 
 
 def test_the_tax_lands_even_though_the_flute_belongs_to_the_opponent():
@@ -179,48 +185,27 @@ def test_only_the_named_spell_is_taxed():
 
 def test_a_player_tapped_out_for_the_agent_cannot_pay_the_three():
     """The refusal has to be *about the cost*. Disruptor Flute prohibits
-    nothing on the casting side, so an engine refusing this for any other
-    reason would be right by accident; the raised message naming {3} is what
-    says the tax is what stopped it."""
+    nothing on the casting side, so the cast was proposed and only the {3}
+    stopped it: the payment question was asked and could not be accepted
+    (CR 118.3)."""
     scenario = board().build()
     flute_naming(scenario, "Living End")
     _, hit = cascade_into_living_end(scenario)
-    assert not [
-        state for state in scenario.game.battlefield if state.name == "Island" and not state.tapped
-    ]
 
-    casting = scenario.cast("Living End", username="bob", from_zone=Zone.EXILE)
-    casting.use_permission()
-    payment = casting.begin_paying()
-
-    with pytest.raises(ValueError) as raised:
-        payment.pay()
-
-    assert "{3}" in str(raised.value)
-    # CR 601.2a moved the card to the stack as the cast was proposed, so the
-    # rewind that puts it back in exile is CR 601.6's, asked for by hand.
-    assert hit.zone is Zone.STACK
-    casting.cancel()
-    assert hit.zone is Zone.EXILE
-    assert scenario.game.stack == []
+    (question,) = tax_question(scenario)
+    assert question.affirmative_is_legal is False
+    assert hit.zone is Zone.LIBRARY
+    assert scenario.stack_names() == ["Shardless Agent"]
 
 
 def test_the_uncast_living_end_goes_to_the_bottom_of_the_library():
     """CR 702.85a's last sentence: "put all cards exiled this way that weren't
     cast on the bottom of your library in a random order". A Living End nobody
-    could pay for is one of those cards - it does not stay in exile, and it
-    does not reanimate anything on its way out.
-
-    The two lands cascade passed on the way down were bottomed the moment the
-    trigger finished; the hit follows once the permission to cast it lapses.
-    """
+    could pay for is one of those cards - it goes there with the two lands the
+    moment the trigger finishes, and it does not reanimate anything."""
     scenario = board().build()
     flute_naming(scenario, "Living End")
     _, hit = cascade_into_living_end(scenario)
-
-    while scenario.step is not Step.CLEANUP:
-        scenario.advance()
-    scenario.game.cleanup_step()
 
     assert hit.zone is Zone.LIBRARY
     assert scenario.game.exile == []
@@ -229,7 +214,6 @@ def test_the_uncast_living_end_goes_to_the_bottom_of_the_library():
         "Island",
         "Living End",
     ]
-    # Nothing was reanimated: Grizzly Bears is where it started.
     assert [state.name for state in scenario.player("bob").cards_in(Zone.GRAVEYARD)] == [
         "Grizzly Bears"
     ]
@@ -242,6 +226,7 @@ def test_the_agent_resolves_onto_the_battlefield_anyway():
     scenario = board().build()
     flute_naming(scenario, "Living End")
     agent, _ = cascade_into_living_end(scenario)
+    scenario.resolve_top()
 
     assert agent.zone is Zone.BATTLEFIELD
 
@@ -251,19 +236,14 @@ def test_the_agent_resolves_onto_the_battlefield_anyway():
 
 def test_a_flute_naming_something_else_lets_the_free_cast_through():
     """The control. Same board, same tapped-out Bob, Flute naming Sol Ring:
-    the cascaded Living End costs nothing, is cast for nothing, and
-    reanimates."""
+    the cascaded Living End costs nothing, is cast for nothing while the
+    trigger resolves, and reanimates."""
     scenario = board().build()
     flute_naming(scenario, "Sol Ring")
     _, hit = cascade_into_living_end(scenario)
 
-    casting = scenario.cast("Living End", username="bob", from_zone=Zone.EXILE)
-    casting.use_permission()
-    assert str(casting.total_cost.mana) == ""
-
-    casting.begin_paying().pay()
-    scenario.put_on_stack(casting)
-    hit.targets = []
+    assert tax_question(scenario) == []
+    assert scenario.stack_names() == ["Shardless Agent", "Living End"]
     scenario.resolve_top()
 
     assert hit.zone is Zone.GRAVEYARD
@@ -276,17 +256,12 @@ def test_three_spare_lands_pay_the_tax_and_the_cast_goes_through():
     Islands end up tapped."""
     scenario = board("Island", "Island", "Island").build()
     flute_naming(scenario, "Living End")
+    spare = scenario.untapped_sources("Island", "Island", "Island", username="bob")
     _, hit = cascade_into_living_end(scenario)
 
-    casting = scenario.cast("Living End", username="bob", from_zone=Zone.EXILE)
-    casting.use_permission()
-    assert str(casting.total_cost.mana) == "{3}"
-
-    payment = casting.begin_paying()
-    spare = scenario.untapped_sources("Island", "Island", "Island", username="bob")
-    scenario.pay_with(payment, *spare)
-    scenario.put_on_stack(casting)
-    hit.targets = []
+    (question,) = tax_question(scenario)
+    assert question.affirmative_is_legal is True
+    assert scenario.stack_names() == ["Shardless Agent", "Living End"]
     scenario.resolve_top()
 
     assert hit.zone is Zone.GRAVEYARD

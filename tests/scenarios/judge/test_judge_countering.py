@@ -74,7 +74,10 @@ def test_transcendent_dragon_counters_and_exiles_the_target_spell():
     scenario.pass_priority("alice")
     bolt = scenario.cast_onto_stack("Lightning Bolt", auto=True, username="bob", targets=["alice"])
     scenario.pass_priority("bob")
+    # Declined: "then you may cast it" is carried out as the trigger resolves
+    # (CR 608.2g), and this test is about the exile, not the recast.
+    scenario.will_take_the_may(False, source="Transcendent Dragon")
     scenario.cast_onto_stack("Transcendent Dragon", auto=True, username="alice", targets=[])
     scenario.resolve_top()  # the Dragon itself enters the battlefield
-    scenario.resolve_top()  # Lightning Bolt, uncountered, resolves normally
+    scenario.resolve_top()  # its enters trigger counters and exiles the Bolt
     assert bolt.zone is Zone.EXILE

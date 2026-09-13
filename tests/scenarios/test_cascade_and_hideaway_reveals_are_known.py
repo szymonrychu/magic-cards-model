@@ -84,10 +84,12 @@ def test_every_card_cascade_exiles_is_revealed_to_all_players():
         ("Lightning Bolt", Zone.EXILE, None),
     ]
     assert all(r.source == "Shardless Agent" for r in scenario.game.reveals)
-    bolt = scenario.find("Lightning Bolt", Zone.EXILE)
-    assert bolt.zone is Zone.EXILE
-    assert known(scenario.game, "alice") == [("Lightning Bolt", Zone.EXILE, None, False)]
-    assert known(scenario.game, "bob") == [("Lightning Bolt", Zone.EXILE, None, False)]
+    # The hit was cast during the resolution (CR 608.2g): a new object on the
+    # stack (CR 400.7), so no exile record of it is live any more.
+    bolt = scenario.find("Lightning Bolt", Zone.STACK)
+    assert bolt.zone is Zone.STACK
+    assert known(scenario.game, "alice") == []
+    assert known(scenario.game, "bob") == []
 
 
 def test_cards_cascade_puts_on_the_bottom_are_no_longer_known_to_anyone():
@@ -140,8 +142,9 @@ def test_bloodbraid_elf_cascade_reveals_the_hit_and_forgets_the_bottomed_land():
     ]
     alice = scenario.player("alice")
     assert [state.name for state in alice.library] == ["Island", "Mountain"]
-    assert known(scenario.game, "bob") == [("Kitchen Finks", Zone.EXILE, None, False)]
-    assert known(scenario.game, "alice") == [("Kitchen Finks", Zone.EXILE, None, False)]
+    assert scenario.stack_names() == ["Bloodbraid Elf", "Kitchen Finks"]
+    assert known(scenario.game, "bob") == []
+    assert known(scenario.game, "alice") == []
 
 
 # -- hideaway (CR 702.75a) -----------------------------------------------------

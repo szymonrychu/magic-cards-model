@@ -172,11 +172,11 @@ def test_a_card_with_suspend_offers_a_way_to_cast_it():
     So the two things this file's parse actually feeds are
     `MarkedExile.suspend` - which charges exactly the `{2}{B}{B}` read off the
     line and hands out exactly the N=3 time counters read off it - and
-    `finish_suspend`, which is where the cast permission is minted when that
-    third ability fires. Putting suspend in the static `KeywordCastOption`
-    table instead would mint the permission twice and hold CR 702.62a's window
-    open far wider than the rule does; `docs/engine-coverage.md` records the
-    choice. `tests/scenarios/test_suspend.py` plays the whole keyword out.
+    `finish_suspend`, which casts it while that third ability resolves (CR
+    608.2g). Putting suspend in the static `KeywordCastOption` table instead
+    would offer a cast outside CR 702.62a's own resolution;
+    `docs/engine-coverage.md` records the choice.
+    `tests/scenarios/test_suspend.py` plays the whole keyword out.
     """
     from magic_cards_model.machines import Step
     from magic_cards_model.machines.casting import (
@@ -221,6 +221,7 @@ def test_a_card_with_suspend_offers_a_way_to_cast_it():
     # CR 702.62a's third ability: "you may play it without paying its mana
     # cost if able" - the offer this card has no other route to, since its
     # printed mana cost is blank (CR 118.6's unpayable cost).
-    permission = finish_suspend(scenario.game, suspended)
-    assert permission is not None
-    assert permission.pays_mana_cost is False
+    spell = finish_suspend(scenario.game, suspended)
+    assert spell is not None
+    assert spell.zone is Zone.STACK
+    assert scenario.game.cast_record_of(spell).keyword == "Suspend"

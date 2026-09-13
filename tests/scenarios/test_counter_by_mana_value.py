@@ -21,12 +21,16 @@ type="rules")` in the session that wrote this file: CR 115.1 (targets are
 declared as part of putting the spell on the stack), CR 601.2c, CR 601.2h,
 CR 608.2b, CR 202.3, CR 404.1, CR 404.2, CR 108.4a.
 
-**Not covered here, and not this file's gap:** neither Spell Snare nor Drown
-in the Loch's counter mode has a spell *effect* - `effect_for("Spell Snare",
-...)` is `None`, measured - so a legally targeted spell is not actually
-removed from the stack. That is the counter-qualifier family in
-`machines/effects.py` (plan task 1.13); the xfail at the bottom holds the
-place for it.
+- **Spellstutter Sprite** - off-pool: "counter target spell with mana value X
+  or less, where X is the number of Faeries you control." A triggered
+  ability, and the bound is defined by the text (CR 107.3c), counted for the
+  ability's controller at CR 603.3d's announcement and again at CR 608.2b.
+
+Both halves are covered: the restriction (`machines/targeting.py`) and the
+counter itself (CR 701.6a, `machines/effects.py`'s counterspell predicate,
+which accepts exactly the comparisons the targeting reader enforces).
+CR 107.3c, 603.3d, 701.6a and 117.3b were looked up with `mise run rules:find`
+in the session that added the resolution tests.
 """
 
 import pytest
@@ -191,3 +195,189 @@ def test_spell_snare_actually_counters_the_spell_it_legally_targeted():
     scenario.resolve_top()
 
     assert bears.zone is Zone.GRAVEYARD
+
+
+# -- Drown in the Loch's counter mode, resolved -------------------------------
+
+
+def _cast_drown_at(scenario, target) -> None:
+    """Alice casts Drown in the Loch's first mode at `target`, onto the stack."""
+    casting = scenario.cast("Drown in the Loch", username="alice")
+    casting.choose_modes([1])
+    casting.choose_targets([target])
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *scenario.untapped_sources("Island", "Swamp", username="alice"))
+    scenario.put_on_stack(casting)
+
+
+def test_drown_in_the_loch_counters_a_spell_whose_mana_value_equals_the_count():
+    """Bound equal passes: two cards in bob's graveyard, a mana value 2 spell.
+    CR 701.6a: the countered spell goes to its owner's graveyard, and the mode
+    is read, so no mode notice is left behind (CR 700.2a)."""
+    scenario = _snare_board(graveyard=["Lightning Bolt", "Grizzly Bears"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    forests = scenario.untapped_sources("Forest", "Forest", username="bob")
+    bears = scenario.cast_onto_stack("Grizzly Bears", *forests, username="bob")
+    scenario.pass_priority("bob")
+
+    _cast_drown_at(scenario, bears)
+    scenario.resolve_top()
+
+    assert bears.zone is Zone.GRAVEYARD
+    assert scenario.game.mode_notices == []
+
+
+def test_drown_in_the_loch_counts_the_targets_controllers_graveyard_not_the_casters():
+    """Alice's own full graveyard does not help: "its controller" is bob, whose
+    graveyard is empty, so a mana value 2 spell exceeds the bound (CR 601.2c)."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("bob", hand=["Grizzly Bears"], battlefield=["Forest", "Forest"])
+        .player(
+            "alice",
+            hand=["Drown in the Loch"],
+            battlefield=["Island", "Swamp"],
+            graveyard=["Lightning Bolt", "Hill Giant", "Forest", "Mountain"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    forests = scenario.untapped_sources("Forest", "Forest", username="bob")
+    bears = scenario.cast_onto_stack("Grizzly Bears", *forests, username="bob")
+    scenario.pass_priority("bob")
+
+    casting = scenario.cast("Drown in the Loch", username="alice")
+    casting.choose_modes([1])
+    with pytest.raises(ValueError, match="mana value"):
+        casting.choose_targets([bears])
+
+
+def test_drown_in_the_loch_rechecks_the_count_on_resolution():
+    """CR 608.2b: legal at announcement with two cards in bob's graveyard, then
+    Nihil Spellbomb exiles that graveyard in response. The bound is now 0, the
+    only target is illegal, so Drown does not resolve and Grizzly Bears does."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "bob",
+            hand=["Grizzly Bears"],
+            battlefield=["Forest", "Forest"],
+            graveyard=["Lightning Bolt", "Hill Giant"],
+        )
+        .player(
+            "alice",
+            hand=["Drown in the Loch"],
+            battlefield=["Island", "Swamp", "Nihil Spellbomb"],
+            library=["Island", "Island"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    forests = scenario.untapped_sources("Forest", "Forest", username="bob")
+    bears = scenario.cast_onto_stack("Grizzly Bears", *forests, username="bob")
+    scenario.pass_priority("bob")
+    _cast_drown_at(scenario, bears)
+    drown = scenario.find("Drown in the Loch", Zone.STACK, "alice")
+
+    spellbomb = scenario.find("Nihil Spellbomb", Zone.BATTLEFIELD, "alice")
+    scenario.activate(spellbomb, targets=["bob"], username="alice")
+    for _ in range(3):
+        if not scenario.player("bob").graveyard:
+            break
+        scenario.pass_until_resolved()
+    assert scenario.player("bob").graveyard == []
+    assert drown.zone is Zone.STACK
+
+    while drown.zone is Zone.STACK:
+        scenario.pass_until_resolved()
+
+    assert drown.zone is Zone.GRAVEYARD
+    assert scenario.game.mode_notices == [], "it did not resolve, so no mode was performed at all"
+    assert bears.zone is Zone.STACK, "the counter did not resolve, so bears is still waiting"
+    scenario.pass_until_resolved()
+    assert bears.zone is Zone.BATTLEFIELD
+
+
+# -- Spellstutter Sprite: the bound defined by "where X is ..." ----------------
+#
+# Off-pool, and worded differently from Drown in the Loch: "counter target
+# spell with mana value X or less, where X is the number of Faeries you
+# control." CR 107.3c: X is defined by the text, the controller does not choose
+# it, and "the value of X may change while that spell or ability is on the
+# stack" - so it is counted at CR 603.3d's announcement and again at the
+# CR 608.2b recheck. CR 107.3c was looked up with `mise run rules:find` in the
+# session that added these tests, as were CR 603.3d and CR 608.2b.
+
+SPRITE = "Spellstutter Sprite"
+
+
+def _sprite_board(*alice_battlefield: str) -> Scenario:
+    return (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "bob",
+            hand=["Grizzly Bears", "Lightning Bolt"],
+            battlefield=["Forest", "Forest", "Mountain"],
+        )
+        .player("alice", hand=[SPRITE], battlefield=["Island", "Island", *alice_battlefield])
+    )
+
+
+def _flash_in_sprite_over_bears(scenario):
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    forests = scenario.untapped_sources("Forest", "Forest", username="bob")
+    bears = scenario.cast_onto_stack("Grizzly Bears", *forests, username="bob")
+    scenario.pass_priority("bob")
+    islands = scenario.untapped_sources("Island", "Island", username="alice")
+    sprite = scenario.cast_onto_stack(SPRITE, *islands, username="alice")
+    scenario.will_choose_targets(bears, username="alice", source=SPRITE)
+    scenario.pass_until_resolved()  # Sprite resolves; its enters trigger goes on the stack
+    assert sprite.zone is Zone.BATTLEFIELD
+    return bears
+
+
+def test_spellstutter_sprite_counters_a_spell_within_its_faerie_count():
+    """Sprite plus Faerie Macabre is two Faeries, so X is 2 and Grizzly Bears'
+    mana value of 2 is in reach."""
+    scenario = _sprite_board("Faerie Macabre").build()
+    bears = _flash_in_sprite_over_bears(scenario)
+
+    scenario.pass_until_resolved()
+
+    assert bears.zone is Zone.GRAVEYARD
+
+
+def test_spellstutter_sprite_alone_has_no_legal_target_above_its_count():
+    """Sprite alone makes X 1: Grizzly Bears is no legal target, so CR 603.3d
+    removes the trigger and the bears resolve."""
+    scenario = _sprite_board().build()
+    bears = _flash_in_sprite_over_bears(scenario)
+
+    while bears.zone is Zone.STACK:
+        scenario.pass_until_resolved()
+
+    assert bears.zone is Zone.BATTLEFIELD
+
+
+def test_spellstutter_sprite_rechecks_x_when_a_faerie_leaves_in_response():
+    """X was 2 at announcement; bob bolts Faerie Macabre in response, X is 1
+    at the CR 608.2b recheck, the only target is illegal, and the trigger does
+    not resolve."""
+    scenario = _sprite_board("Faerie Macabre").build()
+    bears = _flash_in_sprite_over_bears(scenario)
+    macabre = scenario.creature("Faerie Macabre", "alice")
+
+    # CR 117.3b: the active player receives priority after the Sprite resolved.
+    assert scenario.priority_holder == "bob"
+    (mountain,) = scenario.untapped_sources("Mountain", username="bob")
+    scenario.cast_onto_stack("Lightning Bolt", mountain, username="bob", targets=[macabre])
+    scenario.pass_until_resolved()  # the Bolt
+    assert macabre.zone is Zone.GRAVEYARD
+
+    scenario.pass_until_resolved()  # the trigger, rechecked
+    assert bears.zone is Zone.STACK
+    scenario.pass_until_resolved()
+    assert bears.zone is Zone.BATTLEFIELD

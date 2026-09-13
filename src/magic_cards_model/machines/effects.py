@@ -56,7 +56,7 @@ travel.
 import re
 from collections.abc import Callable, Iterable, Sequence
 from random import Random
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
@@ -154,7 +154,12 @@ from .modes import (
     mode_effect_text,
     substitute_x,
 )
-from .targeting import TargetRequirement, profile_for_text
+from .targeting import (
+    COMPARISON_CLAUSE_PATTERN,
+    TargetRequirement,
+    permanent_description,
+    profile_for_text,
+)
 from .triggers import (
     AbilityOnStack,
     is_ability,
@@ -369,7 +374,9 @@ def counter_targets(game: "Game", spell: CardState) -> None:
             game.counter(target)
 
 
-def _counter_unless_pays_effect(amount: int, *, to_exile: bool = False) -> Effect:
+def _counter_unless_pays_effect(
+    amount: int, *, to_exile: bool = False, to_library: Literal["top", "bottom"] | None = None
+) -> Effect:
     """ "Counter target spell unless its controller pays {N}." (CR 118.12a).
 
     Read as one CR 608.2c instruction, not two: the question is put to the
@@ -403,7 +410,7 @@ def _counter_unless_pays_effect(amount: int, *, to_exile: bool = False) -> Effec
                 target.controller, amount, source=spell.name, source_id=source_id_of(spell)
             )
             if not paid:
-                game.counter(target, to_exile=to_exile)
+                game.counter(target, to_exile=to_exile, to_library=to_library)
 
     return effect
 
@@ -747,6 +754,18 @@ def _singular_card_type(word: str) -> Type | None:
         return None
 
 
+def _singular_subtype(word: str) -> str | None:
+    """ "Faeries" -> "faerie", "Elves" -> "elf": a plural subtype word as
+    `subtype_vocabulary` stores it (lowercased, singular), or None when the
+    word is no printed subtype in any of those spellings."""
+    lowered = word.lower()
+    vocabulary = subtype_vocabulary()
+    candidates = [lowered, lowered.removesuffix("s")]
+    if lowered.endswith("ves"):
+        candidates.append(lowered.removesuffix("ves") + "f")
+    return next((candidate for candidate in candidates if candidate in vocabulary), None)
+
+
 def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
     """Parse "the number of <type>[s] you control" or "... card(s) in your
     graveyard" into `(game, controller) -> int`, or `None` if `phrase` is not
@@ -769,7 +788,23 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
     if match := _COUNT_YOU_CONTROL_RE.fullmatch(stripped):
         card_type = _singular_card_type(match.group("qualifier"))
         if card_type is None:
-            return None
+            subtype = _singular_subtype(match.group("qualifier"))
+            if subtype is None:
+                return None
+
+            def count_subtype_on_board(game: "Game", controller: str) -> int:
+                # "the number of Faeries you control" (CR 205.3m's creature
+                # types, or any other printed subtype) on the computed board,
+                # so a changeling or a type-changing effect counts.
+                board = game.computed_board()
+                return sum(
+                    1
+                    for permanent in game.battlefield
+                    if board.of(permanent).controller == controller
+                    and any(word.lower() == subtype for word in board.of(permanent).subtypes)
+                )
+
+            return count_subtype_on_board
 
         def count_on_board(game: "Game", controller: str) -> int:
             board = game.computed_board()
@@ -2873,14 +2908,16 @@ def _parse_hideaway_counter_then_conditional_free_cast_clause(text: str) -> Abil
         )
         if hidden is None:
             return
-        if not game.may(
-            game.player(ability.controller),
-            "play the exiled card without paying its mana cost",
+        game.may_cast_during_resolution(
+            hidden,
+            ability.controller,
+            prompt="play the exiled card without paying its mana cost",
             source=ability.source_name,
             source_id=source_id_of(ability),
-        ):
-            return
-        game.cast_free_from_exile(hidden, ability.controller)
+            source_name=ability.source_name,
+            rule="CR 608.2g",
+            play=True,
+        )
 
     return effect
 
@@ -5392,13 +5429,17 @@ def _parse_hideaway_play_clause(text: str) -> AbilityEffect | None:
         card = game.card_imprinted_on(source.id)
         if card is None:
             return
-        game.grant_play_permission(
+        # "You may play the exiled card" is carried out while this ability
+        # resolves (CR 608.2g), not a permission used later.
+        game.may_cast_during_resolution(
             card,
             controller.username,
-            action=PlayAction.PLAY,
-            pays_mana_cost=False,
+            prompt="play the exiled card without paying its mana cost",
+            source=source.name,
+            source_id=source_id_of(ability),
             source_name=source.name,
-            rule="CR 601.3",
+            rule="CR 608.2g",
+            play=True,
         )
 
     return effect
@@ -5510,11 +5551,11 @@ def _knowledge_pool_free_cast_effect(game: "Game", ability: AbilityOnStack) -> N
     `DecisionKind` - both already exist and are answered everywhere a client
     talks to this engine.
 
-    `Game.has_legal_free_cast` filters the candidate list *before* the MAY
-    is even asked, rather than discovering after the fact that
-    `cast_free_from_exile` returned `None` for a targeted candidate with no
-    legal target (CR 601.2c) - an uncastable card is not a legal choice
-    (CR 608.2d), so it is never offered as one.
+    `Game.can_cast_during_resolution` filters the candidate list *before*
+    the MAY is even asked - a card with no legal target (CR 601.2c), too few
+    legal modes (CR 700.2a), an unpayable mandatory cost (CR 118.3) or a CR
+    611.1 prohibition is not a legal choice (CR 608.2d), so it is never
+    offered as one. The cast is `Game.cast_during_resolution`.
     """
     result = _exile_cast_spell_or_none(game, ability)
     if result is None:
@@ -5529,7 +5570,7 @@ def _knowledge_pool_free_cast_effect(game: "Game", ability: AbilityOnStack) -> N
     candidates = [
         card
         for card in game.cards_imprinted_on(source_id)
-        if card.id != spell.id and game.has_legal_free_cast(card, exiler)
+        if card.id != spell.id and game.can_cast_during_resolution(card, exiler)
     ]
     decision = Decision(
         kind=DecisionKind.MAY,
@@ -5559,7 +5600,7 @@ def _knowledge_pool_free_cast_effect(game: "Game", ability: AbilityOnStack) -> N
     assert isinstance(chosen_ids, tuple)
     by_id = {card.id: card for card in candidates}
     chosen = by_id[chosen_ids[0]]
-    game.cast_free_from_exile(chosen, exiler)
+    game.cast_during_resolution(chosen, exiler, source_name=ability.source_name, rule="CR 608.2g")
 
 
 def _possibility_storm_effect(game: "Game", ability: AbilityOnStack) -> None:
@@ -5578,7 +5619,7 @@ def _possibility_storm_effect(game: "Game", ability: AbilityOnStack) -> None:
     Knowledge Pool's silence (which is exactly why Knowledge Pool's own
     unused cards stay in exile forever and this card's do not).
 
-    `Game.has_legal_free_cast` gates the "may cast" the same way it gates
+    `Game.can_cast_during_resolution` gates the "may cast" the same way it gates
     Knowledge Pool's menu: an uncastable hit (CR 611.1's flat prohibitions,
     or CR 601.2c's no-legal-target) is never offered the choice at all.
 
@@ -5616,7 +5657,7 @@ def _possibility_storm_effect(game: "Game", ability: AbilityOnStack) -> None:
             break
 
     cast_hit = False
-    if hit is not None and game.has_legal_free_cast(hit, exiler):
+    if hit is not None and game.can_cast_during_resolution(hit, exiler):
         decision = Decision(
             kind=DecisionKind.MAY,
             player=exiler,
@@ -5627,7 +5668,12 @@ def _possibility_storm_effect(game: "Game", ability: AbilityOnStack) -> None:
             cards=(hit.id,),
         )
         if game.ask(decision):
-            cast_hit = game.cast_free_from_exile(hit, exiler) is not None
+            cast_hit = (
+                game.cast_during_resolution(
+                    hit, exiler, source_name=ability.source_name, rule="CR 608.2g"
+                )
+                is not None
+            )
 
     bottomed = [spell, *(state for state in dug if not (cast_hit and state is hit))]
     rng = Random(f"{game.shuffle_seed}:{game.shuffles_performed}:possibility-storm")  # noqa: S311
@@ -6676,10 +6722,15 @@ _SPELL_QUALIFIER = rf"{_SPELL_QUALIFIER_WORD}(?: or {_SPELL_QUALIFIER_WORD})*"
 #: enforce the restriction, both in `machines/targeting.py`. Accepting the
 #: tail is therefore not "dropping a condition" - it is letting the half of
 #: the card that already reads the condition actually be reached.
-_SPELL_PREDICATE = (
-    r"with (?:mana value \d+"
-    r"|(?:power|toughness|power or toughness) \d+ or (?:less|greater))"
-)
+#:
+#: The comparison itself is `machines/targeting.py`'s own grammar
+#: (`COMPARISON_CLAUSE_PATTERN`), not a copy of part of it, so every bound the
+#: announcement check enforces is a bound this dispatcher accepts: a printed
+#: number, and a computed one - Drown in the Loch's "less than or equal to the
+#: number of cards in its controller's graveyard" and Spellstutter Sprite's
+#: "X or less, where X is <expression>" (CR 107.3c). `where_x` is checked
+#: readable by `count_expression` in `_parse_targeted_clause`.
+_SPELL_PREDICATE = rf"with (?:{COMPARISON_CLAUSE_PATTERN})(?:,? where x is (?P<where_x>[^.]+?))?"
 _COUNTER_TARGET_SPELL_RE = re.compile(
     rf"^counter target(?: {_SPELL_QUALIFIER})? spell(?: {_SPELL_PREDICATE})?\.?$",
     re.IGNORECASE,
@@ -6847,8 +6898,13 @@ def _parse_regenerate_self_clause(clause: str) -> AbilityEffect | None:
 #: wrapped in either) blocks the prefix, so a clause whose "deals ... damage"
 #: sits inside quotes fails this match entirely and falls through to
 #: `_parse_token_clause`, which is the one that is supposed to read it.
+#: An apostrophe *between two letters* is a possessive, not a quote, and is
+#: let through: a modal card's mode names its source by its printed name
+#: (CR 700.2a), and Kolaghan's Command's "Kolaghan's Command deals 2 damage
+#: to any target." read as nothing until it was (battle 8 follow-up).
+_UNQUOTED_PREFIX = r"(?:[^\"“”'‘’]|(?<=\w)['’](?=\w))*"
 _DAMAGE_TARGET_RE = re.compile(
-    rf"[^\"“”'‘’]*\bdeals? (?P<n>{_COUNT}) damage to (?P<phrase>any target|.*target.+)",
+    rf"{_UNQUOTED_PREFIX}\bdeals? (?P<n>{_COUNT}) damage to (?P<phrase>any target|.*target.+)",
     re.IGNORECASE,
 )
 #: Fling: "<Source> deals damage equal to the sacrificed creature's power to
@@ -7798,11 +7854,20 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
         # index rather than a clause shape.
         return create_continuous_effect  # type: ignore[return-value]
 
-    if (
-        _COUNTER_TARGET_SPELL_RE.fullmatch(clause)
-        or _COUNTER_TARGET_ABILITY_OR_SPELL_RE.fullmatch(clause)
-        or _COUNTER_TARGET_ABILITY_RE.fullmatch(clause)
-    ):
+    if spell_counter := _COUNTER_TARGET_SPELL_RE.fullmatch(clause):
+        # CR 701.6a on a targeted spell, from a spell or from an ability
+        # (Spellstutter Sprite's enters trigger): `counter_targets` reads only
+        # `targets` and the stack, both of which an `AbilityOnStack` carries.
+        # A "where X is" bound nobody can count would refuse every target at
+        # announcement, so it is refused here instead of reading as handled.
+        definition = spell_counter.group("where_x")
+        if definition is not None and count_expression(definition) is None:
+            return None
+        return counter_targets
+
+    if _COUNTER_TARGET_ABILITY_OR_SPELL_RE.fullmatch(
+        clause
+    ) or _COUNTER_TARGET_ABILITY_RE.fullmatch(clause):
         # `counter_targets` walks the stack for a targeted spell (CR 608.2b)
         # and is only meaningful for a resolving *spell* - an ability naming
         # this shape does not turn up in the pool, and guessing at one would
@@ -13207,14 +13272,17 @@ def _parse_counter_then_create_tokens_by_mana_value_pair(
 
 
 #: "If that spell is countered this way, exile it instead of putting it into
-#: its owner's graveyard." (Force of Negation) - CR 701.6a's default
-#: destination, overridden. `that spell` is CR 400.7 anaphora back to
-#: whatever the first sentence's "target ... spell" found, the same reading
-#: `_parse_counter_then_create_tokens_by_mana_value_pair` and
+#: its owner's graveyard." (Force of Negation) or "..., put it on top of its
+#: owner's library instead of into that player's graveyard." (Memory Lapse) -
+#: CR 701.6a's default destination, overridden. `that spell` is CR 400.7
+#: anaphora back to whatever the first sentence's "target ... spell" found,
+#: the same reading `_parse_counter_then_create_tokens_by_mana_value_pair` and
 #: `_parse_anaphoric_clause_pair` already give a second sentence's pronoun.
 _COUNTER_THEN_EXILE_INSTEAD_RE = re.compile(
-    r"^if (?:that|the) spell is countered this way, exile it instead of "
-    r"putting it into its owner'?s graveyard\.?$",
+    r"^if (?:that|the) spell is countered this way, "
+    r"(?:(?P<exile>exile it)|put (?:it|that card) on (?:the )?(?P<end>top|bottom) of "
+    r"its owner'?s library) instead of (?:putting it )?into "
+    r"(?:its owner'?s|that player'?s) graveyard\.?$",
     re.IGNORECASE,
 )
 
@@ -13241,10 +13309,18 @@ def _parse_counter_then_exile_instead_of_graveyard_pair(
     """
     if not for_spell:
         return None
-    if not _COUNTER_THEN_EXILE_INSTEAD_RE.fullmatch(second.strip()):
+    destination = _COUNTER_THEN_EXILE_INSTEAD_RE.fullmatch(second.strip())
+    if destination is None:
         return None
+    to_exile = destination.group("exile") is not None
+    end = destination.group("end")
+    to_library: Literal["top", "bottom"] | None = (
+        None if end is None else ("top" if end.lower() == "top" else "bottom")
+    )
     if unless := _COUNTER_UNLESS_PAYS_RE.fullmatch(first.strip()):
-        return _counter_unless_pays_effect(int(unless.group("n")), to_exile=True)
+        return _counter_unless_pays_effect(
+            int(unless.group("n")), to_exile=to_exile, to_library=to_library
+        )
     if not _COUNTER_TARGET_SPELL_RE.fullmatch(first.strip()):
         return None
 
@@ -13254,7 +13330,7 @@ def _parse_counter_then_exile_instead_of_graveyard_pair(
                 continue
             target = next((item for item in game.stack if item.id == reference.card_id), None)
             if target is not None:
-                game.counter(target, to_exile=True)
+                game.counter(target, to_exile=to_exile, to_library=to_library)
 
     return effect
 
@@ -13425,13 +13501,18 @@ def _parse_counter_exile_then_cast_free_clauses(
             if target is None:
                 continue
             game.counter(target, to_exile=True)
-            game.grant_play_permission(
+            if target.zone is not Zone.EXILE:
+                continue
+            # ", then you may cast it" is carried out while this ability
+            # resolves (CR 608.2g), not a permission used later.
+            game.may_cast_during_resolution(
                 target,
                 controller,
-                pays_mana_cost=False,
+                prompt=f"cast {target.name} without paying its mana cost",
+                source=ability.source_name,
+                source_id=source_id_of(ability),
                 source_name=ability.source_name,
-                rule="CR 611.2a",
-                until_end_of_turn=False,
+                rule="CR 608.2g",
             )
 
     return 3, effect
@@ -14991,10 +15072,11 @@ def _parse_copy_exiled_card_and_cast(text: str) -> AbilityEffect | None:
     battlefield, it ceases to exist", and it is performed here rather than
     left for a check that does not know about this copy.
 
-    The cast itself is `Game.cast_free_from_exile` - CR 118.9's "without
-    paying its mana cost", with the copy's own new targets chosen at CR 601.2c
-    as it is cast, which is what makes the imprinted Orim's Chant point at a
-    fresh player every activation.
+    The cast itself is `Game.may_cast_during_resolution` - CR 707.12's cast
+    of a copy, CR 118.9's "without paying its mana cost", with the copy's own
+    new targets chosen at CR 601.2c and its kicker offered (CR 601.2b), which
+    is what makes the imprinted Orim's Chant point at a fresh player every
+    activation.
     """
     if (
         _COPY_EXILED_CARD_AND_CAST_RE.fullmatch(" ".join(_strip_non_effect_preamble(text).split()))
@@ -15024,13 +15106,16 @@ def _parse_copy_exiled_card_and_cast(text: str) -> AbilityEffect | None:
         )
         game.exile.append(copy)
         if (
-            game.may(
-                controller,
-                "cast the copy without paying its mana cost",
+            game.may_cast_during_resolution(
+                copy,
+                controller.username,
+                prompt="cast the copy without paying its mana cost",
                 source=source_name,
                 source_id=source_id_of(ability),
+                source_name=source_name,
+                rule="CR 707.12",
             )
-            and game.cast_free_from_exile(copy, controller.username) is not None
+            is not None
         ):
             return
         if copy in game.exile:
@@ -17990,17 +18075,12 @@ def _put_spell_in_library(game: "Game", spell: CardState, *, top: bool) -> None:
     if spell not in game.stack:
         return
     game.stack.remove(spell)
-    game.cast_records.pop(spell.id, None)
+    game.forget_cast_record(spell)
     if spell.owner is None:
         return
-    owner = game.player(spell.owner)
-    spell.move_to(Zone.LIBRARY)
-    if top:
-        owner.library.insert(0, spell)
-        owner.note_library_changed()  # CR 701.20d: above every card there
-    else:
-        owner.library.append(spell)
-        owner.note_library_changed(placed=[spell])  # CR 401.2: below every card there
+    # One CR 401.1 instruction, so the move raises the library event and is
+    # known to every player, who saw the spell on the stack (CR 400.2).
+    game.put_cards_into_library([spell], to_bottom=not top)
 
 
 def _parse_choose_up_to_one_target_spell_clauses(
@@ -18917,9 +18997,8 @@ def _merge_exile_top_then_play_until_next_turn_clauses(
     `_parse_exile_then_play_permission_pair`'s ability-side "until end of
     turn" shape uses. Nothing in either printing says what happens to a card
     left unplayed once the permission lapses (unlike cascade's own "put the
-    exiled cards on the bottom" - `PlayPermission.bottom_if_unused`'s own
-    docstring), so it is left exactly where CR 514.2 leaves any other expired
-    grant: sitting in exile, forever.
+    exiled cards on the bottom", CR 702.85a), so it is left exactly where
+    CR 514.2 leaves any other expired grant: sitting in exile, forever.
     """
     if not for_spell or index + 1 >= len(clauses):
         return None
@@ -19804,6 +19883,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     sacrifice_group = _parse_sacrifice_n_of_a_group_clause(clause, for_spell=for_spell)
     if sacrifice_group is not None:
         return sacrifice_group
+    sacrifice_of_their_choice = _parse_each_sacrifices_of_their_choice_clause(clause)
+    if sacrifice_of_their_choice is not None:
+        return sacrifice_of_their_choice
     attacking_tokens = _parse_attacking_token_clause(clause, for_spell=for_spell)
     if attacking_tokens is not None:
         return attacking_tokens
@@ -21083,8 +21165,7 @@ def _parse_reveal_from_outside_the_game_into_hand_clause(effect_text: str) -> Ef
 #: simply an unclaimed face-up exiled card forever after (CR 400.11b's own
 #: "remain[s] in the game" default) - a legitimate resting state Wish's own
 #: text names no other fate for, unlike cascade's own "put ... on the
-#: bottom" instruction (`PlayPermission.bottom_if_unused`), which is why
-#: nothing here sets that flag.
+#: bottom" instruction (CR 702.85a).
 _OUTSIDE_THE_GAME_PLAY_RE = re.compile(
     r"^you may play a card you own from outside the game this turn\.?$", re.IGNORECASE
 )
@@ -21540,6 +21621,87 @@ def _parse_sacrifice_n_of_a_group_clause(clause: str, *, for_spell: bool) -> Tar
         for card_id in chosen_ids:
             permanent = by_id.get(card_id)
             if permanent is not None and permanent.zone is Zone.BATTLEFIELD:
+                game.sacrifice(permanent)
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# "Each opponent sacrifices a <description> of their choice." (CR 701.21a)
+# --------------------------------------------------------------------------
+#
+# The edict template: Sheoldred's Edict's three modes, Yawning Fissure's
+# land, Clip Wings' "a creature of their choice with flying" (the qualifier
+# printed after "of their choice"). Nothing is targeted (CR 115.10a); each
+# sacrificing player chooses among the permanents *they* control that match
+# the description (CR 701.21a: a player can only sacrifice a permanent they
+# control), while the effect is applied (CR 608.2d). With several such
+# players, CR 101.4 has them choose in APNAP order and the sacrifices then
+# happen together, so every choice is made before anything leaves.
+#
+# The description is `machines/targeting.permanent_description`, the target
+# grammar itself, so "nontoken", "token", "non<type>", a type list joined by
+# "or", and a trailing "with <keyword>" read the same here as after "target".
+# A player with no matching permanent sacrifices nothing and is asked nothing
+# (CR 608.2d: no impossible choice); one with exactly as many as required has
+# no choice to make and is not asked either.
+
+_EACH_SACRIFICES_OF_THEIR_CHOICE_RE = re.compile(
+    rf"^each (?P<who>opponent|player) sacrifices (?P<n>{_COUNT}) (?P<description>.+?) "
+    r"of their choice(?P<tail> with [^.]+?)?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_each_sacrifices_of_their_choice_clause(clause: str) -> TargetedClause | None:
+    """`_EACH_SACRIFICES_OF_THEIR_CHOICE_RE`'s shape; see the banner above."""
+    match = _EACH_SACRIFICES_OF_THEIR_CHOICE_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    count = _count(match.group("n"))
+    description = match.group("description").strip()
+    if match.group("tail") is not None:
+        description = f"{description}{match.group('tail')}"
+    requirement = permanent_description(description)
+    if requirement is None or count < 1:
+        return None
+    opponents_only = match.group("who").lower() == "opponent"
+    wanted_words = with_indefinite_article(description) if count == 1 else f"{count} {description}"
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        source_name = (
+            stack_object.source_name
+            if isinstance(stack_object, AbilityOnStack)
+            else stack_object.name
+        )
+        chosen: list[CardState] = []
+        for player in _players_in_apnap_order(game):
+            if opponents_only and player.username == controller:
+                continue
+            candidates = [
+                permanent
+                for permanent in game.permanents_controlled_by(player.username)
+                if requirement.rejects(permanent, player.username, game) is None
+            ]
+            if len(candidates) <= count:
+                chosen.extend(candidates)
+                continue
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=player.username,
+                    prompt=f"sacrifice {wanted_words}",
+                    source=source_name,
+                    amount=count,
+                    cards=tuple(permanent.id for permanent in candidates),
+                    source_id=source_id_of(stack_object),
+                )
+            )
+            by_id = {permanent.id: permanent for permanent in candidates}
+            chosen.extend(by_id[card_id] for card_id in chosen_ids if card_id in by_id)
+        for permanent in chosen:
+            if permanent.zone is Zone.BATTLEFIELD:
                 game.sacrifice(permanent)
 
     return effect
