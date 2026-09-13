@@ -279,3 +279,22 @@ def test_a_snapshot_written_before_library_orders_kept_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_LIBRARY_ORDERS_KEPT}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before `Decision.quality`, token ownership at creation,
+#: and Malevolent Rumble's parsed reveal-to-hand.
+_SCHEMA_VERSION_BEFORE_BATTLE_THREE = 11
+
+
+def test_a_snapshot_written_before_battle_three_is_refused() -> None:
+    """A version-11 dump has decisions with no `quality` and tokens with no
+    owner; decoded as current, both would read as a different game."""
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_BATTLE_THREE
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_BATTLE_THREE
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_BATTLE_THREE}",
+    ):
+        Game.model_validate(dumped)

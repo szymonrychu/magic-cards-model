@@ -61,7 +61,8 @@ correctly, but no clause shape existed for their effects):
 - **Turntimber Symbiosis** - "look at the top seven ... may put a creature
   card ... onto the battlefield [with bonus counters if cheap] ... put the
   rest on the bottom in a random order" is `_parse_look_top_n_may_
-  battlefield_creature_bonus_clause`, close kin to `malevolent_rumble`'s
+  battlefield_creature_bonus_clause`, close kin to
+  `_merge_reveal_top_to_hand_rest_to_graveyard_clauses`'s
   "reveal the top four ... may put a permanent card into your hand" but with
   the battlefield (not the hand) as the kept card's destination and the
   library's bottom (not the graveyard) for the rest.
@@ -279,7 +280,8 @@ def test_turntimber_symbiosis_puts_a_creature_onto_the_battlefield():
 
     W13: `_parse_look_top_n_may_battlefield_creature_bonus_clause`
     (`machines/effects.py`) reads this shape - CR 608.2d's plain "you may",
-    close kin to `malevolent_rumble`'s "reveal the top four ... may put a
+    close kin to `_merge_reveal_top_to_hand_rest_to_graveyard_clauses`'s
+    "reveal the top four ... may put a
     permanent card into your hand", except the kept card's destination is the
     battlefield (CR 110.2a, no casting) and the rest go to the *bottom* of the
     library in a random order rather than the graveyard. With exactly one

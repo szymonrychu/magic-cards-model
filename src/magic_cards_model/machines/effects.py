@@ -1576,54 +1576,6 @@ def seasoned_pyromancer(game: "Game", ability: AbilityOnStack) -> None:
     create_tokens(game, ELEMENTAL, ability.controller, nonlands)
 
 
-def malevolent_rumble(game: "Game", spell: CardState) -> None:
-    """Malevolent Rumble: "Reveal the top four cards of your library. You may put
-    a permanent card from among them into your hand. Put the rest into your
-    graveyard. Create a 0/1 colorless Eldrazi Spawn creature token with
-    'Sacrifice this token: Add {C}.'"
-
-    Revealing changes no game state and is not modelled. The optional "you may
-    put a permanent card into your hand" is CR 608.2d's plain "you may" (there is
-    no more specific numbered rule for choosing among a group of revealed cards)
-    - asked with `Game.may`, whose default is to take it, matching the old
-    hardcoded behaviour when nobody answers. *Which* permanent card is then a
-    `CHOOSE_CARDS` question; the candidates are offered in reverse library order
-    so the unscripted default - "back of the offered cards" - lands on the
-    first permanent in library order, reproducing the old
-    `next(... in revealed if state.is_permanent)` byte for byte. In printed
-    order (CR 608.2c) the token is created last.
-    """
-    player = game.controller_of(spell)
-    revealed = list(player.library[:4])
-    permanents = [state for state in revealed if state.is_permanent]
-    kept = None
-    if permanents and game.may(
-        player,
-        "put a permanent card into your hand",
-        source=spell.name,
-        source_id=source_id_of(spell),
-    ):
-        decision = Decision(
-            kind=DecisionKind.CHOOSE_CARDS,
-            player=player.username,
-            prompt="choose a permanent card to put into your hand",
-            source=spell.name,
-            source_id=source_id_of(spell),
-            amount=1,
-            cards=tuple(state.id for state in reversed(permanents)),
-        )
-        chosen_ids = game.ask(decision)
-        by_id = {state.id: state for state in permanents}
-        kept = by_id[chosen_ids[0]]
-    for state in revealed:
-        player.zones[Zone.LIBRARY].remove(state)
-        if state is kept:
-            player.add(state, Zone.HAND)
-        else:
-            game.put_into_graveyard(state)
-    create_tokens(game, ELDRAZI_SPAWN, player.username)
-
-
 def hangarback_dies(game: "Game", ability: AbilityOnStack) -> None:
     """Hangarback Walker: "When this creature dies, create a 1/1 colorless Thopter
     artifact creature token with flying for each +1/+1 counter on this creature."
@@ -1992,7 +1944,11 @@ EFFECTS: dict[str, Effect] = {
     # clause of `_parse_token_clause`'s shape, read off the card's own printed
     # text, so `effect_for`'s fallback reaches it. See
     # `tests/scenarios/test_registry_is_minimal.py`.
-    "Malevolent Rumble": malevolent_rumble,
+    # Malevolent Rumble's reveal-four, take-a-permanent, rest-to-graveyard run
+    # is not entered here any more: it is
+    # `_merge_reveal_top_to_hand_rest_to_graveyard_clauses`'s template, shared
+    # with Grisly Salvage and Satyr Wayfinder, and its Eldrazi Spawn is
+    # `_parse_token_clause`'s. See `tests/scenarios/test_registry_is_minimal.py`.
     # "Monstrous Rage": "Target creature gets +2/+0 until end of turn. Create
     # a Monster Role token attached to it." is not entered here any more:
     # the pump is `_CONTINUOUS_PUMP_OR_KEYWORD_RE`'s existing shape and the
@@ -2903,6 +2859,10 @@ def _named_type_matcher(word: str) -> Callable[[CardState], bool]:
     `_search_quality_is_readable` is what stops such a word ever reaching a
     resolving effect in the first place.
     """
+    if word.lower() == "permanent":
+        # CR 110.4a: "an artifact, battle, creature, enchantment, land, or
+        # planeswalker card" - one word for six card types.
+        return lambda state: state.is_permanent
     if word.lower().startswith("non"):
         try:
             excluded = Type(word[3:].lower())
@@ -6685,7 +6645,8 @@ _LOOK_TOP_N_MAY_BATTLEFIELD_CREATURE_BONUS_RE = re.compile(
 
 def _parse_look_top_n_may_battlefield_creature_bonus_clause(text: str) -> Effect | None:
     """Turntimber Symbiosis - see `_LOOK_TOP_N_MAY_BATTLEFIELD_CREATURE_
-    BONUS_RE`. An impulsive-look shape close to `malevolent_rumble`'s "reveal
+    BONUS_RE`. An impulsive-look shape close to
+    `_merge_reveal_top_to_hand_rest_to_graveyard_clauses`'s "reveal
     the top four ... may put a permanent card into your hand ... put the rest
     into your graveyard" (CR 608.2d's plain "you may", `CHOOSE_CARDS` for
     *which* card among several candidates), but the destination for the kept
@@ -6826,13 +6787,11 @@ def _parse_reveal_until_land_damage_clause(text: str) -> AbilityEffect | None:
         for target in game.resolve_targets(ability):
             game.deal_damage(target, amount, source=source)
 
-        # "In any order" is the controller's own choice - CR 400.5: "The
-        # order of objects in a library ... can't be changed except when
-        # effects or rules allow it", and this effect allows it - not a
-        # randomisation, and the
-        # engine has nobody to ask about an order, so the revealed order is
-        # kept, which is one legal answer to "any order".
-        for state in revealed:
+        # "In any order" is the controller's own arrangement (CR 401.4), not a
+        # randomisation, so it is asked; unscripted, the revealed order stays.
+        for state in game.ask_library_bottom_order(
+            controller, revealed, source=ability.source_name, source_id=source_id_of(ability)
+        ):
             controller.move(state, Zone.LIBRARY)
 
     return effect
@@ -8951,9 +8910,10 @@ def _parse_mill_then_may_return_creature_clause(text: str) -> AbilityEffect | No
 #: controller for as it resolves (CR 608.2d), so both halves are asked rather
 #: than assumed: `Game.may` for whether to take the follow-up at all, and a
 #: `DecisionKind.CHOOSE_CARDS` question for *which* card - the same pair
-#: `malevolent_rumble` and `_parse_look_top_n_may_battlefield_creature_bonus_
-#: clause` already use. No new `DecisionKind` is needed: "choose 1 of these
-#: candidates" is exactly what `CHOOSE_CARDS` is documented to be general over.
+#: `_merge_reveal_top_to_hand_rest_to_graveyard_clauses` and
+#: `_parse_look_top_n_may_battlefield_creature_bonus_clause` already use. No
+#: new `DecisionKind` is needed: "choose 1 of these candidates" is exactly what `CHOOSE_CARDS` is
+#: documented to be general over.
 #:
 #: "From among them" is what keeps the candidate pool honest. For the mill arm
 #: it is the cards *this* mill just moved (CR 701.17c: an effect referring to a
@@ -9139,6 +9099,12 @@ def _select_from_top_runner(
                     )
                     rng.shuffle(remainder)
                     game.shuffles_performed += 1
+                else:
+                    # CR 401.4 lets the owner arrange cards put on the bottom
+                    # together, whether or not "in any order" is printed.
+                    remainder = game.ask_library_bottom_order(
+                        player, remainder, source=source_name, source_id=source_id
+                    )
                 for state in remainder:
                     player.move(state, Zone.LIBRARY)
 
@@ -12884,7 +12850,8 @@ def _parse_imprint_clause(clause: str, *, for_spell: bool) -> TargetedClause | N
     `affirmative_is_legal` shape `may_pay_life` already uses for CR 119.4).
     *Which* card, once "yes" is legal and chosen, is `DecisionKind.CHOOSE_
     CARDS`, the same CR 608.2d machinery `seasoned_pyromancer`'s discard and
-    `malevolent_rumble`'s "put a permanent card into your hand" both use.
+    `_merge_reveal_top_to_hand_rest_to_graveyard_clauses`'s "put a
+    permanent card into your hand" both use.
 
     The exiled card is annotated `ExileMarker.IMPRINTED`, pointing back at the
     resolving permanent's own id - the only thing a later "exiled with this
@@ -15646,7 +15613,8 @@ def manifest_dread(game: "Game", controller: str, source: str, *, source_id: str
     them, mill the rest.
 
     The choice among two candidates is CR 608.2d's - only asked when there
-    really are two, the same shape `malevolent_rumble`'s own "which
+    really are two, the same shape
+    `_merge_reveal_top_to_hand_rest_to_graveyard_clauses`'s own "which
     permanent to keep" question already takes - and CR 701.62b's own "even
     if some or all of those actions were impossible" is why a library with
     zero or one card left still manifests what it can rather than raising.
@@ -16628,6 +16596,8 @@ def _type_word_is_readable(word: str) -> bool:
     Failing closed here is what sends an unreadable quality to a notice
     instead of to a search that silently finds nothing.
     """
+    if word.strip().lower() == "permanent":
+        return True  # CR 110.4a's six permanent types, read by `_named_type_matcher`
     lowered = word.strip().lower().removeprefix("non")
     try:
         Type(lowered)
@@ -17721,11 +17691,19 @@ def _merge_look_top_reveal_to_hand_clauses(
             kept_label="bottom of your library",
             rest_in_random_order=randomised,
             source_id=source_id_of(stack_object),
+            # "You may reveal a <quality> card": one card at most, and
+            # `Game.ask` refuses a second (CR 608.2d).
+            moved_amount=1,
         )
-        if len(moved) > 1 or any(not matches(state) for state in moved):
-            raise ValueError(
-                f"{source}: may reveal at most one {quality_description} card this way (CR 608.2d)"
-            )
+        for state in moved:
+            if not matches(state):
+                # The count is `Game.ask`'s to refuse; what is left to be
+                # wrong is the card itself, so the refusal names it.
+                article = "an" if quality_description[:1].lower() in "aeiou" else "a"
+                raise ValueError(
+                    f"{source}: {state.name} is not {article} {quality_description} card "
+                    "(CR 608.2d)"
+                )
         for state in moved:
             game.reveal(state, source=source)
             player.add(state, Zone.HAND)
@@ -17734,6 +17712,11 @@ def _merge_look_top_reveal_to_hand_clauses(
             rng = Random(f"{game.shuffle_seed}:{game.shuffles_performed}:top-{count}-bottom")  # noqa: S311
             rng.shuffle(rest)
             game.shuffles_performed += 1
+        elif rest:
+            # CR 401.4: "in any order" is the player's own arrangement.
+            rest = game.ask_library_bottom_order(
+                player, rest, source=source, source_id=source_id_of(stack_object)
+            )
         for state in rest:
             player.library.append(state)
         if rest:
@@ -17742,6 +17725,110 @@ def _merge_look_top_reveal_to_hand_clauses(
             player.note_library_changed(placed=rest)
 
     return 4, effect
+
+
+# --------------------------------------------------------------------------
+# "Reveal the top N cards of your library. You may put a <quality> card from
+# among them into your hand. Put the rest into your graveyard." - Malevolent
+# Rumble, Grisly Salvage, Satyr Wayfinder: one anaphoric run of three clauses,
+# read wherever it starts, so text printed after it (Malevolent Rumble's
+# Eldrazi Spawn) keeps its own reader.
+# --------------------------------------------------------------------------
+
+#: "reveal the top <count> cards of your library"
+_REVEAL_TOP_N_CARDS_RE = re.compile(
+    r"^reveal the top (?P<count>\w+) cards? of your library$", re.IGNORECASE
+)
+#: "you may put a/an <quality> card from among them into your hand"
+_MAY_PUT_A_CARD_FROM_AMONG_THEM_INTO_HAND_RE = re.compile(
+    r"^you may put (?:a|an) (?P<quality>.+?) card from among them into your hand$",
+    re.IGNORECASE,
+)
+#: "put the rest into your graveyard"
+_PUT_THE_REST_INTO_YOUR_GRAVEYARD_RE = re.compile(
+    r"^put the rest into your graveyard$", re.IGNORECASE
+)
+
+
+def _merge_reveal_top_to_hand_rest_to_graveyard_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """The reveal-to-hand run above, as one effect.
+
+    CR 701.20a: "To reveal a card, show that card to all players". Every card
+    is recorded as a public reveal through `Game.reveal` the moment it is
+    shown, while it still sits in the library (CR 701.20b) and before the
+    next sentence moves anything (CR 608.2c). That is what makes the card put
+    into hand known to the opponent: the live library record is carried into
+    the hand by `Player.add`, the same known-draw carry Ancient Stirrings'
+    revealed card already gets.
+
+    Whether to take a card and which one are CR 608.2d choices: a `Game.may`
+    that names the qualifying cards, then a `CHOOSE_CARDS` over them.
+    Unscripted, the first qualifying card in library order is taken. The
+    quality is `_quality_matcher`'s ("permanent" is CR 110.4a's permanent
+    card, "creature or land" either type); a quality it cannot read is not
+    matched at all rather than resolved as a reveal that offers nothing.
+    """
+    if index + 2 >= len(clauses):
+        return None
+    reveal_match = _REVEAL_TOP_N_CARDS_RE.fullmatch(clauses[index].strip())
+    if reveal_match is None:
+        return None
+    count_text = reveal_match.group("count")
+    if not count_text.isdigit() and count_text.lower() not in _NUMBER_WORDS:
+        return None
+    count = _count(count_text)
+    take_match = _MAY_PUT_A_CARD_FROM_AMONG_THEM_INTO_HAND_RE.fullmatch(clauses[index + 1].strip())
+    if take_match is None:
+        return None
+    quality = take_match.group("quality").strip()
+    if not _search_quality_is_readable(quality):
+        return None
+    matches = _quality_matcher(quality)
+    if _PUT_THE_REST_INTO_YOUR_GRAVEYARD_RE.fullmatch(clauses[index + 2].strip()) is None:
+        return None
+    article = "an" if quality[:1].lower() in "aeiou" else "a"
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        player = game.controller_of(stack_object)
+        source = (
+            stack_object.name if isinstance(stack_object, CardState) else stack_object.source_name
+        )
+        source_id = source_id_of(stack_object)
+        revealed = list(player.library[:count])
+        for state in revealed:
+            game.reveal(state, source=source)
+        candidates = [state for state in revealed if matches(state)]
+        chosen: CardState | None = None
+        if candidates and game.may(
+            player,
+            f"put {article} {quality} card from among them into your hand",
+            source=source,
+            source_id=source_id,
+            cards=candidates,
+        ):
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=player.username,
+                    prompt=f"choose {article} {quality} card to put into your hand",
+                    source=source,
+                    source_id=source_id,
+                    amount=1,
+                    cards=tuple(state.id for state in candidates),
+                    default_cards=(candidates[0].id,),
+                )
+            )
+            assert isinstance(chosen_ids, tuple)
+            chosen = next(state for state in candidates if state.id == chosen_ids[0])
+        if chosen is not None:
+            player.move(chosen, Zone.HAND)
+        for state in revealed:
+            if state is not chosen:
+                game.put_into_graveyard(state)
+
+    return 3, effect
 
 
 #: "put one of them into your hand" - Waker of Waves' own second sentence,
@@ -17811,6 +17898,8 @@ def _merge_look_top_split_hand_graveyard_clauses(
             moved_label="your hand",
             kept_label="your graveyard",
             source_id=source_id_of(stack_object),
+            moved_amount=1,
+            moved_exact=True,
         )
         if len(moved) != 1 or len(rest) != count - 1:
             raise ValueError(
@@ -18983,6 +19072,14 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             index += consumed
             continue
         merged = _merge_look_top_reveal_to_hand_clauses(clauses, index, for_spell=for_spell)
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_reveal_top_to_hand_rest_to_graveyard_clauses(
+            clauses, index, for_spell=for_spell
+        )
         if merged is not None:
             consumed, effect = merged
             parsed.append(effect)
