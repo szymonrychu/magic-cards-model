@@ -8095,18 +8095,28 @@ class Game(BaseModel):
         things.extend(self.stack)
         return things
 
-    def _announcement_profile(
+    def announcement_profile(
         self,
         state: CardState,
         *,
-        ability_index: int | None,
-        modes: list[int] | None,
-        x_value: int | None,
+        ability_index: int | None = None,
+        modes: list[int] | None = None,
+        x_value: int | None = None,
         spell_face: str | None = None,
     ) -> TargetingProfile:
         """What `state` may legally target, for an announcement that has not
         happened yet - `legal_targets`'s own reading of CR 601.2c/700.2c,
         before any `Casting` or `AbilityOnStack` exists to ask.
+
+        Public: this is the engine's answer to "what does this cast or
+        activation target", and a consumer asks it here rather than
+        re-reading card text. `ability_index` indexes
+        `Game.activated_abilities(state)` (CR 602.2b applies CR 601.2c to an
+        activation). The returned `TargetingProfile` carries one
+        `TargetRequirement` per slot (`phrase`, `minimum`, `maximum`) and
+        `understood=False` when the text could not be read.
+        `legal_actions` builds every `Action.target_slots` from this call.
+        `_announcement_profile` is kept as an alias of this method.
 
         The same three-way read `magic_cards_model_api.affordances._profile_for`
         used to hardcode: an activated ability's own effect text names the
@@ -8149,6 +8159,8 @@ class Game(BaseModel):
         if modal is None and x_value is not None and state.card.oracle_text:
             return profile_for_text(substitute_x(state.card.oracle_text, x_value))
         return targeting_profile(state.card)
+
+    _announcement_profile = announcement_profile
 
     def legal_targets(
         self,
