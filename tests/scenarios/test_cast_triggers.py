@@ -485,9 +485,10 @@ def test_the_kicked_trigger_fires_and_exiles_the_target_land():
 # untapped. Reproduced here in the engine, with a pause standing in for the
 # seat that has not answered yet: at the moment each question is raised the
 # cost is already paid and the spell already on the stack. What the report
-# saw is the api serving its last committed state while a command is paused,
-# not the engine asking out of order - these tests keep the engine's order
-# pinned.
+# saw was the api serving its last committed state while a command was
+# paused, not the engine asking out of order; the api now serves the paused
+# board (magic-cards-model-api `tests/test_paused_cast_board.py`), and these
+# tests keep the engine's order pinned.
 
 
 def _pause_at_the_cast_trigger(scenario, name: str, *sources):
