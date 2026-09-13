@@ -264,7 +264,7 @@ def test_the_exiled_spell_keeps_no_targets_and_no_cast_record():
 
     assert bolt.zone is Zone.EXILE
     assert bolt.targets == [], "CR 400.7: a new object, no targets"
-    assert scenario.game.cast_records.get(bolt.id) is None, "CR 400.7: no cast record either"
+    assert scenario.game.cast_record_of(bolt) is None, "CR 400.7: no cast record either"
 
 
 # --------------------------------------------------------------------------

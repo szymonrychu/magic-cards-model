@@ -2891,11 +2891,9 @@ def cascade(game: Any, spell: CardState, seed: int | None = None) -> CascadeResu
     (verified against the current CR release; Shardless Agent's own printed
     reminder text still reads "that costs less" and has no "if the resulting
     spell's mana value..." clause - the rule, not the reminder, is what this
-    reads). **Not modelled**: that added "if the resulting spell's mana value
-    is less..." condition on the free cast itself - nothing in this pool casts
-    the hit under a cost-altering effect that would change its mana value
-    between the exile and the cast, so this is recorded as a known gap rather
-    than guessed at; see `docs/engine-coverage.md`.
+    reads). "If the resulting spell's mana value is less than this spell's
+    mana value" is `mana_value_below`: an Adventure or split half whose own
+    mana value is not less is never offered (CR 608.2d).
 
     This is the exiling half, the "you may cast it" half, and the bottoming
     half - all three, because a hit stranded in exile with no route back to
@@ -2913,32 +2911,15 @@ def cascade(game: Any, spell: CardState, seed: int | None = None) -> CascadeResu
     `why_cannot_cast_restriction` (CR 611.1's flat prohibitions) gates whether
     "yes" is even a legal answer.
 
-    - **"yes"** grants a `PlayPermission` (CR 601.3's dynamic half) for the
-      hit, annotated `ExileMarker.CASCADE` so a caller can find it again, with
-      `bottom_if_unused=True` - the hit stays in exile only until the caller
-      actually casts it *or* until this permission would otherwise expire.
-
-      This is **not** the same shape `machines/casting.finish_suspend` uses,
-      on purpose, even though an earlier pass here justified it that way.
-      CR 702.85a's own sentence is one instruction, read as a whole
-      (CR 608.2c): "cast it... [or] put [it]... on the bottom" - there is no
-      textual gap between them the way Ugin, Eye of the Storms' "−11:
-      ...**Until end of turn**, you may cast..." or Ragavan, Nimble Pilferer's
-      "...**Until end of turn**, you may cast that card." print one, and
-      Suspend's own third ability (CR 702.62a) names its own fallback
-      outright - "if you don't, it remains exiled" - so leaving the card
-      sitting in exile is genuinely that rule's own terminal state. Cascade
-      prints neither an "until end of turn" grant nor an "it remains exiled"
-      fallback; its only named resting place for a card that "weren't cast"
-      is the bottom of the library. `Game._bottom_unused_cascade_permissions`,
-      run from `cleanup_step` the instant before an expiring `until_end_of_
-      turn` permission would otherwise just be dropped, is what keeps that
-      true even when a live caller answers "yes" and then never actually
-      drives `Casting.use_permission()` through to a real cast - the one hole
-      the earlier pass left open, because it deferred *only* to "the caller",
-      the same shape that is correct for Ugin/Ragavan/Suspend precisely
-      because their own rules name an "outlives the resolution" duration or
-      an explicit fallback and cascade's does not.
+    - **"yes"** casts the hit right here, while this trigger resolves
+      (`Game.cast_during_resolution`, CR 608.2g): "they do so by following the
+      steps in rules 601.2a-i, except no player receives priority after it's
+      cast. That spell becomes the topmost object on the stack". Timing
+      restrictions do not apply, the caster announces the face, modes and
+      targets mid-resolution, and a cast that turns out illegal (no legal
+      target, CR 601.2c) leaves the hit among the cards that "weren't cast".
+      Battle 8 (B8-01) found the old shape - a permission used later - let the
+      opponent act first and put a sorcery hit under the stack's normal timing.
     - **"no"**, or "yes" refused because `affirmative_is_legal` was False -
       goes straight onto the bottom, in the very same random shuffle the
       misses get, exactly as CR 702.85a's single sentence says: nothing here
@@ -2959,7 +2940,6 @@ def cascade(game: Any, spell: CardState, seed: int | None = None) -> CascadeResu
     replayed from its own decoded snapshot put them in an order the original
     never had.
     """
-    from .casting import PlayAction, why_cannot_cast_restriction  # casting imports this module
 
     with game._id_allocator_scope():  # noqa: SLF001
         controller = spell.controller or game.active_player.username
@@ -2987,28 +2967,29 @@ def cascade(game: Any, spell: CardState, seed: int | None = None) -> CascadeResu
 
         cast_hit = False
         if result.hit is not None:
-            restriction = why_cannot_cast_restriction(result.hit, owner.username, game)
+            castable = game.spell_options_castable_during_resolution(
+                result.hit, owner.username, mana_value_below=threshold
+            )
             decision = Decision(
                 kind=DecisionKind.MAY,
                 player=owner.username,
                 prompt=f"cast {result.hit.name} without paying its mana cost (cascade)",
                 source=spell.name,
                 source_id=source_id_of(spell),
-                affirmative_is_legal=restriction is None,
+                affirmative_is_legal=bool(castable),
             )
-            cast_hit = bool(game.ask(decision))
-            if cast_hit:
-                result.hit.exile_annotation = ExileAnnotation(
-                    marker=ExileMarker.CASCADE, owner=owner.username
-                )
-                game.grant_play_permission(
-                    result.hit,
-                    owner.username,
-                    action=PlayAction.CAST,
-                    pays_mana_cost=False,
-                    source_name=f"{spell.name}'s cascade",
-                    rule="CR 702.85a",
-                    bottom_if_unused=True,
+            if game.ask(decision):
+                # CR 608.2g: cast now, above the cascading spell, with no
+                # priority in between; an illegal cast leaves it in exile.
+                cast_hit = (
+                    game.cast_during_resolution(
+                        result.hit,
+                        owner.username,
+                        source_name=f"{spell.name}'s cascade",
+                        rule="CR 702.85a",
+                        mana_value_below=threshold,
+                    )
+                    is not None
                 )
 
         bottomed = [state for state in result.exiled if not (cast_hit and state is result.hit)]
@@ -3607,12 +3588,8 @@ def _evoke_effect(game: Any, ability: AbilityOnStack) -> CardState | None:
 
 
 def _cascade_effect(game: Any, ability: AbilityOnStack) -> CascadeResult | None:
-    """CR 702.85a's exiling half.
-
-    Casting the hit is left to the caller: "You may cast that card", and there
-    is nobody here to ask - the same concession every optional trigger in this
-    engine makes (CR 603.5). `cascade` performs the exiling and the bottoming.
-    """
+    """CR 702.85a, the whole trigger: `cascade` exiles, asks, casts the hit
+    during this resolution (CR 608.2g) and bottoms the rest."""
     source = ability.source(game)
     if source is None:
         return None
@@ -3683,7 +3660,7 @@ def _replicate_effect(game: Any, ability: AbilityOnStack) -> list[CardState]:
     if source is None or source not in game.stack:
         return []
     controller = ability.controller
-    record = game.cast_records.get(source.id)
+    record = game.cast_record_of(source)
     count = record.replicated if record is not None else 0
     copies: list[CardState] = []
     for _ in range(max(count, 0)):

@@ -3166,7 +3166,7 @@ def _a_player_has_life(count: int, at_most: bool) -> EntersCondition:
 
 def _x_is(count: int, at_most: bool) -> EntersCondition:
     def holds(game: "Game", entering: CardState) -> bool:
-        record = game.cast_records.get(entering.id)
+        record = game.cast_record_of(entering)
         if record is None or record.x_value is None:
             # No announcement to read X off (CR 601.2b) - the permanent got
             # here some other way, X is undefined, and there is nothing to
@@ -3737,7 +3737,7 @@ def _turns_begun_since_foretold(game: "Game", entering: CardState) -> int | None
     this module - the effect is skipped and the permanent enters with no
     counters rather than with a guessed number.
     """
-    record = game.cast_records.get(entering.id)
+    record = game.cast_record_of(entering)
     if record is None or record.exile_annotation is None or game.turn is None:
         return None
     annotation = record.exile_annotation
@@ -3907,7 +3907,7 @@ def _self_enters_modifiers(
             # entry with no record at all (this object arrived some other
             # way) leaves `amount` `None` and the effect skipped, unchanged
             # from before.
-            record = game.cast_records.get(card_state.id)
+            record = game.cast_record_of(card_state)
             if record is not None:
                 amount = record.x_value
         if (
@@ -3934,7 +3934,7 @@ def _self_enters_modifiers(
                     )
                 )
             else:
-                record = game.cast_records.get(card_state.id)
+                record = game.cast_record_of(card_state)
                 x_value = record.x_value if record is not None else 0
                 controller = card_state.controller or card_state.owner
                 amount = reader(game, controller, card_state, x_value)
@@ -3970,7 +3970,7 @@ def _sunburst_counter_amount(game: "Game", entering: CardState) -> int | None:
     each mana went to. `Color.COLORLESS` is excluded: CR 105.1 lists five
     colors and colorless mana is explicitly "not a color" (CR 105.2c).
     """
-    record = game.cast_records.get(entering.id)
+    record = game.cast_record_of(entering)
     if record is None:
         return None
     return sum(
@@ -4201,7 +4201,7 @@ def _impending_entering_counters(game: "Game", event: ReplaceableEvent) -> list[
     entering = event.card
     if entering is None or not event.was_cast:
         return []
-    record = game.cast_records.get(entering.id)
+    record = game.cast_record_of(entering)
     if record is None or (record.keyword or "").lower() != "impending":
         return []
     amount = next(

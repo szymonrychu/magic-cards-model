@@ -70,7 +70,7 @@ def test_countering_a_spell_pops_its_cast_record():
     scenario.start_at(Step.PRECOMBAT_MAIN)
     (mountain,) = scenario.untapped_sources("Mountain")
     bolt = scenario.cast_onto_stack("Lightning Bolt", mountain, targets=[scenario.player("bob")])
-    assert bolt.id in scenario.game.cast_records
+    assert scenario.game.cast_record_of(bolt) is not None
     assert scenario.game.cast_record(bolt).mana_of_color_spent(Color.RED) == 1
 
     scenario.pass_priority("alice")
@@ -80,7 +80,7 @@ def test_countering_a_spell_pops_its_cast_record():
     scenario.pass_until_resolved()  # Counterspell resolves, countering the Bolt
 
     assert bolt.zone is Zone.GRAVEYARD
-    assert bolt.id not in scenario.game.cast_records, (
+    assert not any(record.card_id == bolt.id for record in scenario.game.cast_records.values()), (
         "a countered spell's CastRecord must not linger under its id forever"
     )
 
@@ -107,7 +107,7 @@ def test_a_fizzled_spells_cast_record_is_also_popped():
     helix = scenario.cast_onto_stack(
         "Lightning Helix", *alice_sources, username="alice", targets=[bears]
     )
-    assert helix.id in scenario.game.cast_records
+    assert scenario.game.cast_record_of(helix) is not None
     assert scenario.game.cast_record(helix).any_mana_spent
 
     scenario.pass_priority("alice")
@@ -120,7 +120,7 @@ def test_a_fizzled_spells_cast_record_is_also_popped():
 
     assert helix.zone is Zone.GRAVEYARD
     assert helix.id in scenario.game.fizzled
-    assert helix.id not in scenario.game.cast_records, (
+    assert not any(record.card_id == helix.id for record in scenario.game.cast_records.values()), (
         "a fizzled spell's CastRecord must not linger under its id forever"
     )
 
@@ -165,7 +165,7 @@ def test_a_countered_spells_gone_cast_record_fails_the_recheck_closed():
 
     scenario.pass_until_resolved()  # Counterspell resolves, countering Memnite
     assert memnite.zone is Zone.GRAVEYARD
-    assert memnite.id not in scenario.game.cast_records
+    assert not any(record.card_id == memnite.id for record in scenario.game.cast_records.values())
 
     scenario.pass_until_resolved()  # Vexing Bauble's ability resolves
     assert scenario.stack_names() == []

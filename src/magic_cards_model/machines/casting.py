@@ -1124,30 +1124,12 @@ class PlayPermission(BaseModel):
     has no notion of *whose* turn is next. A permission with this set also
     carries `until_end_of_turn=False`, so `Game.cleanup_step`'s own "until
     end of turn" sweep leaves it alone on the turn it was granted."""
-    bottom_if_unused: bool = False
-    """Whether `Game.cleanup_step` must sweep this card to the bottom of its
-    owner's library, rather than just dropping the permission, if it is still
-    sitting unclaimed in `zone` the moment this permission expires.
 
-    Cascade (CR 702.85a) is the one grant this is true for, and the reason is
-    textual, not a house rule: Ugin, Eye of the Storms' "−11" and Ragavan,
-    Nimble Pilferer's trigger both print "**Until end of turn**, you may cast
-    [it]" - an explicit standing permission whose own rule never says what
-    happens to a card nobody got around to casting, so CR 514.2 dropping the
-    permission and leaving the card wherever it sits is the whole of what
-    those rules require. Suspend's own third ability (CR 702.62a) is the same
-    shape again - no "until end of turn", and its own sentence names the
-    resting state itself: "if you don't, it remains exiled." Cascade's single
-    sentence is the one exception: "Put the exiled cards on the bottom in a
-    random order" is not a fallback for a *declined* hit only, it is what CR
-    702.85a's own resolution does with *every* card that "weren't cast" -
-    the accepted-but-never-actually-cast case included. Nothing else in this
-    engine can finish that cast synchronously inside `cascade`'s own
-    resolution (a live seat's actual `Casting.use_permission()` call is a
-    separate, later step - see `machines/keywords.cascade`), so this flag is
-    what keeps CR 702.85a's own "exiled forever" outcome from becoming a
-    legal resting state for cascade the way it legitimately is for Ugin,
-    Ragavan, and Suspend."""
+    bottom_if_unused: bool = False
+    """Always `False` now, kept because consumers read it. Cascade used to set
+    it for a hit left in exile under a permission; cascade now casts the hit
+    during its own resolution (`Game.cast_during_resolution`, CR 608.2g) and
+    bottoms what was not cast at once (CR 702.85a), so no grant sets it."""
 
     def names(self, card: CardState) -> bool:
         """Whether this permission is about that exact object (CR 400.7)."""
@@ -5022,16 +5004,9 @@ def finish_suspend(game: Any, card: CardState) -> PlayPermission | None:
     `Casting.use_permission()` on the permission this hands back; never
     calling it is CR 702.62a's own "if you don't, it remains exiled."
 
-    That fallback is what makes leaving the permission to expire on its own
-    (`bottom_if_unused` left at its default `False`) correct here, rather
-    than the gap it turned out to be for `machines.keywords.cascade`: CR
-    702.62a's own sentence names "remains exiled" as the resting state for a
+    CR 702.62a's own sentence names "remains exiled" as the resting state for a
     suspended card nobody plays, so `Game.cleanup_step` dropping an unused
-    permission and leaving the card exactly where it sits already matches the
-    rule. Cascade's own sentence names no such fallback - "put the exiled
-    cards... that weren't cast on the bottom" is the fallback, for every card
-    that "weren't cast" - which is why only cascade's grant carries `bottom_
-    if_unused=True`. See `PlayPermission.bottom_if_unused`'s own docstring.
+    permission and leaving the card where it sits already matches the rule.
 
     `immediate=True`: unlike Ugin's and Ragavan's grants, CR 702.62a's third
     ability never prints "until end of turn" - it is CR 117.2e's "resolving

@@ -56,7 +56,7 @@ travel.
 import re
 from collections.abc import Callable, Iterable
 from random import Random
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
@@ -362,7 +362,9 @@ def counter_targets(game: "Game", spell: CardState) -> None:
             game.counter(target)
 
 
-def _counter_unless_pays_effect(amount: int, *, to_exile: bool = False) -> Effect:
+def _counter_unless_pays_effect(
+    amount: int, *, to_exile: bool = False, to_library: Literal["top", "bottom"] | None = None
+) -> Effect:
     """ "Counter target spell unless its controller pays {N}." (CR 118.12a).
 
     Read as one CR 608.2c instruction, not two: the question is put to the
@@ -396,7 +398,7 @@ def _counter_unless_pays_effect(amount: int, *, to_exile: bool = False) -> Effec
                 target.controller, amount, source=spell.name, source_id=source_id_of(spell)
             )
             if not paid:
-                game.counter(target, to_exile=to_exile)
+                game.counter(target, to_exile=to_exile, to_library=to_library)
 
     return effect
 
@@ -13086,14 +13088,17 @@ def _parse_counter_then_create_tokens_by_mana_value_pair(
 
 
 #: "If that spell is countered this way, exile it instead of putting it into
-#: its owner's graveyard." (Force of Negation) - CR 701.6a's default
-#: destination, overridden. `that spell` is CR 400.7 anaphora back to
-#: whatever the first sentence's "target ... spell" found, the same reading
-#: `_parse_counter_then_create_tokens_by_mana_value_pair` and
+#: its owner's graveyard." (Force of Negation) or "..., put it on top of its
+#: owner's library instead of into that player's graveyard." (Memory Lapse) -
+#: CR 701.6a's default destination, overridden. `that spell` is CR 400.7
+#: anaphora back to whatever the first sentence's "target ... spell" found,
+#: the same reading `_parse_counter_then_create_tokens_by_mana_value_pair` and
 #: `_parse_anaphoric_clause_pair` already give a second sentence's pronoun.
 _COUNTER_THEN_EXILE_INSTEAD_RE = re.compile(
-    r"^if (?:that|the) spell is countered this way, exile it instead of "
-    r"putting it into its owner'?s graveyard\.?$",
+    r"^if (?:that|the) spell is countered this way, "
+    r"(?:(?P<exile>exile it)|put (?:it|that card) on (?:the )?(?P<end>top|bottom) of "
+    r"its owner'?s library) instead of (?:putting it )?into "
+    r"(?:its owner'?s|that player'?s) graveyard\.?$",
     re.IGNORECASE,
 )
 
@@ -13120,10 +13125,18 @@ def _parse_counter_then_exile_instead_of_graveyard_pair(
     """
     if not for_spell:
         return None
-    if not _COUNTER_THEN_EXILE_INSTEAD_RE.fullmatch(second.strip()):
+    destination = _COUNTER_THEN_EXILE_INSTEAD_RE.fullmatch(second.strip())
+    if destination is None:
         return None
+    to_exile = destination.group("exile") is not None
+    end = destination.group("end")
+    to_library: Literal["top", "bottom"] | None = (
+        None if end is None else ("top" if end.lower() == "top" else "bottom")
+    )
     if unless := _COUNTER_UNLESS_PAYS_RE.fullmatch(first.strip()):
-        return _counter_unless_pays_effect(int(unless.group("n")), to_exile=True)
+        return _counter_unless_pays_effect(
+            int(unless.group("n")), to_exile=to_exile, to_library=to_library
+        )
     if not _COUNTER_TARGET_SPELL_RE.fullmatch(first.strip()):
         return None
 
@@ -13133,7 +13146,7 @@ def _parse_counter_then_exile_instead_of_graveyard_pair(
                 continue
             target = next((item for item in game.stack if item.id == reference.card_id), None)
             if target is not None:
-                game.counter(target, to_exile=True)
+                game.counter(target, to_exile=to_exile, to_library=to_library)
 
     return effect
 
@@ -17869,17 +17882,12 @@ def _put_spell_in_library(game: "Game", spell: CardState, *, top: bool) -> None:
     if spell not in game.stack:
         return
     game.stack.remove(spell)
-    game.cast_records.pop(spell.id, None)
+    game.forget_cast_record(spell)
     if spell.owner is None:
         return
-    owner = game.player(spell.owner)
-    spell.move_to(Zone.LIBRARY)
-    if top:
-        owner.library.insert(0, spell)
-        owner.note_library_changed()  # CR 701.20d: above every card there
-    else:
-        owner.library.append(spell)
-        owner.note_library_changed(placed=[spell])  # CR 401.2: below every card there
+    # One CR 401.1 instruction, so the move raises the library event and is
+    # known to every player, who saw the spell on the stack (CR 400.2).
+    game.put_cards_into_library([spell], to_bottom=not top)
 
 
 def _parse_choose_up_to_one_target_spell_clauses(
@@ -18694,9 +18702,8 @@ def _merge_exile_top_then_play_until_next_turn_clauses(
     `_parse_exile_then_play_permission_pair`'s ability-side "until end of
     turn" shape uses. Nothing in either printing says what happens to a card
     left unplayed once the permission lapses (unlike cascade's own "put the
-    exiled cards on the bottom" - `PlayPermission.bottom_if_unused`'s own
-    docstring), so it is left exactly where CR 514.2 leaves any other expired
-    grant: sitting in exile, forever.
+    exiled cards on the bottom", CR 702.85a), so it is left exactly where
+    CR 514.2 leaves any other expired grant: sitting in exile, forever.
     """
     if not for_spell or index + 1 >= len(clauses):
         return None
@@ -20854,8 +20861,7 @@ def _parse_reveal_from_outside_the_game_into_hand_clause(effect_text: str) -> Ef
 #: simply an unclaimed face-up exiled card forever after (CR 400.11b's own
 #: "remain[s] in the game" default) - a legitimate resting state Wish's own
 #: text names no other fate for, unlike cascade's own "put ... on the
-#: bottom" instruction (`PlayPermission.bottom_if_unused`), which is why
-#: nothing here sets that flag.
+#: bottom" instruction (CR 702.85a).
 _OUTSIDE_THE_GAME_PLAY_RE = re.compile(
     r"^you may play a card you own from outside the game this turn\.?$", re.IGNORECASE
 )

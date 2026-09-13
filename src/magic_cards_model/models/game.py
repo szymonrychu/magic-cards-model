@@ -6,7 +6,7 @@ from contextlib import contextmanager
 from dataclasses import replace
 from enum import StrEnum
 from random import Random
-from typing import Annotated, Any, ClassVar
+from typing import Annotated, Any, ClassVar, Literal
 from uuid import NAMESPACE_OID, UUID, uuid4, uuid5
 
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, model_validator
@@ -34,6 +34,7 @@ from ..machines.casting import (
     PlayAction,
     PlayPermission,
     _printed_alternative_total_cost,
+    castable_faces,
     face_being_cast,
     granted_cast_options,
     keyword_cast_options,
@@ -1089,6 +1090,11 @@ class CastRecord(BaseModel):
     id up with `Game.find_by_id`, which still finds it wherever paying the
     cost moved it (a sacrifice to the graveyard, an exile cost to exile)."""
 
+    card_id: UUID | None = None
+    """The `CardState.id` of the card this record describes, so every record
+    for a card can be forgotten at once (`Game.forget_cast_record`) after the
+    object has moved on and its stamp no longer matches the key."""
+
     def mana_of_color_spent(self, color: Color) -> int:
         """How much mana of this colour was spent paying the total cost (CR 601.2h)."""
         return self.mana_spent.get(color, 0)
@@ -1919,7 +1925,13 @@ class Game(BaseModel):
     """
 
     cast_records: dict[UUID, "CastRecord"] = Field(default_factory=dict)
-    """How each spell now on the stack was cast, keyed by its id (CR 601.2b).
+    """How each spell now on the stack was cast (CR 601.2b), keyed by the
+    `CardState.zone_change_stamp` of the object the record describes - never
+    by the card's id. CR 400.7 makes a card that changes zones a new object,
+    and this engine keeps its `id`, so an id key let a permanent that left and
+    came back read the cast of the object it used to be (battle 8, B8-02).
+    Read through `Game.cast_record_of`; the key follows the object only across
+    the moves a cast crosses (`Game._carry_cast_record`).
 
     Several rules ask a question about *how* a spell was cast rather than about
     what it is: CR 702.34a exiles a card whose flashback cost was paid,
@@ -2057,7 +2069,7 @@ class Game(BaseModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 15
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 16
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -2219,6 +2231,11 @@ class Game(BaseModel):
     decoded here would replay against a question that build never asked.
     Refused instead. Battle 4 was stamped 11 -> 12 on its own line of
     development; landed after battles 3, 5 and 6, it moved on to 15.
+
+    Bumped 15 -> 16: battle 8. `Game.cast_records` is keyed by the described
+    object's `zone_change_stamp` instead of its card id, and `CastRecord`
+    gained `card_id` (CR 400.7, B8-02). A version-15 dump holds id-keyed
+    records that would read as no record at all. Refused instead.
     """
 
     @model_validator(mode="before")
@@ -2891,7 +2908,7 @@ class Game(BaseModel):
                     self.combat.remove(stack_object.id)
                     stack_object.move_to(Zone.EXILE)
                     self.exile.append(stack_object)
-                    self.cast_records.pop(stack_object.id, None)
+                    self.forget_cast_record(stack_object)
             resolving = self.resolving
             if isinstance(resolving, CardState) and resolving not in self.exile:
                 # CR 724.1b's "including the object that's resolving" - already
@@ -2949,7 +2966,6 @@ class Game(BaseModel):
                 for redirection in self.draw_redirections
                 if not redirection.until_end_of_turn
             ]
-            self._bottom_unused_cascade_permissions()
             # CR 514.2's same sentence: "all 'until end of turn' ... effects end".
             # A card exiled by Ugin's −11 stays exiled and stops being castable.
             # A Wrenn's Resolve/Reckless Impulse grant (`expires_end_of_next_turn`)
@@ -2975,39 +2991,6 @@ class Game(BaseModel):
                 if effect.duration is not Duration.UNTIL_END_OF_TURN
             ]
             return discarded
-
-    def _bottom_unused_cascade_permissions(self) -> None:
-        """CR 702.85a's own sentence: "Put the exiled cards on the bottom in a
-        random order" reaches every card cascade exiled and did not cast, not
-        only the ones the choice was declined for. Called just before this
-        same step drops expired `PlayPermission`s (CR 514.2), so an
-        accepted-but-never-driven cascade cast is swept to the bottom here
-        instead of silently vanishing into a dropped permission with the card
-        still sitting in exile - see `PlayPermission.bottom_if_unused`'s own
-        docstring for why this only ever applies to cascade's grant and not
-        Ugin's, Ragavan's, or Suspend's.
-
-        Only a permission that is (a) marked `bottom_if_unused`, (b) about to
-        be dropped by this same step's `until_end_of_turn` filter just below
-        - `permission.expired(self)` is not the test here, because it compares
-        against `TurnMachine.turns_taken` and this runs *before* that counter
-        moves on to the next turn, the same reason the unconditional filter
-        below cannot use it either - and (c) still pointing at a card
-        genuinely sitting unclaimed in the zone it was granted from (CR
-        400.7's identity check, `PlayPermission.names`) qualifies. A card
-        already cast, or moved some other way, is left alone.
-        """
-        for permission in self.play_permissions:
-            if not permission.bottom_if_unused or not permission.until_end_of_turn:
-                continue
-            card = self.find_by_id(permission.card_id)
-            if card is None or not permission.names(card) or card.zone is not permission.zone:
-                continue
-            owner = self.player(card.owner or permission.player)
-            zone_cards = self.shared_zones.get(permission.zone)
-            if zone_cards is not None and card in zone_cards:
-                zone_cards.remove(card)
-            owner.add(card, Zone.LIBRARY)  # the bottom of the library
 
     def remove_all_damage(self) -> None:
         """Wipe damage marked on every permanent (CR 514.2, 703.4p).
@@ -3211,17 +3194,60 @@ class Game(BaseModel):
             gift_promised=gift_promised,
             gift_chosen_player=gift_chosen_player,
             additional_cost_cards=list(additional_cost_cards or []),
+            card_id=spell.id,
         )
-        self.cast_records[spell.id] = record
+        self.forget_cast_record(spell)
+        self.cast_records[spell.zone_change_stamp] = record
         return record
+
+    def cast_record_of(self, state: StackObject | None) -> "CastRecord | None":
+        """The record of how this exact object was cast, or `None` (CR 400.7).
+
+        Keyed by the object's `zone_change_stamp`, so a card that moved since
+        the cast finds nothing: CR 400.7 makes it "a new object with no memory
+        of, or relation to, its previous existence". The one bridge is CR
+        400.7d, "An ability of a permanent can reference information about the
+        spell that became that permanent as it resolved", which
+        `_carry_cast_record` follows as the spell becomes the permanent.
+        """
+        if not isinstance(state, CardState):
+            return None
+        return self.cast_records.get(state.zone_change_stamp)
+
+    def cast_record_as_last_known(self, stamp: UUID) -> "CastRecord | None":
+        """The record of the object that had `stamp`, for an ability that
+        remembers which object its source was (`AbilityOnStack.source_stamp`).
+
+        CR 113.7a: "if the source is no longer in the zone it's expected to be
+        in at that time, its last known information is used" - an evoked
+        Wistfulness sacrificed before its "if {G}{G} was spent to cast it"
+        trigger resolves is still the object that was cast that way. A later
+        cast of the same card forgets this record (`note_cast`), and a new
+        object never has this stamp (CR 400.7)."""
+        return self.cast_records.get(stamp)
 
     def cast_record(self, spell: StackObject) -> "CastRecord":
         """How this spell was cast, or an empty record if nobody said."""
-        if isinstance(spell, CardState):
-            found = self.cast_records.get(spell.id)
-            if found is not None:
-                return found
-        return CastRecord()
+        found = self.cast_record_of(spell)
+        return found if found is not None else CastRecord()
+
+    def forget_cast_record(self, state: StackObject) -> None:
+        """Drop every record of `state`'s card, whichever object it described."""
+        if not isinstance(state, CardState):
+            return
+        for stamp in [
+            key for key, record in self.cast_records.items() if record.card_id == state.id
+        ]:
+            del self.cast_records[stamp]
+
+    def _carry_cast_record(self, state: CardState, stamp_before: UUID) -> None:
+        """Re-key the record of the object `state` was a moment ago onto the
+        object it is now, for a move the cast itself makes: a spell re-stated
+        onto the stack, or a permanent spell becoming the permanent (CR
+        400.7d). Every other move leaves the old key behind, unreadable."""
+        record = self.cast_records.pop(stamp_before, None)
+        if record is not None:
+            self.cast_records[state.zone_change_stamp] = record
 
     def was_cast_with(self, spell: StackObject, keyword: str) -> bool:
         """Whether this spell was cast using the named keyword (CR 601.2b)."""
@@ -3265,7 +3291,7 @@ class Game(BaseModel):
         # spell that reaches here with no record at all - there is no such
         # path in this engine today, but reading a zone that has not been
         # moved yet is still the right default if one is ever added.
-        record = self.cast_records.get(card_state.id)
+        record = self.cast_record_of(card_state)
         origin_zone = record.origin_zone if record is not None else card_state.zone
         # Exile and the command zone are modelled as shared, not per-player
         # (`shared_zones`, not `owner.zones`) - a card foretold, plotted, or
@@ -3274,7 +3300,9 @@ class Game(BaseModel):
         self._take_out_of_every_zone(card_state)
 
         card_state.controller = controller
+        stamp_before = card_state.zone_change_stamp
         card_state.move_to(Zone.STACK)
+        self._carry_cast_record(card_state, stamp_before)
         if card_state not in self.stack:
             self.stack.append(card_state)
         self.spells_cast_this_turn.setdefault(controller, []).append(card_state)
@@ -3374,7 +3402,7 @@ class Game(BaseModel):
             # `machines/triggers._cast_record_for_clause` now fails an
             # intervening *if* closed rather than misreading a lingering
             # record as "nothing was spent" once it is gone.
-            self.cast_records.pop(spell.id, None)
+            self.forget_cast_record(spell)
             self._before_priority()
             return spell
 
@@ -3470,7 +3498,7 @@ class Game(BaseModel):
                 # branch fixes is that the spell no longer disappears while
                 # that exception unwinds.
                 self.put_into_graveyard(spell, resolving=True)
-                self.cast_records.pop(spell.id, None)
+                self.forget_cast_record(spell)
                 self._before_priority()
                 raise
 
@@ -3488,7 +3516,7 @@ class Game(BaseModel):
             # applies - it does not reach a graveyard and it does not enter the
             # battlefield.
             self.turn_ended_exiled_ids.discard(spell.id)
-            self.cast_records.pop(spell.id, None)
+            self.forget_cast_record(spell)
             self._before_priority()
             return spell
 
@@ -3533,7 +3561,7 @@ class Game(BaseModel):
                         )
                     )
                     self.put_into_graveyard(spell)
-                    self.cast_records.pop(spell.id, None)
+                    self.forget_cast_record(spell)
                     self._before_priority()
                     return spell
             else:
@@ -3558,11 +3586,9 @@ class Game(BaseModel):
             # even though it had correctly gone on the stack in the first
             # place (`test_wistfulness_paid_with_double_blue_draws_two_then_
             # discards_one` is the regression test). The record is keyed by
-            # `spell.id`, which never changes while this incarnation persists
-            # (CR 400.7), so it stays correct for as long as the permanent
-            # does; a later recast of the same physical card after it leaves
-            # and returns overwrites it with a fresh record before this one
-            # could ever be misread as belonging to that new cast.
+            # the permanent's own `zone_change_stamp` (`enter_the_battlefield`
+            # carried it across, CR 400.7d), so it answers for this object
+            # only: once the permanent leaves, nothing finds it (CR 400.7).
         else:
             # CR 614.1: the move to the graveyard is an event like any other, so
             # it goes through the replacement effects. That is the hook
@@ -3574,7 +3600,7 @@ class Game(BaseModel):
             # your next upkeep") is created here rather than inside the
             # replacement effect itself: `_create_rebound_delayed_trigger`
             # needs to know whether the spell was cast from hand, and that is
-            # `Game.cast_records[spell.id]` - which is popped two lines below,
+            # `Game.cast_record(spell)` - which is forgotten two lines below,
             # so it has to be read before `put_into_graveyard` runs, not after.
             #
             # Popped here, unlike the permanent branch above: a non-permanent
@@ -3588,7 +3614,7 @@ class Game(BaseModel):
             self.put_into_graveyard(spell, resolving=True)
             self._create_rebound_delayed_trigger(spell, cast_from_hand)
             self._create_paradigm_delayed_trigger(spell)
-            self.cast_records.pop(spell.id, None)
+            self.forget_cast_record(spell)
 
         self._before_priority()
         return spell
@@ -3973,6 +3999,237 @@ class Game(BaseModel):
             return True
         return bool(self._legal_target_candidates(profile, controller, card.id))
 
+    def spell_options_castable_during_resolution(
+        self, card: CardState, caster: str, *, mana_value_below: float | None = None
+    ) -> list[str | None]:
+        """Every way `caster` could cast `card` while a spell or ability
+        resolves (CR 608.2g), as `Casting.face` values: `None` for the card's
+        own characteristics, a face name for a split half (CR 709.3) or an
+        Adventure (CR 715.3).
+
+        An option CR 611.1 prohibits is left out, and so is one whose
+        resulting spell's mana value is not below `mana_value_below` - CR
+        702.85a's "if the resulting spell's mana value is less than this
+        spell's mana value". CR 608.2d: "the player can't choose an option
+        that's illegal or impossible", so an option left out is never offered.
+        X counts as 0: a spell cast without paying its mana cost has X of 0
+        (CR 107.3b)."""
+        options: list[str | None] = []
+        for option in castable_faces(card.card):
+            if why_cannot_cast_restriction(card, caster, self, face=option) is not None:
+                continue
+            if mana_value_below is not None and (
+                self._resulting_mana_value(card, option) >= mana_value_below
+            ):
+                continue
+            options.append(option)
+        return options
+
+    @staticmethod
+    def _resulting_mana_value(card: CardState, option: str | None) -> int:
+        """The mana value the spell would have on the stack cast as `option`
+        with X of 0 (CR 202.3d, CR 202.3e): the named half's or Adventure's own
+        mana cost (CR 709.3b, CR 715.3b), otherwise the card's."""
+        if option is not None:
+            for face in card.card.card_faces or []:
+                if face.name == option:
+                    return ManaCost.parse(face.mana_cost or "").converted
+        return int(card.card.cmc or 0)
+
+    def cast_during_resolution(
+        self,
+        card: CardState,
+        caster: str,
+        *,
+        source_name: str,
+        rule: str,
+        mana_value_below: float | None = None,
+    ) -> CardState | None:
+        """CR 608.2g: cast `card` without paying its mana cost while the
+        resolving spell or ability that allows it is still resolving.
+
+        "If an effect specifically instructs or allows a player to cast a spell
+        during resolution, they do so by following the steps in rules 601.2a-i,
+        except no player receives priority after it's cast. That spell becomes
+        the topmost object on the stack, and the currently resolving spell or
+        ability continues to resolve". So this drives the real `Casting`
+        machine under an `immediate` `PlayPermission` (CR 117.1's "unless a
+        spell or ability is instructing a player to take an action": no timing
+        restriction applies), asks the caster's CR 601.2b-c announcements
+        through `Game.ask` - which face (CR 709.3, CR 715.3), the modes (CR
+        700.2a), each target - pays nothing with X of 0 (CR 118.9, CR 107.3b),
+        and puts the spell on the stack without `retain_priority`.
+
+        Returns `None`, with the card back where it was, when the cast is not
+        legal: no option qualifies, no mode or no target can be legally
+        announced (CR 601.2c), or a cost cannot be paid (CR 601.2h). CR 601.2's
+        own "the casting of the spell is illegal; the game returns to the
+        moment before the casting of that spell was proposed" is `Casting.
+        cancel` and `CostPayment.rewind`. The permission never outlives this
+        call."""
+        self._refuse_if_over()
+        options = self.spell_options_castable_during_resolution(
+            card, caster, mana_value_below=mana_value_below
+        )
+        if not options:
+            return None
+        permission = self.grant_play_permission(
+            card,
+            caster,
+            action=PlayAction.CAST,
+            pays_mana_cost=False,
+            source_name=source_name,
+            rule=rule,
+            zone=card.zone,
+            until_end_of_turn=False,
+            immediate=True,
+        )
+        casting: Casting | None = None
+        payment: CostPayment | None = None
+        try:
+            face = options[0]
+            if len(options) > 1:
+                normal = (card.card.card_faces or [card.card])[0].name
+                labels = [option or normal for option in options]
+                answer = self.ask(
+                    Decision(
+                        kind=DecisionKind.CHOOSE_A_QUALITY,
+                        player=caster,
+                        prompt=f"choose how to cast {card.name} (CR 709.3, CR 715.3)",
+                        source=card.name,
+                        source_id=source_id_of(card),
+                        options=tuple(labels),
+                        quality="face",
+                    )
+                )
+                face = options[labels.index(str(answer))]
+            with self._id_allocator_scope():
+                casting = Casting(spell=card, caster=caster, origin_zone=card.zone, game=self)
+                casting.use_permission()
+                if face is not None:
+                    if card.card.layout is Layout.SPLIT:
+                        casting.cast_as_split_half(face)
+                    else:
+                        casting.cast_as_adventure()
+                targets = self._announce_resolution_cast(casting, card, caster, face)
+                if targets:
+                    casting.choose_targets(targets)
+                payment = casting.determine_cost(x_value=0)
+                if payment.shortfall:
+                    self._pay_resolution_cast_mana(casting, payment, card, caster)
+                payment.pay()
+                state = casting.cast()
+        except ValueError:
+            if payment is not None:
+                payment.rewind()
+            if casting is not None and not casting.is_settled:
+                casting.cancel()
+            return None
+        finally:
+            self.play_permissions = [
+                granted for granted in self.play_permissions if granted is not permission
+            ]
+        self.put_on_stack(state, caster)
+        return state
+
+    def _pay_resolution_cast_mana(
+        self, casting: Casting, payment: CostPayment, card: CardState, caster: str
+    ) -> None:
+        """CR 601.2g-h inside CR 608.2g: mana still owed on a cast made during
+        resolution - a cost increase applied to "without paying its mana cost"
+        (CR 118.9d, Disruptor Flute's {3}) - is paid by activating mana
+        abilities now (CR 117.1d, CR 608.2g's first sentence). Asked as the
+        same `PAY_MANA` question an "unless ... pays" is, offering the
+        caster's untapped mana sources; declining, or a cost those sources
+        cannot pay (CR 118.3), makes the cast illegal (CR 601.2)."""
+        payer = self.player(caster)
+        mana = casting.total_cost.mana
+        sources = self._mana_sources_while_resolving(payer)
+        payable = plan_mana_payment(mana, sources, game=self, payer=caster) is not None
+        answer = self.ask(
+            Decision(
+                kind=DecisionKind.PAY_MANA,
+                player=caster,
+                prompt=f"pay {mana} to cast {card.name}",
+                source=card.name,
+                source_id=source_id_of(card),
+                amount=mana.converted,
+                affirmative_is_legal=payable,
+                mana_sources=tuple(state.id for state in sources),
+            )
+        )
+        if answer is False:
+            raise ValueError(f"{caster} did not pay {mana} to cast {card.name} (CR 601.2h)")
+        chosen = (
+            sources if answer is True else [state for state in sources if state.id in set(answer)]
+        )
+        payment.auto_tap(chosen)
+
+    def _announce_resolution_cast(
+        self, casting: Casting, card: CardState, caster: str, face: str | None
+    ) -> list[TargetRef]:
+        """CR 601.2b-c for `cast_during_resolution`: the modes, then each
+        chosen mode's targets, or the spell's own targets. Raises `ValueError`
+        when a mandatory announcement has no legal choice (CR 601.2c, CR
+        700.2a), which makes the cast illegal."""
+        modal = casting.modal
+        if face is None and modal is not None and modal.understood:
+            chosen = self._ask_spell_modes(card, caster, modal)
+            casting.choose_modes([mode.number for mode in chosen], x_value=0)
+            targets: list[TargetRef] = []
+            for mode in chosen:
+                body = mode_effect_body(mode)
+                asked = self._ask_targets(profile_for_text(body), caster, card.id, card.name, body)
+                if asked is None:
+                    raise ValueError(f"{card.name}: a chosen mode has no legal target (CR 601.2c)")
+                targets.extend(asked)
+            return targets
+        asked = self._ask_targets(
+            casting.targeting, caster, card.id, card.name, card.oracle_text or ""
+        )
+        if asked is None:
+            raise ValueError(f"{card.name} has no legal target (CR 601.2c)")
+        return list(asked)
+
+    def _ask_spell_modes(self, card: CardState, caster: str, modal: ModalProfile) -> list[Mode]:
+        """A modal spell's modes, asked as CR 601.2b announces them: only a
+        mode whose mandatory targets have a legal candidate is offered (CR
+        700.2a), and once the minimum is met `NO_FURTHER_MODES` comes first,
+        the same shape `_announce_trigger_modes` asks a modal trigger in."""
+
+        def legal(mode: Mode) -> bool:
+            profile = profile_for_text(mode_effect_body(mode))
+            if not profile.understood or not profile.requirements or profile.min_targets == 0:
+                return True
+            return bool(self._legal_target_candidates(profile, caster, card.id))
+
+        offered = [mode for mode in modal.modes if legal(mode)]
+        minimum, maximum = modal.allowed_range()
+        if len(offered) < minimum:
+            raise ValueError(f"{card.name} has too few legal modes to cast (CR 700.2a)")
+        chosen: list[Mode] = []
+        while len(chosen) < maximum:
+            remaining = [mode for mode in offered if modal.repeatable or mode not in chosen]
+            if not remaining:
+                break
+            choices = tuple(mode.text for mode in remaining)
+            if len(chosen) >= minimum:
+                choices = (NO_FURTHER_MODES, *choices)
+            answer = self.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_A_MODE,
+                    player=caster,
+                    prompt="choose a mode" if not chosen else "choose another mode",
+                    source=card.name,
+                    source_id=source_id_of(card),
+                    options=choices,
+                )
+            )
+            if answer == NO_FURTHER_MODES:
+                break
+            chosen.append(next((mode for mode in remaining if mode.text == answer), remaining[0]))
+        return chosen
+
     def copy_spell(self, spell: CardState, controller: str | None = None) -> CardState:
         """CR 707.10: put a copy of `spell` onto the stack.
 
@@ -4328,7 +4585,9 @@ class Game(BaseModel):
         source = ability.source(self)
         if source is None:
             return True
-        return intervening_if_holds(self, printed, source, ability.event)
+        return intervening_if_holds(
+            self, printed, source, ability.event, source_stamp=ability.source_stamp
+        )
 
     # -- events and triggered abilities (CR 603) ---------------------------
 
@@ -5277,14 +5536,18 @@ class Game(BaseModel):
             # whichever face is up. A card that has no back face is left alone
             # (CR 701.28c's "nothing happens" for the sibling action).
             card_state.transformed = transformed and card_state.card.back_face is not None
+            stamp_on_the_stack = card_state.zone_change_stamp
             card_state.move_to(Zone.BATTLEFIELD)
             if was_cast:
+                # CR 400.7d: the permanent may read the spell it was, so the
+                # record follows this one move and no later one.
+                self._carry_cast_record(card_state, stamp_on_the_stack)
                 # CR 702.176a asks "if this permanent's impending cost was paid"
                 # of the permanent - see `CardState.cast_with_keyword`. Read off
                 # the spell's own `CastRecord`, which `resolve_top` has not
                 # popped yet; a permanent arriving any other way was never cast
                 # for any cost (CR 400.7) and `move_to` has just cleared it.
-                record = self.cast_records.get(card_state.id)
+                record = self.cast_record_of(card_state)
                 card_state.cast_with_keyword = record.keyword if record is not None else None
             card_state.tapped = event.tapped
             # CR 702.131 (ascend): "entered this turn" needs a turn-number stamp,
@@ -7975,12 +8238,15 @@ class Game(BaseModel):
         with self._id_allocator_scope():
             moved: list[CardState] = []
             newly_in_library: list[CardState] = []
+            seen_going_in: dict[UUID, Zone] = {}
             left_battlefield: list[CardState] = []
             by_graveyard: dict[str, list[CardState]] = {}
             for card_state in cards:
                 if move_refused(card_state, Zone.LIBRARY) is not None:
                     continue
                 was_in_library = card_state.zone is Zone.LIBRARY
+                if self._face_seen_in_public_zone(card_state):
+                    seen_going_in[card_state.id] = card_state.zone
                 graveyard_owner = self._graveyard_owner_of(card_state)
                 if card_state in self.battlefield:
                     self._note_left_battlefield(card_state)
@@ -8009,6 +8275,7 @@ class Game(BaseModel):
                 # already there, and no record of a position survives that.
                 for owner in {id(p): p for p in map(self._owner_of, moved)}.values():
                     owner.note_library_changed()
+            self._record_cards_seen_going_into_libraries(newly_in_library, seen_going_in)
             for gone in left_battlefield:
                 self.emit(
                     GameEvent(
@@ -8031,6 +8298,50 @@ class Game(BaseModel):
                     )
                 )
             return moved
+
+    @staticmethod
+    def _face_seen_in_public_zone(card_state: CardState) -> bool:
+        """Whether every player can see this card's face where it is now.
+
+        CR 400.2: "Public zones are zones in which all players can see the
+        cards' faces, except for those cards that some rule or effect
+        specifically allow to be face down." CR 406.3 and CR 708.2 are those
+        exceptions: a card exiled face down, and a face-down spell or
+        permanent."""
+        return (
+            not card_state.zone.is_hidden
+            and not card_state.zone.is_outside_the_game
+            and card_state.face_up
+            and card_state.face_down_characteristics is None
+        )
+
+    def _record_cards_seen_going_into_libraries(
+        self, placed: Sequence[CardState], origins: Mapping[UUID, Zone]
+    ) -> None:
+        """Record a card every player saw go into a library, at the position it
+        went to (a knowledge policy over CR 400.2, the library twin of
+        `carry_public_knowledge_into_hand`).
+
+        Only when it is the one card this instruction put into that library:
+        CR 401.4, "If an effect puts two or more cards in a specific position
+        in a library at the same time, the owner of those cards may arrange
+        them in any order. That library's owner doesn't reveal the order in
+        which the cards go into the library." Recorded after the placement
+        has moved the library epoch, so the record lives until the library is
+        next reordered (CR 701.20d) or the card moves (CR 400.7), and a draw
+        carries it into the hand (`carry_knowledge_into_hand`)."""
+        by_library: dict[str, list[CardState]] = {}
+        for card_state in placed:
+            if card_state.zone is Zone.LIBRARY and card_state.owner is not None:
+                by_library.setdefault(card_state.owner, []).append(card_state)
+        for cards in by_library.values():
+            if len(cards) != 1:
+                continue
+            (card_state,) = cards
+            origin = origins.get(card_state.id)
+            if origin is None:
+                continue
+            self._record_shown(card_state, None, origin.value)
 
     # -- targeting and effects --------------------------------------------
 
@@ -8411,7 +8722,7 @@ class Game(BaseModel):
         whole discriminator here - a modal-DFC or transforming spell never
         reaches this branch.
         """
-        record = self.cast_records.get(spell.id)
+        record = self.cast_record_of(spell)
         if record is not None and record.modes:
             try:
                 return profile_for_modes(spell.card, record.modes, record.x_value or None)
@@ -8994,8 +9305,20 @@ class Game(BaseModel):
             self.emit(GameEvent(event=TriggerEvent.LOSES_LIFE, player=player.username))
             return lost
 
-    def counter(self, spell: StackObject, *, to_exile: bool = False) -> StackObject:
+    def counter(
+        self,
+        spell: StackObject,
+        *,
+        to_exile: bool = False,
+        to_library: Literal["top", "bottom"] | None = None,
+    ) -> StackObject:
         """Counter a spell or an ability on the stack: it never resolves (CR 701.6).
+
+        `to_library` sends a countered spell to the top or the bottom of its
+        owner's library instead - Memory Lapse's "put it on top of its owner's
+        library instead of into that player's graveyard" - through
+        `put_cards_into_library`, one CR 401.1 instruction every player saw
+        (CR 400.2).
 
         CR 113.9: an activated or triggered ability on the stack is not a spell,
         but it can still be countered by an effect that counters abilities. It
@@ -9044,7 +9367,9 @@ class Game(BaseModel):
                 return spell
             self.stack.remove(spell)
             if isinstance(spell, CardState):
-                if to_exile:
+                if to_library is not None:
+                    self.put_cards_into_library([spell], to_bottom=to_library == "bottom")
+                elif to_exile:
                     self._take_out_of_every_zone(spell)
                     self.combat.remove(spell.id)  # CR 506.4
                     spell.move_to(Zone.EXILE)
@@ -9057,7 +9382,7 @@ class Game(BaseModel):
                 # longer answer for now fails an intervening *if* closed
                 # (`machines/triggers._cast_record_for_clause`) instead of a
                 # lingering record being misread as "nothing was spent".
-                self.cast_records.pop(spell.id, None)
+                self.forget_cast_record(spell)
             self.emit(
                 GameEvent(
                     event=TriggerEvent.SPELL_IS_COUNTERED,
@@ -9117,7 +9442,7 @@ class Game(BaseModel):
             self.combat.remove(spell.id)  # CR 506.4
             spell.move_to(Zone.EXILE)
             self.exile.append(spell)
-            self.cast_records.pop(spell.id, None)
+            self.forget_cast_record(spell)
             return spell
 
     def destroy(self, permanent: CardState, *, regeneration_allowed: bool = True) -> CardState:
@@ -10644,7 +10969,6 @@ class Game(BaseModel):
         rule: str = "CR 601.3",
         zone: Zone = Zone.EXILE,
         until_end_of_turn: bool = True,
-        bottom_if_unused: bool = False,
         immediate: bool = False,
         until_next_turn_of: str | None = None,
         expires_end_of_next_turn: bool = False,
@@ -10676,9 +11000,6 @@ class Game(BaseModel):
         `pays_mana_cost=False` is CR 118.9's "without paying its mana cost".
         `action=PlayAction.PLAY` is CR 601.1a's wider word, which reaches the
         land drop; `PlayAction.CAST` never does.
-
-        `bottom_if_unused` is `PlayPermission.bottom_if_unused` - see its own
-        docstring for why cascade passes `True` here and nothing else does.
 
         `until_next_turn_of` is CR 800.4m's "until the end of your next turn"
         duration (Hex Magic) rather than a plain "until end of turn" - see
@@ -10713,7 +11034,6 @@ class Game(BaseModel):
                 rule=rule,
                 until_end_of_turn=until_end_of_turn and until_next_turn_of is None,
                 granted_turns_taken=None if turn is None else int(turn.turns_taken),
-                bottom_if_unused=bottom_if_unused,
                 immediate=immediate,
                 granted_step=None if turn is None else turn.step,
                 until_next_turn_of=until_next_turn_of,

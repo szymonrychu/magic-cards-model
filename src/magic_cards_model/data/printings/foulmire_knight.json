@@ -1,0 +1,173 @@
+{
+  "object": "card",
+  "id": "4676c019-886c-4b0d-9849-c044c0e03da3",
+  "oracle_id": "10c0f814-e302-49ff-aded-1b8d8424fd60",
+  "multiverse_ids": [
+    612497
+  ],
+  "mtgo_id": 110946,
+  "tcgplayer_id": 491342,
+  "cardmarket_id": 705743,
+  "name": "Foulmire Knight // Profane Insight",
+  "lang": "en",
+  "released_at": "2023-04-21",
+  "uri": "https://api.scryfall.com/cards/4676c019-886c-4b0d-9849-c044c0e03da3",
+  "scryfall_uri": "https://scryfall.com/card/moc/249/foulmire-knight-profane-insight?utm_source=api",
+  "layout": "adventure",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T04:32:40Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/4/6/4676c019-886c-4b0d-9849-c044c0e03da3.jpg?1783917160",
+    "normal": "https://cards.scryfall.io/normal/front/4/6/4676c019-886c-4b0d-9849-c044c0e03da3.jpg?1783917160",
+    "large": "https://cards.scryfall.io/large/front/4/6/4676c019-886c-4b0d-9849-c044c0e03da3.jpg?1783917160",
+    "png": "https://cards.scryfall.io/png/front/4/6/4676c019-886c-4b0d-9849-c044c0e03da3.png?1783917160",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/4/6/4676c019-886c-4b0d-9849-c044c0e03da3.jpg?1783917160",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/4/6/4676c019-886c-4b0d-9849-c044c0e03da3.jpg?1783917160",
+    "thumb": "https://cards.scryfall.io/thumb/front/4/6/4676c019-886c-4b0d-9849-c044c0e03da3.webp?1783917160",
+    "grid": "https://cards.scryfall.io/grid/front/4/6/4676c019-886c-4b0d-9849-c044c0e03da3.webp?1783917160",
+    "display": "https://cards.scryfall.io/display/front/4/6/4676c019-886c-4b0d-9849-c044c0e03da3.webp?1783917160",
+    "art": "https://cards.scryfall.io/art/front/4/6/4676c019-886c-4b0d-9849-c044c0e03da3.webp?1783917160",
+    "crop": "https://cards.scryfall.io/crop/front/4/6/4676c019-886c-4b0d-9849-c044c0e03da3.webp?1783917160"
+  },
+  "mana_cost": "{B} // {2}{B}",
+  "cmc": 1.0,
+  "type_line": "Creature \u2014 Zombie Knight // Instant \u2014 Adventure",
+  "power": "1",
+  "toughness": "1",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Deathtouch"
+  ],
+  "card_faces": [
+    {
+      "object": "card_face",
+      "name": "Foulmire Knight",
+      "mana_cost": "{B}",
+      "type_line": "Creature \u2014 Zombie Knight",
+      "oracle_text": "Deathtouch",
+      "power": "1",
+      "toughness": "1",
+      "artist": "Alex Brock",
+      "artist_id": "ce381d25-868c-4f13-b1e9-e7cd2f67e994",
+      "illustration_id": "467bdd67-4baa-44b9-bc7e-a421163affb6"
+    },
+    {
+      "object": "card_face",
+      "name": "Profane Insight",
+      "mana_cost": "{2}{B}",
+      "type_line": "Instant \u2014 Adventure",
+      "oracle_text": "You draw a card and you lose 1 life. (Then exile this card. You may cast the creature later from exile.)",
+      "artist": "Alex Brock",
+      "artist_id": "ce381d25-868c-4f13-b1e9-e7cd2f67e994"
+    }
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "4676c019-886c-4b0d-9849-c044c0e03da3",
+      "component": "combo_piece",
+      "name": "Foulmire Knight // Profane Insight",
+      "type_line": "Creature \u2014 Zombie Knight // Instant \u2014 Adventure",
+      "uri": "https://api.scryfall.com/cards/4676c019-886c-4b0d-9849-c044c0e03da3"
+    },
+    {
+      "object": "related_card",
+      "id": "5e289bb3-f6de-450d-9f7e-77e2e70cb7cc",
+      "component": "combo_piece",
+      "name": "On an Adventure",
+      "type_line": "Card",
+      "uri": "https://api.scryfall.com/cards/5e289bb3-f6de-450d-9f7e-77e2e70cb7cc"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "6bba5de9-5afb-42af-a7eb-24ac854bf671",
+  "set": "moc",
+  "set_name": "March of the Machine Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/6bba5de9-5afb-42af-a7eb-24ac854bf671",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amoc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/moc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/4676c019-886c-4b0d-9849-c044c0e03da3/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A10c0f814-e302-49ff-aded-1b8d8424fd60&unique=prints",
+  "collector_number": "249",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Alex Brock",
+  "artist_ids": [
+    "ce381d25-868c-4f13-b1e9-e7cd2f67e994"
+  ],
+  "illustration_id": "467bdd67-4baa-44b9-bc7e-a421163affb6",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 6610,
+  "penny_rank": 2948,
+  "prices": {
+    "usd": "0.30",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.17",
+    "eur_foil": null,
+    "tix": "0.13"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=612497&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DFoulmire%2BKnight%2B%252F%252F%2BProfane%2BInsight",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DFoulmire%2BKnight%2B%252F%252F%2BProfane%2BInsight",
+    "edhrec": "https://edhrec.com/route/?cc=Foulmire+Knight"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F491342%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=705743&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/110946?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
