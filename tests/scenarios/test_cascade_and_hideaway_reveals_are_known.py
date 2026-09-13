@@ -24,8 +24,14 @@
 - **CR 701.20d** - the cards bottomed "in a random order" are put into a
   library and reordered; nobody knows where they are.
 
-Bloodbraid Elf (cascade), Mosswort Bridge and Fight Rigging (hideaway) are in
-neither deck pool; Shardless Agent is, and is here beside Bloodbraid Elf.
+Off-pool proof, checked by grepping both deck pools (`~/Documents/mtg-decks/
+decks/*/decklist.txt` and `magic-cards-model-api/decks/*.txt`): Bloodbraid Elf
+(cascade), Watcher for Tomorrow (hideaway, on a creature) and Threaten are in
+neither. Shardless Agent (living end) and Mosswort Bridge and Fight Rigging
+(eldrazi ramp) are in the pool, and are tested beside the off-pool cards, not
+as the proof. Watcher for Tomorrow carries every hideaway case on its own: the
+private looks at the library cards, the face-down card staying known through a
+shuffle until it leaves exile, and the control change.
 
 Every CR number above was read in full with `mise run rules:find` in the
 session that wrote this file.
@@ -218,6 +224,103 @@ def test_fight_rigging_hidden_card_stays_known_through_a_shuffle_until_it_leaves
     scenario.game.return_to_hand(bolt)
 
     assert bolt.zone is Zone.HAND
+    assert known(scenario.game, "alice") == [], "CR 400.7: it left the exile zone"
+    assert known(scenario.game, "bob") == []
+
+
+def test_watcher_for_tomorrow_hideaway_looks_at_the_library_are_its_controllers_alone():
+    """Off-pool proof of the private looks: hideaway on a creature, not on the
+    eldrazi-ramp land or enchantment. CR 702.75a: "look at the top N cards of
+    your library" is a look (CR 701.20e: "the card is shown only to the
+    specified player"), and the rest go "on the bottom of your library in a
+    random order", so no look at a bottomed card survives (CR 701.20d)."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Watcher for Tomorrow"],
+            library=["Opt", "Goblin Guide", "Craterous Stomp", "Kitchen Finks", "Island"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice = scenario.player("alice")
+    hidden = scenario.find("Goblin Guide", Zone.LIBRARY, "alice")
+    scenario.will_choose_cards(hidden, source="Watcher for Tomorrow")
+    epoch_before = alice.library_epoch
+
+    scenario.put_onto_battlefield("Watcher for Tomorrow", "alice")
+    scenario.game.put_triggers_on_stack()
+    scenario.resolve_top()
+
+    assert hidden.zone is Zone.EXILE and hidden.face_up is False
+    reveals = scenario.game.reveals
+    assert reveals, "CR 701.20e: hideaway looks at the top four cards"
+    assert all(r.viewers == ["alice"] for r in reveals), "CR 701.20e: looks, not reveals"
+    assert all(r.source == "Watcher for Tomorrow" for r in reveals)
+    assert [r.card_name for r in reveals if r.zone is Zone.LIBRARY] == [
+        "Opt",
+        "Goblin Guide",
+        "Craterous Stomp",
+        "Kitchen Finks",
+    ]
+    assert alice.library[0].name == "Island"
+    assert sorted(state.name for state in alice.library) == [
+        "Craterous Stomp",
+        "Island",
+        "Kitchen Finks",
+        "Opt",
+    ]
+    assert alice.library_epoch > epoch_before, "CR 701.20d: a random order is a reordering"
+    assert known(scenario.game, "alice") == [("Goblin Guide", Zone.EXILE, None, False)]
+    assert known(scenario.game, "bob") == []
+
+
+def test_watcher_for_tomorrow_hidden_card_stays_known_through_a_shuffle_until_it_leaves_exile():
+    """Off-pool proof of CR 406.3: a player "instructed to look at a card and
+    then exile it face down ... may continue to look at that card until it
+    leaves the exile zone or is part of a pile of cards that are shuffled".
+    Shuffling the library (CR 701.24a) does not shuffle the exiled card, and
+    the look ends when the card leaves exile (CR 400.7)."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Watcher for Tomorrow"],
+            battlefield=["Flooded Strand"],
+            library=["Opt", "Lightning Bolt", "Forest", "Forest", "Island"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice = scenario.player("alice")
+    hidden = scenario.find("Opt", Zone.LIBRARY, "alice")
+    scenario.will_choose_cards(hidden, source="Watcher for Tomorrow")
+    scenario.put_onto_battlefield("Watcher for Tomorrow", "alice")
+    scenario.game.put_triggers_on_stack()
+    scenario.resolve_top()
+
+    assert hidden.zone is Zone.EXILE and hidden.face_up is False
+    assert known(scenario.game, "alice") == [("Opt", Zone.EXILE, None, False)]
+    assert known(scenario.game, "bob") == []
+
+    epoch_before = alice.library_epoch
+    strand = scenario.find("Flooded Strand", Zone.BATTLEFIELD)
+    scenario.activate(strand)
+    scenario.pass_until_resolved()
+
+    assert sorted(state.name for state in alice.library) == ["Forest", "Forest", "Lightning Bolt"]
+    assert alice.library_epoch > epoch_before, "CR 701.24a: the library was shuffled"
+    assert known(scenario.game, "alice") == [("Opt", Zone.EXILE, None, False)], (
+        "CR 406.3: the shuffled library is not the pile the hidden card is in"
+    )
+    assert known(scenario.game, "bob") == []
+
+    scenario.game.return_to_hand(hidden)
+
+    assert hidden.zone is Zone.HAND
     assert known(scenario.game, "alice") == [], "CR 400.7: it left the exile zone"
     assert known(scenario.game, "bob") == []
 
