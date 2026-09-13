@@ -1987,7 +1987,7 @@ class Game(BaseModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 11
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 12
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -2111,6 +2111,14 @@ class Game(BaseModel):
     kept would silently end. Refused instead.
     The two were built in parallel, each as 9 -> 10, so a 10 from either line
     lacks the other's field; merged, the number moved on once more.
+
+    Bumped 11 -> 12: `Decision` gained `quality` (which CR 614.12a quality a
+    `CHOOSE_A_QUALITY` question asks), tokens are created with `owner` set to
+    their creator (CR 111.2) instead of `None`, and Malevolent Rumble lost its
+    `EFFECTS` row to a reveal-to-hand parser that records each reveal. A
+    version-11 dump holds decisions with no quality, ownerless tokens, and
+    possibly a Rumble on the stack that would now resolve differently.
+    Refused instead.
     """
 
     @model_validator(mode="before")
