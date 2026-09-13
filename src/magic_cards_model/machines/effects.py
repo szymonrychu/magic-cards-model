@@ -14688,8 +14688,8 @@ def _look_at_top_card(game: "Game", stack_object: "StackObject") -> None:
             game.look(player.library[0], viewer.username, source=source)
 
 
-#: "Look at target player's hand." (Gitaxian Probe) - the same CR 701.20e
-#: no-op as `_LOOK_AT_TOP_CARD_RE`, except the thing looked at is a player's
+#: "Look at target player's hand." (Gitaxian Probe, Peek) - the same CR 701.20e
+#: look as `_LOOK_AT_TOP_CARD_RE`, except the thing looked at is a player's
 #: hand rather than a library's top card, so `machines/targeting.py` reads
 #: "target player's hand" as targeting the *player* (its own module-level
 #: docstring lists this exact phrase as one it reads that way).
@@ -14697,10 +14697,18 @@ _LOOK_AT_TARGET_HAND_RE = re.compile(r"^look at target player'?s hand$", re.IGNO
 
 
 def _look_at_target_hand(game: "Game", stack_object: "StackObject") -> None:
-    """No-op (CR 701.20e) - see `_look_at_top_card`. Still resolves the
-    target so a player who has left the game by resolution is refused the
-    ordinary way (CR 608.2b)."""
-    game.resolve_targets(stack_object)
+    """The controller looks at every card in each targeted player's hand
+    (CR 701.20e), recorded through `Game.look` with the controller as the only
+    viewer - the target learns nothing (CR 402.3). A target that is gone by
+    resolution is refused the ordinary way (CR 608.2b)."""
+    viewer = game.controller_of(stack_object)
+    source = (
+        stack_object.source_name if isinstance(stack_object, AbilityOnStack) else stack_object.name
+    )
+    for target in game.resolve_targets(stack_object):
+        if isinstance(target, Player):
+            for state in list(target.hand):
+                game.look(state, viewer.username, source=source)
 
 
 #: "return that card/it/that creature/that permanent to the battlefield under
@@ -16969,9 +16977,13 @@ def _merge_reveal_hand_choose_discard_clauses(
     (CR 608.2c's printed order has no "if you do" gate on it the way
     `_parse_conditional_sacrifice_clause`'s consequence does).
 
+    The reveal is CR 701.20a's, of the whole hand: every card in it is
+    recorded through `Game.reveal` (all players, no viewers) before the
+    choice is asked, not only the cards the choice may take.
+
     A hand with no nonland (or otherwise qualifying) card is CR 608.2d's
-    "impossible option": nothing is asked and the reveal simply shows an
-    all-land hand for nothing, exactly as the paper cards do.
+    "impossible option": nothing is asked, but the hand is still revealed,
+    exactly as the paper cards do.
     """
     if index + 2 >= len(clauses):
         return None
@@ -17020,6 +17032,8 @@ def _merge_reveal_hand_choose_discard_clauses(
             None,
         )
         if revealer is not None:
+            for state in list(revealer.hand):
+                game.reveal(state, source=source)
             candidates = [state for state in revealer.hand if matches(state)]
             if candidates:
                 chosen_ids = game.ask(
