@@ -355,6 +355,15 @@ class TargetRequirement(BaseModel):
     itself; `_rejects_comparison` resolves it and, if it cannot (no game, or a
     controller with no player object), fails closed the same way an unbound X
     does."""
+    comparison_x_definition: str | None = None
+    """The expression a trailing "where X is <expression>" gives an X bound -
+    Spellstutter Sprite's "with mana value X or less, where X is the number of
+    Faeries you control". CR 107.3c: X is then defined by the text, nobody
+    chooses it, and "the value of X may change while that spell or ability is
+    on the stack", so it is counted for the caster at every `rejects` call,
+    at announcement and at the CR 608.2b recheck, never fixed here. An
+    expression `machines/effects.count_expression` cannot read leaves the
+    bound unresolved, which refuses every target (fail closed)."""
     comparison_value_if_revolt: int | None = None
     """Fatal Push's own "Revolt — ... mana value 4 or less instead if a
     permanent left the battlefield under your control this turn": the wider
@@ -830,6 +839,8 @@ class TargetRequirement(BaseModel):
         comparison_value = self.comparison_value
         if comparison_value is None and self.comparison_count is not None:
             comparison_value = self._counted_bound(target, game)
+        if comparison_value is None and self.comparison_x_definition is not None:
+            comparison_value = self._defined_x(game, caster)
         if self.comparison_value_if_revolt is not None and caster is not None:
             revolt_active_for = getattr(game, "revolt_active_for", None)
             if revolt_active_for is not None and revolt_active_for(caster):
@@ -899,6 +910,20 @@ class TargetRequirement(BaseModel):
             return None
         graveyard = getattr(player, "graveyard", None)
         return None if graveyard is None else len(graveyard)
+
+    def _defined_x(self, game: Any, caster: str | None) -> int | None:
+        """`comparison_x_definition` counted for `caster` right now (CR 107.3c),
+        or None when it cannot be: no caster, no game board to count on, or an
+        expression `count_expression` does not read."""
+        if caster is None or self.comparison_x_definition is None:
+            return None
+        if getattr(game, "computed_board", None) is None:
+            return None
+        # Imported here: `machines/effects.py` imports this module at load time.
+        from .effects import count_expression
+
+        reader = count_expression(self.comparison_x_definition)
+        return None if reader is None else reader(game, caster)
 
     def _comparison_holds(self, value: float, comparison_value: int) -> bool:
         assert self.comparison_operator is not None
@@ -2170,8 +2195,12 @@ def _read_subtype_list(noun_phrase: str) -> tuple[list[str], str] | None:
     return [item.lower() for item in raw_items], display
 
 
-def _read_phrase(prefix: str, suffix: str) -> TargetRequirement | None:
-    """Turn one "target ..." phrase into a requirement, or None if unreadable."""
+def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetRequirement | None:
+    """Turn one "target ..." phrase into a requirement, or None if unreadable.
+
+    `strict` also refuses a phrase with words left over once every clause this
+    reader knows has been taken off - the ordinary target scan tolerates a
+    trailing tail it does not read, `permanent_description` must not."""
     excludes_source = _excludes_source(prefix)
     counted = _read_count(prefix)
     if counted is None:
@@ -2415,6 +2444,14 @@ def _read_phrase(prefix: str, suffix: str) -> TargetRequirement | None:
         comparison_count,
         rest,
     ) = comparison
+    comparison_x_definition: str | None = None
+    if comparison_attribute is not None and comparison_value is None and comparison_count is None:
+        # CR 107.3c: "with mana value X or less, where X is ..." defines X in
+        # the text, so the bound is that expression rather than an unbound X.
+        where_x = _WHERE_X_DEFINITION.search(rest)
+        if where_x is not None:
+            comparison_x_definition = where_x.group("expression").strip()
+            rest = rest[: where_x.start()].strip()
 
     distinct_controllers, rest = _extract_distinct_controllers(rest)
 
@@ -2478,6 +2515,11 @@ def _read_phrase(prefix: str, suffix: str) -> TargetRequirement | None:
         if control_match is not None:
             controller = _CONTROLLERS[re.sub(r"\s+", " ", control_match.group(1).lower())]
 
+    if strict and not _nothing_left_unread(
+        rest, bare_card=bare_card, comparison_read=comparison_attribute is not None
+    ):
+        return None
+
     return TargetRequirement(
         phrase=" ".join(["target", *(word for word in words[:noun_end] if word != ",")]),
         count=count,
@@ -2507,9 +2549,60 @@ def _read_phrase(prefix: str, suffix: str) -> TargetRequirement | None:
         comparison_operator=comparison_operator,
         comparison_value=comparison_value,
         comparison_count=comparison_count,
+        comparison_x_definition=comparison_x_definition,
         distinct_controllers=distinct_controllers,
         required_keyword=required_keyword,
     )
+
+
+def _nothing_left_unread(rest: str, *, bare_card: bool, comparison_read: bool) -> bool:
+    """Whether `_read_phrase` consumed a whole permanent description.
+
+    A card in a zone ("creature card in your graveyard") is not a permanent,
+    so it never counts. What may remain is a control clause, and the bare
+    "with" a comparison leaves behind once its own words are taken out."""
+    if bare_card or rest.startswith("card"):
+        return False
+    leftover = rest.strip()
+    control = _CONTROL_CLAUSE.match(leftover)
+    if control is not None:
+        leftover = leftover[control.end() :].strip()
+    if comparison_read:
+        leftover = re.sub(r"^with\b", "", leftover).strip()
+    return not leftover
+
+
+def permanent_description(text: str) -> TargetRequirement | None:
+    """Read an untargeted permanent description - "a nontoken creature", "a
+    creature token", "a creature with flying" - with the grammar a "target
+    ..." phrase uses, so an edict's "sacrifices a <description> of their
+    choice" and a target restriction can never disagree about what a word
+    means (CR 111.1 token-ness, CR 205.2a card types, "non-" types, a
+    trailing "with <keyword>" or comparison).
+
+    `text` is the description without its article. Returns the requirement,
+    for `TargetRequirement.rejects` to test each permanent against, or None
+    when any word is left unread or the description could name something
+    other than a permanent on the battlefield (a player, an ability, a card in
+    another zone, "another" or "that you control" relative to someone). Being
+    affected by it is not being targeted (CR 115.10a); only the description is
+    shared.
+    """
+    requirement = _read_phrase("", text.strip(), strict=True)
+    if requirement is None:
+        return None
+    if (
+        not requirement.allows_cards
+        or requirement.allows_players
+        or requirement.allows_abilities
+        or requirement.zones != frozenset({Zone.BATTLEFIELD})
+        or requirement.controller is not ControllerRestriction.ANY
+        or requirement.excludes_source
+        or requirement.exiled_with_source
+        or requirement.or_any_spell
+    ):
+        return None
+    return requirement
 
 
 class _Adjectives:
@@ -2692,6 +2785,15 @@ _COMPARISON_CLAUSE = re.compile(
     r")",
     re.IGNORECASE,
 )
+
+#: `_COMPARISON_CLAUSE`'s pattern, for a dispatcher that has to accept exactly
+#: the comparisons this reader enforces (`machines/effects.py`'s counterspell
+#: predicate) rather than keep a second, narrower copy of the grammar.
+COMPARISON_CLAUSE_PATTERN = _COMPARISON_CLAUSE.pattern
+
+#: "where X is <expression>" after an X comparison (CR 107.3c) - Spellstutter
+#: Sprite's "..., where X is the number of Faeries you control".
+_WHERE_X_DEFINITION = re.compile(r"(?:,\s*)?\bwhere\s+x\s+is\s+(?P<expression>.+)$", re.IGNORECASE)
 
 #: Returned by `_extract_comparison` when a comparison was clearly attempted
 #: but this parser could not finish reading it - the whole "target ..." phrase

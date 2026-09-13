@@ -152,7 +152,12 @@ from .modes import (
     mode_effect_text,
     substitute_x,
 )
-from .targeting import TargetRequirement, profile_for_text
+from .targeting import (
+    COMPARISON_CLAUSE_PATTERN,
+    TargetRequirement,
+    permanent_description,
+    profile_for_text,
+)
 from .triggers import AbilityOnStack, is_ability
 from .turn import Step
 
@@ -742,6 +747,18 @@ def _singular_card_type(word: str) -> Type | None:
         return None
 
 
+def _singular_subtype(word: str) -> str | None:
+    """ "Faeries" -> "faerie", "Elves" -> "elf": a plural subtype word as
+    `subtype_vocabulary` stores it (lowercased, singular), or None when the
+    word is no printed subtype in any of those spellings."""
+    lowered = word.lower()
+    vocabulary = subtype_vocabulary()
+    candidates = [lowered, lowered.removesuffix("s")]
+    if lowered.endswith("ves"):
+        candidates.append(lowered.removesuffix("ves") + "f")
+    return next((candidate for candidate in candidates if candidate in vocabulary), None)
+
+
 def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
     """Parse "the number of <type>[s] you control" or "... card(s) in your
     graveyard" into `(game, controller) -> int`, or `None` if `phrase` is not
@@ -764,7 +781,23 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
     if match := _COUNT_YOU_CONTROL_RE.fullmatch(stripped):
         card_type = _singular_card_type(match.group("qualifier"))
         if card_type is None:
-            return None
+            subtype = _singular_subtype(match.group("qualifier"))
+            if subtype is None:
+                return None
+
+            def count_subtype_on_board(game: "Game", controller: str) -> int:
+                # "the number of Faeries you control" (CR 205.3m's creature
+                # types, or any other printed subtype) on the computed board,
+                # so a changeling or a type-changing effect counts.
+                board = game.computed_board()
+                return sum(
+                    1
+                    for permanent in game.battlefield
+                    if board.of(permanent).controller == controller
+                    and any(word.lower() == subtype for word in board.of(permanent).subtypes)
+                )
+
+            return count_subtype_on_board
 
         def count_on_board(game: "Game", controller: str) -> int:
             board = game.computed_board()
@@ -6591,10 +6624,15 @@ _SPELL_QUALIFIER = rf"{_SPELL_QUALIFIER_WORD}(?: or {_SPELL_QUALIFIER_WORD})*"
 #: enforce the restriction, both in `machines/targeting.py`. Accepting the
 #: tail is therefore not "dropping a condition" - it is letting the half of
 #: the card that already reads the condition actually be reached.
-_SPELL_PREDICATE = (
-    r"with (?:mana value \d+"
-    r"|(?:power|toughness|power or toughness) \d+ or (?:less|greater))"
-)
+#:
+#: The comparison itself is `machines/targeting.py`'s own grammar
+#: (`COMPARISON_CLAUSE_PATTERN`), not a copy of part of it, so every bound the
+#: announcement check enforces is a bound this dispatcher accepts: a printed
+#: number, and a computed one - Drown in the Loch's "less than or equal to the
+#: number of cards in its controller's graveyard" and Spellstutter Sprite's
+#: "X or less, where X is <expression>" (CR 107.3c). `where_x` is checked
+#: readable by `count_expression` in `_parse_targeted_clause`.
+_SPELL_PREDICATE = rf"with (?:{COMPARISON_CLAUSE_PATTERN})(?:,? where x is (?P<where_x>[^.]+?))?"
 _COUNTER_TARGET_SPELL_RE = re.compile(
     rf"^counter target(?: {_SPELL_QUALIFIER})? spell(?: {_SPELL_PREDICATE})?\.?$",
     re.IGNORECASE,
@@ -7713,11 +7751,20 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
         # index rather than a clause shape.
         return create_continuous_effect  # type: ignore[return-value]
 
-    if (
-        _COUNTER_TARGET_SPELL_RE.fullmatch(clause)
-        or _COUNTER_TARGET_ABILITY_OR_SPELL_RE.fullmatch(clause)
-        or _COUNTER_TARGET_ABILITY_RE.fullmatch(clause)
-    ):
+    if spell_counter := _COUNTER_TARGET_SPELL_RE.fullmatch(clause):
+        # CR 701.6a on a targeted spell, from a spell or from an ability
+        # (Spellstutter Sprite's enters trigger): `counter_targets` reads only
+        # `targets` and the stack, both of which an `AbilityOnStack` carries.
+        # A "where X is" bound nobody can count would refuse every target at
+        # announcement, so it is refused here instead of reading as handled.
+        definition = spell_counter.group("where_x")
+        if definition is not None and count_expression(definition) is None:
+            return None
+        return counter_targets
+
+    if _COUNTER_TARGET_ABILITY_OR_SPELL_RE.fullmatch(
+        clause
+    ) or _COUNTER_TARGET_ABILITY_RE.fullmatch(clause):
         # `counter_targets` walks the stack for a targeted spell (CR 608.2b)
         # and is only meaningful for a resolving *spell* - an ability naming
         # this shape does not turn up in the pool, and guessing at one would
@@ -19588,6 +19635,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     sacrifice_group = _parse_sacrifice_n_of_a_group_clause(clause, for_spell=for_spell)
     if sacrifice_group is not None:
         return sacrifice_group
+    sacrifice_of_their_choice = _parse_each_sacrifices_of_their_choice_clause(clause)
+    if sacrifice_of_their_choice is not None:
+        return sacrifice_of_their_choice
     attacking_tokens = _parse_attacking_token_clause(clause, for_spell=for_spell)
     if attacking_tokens is not None:
         return attacking_tokens
@@ -21317,6 +21367,87 @@ def _parse_sacrifice_n_of_a_group_clause(clause: str, *, for_spell: bool) -> Tar
         for card_id in chosen_ids:
             permanent = by_id.get(card_id)
             if permanent is not None and permanent.zone is Zone.BATTLEFIELD:
+                game.sacrifice(permanent)
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# "Each opponent sacrifices a <description> of their choice." (CR 701.21a)
+# --------------------------------------------------------------------------
+#
+# The edict template: Sheoldred's Edict's three modes, Yawning Fissure's
+# land, Clip Wings' "a creature of their choice with flying" (the qualifier
+# printed after "of their choice"). Nothing is targeted (CR 115.10a); each
+# sacrificing player chooses among the permanents *they* control that match
+# the description (CR 701.21a: a player can only sacrifice a permanent they
+# control), while the effect is applied (CR 608.2d). With several such
+# players, CR 101.4 has them choose in APNAP order and the sacrifices then
+# happen together, so every choice is made before anything leaves.
+#
+# The description is `machines/targeting.permanent_description`, the target
+# grammar itself, so "nontoken", "token", "non<type>", a type list joined by
+# "or", and a trailing "with <keyword>" read the same here as after "target".
+# A player with no matching permanent sacrifices nothing and is asked nothing
+# (CR 608.2d: no impossible choice); one with exactly as many as required has
+# no choice to make and is not asked either.
+
+_EACH_SACRIFICES_OF_THEIR_CHOICE_RE = re.compile(
+    rf"^each (?P<who>opponent|player) sacrifices (?P<n>{_COUNT}) (?P<description>.+?) "
+    r"of their choice(?P<tail> with [^.]+?)?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_each_sacrifices_of_their_choice_clause(clause: str) -> TargetedClause | None:
+    """`_EACH_SACRIFICES_OF_THEIR_CHOICE_RE`'s shape; see the banner above."""
+    match = _EACH_SACRIFICES_OF_THEIR_CHOICE_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    count = _count(match.group("n"))
+    description = match.group("description").strip()
+    if match.group("tail") is not None:
+        description = f"{description}{match.group('tail')}"
+    requirement = permanent_description(description)
+    if requirement is None or count < 1:
+        return None
+    opponents_only = match.group("who").lower() == "opponent"
+    wanted_words = with_indefinite_article(description) if count == 1 else f"{count} {description}"
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        source_name = (
+            stack_object.source_name
+            if isinstance(stack_object, AbilityOnStack)
+            else stack_object.name
+        )
+        chosen: list[CardState] = []
+        for player in _players_in_apnap_order(game):
+            if opponents_only and player.username == controller:
+                continue
+            candidates = [
+                permanent
+                for permanent in game.permanents_controlled_by(player.username)
+                if requirement.rejects(permanent, player.username, game) is None
+            ]
+            if len(candidates) <= count:
+                chosen.extend(candidates)
+                continue
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=player.username,
+                    prompt=f"sacrifice {wanted_words}",
+                    source=source_name,
+                    amount=count,
+                    cards=tuple(permanent.id for permanent in candidates),
+                    source_id=source_id_of(stack_object),
+                )
+            )
+            by_id = {permanent.id: permanent for permanent in candidates}
+            chosen.extend(by_id[card_id] for card_id in chosen_ids if card_id in by_id)
+        for permanent in chosen:
+            if permanent.zone is Zone.BATTLEFIELD:
                 game.sacrifice(permanent)
 
     return effect
