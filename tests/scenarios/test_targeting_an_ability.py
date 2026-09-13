@@ -332,3 +332,56 @@ def test_consign_to_memory_cast_at_an_activated_ability_is_refused_at_announceme
 
     with pytest.raises(ValueError, match="activated ability"):
         scenario.cast_onto_stack("Consign to Memory", island, username="bob", targets=[ability])
+
+
+def cryomancer_against_rites():
+    """Alice's Vampiric Rites ability is on the stack; Bob holds priority with
+    an untapped Rimewind Cryomancer and four snow lands (its "Activate only if
+    you control four or more snow permanents")."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            library=["Forest"],
+            battlefield=["Vampiric Rites", "Swamp", "Swamp", "Grizzly Bears"],
+        )
+        .player(
+            "bob",
+            library=["Forest"],
+            battlefield=["Rimewind Cryomancer"] + ["Snow-Covered Forest"] * 4,
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    ability = activate_rites(scenario)
+    scenario.pass_priority("alice")
+    cryomancer = scenario.creature("Rimewind Cryomancer", "bob")
+    cryomancer.summoning_sick = False
+    return scenario, ability, cryomancer
+
+
+def test_an_ability_on_the_stack_is_among_the_legal_target_candidates():
+    """CR 115.2(b): the ability is an object a spell or ability may target,
+    so the engine's own candidate list for a requirement naming one has to
+    contain it - otherwise a mandatory "target activated ability" reads as
+    having no legal target at all (CR 601.2c, 602.2b)."""
+    scenario, ability, _ = cryomancer_against_rites()
+    profile = profile_for_text(
+        card("Rimewind Cryomancer").oracle_text.split("\n")[0].split(": ", 1)[1]
+    )
+
+    candidates = scenario.game._legal_target_candidates(profile, "bob", None)
+
+    assert ability in candidates
+
+
+def test_an_activation_announced_without_targets_asks_for_the_ability():
+    """`begin_activating` with no targets asks for them (CR 602.2b), offering
+    the ability on the stack, rather than refusing for want of a target."""
+    scenario, ability, cryomancer = cryomancer_against_rites()
+    scenario.will_choose_targets(ability, username="bob")
+
+    payment = scenario.game.begin_activating(cryomancer, 0, "bob")
+
+    assert payment is not None

@@ -4896,7 +4896,7 @@ class Game(BaseModel):
 
     def _legal_target_candidates(
         self, profile: TargetingProfile, controller: str, source_id: UUID | None
-    ) -> list[Targetable]:
+    ) -> list[Targetable | AbilityOnStack]:
         """Every object or player `profile` could legally land on right now.
 
         Used only to tell CR 608.2d's "nothing satisfies the restriction"
@@ -4906,7 +4906,7 @@ class Game(BaseModel):
         this file's own notice check) pick among them.
         """
         seen: set[UUID] = set()
-        candidates: list[Targetable] = []
+        candidates: list[Targetable | AbilityOnStack] = []
         for zone_cards in self.shared_zones.values():
             for state in zone_cards:
                 if isinstance(state, CardState) and state.id not in seen:
@@ -4918,6 +4918,14 @@ class Game(BaseModel):
                     if state.id not in seen:
                         seen.add(state.id)
                         candidates.append(state)
+        for item in self.stack:
+            # CR 115.2(b): an activated or triggered ability on the stack is an
+            # object a spell or ability may target when it says so (CR 113.1c).
+            # Without it, a mandatory "target activated ability" read as having
+            # no legal target and the activation was refused (CR 601.2c).
+            if isinstance(item, AbilityOnStack) and item.id not in seen:
+                seen.add(item.id)
+                candidates.append(item)
         if profile.requirements and any(r.allows_players for r in profile.requirements):
             candidates.extend(self.players)
         return [
