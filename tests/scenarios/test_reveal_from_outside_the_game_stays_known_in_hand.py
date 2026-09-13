@@ -19,8 +19,10 @@ owner's hand, until the card's next zone change.
 
 Karn, the Great Creator's -2 is the reported card. Burning Wish and Living
 Wish ("You may reveal a <quality> card you own from outside the game and put it
-into your hand. Exile <this>.") are the same instruction on a spell, and are
-listed in neither `~/Documents/mtg-decks/decks/*/decklist.txt` nor
+into your hand. Exile <this>.") are the same instruction on a spell, and so is
+Glittering Wish, whose quality is CR 105.2b's color count ("A multicolored
+object is two or more of the five colors"); all three are listed in neither
+`~/Documents/mtg-decks/decks/*/decklist.txt` nor
 `magic-cards-model-api/decks/*.txt`. CR 201.5: "Text that refers to the object
 it's on by name means just that particular object", so the Wish exiles itself;
 CR 608.2n's graveyard step then finds no spell to put there.
@@ -168,4 +170,30 @@ def test_living_wish_reads_a_two_type_quality():
 
     assert pool.zone is Zone.HAND
     assert known(scenario.game, "bob") == [("Breeding Pool", Zone.HAND, None, True)]
+    assert wish.zone is Zone.EXILE
+
+
+def test_glittering_wish_reads_a_color_count_quality():
+    """CR 105.2b: only a card of two or more colors is offered."""
+    scenario = _wish_board(
+        "Glittering Wish",
+        ["Forest", "Plains"],
+        ["Lightning Bolt", "Lightning Helix", "Breeding Pool"],
+    )
+    alice = scenario.player("alice")
+    (helix,) = [state for state in alice.outside_the_game if state.name == "Lightning Helix"]
+    scenario.will_take_the_may(True, username="alice", source="Glittering Wish")
+    scenario.will_choose_cards(helix, username="alice", source="Glittering Wish")
+
+    wish = scenario.cast_and_resolve(
+        "Glittering Wish", *scenario.untapped_sources("Forest", "Plains")
+    )
+
+    (offered,) = [d for d in scenario.game.decisions.asked if d.kind.value == "choose_cards"]
+    assert offered.cards == (helix.id,)
+    assert helix.zone is Zone.HAND
+    (reveal,) = scenario.game.reveals
+    assert reveal.card_id == helix.id
+    assert reveal.viewers is None
+    assert known(scenario.game, "bob") == [("Lightning Helix", Zone.HAND, None, True)]
     assert wish.zone is Zone.EXILE

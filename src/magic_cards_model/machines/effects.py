@@ -2938,6 +2938,17 @@ def _named_type_matcher(word: str) -> Callable[[CardState], bool]:
     return matches
 
 
+#: CR 105.2a "A monocolored object is exactly one of the five colors." and
+#: CR 105.2b "A multicolored object is two or more of the five colors." - a
+#: color *count*, not a color, so they sit beside `_HAND_EXILE_COLOR_WORDS`
+#: rather than in it ("colorless", CR 105.2c, is already there). Glittering
+#: Wish's "a multicolored card" is the printed shape.
+_COLOR_COUNT_WORDS: dict[str, Callable[[int], bool]] = {
+    "monocolored": lambda count: count == 1,
+    "multicolored": lambda count: count >= 2,
+}
+
+
 def _quality_word_matcher(word: str) -> Callable[[CardState], bool]:
     """One space-separated word of a search's stated quality - `_named_type_
     matcher`'s bare type or land type, or that same type qualified by a color
@@ -2952,6 +2963,12 @@ def _quality_word_matcher(word: str) -> Callable[[CardState], bool]:
     own imprint quality.
     """
     parts = word.split()
+    if parts and parts[0] in _COLOR_COUNT_WORDS:
+        count_matches = _COLOR_COUNT_WORDS[parts[0]]
+        if len(parts) == 1:
+            return lambda state: count_matches(len(state.colors))
+        counted_type_matches = _named_type_matcher(parts[1])
+        return lambda state: count_matches(len(state.colors)) and counted_type_matches(state)
     if len(parts) == 2 and parts[0] in _HAND_EXILE_COLOR_WORDS:
         color = _HAND_EXILE_COLOR_WORDS[parts[0]]
         type_matches = _named_type_matcher(parts[1])
@@ -15509,21 +15526,52 @@ _LEARN_RE = re.compile(r"^learn$", re.IGNORECASE)
 
 
 def learn(game: "Game", player: Player, source: str, *, source_id: str | None) -> None:
-    """CR 701.48a's discard-to-draw half.
+    """CR 701.48a, both halves.
 
-    The Lesson-reveal half ("you may reveal a Lesson card you own from
-    outside the game") is not performed: this engine has no "outside the
-    game" zone at all (see `docs/engine-coverage.md`'s Companion row for the
-    same gap from a different keyword), so a player who declines or cannot
-    discard simply learns nothing further - fewer options than CR 701.48a
-    grants, never a fabricated one.
+    The discard is offered first; a player who discards draws and is done. A
+    player who did not discard - declined, or had no card to discard - may
+    then reveal a Lesson card (CR 205.3k's spell type) they own from outside
+    the game (CR 400.11a, CR 108.3b) and put it into their hand. The reveal
+    and the move are `_reveal_and_bring_into_hand`, the same tail Karn, the
+    Great Creator's -2 and the Burning Wish family use, so the Lesson stays
+    known to every player in that hand until it changes zones again.
     """
-    if not player.hand:
-        return
-    if not game.may(player, "discard a card, then draw a card", source=source, source_id=source_id):
-        return
-    if _discard_cards(game, player, 1, source, source_id=source_id):
+    if (
+        player.hand
+        and game.may(player, "discard a card, then draw a card", source=source, source_id=source_id)
+        and _discard_cards(game, player, 1, source, source_id=source_id)
+    ):
         game.draw_cards(player, 1)
+        return
+    lessons = player.owned_outside_the_game(_is_lesson)
+    if not lessons or not game.may(
+        player,
+        "reveal a Lesson card you own from outside the game and put it into your hand",
+        source=source,
+        source_id=source_id,
+    ):
+        return
+    chosen_ids = game.ask(
+        Decision(
+            kind=DecisionKind.CHOOSE_CARDS,
+            player=player.username,
+            prompt="choose a Lesson card you own from outside the game",
+            source=source,
+            source_id=source_id,
+            amount=1,
+            cards=tuple(state.id for state in lessons),
+            card_labels=tuple(state.name for state in lessons),
+        )
+    )
+    assert isinstance(chosen_ids, tuple)
+    by_id = {state.id: state for state in lessons}
+    for card_id in chosen_ids:
+        _reveal_and_bring_into_hand(game, player, by_id[card_id], source)
+
+
+def _is_lesson(state: CardState) -> bool:
+    """CR 205.3k: Lesson is one of the spell types instants and sorceries share."""
+    return any(subtype.lower() == "lesson" for subtype in state.subtypes)
 
 
 def _parse_learn_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
@@ -16604,7 +16652,12 @@ def _search_quality_is_readable(quality: str) -> bool:
         return False
     for word in words:
         parts = word.split()
-        if len(parts) == 2 and parts[0] in _HAND_EXILE_COLOR_WORDS:
+        if parts and parts[0] in _COLOR_COUNT_WORDS:
+            if len(parts) == 2 and not _type_word_is_readable(parts[1]):
+                return False
+            if len(parts) > 2:
+                return False
+        elif len(parts) == 2 and parts[0] in _HAND_EXILE_COLOR_WORDS:
             if not _type_word_is_readable(parts[1]):
                 return False
         elif len(parts) != 1 or not _type_word_is_readable(word):
@@ -19948,8 +20001,9 @@ def _reveal_and_bring_into_hand(
 #: outside the game and put it into your hand. Exile <this>." Burning Wish
 #: (sorcery), Cunning Wish (instant), Living Wish (creature or land) and every
 #: other printing of the template share it; the quality is read by the same
-#: `_quality_matcher` a library search uses, and a quality it cannot read
-#: ("multicolored") leaves the whole paragraph unread rather than half-run.
+#: `_quality_matcher` a library search uses (Glittering Wish's "multicolored"
+#: is CR 105.2b's color count), and a quality it cannot read leaves the whole
+#: paragraph unread rather than half-run.
 _REVEAL_FROM_OUTSIDE_THE_GAME_INTO_HAND_RE = re.compile(
     r"^you may reveal an? (?P<quality>.+?) card you own from outside the game "
     r"and put (?:it|that card) into your hand\.\s*exile (?P<name>[^.]+)\.?$",

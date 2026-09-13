@@ -223,10 +223,8 @@ def executes(keyword: str) -> bool:
         # inside another ability's effect text.
         "investigate",
         # CR 701.48a, the same shape once more: `machines/effects.learn`
-        # performs its discard-to-draw half, reached through
-        # `_parse_learn_clause`. Its Lesson-reveal half needs an "outside
-        # the game" zone this engine does not have; see
-        # `docs/engine-coverage.md`.
+        # performs both halves, discard-to-draw and the Lesson reveal from
+        # outside the game, reached through `_parse_learn_clause`.
         "learn",
         # CR 701.19a, the same shape once more: `machines/effects.
         # regenerate_ability_targets`/`_parse_regenerate_self_clause`
