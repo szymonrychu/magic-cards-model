@@ -211,3 +211,31 @@ def test_a_snapshot_written_before_the_zone_clause_existed_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_ZONE_CLAUSES}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before `Reveal` learned who saw it and against which
+#: object and library order (`viewers`, `zone_change_stamp`, `turn`,
+#: `library_epoch`), before `Player.library_epoch` and before
+#: `Game.known_carries`.
+_SCHEMA_VERSION_BEFORE_KNOWN_INFORMATION = 7
+
+
+def test_the_known_information_bump_moved_the_version_past_seven() -> None:
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_KNOWN_INFORMATION
+
+
+def test_a_snapshot_written_before_known_information_is_refused() -> None:
+    """A version-7 dump has reveals with no stamp or epoch and players with no
+    library epoch; decoded as current, every record would read as an
+    unrecognised shape and silently know nothing. Refused instead."""
+    dumped = _a_played_game().model_dump(mode="json")
+    for player in dumped["players"]:
+        del player["library_epoch"]
+    del dumped["known_carries"]
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_KNOWN_INFORMATION
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_KNOWN_INFORMATION}",
+    ):
+        Game.model_validate(dumped)

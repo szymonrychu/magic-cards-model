@@ -152,6 +152,10 @@ def test_the_reveal_shows_the_one_card_and_not_the_rest_of_the_sideboard():
     assert reveal.revealed_by == "alice"
     assert reveal.zone is Zone.SIDEBOARD, "CR 701.20b: it was shown where it sat"
     assert reveal.source == "Karn, the Great Creator"
+    assert reveal.viewers is None
+    assert reveal.zone_change_stamp is not None
+    assert reveal.turn == scenario.game.turn.turns_taken
+    assert reveal.library_epoch is None
     revealed = {entry.card_id for entry in scenario.game.reveals}
     assert not any(state.id in revealed for state in alice.outside_the_game), (
         "the two cards left outside the game were never shown"

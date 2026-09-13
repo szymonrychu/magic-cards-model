@@ -14658,20 +14658,34 @@ def _parse_delayed_pay_or_lose_clauses(
 #: "look at the top card of target player's/your/their library" - Mishra's
 #: Bauble's first clause, ahead of its own delayed-trigger second clause.
 #: CR 701.20e: "looking at a card follows the same rules as revealing a card,
-#: except that the card is shown only to the specified player" - purely
-#: informational, so there is nothing for this engine's board state to do.
+#: except that the card is shown only to the specified player" - so it moves
+#: nothing, and is recorded through `Game.look` for `Game.known_to`.
 _LOOK_AT_TOP_CARD_RE = re.compile(
     r"^look at the top card of (?:target player's|your|their) library$", re.IGNORECASE
 )
 
 
 def _look_at_top_card(game: "Game", stack_object: "StackObject") -> None:
-    """No-op (CR 701.20e): hidden information this engine does not model a
-    player "seeing" beyond what `Game.find_by_id` already lets any test read
-    directly. `Game.resolve_targets` still runs, so a target that is gone by
-    resolution is refused the ordinary way (CR 608.2b) even though nothing
-    here reads what came back."""
-    game.resolve_targets(stack_object)
+    """The controller looks at the top card of each targeted player's library
+    (CR 701.20e), or of their own for the untargeted "your library" wording.
+
+    `Game.look` records it with the controller as the only viewer. A target
+    that is gone by resolution is refused the ordinary way (CR 608.2b), and a
+    player with an empty library has no top card to look at.
+    """
+    viewer = game.controller_of(stack_object)
+    source = (
+        stack_object.source_name if isinstance(stack_object, AbilityOnStack) else stack_object.name
+    )
+    if stack_object.targets:
+        players = [
+            target for target in game.resolve_targets(stack_object) if isinstance(target, Player)
+        ]
+    else:
+        players = [viewer]
+    for player in players:
+        if player.library:
+            game.look(player.library[0], viewer.username, source=source)
 
 
 #: "Look at target player's hand." (Gitaxian Probe) - the same CR 701.20e
@@ -16873,6 +16887,7 @@ def _put_spell_in_library(game: "Game", spell: CardState, *, top: bool) -> None:
         owner.library.insert(0, spell)
     else:
         owner.library.append(spell)
+    owner.note_library_changed()  # CR 701.20d
 
 
 def _parse_choose_up_to_one_target_spell_clauses(
@@ -17328,6 +17343,8 @@ def _merge_look_top_reveal_to_hand_clauses(
             game.shuffles_performed += 1
         for state in rest:
             player.library.append(state)
+        if rest:
+            player.note_library_changed()  # CR 701.20d
 
     return 4, effect
 
@@ -20422,6 +20439,8 @@ def _explore(game: "Game", permanent: CardState, controller: Player, source_name
         game.put_into_graveyard(state)
     for state in reversed(back_on_top):
         controller.library.insert(0, state)
+    if back_on_top:
+        controller.note_library_changed()  # CR 701.20d
 
 
 #: Amalia Benavides Aguirre's whole trigger: "<Name> explores. Then destroy

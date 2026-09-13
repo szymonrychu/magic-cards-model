@@ -783,7 +783,7 @@ def _parse_activation_prohibition(text: str) -> ActivationProhibition | None:
 
 
 class Reveal(BaseModel):
-    """One card shown to all players (CR 701.20a).
+    """One card shown to all players (CR 701.20a), or to one (CR 701.20e).
 
     "To reveal a card, show that card to all players for a brief time." That is
     the whole of what revealing does to the game state, plus CR 701.20b's
@@ -800,6 +800,21 @@ class Reveal(BaseModel):
 
     Frozen, and named by id as well as by name, because CR 701.20c allows the
     same card to be revealed more than once and each showing is its own event.
+
+    **A look is the same record with viewers.** CR 701.20e: "Looking at a
+    card follows the same rules as revealing a card, except that the card is
+    shown only to the specified player." So `Game.look` appends one of these
+    too, with `viewers` naming that player, and `Game.known_to` reads both
+    kinds through the same checks.
+
+    **What a record knows, and for how long, is data.** `zone_change_stamp`
+    is the card's `CardState.zone_change_stamp` when it was shown, because
+    CR 400.7 makes a card that changed zones "a new object with no memory of,
+    or relation to, its previous existence" even though this engine keeps its
+    `id`. `library_epoch` is the owner's `Player.library_epoch` when the card
+    was shown from a library, because CR 701.20d ends a library reveal the
+    moment the library is "shuffled or otherwise reordered". Both are compared
+    live by `Game.known_to`; nothing here is a callable.
     """
 
     model_config = ConfigDict(frozen=True)
@@ -813,6 +828,70 @@ class Reveal(BaseModel):
     `Zone.SIDEBOARD` means it was outside the game (CR 400.11a)."""
     source: str | None = None
     """The card whose text asked for the reveal, by name."""
+    viewers: list[str] | None = None
+    """Who was shown the card. `None` is every player (CR 701.20a's reveal);
+    a list is a look (CR 701.20e) and names the players who looked."""
+    zone_change_stamp: UUID | None = None
+    """The card's `CardState.zone_change_stamp` when it was shown (CR 400.7).
+    `None` is a record of a shape `Game.known_to` does not recognise, and it
+    is never returned."""
+    turn: int | None = None
+    """`TurnMachine.turns_taken` when it was shown, `0` before the first turn."""
+    library_epoch: int | None = None
+    """The owner's `Player.library_epoch` when the card was shown from a
+    library (CR 701.20d), and `None` for a card shown from any other zone."""
+
+
+class KnownCarry(BaseModel):
+    """A library record carried into its owner's hand by the move itself.
+
+    **A knowledge policy, not a Comprehensive Rules rule** - the project
+    owner's decision. CR 400.7 makes the card in hand a new object, and
+    CR 402.3's "A player can't look at the cards in another player's hand"
+    says nothing about a player who watched a known card go there. A player
+    who saw the top card of a library and then saw its owner draw it
+    (CR 121.1: "putting the top card of their library into their hand") knows
+    what that card in hand is, so a record still live at the moment of a move
+    straight from the owner's library to the owner's hand is copied here with
+    the card's *new* stamp. It ends the way every record ends: the card's
+    next zone change mints another stamp.
+
+    Written by `Game.carry_knowledge_into_hand`, read by `Game.known_to`.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    card_id: UUID
+    card_name: str
+    owner: str
+    viewers: list[str] | None = None
+    """The carried record's own viewers - a look stays the looker's."""
+    zone_change_stamp: UUID
+    """The card's stamp as it arrived in the hand."""
+    source: str | None = None
+    turn: int
+    """When the carried record was made, not when the card moved."""
+
+
+class KnownCard(BaseModel):
+    """One hidden card a player knows, as `Game.known_to` answers it.
+
+    Ids only, never a live `CardState`, the same convention `models/action.py`
+    keeps. `index_from_top` is computed live for a card known in a library
+    (CR 401.2 keeps the library one ordered pile) and is `None` everywhere
+    else; `carried` says the knowledge came through `KnownCarry`.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    card_id: UUID
+    card_name: str
+    owner: str
+    zone: Zone
+    index_from_top: int | None
+    source: str | None
+    turn: int
+    carried: bool
 
 
 class CastRecord(BaseModel):
@@ -1490,7 +1569,14 @@ class Game(BaseModel):
     hidden group of cards - a hand, a library, a sideboard outside the game -
     puts one entry here per card the effect named, never the group it came
     from. Anything reading this to decide what an opponent may see gets the
-    reveal and nothing around it. See `Reveal`."""
+    reveal and nothing around it. See `Reveal`.
+
+    A look (CR 701.20e) is recorded here as well, with `Reveal.viewers`
+    naming who looked; `Game.known_to` is the reader that tells them apart."""
+
+    known_carries: list[KnownCarry] = Field(default_factory=list)
+    """Library records carried into a hand by a library-to-hand move, in
+    order. See `KnownCarry` - a knowledge policy, not a CR rule."""
 
     spells_cast_this_turn: dict[str, list[CardState]] = Field(default_factory=dict)
     """Every spell each player has cast this turn, keyed by controller
@@ -1867,7 +1953,7 @@ class Game(BaseModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 7
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 8
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -1952,6 +2038,15 @@ class Game(BaseModel):
     to ten rather than three. Each changes what an already-recorded restricted
     mana in a pool may pay for, or what an already-recorded permanent's mana
     ability produces.
+
+    Bumped 7 -> 8: known information. `Reveal` gained `viewers`,
+    `zone_change_stamp`, `turn` and `library_epoch`, `Player` gained
+    `library_epoch`, and `Game` gained `known_carries` - fields added to
+    models reachable from the dump, the bump rule's first bullet. A version-7
+    snapshot's reveals carry no stamp and no epoch, and decoded here every one
+    of them would be a record of a shape `Game.known_to` refuses: a game in
+    which everything already shown had silently stopped being known. Refused
+    instead.
     """
 
     @model_validator(mode="before")
@@ -6001,6 +6096,8 @@ class Game(BaseModel):
             for index, state in enumerate(on_top):
                 library.insert(index, state)
             library.extend(to_bottom)
+            if on_top or to_bottom:
+                player.note_library_changed()  # CR 701.20d: put back is reordered
             return CardSplit(
                 moved=tuple(state.id for state in to_bottom),
                 top_order=tuple(state.id for state in on_top),
@@ -6049,6 +6146,8 @@ class Game(BaseModel):
                 library.remove(state)
             for index, state in enumerate(on_top):
                 library.insert(index, state)
+            if on_top:
+                player.note_library_changed()  # CR 701.20d: put back is reordered
             for state in to_graveyard:
                 self.put_into_graveyard(state)
             return CardSplit(
@@ -6176,6 +6275,7 @@ class Game(BaseModel):
         rng = Random(f"{self.shuffle_seed}:{self.shuffles_performed}")  # noqa: S311
         rng.shuffle(rest)
         player.zones[Zone.LIBRARY] = held + rest
+        player.note_library_changed()  # CR 701.20d: a shuffled library is a new order
         self.shuffles_performed += 1
 
     def flip_coin(self) -> bool:
@@ -6338,7 +6438,36 @@ class Game(BaseModel):
         exactly one entry is appended per card shown, and why that matters for
         anything downstream deciding what an opponent may see.
         """
+        return self._record_shown(card_state, None, source)
+
+    def look(self, card_state: CardState, viewer: str, source: str | None = None) -> CardState:
+        """Show one card to one player (CR 701.20e), and record that it was seen.
+
+        "Some effects instruct a player to look at one or more cards. Looking
+        at a card follows the same rules as revealing a card, except that the
+        card is shown only to the specified player." So this is `reveal` with
+        the audience narrowed to `viewer`, and nothing moves (CR 701.20b).
+        """
+        return self._record_shown(card_state, [viewer], source)
+
+    def _turns_taken(self) -> int:
+        return self.turn.turns_taken if self.turn is not None else 0
+
+    def _seat(self, username: str | None) -> Player | None:
+        return next((player for player in self.players if player.username == username), None)
+
+    def _record_shown(
+        self, card_state: CardState, viewers: list[str] | None, source: str | None
+    ) -> CardState:
+        """Append the `Reveal` both `reveal` and `look` record.
+
+        The stamp and, for a library card, the owner's library epoch are read
+        now, because they are what `known_to` compares later: CR 400.7 for
+        the card, CR 701.20d for the order it sat in.
+        """
         with self._id_allocator_scope():
+            owner = self._seat(card_state.owner)
+            in_library = card_state.zone is Zone.LIBRARY and owner is not None
             self.reveals.append(
                 Reveal(
                     card_id=card_state.id,
@@ -6346,9 +6475,140 @@ class Game(BaseModel):
                     revealed_by=card_state.owner or "",
                     zone=card_state.zone,
                     source=source,
+                    viewers=None if viewers is None else list(viewers),
+                    zone_change_stamp=card_state.zone_change_stamp,
+                    turn=self._turns_taken(),
+                    library_epoch=owner.library_epoch if in_library and owner else None,
                 )
             )
             return card_state
+
+    def known_to(self, viewer: str) -> list[KnownCard]:
+        """Every card `viewer` knows from a reveal, a look, or a carry, right now.
+
+        Pure: it reads `reveals` and `known_carries` and changes nothing, so
+        asking twice answers the same. A record is live for `viewer` only when
+        all of these hold, and anything else - including a record whose shape
+        this does not recognise - is left out (fail closed):
+
+        - `viewer` saw it: `Reveal.viewers` is `None` (CR 701.20a, all
+          players) or names them (CR 701.20e).
+        - The card is still that object: it is in the recorded zone with the
+          recorded `zone_change_stamp` (CR 400.7).
+        - For a library record, the library is still in that order: the
+          owner's `Player.library_epoch` is the recorded one (CR 701.20d,
+          CR 701.24a), and `index_from_top` is where the card is now.
+
+        A carry (`KnownCarry`, a knowledge policy rather than a CR rule) is
+        live while the card sits in its owner's hand with the stamp it
+        arrived with. One entry per card: a later live record replaces an
+        earlier one for the same card, so a card revealed again (CR 701.20c)
+        is known once, from its newest showing.
+        """
+        found: dict[UUID, KnownCard] = {}
+        for carry in self.known_carries:
+            carried = self._live_carry(carry, viewer)
+            if carried is not None:
+                found[carry.card_id] = carried
+        for reveal in self.reveals:
+            shown = self._live_reveal(reveal, viewer)
+            if shown is not None:
+                found[reveal.card_id] = shown
+        return list(found.values())
+
+    def _live_reveal(self, reveal: Reveal, viewer: str) -> KnownCard | None:
+        if reveal.viewers is not None and viewer not in reveal.viewers:
+            return None
+        if reveal.zone_change_stamp is None or reveal.turn is None:
+            return None
+        card_state = self.find_by_id(reveal.card_id)
+        if card_state is None or card_state.zone is not reveal.zone:
+            return None
+        if card_state.zone_change_stamp != reveal.zone_change_stamp:
+            return None
+        owner = self._seat(card_state.owner)
+        if owner is None:
+            return None
+        index_from_top: int | None = None
+        if reveal.zone is Zone.LIBRARY:
+            if reveal.library_epoch is None or owner.library_epoch != reveal.library_epoch:
+                return None
+            index_from_top = next(
+                (index for index, state in enumerate(owner.library) if state is card_state), None
+            )
+            if index_from_top is None:
+                return None
+        elif reveal.library_epoch is not None:
+            return None
+        return KnownCard(
+            card_id=reveal.card_id,
+            card_name=reveal.card_name,
+            owner=owner.username,
+            zone=reveal.zone,
+            index_from_top=index_from_top,
+            source=reveal.source,
+            turn=reveal.turn,
+            carried=False,
+        )
+
+    def _live_carry(self, carry: KnownCarry, viewer: str) -> KnownCard | None:
+        if carry.viewers is not None and viewer not in carry.viewers:
+            return None
+        card_state = self.find_by_id(carry.card_id)
+        owner = self._seat(carry.owner)
+        if card_state is None or owner is None or card_state.zone is not Zone.HAND:
+            return None
+        if card_state.zone_change_stamp != carry.zone_change_stamp:
+            return None
+        if not any(state is card_state for state in owner.hand):
+            return None
+        return KnownCard(
+            card_id=carry.card_id,
+            card_name=carry.card_name,
+            owner=carry.owner,
+            zone=Zone.HAND,
+            index_from_top=None,
+            source=carry.source,
+            turn=carry.turn,
+            carried=True,
+        )
+
+    def carry_knowledge_into_hand(self, card_state: CardState, stamp_in_library: UUID) -> None:
+        """Carry every library record still live for `card_state` into its
+        owner's hand, as `KnownCarry` data (a knowledge policy, not a CR rule).
+
+        Called by `Player.add` for a card moving straight from its owner's
+        library to that owner's hand - a draw (CR 121.1) or any effect that
+        makes the same move - after the move, with the stamp the card had in
+        the library. A record the library's epoch had already ended before the
+        move (CR 701.20d) is not live, so it is not carried; neither is a
+        record of an earlier object (CR 400.7).
+        """
+        owner = self._seat(card_state.owner)
+        if owner is None:
+            return
+        for reveal in list(self.reveals):
+            if (
+                reveal.card_id != card_state.id
+                or reveal.zone is not Zone.LIBRARY
+                or reveal.zone_change_stamp is None
+                or reveal.zone_change_stamp != stamp_in_library
+                or reveal.turn is None
+                or reveal.library_epoch is None
+                or reveal.library_epoch != owner.library_epoch
+            ):
+                continue
+            self.known_carries.append(
+                KnownCarry(
+                    card_id=card_state.id,
+                    card_name=reveal.card_name,
+                    owner=owner.username,
+                    viewers=None if reveal.viewers is None else list(reveal.viewers),
+                    zone_change_stamp=card_state.zone_change_stamp,
+                    source=reveal.source,
+                    turn=reveal.turn,
+                )
+            )
 
     def face_up_cards_in_exile(
         self,

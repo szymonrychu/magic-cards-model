@@ -465,6 +465,13 @@ def test_revealing_shows_the_card_and_leaves_it_in_hand():
     assert devourer.zone is Zone.HAND
     assert devourer.id in game.opening_hand_reveals
     assert [reveal.card_name for reveal in game.reveals] == ["Devourer of Destiny"]
+    (reveal,) = game.reveals
+    assert reveal.viewers is None
+    assert reveal.zone is Zone.HAND
+    assert reveal.zone_change_stamp == devourer.zone_change_stamp
+    assert reveal.library_epoch is None
+    assert reveal.turn == 0, "CR 103.6b's reveal happens before the first turn"
+    assert [entry.card_id for entry in game.known_to("bob")] == [devourer.id]
     assert len(game.player("alice").hand) == 7
 
 

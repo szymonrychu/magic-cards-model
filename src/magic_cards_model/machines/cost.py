@@ -2692,6 +2692,8 @@ class CostComponent(BaseModel):
         else:
             owner = card.controller or self.payer
             game.player(owner).cards_in(zone).append(card)
+            if zone is Zone.LIBRARY:
+                game.player(owner).note_library_changed()  # CR 701.20d
 
 
 def tap_cost(*cards: CardState, payer: str | None = None, description: str = "") -> CostComponent:
