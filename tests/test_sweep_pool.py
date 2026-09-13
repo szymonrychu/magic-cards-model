@@ -734,3 +734,21 @@ def test_four_cards_with_no_other_gap_leave_the_silent_list():
     ):
         category, _ = classify_card(card(name))
         assert category != SILENT, name
+
+
+def test_watcher_for_tomorrows_leaves_the_battlefield_clause_is_not_silent():
+    """Watcher for Tomorrow's "When this creature leaves the battlefield, put
+    the exiled card into its owner's hand." is the CR 607.2a linked reference
+    Ugin's Labyrinth prints as "Return the exiled card to its owner's hand."
+    Adding the card to the fixtures for the hideaway knowledge scenarios put
+    one more silent card on the sweep's headline count until the "put ...
+    into" wording was read - see
+    `tests/scenarios/test_cascade_and_hideaway_reveals_are_known.py`.
+
+    Its "This creature enters tapped." static is a separate line the sweeper
+    does not audit, so the card as a whole is static_unaudited, never silent."""
+    watcher = card("Watcher for Tomorrow")
+    outcomes = {outcome.text: outcome.category for outcome in classify_clauses(watcher)}
+    clause = "When this creature leaves the battlefield, put the exiled card into its owner's hand."
+    assert outcomes[clause] == HANDLED
+    assert classify_card(watcher)[0] != SILENT
