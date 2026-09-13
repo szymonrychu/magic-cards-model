@@ -1104,6 +1104,7 @@ class PlayedScenario:
         discarding: list[CardState] | None = None,
         exiling: list[CardState] | None = None,
         tapping: list[CardState] | None = None,
+        revealing: list[CardState] | None = None,
         targets: list[Target] | None = None,
         color: Color | Sequence[Color] | str | None = None,
         auto: bool = False,
@@ -1141,6 +1142,7 @@ class PlayedScenario:
             sacrificing=sacrificing,
             discarding=discarding,
             exiling=exiling,
+            revealing=revealing,
             x_value=x_value,
         )
         if tapping:
@@ -1243,6 +1245,7 @@ class PlayedScenario:
         discarding: list[CardState] | None = None,
         exiling: list[CardState] | None = None,
         tapping: list[CardState] | None = None,
+        revealing: list[CardState] | None = None,
     ) -> Casting:
         """Begin casting a card, returning the casting machine mid-announcement.
 
@@ -1269,6 +1272,7 @@ class PlayedScenario:
             discarding=list(discarding or []),
             exiling=list(exiling or []),
             tapping=list(tapping or []),
+            revealing=None if revealing is None else list(revealing),
         )
         if targets is not None:
             casting.choose_targets(targets)
@@ -1291,6 +1295,7 @@ class PlayedScenario:
         discarding: list[CardState] | None = None,
         exiling: list[CardState] | None = None,
         tapping: list[CardState] | None = None,
+        revealing: list[CardState] | None = None,
     ) -> CardState:
         """Cast a spell and leave it on the stack, unresolved.
 
@@ -1312,6 +1317,7 @@ class PlayedScenario:
             discarding=discarding,
             exiling=exiling,
             tapping=tapping,
+            revealing=revealing,
         )
         payment = casting.begin_paying()
         if auto:
@@ -1351,6 +1357,7 @@ class PlayedScenario:
         discarding: list[CardState] | None = None,
         exiling: list[CardState] | None = None,
         tapping: list[CardState] | None = None,
+        revealing: list[CardState] | None = None,
     ) -> CardState:
         """The whole path for a spell nobody responds to.
 
@@ -1373,5 +1380,6 @@ class PlayedScenario:
             discarding=discarding,
             exiling=exiling,
             tapping=tapping,
+            revealing=revealing,
         )
         return self.resolve_top()

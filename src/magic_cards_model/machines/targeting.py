@@ -2564,13 +2564,23 @@ def _read_adjectives(words: list[str]) -> tuple[_Adjectives, int]:
     "attacking or blocking creature" is one run of two: the conjunction is
     swallowed only when an adjective follows it, so "creature or land" is still
     two nouns rather than one adjective and a noun.
+
+    A comma joins a run the same way: Skyclave Apparition's "nonland, nontoken
+    permanent" and Thief of Existence's "noncreature, nonland permanent" are
+    each two restrictions on one noun (CR 110.4's permanent types, CR 111.1's
+    tokens), and every one of them applies - the adjectives accumulate on
+    `_Adjectives` exactly as they do with no comma between them.
     """
     adjectives = _Adjectives()
     index = 0
     while index < len(words) and adjectives.take(words[index]):
         index += 1
         joined = index + 1
-        if joined < len(words) and words[index] in {"or", "and"} and _is_adjective(words[joined]):
+        if (
+            joined < len(words)
+            and words[index] in {"or", "and", ","}
+            and _is_adjective(words[joined])
+        ):
             index += 1
     return adjectives, index
 

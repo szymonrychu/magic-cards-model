@@ -52,12 +52,14 @@ from .cost import (
     TotalCost,
     additional_cost_phrases,
     alternative_cost_offers,
+    announce_reveal,
     apply_modifications,
     place_counters_cost,
     static_free_cast_grant,
     tap_cost,
     total_cost_for_phrase,
 )
+from .decisions import source_id_of
 from .keywords import (
     FACE_DOWN_CAST_COST,
     enchant_restrictions,
@@ -1990,6 +1992,12 @@ class Casting(BaseModel):
     tapping: list[CardState] = Field(default_factory=list)
     """The permanents chosen to pay a printed "tap ..." additional cost -
     Swallow Whole's "tap an untapped creature you control"."""
+    revealing: list[CardState] | None = None
+    """The cards chosen to pay a printed "reveal ... from your hand" additional
+    cost (CR 118.8a, CR 701.20a) - Living Destiny's "reveal a creature card
+    from your hand". `None` is "not named", and CR 601.2f then asks the caster
+    which cards to reveal (`Game.choose_cards_to_reveal`); an empty list is an
+    answer of its own."""
     spliced_card_ids: list[UUID] = Field(default_factory=list)
     """The cards revealed from the caster's hand to splice onto this spell
     (CR 702.47a), in the order they were announced.
@@ -3949,7 +3957,28 @@ class Casting(BaseModel):
         if self.printed_additional_costs_charged:
             return
         self.printed_additional_costs_charged = True
-        self.additional_costs.extend(self._printed_additional_costs())
+        built = self._printed_additional_costs()
+        self.additional_costs.extend(built)
+        if self.game is None:
+            return
+        for extra in built:
+            for component in extra.components:
+                if component.kind is not ComponentKind.REVEAL:
+                    continue
+                # CR 601.2h pays the reveal the caster chose, so a reveal
+                # nobody named is asked about here, and cards that cannot pay
+                # it are refused before anything is spent (CR 118.3).
+                if self.revealing is None:
+                    self.game.choose_cards_to_reveal(
+                        component,
+                        self.caster,
+                        source=self.spell.name,
+                        source_id=source_id_of(self.spell),
+                        x_value=self.x_value,
+                    )
+                refusal = component.why_not(self.game)
+                if refusal is not None:
+                    raise ValueError(refusal)
 
     def _printed_additional_costs(self) -> list[TotalCost]:
         """The card's own additional costs as payable `TotalCost`s, built fresh
@@ -3978,6 +4007,13 @@ class Casting(BaseModel):
                     f"so it cannot be paid (CR 118.3, 601.2f)"
                 )
             for component in cost.components:
+                if component.kind is ComponentKind.REVEAL:
+                    filled = announce_reveal(
+                        component, self.revealing, self.x_value, self.spell.name
+                    )
+                    component.cards, component.required = filled.cards, filled.required
+                    component.source = filled.source
+                    continue
                 pool = pools.get(component.kind)
                 if pool is None or component.cards or not component.required:
                     continue

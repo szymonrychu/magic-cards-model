@@ -79,8 +79,10 @@ def test_karn_s_fetched_card_stops_being_known_when_it_leaves_the_hand():
     assert known(scenario.game, "bob") == []
 
 
-def test_karn_choosing_a_face_up_exiled_card_carries_nothing():
-    """CR 406.3: already public in exile, never revealed, so nothing to carry."""
+def test_karn_choosing_a_face_up_exiled_card_is_known_from_the_public_move():
+    """CR 406.3: face up in exile the card was never revealed - it was public
+    already (CR 400.2), so the move to hand is watched by every player and
+    carried as such, per `test_public_card_to_hand_known.py`."""
     scenario = _karn_board(exile=["Ensnaring Bridge"])
     karn = _main_phase(scenario)
     bridge = scenario.find("Ensnaring Bridge", Zone.EXILE)
@@ -90,7 +92,10 @@ def test_karn_choosing_a_face_up_exiled_card_carries_nothing():
     scenario.pass_until_resolved()
 
     assert bridge.zone is Zone.HAND
-    assert known(scenario.game, "bob") == []
+    assert [(name, zone, carried) for name, zone, *_, carried in known(scenario.game, "bob")] == [
+        ("Ensnaring Bridge", Zone.HAND, True)
+    ]
+    assert scenario.game.reveals == []
 
 
 # -- the Wish shape ------------------------------------------------------------

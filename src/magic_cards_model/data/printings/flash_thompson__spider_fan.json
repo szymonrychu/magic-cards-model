@@ -1,0 +1,143 @@
+{
+  "object": "card",
+  "id": "42c86f90-bb24-4b68-8754-f1469cd3ea9e",
+  "oracle_id": "f536a518-160e-4267-89da-3d34accc6d2c",
+  "multiverse_ids": [],
+  "resource_id": "A04F33FE6CE3DB5AFCBEF87A25828FAB7DD82875F3B5114666ADCDA4BADD723C",
+  "mtgo_id": 151969,
+  "arena_id": 105782,
+  "tcgplayer_id": 697157,
+  "cardmarket_id": 891944,
+  "name": "Flash Thompson, Spider-Fan",
+  "lang": "en",
+  "released_at": "2026-06-26",
+  "uri": "https://api.scryfall.com/cards/42c86f90-bb24-4b68-8754-f1469cd3ea9e",
+  "scryfall_uri": "https://scryfall.com/card/msc/772/flash-thompson-spider-fan?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:37:00Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/4/2/42c86f90-bb24-4b68-8754-f1469cd3ea9e.jpg?1783903020",
+    "normal": "https://cards.scryfall.io/normal/front/4/2/42c86f90-bb24-4b68-8754-f1469cd3ea9e.jpg?1783903020",
+    "large": "https://cards.scryfall.io/large/front/4/2/42c86f90-bb24-4b68-8754-f1469cd3ea9e.jpg?1783903020",
+    "png": "https://cards.scryfall.io/png/front/4/2/42c86f90-bb24-4b68-8754-f1469cd3ea9e.png?1783903020",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/4/2/42c86f90-bb24-4b68-8754-f1469cd3ea9e.jpg?1783903020",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/4/2/42c86f90-bb24-4b68-8754-f1469cd3ea9e.jpg?1783903020",
+    "thumb": "https://cards.scryfall.io/thumb/front/4/2/42c86f90-bb24-4b68-8754-f1469cd3ea9e.webp?1783903020",
+    "grid": "https://cards.scryfall.io/grid/front/4/2/42c86f90-bb24-4b68-8754-f1469cd3ea9e.webp?1783903020",
+    "display": "https://cards.scryfall.io/display/front/4/2/42c86f90-bb24-4b68-8754-f1469cd3ea9e.webp?1783903020",
+    "art": "https://cards.scryfall.io/art/front/4/2/42c86f90-bb24-4b68-8754-f1469cd3ea9e.webp?1783903020",
+    "crop": "https://cards.scryfall.io/crop/front/4/2/42c86f90-bb24-4b68-8754-f1469cd3ea9e.webp?1783903020"
+  },
+  "mana_cost": "{1}{W}",
+  "cmc": 2.0,
+  "type_line": "Legendary Creature \u2014 Human Citizen",
+  "oracle_text": "Flash\nWhen Flash Thompson enters, choose one or both \u2014\n\u2022 Heckle \u2014 Tap target creature.\n\u2022 Hero Worship \u2014 Untap target creature.",
+  "power": "2",
+  "toughness": "2",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Hero Worship",
+    "Heckle",
+    "Flash"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "9d739461-c5ac-43a1-af41-3d5a585b5c8d",
+  "set": "msc",
+  "set_name": "Marvel Super Heroes Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/9d739461-c5ac-43a1-af41-3d5a585b5c8d",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amsc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/msc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/42c86f90-bb24-4b68-8754-f1469cd3ea9e/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Af536a518-160e-4267-89da-3d34accc6d2c&unique=prints",
+  "collector_number": "772",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "\"No one cares about your Spider-Man obsession, Flash.\"\n\u2014Liz Allan",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Gal Or",
+  "artist_ids": [
+    "4bbf92ce-72b4-4afa-9e3d-b54326e842b0"
+  ],
+  "illustration_id": "9c237e14-adb5-4751-94c1-2e8a9f8184af",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 11747,
+  "penny_rank": 10752,
+  "prices": {
+    "usd": "0.26",
+    "usd_foil": "0.27",
+    "usd_etched": null,
+    "eur": "0.13",
+    "eur_foil": "0.17",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DFlash%2BThompson%252C%2BSpider-Fan",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DFlash%2BThompson%252C%2BSpider-Fan",
+    "edhrec": "https://edhrec.com/route/?cc=Flash+Thompson%2C+Spider-Fan"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F697157%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=891944&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/151969?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

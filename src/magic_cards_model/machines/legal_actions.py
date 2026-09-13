@@ -205,7 +205,7 @@ def _candidate_pool_for(game: Any, payer: str, component: CostComponent) -> list
     when this is not one of the shapes judged here (see `_component_
     affordability`'s own `UNKNOWN` fallback)."""
     kind = component.kind
-    if kind is ComponentKind.DISCARD:
+    if kind in (ComponentKind.DISCARD, ComponentKind.REVEAL):
         return list(game.player(payer).hand)
     if kind is ComponentKind.EXILE:
         if component.zone.is_shared:

@@ -429,6 +429,18 @@ class AbilityOnStack(BaseModel):
     """The event that triggered it, for an effect that needs to know which
     creature attacked or what blocked what. None for an activated ability."""
 
+    modes: list[int] = Field(default_factory=list)
+    """A modal triggered ability's chosen modes, as their 1-based printed
+    positions in the order chosen (CR 700.2). CR 603.3c: "its controller
+    announces the mode choice when putting the ability on the stack", so
+    `Game.put_triggers_on_stack` fills this before any target is chosen, and
+    the resolving effect reads it rather than asking again. Empty for a
+    non-modal ability."""
+
+    mode_targets: list[list[TargetRef]] = Field(default_factory=list)
+    """Each chosen mode's own targets (CR 700.2c, CR 700.2f), aligned by
+    position with `modes`; `targets` is their concatenation."""
+
     x_value: int = 0
     """CR 107.3a's X, as announced when this ability was activated (CR 602.2b
     - "the remainder of the process for activating an ability is identical to

@@ -163,7 +163,13 @@ def test_declining_the_discard_reveals_a_lesson_from_outside_the_game_known_to_a
     assert reveal.card_id == lesson.id
     assert reveal.zone is Zone.SIDEBOARD, "CR 701.20b: shown where it sat"
     assert reveal.viewers is None
-    assert known(scenario.game, "bob") == [("Environmental Sciences", Zone.HAND, None, True)]
+    # The Lesson is carried from its outside-the-game reveal; the Shock that
+    # Divide by Zero bounced off the stack is known too, because the stack is
+    # a public zone (CR 400.2) - see `test_public_card_to_hand_known.py`.
+    assert sorted(known(scenario.game, "bob")) == [
+        ("Environmental Sciences", Zone.HAND, None, True),
+        ("Shock", Zone.HAND, None, True),
+    ]
 
 
 def test_discarding_to_draw_offers_no_lesson():
