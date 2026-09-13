@@ -2057,7 +2057,7 @@ class Game(BaseModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 15
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 16
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -2219,6 +2219,11 @@ class Game(BaseModel):
     decoded here would replay against a question that build never asked.
     Refused instead. Battle 4 was stamped 11 -> 12 on its own line of
     development; landed after battles 3, 5 and 6, it moved on to 15.
+    Bumped 15 -> 16: U1. `AbilityOnStack` gained `source_last_known` (CR 113.7a,
+    608.2h), and the resolution of "Gain control of target ... Untap that
+    creature. It gains haste until end of turn." changed on spells and
+    abilities alike: a version-15 stack holding Act of Treason resolved
+    without the untap or the haste.
     """
 
     @model_validator(mode="before")
@@ -9856,6 +9861,24 @@ class Game(BaseModel):
             if other.id != permanent.id and other.attached_to == permanent.id:
                 other.unattach()
 
+    def _remember_sources_that_ceased_to_exist(self, gone: list[CardState]) -> None:
+        """Keep each vanished token as the last known information of every
+        ability on the stack or waiting to go there that it is the source of.
+
+        CR 113.7a: "Once activated or triggered, an ability exists on the stack
+        independently of its source", and CR 608.2h has an effect that needs
+        the source use its last known information once it has left its zone. A
+        token that ceases to exist (CR 704.5d) leaves nothing to find by id.
+        """
+        by_id = {state.id: state for state in gone}
+        for item in (*self.stack, *self.pending_triggers):
+            if (
+                isinstance(item, AbilityOnStack)
+                and item.source_id in by_id
+                and item.source_last_known is None
+            ):
+                item.source_last_known = by_id[item.source_id]
+
     def check_state_based_actions(self) -> list[CardState]:
         """Apply state-based actions, returning whatever left the battlefield (CR 704).
 
@@ -10052,6 +10075,7 @@ class Game(BaseModel):
         on the repeat check CR 704.3 guarantees, not in the same event.
         """
         gone_tokens = tokens_that_cease_to_exist(self)  # CR 704.5d, CR 111.7
+        self._remember_sources_that_ceased_to_exist(gone_tokens)
 
         board = self.computed_board()
         leaving = [

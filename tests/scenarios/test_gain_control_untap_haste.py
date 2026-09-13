@@ -23,6 +23,8 @@ that wrote this file.
 """
 
 from magic_cards_model.machines import Step
+from magic_cards_model.models import Zone
+from magic_cards_model.models.token import token_copy_of
 from tests.scenarios.harness import Scenario
 
 
@@ -142,5 +144,70 @@ def test_a_triggered_ability_with_the_same_words():
     scenario.cast_and_resolve("Conquering Manticore", *mountains)
     if scenario.stack_names():
         scenario.resolve_top()
+
+    assert_stolen_untapped_hasty(scenario, bears)
+
+
+# --------------------------------------------------------------------------
+# The source is gone before the ability resolves (CR 113.7a, CR 608.2b)
+# --------------------------------------------------------------------------
+#
+# CR 113.7a: "Once activated or triggered, an ability exists on the stack
+# independently of its source. Destruction or removal of the source after that
+# time won't affect the ability." A token that leaves the battlefield ceases to
+# exist (CR 704.5d), so nothing is left to find by id; the control change still
+# happens, and whatever it needs of the source is its last known information.
+
+
+def token_board(printed: str) -> Scenario:
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=[printed], library=["Forest"], battlefield=["Mountain"] * 4)
+        .player("bob", library=["Forest"], battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_an_activated_ability_whose_token_source_ceased_to_exist_still_resolves():
+    """A token copy of Captivating Crew activates, then is destroyed in
+    response; CR 704.5d removes it before the ability resolves."""
+    scenario = token_board("Captivating Crew")
+    printed = scenario.find("Captivating Crew", Zone.HAND, "alice")
+    (crew,) = token_copy_of(scenario.game, printed, "alice")
+    bears = scenario.creature("Grizzly Bears", "bob")
+    bears.tapped = True
+    mountains = scenario.untapped_sources(*["Mountain"] * 4, username="alice")
+    scenario.activate(crew, *mountains, username="alice", targets=[bears])
+
+    scenario.game.destroy(crew)
+    scenario.state_based_actions()
+    assert scenario.game.find_by_id(crew.id) is None, "CR 704.5d: the token is gone"
+    decoded = type(scenario.game).model_validate_json(scenario.game.model_dump_json())
+    (ability,) = decoded.stack
+    assert ability.source_last_known is not None and ability.source_last_known.id == crew.id
+    scenario.resolve_top()
+
+    assert_stolen_untapped_hasty(scenario, bears)
+
+
+def test_a_triggered_ability_whose_token_source_ceased_to_exist_still_resolves():
+    """Conquering Manticore, off the deck pool, as a token copy: its enters
+    trigger is on the stack when the token is destroyed."""
+    scenario = token_board("Conquering Manticore")
+    printed = scenario.find("Conquering Manticore", Zone.HAND, "alice")
+    bears = scenario.creature("Grizzly Bears", "bob")
+    bears.tapped = True
+    scenario.will_choose_targets(bears, username="alice")
+    (manticore,) = token_copy_of(scenario.game, printed, "alice")
+    scenario.game.put_triggers_on_stack()
+    assert scenario.stack_names(), "the enters trigger is on the stack"
+
+    scenario.game.destroy(manticore)
+    scenario.state_based_actions()
+    assert scenario.game.find_by_id(manticore.id) is None, "CR 704.5d: the token is gone"
+    scenario.resolve_top()
 
     assert_stolen_untapped_hasty(scenario, bears)

@@ -1591,8 +1591,17 @@ def _parse_untap_and_gain_control_ability(effect_text: str) -> AbilityEffect | N
         return None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
-        source = game.find_by_id(ability.source_id) if ability.source_id is not None else None
+        # CR 113.7a: the ability does not need its source to still exist; the
+        # continuous effects are recorded against its last known information.
+        source = ability.source_or_last_known(game)
         if source is None:
+            continuous_effects(game).layer_notices.append(
+                LayerNotice(
+                    source_id=ability.source_id,
+                    source_name=ability.source_name,
+                    text=f"{effect_text} (its source and its last known information are both gone)",
+                )
+            )
             return
         _untap_and_apply_control_sentences(
             game, source, game.controller_of(ability), game.resolve_card_targets(ability), sentences
@@ -2553,7 +2562,9 @@ def _source_reads_its_exiled_cards(game: "Game", ability: AbilityOnStack) -> boo
         # A spell exiling its targets (Utter End, Celestial Purge) is not an
         # ability of an object with a linked reader; nothing to link.
         return False
-    source = game.find_by_id(ability.source_id)
+    # CR 113.7a/608.2h: a source that has ceased to exist is read from its
+    # last known information, so a token's linked pair still links.
+    source = ability.source_or_last_known(game)
     if not isinstance(source, CardState):
         return False
     own = ability.ability.text

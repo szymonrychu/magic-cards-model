@@ -209,3 +209,32 @@ def test_witherbloom_command_refuses_each_restriction_in_the_comma_list_and_the_
         casting.choose_modes([2, 4])
         with pytest.raises(ValueError):
             casting.choose_targets([illegal, "bob"])
+
+
+def test_a_token_apparition_that_ceased_to_exist_still_links_its_exile():
+    """CR 113.7a/608.2b: a token copy of Skyclave Apparition is destroyed with
+    its enters trigger on the stack and ceases to exist (CR 704.5d). The trigger
+    still exiles its target, and whether its source had the linked "the exiled
+    card" ability (CR 607.2a) is read from the source's last known information,
+    not dropped because the token can no longer be found."""
+    from magic_cards_model.models.card_state import ExileMarker
+    from magic_cards_model.models.token import token_copy_of
+
+    scenario = board(BOB)
+    printed = scenario.find("Skyclave Apparition", Zone.HAND, "alice")
+    bears = scenario.creature("Grizzly Bears", "bob")
+    scenario.will_choose_targets(bears, username="alice")
+    (apparition,) = token_copy_of(scenario.game, printed, "alice")
+    scenario.game.put_triggers_on_stack()
+    assert scenario.stack_names(), "the enters trigger is on the stack"
+
+    scenario.game.destroy(apparition)
+    scenario.state_based_actions()
+    assert scenario.game.find_by_id(apparition.id) is None, "CR 704.5d: the token is gone"
+    while scenario.stack_names():
+        scenario.resolve_top()
+
+    assert bears.zone is Zone.EXILE
+    assert bears.exile_annotation is not None
+    assert bears.exile_annotation.marker is ExileMarker.LINKED
+    assert bears.exile_annotation.linked_permanent_id == apparition.id
