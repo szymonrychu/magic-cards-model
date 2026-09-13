@@ -2776,3 +2776,91 @@ def _classify_cost(part: str) -> Cost:
     else:
         kind = CostKind.OTHER
     return Cost(kind=kind, text=part)
+
+
+# -- triggered mana abilities (CR 605.1b) ------------------------------------
+
+#: What a triggered mana ability does when it resolves: "[its controller |
+#: that player ]add[s] [an additional ]<mana>." CR 605.1b makes the ability
+#: a mana ability when it triggers from an activated mana ability or from mana
+#: being added and "could add mana to a player's mana pool when it resolves";
+#: this is the "could add mana" half, read off the effect text alone.
+#:
+#: The subject names who adds the mana, and so whose pool it lands in:
+#: nothing ("add", Leyline of Abundance, Nirkana Revenant, Zendikar Resurgent) is
+#: the ability's controller; "its controller" (Wild Growth, Utopia Sprawl,
+#: Vernal Bloom) is the controller of the permanent that was tapped; "that
+#: player" is the player the condition named.
+_TRIGGERED_MANA_RE = re.compile(
+    r"^(?:(?P<subject>its controller|that player)\s+)?adds?\s+"
+    r"(?:an additional\s+|one additional\s+)?(?P<mana>.+?)\.?$",
+    re.IGNORECASE,
+)
+_TRIGGERED_MANA_SYMBOLS_RE = re.compile(r"\{([WUBRGC])\}", re.IGNORECASE)
+#: "one mana of the chosen color" (Utopia Sprawl, recorded as it entered) and
+#: "one mana of that color" (Caged Sun, the colour its own condition named).
+_TRIGGERED_MANA_CHOSEN_RE = re.compile(r"^one mana of (?:the chosen|that) color$", re.IGNORECASE)
+#: "one mana of any color" (Fertile Ground) and "two mana in any combination
+#: of colors" (Market Festival): one colour chosen per mana (CR 105.1).
+_TRIGGERED_MANA_ANY_COLOR_RE = re.compile(
+    r"^(?P<count>one|two|three|\d+) mana (?:of any color|in any combination of colors)$",
+    re.IGNORECASE,
+)
+#: "one mana of any type that land produced" (Zendikar Resurgent, Mirari's
+#: Wake, Kinnan's "that permanent"): one of the types (CR 106.1b) the tapped
+#: permanent's own mana ability just made.
+_TRIGGERED_MANA_PRODUCED_TYPE_RE = re.compile(
+    r"^one mana of any type that (?:[a-z]+ )*?[a-z]+ produced$", re.IGNORECASE
+)
+_TRIGGERED_MANA_COUNTS = {"one": 1, "two": 2, "three": 3}
+
+
+class TriggeredManaShape(BaseModel):
+    """The mana a triggered mana ability adds (CR 605.1b), as data.
+
+    Exactly one of `colors`, `chosen_color`, `any_color` or `produced_type`
+    describes the mana; `recipient` says whose pool it goes to. Read by the
+    resolution (`machines/effects.py`) and by the payment search
+    (`machines/cost.py`), so what a tap is expected to add and what it adds
+    are one reading of the text.
+    """
+
+    recipient: Literal["controller", "its_controller", "that_player"] = "controller"
+    colors: tuple[Color, ...] = ()
+    chosen_color: bool = False
+    any_color: int = 0
+    produced_type: bool = False
+
+
+def parse_triggered_mana(effect: str) -> TriggeredManaShape | None:
+    """`effect`'s mana, when the whole effect is an "add ... mana" instruction
+    this engine reads, else `None` (a count "for each ...", a "may add", or
+    any other rider fails closed)."""
+    match = _TRIGGERED_MANA_RE.fullmatch(effect.strip())
+    if match is None:
+        return None
+    subject = (match.group("subject") or "").lower()
+    recipient: Literal["controller", "its_controller", "that_player"] = (
+        "its_controller"
+        if subject == "its controller"
+        else "that_player"
+        if subject == "that player"
+        else "controller"
+    )
+    mana = match.group("mana").strip()
+    if _TRIGGERED_MANA_CHOSEN_RE.fullmatch(mana):
+        return TriggeredManaShape(recipient=recipient, chosen_color=True)
+    if _TRIGGERED_MANA_PRODUCED_TYPE_RE.fullmatch(mana):
+        return TriggeredManaShape(recipient=recipient, produced_type=True)
+    any_color = _TRIGGERED_MANA_ANY_COLOR_RE.fullmatch(mana)
+    if any_color is not None:
+        word = any_color.group("count").lower()
+        count = _TRIGGERED_MANA_COUNTS.get(word) or (int(word) if word.isdigit() else 0)
+        return TriggeredManaShape(recipient=recipient, any_color=count) if count else None
+    symbols = _TRIGGERED_MANA_SYMBOLS_RE.findall(mana)
+    round_trip = "".join(f"{{{symbol}}}" for symbol in symbols)
+    if not symbols or round_trip.lower() != mana.lower().replace(" ", ""):
+        return None
+    return TriggeredManaShape(
+        recipient=recipient, colors=tuple(Color(symbol.upper()) for symbol in symbols)
+    )

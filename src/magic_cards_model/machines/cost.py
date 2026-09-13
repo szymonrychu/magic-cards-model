@@ -36,7 +36,7 @@ from collections.abc import Hashable, Iterable, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from functools import cache
-from itertools import combinations, product
+from itertools import combinations, combinations_with_replacement, product
 from typing import Any, NamedTuple
 from uuid import UUID
 
@@ -76,17 +76,22 @@ from .abilities import (
     intrinsic_land_ability,
     parse_abilities,
     parse_mana_abilities,
+    parse_triggered_mana,
 )
 from .combat import Keyword, has_keyword
 from .triggers import (
     GameEvent,
+    abilities_triggered_by,
     activated_abilities_from_lines,
     activated_abilities_of,
     added_ability_lines,
     granted_activated_abilities_of,
     is_ability,
+    mana_added_event,
     rewritten_ability_lines,
     tapped_for_mana_event,
+    triggered_abilities_on,
+    triggered_mana_recipient,
 )
 
 
@@ -937,6 +942,116 @@ def _mana_narrowings(
 _Candidate = tuple[CardState, list[list[Color]], ManaRestriction | None]
 
 
+#: CR 105.1's five colours - what "one mana of any color" may be.
+_FIVE_COLORS: tuple[Color, ...] = tuple(Color(letter) for letter in "WUBRG")
+
+
+def mana_trigger_sources(game: Any) -> list[CardState]:
+    """The permanents with a triggered mana ability (CR 605.1b) - a triggered
+    ability whose effect adds mana - that a tap for mana might set off.
+
+    Usually none, which is what keeps `triggered_mana_bonus` free on an
+    ordinary board: the conditions are only read for these.
+    """
+    if game is None:
+        return []
+    return [
+        permanent
+        for permanent in game.battlefield
+        if any(
+            parse_triggered_mana(ability.effect) is not None
+            for ability in triggered_abilities_on(game, permanent)
+        )
+    ]
+
+
+def _triggered_mana_alternatives(
+    shape: Any, trigger_source: CardState, produces: Sequence[Color]
+) -> list[list[Color]]:
+    """What one triggered mana ability would add, one list per choice."""
+    if shape.colors:
+        return [list(shape.colors)]
+    if shape.chosen_color:
+        choice = trigger_source.choice
+        if choice is None or choice.kind is not ChoiceKind.COLOR:
+            return []
+        try:
+            return [[Color(choice.value)]]
+        except ValueError:
+            return []
+    if shape.any_color:
+        return [
+            list(combo) for combo in combinations_with_replacement(_FIVE_COLORS, shape.any_color)
+        ]
+    if shape.produced_type:
+        return [[color] for color in dict.fromkeys(produces)]
+    return []
+
+
+def triggered_mana_bonus(
+    context: "CostPayment | _SpendContext",
+    source: CardState,
+    produces: Sequence[Color],
+    trigger_sources: list[CardState] | None = None,
+) -> list[list[Color]]:
+    """Every way the triggered mana abilities that tapping `source` for
+    `produces` sets off would add mana to the payer's pool - one alternative
+    per choice of colour, `[[]]` when nothing would.
+
+    CR 605.4a resolves a triggered mana ability "immediately after the mana
+    ability that triggered it", and CR 601.2g has mana abilities activated
+    before the cost is paid, so by CR 601.2h that mana is in the pool the cost
+    is paid from: a cost only it can cover is payable (battle 7, B7-03).
+    Nothing triggers here - `abilities_triggered_by` reads each condition
+    against the events the tap would raise (CR 106.12a's tap, and the adding).
+    """
+    game = context.game
+    if game is None or context.payer is None or source.zone is not Zone.BATTLEFIELD:
+        return [[]]
+    if trigger_sources is None:
+        trigger_sources = mana_trigger_sources(game)
+    if not trigger_sources:
+        return [[]]
+    alternatives: list[list[Color]] = [[]]
+    events = (
+        tapped_for_mana_event(source, game, mana_added=produces),
+        mana_added_event(source, game, mana_added=produces),
+    )
+    for event in events:
+        for trigger_source, ability, controller in abilities_triggered_by(
+            game, event, trigger_sources
+        ):
+            shape = parse_triggered_mana(ability.effect)
+            if shape is None:
+                continue
+            if triggered_mana_recipient(shape.recipient, controller, event) != context.payer:
+                continue
+            adds = _triggered_mana_alternatives(shape, trigger_source, produces)
+            if adds:
+                alternatives = [done + more for done in alternatives for more in adds]
+    unique: dict[tuple[Color, ...], list[Color]] = {}
+    for alternative in alternatives:
+        unique.setdefault(tuple(sorted(alternative)), alternative)
+    return list(unique.values())
+
+
+def _with_triggered_mana(
+    context: "CostPayment | _SpendContext",
+    source: CardState,
+    options: list[list[Color]],
+    trigger_sources: list[CardState],
+) -> list[list[Color]]:
+    """Each of `options` followed by the mana its tap's triggered mana
+    abilities add - the ability's own mana first, so `tap_for_mana` can tell
+    the two apart again (`_activated_mana_ability_with_triggers`)."""
+    expanded: dict[tuple[Color, ...], list[Color]] = {}
+    for option in options:
+        for bonus in triggered_mana_bonus(context, source, option, trigger_sources):
+            combined = [*option, *bonus]
+            expanded.setdefault(tuple(combined), combined)
+    return list(expanded.values())
+
+
 def _auto_tap_candidates(
     payment: "CostPayment | _SpendContext", sources: Iterable[CardState]
 ) -> list[_Candidate]:
@@ -1011,6 +1126,7 @@ def _scan_mana_candidates(
     about.
     """
     candidates: list[_ScannedCandidate] = []
+    trigger_sources = mana_trigger_sources(payment.game) if payment.payer is not None else []
     for source in sources:
         if source.zone is not Zone.BATTLEFIELD or source.tapped:
             continue
@@ -1038,6 +1154,8 @@ def _scan_mana_candidates(
             )
             if not options:
                 continue
+            if trigger_sources:
+                options = _with_triggered_mana(payment, source, options, trigger_sources)
             candidates.append((source, options, restriction, any_color, index))
     # A restricted ability first among a source's own abilities, so the mana
     # that can do less is the mana spent - the same preference `ManaPool._buckets`
@@ -4256,6 +4374,36 @@ def _activated_mana_ability(
     return activated, refusals
 
 
+def _activated_mana_ability_with_triggers(
+    context: "CostPayment | _SpendContext",
+    source: CardState,
+    produces: Sequence[Color],
+    restriction: Any = INFER_RESTRICTION,
+) -> tuple["_ActivatedMana | None", list[str], list[Color], list[Color]]:
+    """`_activated_mana_ability`, also accepting a production that lists the
+    mana the tap's triggered mana abilities add after the ability's own
+    (CR 605.4a) - what a `TapPlan` entry reports and what a caller pinning a
+    source may name. Returns `(activated, refusals, the ability's own mana,
+    the triggered mana)`.
+    """
+    activated, refusals = _activated_mana_ability(context, source, produces, restriction)
+    wanted = list(produces)
+    if activated is not None or context.game is None or len(wanted) < 2:
+        return activated, refusals, wanted, []
+    trigger_sources = mana_trigger_sources(context.game)
+    if not trigger_sources:
+        return activated, refusals, wanted, []
+    for cut in range(len(wanted) - 1, 0, -1):
+        own, extra = wanted[:cut], wanted[cut:]
+        candidate, _ = _activated_mana_ability(context, source, own, restriction)
+        if candidate is None:
+            continue
+        bonuses = triggered_mana_bonus(context, source, own, trigger_sources)
+        if sorted(extra) in (sorted(bonus) for bonus in bonuses):
+            return candidate, refusals, own, extra
+    return activated, refusals, wanted, []
+
+
 def mana_ability_index(
     source: CardState,
     produces: Sequence[Color],
@@ -4297,7 +4445,9 @@ def mana_ability_index(
                 return index
     context = _SpendContext(game=game, payer=payer, spend=None)
     try:
-        activated, _refusals = _activated_mana_ability(context, source, wanted, restriction)
+        activated, _refusals, _own, _triggered = _activated_mana_ability_with_triggers(
+            context, source, wanted, restriction
+        )
     except ValueError:
         return None
     return activated.index if activated is not None else None
@@ -4750,7 +4900,9 @@ class CostPayment(BaseModel):
         # and the CR 602.5 refusals collected on the way - `_activated_mana_
         # ability`, shared with `mana_ability_index` so the ability a
         # `TapPlan` entry reports is the ability the tap actually activates.
-        activated, refusals = _activated_mana_ability(self, source, produces, restriction)
+        activated, refusals, produces, triggered_colors = _activated_mana_ability_with_triggers(
+            self, source, produces, restriction
+        )
         if activated is None:
             made = "".join(f"{{{color.value}}}" for color in produces) or "no mana"
             if refusals:
@@ -4799,8 +4951,21 @@ class CostPayment(BaseModel):
             self.game.apply_mana_ability_rider(
                 activated.ability.rider, self.game.controller_of(source).username, source
             )
-            triggered = self.game.emit(tapped_for_mana_event(source, self.game))
-            self.triggers_caused.extend(ability.id for ability in triggered)
+            waiting = {id(ability) for ability in self.game.pending_triggers}
+            # CR 106.12a: this mana ability resolved and produced mana - and
+            # an ability caused the payer to add it, which Caged Sun asks.
+            set_off = [
+                *self.game.emit(tapped_for_mana_event(source, self.game, mana_added=produces)),
+                *self.game.emit(mana_added_event(source, self.game, mana_added=produces)),
+            ]
+            # CR 605.4a: the triggered mana abilities among them resolve now,
+            # into this payment's pool (`Game.mana_pool_receiving`), with any
+            # colour the caller already named for them; CR 733.1's rewind
+            # empties that pool with the rest of the payment's mana.
+            self.game.resolve_triggered_mana_abilities(set_off, color_hints=triggered_colors)
+            self.triggers_caused.extend(
+                ability.id for ability in self.game.pending_triggers if id(ability) not in waiting
+            )
         return self.pool
 
     def auto_tap(self, sources: Iterable[CardState]) -> list[CardState]:

@@ -58,20 +58,16 @@ def test_leyline_of_abundance_adds_an_extra_green_when_a_creature_is_tapped():
     elves = scenario.creature("Llanowar Elves", "alice")
 
     scenario.activate(elves)
-    scenario.pass_until_resolved()
 
+    assert scenario.stack_names() == [], "CR 605.4a: no stack, no priority"
     assert scenario.player("alice").mana_pool.floating == {Color.GREEN: 2}
 
 
 def test_badgermole_cub_adds_extra_mana_left_floating_after_it_pays_for_a_spell():
     """`CostPayment.tap_for_mana`'s call site: tapping a creature to help pay
-    for casting a second one. The trigger goes on the stack *above* the spell
-    (`test_tap_for_mana_triggers.py`) and so resolves only after the spell's
-    own cost is already paid in full - CR 605.4a's stackless resolution is a
-    documented simplification this engine does not implement
-    (`docs/engine-coverage.md`) - so the bonus mana cannot help pay for the
-    very cast that produced it. It still has to go somewhere real:
-    `player.mana_pool`, floating, once the trigger itself resolves.
+    for casting a second one. CR 605.4a resolves the trigger at once, into the
+    payment's pool; the {G} cost is already covered by the Elves, so the bonus
+    is left over and floats in `player.mana_pool` (CR 106.4a).
     """
     scenario = (
         Scenario()
@@ -87,9 +83,7 @@ def test_badgermole_cub_adds_extra_mana_left_floating_after_it_pays_for_a_spell(
     tapper = scenario.creature("Llanowar Elves", "alice")
 
     scenario.cast_onto_stack("Llanowar Elves", tapper)
-    assert scenario.stack_names() == ["Llanowar Elves", "Badgermole Cub's triggered ability"]
-
-    new_elf = scenario.resolve_top()  # Badgermole Cub's trigger
+    assert scenario.stack_names() == ["Llanowar Elves"]
     assert scenario.player("alice").mana_pool.floating == {Color.GREEN: 1}
 
     new_elf = scenario.resolve_top()  # Llanowar Elves itself
@@ -146,7 +140,6 @@ def test_utopia_sprawls_bonus_mana_goes_to_the_enchanted_lands_controller():
 
     scenario.pass_priority("alice")
     scenario.activate(bobs_forest, username="bob")
-    scenario.pass_until_resolved()
 
     assert scenario.player("alice").mana_pool.total == 0
     assert scenario.player("bob").mana_pool.floating == {Color.GREEN: 1, Color.BLUE: 1}

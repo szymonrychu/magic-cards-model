@@ -695,6 +695,27 @@ def tapped_for_mana_event(
     )
 
 
+def triggered_mana_recipient(
+    recipient: str, controller: str, event: "GameEvent | None"
+) -> str | None:
+    """Whose pool a triggered mana ability's mana goes to (CR 605.1b).
+
+    "add" is the ability's own controller; "its controller" is the controller
+    of the permanent the event is about - the land that was tapped, which for
+    an Aura's "enchanted land" is the enchanted one; "that player" is the
+    player the condition named, falling back to that same permanent's
+    controller.
+    """
+    if recipient == "controller":
+        return controller
+    if event is not None:
+        if recipient == "that_player" and event.player is not None:
+            return event.player
+        if event.subject_controller is not None:
+            return event.subject_controller
+    return None
+
+
 def mana_added_event(
     source: CardState, game: "Game | None" = None, mana_added: "Sequence[Color] | None" = None
 ) -> GameEvent:
@@ -905,6 +926,21 @@ _ENTERING_SUBTYPE = re.compile(
     r"^(?:an?|one or more|another) (?:nontoken )?(?P<subtype>[A-Z][A-Za-z]*?)s? "
     r"(?:you control |an opponent controls )?enters?\b"
 )
+
+
+#: "you tap a Swamp for mana" (Nirkana Revenant), "a Forest is tapped for mana"
+#: (Vernal Bloom) - a subtype named as the tapped permanent (CR 205.3i's land
+#: types). Capitalization tells it from the lowercase card-type words
+#: `_types_match` reads ("a creature", "a land"), as `_ENTERING_SUBTYPE` does.
+_TAPPED_SUBTYPE = re.compile(
+    r"(?:\btaps? an? |^an? )(?P<subtype>[A-Z][A-Za-z]*) (?:for mana|is tapped for mana)"
+)
+
+
+def _required_tapped_subtype(condition: str) -> str | None:
+    """The subtype a tapped-for-mana condition names, or `None`."""
+    match = _TAPPED_SUBTYPE.search(condition)
+    return match.group("subtype") if match else None
 
 
 def _required_entering_subtype(condition: str) -> str | None:
@@ -1651,10 +1687,14 @@ def condition_matches(
             return event.subject_id is not None and event.subject_id == source.attached_to
         # "Whenever you tap a creature for mana" (Badgermole Cub, Leyline of
         # Abundance) - the controller's own tap, of a permanent of the named
-        # type. Nothing in the pool prints the self-referential form.
-        return _controller_clause_holds(
-            condition, controller, event.subject_controller
-        ) and _types_match(event.subject_types, condition)
+        # type - and "you tap a Swamp for mana" (Nirkana Revenant), "a Forest is
+        # tapped for mana" (Vernal Bloom), naming a land subtype instead.
+        # Nothing in the pool prints the self-referential form.
+        return (
+            _controller_clause_holds(condition, controller, event.subject_controller)
+            and _types_match(event.subject_types, condition)
+            and _subtype_matches(event.subject_subtypes, _required_tapped_subtype(condition))
+        )
 
     if ability.event is TriggerEvent.TURNED_FACE_UP:
         # CR 702.37e/708.8. Brine Elemental's own printing is the only one
@@ -3254,6 +3294,93 @@ def controller_of_source(game: "Game", source: CardState) -> str:
     return source.owner or source.controller or game.active_player.username
 
 
+def triggered_abilities_on(game: "Game", source: CardState) -> list[TriggeredAbility]:
+    """Every triggered ability `source` has right now, printed and granted,
+    before any condition is read - the abilities `triggers_for` asks."""
+    # CR 400.7b / CR 611.3d: an ability granted to this object is had by
+    # this object, so it is asked here alongside the card's own printed
+    # ones. Never *instead* of them - a grant adds.
+    granted = granted_triggered_abilities_of(source.granted_ability_texts)
+    # CR 613.5 / CR 707.2: a permanent whose computed ability text has been
+    # rewritten by a layer 1 copy effect has the *copied* object's triggers
+    # and not its own, so the printed card is the wrong thing to read.
+    # `rewritten_ability_lines` answers None whenever nothing was taken
+    # away, which is every ordinary permanent.
+    rewritten = rewritten_ability_lines(game, source)
+    if rewritten is not None:
+        granted = granted_triggered_abilities_of(rewritten)
+    else:
+        # CR 613.1f / CR 613.5: a layer 6 grant ("Other creatures you
+        # control are ... and have '...'") can add a triggered ability
+        # this object neither prints nor carries in
+        # `granted_ability_texts` - `layers.quoted_ability_grants` writes
+        # it onto the computed board only. `added_ability_lines` is the
+        # reader `Game.activated_abilities` already uses for the
+        # identical gap on the activated-ability side (the intrinsic mana
+        # ability a granted basic land type brings with it); mirrored
+        # here so a granted "Whenever ..." is actually found rather than
+        # granted invisibly.
+        granted = granted + granted_triggered_abilities_of(added_ability_lines(game, source))
+    granted_ids = {id(ability) for ability in granted}
+    printed_abilities = [] if rewritten is not None else triggered_abilities_of(source.card)
+    had: list[TriggeredAbility] = []
+    for ability in printed_abilities + granted:
+        up_face_name = source.up_face_name
+        if (
+            up_face_name is not None
+            # A granted line was never printed on any face (its `face` is
+            # the empty string), so the double-faced filter below is not
+            # a question that can be asked of it - CR 712.8d is about
+            # which of the *card's* two printed sides is up, and a grant
+            # is on neither.
+            and id(ability) not in granted_ids
+            and ability.face != up_face_name
+        ):
+            # CR 712.8d/712.8e/712.8f: a double-faced permanent has only
+            # the characteristics of the face that's up, and CR 109.3
+            # counts abilities among them. Witch-Blessed Meadow, played as
+            # a land (CR 712.12), has no "when this creature enters"
+            # trigger, because that line was printed on Witch Enchanter's
+            # face; a transformed Duskwatch Recruiter has Krallenhorde
+            # Howler's upkeep trigger and not its own (CR 701.27g), and an
+            # untransformed one has the mirror.
+            continue
+        if ability.class_level is not None and source.class_level < ability.class_level:
+            # CR 716.2a: "As long as this Class is level N or greater, it
+            # has [Abilities]" - a level-gated trigger printed under a
+            # bar the Class has not reached yet is not "in effect", the
+            # same way `CardState.class_ability_text` already keeps a
+            # static ability quiet until then.
+            continue
+        had.append(ability)
+    return had
+
+
+def abilities_triggered_by(
+    game: "Game", event: GameEvent, sources: list[CardState]
+) -> list[tuple[CardState, TriggeredAbility, str]]:
+    """`(source, ability, controller)` for every ability of `sources` this
+    event would trigger (CR 603.2, CR 603.4), without triggering anything.
+
+    Changes nothing and mints nothing, so the payment search can ask what a
+    tap would set off (`machines/cost.triggered_mana_bonus`) as often as it
+    likes; `triggers_for` is this plus the once-per-turn bookkeeping and the
+    stack objects.
+    """
+    found: list[tuple[CardState, TriggeredAbility, str]] = []
+    for source in sources:
+        controller = controller_of_source(game, source)
+        for ability in triggered_abilities_on(game, source):
+            if not condition_matches(game, ability, source, controller, event):
+                continue
+            if source.zone not in zones_ability_functions_in(ability, source):
+                continue  # CR 113.6: doesn't function from the zone it's in.
+            if not intervening_if_holds(game, ability, source, event):
+                continue  # CR 603.4: it does not trigger at all.
+            found.append((source, ability, controller))
+    return found
+
+
 def triggers_for(game: "Game", event: GameEvent, sources: list[CardState]) -> list[AbilityOnStack]:
     """Every ability `sources` have that this event triggers (CR 603.2).
 
@@ -3262,95 +3389,34 @@ def triggers_for(game: "Game", event: GameEvent, sources: list[CardState]) -> li
     then doing nothing.
     """
     triggered: list[AbilityOnStack] = []
-    for source in sources:
-        controller = controller_of_source(game, source)
-        # CR 400.7b / CR 611.3d: an ability granted to this object is had by
-        # this object, so it is asked here alongside the card's own printed
-        # ones. Never *instead* of them - a grant adds.
-        granted = granted_triggered_abilities_of(source.granted_ability_texts)
-        # CR 613.5 / CR 707.2: a permanent whose computed ability text has been
-        # rewritten by a layer 1 copy effect has the *copied* object's triggers
-        # and not its own, so the printed card is the wrong thing to read.
-        # `rewritten_ability_lines` answers None whenever nothing was taken
-        # away, which is every ordinary permanent.
-        rewritten = rewritten_ability_lines(game, source)
-        if rewritten is not None:
-            granted = granted_triggered_abilities_of(rewritten)
-        else:
-            # CR 613.1f / CR 613.5: a layer 6 grant ("Other creatures you
-            # control are ... and have '...'") can add a triggered ability
-            # this object neither prints nor carries in
-            # `granted_ability_texts` - `layers.quoted_ability_grants` writes
-            # it onto the computed board only. `added_ability_lines` is the
-            # reader `Game.activated_abilities` already uses for the
-            # identical gap on the activated-ability side (the intrinsic mana
-            # ability a granted basic land type brings with it); mirrored
-            # here so a granted "Whenever ..." is actually found rather than
-            # granted invisibly.
-            granted = granted + granted_triggered_abilities_of(added_ability_lines(game, source))
-        granted_ids = {id(ability) for ability in granted}
-        printed_abilities = [] if rewritten is not None else triggered_abilities_of(source.card)
-        for ability in printed_abilities + granted:
-            up_face_name = source.up_face_name
-            if (
-                up_face_name is not None
-                # A granted line was never printed on any face (its `face` is
-                # the empty string), so the double-faced filter below is not
-                # a question that can be asked of it - CR 712.8d is about
-                # which of the *card's* two printed sides is up, and a grant
-                # is on neither.
-                and id(ability) not in granted_ids
-                and ability.face != up_face_name
-            ):
-                # CR 712.8d/712.8e/712.8f: a double-faced permanent has only
-                # the characteristics of the face that's up, and CR 109.3
-                # counts abilities among them. Witch-Blessed Meadow, played as
-                # a land (CR 712.12), has no "when this creature enters"
-                # trigger, because that line was printed on Witch Enchanter's
-                # face; a transformed Duskwatch Recruiter has Krallenhorde
-                # Howler's upkeep trigger and not its own (CR 701.27g), and an
-                # untransformed one has the mirror.
+    for source, ability, controller in abilities_triggered_by(game, event, sources):
+        if ability.once_per_turn:
+            # CR 603.2h: "the ability triggers only if its source's
+            # controller has not yet taken the indicated action that
+            # turn" - Caretaker's Talent's own "This ability triggers
+            # only once each turn." `key` pairs the source with the
+            # ability's own printed condition, so a permanent with more
+            # than one once-per-turn trigger is tracked separately for
+            # each.
+            key = f"{source.id}:{ability.condition}"
+            fired = game.once_per_turn_triggers.get(key, 0)
+            if fired > 0:
                 continue
-            if ability.class_level is not None and source.class_level < ability.class_level:
-                # CR 716.2a: "As long as this Class is level N or greater, it
-                # has [Abilities]" - a level-gated trigger printed under a
-                # bar the Class has not reached yet is not "in effect", the
-                # same way `CardState.class_ability_text` already keeps a
-                # static ability quiet until then.
-                continue
-            if not condition_matches(game, ability, source, controller, event):
-                continue
-            if source.zone not in zones_ability_functions_in(ability, source):
-                continue  # CR 113.6: doesn't function from the zone it's in.
-            if not intervening_if_holds(game, ability, source, event):
-                continue  # CR 603.4: it does not trigger at all.
-            if ability.once_per_turn:
-                # CR 603.2h: "the ability triggers only if its source's
-                # controller has not yet taken the indicated action that
-                # turn" - Caretaker's Talent's own "This ability triggers
-                # only once each turn." `key` pairs the source with the
-                # ability's own printed condition, so a permanent with more
-                # than one once-per-turn trigger is tracked separately for
-                # each.
-                key = f"{source.id}:{ability.condition}"
-                fired = game.once_per_turn_triggers.get(key, 0)
-                if fired > 0:
-                    continue
-                game.once_per_turn_triggers[key] = fired + 1
-            on_stack = AbilityOnStack(
-                kind=AbilityKind.TRIGGERED,
-                ability=ability,
-                source_id=source.id,
-                source_name=source.name,
-                controller=controller,
-                event=event,
-            )
-            triggered.append(on_stack)
-            # CR 603.2d: "determine how many times it should trigger, then
-            # trigger it that many times" - Panharmonicon. Each extra time is a
-            # separate ability on the stack in its own right, with its own id.
-            for _ in range(additional_trigger_times(game, on_stack, source, event)):
-                triggered.append(on_stack.model_copy(update={"id": new_id()}, deep=True))
+            game.once_per_turn_triggers[key] = fired + 1
+        on_stack = AbilityOnStack(
+            kind=AbilityKind.TRIGGERED,
+            ability=ability,
+            source_id=source.id,
+            source_name=source.name,
+            controller=controller,
+            event=event,
+        )
+        triggered.append(on_stack)
+        # CR 603.2d: "determine how many times it should trigger, then
+        # trigger it that many times" - Panharmonicon. Each extra time is a
+        # separate ability on the stack in its own right, with its own id.
+        for _ in range(additional_trigger_times(game, on_stack, source, event)):
+            triggered.append(on_stack.model_copy(update={"id": new_id()}, deep=True))
     return triggered
 
 

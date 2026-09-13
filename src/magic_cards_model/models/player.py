@@ -451,6 +451,16 @@ class Player(BaseModel):
             and card_state.owner == self.username
         )
         stamp_before = card_state.zone_change_stamp
+        if not origin.is_shared:
+            # CR 400.7: a card that moves is a new object in its new zone and
+            # nothing of it stays behind. A caller that looked at a card and
+            # left it listed where it was (battle 7, B7-01: a card put into
+            # hand stayed in the library too) must not duplicate it.
+            held = self.zones.get(origin, [])
+            for index, state in enumerate(held):
+                if state is card_state:
+                    del held[index]
+                    break
         card_state.move_to(zone)
         self.cards_in(zone).append(card_state)
         if zone is Zone.LIBRARY:

@@ -368,3 +368,25 @@ def test_a_snapshot_written_before_damage_assignment_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_DAMAGE_ASSIGNMENT}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before battle 7: a triggered mana ability (CR 605.1b)
+#: resolving off the stack (CR 605.4a), scry asking CR 401.4's bottom order,
+#: and the attack requirement (CR 508.1d). Battle 7 was stamped 13 -> 14 and
+#: then 14 -> 15 while battles 6 and 4 landed, so it landed as 16.
+_SCHEMA_VERSION_BEFORE_BATTLE_SEVEN = 15
+
+
+def test_a_snapshot_written_before_battle_seven_is_refused() -> None:
+    """A version-15 dump can hold Leyline of Abundance's trigger on the stack,
+    and a tape one scry-order question short; decoded as current, it would
+    replay into a game no version-16 engine could have produced."""
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_BATTLE_SEVEN
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_BATTLE_SEVEN
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_BATTLE_SEVEN}",
+    ):
+        Game.model_validate(dumped)

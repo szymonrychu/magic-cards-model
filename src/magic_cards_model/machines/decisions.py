@@ -124,7 +124,7 @@ CR 703.4j has each defending player declare blockers (CR 509.1), both asked when
 their step's turn-based action runs rather than while anything resolves.
 """
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
 from itertools import zip_longest
@@ -1437,6 +1437,7 @@ def _ask_declaration(
     player: str,
     prompt: str,
     attackers: tuple[UUID, ...] = (),
+    default: Sequence[tuple[UUID, str]] = (),
 ) -> list[tuple["CardState | UUID", "CardState | TargetRef | UUID | str"]]:
     """Put a combat declaration to one player, and return what they declared.
 
@@ -1457,7 +1458,14 @@ def _ask_declaration(
     staging into the script or the tape - and this asker uses it the same way
     `Game.ask`, `ask_mulligan`, and `ask_trigger_order` do.
     """
-    decision = Decision(kind=kind, player=player, prompt=prompt, cards=attackers, source_id=None)
+    decision = Decision(
+        kind=kind,
+        player=player,
+        prompt=prompt,
+        cards=attackers,
+        source_id=None,
+        default_cards=tuple(creature for creature, _defender in default) or None,
+    )
     script.asked.append(decision)
     found, value = script.take(decision)
     if not found:
@@ -1469,7 +1477,9 @@ def _ask_declaration(
             )
         )
     if not found:
-        value = default_answer(decision)
+        # The asker's own legal floor when it gave one (CR 508.1d: a creature
+        # that attacks each combat if able), else "declare nobody".
+        value = tuple(default) if default else default_answer(decision)
     if not isinstance(value, (list, tuple)):
         raise ValueError(f"{decision.prompt}: the answer is a list of pairs")
     pairs: list[tuple[object, object]] = []
@@ -1491,6 +1501,7 @@ def ask_attackers(
     player: str,
     *,
     prompt: str = "declare attackers",
+    default: Sequence[tuple[UUID, str]] = (),
 ) -> list[tuple["CardState | UUID", "CardState | TargetRef | UUID | str"]]:
     """Put CR 703.4i's declaration to the active player (CR 508.1).
 
@@ -1500,7 +1511,7 @@ def ask_attackers(
     order; an unscripted player declares nobody, which is always legal ("if
     any").
     """
-    return _ask_declaration(script, DecisionKind.DECLARE_ATTACKERS, player, prompt)
+    return _ask_declaration(script, DecisionKind.DECLARE_ATTACKERS, player, prompt, default=default)
 
 
 def ask_blockers(
