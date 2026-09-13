@@ -268,10 +268,22 @@ class Player(BaseModel):
     def library(self) -> list[CardState]:
         return self.zones[Zone.LIBRARY]
 
-    def note_library_changed(self) -> None:
+    def note_library_changed(self, *, placed: list[CardState] | None = None) -> None:
         """Move `library_epoch` on (CR 701.20d), for a put-back that writes
-        the library list directly instead of going through `add`."""
-        self.library_epoch += 1
+        the library list directly instead of going through `add`.
+
+        With no `placed`, every library record ends: a shuffle, or a write
+        that puts cards above others or reorders them. `placed` names the
+        cards a put-back just wrote *below or among only themselves* - onto
+        the bottom, or a scry's own cards - leaving every other card in the
+        order it was in (CR 401.2), so the live library records of those
+        other cards are re-pinned to the new epoch (`Game.keep_untouched_
+        library_records`) and a record of a card in `placed` still ends."""
+        game = self.game
+        if placed is None or game is None:
+            self.library_epoch += 1
+            return
+        game.keep_untouched_library_records(self, placed)
 
     @property
     def hand(self) -> list[CardState]:
@@ -424,20 +436,24 @@ class Player(BaseModel):
             card_state.owner = self.username
         if move_refused(card_state, zone) is not None:
             return
-        from_own_library_to_hand = (
+        origin = card_state.zone
+        from_own_hidden_group_to_hand = (
             zone is Zone.HAND
-            and card_state.zone is Zone.LIBRARY
+            and (origin is Zone.LIBRARY or origin.is_outside_the_game)
             and card_state.owner == self.username
         )
-        stamp_in_library = card_state.zone_change_stamp
+        stamp_before = card_state.zone_change_stamp
         card_state.move_to(zone)
         self.cards_in(zone).append(card_state)
         if zone is Zone.LIBRARY:
-            self.note_library_changed()
-        elif from_own_library_to_hand and self.game is not None:
-            # CR 121.1's draw, or any effect making the same move: what a
-            # player knew about the card on top may follow it into the hand.
-            self.game.carry_knowledge_into_hand(card_state, stamp_in_library)
+            # Appended, so below every card already there (CR 401.2): their
+            # order is untouched and what was known about them stays true.
+            self.note_library_changed(placed=[card_state])
+        elif from_own_hidden_group_to_hand and self.game is not None:
+            # CR 121.1's draw, any effect making the same move, or a card
+            # revealed from outside the game and put into hand (CR 400.11a,
+            # CR 701.20a): what a player knew may follow it into the hand.
+            self.game.carry_knowledge_into_hand(card_state, stamp_before, origin)
 
     def move(self, card_state: CardState, to_zone: Zone) -> None:
         """Move a card between this player's zones.

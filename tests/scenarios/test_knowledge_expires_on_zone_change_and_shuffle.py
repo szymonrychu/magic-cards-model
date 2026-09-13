@@ -17,12 +17,13 @@ ends:
   become new objects." And CR 701.24a's shuffle is exactly that: "randomize
   the cards within it so that no player knows their order." A library record
   is kept against the owner's `Player.library_epoch`, which every shuffle and
-  every insertion into or reordering of that library moves on.
+  every insertion into or reordering of that library moves on; a put that
+  leaves a card's order untouched (onto the bottom) re-pins that card's record
+  to the new epoch - see `test_bottom_put_keeps_untouched_library_knowledge.py`.
 - **CR 401.2** - "Players can't look at or change the order of cards in a
   library", which is why a library card's position is the thing a library
-  record knows, and why anything that changes positions ends it.
-- **CR 103.5** - the mulligan's bottoming puts cards into the library, so it
-  ends library knowledge the same way.
+  record knows, and why anything that reorders it, or puts a card above it,
+  ends it.
 
 Every CR number above was read in full with `mise run rules:find` in the
 session that wrote this file.
@@ -31,7 +32,6 @@ session that wrote this file.
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Game, Zone
 from tests.scenarios.harness import Scenario
-from tests.scenarios.test_mulligans import match as eldrazi_ramp_match
 from tests.scenarios.test_opening_hand_actions import (
     broodscale,
     dealt,
@@ -184,28 +184,6 @@ def test_a_scry_that_keeps_the_card_on_top_still_ends_the_record():
     bolt = scenario.find("Lightning Bolt", Zone.HAND, "bob")
     assert bolt.zone is Zone.HAND
     assert known(scenario.game, "alice") == []
-
-
-def test_bottoming_cards_for_a_mulligan_ends_a_record_of_the_card_left_on_top():
-    """CR 103.5: "puts a number of those cards ... on the bottom of their
-    library". The looked-at top card is still on top afterwards; the library
-    it is on top of is not the one that was looked at."""
-    match = eldrazi_ramp_match()
-    game = match.start_game()
-    bob = game.player("bob")
-    game.declare_mulligan("alice", False)
-    game.declare_mulligan("bob", True)
-    assert not bob.hand_kept
-
-    top = bob.library[0]
-    game.look(top, "alice", source=None)
-    assert known(game, "alice") == [(top.name, Zone.LIBRARY, 0, False)]
-
-    game.declare_mulligan("bob", False)
-
-    assert bob.hand_kept
-    assert bob.library[0] is top
-    assert known(game, "alice") == []
 
 
 # -- a look is for its viewer (CR 701.20e) -------------------------------------

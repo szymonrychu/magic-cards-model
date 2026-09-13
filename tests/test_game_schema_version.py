@@ -259,3 +259,23 @@ def test_a_version_eight_snapshot_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_OF_EITHER_HALF}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before `Game.library_orders_kept` recorded which
+#: library cards kept their order through a put onto the bottom.
+_SCHEMA_VERSION_BEFORE_LIBRARY_ORDERS_KEPT = 10
+
+
+def test_a_snapshot_written_before_library_orders_kept_is_refused() -> None:
+    """A version-10 dump has no `library_orders_kept`; decoded as current, every
+    library record a bottom put had kept would silently end."""
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_LIBRARY_ORDERS_KEPT
+    dumped = _a_played_game().model_dump(mode="json")
+    del dumped["library_orders_kept"]
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_LIBRARY_ORDERS_KEPT
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_LIBRARY_ORDERS_KEPT}",
+    ):
+        Game.model_validate(dumped)

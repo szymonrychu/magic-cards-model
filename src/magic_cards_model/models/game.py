@@ -841,7 +841,9 @@ class Reveal(BaseModel):
     """`TurnMachine.turns_taken` when it was shown, `0` before the first turn."""
     library_epoch: int | None = None
     """The owner's `Player.library_epoch` when the card was shown from a
-    library (CR 701.20d), and `None` for a card shown from any other zone."""
+    library (CR 701.20d), and `None` for a card shown from any other zone.
+    Never rewritten: a put that leaves the card's order untouched is recorded
+    as a `LibraryOrderKept` row instead."""
 
 
 class KnownCarry(BaseModel):
@@ -873,6 +875,31 @@ class KnownCarry(BaseModel):
     source: str | None = None
     turn: int
     """When the carried record was made, not when the card moved."""
+
+
+class LibraryOrderKept(BaseModel):
+    """One library card, as one object, kept its place through one library put.
+
+    CR 701.20d ends a library reveal only for "revealed cards that are
+    reordered", and CR 401.2 keeps a library one ordered pile: a card put onto
+    the bottom goes below every card already there, and a scry or surveil
+    reorders only the cards it looked at. So when such a put moves its owner's
+    `Player.library_epoch` to `epoch`, each other card with a live library
+    record gets one of these, and `Game.known_to` reads a record made at an
+    earlier epoch as still true when every epoch since has one for that card
+    and stamp (CR 400.7). `Reveal` itself is never rewritten: its
+    `library_epoch` stays the order the card was shown in.
+
+    Written by `Game.keep_untouched_library_records`.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    card_id: UUID
+    zone_change_stamp: UUID
+    """The card's stamp when the put happened - a later object is not this one."""
+    epoch: int
+    """The owner's `Player.library_epoch` the put moved the library to."""
 
 
 class KnownCard(BaseModel):
@@ -1580,6 +1607,11 @@ class Game(BaseModel):
     """Library records carried into a hand by a library-to-hand move, in
     order. See `KnownCarry` - a knowledge policy, not a CR rule."""
 
+    library_orders_kept: list[LibraryOrderKept] = Field(default_factory=list)
+    """Library cards that kept their order through a put onto the bottom or a
+    scry/surveil put-back, one row per card per put, in order. See
+    `LibraryOrderKept`."""
+
     spells_cast_this_turn: dict[str, list[CardState]] = Field(default_factory=dict)
     """Every spell each player has cast this turn, keyed by controller
     (CR 601.2a marks the casting event; `put_on_stack` records it here).
@@ -1955,7 +1987,7 @@ class Game(BaseModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 10
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 11
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -2071,6 +2103,14 @@ class Game(BaseModel):
     cast for its impending cost records no paid cost on the permanent, so
     decoded here it would read as a hardcast creature that happens to carry
     time counters - refused instead.
+
+    Bumped 10 -> 11: `Game` gained `library_orders_kept`, the rows that keep a
+    library record true through a put onto the bottom or a scry/surveil
+    put-back that did not reorder its card (CR 701.20d, CR 401.2). A
+    version-10 dump has none, and decoded here every record such a put had
+    kept would silently end. Refused instead.
+    The two were built in parallel, each as 9 -> 10, so a 10 from either line
+    lacks the other's field; merged, the number moved on once more.
     """
 
     @model_validator(mode="before")
@@ -3303,7 +3343,10 @@ class Game(BaseModel):
 
         self._create_resolution_replacements(spell)
 
-        if spell.id in self.turn_ended_exiled_ids:
+        if spell.id in self.turn_ended_exiled_ids or spell.zone is Zone.EXILE:
+            # (Also a spell whose own text exiled it as it resolved - Burning
+            # Wish's "Exile Burning Wish." (CR 201.5): CR 608.2n's final
+            # graveyard step finds no spell left on its way there.)
             # CR 724.1b exiled this spell while it was resolving, and CR 608.2m
             # let it finish resolving anyway ("If an instant spell, sorcery
             # spell, or ability that can legally resolve leaves the stack once
@@ -6228,7 +6271,9 @@ class Game(BaseModel):
                 library.insert(index, state)
             library.extend(to_bottom)
             if on_top or to_bottom:
-                player.note_library_changed()  # CR 701.20d: put back is reordered
+                # CR 701.20d: the scried cards are reordered; the cards below
+                # them keep their order (CR 401.2), so their records stay.
+                player.note_library_changed(placed=looked_at)
             # CR 701.20e: the scrier knows where each card went, against the
             # order the put-back just made - the next reordering ends it.
             for state in (*on_top, *to_bottom):
@@ -6292,7 +6337,9 @@ class Game(BaseModel):
             for index, state in enumerate(on_top):
                 library.insert(index, state)
             if on_top:
-                player.note_library_changed()  # CR 701.20d: put back is reordered
+                # CR 701.20d: the surveilled cards are reordered; the cards
+                # below them keep their order (CR 401.2), so their records stay.
+                player.note_library_changed(placed=looked_at)
             # CR 701.20e for the cards kept on top; a card put into the
             # graveyard is in a public zone (CR 400.2) and needs no record.
             for state in on_top:
@@ -6602,6 +6649,60 @@ class Game(BaseModel):
                 self.shuffle_library(player)
             return found
 
+    def search_and_put(
+        self,
+        player: Player | str,
+        matches: Callable[[CardState], bool],
+        *,
+        destination: Zone,
+        count: int = 1,
+        reveal: bool = False,
+        tapped: bool = False,
+        source: str | None = None,
+        source_id: str | None = None,
+    ) -> list[CardState]:
+        """Search a library for a stated quality, reveal the finds if the text
+        says so, put them into the hand or onto the battlefield, then shuffle.
+
+        The funnel every printed "search your library for ..., [reveal it,]
+        put it ..., then shuffle" goes through, in the order it is printed.
+        CR 701.23b makes each find optional (a stated quality). CR 701.23e:
+        "If the effect that contains the search instruction doesn't also
+        contain instructions to reveal the found card(s), then they're not
+        revealed", so `reveal` is read off the printed text by the caller.
+        The reveal is CR 701.20a's, recorded while the card is still the
+        library's object (CR 701.20b), and the put comes before the CR 701.24a
+        shuffle so a find put into its owner's hand carries the public record
+        (`Player.add`, `carry_knowledge_into_hand`).
+        """
+        with self._id_allocator_scope():
+            if isinstance(player, str):
+                player = self.player(player)
+            if destination not in (Zone.HAND, Zone.BATTLEFIELD):
+                raise ValueError(
+                    "a search puts its finds into a hand or onto the battlefield, "
+                    f"not {destination.value}"
+                )
+            found = self.search_library(
+                player,
+                matches,
+                count=count,
+                optional=True,
+                shuffle=False,
+                source=source,
+                source_id=source_id,
+            )
+            if reveal:
+                for state in found:
+                    self.reveal(state, source=source)
+            for state in found:
+                if destination is Zone.HAND:
+                    player.add(state, Zone.HAND)
+                else:
+                    self.put_onto_battlefield(state, player.username, tapped=tapped)
+            self.shuffle_library(player)
+            return found
+
         # -- revealing, and cards outside the game (CR 701.20, CR 400.11) --------
 
     def reveal(self, card_state: CardState, source: str | None = None) -> CardState:
@@ -6765,7 +6866,9 @@ class Game(BaseModel):
             return None
         index_from_top: int | None = None
         if reveal.zone is Zone.LIBRARY:
-            if reveal.library_epoch is None or owner.library_epoch != reveal.library_epoch:
+            if not self._library_order_holds(
+                card_state.id, card_state.zone_change_stamp, owner, reveal.library_epoch
+            ):
                 return None
             index_from_top = next(
                 (index for index, state in enumerate(owner.library) if state is card_state), None
@@ -6807,16 +6910,79 @@ class Game(BaseModel):
             carried=True,
         )
 
-    def carry_knowledge_into_hand(self, card_state: CardState, stamp_in_library: UUID) -> None:
-        """Carry every library record still live for `card_state` into its
+    def keep_untouched_library_records(self, player: Player, placed: Sequence[CardState]) -> None:
+        """Move `player.library_epoch` on for a put-back that wrote only
+        `placed`, and re-pin every other card's live library record to it.
+
+        CR 701.20d ends a reveal when the library is "shuffled or otherwise
+        reordered" - "any revealed cards that are reordered stop being
+        revealed". A card put on the bottom goes below every card already
+        there, and a scry or surveil moves only its own cards off the top and
+        back (CR 701.22a, CR 701.25a); either way CR 401.2's pile keeps every
+        other card in its order, so their records stay true. Re-pinning is
+        data appended at the moment of the put, the way `KnownCarry` is, so
+        `known_to` stays pure. A record of a card in `placed`, or one already
+        ended (a stale epoch, a new stamp), is not re-pinned and so ends.
+        """
+        placed_ids = {state.id for state in placed}
+        untouched = {state.id: state for state in player.library if state.id not in placed_ids}
+        kept = {
+            reveal.card_id: state
+            for reveal in self.reveals
+            if (state := untouched.get(reveal.card_id)) is not None
+            and reveal.zone is Zone.LIBRARY
+            and reveal.turn is not None
+            and reveal.zone_change_stamp == state.zone_change_stamp
+            and self._library_order_holds(
+                state.id, state.zone_change_stamp, player, reveal.library_epoch
+            )
+        }
+        player.library_epoch += 1
+        for state in kept.values():
+            self.library_orders_kept.append(
+                LibraryOrderKept(
+                    card_id=state.id,
+                    zone_change_stamp=state.zone_change_stamp,
+                    epoch=player.library_epoch,
+                )
+            )
+
+    def _library_order_holds(
+        self, card_id: UUID, stamp: UUID, owner: Player, recorded_epoch: int | None
+    ) -> bool:
+        """Whether a library record made at `recorded_epoch` still describes
+        where card `card_id`, as the object `stamp`, sits (CR 701.20d,
+        CR 401.2).
+
+        True when the owner's library has not moved since, or when every move
+        since was a put that left this card, as this object, in its order - a
+        `LibraryOrderKept` row for each epoch in between.
+        """
+        if recorded_epoch is None or recorded_epoch > owner.library_epoch:
+            return False
+        if recorded_epoch == owner.library_epoch:
+            return True
+        kept = {
+            row.epoch
+            for row in self.library_orders_kept
+            if row.card_id == card_id and row.zone_change_stamp == stamp
+        }
+        return all(epoch in kept for epoch in range(recorded_epoch + 1, owner.library_epoch + 1))
+
+    def carry_knowledge_into_hand(
+        self, card_state: CardState, stamp_before: UUID, origin: Zone = Zone.LIBRARY
+    ) -> None:
+        """Carry every record still live for `card_state` in `origin` into its
         owner's hand, as `KnownCarry` data (a knowledge policy, not a CR rule).
 
-        Called by `Player.add` for a card moving straight from its owner's
-        library to that owner's hand - a draw (CR 121.1) or any effect that
-        makes the same move - after the move, with the stamp the card had in
-        the library. A record the library's epoch had already ended before the
-        move (CR 701.20d) is not live, so it is not carried; neither is a
-        record of an earlier object (CR 400.7).
+        Called by `Player.add` for a card moving straight from a hidden group
+        its owner holds into that owner's hand, after the move, with the stamp
+        the card had before it: from the library - a draw (CR 121.1) or any
+        effect that makes the same move - or from outside the game, a card
+        revealed there (CR 400.11a, CR 701.20a) and then put into the hand
+        (Karn, the Great Creator's -2, Burning Wish). A library record the
+        epoch had already ended before the move (CR 701.20d) is not live, so
+        it is not carried; neither is a record of an earlier object (CR 400.7).
         """
         owner = self._seat(card_state.owner)
         if owner is None:
@@ -6824,13 +6990,18 @@ class Game(BaseModel):
         for reveal in list(self.reveals):
             if (
                 reveal.card_id != card_state.id
-                or reveal.zone is not Zone.LIBRARY
+                or reveal.zone is not origin
                 or reveal.zone_change_stamp is None
-                or reveal.zone_change_stamp != stamp_in_library
+                or reveal.zone_change_stamp != stamp_before
                 or reveal.turn is None
-                or reveal.library_epoch is None
-                or reveal.library_epoch != owner.library_epoch
             ):
+                continue
+            if origin is Zone.LIBRARY:
+                if not self._library_order_holds(
+                    card_state.id, stamp_before, owner, reveal.library_epoch
+                ):
+                    continue
+            elif reveal.library_epoch is not None:
                 continue
             self.known_carries.append(
                 KnownCarry(
@@ -7236,6 +7407,10 @@ class Game(BaseModel):
                     library = self._owner_of(card_state).library
                     library.remove(card_state)
                     library.insert(0, card_state)
+                # CR 701.20d, CR 401.2: a card put on top sits above every card
+                # already there, and no record of a position survives that.
+                for owner in {id(p): p for p in map(self._owner_of, moved)}.values():
+                    owner.note_library_changed()
             for gone in left_battlefield:
                 self.emit(
                     GameEvent(

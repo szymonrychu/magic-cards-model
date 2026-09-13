@@ -1345,25 +1345,18 @@ def _search_reveal_to_hand_and_shuffle(
     quality - a type, or a mana value - which CR 701.23b says the player "isn't
     required to find". The found card is revealed while still in the library
     (CR 701.20a-b), put into the hand, and only then is the library shuffled
-    (CR 701.24a), so the shuffle is held back from the search and done last.
+    (CR 701.24a) - `Game.search_and_put`, the funnel every printed
+    search-reveal-put goes through.
     """
     game = activation.game
-    owner = game.player(activation.player)
-    source = activation.card.name
-    found = game.search_library(
-        owner,
+    return game.search_and_put(
+        game.player(activation.player),
         matches,
-        count=1,
-        optional=True,
-        shuffle=False,
-        source=source,
+        destination=Zone.HAND,
+        reveal=True,
+        source=activation.card.name,
         source_id=source_id_of(activation.card),
     )
-    for state in found:
-        game.reveal(state, source=source)
-        owner.add(state, Zone.HAND)
-    game.shuffle_library(owner)
-    return found
 
 
 def _matches_type(state: CardState, named: str) -> bool:

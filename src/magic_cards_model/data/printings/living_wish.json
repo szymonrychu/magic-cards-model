@@ -1,0 +1,133 @@
+{
+  "object": "card",
+  "id": "d505d319-093d-47af-8ee9-fafae3885aa0",
+  "oracle_id": "b9d186f5-1c92-4539-a5b5-e7fbd4b726fe",
+  "multiverse_ids": [
+    442168
+  ],
+  "mtgo_id": 67272,
+  "mtgo_foil_id": 67273,
+  "tcgplayer_id": 161427,
+  "cardmarket_id": 319005,
+  "name": "Living Wish",
+  "lang": "en",
+  "released_at": "2018-03-16",
+  "uri": "https://api.scryfall.com/cards/d505d319-093d-47af-8ee9-fafae3885aa0",
+  "scryfall_uri": "https://scryfall.com/card/a25/179/living-wish?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:32:07Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/d/5/d505d319-093d-47af-8ee9-fafae3885aa0.jpg?1783935127",
+    "normal": "https://cards.scryfall.io/normal/front/d/5/d505d319-093d-47af-8ee9-fafae3885aa0.jpg?1783935127",
+    "large": "https://cards.scryfall.io/large/front/d/5/d505d319-093d-47af-8ee9-fafae3885aa0.jpg?1783935127",
+    "png": "https://cards.scryfall.io/png/front/d/5/d505d319-093d-47af-8ee9-fafae3885aa0.png?1783935127",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/d/5/d505d319-093d-47af-8ee9-fafae3885aa0.jpg?1783935127",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/d/5/d505d319-093d-47af-8ee9-fafae3885aa0.jpg?1783935127",
+    "thumb": "https://cards.scryfall.io/thumb/front/d/5/d505d319-093d-47af-8ee9-fafae3885aa0.webp?1783935127",
+    "grid": "https://cards.scryfall.io/grid/front/d/5/d505d319-093d-47af-8ee9-fafae3885aa0.webp?1783935127",
+    "display": "https://cards.scryfall.io/display/front/d/5/d505d319-093d-47af-8ee9-fafae3885aa0.webp?1783935127",
+    "art": "https://cards.scryfall.io/art/front/d/5/d505d319-093d-47af-8ee9-fafae3885aa0.webp?1783935127",
+    "crop": "https://cards.scryfall.io/crop/front/d/5/d505d319-093d-47af-8ee9-fafae3885aa0.webp?1783935127"
+  },
+  "mana_cost": "{1}{G}",
+  "cmc": 2.0,
+  "type_line": "Sorcery",
+  "oracle_text": "You may reveal a creature or land card you own from outside the game and put it into your hand. Exile Living Wish.",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "41ee6e2f-69b3-4c53-8a8e-960f5e974cfc",
+  "set": "a25",
+  "set_name": "Masters 25",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/41ee6e2f-69b3-4c53-8a8e-960f5e974cfc",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aa25&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/a25?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/d505d319-093d-47af-8ee9-fafae3885aa0/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ab9d186f5-1c92-4539-a5b5-e7fbd4b726fe&unique=prints",
+  "collector_number": "179",
+  "digital": false,
+  "rarity": "rare",
+  "watermark": "set",
+  "flavor_text": "The best wishes include the will to tame their consequences.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Hideaki Takamura",
+  "artist_ids": [
+    "49b6270b-1b28-4e03-b503-522f97dc3a78"
+  ],
+  "illustration_id": "8b300042-6031-4ad6-94dd-bf012faca7e0",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 28135,
+  "prices": {
+    "usd": "1.55",
+    "usd_foil": "2.70",
+    "usd_etched": null,
+    "eur": "1.88",
+    "eur_foil": "2.79",
+    "tix": "2.52"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=442168&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DLiving%2BWish",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DLiving%2BWish",
+    "edhrec": "https://edhrec.com/route/?cc=Living+Wish"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F161427%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=319005&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/67272?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
