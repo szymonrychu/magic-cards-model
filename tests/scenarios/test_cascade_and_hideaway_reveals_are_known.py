@@ -377,3 +377,44 @@ def test_a_player_who_gains_control_of_the_hideaway_permanent_may_look_at_the_hi
 
     assert known(scenario.game, "alice") == []
     assert known(scenario.game, "bob") == []
+
+
+def test_watcher_for_tomorrow_leaving_puts_the_hidden_card_into_its_owners_hand():
+    """Watcher for Tomorrow: "When this creature leaves the battlefield, put the
+    exiled card into its owner's hand." CR 607.2a links that ability to
+    hideaway's own exile, so "the exiled card" is the hidden one, and CR
+    603.10a lets the leaves-the-battlefield trigger look back at the permanent
+    that is already gone. Ugin's Labyrinth's "Return the exiled card to its
+    owner's hand" is the same shape worded "return ... to"; this is the "put
+    ... into" wording of it. Once the card leaves exile, the face-down look
+    ends (CR 400.7, CR 406.3) - the card is in its owner's hand, a hidden zone
+    the opponent never saw into."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Lightning Bolt"], battlefield=["Mountain"])
+        .player(
+            "bob",
+            hand=["Watcher for Tomorrow"],
+            library=["Lightning Bolt", "Opt", "Goblin Guide", "Craterous Stomp", "Island"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    hidden = scenario.find("Goblin Guide", Zone.LIBRARY, "bob")
+    scenario.will_choose_cards(hidden, source="Watcher for Tomorrow")
+    watcher = scenario.put_onto_battlefield("Watcher for Tomorrow", "bob")
+    scenario.game.put_triggers_on_stack()
+    scenario.resolve_top()
+    assert hidden.zone is Zone.EXILE and hidden.face_up is False
+
+    sources = scenario.untapped_sources("Mountain", username="alice")
+    scenario.cast_and_resolve("Lightning Bolt", *sources, targets=[watcher])
+    scenario.game.put_triggers_on_stack()
+    while scenario.game.stack:
+        scenario.resolve_top()
+
+    assert watcher.zone is Zone.GRAVEYARD
+    assert hidden.zone is Zone.HAND
+    assert hidden in scenario.player("bob").hand
+    assert scenario.game.exile == []
+    assert known(scenario.game, "alice") == []

@@ -12710,9 +12710,13 @@ def _unreadable_imprint_quality(text: str) -> str | None:
 #: Ugin's Labyrinth's third ability: "{T}: Return the exiled card to its
 #: owner's hand." "The exiled card" is a definite reference to whichever card
 #: `_parse_imprint_clause` linked to this permanent, not a target - CR 601.2c
-#: never has this ability's activation choose one.
+#: never has this ability's activation choose one. Watcher for Tomorrow's
+#: "When this creature leaves the battlefield, put the exiled card into its
+#: owner's hand." is the same CR 607.2a linked reference worded "put ... into",
+#: pointing back at hideaway's own exile.
 _RETURN_IMPRINTED_RE = re.compile(
-    r"^return the exiled card to (?:its|their) owner's hand$", re.IGNORECASE
+    r"^(?:return the exiled card to|put the exiled card into) (?:its|their) owner's hand$",
+    re.IGNORECASE,
 )
 
 
