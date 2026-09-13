@@ -22,11 +22,14 @@ from ..machines.abilities import (
     TriggeredAbility,
     TriggerEvent,
     granted_mana_abilities,
+    keyword_ability,
     one_named_color,
     parse_abilities,
     parse_mana_abilities,
 )
 from ..machines.casting import (
+    _BLIGHT_PHRASE,
+    _OPTIONAL_ADDITIONAL_COST,
     AlternativeCostOption,
     AlternativeCostSource,
     Casting,
@@ -36,6 +39,7 @@ from ..machines.casting import (
     _printed_alternative_total_cost,
     castable_faces,
     face_being_cast,
+    grant_suspend_haste,
     granted_cast_options,
     keyword_cast_options,
     marker_cast_options,
@@ -67,6 +71,7 @@ from ..machines.cost import (
     CostPayment,
     CostStep,
     TotalCost,
+    additional_cost_phrases,
     alternative_cost_offers,
     among_colors,
     announce_reveal,
@@ -3285,7 +3290,7 @@ class Game(BaseModel):
         # origin at all. `Casting.cast()` calls `Game.note_cast` with the
         # real origin before it ever reaches this method (see that method's
         # own `self.origin_zone`), so the `CastRecord` it just wrote is
-        # consulted first; `cast_free_from_exile` is the one other caller,
+        # consulted first; `cast_during_resolution` is the one other caller,
         # ordered the same way for the same reason (its own docstring), so
         # its record is there too. `card_state.zone` is the fallback for a
         # spell that reaches here with no record at all - there is no such
@@ -3724,6 +3729,11 @@ class Game(BaseModel):
                     expected_stamp=spell.zone_change_stamp,  # CR 603.7c parenthetical
                 )
             )
+        if self.was_cast_with(spell, "Suspend") and spell.is_creature:
+            # CR 702.62a: "If you cast a creature spell this way, it gains
+            # haste until you lose control of the spell or the permanent it
+            # becomes." `cast_during_resolution` labels the cast "Suspend".
+            grant_suspend_haste(self, spell)
         if self.was_cast_with(spell, "Dash"):
             self._grant_dash_haste(spell)
             self.delayed_triggers.create(
@@ -3891,114 +3901,6 @@ class Game(BaseModel):
             )
         )
 
-    def cast_free_from_exile(
-        self, card: CardState, controller: str, *, keyword: str | None = None
-    ) -> CardState | None:
-        """CR 702.88a/b: cast `card` straight out of exile, choosing new
-        targets (CR 601.2c) and paying no mana cost (CR 118.9's alternative
-        cost, via CR 702.88b's "follows the rules for paying alternative
-        costs").
-
-        This is not the interactive `machines/casting.Casting` state machine -
-        there is no live announcement to drive from inside a resolving
-        ability's effect function, only the same "ask the resolving object's
-        controller" pattern `_ask_trigger_targets` already uses for a
-        triggered ability's own CR 603.3d target announcement. If the card
-        needs a target and none is legal, CR 601.2c makes casting it illegal
-        in the first place, so nothing is put on the stack at all - `None` is
-        returned exactly the way `_ask_trigger_targets` returns no targets for
-        "nothing satisfies the restriction" rather than casting the spell
-        anyway with an empty target list.
-
-        `Game.note_cast` records `origin_zone=Zone.EXILE` so a card that
-        rebounds *again* by some other effect's rebound (there is only one in
-        the pool, but the record does not know that) is never mistaken for
-        one cast from hand a second time. Called **before** `put_on_stack`,
-        not after: that method reads the `CastRecord` this call writes to
-        learn the cast's real origin for its own `GameEvent.origin_zone`
-        (CR 400.7 - the card is already a stack object by the time `put_on_
-        stack` could otherwise ask `card.zone`, which is why it cannot simply
-        read the zone itself here the way it does for a plain hand-cast). A
-        free cast this method makes is from exile, never from hand, and
-        `Knowledge Pool`'s and `Possibility Storm`'s own "casts a spell from
-        their hand" trigger reads exactly this to avoid re-triggering on the
-        free cast it itself granted.
-
-        `keyword` is `CastRecord.keyword` - CR 601.2b's own "the player
-        announces ... any keyword actions". `None` by default, because most
-        of this method's callers cast under no keyword at all: Fight
-        Rigging's hideaway free cast (CR 702.75a) and Isochron Scepter's
-        copy-and-cast (CR 707.10) are alternative-cost casts granted by a
-        printed ability, not a keyword action, and Knowledge Pool's and
-        Possibility Storm's own free casts (CR 118.9's alternative cost, read
-        off the card's own "without paying its mana cost" text) are the same
-        shape - no keyword names any of them. Only `_create_rebound_delayed_
-        trigger`'s callback actually rebounds (CR 702.88a), and passes
-        `keyword="Rebound"` itself; every other call site used to get that
-        same label unconditionally, which mislabelled a hideaway or
-        Isochron-copy cast's `CastRecord` as a rebound it never was.
-        """
-        self._refuse_if_over()
-        with self._id_allocator_scope():
-            profile = profile_for_text(card.oracle_text or "")
-            targets: list[TargetRef] = []
-            if profile.requirements:
-                candidates = self._legal_target_candidates(profile, controller, card.id)
-                if not candidates:
-                    return None  # CR 601.2c: no legal target, casting is illegal.
-                decision = Decision(
-                    kind=DecisionKind.CHOOSE_TARGETS,
-                    player=controller,
-                    prompt=f"choose targets for {card.name}",
-                    source=card.name,
-                    source_id=source_id_of(card),
-                    targets=tuple(TargetRef.coerce(candidate) for candidate in candidates),
-                    target_maximum=profile.max_targets,
-                    # CR 601.2c: mandatory, capped at how many legal targets
-                    # actually exist (`candidates` is truthy here, but may still
-                    # be fewer than the printed requirement asks for).
-                    target_minimum=min(profile.min_targets, len(candidates)),
-                )
-                chosen = self.ask(decision)
-                assert isinstance(chosen, (list, tuple))
-                targets = list(chosen)
-            card.targets = targets
-            self.note_cast(card, keyword=keyword, origin_zone=Zone.EXILE)
-            self.put_on_stack(card, controller)
-            return card
-
-    def has_legal_free_cast(self, card: CardState, controller: str) -> bool:
-        """Whether `cast_free_from_exile(card, controller)` would actually
-        cast something, without doing it.
-
-        Two independent ways a nominally-legal-looking free cast is not
-        actually one, both checked here rather than discovered by trying and
-        failing:
-
-        - **CR 611.1** - a flat prohibition ("Your opponents can't cast
-          noncreature spells this turn", Grafdigger's Cage's graveyard/library
-          ban) holds at any timing. `machines.keywords.cascade` already checks
-          this for its own free cast (`why_cannot_cast_restriction`); this
-          reuses the same function rather than a second copy of the same
-          check.
-        - **CR 601.2c** - casting a targeted spell is illegal when nothing
-          satisfies its restriction, which `cast_free_from_exile` itself only
-          discovers by asking for targets and getting none back, returning
-          `None` afterwards.
-
-        An ability offering a *choice* among several exiled cards - Knowledge
-        Pool's own free cast - needs to know this **before** asking, so an
-        uncastable card can be left off the menu (CR 608.2d: "the player
-        can't choose an option that's illegal or impossible") instead of
-        being offered, chosen, and only then discovered to do nothing.
-        """
-        if why_cannot_cast_restriction(card, controller, self) is not None:
-            return False
-        profile = profile_for_text(card.oracle_text or "")
-        if not profile.requirements:
-            return True
-        return bool(self._legal_target_candidates(profile, controller, card.id))
-
     def spell_options_castable_during_resolution(
         self, card: CardState, caster: str, *, mana_value_below: float | None = None
     ) -> list[str | None]:
@@ -4036,6 +3938,245 @@ class Game(BaseModel):
                     return ManaCost.parse(face.mana_cost or "").converted
         return int(card.card.cmc or 0)
 
+    def can_cast_during_resolution(
+        self, card: CardState, caster: str, *, mana_value_below: float | None = None
+    ) -> bool:
+        """Whether `cast_during_resolution(card, caster)` has a legal cast to
+        make (CR 608.2d: "the player can't choose an option that's illegal or
+        impossible"), without making it.
+
+        A way to cast it must survive CR 611.1 and the mana-value bound
+        (`spell_options_castable_during_resolution`), and for that way: a
+        modal spell has enough modes with a legal target (CR 700.2a), a
+        targeted spell has a legal target (CR 601.2c), and every mandatory
+        additional cost has the objects and life to pay it (CR 118.3). Mana is
+        not counted here: mana owed on the cast is asked for as it is paid.
+        """
+        with self._face_up_while_announced(card):
+            return any(
+                self._resolution_cast_option_is_legal(card, caster, option)
+                for option in self.spell_options_castable_during_resolution(
+                    card, caster, mana_value_below=mana_value_below
+                )
+            )
+
+    def _resolution_cast_option_is_legal(
+        self, card: CardState, caster: str, option: str | None
+    ) -> bool:
+        text = card.oracle_text or ""
+        if option is not None:
+            face = next((f for f in card.card.card_faces or [] if f.name == option), None)
+            text = (face.oracle_text if face is not None else None) or ""
+        modal = modal_profile(card.card) if option is None else None
+        if modal is not None and modal.understood:
+            legal = [mode for mode in modal.modes if self._spell_mode_is_legal(card, caster, mode)]
+            if len(legal) < modal.allowed_range()[0]:
+                return False
+        else:
+            profile = profile_for_text(text)
+            if (
+                profile.understood
+                and profile.requirements
+                and profile.min_targets > 0
+                and not self._legal_target_candidates(profile, caster, card.id)
+            ):
+                return False
+        taken: set[UUID] = set()
+        for printed in additional_cost_phrases(card.card):
+            phrase = substitute_x(printed, 0)
+            if _OPTIONAL_ADDITIONAL_COST.match(phrase):
+                continue
+            cost = total_cost_for_phrase(phrase, caster)
+            if cost is None or not self._cost_objects_available(cost, caster, taken):
+                return False
+        return True
+
+    @contextmanager
+    def _face_up_while_announced(self, card: CardState) -> Iterator[None]:
+        """CR 406.3a: "Unless that card is being cast face down ..., the card
+        is turned face up just before the player announces that they are
+        playing the card." Turned back if the play does not happen."""
+        was_face_up = card.face_up
+        card.face_up = True
+        try:
+            yield
+        finally:
+            if card.zone is Zone.EXILE and not was_face_up:
+                card.face_up = False
+
+    def _cost_candidates(self, component: CostComponent, caster: str) -> list[CardState] | None:
+        """The objects `caster` could choose to pay one cost component, or
+        `None` for a component that names no objects. A sacrificed or tapped
+        permanent is one `caster` controls (CR 701.21a, CR 107.5), a discard
+        comes from their hand (CR 701.9a), an exile from the zone the cost
+        names (CR 406.2), each narrowed by what the cost says (CR 118.3)."""
+        player = self.player(caster)
+        if component.kind is ComponentKind.SACRIFICE:
+            pool = list(self.permanents_controlled_by(caster))
+        elif component.kind is ComponentKind.TAP:
+            pool = [state for state in self.permanents_controlled_by(caster) if not state.tapped]
+        elif component.kind is ComponentKind.DISCARD:
+            pool = list(player.hand)
+        elif component.kind is ComponentKind.EXILE:
+            pool = (
+                list(player.cards_in(component.zone))
+                if component.zone in (Zone.HAND, Zone.GRAVEYARD, Zone.LIBRARY)
+                else []
+            )
+        else:
+            return None
+        if component.requirement is not None:
+            pool = [
+                state
+                for state in pool
+                if component.requirement.why_not(state, self, caster) is None
+            ]
+        return pool
+
+    def _cost_objects_available(self, cost: TotalCost, caster: str, taken: set[UUID]) -> bool:
+        """CR 118.3 for a cost's objects and life: enough of each, not
+        counting objects already chosen for another cost in `taken`."""
+        life = self.player(caster).life
+        for component in cost.components:
+            if component.kind is ComponentKind.PAY_LIFE:
+                life -= component.amount
+                if life < 0:
+                    return False
+                continue
+            pool = self._cost_candidates(component, caster)
+            if pool is None or not component.required or component.cards:
+                continue
+            if len([state for state in pool if state.id not in taken]) < component.required:
+                return False
+        return True
+
+    def _cost_payable_on_top_of(
+        self, casting: Casting, extra: TotalCost, caster: str, taken: set[UUID]
+    ) -> bool:
+        """Whether `extra` can be paid on top of what the cast already owes:
+        its objects (`_cost_objects_available`) and the mana of both together
+        from the caster's untapped mana sources (CR 118.3, CR 608.2g)."""
+        if not self._cost_objects_available(extra, caster, taken):
+            return False
+        mana = casting.total_cost.mana.plus(extra.mana)
+        if not mana.symbols:
+            return True
+        sources = self._mana_sources_while_resolving(self.player(caster))
+        return plan_mana_payment(mana, sources, game=self, payer=caster) is not None
+
+    def _choose_cost_objects(
+        self, cost: TotalCost, caster: str, card: CardState, taken: set[UUID]
+    ) -> list[CardState]:
+        """Ask `caster` which objects pay each component of `cost` that needs
+        them (CR 601.2b announces them, CR 601.2h pays), in printed order.
+        Raises `ValueError` when there are not enough (CR 118.3)."""
+        chosen_all: list[CardState] = []
+        for component in cost.components:
+            pool = self._cost_candidates(component, caster)
+            if pool is None or not component.required or component.cards:
+                continue
+            available = [state for state in pool if state.id not in taken]
+            if len(available) < component.required:
+                raise ValueError(
+                    f"{caster} cannot pay {component.description or component.kind.value} "
+                    f"to cast {card.name} (CR 118.3)"
+                )
+            answer = self.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=caster,
+                    prompt=(
+                        f"choose {component.required} to {component.kind.value} to cast {card.name}"
+                    ),
+                    source=card.name,
+                    source_id=source_id_of(card),
+                    amount=component.required,
+                    cards=tuple(state.id for state in available),
+                )
+            )
+            by_id = {state.id: state for state in available}
+            chosen = [by_id[card_id] for card_id in answer]
+            component.cards = chosen
+            taken.update(state.id for state in chosen)
+            chosen_all.extend(chosen)
+        return chosen_all
+
+    def may_cast_during_resolution(
+        self,
+        card: CardState,
+        caster: str,
+        *,
+        prompt: str,
+        source: str | None,
+        source_id: str | None,
+        source_name: str,
+        rule: str,
+        keyword: str | None = None,
+        mana_value_below: float | None = None,
+        play: bool = False,
+    ) -> CardState | None:
+        """A resolving "you may cast/play <card> without paying its mana cost"
+        (CR 608.2d, CR 608.2g): one `MAY`, legal only when the cast or play is
+        (`can_cast_during_resolution`), then `cast_during_resolution`.
+
+        `play=True` is the wider "play" (CR 601.1a): a land card is played,
+        never cast (CR 305.9), through `_play_land_during_resolution`.
+        Returns the spell or land, or `None` when nothing was cast or played.
+        """
+        is_land = play and card.card.is_land
+        legal = (
+            self._can_play_land_during_resolution(caster)
+            if is_land
+            else self.can_cast_during_resolution(card, caster, mana_value_below=mana_value_below)
+        )
+        answer = self.ask(
+            Decision(
+                kind=DecisionKind.MAY,
+                player=caster,
+                prompt=prompt,
+                source=source,
+                source_id=source_id,
+                affirmative_is_legal=legal,
+                cards=(card.id,),
+            )
+        )
+        if not answer:
+            return None
+        if is_land:
+            return self._play_land_during_resolution(card, caster)
+        return self.cast_during_resolution(
+            card,
+            caster,
+            source_name=source_name,
+            rule=rule,
+            keyword=keyword,
+            mana_value_below=mana_value_below,
+        )
+
+    def _can_play_land_during_resolution(self, username: str) -> bool:
+        """CR 305.3, "A player can't play a land, for any reason, if it isn't
+        their turn", and CR 305.2b, "... if the number of lands the player can
+        play this turn is equal to or less than the number of lands they have
+        already played this turn". CR 305.1's main phase and empty stack are
+        priority's timing, which a resolving instruction does not use."""
+        if self.turn is None or username != self.turn.active_player:
+            return False
+        return self.lands_played.get(username, 0) < self.land_allowance(username)
+
+    def _play_land_during_resolution(self, land: CardState, username: str) -> CardState | None:
+        """Play `land` as an effect instructs during resolution. CR 305.2a
+        counts "lands played during the resolution of spells and abilities",
+        so this is a land play; the rest is `play_land`'s own entry, without
+        the triggers it puts on the stack, which wait for the resolution to
+        finish (CR 603.3)."""
+        if not self._can_play_land_during_resolution(username):
+            return None
+        land.face_up = True
+        self.lands_played[username] = self.lands_played.get(username, 0) + 1
+        with self._id_allocator_scope():
+            self.enter_the_battlefield(land, username, was_cast=False)
+        return land
+
     def cast_during_resolution(
         self,
         card: CardState,
@@ -4043,10 +4184,14 @@ class Game(BaseModel):
         *,
         source_name: str,
         rule: str,
+        keyword: str | None = None,
         mana_value_below: float | None = None,
     ) -> CardState | None:
         """CR 608.2g: cast `card` without paying its mana cost while the
-        resolving spell or ability that allows it is still resolving.
+        resolving spell or ability that allows it is still resolving - the one
+        funnel every such effect uses (cascade, rebound, suspend, hideaway's
+        play, Knowledge Pool, Possibility Storm, Isochron Scepter's copy,
+        Transcendent Dragon, Paradigm).
 
         "If an effect specifically instructs or allows a player to cast a spell
         during resolution, they do so by following the steps in rules 601.2a-i,
@@ -4055,23 +4200,31 @@ class Game(BaseModel):
         ability continues to resolve". So this drives the real `Casting`
         machine under an `immediate` `PlayPermission` (CR 117.1's "unless a
         spell or ability is instructing a player to take an action": no timing
-        restriction applies), asks the caster's CR 601.2b-c announcements
-        through `Game.ask` - which face (CR 709.3, CR 715.3), the modes (CR
-        700.2a), each target - pays nothing with X of 0 (CR 118.9, CR 107.3b),
-        and puts the spell on the stack without `retain_priority`.
+        restriction applies), asks each CR 601.2b-c announcement through
+        `Game.ask` - which face (CR 709.3, CR 715.3); entwine (CR 702.42a); the
+        modes (CR 700.2a) and escalate for each beyond the first (CR 702.120a);
+        each optional additional cost, kicker, multikicker, replicate,
+        offspring, gift and blight (CR 601.2b, CR 118.8a); the objects for a
+        mandatory one (CR 118.8); the targets (CR 601.2c) - with X of 0 (CR
+        107.3b), pays any mana still owed from untapped sources (CR 601.2g-h),
+        and puts the spell on the stack without `retain_priority`. `keyword`
+        labels the `CastRecord` (Rebound, Paradigm, Suspend).
 
         Returns `None`, with the card back where it was, when the cast is not
-        legal: no option qualifies, no mode or no target can be legally
-        announced (CR 601.2c), or a cost cannot be paid (CR 601.2h). CR 601.2's
-        own "the casting of the spell is illegal; the game returns to the
-        moment before the casting of that spell was proposed" is `Casting.
+        legal: no option qualifies, a mandatory announcement has no legal
+        choice (CR 601.2c), or a cost cannot be paid (CR 118.3, CR 601.2h).
+        CR 601.2's "the casting of the spell is illegal; the game returns to
+        the moment before the casting of that spell was proposed" is `Casting.
         cancel` and `CostPayment.rewind`. The permission never outlives this
         call."""
         self._refuse_if_over()
+        was_face_up = card.face_up
+        card.face_up = True  # CR 406.3a
         options = self.spell_options_castable_during_resolution(
             card, caster, mana_value_below=mana_value_below
         )
         if not options:
+            card.face_up = was_face_up
             return None
         permission = self.grant_play_permission(
             card,
@@ -4111,7 +4264,11 @@ class Game(BaseModel):
                         casting.cast_as_split_half(face)
                     else:
                         casting.cast_as_adventure()
-                targets = self._announce_resolution_cast(casting, card, caster, face)
+                taken: set[UUID] = set()
+                chosen_modes = self._announce_resolution_modes(casting, card, caster, face, taken)
+                self._announce_optional_costs(casting, card, caster, taken)
+                self._announce_mandatory_costs(casting, card, caster, taken)
+                targets = self._announce_resolution_targets(casting, card, caster, chosen_modes)
                 if targets:
                     casting.choose_targets(targets)
                 payment = casting.determine_cost(x_value=0)
@@ -4119,11 +4276,17 @@ class Game(BaseModel):
                     self._pay_resolution_cast_mana(casting, payment, card, caster)
                 payment.pay()
                 state = casting.cast()
+                if keyword is not None:
+                    record = self.cast_record_of(state)
+                    if record is not None:
+                        record.keyword = keyword
         except ValueError:
             if payment is not None:
                 payment.rewind()
             if casting is not None and not casting.is_settled:
                 casting.cancel()
+            if card.zone is Zone.EXILE:
+                card.face_up = was_face_up
             return None
         finally:
             self.play_permissions = [
@@ -4136,12 +4299,12 @@ class Game(BaseModel):
         self, casting: Casting, payment: CostPayment, card: CardState, caster: str
     ) -> None:
         """CR 601.2g-h inside CR 608.2g: mana still owed on a cast made during
-        resolution - a cost increase applied to "without paying its mana cost"
-        (CR 118.9d, Disruptor Flute's {3}) - is paid by activating mana
-        abilities now (CR 117.1d, CR 608.2g's first sentence). Asked as the
-        same `PAY_MANA` question an "unless ... pays" is, offering the
-        caster's untapped mana sources; declining, or a cost those sources
-        cannot pay (CR 118.3), makes the cast illegal (CR 601.2)."""
+        resolution - an additional cost (kicker) or a cost increase applied to
+        "without paying its mana cost" (CR 118.9d, Disruptor Flute's {3}) - is
+        paid by activating mana abilities now (CR 117.1d, CR 608.2g's first
+        sentence). Asked as the same `PAY_MANA` question an "unless ... pays"
+        is, offering the caster's untapped mana sources; declining, or a cost
+        those sources cannot pay (CR 118.3), makes the cast illegal (CR 601.2)."""
         payer = self.player(caster)
         mana = casting.total_cost.mana
         sources = self._mana_sources_while_resolving(payer)
@@ -4165,19 +4328,191 @@ class Game(BaseModel):
         )
         payment.auto_tap(chosen)
 
-    def _announce_resolution_cast(
-        self, casting: Casting, card: CardState, caster: str, face: str | None
-    ) -> list[TargetRef]:
-        """CR 601.2b-c for `cast_during_resolution`: the modes, then each
-        chosen mode's targets, or the spell's own targets. Raises `ValueError`
-        when a mandatory announcement has no legal choice (CR 601.2c, CR
-        700.2a), which makes the cast illegal."""
+    def _offer_additional_cost(
+        self,
+        casting: Casting,
+        card: CardState,
+        caster: str,
+        label: str,
+        extra: TotalCost,
+        taken: set[UUID],
+    ) -> bool:
+        """One CR 601.2b "announces their intentions to pay" question for an
+        optional additional cost (CR 118.8a, 118.8b): a `MAY`, legal only when
+        the cost can be paid on top of the rest (CR 118.3, CR 608.2d)."""
+        payable = self._cost_payable_on_top_of(casting, extra, caster, taken)
+        return bool(
+            self.ask(
+                Decision(
+                    kind=DecisionKind.MAY,
+                    player=caster,
+                    prompt=f"pay {label} {extra} as you cast {card.name}",
+                    source=card.name,
+                    source_id=source_id_of(card),
+                    affirmative_is_legal=payable,
+                )
+            )
+        )
+
+    #: Enough for any real multikicker or replicate payment, and a stop for a
+    #: cost of nothing, which an unscripted player would otherwise pay forever.
+    REPEATED_ADDITIONAL_COST_BOUND: ClassVar[int] = 20
+
+    def _announce_optional_costs(
+        self, casting: Casting, card: CardState, caster: str, taken: set[UUID]
+    ) -> None:
+        """CR 601.2b's optional additional costs, read off the keywords that
+        print them and the "you may" additional-cost sentence that blights."""
+        for keyword, pay in (
+            ("kicker", casting.pay_kicker),
+            ("multikicker", casting.pay_kicker),
+            ("replicate", casting.pay_replicate),
+        ):
+            ability = keyword_ability(card.card, keyword)
+            if ability is None or not ability.cost:
+                continue
+            repeats = 1 if keyword == "kicker" else self.REPEATED_ADDITIONAL_COST_BOUND
+            for _ in range(repeats):
+                extra = total_cost_for_phrase(ability.cost, caster)
+                if extra is None or not self._offer_additional_cost(
+                    casting, card, caster, keyword, extra, taken
+                ):
+                    break
+                pay(1, choosing=self._choose_cost_objects(extra, caster, card, taken))
+        offspring = keyword_ability(card.card, "offspring")
+        if offspring is not None and offspring.cost:
+            extra = total_cost_for_phrase(offspring.cost, caster)
+            if extra is not None and self._offer_additional_cost(
+                casting, card, caster, "offspring", extra, taken
+            ):
+                casting.pay_offspring()
+        if keyword_ability(card.card, "gift") is not None:
+            opponents = [p.username for p in self.players_in_game if p.username != caster]
+            promised = self.ask(
+                Decision(
+                    kind=DecisionKind.MAY,
+                    player=caster,
+                    prompt=f"promise an opponent a gift as you cast {card.name} (CR 702.174a)",
+                    source=card.name,
+                    source_id=source_id_of(card),
+                    affirmative_is_legal=bool(opponents),
+                )
+            )
+            if promised:
+                opponent = opponents[0]
+                if len(opponents) > 1:
+                    opponent = str(
+                        self.ask(
+                            Decision(
+                                kind=DecisionKind.CHOOSE_A_QUALITY,
+                                player=caster,
+                                prompt=f"choose the opponent to promise {card.name}'s gift",
+                                source=card.name,
+                                source_id=source_id_of(card),
+                                options=tuple(opponents),
+                                quality="opponent",
+                            )
+                        )
+                    )
+                casting.pay_gift(opponent)
+        if any(_BLIGHT_PHRASE.match(p) for p in additional_cost_phrases(card.card)):
+            creatures = [
+                state
+                for state in self.permanents_controlled_by(caster)
+                if self.characteristics_of(state).is_creature
+            ]
+            if self.ask(
+                Decision(
+                    kind=DecisionKind.MAY,
+                    player=caster,
+                    prompt=f"blight as you cast {card.name} (CR 701.68a)",
+                    source=card.name,
+                    source_id=source_id_of(card),
+                    affirmative_is_legal=bool(creatures),
+                )
+            ):
+                answer = self.ask(
+                    Decision(
+                        kind=DecisionKind.CHOOSE_CARDS,
+                        player=caster,
+                        prompt=f"choose a creature you control to blight for {card.name}",
+                        source=card.name,
+                        source_id=source_id_of(card),
+                        amount=1,
+                        cards=tuple(state.id for state in creatures),
+                    )
+                )
+                casting.pay_blight(next(state for state in creatures if state.id == answer[0]))
+
+    def _announce_mandatory_costs(
+        self, casting: Casting, card: CardState, caster: str, taken: set[UUID]
+    ) -> None:
+        """CR 118.8's mandatory printed additional costs: the objects for each
+        are chosen now (CR 601.2b) and handed to `Casting`, which charges them
+        at CR 601.2f. Not enough objects raises (CR 118.3)."""
+        if not additional_cost_phrases(card.card):
+            return
+        pools = {
+            ComponentKind.SACRIFICE: casting.sacrificing,
+            ComponentKind.DISCARD: casting.discarding,
+            ComponentKind.EXILE: casting.exiling,
+            ComponentKind.TAP: casting.tapping,
+        }
+        for cost in casting._printed_additional_costs():  # noqa: SLF001
+            chosen = self._choose_cost_objects(cost, caster, card, taken)
+            for component in cost.components:
+                pool = pools.get(component.kind)
+                if pool is not None:
+                    pool.extend(state for state in chosen if state in component.cards)
+
+    def _announce_resolution_modes(
+        self,
+        casting: Casting,
+        card: CardState,
+        caster: str,
+        face: str | None,
+        taken: set[UUID],
+    ) -> list[Mode]:
+        """CR 601.2b's modes for `cast_during_resolution`: entwine first (CR
+        702.42a), otherwise the modes asked one at a time, then escalate's
+        cost for each mode beyond the first (CR 702.120a). Raises when no legal
+        choice exists (CR 700.2a)."""
         modal = casting.modal
-        if face is None and modal is not None and modal.understood:
-            chosen = self._ask_spell_modes(card, caster, modal)
-            casting.choose_modes([mode.number for mode in chosen], x_value=0)
+        if face is not None or modal is None or not modal.understood:
+            return []
+        if modal.entwine_cost is not None:
+            extra = total_cost_for_phrase(modal.entwine_cost, caster)
+            all_legal = all(self._spell_mode_is_legal(card, caster, m) for m in modal.modes)
+            if (
+                extra is not None
+                and all_legal
+                and self._offer_additional_cost(casting, card, caster, "entwine", extra, taken)
+            ):
+                casting.choose_modes(
+                    [mode.number for mode in modal.modes], x_value=0, entwined=True
+                )
+                return list(modal.modes)
+        chosen = self._ask_spell_modes(card, caster, modal, taken)
+        casting.choose_modes([mode.number for mode in chosen], x_value=0)
+        if modal.escalate_cost is not None and len(chosen) > 1:
+            choosing: list[CardState] = []
+            for _ in range(len(chosen) - 1):
+                extra = total_cost_for_phrase(modal.escalate_cost, caster)
+                if extra is None:
+                    raise ValueError(f"{card.name}'s escalate cost could not be read")
+                choosing.extend(self._choose_cost_objects(extra, caster, card, taken))
+            casting.pay_escalate(choosing=choosing)
+        return chosen
+
+    def _announce_resolution_targets(
+        self, casting: Casting, card: CardState, caster: str, chosen_modes: list[Mode]
+    ) -> list[TargetRef]:
+        """CR 601.2c for `cast_during_resolution`: each chosen mode's targets,
+        or the spell's own. Raises `ValueError` when a mandatory target has no
+        legal choice, which makes the cast illegal."""
+        if chosen_modes:
             targets: list[TargetRef] = []
-            for mode in chosen:
+            for mode in chosen_modes:
                 body = mode_effect_body(mode)
                 asked = self._ask_targets(profile_for_text(body), caster, card.id, card.name, body)
                 if asked is None:
@@ -4191,22 +4526,40 @@ class Game(BaseModel):
             raise ValueError(f"{card.name} has no legal target (CR 601.2c)")
         return list(asked)
 
-    def _ask_spell_modes(self, card: CardState, caster: str, modal: ModalProfile) -> list[Mode]:
+    def _spell_mode_is_legal(self, card: CardState, caster: str, mode: Mode) -> bool:
+        """CR 700.2a: a mode "that would be illegal (due to an inability to
+        choose legal targets, for example) ... can't be chosen"."""
+        profile = profile_for_text(mode_effect_body(mode))
+        if not profile.understood or not profile.requirements or profile.min_targets == 0:
+            return True
+        return bool(self._legal_target_candidates(profile, caster, card.id))
+
+    def _ask_spell_modes(
+        self, card: CardState, caster: str, modal: ModalProfile, taken: set[UUID]
+    ) -> list[Mode]:
         """A modal spell's modes, asked as CR 601.2b announces them: only a
-        mode whose mandatory targets have a legal candidate is offered (CR
-        700.2a), and once the minimum is met `NO_FURTHER_MODES` comes first,
-        the same shape `_announce_trigger_modes` asks a modal trigger in."""
-
-        def legal(mode: Mode) -> bool:
-            profile = profile_for_text(mode_effect_body(mode))
-            if not profile.understood or not profile.requirements or profile.min_targets == 0:
-                return True
-            return bool(self._legal_target_candidates(profile, caster, card.id))
-
-        offered = [mode for mode in modal.modes if legal(mode)]
+        legal mode is offered (CR 700.2a), once the minimum is met
+        `NO_FURTHER_MODES` comes first (the shape `_announce_trigger_modes`
+        uses), and an escalate spell offers a further mode only while its
+        escalate cost's objects can still be paid (CR 702.120a, CR 118.3)."""
+        offered = [mode for mode in modal.modes if self._spell_mode_is_legal(card, caster, mode)]
         minimum, maximum = modal.allowed_range()
         if len(offered) < minimum:
             raise ValueError(f"{card.name} has too few legal modes to cast (CR 700.2a)")
+        if modal.escalate_cost is not None:
+            extra = total_cost_for_phrase(modal.escalate_cost, caster)
+            capacity = 0
+            if extra is not None:
+                reserved = set(taken)
+                while capacity < len(modal.modes) and self._cost_objects_available(
+                    extra, caster, reserved
+                ):
+                    for component in extra.components:
+                        pool = self._cost_candidates(component, caster) or []
+                        free = [state for state in pool if state.id not in reserved]
+                        reserved.update(state.id for state in free[: component.required])
+                    capacity += 1
+            maximum = min(maximum, 1 + capacity)
         chosen: list[Mode] = []
         while len(chosen) < maximum:
             remaining = [mode for mode in offered if modal.repeatable or mode not in chosen]
@@ -4234,7 +4587,7 @@ class Game(BaseModel):
         """CR 707.10: put a copy of `spell` onto the stack.
 
         "To copy a spell ... means to put a copy of it onto the stack; a copy
-        of a spell isn't cast." Unlike `cast_free_from_exile`, this does not
+        of a spell isn't cast." Unlike `cast_during_resolution`, this does not
         go through `put_on_stack` at all - that method's own CAST_SPELL emit
         is exactly the event CR 707.10 says does *not* happen for a copy, and
         `spells_cast_this_turn` (Alania's own "the first instant spell ...
@@ -4247,7 +4600,7 @@ class Game(BaseModel):
         choices made when casting or activating it (mode, targets, the value
         of X, ...)"; `targets` is carried over verbatim, and a caller wanting
         CR 707.10c's "new targets" permission chooses them afterward the same
-        way `cast_free_from_exile` lets a resolving ability choose targets
+        way `cast_during_resolution` lets a resolving ability choose targets
         for what it casts. `division` (CR 601.2d's damage split) travels too,
         being a simple scalar copiable value; `x_value` lives on `Game.
         cast_record`, keyed by the *original* spell's own id, and `modes`/
@@ -4305,7 +4658,7 @@ class Game(BaseModel):
         copy" (Alania, Divergent Storm being the only printing in the pool).
 
         A plain `MAY` (CR 608.2d), then the same `CHOOSE_TARGETS` question
-        `cast_free_from_exile` asks - reusing `_legal_target_candidates`
+        `cast_during_resolution` asks - reusing `_legal_target_candidates`
         rather than a second target-legality reader. Declining, or a
         restriction this session's targeting reader cannot parse at all,
         leaves the copy with whatever it already had (CR 707.2's copied
@@ -5108,7 +5461,7 @@ class Game(BaseModel):
           would sit doing nothing: CR 603.3d removes a triggered ability from
           the stack in this case, and CR 601.2e/602.2b makes an activation
           with no legal target for a mandatory requirement illegal to begin
-          at all (the same refusal `Game.cast_free_from_exile` already gives
+          at all (the same refusal `Game.cast_during_resolution` already gives
           a spell with no legal target, CR 601.2c).
 
         An ability with no targeting requirement at all is not asked anything
@@ -13162,7 +13515,7 @@ class Game(BaseModel):
                 # activation that cannot legally be completed - a mandatory
                 # target (CR 601.2c) with no legal object or player to name -
                 # never happens at all, the same refusal
-                # `Game.cast_free_from_exile` gives a spell (CR 601.2c).
+                # `Game.cast_during_resolution` gives a spell (CR 601.2c).
                 raise ValueError(
                     f"{permanent.name}'s ability requires a target, but no legal "
                     "target exists, so it cannot be activated (CR 601.2c, CR 602.2b)"

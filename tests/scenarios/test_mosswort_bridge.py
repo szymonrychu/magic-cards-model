@@ -107,9 +107,9 @@ def test_playing_the_hidden_card_once_total_power_is_high_enough():
     scenario.activate(bridge, forest, index=1)
     scenario.resolve_top()
 
-    permission = scenario.game.play_permission_for(goblin_guide, "alice")
-    assert permission is not None
-    assert not permission.pays_mana_cost
+    # Played while the ability resolves (CR 608.2g), not a permission.
+    assert goblin_guide.zone is Zone.STACK
+    assert scenario.game.play_permissions == []
 
 
 def test_playing_the_hidden_card_is_refused_when_total_power_is_too_low():
@@ -137,4 +137,5 @@ def test_playing_the_hidden_card_is_refused_when_total_power_is_too_low():
     scenario.activate(bridge, forest, index=1)
     scenario.resolve_top()
 
-    assert scenario.game.play_permission_for(goblin_guide, "alice") is None
+    assert goblin_guide.zone is Zone.EXILE
+    assert scenario.game.play_permissions == []

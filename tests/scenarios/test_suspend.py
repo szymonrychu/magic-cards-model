@@ -79,7 +79,6 @@ from magic_cards_model.machines.casting import (
     Casting,
     MarkedExile,
     finish_suspend,
-    grant_suspend_haste,
     remove_suspend_time_counter,
     usable_play_permission,
 )
@@ -268,45 +267,32 @@ def test_time_counters_come_off_one_per_upkeep_and_the_free_cast_reanimates():
         assert living_end.counter_count(Counter.TIME) == expected_remaining
 
     # Resolving the third upkeep's trigger emptied the card, which triggered
-    # CR 702.62a's *third* ability in turn - and `_resolve_everything` above
-    # already resolved that too, granting the free cast without anybody
-    # calling `finish_suspend`.
-    permission = usable_play_permission(scenario.game, living_end, "alice")
-    assert permission is not None
-    assert permission.pays_mana_cost is False
-    assert permission.immediate is True
-
-    # Living End is a sorcery with no flash, but CR 117.1a never applies here:
-    # CR 117.2e - "no player has priority while a spell or ability is
-    # resolving" - the cast happens as this triggered ability's own
-    # instruction, still during alice's upkeep, not through the ordinary
-    # priority system that would otherwise gate a sorcery to a main phase.
+    # CR 702.62a's *third* ability in turn, and resolving that cast Living End
+    # while it resolved (CR 608.2g) - still in alice's upkeep, since CR
+    # 117.1a's sorcery timing is not what governs a cast an ability instructs
+    # (CR 117.2e) - and `_resolve_everything` resolved Living End too.
     assert scenario.step is Step.UPKEEP
-    casting = Casting(spell=living_end, caster="alice", origin_zone=Zone.EXILE, game=scenario.game)
-    casting.use_permission()
-    assert casting.total_cost.mana.converted == 0
-    payment = casting.begin_paying()
-    payment.pay()
-    spell = casting.cast()
-    scenario.game.put_on_stack(spell, "alice")
-    living_end.targets = []
+    assert scenario.game.play_permissions == []
 
-    scenario.resolve_top()
-
+    # Kitchen Finks was sacrificed by Living End and came back by persist
+    # (CR 702.79a) once `_resolve_everything` resolved that trigger too.
     creatures_by_owner = {
         (state.name, state.controller)
         for state in scenario.game.battlefield
         if Type.CREATURE in state.card.types
     }
-    assert creatures_by_owner == {("Grizzly Bears", "alice"), ("Colossal Dreadmaw", "bob")}
+    assert creatures_by_owner == {
+        ("Grizzly Bears", "alice"),
+        ("Colossal Dreadmaw", "bob"),
+        ("Kitchen Finks", "alice"),
+    }
     assert living_end.zone is Zone.GRAVEYARD
 
 
 def test_declining_the_free_cast_leaves_the_card_exiled():
-    """CR 702.62a: "If you don't, it remains exiled." Nobody here forces the
-    caller to use the granted `PlayPermission` - declining is simply not
-    calling `Casting.use_permission()`, the same "you may" cascade's own hit
-    leaves to the caller."""
+    """CR 702.62a: "If you don't, it remains exiled." The "may" is asked while
+    the ability resolves (CR 608.2d), and declining leaves nothing behind: no
+    cast, no permission to use later."""
     scenario = (
         Scenario()
         .manual_turn_based_actions()
@@ -320,8 +306,9 @@ def test_declining_the_free_cast_leaves_the_card_exiled():
     for _ in range(3):
         remove_suspend_time_counter(scenario.game, living_end)
 
-    finish_suspend(scenario.game, living_end)
-    # No `use_permission()` call at all: the card just sits there.
+    scenario.will_take_the_may(False, source="Living End")
+    assert finish_suspend(scenario.game, living_end) is None
+    assert scenario.game.play_permissions == []
 
     assert living_end.zone is Zone.EXILE
     assert living_end.counter_count(Counter.TIME) == 0
@@ -351,23 +338,11 @@ def test_the_upkeep_trigger_does_nothing_once_the_card_has_already_left_exile():
 
 def test_the_free_cast_window_does_not_outlive_the_upkeep_trigger():
     """CR 702.62a's third ability prints no "until end of turn" - unlike
-    Ugin, Eye of the Storms' "−11" or Ragavan, Nimble Pilferer's trigger,
-    which both do. Its "you may play it... If you don't, it remains exiled"
-    is CR 117.2e's own shape instead: "Resolving spells and abilities may
-    instruct players to make choices or take actions... Even if a player is
-    doing so, no player has priority while a spell or ability is resolving."
-    The chance to cast exists only for as long as that instruction is being
-    carried out - once the game has moved on to another step in the very
-    same turn, the window CR 117.2e stood in for has already closed and CR
-    702.62a's own fallback ("it remains exiled") has already taken effect.
-
-    This is the point that tells the correct window apart from the wrong
-    one: `until_end_of_turn=True` (the `grant_play_permission` default) would
-    keep the permission alive for every step of alice's turn, including her
-    precombat main phase reached here - which is exactly the bug a sibling
-    repo's tests were built against. `PlayPermission.immediate` closes the
-    window the moment the game leaves the upkeep step the trigger fired in,
-    regardless of how much of the turn is still left.
+    Ugin, Eye of the Storms' "-11" or Ragavan, Nimble Pilferer's trigger. Its
+    "you may play it... If you don't, it remains exiled" is carried out while
+    the ability resolves (CR 117.2e, CR 608.2g), so a declined cast leaves no
+    window at all: later in the same upkeep, and in alice's precombat main
+    phase of the very same turn, nothing allows Living End to be cast.
     """
     scenario = (
         Scenario()
@@ -380,51 +355,29 @@ def test_the_free_cast_window_does_not_outlive_the_upkeep_trigger():
     _suspend_living_end(scenario)
     living_end = scenario.find("Living End", Zone.EXILE)
 
+    scenario.will_take_the_may(False, source="Living End")
     for _ in range(3):
         _advance_to_owners_next_upkeep(scenario, "alice")
         _resolve_everything(scenario)
 
     assert scenario.step is Step.UPKEEP
     assert living_end.counter_count(Counter.TIME) == 0
-    # `granted_step` is the upkeep the third ability *resolved* in, which is
-    # this one - the window is scoped to the resolution that opened it, not
-    # to whichever step a caller later remembers to ask in.
-    permission = usable_play_permission(scenario.game, living_end, "alice")
-    assert permission is not None
-    assert permission.immediate is True
-    assert permission.granted_step is Step.UPKEEP
+    assert scenario.game.play_permissions == []
+    with pytest.raises(ValueError):
+        Casting(
+            spell=living_end, caster="alice", origin_zone=Zone.EXILE, game=scenario.game
+        ).use_permission()
+    assert living_end.zone is Zone.EXILE
 
-    # Still in the same upkeep step the trigger fired in: the window is open.
-    # `usable_play_permission` is what `Casting.use_permission` itself checks
-    # first - read directly rather than through a `Casting` object, so
-    # nothing here exercises `Casting.cancel`'s own CR 733.1 "goes back where
-    # it came from" `move_to`, which would mint this object a new CR 400.7
-    # zone-change stamp of its own and invalidate the permission for an
-    # unrelated reason.
-    assert usable_play_permission(scenario.game, living_end, "alice") is permission
-    assert permission.why_not(living_end, "alice", scenario.game) is None
-
-    # Walk forward to alice's own precombat main, still the very same turn
-    # (Step.DRAW is next, then PRECOMBAT_MAIN) - no cleanup step has run, so
-    # `until_end_of_turn`'s own turns-taken check would still call this "this
-    # turn" and let it through. CR 702.62a's own instruction already closed,
-    # though: nobody used it while the ability was actually resolving.
     scenario.advance()
     assert scenario.step is Step.DRAW
     scenario.advance()
     assert scenario.step is Step.PRECOMBAT_MAIN
     assert scenario.turn.active_player == "alice"  # still alice's own turn
-
-    assert usable_play_permission(scenario.game, living_end, "alice") is None
-    refusal = permission.why_not(living_end, "alice", scenario.game)
-    assert refusal is not None
-    assert "resolution-instructed window" in refusal
-
-    later_casting = Casting(
-        spell=living_end, caster="alice", origin_zone=Zone.EXILE, game=scenario.game
-    )
-    with pytest.raises(ValueError, match="resolution-instructed window"):
-        later_casting.use_permission()
+    with pytest.raises(ValueError):
+        Casting(
+            spell=living_end, caster="alice", origin_zone=Zone.EXILE, game=scenario.game
+        ).use_permission()
 
     # CR 702.62a's own fallback: the card just sits there, still exiled.
     assert living_end.zone is Zone.EXILE
@@ -438,7 +391,7 @@ def test_greater_gargadon_a_second_real_suspend_card_proves_the_parse_is_general
     general parse), and proves the creature-spell haste clause: a permanent
     that entered the battlefield this turn, cast for free off its own
     suspend, can still attack (CR 702.10b) because `grant_suspend_haste`
-    actually reaches the layer engine - not a flag nobody reads.
+    reaches the layer engine as the creature enters - not a flag nobody reads.
     """
     scenario = (
         Scenario()
@@ -474,24 +427,13 @@ def test_greater_gargadon_a_second_real_suspend_card_proves_the_parse_is_general
     # asked for explicitly rather than waited for.
     assert len(scenario.pending_triggers) == 1
     scenario.game.put_triggers_on_stack()
-    _resolve_everything(scenario)
-    permission = usable_play_permission(scenario.game, gargadon, "alice")
-    assert permission is not None
-
-    casting = Casting(spell=gargadon, caster="alice", origin_zone=Zone.EXILE, game=scenario.game)
-    casting.use_permission()
-    assert casting.total_cost.mana.converted == 0
-    payment = casting.begin_paying()
-    payment.pay()
-    spell = casting.cast()
-    scenario.game.put_on_stack(spell, "alice")
+    scenario.resolve_top()  # the last-counter trigger casts it (CR 608.2g)
+    assert gargadon.zone is Zone.STACK
     permanent = scenario.resolve_top()
 
     assert permanent.zone is Zone.BATTLEFIELD
     assert permanent.summoning_sick is True  # entered this turn, ordinarily sick
-
-    grant_suspend_haste(scenario.game, permanent)
-
+    # CR 702.62a's haste comes with the cast; nothing here grants it by hand.
     assert scenario.can_attack(permanent) is True
     scenario.attack_with(permanent)
     assert permanent in scenario.attackers()

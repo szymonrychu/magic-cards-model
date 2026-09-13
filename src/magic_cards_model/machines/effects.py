@@ -2821,14 +2821,16 @@ def _parse_hideaway_counter_then_conditional_free_cast_clause(text: str) -> Abil
         )
         if hidden is None:
             return
-        if not game.may(
-            game.player(ability.controller),
-            "play the exiled card without paying its mana cost",
+        game.may_cast_during_resolution(
+            hidden,
+            ability.controller,
+            prompt="play the exiled card without paying its mana cost",
             source=ability.source_name,
             source_id=source_id_of(ability),
-        ):
-            return
-        game.cast_free_from_exile(hidden, ability.controller)
+            source_name=ability.source_name,
+            rule="CR 608.2g",
+            play=True,
+        )
 
     return effect
 
@@ -5340,13 +5342,17 @@ def _parse_hideaway_play_clause(text: str) -> AbilityEffect | None:
         card = game.card_imprinted_on(source.id)
         if card is None:
             return
-        game.grant_play_permission(
+        # "You may play the exiled card" is carried out while this ability
+        # resolves (CR 608.2g), not a permission used later.
+        game.may_cast_during_resolution(
             card,
             controller.username,
-            action=PlayAction.PLAY,
-            pays_mana_cost=False,
+            prompt="play the exiled card without paying its mana cost",
+            source=source.name,
+            source_id=source_id_of(ability),
             source_name=source.name,
-            rule="CR 601.3",
+            rule="CR 608.2g",
+            play=True,
         )
 
     return effect
@@ -5458,11 +5464,11 @@ def _knowledge_pool_free_cast_effect(game: "Game", ability: AbilityOnStack) -> N
     `DecisionKind` - both already exist and are answered everywhere a client
     talks to this engine.
 
-    `Game.has_legal_free_cast` filters the candidate list *before* the MAY
-    is even asked, rather than discovering after the fact that
-    `cast_free_from_exile` returned `None` for a targeted candidate with no
-    legal target (CR 601.2c) - an uncastable card is not a legal choice
-    (CR 608.2d), so it is never offered as one.
+    `Game.can_cast_during_resolution` filters the candidate list *before*
+    the MAY is even asked - a card with no legal target (CR 601.2c), too few
+    legal modes (CR 700.2a), an unpayable mandatory cost (CR 118.3) or a CR
+    611.1 prohibition is not a legal choice (CR 608.2d), so it is never
+    offered as one. The cast is `Game.cast_during_resolution`.
     """
     result = _exile_cast_spell_or_none(game, ability)
     if result is None:
@@ -5477,7 +5483,7 @@ def _knowledge_pool_free_cast_effect(game: "Game", ability: AbilityOnStack) -> N
     candidates = [
         card
         for card in game.cards_imprinted_on(source_id)
-        if card.id != spell.id and game.has_legal_free_cast(card, exiler)
+        if card.id != spell.id and game.can_cast_during_resolution(card, exiler)
     ]
     decision = Decision(
         kind=DecisionKind.MAY,
@@ -5507,7 +5513,7 @@ def _knowledge_pool_free_cast_effect(game: "Game", ability: AbilityOnStack) -> N
     assert isinstance(chosen_ids, tuple)
     by_id = {card.id: card for card in candidates}
     chosen = by_id[chosen_ids[0]]
-    game.cast_free_from_exile(chosen, exiler)
+    game.cast_during_resolution(chosen, exiler, source_name=ability.source_name, rule="CR 608.2g")
 
 
 def _possibility_storm_effect(game: "Game", ability: AbilityOnStack) -> None:
@@ -5526,7 +5532,7 @@ def _possibility_storm_effect(game: "Game", ability: AbilityOnStack) -> None:
     Knowledge Pool's silence (which is exactly why Knowledge Pool's own
     unused cards stay in exile forever and this card's do not).
 
-    `Game.has_legal_free_cast` gates the "may cast" the same way it gates
+    `Game.can_cast_during_resolution` gates the "may cast" the same way it gates
     Knowledge Pool's menu: an uncastable hit (CR 611.1's flat prohibitions,
     or CR 601.2c's no-legal-target) is never offered the choice at all.
 
@@ -5564,7 +5570,7 @@ def _possibility_storm_effect(game: "Game", ability: AbilityOnStack) -> None:
             break
 
     cast_hit = False
-    if hit is not None and game.has_legal_free_cast(hit, exiler):
+    if hit is not None and game.can_cast_during_resolution(hit, exiler):
         decision = Decision(
             kind=DecisionKind.MAY,
             player=exiler,
@@ -5575,7 +5581,12 @@ def _possibility_storm_effect(game: "Game", ability: AbilityOnStack) -> None:
             cards=(hit.id,),
         )
         if game.ask(decision):
-            cast_hit = game.cast_free_from_exile(hit, exiler) is not None
+            cast_hit = (
+                game.cast_during_resolution(
+                    hit, exiler, source_name=ability.source_name, rule="CR 608.2g"
+                )
+                is not None
+            )
 
     bottomed = [spell, *(state for state in dug if not (cast_hit and state is hit))]
     rng = Random(f"{game.shuffle_seed}:{game.shuffles_performed}:possibility-storm")  # noqa: S311
@@ -6800,8 +6811,13 @@ def _parse_regenerate_self_clause(clause: str) -> AbilityEffect | None:
 #: wrapped in either) blocks the prefix, so a clause whose "deals ... damage"
 #: sits inside quotes fails this match entirely and falls through to
 #: `_parse_token_clause`, which is the one that is supposed to read it.
+#: An apostrophe *between two letters* is a possessive, not a quote, and is
+#: let through: a modal card's mode names its source by its printed name
+#: (CR 700.2a), and Kolaghan's Command's "Kolaghan's Command deals 2 damage
+#: to any target." read as nothing until it was (battle 8 follow-up).
+_UNQUOTED_PREFIX = r"(?:[^\"“”'‘’]|(?<=\w)['’](?=\w))*"
 _DAMAGE_TARGET_RE = re.compile(
-    rf"[^\"“”'‘’]*\bdeals? (?P<n>{_COUNT}) damage to (?P<phrase>any target|.*target.+)",
+    rf"{_UNQUOTED_PREFIX}\bdeals? (?P<n>{_COUNT}) damage to (?P<phrase>any target|.*target.+)",
     re.IGNORECASE,
 )
 #: Fling: "<Source> deals damage equal to the sacrificed creature's power to
@@ -13364,13 +13380,18 @@ def _parse_counter_exile_then_cast_free_clauses(
             if target is None:
                 continue
             game.counter(target, to_exile=True)
-            game.grant_play_permission(
+            if target.zone is not Zone.EXILE:
+                continue
+            # ", then you may cast it" is carried out while this ability
+            # resolves (CR 608.2g), not a permission used later.
+            game.may_cast_during_resolution(
                 target,
                 controller,
-                pays_mana_cost=False,
+                prompt=f"cast {target.name} without paying its mana cost",
+                source=ability.source_name,
+                source_id=source_id_of(ability),
                 source_name=ability.source_name,
-                rule="CR 611.2a",
-                until_end_of_turn=False,
+                rule="CR 608.2g",
             )
 
     return 3, effect
@@ -14930,10 +14951,11 @@ def _parse_copy_exiled_card_and_cast(text: str) -> AbilityEffect | None:
     battlefield, it ceases to exist", and it is performed here rather than
     left for a check that does not know about this copy.
 
-    The cast itself is `Game.cast_free_from_exile` - CR 118.9's "without
-    paying its mana cost", with the copy's own new targets chosen at CR 601.2c
-    as it is cast, which is what makes the imprinted Orim's Chant point at a
-    fresh player every activation.
+    The cast itself is `Game.may_cast_during_resolution` - CR 707.12's cast
+    of a copy, CR 118.9's "without paying its mana cost", with the copy's own
+    new targets chosen at CR 601.2c and its kicker offered (CR 601.2b), which
+    is what makes the imprinted Orim's Chant point at a fresh player every
+    activation.
     """
     if (
         _COPY_EXILED_CARD_AND_CAST_RE.fullmatch(" ".join(_strip_non_effect_preamble(text).split()))
@@ -14963,13 +14985,16 @@ def _parse_copy_exiled_card_and_cast(text: str) -> AbilityEffect | None:
         )
         game.exile.append(copy)
         if (
-            game.may(
-                controller,
-                "cast the copy without paying its mana cost",
+            game.may_cast_during_resolution(
+                copy,
+                controller.username,
+                prompt="cast the copy without paying its mana cost",
                 source=source_name,
                 source_id=source_id_of(ability),
+                source_name=source_name,
+                rule="CR 707.12",
             )
-            and game.cast_free_from_exile(copy, controller.username) is not None
+            is not None
         ):
             return
         if copy in game.exile:

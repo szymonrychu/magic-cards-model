@@ -203,15 +203,9 @@ the summary. Clause-by-clause, they are not.
 - "Imprint - When this artifact enters, you may exile an instant card with
   mana value 2 or less from your hand." - **handled** (trigger).
 - "{2}, {T}: You may copy the exiled card. If you do, you may cast the copy
-  without paying its mana cost." - **dead** (silent). The exile half works
-  and then the card can never do anything with what it exiled. Missing
-  primitive: **copying an imprinted card and casting the copy for free** (CR
-  112.1b, "some effects allow a player to cast a copy of a card"). The
-  engine's existing "you may play the exiled card without paying its mana
-  cost" readers (`effects.py:2143`, hideaway) are about *playing the card
-  itself*, not a copy, and are one-shot rather than repeatable. With four
-  Orim's Chants in the deck this is the archetype's whole lock, and half of
-  it is missing.
+  without paying its mana cost." - **handled**. The copy is cast through
+  `Game.may_cast_during_resolution` (CR 707.12, CR 608.2g), which announces
+  its targets and offers its kicker (CR 601.2b).
 
 ### High Noon - `handled`
 

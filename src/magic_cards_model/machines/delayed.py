@@ -299,9 +299,10 @@ class ReboundRecast(DelayedEffectSpecBase):
     all, rather than this reaching for whatever else has `subject_id`'s id
     now (CR 400.7 - once it moves again, it is a new object).
 
-    `Game.cast_free_from_exile` is where CR 702.88b's alternative-cost
-    casting actually happens, and where the card's own new targets (CR
-    601.2c) are chosen; this only asks whether to do it at all.
+    `Game.may_cast_during_resolution` asks and casts: CR 702.88b's
+    alternative-cost cast through the one CR 608.2g funnel, which announces
+    the card's own new targets (CR 601.2c) and refuses a cast CR 611.1
+    prohibits.
     """
 
     kind: Literal["rebound_recast"] = "rebound_recast"
@@ -310,12 +311,16 @@ class ReboundRecast(DelayedEffectSpecBase):
         card = trigger.still_affects(game)
         if card is None:
             return
-        prompt = f"cast {card.name} from exile without paying its mana cost"
-        if not game.may(
-            trigger.controller, prompt, source=card.name, source_id=source_id_of(ability)
-        ):
-            return
-        game.cast_free_from_exile(card, trigger.controller, keyword="Rebound")
+        game.may_cast_during_resolution(
+            card,
+            trigger.controller,
+            prompt=f"cast {card.name} from exile without paying its mana cost",
+            source=card.name,
+            source_id=source_id_of(ability),
+            source_name=f"{card.name}'s rebound",
+            rule="CR 702.88a",
+            keyword="Rebound",
+        )
 
 
 class ParadigmCopyAndCast(DelayedEffectSpecBase):
@@ -364,15 +369,19 @@ class ParadigmCopyAndCast(DelayedEffectSpecBase):
                 is_copy=True,
             )
             game.exile.append(copy)
-        prompt = f"cast the copy of {copy.name} without paying its mana cost"
-        if not game.may(
-            trigger.controller, prompt, source=copy.name, source_id=source_id_of(ability)
-        ):
-            # CR 704.5e/707.10a: a declined copy has nowhere to persist.
-            if copy in game.exile:
-                game.exile.remove(copy)
-            return
-        game.cast_free_from_exile(copy, trigger.controller, keyword="Paradigm")
+        cast = game.may_cast_during_resolution(
+            copy,
+            trigger.controller,
+            prompt=f"cast the copy of {copy.name} without paying its mana cost",
+            source=copy.name,
+            source_id=source_id_of(ability),
+            source_name=f"{copy.name}'s paradigm",
+            rule="CR 702.192a",
+            keyword="Paradigm",
+        )
+        if cast is None and copy in game.exile:
+            # CR 704.5e/707.10a: a copy not cast has nowhere to persist.
+            game.exile.remove(copy)
 
 
 class DrawACardForController(DelayedEffectSpecBase):

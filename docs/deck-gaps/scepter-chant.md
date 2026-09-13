@@ -17,7 +17,7 @@ copy of it every turn. Of the three things that has to do, one works:
 | Piece | Verdict |
 |---|---|
 | **Imprint** - "When this artifact enters, you may exile an instant card with mana value 2 or less from your hand." | **Works.** "Imprint" is an ability word with no rules meaning (CR 207.2c), so this is an ordinary enters-the-battlefield trigger. `trigger_effect_for("Isochron Scepter", ENTERS_THE_BATTLEFIELD, ...)` returns a real effect built by `_parse_imprint_clause`; the card is exiled with `ExileMarker.IMPRINTED` and `Game.card_imprinted_on` finds it. Asserted in `test_isochron_scepter_imprints_orims_chant_on_entry`. |
-| **Casting a copy of a card from the artifact** - "{2}, {T}: You may copy the exiled card. If you do, you may cast the copy without paying its mana cost." | **Dead, and silent.** `activated_effect_for("Isochron Scepter", 0, ...)` returns `None`. `_prepare_effect_clauses` splits it into `["You may copy the exiled card", "If you do, you may cast the copy without paying its mana cost"]` and **neither** clause parses. No notice of any kind is recorded - every `_unreadable_*` probe (`_unreadable_cast_permission_clause`, `_unreadable_anaphoric_clause`, `_unreadable_delayed_clause`, `_unreadable_reflexive_clause`, `_unreadable_conditional_clause`, `_unreadable_imprint_quality`, `_unreadable_unbounded_hand_choice_clause`) returns `None` on this text. Activating the Scepter costs {2} and taps it and then does nothing at all. CR 707.12 (cast a copy of an object) and CR 112.1b (the copy is a spell) have no representation in the engine. |
+| **Casting a copy of a card from the artifact** - "{2}, {T}: You may copy the exiled card. If you do, you may cast the copy without paying its mana cost." | **Works.** Read by `machines/effects.py`'s copy-and-cast parser; the copy is cast through `Game.may_cast_during_resolution` (CR 707.12, CR 608.2g), which also offers the copy's kicker (CR 601.2b). Asserted in `test_the_scepter_recasts_the_imprinted_chant` and `test_free_casts_go_through_one_funnel.py::test_the_scepters_copy_is_offered_its_kicker`. |
 | **The lock piece's own effect** - Orim's Chant, "Target player can't cast spells this turn." | **Works on its own.** `effect_for` returns a real effect via `create_targeted_cant_cast_restriction`, and `tests/scenarios/test_orims_chant.py` already covers both the unkicked and the kicked (CR 702.33a) halves. |
 
 So: **cast by hand, Orim's Chant locks a turn correctly. Put on the Scepter, the
@@ -96,8 +96,8 @@ Seven cards report `silent`. All seven were split into the clauses
 a paragraph fails closed as a unit (the Goryo's Vengeance shape): one dead clause
 kills every working clause beside it.
 
-- **Isochron Scepter** - covered above. Trigger works; activated ability
-  completely silent. Two mainboard copies.
+- **Isochron Scepter** - covered above. Trigger and activated ability both
+  work. Two mainboard copies.
 - **Spell Snare** (2 copies) - "Counter target spell with mana value 2." One
   clause, dispatches to `None`. Bare "Counter target spell." parses fine, so it
   is the **mana-value restriction** (CR 202.3) that is unreadable. The card does

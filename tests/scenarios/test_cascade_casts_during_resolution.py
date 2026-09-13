@@ -171,14 +171,20 @@ def test_a_modal_hits_modes_are_announced_during_resolution():
 
 def test_a_hit_with_no_legal_target_is_not_cast_and_goes_to_the_bottom():
     """CR 601.2c makes casting Fatal Push with no creature to target illegal,
-    so it "weren't cast" and joins the bottom (CR 702.85a)."""
+    so the "may" cannot be taken (CR 608.2d), it "weren't cast" and it joins
+    the bottom (CR 702.85a)."""
     scenario = elf_board("Fatal Push").build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    scenario.will_take_the_may(True, source="Bloodbraid Elf")
     cast_elf(scenario)
 
     scenario.resolve_top()
 
+    (question,) = [
+        q
+        for q in scenario.questions_asked()
+        if q.kind is DecisionKind.MAY and q.source == "Bloodbraid Elf"
+    ]
+    assert question.affirmative_is_legal is False
     push = scenario.find("Fatal Push", Zone.LIBRARY, "alice")
     assert scenario.stack_names() == ["Bloodbraid Elf"]
     assert scenario.player("alice").library[-1] is push

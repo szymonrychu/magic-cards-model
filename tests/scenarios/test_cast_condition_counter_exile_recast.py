@@ -28,10 +28,9 @@ type="rules")` in the session that wrote this file:
 - **CR 701.6a** - to counter a spell moves it to its owner's graveyard by
   default; Transcendent Dragon's own second sentence overrides that
   destination.
-- **CR 611.2a** - "If no duration is stated, [a continuous effect] lasts
-  until the end of the game" - what governs the cast permission's own
-  `until_end_of_turn=False`, unlike Ragavan's/Ugin's "until end of turn"
-  sentence.
+- **CR 608.2g** - "then you may cast it without paying its mana cost" is
+  carried out while the trigger resolves, through `Game.
+  may_cast_during_resolution`, not held as a permission.
 - **CR 118.9** - "without paying its mana cost" is CR 107.3b's alternative
   cost of nothing.
 """
@@ -62,6 +61,7 @@ def test_casting_the_dragon_counters_and_exiles_the_target_spell():
     islands = scenario.untapped_sources(*["Island"] * 6)
     scenario.pass_priority("bob")
     scenario.choose_trigger_targets("Transcendent Dragon", [bolt])
+    scenario.will_take_the_may(False, source="Transcendent Dragon")
     dragon = scenario.cast_and_resolve("Transcendent Dragon", *islands)
     scenario.pass_until_resolved()
 
@@ -71,10 +71,10 @@ def test_casting_the_dragon_counters_and_exiles_the_target_spell():
 
 
 def test_the_exiled_spell_may_be_cast_again_for_free_by_the_dragons_controller():
-    """The permission half: "you may cast it" is Transcendent Dragon's own
+    """The cast half: "you may cast it" is Transcendent Dragon's own
     controller (alice), not bolt's owner (bob) - CR 108.3 keeps ownership and
-    permission separate, the same distinction Ragavan's own permission
-    (`grant_play_permission`'s docstring) already draws."""
+    control separate - and it is cast while the trigger resolves (CR 608.2g),
+    not held as a permission for later."""
     scenario = (
         Scenario()
         .player(
@@ -93,13 +93,17 @@ def test_the_exiled_spell_may_be_cast_again_for_free_by_the_dragons_controller()
     islands = scenario.untapped_sources(*["Island"] * 6)
     scenario.pass_priority("bob")
     scenario.choose_trigger_targets("Transcendent Dragon", [bolt])
+    scenario.will_take_the_may(True, source="Transcendent Dragon")
+    scenario.will_choose_targets("bob", source="Lightning Bolt")
     scenario.cast_and_resolve("Transcendent Dragon", *islands)
-    scenario.pass_until_resolved()
+    scenario.game.put_triggers_on_stack()
+    scenario.resolve_top()  # the enters trigger: counter, exile, cast it
 
-    permission = scenario.game.play_permission_for(bolt, "alice")
-    assert permission is not None
-    assert permission.pays_mana_cost is False
-    assert permission.until_end_of_turn is False
+    assert bolt.zone is Zone.STACK
+    assert scenario.game.controller_of(bolt).username == "alice"
+    assert scenario.game.play_permissions == []
+    scenario.resolve_top()
+    assert scenario.player("bob").life == 17
 
 
 def test_reanimating_the_dragon_never_triggers_the_counter_at_all():

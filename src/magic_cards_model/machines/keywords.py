@@ -2967,7 +2967,7 @@ def cascade(game: Any, spell: CardState, seed: int | None = None) -> CascadeResu
 
         cast_hit = False
         if result.hit is not None:
-            castable = game.spell_options_castable_during_resolution(
+            castable = game.can_cast_during_resolution(
                 result.hit, owner.username, mana_value_below=threshold
             )
             decision = Decision(
@@ -2976,7 +2976,7 @@ def cascade(game: Any, spell: CardState, seed: int | None = None) -> CascadeResu
                 prompt=f"cast {result.hit.name} without paying its mana cost (cascade)",
                 source=spell.name,
                 source_id=source_id_of(spell),
-                affirmative_is_legal=bool(castable),
+                affirmative_is_legal=castable,
             )
             if game.ask(decision):
                 # CR 608.2g: cast now, above the cascading spell, with no
