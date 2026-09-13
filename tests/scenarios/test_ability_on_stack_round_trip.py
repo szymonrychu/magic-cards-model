@@ -183,7 +183,8 @@ def test_an_unpaid_ward_still_counters_the_spell_after_a_round_trip():
 
     Nothing pays the ward before the dump - `unless_payment` stays `None` the
     whole way through, exactly like a game where ward never entered the
-    picture, and `_ward_effect` still counters on the decoded copy.
+    picture - and the caster declines when the decoded copy asks (CR 118.12a),
+    so `_ward_effect` still counters on it.
     """
     scenario = _ward_board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
@@ -199,6 +200,7 @@ def test_an_unpaid_ward_still_counters_the_spell_after_a_round_trip():
     decoded_bolt = played.game.find_by_id(bolt.id)
     assert isinstance(decoded_bolt, CardState)
 
+    played.will_pay_the_mana_cost(False)
     played.resolve_top()  # the ward trigger, unpaid
 
     assert decoded_bolt.zone is Zone.GRAVEYARD
@@ -229,6 +231,7 @@ def test_a_game_with_no_ward_payment_dumps_and_resolves_fine():
     decoded_bolt = played.game.find_by_id(bolt.id)
     assert isinstance(decoded_bolt, CardState)
 
+    played.will_pay_the_mana_cost(False)  # CR 118.12a: the caster declines
     played.resolve_top()
     assert decoded_bolt.zone is Zone.GRAVEYARD
 
