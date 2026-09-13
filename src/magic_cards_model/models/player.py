@@ -229,10 +229,10 @@ class Player(BaseModel):
     has_citys_blessing: bool = False
     """CR 702.131c: "a designation that has no rules meaning other than to act
     as a marker that other rules and effects can identify." Granted by *ascend*
-    (CR 702.131b, checked by `machines.keywords.ascend_state_based_actions`
-    the same background-check way `equipment_state_based_actions` and
-    `aura_state_based_actions` run) once a player controls ten or more
-    permanents.
+    (CR 702.131b's "any time", through `machines.keywords.
+    grant_the_citys_blessing`, which `Game.emit` runs before matching
+    triggers; CR 702.131a's spell version as the spell resolves) once a player
+    controls ten or more permanents.
 
     Set-only: CR 702.131c gives no rule that ever takes it away, so a player
     who drops back under ten permanents keeps it, and this field is never

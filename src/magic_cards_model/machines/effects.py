@@ -11353,6 +11353,43 @@ def _parse_choose_targets_then_return_to_hand_pair(text: str) -> Effect | None:
     return effect
 
 
+#: "<instruction>. If you have the city's blessing, <instruction> instead." -
+#: Secrets of the Golden City's "Draw two cards. If you have the city's
+#: blessing, draw three cards instead." The city's blessing (CR 702.131c) is a
+#: designation on the player, read off `Player.has_citys_blessing` as the
+#: spell resolves - after CR 702.131a's own ascend instruction has already
+#: been followed (`Game._resolve_top`), which is what lets the blessing that
+#: very spell granted count. Both halves are read by `parse_clause_effect`,
+#: so any plain player instruction it reads (a draw, a life change, a mill,
+#: a scry, ...) takes this shape, not only a draw; an instruction it cannot
+#: read on either side leaves the whole text unread rather than half-run
+#: (CR 608.2c).
+_CITYS_BLESSING_INSTEAD_RE = re.compile(
+    r"^(?P<base>[^.]+)\.\s*if you have the city(?:'|\u2019)s blessing,\s*"
+    r"(?P<blessed>[^.]+?)\s+instead\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_citys_blessing_instead_clause(effect_text: str) -> Effect | None:
+    """`_CITYS_BLESSING_INSTEAD_RE`'s shape, or `None`."""
+    whole = " ".join(_strip_non_effect_preamble(effect_text).split())
+    match = _CITYS_BLESSING_INSTEAD_RE.fullmatch(whole)
+    if match is None:
+        return None
+    base = parse_clause_effect(match.group("base"))
+    blessed = parse_clause_effect(match.group("blessed"))
+    if base is None or blessed is None:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell)
+        chosen = blessed if controller.has_citys_blessing else base
+        chosen(game, controller, spell.name, source_id_of(spell))
+
+    return effect
+
+
 def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     """The spell-side twin of `_ability_effect_or_notice`, for `effect_for`.
 
@@ -11387,6 +11424,9 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     if x_life_mass_debuff is not None:
         return x_life_mass_debuff
     # -- end Wave W6 whole-text additions -----------------------------------
+    citys_blessing_instead = _parse_citys_blessing_instead_clause(whole)
+    if citys_blessing_instead is not None:
+        return citys_blessing_instead
     gift_promised_return = _parse_gift_promised_return_instead_clause(whole)
     if gift_promised_return is not None:
         return gift_promised_return

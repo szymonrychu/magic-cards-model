@@ -185,6 +185,38 @@ class SacrificeSubject(DelayedEffectSpecBase):
             game.put_into_graveyard(permanent)
 
 
+class SacrificeEach(DelayedEffectSpecBase):
+    """ "Sacrifice them at the beginning of the next end step." - one delayed
+    triggered ability about several objects, where `SacrificeSubject` is about
+    one. Mobilize's tokens are the shape (CR 702.181a): the trigger that made
+    them creates a single delayed ability, so a single object goes on the
+    stack at the end step, not one per token.
+
+    `subjects` pairs each object's id with the `zone_change_stamp` it had when
+    the ability was created. CR 603.7c is applied object by object: "if that
+    object is no longer in the zone it's expected to be in at the time the
+    delayed triggered ability resolves, the ability won't affect it", and one
+    that left and came back is a new object. CR 701.21a: "A player can't
+    sacrifice ... something that's a permanent they don't control", so an
+    object now controlled by someone else is skipped too.
+    """
+
+    kind: Literal["sacrifice_each"] = "sacrifice_each"
+
+    subjects: tuple[tuple[UUID, UUID], ...]
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        for subject_id, stamp in self.subjects:
+            found = game.find_by_id(subject_id)
+            if not isinstance(found, CardState) or found.zone is not Zone.BATTLEFIELD:
+                continue
+            if found.zone_change_stamp != stamp:
+                continue
+            if game.controller_of(found).username != trigger.controller:
+                continue
+            game.sacrifice(found)
+
+
 class ExileSubjectAtNextEndStep(DelayedEffectSpecBase):
     """ "Exile it at the beginning of the next end step" - Postmortem Lunge's
     own delayed exile of the creature it just returned to the battlefield
@@ -869,6 +901,7 @@ DelayedEffectSpec = Annotated[
     ExileWarped
     | GrantExtraTurn
     | SacrificeSubject
+    | SacrificeEach
     | ExileSubjectAtNextEndStep
     | ReturnSubjectToBattlefieldUnderOwner
     | ReturnSubjectToHand

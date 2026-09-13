@@ -124,10 +124,11 @@ from ..machines.effects import (
     trigger_effect_for,
 )
 from ..machines.keywords import (
-    ascend_state_based_actions,
+    ascend_as_a_spell_resolves,
     attachment_state_based_actions,
     aura_state_based_actions,
     equipment_state_based_actions,
+    grant_the_citys_blessing,
     has_paradigm,
     has_rebound,
     is_indestructible,
@@ -3235,6 +3236,9 @@ class Game(BaseModel):
         # dispatch, not folded into it, because gift is never a clause of
         # the card's own printed text (it lives on the keyword line alone).
         apply_gift_if_promised(self, spell)
+        # CR 702.131a: ascend on an instant or sorcery is a spell ability,
+        # followed as the spell resolves and ahead of the text printed after it.
+        ascend_as_a_spell_resolves(self, spell)
         effects = [
             effect
             for effect in (
@@ -4223,6 +4227,12 @@ class Game(BaseModel):
         subjects have also moved by the time the trigger is worked out.
         """
         with self._id_allocator_scope():
+            # CR 702.131b's "any time" and CR 702.131d's "before the game
+            # checks ... trigger conditions": a player who has just come to
+            # control a tenth permanent has the city's blessing before anything
+            # below reads the event, and before the rest of a resolving effect
+            # asks about it.
+            grant_the_citys_blessing(self)
             sources: list[CardState] = list(self.battlefield)
             # CR 113.6m: "An ability whose cost or effect specifies that it moves
             # the object it's on out of a particular zone functions only in that
@@ -9314,12 +9324,10 @@ class Game(BaseModel):
         # that is already equipping something.
         attachment_state_based_actions(self)
         # CR 702.131b (ascend): "Any time you control ten or more permanents
-        # and you don't have the city's blessing, you get the city's blessing
-        # for the rest of the game." Not itself a triggered ability with a
-        # stack object (CR 603.8's state-trigger shape), so it is checked here
-        # alongside the equipment and Aura background checks rather than
-        # through `machines/triggers.py`.
-        ascend_state_based_actions(self)
+        # ..." - granted the moment an event is raised (`emit`), and checked
+        # here too for a change no event announces. See
+        # `machines/keywords.grant_the_citys_blessing`.
+        grant_the_citys_blessing(self)
         return leaving + gone_tokens
 
     def _roles_beyond_the_newest(self, board: ComputedBoard) -> list[CardState]:

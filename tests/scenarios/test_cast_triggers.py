@@ -41,7 +41,10 @@ The effects are `exile_ability_targets` and `fetch_any_land_onto_the_battlefield
 in `machines/effects.py`.
 """
 
+import pytest
+
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.decisions import DecisionKind, DecisionPending
 from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario, mana_from
 
@@ -461,3 +464,144 @@ def test_the_kicked_trigger_fires_and_exiles_the_target_land():
     # see the docstring above for why this is the accepted, separate gap.
     assert "Eldrazi Temple" not in scenario.battlefield_names()
     assert bob_island.zone is Zone.EXILE
+
+
+# -- CR 601.2: the costs are paid before the spell becomes cast -------------
+#
+# Read whole with `mise run rules:find` in the session that added these:
+#
+# - **CR 601.2c** - targets are announced during the proposal; CR 601.2f-h
+#   determine, activate mana abilities for, and pay the total cost.
+# - **CR 601.2i** - "Once the steps described in 601.2a-h are completed, ...
+#   the spell becomes cast. Any abilities that trigger when a spell is cast or
+#   put onto the stack trigger at this time."
+# - **CR 603.3** - a triggered ability is put on the stack "the next time a
+#   player would receive priority"; **CR 603.3b** is the ordering question when
+#   several are waiting, and **CR 603.3d** is the trigger's own CR 601.2c
+#   target announcement as it goes on the stack.
+#
+# The battle report (B2-13) saw Ugin's cast-trigger target question and
+# Devourer of Destiny's trigger ordering pending while the lands were still
+# untapped. Reproduced here in the engine, with a pause standing in for the
+# seat that has not answered yet: at the moment each question is raised the
+# cost is already paid and the spell already on the stack. What the report
+# saw is the api serving its last committed state while a command is paused,
+# not the engine asking out of order - these tests keep the engine's order
+# pinned.
+
+
+def _pause_at_the_cast_trigger(scenario, name: str, *sources):
+    scenario.game.decisions.pause_when_unanswered = True
+    casting = scenario.cast(name, "alice")
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *sources)
+    with pytest.raises(DecisionPending) as paused:
+        scenario.put_on_stack(casting)
+    return casting.spell, paused.value.pending
+
+
+def _all_tapped(scenario, names: list[str]) -> bool:
+    lands = [s for s in scenario.game.permanents_controlled_by("alice") if s.name in names]
+    return bool(lands) and all(land.tapped for land in lands)
+
+
+def test_ugins_cast_trigger_asks_for_its_target_only_after_the_cost_is_paid():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            library=["Forest"],
+            hand=["Ugin, Eye of the Storms"],
+            battlefield=list(MOUNTAINS_FOR_UGIN),
+        )
+        .player("bob", library=["Forest"], battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources(*MOUNTAINS_FOR_UGIN, username="alice")
+
+    spell, pending = _pause_at_the_cast_trigger(scenario, "Ugin, Eye of the Storms", *sources)
+
+    assert pending.decision.kind is DecisionKind.CHOOSE_TARGETS
+    assert pending.decision.source == "Ugin, Eye of the Storms"
+    assert _all_tapped(scenario, ["Mountain"]), "CR 601.2h paid before CR 601.2i"
+    assert scenario.game.stack == [spell]
+    assert spell.zone is Zone.STACK
+    assert sum(scenario.game.cast_record(spell).mana_spent.values()) == 7
+
+
+def test_a_cast_trigger_outside_the_pool_asks_only_after_the_cost_is_paid():
+    """Petrifying Meddler: "When you cast this spell, tap up to one target
+    creature and put a stun counter on it." A different effect, a different
+    cost and an "up to one" target from Ugin's, on a card in no deck pool."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            library=["Forest"],
+            hand=["Petrifying Meddler"],
+            battlefield=["Island"] * 5,
+        )
+        .player("bob", library=["Forest"], battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources(*["Island"] * 5, username="alice")
+
+    spell, pending = _pause_at_the_cast_trigger(scenario, "Petrifying Meddler", *sources)
+
+    assert pending.decision.kind is DecisionKind.CHOOSE_TARGETS
+    assert _all_tapped(scenario, ["Island"])
+    assert scenario.game.stack == [spell]
+    assert sum(scenario.game.cast_record(spell).mana_spent.values()) == 5
+
+
+def test_two_cast_triggers_are_ordered_only_after_the_cost_is_paid():
+    """Devourer of Destiny's own cast trigger and the Ugin on the battlefield's
+    "Whenever you cast a colorless spell" trigger together: CR 603.3b's order
+    question comes after CR 601.2h, the report's second repro."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            library=["Forest"],
+            hand=["Devourer of Destiny"],
+            battlefield=["Wastes"] * 7 + ["Ugin, Eye of the Storms"],
+        )
+        .player("bob", library=["Forest"], battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources(*["Wastes"] * 7, username="alice")
+
+    spell, pending = _pause_at_the_cast_trigger(scenario, "Devourer of Destiny", *sources)
+
+    assert pending.decision.kind is DecisionKind.ORDER_TRIGGERS
+    assert _all_tapped(scenario, ["Wastes"])
+    assert scenario.game.stack == [spell]
+
+
+def test_a_cost_that_cannot_be_paid_asks_no_cast_trigger_question():
+    """Six Mountains for a seven-mana Ugin: CR 601.2h fails, the spell never
+    becomes cast (CR 601.2i), and so nothing triggers and nothing is asked."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            library=["Forest"],
+            hand=["Ugin, Eye of the Storms"],
+            battlefield=["Mountain"] * 6,
+        )
+        .player("bob", library=["Forest"], battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.game.decisions.pause_when_unanswered = True
+    casting = scenario.cast("Ugin, Eye of the Storms", "alice")
+    payment = casting.begin_paying()
+
+    with pytest.raises(ValueError):
+        scenario.pay_with(payment, *scenario.untapped_sources(*["Mountain"] * 6, username="alice"))
+
+    assert scenario.game.pending_triggers == []
+    assert scenario.questions_asked() == []

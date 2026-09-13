@@ -411,6 +411,26 @@ def _defender_refusal(game: "Game", defender: TargetRef, active: str) -> str | N
     return None
 
 
+def attackable_defenders(game: "Game", active: str) -> list[TargetRef]:
+    """Everything `active` could have a creature attack right now: each other
+    player still in the game, and each planeswalker or battle that
+    `_defender_refusal` accepts - the same test a declared attack is held to.
+
+    CR 508.4's choice for a creature put onto the battlefield attacking is
+    made among exactly these ("which defending player, planeswalker a
+    defending player controls, or battle a defending player protects").
+    """
+    candidates = [
+        TargetRef.coerce(player.username)
+        for player in game.players_in_game
+        if player.username != active
+    ]
+    candidates.extend(TargetRef.coerce(permanent) for permanent in game.battlefield)
+    return [
+        candidate for candidate in candidates if _defender_refusal(game, candidate, active) is None
+    ]
+
+
 def declare_attacker(game: "Game", creature: CardState, defender: TargetRef) -> Attack:
     """Declare one attacker, tapping it unless it has vigilance.
 
