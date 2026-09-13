@@ -69,7 +69,7 @@ from .cost import (
     tap_cost,
     total_cost_for_phrase,
 )
-from .decisions import Decision, DecisionKind
+from .decisions import Decision, DecisionKind, source_id_of
 from .delayed import anaphoric_delayed_trigger
 from .layers import (
     ComputedBoard,
@@ -1191,7 +1191,13 @@ def _search_reveal_to_hand_and_shuffle(
     owner = game.player(activation.player)
     source = activation.card.name
     found = game.search_library(
-        owner, matches, count=1, optional=True, shuffle=False, source=source
+        owner,
+        matches,
+        count=1,
+        optional=True,
+        shuffle=False,
+        source=source,
+        source_id=source_id_of(activation.card),
     )
     for state in found:
         game.reveal(state, source=source)
@@ -2775,6 +2781,7 @@ def cascade(game: Any, spell: CardState, seed: int | None = None) -> CascadeResu
                 player=owner.username,
                 prompt=f"cast {result.hit.name} without paying its mana cost (cascade)",
                 source=spell.name,
+                source_id=source_id_of(spell),
                 affirmative_is_legal=restriction is None,
             )
             cast_hit = bool(game.ask(decision))
@@ -3439,7 +3446,9 @@ def _storm_effect(game: Any, ability: AbilityOnStack) -> list[CardState]:
     copies: list[CardState] = []
     for _ in range(max(count, 0)):
         copy = game.copy_spell(source, controller=controller)
-        game.offer_new_targets_for_copy(copy, controller, source_name=source.name)
+        game.offer_new_targets_for_copy(
+            copy, controller, source_name=source.name, source_id=source_id_of(source)
+        )
         copies.append(copy)
     return copies
 
@@ -3467,7 +3476,9 @@ def _replicate_effect(game: Any, ability: AbilityOnStack) -> list[CardState]:
     copies: list[CardState] = []
     for _ in range(max(count, 0)):
         copy = game.copy_spell(source, controller=controller)
-        game.offer_new_targets_for_copy(copy, controller, source_name=source.name)
+        game.offer_new_targets_for_copy(
+            copy, controller, source_name=source.name, source_id=source_id_of(source)
+        )
         copies.append(copy)
     return copies
 
@@ -3573,6 +3584,7 @@ def _hideaway_effect(game: Any, ability: AbilityOnStack) -> None:
             player=controller.username,
             prompt=f"exile a card face down with {source.name} (hideaway)",
             source=source.name,
+            source_id=source_id_of(source),
             amount=1,
             cards=tuple(state.id for state in looked),
         )
