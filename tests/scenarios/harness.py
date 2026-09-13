@@ -812,6 +812,27 @@ class PlayedScenario:
             times,
         )
 
+    def will_assign_combat_damage(
+        self,
+        *assignment: tuple[Target, int],
+        username: str | None = None,
+        source: str | None = None,
+        times: int | None = 1,
+    ) -> None:
+        """Answer the next `ASSIGN_COMBAT_DAMAGE` question (CR 510.1c, 702.19b).
+
+        Each entry is `(recipient, amount)`: a blocking creature, or a player
+        by username (trample). `Game.ask` checks the whole assignment
+        (CR 510.1e), so an illegal one raises naming the rule it breaks.
+        """
+        self._queue(
+            DecisionKind.ASSIGN_COMBAT_DAMAGE,
+            tuple((TargetRef.coerce(target), amount) for target, amount in assignment),
+            username,
+            source,
+            times,
+        )
+
     def will_order_triggers(
         self,
         *source_names: str,
@@ -990,7 +1011,7 @@ class PlayedScenario:
         return self.game.can_attack(creature, defender)
 
     def block(self, attacker: CardState, *blockers: CardState) -> None:
-        """Block one attacker with these creatures, in damage assignment order.
+        """Block one attacker with these creatures, in declaration order.
 
         Combines with earlier `block` calls, and the whole declaration is
         rechecked each time (CR 509.1), which is what makes a lone blocker on a

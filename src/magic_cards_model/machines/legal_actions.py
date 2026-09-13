@@ -1564,6 +1564,19 @@ def decision_answers(decision: Decision, game: Any = None) -> list[Action]:
             )
         ]
 
+    if decision.kind is DecisionKind.ASSIGN_COMBAT_DAMAGE:
+        # CR 510.1c / 702.19b: one answer naming every legal recipient; the
+        # whole division is checked by `Game.ask` (CR 510.1e), not enumerated.
+        return [
+            build(
+                decision_candidates=tuple(t.card_id for t in decision.targets if t.is_card),
+                decision_player_candidates=tuple(
+                    t.username for t in decision.targets if t.is_player
+                ),
+                x_range=(decision.amount, decision.amount),
+            )
+        ]
+
     if decision.kind is DecisionKind.ORDER_TRIGGERS:
         return [build(decision_candidates=decision.cards)]
 

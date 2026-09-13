@@ -3698,17 +3698,17 @@ def _replicate_effect(game: Any, ability: AbilityOnStack) -> list[CardState]:
 def _ward_effect(game: Any, ability: AbilityOnStack) -> bool:
     """CR 702.21a's effect: "counter that spell or ability unless that player pays".
 
-    The "unless" is read off **this very ability**: `WardTrigger` opens the
-    payment on `AbilityOnStack.unless_payment`, so the object that was paid is
-    the object now resolving. Ward's cost is paid as the trigger resolves, and
-    a second standalone object holding the payment could only disagree with
-    this one.
+    CR 118.12a reads that "unless" as a question: that player may pay, and if
+    they don't, the spell or ability is countered. It is asked here, as the
+    ward trigger resolves, of the targeting spell's or ability's controller,
+    through `Game.may_pay_unless_cost` - mana, life, a discard, a sacrifice, or
+    any mix of them. CR 702.21b fixes the cost at resolution, so it is read off
+    the permanent now.
 
-    Nobody can be asked at this point whether they want to pay, so a payment
-    that was never opened, or opened and not finished, counts as unpaid and the
-    spell is countered - the opposite default to an optional trigger, and the
-    right one: CR 702.21a makes countering what happens *unless* something is
-    done, rather than something a player opts into.
+    A payment already made on this very ability (`WardTrigger.begin_paying`,
+    `AbilityOnStack.unless_payment`) is honoured without asking again. A cost
+    that cannot be read, or a warded permanent that can no longer be found to
+    read it from, cannot be paid, and the spell is countered as unpaid.
 
     Returns True if the targeting spell or ability survived.
     """
@@ -3717,13 +3717,22 @@ def _ward_effect(game: Any, ability: AbilityOnStack) -> bool:
     event = ability.event
     if event is None or event.targeted_by is None:
         return True
-    for item in list(game.stack):
-        if getattr(item, "id", None) == event.targeted_by:
-            game.counter(item)  # CR 701.6a
-            return False
-    # CR 608.2b is not this: the spell is simply no longer on the stack, so
-    # there is nothing left to counter.
-    return True
+    targeting = next(
+        (item for item in game.stack if getattr(item, "id", None) == event.targeted_by), None
+    )
+    if targeting is None:
+        # CR 608.2b is not this: the spell is simply no longer on the stack, so
+        # there is nothing left to counter.
+        return True
+    payer = getattr(targeting, "controller", None) or game.active_player.username
+    permanent = ability.source(game)
+    cost = ward_cost(permanent.card, payer) if permanent is not None else None
+    if cost is not None and game.may_pay_unless_cost(
+        payer, cost, source=ability.source_name, source_id=source_id_of(ability)
+    ):
+        return True
+    game.counter(targeting)  # CR 701.6a
+    return False
 
 
 def _madness_effect(game: Any, ability: AbilityOnStack) -> CardState | None:

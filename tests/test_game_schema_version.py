@@ -347,3 +347,24 @@ def test_a_snapshot_written_before_battle_six_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_BATTLE_SIX}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before `Answer.damage` (the `ASSIGN_COMBAT_DAMAGE` tape
+#: field) and `Game.unreadable_counter_amount_notices` existed.
+_SCHEMA_VERSION_BEFORE_DAMAGE_ASSIGNMENT = 14
+
+
+def test_a_snapshot_written_before_damage_assignment_is_refused() -> None:
+    """A version-14 dump has no `unreadable_counter_amount_notices`, and its tape
+    cannot hold a combat damage assignment; decoded as current, a paused combat
+    would replay against a question that build never asked. Refused instead."""
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_DAMAGE_ASSIGNMENT
+    dumped = _a_played_game().model_dump(mode="json")
+    del dumped["unreadable_counter_amount_notices"]
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_DAMAGE_ASSIGNMENT
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_DAMAGE_ASSIGNMENT}",
+    ):
+        Game.model_validate(dumped)
