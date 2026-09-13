@@ -14,11 +14,10 @@ not for Opt by name: `_INLINE_REMINDER_RE` now strips reminder text wherever
 it sits in the text, not only on its own line.
 
 **Gitaxian Probe** - "Look at target player's hand.\\nDraw a card." The draw
-half already read; "look at target player's hand" needed its own no-op
-reader (`_look_at_target_hand`, CR 701.20e: hidden information this engine
-does not model beyond what a test can already read directly) - the same
-shape `_look_at_top_card` already reads for Mishra's Bauble's own library
-peek.
+half already read; "look at target player's hand" needed its own reader
+(`_look_at_target_hand`, CR 701.20e), which records the look through
+`Game.look` the same way `_look_at_top_card` does for Mishra's Bauble's own
+library peek - see `test_revealed_hand_stays_known.py`.
 
 **Faithless Looting** - "Draw two cards, then discard two cards.\\nFlashback
 {2}{R} (...)" Its own printed Flashback line was never stripped before this

@@ -2768,6 +2768,10 @@ def cascade(game: Any, spell: CardState, seed: int | None = None) -> CascadeResu
             # emptied, so a card bottomed at the end of this ability was still
             # listed as exiled by that player forever after.
             game.exile_cards([state])
+            # Exiled face up (CR 406.3), so every card on the way is shown to
+            # all players (CR 701.20a). A card bottomed below changes zones
+            # into a reordered library (CR 400.7, CR 701.20d): nobody knows it.
+            game.reveal(state, source=spell.name)
             result.exiled.append(state)
             if not state.card.is_land and state.card.cmc < threshold:
                 result.hit = state
@@ -3579,6 +3583,8 @@ def _hideaway_effect(game: Any, ability: AbilityOnStack) -> None:
         looked = list(controller.library[:count])
         if not looked:
             return
+        for state in looked:
+            game.look(state, controller.username, source=source.name)  # CR 701.20e
         decision = Decision(
             kind=DecisionKind.CHOOSE_CARDS,
             player=controller.username,
@@ -3602,6 +3608,13 @@ def _hideaway_effect(game: Any, ability: AbilityOnStack) -> None:
             marker=ExileMarker.HIDEAWAY, owner=chosen.owner, linked_permanent_id=source.id
         )
         game.exile.append(chosen)
+        # CR 406.3: a player "instructed to look at a card and then exile it
+        # face down ... may continue to look at that card until it leaves the
+        # exile zone" - a look against the exiled object's own stamp. CR
+        # 702.75a's granted look belongs to whoever controls this permanent,
+        # now and after any later control change (`Game.note_hideaway_viewers`).
+        game.look(chosen, controller.username, source=source.name)
+        game.note_hideaway_viewers()
 
         if rest:
             rng = random.Random(  # noqa: S311

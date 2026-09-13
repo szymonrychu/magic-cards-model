@@ -47,6 +47,13 @@ def test_wish_brings_the_chosen_card_into_exile_with_a_permission_to_play_it():
     scenario.cast_and_resolve("Wish", *sources)
 
     assert bolt.zone is Zone.EXILE
+    (reveal,) = scenario.game.reveals
+    assert reveal.zone is Zone.SIDEBOARD
+    assert reveal.viewers is None
+    assert reveal.zone_change_stamp is not None
+    assert reveal.zone_change_stamp != bolt.zone_change_stamp
+    assert reveal.turn == scenario.game.turn.turns_taken
+    assert reveal.library_epoch is None
     permission = scenario.game.play_permission_for(bolt, "alice", PlayAction.PLAY)
     assert permission is not None
     assert permission.pays_mana_cost is True

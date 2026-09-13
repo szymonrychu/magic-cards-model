@@ -163,6 +163,20 @@ class Player(BaseModel):
     `Zone.EXILE`, `Zone.COMMAND` and `Zone.ANTE` outright - those live in
     `Game.shared_zones`, one each per game rather than one each per player.
     """
+    library_epoch: int = 0
+    """How many times this player's library has been reordered or added to.
+
+    CR 701.20d: "If cards in a player's library are shuffled or otherwise
+    reordered, any revealed cards that are reordered stop being revealed and
+    become new objects", and CR 401.2 keeps the library one ordered pile, so a
+    record of which card sat where is only good for the order it was made in.
+    `Reveal.library_epoch` records this counter and `Game.known_to` compares
+    it. It moves on every shuffle (`Game.shuffle_library`, `shuffle`), every
+    card put into the library (`add`, which `move` and CR 103.5's mulligan
+    bottoming go through) and every put-back that writes the library list
+    directly (`note_library_changed`). Drawing or otherwise taking a card off
+    the library does not move it: the cards left keep their order."""
+
     starting_hand_size: int = 7
     """CR 103.5. A field because effects can change it, though none do yet."""
 
@@ -253,6 +267,11 @@ class Player(BaseModel):
     @property
     def library(self) -> list[CardState]:
         return self.zones[Zone.LIBRARY]
+
+    def note_library_changed(self) -> None:
+        """Move `library_epoch` on (CR 701.20d), for a put-back that writes
+        the library list directly instead of going through `add`."""
+        self.library_epoch += 1
 
     @property
     def hand(self) -> list[CardState]:
@@ -405,8 +424,20 @@ class Player(BaseModel):
             card_state.owner = self.username
         if move_refused(card_state, zone) is not None:
             return
+        from_own_library_to_hand = (
+            zone is Zone.HAND
+            and card_state.zone is Zone.LIBRARY
+            and card_state.owner == self.username
+        )
+        stamp_in_library = card_state.zone_change_stamp
         card_state.move_to(zone)
         self.cards_in(zone).append(card_state)
+        if zone is Zone.LIBRARY:
+            self.note_library_changed()
+        elif from_own_library_to_hand and self.game is not None:
+            # CR 121.1's draw, or any effect making the same move: what a
+            # player knew about the card on top may follow it into the hand.
+            self.game.carry_knowledge_into_hand(card_state, stamp_in_library)
 
     def move(self, card_state: CardState, to_zone: Zone) -> None:
         """Move a card between this player's zones.
@@ -843,6 +874,7 @@ class Player(BaseModel):
         once and passes the next run, which is worse than no test at all.
         """
         _rng(seed).shuffle(self.library)
+        self.note_library_changed()
         return self.library
 
     def draw_opening_hand(self) -> list[CardState]:
@@ -942,9 +974,7 @@ class Player(BaseModel):
                 raise ValueError(f"{card_state.name} is not in {self.username}'s hand")
 
         for card_state in bottom:
-            self.hand.remove(card_state)
-            card_state.move_to(Zone.LIBRARY)
-            self.library.append(card_state)  # the bottom of the library is its end
+            self.move(card_state, Zone.LIBRARY)  # the bottom of the library is its end
 
         self.hand_kept = True
         return list(self.hand)

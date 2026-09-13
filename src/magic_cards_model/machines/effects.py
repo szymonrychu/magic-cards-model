@@ -6718,7 +6718,9 @@ def _parse_reveal_until_land_damage_clause(text: str) -> AbilityEffect | None:
     """`_REVEAL_UNTIL_LAND_DAMAGE_RE`'s shape - see above.
 
     CR 701.20a's reveal moves nothing; the cards stay on top of the library
-    until the last sentence puts them on the bottom. A library with no land in
+    until the last sentence puts them on the bottom. Each card is recorded
+    through `Game.reveal` as it is shown, and putting them on the bottom ends
+    those records (CR 701.20d). A library with no land in
     it at all reveals the whole library and stops - "until" has no more cards
     to look at - and the damage is then the number of nonland cards seen,
     which is the entire library.
@@ -6744,6 +6746,7 @@ def _parse_reveal_until_land_damage_clause(text: str) -> AbilityEffect | None:
         revealed: list[CardState] = []
         stopper: CardState | None = None
         for state in list(controller.library):
+            game.reveal(state, source=ability.source_name)
             revealed.append(state)
             if Type.LAND in state.types:
                 stopper = state
@@ -6794,8 +6797,9 @@ _REVEAL_TOP_N_ONE_PER_CARD_TYPE_RE = re.compile(
 def _parse_reveal_top_n_one_per_card_type_clause(text: str) -> AbilityEffect | None:
     """`_REVEAL_TOP_N_ONE_PER_CARD_TYPE_RE`'s shape - see above.
 
-    CR 701.20a's reveal changes no state this model tracks; what matters is
-    which of the revealed cards end up in hand and which go to the bottom.
+    CR 701.20a's reveal moves nothing; each revealed card is recorded through
+    `Game.reveal`, and what matters beyond that is which of them end up in
+    hand and which go to the bottom (where CR 701.20d ends their records).
 
     **The loop is over the card types actually present among the revealed
     cards**, not over CR 300.1's full list. That is the same set of
@@ -6828,6 +6832,8 @@ def _parse_reveal_top_n_one_per_card_type_clause(text: str) -> AbilityEffect | N
         revealed = list(controller.library[:n])
         if not revealed:
             return
+        for state in revealed:
+            game.reveal(state, source=ability.source_name)
         remaining = list(revealed)
         kept: list[CardState] = []
         # A stable order over the types present, so the questions are asked
@@ -12855,9 +12861,13 @@ def _unreadable_imprint_quality(text: str) -> str | None:
 #: Ugin's Labyrinth's third ability: "{T}: Return the exiled card to its
 #: owner's hand." "The exiled card" is a definite reference to whichever card
 #: `_parse_imprint_clause` linked to this permanent, not a target - CR 601.2c
-#: never has this ability's activation choose one.
+#: never has this ability's activation choose one. Watcher for Tomorrow's
+#: "When this creature leaves the battlefield, put the exiled card into its
+#: owner's hand." is the same CR 607.2a linked reference worded "put ... into",
+#: pointing back at hideaway's own exile.
 _RETURN_IMPRINTED_RE = re.compile(
-    r"^return the exiled card to (?:its|their) owner's hand$", re.IGNORECASE
+    r"^(?:return the exiled card to|put the exiled card into) (?:its|their) owner's hand$",
+    re.IGNORECASE,
 )
 
 
@@ -14840,24 +14850,38 @@ def _parse_delayed_pay_or_lose_clauses(
 #: "look at the top card of target player's/your/their library" - Mishra's
 #: Bauble's first clause, ahead of its own delayed-trigger second clause.
 #: CR 701.20e: "looking at a card follows the same rules as revealing a card,
-#: except that the card is shown only to the specified player" - purely
-#: informational, so there is nothing for this engine's board state to do.
+#: except that the card is shown only to the specified player" - so it moves
+#: nothing, and is recorded through `Game.look` for `Game.known_to`.
 _LOOK_AT_TOP_CARD_RE = re.compile(
     r"^look at the top card of (?:target player's|your|their) library$", re.IGNORECASE
 )
 
 
 def _look_at_top_card(game: "Game", stack_object: "StackObject") -> None:
-    """No-op (CR 701.20e): hidden information this engine does not model a
-    player "seeing" beyond what `Game.find_by_id` already lets any test read
-    directly. `Game.resolve_targets` still runs, so a target that is gone by
-    resolution is refused the ordinary way (CR 608.2b) even though nothing
-    here reads what came back."""
-    game.resolve_targets(stack_object)
+    """The controller looks at the top card of each targeted player's library
+    (CR 701.20e), or of their own for the untargeted "your library" wording.
+
+    `Game.look` records it with the controller as the only viewer. A target
+    that is gone by resolution is refused the ordinary way (CR 608.2b), and a
+    player with an empty library has no top card to look at.
+    """
+    viewer = game.controller_of(stack_object)
+    source = (
+        stack_object.source_name if isinstance(stack_object, AbilityOnStack) else stack_object.name
+    )
+    if stack_object.targets:
+        players = [
+            target for target in game.resolve_targets(stack_object) if isinstance(target, Player)
+        ]
+    else:
+        players = [viewer]
+    for player in players:
+        if player.library:
+            game.look(player.library[0], viewer.username, source=source)
 
 
-#: "Look at target player's hand." (Gitaxian Probe) - the same CR 701.20e
-#: no-op as `_LOOK_AT_TOP_CARD_RE`, except the thing looked at is a player's
+#: "Look at target player's hand." (Gitaxian Probe, Peek) - the same CR 701.20e
+#: look as `_LOOK_AT_TOP_CARD_RE`, except the thing looked at is a player's
 #: hand rather than a library's top card, so `machines/targeting.py` reads
 #: "target player's hand" as targeting the *player* (its own module-level
 #: docstring lists this exact phrase as one it reads that way).
@@ -14865,10 +14889,18 @@ _LOOK_AT_TARGET_HAND_RE = re.compile(r"^look at target player'?s hand$", re.IGNO
 
 
 def _look_at_target_hand(game: "Game", stack_object: "StackObject") -> None:
-    """No-op (CR 701.20e) - see `_look_at_top_card`. Still resolves the
-    target so a player who has left the game by resolution is refused the
-    ordinary way (CR 608.2b)."""
-    game.resolve_targets(stack_object)
+    """The controller looks at every card in each targeted player's hand
+    (CR 701.20e), recorded through `Game.look` with the controller as the only
+    viewer - the target learns nothing (CR 402.3). A target that is gone by
+    resolution is refused the ordinary way (CR 608.2b)."""
+    viewer = game.controller_of(stack_object)
+    source = (
+        stack_object.source_name if isinstance(stack_object, AbilityOnStack) else stack_object.name
+    )
+    for target in game.resolve_targets(stack_object):
+        if isinstance(target, Player):
+            for state in list(target.hand):
+                game.look(state, viewer.username, source=source)
 
 
 #: "return that card/it/that creature/that permanent to the battlefield under
@@ -17085,6 +17117,7 @@ def _put_spell_in_library(game: "Game", spell: CardState, *, top: bool) -> None:
         owner.library.insert(0, spell)
     else:
         owner.library.append(spell)
+    owner.note_library_changed()  # CR 701.20d
 
 
 def _parse_choose_up_to_one_target_spell_clauses(
@@ -17167,9 +17200,13 @@ def _merge_reveal_hand_choose_discard_clauses(
     (CR 608.2c's printed order has no "if you do" gate on it the way
     `_parse_conditional_sacrifice_clause`'s consequence does).
 
+    The reveal is CR 701.20a's, of the whole hand: every card in it is
+    recorded through `Game.reveal` (all players, no viewers) before the
+    choice is asked, not only the cards the choice may take.
+
     A hand with no nonland (or otherwise qualifying) card is CR 608.2d's
-    "impossible option": nothing is asked and the reveal simply shows an
-    all-land hand for nothing, exactly as the paper cards do.
+    "impossible option": nothing is asked, but the hand is still revealed,
+    exactly as the paper cards do.
     """
     if index + 2 >= len(clauses):
         return None
@@ -17218,6 +17255,8 @@ def _merge_reveal_hand_choose_discard_clauses(
             None,
         )
         if revealer is not None:
+            for state in list(revealer.hand):
+                game.reveal(state, source=source)
             candidates = [state for state in revealer.hand if matches(state)]
             if candidates:
                 chosen_ids = game.ask(
@@ -17524,6 +17563,10 @@ def _merge_look_top_reveal_to_hand_clauses(
     def effect(game: "Game", stack_object: "StackObject") -> None:
         player = game.controller_of(stack_object)
         source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        # "Look at" (CR 701.20e) shows the cards to the controller alone, and
+        # `look_at_top_and_split` records that look once per card; "in a
+        # random order" leaves the controller nothing to know about the rest.
+        # The chosen card is then revealed (CR 701.20a) to everyone.
         moved, rest = game.look_at_top_and_split(
             player,
             count,
@@ -17531,6 +17574,7 @@ def _merge_look_top_reveal_to_hand_clauses(
             prompt=f"reveal a {quality_description} card from the top {count}",
             moved_label="your hand",
             kept_label="bottom of your library",
+            rest_in_random_order=randomised,
             source_id=source_id_of(stack_object),
         )
         if len(moved) > 1 or any(not matches(state) for state in moved):
@@ -17538,6 +17582,7 @@ def _merge_look_top_reveal_to_hand_clauses(
                 f"{source}: may reveal at most one {quality_description} card this way (CR 608.2d)"
             )
         for state in moved:
+            game.reveal(state, source=source)
             player.add(state, Zone.HAND)
         if randomised and rest:
             # Not CR 701.24a's shuffle - see `_PUT_REST_ON_BOTTOM_ANY_ORDER_RE`.
@@ -17546,6 +17591,8 @@ def _merge_look_top_reveal_to_hand_clauses(
             game.shuffles_performed += 1
         for state in rest:
             player.library.append(state)
+        if rest:
+            player.note_library_changed()  # CR 701.20d
 
     return 4, effect
 
@@ -20684,6 +20731,8 @@ def _explore(
         game.put_into_graveyard(state)
     for state in reversed(back_on_top):
         controller.library.insert(0, state)
+    if back_on_top:
+        controller.note_library_changed()  # CR 701.20d
 
 
 #: Amalia Benavides Aguirre's whole trigger: "<Name> explores. Then destroy

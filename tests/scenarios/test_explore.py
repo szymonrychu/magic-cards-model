@@ -106,6 +106,12 @@ def test_a_land_on_top_goes_to_hand_and_adds_no_counter():
     assert scenario.game.power_of(amalia) == 2
     assert _hand_names(scenario) == ["Forest"]
     assert _library_names(scenario) == ["Llanowar Elves"]
+    (reveal,) = scenario.game.reveals
+    assert reveal.zone is Zone.LIBRARY
+    assert reveal.viewers is None
+    assert reveal.library_epoch is not None
+    assert reveal.zone_change_stamp is not None
+    assert reveal.turn == scenario.game.turn.turns_taken
 
 
 def test_no_question_is_asked_when_the_revealed_card_is_a_land():

@@ -469,6 +469,8 @@ class DevourerOfDestinyFirstUpkeep(DelayedEffectSpecBase):
         game.exile_cards(rest)
         for index, state in enumerate(kept):
             player.library.insert(index, state)
+        if kept:
+            player.note_library_changed()  # CR 701.20d
 
 
 class StaticPrisonReturn(DelayedEffectSpecBase):
