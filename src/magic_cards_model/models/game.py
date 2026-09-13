@@ -6139,6 +6139,29 @@ class Game(BaseModel):
             rest.sort(key=lambda state: ranked.get(state.id, len(ranked)))
         return moved, rest
 
+    def _look_before_choosing(
+        self, player: Player, looked_at: list[CardState], source: str | None
+    ) -> list[Reveal]:
+        """Record the look that comes before the question, and return it.
+
+        "Look at the top N cards of your library, then put" (CR 701.22a,
+        CR 701.25a): the chooser has seen the cards, where they sit, while the
+        choice of where each goes is still pending - a paused command's
+        half-applied game must say so. The put-back ends these records
+        (CR 701.20d), so `_end_looks` drops them there and the caller records
+        what the chooser knows against the order the put-back makes: one look
+        per card either way.
+        """
+        start = len(self.reveals)
+        for state in looked_at:
+            self.look(state, player.username, source=source)
+        return self.reveals[start:]
+
+    def _end_looks(self, looks: list[Reveal]) -> None:
+        """Drop the records `_look_before_choosing` made (by identity)."""
+        ended = {id(look) for look in looks}
+        self.reveals[:] = [reveal for reveal in self.reveals if id(reveal) not in ended]
+
     def scry(
         self,
         player: Player | str,
@@ -6169,6 +6192,7 @@ class Game(BaseModel):
                 return CardSplit()
 
             looked_at = self._look_at_top(player, count)
+            pending_looks = self._look_before_choosing(player, looked_at, source)
             answer = self.ask(
                 Decision(
                     kind=DecisionKind.SCRY,
@@ -6186,6 +6210,7 @@ class Game(BaseModel):
             )
             assert isinstance(answer, CardSplit)
             to_bottom, on_top = self._split_top(player, looked_at, answer)
+            self._end_looks(pending_looks)
             library = player.library
             for state in looked_at:
                 library.remove(state)
@@ -6232,6 +6257,7 @@ class Game(BaseModel):
                 return CardSplit()
 
             looked_at = self._look_at_top(player, count)
+            pending_looks = self._look_before_choosing(player, looked_at, source)
             answer = self.ask(
                 Decision(
                     kind=DecisionKind.SURVEIL,
@@ -6249,6 +6275,7 @@ class Game(BaseModel):
             )
             assert isinstance(answer, CardSplit)
             to_graveyard, on_top = self._split_top(player, looked_at, answer)
+            self._end_looks(pending_looks)
             library = player.library
             for state in looked_at:
                 library.remove(state)
@@ -6356,6 +6383,7 @@ class Game(BaseModel):
             return [], []
 
         looked_at = self._look_at_top(player, count)
+        pending_looks = self._look_before_choosing(player, looked_at, source)
         answer = self.ask(
             Decision(
                 kind=DecisionKind.SCRY,
@@ -6371,6 +6399,7 @@ class Game(BaseModel):
         )
         assert isinstance(answer, CardSplit)
         moved, rest = self._split_top(player, looked_at, answer)
+        self._end_looks(pending_looks)
         put_back_epoch = player.library_epoch + (0 if rest_in_random_order else 1)
         for state in looked_at:
             self._record_shown(state, [player.username], source, library_epoch=put_back_epoch)
