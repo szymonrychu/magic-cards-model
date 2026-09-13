@@ -5408,6 +5408,7 @@ class Game(BaseModel):
         Returns the step the game is in afterwards, which is how a caller learns
         that its declaration was the one that finished the round.
         """
+        self._refuse_if_over()
         assert self.turn is not None
         if self.turn.step is not Step.MULLIGAN:
             raise ValueError(
@@ -5636,6 +5637,7 @@ class Game(BaseModel):
         action - a card that does not allow the action is not permission to take
         it.
         """
+        self._refuse_if_over()
         assert self.turn is not None
         if self.turn.step is not Step.PREGAME_ACTIONS:
             raise ValueError(
@@ -5674,6 +5676,7 @@ class Game(BaseModel):
         turn-based actions happen when the game advances out of it, exactly as on
         every later turn.
         """
+        self._refuse_if_over()
         with self._id_allocator_scope():
             assert self.turn is not None
             if self.turn.step is not Step.PREGAME_ACTIONS:

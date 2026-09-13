@@ -153,3 +153,48 @@ def test_no_trigger_goes_on_the_stack_and_no_decision_is_raised():
     assert answer == default_answer(question), "nothing paused and nobody was asked"
     assert scenario.stack_names() == stack_before
     assert len(game.decisions.asked) == asked_before
+
+
+def test_a_concession_during_the_pregame_refuses_the_remaining_declarations():
+    """CR 104.3a: "A player can concede the game at any time. A player who
+    concedes leaves the game immediately. That player loses the game." That
+    includes the mulligan step, while declarations are still owed. Once Bob
+    concedes, CR 104.1 has ended the game, so Alice's declaration is refused
+    rather than resolving the round and moving the pregame on.
+
+    Registered lists as `test_pregame_steps.py`: devoted combo (pilot
+    musasabi, 2026-08-29) and broodscale bloodchief (pilot unagieel,
+    2026-08-30)."""
+    from tests.scenarios.test_opening_hand_actions import broodscale, devoted, series
+
+    game = series(devoted(), broodscale()).start_game()
+    assert game.turn.step is Step.MULLIGAN
+    assert game.awaiting_mulligan_declarations == ["alice", "bob"]
+
+    game.concede("bob")
+    assert game.is_over and game.winner == "alice"
+
+    with pytest.raises(ValueError, match=GAME_OVER):
+        game.declare_mulligan("alice", False)
+    assert game.turn.step is Step.MULLIGAN
+    assert "alice" not in game.mulligan_declarations
+
+
+def test_a_concession_during_opening_hand_actions_refuses_the_remaining_ones():
+    """The CR 103.6 step is the other half of the pregame, and the same
+    CR 104.3a concession ends the game there too."""
+    from tests.scenarios.test_opening_hand_actions import broodscale, devoted, series
+
+    game = series(devoted(), broodscale()).start_game()
+    game.declare_mulligan("alice", False)
+    assert game.declare_mulligan("bob", False) is Step.PREGAME_ACTIONS
+    hand_card = game.player("alice").hand[0]
+
+    game.concede("bob")
+    assert game.is_over
+
+    with pytest.raises(ValueError, match=GAME_OVER):
+        game.take_opening_hand_action("alice", hand_card.id)
+    with pytest.raises(ValueError, match=GAME_OVER):
+        game.finish_opening_hand_actions("alice")
+    assert game.turn.step is Step.PREGAME_ACTIONS

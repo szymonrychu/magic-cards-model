@@ -68,3 +68,58 @@ def test_a_target_refusal_reads_needs_an_artifact():
 
     assert refusal is not None
     assert "needs an artifact" in refusal
+
+
+def test_a_subtype_cost_refusal_reads_is_not_an_ally():
+    """Boiling Rock Rioter: "Tap an untapped Ally you control: Exile target card
+    from a graveyard." The cost's quality is a subtype read from a capitalised
+    noun, and a Grizzly Bears nominated for it is refused as "not an Ally"."""
+    from magic_cards_model.machines.cost import cost_component_for_phrase
+
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Boiling Rock Rioter", "Grizzly Bears"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    rioter = scenario.creature("Boiling Rock Rioter", "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    (printed,) = [line for line in rioter.card.oracle_text.split("\n") if line.startswith("Tap")]
+    cost_phrase = printed.split(":", 1)[0]
+    assert cost_phrase == "Tap an untapped Ally you control"
+
+    component = cost_component_for_phrase(cost_phrase, "alice")
+    assert component is not None and component.requirement is not None
+    refusal = component.requirement.why_not(bears, scenario.game, "alice")
+
+    assert refusal == "Grizzly Bears is not an Ally"
+    assert component.requirement.why_not(rioter, scenario.game, "alice") is None
+
+
+def test_an_animation_to_an_eight_eight_reads_becomes_an_8_8():
+    """Jolrael, Voice of Zhalfir: "At the beginning of combat on your turn, up
+    to one target land you control becomes an X/X green and blue Bird creature
+    ... where X is the number of cards in your hand." With eight cards in hand
+    the substituted P/T is 8/8, and the effect reads "becomes an 8/8"."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Island"] * 8,
+            battlefield=["Jolrael, Voice of Zhalfir", "Forest"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (forest,) = scenario.untapped_sources("Forest", username="alice")
+    scenario.choose_trigger_targets("Jolrael, Voice of Zhalfir", [forest])
+    scenario.advance()
+    assert scenario.step is Step.BEGINNING_OF_COMBAT
+    scenario.pass_until_resolved()
+    assert scenario.game.characteristics_of(forest).power_toughness == (8, 8)
+
+    descriptions = [effect.description for effect in scenario.game.continuous_effects.effects]
+    assert any("becomes an 8/8 Bird" in description for description in descriptions), descriptions
+    assert not any("becomes a 8/8" in description for description in descriptions)

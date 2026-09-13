@@ -3024,8 +3024,11 @@ def _target_animation_builder(
             effects.append(
                 ContinuousEffect(
                     description=(
-                        f"{source.name}: {target.name} becomes a {power}/{toughness} "
-                        f"{named}{' '.join(card_type.value for card_type in types)}"
+                        f"{source.name}: {target.name} becomes "
+                        + with_indefinite_article(
+                            f"{power}/{toughness} {named}"
+                            + " ".join(card_type.value for card_type in types)
+                        )
                     ),
                     layer=Layer.TYPE,
                     timestamp=timestamp,
@@ -3111,8 +3114,11 @@ def _self_animation_builder(
             effects.append(
                 ContinuousEffect(
                     description=(
-                        f"{source.name}: {target.name} becomes a {power}/{toughness} "
-                        f"{named}{' '.join(card_type.value for card_type in types)}"
+                        f"{source.name}: {target.name} becomes "
+                        + with_indefinite_article(
+                            f"{power}/{toughness} {named}"
+                            + " ".join(card_type.value for card_type in types)
+                        )
                     ),
                     layer=Layer.TYPE,
                     timestamp=timestamp,

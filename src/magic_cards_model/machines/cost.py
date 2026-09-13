@@ -1983,7 +1983,7 @@ class CardRequirement(BaseModel):
             wanted = "/".join(type_.value for type_ in self.types)
             return f"{card.name} is not {with_indefinite_article(wanted)}"
         if self.subtypes and not subtypes & self._wanted_subtypes():
-            return f"{card.name} is not a {'/'.join(self.subtypes)}"
+            return f"{card.name} is not {with_indefinite_article('/'.join(self.subtypes))}"
         if self.mana_value is not None and mana_value != self.mana_value:
             # CR 202.3: the mana value is read off the object, not off the
             # printed front face - computed when there is a board to compute
