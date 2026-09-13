@@ -382,3 +382,48 @@ def test_an_activation_that_targets_nothing_keeps_no_slots():
     claws = scenario.find("Claws of Gix", Zone.BATTLEFIELD, "alice")
 
     assert _row(scenario.game, "alice", claws.id, index=0).target_slots == ()
+
+
+# -- an announcement whose payment never completed ---------------------------
+#
+# CR 602.2b imports CR 601.2c-h in order, so the targets `begin_activating`
+# announces belong to the payment it opens (CR 601.2h). A payment that is
+# rewound or abandoned ends that activation: its announcement must not be
+# taken by a later activation of the same ability, which announces its own.
+
+
+def _abandon_a_bombardment_announcing(scenario, target):
+    bombardment = scenario.find("Goblin Bombardment", Zone.BATTLEFIELD, "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    payment = scenario.game.begin_activating(
+        bombardment, 0, "alice", sacrificing=[bears], targets=[target]
+    )
+    payment.rewind()
+    return bombardment
+
+
+def test_a_rewound_announcement_does_not_supply_a_later_activations_targets():
+    scenario = _bombardment_board()
+    wolf = scenario.creature("Watchwolf", "bob")
+    bombardment = _abandon_a_bombardment_announcing(scenario, "bob")
+    scenario.game.decisions.add(
+        ScriptedAnswer(kind=DecisionKind.CHOOSE_TARGETS, value=(wolf,), player="alice")
+    )
+
+    ability = scenario.game.activate_ability(bombardment, 0, "alice")
+
+    assert ability is not None
+    assert ability.targets == [TargetRef.to_card(wolf)], (
+        "the rewound announcement of bob was taken instead of asking again"
+    )
+
+
+def test_a_rewound_announcement_does_not_refuse_a_later_activations_own_targets():
+    scenario = _bombardment_board()
+    wolf = scenario.creature("Watchwolf", "bob")
+    bombardment = _abandon_a_bombardment_announcing(scenario, "bob")
+
+    ability = scenario.game.activate_ability(bombardment, 0, "alice", targets=[wolf])
+
+    assert ability is not None
+    assert ability.targets == [TargetRef.to_card(wolf)]

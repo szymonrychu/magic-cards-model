@@ -63,6 +63,7 @@ from ..machines.cost import (
     CostModifierKind,
     CostModifierNotice,
     CostPayment,
+    CostStep,
     TotalCost,
     alternative_cost_offers,
     among_colors,
@@ -1653,12 +1654,16 @@ class Game(BaseModel):
     announced as the cost is chosen, and the ability on the stack is built by
     a second call, so this is the value that crosses from one to the other."""
 
-    _announced_targets: dict[str, list[TargetRef]] = PrivateAttr(default_factory=dict)
+    _announced_targets: dict[str, tuple[list[TargetRef], CostPayment]] = PrivateAttr(
+        default_factory=dict
+    )
     """The targets `begin_activating` announced (CR 601.2c), keyed like
-    `activations`, taken back by `activate_ability` once the cost is paid
-    (CR 601.2h). Not persisted: both calls run inside one command, and a
-    command that pauses is replayed from its start, `begin_activating`
-    included."""
+    `activations`, with the payment it opened for them. `activate_ability`
+    takes them back only once that payment is paid (CR 601.2h): a payment
+    rewound, cancelled or never paid ended that activation, so its
+    announcement is discarded and the next activation announces its own.
+    Not persisted: both calls run inside one command, and a command that
+    pauses is replayed from its start, `begin_activating` included."""
 
     library_orders_kept: list[LibraryOrderKept] = Field(default_factory=list)
     """Library cards that kept their order through a put onto the bottom or a
@@ -12797,8 +12802,6 @@ class Game(BaseModel):
         announced = self._announce_activation_targets(
             permanent, controller, self._activation_target_text(ability, announced_x), targets
         )
-        if announced is not None:
-            self._announced_targets[key] = announced
         # CR 106.6: an activation is what Shang-Chi's and Eldrazi Temple's
         # mana is restricted *to*, and what Cavern of Souls's and Delighted
         # Halfling's is restricted *from*, so the payment is told which it is
@@ -12810,12 +12813,15 @@ class Game(BaseModel):
         # front face, wrong for a transformed permanent even before layers.
         # `machines/legal_actions.py` asks the identical question when it
         # enumerates the same activation, and the two must not disagree.
-        return CostPayment.for_total(
+        payment = CostPayment.for_total(
             total,
             game=self,
             payer=controller,
             spend=ManaSpend.activating(self.characteristics_of(permanent)),
         )
+        if announced is not None:
+            self._announced_targets[key] = (announced, payment)
+        return payment
 
     def activate_ability(
         self,
@@ -12890,7 +12896,10 @@ class Game(BaseModel):
             # have made one illegal - Vampire Hexmage sacrificing itself - and
             # nothing rechecks that here; CR 608.2b does, on resolution.
             key = self._activation_key(permanent, index)
-            recorded = self._announced_targets.pop(key, None)
+            entry = self._announced_targets.pop(key, None)
+            # Only the announcement whose payment was paid belongs to this
+            # activation; one whose payment was rewound or abandoned is stale.
+            recorded = entry[0] if entry is not None and entry[1].step is CostStep.PAID else None
             if recorded is not None:
                 if targets is not None and [TargetRef.coerce(t) for t in targets] != recorded:
                     raise ValueError(
