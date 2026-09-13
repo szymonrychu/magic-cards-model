@@ -112,3 +112,43 @@ def test_with_no_permanent_card_revealed_nothing_is_asked_and_all_four_are_still
     assert not [d for d in scenario.questions_asked() if d.source == "Malevolent Rumble"], (
         "no permanent card to take: CR 608.2d has no choice to put"
     )
+
+
+def test_an_off_pool_card_with_the_same_template_reveals_before_it_asks():
+    """Commune with the Gods prints the same three sentences with a different
+    count and quality ("Reveal the top five cards of your library. You may put
+    a creature or enchantment card from among them into your hand. Put the rest
+    into your graveyard."), so it is read by the same template and shows every
+    card before the question, which names only the qualifying ones."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Commune with the Gods"],
+            battlefield=["Forest", "Forest"],
+            library=["Lightning Bolt", "Satyr Wayfinder", "Forest", "Opt", "Island", "Shock"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    forests = scenario.untapped_sources("Forest", "Forest", username="alice")
+    scenario.cast_onto_stack("Commune with the Gods", *forests)
+    top_five = scenario.top_of_library(5)
+    wayfinder = top_five[1]
+    scenario.game.decisions.pause_when_unanswered = True
+
+    with pytest.raises(DecisionPending) as excinfo:
+        scenario.resolve_top()
+
+    decision = excinfo.value.pending.decision
+    assert decision.kind is DecisionKind.MAY
+    assert decision.cards == (wayfinder.id,)
+    five = {state.id for state in top_five}
+    public = {
+        r.card_id
+        for r in scenario.game.reveals
+        if r.source == "Commune with the Gods" and r.viewers is None
+    }
+    assert public == five
+    assert _known_ids(scenario.game, "bob") >= five
