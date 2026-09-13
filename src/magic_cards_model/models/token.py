@@ -73,7 +73,7 @@ Three of the rules above are only half here, because the other half belongs to
   Season's token half watches.
 """
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from typing import TYPE_CHECKING, Any, Literal
 from uuid import NAMESPACE_OID, UUID, uuid5
 
@@ -545,7 +545,7 @@ def create_tokens(
     count: int = 1,
     *,
     tapped: bool = False,
-    attacking: "TargetRef | str | None" = None,
+    attacking: "TargetRef | str | Callable[[TokenState], TargetRef | str | None] | None" = None,
     counters: dict[CounterKind, int] | None = None,
     attached_to: CardState | None = None,
 ) -> list[TokenState]:
@@ -568,6 +568,15 @@ def create_tokens(
     `ATTACKS` event. CR 508.4c adds that such a creature "isn't affected by
     requirements or restrictions that apply to the declaration of attackers", so
     summoning sickness (CR 302.6) does not stop it either.
+
+    `attacking` may also be a function of the token, asked once per token as
+    it enters: CR 508.4 has "its controller [choose] which defending player,
+    planeswalker a defending player controls, or battle a defending player
+    protects it's attacking as it enters the battlefield (unless the effect
+    that put it onto the battlefield specifies what it's attacking)", and a
+    function is the only shape that can ask per token after a replacement
+    effect has settled how many there are. Returning `None` leaves that token
+    not attacking.
 
     Two ways it does not become an attacker even so, both checked here:
     CR 506.3b, put onto the battlefield attacking "under the control of any
@@ -643,7 +652,9 @@ def create_tokens(
             for kind, amount in (counters or {}).items():
                 game.add_counters(token, kind, amount)
             if attacking is not None:
-                _put_onto_the_battlefield_attacking(game, token, attacking)
+                defender = attacking(token) if callable(attacking) else attacking
+                if defender is not None:
+                    _put_onto_the_battlefield_attacking(game, token, defender)
             created.append(token)
 
         for extra in extra_definitions:

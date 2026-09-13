@@ -8,12 +8,21 @@ differently-shaped cards: Divide by Zero's capitalised, sentence-final
 "Learn." on a spell, and Eyetwitch's lowercase, mid-sentence "learn" inside
 a dies trigger.
 
-The Lesson-reveal half is out of scope and documented as such: this engine
-has no "outside the game" zone (see `docs/engine-coverage.md`).
+The Lesson-reveal half is performed too: CR 400.11a puts a sideboard outside
+the game, CR 205.3k makes Lesson a spell type, and the card revealed there and
+put into the hand is recorded publicly (CR 701.20a, 701.20b) and carried into
+the hand like every other "reveal ... from outside the game and put it into
+your hand" template (`test_reveal_from_outside_the_game_stays_known_in_hand.
+py`). Igneous Inspiration is the off-pool proof: it is listed in neither
+`~/Documents/mtg-decks/decks/*/decklist.txt` nor `magic-cards-model-api/decks/
+*.txt`.
+
+Every CR number above was read in full with `mise run rules:find` in the
+session that wrote this file.
 """
 
 from magic_cards_model.machines import Step
-from magic_cards_model.models import Zone
+from magic_cards_model.models import Game, Zone
 from tests.scenarios.harness import Scenario
 
 
@@ -104,3 +113,147 @@ def test_eyetwitch_learns_lowercase_and_mid_sentence_when_it_dies():
 
     assert bolt.zone.value == "graveyard"
     assert len(scenario.player("alice").hand) == hand_before
+
+
+# -- the Lesson-reveal half ----------------------------------------------------
+
+
+def known(game: Game, viewer: str) -> list[tuple[str, Zone, int | None, bool]]:
+    return [
+        (entry.card_name, entry.zone, entry.index_from_top, entry.carried)
+        for entry in game.known_to(viewer)
+    ]
+
+
+def _divide_by_zero_board(hand: list[str], sideboard: list[str]):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Divide by Zero", "Shock", *hand],
+            library=["Forest"],
+            battlefield=["Island", "Island", "Island", "Mountain"],
+            sideboard=sideboard,
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_declining_the_discard_reveals_a_lesson_from_outside_the_game_known_to_all():
+    """CR 701.48a: "If you didn't discard a card, you may reveal a Lesson card
+    you own from outside the game and put it into your hand." """
+    scenario = _divide_by_zero_board(["Lightning Bolt"], ["Environmental Sciences", "Preordain"])
+    alice = scenario.player("alice")
+    (lesson,) = [
+        state for state in alice.outside_the_game if state.name == "Environmental Sciences"
+    ]
+    scenario.will_take_the_may(False, username="alice", source="Divide by Zero")
+    scenario.will_take_the_may(True, username="alice", source="Divide by Zero")
+    scenario.will_choose_cards(lesson, username="alice", source="Divide by Zero")
+
+    _cast_divide_by_zero_at_a_spell(scenario)
+    scenario.pass_until_resolved()
+
+    assert lesson.zone is Zone.HAND
+    assert [state.name for state in alice.outside_the_game] == ["Preordain"]
+    (reveal,) = scenario.game.reveals
+    assert reveal.card_id == lesson.id
+    assert reveal.zone is Zone.SIDEBOARD, "CR 701.20b: shown where it sat"
+    assert reveal.viewers is None
+    assert known(scenario.game, "bob") == [("Environmental Sciences", Zone.HAND, None, True)]
+
+
+def test_discarding_to_draw_offers_no_lesson():
+    """CR 701.48a's "If you didn't discard a card": the two halves are exclusive."""
+    scenario = _divide_by_zero_board(["Lightning Bolt"], ["Environmental Sciences"])
+    alice = scenario.player("alice")
+    bolt = scenario.find("Lightning Bolt", Zone.HAND, "alice")
+    scenario.will_take_the_may(True, username="alice", source="Divide by Zero")
+    scenario.will_discard(bolt, username="alice")
+
+    _cast_divide_by_zero_at_a_spell(scenario)
+    scenario.pass_until_resolved()
+
+    assert [state.name for state in alice.outside_the_game] == ["Environmental Sciences"]
+    assert scenario.game.reveals == []
+
+
+def test_a_non_lesson_card_outside_the_game_is_not_offered():
+    scenario = _divide_by_zero_board([], ["Preordain", "Lightning Bolt"])
+    alice = scenario.player("alice")
+    # The bounced Shock is back in hand by now, so the discard is offered first.
+    scenario.will_take_the_may(False, username="alice", source="Divide by Zero")
+
+    _cast_divide_by_zero_at_a_spell(scenario)
+    scenario.pass_until_resolved()
+
+    assert len(alice.outside_the_game) == 2
+    assert scenario.game.reveals == []
+    assert not any("Lesson" in d.prompt for d in scenario.game.decisions.asked)
+
+
+def test_declining_the_lesson_reveal_leaves_it_outside_the_game():
+    scenario = _divide_by_zero_board([], ["Environmental Sciences"])
+    alice = scenario.player("alice")
+    scenario.will_take_the_may(False, username="alice", source="Divide by Zero")
+    scenario.will_take_the_may(False, username="alice", source="Divide by Zero")
+
+    _cast_divide_by_zero_at_a_spell(scenario)
+    scenario.pass_until_resolved()
+
+    assert [state.name for state in alice.outside_the_game] == ["Environmental Sciences"]
+    assert scenario.game.reveals == []
+
+
+def test_eyetwitch_with_an_empty_hand_still_reveals_a_lesson():
+    """No card to discard means no discard, so the Lesson half is still open."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Eyetwitch"], sideboard=["Environmental Sciences"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice = scenario.player("alice")
+    (lesson,) = list(alice.outside_the_game)
+    scenario.will_take_the_may(True, username="alice", source="Eyetwitch")
+    scenario.will_choose_cards(lesson, username="alice", source="Eyetwitch")
+
+    scenario.game.destroy(scenario.creature("Eyetwitch", "alice"))
+    scenario.state_based_actions()
+    scenario.pass_until_resolved()
+
+    assert lesson.zone is Zone.HAND
+    assert known(scenario.game, "bob") == [("Environmental Sciences", Zone.HAND, None, True)]
+
+
+def test_igneous_inspiration_learns_a_lesson_off_pool():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Igneous Inspiration"],
+            battlefield=["Mountain", "Mountain", "Mountain"],
+            sideboard=["Environmental Sciences"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice = scenario.player("alice")
+    (lesson,) = list(alice.outside_the_game)
+    scenario.will_take_the_may(True, username="alice", source="Igneous Inspiration")
+    scenario.will_choose_cards(lesson, username="alice", source="Igneous Inspiration")
+
+    scenario.cast_and_resolve(
+        "Igneous Inspiration",
+        *scenario.untapped_sources("Mountain", "Mountain", "Mountain"),
+        targets=["bob"],
+    )
+
+    assert scenario.player("bob").life == 17
+    assert lesson.zone is Zone.HAND
+    assert known(scenario.game, "bob") == [("Environmental Sciences", Zone.HAND, None, True)]

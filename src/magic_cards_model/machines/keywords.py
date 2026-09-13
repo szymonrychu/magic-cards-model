@@ -118,6 +118,7 @@ class KeywordRule(StrEnum):
     UNEARTH = "CR 702.84a"
     TRANSMUTE = "CR 702.53a"
     PARADIGM = "CR 702.192a"
+    IMPENDING = "CR 702.176a"
 
 
 def executes(keyword: str) -> bool:
@@ -174,6 +175,13 @@ def executes(keyword: str) -> bool:
         # enters, if its evoke cost was paid, its controller sacrifices it" -
         # is `_evoke_ability`/`_evoke_effect` here.
         "evoke",
+        # CR 702.176a. Four abilities in four places: the alternative cost is
+        # `machines/casting.py`'s `keyword_cast_options`, the entering time
+        # counters are `machines/replacement._impending_entering_counters`, the
+        # "it's not a creature" is `machines/layers._impending_not_a_creature`,
+        # and the end step trigger is `_impending_ability`/`_impending_effect`
+        # here.
+        "impending",
         # CR 702.189a. The triggered half is `_firebending_ability` above
         # (`_TRIGGER_EXPANSIONS`), and `machines/effects._parse_firebending_
         # add_mana` reads the "add N {R}" effect it puts on the stack.
@@ -215,10 +223,8 @@ def executes(keyword: str) -> bool:
         # inside another ability's effect text.
         "investigate",
         # CR 701.48a, the same shape once more: `machines/effects.learn`
-        # performs its discard-to-draw half, reached through
-        # `_parse_learn_clause`. Its Lesson-reveal half needs an "outside
-        # the game" zone this engine does not have; see
-        # `docs/engine-coverage.md`.
+        # performs both halves, discard-to-draw and the Lesson reveal from
+        # outside the game, reached through `_parse_learn_clause`.
         "learn",
         # CR 701.19a, the same shape once more: `machines/effects.
         # regenerate_ability_targets`/`_parse_regenerate_self_clause`
@@ -517,12 +523,37 @@ def _offspring_ability(ability: KeywordAbility) -> TriggeredAbility:
     )
 
 
+def _impending_ability(ability: KeywordAbility) -> TriggeredAbility:
+    """CR 702.176a's fourth ability: "At the beginning of your end step, if this
+    permanent's impending cost was paid and it has a time counter on it,
+    remove a time counter from it."
+
+    The other three are the alternative cost (`machines/casting.py`), the
+    entering counters (`machines/replacement.py`) and the layer 4 "it's not a
+    creature" (`machines/layers.py`); only this one goes on the stack.
+
+    The *if* is an intervening *if* (CR 603.4), answered by
+    `machines/triggers.intervening_if_holds` off `CardState.cast_with_keyword`
+    and the time counter count - so a hardcast Overlord, a blinked one, and one
+    whose last counter is already gone never trigger at all.
+    """
+    return _expansion(
+        ability,
+        keyword="impending",
+        word=TriggerWord.AT,
+        condition="the beginning of your end step",
+        intervening_if="this permanent's impending cost was paid and it has a time counter on it",
+        effect="remove a time counter from it",
+        event=TriggerEvent.BEGINNING_OF_STEP,
+    )
+
+
 def _mobilize_ability(ability: KeywordAbility) -> TriggeredAbility:
     """CR 702.181a: "Mobilize N" means "Whenever this creature attacks, create N
     1/1 red Warrior creature tokens. Those tokens enter tapped and attacking.
     Sacrifice them at the beginning of the next end step.""
     """
-    count = ability.count if ability.count is not None else 1
+    count = ability.count if ability.count is not None else "X"
     return _expansion(
         ability,
         keyword="mobilize",
@@ -533,6 +564,132 @@ def _mobilize_ability(ability: KeywordAbility) -> TriggeredAbility:
             f"attacking. Sacrifice them at the beginning of the next end step"
         ),
         event=TriggerEvent.ATTACKS,
+    )
+
+
+#: The count on a mobilize line: "Mobilize 2", or "Mobilize X, where X is the
+#: number of creature cards in your graveyard" (Avenger of the Fallen).
+_MOBILIZE_COUNT_RE = re.compile(
+    r"^mobilize\s+(?P<n>\d+|x)\b(?:\s*,\s*where x is (?P<expr>[^.(]+))?",
+    re.IGNORECASE,
+)
+
+
+def _mobilize_effect(game: Any, ability: AbilityOnStack) -> None:
+    """CR 702.181a's effect: "create N 1/1 red Warrior creature tokens. Those
+    tokens enter tapped and attacking. Sacrifice them at the beginning of the
+    next end step."
+
+    **N** is read off the keyword line the ability came from, not off its
+    reminder text or the card: a number, or CR 608.2h's "where X is ..."
+    counted once, now, through `machines/effects.count_expression`. An X this
+    engine cannot count fails closed with an `UnmodeledTriggerEffectNotice`
+    rather than creating a guessed number of tokens.
+
+    **What each token attacks** is CR 508.4: "its controller chooses which
+    defending player, planeswalker a defending player controls, or battle a
+    defending player protects it's attacking as it enters the battlefield",
+    and mobilize specifies nothing. With one thing to attack there is nothing
+    to ask; with more, the controller is asked once per token as it enters,
+    with the object the mobilizing creature is attacking offered first (and
+    so the default). CR 506.3b is `create_tokens`' own: a token whose
+    controller is not an attacking player enters but never attacks.
+
+    **"Sacrifice them"** is one delayed triggered ability (CR 603.7) about
+    every token this made - `delayed.SacrificeEach` - so one object goes on
+    the stack at the next end step, and CR 603.7c is applied token by token.
+    """
+    from ..models.card import Color
+    from ..models.token import TokenDefinition, create_tokens
+    from .combat import attackable_defenders
+    from .delayed import DelayedTrigger, SacrificeEach
+    from .effects import UnmodeledTriggerEffectNotice, count_expression
+    from .turn import Step
+
+    printed = ability.ability
+    raw = printed.raw if isinstance(printed, TriggeredAbility) else ""
+    controller = game.controller_of(ability).username
+    count: int | None = None
+    match = _MOBILIZE_COUNT_RE.match((raw or "").strip())
+    if match is not None:
+        if match.group("n").lower() != "x":
+            count = int(match.group("n"))
+        elif match.group("expr") is not None:
+            measure = count_expression(match.group("expr"))
+            if measure is not None:
+                count = measure(game, controller)
+    if count is None:
+        game.unmodeled_trigger_effect_notices.append(
+            UnmodeledTriggerEffectNotice(
+                source_id=ability.source_id,
+                source_name=ability.source_name,
+                text=raw or "mobilize",
+            )
+        )
+        return
+    if count <= 0:
+        return
+
+    mobilizing = next(
+        (
+            attack.defender
+            for attack in game.combat.attacks
+            if attack.attacker_id == ability.source_id
+        ),
+        None,
+    )
+
+    def choose_defender(token: CardState) -> TargetRef | None:
+        if token.controller != game.active_player.username:
+            return None  # CR 506.3b: it enters, but never attacking.
+        candidates = attackable_defenders(game, controller)
+        if mobilizing in candidates:
+            candidates.remove(mobilizing)
+            candidates.insert(0, mobilizing)
+        if len(candidates) <= 1:
+            return candidates[0] if candidates else None
+        chosen = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_TARGETS,
+                player=controller,
+                prompt=(
+                    f"choose which player, planeswalker or battle this {token.name} "
+                    "is attacking (CR 508.4)"
+                ),
+                source=ability.source_name,
+                source_id=source_id_of(ability),
+                targets=tuple(candidates),
+                target_minimum=1,
+                target_maximum=1,
+            )
+        )
+        return TargetRef.coerce(chosen[0])
+
+    warrior = TokenDefinition(
+        types=(Type.CREATURE,),
+        subtypes=("Warrior",),
+        colors=(Color.RED,),
+        power=1,
+        toughness=1,
+    )
+    created = create_tokens(
+        game, warrior, controller, count, tapped=True, attacking=choose_defender
+    )
+    on_battlefield = [token for token in created if token.zone is Zone.BATTLEFIELD]
+    if not on_battlefield:
+        return
+    game.create_delayed_trigger(
+        DelayedTrigger(
+            text="Sacrifice them at the beginning of the next end step.",
+            effect=SacrificeEach(
+                subjects=tuple((token.id, token.zone_change_stamp) for token in on_battlefield)
+            ),
+            event=TriggerEvent.BEGINNING_OF_STEP,
+            step=Step.END_STEP,
+            controller=controller,
+            source_id=ability.source_id,
+            source_name=ability.source_name,
+        )
     )
 
 
@@ -707,6 +864,7 @@ _TRIGGER_EXPANSIONS: dict[str, Callable[[KeywordAbility], list[TriggeredAbility]
     "madness": _single(_madness_ability),
     "hideaway": _single(_hideaway_ability),
     "suspend": _suspend_abilities,
+    "impending": _single(_impending_ability),
 }
 
 
@@ -1185,25 +1343,18 @@ def _search_reveal_to_hand_and_shuffle(
     quality - a type, or a mana value - which CR 701.23b says the player "isn't
     required to find". The found card is revealed while still in the library
     (CR 701.20a-b), put into the hand, and only then is the library shuffled
-    (CR 701.24a), so the shuffle is held back from the search and done last.
+    (CR 701.24a) - `Game.search_and_put`, the funnel every printed
+    search-reveal-put goes through.
     """
     game = activation.game
-    owner = game.player(activation.player)
-    source = activation.card.name
-    found = game.search_library(
-        owner,
+    return game.search_and_put(
+        game.player(activation.player),
         matches,
-        count=1,
-        optional=True,
-        shuffle=False,
-        source=source,
+        destination=Zone.HAND,
+        reveal=True,
+        source=activation.card.name,
         source_id=source_id_of(activation.card),
     )
-    for state in found:
-        game.reveal(state, source=source)
-        owner.add(state, Zone.HAND)
-    game.shuffle_library(owner)
-    return found
 
 
 def _matches_type(state: CardState, named: str) -> bool:
@@ -2053,59 +2204,87 @@ def _has_computed_ascend(board: ComputedBoard, permanent: CardState) -> bool:
     return any(_ASCEND_LINE.match(line) for line in abilities)
 
 
-def ascend_state_based_actions(game: Any) -> list[str]:
+def grant_the_citys_blessing(game: Any) -> list[str]:
     """CR 702.131b: "Ascend on a permanent represents a static ability. It
     means 'Any time you control ten or more permanents and you don't have the
     city's blessing, you get the city's blessing for the rest of the game.'"
 
-    Read as a background check the same way `equipment_state_based_actions`
-    and `aura_state_based_actions` are, rather than through
-    `machines/triggers.py`: an "any time ... is true" static ability is
-    CR 603.8's *state trigger* shape, not an ordinary event-triggered ability
-    with a stack object of its own, so there is no `AbilityOnStack` for it to
-    put on the stack. Getting the blessing is not itself a game object that
-    resolves - it just happens, the moment the condition is met.
+    **"Any time" is the timing**, and it is not a state-based action's - CR
+    704.5 lists no such item. A blessing that waited for the next state-based
+    check arrived too late for anything read before that check: Ocelot Pride's
+    end-step trigger makes the Cat that is its controller's tenth permanent and
+    then, in the same resolution, asks "if you have the city's blessing" - a
+    question no state-based check can get in between (battle report B2-07).
+
+    So `Game.emit` calls this before it matches any trigger, which is every
+    time the game raises an event - a permanent entering among them - and
+    CR 702.131d is why it comes first: "After a player gets the city's
+    blessing, continuous effects are reapplied before the game checks to see
+    if the game state or preceding events have matched any trigger
+    conditions." Continuous effects here are recomputed on every
+    `computed_board()` read rather than reapplied, so nothing further is owed
+    to that rule. The state-based pass still calls it as well, for a change no
+    event announces.
 
     `Player.has_citys_blessing` is CR 702.131c's designation, "no rules
     meaning other than to act as a marker" that, once set, nothing in the
     rules ever clears - so this only ever turns the flag on, and a player who
     already has it is skipped outright rather than rechecked.
 
-    **CR 702.131a** (ascend printed on an instant or sorcery, a spell ability
-    checked once as the spell resolves rather than a permanent's static
-    check) is not modelled: nothing in the card pool prints ascend on a
-    non-permanent.
-
-    **Not modelled**: CR 702.131d - "After a player gets the city's blessing,
-    continuous effects are reapplied before the game checks to see if the
-    game state or preceding events have matched any trigger conditions." This
-    engine's continuous effects are recomputed from scratch on every
-    `computed_board()` call rather than reapplied incrementally, so there is
-    no separate reapplication step for this rule to slot into; the only
-    consequence would be a trigger that itself depends on already having the
-    blessing seeing it one instant later than CR 702.131d demands, which
-    nothing in the pool exercises.
+    Ascend on an instant or sorcery is CR 702.131a's spell ability instead,
+    `ascend_as_a_spell_resolves` below.
 
     Ascend is read off the computed board (`_has_computed_ascend`), not off
     `has_ascend`'s printed keyword: CR 613.5's layer 6 (CR 613.1f) can remove
     the ability, and a printed-only read would keep granting the blessing to
     a player whose only ascend permanent has had it stripped - Humility and
-    Dress Down are the cards in the pool that strip it. One `computed_board()`
-    is hoisted for every player this checks, rather than one per permanent.
+    Dress Down are the cards in the pool that strip it. The board is computed
+    only once some player without the blessing reaches ten permanents, and
+    then once for every player this checks.
     """
     blessed: list[str] = []
-    board = game.computed_board()
+    board: ComputedBoard | None = None
     for player in game.players_in_game:
         if player.has_citys_blessing:
             continue
         permanents = game.permanents_controlled_by(player.username)
         if len(permanents) < 10:
             continue
+        if board is None:
+            board = game.computed_board()
         if not any(_has_computed_ascend(board, permanent) for permanent in permanents):
             continue
         player.has_citys_blessing = True
         blessed.append(player.username)
     return blessed
+
+
+def ascend_as_a_spell_resolves(game: Any, spell: CardState) -> bool:
+    """CR 702.131a: "Ascend on an instant or sorcery spell represents a spell
+    ability. It means 'If you control ten or more permanents and you don't
+    have the city's blessing, you get the city's blessing for the rest of the
+    game.'"
+
+    A spell ability is an instruction followed as the spell resolves (CR
+    608.2c), and the ascend line is printed ahead of the rest of the text, so
+    `Game._resolve_top` follows it before the spell's own effect runs - which
+    is what lets Secrets of the Golden City's "If you have the city's
+    blessing, draw three cards instead" read a blessing this same resolution
+    granted. Nothing is granted while the spell only waits on the stack, and a
+    spell that does not resolve (CR 608.2b) never follows it.
+
+    Read off the printed keyword: a spell on the stack is not on the board
+    `computed_board()` covers. Returns whether the blessing was granted now.
+    """
+    if spell.is_permanent or not has_ascend(spell.card):
+        return False
+    controller = game.controller_of(spell)
+    if controller.has_citys_blessing:
+        return False
+    if len(game.permanents_controlled_by(controller.username)) < 10:
+        return False
+    controller.has_citys_blessing = True
+    return True
 
 
 def attachment_state_based_actions(game: Any) -> list[CardState]:
@@ -3659,6 +3838,22 @@ def _suspend_effect(game: Any, ability: AbilityOnStack) -> Any:
     return finish_suspend(game, source)
 
 
+def _impending_effect(game: Any, ability: AbilityOnStack) -> int | None:
+    """CR 702.176a's fourth ability resolving: "remove a time counter from it."
+
+    Its intervening *if* was checked as it triggered (CR 603.4) and again as it
+    resolves (CR 608.2a), which is what stops a blinked Overlord - a new object,
+    CR 400.7 - losing a counter it never had. Guarded anyway against a source
+    that is gone, so a direct call cannot raise on an empty count.
+    """
+    source = ability.source(game)
+    if source is None or source.zone is not Zone.BATTLEFIELD:
+        return None
+    if not source.can_remove_counters(Counter.TIME):
+        return None
+    return source.remove_counters(Counter.TIME, 1)
+
+
 #: What one keyword's triggered ability does when it resolves, by keyword.
 #: `Game._effect_of` has to consult this before the card-name registry - see
 #: `docs/engine-coverage.md` for the hook.
@@ -3673,20 +3868,15 @@ KEYWORD_TRIGGER_EFFECTS: dict[str, Callable[[Any, AbilityOnStack], Any]] = {
     "hideaway": _hideaway_effect,
     "evoke": _evoke_effect,
     "suspend": _suspend_effect,
+    "impending": _impending_effect,
+    "mobilize": _mobilize_effect,
 }
 
 
 def keyword_trigger_effect(
     ability: TriggeredAbility,
 ) -> Callable[[Any, AbilityOnStack], Any] | None:
-    """The effect of a triggered ability that was printed as a keyword, or None.
-
-    Mobilize (CR 702.181a) deliberately has no entry: its effect is creating
-    tokens, and nothing in this engine creates one - see
-    `docs/engine-coverage.md`. The trigger still fires, goes on the stack, and
-    can be responded to; it simply does nothing when it gets there, which is the
-    same shape as a card with no entry in `machines/effects.py`.
-    """
+    """The effect of a triggered ability that was printed as a keyword, or None."""
     if ability.keyword is None:
         return None
     return KEYWORD_TRIGGER_EFFECTS.get(ability.keyword.lower())

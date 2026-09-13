@@ -126,7 +126,8 @@ def test_ascend_removed_in_layer_6_no_longer_grants_the_blessing():
     on the battlefield, Ocelot Pride's computed abilities no longer include
     ascend, whatever its printed keyword list still says.
 
-    `ascend_state_based_actions` used to read `has_ascend(permanent.card)`,
+    `grant_the_citys_blessing` (then `ascend_state_based_actions`) used to read
+    `has_ascend(permanent.card)`,
     the printed keyword, so a player who had ten-plus permanents kept getting
     the blessing here even though the only ascend on the board had been
     stripped away. Alice controls exactly ten permanents (Ocelot Pride,
@@ -338,3 +339,153 @@ def test_two_ocelot_prides_each_copy_everything_that_entered_this_turn():
         scenario.resolve_top()
 
     assert len(_cats(scenario)) == 6
+
+
+# --------------------------------------------------------------------------
+# CR 702.131b's "any time": the blessing is not waiting for a state-based check
+# --------------------------------------------------------------------------
+#
+# Read whole with `mise run rules:find 702.131` in the session that added these:
+#
+# - **CR 702.131b** - "Ascend on a permanent represents a static ability. It
+#   means 'Any time you control ten or more permanents and you don't have the
+#   city's blessing, you get the city's blessing for the rest of the game.'"
+#   A static ability, not a state-based action (CR 704 does not list it).
+# - **CR 702.131a** - "Ascend on an instant or sorcery spell represents a spell
+#   ability. It means 'If you control ten or more permanents and you don't have
+#   the city's blessing, you get the city's blessing for the rest of the
+#   game.'" Checked as the spell resolves, like any other instruction on it.
+# - **CR 702.131d** - "After a player gets the city's blessing, continuous
+#   effects are reapplied before the game checks to see if the game state or
+#   preceding events have matched any trigger conditions."
+
+
+def test_the_cat_that_makes_the_tenth_permanent_is_copied_by_the_same_trigger():
+    """The battle report's repro (B2-07): nine permanents, life gained, end
+    step. The trigger's first sentence makes the Cat - the tenth permanent - and
+    CR 702.131b grants the blessing at that instant, so the second sentence's
+    "Then if you have the city's blessing" is already true and the Cat is
+    copied. No state-based check runs between the two sentences, so a blessing
+    that waited for one arrived one sentence too late and made one Cat."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Ocelot Pride", *["Plains"] * 8])
+        .player("bob")
+        .manual_turn_based_actions()
+        .build()
+    )
+    scenario.game.check_state_based_actions()
+    assert len(scenario.game.permanents_controlled_by("alice")) == 9
+    assert scenario.player("alice").has_citys_blessing is False
+
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.game.gain_life("alice", 1)
+    scenario.start_at(Step.POSTCOMBAT_MAIN)
+    scenario.advance()  # the end step begins
+    assert len(scenario.game.stack) == 1
+    scenario.resolve_top()
+
+    assert scenario.player("alice").has_citys_blessing is True
+    assert len(_cats(scenario)) == 2
+
+
+def test_the_blessing_arrives_without_any_state_based_check():
+    """The tenth permanent entering is enough on its own: nothing calls
+    `check_state_based_actions` here, and the blessing is already held."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Plains"], battlefield=["Ocelot Pride", *["Plains"] * 8])
+        .player("bob")
+        .manual_turn_based_actions()
+        .build()
+    )
+    plains = scenario.find("Plains", Zone.HAND, username="alice")
+    scenario.game.put_onto_battlefield(plains, "alice")
+
+    assert len(scenario.game.permanents_controlled_by("alice")) == 10
+    assert scenario.player("alice").has_citys_blessing is True
+
+
+# --------------------------------------------------------------------------
+# CR 702.131a: ascend on a spell, through Secrets of the Golden City
+# --------------------------------------------------------------------------
+#
+# "Ascend (...) Draw two cards. If you have the city's blessing, draw three
+# cards instead." - a sorcery in no deck pool, and the only kind of ascend
+# card whose blessing is granted by resolving rather than by a permanent.
+
+_SECRETS_LIBRARY = ["Island"] * 6
+
+
+def _secrets_board(other_permanents: int, *, with_ocelot: bool = False) -> Scenario:
+    battlefield = ["Island"] * 3 + ["Plains"] * (other_permanents - 3)
+    if with_ocelot:
+        battlefield = ["Ocelot Pride", *battlefield]
+    return (
+        Scenario()
+        .player(
+            "alice",
+            library=list(_SECRETS_LIBRARY),
+            hand=["Secrets of the Golden City"],
+            battlefield=battlefield,
+        )
+        .player("bob", library=["Island"])
+        .manual_turn_based_actions()
+    )
+
+
+def _cast_secrets(scenario):
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Island", "Island", "Island", username="alice")
+    return scenario.cast_onto_stack("Secrets of the Golden City", *sources, username="alice")
+
+
+def test_secrets_with_nine_permanents_draws_two_and_grants_nothing():
+    scenario = _secrets_board(9).build()
+    _cast_secrets(scenario)
+    library_before = len(scenario.player("alice").library)
+    scenario.resolve_top()
+
+    assert library_before - len(scenario.player("alice").library) == 2
+    assert scenario.player("alice").has_citys_blessing is False
+
+
+def test_secrets_with_ten_permanents_grants_the_blessing_as_it_resolves_and_draws_three():
+    """CR 702.131a: no permanent alice controls has ascend, so ten permanents
+    alone never grant the blessing - not before the cast and not while the
+    spell waits on the stack. Resolving, the ascend instruction is followed
+    first, and "If you have the city's blessing" then reads it."""
+    scenario = _secrets_board(10).build()
+    scenario.game.check_state_based_actions()
+    assert scenario.player("alice").has_citys_blessing is False
+
+    _cast_secrets(scenario)
+    scenario.game.check_state_based_actions()
+    assert scenario.player("alice").has_citys_blessing is False, (
+        "a spell on the stack grants nothing"
+    )
+
+    library_before = len(scenario.player("alice").library)
+    scenario.resolve_top()
+
+    assert scenario.player("alice").has_citys_blessing is True
+    assert library_before - len(scenario.player("alice").library) == 3
+
+
+def test_a_blessing_already_held_makes_secrets_draw_three_below_ten_permanents():
+    """CR 702.131c: the blessing is kept. Ocelot Pride granted it at ten
+    permanents; five Plains are sacrificed; Secrets still draws three."""
+    scenario = _secrets_board(9, with_ocelot=True).build()
+    scenario.game.check_state_based_actions()
+    assert scenario.player("alice").has_citys_blessing is True
+    for plains in [
+        s for s in scenario.game.permanents_controlled_by("alice") if s.name == "Plains"
+    ][:5]:
+        scenario.game.sacrifice(plains)
+    assert len(scenario.game.permanents_controlled_by("alice")) == 5
+
+    _cast_secrets(scenario)
+    library_before = len(scenario.player("alice").library)
+    scenario.resolve_top()
+
+    assert library_before - len(scenario.player("alice").library) == 3

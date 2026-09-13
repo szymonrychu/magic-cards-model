@@ -2859,7 +2859,9 @@ _SEARCH_AND_PUT_RE = re.compile(
     # `_search_and_place_for` folds this group into `max_mv` rather than
     # growing a second bound-reading code path for it.
     r"(?P<mana_cost_0_or_1> with mana cost \{0\} or \{1\})?"
-    r"(?:, reveal it)?"
+    # CR 701.23e: a printed reveal is a real reveal. "reveal it" (Expedition
+    # Map) and "reveal that card" (Trinket Mage) are the same instruction.
+    r"(?P<reveal>, reveal (?:it|that card))?"
     r", put (?:it|that card) (?P<dest>into your hand|onto the battlefield(?P<tapped> tapped)?)"
     r"(?:, then shuffle)?\.?",
     re.IGNORECASE,
@@ -2936,6 +2938,17 @@ def _named_type_matcher(word: str) -> Callable[[CardState], bool]:
     return matches
 
 
+#: CR 105.2a "A monocolored object is exactly one of the five colors." and
+#: CR 105.2b "A multicolored object is two or more of the five colors." - a
+#: color *count*, not a color, so they sit beside `_HAND_EXILE_COLOR_WORDS`
+#: rather than in it ("colorless", CR 105.2c, is already there). Glittering
+#: Wish's "a multicolored card" is the printed shape.
+_COLOR_COUNT_WORDS: dict[str, Callable[[int], bool]] = {
+    "monocolored": lambda count: count == 1,
+    "multicolored": lambda count: count >= 2,
+}
+
+
 def _quality_word_matcher(word: str) -> Callable[[CardState], bool]:
     """One space-separated word of a search's stated quality - `_named_type_
     matcher`'s bare type or land type, or that same type qualified by a color
@@ -2950,6 +2963,12 @@ def _quality_word_matcher(word: str) -> Callable[[CardState], bool]:
     own imprint quality.
     """
     parts = word.split()
+    if parts and parts[0] in _COLOR_COUNT_WORDS:
+        count_matches = _COLOR_COUNT_WORDS[parts[0]]
+        if len(parts) == 1:
+            return lambda state: count_matches(len(state.colors))
+        counted_type_matches = _named_type_matcher(parts[1])
+        return lambda state: count_matches(len(state.colors)) and counted_type_matches(state)
     if len(parts) == 2 and parts[0] in _HAND_EXILE_COLOR_WORDS:
         color = _HAND_EXILE_COLOR_WORDS[parts[0]]
         type_matches = _named_type_matcher(parts[1])
@@ -3119,6 +3138,7 @@ def _search_and_place_for(
         description = f"{description} with a basic land type"
     tapped = bool(match.group("tapped"))
     to_hand = match.group("dest").startswith("into your hand")
+    reveal = bool(match.groupdict().get("reveal"))
 
     def run(game: "Game", player: Player, source: str, source_id: str | None) -> None:
         if optional and not game.may(
@@ -3128,13 +3148,15 @@ def _search_and_place_for(
             source_id=source_id,
         ):
             return
-        found = _search_library(game, player, matches, source=source, source_id=source_id)
-        if found is None:
-            return
-        if to_hand:
-            player.add(found, Zone.HAND)
-        else:
-            game.put_onto_battlefield(found, player.username, tapped=tapped)
+        game.search_and_put(
+            player,
+            matches,
+            destination=Zone.HAND if to_hand else Zone.BATTLEFIELD,
+            reveal=reveal,
+            tapped=tapped,
+            source=source,
+            source_id=source_id,
+        )
 
     return run
 
@@ -3207,11 +3229,14 @@ def _parse_search_mv_lte_count_clause(clause: str, *, for_spell: bool) -> Target
         def matches(state: CardState) -> bool:
             return state.mana_value <= ceiling
 
-        found = _search_library(
-            game, controller, matches, source=source, source_id=source_id_of(stack_object)
+        game.search_and_put(
+            controller,
+            matches,
+            destination=Zone.HAND,
+            reveal=True,
+            source=source,
+            source_id=source_id_of(stack_object),
         )
-        if found is not None:
-            controller.add(found, Zone.HAND)
 
     return effect
 
@@ -3668,17 +3693,18 @@ def _parse_sacrifice_lands_then_search_that_many_clause(text: str) -> Effect | N
 #: asks once per candidate up to `count`, the same shape `_search_and_place_for`
 #: uses for the singular case, just handed a `count` above one.
 #: The destination is a choice of two, and the optional "reveal them" between
-#: the search and the move is read and discarded, exactly as the singular
-#: `_SEARCH_AND_PUT_RE` already reads and discards its "reveal it": CR 701.23e
-#: makes revealing a search's finds something an effect must print to do, and
-#: showing cards changes no state this model tracks. Tooth and Nail's first
+#: the search and the move is a real reveal, exactly as the singular
+#: `_SEARCH_AND_PUT_RE`'s "reveal it" is: CR 701.23e makes revealing a
+#: search's finds something an effect must print to do, and when it is printed
+#: `Game.search_and_put` records each find as public (CR 701.20a), carried into
+#: the hand by the put. Tooth and Nail's first
 #: mode - "Search your library for up to two creature cards, reveal them, put
 #: them into your hand, then shuffle." - is the hand-bound twin of Primeval
 #: Titan's battlefield-bound one.
 _SEARCH_UP_TO_N_AND_PUT_RE = re.compile(
     r"(?P<subject>you may )?"
     r"search (?:your|their) library for up to (?P<count>[\w-]+) (?P<quality>.+?) cards?"
-    r"(?:, reveal (?:them|it))?"
+    r"(?P<reveal>, reveal (?:them|it|those cards))?"
     r", put (?:them|it) (?P<dest>into your hand|onto the battlefield(?P<tapped> tapped)?)"
     r"(?:, then shuffle)?\.?",
     re.IGNORECASE,
@@ -3708,6 +3734,7 @@ def _parse_search_up_to_n_and_put_clause(clause: str, *, for_spell: bool) -> Tar
     tapped = bool(match.group("tapped"))
     to_hand = match.group("dest").startswith("into your hand")
     optional = bool((match.group("subject") or "").strip())
+    reveal = match.group("reveal") is not None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         player = game.controller_of(stack_object)
@@ -3719,19 +3746,16 @@ def _parse_search_up_to_n_and_put_clause(clause: str, *, for_spell: bool) -> Tar
             source_id=source_id_of(stack_object),
         ):
             return
-        found = game.search_library(
+        game.search_and_put(
             player,
             matches,
+            destination=Zone.HAND if to_hand else Zone.BATTLEFIELD,
             count=count,
-            optional=True,
+            reveal=reveal,
+            tapped=tapped,
             source=source,
             source_id=source_id_of(stack_object),
         )
-        for card in found:
-            if to_hand:
-                player.add(card, Zone.HAND)
-            else:
-                game.put_onto_battlefield(card, player.username, tapped=tapped)
 
     return effect
 
@@ -3754,9 +3778,10 @@ def parse_search_and_put_effect(text: str) -> AbilityEffect | None:
     CR 305.1's one-land-per-turn restriction applies to *playing* a land, and
     this is an effect putting one there.
 
-    "Reveal it" changes no state this model tracks (CR 701.23e: an effect that
-    does not print "reveal" does not reveal, and the ones that do have nothing
-    else to show for it here). The printed "you may" is asked as CR 701.23g;
+    "Reveal it" / "reveal that card" is a real reveal (CR 701.23e: an effect
+    that does not print "reveal" does not reveal, and one that does shows the
+    find to all players, CR 701.20a), recorded by `Game.search_and_put` and
+    carried into the hand. The printed "you may" is asked as CR 701.23g;
     either way, CR 701.23b makes "find nothing" a legal answer for a search
     naming a stated quality, so an empty or exhausted library just does
     nothing. The first match in library order is taken unless a scenario rigs
@@ -5735,6 +5760,43 @@ def _parse_remove_time_counter_from_self_clause(text: str) -> AbilityEffect | No
         if source is None:
             return
         remove_suspend_time_counter(game, source)
+
+    return effect
+
+
+#: Vampire Hexmage: "Remove all counters from target permanent." - and the
+#: same sentence narrowed to one kind ("Remove all +1/+1 counters from target
+#: creature."). Every counter of the kind named, or of every kind, comes off
+#: the target; removing what is not there is simply nothing to remove.
+_REMOVE_ALL_COUNTERS_FROM_TARGET_RE = re.compile(
+    r"^remove all (?:(?P<kind>\+1/\+1|-1/-1|[a-z]+) )?counters from (?P<phrase>target .+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_remove_all_counters_from_target_clause(text: str) -> AbilityEffect | None:
+    """`_REMOVE_ALL_COUNTERS_FROM_TARGET_RE`'s shape.
+
+    Counters are removed from the object itself, so whatever reads them next
+    - a layer 4 "as long as it has a time counter on it" (impending, CR
+    702.176a), a +1/+1 counter's layer 7c bonus - reads the empty count the
+    next time the board is computed.
+    """
+    match = _REMOVE_ALL_COUNTERS_FROM_TARGET_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=False):
+        return None
+    kind = _counter_kind(match.group("kind")) if match.group("kind") else None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        for target in game.resolve_targets(ability):
+            if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
+                continue
+            for each in [kind] if kind is not None else list(target.counters):
+                present = target.counter_count(each)
+                if present:
+                    target.remove_counters(each, present)
 
     return effect
 
@@ -8045,7 +8107,7 @@ _REFERENT_SEARCH_RE = re.compile(
     r"^may search (?:your|their) library for (?:a|an) (?P<quality>.+?) card"
     r"(?P<basic_land_type> with a basic land type)?"
     r"(?: with mana value (?P<max_mv>\d+) or less)?"
-    r"(?:, reveal it)?"
+    r"(?P<reveal>, reveal (?:it|that card))?"
     r", put (?:it|that card) (?P<dest>into your hand|onto the battlefield(?P<tapped> tapped)?)"
     r"(?:, then shuffle)?\.?$",
     re.IGNORECASE,
@@ -9870,6 +9932,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     remove_time_counter_self = _parse_remove_time_counter_from_self_clause(effect_text)
     if remove_time_counter_self is not None:
         return remove_time_counter_self
+    remove_all_counters_from_target = _parse_remove_all_counters_from_target_clause(effect_text)
+    if remove_all_counters_from_target is not None:
+        return remove_all_counters_from_target
     whole_text_token = _parse_whole_text_token_clause(effect_text)
     if whole_text_token is not None:
         return whole_text_token
@@ -11313,6 +11378,43 @@ def _parse_choose_targets_then_return_to_hand_pair(text: str) -> Effect | None:
     return effect
 
 
+#: "<instruction>. If you have the city's blessing, <instruction> instead." -
+#: Secrets of the Golden City's "Draw two cards. If you have the city's
+#: blessing, draw three cards instead." The city's blessing (CR 702.131c) is a
+#: designation on the player, read off `Player.has_citys_blessing` as the
+#: spell resolves - after CR 702.131a's own ascend instruction has already
+#: been followed (`Game._resolve_top`), which is what lets the blessing that
+#: very spell granted count. Both halves are read by `parse_clause_effect`,
+#: so any plain player instruction it reads (a draw, a life change, a mill,
+#: a scry, ...) takes this shape, not only a draw; an instruction it cannot
+#: read on either side leaves the whole text unread rather than half-run
+#: (CR 608.2c).
+_CITYS_BLESSING_INSTEAD_RE = re.compile(
+    r"^(?P<base>[^.]+)\.\s*if you have the city(?:'|\u2019)s blessing,\s*"
+    r"(?P<blessed>[^.]+?)\s+instead\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_citys_blessing_instead_clause(effect_text: str) -> Effect | None:
+    """`_CITYS_BLESSING_INSTEAD_RE`'s shape, or `None`."""
+    whole = " ".join(_strip_non_effect_preamble(effect_text).split())
+    match = _CITYS_BLESSING_INSTEAD_RE.fullmatch(whole)
+    if match is None:
+        return None
+    base = parse_clause_effect(match.group("base"))
+    blessed = parse_clause_effect(match.group("blessed"))
+    if base is None or blessed is None:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell)
+        chosen = blessed if controller.has_citys_blessing else base
+        chosen(game, controller, spell.name, source_id_of(spell))
+
+    return effect
+
+
 def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     """The spell-side twin of `_ability_effect_or_notice`, for `effect_for`.
 
@@ -11347,6 +11449,9 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     if x_life_mass_debuff is not None:
         return x_life_mass_debuff
     # -- end Wave W6 whole-text additions -----------------------------------
+    citys_blessing_instead = _parse_citys_blessing_instead_clause(whole)
+    if citys_blessing_instead is not None:
+        return citys_blessing_instead
     gift_promised_return = _parse_gift_promised_return_instead_clause(whole)
     if gift_promised_return is not None:
         return gift_promised_return
@@ -11428,6 +11533,9 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     outside_the_game_play = _parse_outside_the_game_play_clause(whole)
     if outside_the_game_play is not None:
         return outside_the_game_play
+    reveal_from_outside_into_hand = _parse_reveal_from_outside_the_game_into_hand_clause(whole)
+    if reveal_from_outside_into_hand is not None:
+        return reveal_from_outside_into_hand
     exile_hand_draw_then_play = _parse_exile_hand_draw_then_play_until_next_turn_clause(whole)
     if exile_hand_draw_then_play is not None:
         return exile_hand_draw_then_play
@@ -15418,21 +15526,52 @@ _LEARN_RE = re.compile(r"^learn$", re.IGNORECASE)
 
 
 def learn(game: "Game", player: Player, source: str, *, source_id: str | None) -> None:
-    """CR 701.48a's discard-to-draw half.
+    """CR 701.48a, both halves.
 
-    The Lesson-reveal half ("you may reveal a Lesson card you own from
-    outside the game") is not performed: this engine has no "outside the
-    game" zone at all (see `docs/engine-coverage.md`'s Companion row for the
-    same gap from a different keyword), so a player who declines or cannot
-    discard simply learns nothing further - fewer options than CR 701.48a
-    grants, never a fabricated one.
+    The discard is offered first; a player who discards draws and is done. A
+    player who did not discard - declined, or had no card to discard - may
+    then reveal a Lesson card (CR 205.3k's spell type) they own from outside
+    the game (CR 400.11a, CR 108.3b) and put it into their hand. The reveal
+    and the move are `_reveal_and_bring_into_hand`, the same tail Karn, the
+    Great Creator's -2 and the Burning Wish family use, so the Lesson stays
+    known to every player in that hand until it changes zones again.
     """
-    if not player.hand:
-        return
-    if not game.may(player, "discard a card, then draw a card", source=source, source_id=source_id):
-        return
-    if _discard_cards(game, player, 1, source, source_id=source_id):
+    if (
+        player.hand
+        and game.may(player, "discard a card, then draw a card", source=source, source_id=source_id)
+        and _discard_cards(game, player, 1, source, source_id=source_id)
+    ):
         game.draw_cards(player, 1)
+        return
+    lessons = player.owned_outside_the_game(_is_lesson)
+    if not lessons or not game.may(
+        player,
+        "reveal a Lesson card you own from outside the game and put it into your hand",
+        source=source,
+        source_id=source_id,
+    ):
+        return
+    chosen_ids = game.ask(
+        Decision(
+            kind=DecisionKind.CHOOSE_CARDS,
+            player=player.username,
+            prompt="choose a Lesson card you own from outside the game",
+            source=source,
+            source_id=source_id,
+            amount=1,
+            cards=tuple(state.id for state in lessons),
+            card_labels=tuple(state.name for state in lessons),
+        )
+    )
+    assert isinstance(chosen_ids, tuple)
+    by_id = {state.id: state for state in lessons}
+    for card_id in chosen_ids:
+        _reveal_and_bring_into_hand(game, player, by_id[card_id], source)
+
+
+def _is_lesson(state: CardState) -> bool:
+    """CR 205.3k: Lesson is one of the spell types instants and sorceries share."""
+    return any(subtype.lower() == "lesson" for subtype in state.subtypes)
 
 
 def _parse_learn_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
@@ -16513,7 +16652,12 @@ def _search_quality_is_readable(quality: str) -> bool:
         return False
     for word in words:
         parts = word.split()
-        if len(parts) == 2 and parts[0] in _HAND_EXILE_COLOR_WORDS:
+        if parts and parts[0] in _COLOR_COUNT_WORDS:
+            if len(parts) == 2 and not _type_word_is_readable(parts[1]):
+                return False
+            if len(parts) > 2:
+                return False
+        elif len(parts) == 2 and parts[0] in _HAND_EXILE_COLOR_WORDS:
             if not _type_word_is_readable(parts[1]):
                 return False
         elif len(parts) != 1 or not _type_word_is_readable(word):
@@ -17115,9 +17259,10 @@ def _put_spell_in_library(game: "Game", spell: CardState, *, top: bool) -> None:
     spell.move_to(Zone.LIBRARY)
     if top:
         owner.library.insert(0, spell)
+        owner.note_library_changed()  # CR 701.20d: above every card there
     else:
         owner.library.append(spell)
-    owner.note_library_changed()  # CR 701.20d
+        owner.note_library_changed(placed=[spell])  # CR 401.2: below every card there
 
 
 def _parse_choose_up_to_one_target_spell_clauses(
@@ -17592,7 +17737,9 @@ def _merge_look_top_reveal_to_hand_clauses(
         for state in rest:
             player.library.append(state)
         if rest:
-            player.note_library_changed()  # CR 701.20d
+            # CR 701.20d for the cards put back; CR 401.2 keeps the cards
+            # above them in their order.
+            player.note_library_changed(placed=rest)
 
     return 4, effect
 
@@ -19827,11 +19974,92 @@ def _bring_in_from_outside_the_game_or_exile(
             # CR 701.20a: the reveal is what makes taking it from a group
             # nobody may look at public information, and CR 701.20b leaves the
             # card where it is - so it is revealed first, then brought in.
-            game.reveal(chosen, source=ability.source_name)
-            controller.bring_into_the_game(chosen, Zone.HAND)
+            _reveal_and_bring_into_hand(game, controller, chosen, ability.source_name)
         else:
             # Already face up in exile (CR 406.3), so nothing to reveal.
             game.return_to_hand(chosen)
+
+
+def _reveal_and_bring_into_hand(
+    game: "Game", controller: Player, card: CardState, source: str | None
+) -> None:
+    """Reveal a card its controller owns outside the game, then put it into
+    that player's hand - the shared tail of Karn, the Great Creator's -2 and
+    the Burning Wish family.
+
+    CR 701.20a shows it to all players and CR 701.20b leaves it where it is,
+    so the public record is made against the sideboard (CR 400.11a) first;
+    CR 108.3b/400.11b's move into the hand then carries that record with the
+    card (`Player.add`, `Game.carry_knowledge_into_hand`), so every player
+    knows it in hand until it changes zones again.
+    """
+    game.reveal(card, source=source)
+    controller.bring_into_the_game(card, Zone.HAND)
+
+
+#: The Burning Wish family: "You may reveal a <quality> card you own from
+#: outside the game and put it into your hand. Exile <this>." Burning Wish
+#: (sorcery), Cunning Wish (instant), Living Wish (creature or land) and every
+#: other printing of the template share it; the quality is read by the same
+#: `_quality_matcher` a library search uses (Glittering Wish's "multicolored"
+#: is CR 105.2b's color count), and a quality it cannot read leaves the whole
+#: paragraph unread rather than half-run.
+_REVEAL_FROM_OUTSIDE_THE_GAME_INTO_HAND_RE = re.compile(
+    r"^you may reveal an? (?P<quality>.+?) card you own from outside the game "
+    r"and put (?:it|that card) into your hand\.\s*exile (?P<name>[^.]+)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_reveal_from_outside_the_game_into_hand_clause(effect_text: str) -> Effect | None:
+    """`_REVEAL_FROM_OUTSIDE_THE_GAME_INTO_HAND_RE`'s shape, or `None`.
+
+    CR 400.11c lets this spell reach outside the game at all, CR 108.3b limits
+    it to cards its controller owns, and CR 608.2d makes the "you may" and the
+    choice as it resolves - with no candidate there is nothing to choose. The
+    reveal and the move are `_reveal_and_bring_into_hand`. "Exile <this>" is
+    CR 201.5's reference to this very spell, done last as printed, whether or
+    not a card was taken; a name that is not this spell's fails closed.
+    """
+    match = _REVEAL_FROM_OUTSIDE_THE_GAME_INTO_HAND_RE.fullmatch(" ".join(effect_text.split()))
+    if match is None:
+        return None
+    quality = match.group("quality")
+    if not _search_quality_is_readable(quality):
+        return None
+    matches = _quality_matcher(quality)
+    named = match.group("name").strip()
+
+    def effect(game: "Game", spell: CardState) -> None:
+        if named.lower() != (spell.name or "").lower():
+            return
+        controller = game.controller_of(spell)
+        candidates = controller.owned_outside_the_game(matches)
+        if candidates and game.may(
+            controller,
+            f"reveal a {quality} card you own from outside the game and put it into your hand",
+            source=spell.name,
+            source_id=source_id_of(spell),
+        ):
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=controller.username,
+                    prompt=f"choose a {quality} card you own from outside the game",
+                    source=spell.name,
+                    source_id=source_id_of(spell),
+                    amount=1,
+                    cards=tuple(state.id for state in candidates),
+                    card_labels=tuple(state.name for state in candidates),
+                )
+            )
+            assert isinstance(chosen_ids, tuple)
+            by_id = {state.id: state for state in candidates}
+            for card_id in chosen_ids:
+                _reveal_and_bring_into_hand(game, controller, by_id[card_id], spell.name)
+        game.exile_cards([spell])
+
+    return effect
 
 
 #: Wish: "You may play a card you own from outside the game this turn." A

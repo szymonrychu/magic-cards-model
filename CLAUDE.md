@@ -45,6 +45,10 @@ mise run rules:pull          # latest CR from wizards.com, into .rules/ (gitigno
 mise run rules:find 305.7    # that rule and its subrules, in full
 ```
 
+`rules:find` reads only that local `.rules/` copy, which is gitignored, so a
+fresh clone or worktree has none: run `rules:pull` there once before the first
+`rules:find`, which otherwise stops with "no local rules file".
+
 `rules:pull` scrapes the current download link rather than pinning a URL,
 because the filename carries the release date and moves with every update.
 

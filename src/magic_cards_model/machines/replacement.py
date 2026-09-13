@@ -4175,6 +4175,58 @@ def _apply_self_enters(effect: ReplacementEffect, amount: int | None) -> Apply:
 # --------------------------------------------------------------------------
 
 
+def _impending_entering_counters(game: "Game", event: ReplaceableEvent) -> list[ApplicableEffect]:
+    """CR 702.176a's second ability: "If you chose to pay this permanent's
+    impending cost, it enters with N time counters on it."
+
+    CR 702.176a makes it "a replacement effect that may apply to the permanent
+    with impending as it enters the battlefield from the stack", and CR 614.1c
+    makes "[this permanent] enters with ..." a replacement effect - so it
+    changes the same entering event every other entering counter does, and
+    `Game.enter_the_battlefield` places the counters through `add_counters`.
+
+    "From the stack" and "you chose to pay" are one question here:
+    `event.was_cast` (a resolving spell) and its own `CastRecord.keyword`,
+    which `resolve_top` has not popped yet. A blinked or reanimated permanent
+    enters with no cast behind it and gets nothing (CR 400.7). N is read off
+    the printed keyword line (`KeywordAbility.count`), never off the card's
+    name. CR 118.9a allows one alternative cost per spell, so only the first
+    impending line counts even on a card that printed two.
+    """
+    # Imported here, beside their one use: casting imports this module's siblings.
+    from ..models.card_state import Counter
+    from .abilities import keyword_abilities
+
+    entering = event.card
+    if entering is None or not event.was_cast:
+        return []
+    record = game.cast_records.get(entering.id)
+    if record is None or (record.keyword or "").lower() != "impending":
+        return []
+    amount = next(
+        (
+            ability.count
+            for ability in keyword_abilities(entering.card)
+            if ability.canonical.lower() == "impending" and ability.count is not None
+        ),
+        None,
+    )
+    if amount is None:
+        return []
+
+    def apply(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
+        event.counters[Counter.TIME] = event.counters.get(Counter.TIME, 0) + amount
+
+    return [
+        ApplicableEffect(
+            key=f"{entering.id}:impending",
+            source=entering,
+            label=f"impending: enters with {amount} time counters (CR 702.176a)",
+            apply=apply,
+        )
+    ]
+
+
 def _protection_effects(game: "Game", event: ReplaceableEvent) -> list[ApplicableEffect]:
     """Protection preventing damage from a source with the stated quality.
 
@@ -4417,6 +4469,7 @@ def applicable_effects(game: "Game", event: ReplaceableEvent) -> list[Applicable
                     copy_as_it_enters=copy_as_it_enters,
                 )
             )
+        found.extend(_impending_entering_counters(game, event))
 
     found.extend(_stack_replacements(game, event))
 

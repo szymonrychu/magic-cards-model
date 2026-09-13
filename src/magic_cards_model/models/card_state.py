@@ -838,7 +838,7 @@ class CardState(BaseModel):
     """Which pile of exile this card is in, when that matters (CR 406.4).
 
     Set as the card is exiled by a keyword that hands out permission to cast it
-    later - plot (CR 702.170c), foretell (CR 702.143c), warp (CR 702.185b), and
+    later - plot (CR 702.170c), foretell (CR 702.143c), warp (CR 702.185a-b), and
     the Adventure exile of CR 715.3d. `move_to` drops it on the way out of
     exile, because a card that leaves exile is a new object (CR 400.7) and its
     pile no longer means anything.
@@ -971,6 +971,18 @@ class CardState(BaseModel):
     alongside a card's own printed abilities, so a granted ability is not
     just visible but actually usable - activatable, tappable for mana - the
     same as one printed on the card."""
+
+    cast_with_keyword: str | None = None
+    """The keyword whose alternative cost was paid to cast the spell this
+    permanent became (CR 118.9, 601.2b), for this object only.
+
+    CR 702.176a asks "if this permanent's impending cost was paid" of the
+    *permanent*, on every later end step, and `Game.cast_records` cannot answer
+    that on its own: `CardState.id` survives a zone change, so a blinked
+    permanent would still find the record its earlier incarnation left. CR
+    400.7 makes the returning object a new one that nobody cast, which is why
+    `move_to` clears this on every move and `Game.enter_the_battlefield` sets
+    it only for a permanent entering as a spell that was cast."""
 
     bestowed: bool = False
     """True while this object was cast bestowed and is still an Aura (CR 702.103).
@@ -2035,6 +2047,9 @@ class CardState(BaseModel):
             # permanent". Every other move is CR 400.7's new object, which
             # nobody cast bestowed.
             self.bestowed = False
+        # CR 400.7: see `cast_with_keyword` - set again by `Game.enter_the_
+        # battlefield` for the one move that carries a cast spell's choice.
+        self.cast_with_keyword = None
         if origin is Zone.STACK and zone is not Zone.STACK:
             # CR 702.47e: "The spell loses any splice changes once it leaves
             # the stack for any reason." *Leaves* - so the move that puts it

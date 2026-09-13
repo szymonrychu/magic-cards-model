@@ -22,6 +22,12 @@ shuffle, CR 701.24a: "randomize the cards within it so that no player knows
 their order" - ends it. A surveilled card put into a graveyard needs no record
 at all: CR 400.2 makes the graveyard a public zone.
 
+The look itself comes first: "look at the top N cards ..., then put" -
+so while the choice of where each card goes is pending, the chooser
+already knows the looked-at cards where they sit. That record is made
+before the question is asked and ends at the put-back (CR 701.20d), where
+the record of the chooser's own order replaces it.
+
 A kept top card the chooser then draws stays known to them in hand - the
 known-draw carry `tests/scenarios/test_known_card_drawn_stays_known.py` pins.
 
@@ -34,8 +40,15 @@ Every CR number above was read in full with `mise run rules:find` in the
 session that wrote this file.
 """
 
+import pytest
+
 from magic_cards_model.machines import Step
-from magic_cards_model.machines.decisions import CardSplit, DecisionKind, ScriptedAnswer
+from magic_cards_model.machines.decisions import (
+    CardSplit,
+    DecisionKind,
+    DecisionPending,
+    ScriptedAnswer,
+)
 from magic_cards_model.models import Game, Zone
 from tests.scenarios.harness import Scenario
 
@@ -354,3 +367,83 @@ def test_a_split_that_puts_nothing_back_leaves_no_library_knowledge_behind():
 
     assert island.zone is Zone.GRAVEYARD and mountain.zone is Zone.EXILE
     assert known(game, "alice") == []
+
+
+# -- while the choice is pending (the look comes before the put-back) ----------
+
+
+def _paused_board() -> Scenario:
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", library=["Island", "Mountain", "Forest", "Swamp", "Plains"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.game.decisions.pause_when_unanswered = True
+    return scenario
+
+
+@pytest.mark.parametrize(
+    ("kind", "source"),
+    [(DecisionKind.SCRY, "Preordain"), (DecisionKind.SURVEIL, "Otherworldly Gaze")],
+)
+def test_a_pending_scry_or_surveil_already_shows_the_chooser_the_cards_where_they_sit(kind, source):
+    scenario = _paused_board()
+    game = scenario.game
+    ask = game.scry if kind is DecisionKind.SCRY else game.surveil
+
+    with pytest.raises(DecisionPending) as excinfo:
+        ask("alice", 3, source=source)
+
+    assert excinfo.value.pending.decision.kind is kind
+    assert known(game, "alice") == [
+        ("Island", Zone.LIBRARY, 0, False),
+        ("Mountain", Zone.LIBRARY, 1, False),
+        ("Forest", Zone.LIBRARY, 2, False),
+    ]
+    assert known(game, "bob") == [], "CR 701.20e: a look is the chooser's alone"
+    assert all(look.source == source and look.viewers == ["alice"] for look in game.reveals)
+
+
+def test_a_pending_look_at_the_top_and_split_already_shows_the_chooser_the_cards():
+    scenario = _paused_board()
+    game = scenario.game
+
+    with pytest.raises(DecisionPending):
+        game.look_at_top_and_split(
+            "alice",
+            2,
+            moved_label="your hand",
+            kept_label="bottom of your library",
+            source="Commune with Nature",
+        )
+
+    assert known(game, "alice") == [
+        ("Island", Zone.LIBRARY, 0, False),
+        ("Mountain", Zone.LIBRARY, 1, False),
+    ]
+    assert known(game, "bob") == []
+
+
+def test_the_pending_look_is_replaced_by_the_put_back_record_not_added_to_it():
+    """Answering leaves one look per card - the one against the chooser's own
+    order - so the pending look neither outlives the put-back (CR 701.20d)
+    nor doubles the record."""
+    scenario = _paused_board()
+    game = scenario.game
+    island, mountain, forest = scenario.top_of_library(3)
+    game.decisions.pause_when_unanswered = False
+    scenario.scry_bottoming(island, top_order=[forest, mountain])
+
+    game.scry("alice", 3, source="Preordain")
+
+    assert sorted(str(look.card_id) for look in game.reveals) == sorted(
+        str(state.id) for state in (island, mountain, forest)
+    )
+    assert known(game, "alice") == [
+        ("Forest", Zone.LIBRARY, 0, False),
+        ("Mountain", Zone.LIBRARY, 1, False),
+        ("Island", Zone.LIBRARY, 4, False),
+    ]
