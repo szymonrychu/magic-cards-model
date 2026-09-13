@@ -116,6 +116,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
+from ..data.creature_types import creature_types
 from ..models.card import Card, Color, Type
 from ..models.card_state import CardState, Choice, ChoiceKind, ExileMarker
 from ..models.token import TokenDefinition, is_token
@@ -3369,6 +3370,21 @@ def _unwired_choice_notices(card: Card, source_id: UUID) -> list[UnwiredChoiceNo
     return found
 
 
+def _quality_options(kind: ChoiceKind) -> tuple[str, ...]:
+    """Every legal answer to CR 614.12a's choice, where the rules enumerate them.
+
+    A color is one of CR 105.1's five. A creature type is one of CR 205.3m's
+    list, read from the rules text (`data/creature_types.py`) - a land type
+    such as "Island" is not one, and neither is an empty string. A card name
+    has no list to offer, so it stays open.
+    """
+    if kind is ChoiceKind.COLOR:
+        return _COLOR_OPTIONS
+    if kind is ChoiceKind.CREATURE_TYPE:
+        return creature_types()
+    return ()
+
+
 def _choose_a_quality(kind: ChoiceKind, card_name: str) -> Apply:
     """Ask CR 614.12a's choice and record it on the entering object itself.
 
@@ -3402,7 +3418,8 @@ def _choose_a_quality(kind: ChoiceKind, card_name: str) -> Apply:
             prompt=f"choose a {kind.value.replace('_', ' ')}",
             source=card_name,
             source_id=source_id_of(source),
-            options=_COLOR_OPTIONS if kind is ChoiceKind.COLOR else (),
+            options=_quality_options(kind),
+            quality=kind.value,
         )
         value = game.ask(decision)
         assert isinstance(value, str)

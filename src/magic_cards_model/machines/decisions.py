@@ -275,12 +275,13 @@ class DecisionKind(StrEnum):
     CHOOSE_TARGETS = "choose_targets"
     #: "As [this] enters, choose a color/card name/creature type" (CR 614.1c,
     #: CR 614.12a). One kind for all three shapes: `Decision.options` narrows
-    #: the legal answers to the five colors for a color choice, and is empty
-    #: for the other two, whose universe (every card name; every creature
-    #: type) is too large to enumerate here. Which of the three was actually
-    #: asked is not carried on the `Decision` at all - the replacement effect
-    #: that asks already knows, from the card's own printed text, and records
-    #: it on `CardState.choice`'s own `ChoiceKind` once the answer comes back.
+    #: the legal answers to the five colors for a color choice and to CR
+    #: 205.3m's creature types for a creature type choice, and is empty for a
+    #: card name, whose universe (every card name) is too large to enumerate
+    #: here. `Decision.quality` names which of the three was asked, so a
+    #: refusal can say what the answer failed to be; the replacement effect
+    #: that asks records it on `CardState.choice`'s own `ChoiceKind` once the
+    #: answer comes back.
     CHOOSE_A_QUALITY = "choose_a_quality"
     #: CR 603.3c/700.2b: "The controller of a modal triggered ability chooses
     #: the mode(s) as part of putting that ability on the stack." Elder
@@ -448,9 +449,17 @@ class Decision:
     #: number of") or for an ability with no targeting requirement at all.
     target_minimum: int = 0
     #: The legal answers to a `CHOOSE_A_QUALITY` question, or empty for "any
-    #: string" (a card name, a creature type - too large a set to enumerate).
-    #: Populated with the five colors' letter codes for a color choice.
+    #: string" (a card name - too large a set to enumerate). Populated with the
+    #: five colors' letter codes for a color choice, and with CR 205.3m's
+    #: creature types (`data/creature_types.py`) for a creature type choice.
     options: tuple[str, ...] = ()
+    #: `CHOOSE_A_QUALITY` only: which quality is being chosen, as a
+    #: `ChoiceKind` value ("color", "card_name", "creature_type"), or "" when
+    #: the asker is not an "as [this] enters, choose" effect (a mana color
+    #: narrowed by `options` alone). `Game.ask` reads it to say why an answer
+    #: outside `options` is refused - "is not a creature type (CR 205.3m)" -
+    #: instead of listing every legal answer.
+    quality: str = ""
     #: `CHOOSE_CARDS` only: `True` (the default, every existing question) means
     #: `amount` is exact - the cleanup discard, which always names precisely
     #: how many. `False` means CR 107.1c's "any number" - Valakut Awakening's
@@ -591,15 +600,21 @@ def default_answer(decision: Decision) -> object:
     if decision.kind is DecisionKind.CHOOSE_A_QUALITY:
         # CR 614.12a's choice is mandatory - there is no "decline" branch the
         # way `MAY` has one - so an unscripted answer still has to name
-        # something. The first offered option for a color choice; an empty
-        # string for the other two, which offer none: there is no rule-backed
-        # "first card name" or "first creature type" to reach for.
+        # something. The first offered option for a color or creature type
+        # choice; an empty string for a card name, which offers none: there is
+        # no rule-backed "first card name" to reach for.
         return decision.options[0] if decision.options else ""
     if decision.kind is DecisionKind.CHOOSE_A_MODE:
         # CR 700.2a's choice is mandatory too, same reasoning as
         # CHOOSE_A_QUALITY just above: the first printed mode, not a
         # judgement about which mode is best.
         return decision.options[0] if decision.options else ""
+    if decision.exact and decision.amount > 0:
+        # A split the printed text makes mandatory - Waker of Waves' "put one
+        # of them into your hand" - has no empty answer to fall back on, so
+        # the first `amount` cards looked at are moved: a legal answer, not a
+        # judgement about which card is best.
+        return CardSplit(moved=decision.cards[: decision.amount])
     return CardSplit()
 
 

@@ -464,8 +464,9 @@ class DevourerOfDestinyFirstUpkeep(DelayedEffectSpecBase):
     `Game.look_at_top_and_split` asks CR 701.22a's shared look-then-split
     question; the "moved" half is read here as the card kept on top, so an
     unscripted player - whose default answer moves nothing - exiles all four,
-    which is what declining a "you may put one back" does. More than one card
-    kept is refused: the card says "one".
+    which is what declining a "you may put one back" does. The question says
+    "at most one" (`moved_amount=1`) and `Game.ask` refuses more: the card
+    says "one".
 
     "Exile the rest" goes through `Game.exile_cards`, never
     `Player.add(state, Zone.EXILE)`. CR 400.1 lists the seven zones and says
@@ -492,12 +493,8 @@ class DevourerOfDestinyFirstUpkeep(DelayedEffectSpecBase):
             prompt="look at the top four cards; you may put one back on top",
             moved_label="top of your library",
             kept_label="exiled",
+            moved_amount=1,
         )
-        if len(kept) > 1:
-            raise ValueError(
-                f"{trigger.source_name}: only one of those cards may be put back on top "
-                f"of your library (CR 608.2d)"
-            )
         game.exile_cards(rest)
         for index, state in enumerate(kept):
             player.library.insert(index, state)

@@ -635,7 +635,7 @@ def create_tokens(
         card = definition.to_card()
         created: list[TokenState] = []
         for _ in range(count):
-            token = TokenState(card=card, zone=Zone.STACK, controller=controller)
+            token = TokenState(card=card, zone=Zone.STACK, controller=controller, owner=controller)
             # `zone=Zone.STACK` is only where it is *before* it exists: nothing holds
             # it, and `enter_the_battlefield` calls `move_to(BATTLEFIELD)` at once.
             # It is never a token in a zone other than the battlefield for the
@@ -662,7 +662,9 @@ def create_tokens(
             # none of this call's `tapped`/`attacking`/`counters`/`attached_to`
             # applies to it: those describe how *these* tokens were asked for, and
             # the addition was asked for by somebody else's card.
-            addition = TokenState(card=extra.to_card(), zone=Zone.STACK, controller=controller)
+            addition = TokenState(
+                card=extra.to_card(), zone=Zone.STACK, controller=controller, owner=controller
+            )
             game.put_onto_battlefield(addition, controller)
             created.append(addition)
         return created
@@ -814,11 +816,15 @@ def token_copy_of(
 
         created: list[TokenState] = []
         for _ in range(count):
-            copy = TokenState(card=copiable, zone=Zone.STACK, controller=controller)
+            copy = TokenState(
+                card=copiable, zone=Zone.STACK, controller=controller, owner=controller
+            )
             game.put_onto_battlefield(copy, controller, tapped=bool(options.get("tapped")))
             created.append(copy)
         for extra in extra_definitions:
-            addition = TokenState(card=extra.to_card(), zone=Zone.STACK, controller=controller)
+            addition = TokenState(
+                card=extra.to_card(), zone=Zone.STACK, controller=controller, owner=controller
+            )
             game.put_onto_battlefield(addition, controller)
             created.append(addition)
         return created

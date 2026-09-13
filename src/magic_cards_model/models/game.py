@@ -3319,7 +3319,7 @@ class Game(BaseModel):
                 # sends one whose controller "can't put it onto the
                 # battlefield" (Worms of the Earth's own example). Whatever
                 # the effect had not yet done when it raised - the revealed
-                # cards `malevolent_rumble` had not yet moved off the library,
+                # cards a reveal effect had not yet moved off the library,
                 # here - simply never happened, which is the fail-closed,
                 # nothing-half-applied posture this project's abilities keep
                 # everywhere else.
@@ -5813,6 +5813,12 @@ class Game(BaseModel):
             if not isinstance(value, str) or not value:
                 raise ValueError(f"{decision.prompt}: needs a chosen value (CR 614.12a)")
             if decision.options and value not in decision.options:
+                if decision.quality == ChoiceKind.CREATURE_TYPE:
+                    # CR 205.3m is the whole list; naming it back would be
+                    # three hundred words, so the refusal names the rule.
+                    raise ValueError(
+                        f"{decision.prompt}: {value!r} is not a creature type (CR 205.3m)"
+                    )
                 raise ValueError(
                     f"{decision.prompt}: {value!r} is not among the legal choices "
                     f"({', '.join(decision.options)})"
@@ -5852,6 +5858,21 @@ class Game(BaseModel):
                 f"{decision.prompt}: cannot move a card that was not looked at "
                 f"(CR 701.22a, CR 701.25a): {', '.join(stray)}"
             )
+        # `amount`/`exact` are the printed count of cards the player may pick:
+        # scry's "any number" (CR 107.1c), Devourer of Destiny's "one of those
+        # cards", Waker of Waves' "put one of them". Picking outside it is an
+        # option CR 608.2d does not allow.
+        chosen = len(set(value.moved))
+        if decision.exact and chosen != decision.amount:
+            raise ValueError(
+                f"{decision.prompt}: exactly {decision.amount} card(s) must be chosen, "
+                f"{chosen} given (CR 608.2d)"
+            )
+        if chosen > decision.amount:
+            raise ValueError(
+                f"{decision.prompt}: at most {decision.amount} card(s) may be chosen, "
+                f"{chosen} given (CR 608.2d)"
+            )
         return value
 
     def ask_cleanup_discard(self, player: Player, needed: int) -> list[CardState]:
@@ -5888,11 +5909,16 @@ class Game(BaseModel):
         *,
         source: str | None = None,
         source_id: str | None = None,
+        cards: Sequence[CardState] = (),
     ) -> bool:
         """A plain "you may" during resolution (CR 608.2d).
 
         Both branches are always legal, so this is the one question where the
         default - take it - is a genuine deviation rather than the only answer.
+
+        `cards` are the cards the "you may" is about - the revealed cards a
+        player may take one of - published on `Decision.cards` so the player
+        is not asked blind.
         """
         username = player if isinstance(player, str) else player.username
         answer = self.ask(
@@ -5902,6 +5928,7 @@ class Game(BaseModel):
                 prompt=prompt,
                 source=source,
                 source_id=source_id,
+                cards=tuple(state.id for state in cards),
             )
         )
         return bool(answer)
@@ -6254,6 +6281,8 @@ class Game(BaseModel):
                     source=source,
                     source_id=source_id,
                     amount=count,
+                    # CR 107.1c: "any number" of the cards looked at, zero included.
+                    exact=False,
                     cards=tuple(state.id for state in looked_at),
                     # CR 701.22a's own two destinations, quoted above, so a client
                     # does not have to infer them from the kind.
@@ -6321,6 +6350,8 @@ class Game(BaseModel):
                     source=source,
                     source_id=source_id,
                     amount=count,
+                    # CR 107.1c: "any number" of the cards looked at, zero included.
+                    exact=False,
                     cards=tuple(state.id for state in looked_at),
                     # CR 701.25a's own two destinations, quoted above: the same
                     # "rest on top" as a scry, a different first half.
@@ -6362,6 +6393,8 @@ class Game(BaseModel):
         source_id: str | None = None,
         prompt: str | None = None,
         rest_in_random_order: bool = False,
+        moved_amount: int | None = None,
+        moved_exact: bool = False,
     ) -> tuple[list[CardState], list[CardState]]:
         """Look at the top `count` cards and split them into two groups, the
         same CR 608.2d question `scry` and `surveil` already ask (CR 701.22a,
@@ -6433,6 +6466,15 @@ class Game(BaseModel):
         card put back. Keeping it that way is what makes the empty answer -
         what an unscripted or declining player gives - the correct decline for
         both. See `Decision.moved_label`.
+
+        `moved_amount` and `moved_exact` are how many cards the printed text
+        lets the player put in `moved`, published as `Decision.amount` and
+        `Decision.exact` and enforced by `ask` (CR 608.2d). The default is a
+        scry's "any number of them" (CR 107.1c). Devourer of Destiny's "you may
+        put one of those cards back" and Ancient Stirrings' "you may reveal a
+        colorless card" are `moved_amount=1`; Waker of Waves' "put one of them
+        into your hand" is `moved_amount=1, moved_exact=True`. The count of
+        cards looked at is `len(Decision.cards)`, never `amount`.
         """
         if isinstance(player, str):
             player = self.player(player)
@@ -6448,7 +6490,10 @@ class Game(BaseModel):
                 prompt=prompt or f"look at the top {count} card(s)",
                 source=source,
                 source_id=source_id,
-                amount=count,
+                amount=len(looked_at)
+                if moved_amount is None
+                else min(moved_amount, len(looked_at)),
+                exact=moved_exact,
                 cards=tuple(state.id for state in looked_at),
                 moved_label=moved_label,
                 kept_label=kept_label,
@@ -6465,6 +6510,61 @@ class Game(BaseModel):
             if state in library:
                 library.remove(state)
         return moved, rest
+
+    def ask_library_bottom_order(
+        self,
+        player: Player | str,
+        cards: Sequence[CardState],
+        *,
+        source: str | None = None,
+        source_id: str | None = None,
+    ) -> list[CardState]:
+        """The order `cards` go to the bottom of a library, topmost first
+        (CR 401.4).
+
+        "If an effect puts two or more cards in a specific position in a
+        library at the same time, the owner of those cards may arrange them in
+        any order. That library's owner doesn't reveal the order in which the
+        cards go into the library." So the order is the owner's choice, asked
+        here as the engine's ordered `CHOOSE_CARDS` answer - every card offered,
+        all of them required, the first named nearest the top - the same shape
+        Brainstorm's "in any order" already answers.
+
+        Nothing is asked when the order cannot matter: fewer than two cards, or
+        cards that are all the same card, which make the same library in every
+        order. An unscripted player keeps the order `cards` came in
+        (`Decision.default_cards`), so a rigged library stays rigged.
+
+        This only asks. Placing the cards, and moving the library epoch for
+        what the owner knows (CR 701.20d), stays with the caller, whose
+        placement already does both. Labels travel with the question because a
+        caller may hold the cards off every zone while it asks.
+        """
+        if isinstance(player, str):
+            player = self.player(player)
+        ordered = list(cards)
+        if len(ordered) < 2 or len({state.name for state in ordered}) == 1:
+            return ordered
+        ids = tuple(state.id for state in ordered)
+        answer = self.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=player.username,
+                prompt=(
+                    f"order the {len(ordered)} cards going to the bottom of your library, "
+                    "topmost first"
+                ),
+                source=source,
+                source_id=source_id,
+                amount=len(ordered),
+                cards=ids,
+                card_labels=tuple(state.name for state in ordered),
+                default_cards=ids,
+            )
+        )
+        assert isinstance(answer, tuple)
+        by_id = {state.id: state for state in ordered}
+        return [by_id[card_id] for card_id in answer]
 
     # -- shuffling and searching (CR 701.23, CR 701.24) -----------------------
 

@@ -1375,13 +1375,13 @@ def decision_answers(decision: Decision, game: Any = None) -> list[Action]:
     if decision.kind is DecisionKind.CHOOSE_A_QUALITY:
         if decision.options:
             return [build(decision_option=option) for option in decision.options]
-        # A card name or a creature type: too large a universe to enumerate,
+        # A card name: too large a universe to enumerate,
         # the same "name what is not modelled" treatment CR 116.2's own
         # unmodelled subrules get in this module's docstring.
         return [
             build(
                 affordable=Affordability.UNKNOWN,
-                unaffordable_reason="a card name or creature type choice is not enumerated",
+                unaffordable_reason="a card name choice is not enumerated",
             )
         ]
 
