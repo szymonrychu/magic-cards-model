@@ -88,6 +88,7 @@ from ..models.mana import ManaCost
 from ..models.token import TokenDefinition, create_tokens
 from ..models.zone import Zone
 from .abilities import AbilityKind, TriggeredAbility, TriggerEvent, TriggerWord
+from .decisions import source_id_of
 from .triggers import AbilityOnStack, GameEvent
 from .turn import Step
 
@@ -278,7 +279,9 @@ class ReboundRecast(DelayedEffectSpecBase):
         if card is None:
             return
         prompt = f"cast {card.name} from exile without paying its mana cost"
-        if not game.may(trigger.controller, prompt, source=card.name):
+        if not game.may(
+            trigger.controller, prompt, source=card.name, source_id=source_id_of(ability)
+        ):
             return
         game.cast_free_from_exile(card, trigger.controller, keyword="Rebound")
 
@@ -330,7 +333,9 @@ class ParadigmCopyAndCast(DelayedEffectSpecBase):
             )
             game.exile.append(copy)
         prompt = f"cast the copy of {copy.name} without paying its mana cost"
-        if not game.may(trigger.controller, prompt, source=copy.name):
+        if not game.may(
+            trigger.controller, prompt, source=copy.name, source_id=source_id_of(ability)
+        ):
             # CR 704.5e/707.10a: a declined copy has nowhere to persist.
             if copy in game.exile:
                 game.exile.remove(copy)
@@ -451,6 +456,7 @@ class DevourerOfDestinyFirstUpkeep(DelayedEffectSpecBase):
             player,
             4,
             source=trigger.source_name,
+            source_id=source_id_of(ability),
             prompt="look at the top four cards; you may put one back on top",
             moved_label="top of your library",
             kept_label="exiled",
@@ -604,7 +610,12 @@ class PayOrLoseTheGame(DelayedEffectSpecBase):
     def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
         if not game.is_in_game(trigger.controller):
             return
-        if game.may_pay_mana_cost(trigger.controller, self.cost, source=trigger.source_name):
+        if game.may_pay_mana_cost(
+            trigger.controller,
+            self.cost,
+            source=trigger.source_name,
+            source_id=source_id_of(ability),
+        ):
             return
         game.player_loses_the_game(trigger.controller)
 
@@ -662,7 +673,10 @@ class CopyNextSpellYouCast(DelayedEffectSpecBase):
         copy = game.copy_spell(spell, controller=trigger.controller)
         if self.may_retarget:
             game.offer_new_targets_for_copy(
-                copy, trigger.controller, source_name=trigger.source_name
+                copy,
+                trigger.controller,
+                source_name=trigger.source_name,
+                source_id=source_id_of(ability),
             )
 
 

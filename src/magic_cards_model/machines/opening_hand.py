@@ -83,7 +83,7 @@ from pydantic import BaseModel, ConfigDict
 from ..models.card import Card
 from ..models.card_state import CardState
 from .abilities import TriggerEvent
-from .decisions import Decision, DecisionKind
+from .decisions import Decision, DecisionKind, source_id_of
 from .delayed import DelayedTrigger, devourer_of_destiny_first_upkeep
 from .turn import Step
 
@@ -263,6 +263,7 @@ def _gemstone_caverns_rider(game: "Game", card_state: CardState, player: "Player
             player=player.username,
             prompt="exile a card from your hand",
             source=card_state.name,
+            source_id=source_id_of(card_state),
             amount=1,
             cards=tuple(state.id for state in hand),
         )

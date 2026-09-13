@@ -91,7 +91,7 @@ from .abilities import (
 from .casting import PlayAction, annotate_exile, remove_suspend_time_counter
 from .casting_restrictions import create_targeted_cant_cast_restriction, parse_casting_rule_clause
 from .combat import has_keyword
-from .decisions import Decision, DecisionKind
+from .decisions import Decision, DecisionKind, source_id_of
 from .delayed import (
     ANAPHORIC_TIMING_STEPS,
     CombatDamageToPlayerDraw,
@@ -388,7 +388,9 @@ def _counter_unless_pays_effect(amount: int, *, to_exile: bool = False) -> Effec
             target = next((item for item in game.stack if item.id == reference.card_id), None)
             if target is None:
                 continue
-            paid = game.may_pay_mana(target.controller, amount, source=spell.name)
+            paid = game.may_pay_mana(
+                target.controller, amount, source=spell.name, source_id=source_id_of(spell)
+            )
             if not paid:
                 game.counter(target, to_exile=to_exile)
 
@@ -531,7 +533,9 @@ _PUMP_AND_BECOMES_CHOSEN_COLOR_RE = re.compile(
 _COLOR_LETTERS: tuple[str, ...] = ("W", "U", "B", "R", "G")
 
 
-def _choose_a_color(game: "Game", player: Player, source_name: str, prompt: str) -> Color:
+def _choose_a_color(
+    game: "Game", player: Player, source_name: str, prompt: str, *, source_id: str | None
+) -> Color:
     """CR 608.2d's "of your choice", asked with `DecisionKind.CHOOSE_A_
     QUALITY` narrowed to CR 105's five colours - the same kind and the same
     narrowing `_parse_destroy_each_then_add_mana_per_destroyed` already uses
@@ -543,6 +547,7 @@ def _choose_a_color(game: "Game", player: Player, source_name: str, prompt: str)
         prompt=prompt,
         source=source_name,
         options=_COLOR_LETTERS,
+        source_id=source_id,
     )
     value = game.ask(decision)
     assert isinstance(value, str)
@@ -568,7 +573,13 @@ def _parse_pump_and_becomes_chosen_color_clause(text: str) -> AbilityEffect | No
         if source is None or source.zone is not Zone.BATTLEFIELD:
             return
         controller = game.controller_of(ability)
-        color = _choose_a_color(game, controller, source.name, f"choose a color for {source.name}")
+        color = _choose_a_color(
+            game,
+            controller,
+            source.name,
+            f"choose a color for {source.name}",
+            source_id=source_id_of(ability),
+        )
         store = continuous_effects(game)
         timestamp = store.tick()
         store.add(
@@ -644,7 +655,11 @@ def _parse_protection_from_chosen_color_clause(text: str) -> AbilityEffect | Non
         source_name = source.name if source is not None else ability.source_name
         controller = game.controller_of(ability)
         color = _choose_a_color(
-            game, controller, source_name, f"choose a color for {source_name}'s protection"
+            game,
+            controller,
+            source_name,
+            f"choose a color for {source_name}'s protection",
+            source_id=source_id_of(ability),
         )
         store = continuous_effects(game)
         store.add(
@@ -989,6 +1004,7 @@ def _parse_scry_or_untap_if_not_starting_player_clauses(
                     player=controller.username,
                     prompt=f"untap {source.name} instead of scrying",
                     source=ability.source_name,
+                    source_id=source_id_of(ability),
                     affirmative_is_legal=True,
                 )
             )
@@ -999,7 +1015,7 @@ def _parse_scry_or_untap_if_not_starting_player_clauses(
                 # at its default `True`.
                 source.untap(exert_applies=False)
                 return
-        game.scry(controller, count, source=ability.source_name)
+        game.scry(controller, count, source=ability.source_name, source_id=source_id_of(ability))
 
     return 2, effect
 
@@ -1536,6 +1552,7 @@ def seasoned_pyromancer(game: "Game", ability: AbilityOnStack) -> None:
         player=player.username,
         prompt=f"choose {amount} card(s) to discard",
         source=ability.source_name,
+        source_id=source_id_of(ability),
         amount=amount,
         cards=tuple(state.id for state in reversed(hand)),
     )
@@ -1580,12 +1597,18 @@ def malevolent_rumble(game: "Game", spell: CardState) -> None:
     revealed = list(player.library[:4])
     permanents = [state for state in revealed if state.is_permanent]
     kept = None
-    if permanents and game.may(player, "put a permanent card into your hand", source=spell.name):
+    if permanents and game.may(
+        player,
+        "put a permanent card into your hand",
+        source=spell.name,
+        source_id=source_id_of(spell),
+    ):
         decision = Decision(
             kind=DecisionKind.CHOOSE_CARDS,
             player=player.username,
             prompt="choose a permanent card to put into your hand",
             source=spell.name,
+            source_id=source_id_of(spell),
             amount=1,
             cards=tuple(state.id for state in reversed(permanents)),
         )
@@ -1668,7 +1691,9 @@ def scry(count: int) -> Effect:
     """
 
     def effect(game: "Game", spell: CardState) -> None:
-        game.scry(game.controller_of(spell), count, source=spell.name)
+        game.scry(
+            game.controller_of(spell), count, source=spell.name, source_id=source_id_of(spell)
+        )
 
     return effect
 
@@ -2530,6 +2555,7 @@ def _parse_hideaway_clause(text: str) -> AbilityEffect | None:
                 player=player.username,
                 prompt="choose a card to exile face down",
                 source=ability.source_name,
+                source_id=source_id_of(ability),
                 amount=1,
                 cards=tuple(state.id for state in looked),
             )
@@ -2620,6 +2646,7 @@ def _parse_hideaway_counter_then_conditional_free_cast_clause(text: str) -> Abil
             game.player(ability.controller),
             "play the exiled card without paying its mana cost",
             source=ability.source_name,
+            source_id=source_id_of(ability),
         ):
             return
         game.cast_free_from_exile(hidden, ability.controller)
@@ -2643,7 +2670,9 @@ def _parse_pay_any_life_then_draw_that_many_clause(text: str) -> AbilityEffect |
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         player = game.player(ability.controller)
-        paid = game.pay_any_amount_of_life(player, source=ability.source_name)
+        paid = game.pay_any_amount_of_life(
+            player, source=ability.source_name, source_id=source_id_of(ability)
+        )
         if paid > 0:
             game.draw_cards(player.username, paid)
 
@@ -2743,6 +2772,7 @@ def _search_library(
     matches: Callable[[CardState], bool],
     *,
     source: str | None = None,
+    source_id: str | None,
 ) -> CardState | None:
     """Find and remove one matching card from a player's library, then shuffle.
 
@@ -2769,7 +2799,9 @@ def _search_library(
 
     The card is taken from the library here; the caller decides where it goes.
     """
-    found = game.search_library(player, matches, count=1, optional=True, source=source)
+    found = game.search_library(
+        player, matches, count=1, optional=True, source=source, source_id=source_id
+    )
     return found[0] if found else None
 
 
@@ -3088,12 +3120,15 @@ def _search_and_place_for(
     tapped = bool(match.group("tapped"))
     to_hand = match.group("dest").startswith("into your hand")
 
-    def run(game: "Game", player: Player, source: str) -> None:
+    def run(game: "Game", player: Player, source: str, source_id: str | None) -> None:
         if optional and not game.may(
-            player, f"search your library for a {description} card", source=source
+            player,
+            f"search your library for a {description} card",
+            source=source,
+            source_id=source_id,
         ):
             return
-        found = _search_library(game, player, matches, source=source)
+        found = _search_library(game, player, matches, source=source, source_id=source_id)
         if found is None:
             return
         if to_hand:
@@ -3122,7 +3157,7 @@ def _build_search_clause(match: re.Match[str], *, for_spell: bool) -> TargetedCl
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
-        run(game, game.controller_of(stack_object), source)
+        run(game, game.controller_of(stack_object), source, source_id_of(stack_object))
 
     return effect
 
@@ -3172,7 +3207,9 @@ def _parse_search_mv_lte_count_clause(clause: str, *, for_spell: bool) -> Target
         def matches(state: CardState) -> bool:
             return state.mana_value <= ceiling
 
-        found = _search_library(game, controller, matches, source=source)
+        found = _search_library(
+            game, controller, matches, source=source, source_id=source_id_of(stack_object)
+        )
         if found is not None:
             controller.add(found, Zone.HAND)
 
@@ -3270,7 +3307,13 @@ def _parse_search_mv_equal_to_sacrificed_clause(
         def matches(state: CardState) -> bool:
             return matches_quality(state) and state.mana_value == wanted
 
-        found = _search_library(game, controller, matches, source=stack_object.name)
+        found = _search_library(
+            game,
+            controller,
+            matches,
+            source=stack_object.name,
+            source_id=source_id_of(stack_object),
+        )
         if found is None:
             return
         permanent = game.put_onto_battlefield(found, controller.username)
@@ -3376,7 +3419,9 @@ def _land_cards_in_hand(player: Player) -> list[CardState]:
     return [state for state in player.hand if Type.LAND in state.types]
 
 
-def _choose_land_from_hand(game: "Game", player: Player, source: str) -> CardState | None:
+def _choose_land_from_hand(
+    game: "Game", player: Player, source: str, *, source_id: str | None
+) -> CardState | None:
     """CR 601.2d-shaped choice among a player's own land cards already known
     to be in hand ("a land card from your hand" is a choice of *which* land,
     not merely whether to act). Callers check `_land_cards_in_hand` first, so
@@ -3390,6 +3435,7 @@ def _choose_land_from_hand(game: "Game", player: Player, source: str) -> CardSta
         source=source,
         amount=1,
         cards=tuple(state.id for state in lands),
+        source_id=source_id,
     )
     chosen_ids = game.ask(decision)
     by_id = {state.id: state for state in lands}
@@ -3417,10 +3463,13 @@ def _parse_put_land_from_hand_clause(clause: str, *, for_spell: bool) -> Targete
         if not _land_cards_in_hand(player):
             return
         if optional and not game.may(
-            player, "put a land card from your hand onto the battlefield", source=source
+            player,
+            "put a land card from your hand onto the battlefield",
+            source=source,
+            source_id=source_id_of(stack_object),
         ):
             return
-        chosen = _choose_land_from_hand(game, player, source)
+        chosen = _choose_land_from_hand(game, player, source, source_id=source_id_of(stack_object))
         game.put_onto_battlefield(chosen, player.username, tapped=tapped)
 
     return effect
@@ -3462,9 +3511,12 @@ def _parse_put_land_from_hand_repeat_clause(text: str) -> AbilityEffect | None:
                 controller,
                 "put a land card from your hand onto the battlefield",
                 source=source,
+                source_id=source_id_of(ability),
             ):
                 break
-            chosen = _choose_land_from_hand(game, controller, source)
+            chosen = _choose_land_from_hand(
+                game, controller, source, source_id=source_id_of(ability)
+            )
             game.put_onto_battlefield(chosen, controller.username, tapped=tapped)
             game.draw_cards(controller.username, 1)
 
@@ -3517,10 +3569,13 @@ def _parse_draw_then_put_land_cave_bonus_clause(text: str) -> AbilityEffect | No
         if not _land_cards_in_hand(controller):
             return
         if not game.may(
-            controller, "put a land card from your hand onto the battlefield", source=source
+            controller,
+            "put a land card from your hand onto the battlefield",
+            source=source,
+            source_id=source_id_of(ability),
         ):
             return
-        chosen = _choose_land_from_hand(game, controller, source)
+        chosen = _choose_land_from_hand(game, controller, source, source_id=source_id_of(ability))
         game.put_onto_battlefield(chosen, controller.username, tapped=False)
         if is_cave(game.characteristics_of(chosen)):
             game.gain_life(controller, life)
@@ -3576,6 +3631,7 @@ def _parse_sacrifice_lands_then_search_that_many_clause(text: str) -> Effect | N
             player=controller.username,
             prompt="sacrifice any number of lands",
             source=spell.name,
+            source_id=source_id_of(spell),
             amount=len(lands),
             cards=tuple(state.id for state in lands),
             exact=False,
@@ -3588,7 +3644,12 @@ def _parse_sacrifice_lands_then_search_that_many_clause(text: str) -> Effect | N
         if not sacrificed:
             return
         found = game.search_library(
-            controller, matches, count=len(sacrificed), optional=True, source=spell.name
+            controller,
+            matches,
+            count=len(sacrificed),
+            optional=True,
+            source=spell.name,
+            source_id=source_id_of(spell),
         )
         for card in found:
             game.put_onto_battlefield(card, controller.username, tapped=tapped)
@@ -3655,9 +3716,17 @@ def _parse_search_up_to_n_and_put_clause(clause: str, *, for_spell: bool) -> Tar
             player,
             f"search your library for up to {count} {match.group('quality')} cards",
             source=source,
+            source_id=source_id_of(stack_object),
         ):
             return
-        found = game.search_library(player, matches, count=count, optional=True, source=source)
+        found = game.search_library(
+            player,
+            matches,
+            count=count,
+            optional=True,
+            source=source,
+            source_id=source_id_of(stack_object),
+        )
         for card in found:
             if to_hand:
                 player.add(card, Zone.HAND)
@@ -3739,7 +3808,7 @@ def _count(word: str) -> int:
 #: from a triggered or activated ability (CR 603.3a, CR 602.2). `source` is a
 #: display name only, passed through to `Game.scry`/`Game.surveil` for their
 #: decision prompts.
-ClauseEffect = Callable[["Game", Player, str], None]
+ClauseEffect = Callable[["Game", Player, str, str | None], None]
 
 # CR 119.3: "If an effect causes a player to gain life or lose life, that
 # player's life total is adjusted accordingly." No card in the pool phrases
@@ -3810,7 +3879,9 @@ _DRAW_FOR_EACH_OPPONENT_WHO_LOST_LIFE_RE = re.compile(
 )
 
 
-def _discard_cards(game: "Game", player: Player, count: int, source: str) -> list[CardState]:
+def _discard_cards(
+    game: "Game", player: Player, count: int, source: str, *, source_id: str | None
+) -> list[CardState]:
     """CR 701.9a/701.9b: `player` discards `count` cards of their own choice.
 
     A hand shorter than `count` is not a violation - the player discards
@@ -3835,6 +3906,7 @@ def _discard_cards(game: "Game", player: Player, count: int, source: str) -> lis
             source=source,
             amount=needed,
             cards=tuple(state.id for state in player.hand),
+            source_id=source_id,
         )
     )
     assert isinstance(chosen_ids, tuple)
@@ -3887,21 +3959,25 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
         # `Player.gain_life` directly adjusted the total (CR 119.3) but
         # emitted nothing, so Amalia Benavides Aguirre and every other
         # "whenever you gain life" card was blind to every spell in the pool.
-        return lambda game, player, source: game.gain_life(player, amount)
+        return lambda game, player, source, source_id: game.gain_life(player, amount)
 
     if _GAIN_LIFE_EQUAL_TO_LIFE_LOST_THIS_TURN_RE.fullmatch(clause):
         # Through `Game.gain_life` for the same CR 119.9 reason the flat
         # "you gain N life" above uses it.
-        return lambda game, player, source: game.gain_life(player, player.life_lost_this_turn)
+        return lambda game, player, source, source_id: game.gain_life(
+            player, player.life_lost_this_turn
+        )
 
     if match := _LOSE_LIFE_RE.fullmatch(clause):
         amount = _count(match.group("n"))
-        return lambda game, player, source: player.lose_life(amount)
+        return lambda game, player, source, source_id: player.lose_life(amount)
 
     if match := _EACH_OPPONENT_LOSES_LIFE_RE.fullmatch(clause):
         amount = _count(match.group("n"))
 
-        def each_opponent_loses(game: "Game", player: Player, source: str) -> None:
+        def each_opponent_loses(
+            game: "Game", player: Player, source: str, source_id: str | None
+        ) -> None:
             for opponent in _opponents(game, player.username):
                 opponent.lose_life(amount)
 
@@ -3909,7 +3985,9 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
 
     if _DRAW_FOR_EACH_OPPONENT_WHO_LOST_LIFE_RE.fullmatch(clause):
 
-        def draw_for_each_opponent_who_lost_life(game: "Game", player: Player, source: str) -> None:
+        def draw_for_each_opponent_who_lost_life(
+            game: "Game", player: Player, source: str, source_id: str | None
+        ) -> None:
             # CR 608.2h: "If an effect requires information from the game ...
             # the answer is determined only once, when the effect is applied" -
             # so the count is taken here, in one pass, and every card is drawn
@@ -3926,27 +4004,33 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
 
     if match := _ENERGY_RE.fullmatch(clause):
         amount = len(re.findall(r"\{e\}", match.group("e"), re.IGNORECASE))
-        return lambda game, player, source: player.add_counters(Counter.ENERGY, amount)
+        return lambda game, player, source, source_id: player.add_counters(Counter.ENERGY, amount)
 
     if match := _DRAW_RE.fullmatch(clause):
         amount = _count(match.group("n")) if match.group("n") else 1
-        return lambda game, player, source: game.draw_cards(player.username, amount)
+        return lambda game, player, source, source_id: game.draw_cards(player.username, amount)
 
     if match := _DISCARD_A_CARD_RE.fullmatch(clause):
         amount = _count(match.group("n")) if match.group("n") else 1
-        return lambda game, player, source: _discard_cards(game, player, amount, source)
+        return lambda game, player, source, source_id: _discard_cards(
+            game, player, amount, source, source_id=source_id
+        )
 
     if match := _MILL_RE.fullmatch(clause):
         amount = _count(match.group("n")) if match.group("n") else 1
-        return lambda game, player, source: _mill(game, player, amount)
+        return lambda game, player, source, source_id: _mill(game, player, amount)
 
     if match := _SURVEIL_RE.fullmatch(clause):
         amount = int(match.group("n"))
-        return lambda game, player, source: game.surveil(player, amount, source=source)
+        return lambda game, player, source, source_id: game.surveil(
+            player, amount, source=source, source_id=source_id
+        )
 
     if match := _SCRY_RE.fullmatch(clause):
         amount = int(match.group("n"))
-        return lambda game, player, source: game.scry(player, amount, source=source)
+        return lambda game, player, source, source_id: game.scry(
+            player, amount, source=source, source_id=source_id
+        )
 
     return None
 
@@ -3969,9 +4053,9 @@ def _optional_clause(inner: ClauseEffect, prompt: str) -> ClauseEffect:
     reargues.
     """
 
-    def effect(game: "Game", player: Player, source: str) -> None:
-        if game.may(player, prompt, source=source):
-            inner(game, player, source)
+    def effect(game: "Game", player: Player, source: str, source_id: str | None) -> None:
+        if game.may(player, prompt, source=source, source_id=source_id):
+            inner(game, player, source, source_id)
 
     return effect
 
@@ -4026,9 +4110,9 @@ def _parse_comma_chained_player_clause(clause: str) -> ClauseEffect | None:
             return None
         chain.append(parsed)
 
-    def run(game: "Game", player: Player, source: str) -> None:
+    def run(game: "Game", player: Player, source: str, source_id: str | None) -> None:
         for step in chain:
-            step(game, player, source)
+            step(game, player, source, source_id)
 
     return run
 
@@ -4411,7 +4495,7 @@ def parse_player_effect(text: str) -> AbilityEffect | None:
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         player = game.player(ability.controller)
         for clause in clauses:
-            clause(game, player, ability.source_name)
+            clause(game, player, ability.source_name, source_id_of(ability))
 
     return effect
 
@@ -4429,7 +4513,7 @@ def parse_player_effect_for_spell(text: str) -> Effect | None:
     def effect(game: "Game", spell: CardState) -> None:
         player = game.controller_of(spell)
         for clause in clauses:
-            clause(game, player, spell.card.name)
+            clause(game, player, spell.card.name, source_id_of(spell))
 
     return effect
 
@@ -4986,6 +5070,7 @@ def _knowledge_pool_free_cast_effect(game: "Game", ability: AbilityOnStack) -> N
             "without paying its mana cost"
         ),
         source=ability.source_name,
+        source_id=source_id_of(ability),
         affirmative_is_legal=bool(candidates),
         cards=tuple(card.id for card in candidates),
     )
@@ -4997,6 +5082,7 @@ def _knowledge_pool_free_cast_effect(game: "Game", ability: AbilityOnStack) -> N
             player=exiler,
             prompt="choose a card to cast without paying its mana cost",
             source=ability.source_name,
+            source_id=source_id_of(ability),
             amount=1,
             cards=tuple(card.id for card in candidates),
         )
@@ -5067,6 +5153,7 @@ def _possibility_storm_effect(game: "Game", ability: AbilityOnStack) -> None:
             player=exiler,
             prompt=f"cast {hit.name} without paying its mana cost",
             source=ability.source_name,
+            source_id=source_id_of(ability),
             affirmative_is_legal=True,
             cards=(hit.id,),
         )
@@ -5544,6 +5631,7 @@ def _parse_return_a_land_you_control_clause(text: str) -> AbilityEffect | None:
                 source=source_name,
                 amount=1,
                 cards=tuple(state.id for state in candidates),
+                source_id=source_id_of(ability),
             )
         )
         assert isinstance(chosen_ids, tuple)
@@ -6502,6 +6590,7 @@ def _parse_bottom_hand_then_draw_plus_one_clause(text: str) -> Effect | None:
                 player=controller.username,
                 prompt="put any number of cards from your hand on the bottom of your library",
                 source=spell.name,
+                source_id=source_id_of(spell),
                 amount=len(hand),
                 cards=tuple(state.id for state in hand),
                 exact=False,
@@ -6567,13 +6656,17 @@ def _parse_look_top_n_may_battlefield_creature_bonus_clause(text: str) -> Effect
         creatures = [state for state in looked if state.card.is_creature]
         chosen: CardState | None = None
         if creatures and game.may(
-            controller.username, "put a creature card onto the battlefield", source=spell.name
+            controller.username,
+            "put a creature card onto the battlefield",
+            source=spell.name,
+            source_id=source_id_of(spell),
         ):
             decision = Decision(
                 kind=DecisionKind.CHOOSE_CARDS,
                 player=controller.username,
                 prompt="choose a creature card to put onto the battlefield",
                 source=spell.name,
+                source_id=source_id_of(spell),
                 amount=1,
                 cards=tuple(state.id for state in reversed(creatures)),
             )
@@ -6757,6 +6850,7 @@ def _parse_reveal_top_n_one_per_card_type_clause(text: str) -> AbilityEffect | N
                 controller.username,
                 f"put a {card_type.value} card from among the revealed cards into your hand",
                 source=ability.source_name,
+                source_id=source_id_of(ability),
             ):
                 continue
             chosen_ids = game.ask(
@@ -6765,6 +6859,7 @@ def _parse_reveal_top_n_one_per_card_type_clause(text: str) -> AbilityEffect | N
                     player=controller.username,
                     prompt=f"choose a {card_type.value} card to put into your hand",
                     source=ability.source_name,
+                    source_id=source_id_of(ability),
                     amount=1,
                     cards=tuple(state.id for state in candidates),
                 )
@@ -7046,7 +7141,7 @@ def _optional_targeted_clause(
     def effect(game: "Game", stack_object: "StackObject") -> None:
         player = game.controller_of(stack_object)
         source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
-        if game.may(player, prompt, source=source):
+        if game.may(player, prompt, source=source, source_id=source_id_of(stack_object)):
             inner(game, stack_object)
 
     return effect
@@ -7250,7 +7345,7 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
             source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
             for target in game.resolve_targets(stack_object):
                 if isinstance(target, Player):
-                    clause_effect(game, target, source)
+                    clause_effect(game, target, source, source_id_of(stack_object))
 
         return player_verb_effect
 
@@ -7718,7 +7813,7 @@ def _parse_target_player_mode(text: str) -> Effect | None:
         for target in game.resolve_targets(spell):
             if isinstance(target, Player):
                 for clause_effect in parsed:
-                    clause_effect(game, target, spell.card.name)
+                    clause_effect(game, target, spell.card.name, source_id_of(spell))
 
     return effect
 
@@ -7890,6 +7985,7 @@ def _resolve_modal_triggered_ability_clause(text: str) -> AbilityEffect | None:
                 player=ability.controller,
                 prompt="choose one",
                 source=ability.source_name,
+                source_id=source_id_of(ability),
                 options=options,
             )
         )
@@ -7987,10 +8083,12 @@ def _read_referent_power_expression(expr: str) -> bool:
 #: LKI power (`None` if it could not be read - a `*` power CDA the layers
 #: engine itself failed to resolve, not something this wave should crash or
 #: silently zero on).
-ReferentClause = Callable[["Game", Player, int | None, str], None]
+ReferentClause = Callable[["Game", Player, int | None, str, str | None], None]
 
 
-def _referent_gain_life(game: "Game", player: Player, power: int | None, source: str) -> None:
+def _referent_gain_life(
+    game: "Game", player: Player, power: int | None, source: str, source_id: str | None
+) -> None:
     """ "<Referent's controller> gains life equal to its power" (CR 119.3).
 
     CR 107.1b: "You can't ... gain negative life" - a negative last-known
@@ -8022,8 +8120,10 @@ def _parse_referent_clause(rest: str) -> ReferentClause | None:
     if match := _REFERENT_SEARCH_RE.fullmatch(rest):
         run = _search_and_place_for(match, optional=True)
 
-        def search_effect(game: "Game", player: Player, power: int | None, source: str) -> None:
-            run(game, player, source)
+        def search_effect(
+            game: "Game", player: Player, power: int | None, source: str, source_id: str | None
+        ) -> None:
+            run(game, player, source, source_id)
 
         return search_effect
 
@@ -8044,7 +8144,9 @@ def _parse_referent_clause(rest: str) -> ReferentClause | None:
         if definition is None:
             return None
 
-        def token_effect(game: "Game", player: Player, power: int | None, source: str) -> None:
+        def token_effect(
+            game: "Game", player: Player, power: int | None, source: str, source_id: str | None
+        ) -> None:
             create_tokens(game, definition, player.username, count, tapped=tapped)
 
         return token_effect
@@ -8600,7 +8702,13 @@ def _parse_add_one_mana_of_any_color_trigger(text: str) -> AbilityEffect | None:
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         controller = ability.controller
         player = game.player(controller)
-        color = _choose_a_color(game, player, ability.source_name, "add one mana of any color")
+        color = _choose_a_color(
+            game,
+            player,
+            ability.source_name,
+            "add one mana of any color",
+            source_id=source_id_of(ability),
+        )
         player.mana_pool.add(color)
 
     return effect
@@ -8639,7 +8747,9 @@ def _parse_sacrifice_unless_pay_energy(text: str) -> AbilityEffect | None:
         if source is None or source.zone is not Zone.BATTLEFIELD:
             return
         player = game.player(ability.controller)
-        paid = game.may_pay_energy(player, amount, source=ability.source_name)
+        paid = game.may_pay_energy(
+            player, amount, source=ability.source_name, source_id=source_id_of(ability)
+        )
         if not paid:
             game.sacrifice(source)
 
@@ -8742,6 +8852,7 @@ def _parse_mill_then_may_return_creature_clause(text: str) -> AbilityEffect | No
             f"return a creature card with mana value {ceiling} or less from your "
             f"graveyard to the battlefield",
             source=ability.source_name,
+            source_id=source_id_of(ability),
         ):
             return
         chosen_ids = game.ask(
@@ -8750,6 +8861,7 @@ def _parse_mill_then_may_return_creature_clause(text: str) -> AbilityEffect | No
                 player=player.username,
                 prompt="choose a creature card to return to the battlefield",
                 source=ability.source_name,
+                source_id=source_id_of(ability),
                 amount=1,
                 cards=tuple(candidate.id for candidate in candidates),
             )
@@ -8841,7 +8953,7 @@ _SELECT_FROM_TOP_RE = re.compile(
 
 def _select_from_top_runner(
     text: str,
-) -> Callable[["Game", Player, str, CardState | None], None] | None:
+) -> Callable[["Game", Player, str, CardState | None, str | None], None] | None:
     """Compile `_SELECT_FROM_TOP_RE`'s shape into one runner both the spell
     side and the ability side can call.
 
@@ -8880,7 +8992,13 @@ def _select_from_top_runner(
     rest = (match.group("rest") or "").lower()
     noun = f"{kind_word} card" if kind_word else "card"
 
-    def run(game: "Game", player: Player, source_name: str, source: CardState | None) -> None:
+    def run(
+        game: "Game",
+        player: Player,
+        source_name: str,
+        source: CardState | None,
+        source_id: str | None,
+    ) -> None:
         # Milling moves the cards (CR 701.17a); looking changes no zone at all -
         # they stay where CR 401.2 keeps them, on top of the library, until
         # this effect moves one of them.
@@ -8896,7 +9014,10 @@ def _select_from_top_runner(
 
         chosen: CardState | None = None
         if candidates and game.may(
-            player, f"put a {noun} from among them {destination}", source=source_name
+            player,
+            f"put a {noun} from among them {destination}",
+            source=source_name,
+            source_id=source_id,
         ):
             chosen_ids = game.ask(
                 Decision(
@@ -8906,6 +9027,7 @@ def _select_from_top_runner(
                     source=source_name,
                     amount=1,
                     cards=tuple(candidate.id for candidate in candidates),
+                    source_id=source_id,
                 )
             )
             assert isinstance(chosen_ids, tuple)
@@ -8970,7 +9092,13 @@ def _parse_select_from_top_clause(text: str) -> AbilityEffect | None:
         return None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
-        run(game, game.player(ability.controller), ability.source_name, ability.source(game))
+        run(
+            game,
+            game.player(ability.controller),
+            ability.source_name,
+            ability.source(game),
+            source_id_of(ability),
+        )
 
     return effect
 
@@ -8985,7 +9113,7 @@ def _parse_select_from_top_spell_clause(text: str) -> Effect | None:
         return None
 
     def effect(game: "Game", spell: CardState) -> None:
-        run(game, game.controller_of(spell), spell.name, None)
+        run(game, game.controller_of(spell), spell.name, None, source_id_of(spell))
 
     return effect
 
@@ -9044,7 +9172,12 @@ def _parse_look_top_card_conditional_clause(text: str) -> AbilityEffect | None:
             return
         top = player.library[0]
         if predicate(top):
-            if game.may(player, f"put a {noun} {destination}", source=ability.source_name):
+            if game.may(
+                player,
+                f"put a {noun} {destination}",
+                source=ability.source_name,
+                source_id=source_id_of(ability),
+            ):
                 move(game, player, top, destination)
             return
         move(game, player, top, otherwise)
@@ -9129,6 +9262,7 @@ def _parse_may_exile_self_then_return_clause(text: str) -> AbilityEffect | None:
             player=ability.controller,
             prompt=prompt,
             source=ability.source_name,
+            source_id=source_id_of(ability),
             affirmative_is_legal=True,
         )
         if not game.ask(decision):
@@ -9283,6 +9417,7 @@ def _parse_mill_that_many_then_take_from_among_them(text: str) -> AbilityEffect 
                     player=player.username,
                     prompt=f"put any number of {quality} cards into your hand",
                     source=ability.source_name,
+                    source_id=source_id_of(ability),
                     # CR 107.1c's "any number of": `amount` is the ceiling and
                     # any count from zero up to it is a legal answer, which is
                     # exactly what `exact=False` means.
@@ -9400,6 +9535,7 @@ def _merge_flip_coin_damage_or_exile_transform_clauses(
                 prompt=f"exile {source.name}, then return it to the battlefield"
                 + (" transformed" if transformed else ""),
                 source=ability.source_name,
+                source_id=source_id_of(ability),
                 affirmative_is_legal=True,
             )
             if not game.ask(decision):
@@ -9502,6 +9638,7 @@ def _parse_each_opponent_choose_one_of_each_type_then_sacrifice(
                     player=opponent.username,
                     prompt=f"choose {article} {card_type.value} to keep",
                     source=ability.source_name,
+                    source_id=source_id_of(ability),
                     amount=1,
                     cards=tuple(permanent.id for permanent in candidates),
                 )
@@ -10035,7 +10172,9 @@ def _parse_target_get_energy_pay_damage(text: str) -> Effect | None:
         player = game.controller_of(spell)
         if energy_amount:
             player.add_counters(Counter.ENERGY, energy_amount)
-        paid = game.pay_any_amount_of_energy(player, source=spell.card.name)
+        paid = game.pay_any_amount_of_energy(
+            player, source=spell.card.name, source_id=source_id_of(spell)
+        )
         if paid <= 0:
             return
         for target in game.resolve_targets(spell):
@@ -10101,7 +10240,9 @@ def _parse_x_energy_pay_destroy_by_mana_value(text: str) -> Effect | None:
         x_value = game.cast_record(spell).x_value
         if x_value > 0:
             player.add_counters(Counter.ENERGY, x_value)
-        paid = game.pay_any_amount_of_energy(player, source=spell.card.name)
+        paid = game.pay_any_amount_of_energy(
+            player, source=spell.card.name, source_id=source_id_of(spell)
+        )
         if paid <= 0:
             return
 
@@ -10783,6 +10924,7 @@ def _parse_destroy_each_then_add_mana_per_destroyed(text: str) -> Effect | None:
                 player=player.username,
                 prompt=f"choose a color for {spell.name}'s mana",
                 source=spell.name,
+                source_id=source_id_of(spell),
                 options=symbols,
             )
             value = game.ask(decision)
@@ -10939,11 +11081,15 @@ def _parse_each_player_step(text: str) -> ClauseEffect | None:
 
     if match := _DISCARD_AT_RANDOM_RE.fullmatch(clause):
         amount = _count(match.group("n")) if match.group("n") else 1
-        return lambda game, player, source: _discard_at_random(game, player, amount, source)
+        return lambda game, player, source, source_id: _discard_at_random(
+            game, player, amount, source
+        )
 
     if _SHUFFLE_HAND_AND_GRAVEYARD_RE.fullmatch(clause):
 
-        def shuffle_hand_and_graveyard(game: "Game", player: Player, source: str) -> None:
+        def shuffle_hand_and_graveyard(
+            game: "Game", player: Player, source: str, source_id: str | None
+        ) -> None:
             for card_state in list(player.hand) + list(player.graveyard):
                 player.move(card_state, Zone.LIBRARY)
             game.shuffle_library(player)
@@ -10951,13 +11097,15 @@ def _parse_each_player_step(text: str) -> ClauseEffect | None:
         return shuffle_hand_and_graveyard
 
     if _BARE_SHUFFLE_RE.fullmatch(clause):
-        return lambda game, player, source: game.shuffle_library(player)
+        return lambda game, player, source, source_id: game.shuffle_library(player)
 
     if match := _EACH_PLAYER_EXILES_TOP_RE.fullmatch(clause):
         amount = _count(match.group("n")) if match.group("n") else 1
         face_down = match.group("face_down") is not None
 
-        def exile_top_of_library(game: "Game", player: Player, source: str) -> None:
+        def exile_top_of_library(
+            game: "Game", player: Player, source: str, source_id: str | None
+        ) -> None:
             for card_state in list(player.library[:amount]):
                 moved = game.exile_permanent(card_state)
                 if moved is not None and face_down:
@@ -10974,8 +11122,10 @@ def _parse_each_player_step(text: str) -> ClauseEffect | None:
         matcher = _quality_matcher(match.group("quality"))
         tapped = match.group("tapped") is not None
 
-        def search_and_put(game: "Game", player: Player, source: str) -> None:
-            found = _search_library(game, player, matcher, source=source)
+        def search_and_put(
+            game: "Game", player: Player, source: str, source_id: str | None
+        ) -> None:
+            found = _search_library(game, player, matcher, source=source, source_id=source_id)
             if found is not None:
                 game.put_onto_battlefield(found, player.username, tapped=tapped)
 
@@ -10997,9 +11147,9 @@ def _parse_each_player_step(text: str) -> ClauseEffect | None:
         return None
     ordered = [part for part in chain if part is not None]
 
-    def run_chain(game: "Game", player: Player, source: str) -> None:
+    def run_chain(game: "Game", player: Player, source: str, source_id: str | None) -> None:
         for part in ordered:
-            part(game, player, source)
+            part(game, player, source, source_id)
 
     return run_chain
 
@@ -11058,7 +11208,7 @@ def _merge_each_player_clauses(
             # the next one starts, in APNAP order within each step.
             for player in _players_in_apnap_order(game):
                 before = len(game.exile)
-                step(game, player, source)
+                step(game, player, source, source_id_of(stack_object))
                 # CR 607.2a, CR 406.6: an ability that exiles cards and later
                 # refers to "the exiled cards" or cards "exiled with [this
                 # object]" links the two. Knowledge Pool's "Imprint — When
@@ -11071,10 +11221,9 @@ def _merge_each_player_clauses(
                 # and left `exile_annotation` at `None`, so the reader always
                 # found an empty pool no matter what ability 2 itself wrote.
                 #
-                # `ClauseEffect` (`Callable[[Game, Player, str], None]`) hands
-                # a step the source's *name*, never its id, so a step cannot
-                # annotate what it moves on its own - widening the type would
-                # touch every `ClauseEffect` in this module, most of which
+                # A `ClauseEffect` step is handed the source's name and the
+                # string id its questions carry, never the object, so a step
+                # does not annotate what it moves on its own - and most steps
                 # exile nothing at all. Diffing `game.exile` before and after
                 # each step instead is a property of *this* closure alone
                 # (it already holds `stack_object`, and therefore the id):
@@ -11591,7 +11740,7 @@ def _parse_anaphoric_clause_pair(
             # indestructible refuses `destroy`, and CR 111.8 refuses either
             # verb for a token that has already left the battlefield once.
             return
-        second_clause(game, referent, power, source)
+        second_clause(game, referent, power, source, source_id_of(stack_object))
 
     return effect
 
@@ -12662,6 +12811,7 @@ def _parse_imprint_clause(clause: str, *, for_spell: bool) -> TargetedClause | N
             # cannot work them out from the game state; `Game.ask` labels them
             # by name on the way out.
             cards=tuple(state.id for state in candidates),
+            source_id=source_id_of(stack_object),
         )
         if not game.ask(decision):
             return
@@ -12673,6 +12823,7 @@ def _parse_imprint_clause(clause: str, *, for_spell: bool) -> TargetedClause | N
                 source=source_name,
                 amount=1,
                 cards=tuple(state.id for state in candidates),
+                source_id=source_id_of(stack_object),
             )
         )
         assert isinstance(chosen_ids, tuple)
@@ -12947,7 +13098,7 @@ def _parse_x_magnitude_body(body: str) -> Callable[["Game", Player, int], None] 
 #: a magnitude-free consequence, which never calls this argument at all), and
 #: the source name for `Game.may`/`Game.ask` prompts a nested search still
 #: needs.
-_SacrificeConsequence = Callable[["Game", Player, int | None, str], None]
+_SacrificeConsequence = Callable[["Game", Player, int | None, str, str | None], None]
 
 
 def _parse_sacrifice_consequence(consequence: str) -> _SacrificeConsequence | None:
@@ -12973,7 +13124,9 @@ def _parse_sacrifice_consequence(consequence: str) -> _SacrificeConsequence | No
         if run is None:
             return None
 
-        def magnitude_effect(game: "Game", player: Player, power: int | None, source: str) -> None:
+        def magnitude_effect(
+            game: "Game", player: Player, power: int | None, source: str, source_id: str | None
+        ) -> None:
             run(game, player, max(power, 0) if power is not None else 0)
 
         return magnitude_effect
@@ -12982,8 +13135,10 @@ def _parse_sacrifice_consequence(consequence: str) -> _SacrificeConsequence | No
     if search_match is not None:
         search_run = _search_and_place_for(search_match, optional=False)
 
-        def search_effect(game: "Game", player: Player, power: int | None, source: str) -> None:
-            search_run(game, player, source)
+        def search_effect(
+            game: "Game", player: Player, power: int | None, source: str, source_id: str | None
+        ) -> None:
+            search_run(game, player, source, source_id)
 
         return search_effect
 
@@ -12999,7 +13154,9 @@ def _parse_sacrifice_consequence(consequence: str) -> _SacrificeConsequence | No
         if count is None:
             return None
 
-        def draw_effect(game: "Game", player: Player, power: int | None, source: str) -> None:
+        def draw_effect(
+            game: "Game", player: Player, power: int | None, source: str, source_id: str | None
+        ) -> None:
             game.draw_cards(player.username, count)
 
         return draw_effect
@@ -13152,6 +13309,7 @@ def _parse_conditional_sacrifice_clause(text: str, *, for_spell: bool) -> Target
             prompt=prompt,
             source=source_name,
             affirmative_is_legal=bool(candidates),
+            source_id=source_id_of(stack_object),
         )
         if not game.ask(decision):
             return
@@ -13166,6 +13324,7 @@ def _parse_conditional_sacrifice_clause(text: str, *, for_spell: bool) -> Target
                     source=source_name,
                     amount=1,
                     cards=tuple(candidate.id for candidate in candidates),
+                    source_id=source_id_of(stack_object),
                 )
             )
             assert isinstance(chosen_ids, tuple)
@@ -13173,7 +13332,7 @@ def _parse_conditional_sacrifice_clause(text: str, *, for_spell: bool) -> Target
             chosen = by_id[chosen_ids[0]]
         power = game.power_of(chosen)
         game.sacrifice(chosen)
-        consequence(game, player, power, source_name)
+        consequence(game, player, power, source_name, source_id_of(stack_object))
 
     return effect
 
@@ -13341,6 +13500,7 @@ def _parse_reflexive_sacrifice_clause(text: str) -> AbilityEffect | None:
             prompt=prompt,
             source=source_name,
             affirmative_is_legal=bool(candidates),
+            source_id=source_id_of(ability),
         )
         if not game.ask(decision):
             return
@@ -13355,6 +13515,7 @@ def _parse_reflexive_sacrifice_clause(text: str) -> AbilityEffect | None:
                     source=source_name,
                     amount=1,
                     cards=tuple(candidate.id for candidate in candidates),
+                    source_id=source_id_of(ability),
                 )
             )
             assert isinstance(chosen_ids, tuple)
@@ -13564,7 +13725,9 @@ def _parse_reflexive_pay_energy_clause(text: str) -> AbilityEffect | None:
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         player = game.controller_of(ability)
         source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
-        paid = game.may_pay_energy(player, amount, source=source_name)
+        paid = game.may_pay_energy(
+            player, amount, source=source_name, source_id=source_id_of(ability)
+        )
         if not paid:
             return
         game.create_reflexive_trigger(
@@ -13773,6 +13936,7 @@ def _parse_create_token_then_may_attach_clause(text: str) -> AbilityEffect | Non
                 player=controller.username,
                 prompt=f"attach {source.name} to {token.name}",
                 source=ability.source_name,
+                source_id=source_id_of(ability),
                 affirmative_is_legal=True,
             )
         )
@@ -13880,7 +14044,9 @@ def _parse_undergrowth_pump_and_fight_clause(text: str) -> AbilityEffect | None:
             # CR 701.14b: either is gone, or no longer a creature.
             return
         prompt = f"have {source.name} fight {opponent_creature.name}"
-        if not game.may(controller.username, prompt, source=source.name):
+        if not game.may(
+            controller.username, prompt, source=source.name, source_id=source_id_of(source)
+        ):
             return
         _fight(game, source, opponent_creature)
 
@@ -14057,7 +14223,9 @@ def _parse_copy_exiled_card_and_cast(text: str) -> AbilityEffect | None:
         if exiled is None:
             return
         controller = game.controller_of(ability)
-        if not game.may(controller, "copy the exiled card", source=source_name):
+        if not game.may(
+            controller, "copy the exiled card", source=source_name, source_id=source_id_of(ability)
+        ):
             return
         # CR 707.12: created in the same zone the object is in - exile.
         # CR 707.2: the copy acquires the original's copiable values, which is
@@ -14071,7 +14239,12 @@ def _parse_copy_exiled_card_and_cast(text: str) -> AbilityEffect | None:
         )
         game.exile.append(copy)
         if (
-            game.may(controller, "cast the copy without paying its mana cost", source=source_name)
+            game.may(
+                controller,
+                "cast the copy without paying its mana cost",
+                source=source_name,
+                source_id=source_id_of(ability),
+            )
             and game.cast_free_from_exile(copy, controller.username) is not None
         ):
             return
@@ -14144,7 +14317,10 @@ def _parse_exchange_life_totals_then_draw(text: str) -> AbilityEffect | None:
             return
         source_name = ability.source_name
         if optional and not game.may(
-            controller, "exchange life totals with target opponent", source=source_name
+            controller,
+            "exchange life totals with target opponent",
+            source=source_name,
+            source_id=source_id_of(ability),
         ):
             return
         lost = game.exchange_life_totals(controller, opponent)
@@ -14228,6 +14404,7 @@ def _parse_put_creature_from_hand_attacking_then_return(text: str) -> AbilityEff
             controller,
             "put a creature card from your hand onto the battlefield tapped and attacking",
             source=source_name,
+            source_id=source_id_of(ability),
         ):
             return
         decision = Decision(
@@ -14237,6 +14414,7 @@ def _parse_put_creature_from_hand_attacking_then_return(text: str) -> AbilityEff
             source=source_name,
             amount=1,
             cards=tuple(state.id for state in reversed(candidates)),
+            source_id=source_id_of(ability),
         )
         chosen_ids = game.ask(decision)
         if not chosen_ids:
@@ -14488,7 +14666,9 @@ def _parse_may_cost_then_attacking_token_clause(text: str) -> AbilityEffect | No
         controller = game.controller_of(ability)
         source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
         if cost is not None:
-            if not game.may_pay_mana_cost(controller, cost, source=source_name):
+            if not game.may_pay_mana_cost(
+                controller, cost, source=source_name, source_id=source_id_of(ability)
+            ):
                 return
         else:
             assert candidates_of is not None
@@ -14499,6 +14679,7 @@ def _parse_may_cost_then_attacking_token_clause(text: str) -> AbilityEffect | No
                 prompt=prompt,
                 source=source_name,
                 affirmative_is_legal=bool(available),
+                source_id=source_id_of(ability),
             )
             if not game.ask(decision):
                 return
@@ -14510,6 +14691,7 @@ def _parse_may_cost_then_attacking_token_clause(text: str) -> AbilityEffect | No
                     source=source_name,
                     amount=1,
                     cards=tuple(candidate.id for candidate in available),
+                    source_id=source_id_of(ability),
                 )
             )
             assert isinstance(chosen_ids, tuple)
@@ -15058,7 +15240,15 @@ def _armies_controlled_by(game: "Game", controller: str) -> list[CardState]:
     return armies
 
 
-def amass(game: "Game", controller: str, subtype: str, amount: int, source_name: str) -> None:
+def amass(
+    game: "Game",
+    controller: str,
+    subtype: str,
+    amount: int,
+    source_name: str,
+    *,
+    source_id: str | None,
+) -> None:
     """CR 701.47a: "To amass [subtype] N means 'If you don't control an Army
     creature, create a 0/0 black [subtype] Army creature token. Choose an Army
     creature you control. Put N +1/+1 counters on that creature. If it isn't a
@@ -15112,6 +15302,7 @@ def amass(game: "Game", controller: str, subtype: str, amount: int, source_name:
                 source=source_name,
                 amount=1,
                 cards=tuple(state.id for state in armies),
+                source_id=source_id,
             )
         )
         assert isinstance(chosen, tuple)
@@ -15152,7 +15343,14 @@ def _parse_amass_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
-        amass(game, game.controller_of(stack_object).username, subtype, amount, source)
+        amass(
+            game,
+            game.controller_of(stack_object).username,
+            subtype,
+            amount,
+            source,
+            source_id=source_id_of(stack_object),
+        )
 
     return effect
 
@@ -15219,7 +15417,7 @@ def _parse_investigate_clause(clause: str, *, for_spell: bool) -> TargetedClause
 _LEARN_RE = re.compile(r"^learn$", re.IGNORECASE)
 
 
-def learn(game: "Game", player: Player, source: str) -> None:
+def learn(game: "Game", player: Player, source: str, *, source_id: str | None) -> None:
     """CR 701.48a's discard-to-draw half.
 
     The Lesson-reveal half ("you may reveal a Lesson card you own from
@@ -15231,9 +15429,9 @@ def learn(game: "Game", player: Player, source: str) -> None:
     """
     if not player.hand:
         return
-    if not game.may(player, "discard a card, then draw a card", source=source):
+    if not game.may(player, "discard a card, then draw a card", source=source, source_id=source_id):
         return
-    if _discard_cards(game, player, 1, source):
+    if _discard_cards(game, player, 1, source, source_id=source_id):
         game.draw_cards(player, 1)
 
 
@@ -15250,7 +15448,7 @@ def _parse_learn_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
-        learn(game, game.controller_of(stack_object), source)
+        learn(game, game.controller_of(stack_object), source, source_id=source_id_of(stack_object))
 
     return effect
 
@@ -15304,7 +15502,7 @@ def _parse_manifest_top_card_clause(clause: str, *, for_spell: bool) -> Targeted
 _MANIFEST_DREAD_RE = re.compile(r"^manifest dread$", re.IGNORECASE)
 
 
-def manifest_dread(game: "Game", controller: str, source: str) -> None:
+def manifest_dread(game: "Game", controller: str, source: str, *, source_id: str | None) -> None:
     """CR 701.62a, in full: look at the top two, manifest a choice among
     them, mill the rest.
 
@@ -15329,6 +15527,7 @@ def manifest_dread(game: "Game", controller: str, source: str) -> None:
                 source=source,
                 amount=1,
                 cards=tuple(state.id for state in top_two),
+                source_id=source_id,
             )
         )
         assert isinstance(chosen_ids, tuple)
@@ -15353,7 +15552,12 @@ def _parse_manifest_dread_clause(clause: str, *, for_spell: bool) -> TargetedCla
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
-        manifest_dread(game, game.controller_of(stack_object).username, source)
+        manifest_dread(
+            game,
+            game.controller_of(stack_object).username,
+            source,
+            source_id=source_id_of(stack_object),
+        )
 
     return effect
 
@@ -15390,7 +15594,7 @@ def _parse_if_additional_cost_paid_clause(clause: str, *, for_spell: bool) -> Ta
         record = game.cast_record(stack_object)
         if record.optional_additional_cost_paid:
             player = game.controller_of(stack_object)
-            clause_effect(game, player, stack_object.name)  # type: ignore[union-attr]
+            clause_effect(game, player, stack_object.name, source_id_of(stack_object))  # type: ignore[union-attr]
 
     return effect
 
@@ -16375,6 +16579,7 @@ def _parse_exile_antecedent(clause: str) -> tuple[ExileAntecedent, bool] | None:
                 count=len(player.library),
                 optional=True,
                 source=ability.source_name,
+                source_id=source_id_of(ability),
             )
             return [game.exile_permanent(card) for card in found]
 
@@ -16514,7 +16719,13 @@ def _parse_add_any_combination_mana_clause(
         pool = player.mana_pool
         source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
         for _ in range(count):
-            color = _choose_a_color(game, player, source, "choose a color for mana")
+            color = _choose_a_color(
+                game,
+                player,
+                source,
+                "choose a color for mana",
+                source_id=source_id_of(stack_object),
+            )
             pool.add(color)
 
     return effect
@@ -16870,6 +17081,7 @@ def _parse_put_cards_from_hand_into_library_clause(
             source=source,
             amount=amount,
             cards=tuple(state.id for state in reversed(hand)),
+            source_id=source_id_of(stack_object),
         )
         chosen_ids = game.ask(decision)
         by_id = {state.id: state for state in hand}
@@ -16952,6 +17164,7 @@ def _parse_choose_up_to_one_target_spell_clauses(
                 player=spell.owner,
                 prompt=(f"put {spell.name} on the top or bottom of {spell.owner}'s library"),
                 source=ability.source_name,
+                source_id=source_id_of(ability),
             )
         )
         assert isinstance(top, bool)
@@ -17057,6 +17270,7 @@ def _merge_reveal_hand_choose_discard_clauses(
                         source=source,
                         amount=1,
                         cards=tuple(state.id for state in candidates),
+                        source_id=source_id_of(stack_object),
                     )
                 )
                 assert isinstance(chosen_ids, tuple)
@@ -17119,6 +17333,7 @@ def _parse_target_player_discards_clause(clause: str, *, for_spell: bool) -> Tar
                     source=source,
                     amount=needed,
                     cards=tuple(state.id for state in target.hand),
+                    source_id=source_id_of(stack_object),
                 )
             )
             assert isinstance(chosen_ids, tuple)
@@ -17229,6 +17444,7 @@ def _merge_may_discard_if_you_do_clauses(
             prompt="discard a card",
             source=source,
             affirmative_is_legal=bool(player.hand),
+            source_id=source_id_of(stack_object),
         )
         if not game.ask(decision):
             return
@@ -17240,12 +17456,13 @@ def _merge_may_discard_if_you_do_clauses(
                 source=source,
                 amount=1,
                 cards=tuple(state.id for state in player.hand),
+                source_id=source_id_of(stack_object),
             )
         )
         assert isinstance(chosen_ids, tuple)
         by_id = {state.id: state for state in player.hand}
         game.discard_cards(player.username, [by_id[chosen_ids[0]]], source=source)
-        consequence(game, player, None, source)
+        consequence(game, player, None, source, source_id_of(stack_object))
 
     return 2, effect
 
@@ -17358,6 +17575,7 @@ def _merge_look_top_reveal_to_hand_clauses(
             moved_label="your hand",
             kept_label="bottom of your library",
             rest_in_random_order=randomised,
+            source_id=source_id_of(stack_object),
         )
         if len(moved) > 1 or any(not matches(state) for state in moved):
             raise ValueError(
@@ -17445,6 +17663,7 @@ def _merge_look_top_split_hand_graveyard_clauses(
             prompt="put one into your hand, the other into your graveyard",
             moved_label="your hand",
             kept_label="your graveyard",
+            source_id=source_id_of(stack_object),
         )
         if len(moved) != 1 or len(rest) != count - 1:
             raise ValueError(
@@ -17526,6 +17745,7 @@ def _merge_look_top_hand_bottom_exile_play_clauses(
                     player=player.username,
                     prompt=prompt,
                     source=spell.name,
+                    source_id=source_id_of(spell),
                     amount=1,
                     cards=tuple(state.id for state in pool),
                 )
@@ -17978,7 +18198,7 @@ def _parse_ante_self_if_you_do_clause(text: str) -> AbilityEffect | None:
                 continue
             game.put_into_graveyard(state)
         if tail_effect is not None:
-            tail_effect(game, player, ability.source_name)
+            tail_effect(game, player, ability.source_name, source_id_of(ability))
 
     return effect
 
@@ -17991,6 +18211,7 @@ def _search_and_exile_matching_name(
     chooser: Player,
     cap: int | None,
     source: str,
+    source_id: str | None,
 ) -> tuple[list[CardState], int]:
     """Search `zones_owner`'s graveyard, hand, and library, in that printed
     order, for cards named `name`, exile every one found (capped at `cap`
@@ -18038,6 +18259,7 @@ def _search_and_exile_matching_name(
                 source=source,
                 amount=cap,
                 cards=tuple(state.id for state in offered),
+                source_id=source_id,
             )
         )
         assert isinstance(chosen_ids, tuple)
@@ -18058,6 +18280,7 @@ def _search_and_exile_matching_name(
             optional=False,
             zone=zone,
             source=source,
+            source_id=source_id,
         )
         for state in found:
             game.exile_permanent(state)
@@ -18134,11 +18357,18 @@ def _parse_stone_brain_clause(text: str, *, for_spell: bool) -> TargetedClause |
                 player=controller.username,
                 prompt="choose a card name",
                 source=source,
+                source_id=source_id_of(ability),
             )
         )
         assert isinstance(name, str)
         _exiled, exiled_from_hand = _search_and_exile_matching_name(
-            game, target_player, name, chooser=controller, cap=cap, source=source
+            game,
+            target_player,
+            name,
+            chooser=controller,
+            cap=cap,
+            source=source,
+            source_id=source_id_of(ability),
         )
         if exiled_from_hand:
             game.draw_cards(target_player.username, exiled_from_hand)
@@ -18177,7 +18407,13 @@ def _parse_surgical_extraction_clause(text: str, *, for_spell: bool) -> Targeted
             return
         owner = game.player(target_card.owner)
         _search_and_exile_matching_name(
-            game, owner, target_card.name, chooser=controller, cap=None, source=spell.name
+            game,
+            owner,
+            target_card.name,
+            chooser=controller,
+            cap=None,
+            source=spell.name,
+            source_id=source_id_of(spell),
         )
 
     return effect
@@ -18283,7 +18519,7 @@ def _parse_optional_mixed_clause(clause: str, *, for_spell: bool) -> TargetedCla
     def effect(game: "Game", stack_object: "StackObject") -> None:
         player = game.controller_of(stack_object)
         source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
-        if game.may(player, body, source=source):
+        if game.may(player, body, source=source, source_id=source_id_of(stack_object)):
             inner(game, stack_object)
 
     return effect
@@ -18504,7 +18740,7 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     def effect(game: "Game", stack_object: "StackObject") -> None:
         player = game.controller_of(stack_object)
         source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
-        player_clause(game, player, source)
+        player_clause(game, player, source, source_id_of(stack_object))
 
     return effect
 
@@ -18855,6 +19091,7 @@ def _parse_target_opponent_draw_then_copy_that_spell_clause(text: str) -> Abilit
             game.player(ability.controller),
             "have target opponent draw a card",
             source=ability.source_name,
+            source_id=source_id_of(ability),
         ):
             return
         game.draw_cards(opponent.username, 1)
@@ -18866,7 +19103,12 @@ def _parse_target_opponent_draw_then_copy_that_spell_clause(text: str) -> Abilit
         if spell is None or spell not in game.stack:
             return
         copy = game.copy_spell(spell, controller=ability.controller)
-        game.offer_new_targets_for_copy(copy, ability.controller, source_name=ability.source_name)
+        game.offer_new_targets_for_copy(
+            copy,
+            ability.controller,
+            source_name=ability.source_name,
+            source_id=source_id_of(ability),
+        )
 
     return effect
 
@@ -19562,6 +19804,7 @@ def _bring_in_from_outside_the_game_or_exile(
         f"reveal a {quality.value} card you own from outside the game, or choose a "
         f"face-up one you own in exile",
         source=ability.source_name,
+        source_id=source_id_of(ability),
     ):
         return
 
@@ -19571,6 +19814,7 @@ def _bring_in_from_outside_the_game_or_exile(
             player=controller.username,
             prompt=f"choose a {quality.value} card you own to put into your hand",
             source=ability.source_name,
+            source_id=source_id_of(ability),
             amount=1,
             cards=tuple(state.id for state in candidates),
         )
@@ -19633,6 +19877,7 @@ def _parse_outside_the_game_play_clause(effect_text: str) -> Effect | None:
             controller,
             "play a card you own from outside the game this turn",
             source=spell.name,
+            source_id=source_id_of(spell),
         ):
             return
         chosen_ids = game.ask(
@@ -19641,6 +19886,7 @@ def _parse_outside_the_game_play_clause(effect_text: str) -> Effect | None:
                 player=controller.username,
                 prompt="choose a card you own from outside the game to play this turn",
                 source=spell.name,
+                source_id=source_id_of(spell),
                 amount=1,
                 cards=tuple(state.id for state in candidates),
             )
@@ -20059,6 +20305,7 @@ def _parse_sacrifice_n_of_a_group_clause(clause: str, *, for_spell: bool) -> Tar
                 source=source_name,
                 amount=wanted,
                 cards=tuple(state.id for state in candidates),
+                source_id=source_id_of(stack_object),
             )
         )
         by_id = {state.id: state for state in candidates}
@@ -20198,7 +20445,9 @@ def _parse_recruit_clause(clause: str, *, for_spell: bool) -> TargetedClause | N
         game.draw_cards(controller.username, 1)
         if not controller.hand:
             return
-        discarded = _discard_cards(game, controller, 1, source_name)
+        discarded = _discard_cards(
+            game, controller, 1, source_name, source_id=source_id_of(stack_object)
+        )
         if any(Type.LAND not in state.card.types for state in discarded):
             create_tokens(game, _RECRUIT_TOKEN, controller.username, 1)
 
@@ -20315,7 +20564,10 @@ def _parse_choose_new_targets_clause(clause: str, *, for_spell: bool) -> Targete
             return
         source_name = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
         game.offer_new_targets_for_copy(
-            subject, game.controller_of(stack_object).username, source_name=source_name
+            subject,
+            game.controller_of(stack_object).username,
+            source_name=source_name,
+            source_id=source_id_of(stack_object),
         )
 
     return effect
@@ -20393,6 +20645,7 @@ def _parse_put_permanent_card_from_hand_clause(
             controller,
             "put a permanent card from your hand onto the battlefield",
             source=source_name,
+            source_id=source_id_of(stack_object),
         ):
             return
         wanted = min(amount, len(candidates))
@@ -20404,6 +20657,7 @@ def _parse_put_permanent_card_from_hand_clause(
                 source=source_name,
                 amount=wanted,
                 cards=tuple(state.id for state in candidates),
+                source_id=source_id_of(stack_object),
             )
         )
         by_id = {state.id: state for state in candidates}
@@ -20438,7 +20692,14 @@ def _parse_put_permanent_card_from_hand_clause(
 # with its own name, and nothing here is a surveil.
 
 
-def _explore(game: "Game", permanent: CardState, controller: Player, source_name: str) -> None:
+def _explore(
+    game: "Game",
+    permanent: CardState,
+    controller: Player,
+    source_name: str,
+    *,
+    source_id: str | None,
+) -> None:
     """One permanent explores (CR 701.44a), whatever the outcome.
 
     The reveal is CR 701.20a's own keyword action, done through
@@ -20464,6 +20725,7 @@ def _explore(game: "Game", permanent: CardState, controller: Player, source_name
         prompt="put the revealed card into your graveyard, or back on top",
         moved_label="your graveyard",
         kept_label="top of your library",
+        source_id=source_id,
     )
     for state in to_graveyard:
         game.put_into_graveyard(state)
@@ -20518,7 +20780,7 @@ def _parse_explores_then_conditional_mass_destroy(text: str) -> AbilityEffect | 
         source = ability.source(game)
         if source is None:
             return
-        _explore(game, source, controller, ability.source_name)
+        _explore(game, source, controller, ability.source_name, source_id=source_id_of(ability))
         power = game.power_of(source) if source.zone is Zone.BATTLEFIELD else None
         if power != threshold:
             return
@@ -20893,6 +21155,7 @@ def _parse_mill_then_may_return_to_hand_clause(text: str) -> AbilityEffect | Non
             controller,
             "return a card from your graveyard to your hand",
             source=ability.source_name,
+            source_id=source_id_of(ability),
         ):
             return
         chosen_ids = game.ask(
@@ -20901,6 +21164,7 @@ def _parse_mill_then_may_return_to_hand_clause(text: str) -> AbilityEffect | Non
                 player=controller.username,
                 prompt="choose a card to return to your hand",
                 source=ability.source_name,
+                source_id=source_id_of(ability),
                 amount=1,
                 cards=tuple(state.id for state in candidates),
             )
@@ -20964,6 +21228,7 @@ def _parse_mill_then_may_take_from_milled(text: str) -> Effect | None:
             controller,
             "put a card from among the milled cards into your hand",
             source=spell.name,
+            source_id=source_id_of(spell),
         ):
             chosen_ids = game.ask(
                 Decision(
@@ -20971,6 +21236,7 @@ def _parse_mill_then_may_take_from_milled(text: str) -> Effect | None:
                     player=controller.username,
                     prompt="choose a milled card to put into your hand",
                     source=spell.name,
+                    source_id=source_id_of(spell),
                     amount=1,
                     cards=tuple(state.id for state in candidates),
                 )
@@ -21028,13 +21294,19 @@ def _parse_draw_then_discard_unless(text: str) -> Effect | None:
         controller = game.controller_of(spell)
         game.draw_cards(controller.username, draw)
         candidates = [state for state in list(controller.hand) if predicate(state)]
-        if candidates and game.may(controller, f"discard a {quality} card", source=spell.name):
+        if candidates and game.may(
+            controller,
+            f"discard a {quality} card",
+            source=spell.name,
+            source_id=source_id_of(spell),
+        ):
             chosen_ids = game.ask(
                 Decision(
                     kind=DecisionKind.CHOOSE_CARDS,
                     player=controller.username,
                     prompt=f"choose a {quality} card to discard",
                     source=spell.name,
+                    source_id=source_id_of(spell),
                     amount=1,
                     cards=tuple(state.id for state in candidates),
                 )
@@ -21044,7 +21316,7 @@ def _parse_draw_then_discard_unless(text: str) -> Effect | None:
             if discarding:
                 game.discard_cards(controller.username, discarding, source=spell.name)
                 return
-        _discard_cards(game, controller, penalty, spell.name)
+        _discard_cards(game, controller, penalty, spell.name, source_id=source_id_of(spell))
 
     return effect
 
@@ -21221,6 +21493,7 @@ def _parse_look_top_lands_take_to_hand(text: str) -> Effect | None:
                     player=controller.username,
                     prompt=f"put {wanted} of the cards looked at into your hand",
                     source=spell.name,
+                    source_id=source_id_of(spell),
                     amount=wanted,
                     cards=tuple(state.id for state in looked),
                 )
@@ -21286,6 +21559,7 @@ def _parse_look_top_n_put_total_mv_onto_battlefield(text: str) -> Effect | None:
                         "or less onto the battlefield"
                     ),
                     source=spell.name,
+                    source_id=source_id_of(spell),
                     amount=min(take, len(candidates)),
                     cards=tuple(state.id for state in candidates),
                     exact=False,

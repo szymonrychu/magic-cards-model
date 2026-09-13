@@ -239,3 +239,23 @@ def test_a_snapshot_written_before_known_information_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_KNOWN_INFORMATION}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version both the known-information change and `Decision.source_id`
+#: stamped independently, each without the other's fields.
+_SCHEMA_VERSION_OF_EITHER_HALF = 8
+
+
+def test_a_version_eight_snapshot_is_refused() -> None:
+    """A version-8 dump was written by a build with known information and no
+    `Decision.source_id`, or with `source_id` and no reveal stamps or epochs.
+    Either one decoded as current says the wrong thing, so neither decodes."""
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_OF_EITHER_HALF
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_OF_EITHER_HALF
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_OF_EITHER_HALF}",
+    ):
+        Game.model_validate(dumped)
