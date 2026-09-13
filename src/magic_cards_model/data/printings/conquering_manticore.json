@@ -1,0 +1,135 @@
+{
+  "object": "card",
+  "id": "95f5bf3f-3fa7-47db-981b-933cdb505398",
+  "oracle_id": "140b58b9-7e82-4feb-99d7-5e8b707b845c",
+  "multiverse_ids": [
+    373366
+  ],
+  "mtgo_id": 49903,
+  "mtgo_foil_id": 49904,
+  "tcgplayer_id": 71055,
+  "cardmarket_id": 263753,
+  "name": "Conquering Manticore",
+  "lang": "en",
+  "released_at": "2013-09-06",
+  "uri": "https://api.scryfall.com/cards/95f5bf3f-3fa7-47db-981b-933cdb505398",
+  "scryfall_uri": "https://scryfall.com/card/ddl/55/conquering-manticore?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T10:50:41Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/5/95f5bf3f-3fa7-47db-981b-933cdb505398.jpg?1783939841",
+    "normal": "https://cards.scryfall.io/normal/front/9/5/95f5bf3f-3fa7-47db-981b-933cdb505398.jpg?1783939841",
+    "large": "https://cards.scryfall.io/large/front/9/5/95f5bf3f-3fa7-47db-981b-933cdb505398.jpg?1783939841",
+    "png": "https://cards.scryfall.io/png/front/9/5/95f5bf3f-3fa7-47db-981b-933cdb505398.png?1783939841",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/5/95f5bf3f-3fa7-47db-981b-933cdb505398.jpg?1783939841",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/5/95f5bf3f-3fa7-47db-981b-933cdb505398.jpg?1783939841",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/5/95f5bf3f-3fa7-47db-981b-933cdb505398.webp?1783939841",
+    "grid": "https://cards.scryfall.io/grid/front/9/5/95f5bf3f-3fa7-47db-981b-933cdb505398.webp?1783939841",
+    "display": "https://cards.scryfall.io/display/front/9/5/95f5bf3f-3fa7-47db-981b-933cdb505398.webp?1783939841",
+    "art": "https://cards.scryfall.io/art/front/9/5/95f5bf3f-3fa7-47db-981b-933cdb505398.webp?1783939841",
+    "crop": "https://cards.scryfall.io/crop/front/9/5/95f5bf3f-3fa7-47db-981b-933cdb505398.webp?1783939841"
+  },
+  "mana_cost": "{4}{R}{R}",
+  "cmc": 6.0,
+  "type_line": "Creature \u2014 Manticore",
+  "oracle_text": "Flying\nWhen this creature enters, gain control of target creature an opponent controls until end of turn. Untap that creature. It gains haste until end of turn.",
+  "power": "5",
+  "toughness": "5",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Flying"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "7dfc5406-c4cf-479d-b005-11e578752dc9",
+  "set": "ddl",
+  "set_name": "Duel Decks: Heroes vs. Monsters",
+  "set_type": "duel_deck",
+  "set_uri": "https://api.scryfall.com/sets/7dfc5406-c4cf-479d-b005-11e578752dc9",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Addl&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ddl?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/95f5bf3f-3fa7-47db-981b-933cdb505398/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A140b58b9-7e82-4feb-99d7-5e8b707b845c&unique=prints",
+  "collector_number": "55",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "It speaks no commands but is always obeyed.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Chris Rahn",
+  "artist_ids": [
+    "7742047e-0f80-4c0f-a530-d07460165e86"
+  ],
+  "illustration_id": "20b3c33b-40bd-4e61-b086-33530b938e71",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 15814,
+  "penny_rank": 15480,
+  "prices": {
+    "usd": "0.21",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.22",
+    "eur_foil": null,
+    "tix": "0.33"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=373366&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DConquering%2BManticore",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DConquering%2BManticore",
+    "edhrec": "https://edhrec.com/route/?cc=Conquering+Manticore"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F71055%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=263753&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/49903?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -217,3 +217,118 @@ def test_the_engine_can_find_the_ability_a_target_points_at():
     assert trigger.targets, "the trigger went on the stack carrying its target"
     assert scenario.game.resolve_target(trigger.targets[0]) is ability
     assert not scenario.game.spell_fizzles(trigger)
+
+
+# --------------------------------------------------------------------------
+# Which kind of ability the words name (CR 113.3b, CR 113.3c)
+# --------------------------------------------------------------------------
+#
+# "target activated or triggered ability" names both categories, but the
+# shorter phrases name one: Consign to Memory's "target triggered ability or
+# colorless spell" cannot be aimed at an activated ability, and Rimewind
+# Cryomancer's "{1}, {T}: Counter target activated ability." cannot be aimed at
+# a trigger. CR 113.3b and CR 113.3c define the two categories; each ability on
+# the stack is one or the other (`AbilityOnStack.kind`).
+
+
+def consign_requirement():
+    (requirement,) = targeting_profile(card("Consign to Memory")).requirements
+    return requirement
+
+
+def cryomancer_requirement():
+    """The target of Rimewind Cryomancer's activated ability, read off its own
+    effect text (the part after the cost, CR 602.1a)."""
+    line = card("Rimewind Cryomancer").oracle_text.split("\n")[0]
+    (requirement,) = profile_for_text(line.split(": ", 1)[1]).requirements
+    return requirement
+
+
+def kitchen_finks_trigger():
+    """Alice's Kitchen Finks resolves and its "When this creature enters, you
+    gain 2 life." trigger is on the stack. Returns the scenario and trigger."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Kitchen Finks"],
+            library=["Forest"],
+            battlefield=["Plains", "Plains", "Plains"],
+        )
+        .player("bob", library=["Forest"], battlefield=["Island", "Island"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    plains = scenario.untapped_sources("Plains", "Plains", "Plains", username="alice")
+    scenario.cast_and_resolve("Kitchen Finks", *plains)
+    (trigger,) = scenario.game.stack
+    assert getattr(trigger, "is_ability", False) and trigger.source_name == "Kitchen Finks"
+    return scenario, trigger
+
+
+def test_a_triggered_only_target_refuses_an_activated_ability():
+    scenario = board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    ability = activate_rites(scenario)
+
+    reason = consign_requirement().rejects(ability, caster="bob")
+
+    assert reason is not None and "activated ability" in reason
+
+
+def test_a_triggered_only_target_accepts_a_trigger():
+    _, trigger = kitchen_finks_trigger()
+
+    assert consign_requirement().rejects(trigger, caster="bob") is None
+
+
+def test_an_activated_only_target_refuses_a_trigger():
+    """Rimewind Cryomancer is not in either deck pool, and its phrase is the
+    other single category, so this is the same rule on different words."""
+    _, trigger = kitchen_finks_trigger()
+
+    reason = cryomancer_requirement().rejects(trigger, caster="bob")
+
+    assert reason is not None and "triggered ability" in reason
+
+
+def test_an_activated_only_target_accepts_an_activated_ability():
+    scenario = board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    ability = activate_rites(scenario)
+
+    assert cryomancer_requirement().rejects(ability, caster="bob") is None
+
+
+def test_activated_or_triggered_still_accepts_both():
+    scenario = board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    ability = activate_rites(scenario)
+    _, trigger = kitchen_finks_trigger()
+
+    assert tidebinder_requirement().rejects(ability, caster="bob") is None
+    assert tidebinder_requirement().rejects(trigger, caster="bob") is None
+
+
+def test_consign_to_memory_cast_at_an_activated_ability_is_refused_at_announcement():
+    """The same rule through CR 601.2c on a real board, with the engine's own
+    words as the refusal."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            library=["Forest"],
+            battlefield=["Vampiric Rites", "Swamp", "Swamp", "Grizzly Bears"],
+        )
+        .player("bob", hand=["Consign to Memory"], library=["Forest"], battlefield=["Island"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    ability = activate_rites(scenario)
+    scenario.pass_priority("alice")
+    (island,) = scenario.untapped_sources("Island", username="bob")
+
+    with pytest.raises(ValueError, match="activated ability"):
+        scenario.cast_onto_stack("Consign to Memory", island, username="bob", targets=[ability])

@@ -54,7 +54,7 @@ travel.
 """
 
 import re
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Sequence
 from random import Random
 from typing import TYPE_CHECKING
 from uuid import UUID
@@ -1478,56 +1478,125 @@ _UNTAP_AND_GAIN_CONTROL_RE = re.compile(
 )
 
 
-def _parse_untap_and_gain_control_clause(effect_text: str) -> Effect | None:
-    """`_UNTAP_AND_GAIN_CONTROL_RE`'s shape - Threaten, Act of Treason and the
-    rest of that template - or `None` if this is not it.
+#: Act of Treason's order of the same three instructions: "Gain control of
+#: target creature until end of turn. Untap that creature. It gains haste until
+#: end of turn." Printed on spells (Claim the Firstborn; Hijack's "Untap it.";
+#: Metallic Mastery's "Untap that artifact."), activated abilities (Captivating
+#: Crew) and triggered ones (Conquering Manticore) alike. `parsed_layer_effects`
+#: read only the first sentence of it and skipped the other two without a
+#: notice, so the stolen creature stayed tapped and never gained haste.
+_GAIN_CONTROL_THEN_UNTAP_RE = re.compile(
+    r"^gain control of (?P<phrase>target [^.]*?) until end of turn\.\s*"
+    r"untap (?:it|that (?:creature|permanent|artifact))\.\s*"
+    r"(?:it|that (?:creature|permanent|artifact)) gains (?P<keywords>[a-z][a-z, ]*?) "
+    r"until end of turn\.?$",
+    re.IGNORECASE,
+)
 
-    The two continuous halves are rewritten back into the sentences
+#: Reminder text and an activated ability's own timing instruction are not
+#: part of the effect (CR 207.2 reminder text; CR 602.5d "Activate only as a
+#: sorcery").
+_REMINDER_OR_ACTIVATION_RULE_RE = re.compile(r"\([^)]*\)|\bactivate only [^.]*\.", re.IGNORECASE)
+
+
+def _gain_control_untap_grant(effect_text: str) -> tuple[str, str] | None:
+    """The two layer sentences of either word order - Threaten's
+    (`_UNTAP_AND_GAIN_CONTROL_RE`) or Act of Treason's
+    (`_GAIN_CONTROL_THEN_UNTAP_RE`) - or `None` if `effect_text` is neither.
+
+    The continuous halves are rewritten back into the sentences
     `machines/layers.py` reads on their own - "gain control of target creature
-    until end of turn." and "target creature gains haste until end of turn." -
-    and built against the targets this spell actually chose (CR 611.2c fixes
-    that set now). Rewriting rather than teaching the layer parser a pronoun
-    is deliberate: "it" and "that creature" are CR 607.1 anaphora back to the
-    same target the first clause named, and the object is already in hand
-    here.
-
-    A half the layer parser cannot read leaves a `LayerNotice` rather than
-    silently doing nothing, the same way `_run_mass_pump` records its own
-    unreadable keyword grants.
+    until end of turn." and "target creature gains haste until end of turn."
+    - and built against the targets actually chosen (CR 611.2c fixes that set
+    now). "it" and "that creature" are anaphora back to the one target the
+    first instruction named, and that object is already in hand at resolution.
     """
-    match = _UNTAP_AND_GAIN_CONTROL_RE.fullmatch(effect_text.strip())
-    if match is None:
+    text = " ".join(_REMINDER_OR_ACTIVATION_RULE_RE.sub(" ", effect_text).split())
+    for pattern in (_UNTAP_AND_GAIN_CONTROL_RE, _GAIN_CONTROL_THEN_UNTAP_RE):
+        match = pattern.fullmatch(text)
+        if match is not None:
+            break
+    else:
         return None
-    phrase = match.group("phrase").strip()
-    if not _targets_understood(phrase):
+    if not _targets_understood(match.group("phrase").strip()):
         return None
-    sentences = (
-        f"gain control of {phrase} until end of turn.",
-        f"{phrase} gains {match.group('keywords').strip()} until end of turn.",
+    # The printed phrase was checked at announcement (CR 601.2c) and the
+    # builders act on the targets handed to them, so the sentences only need a
+    # subject `machines/layers.py` reads: "target creature with mana value 3
+    # or less" and "target artifact or creature" would each read as nothing.
+    return (
+        "gain control of it until end of turn.",
+        f"target creature gains {match.group('keywords').strip()} until end of turn.",
     )
+
+
+def _untap_and_apply_control_sentences(
+    game: "Game",
+    source: CardState,
+    controller: "Player",
+    targets: Sequence[CardState],
+    sentences: tuple[str, str],
+) -> None:
+    """Untap each target still on the battlefield (CR 701.26b), then create the
+    control change (CR 613.1b) and the keyword grant against them. A sentence
+    the layer parser cannot read leaves a `LayerNotice` rather than silently
+    doing nothing."""
+    targets = [target for target in targets if target.zone is Zone.BATTLEFIELD]
+    if not targets:
+        return  # CR 608.2b: no legal target left, so none of this happens.
+    for target in targets:
+        target.untap()  # CR 701.26b
+    store = continuous_effects(game)
+    context = layer_context_for(game, controller)
+    for sentence in sentences:
+        builder = parsed_layer_effects(sentence)
+        if builder is None:
+            store.layer_notices.append(
+                LayerNotice(source_id=source.id, source_name=source.name, text=sentence)
+            )
+            continue
+        timestamp = store.tick()
+        for built in builder(source, timestamp, targets, context):
+            if built.holds(game):
+                store.add(built)
+
+
+def _parse_untap_and_gain_control_clause(effect_text: str) -> Effect | None:
+    """A spell printing either word order of "gain control of target creature
+    until end of turn, untap it, it gains haste until end of turn" - Threaten,
+    Act of Treason, Claim the Firstborn, Hijack - or `None`."""
+    sentences = _gain_control_untap_grant(effect_text)
+    if sentences is None:
+        return None
 
     def effect(game: "Game", spell: CardState) -> None:
         targets = [
             target for target in game.resolve_targets(spell) if isinstance(target, CardState)
         ]
-        targets = [target for target in targets if target.zone is Zone.BATTLEFIELD]
-        if not targets:
-            return  # CR 608.2b: no legal target left, so none of this happens.
-        for target in targets:
-            target.untap()  # CR 701.26b
-        store = continuous_effects(game)
-        context = layer_context_for(game, game.controller_of(spell))
-        for sentence in sentences:
-            builder = parsed_layer_effects(sentence)
-            if builder is None:
-                store.layer_notices.append(
-                    LayerNotice(source_id=spell.id, source_name=spell.name, text=sentence)
-                )
-                continue
-            timestamp = store.tick()
-            for built in builder(spell, timestamp, targets, context):
-                if built.holds(game):
-                    store.add(built)
+        _untap_and_apply_control_sentences(
+            game, spell, game.controller_of(spell), targets, sentences
+        )
+
+    return effect
+
+
+def _parse_untap_and_gain_control_ability(effect_text: str) -> AbilityEffect | None:
+    """The same effect printed on an activated or triggered ability -
+    Captivating Crew's "{3}{R}: ...", Conquering Manticore's "When this
+    creature enters, ..." - or `None`. The ability's source card is what the
+    continuous effects are recorded against; the targets are rechecked on
+    resolution (CR 608.2b) the way a spell's are."""
+    sentences = _gain_control_untap_grant(effect_text)
+    if sentences is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = game.find_by_id(ability.source_id) if ability.source_id is not None else None
+        if source is None:
+            return
+        _untap_and_apply_control_sentences(
+            game, source, game.controller_of(ability), game.resolve_card_targets(ability), sentences
+        )
 
     return effect
 
@@ -10327,6 +10396,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     exile_until_leaves_then_counters = _parse_exile_targets_until_leaves_then_counters(effect_text)
     if exile_until_leaves_then_counters is not None:
         return exile_until_leaves_then_counters
+    untap_and_gain_control = _parse_untap_and_gain_control_ability(effect_text)
+    if untap_and_gain_control is not None:
+        return untap_and_gain_control
     token_copies_except = _parse_create_token_copies_except_clause(effect_text, for_spell=False)
     if token_copies_except is not None:
         return token_copies_except
