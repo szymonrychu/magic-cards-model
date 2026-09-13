@@ -821,6 +821,153 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
     return None
 
 
+#: `(game, controller, object the counters go on, X) -> int`: one amount, read
+#: at the moment the effect or replacement applies.
+AmountReader = Callable[["Game", str, CardState, int], int]
+
+#: The two joining words an amount expression prints between its terms -
+#: Slumbering Trudge's "three minus X".
+_AMOUNT_OPERATOR_RE = re.compile(r"\s+(minus|plus)\s+", re.IGNORECASE)
+#: "twice <term>" - CR 107.1's plain arithmetic on one term.
+_AMOUNT_TWICE_RE = re.compile(r"^twice (?P<term>.+)$", re.IGNORECASE)
+
+
+def _greatest_mana_value_among_cards_in_exile(game: "Game", *_: object) -> int:
+    """ "The greatest mana value among cards in exile" (Ulamog, the Defiler).
+
+    Every card in exile, whoever owns it, read as it is when the amount is
+    needed. A card exiled face down contributes 0: CR 406.3a, "A card exiled
+    face down has no characteristics", and CR 202.3a, "The mana value of an
+    object with no mana cost is 0", which `CardState.mana_value` already
+    answers. An empty exile is 0 rather than an error: "the greatest ...
+    among" an empty set is a number that can't be determined, and CR 107.2
+    uses 0 for it.
+    """
+    values = [state.mana_value for state in game.exile]
+    return int(max(values)) if values else 0
+
+
+def _amount_term(term: str) -> AmountReader | None:
+    """One term of `amount_expression`, or `None` when it is not readable."""
+    text = term.strip()
+    lowered = text.lower()
+    if text.isdigit() or lowered in _NUMBER_WORDS:
+        constant = _count(text)
+        return lambda _game, _controller, _object, _x: constant
+    if lowered == "x":
+        return lambda _game, _controller, _object, x: x
+    if match := _AMOUNT_TWICE_RE.fullmatch(text):
+        inner = _amount_term(match.group("term"))
+        if inner is None:
+            return None
+        return lambda game, controller, obj, x: 2 * inner(game, controller, obj, x)
+    if lowered == "the greatest mana value among cards in exile":
+        return lambda game, _controller, _object, _x: _greatest_mana_value_among_cards_in_exile(
+            game
+        )
+    counted = count_expression(text) or _devotion_count(text)
+    if counted is not None:
+        return lambda game, controller, _object, _x: counted(game, controller)
+    return None
+
+
+def amount_expression(phrase: str) -> AmountReader | None:
+    """Read the `<expr>` of "counters ... equal to `<expr>`" into a reader, or
+    `None` when any term of it is unreadable.
+
+    Terms are a literal number, X, "twice `<term>`", or one of the game-value
+    counts `count_expression` and `_devotion_count` already read; "minus" and
+    "plus" join them left to right. The caller supplies X: CR 107.3m's X of the
+    spell that became the entering object, or the resolving ability's own X.
+
+    CR 107.1b: "If a calculation that would determine the result of an effect
+    yields a negative number, zero is used instead" - three minus X for X=5 is
+    zero counters.
+    """
+    parts = _AMOUNT_OPERATOR_RE.split(phrase.strip().rstrip("."))
+    readers = [_amount_term(term) for term in parts[0::2]]
+    if not readers or any(reader is None for reader in readers):
+        return None
+    operators = [operator.lower() for operator in parts[1::2]]
+    first, *rest = [reader for reader in readers if reader is not None]
+
+    def evaluate(game: "Game", controller: str, obj: CardState, x: int) -> int:
+        total = first(game, controller, obj, x)
+        for operator, reader in zip(operators, rest, strict=True):
+            value = reader(game, controller, obj, x)
+            total = total - value if operator == "minus" else total + value
+        return max(total, 0)  # CR 107.1b
+
+    return evaluate
+
+
+class UnreadableCounterAmountNotice(BaseModel):
+    """Counters whose "equal to `<expr>`" amount could not be evaluated.
+
+    Recorded instead of placing a guessed number: the counters are not placed
+    at all (a fail-closed skip), and this names the expression nobody read.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    source_id: UUID | None
+    source_name: str
+    text: str
+    expression: str
+
+
+#: "Put a number of `<kind>` counters on it/this `<noun>` equal to `<expr>`." -
+#: the resolving-effect twin of the "enters with a number of `<kind>` counters
+#: on it equal to `<expr>`" replacement (Reverent Hunter's enters trigger).
+_COUNTERS_EQUAL_TO_ON_OBJECT_RE = re.compile(
+    r"^put a number of (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on (?P<object>it|this \w+) "
+    r"equal to (?P<expression>.+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_put_counters_equal_to_clause(text: str) -> AbilityEffect | None:
+    """`_COUNTERS_EQUAL_TO_ON_OBJECT_RE`'s shape (CR 122.1, 608.2c).
+
+    "This `<noun>`" is the ability's source (CR 109.2). "It" is the object the
+    trigger's own condition named (`GameEvent.subject_id`, the same referent
+    `_parse_untap_trigger_subject_clause` reads), falling back to the source for
+    an ability with no event. X is the ability's own announced X. An
+    expression `amount_expression` cannot read records an
+    `UnreadableCounterAmountNotice` and places nothing.
+    """
+    match = _COUNTERS_EQUAL_TO_ON_OBJECT_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    kind = _counter_kind(match.group("kind"))
+    expression = match.group("expression").strip()
+    reader = amount_expression(expression)
+    names_the_subject = match.group("object").lower() == "it"
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        obj = ability.source(game)
+        event = ability.event
+        if names_the_subject and event is not None and event.subject_id is not None:
+            obj = game.find_by_id(event.subject_id)
+        if obj is None or obj.zone is not Zone.BATTLEFIELD:
+            return
+        if reader is None:
+            game.unreadable_counter_amount_notices.append(
+                UnreadableCounterAmountNotice(
+                    source_id=ability.source_id,
+                    source_name=ability.source_name,
+                    text=text.strip(),
+                    expression=expression,
+                )
+            )
+            return
+        amount = reader(game, ability.controller, obj, ability.x_value)
+        if amount > 0:
+            game.add_counters(obj, kind, amount)
+
+    return effect
+
+
 #: "your devotion to <color>" (CR 700.5) - Gray Merchant of Asphodel's own
 #: magnitude. Read separately from `count_expression`'s "number of <type>
 #: you control"/"<type> cards in your graveyard" family above: a genuinely
@@ -10280,6 +10427,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     put_counters_on_self = _parse_put_counters_on_self_clause(effect_text)
     if put_counters_on_self is not None:
         return put_counters_on_self
+    put_counters_equal_to = _parse_put_counters_equal_to_clause(effect_text)
+    if put_counters_equal_to is not None:
+        return put_counters_equal_to
     adapt = _parse_adapt_clause(effect_text)
     if adapt is not None:
         return adapt
@@ -19305,6 +19455,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
         counters_on_self = _parse_put_counters_on_self_clause(clause)
         if counters_on_self is not None:
             return counters_on_self  # type: ignore[return-value]
+        counters_equal_to = _parse_put_counters_equal_to_clause(clause)
+        if counters_equal_to is not None:
+            return counters_equal_to  # type: ignore[return-value]
         regenerate_self = _parse_regenerate_self_clause(clause)
         if regenerate_self is not None:
             return regenerate_self  # type: ignore[return-value]

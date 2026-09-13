@@ -140,8 +140,10 @@ def test_a_spell_that_targets_a_player_triggers_no_ward():
 def test_an_unpaid_ward_counters_the_spell():
     """CR 701.6a: it never resolves, and goes to its owner's graveyard.
 
-    Nothing here drives ward. The trigger the cast put on the stack is resolved
-    by the game, finds no payment on itself, and counters.
+    The trigger the cast put on the stack is resolved by the game, finds no
+    payment on itself, and asks alice whether to pay. She has two untapped
+    Mountains, so paying is legal (CR 118.3, CR 608.2g); she declines, and it
+    counters.
     """
     scenario = board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
@@ -150,6 +152,7 @@ def test_an_unpaid_ward_counters_the_spell():
     bolt = scenario.cast_onto_stack(
         "Lightning Bolt", *scenario.untapped_sources("Mountain"), targets=[dragon]
     )
+    scenario.will_pay_the_mana_cost(False)  # CR 118.12a: the caster declines
 
     scenario.resolve_top()  # the ward trigger
 
@@ -225,6 +228,7 @@ def test_the_mana_spent_on_a_countered_spell_is_not_refunded():
     (mountain,) = scenario.untapped_sources("Mountain")
 
     bolt = scenario.cast_onto_stack("Lightning Bolt", mountain, targets=[dragon])
+    scenario.will_pay_the_mana_cost(False)  # CR 118.12a: the caster declines
 
     scenario.resolve_top()  # the ward trigger
 
@@ -277,9 +281,9 @@ def test_ward_does_not_trigger_off_its_own_controllers_spell():
 def test_the_ward_trigger_counters_the_spell_when_it_resolves():
     """CR 702.21a's effect half, resolved by the game rather than by the test.
 
-    Nobody can be asked whether they want to pay {2}, so the cost goes unpaid
-    and the spell is countered - which is the correct default, because
-    CR 702.21a makes countering what happens *unless* something is done.
+    The caster is asked whether to pay {2} (CR 118.12a) and declines, so the
+    cost goes unpaid and the spell is countered: CR 702.21a makes countering
+    what happens *unless* something is done.
     """
     scenario = board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
@@ -288,6 +292,7 @@ def test_the_ward_trigger_counters_the_spell_when_it_resolves():
     bolt = scenario.cast_onto_stack(
         "Lightning Bolt", *scenario.untapped_sources("Mountain"), targets=[dragon]
     )
+    scenario.will_pay_the_mana_cost(False)  # CR 118.12a: the caster declines
     scenario.resolve_top()  # the ward trigger
 
     assert bolt.zone is Zone.GRAVEYARD

@@ -388,7 +388,28 @@ def _trigger_order() -> list[Decision]:
     return _asked(scenario.questions_asked(), DecisionKind.ORDER_TRIGGERS)
 
 
+def _combat_damage_assignment() -> list[Decision]:
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Colossal Dreadmaw"])
+        .player("bob", battlefield=["Grizzly Bears", "Hill Giant"])
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    dreadmaw = scenario.creature("Colossal Dreadmaw", "alice")
+    scenario.attack_with(dreadmaw)
+    scenario.block(
+        dreadmaw, scenario.creature("Grizzly Bears", "bob"), scenario.creature("Hill Giant", "bob")
+    )
+    scenario.combat_damage()
+    return _asked(scenario.questions_asked(), DecisionKind.ASSIGN_COMBAT_DAMAGE)
+
+
 SOURCELESS: dict[DecisionKind, tuple[str, Callable[[], list[Decision]]]] = {
+    DecisionKind.ASSIGN_COMBAT_DAMAGE: (
+        "CR 703.4k: assigning combat damage is a turn-based action, not any object's",
+        _combat_damage_assignment,
+    ),
     DecisionKind.MULLIGAN: (
         "CR 103.5: the rules ask a player about their hand; no object asks it",
         _mulligan,

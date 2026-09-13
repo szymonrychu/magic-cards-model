@@ -3687,37 +3687,6 @@ def _enters_as_copy(effect: ReplacementEffect, card_name: str) -> Apply:
     return apply
 
 
-def _greatest_mana_value_among_cards_in_exile(game: "Game", entering: CardState) -> int:
-    """ "the greatest mana value among cards in exile" - Ulamog, the Defiler.
-
-    Every card in exile, whoever owns it, and read as the objects actually are
-    right now (CR 613.5-shaped: the count is worked out as the permanent
-    enters, not when the spell was cast).
-
-    A card exiled **face down** contributes 0, and that is the whole point of
-    the clause in play. CR 406.3a: "A card exiled face down has no
-    characteristics"; CR 202.3a: "The mana value of an object with no mana cost
-    is 0". `CardState.mana_value` already answers 0 for such a card, so nothing
-    special is done here - the rule is enforced one layer down, where every
-    other reader of a mana value gets it too.
-
-    An empty exile is 0 rather than an error: "the greatest ... among" an empty
-    set of cards is nothing, and CR 122.1 has no counters to put on.
-    """
-    values = [state.mana_value for state in game.exile]
-    return int(max(values)) if values else 0
-
-
-#: The `ENTERS_WITH` count expressions this engine can evaluate, keyed by the
-#: printed phrase in lower case. A phrase with no entry leaves the count
-#: unknown and the whole effect skipped - fail closed, the same way an
-#: unreadable `ENTERS_TAPPED` condition is skipped a few lines below, rather
-#: than a permanent silently entering with the wrong number of counters.
-_ENTERS_WITH_AMOUNT_RESOLVERS: dict[str, Callable[["Game", CardState], int]] = {
-    "the greatest mana value among cards in exile": _greatest_mana_value_among_cards_in_exile,
-}
-
-
 #: "where X is the number of turns you've begun since it was foretold" -
 #: Lupine Harbingers' own count, printed on the card in
 #: `tests/fixtures/cards/` (`resolve_cards` has no entry for this printing, so
@@ -3947,15 +3916,28 @@ def _self_enters_modifiers(
             and amount is None
             and effect.amount_expression is not None
         ):
-            # "...equal to [expression]" - not a literal and not CR 107.3m's X,
-            # but a count worked out against the game as the permanent enters.
-            # An expression with no resolver leaves `amount` None and the
-            # effect is skipped below, unchanged.
-            resolver = _ENTERS_WITH_AMOUNT_RESOLVERS.get(
-                effect.amount_expression.strip().rstrip(".").lower()
-            )
-            if resolver is not None:
-                amount = resolver(game, card_state)
+            # "...equal to [expression]" - a count worked out against the game
+            # as the permanent enters. An X inside it is CR 107.3m's X of the
+            # spell that became this object; with no such spell it cannot be
+            # determined and CR 107.2 uses 0. An expression nobody can read
+            # leaves `amount` None, skips the counters, and says so.
+            from .effects import UnreadableCounterAmountNotice, amount_expression
+
+            reader = amount_expression(effect.amount_expression)
+            if reader is None:
+                game.unreadable_counter_amount_notices.append(
+                    UnreadableCounterAmountNotice(
+                        source_id=card_state.id,
+                        source_name=card_state.name,
+                        text=effect.text,
+                        expression=effect.amount_expression,
+                    )
+                )
+            else:
+                record = game.cast_records.get(card_state.id)
+                x_value = record.x_value if record is not None else 0
+                controller = card_state.controller or card_state.owner
+                amount = reader(game, controller, card_state, x_value)
         readable_counters = (
             effect.kind is ReplacementKind.ENTERS_WITH
             and effect.counter_kind is not None
