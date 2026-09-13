@@ -144,6 +144,7 @@ if TYPE_CHECKING:  # pragma: no cover - import cycle: the models build on the ma
 __all__ = [
     "Answer",
     "CardSplit",
+    "DamageAssignment",
     "Decision",
     "DecisionKind",
     "DecisionPending",
@@ -155,6 +156,7 @@ __all__ = [
     "ask_blockers",
     "ask_mulligan",
     "ask_trigger_order",
+    "damage_assignment_answer",
     "default_answer",
     "legal_options",
     "rule_for_kind",
@@ -237,6 +239,15 @@ class DecisionKind(StrEnum):
     #: defending player in turn order (CR 802.4) when the declare blockers step
     #: begins. The value is `(blocker, attacker)` pairs.
     DECLARE_BLOCKERS = "declare_blockers"
+    #: How one blocked attacking creature divides its combat damage (CR 703.4k,
+    #: 510.1c, 702.19b). Asked of the attacking creature's controller as the
+    #: combat damage step begins, and only when there is something to choose:
+    #: two or more blockers, or trample with power beyond the blockers' lethal
+    #: damage. `cards` is the attacker then its blockers, `targets` every legal
+    #: recipient (the defender too, with trample), `lethal_damage` aligned with
+    #: `targets`, and `amount` the power to assign. The value is
+    #: `(target, amount)` pairs.
+    ASSIGN_COMBAT_DAMAGE = "assign_combat_damage"
     #: Choose exactly `amount` cards out of `cards`, a candidate set drawn from
     #: one zone. The cleanup discard (CR 514.1, CR 703.4n) is the first caller -
     #: CR 701.9b: "effects that cause a player to discard a card allow the
@@ -491,6 +502,17 @@ class Decision:
     #: may activate while paying (CR 608.2g, CR 605.3a). An answer naming
     #: sources must name a subset of these.
     mana_sources: tuple[UUID, ...] = ()
+    #: `ASSIGN_COMBAT_DAMAGE` only: the damage each of `targets` still needs
+    #: before it counts as assigned lethal damage (CR 702.19b, CR 702.2c),
+    #: aligned with `targets`; 0 for the player or planeswalker being attacked.
+    lethal_damage: tuple[int, ...] = ()
+    #: `ASSIGN_COMBAT_DAMAGE` only: what an unscripted, unpaused seat assigns -
+    #: lethal damage to each blocker in declaration order, the rest through
+    #: with trample or onto the last blocker without it.
+    default_damage: tuple[tuple[TargetRef, int], ...] | None = None
+    #: `ASSIGN_COMBAT_DAMAGE` only: whether the attacker has trample, so damage
+    #: may go past its blockers once each has lethal damage (CR 702.19b).
+    trample: bool = False
 
 
 def source_id_of(obj: "CardState | AbilityOnStack | UUID | None") -> str | None:
@@ -561,6 +583,10 @@ def default_answer(decision: Decision) -> object:
         # this engine before the question existed. A permutation is always
         # legal, so there is no `affirmative_is_legal` branch here.
         return decision.cards
+    if decision.kind is DecisionKind.ASSIGN_COMBAT_DAMAGE:
+        # CR 510.1c's division with nobody choosing: the asker's own
+        # documented split, which is what combat did before it asked.
+        return decision.default_damage or ()
     if decision.kind in (DecisionKind.DECLARE_ATTACKERS, DecisionKind.DECLARE_BLOCKERS):
         # CR 508.1 says "if any" and CR 509.1 says "may": declaring nobody is
         # always legal, and is what an unscripted player does.
@@ -688,6 +714,8 @@ def rule_for_kind(kind: DecisionKind) -> str:
             "CR 608.2d, CR 608.2g (a choice made while the effect applies; the player "
             "may activate mana abilities before paying)"
         )
+    if kind is DecisionKind.ASSIGN_COMBAT_DAMAGE:
+        return "CR 703.4k, CR 510.1c, CR 702.19b (assigning combat damage, a turn-based action)"
     return "CR 608.2d (a choice made while the effect applies)"
 
 
@@ -713,6 +741,7 @@ _ANSWER_FIELD_FOR_KIND: dict[DecisionKind, str] = {
     DecisionKind.CHOOSE_A_MODE: "text",
     DecisionKind.DECLARE_ATTACKERS: "pairs",
     DecisionKind.DECLARE_BLOCKERS: "pairs",
+    DecisionKind.ASSIGN_COMBAT_DAMAGE: "damage",
 }
 assert set(_ANSWER_FIELD_FOR_KIND) == set(DecisionKind), (
     "every DecisionKind needs exactly one Answer field - see _ANSWER_FIELD_FOR_KIND"
@@ -760,6 +789,98 @@ class DeclaredPair(BaseModel):
                 "a DeclaredPair needs exactly one of defender_card/defender_player set"
             )
         return self
+
+
+class DamageAssignment(BaseModel):
+    """One `(recipient, amount)` entry of a recorded `ASSIGN_COMBAT_DAMAGE`
+    answer (CR 510.1c, CR 702.19b).
+
+    Exactly one of `target_card`/`target_player` is set, for the same reason
+    `DeclaredPair` names a player by username: a player has no id.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    target_card: UUID | None = None
+    target_player: str | None = None
+    amount: int
+
+    @model_validator(mode="after")
+    def _one_recipient(self) -> "DamageAssignment":
+        if (self.target_card is None) == (self.target_player is None):
+            raise ValueError("a damage assignment names exactly one card or one player")
+        return self
+
+    @property
+    def target(self) -> TargetRef:
+        if self.target_card is not None:
+            return TargetRef.to_card(self.target_card)
+        return TargetRef.to_player(self.target_player)
+
+
+def damage_assignment_answer(
+    decision: Decision, value: object
+) -> tuple[tuple[TargetRef, int], ...]:
+    """Check one `ASSIGN_COMBAT_DAMAGE` answer and return it canonical.
+
+    CR 510.1e: the assignment is checked as a whole, and an illegal one is
+    refused. The checks, each the rule that makes the answer illegal:
+
+    - CR 510.1a: the amounts add up to the creature's power, none negative.
+    - CR 510.1c: a recipient is one of the creatures blocking it; the player or
+      planeswalker it attacks only with trample.
+    - CR 702.19b: damage to that player or planeswalker only once every blocker
+      is assigned lethal damage (`Decision.lethal_damage`, which already counts
+      marked damage, deathtouch and damage other attackers assign this step).
+    """
+    if not isinstance(value, (tuple, list)):
+        raise ValueError(f"{decision.prompt}: needs (target, amount) pairs")
+    offered = {ref: index for index, ref in enumerate(decision.targets)}
+    blocker_ids = set(decision.cards[1:])
+    chosen: dict[TargetRef, int] = {}
+    for entry in value:
+        if isinstance(entry, DamageAssignment):
+            target, amount = entry.target, entry.amount
+        elif isinstance(entry, (tuple, list)) and len(entry) == 2:
+            target, amount = TargetRef.coerce(entry[0]), entry[1]
+        else:
+            raise ValueError(f"{decision.prompt}: each entry is a (target, amount) pair")
+        if not isinstance(amount, int) or isinstance(amount, bool) or amount < 0:
+            raise ValueError(
+                f"{decision.prompt}: {amount!r} is not an amount of damage (CR 510.1a)"
+            )
+        if target not in offered:
+            if target.is_player or target.card_id not in blocker_ids:
+                raise ValueError(
+                    f"{decision.prompt}: {target} is not a creature blocking it, and only "
+                    f"trample lets damage go past its blockers (CR 510.1c, CR 702.19b)"
+                )
+            raise ValueError(f"{decision.prompt}: {target} was not offered (CR 510.1c)")
+        if target in chosen:
+            raise ValueError(f"{decision.prompt}: {target} is named twice")
+        chosen[target] = amount
+    total = sum(chosen.values())
+    if total != decision.amount:
+        raise ValueError(
+            f"{decision.prompt}: {total} damage assigned, but the creature assigns "
+            f"exactly its power, {decision.amount} (CR 510.1a)"
+        )
+    past_blockers = [
+        ref for ref, amount in chosen.items() if amount and ref.card_id not in blocker_ids
+    ]
+    if past_blockers:
+        short = [
+            ref
+            for ref, index in offered.items()
+            if ref.card_id in blocker_ids and chosen.get(ref, 0) < decision.lethal_damage[index]
+        ]
+        if short:
+            raise ValueError(
+                f"{decision.prompt}: damage can reach {past_blockers[0]} only once every "
+                f"blocker is assigned lethal damage, and {short[0]} is not (CR 702.19b)"
+            )
+    canonical = {ref: ref for ref in decision.targets}
+    return tuple((canonical[ref], amount) for ref, amount in chosen.items() if amount)
 
 
 class Answer(BaseModel):
@@ -837,6 +958,9 @@ class Answer(BaseModel):
     #: each id or username against the game as it stands when the tape is
     #: replayed.
     pairs: tuple["DeclaredPair", ...] | None = None
+    #: `ASSIGN_COMBAT_DAMAGE` - `DamageAssignment`s, one per recipient
+    #: (CR 510.1c, CR 702.19b).
+    damage: tuple[DamageAssignment, ...] | None = None
 
     @model_validator(mode="after")
     def _check_one_value_field(self) -> "Answer":

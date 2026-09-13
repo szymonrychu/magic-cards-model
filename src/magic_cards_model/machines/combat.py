@@ -57,6 +57,7 @@ from .abilities import (
     layer_readable_sentences,
     unread_keyword_tokens,
 )
+from .decisions import Decision, DecisionKind
 from .triggers import GameEvent
 
 #: What a creature may attack besides a player (CR 306.6, 310.5).
@@ -829,6 +830,9 @@ def combat_damage_step(game: "Game") -> list[tuple["Targetable", int]]:
         combat.first_strike_step_happened = True
 
     assignments: list[tuple[CardState, Targetable, int]] = []
+    # CR 702.19b: lethal damage takes into account "damage from other creatures
+    # that's being assigned during the same combat damage step".
+    assigned_this_step: dict[UUID, int] = {}
 
     # CR 510.1: attackers are announced first, then blockers - but nothing is
     # dealt until both are known, because combat damage is simultaneous.
@@ -838,10 +842,10 @@ def combat_damage_step(game: "Game") -> list[tuple["Targetable", int]]:
             continue
         if not deals_damage_this_step(attacker, first_strike_step=first_strike_step, game=game):
             continue
-        assignments.extend(
-            (attacker, target, amount)
-            for target, amount in _attacker_assignment(game, attack, attacker)
-        )
+        for target, amount in _attacker_assignment(game, attack, attacker, assigned_this_step):
+            assignments.append((attacker, target, amount))
+            if isinstance(target, CardState):
+                assigned_this_step[target.id] = assigned_this_step.get(target.id, 0) + amount
 
     for attack in combat.attacks:
         attacker = game.find_by_id(attack.attacker_id)
@@ -971,7 +975,12 @@ def _toughness_of(game: "Game | None", creature: CardState) -> int | None:
     return game.toughness_of(creature) if game is not None else creature.toughness
 
 
-def lethal_for(attacker: CardState, blocker: CardState, game: "Game | None" = None) -> int | None:
+def lethal_for(
+    attacker: CardState,
+    blocker: CardState,
+    game: "Game | None" = None,
+    already_assigned: int = 0,
+) -> int | None:
     """How much damage counts as lethal when `attacker` assigns to `blocker`.
 
     CR 510.1c divides a blocked creature's damage among its blockers, each
@@ -985,24 +994,36 @@ def lethal_for(attacker: CardState, blocker: CardState, game: "Game | None" = No
     damage is being dealt." One is a nonzero amount, so one is lethal - which is
     what lets a 5/5 with deathtouch and trample put four through a 4/4 blocker.
 
+    `already_assigned` is CR 702.19b's "damage from other creatures that's being
+    assigned during the same combat damage step": a blocker that already has
+    lethal damage coming needs nothing more.
+
     None when the blocker's toughness is not a number.
     """
-    if has_keyword(attacker, Keyword.DEATHTOUCH, game):
-        return 1
     toughness = _toughness_of(game, blocker)
-    return None if toughness is None else toughness - blocker.damage
+    remaining = None if toughness is None else toughness - blocker.damage - already_assigned
+    if has_keyword(attacker, Keyword.DEATHTOUCH, game):
+        return 0 if remaining is not None and remaining <= 0 else 1
+    return remaining
 
 
 def _attacker_assignment(
-    game: "Game", attack: Attack, attacker: CardState
+    game: "Game",
+    attack: Attack,
+    attacker: CardState,
+    assigned_this_step: dict[UUID, int] | None = None,
 ) -> list[tuple["Targetable", int]]:
     """How one attacking creature divides its damage (CR 510.1a-c, 702.19b).
 
-    Unblocked, it all goes to whatever it is attacking. Blocked, it is divided
-    among the blockers in declaration order, each one assigned lethal damage
-    before the next gets any. With trample, whatever is left over once every
-    blocker has lethal goes through to the defending player; without it, the
-    leftover has nowhere to go but the last blocker.
+    Unblocked, it all goes to whatever it is attacking. Blocked by exactly one
+    creature without trample, it all goes to that creature (CR 510.1c). Every
+    other blocked case is its controller's choice (CR 703.4k): two or more
+    blockers are "divided as its controller chooses among them" (CR 510.1c),
+    and with trample the excess past lethal damage may go to the attacked
+    player or planeswalker (CR 702.19b). That choice is an
+    `ASSIGN_COMBAT_DAMAGE` question; unscripted and unpaused, its default is
+    lethal damage to each blocker in declaration order, then the rest through
+    with trample or onto the last blocker without it.
     """
     power = _power_of(game, attacker)
     if power is None:
@@ -1026,26 +1047,66 @@ def _attacker_assignment(
         defender = game.resolve_target(attack.defender)
         return [(defender, power)] if defender is not None else []
 
-    assigned: list[tuple[Targetable, int]] = []
+    already = assigned_this_step or {}
+    # An unknowable toughness makes lethal damage unknowable too; it is held at
+    # the whole power, so trample cannot be assigned past that blocker.
+    lethal = [
+        power if needed is None else max(needed, 0)
+        for needed in (
+            lethal_for(attacker, blocker, game, already.get(blocker.id, 0)) for blocker in blockers
+        )
+    ]
+    defender = game.resolve_target(attack.defender) if trample else None
+
+    default: list[tuple[Targetable, int]] = []
     remaining = power
-    for blocker in blockers:
-        if remaining <= 0:
-            break
-        lethal = lethal_for(attacker, blocker, game)
-        share = remaining if lethal is None else min(remaining, max(lethal, 0))
+    for blocker, needed in zip(blockers, lethal, strict=True):
+        share = min(remaining, needed)
         if share > 0:
-            assigned.append((blocker, share))
+            default.append((blocker, share))
             remaining -= share
-
     if remaining > 0:
-        if trample:
-            defender = game.resolve_target(attack.defender)
-            if defender is not None:
-                assigned.append((defender, remaining))
-        elif assigned:
-            target, amount = assigned[-1]
-            assigned[-1] = (target, amount + remaining)
+        if defender is not None:
+            default.append((defender, remaining))
+        elif default:
+            default[-1] = (default[-1][0], default[-1][1] + remaining)
         else:
-            assigned.append((blockers[-1], remaining))
+            default.append((blockers[-1], remaining))
 
-    return assigned
+    if len(blockers) == 1 and (defender is None or power <= lethal[0]):
+        return default  # CR 510.1c: exactly one blocker, nothing to divide
+
+    targets = [TargetRef.to_card(blocker) for blocker in blockers]
+    if defender is not None:
+        targets.append(attack.defender)
+    ref_of = {blocker.id: ref for blocker, ref in zip(blockers, targets, strict=False)}
+    decision = Decision(
+        kind=DecisionKind.ASSIGN_COMBAT_DAMAGE,
+        player=game.controller_of(attacker).username,
+        prompt=f"assign {power} combat damage from {attacker.name}",
+        source=attacker.name,
+        source_id=None,  # CR 703.4k: a turn-based action, not an object's.
+        amount=power,
+        cards=(attacker.id, *(blocker.id for blocker in blockers)),
+        targets=tuple(targets),
+        lethal_damage=(*lethal, *([0] if defender is not None else [])),
+        default_damage=tuple(
+            (
+                ref_of.get(target.id, attack.defender)
+                if isinstance(target, CardState)
+                else attack.defender,
+                amount,
+            )
+            for target, amount in default
+        ),
+        trample=trample,
+    )
+    answer = game.ask(decision)
+    assert isinstance(answer, tuple)
+    by_id: dict[UUID, Targetable] = {blocker.id: blocker for blocker in blockers}
+    chosen: list[tuple[Targetable, int]] = []
+    for ref, amount in answer:
+        recipient = by_id.get(ref.card_id, defender) if ref.card_id is not None else defender
+        if recipient is not None and amount > 0:
+            chosen.append((recipient, amount))
+    return chosen

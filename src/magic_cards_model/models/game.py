@@ -18,6 +18,7 @@ from ..machines.abilities import (
     ActivatedAbility,
     CostKind,
     CouldProduce,
+    ManaAbilityRider,
     TriggeredAbility,
     TriggerEvent,
     granted_mana_abilities,
@@ -95,6 +96,7 @@ from ..machines.decisions import (
     ask_blockers,
     ask_mulligan,
     ask_trigger_order,
+    damage_assignment_answer,
     default_answer,
     legal_options,
     rule_for_kind,
@@ -123,6 +125,7 @@ from ..machines.effects import (
     SearchDescriptionNotice,
     SuspendRedirectNotice,
     UnmodeledTriggerEffectNotice,
+    UnreadableCounterAmountNotice,
     activated_effect_for,
     apply_gift_if_promised,
     devotion_to,
@@ -1495,6 +1498,15 @@ class Game(BaseModel):
     meaning "unreadable" and a `None` meaning "nothing printed" collapsed into
     the same `effect.copy_exception or CopyException()` default."""
 
+    unreadable_counter_amount_notices: list[UnreadableCounterAmountNotice] = Field(
+        default_factory=list
+    )
+    """One entry per "counters ... equal to `<expr>`" whose expression
+    `machines/effects.amount_expression` could not evaluate - see
+    `UnreadableCounterAmountNotice`. The counters are not placed: a guessed
+    number is worse than none, and Slumbering Trudge's "three minus X" used to
+    be skipped here with nothing recorded at all."""
+
     suspend_redirect_notices: list[SuspendRedirectNotice] = Field(default_factory=list)
     """One entry per "counter target spell. If it is countered this way,
     exile it with N time counters ... . If it doesn't have suspend, it gains
@@ -2033,7 +2045,7 @@ class Game(BaseModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 14
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 15
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -2187,6 +2199,14 @@ class Game(BaseModel):
     instead. Battle 6 was stamped 12 -> 13 on a line of development beside
     battle 5's, so a 13 from either line lacks the other's fields; merged, the
     number moved on once more.
+    Bumped 14 -> 15: battle 4. `Answer` gained `damage` (the
+    `ASSIGN_COMBAT_DAMAGE` tape field, CR 510.1c, CR 702.19b), `Decision`
+    gained `lethal_damage`, `default_damage` and `trample`, and `Game` gained
+    `unreadable_counter_amount_notices`. A version-14 dump has no notices list
+    and a tape that cannot hold a combat damage assignment, so a paused combat
+    decoded here would replay against a question that build never asked.
+    Refused instead. Battle 4 was stamped 11 -> 12 on its own line of
+    development; landed after battles 3, 5 and 6, it moved on to 15.
     """
 
     @model_validator(mode="before")
@@ -6019,6 +6039,9 @@ class Game(BaseModel):
                 )
             return chosen
 
+        if decision.kind is DecisionKind.ASSIGN_COMBAT_DAMAGE:
+            return damage_assignment_answer(decision, value)
+
         if decision.kind is DecisionKind.CHOOSE_A_QUALITY:
             if not isinstance(value, str) or not value:
                 raise ValueError(f"{decision.prompt}: needs a chosen value (CR 614.12a)")
@@ -6142,6 +6165,106 @@ class Game(BaseModel):
             )
         )
         return bool(answer)
+
+    def may_pay_unless_cost(
+        self,
+        player: Player | str,
+        cost: TotalCost,
+        *,
+        source: str | None = None,
+        source_id: str | None = None,
+    ) -> bool:
+        """ "... unless that player pays [cost]", asked and then paid, for any
+        printed cost (CR 118.12a, CR 608.2d) - ward's (CR 702.21a).
+
+        CR 118.12a: "[Do something] unless [a player does something else]"
+        means "[A player may do something else]. If [that player doesn't], [do
+        something]." Paying is offered only when CR 118.3 allows it: "A player
+        can't pay a cost without having the necessary resources to pay it
+        fully."
+
+        A mana-only cost is `may_pay_mana_cost`'s `PAY_MANA` question and a
+        life-only cost `may_pay_life`'s `PAY_LIFE`, so those keep their own
+        kinds and defaults. Anything else - a discard, a sacrifice, or a mix
+        with mana or life - is one `MAY` for the whole cost, then a
+        `CHOOSE_CARDS` for each part that needs objects: the discarding player
+        chooses the discard (CR 701.9b), and a player sacrifices only a
+        permanent they control (CR 701.21a). Mana is paid from the pool
+        (CR 608.2g's mana abilities are not activated mid-resolution here; see
+        `may_pay_mana`). A part of a kind this cannot pay makes the whole cost
+        unpayable rather than half-paid.
+
+        Returns whether the cost was paid, and pays it.
+        """
+        username = player if isinstance(player, str) else player.username
+        payer = self.player(username)
+        components = [
+            component.model_copy(update={"payer": username}) for component in cost.components
+        ]
+        if not components:
+            return self.may_pay_mana_cost(payer, cost.mana, source=source, source_id=source_id)
+        if not cost.mana.symbols and all(c.kind is ComponentKind.PAY_LIFE for c in components):
+            total = sum(component.amount for component in components)
+            return self.may_pay_life(payer, total, source=source, source_id=source_id)
+
+        candidates: list[list[CardState]] = []
+        payable = not cost.mana.symbols or payer.mana_pool.can_pay(cost.mana)
+        for component in components:
+            if component.kind is ComponentKind.DISCARD:
+                pool = list(payer.hand)
+            elif component.kind is ComponentKind.SACRIFICE:
+                pool = list(self.permanents_controlled_by(username))
+            elif component.kind is ComponentKind.PAY_LIFE:
+                pool = []
+                payable = payable and payer.life >= component.amount  # CR 119.4
+            else:
+                pool = []
+                payable = False
+            if component.requirement is not None:
+                pool = [
+                    card
+                    for card in pool
+                    if component.requirement.why_not(card, self, username) is None
+                ]
+            candidates.append(pool)
+            if component.kind in (ComponentKind.DISCARD, ComponentKind.SACRIFICE):
+                payable = payable and len(pool) >= component.required
+        answer = self.ask(
+            Decision(
+                kind=DecisionKind.MAY,
+                player=username,
+                prompt=f"pay {cost}",
+                source=source,
+                source_id=source_id,
+                affirmative_is_legal=payable,
+            )
+        )
+        if not answer:
+            return False
+        for component, pool in zip(components, candidates, strict=True):
+            if component.kind not in (ComponentKind.DISCARD, ComponentKind.SACRIFICE):
+                continue
+            verb = "discard" if component.kind is ComponentKind.DISCARD else "sacrifice"
+            chosen_ids = self.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=username,
+                    prompt=f"choose {component.required} card(s) to {verb}",
+                    source=source,
+                    source_id=source_id,
+                    amount=component.required,
+                    cards=tuple(card.id for card in pool),
+                    default_cards=tuple(card.id for card in pool[: component.required]),
+                )
+            )
+            assert isinstance(chosen_ids, tuple)
+            by_id = {card.id: card for card in pool}
+            component.cards = [by_id[card_id] for card_id in chosen_ids]
+        if cost.mana.symbols:
+            payer.mana_pool.pay(cost.mana)
+        for component in components:
+            component.pay(self)
+        return True
 
     def may_pay_life(
         self,
@@ -12722,6 +12845,28 @@ class Game(BaseModel):
             spend=ManaSpend.activating(self.characteristics_of(permanent)),
         )
 
+    def apply_mana_ability_rider(
+        self, rider: ManaAbilityRider | None, controller: str, source: CardState
+    ) -> None:
+        """CR 405.6c: "If a mana ability both produces mana and has another
+        effect, the mana is produced and the other effect happens immediately."
+
+        The one funnel for that other effect, whichever route activated the
+        ability: `activate_ability`'s mana fast path, and
+        `CostPayment.tap_for_mana` when a source is tapped while paying a cost
+        (a hand-picked source list and `auto_tap` both reach it). CR 118.3c
+        makes tapping a source during payment an activation of its mana
+        ability all the same, so the rider cannot depend on who chose it.
+        """
+        if rider is None:
+            return
+        if rider.kind == "damage_to_controller":
+            self.deal_damage(self.player(controller), rider.amount, source=source)
+        elif rider.kind == "lose_life":
+            self.player(controller).lose_life(rider.amount)
+        elif rider.kind == "gain_life":
+            self.gain_life(controller, rider.amount)
+
     def activate_ability(
         self,
         permanent: CardState,
@@ -12971,14 +13116,7 @@ class Game(BaseModel):
                 # reaching here means it is either absent or a known shape -
                 # Talisman of Resilience's "This artifact deals 1 damage to
                 # you." is what taught this engine the shape existed at all.
-                if ability.mana.rider is not None:
-                    rider = ability.mana.rider
-                    if rider.kind == "damage_to_controller":
-                        self.deal_damage(self.player(controller), rider.amount, source=permanent)
-                    elif rider.kind == "lose_life":
-                        self.player(controller).lose_life(rider.amount)
-                    elif rider.kind == "gain_life":
-                        self.gain_life(controller, rider.amount)
+                self.apply_mana_ability_rider(ability.mana.rider, controller, permanent)
                 # CR 106.12: "to 'tap [a permanent] for mana' is to activate a mana
                 # ability of that permanent that includes the {T} symbol in its
                 # activation cost" - so only a `{T}: ...` ability counts, not

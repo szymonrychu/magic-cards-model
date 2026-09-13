@@ -1729,7 +1729,10 @@ def plan_mana_payment(
             snow = dict(pool.snow)
             restricted = [entry.model_copy(deep=True) for entry in pool.restricted]
             try:
-                life_available = int(player.life)
+                # CR 119.4b: "Players can always pay 0 life" - a total already
+                # below zero (a mana ability's damage mid-payment) leaves 0 to
+                # spend, never a negative budget that refuses a 0-life option.
+                life_available = max(int(player.life), 0)
             except (TypeError, ValueError):
                 life_available = 0
     return _solve_auto_tap(
@@ -4616,12 +4619,15 @@ class CostPayment(BaseModel):
 
         Their whole life total: CR 119.4 lets life be paid down to zero, and
         losing the game for it is a state-based action afterwards, not a reason
-        the cost could not be paid.
+        the cost could not be paid. A total already below zero - a mana
+        ability's CR 405.6c damage taken while this payment is open - is 0 to
+        spend, not a negative budget: CR 119.4b, "Players can always pay 0
+        life".
         """
         if self.game is None or self.payer is None:
             return 0
         try:
-            return int(self.game.player(self.payer).life)
+            return max(int(self.game.player(self.payer).life), 0)
         except (KeyError, ValueError, AttributeError):
             return 0
 
@@ -4788,6 +4794,11 @@ class CostPayment(BaseModel):
             spend_effect=spend_effect,
         )
         if self.game is not None:
+            # CR 405.6c: the mana ability's other effect happens with the mana,
+            # through the same funnel `Game.activate_ability` uses.
+            self.game.apply_mana_ability_rider(
+                activated.ability.rider, self.game.controller_of(source).username, source
+            )
             triggered = self.game.emit(tapped_for_mana_event(source, self.game))
             self.triggers_caused.extend(ability.id for ability in triggered)
         return self.pool
