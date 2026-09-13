@@ -370,23 +370,26 @@ def test_a_snapshot_written_before_damage_assignment_is_refused() -> None:
         Game.model_validate(dumped)
 
 
-#: The version stamped before battle 7: a triggered mana ability (CR 605.1b)
-#: resolving off the stack (CR 605.4a), scry asking CR 401.4's bottom order,
-#: and the attack requirement (CR 508.1d). Battle 7 was stamped 13 -> 14 and
-#: then 14 -> 15 while battles 6 and 4 landed, so it landed as 16.
-_SCHEMA_VERSION_BEFORE_BATTLE_SEVEN = 15
+#: The version stamped before battle 7, U1 (PR #21) and battle 8, which share
+#: one bump because none was deployed on its own: a triggered mana ability (CR
+#: 605.1b) resolving off the stack (CR 605.4a), scry asking CR 401.4's bottom
+#: order and the attack requirement (CR 508.1d); `AbilityOnStack.source_last_known`
+#: (CR 113.7a); cast records keyed per object (CR 400.7) and
+#: `AbilityOnStack.source_stamp`.
+_SCHEMA_VERSION_BEFORE_BATTLES_SEVEN_AND_EIGHT = 15
 
 
-def test_a_snapshot_written_before_battle_seven_is_refused() -> None:
+def test_a_snapshot_written_before_battles_seven_and_eight_is_refused() -> None:
     """A version-15 dump can hold Leyline of Abundance's trigger on the stack,
-    and a tape one scry-order question short; decoded as current, it would
-    replay into a game no version-16 engine could have produced."""
-    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_BATTLE_SEVEN
+    a tape one scry-order question short, and cast records keyed by card id
+    that would read as no record at all; decoded as current, it would replay
+    into a game no version-16 engine could have produced."""
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_BATTLES_SEVEN_AND_EIGHT
     dumped = _a_played_game().model_dump(mode="json")
-    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_BATTLE_SEVEN
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_BATTLES_SEVEN_AND_EIGHT
 
     with pytest.raises(
         SchemaVersionMismatch,
-        match=f"schema_version={_SCHEMA_VERSION_BEFORE_BATTLE_SEVEN}",
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_BATTLES_SEVEN_AND_EIGHT}",
     ):
         Game.model_validate(dumped)
