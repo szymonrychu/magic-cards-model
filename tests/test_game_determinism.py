@@ -36,6 +36,7 @@ import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.casting import Casting
+from magic_cards_model.machines.decisions import Answer, CardSplit, DecisionKind
 from magic_cards_model.models import Zone
 from magic_cards_model.models.game import Game
 from tests.scenarios.harness import PlayedScenario, Scenario
@@ -288,5 +289,64 @@ def test_replaying_a_refused_cast_twice_is_byte_identical():
     # wrong, unwrapped count) without it.
     assert replay_a.objects_created == before_a + 2
     assert replay_b.objects_created == before_b + 2
+    assert replay_a.objects_created == replay_b.objects_created
+    assert replay_a.model_dump(mode="json") == replay_b.model_dump(mode="json")
+
+
+def test_replaying_a_bottom_of_library_order_tape_twice_is_byte_identical():
+    """CR 401.4's order for cards put on the bottom together is a question
+    (`Game.ask_library_bottom_order`), so a resumed command reads it off the
+    tape. Two replays of the same snapshot with the same tape must reach the
+    same game, down to every id, and that game must carry the chosen order,
+    not the unscripted default."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Ancient Stirrings"],
+            battlefield=["Forest"],
+            library=["Sol Ring", "Lightning Bolt", "Grizzly Bears", "Island", "Swamp", "Mountain"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sol_ring, bolt, bears, island, swamp = scenario.top_of_library(5, "alice")
+    (forest,) = scenario.untapped_sources("Forest", username="alice")
+    scenario.cast_onto_stack("Ancient Stirrings", forest)
+    snapshot = scenario.game.model_dump(mode="json")
+    tape = [
+        Answer(
+            seq=0,
+            kind=DecisionKind.SCRY,
+            player="alice",
+            split=CardSplit(moved=(sol_ring.id,)),
+        ),
+        Answer(
+            seq=1,
+            kind=DecisionKind.CHOOSE_CARDS,
+            player="alice",
+            card_ids=(swamp.id, island.id, bears.id, bolt.id),
+        ),
+    ]
+
+    def replay() -> Game:
+        game = Game.model_validate(snapshot)
+        game.decisions.begin_replay(tape)
+        game.decisions.pause_when_unanswered = True
+        game.resolve_top()
+        game.decisions.finish_replay()
+        return game
+
+    replay_a = replay()
+    replay_b = replay()
+
+    assert [state.name for state in replay_a.player("alice").library] == [
+        "Mountain",
+        "Swamp",
+        "Island",
+        "Grizzly Bears",
+        "Lightning Bolt",
+    ]
     assert replay_a.objects_created == replay_b.objects_created
     assert replay_a.model_dump(mode="json") == replay_b.model_dump(mode="json")
