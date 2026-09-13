@@ -95,6 +95,7 @@ from .abilities import (
 from .casting import PlayAction, annotate_exile, remove_suspend_time_counter
 from .casting_restrictions import create_targeted_cant_cast_restriction, parse_casting_rule_clause
 from .combat import has_keyword
+from .cost import is_snow_source, spend_restriction
 from .decisions import Decision, DecisionKind, source_id_of
 from .delayed import (
     ANAPHORIC_TIMING_STEPS,
@@ -154,7 +155,12 @@ from .modes import (
     substitute_x,
 )
 from .targeting import TargetRequirement, profile_for_text
-from .triggers import AbilityOnStack, is_ability, triggered_mana_recipient
+from .triggers import (
+    AbilityOnStack,
+    is_ability,
+    triggered_mana_count,
+    triggered_mana_recipient,
+)
 from .turn import Step
 
 if TYPE_CHECKING:
@@ -9134,31 +9140,69 @@ def _parse_mana_adding_trigger(text: str) -> AbilityEffect | None:
             recipient = enchanted.controller if enchanted is not None else None
         if recipient is None:
             return
-        produced = list(shape.colors)
+        # CR 608.2h: a "for each" count is taken now, as the mana is added.
+        times = (
+            triggered_mana_count(game, shape.count, ability.controller)
+            if shape.count is not None
+            else 1
+        )
+        if times <= 0:
+            return
+        colors = shape.colors
+        if shape.snow_colors is not None and ability.event is not None:
+            tapped = (
+                game.find_by_id(ability.event.subject_id)
+                if ability.event.subject_id is not None
+                else None
+            )
+            if isinstance(tapped, CardState) and is_snow_source(tapped, game):
+                colors = shape.snow_colors  # "If that Island is snow, ... instead"
+        literal = list(colors) * times
+        if shape.optional:
+            # CR 608.2d: "may add" is the recipient's choice, asked in place -
+            # unless a payment's own plan already named this mana, which is
+            # the plan's answer (`Game.mana_hints_planned`).
+            planned = game.take_mana_color_hints(literal)
+            if not planned:
+                if game.mana_hints_planned:
+                    return
+                if not game.may(
+                    recipient,
+                    f"add {''.join(f'{{{color.value}}}' for color in literal)}",
+                    source=ability.source_name,
+                    source_id=source_id_of(ability),
+                ):
+                    return
+        else:
+            game.take_mana_color_hints(literal)
+        produced = literal
         if shape.chosen_color:
             choice = source.choice if source is not None else None
             if choice is None or choice.kind is not ChoiceKind.COLOR:
                 return
             try:
-                produced.append(Color(choice.value))
+                produced.extend([Color(choice.value)] * times)
             except ValueError:
                 return
         five = tuple(Color(letter) for letter in _COLOR_LETTERS)
-        for _ in range(shape.any_color):
+        for _ in range(shape.any_color * times):
             produced.append(
                 _choose_mana_color(game, recipient, ability, five, "add one mana of any color")
             )
         if shape.produced_type:
             made = tuple(dict.fromkeys(ability.event.mana_added)) if ability.event else ()
-            if made:
+            for _ in range(times if made else 0):
                 produced.append(
                     _choose_mana_color(
                         game, recipient, ability, made, "add one mana of any type it produced"
                     )
                 )
+        restriction = (
+            spend_restriction(shape.restriction, source) if shape.restriction is not None else None
+        )
         pool = game.mana_pool_receiving(recipient)
         for color in produced:
-            pool.add(color)
+            pool.add(color, restriction=restriction)
 
     return effect
 

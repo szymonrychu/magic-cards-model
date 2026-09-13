@@ -69,6 +69,7 @@ from .abilities import (
     intrinsic_land_ability,
     parse_abilities,
     parse_granted_ability_lines,
+    parse_mana_count,
 )
 from .turn import Step
 
@@ -693,6 +694,31 @@ def tapped_for_mana_event(
         subject_subtypes=subtypes,
         mana_added=tuple(mana_added or ()),
     )
+
+
+def triggered_mana_count(game: "Game", phrase: str, controller: str) -> int:
+    """How many times a triggered mana ability's "for each <phrase>" adds its
+    mana, counted now (CR 608.2h: "the answer is determined only once, when
+    the effect is applied"), off the computed board (CR 613.5). An unread
+    phrase counts 0, adding nothing."""
+    parsed = parse_mana_count(phrase)
+    if parsed is None:
+        return 0
+    scope, card_type, subtype = parsed
+    board = game.computed_board()
+    total = 0
+    for permanent in game.battlefield:
+        characteristics = board.of(permanent)
+        if scope == "you_control" and characteristics.controller != controller:
+            continue
+        if (
+            card_type is not None
+            and card_type in characteristics.types
+            or subtype
+            and any(word.lower() == subtype.lower() for word in characteristics.subtypes)
+        ):
+            total += 1
+    return total
 
 
 def triggered_mana_recipient(

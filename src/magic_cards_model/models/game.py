@@ -2331,6 +2331,11 @@ class Game(BaseModel):
     the same reason `continuous_effects` is a field.
     """
 
+    _mana_hints_planned: bool = False
+    """True while a payment's solver planned the tap now resolving its
+    triggered mana abilities: a "may add" the plan did not count is declined
+    rather than asked (`CostPayment.auto_tap`)."""
+
     _mana_color_hints: tuple[Color, ...] = ()
     """Colours a payment's solver already chose for the triggered mana
     abilities (CR 605.1b) the tap it is making sets off, consumed by
@@ -4137,6 +4142,23 @@ class Game(BaseModel):
         pool = self.open_payment_pools.get(username)
         return pool if pool is not None else self.player(username).mana_pool
 
+    @property
+    def mana_hints_planned(self) -> bool:
+        """Whether the colour hints now in force are a payment plan's."""
+        return self._mana_hints_planned
+
+    def take_mana_color_hints(self, colors: Sequence[Color]) -> bool:
+        """Consume every one of `colors` from the hints when all are there,
+        else consume nothing; True when they were taken."""
+        remaining = list(self._mana_color_hints)
+        for color in colors:
+            if color not in remaining:
+                return False
+            remaining.remove(color)
+        if colors:
+            self._mana_color_hints = tuple(remaining)
+        return bool(colors)
+
     def take_mana_color_hint(self, options: Sequence[Color]) -> Color | None:
         """Consume the first hinted colour that is one of `options`, if any."""
         for index, color in enumerate(self._mana_color_hints):
@@ -4148,7 +4170,11 @@ class Game(BaseModel):
         return None
 
     def resolve_triggered_mana_abilities(
-        self, triggered: Sequence[AbilityOnStack], *, color_hints: Sequence[Color] = ()
+        self,
+        triggered: Sequence[AbilityOnStack],
+        *,
+        color_hints: Sequence[Color] = (),
+        planned: bool = False,
     ) -> None:
         """Resolve CR 605.1b's triggered mana abilities inline (CR 605.4a).
 
@@ -4167,7 +4193,9 @@ class Game(BaseModel):
         stays pending for the stack (CR 605.5a).
 
         `color_hints` are colours a payment's solver already chose for this
-        mana (`take_mana_color_hint`); a colour not hinted is asked.
+        mana (`take_mana_color_hint`); a colour not hinted is asked. `planned`
+        says the hints are a payment plan's, so a "may add" the plan left out
+        is declined instead of asked (CR 608.2d); otherwise it is asked.
 
         Each resolution that actually puts mana in the pool re-raises the same
         event from the same source, because a triggered mana ability's own
@@ -4182,11 +4210,14 @@ class Game(BaseModel):
         one activation, `Game.drawn` is set and the chain stops.
         """
         previous_hints = self._mana_color_hints
+        previous_planned = self._mana_hints_planned
         self._mana_color_hints = tuple(color_hints)
+        self._mana_hints_planned = planned
         try:
             self._resolve_triggered_mana_abilities(list(triggered))
         finally:
             self._mana_color_hints = previous_hints
+            self._mana_hints_planned = previous_planned
 
     def _resolve_triggered_mana_abilities(self, pending: list[AbilityOnStack]) -> None:
         resolved = 0

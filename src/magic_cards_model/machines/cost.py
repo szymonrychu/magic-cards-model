@@ -91,6 +91,7 @@ from .triggers import (
     rewritten_ability_lines,
     tapped_for_mana_event,
     triggered_abilities_on,
+    triggered_mana_count,
     triggered_mana_recipient,
 )
 
@@ -966,25 +967,37 @@ def mana_trigger_sources(game: Any) -> list[CardState]:
 
 
 def _triggered_mana_alternatives(
-    shape: Any, trigger_source: CardState, produces: Sequence[Color]
+    shape: Any,
+    trigger_source: CardState,
+    tapped: CardState,
+    produces: Sequence[Color],
+    times: int,
+    game: Any,
 ) -> list[list[Color]]:
-    """What one triggered mana ability would add, one list per choice."""
-    if shape.colors:
-        return [list(shape.colors)]
+    """What one triggered mana ability would add, one list per choice, its
+    "for each" count already taken (`times`)."""
+    colors = shape.colors
+    if shape.snow_colors is not None and is_snow_source(tapped, game):
+        colors = shape.snow_colors
+    if colors:
+        return [list(colors) * times]
     if shape.chosen_color:
         choice = trigger_source.choice
         if choice is None or choice.kind is not ChoiceKind.COLOR:
             return []
         try:
-            return [[Color(choice.value)]]
+            return [[Color(choice.value)] * times]
         except ValueError:
             return []
     if shape.any_color:
         return [
-            list(combo) for combo in combinations_with_replacement(_FIVE_COLORS, shape.any_color)
+            list(combo)
+            for combo in combinations_with_replacement(_FIVE_COLORS, shape.any_color * times)
         ]
     if shape.produced_type:
-        return [[color] for color in dict.fromkeys(produces)]
+        return [
+            list(combo) for combo in combinations_with_replacement(dict.fromkeys(produces), times)
+        ]
     return []
 
 
@@ -1022,11 +1035,26 @@ def triggered_mana_bonus(
             game, event, trigger_sources
         ):
             shape = parse_triggered_mana(ability.effect)
-            if shape is None:
+            if shape is None or shape.restriction is not None:
+                # CR 106.6: restricted mana is spend-dependent, and this scan
+                # is hoisted independent of the spend; the only printing,
+                # Snowfall's, pays cumulative upkeep, which no payment here is.
                 continue
             if triggered_mana_recipient(shape.recipient, controller, event) != context.payer:
                 continue
-            adds = _triggered_mana_alternatives(shape, trigger_source, produces)
+            times = (
+                triggered_mana_count(game, shape.count, controller)
+                if shape.count is not None
+                else 1
+            )
+            if times <= 0:
+                continue
+            adds = _triggered_mana_alternatives(
+                shape, trigger_source, source, produces, times, game
+            )
+            if shape.optional:
+                # CR 608.2d: "may add" - a plan may take it or leave it.
+                adds = [[], *adds]
             if adds:
                 alternatives = [done + more for done in alternatives for more in adds]
     unique: dict[tuple[Color, ...], list[Color]] = {}
@@ -4643,6 +4671,7 @@ class CostPayment(BaseModel):
     with the unrestricted mana available to it, which is what the engine did
     everywhere before restrictions existed."""
 
+    _planning: bool = PrivateAttr(default=False)
     _preexisting: ManaPool | None = PrivateAttr(default=None)
     """The payer's floating mana as it stood when the payment opened, so a
     rewind (CR 733.1) can put it back after `pay` spent part of it.
@@ -4962,7 +4991,9 @@ class CostPayment(BaseModel):
             # into this payment's pool (`Game.mana_pool_receiving`), with any
             # colour the caller already named for them; CR 733.1's rewind
             # empties that pool with the rest of the payment's mana.
-            self.game.resolve_triggered_mana_abilities(set_off, color_hints=triggered_colors)
+            self.game.resolve_triggered_mana_abilities(
+                set_off, color_hints=triggered_colors, planned=self._planning
+            )
             self.triggers_caused.extend(
                 ability.id for ability in self.game.pending_triggers if id(ability) not in waiting
             )
@@ -5027,8 +5058,15 @@ class CostPayment(BaseModel):
         )
         if plan is None:
             raise ValueError(_unpayable_cost_message(self, sources))
-        for source, colors, restriction in plan:
-            self.tap_for_mana(source, colors, restriction)
+        # The plan answers the "may add" of each tap's triggered mana abilities
+        # (CR 608.2d), the way it picks each colour: the mana it counted is
+        # taken, and the mana it left out is declined, never asked mid-payment.
+        self._planning = True
+        try:
+            for source, colors, restriction in plan:
+                self.tap_for_mana(source, colors, restriction)
+        finally:
+            self._planning = False
         return [source for source, _colors, _restriction in plan]
 
     def add_mana(self, color: Color, amount: int = 1, snow: bool = False) -> ManaPool:

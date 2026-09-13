@@ -231,3 +231,149 @@ def test_a_refused_payment_takes_back_the_triggered_mana_with_the_tap():
     assert elves.untapped
     assert scenario.player("alice").mana_pool.total == 0
     assert scenario.stack_names() == []
+
+
+# -- a count, computed as the mana is added (CR 608.2h) ----------------------
+
+
+def _guided_forest(elves: list[str]):
+    """Elvish Guidance ("Whenever enchanted land is tapped for mana, its
+    controller adds an additional {G} for each Elf on the battlefield.") on a
+    Forest, with `elves` on alice's side and one Elf on bob's."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Elvish Guidance"],
+            battlefield=["Forest", "Forest", "Forest", "Forest", *elves],
+        )
+        .player("bob", battlefield=["Llanowar Elves"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    *payers, enchanted = scenario.untapped_sources("Forest", "Forest", "Forest", "Forest")
+    scenario.cast_and_resolve("Elvish Guidance", *payers[:3], targets=[enchanted])
+    scenario.player("alice").mana_pool.empty()
+    return scenario, enchanted
+
+
+def test_elvish_guidance_adds_one_green_for_each_elf_on_the_battlefield_at_once():
+    """Every Elf on the battlefield counts, bob's included."""
+    scenario, enchanted = _guided_forest(["Wood Elves", "Bloodbraid Elf"])
+
+    scenario.activate(enchanted)
+
+    assert scenario.stack_names() == []
+    assert scenario.player("alice").mana_pool.floating == {Color.GREEN: 4}
+
+
+def test_elvish_guidance_counts_at_resolution_so_no_elf_adds_nothing_extra():
+    scenario = (
+        Scenario()
+        .player(
+            "alice", hand=["Elvish Guidance"], battlefield=["Forest", "Forest", "Forest", "Forest"]
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    *payers, enchanted = scenario.untapped_sources("Forest", "Forest", "Forest", "Forest")
+    scenario.cast_and_resolve("Elvish Guidance", *payers[:3], targets=[enchanted])
+    scenario.player("alice").mana_pool.empty()
+
+    scenario.activate(enchanted)
+
+    assert scenario.stack_names() == []
+    assert scenario.player("alice").mana_pool.floating == {Color.GREEN: 1}
+
+
+def test_the_payment_search_counts_elvish_guidances_mana():
+    """Deterministic when the tap is planned: the Elves are on the board -
+    alice's Wood Elves and bob's Llanowar Elves, so one Forest makes three."""
+    scenario, enchanted = _guided_forest(["Wood Elves"])
+    game = scenario.game
+    game.player("alice").hand.clear()
+
+    sources = [enchanted]
+    assert could_pay_mana_cost(ManaCost.parse("{2}{G}"), sources, game=game, payer="alice")
+    assert not could_pay_mana_cost(ManaCost.parse("{3}{G}"), sources, game=game, payer="alice")
+
+
+def test_a_cast_paid_by_the_enchanted_land_alone_uses_the_counted_mana():
+    """Grizzly Bears' {1}{G} from one Forest: its {G} and one Elf's {G}."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Elvish Guidance", "Grizzly Bears"],
+            battlefield=["Forest", "Forest", "Forest", "Forest", "Wood Elves"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    *payers, enchanted = scenario.untapped_sources("Forest", "Forest", "Forest", "Forest")
+    scenario.cast_and_resolve("Elvish Guidance", *payers[:3], targets=[enchanted])
+    scenario.player("alice").mana_pool.empty()
+    bears = scenario.find("Grizzly Bears", Zone.HAND, "alice")
+
+    scenario.game.cast(bears, "alice", mana_sources=[enchanted])
+
+    assert scenario.stack_names() == ["Grizzly Bears"]
+    assert scenario.player("alice").mana_pool.total == 0
+    assert enchanted.tapped, "the enchanted Forest alone paid"
+    assert scenario.creature("Wood Elves").untapped
+
+
+# -- "may add", asked in place (CR 608.2d) -----------------------------------
+
+
+def _snowfall(land: str):
+    scenario = _board(["Snowfall", land])
+    (island,) = scenario.untapped_sources(land)
+    return scenario, island
+
+
+def test_snowfall_asks_its_may_at_once_and_an_unscripted_seat_takes_the_mana():
+    scenario, island = _snowfall("Island")
+
+    scenario.activate(island)
+
+    assert scenario.stack_names() == []
+    asked = [q for q in scenario.questions_asked() if q.source == "Snowfall"]
+    assert [q.kind for q in asked] == [DecisionKind.MAY]
+    pool = scenario.player("alice").mana_pool
+    assert pool.floating == {Color.BLUE: 2}
+    assert len(pool.restricted) == 1, "CR 106.6: Snowfall's own {U} carries its restriction"
+
+
+def test_declining_snowfalls_may_adds_nothing_extra():
+    scenario, island = _snowfall("Island")
+    scenario.will_take_the_may(False, source="Snowfall")
+
+    scenario.activate(island)
+
+    assert scenario.stack_names() == []
+    assert scenario.player("alice").mana_pool.floating == {Color.BLUE: 1}
+    assert scenario.player("alice").mana_pool.restricted == []
+
+
+def test_a_snow_island_gets_snowfalls_two_blue_instead():
+    scenario, island = _snowfall("Snow-Covered Island")
+
+    scenario.activate(island)
+
+    assert scenario.stack_names() == []
+    assert scenario.player("alice").mana_pool.floating == {Color.BLUE: 3}
+
+
+def test_snowfalls_restricted_mana_is_not_counted_toward_a_spell():
+    """CR 106.6: "Spend this mana only to pay cumulative upkeep costs" - no
+    spell can spend it, so the payment search does not count it."""
+    scenario, island = _snowfall("Island")
+    game = scenario.game
+
+    assert could_pay_mana_cost(ManaCost.parse("{U}"), game.battlefield, game=game, payer="alice")
+    assert not could_pay_mana_cost(
+        ManaCost.parse("{1}{U}"), game.battlefield, game=game, payer="alice"
+    )

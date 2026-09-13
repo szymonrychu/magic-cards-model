@@ -2792,7 +2792,7 @@ def _classify_cost(part: str) -> Cost:
 #: Vernal Bloom) is the controller of the permanent that was tapped; "that
 #: player" is the player the condition named.
 _TRIGGERED_MANA_RE = re.compile(
-    r"^(?:(?P<subject>its controller|that player)\s+)?adds?\s+"
+    r"^(?:(?P<subject>its controller|that player)\s+)?(?P<may>may\s+)?adds?\s+"
     r"(?:an additional\s+|one additional\s+)?(?P<mana>.+?)\.?$",
     re.IGNORECASE,
 )
@@ -2813,16 +2813,54 @@ _TRIGGERED_MANA_PRODUCED_TYPE_RE = re.compile(
     r"^one mana of any type that (?:[a-z]+ )*?[a-z]+ produced$", re.IGNORECASE
 )
 _TRIGGERED_MANA_COUNTS = {"one": 1, "two": 2, "three": 3}
+#: "<mana> for each <phrase>" (Elvish Guidance's "{G} for each Elf on the
+#: battlefield"): the mana, that many times, counted as it is added
+#: (CR 608.2h).
+_TRIGGERED_MANA_FOR_EACH_RE = re.compile(r"^(?P<mana>.+?) for each (?P<phrase>.+)$", re.IGNORECASE)
+#: "If that Island is snow, its controller may add an additional {U}{U}
+#: instead." (Snowfall): the same instruction with other mana when the tapped
+#: permanent is snow (CR 205.4a).
+_TRIGGERED_MANA_SNOW_INSTEAD_RE = re.compile(
+    r"^if that (?:[a-z]+ )*?[a-z]+ is snow, (?P<rest>.+?) instead\.?$", re.IGNORECASE
+)
+#: CR 106.6's "Spend this mana only ..." sentence, carried on the mana.
+_TRIGGERED_MANA_SPEND_ONLY_RE = re.compile(r"^spend this mana only\b.*$", re.IGNORECASE)
+#: What "for each" counts: "<Subtype or card type> on the battlefield" (every
+#: player's) or "<Subtype or card type> you control".
+_MANA_COUNT_PHRASE_RE = re.compile(
+    r"^(?P<word>[A-Za-z]+) (?P<scope>on the battlefield|you control)$", re.IGNORECASE
+)
+
+
+def parse_mana_count(phrase: str) -> tuple[str, Type | None, str] | None:
+    """A "for each" phrase as `(scope, card type, subtype)`: scope is
+    `"battlefield"` or `"you_control"`, and exactly one of the card type
+    (CR 205.2a, lowercase in Oracle text) or the subtype (CR 205.3,
+    capitalised) is set. `None` for any other phrase, which fails closed."""
+    match = _MANA_COUNT_PHRASE_RE.fullmatch(phrase.strip().rstrip("."))
+    if match is None:
+        return None
+    word = match.group("word")
+    scope = "battlefield" if match.group("scope").lower() == "on the battlefield" else "you_control"
+    if word[:1].isupper():
+        return scope, None, word
+    try:
+        return scope, Type(word.lower()), ""
+    except ValueError:
+        return None
 
 
 class TriggeredManaShape(BaseModel):
     """The mana a triggered mana ability adds (CR 605.1b), as data.
 
     Exactly one of `colors`, `chosen_color`, `any_color` or `produced_type`
-    describes the mana; `recipient` says whose pool it goes to. Read by the
-    resolution (`machines/effects.py`) and by the payment search
-    (`machines/cost.py`), so what a tap is expected to add and what it adds
-    are one reading of the text.
+    describes the mana; `recipient` says whose pool it goes to. `count` is a
+    "for each" phrase multiplying it (`parse_mana_count`), `optional` a "may
+    add" (CR 608.2d), `snow_colors` the literal mana added instead when the
+    tapped permanent is snow, and `restriction` CR 106.6's "Spend this mana
+    only" sentence. Read by the resolution (`machines/effects.py`) and by the
+    payment search (`machines/cost.py`), so what a tap is expected to add and
+    what it adds are one reading of the text.
     """
 
     recipient: Literal["controller", "its_controller", "that_player"] = "controller"
@@ -2830,13 +2868,15 @@ class TriggeredManaShape(BaseModel):
     chosen_color: bool = False
     any_color: int = 0
     produced_type: bool = False
+    optional: bool = False
+    count: str | None = None
+    snow_colors: tuple[Color, ...] | None = None
+    restriction: str | None = None
 
 
-def parse_triggered_mana(effect: str) -> TriggeredManaShape | None:
-    """`effect`'s mana, when the whole effect is an "add ... mana" instruction
-    this engine reads, else `None` (a count "for each ...", a "may add", or
-    any other rider fails closed)."""
-    match = _TRIGGERED_MANA_RE.fullmatch(effect.strip())
+def _parse_add_mana_sentence(sentence: str) -> TriggeredManaShape | None:
+    """One "[subject ][may ]add[s] [an additional ]<mana>[ for each ...]"."""
+    match = _TRIGGERED_MANA_RE.fullmatch(sentence.strip())
     if match is None:
         return None
     subject = (match.group("subject") or "").lower()
@@ -2847,20 +2887,70 @@ def parse_triggered_mana(effect: str) -> TriggeredManaShape | None:
         if subject == "that player"
         else "controller"
     )
+    optional = match.group("may") is not None
     mana = match.group("mana").strip()
+    count: str | None = None
+    for_each = _TRIGGERED_MANA_FOR_EACH_RE.fullmatch(mana)
+    if for_each is not None:
+        count = for_each.group("phrase").strip()
+        if parse_mana_count(count) is None:
+            return None
+        mana = for_each.group("mana").strip()
+    common = {"recipient": recipient, "optional": optional, "count": count}
     if _TRIGGERED_MANA_CHOSEN_RE.fullmatch(mana):
-        return TriggeredManaShape(recipient=recipient, chosen_color=True)
+        return TriggeredManaShape(chosen_color=True, **common)
     if _TRIGGERED_MANA_PRODUCED_TYPE_RE.fullmatch(mana):
-        return TriggeredManaShape(recipient=recipient, produced_type=True)
+        return TriggeredManaShape(produced_type=True, **common)
     any_color = _TRIGGERED_MANA_ANY_COLOR_RE.fullmatch(mana)
     if any_color is not None:
         word = any_color.group("count").lower()
-        count = _TRIGGERED_MANA_COUNTS.get(word) or (int(word) if word.isdigit() else 0)
-        return TriggeredManaShape(recipient=recipient, any_color=count) if count else None
+        amount = _TRIGGERED_MANA_COUNTS.get(word) or (int(word) if word.isdigit() else 0)
+        return TriggeredManaShape(any_color=amount, **common) if amount else None
     symbols = _TRIGGERED_MANA_SYMBOLS_RE.findall(mana)
     round_trip = "".join(f"{{{symbol}}}" for symbol in symbols)
     if not symbols or round_trip.lower() != mana.lower().replace(" ", ""):
         return None
-    return TriggeredManaShape(
-        recipient=recipient, colors=tuple(Color(symbol.upper()) for symbol in symbols)
-    )
+    return TriggeredManaShape(colors=tuple(Color(symbol.upper()) for symbol in symbols), **common)
+
+
+def parse_triggered_mana(effect: str) -> TriggeredManaShape | None:
+    """`effect`'s mana, when the whole effect is an "add ... mana" instruction
+    this engine reads, else `None`: one add sentence, then optionally Snowfall's
+    "If that <permanent> is snow, <the same instruction with other mana>
+    instead." and a CR 106.6 "Spend this mana only ..." sentence. A count this
+    does not read ("for each other land you control with the same name as
+    it") or any other rider fails closed."""
+    sentences = [part for part in re.split(r"(?<=\.)\s+", effect.strip()) if part]
+    if not sentences:
+        return None
+    restriction: str | None = None
+    if len(sentences) > 1 and _TRIGGERED_MANA_SPEND_ONLY_RE.fullmatch(sentences[-1]):
+        restriction = sentences.pop()
+    snow: TriggeredManaShape | None = None
+    if len(sentences) == 2:
+        instead = _TRIGGERED_MANA_SNOW_INSTEAD_RE.fullmatch(sentences[1])
+        if instead is None:
+            return None
+        snow = _parse_add_mana_sentence(instead.group("rest"))
+        if snow is None:
+            return None
+        sentences.pop()
+    if len(sentences) != 1:
+        return None
+    shape = _parse_add_mana_sentence(sentences[0])
+    if shape is None:
+        return None
+    update: dict[str, object] = {}
+    if snow is not None:
+        if (
+            not shape.colors
+            or not snow.colors
+            or snow.recipient != shape.recipient
+            or snow.optional != shape.optional
+            or snow.count != shape.count
+        ):
+            return None
+        update["snow_colors"] = snow.colors
+    if restriction is not None:
+        update["restriction"] = restriction
+    return shape.model_copy(update=update) if update else shape
