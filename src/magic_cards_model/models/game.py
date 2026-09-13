@@ -9,7 +9,7 @@ from random import Random
 from typing import Annotated, Any, ClassVar
 from uuid import NAMESPACE_OID, UUID, uuid4, uuid5
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, model_validator
 
 from ..ids import install_id_allocator, reset_id_allocator
 from ..machines import combat as combat_rules
@@ -1652,6 +1652,13 @@ class Game(BaseModel):
     `begin_activating` and taken back by `activate_ability`: CR 107.3a's X is
     announced as the cost is chosen, and the ability on the stack is built by
     a second call, so this is the value that crosses from one to the other."""
+
+    _announced_targets: dict[str, list[TargetRef]] = PrivateAttr(default_factory=dict)
+    """The targets `begin_activating` announced (CR 601.2c), keyed like
+    `activations`, taken back by `activate_ability` once the cost is paid
+    (CR 601.2h). Not persisted: both calls run inside one command, and a
+    command that pauses is replayed from its start, `begin_activating`
+    included."""
 
     library_orders_kept: list[LibraryOrderKept] = Field(default_factory=list)
     """Library cards that kept their order through a put onto the bottom or a
@@ -12658,6 +12665,64 @@ class Game(BaseModel):
             )
             return permanent
 
+    def _activation_target_text(self, ability: Any, x_value: int) -> str:
+        """The ability's own text its targets are announced against.
+
+        `x_value` is substituted in first when the printed cost carries an
+        {X} at all (CR 107.3a: X is announced as part of CR 601.2b/602.2b,
+        before targets are, CR 601.2c) - The Mycosynth Gardens' own "target
+        nontoken artifact you control with mana value X" is unreadable by
+        `machines/targeting.py` with a literal "X" still in it.
+
+        A **loyalty** ability spells its X differently: CR 107.7's negative
+        symbol is written "-X", not "{X}", so Tamiyo, Compleated Sage's "-X:
+        Exile target nonland permanent card with mana value X from your
+        graveyard" is marked by `LoyaltyCost.variable` instead.
+        """
+        has_variable_loyalty = ability.loyalty is not None and ability.loyalty.variable
+        if cost_announces_x(ability.cost) or has_variable_loyalty:
+            return substitute_x(ability.text, x_value)
+        return ability.text
+
+    def _announce_activation_targets(
+        self,
+        permanent: CardState,
+        controller: str,
+        text: str,
+        targets: list[object] | None,
+    ) -> list[TargetRef] | None:
+        """CR 601.2c for an activation (CR 602.2b): ask for, or check, its targets.
+
+        `None` when the ability's text names no target this engine can read,
+        so there is nothing to announce. Otherwise the announced targets,
+        referenced as they are *now* - before any cost is paid (CR 601.2h) -
+        so a target the cost itself moves (a source sacrificing itself) keeps
+        naming the object it was when chosen, and CR 608.2b finds it gone.
+        """
+        profile = profile_for_text(text)
+        if not (profile.understood and profile.requirements):
+            return None
+        if targets is None:
+            # The caller supplied nothing, so this is not yet a target
+            # announcement at all - ask, the same way a triggered ability's
+            # own announcement is asked (`_ask_targets`, shared with
+            # `_ask_trigger_targets`). An explicit list, even an empty one, is
+            # a real answer already given and is checked instead.
+            asked = self._ask_targets(profile, controller, permanent.id, permanent.name, text)
+            if asked is None:
+                # CR 601.2e, imported wholesale by CR 602.2b: a proposed
+                # activation that cannot legally be completed - a mandatory
+                # target (CR 601.2c) with no legal object or player to name -
+                # never happens at all, the same refusal
+                # `Game.cast_free_from_exile` gives a spell (CR 601.2c).
+                raise ValueError(
+                    f"{permanent.name}'s ability requires a target, but no legal "
+                    "target exists, so it cannot be activated (CR 601.2c, CR 602.2b)"
+                )
+            return list(asked)
+        profile.check(list(targets), controller, self, source_id=permanent.id)
+        return [TargetRef.coerce(target) for target in targets]
+
     def begin_activating(
         self,
         permanent: CardState,
@@ -12669,11 +12734,19 @@ class Game(BaseModel):
         exiling: list[CardState] | None = None,
         revealing: list[CardState] | None = None,
         x_value: int = 0,
+        targets: list[object] | None = None,
     ) -> CostPayment:
         """Announce an activation and open its payment (CR 602.2a, 602.2b).
 
         Raises if the ability is prohibited from being activated at all
         (CR 602.5), before anything has been spent.
+
+        `targets` are announced here, before the payment this returns is
+        paid: CR 602.2b runs CR 601.2c (targets) before CR 601.2h (paying).
+        `None` asks for them. They are checked against the board as it is now,
+        so Vampire Hexmage may target itself and its "Sacrifice this
+        creature" cost is paid afterwards; CR 608.2b is what finds the target
+        gone on resolution. `activate_ability` takes the announcement back.
 
         `x_value` is CR 107.3a's X, announced now (CR 602.2b puts the whole of
         CR 601.2b's announcement, X included, at this same moment) - the
@@ -12716,6 +12789,16 @@ class Game(BaseModel):
                 raise ValueError(refusal)
             if component.variable_count:
                 self.announced_reveal_counts[key] = len(component.cards)
+        # CR 601.2c before CR 601.2h (both via CR 602.2b): the targets are
+        # announced and checked now, while the cost is still unpaid.
+        self._announced_targets.pop(key, None)
+        ability = self.activated_abilities(permanent)[index]
+        announced_x = x_value or self.announced_reveal_counts.get(key, 0)
+        announced = self._announce_activation_targets(
+            permanent, controller, self._activation_target_text(ability, announced_x), targets
+        )
+        if announced is not None:
+            self._announced_targets[key] = announced
         # CR 106.6: an activation is what Shang-Chi's and Eldrazi Temple's
         # mana is restricted *to*, and what Cavern of Souls's and Delighted
         # Halfling's is restricted *from*, so the payment is told which it is
@@ -12802,61 +12885,27 @@ class Game(BaseModel):
             if announced is not None and not x_value:
                 x_value = announced
 
-            # CR 602.2b: "the remainder of the process for activating an ability is
-            # identical to the process for casting a spell", so CR 601.2c applies -
-            # the targets are announced and checked here, against the ability's own
-            # text rather than the card's spell text (CR 113.1c).
-            #
-            # `x_value` is substituted in first when the printed cost carries an
-            # {X} at all (CR 107.3a: X is announced as part of paying the cost,
-            # CR 601.2b/602.2b, a step already finished by the time targets are
-            # announced, CR 601.2c) - The Mycosynth Gardens' own "target nontoken
-            # artifact you control with mana value X" is unreadable by `machines/
-            # targeting.py` with a literal "X" still in it (nothing there resolves
-            # a bare letter to a number), so without this every such target would
-            # be refused outright rather than checked against the real, paid X.
-            #
-            # A **loyalty** ability spells its X differently: CR 107.7's negative
-            # symbol is written "−X", not "{X}", so the `{X}`-in-the-cost test
-            # above does not see it. Tamiyo, Compleated Sage's "−X: Exile target
-            # nonland permanent card with mana value X from your graveyard" is that
-            # shape, and its target clause needs the same substitution for the same
-            # reason - `LoyaltyCost.variable` is what marks the symbol as carrying
-            # a chosen X.
-            has_variable_loyalty = ability.loyalty is not None and ability.loyalty.variable
-            text = (
-                substitute_x(ability.text, x_value)
-                if cost_announces_x(ability.cost) or has_variable_loyalty
-                else ability.text
-            )
-            profile = profile_for_text(text)
-            if profile.understood and profile.requirements:
-                if targets is None:
-                    # The caller supplied nothing, so this is not yet a target
-                    # announcement (CR 601.2c) at all - ask, the same way a
-                    # triggered ability's own announcement is asked
-                    # (`_ask_targets`, shared with `_ask_trigger_targets`). An
-                    # explicit list, even an empty one, is a real answer already
-                    # given and is checked below instead, exactly as before.
-                    asked = self._ask_targets(
-                        profile, controller, permanent.id, permanent.name, text
-                    )
-                    if asked is None:
-                        # CR 601.2e, imported wholesale by CR 602.2b: a proposed
-                        # activation that cannot legally be completed - here, a
-                        # mandatory target (CR 601.2c) with no legal object or
-                        # player to name - never happens at all, the same refusal
-                        # `Game.cast_free_from_exile` already gives a spell with
-                        # no legal target for the same reason (CR 601.2c).
-                        raise ValueError(
-                            f"{permanent.name}'s ability requires a target, but no legal "
-                            "target exists, so it cannot be activated (CR 601.2c, CR 602.2b)"
-                        )
-                    targets = asked
-                else:
-                    profile.check(list(targets), controller, self, source_id=permanent.id)
-
+            # CR 601.2c, via CR 602.2b: `begin_activating` announced and checked
+            # the targets before the cost was paid (CR 601.2h). Paying it may
+            # have made one illegal - Vampire Hexmage sacrificing itself - and
+            # nothing rechecks that here; CR 608.2b does, on resolution.
             key = self._activation_key(permanent, index)
+            recorded = self._announced_targets.pop(key, None)
+            if recorded is not None:
+                if targets is not None and [TargetRef.coerce(t) for t in targets] != recorded:
+                    raise ValueError(
+                        f"{permanent.name}'s targets were already announced as it was "
+                        "activated, before its cost was paid (CR 601.2c, CR 602.2b)"
+                    )
+                targets = list(recorded)
+            else:
+                # A caller that never went through `begin_activating` announces
+                # here instead, against the ability's own text.
+                announced_targets = self._announce_activation_targets(
+                    permanent, controller, self._activation_target_text(ability, x_value), targets
+                )
+                if announced_targets is not None:
+                    targets = list(announced_targets)
             self.activations[key] = self.activations.get(key, 0) + 1
             if ability.loyalty is not None:
                 # CR 606.3's once-per-turn rule is per permanent: having activated

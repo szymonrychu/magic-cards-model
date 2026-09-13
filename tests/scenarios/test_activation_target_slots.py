@@ -21,16 +21,19 @@ to reach into a private engine method to find out what it may point at.
   legal target on the board its cost is priced rather than left UNKNOWN.
 
 Every CR number here was read with `mise run rules:find` in the session that
-wrote this file (602.2b, 601.2c, 115.1, 115.5, 702.6a, 606.3, 606.4, 113.6j).
+wrote this file (602.2b, 601.2c, 601.2h, 608.2b, 115.1, 115.5, 702.6a, 606.3,
+606.4, 113.6j).
 """
 
 import pytest
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.decisions import DecisionKind, ScriptedAnswer
 from magic_cards_model.machines.keywords import equip_activation
 from magic_cards_model.machines.legal_actions import legal_actions
 from magic_cards_model.models import Zone
 from magic_cards_model.models.action import Action, ActionKind, Affordability
+from magic_cards_model.models.card_state import TargetRef
 from magic_cards_model.models.game import Game
 from tests.scenarios.harness import Scenario
 
@@ -250,6 +253,83 @@ def test_an_off_pool_sacrifice_ability_refuses_a_player_target():
 
     with pytest.raises(ValueError, match="target permanent"):
         scenario.activate(hexmage, targets=["bob"])
+
+    assert hexmage.zone is Zone.BATTLEFIELD, (
+        "CR 601.2c comes before CR 601.2h: an illegal target refuses the "
+        "activation before the sacrifice is paid"
+    )
+
+
+# -- a target the cost itself makes illegal ------------------------------------
+#
+# CR 602.2b imports CR 601.2c-h in order: the target is announced (601.2c) and
+# only then is the cost paid (601.2h). Nothing between the two rechecks the
+# target, so a source sacrificing itself - or a creature sacrificed as the
+# cost - is a legal target when announced. CR 608.2b is where it stops being
+# one: "A target that's no longer in the zone it was in when it was targeted is
+# illegal ... If all its targets ... are now illegal, the spell or ability
+# doesn't resolve."
+
+
+def test_hexmage_may_target_itself_and_fizzles_once_sacrificed():
+    scenario = _hexmage_board()
+    hexmage = scenario.creature("Vampire Hexmage", "alice")
+
+    (slot,) = _row(scenario.game, "alice", hexmage.id, index=0).target_slots
+    assert hexmage.id in slot.candidates
+
+    ability = scenario.activate(hexmage, targets=[hexmage])
+
+    assert ability is not None and scenario.game.stack[-1] is ability
+    assert scenario.find("Vampire Hexmage", Zone.GRAVEYARD, "alice") is not None
+    scenario.resolve_top()
+    assert ability.id in scenario.game.fizzled
+
+
+def test_hexmage_asked_for_its_target_is_offered_itself_before_paying():
+    scenario = _hexmage_board()
+    hexmage = scenario.creature("Vampire Hexmage", "alice")
+    scenario.game.decisions.add(
+        ScriptedAnswer(kind=DecisionKind.CHOOSE_TARGETS, value=(hexmage,), player="alice")
+    )
+
+    ability = scenario.activate(hexmage)
+
+    (decision,) = [
+        asked
+        for asked in scenario.game.decisions.asked
+        if asked.kind is DecisionKind.CHOOSE_TARGETS
+    ]
+    assert TargetRef.to_card(hexmage) in decision.targets
+    assert ability is not None
+    scenario.resolve_top()
+    assert ability.id in scenario.game.fizzled
+
+
+def test_an_off_pool_sacrifice_a_creature_ability_may_target_the_sacrificed_creature():
+    """Phyrexian Plaguelord is in no deck list: "Sacrifice a creature: Target
+    creature gets -1/-1 until end of turn." The creature chosen to pay the cost
+    is also the target: legal when announced, gone by resolution."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Phyrexian Plaguelord", "Watchwolf"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    plaguelord = scenario.creature("Phyrexian Plaguelord", "alice")
+    wolf = scenario.creature("Watchwolf", "alice")
+
+    (slot,) = _row(scenario.game, "alice", plaguelord.id, index=1).target_slots
+    assert wolf.id in slot.candidates
+
+    ability = scenario.activate(plaguelord, index=1, sacrificing=[wolf], targets=[wolf])
+
+    assert ability is not None
+    assert scenario.find("Watchwolf", Zone.GRAVEYARD, "alice") is not None
+    scenario.resolve_top()
+    assert ability.id in scenario.game.fizzled
+    assert scenario.game.characteristics_of(plaguelord).toughness == 4
 
 
 # -- an off-battlefield ability, and the cast row's candidates ---------------
