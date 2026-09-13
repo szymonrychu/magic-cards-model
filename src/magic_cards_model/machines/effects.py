@@ -7868,11 +7868,12 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
     if _COUNTER_TARGET_ABILITY_OR_SPELL_RE.fullmatch(
         clause
     ) or _COUNTER_TARGET_ABILITY_RE.fullmatch(clause):
-        # `counter_targets` walks the stack for a targeted spell (CR 608.2b)
-        # and is only meaningful for a resolving *spell* - an ability naming
-        # this shape does not turn up in the pool, and guessing at one would
-        # be worse than refusing it.
-        return counter_targets if for_spell else None
+        # CR 113.9: abilities "can be countered by spells and abilities that
+        # specifically counter abilities". `counter_targets` reads only
+        # `targets` and the stack, which an `AbilityOnStack` carries too, so
+        # Rimewind Cryomancer's and Azorius Guildmage's activated "Counter
+        # target activated ability." reach it the way Repudiate does.
+        return counter_targets
 
     if match := _COUNTER_UNLESS_PAYS_RE.fullmatch(clause):
         return _counter_unless_pays_effect(int(match.group("n"))) if for_spell else None

@@ -252,3 +252,65 @@ def test_repudiate_cannot_target_a_mana_ability():
 
     with pytest.raises(ValueError):
         scenario.cast("Repudiate", username="bob", targets=[swamp])
+
+
+# --------------------------------------------------------------------------
+# An activated ability that counters an ability (CR 113.9 via CR 602.2b)
+#
+# "Counter target activated ability." printed after an activation cost is the
+# same clause Repudiate prints, and CR 701.6a's counter does not care whether
+# a spell or an ability does it. Rimewind Cryomancer is the reported card;
+# Azorius Guildmage, in no deck pool, proves the shape rather than the card.
+# --------------------------------------------------------------------------
+
+
+def _alice_activates_rites_against(bob_battlefield: list[str]) -> tuple[Scenario, object]:
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            library=["Forest"],
+            battlefield=["Vampiric Rites", "Swamp", "Swamp", "Grizzly Bears"],
+        )
+        .player("bob", library=["Forest"], battlefield=bob_battlefield)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    ability = activate_rites(scenario)
+    scenario.pass_priority("alice")
+    return scenario, ability
+
+
+def test_rimewind_cryomancers_activated_ability_counters_the_ability():
+    """CR 113.9 and CR 701.6a: the Cryomancer's "{1}, {T}: Counter target
+    activated ability" removes the Rites ability from the stack, so it never
+    resolves - no life, no card."""
+    scenario, ability = _alice_activates_rites_against(
+        ["Rimewind Cryomancer"] + ["Snow-Covered Forest"] * 4
+    )
+    cryomancer = scenario.creature("Rimewind Cryomancer", "bob")
+    cryomancer.summoning_sick = False
+    (forest,) = scenario.untapped_sources("Snow-Covered Forest", username="bob")
+
+    scenario.activate(cryomancer, forest, username="bob", targets=[ability])
+    scenario.pass_until_resolved()
+
+    assert scenario.player("alice").life == 20, "the ability never resolved"
+    assert scenario.player("alice").hand == []
+    assert scenario.stack_names() == []
+
+
+def test_azorius_guildmages_activated_ability_counters_the_ability():
+    """The same printed clause on a different card: Azorius Guildmage's
+    "{2}{U}: Counter target activated ability." reaches the same counter."""
+    scenario, ability = _alice_activates_rites_against(["Azorius Guildmage"] + ["Island"] * 3)
+    guildmage = scenario.creature("Azorius Guildmage", "bob")
+    islands = scenario.untapped_sources("Island", "Island", "Island", username="bob")
+
+    scenario.activate(guildmage, *islands, index=1, username="bob", targets=[ability])
+    scenario.pass_until_resolved()
+
+    assert scenario.player("alice").life == 20, "the ability never resolved"
+    assert scenario.player("alice").hand == []
+    assert scenario.stack_names() == []
