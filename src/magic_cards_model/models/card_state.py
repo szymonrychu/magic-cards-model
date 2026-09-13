@@ -411,6 +411,14 @@ class ExileMarker(StrEnum):
     load-bearing here in a way it is not for most of the markers above: the
     permission is the **owner's**, and the player who airbent the object is
     usually somebody else."""
+    LINKED = "linked"
+    """CR 607.2a / CR 406.6: a card exiled by an ability of an object that also
+    has an ability referring to "the exiled card(s)" - Skyclave Apparition's
+    enters-the-battlefield exile, read back by its leaves-the-battlefield
+    token. "The second ability refers only to cards in the exile zone that were
+    put there as a result of an instruction to exile them in the first
+    ability", so the card carries `linked_permanent_id` the way an imprinted
+    card does, and `Game.cards_imprinted_on` finds it the same way."""
     IMPRINTED = "imprinted"
     """"Imprint" is an ability word (CR 207.2c): it "has no special rules
     meaning" of its own, so the rule is whatever the card's own sentence says -

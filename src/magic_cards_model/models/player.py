@@ -442,6 +442,14 @@ class Player(BaseModel):
             and (origin is Zone.LIBRARY or origin.is_outside_the_game)
             and card_state.owner == self.username
         )
+        # CR 400.2: every player saw the card's face in a public zone - unless
+        # it sat in exile face down, which CR 406.3 lets nobody examine.
+        from_public_zone_to_hand = (
+            zone is Zone.HAND
+            and not origin.is_hidden
+            and not (origin is Zone.EXILE and not card_state.face_up)
+            and card_state.owner == self.username
+        )
         stamp_before = card_state.zone_change_stamp
         card_state.move_to(zone)
         self.cards_in(zone).append(card_state)
@@ -454,6 +462,8 @@ class Player(BaseModel):
             # revealed from outside the game and put into hand (CR 400.11a,
             # CR 701.20a): what a player knew may follow it into the hand.
             self.game.carry_knowledge_into_hand(card_state, stamp_before, origin)
+        elif from_public_zone_to_hand and self.game is not None:
+            self.game.carry_public_knowledge_into_hand(card_state, origin)
 
     def move(self, card_state: CardState, to_zone: Zone) -> None:
         """Move a card between this player's zones.

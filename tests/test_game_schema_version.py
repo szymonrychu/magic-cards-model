@@ -298,3 +298,30 @@ def test_a_snapshot_written_before_battle_three_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_BATTLE_THREE}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before battle 5's persisted shapes: a modal triggered
+#: ability's chosen modes (`AbilityOnStack.modes`/`.mode_targets`),
+#: `Game.announced_reveal_counts`, `Game.search_description_notices`,
+#: `CostComponent.variable_count`/`.source`, and `ExileMarker.LINKED`.
+_SCHEMA_VERSION_BEFORE_TRIGGER_MODES_AND_REVEAL_COSTS = 12
+
+
+def test_a_snapshot_written_before_trigger_modes_and_reveal_costs_is_refused() -> None:
+    """A version-12 dump has no `announced_reveal_counts` and no
+    `search_description_notices`, and a modal trigger in it carries no chosen
+    mode; decoded as current, that trigger would be asked for its mode again at
+    resolution, which CR 603.3c places at the moment it went on the stack."""
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_TRIGGER_MODES_AND_REVEAL_COSTS
+    dumped = _a_played_game().model_dump(mode="json")
+    assert "announced_reveal_counts" in dumped
+    assert "search_description_notices" in dumped
+    del dumped["announced_reveal_counts"]
+    del dumped["search_description_notices"]
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_TRIGGER_MODES_AND_REVEAL_COSTS
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_TRIGGER_MODES_AND_REVEAL_COSTS}",
+    ):
+        Game.model_validate(dumped)

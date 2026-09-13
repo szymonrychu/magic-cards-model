@@ -222,7 +222,12 @@ def test_a_look_is_known_only_to_the_player_who_looked():
 # -- a zone change is a new object (CR 400.7) ----------------------------------
 
 
-def test_a_revealed_card_that_is_exiled_and_returned_to_the_same_zone_is_not_known():
+def test_a_revealed_card_exiled_and_returned_to_hand_is_known_only_from_the_public_move():
+    """CR 400.7 ends the opening-hand reveal the moment the card is exiled.
+    Exile is a public zone (CR 400.2) and the card sat there face up, so the
+    return to hand is watched by everyone - a carried record of the new
+    object, per `test_public_card_to_hand_known.py`'s knowledge policy, not the
+    old reveal coming back."""
     game, devourer = _devourer_revealed_from_alices_opening_hand()
     assert known(game, "bob") == [("Devourer of Destiny", Zone.HAND, None, False)]
 
@@ -231,11 +236,15 @@ def test_a_revealed_card_that_is_exiled_and_returned_to_the_same_zone_is_not_kno
     game.return_to_hand(devourer)
 
     assert devourer.zone is Zone.HAND
-    assert known(game, "bob") == []
-    assert known(game, "alice") == []
+    assert known(game, "bob") == [("Devourer of Destiny", Zone.HAND, None, True)]
+    assert known(game, "alice") == [("Devourer of Destiny", Zone.HAND, None, True)]
 
 
-def test_a_battlefield_card_bounced_to_hand_is_a_new_object_and_not_known():
+def test_a_battlefield_card_bounced_to_hand_is_a_new_object_known_only_from_the_public_move():
+    """CR 400.7 still ends the opening-hand reveal: the card that comes back
+    is a new object. What bob knows afterwards comes from watching it leave
+    the battlefield (CR 400.2, a public zone) - a carried record, not the old
+    reveal - per `test_public_card_to_hand_known.py`'s knowledge policy."""
     game, devourer = _devourer_revealed_from_alices_opening_hand()
     assert known(game, "bob") == [("Devourer of Destiny", Zone.HAND, None, False)]
 
@@ -246,4 +255,4 @@ def test_a_battlefield_card_bounced_to_hand_is_a_new_object_and_not_known():
     game.return_to_hand(devourer)
 
     assert devourer.zone is Zone.HAND
-    assert known(game, "bob") == []
+    assert known(game, "bob") == [("Devourer of Destiny", Zone.HAND, None, True)]

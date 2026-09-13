@@ -61,6 +61,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
+from ..data.subtypes import subtype_vocabulary
 from ..models.card import Color, Supertype, Type
 from ..models.card_state import (
     CardState,
@@ -141,6 +142,7 @@ from .layers import (
     set_power_toughness,
 )
 from .modes import (
+    ModalProfile,
     Mode,
     is_modal_text,
     modal_profile,
@@ -2303,9 +2305,46 @@ def exile_ability_targets(game: "Game", ability: AbilityOnStack) -> None:
     `parse_mixed_effect_for_spell`, which reads this shape the same way any
     non-modal card's text would).
     """
+    linked = _source_reads_its_exiled_cards(game, ability)
     for target in game.resolve_targets(ability):
         if isinstance(target, CardState):
-            game.exile_permanent(target)
+            exiled = game.exile_permanent(target)
+            if linked and exiled.zone is Zone.EXILE:
+                # CR 607.2a: the object's other ability refers to "the exiled
+                # card", and only to a card this ability exiled - so the card
+                # is marked as exiled with the ability's source.
+                exiled.exile_annotation = ExileAnnotation(
+                    marker=ExileMarker.LINKED,
+                    owner=exiled.owner,
+                    turn_exiled=game.turn.turns_taken if game.turn is not None else None,
+                    linked_permanent_id=ability.source_id,
+                )
+
+
+#: CR 607.2a's second ability: "refers either to 'the exiled cards' or to
+#: cards 'exiled with [this object]'".
+_LINKED_EXILE_READER_RE = re.compile(r"\bthe exiled cards?\b|\bexiled with\b", re.IGNORECASE)
+
+
+def _source_reads_its_exiled_cards(game: "Game", ability: AbilityOnStack) -> bool:
+    """Whether the resolving ability's source has another printed ability that
+    reads the cards this one exiles (CR 607.2a, CR 406.6) - Skyclave
+    Apparition's "the exiled card's owner creates ...". Read off the card's own
+    oracle text, so every object printing the linked pair gets the link."""
+    if not isinstance(ability, AbilityOnStack) or ability.source_id is None:
+        # A spell exiling its targets (Utter End, Celestial Purge) is not an
+        # ability of an object with a linked reader; nothing to link.
+        return False
+    source = game.find_by_id(ability.source_id)
+    if not isinstance(source, CardState):
+        return False
+    own = ability.ability.text
+    for line in (source.card.front_oracle_text or "").splitlines():
+        if own and (own in line or line in own):
+            continue
+        if _LINKED_EXILE_READER_RE.search(line):
+            return True
+    return False
 
 
 def exile_target_players_graveyard(game: "Game", stack_object: "StackObject") -> None:
@@ -3016,18 +3055,191 @@ def _quality_matcher(quality: str) -> Callable[[CardState], bool]:
     return matches
 
 
-def _quality_description(quality: str | None, max_mv: str | None) -> str:
-    """The stated quality, for a `Game.may`/`Game.ask` prompt - "basic land",
-    "creature with mana value 1 or less".
+def _with_article(phrase: str) -> str:
+    """ "a" or "an" in front of a card description, by its first letter."""
+    return ("an " if phrase[:1].lower() in "aeiou" else "a ") + phrase
 
-    `None` is an unrestricted search ("search your library for a card", CR
-    701.23d), which has no quality word to name at all.
+
+def _quality_description(
+    quality: str | None, max_mv: str | None, *, basic_land_type: bool = False
+) -> str:
+    """One card description for a `Game.may`/`Game.ask` prompt, article and
+    all - "a basic land card", "a creature card with mana value 1 or less".
+
+    The qualifiers follow the word "card", in the order the card prints them;
+    appending "card" after the bound produced "a creature with mana value 1 or
+    less card" (battle report B5-07). `None` is an unrestricted search ("a
+    card", CR 701.23d), which names no quality word at all.
     """
-    if quality is None:
-        return "" if max_mv is None else f"card with mana value {max_mv} or less"
-    if max_mv is None:
-        return quality
-    return f"{quality} with mana value {max_mv} or less"
+    noun = "card" if quality is None else f"{quality} card"
+    if basic_land_type:
+        noun += " with a basic land type"
+    if max_mv is not None:
+        noun += f" with mana value {max_mv} or less"
+    return _with_article(noun)
+
+
+#: One whole card description inside a search sentence, after its article:
+#: "basic Plains card", "creature card with mana value 1 or less", "land card
+#: with a basic land type". `_SEARCH_AND_PUT_RE` reads the qualifiers of the
+#: last description it sees; `_search_descriptions` reads every description
+#: with this.
+_SEARCH_DESCRIPTION_RE = re.compile(
+    r"(?:(?P<quality>.+?) )?card(?P<basic_land_type> with a basic land type)?"
+    r"(?: with mana value (?P<max_mv>\d+) or less)?"
+    r"(?P<mana_cost_0_or_1> with mana cost \{0\} or \{1\})?",
+    re.IGNORECASE,
+)
+#: "or a" / "or an" between two whole card descriptions - Starfield
+#: Shepherd's "a basic Plains card or a creature card with mana value 1 or
+#: less". The article is what tells it apart from a list of types inside one
+#: description ("a Mountain or Plains card"), which never repeats it.
+_SEARCH_DESCRIPTION_JOIN_RE = re.compile(r"\s+or\s+an?\s+", re.IGNORECASE)
+
+
+def _named_type_word_is_readable(word: str) -> bool:
+    """Whether `_named_type_matcher` really reads this one word: a card type
+    (CR 205.2a), a "non"-prefixed card type, a supertype (CR 205.4a), or a
+    subtype WOTC has printed (CR 205.3, `subtype_vocabulary`). `has_land_type`
+    accepts any string, so it cannot be the test - a typo would validate."""
+    lowered = word.strip().lower()
+    if lowered.startswith("non"):
+        try:
+            Type(lowered[3:])
+        except ValueError:
+            return False
+        return True
+    for kind in (Type, Supertype):
+        try:
+            kind(lowered)
+        except ValueError:
+            continue
+        return True
+    return lowered in subtype_vocabulary()
+
+
+def _card_description_is_readable(quality: str) -> bool:
+    """Whether `_quality_matcher` reads every word of one description's
+    quality, following its own shapes word for word: a "basic " prefix,
+    "historic" (CR 700.6), and a comma/"or" list of words, each a type word
+    or one carrying a color or color-count adjective. A word it cannot read
+    makes it match nothing, which is a search that silently finds nothing -
+    this is what sends such a search to a notice instead."""
+    lowered = quality.strip().lower()
+    if lowered.startswith("basic "):
+        return _card_description_is_readable(lowered.removeprefix("basic "))
+    if lowered == "historic":
+        return True
+    words = [word.strip() for word in re.split(r",\s*|\s+or\s+", lowered) if word.strip()]
+    if not words:
+        return False
+    for word in words:
+        parts = word.split()
+        if parts[0] in _COLOR_COUNT_WORDS or parts[0] in _HAND_EXILE_COLOR_WORDS:
+            if len(parts) > 2 or (len(parts) == 2 and not _named_type_word_is_readable(parts[1])):
+                return False
+        elif len(parts) != 1 or not _named_type_word_is_readable(word):
+            return False
+    return True
+
+
+def _search_descriptions(
+    match: re.Match[str],
+) -> tuple[Callable[[CardState], bool], str] | None:
+    """What one `_SEARCH_AND_PUT_RE` match finds, and how to name it.
+
+    CR 701.23a: "find a card that matches the given description." The given
+    description may be two whole descriptions joined by "or a" - Starfield
+    Shepherd's "a basic Plains card or a creature card with mana value 1 or
+    less" - and then a card matching either one matches, with each
+    description's own qualifiers applying to it alone (the mana value bound is
+    the creature's, not the Plains'). Returns the predicate and the prompt
+    wording ("a basic Plains card or a creature card with mana value 1 or
+    less"), or `None` when any description has a word this engine cannot read
+    - the caller fails closed rather than searching for a narrower set.
+    """
+    quality = match.group("quality")
+    groups = match.groupdict()
+    whole = "card" if quality is None else f"{quality} card"
+    if groups.get("basic_land_type"):
+        whole += " with a basic land type"
+    if match.group("max_mv") is not None:
+        whole += f" with mana value {match.group('max_mv')} or less"
+    if groups.get("mana_cost_0_or_1"):
+        whole += " with mana cost {0} or {1}"
+    joined = quality is not None and re.search(r"\bcard\b", quality, re.IGNORECASE)
+    halves = _SEARCH_DESCRIPTION_JOIN_RE.split(whole) if joined else [whole]
+    matchers: list[Callable[[CardState], bool]] = []
+    descriptions: list[str] = []
+    for half in halves:
+        piece = _SEARCH_DESCRIPTION_RE.fullmatch(half.strip())
+        if piece is None:
+            return None
+        half_quality = piece.group("quality")
+        if half_quality is not None and not _card_description_is_readable(half_quality):
+            return None
+        max_mv = piece.group("max_mv")
+        if max_mv is None and piece.group("mana_cost_0_or_1"):
+            # "with mana cost {0} or {1}" (Urza's Saga chapter III) - see
+            # `_SEARCH_AND_PUT_RE`'s own comment for why this is the same
+            # bound as "mana value 1 or less".
+            max_mv = "1"
+        matcher = _bounded_quality_matcher(half_quality, max_mv)
+        with_basic_land_type = bool(piece.group("basic_land_type"))
+        if with_basic_land_type:
+            # CR 305.6/305.8: a *subtype* question, not the "basic" supertype -
+            # see `_has_a_basic_land_type`'s own docstring.
+            matcher = _and_has_a_basic_land_type(matcher)
+        matchers.append(matcher)
+        descriptions.append(
+            _quality_description(half_quality, max_mv, basic_land_type=with_basic_land_type)
+        )
+    if len(matchers) == 1:
+        return matchers[0], descriptions[0]
+
+    def matches_either(state: CardState) -> bool:
+        return any(matcher(state) for matcher in matchers)
+
+    return matches_either, " or ".join(descriptions)
+
+
+def _and_has_a_basic_land_type(base: Callable[[CardState], bool]) -> Callable[[CardState], bool]:
+    def matches(state: CardState) -> bool:
+        return base(state) and _has_a_basic_land_type(state)
+
+    return matches
+
+
+class SearchDescriptionNotice(BaseModel):
+    """One library search whose card description this engine cannot read.
+
+    CR 701.23a's search finds "a card that matches the given description", and
+    CR 701.23b makes finding nothing a legal answer - so a description read as
+    matching nothing is indistinguishable from a real miss. Moonsilver Key's
+    "an artifact card with a mana ability or a basic land card" is the shape:
+    "with a mana ability" is not a description this engine reads. The search is
+    not run at all, and this records why.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    source_id: UUID | None
+    source_name: str
+    text: str
+    """The search clause as printed."""
+
+
+def _unreadable_search_description(text: str) -> str | None:
+    """The first search clause in `text` whose description does not read
+    (`_search_descriptions`), or `None`."""
+    clauses = _prepare_effect_clauses(text)
+    if clauses is None:
+        return None
+    for clause in clauses:
+        match = _SEARCH_AND_PUT_RE.fullmatch(clause.strip())
+        if match is not None and _search_descriptions(match) is None:
+            return clause.strip()
+    return None
 
 
 def _bounded_quality_matcher(
@@ -3059,7 +3271,7 @@ def _bounded_quality_matcher(
 
 def _search_and_place_for(
     match: re.Match[str], *, optional: bool
-) -> Callable[["Game", Player, str], None]:
+) -> Callable[["Game", Player, str, str | None], None] | None:
     """The core of one search-and-put match - search, then place the find -
     as a function of **whichever player is doing it**, independent of who
     controls the resolving spell or ability.
@@ -3077,25 +3289,10 @@ def _search_and_place_for(
     `_parse_anaphoric_clause_pair`, which reads it off the previous clause's
     target rather than off this one's own text.
     """
-    quality = match.group("quality")
-    max_mv = match.group("max_mv")
-    if max_mv is None and match.groupdict().get("mana_cost_0_or_1"):
-        # "with mana cost {0} or {1}" (Urza's Saga chapter III) - see
-        # `_SEARCH_AND_PUT_RE`'s own comment for why this is the same bound
-        # as "mana value 1 or less".
-        max_mv = "1"
-    matches = _bounded_quality_matcher(quality, max_mv)
-    description = _quality_description(quality, max_mv)
-    if match.groupdict().get("basic_land_type"):
-        # CR 305.6/305.8: "a land card with a basic land type" is a *subtype*
-        # question, not the "basic" supertype `_quality_matcher`'s own "basic
-        # land" branch checks - see `_has_a_basic_land_type`'s own docstring.
-        base_matches = matches
-
-        def matches(state: CardState, _base: Callable[[CardState], bool] = base_matches) -> bool:
-            return _base(state) and _has_a_basic_land_type(state)
-
-        description = f"{description} with a basic land type"
+    described = _search_descriptions(match)
+    if described is None:
+        return None
+    matches, description = described
     tapped = bool(match.group("tapped"))
     to_hand = match.group("dest").startswith("into your hand")
     reveal = bool(match.groupdict().get("reveal"))
@@ -3103,7 +3300,7 @@ def _search_and_place_for(
     def run(game: "Game", player: Player, source: str, source_id: str | None) -> None:
         if optional and not game.may(
             player,
-            f"search your library for a {description} card",
+            f"search your library for {description}",
             source=source,
             source_id=source_id,
         ):
@@ -3121,7 +3318,7 @@ def _search_and_place_for(
     return run
 
 
-def _build_search_clause(match: re.Match[str], *, for_spell: bool) -> TargetedClause:
+def _build_search_clause(match: re.Match[str], *, for_spell: bool) -> TargetedClause | None:
     """The effect for one `_SEARCH_AND_PUT_RE` match, as a `TargetedClause` -
     usable directly by `parse_search_and_put_effect`'s whole-text callers and
     by `_parse_mixed_clause`'s per-clause dispatch alike.
@@ -3136,6 +3333,8 @@ def _build_search_clause(match: re.Match[str], *, for_spell: bool) -> TargetedCl
     """
     optional = bool((match.group("subject") or "").strip())
     run = _search_and_place_for(match, optional=optional)
+    if run is None:
+        return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
@@ -3801,7 +4000,11 @@ ClauseEffect = Callable[["Game", Player, str, str | None], None]
 # loses 1 life" - Blood Artist) or being a cost ("Pay 7 life" is CR 118, not
 # an effect) - so only "you" is recognised; a targeted or "each"/"opponent"
 # phrasing is deliberately left to the targeted-effects wave.
-_GAIN_LIFE_RE = re.compile(rf"you gains? (?P<n>{_COUNT}) life", re.IGNORECASE)
+#: "you gain N life", and "you gain three times X life" (Martyr of Sands) once
+#: CR 107.3a's X is substituted - a multiplier on the count, read the same way.
+_GAIN_LIFE_RE = re.compile(
+    rf"you gains? (?:(?P<times>{_COUNT}) times )?(?P<n>{_COUNT}) life", re.IGNORECASE
+)
 _LOSE_LIFE_RE = re.compile(rf"you loses? (?P<n>{_COUNT}) life", re.IGNORECASE)
 #: "Each opponent loses N life." - Cauldron Familiar's own enters trigger,
 #: the flat-number twin of `_EACH_OPPONENT_LOSES_LIFE_EQUAL_TO_RE`'s counted
@@ -3935,6 +4138,8 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
 
     if match := _GAIN_LIFE_RE.fullmatch(clause):
         amount = _count(match.group("n"))
+        if match.group("times") is not None:
+            amount *= _count(match.group("times"))
         # Through `Game.gain_life`, not `Player.gain_life`. CR 119.9: "Some
         # triggered abilities are written, 'Whenever [a player] gains life,
         # . . . .' Such abilities are treated as though they are written,
@@ -6484,6 +6689,119 @@ _COUNTER_ON_ADDITIONAL_COST_CARD_RE = re.compile(
 )
 
 
+#: Living Destiny: "You gain life equal to the revealed card's mana value." The
+#: card that paid this spell's additional cost (CR 118.8a), read back off
+#: `Game.cast_record(spell).additional_cost_cards` the way Fling's "the
+#: sacrificed creature's power" and Swallow Whole's "the creature tapped to pay
+#: this spell's additional cost" already are. The verb says which cost paid it;
+#: the characteristic is CR 202.3's mana value or CR 208.1's power or toughness,
+#: read off the card wherever paying it left it.
+_GAIN_LIFE_EQUAL_TO_ADDITIONAL_COST_CARD_RE = re.compile(
+    r"^you gain life equal to the (?:revealed|sacrificed|exiled|discarded|tapped) "
+    r"(?:card|creature|permanent|artifact)'?s (?P<attr>mana value|power|toughness)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_gain_life_equal_to_additional_cost_card_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_GAIN_LIFE_EQUAL_TO_ADDITIONAL_COST_CARD_RE`'s shape, or `None`.
+
+    Spell-only: an additional cost is a spell's (CR 118.8a), and only a spell
+    has a `Game.cast_record` to read it back from. Gains nothing when no card
+    was recorded or the characteristic cannot be read (a `*` power off the
+    battlefield), and never a negative amount (CR 107.1b).
+    """
+    if not for_spell:
+        return None
+    match = _GAIN_LIFE_EQUAL_TO_ADDITIONAL_COST_CARD_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    attribute = match.group("attr").lower()
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        record = game.cast_record(stack_object)
+        if not record.additional_cost_cards:
+            return
+        card_state = game.find_by_id(record.additional_cost_cards[0])
+        if not isinstance(card_state, CardState):
+            return
+        if attribute == "mana value":
+            value: float | int | None = card_state.mana_value
+        elif attribute == "power":
+            value = card_state.power
+        else:
+            value = card_state.toughness
+        if value is None:
+            return
+        game.gain_life(game.controller_of(stack_object), max(int(value), 0))
+
+    return effect
+
+
+#: Skyclave Apparition's leaves-the-battlefield half: "the exiled card's owner
+#: creates an X/X blue Illusion creature token, where X is the mana value of
+#: the exiled card." CR 607.2a links "the exiled card" to the cards the same
+#: object's other ability exiled (`ExileMarker.LINKED`, read by
+#: `Game.cards_imprinted_on`); CR 111.2 makes the creating player - the exiled
+#: card's owner - the token's owner and controller. The descriptor is read by
+#: `_parse_generic_token_descriptor`, and X is the named characteristic of the
+#: exiled card, summed over several linked cards (CR 607.3).
+_EXILED_CARD_OWNER_CREATES_X_TOKEN_RE = re.compile(
+    r"^the exiled card'?s owner creates an? x/x (?P<desc>.+?) tokens?"
+    r"(?:\s+with\s+(?P<tail>.+?))?,?\s*where x is the (?P<attr>mana value|power|toughness) "
+    r"of the exiled card\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_exiled_card_owner_creates_x_token_clause(text: str) -> AbilityEffect | None:
+    """`_EXILED_CARD_OWNER_CREATES_X_TOKEN_RE`'s shape, or `None`.
+
+    A card that has left exile is no longer "the exiled card" (CR 607.2a reads
+    cards in the exile zone only), so it counts for nothing. CR 607.3: when the
+    linked ability exiled several cards, "the exiled card" gets several answers
+    and a variable uses their sum - so each owner of linked cards creates one
+    token whose X is the sum over that owner's cards. X is not floored at zero:
+    CR 107.1b lets an effect set a creature's power and toughness to a negative
+    value, and a mana value of 0 simply makes a 0/0 that state-based actions
+    put into the graveyard.
+    """
+    match = _EXILED_CARD_OWNER_CREATES_X_TOKEN_RE.fullmatch(
+        _strip_non_effect_preamble(text).strip()
+    )
+    if match is None:
+        return None
+    words = match.group("desc").strip().split()
+    definition = _parse_generic_token_descriptor(words, match.group("tail"))
+    if definition is None or Type.CREATURE not in definition.types:
+        return None
+    attribute = match.group("attr").lower()
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        if ability.source_id is None:
+            return
+        totals: dict[str, int] = {}
+        for exiled in game.cards_imprinted_on(ability.source_id):
+            if attribute == "mana value":
+                value: float | int | None = exiled.mana_value
+            elif attribute == "power":
+                value = exiled.power
+            else:
+                value = exiled.toughness
+            if value is None:
+                continue
+            owner = exiled.owner or game.controller_of(ability).username
+            totals[owner] = totals.get(owner, 0) + int(value)
+        for owner, size in totals.items():
+            create_tokens(
+                game, definition.model_copy(update={"power": size, "toughness": size}), owner
+            )
+
+    return effect
+
+
 def _parse_counter_on_additional_cost_card_clause(clause: str) -> TargetedClause | None:
     """`_COUNTER_ON_ADDITIONAL_COST_CARD_RE`'s shape, or `None` if not it."""
     match = _COUNTER_ON_ADDITIONAL_COST_CARD_RE.fullmatch(clause.strip())
@@ -7958,71 +8276,110 @@ def resolve_modal_spell(game: "Game", spell: CardState) -> None:
         spell.targets = original_targets
 
 
-def _resolve_modal_triggered_ability_clause(text: str) -> AbilityEffect | None:
-    """A modal *triggered* ability's own "choose one/two -" tail (CR 700.2,
-    603.3c) - Elder Gargaroth's "attacks or blocks, choose one -" is the only
-    printing in the pool.
+#: The option a player names to stop choosing modes once the instruction's
+#: minimum is met - "choose one or both" (CR 700.2) takes a second mode only
+#: if the player wants one. Offered first, so an unscripted player takes the
+#: least they must.
+NO_FURTHER_MODES = "Choose no further modes."
 
-    Unlike `resolve_modal_spell`, there is no `Casting`/`CastRecord` here:
-    CR 603.3c puts the mode choice "as part of putting that ability on the
-    stack", a moment this project's engine does not yet have a hook for (see
-    `docs/engine-coverage.md`) - `Game.put_triggers_on_stack` chooses a
-    triggered ability's *targets* at that moment (CR 603.3d) but not its
-    modes. This reads the choice at **resolution** instead, one step later
-    than the rule places it, which only matters if something could observe
-    the ability sitting on the stack with its mode not yet chosen (nothing in
-    the pool does) - `DecisionKind.CHOOSE_A_MODE` is new this wave, so the
-    ability's controller may need to answer it live in a real game; see this
-    wave's report.
+#: CR 207.2d: "flavor words appear in italics at the beginning of some
+#: abilities ... [and] have no special rules meaning". Flash Thompson's
+#: "Heckle \u2014 Tap target creature." is such a mode; the words before the
+#: dash are not rules text.
+_FLAVOR_WORD_PREFIX = re.compile(r"^[A-Z][^\u2014.\n]{0,40}?\s+\u2014\s+")
 
-    Only a plain "choose one" is read - `ModalProfile.allowed_range` other
-    than `(1, 1)` (Spree's per-mode costs, "choose one or more", pawprint)
-    leaves `profile.understood` False and this returns `None`, the same
-    fail-closed default every other unreadable modal shape gets.
 
-    `text` arrives whitespace-collapsed - `machines/abilities._strip_reminder`
-    runs `re.sub(r"\\s+", " ", ...)` on every printed line, `TriggeredAbility.
-    effect` included, which flattens the real newlines `_merge_modal_bullet_
-    lines` had just reassembled to keep the bullets attached to this ability
-    in the first place. `machines/modes._parse` reads bullets by
-    `splitlines()`, one `•` per line (CR 700.2's own printed shape), so those
-    newlines are put back here, right before each `•` marker, rather than
-    teaching two different modules two different bullet grammars.
+def modal_trigger_profile(effect_text: str | None) -> ModalProfile | None:
+    """The modes of a triggered ability's "choose ... -" effect (CR 700.2),
+    or `None` when the text is not modal or its structure is not read.
+
+    `effect_text` arrives whitespace-collapsed - `machines/abilities.
+    _strip_reminder` runs `re.sub(r"\\s+", " ", ...)` on every printed line,
+    `TriggeredAbility.effect` included, flattening the newlines
+    `_merge_modal_bullet_lines` had reassembled - and `machines/modes._parse`
+    reads bullets one per line (CR 700.2's printed shape), so the newline is put
+    back before each bullet here rather than teaching two modules two bullet
+    grammars.
+
+    Read: any instruction whose minimum is at least one ("choose one", "choose
+    one or both", "choose one or more"). CR 603.3c removes an ability for which
+    no mode is chosen, which a minimum of zero would allow; that shape, and
+    pawprint or per-mode costs (`understood` False), return `None`.
     """
-    text = re.sub(r"\s*•\s*", "\n• ", text).strip()
+    text = re.sub(r"\s*\u2022\s*", "\n\u2022 ", effect_text or "").strip()
     if not is_modal_text(text):
         return None
     profile = modal_profile_from_text(text)
     if profile is None or not profile.understood or not profile.modes:
         return None
-    if profile.allowed_range() != (1, 1):
+    if profile.allowed_range()[0] < 1 or any(mode.cost is not None for mode in profile.modes):
+        return None
+    return profile
+
+
+def mode_effect_body(mode: Mode) -> str:
+    """One mode's effect text with CR 700.2h's cost prefix and CR 207.2d's
+    flavor word taken off - what a parser reads and what targeting is read
+    from."""
+    return _FLAVOR_WORD_PREFIX.sub("", mode_effect_text(mode)).strip()
+
+
+def _resolve_modal_triggered_ability_clause(text: str) -> AbilityEffect | None:
+    """A modal *triggered* ability's own "choose one/one or both -" tail
+    (CR 700.2, CR 603.3c) - Elder Gargaroth, Abiding Grace, Flash Thompson.
+
+    CR 603.3c: "its controller announces the mode choice when putting the
+    ability on the stack", and CR 700.2c chooses targets only for the modes
+    chosen. `Game.put_triggers_on_stack` does both and records them on the
+    ability (`AbilityOnStack.modes`, `.mode_targets`); this runs each chosen
+    mode in order with `ability.targets` narrowed to that mode's own slice,
+    the same per-mode dispatch `resolve_modal_spell` gives a spell. A mode
+    whose text is not read records a `ModeNotice` and the others still run.
+
+    An ability that reaches resolution with no mode recorded never went
+    through that hook (a copy made elsewhere, for instance); it is asked for
+    its first mode now rather than doing nothing.
+    """
+    profile = modal_trigger_profile(text)
+    if profile is None:
         return None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
-        options = tuple(mode.text for mode in profile.modes)
-        chosen_text = game.ask(
-            Decision(
-                kind=DecisionKind.CHOOSE_A_MODE,
-                player=ability.controller,
-                prompt="choose one",
-                source=ability.source_name,
-                source_id=source_id_of(ability),
-                options=options,
-            )
-        )
-        mode = next((m for m in profile.modes if m.text == chosen_text), profile.modes[0])
-        clause = parse_mixed_effect(mode.text)
-        if clause is None:
-            game.mode_notices.append(
-                ModeNotice(
-                    source_id=ability.source_id,
-                    source_name=ability.source_name,
-                    mode_number=mode.number,
-                    text=mode.text,
+        chosen = list(ability.modes)
+        slices = [list(slice_) for slice_ in ability.mode_targets]
+        if not chosen:
+            chosen_text = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_A_MODE,
+                    player=ability.controller,
+                    prompt="choose one",
+                    source=ability.source_name,
+                    source_id=source_id_of(ability),
+                    options=tuple(mode.text for mode in profile.modes),
                 )
             )
-            return
-        clause(game, ability)
+            mode = next((m for m in profile.modes if m.text == chosen_text), profile.modes[0])
+            chosen = [mode.number]
+            slices = [list(ability.targets)]
+        original_targets = ability.targets
+        try:
+            for position, number in enumerate(chosen):
+                mode = profile.mode(number)
+                ability.targets = list(slices[position]) if position < len(slices) else []
+                clause = parse_mixed_effect(mode_effect_body(mode))
+                if clause is None:
+                    game.mode_notices.append(
+                        ModeNotice(
+                            source_id=ability.source_id,
+                            source_name=ability.source_name,
+                            mode_number=mode.number,
+                            text=mode.text,
+                        )
+                    )
+                    continue
+                clause(game, ability)
+        finally:
+            ability.targets = original_targets
 
     return effect
 
@@ -8140,6 +8497,8 @@ def _parse_referent_clause(rest: str) -> ReferentClause | None:
 
     if match := _REFERENT_SEARCH_RE.fullmatch(rest):
         run = _search_and_place_for(match, optional=True)
+        if run is None:
+            return None
 
         def search_effect(
             game: "Game", player: Player, power: int | None, source: str, source_id: str | None
@@ -10028,6 +10387,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     )
     if token_copy_of_cost_exiled_card is not None:
         return token_copy_of_cost_exiled_card
+    exiled_card_owner_token = _parse_exiled_card_owner_creates_x_token_clause(effect_text)
+    if exiled_card_owner_token is not None:
+        return exiled_card_owner_token
     parsed = parse_mixed_effect(effect_text)
     if parsed is not None:
         return parsed
@@ -10046,6 +10408,20 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
             )
 
         return conditional_notice_only
+
+    unread_search = _unreadable_search_description(effect_text)
+    if unread_search is not None:
+
+        def search_description_notice_only(game: "Game", ability: AbilityOnStack) -> None:
+            game.search_description_notices.append(
+                SearchDescriptionNotice(
+                    source_id=ability.source_id,
+                    source_name=ability.source_name,
+                    text=unread_search,
+                )
+            )
+
+        return search_description_notice_only
 
     # `_unreadable_cost_reference_clause` is on this side too, not only the
     # spell side: Birthing Ritual reads back "the sacrificed creature's mana
@@ -11546,6 +11922,18 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
             )
 
         return conditional_notice_only
+
+    unread_search = _unreadable_search_description(effect_text)
+    if unread_search is not None:
+
+        def search_description_notice_only(game: "Game", spell: CardState) -> None:
+            game.search_description_notices.append(
+                SearchDescriptionNotice(
+                    source_id=spell.id, source_name=spell.card.name, text=unread_search
+                )
+            )
+
+        return search_description_notice_only
 
     unread = _unreadable_anaphoric_clause(
         effect_text, for_spell=True
@@ -13209,6 +13597,8 @@ def _parse_sacrifice_consequence(consequence: str) -> _SacrificeConsequence | No
     search_match = _SEARCH_AND_PUT_RE.fullmatch(consequence)
     if search_match is not None:
         search_run = _search_and_place_for(search_match, optional=False)
+        if search_run is None:
+            return None
 
         def search_effect(
             game: "Game", player: Player, power: int | None, source: str, source_id: str | None
@@ -18788,6 +19178,11 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     counter_on_additional_cost_card = _parse_counter_on_additional_cost_card_clause(clause)
     if counter_on_additional_cost_card is not None:
         return counter_on_additional_cost_card
+    gain_life_equal_to_cost_card = _parse_gain_life_equal_to_additional_cost_card_clause(
+        clause, for_spell=for_spell
+    )
+    if gain_life_equal_to_cost_card is not None:
+        return gain_life_equal_to_cost_card
     if not for_spell:
         # "Put a +1/+1 counter on this creature." was reachable only as a
         # *whole* ability's effect (`_ability_effect_or_notice`), never as one
@@ -19891,9 +20286,16 @@ def activated_effect_for(
     leaves a bare "X" written into the effect's own rules text (CR 107.3f, not
     this one) untouched. Fiend Artisan's "Search your library for a creature
     card with mana value X or less" is unreadable by `_SEARCH_AND_PUT_RE`
-    until X is substituted for a real number, so - exactly as `effect_for`
-    does for a spell - the unsubstituted text is tried first and the
-    substituted text only once that comes back empty.
+    until X is substituted for a real number.
+
+    The substituted text is tried **first** whenever an X was announced.
+    CR 107.3a: "While an activated ability is on the stack, any X in its
+    activation cost equals the announced value", and a cost whose X the player
+    chose never has an X its own text defines (CR 107.3c is the other case), so
+    the number is the only reading. Trying the bare text first let a parser
+    that accepts a literal "X" win with no value behind it: Martyr of Spores's
+    "Target creature gets +X/+X until end of turn" became a +0/+0 pump. The
+    unsubstituted text stays the fallback for a shape only it matches.
     """
     front = card_name.split("//")[0].strip()
     explicit = ACTIVATED_EFFECTS.get((card_name, index)) or ACTIVATED_EFFECTS.get((front, index))
@@ -19902,10 +20304,11 @@ def activated_effect_for(
     if effect_text is None:
         return None
     effect_text = _self_normalized_effect_text(card_name, effect_text)
-    effect = _ability_effect_or_notice(effect_text)
-    if effect is not None or x_value is None:
-        return effect
-    return _ability_effect_or_notice(substitute_x(effect_text, x_value))
+    if x_value is not None:
+        substituted = _ability_effect_or_notice(substitute_x(effect_text, x_value))
+        if substituted is not None:
+            return substituted
+    return _ability_effect_or_notice(effect_text)
 
 
 # --------------------------------------------------------------------------

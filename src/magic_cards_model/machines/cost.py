@@ -1855,6 +1855,12 @@ class ComponentKind(StrEnum):
     #: "unblocked attacking", the one restriction no existing object cost
     #: (SACRIFICE, DISCARD, EXILE) reads.
     RETURN_TO_HAND = "return_to_hand"
+    #: CR 701.20a's reveal, as a cost (CR 118.1): "Reveal X white cards from
+    #: your hand" (Martyr of Sands), "reveal a creature card from your hand"
+    #: (Living Destiny's additional cost). Nothing moves (CR 701.20b); paying
+    #: records the reveal on the game, and `variable_count` marks CR 107.3a's
+    #: X, where `required` is the number the payer chose to reveal.
+    REVEAL = "reveal"
 
 
 _OBJECT_KINDS = frozenset(
@@ -1868,6 +1874,7 @@ _OBJECT_KINDS = frozenset(
         ComponentKind.PLACE_COUNTERS,
         ComponentKind.EXERT,
         ComponentKind.RETURN_TO_HAND,
+        ComponentKind.REVEAL,
     }
 )
 
@@ -2086,6 +2093,16 @@ class CostComponent(BaseModel):
     and stays hardcoded.
     """
 
+    variable_count: bool = False
+    """`ComponentKind.REVEAL` only: the printed count is CR 107.3a's X ("Reveal
+    X white cards from your hand"), so `required` is whatever the payer
+    announced - the number of cards they chose to reveal - rather than a
+    number the text fixes."""
+
+    source: str | None = None
+    """The card whose cost this is, by name - the `Reveal.source` a paid
+    `ComponentKind.REVEAL` records (CR 701.20a)."""
+
     _undo: list[tuple[CardState, dict[str, Any]]] = PrivateAttr(default_factory=list)
     """What `pay` changed, so `unpay` can put it back (CR 733.1). A
     `PrivateAttr`, so - unlike every `Field` above it - it does not survive a
@@ -2093,6 +2110,10 @@ class CostComponent(BaseModel):
     always comes back with `_undo == []`. `unpay` refuses loudly rather than
     silently restoring nothing when that state was needed and is gone; see its
     own docstring."""
+
+    _reveals_recorded: list[Any] = PrivateAttr(default_factory=list)
+    """The `Reveal` records a paid `ComponentKind.REVEAL` wrote, so `unpay` can
+    take exactly those back (CR 733.1). Private for the same reason `_undo` is."""
 
     def __str__(self) -> str:
         if self.description:
@@ -2130,8 +2151,30 @@ class CostComponent(BaseModel):
             ComponentKind.UNTAP: self._why_not_untap,
             ComponentKind.COLLECT_EVIDENCE: self._why_not_collect_evidence,
             ComponentKind.RETURN_TO_HAND: self._why_not_return_to_hand,
+            ComponentKind.REVEAL: self._why_not_reveal,
         }
         return checks[self.kind](game)
+
+    def _why_not_reveal(self, _game: Any) -> str | None:
+        """CR 118.3 for a reveal cost: every card named has to be in the
+        payer's own hand ("from your hand"), and a card is one object
+        (CR 109.1) - naming it twice reveals one card, not two."""
+        seen: set[UUID] = set()
+        for card in self.cards:
+            if card.id in seen:
+                return (
+                    f"{card.name} is named more than once, but one card is revealed only "
+                    "once to pay a cost (CR 109.1, CR 118.3)"
+                )
+            seen.add(card.id)
+        in_hand = self._why_not_in_zone(Zone.HAND)
+        if in_hand is not None:
+            return in_hand
+        if self.payer is not None:
+            for card in self.cards:
+                if card.owner is not None and card.owner != self.payer:
+                    return f"{card.name} is not in {self.payer}'s hand"
+        return None
 
     def _why_not_untap(self, _game: Any) -> str | None:
         """CR 107.6: "A permanent that's already untapped can't be untapped
@@ -2455,6 +2498,17 @@ class CostComponent(BaseModel):
                 # combat clean-up - so this delegates outright rather than
                 # special-casing one more zone by hand.
                 game.exile_cards(list(self.cards))
+        elif self.kind is ComponentKind.REVEAL:
+            # CR 701.20a: showing the cards is the whole payment, and CR
+            # 701.20b keeps them where they are. The record is what
+            # `Game.known_to` reads, and it ends when the card leaves the hand
+            # (CR 400.7). A component paid with no game has nobody to show.
+            for card in self.cards:
+                self._remember(card)
+                if game is not None:
+                    before = len(game.reveals)
+                    game.reveal(card, source=self.source)
+                    self._reveals_recorded.extend(game.reveals[before:])
         elif self.kind is ComponentKind.RETURN_TO_HAND:
             # CR 702.49a's own cost: the creature leaves combat as it leaves
             # the battlefield (the zone change is what ends its being an
@@ -2601,6 +2655,15 @@ class CostComponent(BaseModel):
         if self.kind is ComponentKind.PAY_LIFE:
             if self.amount:
                 game.player(self.payer).gain_life(self.amount)
+        elif self.kind is ComponentKind.REVEAL:
+            # Revealing moved nothing (CR 701.20b), so neither does the
+            # rewind; it takes back the records the payment wrote, so an
+            # attempt rewound under CR 733.1 leaves nobody knowing the cards.
+            if game is not None:
+                for record in self._reveals_recorded:
+                    if record in game.reveals:
+                        game.reveals.remove(record)
+            self._reveals_recorded = []
         elif self.kind is ComponentKind.EXERT:
             # Exerting moves nothing either, and CR 701.43b lets it be exerted
             # more than once, so the rewind is simply putting the flag back.
@@ -2804,6 +2867,63 @@ def discard_cost(
         payer=payer,
         description=description,
     )
+
+
+def reveal_cost(
+    *cards: CardState,
+    payer: str | None = None,
+    required: int | None = None,
+    description: str = "",
+    variable_count: bool = False,
+) -> CostComponent:
+    """Reveal cards from the payer's hand as a cost (CR 118.1, CR 701.20a).
+    `CostComponent._why_not_reveal` is the check."""
+    return CostComponent(
+        kind=ComponentKind.REVEAL,
+        cards=list(cards),
+        required=len(cards) if required is None else required,
+        payer=payer,
+        description=description,
+        variable_count=variable_count,
+    )
+
+
+def announce_reveal(
+    component: CostComponent,
+    revealing: Sequence[CardState] | None,
+    x_value: int,
+    source: str,
+) -> CostComponent:
+    """A reveal cost with the cards its payer named filled in (CR 601.2b).
+
+    For a fixed count the count stands and the named cards must match it
+    (`_why_not_reveal`, CR 118.3). For CR 107.3a's X the number revealed is
+    the X announced: naming the cards fixes it, and an `x_value` announced as
+    well has to agree. Nothing named leaves `required` at the announced
+    `x_value` (0 when none was), which is a cost `legal_actions` can price and
+    `Game.choose_cards_to_reveal` can ask about.
+    """
+    cards = list(revealing or [])
+    required = component.required
+    if component.variable_count:
+        if revealing is not None:
+            if x_value and x_value != len(cards):
+                raise ValueError(
+                    f"X was announced as {x_value}, but {len(cards)} card(s) were named to "
+                    f"pay {component.description!r} (CR 107.3a)"
+                )
+            required = len(cards)
+        else:
+            required = x_value
+    return component.model_copy(update={"cards": cards, "required": required, "source": source})
+
+
+def cost_announces_x(cost_text: str) -> bool:
+    """Whether a printed cost has an X in it (CR 107.3a: "a mana cost,
+    alternative cost, additional cost, and/or activation cost with an {X},
+    [-X], or X in it") - `{X}` and Martyr of Sands's bare "Reveal X white
+    cards" alike."""
+    return re.search(r"\bX\b", cost_text or "") is not None
 
 
 def return_to_hand_cost(
@@ -3518,6 +3638,16 @@ _PHRASE_EXILE = re.compile(
     + r"(?: from (?:your|their) (?P<zone>hand|graveyard|library|battlefield))?$",
     re.IGNORECASE,
 )
+#: CR 701.20a's reveal as a cost: "Reveal X white cards from your hand"
+#: (Martyr of Sands, Martyr of Spores), "reveal a creature card from your
+#: hand" (Living Destiny). The count is a number word or CR 107.3a's X, and
+#: the quality is read by `_requirement` like every other object cost's. A
+#: rider after "hand" - Illuminated Folio's "that share a color" - is not this
+#: shape, so that phrase stays unread rather than paying for the wrong cards.
+_PHRASE_REVEAL = re.compile(
+    r"^reveal (?P<count>x|\w+) (?P<quality>[\w ,]*?)cards? from your hand$",
+    re.IGNORECASE,
+)
 _ZONE_WORDS: dict[str, Zone] = {
     "hand": Zone.HAND,
     "graveyard": Zone.GRAVEYARD,
@@ -3799,6 +3929,21 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
             return None
         kind = _counter_kind_word(remove_counters.group("kind"))
         return remove_counters_cost(None, count, counter_kind=kind, payer=payer, description=text)
+
+    reveal = _PHRASE_REVEAL.match(text)
+    if reveal is not None:
+        reveal_requirement = _requirement(reveal.group("quality"))
+        if reveal_requirement is None:
+            return None
+        if reveal.group("count").lower() == "x":
+            component = reveal_cost(payer=payer, required=0, description=text, variable_count=True)
+        else:
+            reveal_count = _count(reveal.group("count"))
+            if reveal_count is None:
+                return None
+            component = reveal_cost(payer=payer, required=reveal_count, description=text)
+        component.requirement = reveal_requirement
+        return component
 
     exile_and_pay = _PHRASE_EXILE_AND_PAY_MANA_COST.match(text)
     if exile_and_pay is not None:

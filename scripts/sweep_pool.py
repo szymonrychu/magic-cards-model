@@ -105,6 +105,7 @@ from magic_cards_model.machines.casting import (  # noqa: E402
 )
 from magic_cards_model.machines.combat import Keyword  # noqa: E402
 from magic_cards_model.machines.cost import (  # noqa: E402
+    cost_announces_x,
     cost_modifier_effect,
     looks_like_unparsed_cost_modifier,
 )
@@ -361,13 +362,34 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     return found
 
 
+#: CR 207.2d: "flavor words appear in italics at the beginning of some
+#: abilities ... [and] have no special rules meaning". Scryfall lists a
+#: mode's label as a keyword (Flash Thompson's "\u2022 Heckle \u2014 Tap target
+#: creature."), but there is nothing for any machine to execute.
+_FLAVOR_WORD_LABEL = re.compile(r"^\u2022\s*(?P<word>[^\u2014\n]+?)\s+\u2014\s+", re.MULTILINE)
+
+
+def flavor_words(printing: Card) -> frozenset[str]:
+    """The words this printing uses only as a mode's flavor-word label."""
+    return frozenset(
+        match.group("word").strip().lower()
+        for match in _FLAVOR_WORD_LABEL.finditer(printing.oracle_text or "")
+    )
+
+
 def ignored_keywords(printing: Card) -> list[str]:
     """Keywords on this printing that nothing in the engine acts on."""
     executed = executed_keywords(printing)
+    flavor = flavor_words(printing)
     ignored = []
     for keyword in printing.keywords:
         lowered = keyword.lower()
-        if lowered in executed or lowered in NEEDS_NO_CODE or lowered in ABILITY_WORDS:
+        if (
+            lowered in executed
+            or lowered in NEEDS_NO_CODE
+            or lowered in ABILITY_WORDS
+            or lowered in flavor
+        ):
             continue
         ignored.append(keyword)
     return sorted(ignored)
@@ -448,6 +470,7 @@ _NOTICE_STAND_IN_NAMES = frozenset(
         "suspend_redirect_notice_only",
         "damage_then_group_grant_notice_only",
         "control_replacement_notice_only",
+        "search_description_notice_only",
     }
 )
 
@@ -1060,14 +1083,14 @@ def _x_candidates(cost_or_mana_cost: str | None) -> tuple[int | None, ...]:
     """Every X value `classify_card` should try for one clause.
 
     Mirrors `models/game.py`'s own gate for a real resolution
-    (`"{X}" in (spell.mana_cost or "")` for a spell, `"{X}" in ability.ability.cost`
-    for an activated ability): `None` - leave a bare "X" in the text alone,
-    the same as a card that defines its own X in its rules text (CR 107.3f)
-    rather than in its cost (CR 107.3a) - unless the cost that actually pays
-    for this clause carries `{X}`, in which case every value in
+    (`machines/cost.cost_announces_x` on the cost that pays for the clause):
+    `None` - leave a bare "X" in the text alone, the same as a card that
+    defines its own X in its rules text (CR 107.3f) rather than in its cost
+    (CR 107.3a) - unless that cost has an X in it, `{X}` or Martyr of Sands's
+    bare "Reveal X white cards", in which case every value in
     `_X_PROBE_VALUES` is tried.
     """
-    if cost_or_mana_cost and "{X}" in cost_or_mana_cost:
+    if cost_or_mana_cost and cost_announces_x(cost_or_mana_cost):
         return _X_PROBE_VALUES
     return (None,)
 
@@ -1542,7 +1565,9 @@ def report_card(name: str) -> int:
     print("\n  keyword execution:")
     for keyword in printing.keywords:
         where = executed.get(keyword.lower())
-        if where is None and keyword.lower() in NEEDS_NO_CODE | ABILITY_WORDS:
+        if where is None and keyword.lower() in NEEDS_NO_CODE | ABILITY_WORDS | flavor_words(
+            printing
+        ):
             where = "no code needed"
         print(f"    {keyword:<18} {where or 'IGNORED'}")
     if has_rules_text(printing):

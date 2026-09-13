@@ -66,6 +66,8 @@ from ..machines.cost import (
     TotalCost,
     alternative_cost_offers,
     among_colors,
+    announce_reveal,
+    cost_announces_x,
     cost_component_for_phrase,
     cost_modifier_effect,
     discard_cost,
@@ -107,6 +109,7 @@ from ..machines.delayed import (
     return_subject_to_hand,
 )
 from ..machines.effects import (
+    NO_FURTHER_MODES,
     AnaphoricClauseNotice,
     CastFromHandExileNotice,
     ConditionalClauseNotice,
@@ -115,12 +118,15 @@ from ..machines.effects import (
     ImprintNotice,
     ModeNotice,
     ReflexiveClauseNotice,
+    SearchDescriptionNotice,
     SuspendRedirectNotice,
     UnmodeledTriggerEffectNotice,
     activated_effect_for,
     apply_gift_if_promised,
     devotion_to,
     effect_for,
+    modal_trigger_profile,
+    mode_effect_body,
     trigger_effect_for,
 )
 from ..machines.keywords import (
@@ -152,7 +158,7 @@ from ..machines.layers import (
     only_this_incarnation,
     spend_effect_effects,
 )
-from ..machines.modes import modal_profile, substitute_x
+from ..machines.modes import ModalProfile, Mode, modal_profile, substitute_x
 from ..machines.objects_as_costs import convoke as pay_convoke
 from ..machines.objects_as_costs import delve as pay_delve
 from ..machines.objects_as_costs import improvise as pay_improvise
@@ -860,7 +866,12 @@ class KnownCarry(BaseModel):
     the card's *new* stamp. It ends the way every record ends: the card's
     next zone change mints another stamp.
 
-    Written by `Game.carry_knowledge_into_hand`, read by `Game.known_to`.
+    The same policy covers a card that moves from a public zone (CR 400.2:
+    graveyard, battlefield, stack, exile face up) into its owner's hand: every
+    player saw its face there, so the move is recorded for every player.
+
+    Written by `Game.carry_knowledge_into_hand` and
+    `Game.carry_public_knowledge_into_hand`, read by `Game.known_to`.
     """
 
     model_config = ConfigDict(frozen=True)
@@ -1398,6 +1409,10 @@ class Game(BaseModel):
     unread. The same unreadable-is-not-the-same-as-no-effect record every
     other notice list here keeps."""
 
+    search_description_notices: list[SearchDescriptionNotice] = Field(default_factory=list)
+    """Library searches whose card description could not be read, so the
+    search was not run at all (CR 701.23a) - see `SearchDescriptionNotice`."""
+
     imprint_notices: list[ImprintNotice] = Field(default_factory=list)
     """One entry per "you may exile a `<quality>` card ... from your hand"
     effect (CR 207.2c's "Imprint" ability word among them) whose stated
@@ -1604,8 +1619,16 @@ class Game(BaseModel):
     naming who looked; `Game.known_to` is the reader that tells them apart."""
 
     known_carries: list[KnownCarry] = Field(default_factory=list)
-    """Library records carried into a hand by a library-to-hand move, in
-    order. See `KnownCarry` - a knowledge policy, not a CR rule."""
+    """Records carried into a hand by a library-to-hand move or a move from a
+    public zone, in order. See `KnownCarry` - a knowledge policy, not a CR
+    rule."""
+
+    announced_reveal_counts: dict[str, int] = Field(default_factory=dict)
+    """How many cards an activation's "Reveal X ... cards from your hand" cost
+    revealed, keyed like `activations` (`_activation_key`). Written by
+    `begin_activating` and taken back by `activate_ability`: CR 107.3a's X is
+    announced as the cost is chosen, and the ability on the stack is built by
+    a second call, so this is the value that crosses from one to the other."""
 
     library_orders_kept: list[LibraryOrderKept] = Field(default_factory=list)
     """Library cards that kept their order through a put onto the bottom or a
@@ -1987,7 +2010,7 @@ class Game(BaseModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 12
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 13
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -2119,6 +2142,19 @@ class Game(BaseModel):
     version-11 dump holds decisions with no quality, ownerless tokens, and
     possibly a Rumble on the stack that would now resolve differently.
     Refused instead.
+
+    Bumped 12 -> 13: battle 5. `AbilityOnStack` gained `modes` and
+    `mode_targets` (a modal triggered ability's modes are chosen as it goes on
+    the stack, CR 603.3c), `Game` gained `announced_reveal_counts` and
+    `search_description_notices`, `CostComponent` gained `variable_count` and
+    `source`, `ExileMarker` gained `LINKED`, and a card moved from a public
+    zone into its owner's hand now carries a `KnownCarry`. A version-12 dump
+    holds modal triggers with no chosen mode, which decoded here would be
+    asked again at resolution, and hand cards whose public origin left no
+    record. Refused instead.
+    This change and battle 3's above were each stamped 11 -> 12 on separate
+    lines of development, so a 12 from either line lacks the other's fields;
+    merged, the number moved on once more.
     """
 
     @model_validator(mode="before")
@@ -4159,7 +4195,7 @@ class Game(BaseModel):
                 # in the mana cost" gate `resolve_top` uses for a spell's own
                 # `x_value`, so an ordinary ability's bare "X" in its rules
                 # text (CR 107.3f) is never mistaken for this one.
-                x_value = ability.x_value if "{X}" in ability.ability.cost else None
+                x_value = ability.x_value if cost_announces_x(ability.ability.cost) else None
                 return activated_effect_for(
                     ability.source_name, index, ability.ability.effect, x_value=x_value
                 )
@@ -4420,6 +4456,19 @@ class Game(BaseModel):
         )
         placed: list[AbilityOnStack] = []
         for ability in ordered:
+            modal = modal_trigger_profile(
+                ability.ability.effect if isinstance(ability.ability, TriggeredAbility) else None
+            )
+            if modal is not None:
+                # CR 603.3c: the mode is announced as the ability is put on the
+                # stack, then CR 603.3d/CR 700.2c's targets for the chosen
+                # modes only. No mode chosen removes the ability.
+                if not self._announce_trigger_modes(ability, modal):
+                    continue
+                self.stack.append(ability)
+                self._emit_ability_becomes_target(ability)
+                placed.append(ability)
+                continue
             targets = self._targets_for_trigger(ability)
             if targets is None:
                 # CR 603.3d: "if a choice is required when the triggered
@@ -4437,6 +4486,78 @@ class Game(BaseModel):
             self.trigger_targets.pop(ability.source_name, None)
             self.trigger_targets.pop(ability.source_name.split("//")[0].strip(), None)
         return placed
+
+    def _announce_trigger_modes(self, ability: AbilityOnStack, modal: ModalProfile) -> bool:
+        """Choose a modal triggered ability's modes and their targets as it goes
+        on the stack (CR 603.3c, CR 700.2b, CR 700.2c). False when no mode is
+        chosen, which removes the ability.
+
+        "If one of the modes would be illegal (due to an inability to choose
+        legal targets, for example), that mode can't be chosen" - so only a
+        mode with a legal target for every mandatory target it names is
+        offered, and a mode with no target at all always is. The first choice
+        offers the legal modes; once the instruction's minimum is met, each
+        further choice also offers `NO_FURTHER_MODES`, first, until the maximum.
+        Then each chosen mode's targets are asked for in order.
+        """
+        legal = [mode for mode in modal.modes if self._trigger_mode_is_legal(ability, mode)]
+        minimum, maximum = modal.allowed_range()
+        if len(legal) < minimum:
+            return False
+        chosen: list[Mode] = []
+        while len(chosen) < maximum:
+            remaining = [mode for mode in legal if modal.repeatable or mode not in chosen]
+            if not remaining:
+                break
+            options = tuple(mode.text for mode in remaining)
+            if len(chosen) >= minimum:
+                options = (NO_FURTHER_MODES, *options)
+            answer = self.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_A_MODE,
+                    player=ability.controller,
+                    prompt="choose a mode" if not chosen else "choose another mode",
+                    source=ability.source_name,
+                    source_id=source_id_of(ability),
+                    options=options,
+                )
+            )
+            if answer == NO_FURTHER_MODES:
+                break
+            chosen.append(next((m for m in remaining if m.text == answer), remaining[0]))
+        if len(chosen) < minimum:
+            return False
+        slices: list[list[TargetRef]] = []
+        scripted = self.trigger_targets.get(ability.source_name)
+        for mode in chosen:
+            body = mode_effect_body(mode)
+            profile = profile_for_text(body)
+            if not profile.requirements and profile.understood:
+                slices.append([])
+                continue
+            if scripted is not None:
+                slices.append(list(scripted))
+                scripted = None
+                continue
+            asked = self._ask_targets(
+                profile, ability.controller, ability.source_id, ability.source_name, body
+            )
+            if asked is None:
+                return False
+            slices.append(list(asked))
+        ability.modes = [mode.number for mode in chosen]
+        ability.mode_targets = slices
+        ability.targets = [target for slice_ in slices for target in slice_]
+        return True
+
+    def _trigger_mode_is_legal(self, ability: AbilityOnStack, mode: Mode) -> bool:
+        """CR 603.3c's legality of one mode: a mode whose mandatory target has
+        no legal candidate "can't be chosen". A target this engine cannot read
+        is not treated as unavailable - `_ask_targets` records that gap."""
+        profile = profile_for_text(mode_effect_body(mode))
+        if not profile.understood or not profile.requirements or profile.min_targets == 0:
+            return True
+        return bool(self._legal_target_candidates(profile, ability.controller, ability.source_id))
 
     def _order_triggers_by_controller(self, ordered: list[AbilityOnStack]) -> list[AbilityOnStack]:
         """CR 603.3b's second half: each controller orders their own block.
@@ -7123,6 +7244,96 @@ class Game(BaseModel):
                 )
             )
 
+    def choose_cards_to_reveal(
+        self,
+        component: CostComponent,
+        payer: str,
+        *,
+        source: str,
+        source_id: str | None,
+        x_value: int = 0,
+    ) -> None:
+        """Ask `payer` which cards pay a reveal cost nobody named (CR 601.2h).
+
+        Offered: the cards in `payer`'s own hand that meet the cost's quality
+        (CR 118.3). For CR 107.3a's X with no X announced, any number of them
+        is an answer and the number chosen becomes X; for a fixed count, or an
+        X already announced, exactly that many. A hand that cannot cover the
+        count is not asked - the component then refuses to be paid. The
+        answer is written onto `component`, which is otherwise left alone.
+        """
+        if component.kind is not ComponentKind.REVEAL or component.cards:
+            return
+        eligible = [
+            card
+            for card in self.player(payer).hand
+            if component.requirement is None
+            or component.requirement.why_not(card, self, payer) is None
+        ]
+        description = component.description or "this cost"
+        if component.variable_count and not x_value:
+            if not eligible:
+                component.required = 0
+                return
+            decision = Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=payer,
+                prompt=f"choose any number of cards to reveal for {description!r}",
+                source=source,
+                source_id=source_id,
+                amount=len(eligible),
+                cards=tuple(card.id for card in eligible),
+                exact=False,
+            )
+        else:
+            needed = x_value if component.variable_count else component.required
+            component.required = needed
+            if needed <= 0 or len(eligible) < needed:
+                return
+            decision = Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=payer,
+                prompt=f"choose {needed} card(s) to reveal for {description!r}",
+                source=source,
+                source_id=source_id,
+                amount=needed,
+                cards=tuple(card.id for card in eligible),
+            )
+        chosen = self.ask(decision)
+        assert isinstance(chosen, tuple)
+        by_id = {card.id: card for card in eligible}
+        component.cards = [by_id[card_id] for card_id in chosen]
+        if component.variable_count:
+            component.required = len(component.cards)
+
+    def carry_public_knowledge_into_hand(self, card_state: CardState, origin: Zone) -> None:
+        """Record a card that moved from a public zone into its owner's hand as
+        known to every player, as `KnownCarry` data (a knowledge policy, not a
+        CR rule).
+
+        CR 400.2 makes the graveyard, battlefield, stack and exile public zones,
+        "zones in which all players can see the cards' faces", so every player
+        saw this card before it went into the hand - a graveyard return, a
+        bounce, a dash return. Called by `Player.add` after the move, so the
+        record carries the stamp the card arrived with and ends at its next
+        zone change (CR 400.7), exactly like a carried library record. `origin`
+        names the zone it came from, for the record's source.
+        """
+        owner = self._seat(card_state.owner)
+        if owner is None:
+            return
+        self.known_carries.append(
+            KnownCarry(
+                card_id=card_state.id,
+                card_name=card_state.name,
+                owner=owner.username,
+                viewers=None,
+                zone_change_stamp=card_state.zone_change_stamp,
+                source=origin.value,
+                turn=self._turns_taken(),
+            )
+        )
+
     def face_up_cards_in_exile(
         self,
         owner: str | None = None,
@@ -9000,7 +9211,8 @@ class Game(BaseModel):
             card
             for card in self.exile
             if (annotation := card.exile_annotation) is not None
-            and annotation.marker in (ExileMarker.IMPRINTED, ExileMarker.HIDEAWAY)
+            and annotation.marker
+            in (ExileMarker.IMPRINTED, ExileMarker.HIDEAWAY, ExileMarker.LINKED)
             and annotation.linked_permanent_id == permanent_id
         ]
 
@@ -11878,6 +12090,7 @@ class Game(BaseModel):
         sacrificing: list[CardState] | None = None,
         discarding: list[CardState] | None = None,
         exiling: list[CardState] | None = None,
+        revealing: list[CardState] | None = None,
         x_value: int = 0,
     ) -> TotalCost:
         """The total cost of one activation (CR 602.1a, 601.2f).
@@ -12030,6 +12243,11 @@ class Game(BaseModel):
                     while exiles and len(chosen) < component.required:
                         chosen.append(exiles.pop(0))
                     component = component.model_copy(update={"cards": chosen})
+                if component.kind is ComponentKind.REVEAL:
+                    # CR 701.20a's reveal from hand: the cards named in
+                    # `revealing` pay it, and for CR 107.3a's X their number
+                    # is the X announced (`announce_reveal`).
+                    component = announce_reveal(component, revealing, x_value, permanent.name)
                 if component.pay_mana_cost_of_chosen:
                     # CR 118.9's own alternative-cost shape, aimed at the just
                     # -chosen card's *own* printed mana cost rather than a
@@ -12280,6 +12498,7 @@ class Game(BaseModel):
         sacrificing: list[CardState] | None = None,
         discarding: list[CardState] | None = None,
         exiling: list[CardState] | None = None,
+        revealing: list[CardState] | None = None,
         x_value: int = 0,
     ) -> CostPayment:
         """Announce an activation and open its payment (CR 602.2a, 602.2b).
@@ -12304,8 +12523,30 @@ class Game(BaseModel):
             sacrificing=sacrificing,
             discarding=discarding,
             exiling=exiling,
+            revealing=revealing,
             x_value=x_value,
         )
+        # CR 601.2h pays the cost the player chose, so a reveal cost nobody
+        # named is asked about now, before anything is spent - and refused now
+        # (CR 118.3) if the cards named cannot pay it.
+        key = self._activation_key(permanent, index)
+        self.announced_reveal_counts.pop(key, None)
+        for component in total.components:
+            if component.kind is not ComponentKind.REVEAL:
+                continue
+            if revealing is None:
+                self.choose_cards_to_reveal(
+                    component,
+                    controller,
+                    source=permanent.name,
+                    source_id=source_id_of(permanent),
+                    x_value=x_value,
+                )
+            refusal = component.why_not(self)
+            if refusal is not None:
+                raise ValueError(refusal)
+            if component.variable_count:
+                self.announced_reveal_counts[key] = len(component.cards)
         # CR 106.6: an activation is what Shang-Chi's and Eldrazi Temple's
         # mana is restricted *to*, and what Cavern of Souls's and Delighted
         # Halfling's is restricted *from*, so the payment is told which it is
@@ -12383,6 +12624,13 @@ class Game(BaseModel):
         with self._id_allocator_scope():
             ability = self.activated_abilities(permanent)[index]
             controller = controller or self.controller_of(permanent).username
+            # CR 107.3a: a "Reveal X ..." cost's X is the number of cards
+            # `begin_activating` revealed, unless the caller announced it.
+            announced = self.announced_reveal_counts.pop(
+                self._activation_key(permanent, index), None
+            )
+            if announced is not None and not x_value:
+                x_value = announced
 
             # CR 602.2b: "the remainder of the process for activating an ability is
             # identical to the process for casting a spell", so CR 601.2c applies -
@@ -12408,7 +12656,7 @@ class Game(BaseModel):
             has_variable_loyalty = ability.loyalty is not None and ability.loyalty.variable
             text = (
                 substitute_x(ability.text, x_value)
-                if "{X}" in ability.cost or has_variable_loyalty
+                if cost_announces_x(ability.cost) or has_variable_loyalty
                 else ability.text
             )
             profile = profile_for_text(text)
