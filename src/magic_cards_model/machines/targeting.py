@@ -106,7 +106,7 @@ from ..models.card import Card, Color, Supertype, Type
 from ..models.card_state import CardState, ExileMarker, TargetRef
 from ..models.zone import Zone
 from ..serialization import SortedFrozenSet
-from .abilities import keyword_abilities
+from .abilities import AbilityKind, keyword_abilities
 from .combat import has_keyword
 from .layers import BASIC_LAND_TYPES
 from .modes import Mode, modal_profile, mode_rules_text
@@ -284,6 +284,12 @@ class TargetRequirement(BaseModel):
     allows_players: bool = False
     allows_abilities: bool = False
     """True for "target activated or triggered ability" (CR 115.2, CR 113.1c)."""
+    ability_kinds: SortedFrozenSet[AbilityKind] = frozenset()
+    """Which of CR 113.3's categories an ability target must belong to, read
+    off the phrase: `{TRIGGERED}` for Consign to Memory's "target triggered
+    ability" (CR 113.3c), `{ACTIVATED}` for Rimewind Cryomancer's "target
+    activated ability" (CR 113.3b), both for "activated or triggered". Empty
+    means the phrase named no category, and any ability is accepted."""
     opponent_only: bool = False
     zones: SortedFrozenSet[Zone] = frozenset({Zone.BATTLEFIELD})
     controller: ControllerRestriction = ControllerRestriction.ANY
@@ -498,6 +504,10 @@ class TargetRequirement(BaseModel):
         """
         if not self.allows_abilities:
             return f"{self.phrase} cannot target {target.name}, which is an ability on the stack"
+        kind = getattr(target, "kind", None)
+        if self.ability_kinds and kind not in self.ability_kinds:
+            category = "an activated" if kind is AbilityKind.ACTIVATED else "a triggered"
+            return f"{self.phrase} cannot target {target.name}, which is {category} ability"
         target_count = self._rejects_target_count(target)
         if target_count is not None:
             return target_count
@@ -1418,6 +1428,21 @@ _ABILITY_PHRASE = re.compile(
     re.IGNORECASE,
 )
 
+
+def _ability_kinds_named(words: str) -> frozenset[AbilityKind]:
+    """The CR 113.3 categories `_ABILITY_PHRASE`'s words name: "triggered" is
+    CR 113.3c's, "activated" CR 113.3b's, and "loyalty" is an activated
+    ability too (CR 606.1). No category word names none, which `rejects`
+    reads as any."""
+    named = {word.lower() for word in re.findall(r"activated|triggered|loyalty", words, re.I)}
+    kinds = set()
+    if "triggered" in named:
+        kinds.add(AbilityKind.TRIGGERED)
+    if named & {"activated", "loyalty"}:
+        kinds.add(AbilityKind.ACTIVATED)
+    return frozenset(kinds)
+
+
 #: "... or colorless spell" (Consign to Memory's "target triggered ability or
 #: colorless spell") - the tail left over once `_ABILITY_PHRASE` has consumed
 #: the ability half of the compound. Generalised across CR 105.2's whole
@@ -2207,6 +2232,7 @@ def _read_phrase(prefix: str, suffix: str) -> TargetRequirement | None:
                 variable_count=variable,
                 allows_cards=False,
                 allows_abilities=True,
+                ability_kinds=_ability_kinds_named(ability.group(0)),
                 zones=frozenset({Zone.STACK}),
                 excludes_source=excludes_source,
             )
@@ -2235,6 +2261,7 @@ def _read_phrase(prefix: str, suffix: str) -> TargetRequirement | None:
                 variable_count=variable,
                 allows_cards=True,
                 allows_abilities=True,
+                ability_kinds=_ability_kinds_named(ability.group(0)),
                 zones=frozenset({Zone.STACK}),
                 color_count=compound.group("color_count").lower(),
                 excludes_source=excludes_source,

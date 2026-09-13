@@ -2221,18 +2221,24 @@ class Game(BaseModel):
     Refused instead. Battle 4 was stamped 11 -> 12 on its own line of
     development; landed after battles 3, 5 and 6, it moved on to 15.
 
-    Bumped 15 -> 16: battle 7. No field was added, but existing state now
-    resolves differently, the bump rule's second bullet: a triggered mana
-    ability (CR 605.1b) resolves at once instead of from the stack (CR
-    605.4a), so a version-15 dump can hold Leyline of Abundance's trigger on
-    the stack that no version-16 game could have put there; a scry that
-    bottoms two or more cards asks CR 401.4's order, so a version-15 tape
-    replays one question short; "Put one of them into your hand and the
-    other/the rest ..." looks and the attacks-each-combat requirement (CR
-    508.1d) are read now, so a recorded declaration or spell on the stack can
-    decode into a different game. Refused instead. Battles 6 and 4 landed
-    first as 14 and 15 on their own lines of development, so this took the next
-    number.
+    Bumped 15 -> 16: battle 7 and U1 (PR #21), one bump for both because
+    neither was deployed at 16 on its own.
+    Battle 7: no field was added, but existing state now resolves
+    differently, the bump rule's second bullet: a triggered mana ability (CR
+    605.1b) resolves at once instead of from the stack (CR 605.4a), so a
+    version-15 dump can hold Leyline of Abundance's trigger on the stack that
+    no version-16 game could have put there; a scry that bottoms two or more
+    cards asks CR 401.4's order, so a version-15 tape replays one question
+    short; "Put one of them into your hand and the other/the rest ..." looks
+    and the attacks-each-combat requirement (CR 508.1d) are read now, so a
+    recorded declaration or spell on the stack can decode into a different
+    game.
+    U1: `AbilityOnStack` gained `source_last_known` (CR 113.7a, 608.2h), and
+    the resolution of "Gain control of target ... Untap that creature. It
+    gains haste until end of turn." changed on spells and abilities alike: a
+    version-15 stack holding Act of Treason resolved without the untap or the
+    haste.
+    Refused instead.
     """
 
     @model_validator(mode="before")
@@ -5003,7 +5009,7 @@ class Game(BaseModel):
 
     def _legal_target_candidates(
         self, profile: TargetingProfile, controller: str, source_id: UUID | None
-    ) -> list[Targetable]:
+    ) -> list[Targetable | AbilityOnStack]:
         """Every object or player `profile` could legally land on right now.
 
         Used only to tell CR 608.2d's "nothing satisfies the restriction"
@@ -5013,7 +5019,7 @@ class Game(BaseModel):
         this file's own notice check) pick among them.
         """
         seen: set[UUID] = set()
-        candidates: list[Targetable] = []
+        candidates: list[Targetable | AbilityOnStack] = []
         for zone_cards in self.shared_zones.values():
             for state in zone_cards:
                 if isinstance(state, CardState) and state.id not in seen:
@@ -5025,6 +5031,14 @@ class Game(BaseModel):
                     if state.id not in seen:
                         seen.add(state.id)
                         candidates.append(state)
+        for item in self.stack:
+            # CR 115.2(b): an activated or triggered ability on the stack is an
+            # object a spell or ability may target when it says so (CR 113.1c).
+            # Without it, a mandatory "target activated ability" read as having
+            # no legal target and the activation was refused (CR 601.2c).
+            if isinstance(item, AbilityOnStack) and item.id not in seen:
+                seen.add(item.id)
+                candidates.append(item)
         if profile.requirements and any(r.allows_players for r in profile.requirements):
             candidates.extend(self.players)
         return [
@@ -9961,6 +9975,24 @@ class Game(BaseModel):
             if other.id != permanent.id and other.attached_to == permanent.id:
                 other.unattach()
 
+    def _remember_sources_that_ceased_to_exist(self, gone: list[CardState]) -> None:
+        """Keep each vanished token as the last known information of every
+        ability on the stack or waiting to go there that it is the source of.
+
+        CR 113.7a: "Once activated or triggered, an ability exists on the stack
+        independently of its source", and CR 608.2h has an effect that needs
+        the source use its last known information once it has left its zone. A
+        token that ceases to exist (CR 704.5d) leaves nothing to find by id.
+        """
+        by_id = {state.id: state for state in gone}
+        for item in (*self.stack, *self.pending_triggers):
+            if (
+                isinstance(item, AbilityOnStack)
+                and item.source_id in by_id
+                and item.source_last_known is None
+            ):
+                item.source_last_known = by_id[item.source_id]
+
     def check_state_based_actions(self) -> list[CardState]:
         """Apply state-based actions, returning whatever left the battlefield (CR 704).
 
@@ -10157,6 +10189,7 @@ class Game(BaseModel):
         on the repeat check CR 704.3 guarantees, not in the same event.
         """
         gone_tokens = tokens_that_cease_to_exist(self)  # CR 704.5d, CR 111.7
+        self._remember_sources_that_ceased_to_exist(gone_tokens)
 
         board = self.computed_board()
         leaving = [

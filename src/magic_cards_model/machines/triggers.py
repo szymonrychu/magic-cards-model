@@ -51,7 +51,7 @@ import operator
 import re
 from collections.abc import Sequence
 from enum import StrEnum
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Annotated, Any, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -59,6 +59,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from ..ids import new_id
 from ..models.card import Card, Color, Type
 from ..models.card_state import CardState, ChoiceKind, Counter, TargetRef
+from ..models.token import TokenState
 from ..models.zone import Zone
 from .abilities import (
     Ability,
@@ -425,6 +426,15 @@ class AbilityOnStack(BaseModel):
     does, so unlike `CardState.state_class` this one has nothing else to key
     off and is always this one literal value.
     """
+    source_last_known: (
+        Annotated[CardState | TokenState, Field(discriminator="state_class")] | None
+    ) = Field(default=None, repr=False)
+    """The source as it last existed, kept once it has ceased to exist while
+    this ability waits (a token, CR 704.5d). CR 113.7a: the ability "exists on
+    the stack independently of its source", and CR 608.2h has an effect that
+    needs the source use "the object's last known information" once it is no
+    longer in its zone - nothing is left to find by `source_id`. None while the
+    source can still be found. `source_or_last_known` reads it."""
     targets: list[TargetRef] = Field(default_factory=list)
     event: GameEvent | None = None
     """The event that triggered it, for an effect that needs to know which
@@ -645,6 +655,11 @@ class AbilityOnStack(BaseModel):
         if self.source_id is None:
             return None
         return game.find_by_id(self.source_id)
+
+    def source_or_last_known(self, game: "Game") -> CardState | None:
+        """The source if it can still be found, otherwise its last known
+        information (CR 113.7a, CR 608.2h), or None when there is neither."""
+        return self.source(game) or self.source_last_known
 
 
 def tapped_for_mana_event(
