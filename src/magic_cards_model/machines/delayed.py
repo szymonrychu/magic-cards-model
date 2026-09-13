@@ -622,8 +622,9 @@ class CreateAttackingTokens(DelayedEffectSpecBase):
 
 
 class PayOrLoseTheGame(DelayedEffectSpecBase):
-    """Summoner's Pact's own delayed half: pay `cost` from the pool already
-    floating, or lose the game (CR 104.3e) trying.
+    """Summoner's Pact's own delayed half: pay `cost` - from floating mana and,
+    per CR 608.2g, mana abilities activated while paying - or lose the game
+    (CR 104.3e) trying.
 
     CR 603.7d/e: the controller who owes this is the one who created the
     delayed trigger, taken as it resolved - `trigger.controller`, not whoever

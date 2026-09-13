@@ -116,6 +116,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
+from magic_cards_model.phrases import with_indefinite_article
+
 from ..data.creature_types import creature_types
 from ..models.card import Card, Color, Type
 from ..models.card_state import CardState, Choice, ChoiceKind, ExileMarker
@@ -3415,7 +3417,7 @@ def _choose_a_quality(kind: ChoiceKind, card_name: str) -> Apply:
         decision = Decision(
             kind=DecisionKind.CHOOSE_A_QUALITY,
             player=who,
-            prompt=f"choose a {kind.value.replace('_', ' ')}",
+            prompt=f"choose {with_indefinite_article(kind.value.replace('_', ' '))}",
             source=card_name,
             source_id=source_id_of(source),
             options=_quality_options(kind),

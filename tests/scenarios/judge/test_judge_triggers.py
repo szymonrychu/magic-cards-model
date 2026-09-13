@@ -231,15 +231,16 @@ def test_the_unordered_default_lets_gut_eat_the_harrier_before_it_pays():
     thing alice controls that its restriction reaches - the Harrier itself
     (CR 701.21a). The Harrier's own trigger still resolves afterwards, from the
     graveyard (CR 113.7a: an ability on the stack exists independently of its
-    source), but alice has no mana floating and `Game.may_pay_mana_cost` only
-    spends the pool - CR 608.2g's mid-resolution "chance to activate mana
-    abilities" is not modelled - so the {2} goes unpaid and CR 118.12's "if you
-    do" branch does not run.
+    source). Alice has no mana floating, but CR 608.2g lets her activate mana
+    abilities while paying, so her two untapped Mountains pay the {2} (the
+    unscripted default takes a legal "may"), the "if you do" branch runs, and a
+    Robot is created tapped and attacking with its end-of-combat sacrifice
+    registered.
 
-    One Skeleton, no Robot, and no delayed sacrifice registered: the *right*
-    board for the wrong reason, which is why the episode's own test below is
-    still `xfail`. CR 111.4 names the token: the ability states no name, so it
-    is "its subtype(s) plus the word 'token'".
+    One Skeleton and one Robot: without the ordering trick the Robot is not
+    there yet when Gut asks, so the Harrier is what gets eaten. CR 111.4 names
+    the tokens: neither ability states a name, so each is "its subtype(s) plus
+    the word 'token'".
     """
     scenario = (
         Scenario()
@@ -259,9 +260,10 @@ def test_the_unordered_default_lets_gut_eat_the_harrier_before_it_pays():
 
     assert harrier.zone is Zone.GRAVEYARD
     assert sorted(scenario.battlefield_names()) == sorted(
-        ["Gut, True Soul Zealot", "Mountain", "Mountain", "Skeleton Token"]
+        ["Gut, True Soul Zealot", "Mountain", "Mountain", "Robot Token", "Skeleton Token"]
     )
-    assert scenario.game.delayed_triggers.triggers == []
+    robot = scenario.creature("Robot Token", "alice")
+    assert [trigger.subject_id for trigger in scenario.game.delayed_triggers.triggers] == [robot.id]
 
 
 def test_the_robot_is_sacrificed_for_a_skeleton_that_survives_end_of_combat():
@@ -283,8 +285,9 @@ def test_the_robot_is_sacrificed_for_a_skeleton_that_survives_end_of_combat():
     The two Mountains are tapped for mana *before* the triggers resolve, and
     that is not staging around a gap: CR 605.3a lets a mana ability be
     activated whenever its controller has priority, and alice has priority
-    after her own triggers go on the stack. `Game.may_pay_mana_cost` spends
-    only the floating pool, so this is how the {2} is actually payable.
+    after her own triggers go on the stack. (CR 608.2g would also let her tap
+    them while the Harrier's trigger asks for the {2}; floating the mana first
+    is the other legal order.)
 
     Both token names are CR 111.4's default - neither ability states a name, so
     each is "its subtype(s) plus the word 'token'".

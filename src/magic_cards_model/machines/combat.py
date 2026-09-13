@@ -46,6 +46,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from magic_cards_model.phrases import with_indefinite_article
+
 from ..models.card import Type
 from ..models.card_state import CardState, TargetRef
 from ..models.zone import Zone
@@ -691,7 +693,7 @@ def landwalk_refusal(game: "Game", attacker: CardState, defending: str | None) -
         if lands:
             return (
                 f"{attacker.name} has {keyword.value} and {defending} controls "
-                f"a {land_type}, so it cannot be blocked (CR 702.14c)"
+                f"{with_indefinite_article(land_type)}, so it cannot be blocked (CR 702.14c)"
             )
     return None
 

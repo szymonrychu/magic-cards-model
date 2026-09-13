@@ -1367,7 +1367,19 @@ def decision_answers(decision: Decision, game: Any = None) -> list[Action]:
         return [*pair_actions, build(decision_option="declare_nobody")]
 
     if decision.kind in _BOOLEAN_DECISION_KINDS:
-        return [build(decision_option=str(option).lower()) for option in legal_options(decision)]
+        return [
+            build(
+                decision_option=str(option).lower(),
+                # CR 608.2g / CR 605.3a: paying may activate these mana sources,
+                # so the "pay" answer names them for the seat to choose among.
+                decision_candidates=(
+                    decision.mana_sources
+                    if option and decision.kind is DecisionKind.PAY_MANA
+                    else ()
+                ),
+            )
+            for option in legal_options(decision)
+        ]
 
     if decision.kind in (DecisionKind.PAY_ENERGY_AMOUNT, DecisionKind.PAY_LIFE_AMOUNT):
         return [build(x_range=(0, decision.amount))]
@@ -1462,6 +1474,8 @@ def legal_actions(
     real enough that a caller diffing `model_dump_json` before and after a
     cold game's first call will see it move.
     """
+    if game.is_over:
+        return []  # CR 104.1: nothing is legal in a game that has ended
     if pending is not None:
         if pending.decision.player != player:
             return []

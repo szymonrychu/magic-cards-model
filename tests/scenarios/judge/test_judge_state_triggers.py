@@ -112,21 +112,16 @@ def test_a_thousand_time_counters_trigger_once_and_then_latch():
     assert scenario.game.put_triggers_on_stack() == []
 
 
-def test_the_state_trigger_fires_again_once_the_first_one_has_resolved():
-    """The other half of CR 603.8's latch: the ability left the stack, so it may
-    trigger again, and it does.
+def test_the_calendars_resolution_ends_the_game_before_it_could_trigger_again():
+    """The ability resolves: the Calendar is sacrificed and Bob loses 1,000 life.
 
-    Why it does is currently the gate named in the `xfail` below - the
-    Calendar's effect is written in `machines/effects.py` but `Game._effect_of`
-    never asks for it, so the ability resolves doing nothing and the thousand
-    counters are still sitting there when the sweep next runs. Once that gate
-    is dropped the ability really does sacrifice the Calendar, and the sweep
-    *still* produces a second trigger, because `Game.sacrifice` emits
-    CR 603.10a's look-back `IS_SACRIFICED` event while the permanent is still
-    on the battlefield and `Game.emit` runs the CR 603.8 sweep on it. That is
-    a `models/game.py` timing question, not this file's; either way the rule
-    being asserted here - "doesn't trigger again until it has left the stack" -
-    holds."""
+    CR 603.8's latch would let the state trigger fire again once it has left
+    the stack (the countering case below shows exactly that), but here the
+    state-based check that follows the resolution takes Bob out first
+    (CR 704.5a), and CR 104.1 ends the game immediately: "A game ends
+    immediately when a player wins". Nothing is put on the stack in a game
+    that is over, so the look-back trigger `Game.sacrifice` queued stays
+    pending and never reaches the stack (battle report B6-06)."""
     scenario = (
         Scenario().player("alice", battlefield=["The Millennium Calendar"]).player("bob").build()
     )
@@ -137,11 +132,11 @@ def test_the_state_trigger_fires_again_once_the_first_one_has_resolved():
     (first,) = scenario.game.put_triggers_on_stack()
     scenario.resolve_top()
 
-    # `resolve_top` flushes CR 603.3's triggers itself, so the second one is
-    # already there: the ability left the stack, the condition is still true.
-    assert scenario.stack_names() == ["The Millennium Calendar's triggered ability"]
-    (second,) = scenario.game.stack
-    assert second.id != first.id
+    assert calendar.zone is Zone.GRAVEYARD
+    assert scenario.player("bob").life == -980
+    assert scenario.game.winner == "alice"
+    assert scenario.stack_names() == []
+    assert scenario.game.put_triggers_on_stack() == []
 
 
 def test_countering_the_state_trigger_lets_it_trigger_again_before_the_abilities_go():
