@@ -112,15 +112,18 @@ def test_equip_can_only_be_activated_as_a_sorcery():
 
 
 def test_it_cannot_be_attached_to_a_creature_an_opponent_controls():
-    """CR 702.6a targets a creature *you control*, rechecked by CR 608.2b."""
+    """CR 702.6a targets a creature *you control*. CR 601.2c (via CR 602.2b)
+    refuses that target at announcement, before anything is paid; the
+    CR 608.2b recheck is the left-the-battlefield test below."""
     scenario = board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     cutter = scenario.find("Cori-Steel Cutter", Zone.BATTLEFIELD, "alice")
     wolf = scenario.creature("Watchwolf", "bob")
 
-    activation = equip(scenario, cutter, wolf)
-    assert activation.resolve() is None
+    with pytest.raises(ValueError, match="Watchwolf"):
+        equip(scenario, cutter, wolf)
     assert not cutter.is_attached
+    assert scenario.game.stack_is_empty
 
 
 def test_a_target_that_left_the_battlefield_attaches_nothing():
@@ -383,11 +386,9 @@ def test_a_permanent_karn_animated_can_be_equipped():
 
 def test_an_unanimated_noncreature_artifact_cannot_be_equipped():
     """The inverse of the test above: Sol Ring Karn never touched is still
-    only ever an artifact, so equip's target recheck (CR 608.2b) finds it
-    illegal and the ability does nothing - CR 608.2b's "if all its targets ...
-    are illegal, it doesn't resolve", read for an ability with the one target
-    equip always has. Nothing to unattach, no exception raised: an illegal
-    equip target is a no-op, not an error.
+    only ever an artifact, so "target creature you control" refuses it at
+    announcement (CR 601.2c, via CR 602.2b) - nothing is paid and nothing
+    goes on the stack.
     """
     scenario = _karn_and_a_target_artifact().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
@@ -395,9 +396,10 @@ def test_an_unanimated_noncreature_artifact_cannot_be_equipped():
     assert not scenario.game.computed_board().of(ring).is_creature
 
     cutter = scenario.find("Cori-Steel Cutter", Zone.BATTLEFIELD, "alice")
-    activation = equip(scenario, cutter, ring)
+    with pytest.raises(ValueError, match="Sol Ring"):
+        equip(scenario, cutter, ring)
 
-    assert activation.resolve() is None
+    assert scenario.game.stack_is_empty
     assert equipped_creature(scenario.game, cutter) is None
     assert not cutter.is_attached
 

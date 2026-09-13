@@ -226,15 +226,11 @@ def test_off_battlefield_activation_covers_cycling_channel_and_gargadon():
     )
     assert any(action.keyword and "cycling" in action.keyword.lower() for action in cycling_actions)
 
-    # Boseiju, Who Endures's own Channel targets ("destroy target artifact,
-    # enchantment, or nonbasic land") - `off_battlefield_activation`
-    # announces and checks targets as part of *building* the activation, and
-    # this enumeration has no targets to give it yet (see the module
-    # docstring), so that specific case is exercised on its own below
-    # (`test_boseiju_channel_appears_as_unknown_rather_than_vanishing`)
-    # rather than here. World Breaker's graveyard-functioning ability
-    # targets nothing, so it proves this category's ordinary, non-targeted
-    # shape without also exercising the targeted one.
+    # Boseiju, Who Endures's own Channel targets, and with nothing to name it
+    # stays UNKNOWN (`test_boseiju_channel_appears_as_unknown_rather_than_vanishing`);
+    # with a target it is priced (`test_activation_target_slots.py`). World
+    # Breaker's graveyard-functioning ability targets nothing, so it proves
+    # this category's ordinary, non-targeted shape here.
     world_breaker_scenario = (
         Scenario().player("alice", graveyard=["World Breaker"], battlefield=["Forest"] * 5).build()
     )

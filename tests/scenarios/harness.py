@@ -1168,6 +1168,7 @@ class PlayedScenario:
             exiling=exiling,
             revealing=revealing,
             x_value=x_value,
+            targets=targets,
         )
         if tapping:
             waterbend(payment, *tapping)
@@ -1181,7 +1182,6 @@ class PlayedScenario:
             source,
             index,
             controller,
-            targets=targets,
             color=color,
             x_value=x_value,
             exiled_for_cost=exiling[0] if exiling else None,
