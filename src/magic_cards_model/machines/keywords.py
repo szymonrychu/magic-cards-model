@@ -889,7 +889,7 @@ class KeywordActivation(BaseModel):
         if self.applied:
             return self.result
         self.applied = True
-        effect = KEYWORD_EFFECTS.get(self.keyword.lower())
+        effect = keyword_activation_effect(self.keyword)
         self.result = effect(self) if effect is not None else None
         return self.result
 
@@ -1167,32 +1167,57 @@ def _cycling_effect(activation: KeywordActivation) -> list[CardState]:
     with game._id_allocator_scope():  # noqa: SLF001
         if typed is None:
             return game.draw_cards(activation.player, 1)
-
-        # CR 702.29e: "Search your library for a [type] card, reveal it, and put it
-        # into your hand. Then shuffle." The shuffle does not happen - a scenario's
-        # rigged library is the point of the scenario - which is the same
-        # concession Solemn Simulacrum's effect entry makes.
-        owner = game.player(activation.player)
-        for state in list(owner.library):
-            if _matches_type(state.card, typed):
-                owner.move(state, Zone.HAND)
-                return [state]
-        return []
+        # CR 702.29e: "Search your library for a [type] card, reveal it, and put
+        # it into your hand. Then shuffle your library."
+        return _search_reveal_to_hand_and_shuffle(
+            activation, lambda state: _matches_type(state, typed)
+        )
 
 
-def _matches_type(card: Card, named: str) -> bool:
+def _search_reveal_to_hand_and_shuffle(
+    activation: KeywordActivation, matches: Callable[[CardState], bool]
+) -> list[CardState]:
+    """Typecycling's and transmute's shared resolution, in the order both
+    printed expansions state it (CR 702.29e, CR 702.53a).
+
+    The search is `Game.search_library`'s single CHOOSE_CARDS question over
+    every matching card (CR 701.23a), asked inexact because both name a stated
+    quality - a type, or a mana value - which CR 701.23b says the player "isn't
+    required to find". The found card is revealed while still in the library
+    (CR 701.20a-b), put into the hand, and only then is the library shuffled
+    (CR 701.24a), so the shuffle is held back from the search and done last.
+    """
+    game = activation.game
+    owner = game.player(activation.player)
+    source = activation.card.name
+    found = game.search_library(
+        owner, matches, count=1, optional=True, shuffle=False, source=source
+    )
+    for state in found:
+        game.reveal(state, source=source)
+        owner.add(state, Zone.HAND)
+    game.shuffle_library(owner)
+    return found
+
+
+def _matches_type(state: CardState, named: str) -> bool:
     """Whether a card is of the type a typecycling ability names (CR 702.29e).
 
-    The name is a land subtype ("Forest") for forestcycling and a card type
-    ("Land") for landcycling, so both are tried - CR 205.2a for the card types,
-    CR 305.6 for the basic land types.
+    "This type is usually a subtype (as in "mountaincycling") but can be any
+    card type, subtype, supertype, or combination thereof (as in "basic
+    landcycling")." So every word named has to be one of the card's own
+    supertypes (CR 205.4a), card types (CR 205.2a) or subtypes (CR 205.3) -
+    "basic land" is a basic *and* a land, never a land with a basic land type.
     """
-    if named.lower() in {subtype.lower() for subtype in card.subtypes}:
-        return True
-    try:
-        return Type(named.lower()) in card.types
-    except ValueError:
+    words = named.lower().split()
+    if not words:
         return False
+    own = {
+        *(supertype.value for supertype in state.supertypes),
+        *(card_type.value for card_type in state.types),
+        *(subtype.lower() for subtype in state.subtypes),
+    }
+    return all(word in own for word in words)
 
 
 def cycle(
@@ -1425,20 +1450,17 @@ def _transmute_effect(activation: KeywordActivation) -> CardState | None:
     charged the discard as part of paying the cost before this ever runs
     (CR 602.2b/CR 118.8a), so by the time the effect resolves `activation.
     card.zone` is the graveyard, exactly what CR 702.53a's own "the
-    discarded card" refers to. No shuffle happens here, the same declared
-    concession `_cycling_effect`'s own typecycling search makes: a rigged
-    library is the scenario's own staging, not something this effect should
-    randomise away.
+    discarded card" refers to. The search, reveal and shuffle are the ones
+    typecycling uses (`_search_reveal_to_hand_and_shuffle`): the player
+    chooses among every card of that mana value, or finds nothing.
     """
     game = activation.game
     target_value = activation.card.mana_value
-    owner = game.player(activation.player)
-    for state in list(owner.library):
-        if state.mana_value == target_value:
-            with game._id_allocator_scope():  # noqa: SLF001
-                owner.move(state, Zone.HAND)
-            return state
-    return None
+    with game._id_allocator_scope():  # noqa: SLF001
+        found = _search_reveal_to_hand_and_shuffle(
+            activation, lambda state: state.mana_value == target_value
+        )
+    return found[0] if found else None
 
 
 # --------------------------------------------------------------------------
@@ -3690,11 +3712,21 @@ KEYWORD_EFFECTS: dict[str, Callable[[KeywordActivation], Any]] = {
     "commander ninjutsu": _ninjutsu_effect,
 }
 
-for _name in ("cycling", "landcycling", "typecycling"):
-    KEYWORD_EFFECTS[_name] = _cycling_effect
-for _land in ("plains", "island", "swamp", "mountain", "forest"):
-    KEYWORD_EFFECTS[f"{_land}cycling"] = _cycling_effect
-del _name, _land
+
+def keyword_activation_effect(keyword: str) -> Callable[[KeywordActivation], Any] | None:
+    """The effect a keyword's activated ability has on resolution, or None.
+
+    Cycling and every typecycling are routed by the keyword's shape rather than
+    by a row per type: CR 702.29e allows "any card type, subtype, supertype, or
+    combination thereof" before "cycling", so `Wizardcycling`, `Slivercycling`
+    and `Basic landcycling` are the same ability as `Islandcycling`, and a list
+    of types would always be missing one.
+    """
+    lowered = keyword.lower()
+    if lowered.endswith("cycling"):
+        return _cycling_effect
+    return KEYWORD_EFFECTS.get(lowered)
+
 
 # `AbilityOnStack.keyword_activation`/`.unless_payment` (machines/triggers.py)
 # carry `KeywordActivation` and `CostPayment` as string forward references,
