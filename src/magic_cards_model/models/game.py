@@ -75,7 +75,9 @@ from ..machines.cost import (
     increase,
     looks_like_unparsed_cost_modifier,
     loyalty_cost,
+    mana_candidate_scan,
     pay_life_cost,
+    plan_mana_payment,
     sacrifice_cost,
     spend_restriction,
     tap_cost,
@@ -934,6 +936,21 @@ class KnownCard(BaseModel):
     carried: bool
 
 
+def _illegal_option_refusal(decision: Decision) -> str:
+    """The refusal for choosing an option CR 608.2d rules out, in its words."""
+    refusal = (
+        f"{decision.prompt}: that option is illegal, so CR 608.2d does not allow choosing "
+        "it (\"The player can't choose an option that's illegal or impossible\")"
+    )
+    if decision.kind is DecisionKind.PAY_MANA:
+        refusal += (
+            " - the floating mana and the untapped mana sources available cannot pay it "
+            "(CR 118.3: \"A player can't pay a cost without having the necessary "
+            'resources to pay it fully")'
+        )
+    return refusal
+
+
 class CastRecord(BaseModel):
     """What was announced while a spell was being cast (CR 601.2b, 601.2c).
 
@@ -963,6 +980,12 @@ class CastRecord(BaseModel):
 
     keyword: str | None = None
     """The keyword the spell was cast with, as printed: `Flashback`, `Warp`."""
+    keyword_cost_paid: bool = False
+    """Whether the cost that keyword names was paid (`Casting.keyword_cost_paid`).
+
+    CR 702.185a: a warped card cast from exile later is cast with the same
+    keyword option but for its mana cost, and "If this spell's warp cost was
+    paid" is false for it."""
     origin_zone: Zone = Zone.HAND
     """Where the spell was cast **from** (CR 601.2a), copied from `Casting.
     origin_zone` as the spell goes on the stack. CR 702.88a's rebound applies
@@ -2010,7 +2033,7 @@ class Game(BaseModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 13
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 14
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -2155,6 +2178,15 @@ class Game(BaseModel):
     This change and battle 3's above were each stamped 11 -> 12 on separate
     lines of development, so a 12 from either line lacks the other's fields;
     merged, the number moved on once more.
+
+    Bumped 13 -> 14: battle 6. `CastRecord` gained `keyword_cost_paid` (warp's
+    delayed exile applies only "If this spell's warp cost was paid", CR
+    702.185a) and `Decision` gained `mana_sources` (an "unless ... pays"
+    payment may activate mana abilities, CR 608.2g). A version-13 dump holds
+    cast records that read every warp cast as cast for its mana cost. Refused
+    instead. Battle 6 was stamped 12 -> 13 on a line of development beside
+    battle 5's, so a 13 from either line lacks the other's fields; merged, the
+    number moved on once more.
     """
 
     @model_validator(mode="before")
@@ -2397,6 +2429,28 @@ class Game(BaseModel):
     def is_over(self) -> bool:
         """A game with a winner is over, and so is a drawn one (CR 104.1)."""
         return self.winner is not None or self.drawn
+
+    def why_game_is_over(self) -> str | None:
+        """Why nothing more may happen in this game, or None while it goes on.
+
+        CR 104.1: "A game ends immediately when a player wins, when the game is
+        a draw, or when the game is restarted." Once it has ended nothing
+        resolves, nothing is put on the stack, no decision is raised, and every
+        action is refused with this reason (battle report B6-06).
+        """
+        if not self.is_over:
+            return None
+        outcome = f"{self.winner} won" if self.winner is not None else "it is a draw"
+        return (
+            f"the game is over: {outcome} (CR 104.1: a game ends immediately when a "
+            "player wins, when the game is a draw, or when the game is restarted)"
+        )
+
+    def _refuse_if_over(self) -> None:
+        """Raise `why_game_is_over`'s reason once the game has ended (CR 104.1)."""
+        refusal = self.why_game_is_over()
+        if refusal is not None:
+            raise ValueError(refusal)
 
     @property
     def battlefield(self) -> list[CardState]:
@@ -3063,6 +3117,7 @@ class Game(BaseModel):
         spell: CardState,
         *,
         keyword: str | None = None,
+        keyword_cost_paid: bool = False,
         origin_zone: Zone = Zone.HAND,
         face: str | None = None,
         exile_annotation: "ExileAnnotation | None" = None,
@@ -3108,6 +3163,7 @@ class Game(BaseModel):
         """
         record = CastRecord(
             keyword=keyword,
+            keyword_cost_paid=keyword_cost_paid,
             origin_zone=origin_zone,
             face=face,
             exile_annotation=exile_annotation,
@@ -3239,6 +3295,7 @@ class Game(BaseModel):
         stack, **including the object that's resolving**." `Game.resolving` is
         that answer, live only for the length of one resolution.
         """
+        self._refuse_if_over()
         if self.stack_is_empty:
             raise ValueError("the stack is empty")
         self.resolving = self.stack[-1]
@@ -3591,7 +3648,7 @@ class Game(BaseModel):
         CR 603.7d/e give the ability the creating spell's source and its
         controller as it resolved, which is what is recorded here.
         """
-        if self.was_cast_with(spell, "Warp"):
+        if self.was_cast_with(spell, "Warp") and self.cast_record(spell).keyword_cost_paid:
             self.delayed_triggers.create(
                 DelayedTrigger(
                     text=(
@@ -3823,6 +3880,7 @@ class Game(BaseModel):
         same label unconditionally, which mislabelled a hideaway or
         Isochron-copy cast's `CastRecord` as a rebound it never was.
         """
+        self._refuse_if_over()
         with self._id_allocator_scope():
             profile = profile_for_text(card.oracle_text or "")
             targets: list[TargetRef] = []
@@ -4430,6 +4488,8 @@ class Game(BaseModel):
         anybody gets priority - so this drains repeatedly rather than leaving
         them for a later call that a scenario may never make.
         """
+        if self.is_over:
+            return []  # CR 104.1: the game has ended
         with self._id_allocator_scope():
             placed: list[AbilityOnStack] = []
             # CR 603.8 / CR 704.1a: a state trigger is a triggered ability whose
@@ -5813,6 +5873,11 @@ class Game(BaseModel):
         `_with_card_labels` - so a client is never handed a list of ids naming
         cards it cannot see.
         """
+        if self.is_over:
+            # CR 104.1: the game has ended, so no question is put to anybody -
+            # nothing is recorded, nothing pauses, and the rest of a resolution
+            # that ended the game reads the documented default.
+            return default_answer(decision)
         decision = self._with_card_labels(decision)
         self.decisions.asked.append(decision)
         allowed = legal_options(decision)
@@ -5830,6 +5895,22 @@ class Game(BaseModel):
         if not found:
             return default_answer(decision)
 
+        if decision.kind is DecisionKind.PAY_MANA and isinstance(value, tuple):
+            # CR 608.2g / CR 605.3a: paying, and naming the mana sources to
+            # activate while doing it. Every one must have been offered.
+            if not all(isinstance(card_id, UUID) for card_id in value):
+                raise ValueError(f"{decision.prompt}: needs a tuple of mana source ids")
+            offered = set(decision.mana_sources)
+            stray = [str(card_id) for card_id in value if card_id not in offered]
+            if stray:
+                raise ValueError(
+                    f"{decision.prompt}: {', '.join(stray)} is not one of the mana sources "
+                    f"{decision.player} can activate while paying (CR 605.3a)"
+                )
+            if True not in allowed:
+                raise ValueError(_illegal_option_refusal(decision))
+            return value
+
         if decision.kind in (
             DecisionKind.MAY,
             DecisionKind.PAY_LIFE,
@@ -5839,10 +5920,7 @@ class Game(BaseModel):
             if not isinstance(value, bool):
                 raise ValueError(f"{decision.prompt}: a yes-or-no question needs a bool answer")
             if value not in allowed:
-                raise ValueError(
-                    f"{decision.prompt}: that option is illegal, so CR 608.2d "
-                    f"does not allow choosing it"
-                )
+                raise ValueError(_illegal_option_refusal(decision))
             return value
 
         if decision.kind is DecisionKind.PAY_ENERGY_AMOUNT:
@@ -6164,7 +6242,7 @@ class Game(BaseModel):
         source_id: str | None = None,
     ) -> bool:
         """ "Unless its controller pays {N}", asked and then paid (CR 118.12a,
-        CR 608.2d) - Censor's and Mystical Dispute's shape.
+        CR 608.2d) - Censor's, Mana Leak's and Metallic Rebuke's shape.
 
         CR 118.12a: "[Do something] unless [a player does something else]"
         means "[a player] may [do something else]. If [that player] doesn't,
@@ -6172,33 +6250,26 @@ class Game(BaseModel):
         Prison's own "unless", just with the branches swapped: paying here is
         what *avoids* the counter, not what triggers a bonus.
 
-        Only mana already floating in the player's pool counts. CR 608.2g
-        lets a player activate mana abilities right here, but nothing calls
-        this mid-resolution with an interactive tap step, so a player who
-        would have to tap a land is refused exactly as if they had no mana at
-        all - see `docs/engine-coverage.md`.
+        CR 608.2g: "If an effect gives a player the option to pay mana, they
+        may activate mana abilities before taking that action", and CR 605.3a
+        allows it "even if it's in the middle of ... resolving a spell". So
+        the payment counts the floating pool **and** the untapped mana sources
+        the player could activate now (`Decision.mana_sources`); see
+        `_pay_mana_while_resolving` for how the answer is paid.
 
         Returns whether the mana was paid, and spends it.
         """
         if isinstance(player, str):
             player = self.player(player)
-        payable = amount <= 0 or player.mana_pool.total >= amount
-        answer = self.ask(
-            Decision(
-                kind=DecisionKind.PAY_MANA,
-                player=player.username,
-                prompt=f"pay {{{amount}}} or the spell is countered",
-                source=source,
-                source_id=source_id,
-                amount=amount,
-                affirmative_is_legal=payable,
-            )
+        cost = ManaCost.parse(f"{{{amount}}}") if amount > 0 else ManaCost()
+        return self._may_pay_mana_while_resolving(
+            player,
+            cost,
+            prompt=f"pay {{{amount}}} or the spell is countered",
+            amount=amount,
+            source=source,
+            source_id=source_id,
         )
-        if not answer:
-            return False
-        if amount > 0:
-            player.mana_pool.pay(ManaCost.parse(f"{{{amount}}}"))
-        return True
 
     def may_pay_mana_cost(
         self,
@@ -6214,31 +6285,101 @@ class Game(BaseModel):
         read the other way round): "At the beginning of your next upkeep, pay
         {2}{G}{G}. If you don't, you lose the game."
 
-        Same limitation as `may_pay_mana`: only mana already floating in the
-        pool counts (CR 608.2g's interactive tap step is not modelled
-        mid-resolution), so a player who could only pay by tapping a land is
-        refused exactly as if they had no mana at all.
+        The same CR 608.2g payment as `may_pay_mana`: floating mana and the
+        mana abilities of untapped sources both count.
 
         Returns whether the cost was paid, and pays it.
         """
         if isinstance(player, str):
             player = self.player(player)
-        payable = player.mana_pool.can_pay(cost)
+        return self._may_pay_mana_while_resolving(
+            player,
+            cost,
+            prompt=f"pay {cost}",
+            amount=cost.converted,
+            source=source,
+            source_id=source_id,
+        )
+
+    def _may_pay_mana_while_resolving(
+        self,
+        player: Player,
+        cost: ManaCost,
+        *,
+        prompt: str,
+        amount: int,
+        source: str | None,
+        source_id: str | None,
+    ) -> bool:
+        """Ask `player` whether to pay `cost` mid-resolution, and pay it.
+
+        The question offers every untapped mana source the player could
+        activate (CR 605.3a) and is legal to accept exactly when the floating
+        pool plus those sources can pay the cost fully (CR 118.3).
+        """
+        free = cost.converted <= 0 and not cost.symbols
+        sources = [] if free else self._mana_sources_while_resolving(player)
+        payable = free or (
+            plan_mana_payment(cost, sources, game=self, payer=player.username) is not None
+        )
         answer = self.ask(
             Decision(
                 kind=DecisionKind.PAY_MANA,
                 player=player.username,
-                prompt=f"pay {cost}",
+                prompt=prompt,
                 source=source,
                 source_id=source_id,
-                amount=cost.converted,
+                amount=amount,
                 affirmative_is_legal=payable,
+                mana_sources=tuple(state.id for state in sources),
             )
         )
-        if not answer:
+        if answer is False:
             return False
-        player.mana_pool.pay(cost)
+        if not free:
+            chosen = sources if answer is True else [s for s in sources if s.id in set(answer)]
+            self._pay_mana_while_resolving(player, cost, chosen, prompt=prompt)
         return True
+
+    def _mana_sources_while_resolving(self, player: Player) -> list[CardState]:
+        """The untapped permanents whose mana abilities `player` could activate
+        right now to pay a cost (CR 605.3a), each once, in battlefield order.
+
+        The same candidate scan `CostPayment.auto_tap` and `legal_actions` read,
+        so a source offered here is one the payment below can really tap.
+        """
+        found: list[CardState] = []
+        scan = mana_candidate_scan(
+            self.permanents_controlled_by(player.username), game=self, payer=player.username
+        )
+        for candidate in scan:
+            state = candidate[0]
+            if all(state.id != seen.id for seen in found):
+                found.append(state)
+        return found
+
+    def _pay_mana_while_resolving(
+        self, player: Player, cost: ManaCost, sources: Sequence[CardState], *, prompt: str
+    ) -> None:
+        """Pay `cost` from the floating pool plus mana abilities of `sources`.
+
+        CR 118.3c: "Activating mana abilities is not mandatory, even if paying a
+        cost is", so only as many of `sources` are activated as the payment
+        needs, through `CostPayment.auto_tap` - the one solver every other mana
+        payment in this engine uses. What is left over stays in the pool
+        (CR 106.4a).
+        """
+        payment = CostPayment.for_total(TotalCost.of(cost), game=self, payer=player.username)
+        try:
+            payment.auto_tap(sources)
+        except ValueError as unpayable:
+            payment.cancel()
+            raise ValueError(
+                f'{prompt}: the mana sources named cannot pay {cost} (CR 118.3: "A player '
+                f"can't pay a cost without having the necessary resources to pay it fully\"): "
+                f"{unpayable}"
+            ) from unpayable
+        payment.pay()
 
     def pay_any_amount_of_energy(
         self,
@@ -10122,6 +10263,7 @@ class Game(BaseModel):
         and no player receives priority between one declaration and the next.
         `declare_attackers` opens that window once the whole attack is declared.
         """
+        self._refuse_if_over()
         attack = combat_rules.declare_attacker(self, creature, self.attack_target(defender))
         # CR 613.5: the attacker's characteristics for this event are the
         # computed ones - a land animated by earthbend is a creature only
@@ -10144,6 +10286,7 @@ class Game(BaseModel):
 
     def declare_attackers(self, attacks: list[tuple[CardState, "Targetable | str"]]) -> None:
         """Declare a whole attack at once, in order (CR 508.1, 508.2b)."""
+        self._refuse_if_over()
         with self._id_allocator_scope():
             for creature, defender in attacks:
                 self.declare_attacker(creature, defender)
@@ -10183,6 +10326,7 @@ class Game(BaseModel):
         per combat, so re-declaring a block that was already declared does not
         fire it again.
         """
+        self._refuse_if_over()
         with self._id_allocator_scope():
             combat_rules.declare_blockers(self, blocks)
 
@@ -10313,6 +10457,8 @@ class Game(BaseModel):
           than the number of lands they have already played this turn."
           CR 305.2a is the comparison: `land_allowance` against `lands_played`.
         """
+        if self.is_over:
+            return self.why_game_is_over()
         assert self.turn is not None
         if self.turn.step not in MAIN_PHASES:
             return (
@@ -10748,6 +10894,7 @@ class Game(BaseModel):
         determines (`Casting._splice_card` nulls the announcement's own stale
         `payment` for exactly that reason).
         """
+        self._refuse_if_over()
         origin_zone = card.zone
         # CR 601.3's dynamic half is asked before CR 601.2a's move, exactly
         # like `engine_api.cast_card` asks it - the object `usable_play_
@@ -10835,6 +10982,7 @@ class Game(BaseModel):
         same CR 305.1 land drop, so it is checked and counted exactly like any
         other land below.
         """
+        self._refuse_if_over()
         land_face = land.card.land_face
         if not land.card.is_land and land_face is None:
             raise ValueError(f"{land.name} is not a land")
@@ -10940,6 +11088,7 @@ class Game(BaseModel):
         only once the whole cost is already in hand. Raises if the action is
         unavailable at all, before anything has been spent.
         """
+        self._refuse_if_over()
         refusal = self.why_cannot_bring_companion_to_hand(username)
         if refusal is not None:
             raise ValueError(refusal)
@@ -10956,6 +11105,7 @@ class Game(BaseModel):
         so companion gets CR 108.3b's ownership check and CR 400.11a's zone
         check for free rather than a second copy of either.
         """
+        self._refuse_if_over()
         refusal = self.why_cannot_bring_companion_to_hand(username)
         if refusal is not None:
             raise ValueError(refusal)
@@ -11667,6 +11817,8 @@ class Game(BaseModel):
         the game at 0 life is a separate state-based action (CR 704.5a),
         checked when a player would next receive priority.
         """
+        if self.is_over:
+            return self.why_game_is_over()
         abilities = self.activated_abilities(permanent)
         if index >= len(abilities):
             return f"{permanent.name} has no activated ability number {index}"
@@ -12451,6 +12603,7 @@ class Game(BaseModel):
         parenthetical, or a permanent that is not face down here), before
         anything has been spent.
         """
+        self._refuse_if_over()
         refusal = why_cannot_turn_face_up(permanent)
         if refusal is not None:
             raise ValueError(refusal)
@@ -12474,6 +12627,7 @@ class Game(BaseModel):
         a player would receive priority) - a special action skips the stack
         for *itself*, not for what it triggers.
         """
+        self._refuse_if_over()
         with self._id_allocator_scope():
             controller = controller or self.controller_of(permanent).username
             permanent.turn_face_up()
@@ -12621,6 +12775,7 @@ class Game(BaseModel):
         is needed but missing, or when the one given is not on offer. It is
         not consulted at all for an ability with only one possible output.
         """
+        self._refuse_if_over()
         with self._id_allocator_scope():
             ability = self.activated_abilities(permanent)[index]
             controller = controller or self.controller_of(permanent).username
@@ -12961,6 +13116,7 @@ class Game(BaseModel):
         not one: running them here would put an untap-step trigger straight onto
         the stack, which is the very thing CR 502.4's second sentence forbids.
         """
+        self._refuse_if_over()
         assert self.priority is not None
         if self.priority.withheld is not None:
             # Through `require`, so a player who is not at the table at all is
@@ -12978,6 +13134,10 @@ class Game(BaseModel):
             # caused is caught here, the next time anyone would receive
             # priority.
             self._check_state_based_actions_and_stack_triggers()
+            if self.is_over:
+                # CR 104.1: the check that preceded this pass ended the game,
+                # so the pass does nothing - no resolution, no step change.
+                return PriorityOutcome.GAME_OVER
             outcome = self.priority.pass_priority(username, self.stack_is_empty)
             if outcome is PriorityOutcome.RESOLVE_TOP:
                 self.resolve_top()
@@ -13008,6 +13168,11 @@ class Game(BaseModel):
         and `declare_attack` (`engine_api.py`, e.g. around lines 375, 440,
         608, 731), so it needs a scope of its own.
         """
+        if self.is_over:
+            # CR 104.1: the cast or activation this follows may itself have ended
+            # the game (a CR 104.4b draw off a mana ability), and nobody receives
+            # priority in a game that is over.
+            return username
         with self._id_allocator_scope():
             return self._retain_priority_impl(username)
 
@@ -13072,6 +13237,8 @@ class Game(BaseModel):
         only thing refused here is a player reaching for somebody else's
         decisions without an effect that gives them.
         """
+        if self.is_over:
+            return self.why_game_is_over()
         actual = self.controller_of_player(player)
         if decider == actual:
             return None
@@ -13161,6 +13328,7 @@ class Game(BaseModel):
         player-controlling effect never reaches - CR 723.5 hands over every
         choice "the rules or any objects" call for, and conceding is neither.
         """
+        self._refuse_if_over()
         with self._id_allocator_scope():
             self.player(username)  # raises if unknown
             if by is not None and by != username:
@@ -13173,6 +13341,7 @@ class Game(BaseModel):
             self._check_for_a_winner()
 
     def end_with_winner(self, username: str) -> None:
+        self._refuse_if_over()
         self.player(username)  # raises if unknown
         self.winner = username
 
@@ -13250,8 +13419,7 @@ class Game(BaseModel):
           the caller must pass priority and let it resolve instead.
         """
         assert self.turn is not None
-        if self.is_over:
-            raise ValueError("the game is over")
+        self._refuse_if_over()
         if self.turn.in_pregame:
             # CR 500.1's steps are parts of a turn and no turn has begun yet, so
             # there is no step to advance and no active player whose decision it
@@ -13407,6 +13575,7 @@ class Game(BaseModel):
         begun. `TurnMachine.advance_to` will move the raw pointer through the
         pregame for a caller that genuinely wants only the pointer moved.
         """
+        self._refuse_if_over()
         assert self.turn is not None
         if self.turn.in_pregame:
             raise ValueError(

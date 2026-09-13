@@ -253,8 +253,8 @@ def test_lethal_spells_resolving_in_sequence_end_the_game_at_the_first():
     """Two Bolts, one at each player, on the stack together. The last cast
     resolves first (CR 608: last in, first out) and takes bob out, the game
     ends (CR 104.1), and the second Bolt resolving into a finished game cannot
-    turn alice's win into a draw - the loss it would deal is never checked,
-    because no player would receive priority in a game that is over. (The Bolt
+    turn alice's win into a draw - it is never resolved at all, because
+    nothing resolves in a game that is over. (The Bolt
     aimed at the loser is gone with her: CR 800.4a takes her objects out of the
     game when she leaves, so the spell left on the stack is the winner's.)
     """
@@ -283,7 +283,8 @@ def test_lethal_spells_resolving_in_sequence_end_the_game_at_the_first():
     assert not game.drawn
     assert not game.is_in_game("bob")
 
-    scenario.resolve_top()  # the Bolt aimed at alice resolves into a finished game
+    with pytest.raises(ValueError, match=r"the game is over.*CR 104\.1"):
+        scenario.resolve_top()  # CR 104.1: nothing resolves into a finished game
     assert game.winner == "alice"
     assert not game.drawn
     assert game.is_in_game("alice"), "the game ended before her loss could be checked"

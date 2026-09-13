@@ -257,3 +257,40 @@ def test_the_end_step_exiles_a_warped_permanent_on_its_own():
         scenario.resolve_top()
 
     assert colossus.zone is Zone.EXILE
+
+
+def test_a_warped_card_recast_from_exile_for_its_mana_cost_stays_on_the_battlefield():
+    """Battle report B6-04. CR 702.185a: the delayed exile exists only "If this
+    spell's warp cost was paid". The later cast from exile pays the mana cost
+    ("Its owner may cast this card after the current turn has ended for as long
+    as it remains exiled"), so no delayed trigger is created for it, and the
+    permanent that cast becomes is a new object (CR 400.7) that the first
+    trigger never referred to.
+    """
+    scenario = board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    sources = scenario.untapped_sources("Island", "Island", "Island")
+    casting = scenario.cast("Bygone Colossus")
+    casting.use_keyword("Warp")
+    scenario.pay_with(casting.begin_paying(), *sources)
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    alices_next_main(scenario)
+    exiled = scenario.find("Bygone Colossus", Zone.EXILE, "alice")
+    assert exiled.exile_annotation is not None
+    assert exiled.exile_annotation.marker is ExileMarker.WARPED
+
+    again = scenario.cast("Bygone Colossus", from_zone=Zone.EXILE)
+    again.use_keyword("Warp")
+    islands = scenario.untapped_sources(*["Island"] * 9, username="alice")
+    scenario.pay_with(again.begin_paying(), *islands)
+    scenario.put_on_stack(again)
+    recast = scenario.resolve_top()
+    assert recast.zone is Zone.BATTLEFIELD
+
+    alices_next_main(scenario)
+
+    assert recast.zone is Zone.BATTLEFIELD, "the warp exile applies only to a warped spell"
+    assert scenario.game.battlefield.count(recast) == 1

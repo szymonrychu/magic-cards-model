@@ -133,6 +133,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
+from magic_cards_model.phrases import with_indefinite_article
+
 from ..models.card_state import TargetRef
 
 if TYPE_CHECKING:  # pragma: no cover - import cycle: the models build on the machines
@@ -184,11 +186,12 @@ class DecisionKind(StrEnum):
     #: `Decision.player` is the *target spell's* controller, not the resolving
     #: counterspell's - CR 608.2d's "the player" is whoever the effect names.
     #:
-    #: Only mana already floating in that player's pool can pay it. CR 608.2g
-    #: lets a player activate mana abilities right here, but this engine has
-    #: no interactive "tap a land mid-resolution" step, so a controller who
-    #: would have to tap a source to make the payment is treated as unable to
-    #: pay - see `docs/engine-coverage.md`.
+    #: CR 608.2g: "If an effect gives a player the option to pay mana, they may
+    #: activate mana abilities before taking that action." The floating pool
+    #: and the untapped mana sources in `Decision.mana_sources` both count
+    #: toward `affirmative_is_legal`; the answer is `True` (the engine picks
+    #: the sources, as `CostPayment.auto_tap` does), `False`, or a tuple of the
+    #: offered source ids to activate while paying.
     PAY_MANA = "pay_mana"
     #: "You may pay any amount of {E}" (Galvanic Discharge, Wrath of the
     #: Skies) - CR 107.14/118.3's variable-amount cousin of `PAY_ENERGY`. The
@@ -484,6 +487,10 @@ class Decision:
     #: (see the module docstring), and this field is where a caller writes the
     #: deviation down rather than hiding it in a reversed candidate list.
     default_cards: tuple[UUID, ...] | None = None
+    #: `PAY_MANA` only: the untapped permanents whose mana abilities the payer
+    #: may activate while paying (CR 608.2g, CR 605.3a). An answer naming
+    #: sources must name a subset of these.
+    mana_sources: tuple[UUID, ...] = ()
 
 
 def source_id_of(obj: "CardState | AbilityOnStack | UUID | None") -> str | None:
@@ -676,6 +683,11 @@ def rule_for_kind(kind: DecisionKind) -> str:
         return "CR 703.4i, CR 508.1 (declaring attackers, a turn-based action)"
     if kind is DecisionKind.DECLARE_BLOCKERS:
         return "CR 703.4j, CR 509.1 (declaring blockers, a turn-based action)"
+    if kind is DecisionKind.PAY_MANA:
+        return (
+            "CR 608.2d, CR 608.2g (a choice made while the effect applies; the player "
+            "may activate mana abilities before paying)"
+        )
     return "CR 608.2d (a choice made while the effect applies)"
 
 
@@ -800,6 +812,9 @@ class Answer(BaseModel):
     #: `PAY_ENERGY_AMOUNT`, `PAY_LIFE_AMOUNT` - how much was paid, 0 or more.
     amount: int | None = None
     #: `CHOOSE_CARDS` - which candidates were chosen; `ORDER_TRIGGERS` - the
+    #: chosen order's `AbilityOnStack` ids; `PAY_MANA` (beside `accept=True`
+    #: only) - the offered mana sources to activate while paying (CR 608.2g).
+    #: For the first two: the
     #: chosen order's `AbilityOnStack` ids, bottom of the stack first (CR
     #: 603.3b). Both are "a tuple of ids naming some of `Decision.cards`",
     #: which is why they share a field rather than each growing its own.
@@ -828,7 +843,9 @@ class Answer(BaseModel):
         wanted = _ANSWER_FIELD_FOR_KIND[self.kind]
         value = getattr(self, wanted)
         if value is None:
-            raise ValueError(f"a {self.kind.value} answer needs its {wanted!r} field set")
+            raise ValueError(
+                f"{with_indefinite_article(self.kind.value)} answer needs its {wanted!r} field set"
+            )
         if self.kind in (DecisionKind.CHOOSE_A_QUALITY, DecisionKind.CHOOSE_A_MODE) and value == "":
             # CR 614.12a's and CR 700.2a's choices are both mandatory - there
             # is no "decline" branch - so an empty string is never a real
@@ -836,15 +853,23 @@ class Answer(BaseModel):
             # its own `not value` check), so this is an early refusal, not the
             # only one; the api's `quality_answer`/`mode_answer` refuse the
             # same way for the same reason.
-            raise ValueError(f"a {self.kind.value} answer needs a non-empty {wanted!r}")
+            raise ValueError(
+                f"{with_indefinite_article(self.kind.value)} answer needs a non-empty {wanted!r}"
+            )
+        allowed_extra = {"card_ids"} if self.kind is DecisionKind.PAY_MANA else set()
+        if self.kind is DecisionKind.PAY_MANA and self.card_ids is not None and not self.accept:
+            raise ValueError("a pay_mana answer names mana sources only when it pays")
         stray = [
             field_name
             for field_name in _ANSWER_VALUE_FIELDS
-            if field_name != wanted and getattr(self, field_name) is not None
+            if field_name != wanted
+            and field_name not in allowed_extra
+            and getattr(self, field_name) is not None
         ]
         if stray:
             raise ValueError(
-                f"a {self.kind.value} answer only uses {wanted!r}, not {', '.join(stray)}"
+                f"{with_indefinite_article(self.kind.value)} answer only uses {wanted!r}, "
+                f"not {', '.join(stray)}"
             )
         return self
 
@@ -858,6 +883,8 @@ class Answer(BaseModel):
         `_check_one_value_field` already guarantees the right field is set, so
         this is a lookup, not a re-validation.
         """
+        if self.kind is DecisionKind.PAY_MANA and self.card_ids is not None:
+            return self.card_ids
         return getattr(self, _ANSWER_FIELD_FOR_KIND[self.kind])
 
 

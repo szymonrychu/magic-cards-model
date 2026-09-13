@@ -61,6 +61,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
+from magic_cards_model.phrases import with_indefinite_article
+
 from ..data.subtypes import subtype_vocabulary
 from ..models.card import Color, Supertype, Type
 from ..models.card_state import (
@@ -2830,6 +2832,36 @@ def has_land_type(*subtypes: str) -> Callable[[CardState], bool]:
 #: the multi-clause dispatcher has already had its "then shuffle" tail
 #: reattached by `_rejoin_search_clauses` - the group still has to be
 #: *readable*, just not mandatory at the regex level.
+#: One or more printed mana costs joined the way rules text lists them:
+#: "{0} or {1}", "{1}, {2}, or {3}". Each cost is a run of mana symbols.
+_MANA_COST_LIST = r"(?:\{[^}\s]+\})+(?:(?:,? or|,) (?:\{[^}\s]+\})+)*"
+
+
+def _exact_mana_cost_matcher(costs_text: str) -> Callable[[CardState], bool]:
+    """Whether a card's mana cost is one of the printed costs in `costs_text`.
+
+    CR 202.1: "A card's mana cost is indicated by mana symbols near the top of
+    the card." So this compares symbols, never mana value: Engineered
+    Explosives' {X} is not {0} even though CR 202.3e treats X as 0 for its
+    mana value outside the stack, Swooping Lookout's {W} is not {1}, and a card
+    with no mana cost (CR 202.1b) matches no cost at all. Symbols are compared
+    as a multiset, so a cost printed in a different order still matches.
+    """
+    wanted = [
+        sorted(str(symbol) for symbol in ManaCost.parse(cost).symbols)
+        for cost in re.findall(r"(?:\{[^}\s]+\})+", costs_text)
+    ]
+
+    def matches(state: CardState) -> bool:
+        printed = state.mana_cost
+        if not printed:
+            return False
+        symbols = sorted(str(symbol) for symbol in ManaCost.parse(printed).symbols)
+        return symbols in wanted
+
+    return matches
+
+
 _SEARCH_AND_PUT_RE = re.compile(
     # "Its controller may search ..." is deliberately not an alternative here
     # any more - that subject names a different player than whoever controls
@@ -2847,13 +2879,11 @@ _SEARCH_AND_PUT_RE = re.compile(
     r"search (?:your|their) library for (?:a|an) (?:(?P<quality>.+?) )?card"
     r"(?P<basic_land_type> with a basic land type)?"
     r"(?: with mana value (?P<max_mv>\d+) or less)?"
-    # Urza's Saga chapter III's own phrasing: "an artifact card with mana
-    # cost {0} or {1}". CR 202.3a makes mana value a non-negative integer, so
-    # naming the two literal costs a mana value can take is the identical set
-    # `_bounded_quality_matcher`'s own "N or less" already reads;
-    # `_search_and_place_for` folds this group into `max_mv` rather than
-    # growing a second bound-reading code path for it.
-    r"(?P<mana_cost_0_or_1> with mana cost \{0\} or \{1\})?"
+    # "with mana cost {0} or {1}" (Urza's Saga chapter III) names printed
+    # mana costs, not mana values: CR 202.1 makes a mana cost the mana
+    # symbols, so {X} (mana value 0 in a library, CR 202.3e) is neither, and
+    # CR 202.1b's "no mana cost" is not {0}. Read by `_exact_mana_cost_matcher`.
+    r"(?: with mana cost (?P<mana_costs>" + _MANA_COST_LIST + r"))?"
     # CR 701.23e: a printed reveal is a real reveal. "reveal it" (Expedition
     # Map) and "reveal that card" (Trinket Mage) are the same instruction.
     r"(?P<reveal>, reveal (?:it|that card))?"
@@ -3055,13 +3085,12 @@ def _quality_matcher(quality: str) -> Callable[[CardState], bool]:
     return matches
 
 
-def _with_article(phrase: str) -> str:
-    """ "a" or "an" in front of a card description, by its first letter."""
-    return ("an " if phrase[:1].lower() in "aeiou" else "a ") + phrase
-
-
 def _quality_description(
-    quality: str | None, max_mv: str | None, *, basic_land_type: bool = False
+    quality: str | None,
+    max_mv: str | None,
+    *,
+    basic_land_type: bool = False,
+    mana_costs: str | None = None,
 ) -> str:
     """One card description for a `Game.may`/`Game.ask` prompt, article and
     all - "a basic land card", "a creature card with mana value 1 or less".
@@ -3076,7 +3105,9 @@ def _quality_description(
         noun += " with a basic land type"
     if max_mv is not None:
         noun += f" with mana value {max_mv} or less"
-    return _with_article(noun)
+    if mana_costs is not None:
+        noun += f" with mana cost {mana_costs}"
+    return with_indefinite_article(noun)
 
 
 #: One whole card description inside a search sentence, after its article:
@@ -3087,7 +3118,7 @@ def _quality_description(
 _SEARCH_DESCRIPTION_RE = re.compile(
     r"(?:(?P<quality>.+?) )?card(?P<basic_land_type> with a basic land type)?"
     r"(?: with mana value (?P<max_mv>\d+) or less)?"
-    r"(?P<mana_cost_0_or_1> with mana cost \{0\} or \{1\})?",
+    r"(?: with mana cost (?P<mana_costs>" + _MANA_COST_LIST + r"))?",
     re.IGNORECASE,
 )
 #: "or a" / "or an" between two whole card descriptions - Starfield
@@ -3165,8 +3196,8 @@ def _search_descriptions(
         whole += " with a basic land type"
     if match.group("max_mv") is not None:
         whole += f" with mana value {match.group('max_mv')} or less"
-    if groups.get("mana_cost_0_or_1"):
-        whole += " with mana cost {0} or {1}"
+    if groups.get("mana_costs"):
+        whole += f" with mana cost {groups['mana_costs']}"
     joined = quality is not None and re.search(r"\bcard\b", quality, re.IGNORECASE)
     halves = _SEARCH_DESCRIPTION_JOIN_RE.split(whole) if joined else [whole]
     matchers: list[Callable[[CardState], bool]] = []
@@ -3179,20 +3210,25 @@ def _search_descriptions(
         if half_quality is not None and not _card_description_is_readable(half_quality):
             return None
         max_mv = piece.group("max_mv")
-        if max_mv is None and piece.group("mana_cost_0_or_1"):
-            # "with mana cost {0} or {1}" (Urza's Saga chapter III) - see
-            # `_SEARCH_AND_PUT_RE`'s own comment for why this is the same
-            # bound as "mana value 1 or less".
-            max_mv = "1"
         matcher = _bounded_quality_matcher(half_quality, max_mv)
         with_basic_land_type = bool(piece.group("basic_land_type"))
         if with_basic_land_type:
             # CR 305.6/305.8: a *subtype* question, not the "basic" supertype -
             # see `_has_a_basic_land_type`'s own docstring.
             matcher = _and_has_a_basic_land_type(matcher)
+        mana_costs = piece.group("mana_costs")
+        if mana_costs:
+            # CR 202.1: a printed-cost bound, not a mana-value one - see
+            # `_exact_mana_cost_matcher`.
+            matcher = _and_has_exact_mana_cost(matcher, _exact_mana_cost_matcher(mana_costs))
         matchers.append(matcher)
         descriptions.append(
-            _quality_description(half_quality, max_mv, basic_land_type=with_basic_land_type)
+            _quality_description(
+                half_quality,
+                max_mv,
+                basic_land_type=with_basic_land_type,
+                mana_costs=mana_costs or None,
+            )
         )
     if len(matchers) == 1:
         return matchers[0], descriptions[0]
@@ -3201,6 +3237,15 @@ def _search_descriptions(
         return any(matcher(state) for matcher in matchers)
 
     return matches_either, " or ".join(descriptions)
+
+
+def _and_has_exact_mana_cost(
+    base: Callable[[CardState], bool], exact: Callable[[CardState], bool]
+) -> Callable[[CardState], bool]:
+    def matches(state: CardState) -> bool:
+        return base(state) and exact(state)
+
+    return matches
 
 
 def _and_has_a_basic_land_type(base: Callable[[CardState], bool]) -> Callable[[CardState], bool]:
@@ -7187,7 +7232,8 @@ def _parse_reveal_top_n_one_per_card_type_clause(text: str) -> AbilityEffect | N
                 continue
             if not game.may(
                 controller.username,
-                f"put a {card_type.value} card from among the revealed cards into your hand",
+                f"put {with_indefinite_article(f'{card_type.value} card')} "
+                f"from among the revealed cards into your hand",
                 source=ability.source_name,
                 source_id=source_id_of(ability),
             ):
@@ -7196,7 +7242,10 @@ def _parse_reveal_top_n_one_per_card_type_clause(text: str) -> AbilityEffect | N
                 Decision(
                     kind=DecisionKind.CHOOSE_CARDS,
                     player=controller.username,
-                    prompt=f"choose a {card_type.value} card to put into your hand",
+                    prompt=(
+                        f"choose {with_indefinite_article(f'{card_type.value} card')} "
+                        "to put into your hand"
+                    ),
                     source=ability.source_name,
                     source_id=source_id_of(ability),
                     amount=1,
@@ -9396,7 +9445,7 @@ def _select_from_top_runner(
         chosen: CardState | None = None
         if candidates and game.may(
             player,
-            f"put a {noun} from among them {destination}",
+            f"put {with_indefinite_article(noun)} from among them {destination}",
             source=source_name,
             source_id=source_id,
         ):
@@ -9404,7 +9453,7 @@ def _select_from_top_runner(
                 Decision(
                     kind=DecisionKind.CHOOSE_CARDS,
                     player=player.username,
-                    prompt=f"choose a {noun} to put {destination}",
+                    prompt=f"choose {with_indefinite_article(noun)} to put {destination}",
                     source=source_name,
                     amount=1,
                     cards=tuple(candidate.id for candidate in candidates),
@@ -9561,7 +9610,7 @@ def _parse_look_top_card_conditional_clause(text: str) -> AbilityEffect | None:
         if predicate(top):
             if game.may(
                 player,
-                f"put a {noun} {destination}",
+                f"put {with_indefinite_article(noun)} {destination}",
                 source=ability.source_name,
                 source_id=source_id_of(ability),
             ):
@@ -14148,7 +14197,7 @@ def _parse_counters_and_becomes_type_clause(text: str) -> AbilityEffect | None:
             store.add(
                 ContinuousEffect(
                     description=(
-                        f"{source_name}: {target.name} becomes a {subtype} "
+                        f"{source_name}: {target.name} becomes {with_indefinite_article(subtype)} "
                         "in addition to its other types"
                     ),
                     layer=Layer.TYPE,
@@ -15075,11 +15124,11 @@ def _parse_may_cost_then_attacking_token_clause(text: str) -> AbilityEffect | No
     cost, or a timing phrase `delayed.ANAPHORIC_TIMING_STEPS` does not know
     each take the whole ability down rather than doing part of it (CR 608.2c).
 
-    The mana half only spends mana already floating - `Game.may_pay_mana_cost`'s
-    own documented limitation, CR 608.2g's mid-resolution "chance to activate
-    mana abilities" not being modelled - so a controller who would have to tap
-    a land to find the {2} is treated as unable to pay and the "if you do"
-    branch correctly does not run.
+    The mana half goes through `Game.may_pay_mana_cost`, which counts floating
+    mana and the controller's untapped mana sources (CR 608.2g: "they may
+    activate mana abilities before taking that action"); a controller who
+    cannot find the {2} either way is refused and the "if you do" branch does
+    not run.
 
     CR 508.4 places the token into the combat already in progress, against
     whatever the controller's own attack already named
@@ -15780,7 +15829,7 @@ def amass(
         return
     game.continuous_effects.add(
         ContinuousEffect(
-            description=f"amass {subtype}: {army.name} becomes a {singular}",
+            description=f"amass {subtype}: {army.name} becomes {with_indefinite_article(singular)}",
             layer=Layer.TYPE,
             timestamp=game.continuous_effects.tick(),
             duration=Duration.INDEFINITE,
@@ -16545,7 +16594,8 @@ class UnmodeledTriggerEffectNotice(BaseModel):
 #: permission over. Granting nothing, or guessing at an object, is the silent
 #: half-run the notice exists to prevent.
 _CAST_PERMISSION_CLAUSE_RE = re.compile(
-    r"^(?:until end of turn, )?you may cast (?:it|that card|those cards)$",
+    r"^(?:until end of turn, )?you may (?:cast|play) (?:it|that card|those cards|them)"
+    r"(?: without paying (?:its|their) mana costs?)?(?: this turn)?$",
     re.IGNORECASE,
 )
 
@@ -16581,9 +16631,11 @@ def _unreadable_cast_permission_clause(text: str, *, for_spell: bool) -> str | N
     same "caller already tried and failed" contract every other `_unreadable_
     *_clause` function here keeps.
 
-    Ability-only: nothing in the pool prints this shape on a spell, and a
-    spell has no `AbilityOnStack` to have handed out a time-boxed permission
-    in the first place.
+    Ability-only: a spell's dispatch is handed a permanent's whole printed text
+    too (`effect_for`), where this sentence belongs to a triggered or activated
+    ability that is judged on its own - reading it there would put a notice on
+    Ragavan's or Ugin's resolution as a creature or planeswalker spell. Battle
+    report B6-03 was a tap ability resolving with no permission and no notice.
     """
     if for_spell:
         return None
@@ -16948,12 +17000,40 @@ def _parse_pump_per_discard_then_delayed_draw_clause(text: str) -> AbilityEffect
 #: it as a spell), and "without paying its/their mana cost(s)" is CR 118.9's
 #: alternative cost of nothing, which CR 107.3b keeps distinct from an
 #: alternative cost with something in it.
+#:
+#: The duration is printed either way round - "Until end of turn, you may cast
+#: that card" (Ragavan) or "You may cast that card this turn" (Emry, Lurker of
+#: the Loch) - and CR 514.2 ends both in the same cleanup step: "all 'until end
+#: of turn' and 'this turn' effects end". Exactly one of the two is required.
 _PLAY_PERMISSION_RE = re.compile(
-    r"^until end of turn, you may (?P<action>cast|play) "
+    r"^(?P<leading>until end of turn, )?you may (?P<action>cast|play) "
     r"(?P<subject>it|that card|those cards|them)"
-    r"(?P<free> without paying (?:its|their) mana costs?)?$",
+    r"(?P<free> without paying (?:its|their) mana costs?)?"
+    r"(?P<trailing> this turn)?$",
     re.IGNORECASE,
 )
+
+#: "Choose target <quality> card in your graveyard" - Emry, Lurker of the
+#: Loch's tap ability and Silas Renn, Seeker Adept's combat damage trigger. The
+#: card is the ability's own target, already validated by `machines/targeting`
+#: when it was chosen (CR 601.2c, CR 603.3d) and rechecked on resolution
+#: (CR 608.2b), so this antecedent only has to hand back the target still
+#: legal. One target, so the permission sentence's pronoun must be singular.
+_CHOOSE_TARGET_CARD_RE = re.compile(r"^choose target (?!.*\bcards\b).*\bcard\b.*$", re.IGNORECASE)
+
+
+def _parse_chosen_target_card_antecedent(
+    clause: str,
+) -> "tuple[ExileAntecedent, bool] | None":
+    """ "choose target <...> card <...>": the referent is the chosen target."""
+    if _CHOOSE_TARGET_CARD_RE.fullmatch(clause.strip()) is None:
+        return None
+
+    def chosen(game: "Game", stack_object: "StackObject") -> list[CardState]:
+        return game.resolve_card_targets(stack_object)
+
+    return chosen, False
+
 
 #: The plural pronouns. CR 607.1's within-one-ability anaphora has to agree in
 #: number with the clause it points back at: "that card" cannot refer to a
@@ -17032,6 +17112,12 @@ def _search_quality_is_readable(quality: str) -> bool:
 ExileAntecedent = Callable[["Game", AbilityOnStack], list[CardState]]
 
 
+#: "exile the top card of your library" - the controller's own library, the
+#: antecedent Experimental Synthesizer prints in front of "Until end of turn,
+#: you may play that card."
+_EXILE_TOP_OF_YOUR_LIBRARY_RE = re.compile(r"^exile the top card of your library$", re.IGNORECASE)
+
+
 def _parse_exile_antecedent(clause: str) -> tuple[ExileAntecedent, bool] | None:
     """One exiling clause, plus whether it exiles more than one card.
 
@@ -17053,6 +17139,18 @@ def _parse_exile_antecedent(clause: str) -> tuple[ExileAntecedent, bool] | None:
     unread rather than half-read (CR 608.2c).
     """
     stripped = clause.strip()
+
+    if _EXILE_TOP_OF_YOUR_LIBRARY_RE.fullmatch(stripped):
+        # Experimental Synthesizer: the controller's own top card (CR 108.3:
+        # its owner, and the player the permission goes to, are the same).
+
+        def exile_own_top(game: "Game", ability: AbilityOnStack) -> list[CardState]:
+            player = game.controller_of(ability)
+            if not player.library:
+                return []
+            return [game.exile_permanent(player.library[0])]
+
+        return exile_own_top, False
 
     if _EXILE_TOP_OF_THAT_PLAYERS_LIBRARY_RE.fullmatch(stripped):
 
@@ -17095,8 +17193,8 @@ def _parse_exile_antecedent(clause: str) -> tuple[ExileAntecedent, bool] | None:
 def _parse_exile_then_play_permission_pair(
     first: str, second: str, *, for_spell: bool
 ) -> TargetedClause | None:
-    """ "[exile some cards]. Until end of turn, you may cast/play them." as one
-    CR 608.2c instruction.
+    """ "[exile or choose some cards]. Until end of turn, you may cast/play them."
+    (or "... You may cast that card this turn.") as one CR 608.2c instruction.
 
     Read as a *pair* rather than two independent clauses because the second
     sentence has no meaning without the first: its pronoun is CR 607.1's
@@ -17111,12 +17209,17 @@ def _parse_exile_then_play_permission_pair(
     `AbilityOnStack.event` to resolve "that player" against, and a resolving
     spell has no `source_name` to name the granting effect by.
     """
-    if for_spell:
-        return None
     permission = _PLAY_PERMISSION_RE.fullmatch(second.strip())
     if permission is None:
         return None
-    antecedent = _parse_exile_antecedent(first)
+    if bool(permission.group("leading")) == bool(permission.group("trailing")):
+        # No duration, or both: not the sentence this reads.
+        return None
+    antecedent = _parse_chosen_target_card_antecedent(first)
+    if antecedent is None:
+        if for_spell:
+            return None
+        antecedent = _parse_exile_antecedent(first)
     if antecedent is None:
         return None
     exile, exiles_many = antecedent
@@ -17129,17 +17232,21 @@ def _parse_exile_then_play_permission_pair(
     free = permission.group("free") is not None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
-        ability = stack_object
-        assert isinstance(ability, AbilityOnStack)
-        controller = game.controller_of(ability).username
-        for card in exile(game, ability):
+        controller = game.controller_of(stack_object).username
+        source_name = (
+            stack_object.card.name
+            if isinstance(stack_object, CardState)
+            else stack_object.source_name
+        )
+        for card in exile(game, stack_object):
             game.grant_play_permission(
                 card,
                 controller,
                 action=action,
                 pays_mana_cost=not free,
-                source_name=ability.source_name,
+                source_name=source_name,
                 rule="CR 601.3",
+                zone=card.zone,
             )
 
     return effect
@@ -17769,7 +17876,7 @@ def _merge_reveal_hand_choose_discard_clauses(
                         kind=DecisionKind.CHOOSE_CARDS,
                         player=controller.username,
                         prompt=(
-                            f"choose a {quality_description} card from "
+                            f"choose {with_indefinite_article(f'{quality_description} card')} from "
                             f"{revealer.username}'s revealed hand"
                         ),
                         source=source,
@@ -18076,7 +18183,10 @@ def _merge_look_top_reveal_to_hand_clauses(
             player,
             count,
             source=source,
-            prompt=f"reveal a {quality_description} card from the top {count}",
+            prompt=(
+                f"reveal {with_indefinite_article(f'{quality_description} card')} "
+                f"from the top {count}"
+            ),
             moved_label="your hand",
             kept_label="bottom of your library",
             rest_in_random_order=randomised,
@@ -20448,7 +20558,8 @@ def _bring_in_from_outside_the_game_or_exile(
     # CR 608.2d's plain "you may": the whole instruction is optional.
     if not game.may(
         controller,
-        f"reveal a {quality.value} card you own from outside the game, or choose a "
+        f"reveal {with_indefinite_article(f'{quality.value} card')} you own from outside the game, "
+        f"or choose a "
         f"face-up one you own in exile",
         source=ability.source_name,
         source_id=source_id_of(ability),
@@ -20459,7 +20570,10 @@ def _bring_in_from_outside_the_game_or_exile(
         Decision(
             kind=DecisionKind.CHOOSE_CARDS,
             player=controller.username,
-            prompt=f"choose a {quality.value} card you own to put into your hand",
+            prompt=(
+                f"choose {with_indefinite_article(f'{quality.value} card')} "
+                "you own to put into your hand"
+            ),
             source=ability.source_name,
             source_id=source_id_of(ability),
             amount=1,
@@ -20537,7 +20651,8 @@ def _parse_reveal_from_outside_the_game_into_hand_clause(effect_text: str) -> Ef
         candidates = controller.owned_outside_the_game(matches)
         if candidates and game.may(
             controller,
-            f"reveal a {quality} card you own from outside the game and put it into your hand",
+            f"reveal {with_indefinite_article(f'{quality} card')} you own from outside the game "
+            f"and put it into your hand",
             source=spell.name,
             source_id=source_id_of(spell),
         ):
@@ -20545,7 +20660,10 @@ def _parse_reveal_from_outside_the_game_into_hand_clause(effect_text: str) -> Ef
                 Decision(
                     kind=DecisionKind.CHOOSE_CARDS,
                     player=controller.username,
-                    prompt=f"choose a {quality} card you own from outside the game",
+                    prompt=(
+                        f"choose {with_indefinite_article(f'{quality} card')} "
+                        "you own from outside the game"
+                    ),
                     source=spell.name,
                     source_id=source_id_of(spell),
                     amount=1,
@@ -22024,7 +22142,7 @@ def _parse_draw_then_discard_unless(text: str) -> Effect | None:
         candidates = [state for state in list(controller.hand) if predicate(state)]
         if candidates and game.may(
             controller,
-            f"discard a {quality} card",
+            f"discard {with_indefinite_article(f'{quality} card')}",
             source=spell.name,
             source_id=source_id_of(spell),
         ):
@@ -22032,7 +22150,7 @@ def _parse_draw_then_discard_unless(text: str) -> Effect | None:
                 Decision(
                     kind=DecisionKind.CHOOSE_CARDS,
                     player=controller.username,
-                    prompt=f"choose a {quality} card to discard",
+                    prompt=f"choose {with_indefinite_article(f'{quality} card')} to discard",
                     source=spell.name,
                     source_id=source_id_of(spell),
                     amount=1,

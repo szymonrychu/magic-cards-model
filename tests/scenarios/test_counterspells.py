@@ -113,6 +113,15 @@ def test_force_of_negation_cannot_target_a_creature_spell():
 # --------------------------------------------------------------------------
 
 
+def _tap_alices_untapped_lands(scenario) -> None:
+    """Staging: Alice has already spent her lands this turn, so CR 608.2g's
+    "may activate mana abilities before taking that action" has nothing left
+    to activate and only her floating mana can pay an "unless"."""
+    for permanent in scenario.game.permanents_controlled_by("alice"):
+        if permanent.untapped:
+            permanent.tap()
+
+
 def censor_board() -> Scenario:
     return board(["Opt"], bob_hand=["Censor"], bob_battlefield=["Island", "Island"])
 
@@ -120,13 +129,15 @@ def censor_board() -> Scenario:
 def test_censor_counters_the_spell_when_its_controller_cannot_pay():
     """CR 118.12a: "[Do something] unless [a player does something else]"
     means "[a player] may [do something else]. If [that player] doesn't,
-    [effect]." Alice has no floating mana at all, so paying {1} is not a
+    [effect]." Alice has no floating mana and every land she has is tapped,
+    so CR 608.2g's mana abilities cannot help either: paying {1} is not a
     legal choice (`DecisionKind.PAY_MANA.affirmative_is_legal` is False) and
     the spell is countered without anybody being asked to decide anything.
     """
     scenario = censor_board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     opt = scenario.cast_onto_stack("Opt", username="alice", auto=True)
+    _tap_alices_untapped_lands(scenario)
     scenario.pass_priority("alice")
 
     bob_islands = scenario.untapped_sources("Island", "Island", username="bob")
@@ -139,10 +150,10 @@ def test_censor_counters_the_spell_when_its_controller_cannot_pay():
 
 
 def test_censor_is_countered_when_its_controller_can_pay_and_does():
-    """The controller's own floating mana pays it - CR 608.2g lets a mana
-    ability be activated right here, but this engine only reads mana already
-    floating (see `Game.may_pay_mana`'s own docstring); staging it directly on
-    the pool is the same kind of setup a rigged library already is.
+    """The controller's own floating mana pays it. CR 608.2g would let her
+    tap a land for it too (`test_unless_pays_from_mana_sources.py`); staging
+    the mana directly on the pool is the same kind of setup a rigged library
+    already is.
     """
     scenario = censor_board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
@@ -189,6 +200,7 @@ def test_mystical_dispute_reads_its_own_higher_amount():
     alice = scenario.player("alice")
     alice.mana_pool.add(Color.COLORLESS, 2)  # one short of Mystical Dispute's {3}
     opt = scenario.cast_onto_stack("Opt", username="alice", auto=True)
+    _tap_alices_untapped_lands(scenario)
     scenario.pass_priority("alice")
 
     bob_islands = scenario.untapped_sources("Island", "Island", "Island", username="bob")
@@ -578,11 +590,13 @@ def cast_syncopate(scenario, target, x_value: int):
 def test_syncopate_counters_and_exiles_when_x_cannot_be_paid():
     """CR 118.12a's "unless" question is put for the announced X, and
     Syncopate's own second sentence replaces CR 701.6a's graveyard with
-    exile. Alice has no floating mana, so paying {2} is not a legal choice.
+    exile. Alice has no floating mana and no untapped land, so paying {2} is
+    not a legal choice.
     """
     scenario = syncopate_board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     opt = scenario.cast_onto_stack("Opt", username="alice", auto=True)
+    _tap_alices_untapped_lands(scenario)
     scenario.pass_priority("alice")
 
     cast_syncopate(scenario, opt, 2)
@@ -741,6 +755,7 @@ def test_spell_pierce_counters_a_noncreature_spell_that_is_not_paid_for():
     scenario = board(["Opt"], bob_hand=["Spell Pierce"], bob_battlefield=["Island"]).build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     opt = scenario.cast_onto_stack("Opt", username="alice", auto=True)
+    _tap_alices_untapped_lands(scenario)
     scenario.pass_priority("alice")
 
     (island,) = scenario.untapped_sources("Island", username="bob")

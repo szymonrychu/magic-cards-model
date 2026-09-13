@@ -84,6 +84,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, model_validator
 
+from magic_cards_model.phrases import with_indefinite_article
+
 from ..ids import new_id
 from ..models.card import Color, Supertype, Type
 from ..models.card_state import CardState, Counter
@@ -1433,12 +1435,17 @@ class ContinuousEffect(BaseModel):
         if self.duration is Duration.FOR_AS_LONG_AS and self.condition is None:
             raise ValueError('a "for as long as" effect needs a condition (CR 611.2b)')
         if self.duration is not Duration.FOR_AS_LONG_AS and self.condition is not None:
-            raise ValueError(f"a {self.duration} effect has no condition to check")
+            raise ValueError(
+                f"{with_indefinite_article(str(self.duration))} effect has no condition to check"
+            )
         if self.duration is Duration.UNTIL_YOUR_NEXT_TURN and self.until_next_turn_of is None:
             raise ValueError('an "until your next turn" effect needs to say whose (CR 800.4m)')
         not_next_turn = self.duration is not Duration.UNTIL_YOUR_NEXT_TURN
         if not_next_turn and self.until_next_turn_of is not None:
-            raise ValueError(f"a {self.duration} effect has no next-turn owner to check")
+            raise ValueError(
+                f"{with_indefinite_article(str(self.duration))} effect "
+                "has no next-turn owner to check"
+            )
         return self
 
     @model_validator(mode="after")
@@ -2873,7 +2880,8 @@ def _self_becomes_type_until_next_turn_builder(
         for target in targets:
             effects.append(
                 ContinuousEffect(
-                    description=f"{source.name}: {target.name} becomes a {extra_type.value}",
+                    description=f"{source.name}: {target.name} becomes "
+                    f"{with_indefinite_article(extra_type.value)}",
                     layer=Layer.TYPE,
                     timestamp=timestamp,
                     duration=Duration.UNTIL_YOUR_NEXT_TURN,
@@ -3289,7 +3297,7 @@ def _each_land_is_builder(subtype: str, line: str) -> EffectBuilder:
     ) -> list[ContinuousEffect]:
         return [
             ContinuousEffect(
-                description=f"{source.name}: each land is a {subtype}",
+                description=f"{source.name}: each land is {with_indefinite_article(subtype)}",
                 layer=Layer.TYPE,
                 timestamp=timestamp,
                 source_id=source.id,
@@ -4841,7 +4849,8 @@ def _attached_creature_loses_and_becomes_builder(
                 modification=lose_all_abilities,
             ),
             ContinuousEffect(
-                description=f"{source.name}: {subject} creature is a {subtype} {named}",
+                description=f"{source.name}: {subject} creature is "
+                f"{with_indefinite_article(subtype)} {named}",
                 layer=Layer.TYPE,
                 timestamp=timestamp,
                 source_id=source.id,

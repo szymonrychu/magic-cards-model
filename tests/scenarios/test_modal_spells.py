@@ -92,7 +92,7 @@ def test_the_mode_that_was_not_chosen_does_not_get_to_pick_the_target():
     casting = scenario.cast("Abrade")
     casting.choose_modes([2])
 
-    with pytest.raises(ValueError, match="needs a artifact"):
+    with pytest.raises(ValueError, match="needs an artifact"):
         casting.choose_targets([bears])
 
 
@@ -157,7 +157,7 @@ def test_a_charm_mode_targeting_an_enchantment_refuses_a_creature():
     casting = scenario.cast("Thraben Charm")
     casting.choose_modes([2])
 
-    with pytest.raises(ValueError, match="needs a enchantment"):
+    with pytest.raises(ValueError, match="needs an enchantment"):
         casting.choose_targets([bears])
 
 

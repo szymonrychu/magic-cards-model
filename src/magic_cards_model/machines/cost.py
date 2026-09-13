@@ -42,6 +42,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
 
+from magic_cards_model.phrases import with_indefinite_article
+
 from ..data.subtypes import canonical_subtype
 from ..models.card import Card, Color, Supertype, Type
 from ..models.card_state import CardState, ChoiceKind, Counter, CounterKind
@@ -1979,7 +1981,7 @@ class CardRequirement(BaseModel):
             return f"{card.name} is not {wanted}"
         if self.types and not types & set(self.types):
             wanted = "/".join(type_.value for type_ in self.types)
-            return f"{card.name} is not a {wanted}"
+            return f"{card.name} is not {with_indefinite_article(wanted)}"
         if self.subtypes and not subtypes & self._wanted_subtypes():
             return f"{card.name} is not a {'/'.join(self.subtypes)}"
         if self.mana_value is not None and mana_value != self.mana_value:

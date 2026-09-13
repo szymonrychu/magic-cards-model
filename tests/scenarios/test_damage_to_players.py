@@ -124,16 +124,19 @@ def test_a_player_already_at_zero_life_loses_at_the_next_check():
 
     Bob starts at zero, and alice's Bolt goes at the Bears rather than at him.
     He still loses, because CR 704.5a is checked whenever state-based actions
-    are, which is before any player would next get priority (CR 704.3).
+    are, which is before any player would next get priority (CR 704.3) - here,
+    alice keeping priority after casting (CR 117.3c). CR 104.1 then ends the
+    game immediately, so the Bolt never resolves.
     """
     scenario = burn(bob_life=0).build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD)
     (mountain,) = scenario.untapped_sources("Mountain", username="alice")
 
-    scenario.cast_and_resolve("Lightning Bolt", mountain, username="alice", targets=[bears])
+    bolt = scenario.cast_onto_stack("Lightning Bolt", mountain, username="alice", targets=[bears])
 
     assert scenario.game.winner == "alice"
+    assert bolt.zone is Zone.STACK, "CR 104.1: nothing resolves once the game is over"
     assert "bob" not in [player.username for player in scenario.game.players_in_game]
 
 

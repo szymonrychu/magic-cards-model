@@ -705,15 +705,18 @@ class PlayedScenario:
         username: str | None = None,
         source: str | None = None,
         times: int | None = 1,
+        sources: Sequence[CardState] | None = None,
     ) -> None:
         """Answer the next "unless its controller pays {N}" (CR 118.12a, CR
         608.2d) - Censor's and Mystical Dispute's shape.
 
-        Refusing is always legal; paying is not when the pool does not already
-        hold that much floating mana - see `DecisionKind.PAY_MANA`'s own
-        docstring for why only the floating pool counts.
+        Refusing is always legal; paying is not when the floating mana plus
+        the payer's untapped mana sources cannot cover it (CR 118.3, CR
+        608.2g). `sources` names which mana sources to activate while paying;
+        left out, the engine chooses them the way `CostPayment.auto_tap` does.
         """
-        self._queue(DecisionKind.PAY_MANA, paid, username, source, times)
+        value: object = paid if sources is None else tuple(state.id for state in sources)
+        self._queue(DecisionKind.PAY_MANA, value, username, source, times)
 
     def will_pay_energy_amount(
         self,

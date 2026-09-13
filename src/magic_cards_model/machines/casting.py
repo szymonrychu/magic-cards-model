@@ -1537,6 +1537,8 @@ def why_cannot_cast_now(
     `CLAUDE.md` is explicit that generality is demonstrated on a real card
     rather than asserted, so a per-face keyword read is not built here.
     """
+    if game is not None and game.is_over:
+        return game.why_game_is_over()
     if game is None:
         return None
     types = types_being_cast(spell.card, face)
@@ -1958,6 +1960,15 @@ class Casting(BaseModel):
     flashback's exile replacement (CR 702.34a), warp's delayed trigger
     (CR 702.185a) - and none of them can be applied without knowing the spell
     was cast that way.
+    """
+    keyword_cost_paid: bool = False
+    """Whether the cost `keyword_used` names was paid, rather than the mana cost.
+
+    Warp hands out two options under one keyword: the warp cost from hand and,
+    for a warped card in exile, a cast for its own mana cost. CR 702.185a's
+    delayed exile applies only "If this spell's warp cost was paid", so the
+    keyword alone cannot answer it (battle report B6-04). Set by `use_keyword`
+    from the option's `pays_mana_cost`.
     """
     permission_used: PlayPermission | None = None
     """The `PlayPermission` this spell is being cast under, if any (CR 601.3).
@@ -2847,6 +2858,7 @@ class Casting(BaseModel):
         option = usable[0]
         self._enter_modes()
         self.keyword_used = option.keyword
+        self.keyword_cost_paid = not option.pays_mana_cost
         if option.keyword.lower() == "bestow":
             # CR 702.103b: "As a spell cast bestowed is put onto the stack, it
             # becomes an Aura enchantment and gains enchant creature." CR 601.2a
@@ -4451,6 +4463,7 @@ class Casting(BaseModel):
                 keyword=self.keyword_used
                 if self.keyword_used is not None
                 else self._granted_flashback_keyword(),
+                keyword_cost_paid=self.keyword_cost_paid,
                 origin_zone=self.origin_zone,
                 face=self.face,
                 modes=list(self.chosen_mode_numbers),

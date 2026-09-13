@@ -325,3 +325,25 @@ def test_a_snapshot_written_before_trigger_modes_and_reveal_costs_is_refused() -
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_TRIGGER_MODES_AND_REVEAL_COSTS}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before `CastRecord.keyword_cost_paid` (warp's delayed
+#: exile, CR 702.185a) and `Decision.mana_sources` (paying an "unless" by
+#: activating mana abilities, CR 608.2g). Battle 6 was stamped 12 -> 13 on its
+#: own line of development, beside battle 5's 12 -> 13, so it landed as 14.
+_SCHEMA_VERSION_BEFORE_BATTLE_SIX = 13
+
+
+def test_a_snapshot_written_before_battle_six_is_refused() -> None:
+    """A version-13 dump has cast records with no `keyword_cost_paid`; decoded
+    as current, a warp card cast for its warp cost would read as cast for its
+    mana cost and never be exiled at end step."""
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_BATTLE_SIX
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_BATTLE_SIX
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_BATTLE_SIX}",
+    ):
+        Game.model_validate(dumped)

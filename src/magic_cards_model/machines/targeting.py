@@ -100,6 +100,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
+from magic_cards_model.phrases import with_indefinite_article
+
 from ..models.card import Card, Color, Supertype, Type
 from ..models.card_state import CardState, ExileMarker, TargetRef
 from ..models.zone import Zone
@@ -546,30 +548,48 @@ class TargetRequirement(BaseModel):
             current_types = set(self._current_types(target, game))
             if self.card_types and not (current_types & self.card_types):
                 wanted = " or ".join(sorted(kind.value for kind in self.card_types))
-                return f"{self.phrase} needs a {wanted}, and {target.name} is not one"
+                return (
+                    f"{self.phrase} needs {with_indefinite_article(wanted)}, "
+                    f"and {target.name} is not one"
+                )
             if self.excluded_card_types and (current_types & self.excluded_card_types):
                 unwanted = " or ".join(sorted(kind.value for kind in self.excluded_card_types))
-                return f"{self.phrase} cannot target a {unwanted}, and {target.name} is one"
+                return (
+                    f"{self.phrase} cannot target {with_indefinite_article(unwanted)}, "
+                    f"and {target.name} is one"
+                )
         if self.required_supertypes and not (
             set(self._current_supertypes(target, game)) & self.required_supertypes
         ):
             wanted = " or ".join(sorted(kind.value for kind in self.required_supertypes))
-            return f"{self.phrase} needs a {wanted} permanent, and {target.name} is not one"
+            return (
+                f"{self.phrase} needs {with_indefinite_article(wanted)} permanent, "
+                f"and {target.name} is not one"
+            )
         if self.excluded_supertypes and (
             set(self._current_supertypes(target, game)) & self.excluded_supertypes
         ):
             unwanted = " or ".join(sorted(kind.value for kind in self.excluded_supertypes))
-            return f"{self.phrase} cannot target a {unwanted} permanent, and {target.name} is one"
+            return (
+                f"{self.phrase} cannot target {with_indefinite_article(unwanted)} permanent, "
+                f"and {target.name} is one"
+            )
         if self.required_subtypes and not any(
             word.lower() in self.required_subtypes for word in self._current_subtypes(target, game)
         ):
             wanted = " or ".join(sorted(self.required_subtypes))
-            return f"{self.phrase} needs a {wanted}, and {target.name} is not one"
+            return (
+                f"{self.phrase} needs {with_indefinite_article(wanted)}, "
+                f"and {target.name} is not one"
+            )
         if self.required_colors and not (
             set(self._current_colors(target, game)) & self.required_colors
         ):
             wanted = " or ".join(sorted(color.name.lower() for color in self.required_colors))
-            return f"{self.phrase} needs a {wanted} permanent, and {target.name} is not one"
+            return (
+                f"{self.phrase} needs {with_indefinite_article(wanted)} permanent, "
+                f"and {target.name} is not one"
+            )
         if self.color_count is not None:
             count = len(set(self._current_colors(target, game)))
             satisfied = (
@@ -580,7 +600,7 @@ class TargetRequirement(BaseModel):
             )
             if not satisfied:
                 return (
-                    f"{self.phrase} needs a {self.color_count} permanent, "
+                    f"{self.phrase} needs {with_indefinite_article(self.color_count)} permanent, "
                     f"and {target.name} is not one"
                 )
         historic = self._rejects_historic(target, game)
@@ -588,7 +608,10 @@ class TargetRequirement(BaseModel):
             return historic
         if self.must_be_tapped is not None and target.tapped is not self.must_be_tapped:
             state = "tapped" if self.must_be_tapped else "untapped"
-            return f"{self.phrase} needs a {state} permanent, and {target.name} is not"
+            return (
+                f"{self.phrase} needs {with_indefinite_article(state)} permanent, "
+                f"and {target.name} is not"
+            )
         token = self._rejects_token(target)
         if token is not None:
             return token
@@ -837,7 +860,9 @@ class TargetRequirement(BaseModel):
         else:
             values = [value for value in (power, toughness) if value is not None]
         if not values:
-            return f"{self.phrase} needs a {label}, and {target.name} has none"
+            return (
+                f"{self.phrase} needs {with_indefinite_article(label)}, and {target.name} has none"
+            )
         if any(self._comparison_holds(value, comparison_value) for value in values):
             return None
         return (

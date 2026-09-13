@@ -32,6 +32,10 @@ class PriorityOutcome(StrEnum):
     END_STEP = "end_step"
     """Everyone passed on an empty stack, so the step or phase ends."""
 
+    GAME_OVER = "game_over"
+    """The state-based check before the pass ended the game (CR 104.1), so the
+    pass did nothing."""
+
 
 class PriorityMachine(BaseModel):
     """Who holds priority, and how many players have passed in a row."""

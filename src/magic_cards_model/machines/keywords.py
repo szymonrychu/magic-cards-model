@@ -37,6 +37,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from magic_cards_model.phrases import with_indefinite_article
+
 from ..models.card import Card, Type
 from ..models.card_state import (
     CardState,
@@ -1109,6 +1111,8 @@ class KeywordActivation(BaseModel):
 
     def begin_paying(self) -> CostPayment:
         """CR 602.2a-b: announce the activation and open its cost."""
+        if self.game is not None:
+            self.game._refuse_if_over()  # CR 104.1
         refusal = self.why_not()
         if refusal is not None:
             raise ValueError(refusal)
@@ -1281,7 +1285,8 @@ def cycling_activation(
             ability,
             cost_text=f"{ability.cost or ''}, Discard this card".strip(", "),
             effect=(
-                f"Search your library for a {typed} card, reveal it, and put it into your hand. "
+                f"Search your library for {with_indefinite_article(f'{typed} card')}, reveal it, "
+                f"and put it into your hand. "
                 f"Then shuffle."
                 if typed
                 else "Draw a card."
@@ -2529,8 +2534,8 @@ def off_zone_abilities(card: Card) -> list[OffZoneAbility]:
                     kw_ability,
                     cost_text=f"{kw_ability.cost or ''}, Discard this card".strip(", "),
                     effect=(
-                        f"Search your library for a {typed} card, reveal it, and put it "
-                        f"into your hand. Then shuffle."
+                        f"Search your library for {with_indefinite_article(f'{typed} card')}, "
+                        f"reveal it, and put it into your hand. Then shuffle."
                         if typed
                         else "Draw a card."
                     ),

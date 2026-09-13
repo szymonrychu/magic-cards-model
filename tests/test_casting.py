@@ -282,7 +282,7 @@ def test_the_other_modes_target_is_still_illegal():
 
     casting.choose_modes([2])
 
-    with pytest.raises(ValueError, match="needs a artifact"):
+    with pytest.raises(ValueError, match="needs an artifact"):
         casting.choose_targets([bears])
 
 
