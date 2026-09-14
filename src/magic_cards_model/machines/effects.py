@@ -10774,6 +10774,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     select_from_top = _parse_select_from_top_clause(effect_text)
     if select_from_top is not None:
         return select_from_top
+    mill_then_take_from_milled_ability = _parse_mill_then_may_take_from_milled_ability(effect_text)
+    if mill_then_take_from_milled_ability is not None:
+        return mill_then_take_from_milled_ability
     look_top_card_conditional = _parse_look_top_card_conditional_clause(effect_text)
     if look_top_card_conditional is not None:
         return look_top_card_conditional
@@ -22767,16 +22770,27 @@ def _parse_mill_then_may_return_to_hand_clause(text: str) -> AbilityEffect | Non
 # to be read together: only the first sentence knows which cards those are
 # (CR 700.7's anaphora again).
 
+#: Rapid Rescue's fixed "a", Vorinclex // The Grand Evolution's chapter I
+#: "up to two ... onto the battlefield": `QUANTITY` reads either. A bare
+#: fixed count needs the printed "you may" for its CR 608.2d optionality,
+#: exactly as `_SELECT_FROM_TOP_RE` requires it above; "up to N"/"any number
+#: of" carry their own (CR 107.1c) and print no "you may" at all.
 _MILL_THEN_MAY_TAKE_FROM_MILLED_RE = re.compile(
-    rf"^mill (?P<n>{COUNT}) cards?\.\s*"
-    r"you may put (?:an?|one) (?P<group>[a-z]+) card from among the milled cards "
-    r"into your hand\.(?:\s*you gain (?P<life>\d+) life\.?)?$",
+    rf"^mill (?P<mill_n>{COUNT}) cards?\.\s*"
+    rf"(?P<may>you may )?put {quantity_pattern('take_n')} (?P<group>[a-z]+) cards? "
+    r"from among the milled cards "
+    r"(?P<dest>into your hand|onto the battlefield)"
+    r"\.(?:\s*you gain (?P<life>\d+) life\.?)?$",
     re.IGNORECASE | re.DOTALL,
 )
 
 
-def _parse_mill_then_may_take_from_milled(text: str) -> Effect | None:
-    """`_MILL_THEN_MAY_TAKE_FROM_MILLED_RE`'s shape - Rapid Rescue.
+def _mill_then_may_take_from_milled_runner(
+    text: str,
+) -> Callable[["Game", Player, str, str | None], None] | None:
+    """Compile `_MILL_THEN_MAY_TAKE_FROM_MILLED_RE`'s shape into one runner
+    both the spell side (Rapid Rescue) and the ability side (Vorinclex //
+    The Grand Evolution's own chapter I) call.
 
     The optional trailing life gain is part of this pattern rather than left
     to the ordinary player-clause path, because a whole-text parser has to
@@ -22787,44 +22801,118 @@ def _parse_mill_then_may_take_from_milled(text: str) -> Effect | None:
     match = _MILL_THEN_MAY_TAKE_FROM_MILLED_RE.fullmatch(_strip_non_effect_preamble(text).strip())
     if match is None:
         return None
-    count = parse_count(match.group("n"))
+    count = parse_count(match.group("mill_n"))
     if count is None:
+        return None
+    quantity = parse_quantity(match.group("take_n"))
+    if quantity is None or quantity.source not in (QuantitySource.FIXED, QuantitySource.ANY_NUMBER):
+        return None
+    if quantity.exact and match.group("may") is None:
         return None
     predicate = _parse_card_group_qualifier(match.group("group"))
     if predicate is None:
         return None
+    destination = match.group("dest").lower()
     life = int(match.group("life")) if match.group("life") else 0
+    if quantity.source is QuantitySource.ANY_NUMBER:
+        take_noun = "any number of cards"
+    elif quantity.exact and quantity.amount == 1:
+        take_noun = "a card"
+    else:
+        take_noun = f"up to {quantity.amount} cards"
 
-    def effect(game: "Game", spell: CardState) -> None:
-        controller = game.controller_of(spell)
+    def run(game: "Game", controller: Player, source_name: str, source_id: str | None) -> None:
         milled = _mill(game, controller, count)
         candidates = [
             state for state in milled if state.zone is Zone.GRAVEYARD and predicate(state)
         ]
-        if candidates and game.may(
-            controller,
-            "put a card from among the milled cards into your hand",
-            source=spell.name,
-            source_id=source_id_of(spell),
-        ):
-            chosen_ids = game.ask(
-                Decision(
-                    kind=DecisionKind.CHOOSE_CARDS,
-                    player=controller.username,
-                    prompt="choose a milled card to put into your hand",
-                    source=spell.name,
-                    source_id=source_id_of(spell),
-                    amount=1,
-                    cards=tuple(state.id for state in candidates),
+        chosen: list[CardState] = []
+        if candidates:
+            if quantity.exact:
+                # A single optional pick, CR 608.2d's "may" gate before
+                # naming candidates - unchanged from before this family
+                # read any other quantifier.
+                if game.may(
+                    controller,
+                    f"put {take_noun} from among the milled cards {destination}",
+                    source=source_name,
+                    source_id=source_id,
+                ):
+                    chosen_ids = game.ask(
+                        Decision(
+                            kind=DecisionKind.CHOOSE_CARDS,
+                            player=controller.username,
+                            prompt=f"choose {take_noun} to put {destination}",
+                            source=source_name,
+                            source_id=source_id,
+                            amount=1,
+                            cards=tuple(state.id for state in candidates),
+                        )
+                    )
+                    by_id = {state.id: state for state in candidates}
+                    chosen = [
+                        state for card_id in chosen_ids if (state := by_id.get(card_id)) is not None
+                    ]
+            else:
+                # "up to N"/"any number of": CR 107.1c - zero to the
+                # ceiling is one question, with no separate "may" gate.
+                ceiling = (
+                    len(candidates)
+                    if quantity.amount is None
+                    else min(quantity.amount, len(candidates))
                 )
-            )
-            by_id = {state.id: state for state in candidates}
-            for card_id in chosen_ids:
-                state = by_id.get(card_id)
-                if state is not None and state.zone is Zone.GRAVEYARD:
-                    controller.move(state, Zone.HAND)
+                chosen_ids = game.ask(
+                    Decision(
+                        kind=DecisionKind.CHOOSE_CARDS,
+                        player=controller.username,
+                        prompt=f"put {take_noun} from among the milled cards {destination}",
+                        source=source_name,
+                        source_id=source_id,
+                        amount=ceiling,
+                        exact=False,
+                        cards=tuple(state.id for state in candidates),
+                    )
+                )
+                by_id = {state.id: state for state in candidates}
+                chosen = [
+                    state for card_id in chosen_ids if (state := by_id.get(card_id)) is not None
+                ]
+        for state in chosen:
+            if state.zone is not Zone.GRAVEYARD:
+                continue
+            if destination == "into your hand":
+                controller.move(state, Zone.HAND)
+            else:
+                # CR 110.4a's permanent card, put onto the battlefield
+                # without being cast (no spell, so no cast trigger).
+                game.put_onto_battlefield(state, controller.username)
         if life:
             game.gain_life(controller, life)
+
+    return run
+
+
+def _parse_mill_then_may_take_from_milled(text: str) -> Effect | None:
+    """The runner above, on a spell (CR 608.3) - Rapid Rescue."""
+    run = _mill_then_may_take_from_milled_runner(text)
+    if run is None:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        run(game, game.controller_of(spell), spell.name, source_id_of(spell))
+
+    return effect
+
+
+def _parse_mill_then_may_take_from_milled_ability(text: str) -> AbilityEffect | None:
+    """The runner above, on a triggered or activated ability (CR 603.3a,
+    CR 602.2a) - Vorinclex // The Grand Evolution's chapter I."""
+    run = _mill_then_may_take_from_milled_runner(text)
+    if run is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        run(game, game.player(ability.controller), ability.source_name, source_id_of(ability))
 
     return effect
 
