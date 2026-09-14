@@ -466,3 +466,92 @@ def test_a_clone_with_nothing_to_copy_enters_as_itself():
     assert (clone.power, clone.toughness) == (0, 0)
     scenario.state_based_actions()
     assert clone.zone is Zone.GRAVEYARD
+
+
+# --------------------------------------------------------------------------
+# CR 614.1a: how much life is gained, read as a multiplier and an addend
+# --------------------------------------------------------------------------
+#
+# "You gain twice that much life" (Alhammarret's Archive, Boon Reflection) and
+# "you gain that much life plus 1" (Angel of Vitality, Leyline of Hope) are the
+# same replacement with a different number in it. CR 107.1b, looked up with
+# `mise run rules:find`: a calculation that "doubles" a value is exempt from
+# the zero floor, and a result is always an integer (CR 107.1).
+
+
+def _life_gain_board(*permanents: str) -> Scenario:
+    return Scenario().player("alice", battlefield=list(permanents)).player("bob")
+
+
+def test_angel_of_vitality_adds_one_to_each_life_gain():
+    """ "...you gain that much life plus 1 instead." Three becomes four."""
+    scenario = _life_gain_board("Angel of Vitality").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    scenario.game.gain_life("alice", 3)
+
+    assert scenario.player("alice").life == 24
+
+
+def test_boon_reflection_doubles_each_life_gain():
+    """ "...you gain twice that much life instead." Three becomes six."""
+    scenario = _life_gain_board("Boon Reflection").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    scenario.game.gain_life("alice", 3)
+
+    assert scenario.player("alice").life == 26
+
+
+def test_angel_of_vitality_adds_one_to_a_single_point_of_life():
+    """The addend is flat, not per point: one becomes two, not one plus one each."""
+    scenario = _life_gain_board("Angel of Vitality").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    scenario.game.gain_life("alice", 1)
+
+    assert scenario.player("alice").life == 22
+
+
+def test_two_angels_of_vitality_each_add_one():
+    """CR 614.5: each effect gets one opportunity at the event, so two Angels
+    add two, and neither adds again to the event the other modified."""
+    scenario = _life_gain_board("Angel of Vitality", "Angel of Vitality").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    scenario.game.gain_life("alice", 3)
+
+    assert scenario.player("alice").life == 25
+
+
+def test_the_angel_and_the_reflection_each_apply_exactly_once():
+    """CR 616.1 lets the affected player order the two; either order applies
+    each effect once, so three is (3 + 1) * 2 = 8 or 3 * 2 + 1 = 7 - never
+    anything that doubles or adds twice."""
+    scenario = _life_gain_board("Angel of Vitality", "Boon Reflection").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    scenario.game.gain_life("alice", 3)
+
+    assert scenario.player("alice").life in (27, 28)
+
+
+def test_angel_of_vitality_does_not_touch_an_opponents_life_gain():
+    """ "If *you* would gain life" - Bob's gain is his own."""
+    scenario = _life_gain_board("Angel of Vitality").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    scenario.game.gain_life("bob", 3)
+
+    assert scenario.player("bob").life == 23
+
+
+def test_gaining_no_life_is_not_an_event_the_angel_can_add_to():
+    """CR 119.3 adjusts a life total by what is gained; zero is no gain, and
+    "that much life plus 1" has no "that much" to add to."""
+    scenario = _life_gain_board("Angel of Vitality").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    scenario.game.gain_life("alice", 0)
+
+    assert scenario.player("alice").life == 20

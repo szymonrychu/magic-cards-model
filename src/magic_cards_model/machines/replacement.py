@@ -123,7 +123,7 @@ from ..models.card import Card, Color, Type
 from ..models.card_state import CardState, Choice, ChoiceKind, ExileMarker
 from ..models.token import TokenDefinition, is_token
 from ..models.zone import Zone
-from ..numbers import parse_count
+from ..numbers import COUNT, MULTIPLIER, parse_count, parse_multiplier
 from ..snapshot import EngineModel
 from .abilities import keywords_in_lines
 from .combat import Keyword
@@ -1633,8 +1633,21 @@ def _containment_priest_applies(game: "Game", source: CardState, event: Replacea
     )
 
 
-def _double_life(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
-    event.amount *= 2
+def _scale_amount(multiplier: int = 1, addend: int = 0) -> Apply:
+    """ "twice that many", "three times that many", "that many plus one",
+    "that many minus one", "that much life plus 1" - one replacement, read as
+    data: the event's count times `multiplier`, plus `addend`.
+
+    CR 614.5 gives each effect one opportunity at the event, so the addend is
+    flat rather than per unit. CR 107.1b: "If a calculation that would
+    determine the result of an effect yields a negative number, zero is used
+    instead" - a "minus one" on a single counter leaves none, never fewer.
+    """
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        event.amount = max(event.amount * multiplier + addend, 0)
+
+    return apply
 
 
 def _archive_life_applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
@@ -2174,7 +2187,15 @@ def _compile_self_prevent_combat_damage(effect: ReplacementEffect) -> CardReplac
     return CardReplacement(label=effect.text, applies=_fog_bank_applies, apply=_prevent_all)
 
 
-# -- "if you would gain life, you gain twice that much life instead" --
+# -- "if you would gain life, you gain twice that much life instead" /
+#    "... you gain that much life plus 1 instead" --
+
+#: Alhammarret's Archive's "twice that much life", Angel of Vitality's "that
+#: much life plus 1". The number is read, never pinned (CR 107.1: integers).
+_LIFE_GAIN_AMOUNT_RE = re.compile(
+    rf"^you gain (?:(?P<mult>{MULTIPLIER}) that much life|that much life plus (?P<plus>{COUNT}))$",
+    re.IGNORECASE,
+)
 
 
 def _compile_life_gain_doubler(effect: ReplacementEffect) -> CardReplacement | None:
@@ -2182,9 +2203,20 @@ def _compile_life_gain_doubler(effect: ReplacementEffect) -> CardReplacement | N
         return None
     if (effect.event or "").strip().lower() != "you would gain life":
         return None
-    if (effect.replacement or "").strip().rstrip(".").lower() != "you gain twice that much life":
+    match = _LIFE_GAIN_AMOUNT_RE.match((effect.replacement or "").strip().rstrip("."))
+    if match is None:
         return None
-    return CardReplacement(label=effect.text, applies=_archive_life_applies, apply=_double_life)
+    if match.group("mult") is not None:
+        multiplier = parse_multiplier(match.group("mult"))
+        if multiplier is None:
+            return None
+        apply = _scale_amount(multiplier=multiplier)
+    else:
+        addend = parse_count(match.group("plus"))
+        if addend is None:
+            return None
+        apply = _scale_amount(addend=addend)
+    return CardReplacement(label=effect.text, applies=_archive_life_applies, apply=apply)
 
 
 # -- "if you would draw a card except the first ... in each of your draw
