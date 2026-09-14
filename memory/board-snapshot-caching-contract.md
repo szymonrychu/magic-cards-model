@@ -104,6 +104,17 @@ read-only scans only. Checking that a pinned block left the board inputs
 unchanged (a fingerprint taken as the pin opens) belongs in a test run, never
 in production.
 
+**Pin races (T14, 2026-09-14).** A drop from another thread can land at any
+line of the pinned thread's read. A drop counts itself (`drops += 1`) before
+it clears the board, and a fill stores its board before it compares `drops`,
+so a drop is either seen by that check or clears the store; the other order
+kept a board computed before an announced edit landed. A served read takes
+`pin.board` once, since a drop between a `None` check and a second read
+returned `None`. `tests/scenarios/test_scan_pin.py` holds each thread at
+every line boundary of the other's half (`sys.settrace`); a field store
+cannot show the drop-order race because it drops again after landing, so
+that test uses `Counters.add`.
+
 **Board effect ids.** `_compute_board` mints the effects it builds from a
 per-computation allocator (`uuid5(game_uid:board:n)`, n from zero), never
 `_allocate_id`. Before that, each computation inside a command advanced

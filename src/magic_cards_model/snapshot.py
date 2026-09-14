@@ -188,8 +188,10 @@ def _drop_pins(model: object | None, *, structural: bool, lift: int = 0) -> None
             if lift and pin.tracked.game is not model:
                 continue
             pin.lifted += lift
-            pin.board = None
+            # Counted before the board is cleared, which is what lets a fill in
+            # the pin's own thread store first and check after (`cached_board`).
             pin.drops += 1
+            pin.board = None
             if structural:
                 pin.tracked.structure += 1
 
@@ -507,17 +509,21 @@ def cached_board[B: BaseModel](game: Any, compute: Callable[[], B]) -> B:
     key = id(game)
     pin = None if _uncached.get() else _serving_pin(key)
     if pin is not None:
-        if pin.board is None:
+        # Read once: another thread's drop may clear it at any moment.
+        board = pin.board
+        if board is None:
             _computations += 1
             drops, token = pin.drops, _pin_filling.set(pin)
             try:
                 board = compute()
             finally:
                 _pin_filling.reset(token)
-            if pin.drops != drops or pin.closed or pin.lifted:
-                return board
+            # Stored first and checked after: a drop counts itself before it
+            # clears the board, so it is either seen here or clears the store.
             pin.board = board
-        return pin.board
+            if pin.drops != drops or pin.closed or pin.lifted:
+                pin.board = None
+        return board
     snapshot = _open_snapshot(key)
     if snapshot is None or _uncached.get() or key in _commanding.get():
         _computations += 1

@@ -8,9 +8,9 @@ rebuilding the board once per permanent: one play land on a 28-permanent
 board computed it 122 times, and an api POST action paid that on every
 request (2026-09-14).
 
-The scans now open a scope of their own around the reading half only, with
-no mutation inside it, so the board is shared within one scan and computed
-afresh for the next. This file is the contract:
+The scans now pin one board each (`snapshot.scan_pin`) around the reading
+half only, with no mutation inside it, so the board is shared within one scan
+and computed afresh for the next. This file is the contract:
 
 - **Count.** Playing a land, passing priority and resolving a spell each
   compute the board a small constant number of times, the same on a small
