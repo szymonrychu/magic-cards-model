@@ -5215,9 +5215,22 @@ def regenerate_ability_targets(game: "Game", stack_object: "StackObject") -> Non
 #: `_parse_targeted_clauses`'s independent per-clause dispatch, the same
 #: reason `_X_DAMAGE_DIVIDED_DOUBLED_RE` reads Shatterskull Smashing's own
 #: two sentences together.
+#:
+#: The old shape hardcoded "up to \S+" ahead of "target" and a singular "it"
+#: pronoun, so it read only Tamiyo's own exact wording. Frost Breath's real
+#: printing - "Tap up to two target creatures. Those creatures don't untap
+#: during their controller's next untap step." - has neither: a plural count
+#: with no "it" at all. Chill of the Grave's real printing has the opposite
+#: gap - no "up to" prefix, a single mandatory target ("Tap target creature.
+#: It doesn't untap ..."). The count word itself is read entirely by
+#: `_targets_understood(count_agnostic=True)` below, same as before; the
+#: phrase only has to admit an optional leading count and the plural pronoun
+#: pair `_targets_understood` already knows how to size (one target, several,
+#: or "up to" any of them).
 _TAP_TARGET_THEN_NO_UNTAP_RE = re.compile(
-    r"^tap (?P<phrase>up to \S+ target .+?)\.\s*"
-    r"it doesn'?t untap during its controller'?s next untap step\.?$",
+    rf"^tap (?P<phrase>(?:up to )?(?:{COUNT} )?target .+?)\.\s*"
+    r"(?:it doesn'?t|(?:those \w+|they) don'?t) untap during "
+    r"(?:its|their) controller'?s next untap step\.?$",
     re.IGNORECASE | re.DOTALL,
 )
 
@@ -5247,6 +5260,31 @@ def _parse_tap_target_then_no_untap_clause(text: str) -> AbilityEffect | None:
                 target.exerted = True
 
     return effect
+
+
+def _merge_tap_target_then_no_untap_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """Frost Breath, Chill of the Grave: the same "Tap ... target(s). It/
+    those creatures don't untap ..." pair `_parse_tap_target_then_no_untap_
+    clause` already reads whole for Tamiyo's loyalty ability, but printed on
+    an instant instead - and, for Chill of the Grave, with a further "Draw a
+    card." clause after it. `split_effect_clauses` cuts a spell's own text
+    into one clause per sentence with no notion that this pair is one CR
+    608.2c instruction, so `_parse_mixed_clauses` has to try the two adjacent
+    clauses together before falling back to reading each alone; unused
+    `for_spell` kept only for the same signature every other merge function
+    in this chain has, since `effect()` below is generic over an ability or a
+    spell already (`game.resolve_targets` and `game.controller_of` take
+    either).
+    """
+    if index + 1 >= len(clauses):
+        return None
+    pair = f"{clauses[index].strip()}. {clauses[index + 1].strip()}."
+    effect = _parse_tap_target_then_no_untap_clause(pair)
+    if effect is None:
+        return None
+    return 2, effect
 
 
 #: Diamond City: "Move a shield counter from this land onto target creature."
@@ -6453,8 +6491,17 @@ _EXILE_QUALITY_FROM_ALL_GRAVEYARDS_RE = re.compile(
 #: own two-sibling "dies or is put into exile" shape, extended to the three
 #: departure routes this pool's permanents can actually take (destroyed,
 #: sacrificed - both `TriggerEvent.DIES` - exiled, or bounced to hand).
+#:
+#: The phrase used to require "target" as the very next word after "exile ",
+#: so Prayer of Binding's real "exile up to one target nonland permanent an
+#: opponent controls until this enchantment leaves the battlefield" (an "up
+#: to" count ahead of the word "target") never matched at all - silent, per
+#: the number sweep. `.*target.+?` is the same loose phrase shape
+#: `_EXILE_TARGET_RE` already uses for the plain "exile target ..." family;
+#: the count word itself is read by `_targets_understood(count_agnostic=
+#: True)` below, not by this regex.
 _EXILE_UNTIL_THIS_LEAVES_BATTLEFIELD_RE = re.compile(
-    r"^exile (?P<phrase>target .+?) until this "
+    r"^exile (?P<phrase>.*target.+?) until this "
     r"(?:permanent|enchantment|artifact|creature|planeswalker) leaves the battlefield$",
     re.IGNORECASE,
 )
@@ -6513,13 +6560,24 @@ def _parse_exile_until_leaves_battlefield_clause(
     shape on a spell, and the "this `<type>`" pronoun needs a live source
     object on the battlefield to watch (`ability.source(game)`), which only
     an ability - never a spell resolving itself off the stack - carries.
+
+    `count_agnostic=True`, the same reading `_targets_understood`'s own
+    docstring already gives Mindbreak Trap's "exile any number of target
+    spells": Prayer of Binding and Touch the Spirit Realm both print "exile
+    up to one target ..." here, CR 115.6's zero-or-one, not the exactly-one
+    `_EXILE_UNTIL_THIS_LEAVES_BATTLEFIELD_RE` used to enforce alone. Every
+    legal target is exiled and watched, the same "one departure watch per
+    exiled card" shape `_parse_exile_targets_until_leaves_then_counters`
+    (Lagrella, the Magpie) already uses for its own count-agnostic "any
+    number of other target creatures" - "up to one" is not a fourth shape,
+    only a narrower bound on the same one.
     """
     if for_spell:
         return None
     match = _EXILE_UNTIL_THIS_LEAVES_BATTLEFIELD_RE.fullmatch(clause.strip())
     if match is None:
         return None
-    if not _targets_understood(match.group("phrase")):
+    if not _targets_understood(match.group("phrase"), count_agnostic=True):
         return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
@@ -6529,14 +6587,15 @@ def _parse_exile_until_leaves_battlefield_clause(
             target for target in game.resolve_targets(ability) if isinstance(target, CardState)
         ]
         if not targets:
-            return  # CR 608.2b: the target is gone, so there is nothing to exile.
+            return  # CR 608.2b/115.6: no (legal) target chosen; nothing to exile.
         source = ability.source(game)
         if source is None:
             return  # CR 113.7a: the source is already gone; nothing left to watch leave.
-        exiled = game.exile_permanent(targets[0])
-        if exiled.zone is not Zone.EXILE:
-            return  # CR 111.8: a token refused the move; nothing to bring back later.
-        _watch_for_departure_and_return_exiled_card(game, source, exiled, ability.controller)
+        for target in targets:
+            exiled = game.exile_permanent(target)
+            if exiled.zone is not Zone.EXILE:
+                continue  # CR 111.8: a token refused the move; nothing to bring back later.
+            _watch_for_departure_and_return_exiled_card(game, source, exiled, ability.controller)
 
     return effect
 
@@ -20068,6 +20127,12 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
         merged = _parse_scry_or_untap_if_not_starting_player_clauses(
             clauses, index, for_spell=for_spell
         )
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_tap_target_then_no_untap_clauses(clauses, index, for_spell=for_spell)
         if merged is not None:
             consumed, effect = merged
             parsed.append(effect)

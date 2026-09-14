@@ -1,0 +1,134 @@
+{
+  "object": "card",
+  "id": "8d05289c-d8de-4085-ac01-5dd8fd954d35",
+  "oracle_id": "4505ff9f-97f1-45d1-aea9-5590fefb4a4d",
+  "multiverse_ids": [],
+  "tcgplayer_id": 695523,
+  "cardmarket_id": 904191,
+  "name": "Prayer of Binding",
+  "lang": "en",
+  "released_at": "2026-04-24",
+  "uri": "https://api.scryfall.com/cards/8d05289c-d8de-4085-ac01-5dd8fd954d35",
+  "scryfall_uri": "https://scryfall.com/card/fdn/739/prayer-of-binding?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-08-24T09:18:17Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/8/d/8d05289c-d8de-4085-ac01-5dd8fd954d35.jpg?1787563097",
+    "normal": "https://cards.scryfall.io/normal/front/8/d/8d05289c-d8de-4085-ac01-5dd8fd954d35.jpg?1787563097",
+    "large": "https://cards.scryfall.io/large/front/8/d/8d05289c-d8de-4085-ac01-5dd8fd954d35.jpg?1787563097",
+    "png": "https://cards.scryfall.io/png/front/8/d/8d05289c-d8de-4085-ac01-5dd8fd954d35.png?1787563097",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/8/d/8d05289c-d8de-4085-ac01-5dd8fd954d35.jpg?1787563097",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/8/d/8d05289c-d8de-4085-ac01-5dd8fd954d35.jpg?1787563097",
+    "thumb": "https://cards.scryfall.io/thumb/front/8/d/8d05289c-d8de-4085-ac01-5dd8fd954d35.webp?1787563097",
+    "grid": "https://cards.scryfall.io/grid/front/8/d/8d05289c-d8de-4085-ac01-5dd8fd954d35.webp?1787563097",
+    "display": "https://cards.scryfall.io/display/front/8/d/8d05289c-d8de-4085-ac01-5dd8fd954d35.webp?1787563097",
+    "art": "https://cards.scryfall.io/art/front/8/d/8d05289c-d8de-4085-ac01-5dd8fd954d35.webp?1787563097",
+    "crop": "https://cards.scryfall.io/crop/front/8/d/8d05289c-d8de-4085-ac01-5dd8fd954d35.webp?1787563097"
+  },
+  "mana_cost": "{3}{W}",
+  "cmc": 4.0,
+  "type_line": "Enchantment",
+  "oracle_text": "Flash\nWhen this enchantment enters, exile up to one target nonland permanent an opponent controls until this enchantment leaves the battlefield. You gain 2 life.",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Flash"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "a7ecb771-d1b6-4dec-8cf5-8d45179f21e0",
+  "set": "fdn",
+  "set_name": "Foundations",
+  "set_type": "core",
+  "set_uri": "https://api.scryfall.com/sets/a7ecb771-d1b6-4dec-8cf5-8d45179f21e0",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afdn&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fdn?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/8d05289c-d8de-4085-ac01-5dd8fd954d35/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A4505ff9f-97f1-45d1-aea9-5590fefb4a4d&unique=prints",
+  "collector_number": "739",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Wylie Beckert",
+  "artist_ids": [
+    "074daf3d-0849-4c4a-b5a5-c276384e81e5"
+  ],
+  "illustration_id": "24e1cd73-3b08-4740-b9ca-968193b0ed0c",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "enchantment"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "setextension"
+  ],
+  "edhrec_rank": 16491,
+  "penny_rank": 10095,
+  "prices": {
+    "usd": "0.25",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": null,
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DPrayer%2Bof%2BBinding",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DPrayer%2Bof%2BBinding",
+    "edhrec": "https://edhrec.com/route/?cc=Prayer+of+Binding"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F695523%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=904191&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Prayer+of+Binding&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
