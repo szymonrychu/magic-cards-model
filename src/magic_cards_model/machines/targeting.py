@@ -2087,9 +2087,18 @@ def _read_count(prefix: str) -> tuple[int, int | None, bool] | None:
     count "other", which is not a number, and the whole phrase falls back to
     a mandatory exactly-one. `_excludes_source` is what actually reads the
     word; this function only has to stop it from breaking the count.
+
+    "one, two, or three target creatures" - Arc Lightning, Inferno Titan, and
+    21 other Modern cards CR 601.2d divides this way - is a longer list than
+    the two-number "one or two" shape above, read by `_read_numeric_list`
+    over every word, not just the last three: a version of this reader that
+    only looked at the tail end used to read "two, or three" out of the full
+    list and silently drop the leading "one", pinning the floor at two
+    instead of one (Arc Lightning could not legally be cast at a single
+    target even though the card's own text lists "one" first).
     """
-    words = [w for w in re.findall(r"[\w'-]+", prefix.lower()) if w not in _SOURCE_EXCLUDING]
-    words = words[-3:]
+    all_words = [w for w in re.findall(r"[\w'-]+", prefix.lower()) if w not in _SOURCE_EXCLUDING]
+    words = all_words[-3:]
     if words[-3:] == ["any", "number", "of"]:
         return 0, None, False
     if len(words) >= 3 and words[-3] == "up" and words[-2] == "to":
@@ -2097,15 +2106,53 @@ def _read_count(prefix: str) -> tuple[int, int | None, bool] | None:
             return 0, None, True
         count = parse_count(words[-1])
         return None if count is None else (0, count, False)
-    if len(words) >= 3 and words[-2] == "or":
-        fewest, most = parse_count(words[-3]), parse_count(words[-1])
-        if fewest is not None and most is not None:
-            return (fewest, most, False) if fewest <= most else None
+    numeric_list = _read_numeric_list(all_words)
+    if numeric_list is not None:
+        fewest, most = numeric_list
+        return fewest, most, False
     if words and words[-1] == "x":
         return 0, None, True
     if words and words[-1] not in {"a", "an"} and (count := parse_count(words[-1])) is not None:
         return count, count, False
     return 1, 1, False
+
+
+def _read_numeric_list(words: list[str]) -> tuple[int, int] | None:
+    """The count list at the very end of `words` - "one, two, or three"
+    (commas are not word characters, so `re.findall(r"[\\w'-]+", ...)`
+    already tokenizes that as `["one", "two", "or", "three"]` with no comma
+    of its own to read) or the plain two-item "one or two" - as (fewest,
+    most).
+
+    CR 601.2d always prints a division's choices in ascending order, so the
+    first number in the list is the floor and the last is the ceiling. Reads
+    backward from the word right before a trailing "or" (or the Oxford
+    "and/or", which tokenizes as the two words "and", "or"), consuming
+    countable words one at a time and stopping at the first word that is not
+    one - which is what lets this run against the *whole* prefix rather than
+    a fixed-width window: whatever sits further back (an "among", a verb, an
+    unrelated word) simply is not a count and ends the scan on its own.
+
+    `None` when the end of `words` is not at least two counts joined by
+    "or"/"and or" - a single trailing count, or a phrase that happens to end
+    in an unrelated "... or <something>" that is not itself a number.
+    """
+    if len(words) < 3 or words[-2] != "or":
+        return None
+    last = parse_count(words[-1])
+    if last is None:
+        return None
+    index = len(words) - 3
+    if index >= 0 and words[index] == "and":
+        index -= 1
+    counts = [last]
+    while index >= 0 and (count := parse_count(words[index])) is not None:
+        counts.append(count)
+        index -= 1
+    if len(counts) < 2:
+        return None
+    fewest, most = counts[-1], counts[0]
+    return (fewest, most) if fewest <= most else None
 
 
 #: "up to one **other** target creature", "exile **another** target permanent":

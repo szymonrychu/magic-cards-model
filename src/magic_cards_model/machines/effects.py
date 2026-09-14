@@ -84,7 +84,7 @@ from ..models.token import (
     token_copy_of,
 )
 from ..models.zone import Zone
-from ..numbers import COUNT, parse_count, parse_multiplier
+from ..numbers import AMOUNT, COUNT, parse_count, parse_multiplier, where_x_pattern
 from ..snapshot import EngineModel
 from . import combat as combat_rules
 from .abilities import (
@@ -123,6 +123,7 @@ from .delayed import (
     return_subject_to_hand,
 )
 from .layers import (
+    BASIC_LAND_TYPES,
     Characteristics,
     ContinuousEffect,
     ContinuousEffects,
@@ -721,11 +722,31 @@ _COLOR_NAME: dict[Color, str] = {
 # a value - because CR 611.2c only fixes the *result* at the moment a caller
 # actually evaluates it, not the expression itself; Craterhoof's own
 # docstring on `_run_mass_pump` is where that one evaluation happens.
+#: "the number of" is optional so the identical shape also reads a "for each
+#: <qualifier> you control" multiplier - Immaculate Magistrate's own "Put a
+#: +1/+1 counter on target creature for each Elf you control" - once
+#: `_for_each_expression` has already stripped the "for each" off and handed
+#: this whichever bare phrase is left, singular or plural either way.
 _COUNT_YOU_CONTROL_RE = re.compile(
-    r"^(?:the )?number of (?P<qualifier>[a-z]+) you control$", re.IGNORECASE
+    r"^(?:the )?(?:number of )?(?P<qualifier>[a-z]+) you control$", re.IGNORECASE
 )
+#: Same relaxation, for Lotleth Giant's "for each creature card in your
+#: graveyard" - the singular counterpart of "the number of creature cards in
+#: your graveyard" this regex already read.
 _COUNT_CARDS_IN_YOUR_GRAVEYARD_RE = re.compile(
-    r"^(?:the )?number of (?P<qualifier>[a-z]+) cards? in your graveyard$", re.IGNORECASE
+    r"^(?:the )?(?:number of )?(?P<qualifier>[a-z]+) cards? in your graveyard$", re.IGNORECASE
+)
+#: Domain (CR 702.94-adjacent naming; no keyword ability of its own, just a
+#: fixed count expression templated identically on every card that uses it):
+#: Tribal Flames' "the number of basic land types among lands you control".
+#: `BASIC_LAND_TYPES` is CR 305.6's five (`.layers` already names them for
+#: `machines/targeting.py`'s own basic-land exclusion); this counts how many
+#: of those five subtypes are on any land the given player controls, read off
+#: the computed board (CR 613.5) the same way `count_expression`'s other
+#: readers already are, so a land that has *become* a basic type through a
+#: continuous effect still counts.
+_COUNT_BASIC_LAND_TYPES_RE = re.compile(
+    r"^(?:the )?number of basic land types among lands you control$", re.IGNORECASE
 )
 #: "the number of cards in your hand" - Jolrael, Voice of Zhalfir's own X.
 #: Not a filtered count the way the two above are: CR 402.1 makes the hand a
@@ -756,10 +777,25 @@ def _singular_card_type(word: str) -> Type | None:
         return None
 
 
-def _singular_subtype(word: str) -> str | None:
-    """ "Faeries" -> "faerie", "Elves" -> "elf": a plural subtype word as
-    `subtype_vocabulary` stores it (lowercased, singular), or None when the
-    word is no printed subtype in any of those spellings."""
+def _singular_subtype_in_vocabulary(word: str) -> str | None:
+    """ "Faeries" -> "faerie", "Elves" -> "elf", "Elf" -> "elf": a subtype
+    word, singular or plural, as `subtype_vocabulary` stores it (lowercased,
+    singular), or None when the word is no printed subtype in any of those
+    spellings.
+
+    Named `_in_vocabulary` rather than the bare `_singular_subtype` two other
+    unrelated helpers elsewhere in this file already use for their own,
+    narrower purposes (Amass's plain "drop one trailing s", the transform-all
+    clause's own suffix table) - three same-named module-level functions
+    silently shadow one another, so the *last* one defined always won
+    regardless of which a given call site meant, and `count_expression`'s own
+    "Elf you control" reading always got Amass's, never this one. Renaming
+    only this function is the narrow fix: it un-shadows `count_expression`'s
+    single call site without touching the other two, which belong to
+    different work than this one and are shadowing *each other* the same
+    way - a pre-existing collision, not one this rename can fix without
+    reaching into their own territory.
+    """
     lowered = word.lower()
     vocabulary = subtype_vocabulary()
     candidates = [lowered, lowered.removesuffix("s")]
@@ -787,10 +823,29 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
     the function itself.
     """
     stripped = phrase.strip().rstrip(".")
+    if _COUNT_BASIC_LAND_TYPES_RE.fullmatch(stripped):
+        # Domain: Tribal Flames' own X definition. `BASIC_LAND_TYPES` names
+        # CR 305.6's five; a land counts once per distinct basic type it
+        # carries, on the computed board so a continuous effect that grants
+        # one (Urborg, Tomb of Yawgmoth) still counts.
+        def count_basic_land_types(game: "Game", controller: str) -> int:
+            board = game.computed_board()
+            found = {
+                subtype
+                for permanent in game.battlefield
+                if board.of(permanent).controller == controller
+                and Type.LAND in board.of(permanent).types
+                for subtype in board.of(permanent).subtypes
+                if subtype in BASIC_LAND_TYPES
+            }
+            return len(found)
+
+        return count_basic_land_types
+
     if match := _COUNT_YOU_CONTROL_RE.fullmatch(stripped):
         card_type = _singular_card_type(match.group("qualifier"))
         if card_type is None:
-            subtype = _singular_subtype(match.group("qualifier"))
+            subtype = _singular_subtype_in_vocabulary(match.group("qualifier"))
             if subtype is None:
                 return None
 
@@ -5097,11 +5152,17 @@ def _targets_understood(
     verb whose semantics genuinely do not change with the count - destroy,
     exile, tap, untap, return, and put-counters all just repeat themselves
     once per legal target, including "up to one" resolving to zero (CR 608.2b
-    already skips an illegal target the same way). Damage never sets this:
-    multiple targets divide a damage total at announcement (CR 601.2d,
-    Electrolyze), which is a different mechanism `deal_damage` does not
-    model, so damage keeps the strict single-mandatory-target rule regardless
-    of what the caller asks for.
+    already skips an illegal target the same way). Damage joins them for
+    exactly the same reason *unless* the card's own text divides the total
+    (CR 601.2d's "divided as you choose", Electrolyze) - that shape is a
+    different mechanism (`deal_divided_damage`, matched by `_DIVIDED_DAMAGE_
+    RE` before this one is even tried) that this wave's `deal_damage`/
+    `damage_ability_targets` do not model, so *that* caller keeps the strict
+    single-mandatory-target rule. A plain "deals N damage to up to one target
+    creature" (Mjolnir) or "to each of up to two target creatures" (Dual
+    Shot) never divides anything - CR 115.6 is the whole rule - so every
+    target chosen simply takes the full N, which is exactly what the ordinary
+    per-target loop below already does once this flag lets it run.
     """
     if _TRAILING_DURATION_RE.search(phrase):
         return False
@@ -6871,8 +6932,28 @@ def _parse_regenerate_self_clause(clause: str) -> AbilityEffect | None:
 #: (CR 700.2a), and Kolaghan's Command's "Kolaghan's Command deals 2 damage
 #: to any target." read as nothing until it was (battle 8 follow-up).
 _UNQUOTED_PREFIX = r"(?:[^\"“”'‘’]|(?<=\w)['’](?=\w))*"
+#: `n` reads `AMOUNT` (a fixed count or CR 107.3a's X) rather than plain
+#: `COUNT` - Tribal Flames' "deals X damage to any target, where X is the
+#: number of basic land types among lands you control" (Domain) and Scourge
+#: of Valkas' "deals X damage to any target, where X is the number of
+#: Dragons you control" both print a literal X here, evaluated at resolution
+#: through `count_expression`'s reader for the `where_x` tail
+#: (`numbers.where_x_pattern`).
+#:
+#: The optional " for each <expr>" tail is CR 608.2c's other multiplier
+#: shape - Lotleth Giant's "deals 1 damage to target opponent for each
+#: creature card in your graveyard" and Immaculate Magistrate's identically
+#: shaped "put a +1/+1 counter on target creature for each Elf you control"
+#: below - a fixed base multiplied by a count taken once, as the ability
+#: resolves (CR 608.2h). Both tails are lazy (`.+?`/non-greedy `phrase`) so
+#: a clause with neither still lets `phrase` swallow the whole rest of the
+#: sentence exactly as it always did; only a clause that actually prints one
+#: of the two tails stops `phrase` short of it.
 _DAMAGE_TARGET_RE = re.compile(
-    rf"{_UNQUOTED_PREFIX}\bdeals? (?P<n>{COUNT}) damage to (?P<phrase>any target|.*target.+)",
+    rf"{_UNQUOTED_PREFIX}\bdeals? (?P<n>{AMOUNT}) damage to "
+    rf"(?P<phrase>any target|.*?target.+?)"
+    rf"(?: for each (?P<each>[^.]+?))?"
+    rf"{where_x_pattern()}$",
     re.IGNORECASE,
 )
 #: Fling: "<Source> deals damage equal to the sacrificed creature's power to
@@ -6971,8 +7052,14 @@ def _parse_target_player_cant_cast_kicked_attack_clause(effect_text: str) -> Eff
 #: target permanent" is exactly that - a named counter with no rules of its
 #: own, put on by a plain activated ability this shape already reads once the
 #: kind word is not pinned to the two P/T spellings.
+#: The optional " for each <expr>" tail is Immaculate Magistrate's own "Put a
+#: +1/+1 counter on target creature for each Elf you control" - the same
+#: CR 608.2h multiplier `_DAMAGE_TARGET_RE` reads, kept lazy for the same
+#: reason: a clause with no tail still lets `phrase` take the whole rest of
+#: the sentence, unchanged from before this was added.
 _COUNTER_TARGET_RE = re.compile(
-    rf"put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on (?P<phrase>.*target.+)",
+    rf"put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on "
+    rf"(?P<phrase>.*?target.+?)(?: for each (?P<each>[^.]+?))?$",
     re.IGNORECASE,
 )
 #: Swallow Whole: "Put a +1/+1 counter on the creature tapped to pay this
@@ -7135,18 +7222,28 @@ def _parse_counter_on_additional_cost_card_clause(clause: str) -> TargetedClause
 
 
 #: "<Source> deals N damage divided as you choose among one or two targets."
-#: (Electrolyze), or "among one, two, or three targets" (Arc Lightning) -
-#: CR 601.2d's division, read by `deal_divided_damage`, which already does its
-#: own count-agnostic split at resolution rather than needing
-#: `_targets_understood` to vet a restriction: the phrase is always a plain
-#: run of CR 115.4 "targets", never a printed restriction like "target
-#: creature" this wave would otherwise have to read. The ceiling in the phrase
-#: is not re-read here either - `machines/targeting.py` is what counts the
-#: targets at announcement, and the payout below is driven by how many were
-#: actually chosen and by the caster's announced division.
+#: (Electrolyze), "among one, two, or three targets" (Arc Lightning), "among
+#: any number of targets" (Pyrotechnics, Rolling Thunder - CR 107.1c, no
+#: printed ceiling at all), or "among any number of target creatures and/or
+#: planeswalkers your opponents control, where X is ..." (Ureni, the Song
+#: Unending - a real printed restriction this time, not CR 115.4's bare
+#: "targets"). `phrase` is read whole and handed to `_targets_understood`
+#: the same way every other targeted clause's phrase is - `machines/
+#: targeting.py`'s own `_read_count` (shared with `_COUNTER_TARGET_RE` et
+#: al.) already reads "any number of", "up to N", and the "N, M, or K" list
+#: shape uniformly, so there is no need to spell any of them out again here
+#: as a second, parallel alternation the way an earlier wave's hard-coded
+#: "one(?:, two)?,? or (?:two|three)" did - that fixed list is exactly why
+#: this shape used to be silent on Pyrotechnics and Rolling Thunder at all.
+#: `n` reads `AMOUNT`/`where_x_pattern` for Ureni and Rolling Thunder's own
+#: X, evaluated through `count_expression` the same way `_DAMAGE_TARGET_RE`'s
+#: does. The actual count chosen, and the caster's own CR 601.2d division
+#: announcement, are still read off `spell.targets`/`spell.division` at
+#: resolution - `_deal_divided_damage_shares` below never re-reads this
+#: phrase.
 _DIVIDED_DAMAGE_RE = re.compile(
-    rf".*\bdeals? (?P<n>{COUNT}) damage divided as you choose "
-    r"among one(?:, two)?,? or (?:two|three) targets\.?$",
+    rf".*\bdeals? (?P<n>{AMOUNT}) damage divided as you choose among "
+    rf"(?P<phrase>[^.]+?){where_x_pattern()}\.?$",
     re.IGNORECASE,
 )
 #: Shatterskull Smashing: "deals X damage divided as you choose among up to
@@ -7534,14 +7631,19 @@ def _parse_reveal_top_n_one_per_card_type_clause(text: str) -> AbilityEffect | N
 #: directly rather than through `Game.controller_of`, which is only ever
 #: handed a triggered or activated ability here (no spell in the pool prints
 #: this shape).
+#: `n` reads `AMOUNT`/`where_x_pattern` the same as `_DAMAGE_TARGET_RE` -
+#: Scourge of Valkas' variant, "it deals X damage to each opponent, where X
+#: is the number of Dragons you control", would otherwise be silent purely
+#: for lacking a fixed digit.
 _DAMAGE_EACH_OPPONENT_RE = re.compile(
-    rf".*\bdeals? (?P<n>{COUNT}) damage to each opponent\.?$", re.IGNORECASE
+    rf".*\bdeals? (?P<n>{AMOUNT}) damage to each opponent{where_x_pattern()}\.?$", re.IGNORECASE
 )
 #: "<Source> deals N damage to each creature." (Extinguisher Battleship) -
 #: CR 119.3, also with no target: "each creature" is every creature on the
-#: battlefield, not something chosen or a player group.
+#: battlefield, not something chosen or a player group. Same X/where-X
+#: widening as `_DAMAGE_EACH_OPPONENT_RE` just above.
 _DAMAGE_EACH_CREATURE_RE = re.compile(
-    rf".*\bdeals? (?P<n>{COUNT}) damage to each creature\.?$", re.IGNORECASE
+    rf".*\bdeals? (?P<n>{AMOUNT}) damage to each creature{where_x_pattern()}\.?$", re.IGNORECASE
 )
 #: "Prevent all combat damage that would be dealt this turn." (Fog, Angelsong)
 #: - CR 615.1a's prevention effect naming neither a permanent nor a player, so
@@ -7770,6 +7872,124 @@ def _merge_prevent_damage_from_target_clauses(
     return consumed, _prevent_next_damage_from_target(gains_life=gains_life)
 
 
+# --------------------------------------------------------------------------
+# CR 608.2h/611.2c multipliers on a targeted damage or counter amount: a
+# fixed base "for each <expr>" (Immaculate Magistrate, Lotleth Giant), or
+# CR 107.3a's X off a "where X is <expr>" tail (Tribal Flames, Scourge of
+# Valkas). Both read once, as the ability begins to resolve, and are applied
+# to every target alike - the same one-shot-then-fixed reading Craterhoof's
+# own mass pump already gives its own "for each" (see `count_expression`'s
+# own docstring).
+# --------------------------------------------------------------------------
+
+
+def _resolve_multiplied_amount(
+    n: str, each: str | None, where_x: str | None
+) -> Callable[["Game", str], int] | None:
+    """The amount one of the damage/counter regexes above printed, as a
+    function of `(game, controller)` evaluated once at resolution - `None`
+    when the text names a multiplier this wave cannot read (an unfamiliar
+    "for each"/"where X" expression, or a literal "x" with no definition to
+    evaluate it against).
+    """
+    if n.lower() == "x":
+        if where_x is None:
+            return None
+        return count_expression(where_x)
+    base = parse_count(n)
+    if base is None:
+        return None
+    if each is None:
+        return lambda _game, _controller: base
+    multiplier = count_expression(each)
+    if multiplier is None:
+        return None
+    return lambda game, controller: base * multiplier(game, controller)
+
+
+def _deal_damage_for_each(
+    amount_fn: Callable[["Game", str], int], *, for_spell: bool
+) -> TargetedClause:
+    """`deal_damage`/`damage_ability_targets`'s twin for a multiplied amount -
+    the base times the "for each"/X reader is computed once, then dealt to
+    every target the same way the fixed-amount builders already do.
+    """
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object)
+        amount = amount_fn(game, controller.username)
+        source = stack_object if for_spell else stack_object.source(game)  # type: ignore[union-attr]
+        for target in game.resolve_targets(stack_object):
+            game.deal_damage(target, amount, source=source)
+
+    return effect
+
+
+def _deal_divided_damage_for_expression(multiplier: Callable[["Game", str], int]) -> Effect:
+    """`deal_divided_damage`'s twin for a "where X is <expr>" total - Ureni's
+    "X damage divided as you choose ..., where X is the number of lands you
+    control" and Rolling Thunder's identical shape. `_deal_divided_damage_
+    shares` still does the actual payout, exactly as it does for a fixed
+    total: only how the total itself is read differs.
+    """
+
+    def effect(game: "Game", spell: "StackObject") -> None:
+        controller = game.controller_of(spell)
+        total = multiplier(game, controller.username)
+        _deal_divided_damage_shares(game, spell, total)
+
+    return effect
+
+
+def _put_counters_on_targets_for_each(
+    kind: Counter | str, base: int, multiplier: Callable[["Game", str], int]
+) -> TargetedClause:
+    """`put_counters_on_ability_targets`'s twin for Immaculate Magistrate's
+    own "for each Elf you control" - the multiplier is read once, then the
+    resulting amount is put on every target (CR 122.1)."""
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object)
+        amount = base * multiplier(game, controller.username)
+        for target in game.resolve_targets(stack_object):
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
+                game.add_counters(target, kind, amount)
+
+    return effect
+
+
+def _damage_each_opponent_for_expression(
+    amount_fn: Callable[["Game", str], int],
+) -> AbilityEffect:
+    """`damage_each_opponent`'s twin for a "where X is <expr>" amount."""
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        amount = amount_fn(game, ability.controller)
+        for opponent in _opponents(game, ability.controller):
+            game.deal_damage(opponent, amount, source=source)
+
+    return effect
+
+
+def _damage_each_creature_for_expression(
+    amount_fn: Callable[["Game", str], int], *, for_spell: bool
+) -> TargetedClause:
+    """`damage_each_creature`/`damage_each_creature_spell`'s twin for a
+    "where X is <expr>" amount."""
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object)
+        amount = amount_fn(game, controller.username)
+        source = stack_object if for_spell else stack_object.source(game)  # type: ignore[union-attr]
+        board = game.computed_board()
+        for creature in list(game.battlefield):
+            if Type.CREATURE in board.of(creature).types:
+                game.deal_damage(creature, amount, source=source)
+
+    return effect
+
+
 def _optional_targeted_clause(
     inner: TargetedClause, prompt: str, *, for_spell: bool
 ) -> TargetedClause:
@@ -7929,9 +8149,16 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
     if match := _COUNTER_TARGET_RE.fullmatch(clause):
         if not _targets_understood(match.group("phrase"), count_agnostic=True):
             return None
-        amount = parse_count(match.group("n"))
         kind = _counter_kind(match.group("kind"))
-        return put_counters_on_ability_targets(kind, amount)
+        each = match.group("each")
+        if each is None:
+            amount = parse_count(match.group("n"))
+            return put_counters_on_ability_targets(kind, amount)
+        base = parse_count(match.group("n"))
+        multiplier = count_expression(each)
+        if base is None or multiplier is None:
+            return None
+        return _put_counters_on_targets_for_each(kind, base, multiplier)
 
     if for_spell and (match := _DAMAGE_EQUAL_TO_SACRIFICED_CREATURE_POWER_RE.fullmatch(clause)):
         if not _targets_understood(match.group("phrase"), allow_player_targets=True):
@@ -7939,20 +8166,52 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
         return _deal_damage_equal_to_sacrificed_creature_power
 
     if match := _DAMAGE_TARGET_RE.fullmatch(clause):
-        # Damage never goes count-agnostic: multiple targets divide a damage
-        # total at announcement (CR 601.2d), a different mechanism
-        # `deal_damage`/`damage_ability_targets` do not model (see
-        # `deal_divided_damage`, which is the real thing and is not reached
-        # by this parser). The strict single-mandatory-target check stays.
-        if not _targets_understood(match.group("phrase"), allow_player_targets=True):
+        # CR 601.2d's division is triggered only by the card's own printed
+        # word "divided" - `_DIVIDED_DAMAGE_RE` reads that shape, and this
+        # regex never matches text carrying it (there is no literal "to"
+        # right after "damage" in "damage divided as you choose among").
+        # Absent that word, "up to one target creature" (Mjolnir) and "each
+        # of up to two target creatures" (Dual Shot) are CR 115.6's ordinary
+        # optional targets: every target actually chosen takes the *whole*
+        # printed amount, which is exactly what `deal_damage`/
+        # `damage_ability_targets`'s per-target loop already does - so this
+        # is `count_agnostic` after all, unlike the docstring above used to
+        # claim, once "divided" is what actually decides the mechanism.
+        if not _targets_understood(
+            match.group("phrase"), count_agnostic=True, allow_player_targets=True
+        ):
             return None
-        amount = parse_count(match.group("n"))
-        return deal_damage(amount) if for_spell else damage_ability_targets(amount)
+        each = match.group("each")
+        where_x = match.group("where_x")
+        if each is None and where_x is None:
+            amount = parse_count(match.group("n"))
+            return deal_damage(amount) if for_spell else damage_ability_targets(amount)
+        amount_fn = _resolve_multiplied_amount(match.group("n"), each, where_x)
+        if amount_fn is None:
+            return None
+        return _deal_damage_for_each(amount_fn, for_spell=for_spell)
 
     if match := _DIVIDED_DAMAGE_RE.fullmatch(clause):
-        # "one or two targets" is fixed by the sentence itself (CR 601.2d),
-        # never a printed restriction to vet through `_targets_understood`.
-        amount = parse_count(match.group("n"))
+        # Unlike `_DAMAGE_TARGET_RE`, this phrase genuinely can carry a
+        # printed restriction (Ureni's "target creatures and/or
+        # planeswalkers your opponents control"), so it is vetted the same
+        # way every other targeted clause's phrase is - a bare CR 115.4
+        # "targets" with no noun after it reads as the ordinary any-target
+        # requirement `_read_phrase` already gives one.
+        if not _targets_understood(
+            match.group("phrase"), count_agnostic=True, allow_player_targets=True
+        ):
+            return None
+        where_x = match.group("where_x")
+        n = match.group("n")
+        if n.lower() == "x":
+            if where_x is None:
+                return None
+            multiplier = count_expression(where_x)
+            if multiplier is None:
+                return None
+            return _deal_divided_damage_for_expression(multiplier)  # type: ignore[return-value]
+        amount = parse_count(n)
         return deal_divided_damage(amount)  # type: ignore[return-value]
 
     if match := _DAMAGE_EACH_OPPONENT_RE.fullmatch(clause):
@@ -7961,15 +8220,27 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
         # `ability.controller` directly, which only an `AbilityOnStack` has.
         if for_spell:
             return None
-        amount = parse_count(match.group("n"))
-        return damage_each_opponent(amount)  # type: ignore[return-value]
+        where_x = match.group("where_x")
+        if where_x is None:
+            amount = parse_count(match.group("n"))
+            return damage_each_opponent(amount)  # type: ignore[return-value]
+        amount_fn = _resolve_multiplied_amount(match.group("n"), None, where_x)
+        if amount_fn is None:
+            return None
+        return _damage_each_opponent_for_expression(amount_fn)  # type: ignore[return-value]
 
     if match := _DAMAGE_EACH_CREATURE_RE.fullmatch(clause):
         # No target either (every creature on the battlefield, CR 119.3).
-        amount = parse_count(match.group("n"))
-        if for_spell:
-            return damage_each_creature_spell(amount)
-        return damage_each_creature(amount)  # type: ignore[return-value]
+        where_x = match.group("where_x")
+        if where_x is None:
+            amount = parse_count(match.group("n"))
+            if for_spell:
+                return damage_each_creature_spell(amount)
+            return damage_each_creature(amount)  # type: ignore[return-value]
+        amount_fn = _resolve_multiplied_amount(match.group("n"), None, where_x)
+        if amount_fn is None:
+            return None
+        return _damage_each_creature_for_expression(amount_fn, for_spell=for_spell)
 
     if _PLAIN_END_THE_TURN_RE.fullmatch(clause):
         return end_the_turn_effect  # type: ignore[return-value]
