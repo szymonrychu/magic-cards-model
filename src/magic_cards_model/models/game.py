@@ -28,6 +28,7 @@ from ..machines.abilities import (
     parse_abilities,
     parse_mana_abilities,
     parse_triggered_mana,
+    resolve_mana_count_expression,
 )
 from ..machines.casting import (
     _BLIGHT_PHRASE,
@@ -14003,6 +14004,20 @@ class Game(EngineModel):
                     if ability.mana.amount_from_devotion and devotion_color is not None
                     else None
                 )
+                # CR 107.3's X, read off the board the moment this ability
+                # resolves (CR 605.3b: immediately) - Seance Board's "the
+                # number of soul counters on this artifact", Woodland
+                # Weavemaster's "this creature's power". `_parse_effect`
+                # already refused to build this ability at all if its own
+                # "where X is ..." text were not one `resolve_mana_count_
+                # expression` can answer, so this is never `None` here.
+                expression_count = (
+                    resolve_mana_count_expression(
+                        self, controller, permanent, ability.mana.any_color_count_expression
+                    )
+                    if ability.mana.any_color_count_expression is not None
+                    else None
+                )
                 # The two board-derived narrowings `ManaAbility.effective` asks
                 # for. Without them this fast path resolved the ability against
                 # the printed text alone, while `machines/cost.py`'s auto-tap
@@ -14029,7 +14044,7 @@ class Game(EngineModel):
                     own_counters,
                     color,
                     has_imprinted_card,
-                    count=devotion,
+                    count=devotion if devotion is not None else expression_count,
                     could_produce_colors=could_produce_colors,
                     chosen_color=chosen_color,
                 )
