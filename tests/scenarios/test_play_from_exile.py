@@ -451,3 +451,69 @@ def test_ragavans_permission_ends_with_the_turn():
 
     assert bolt.zone is Zone.EXILE
     assert scenario.game.play_permission_for(bolt, "alice") is None
+
+
+# -- Bard Class: "exile the top N cards ... you may play them this turn" --
+#
+# A third shape, ability-side like Ragavan's own but reading a printed
+# *count* rather than Ragavan's fixed one card: Bard Class's own level 3
+# ability, "Whenever you cast a legendary spell, exile the top two cards of
+# your library. You may play them this turn." (verified with `resolve_cards`
+# against `tests/fixtures/cards/bard_class.json`, added with `scripts/
+# add_card.py`). `_parse_exile_antecedent`'s own `_EXILE_TOP_OF_YOUR_LIBRARY_
+# RE` used to read only "the top card" (Experimental Synthesizer's own
+# singular); Bonehoard Dracosaur and Ardent Dustspeaker print the identical
+# "top two" sentence but wrap it in extra riders (a land/nonland bonus, an
+# optional graveyard cost) this wave's own family does not reach, so Bard
+# Class - a real card `class_level` already lets a scenario reach directly,
+# with nothing else printed alongside the sentence - is what proves the
+# antecedent's own count generally rather than against one specific
+# card's whole, more complex text.
+
+
+def test_bard_class_level_3_exiles_the_top_two_cards_with_play_permission():
+    """CR 716.2a's level-gated ability, reached by setting `class_level`
+    directly the way `test_class_levels.py` already does rather than paying
+    through two level-ups - CR 716.2b: level is not itself a copiable or
+    otherwise event-derived characteristic, so setting it is exactly what a
+    live game's own two activations would have left behind.
+
+    "You may play them this turn" (CR 514.2's cleanup, not "until end of
+    turn") is `_PLAY_PERMISSION_RE`'s trailing-duration form, and "play" -
+    not "cast" - is CR 601.1a's broader verb: `PlayAction.PLAY` reaches a
+    land found among the exiled two the way `PlayAction.CAST` could not.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Ragavan, Nimble Pilferer"],
+            battlefield=["Bard Class", "Mountain"],
+            library=["Lightning Bolt", "Forest"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bard = scenario.find("Bard Class", Zone.BATTLEFIELD, "alice")
+    bard.class_level = 3
+    (mountain,) = scenario.untapped_sources("Mountain")
+
+    scenario.cast_onto_stack("Ragavan, Nimble Pilferer", mountain)
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()  # the level 3 trigger: exile the top two
+    scenario.pass_until_resolved()  # Ragavan himself, now alone on the stack
+
+    bolt = scenario.find("Lightning Bolt", Zone.EXILE, "alice")
+    forest = scenario.find("Forest", Zone.EXILE, "alice")
+    assert scenario.player("alice").library == []
+
+    for card in (bolt, forest):
+        permission = scenario.game.play_permission_for(card, "alice")
+        assert permission is not None
+        assert permission.player == "alice"
+        assert permission.action is PlayAction.PLAY
+        assert permission.pays_mana_cost is True
+
+    # Bob has no permission of his own over either card.
+    assert scenario.game.play_permission_for(bolt, "bob") is None

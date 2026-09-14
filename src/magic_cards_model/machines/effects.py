@@ -17559,7 +17559,9 @@ ExileAntecedent = Callable[["Game", AbilityOnStack], list[CardState]]
 #: "exile the top card of your library" - the controller's own library, the
 #: antecedent Experimental Synthesizer prints in front of "Until end of turn,
 #: you may play that card."
-_EXILE_TOP_OF_YOUR_LIBRARY_RE = re.compile(r"^exile the top card of your library$", re.IGNORECASE)
+_EXILE_TOP_OF_YOUR_LIBRARY_RE = re.compile(
+    rf"^exile the top (?:card|{count_pattern('n')} cards) of your library$", re.IGNORECASE
+)
 
 
 def _parse_exile_antecedent(clause: str) -> tuple[ExileAntecedent, bool] | None:
@@ -17584,17 +17586,27 @@ def _parse_exile_antecedent(clause: str) -> tuple[ExileAntecedent, bool] | None:
     """
     stripped = clause.strip()
 
-    if _EXILE_TOP_OF_YOUR_LIBRARY_RE.fullmatch(stripped):
-        # Experimental Synthesizer: the controller's own top card (CR 108.3:
-        # its owner, and the player the permission goes to, are the same).
+    if match := _EXILE_TOP_OF_YOUR_LIBRARY_RE.fullmatch(stripped):
+        # Experimental Synthesizer's "top card" (Bonehoard Dracosaur's own
+        # "top two cards" is the same shape, generalized on the count): the
+        # controller's own top N (CR 108.3: its owner, and the player the
+        # permission goes to, are the same). `exiles_many` (the pair's own
+        # plural-pronoun check) is whether more than one card is named, not
+        # whether the library actually held that many - CR 107.1b/608.2b have
+        # nothing to say about a search or exile running short, it just
+        # exiles what is there.
+        n = parse_count(match.group("n")) if match.group("n") else 1
 
         def exile_own_top(game: "Game", ability: AbilityOnStack) -> list[CardState]:
             player = game.controller_of(ability)
-            if not player.library:
-                return []
-            return [game.exile_permanent(player.library[0])]
+            exiled: list[CardState] = []
+            for _ in range(n):
+                if not player.library:
+                    break
+                exiled.append(game.exile_permanent(player.library[0]))
+            return exiled
 
-        return exile_own_top, False
+        return exile_own_top, n > 1
 
     if _EXILE_TOP_OF_THAT_PLAYERS_LIBRARY_RE.fullmatch(stripped):
 
