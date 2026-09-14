@@ -2600,23 +2600,29 @@ def intervening_if_holds(
     return _fail_closed(game, ability, source)
 
 
-#: Ayara's Oathsworn's clause: "it has fewer than four +1/+1 counters on it".
-#: "It" is the source itself - the only subject this shape is printed with in
-#: this pool, and CR 603.4's clause is read about the ability's own source
-#: unless it plainly names something else.
+#: Ayara's Oathsworn's clause: "it has fewer than four +1/+1 counters on it",
+#: and the suffix form most cards print: Lightning Coils' "this artifact has
+#: five or more charge counters on it", Earthbender Ascension's "it has four or
+#: more quest counters on it". "It" is the source itself - the only subject
+#: this shape is printed with in this pool, and CR 603.4's clause is read about
+#: the ability's own source unless it plainly names something else.
 _COUNTER_COUNT_CLAUSE = re.compile(
     r"^(?:it|this [a-z]+) has "
-    r"(?:(?P<comparison>fewer than|more than|at least|exactly) (?P<count>[a-z]+)|(?P<none>no))"
+    rf"(?:(?P<comparison>fewer than|more than|at least|exactly) (?P<count>{COUNT})"
+    rf"|(?P<suffix_count>{COUNT}) or (?P<direction>more|fewer)"
+    r"|(?P<none>no))"
     r" (?P<kind>\S+) counters? on it$"
 )
 
 #: How each comparison word answers, given the counters actually there and the
-#: number the clause names.
+#: number the clause names. "N or more" and "N or fewer" are inclusive.
 _COUNTER_COMPARISONS = {
     "fewer than": operator.lt,
     "more than": operator.gt,
     "at least": operator.ge,
     "exactly": operator.eq,
+    "more": operator.ge,
+    "fewer": operator.le,
 }
 
 
@@ -2635,10 +2641,14 @@ def _counter_count_holds(clause: str, source: CardState) -> bool | None:
     on_it = source.counter_count(match.group("kind"))
     if match.group("none") is not None:
         return on_it == 0
-    wanted = parse_count(match.group("count"), article=False)
+    if match.group("suffix_count") is not None:
+        count_word, comparison = match.group("suffix_count"), match.group("direction")
+    else:
+        count_word, comparison = match.group("count"), match.group("comparison")
+    wanted = parse_count(count_word, article=False)
     if wanted is None:
         return None
-    return _COUNTER_COMPARISONS[match.group("comparison")](on_it, wanted)
+    return _COUNTER_COMPARISONS[comparison](on_it, wanted)
 
 
 #: Vengevine's clause: "it's the second creature spell you cast this turn".

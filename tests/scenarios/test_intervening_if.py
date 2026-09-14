@@ -350,3 +350,53 @@ def test_loan_shark_alone_is_one_spell_and_draws_nothing():
     assert [state.name for state in alice.hand] == ["Lightning Bolt"]
     assert scenario.pending_triggers == []
     assert scenario.game.intervening_if_notices == []
+
+
+# -- a counter count printed as "N or more" ----------------------------------
+#
+# CR 603.4's clause as a count of counters on the source. Ayara's Oathsworn
+# prints the comparison first ("fewer than four"); most cards print it after
+# the number ("five or more"), and that suffix was never read, so the clause
+# fell through to `_fail_closed`.
+#
+# Lightning Coils (verified off its Scryfall printing): "At the beginning of
+# your upkeep, if this artifact has five or more charge counters on it, remove
+# all of them from it and create that many 3/1 red Elemental creature tokens
+# with haste. ..." Five, not Earthbender Ascension's four. Its effect fails
+# closed on "that many" (a different gap); what is under test here is only
+# whether the ability triggers.
+
+
+def lightning_coils_board(charge: int) -> Scenario:
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Lightning Coils"])
+        .player("bob")
+        .manual_turn_based_actions()
+        .build()
+    )
+    coils = scenario.find("Lightning Coils", Zone.BATTLEFIELD, "alice")
+    coils.add_counters("charge", charge)
+    return scenario
+
+
+def test_five_charge_counters_trigger_lightning_coils_at_upkeep():
+    scenario = lightning_coils_board(5)
+
+    scenario.advance()  # the untap step ends and alice's upkeep begins
+
+    assert scenario.step is Step.UPKEEP
+    assert scenario.stack_names() == ["Lightning Coils's triggered ability"]
+    assert scenario.game.intervening_if_notices == []
+
+
+def test_four_charge_counters_do_not_trigger_lightning_coils():
+    """Four is fewer than five: the clause is read and is false, so the
+    ability does not trigger and nothing is refused."""
+    scenario = lightning_coils_board(4)
+
+    scenario.advance()  # the untap step ends and alice's upkeep begins
+
+    assert scenario.step is Step.UPKEEP
+    assert scenario.stack_names() == []
+    assert scenario.game.intervening_if_notices == []
