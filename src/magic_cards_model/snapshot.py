@@ -64,6 +64,14 @@ difference. A scope is for reading; an unannounced edit inside one is a bug in
 the caller, and it is loud. Fingerprints are taken once per cached board and
 checked only when it is dropped - never per read.
 
+**Scan pins.** `scan_pin(game)` is for the engine's own read-only scans that
+run inside a command, where no scope caches: the board is computed once for the
+scan. It is dropped by anything that bears on the board - a field store or an
+announced in-place edit on a model of that game, from any thread, whether or
+not a command is running - and lifted for the extent of a command started
+inside it. It serves only the thread that opened it, and never after its
+block ends.
+
 Nested scopes on the same game share one board and the outermost one ends it.
 `uncached_boards()` switches caching off entirely for its extent, which is
 what equivalence checks compare against. `board_computations()` counts real
@@ -152,6 +160,40 @@ _live = 0
 _commands: dict[int, int] = {}
 _computations = 0
 
+
+@dataclass(eq=False, slots=True)
+class _Pin:
+    """One `scan_pin`: its own membership record of the game, the thread it
+    serves, and the board it holds while nothing has dropped it."""
+
+    tracked: _Tracked
+    thread: int
+    board: Any = None
+    drops: int = 0
+    lifted: int = 0
+    closed: bool = False
+
+
+_pins: ContextVar[dict[int, _Pin] | None] = ContextVar("magic_cards_model_scan_pins", default=None)
+_pin_filling: ContextVar[_Pin | None] = ContextVar("magic_cards_model_pin_filling", default=None)
+#: Every open pin in any context, so a change from any thread reaches it.
+_open_pins: list[_Pin] = []
+
+
+def _drop_pins(model: object | None, *, structural: bool, lift: int = 0) -> None:
+    """Drop every open pin on a game `model` belongs to - commands or not."""
+    filling = _pin_filling.get()
+    for pin in tuple(_open_pins):
+        if pin is not filling and (lift or _holds(pin.tracked, model)):
+            if lift and pin.tracked.game is not model:
+                continue
+            pin.lifted += lift
+            pin.board = None
+            pin.drops += 1
+            if structural:
+                pin.tracked.structure += 1
+
+
 _ATTACHES = (BaseModel, list, tuple, dict, set, frozenset)
 
 
@@ -217,6 +259,7 @@ def _signal(model: object | None, *, structural: bool) -> None:
 
     A game this context is running a command on is skipped: the command's end
     moves it, after every edit the command makes."""
+    _drop_pins(model, structural=structural)
     commanding = _commanding.get()
     for key, tracked in tuple(_tracked.items()):
         if key not in commanding and _holds(tracked, model):
@@ -246,6 +289,7 @@ def _verify_and_drop(snapshot: _Snapshot) -> None:
 def _before(model: object | None) -> None:
     """A change to `model` is about to land: check and drop this context's
     boards on the games it belongs to, then signal every context."""
+    _drop_pins(model, structural=False)
     held = _snapshots.get()
     if held:
         for snapshot in tuple(held.values()):
@@ -362,7 +406,59 @@ def board_snapshot(game: Any) -> Iterator[None]:
 
 
 @contextmanager
+def scan_pin(game: Any) -> Iterator[None]:
+    """Compute `game`'s board once for a read-only scan, commands or not - see
+    this module's docstring. Nested pins on the same game share the outer one."""
+    global _live
+    key = id(game)
+    held = _pins.get()
+    if _serving_pin(key) is not None:
+        yield
+        return
+    pin = _Pin(_Tracked(game), threading.get_ident())
+    replaced = None if held is None else held.get(key)  # a lifted outer pin comes back
+    with _lock:
+        _open_pins.append(pin)
+        _live += 1
+    _pins.set({**(held or {}), key: pin})
+    try:
+        yield
+    finally:
+        pin.closed = True
+        pin.board = None
+        with _lock:
+            _open_pins.remove(pin)
+            _live -= 1
+        held = _pins.get()
+        if held is not None and held.get(key) is pin:
+            rest = {other: kept for other, kept in held.items() if other != key}
+            if replaced is not None:
+                rest[key] = replaced
+            _pins.set(rest or None)
+
+
+def _serving_pin(key: int) -> _Pin | None:
+    held = _pins.get()
+    pin = None if held is None else held.get(key)
+    if pin is None or pin.closed or pin.lifted or pin.thread != threading.get_ident():
+        return None
+    return pin
+
+
+@contextmanager
 def command(game: Any) -> Iterator[None]:
+    """A mutating command is running on `game`: `_command`, with every scan pin
+    on `game` lifted for its extent and dropped once it ends."""
+    _drop_pins(game, structural=True, lift=1)
+    try:
+        with _command(game):
+            yield
+    finally:
+        _drop_pins(game, structural=True, lift=-1)
+
+
+@contextmanager
+def _command(game: Any) -> Iterator[None]:
     """A mutating command is running on `game`.
 
     Nothing is cached for `game` anywhere while it runs, and its end moves the
@@ -409,6 +505,19 @@ def cached_board[B: BaseModel](game: Any, compute: Callable[[], B]) -> B:
     command running on `game` and nothing else changing it meanwhile."""
     global _computations
     key = id(game)
+    pin = None if _uncached.get() else _serving_pin(key)
+    if pin is not None:
+        if pin.board is None:
+            _computations += 1
+            drops, token = pin.drops, _pin_filling.set(pin)
+            try:
+                board = compute()
+            finally:
+                _pin_filling.reset(token)
+            if pin.drops != drops or pin.closed or pin.lifted:
+                return board
+            pin.board = board
+        return pin.board
     snapshot = _open_snapshot(key)
     if snapshot is None or _uncached.get() or key in _commanding.get():
         _computations += 1
