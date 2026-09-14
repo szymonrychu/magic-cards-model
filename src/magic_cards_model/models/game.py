@@ -2227,7 +2227,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 20
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 21
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -2446,6 +2446,15 @@ class Game(EngineModel):
     207.2c, CR 700.4). A version-19 dump has no count of the deaths it already
     saw this turn, and a default of zero would switch morbid off mid-turn.
     Refused instead.
+
+    Bumped 20 -> 21: `machines/delayed.py`'s `DrawACardForController` gained
+    `count` (a delayed "draw `<n>` cards", not just one - Nth-draw and
+    for-each-qualifier draw triggers whose delayed half now reads a count
+    other than 1). `count` defaults to 1, which is every version-20 use's
+    only possible value, but a `DelayedEffectSpec` is reachable from
+    `Game.model_dump()` and the bump rule's first bullet does not carve out
+    an exception for a field whose default happens to match every existing
+    use - refused rather than trusted on that observation holding forever.
     """
 
     @model_validator(mode="before")
