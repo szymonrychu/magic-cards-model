@@ -7655,6 +7655,20 @@ class Game(EngineModel):
         colorless card" are `moved_amount=1`; Waker of Waves' "put one of them
         into your hand" is `moved_amount=1, moved_exact=True`. The count of
         cards looked at is `len(Decision.cards)`, never `amount`.
+
+        **Nothing is asked when there is no choice to make.** An empty library
+        looks at nothing (CR 609.3), so there is no split to ask about - the
+        same "no event" CR 701.22b gives a scry of 0. And when `moved_exact`
+        pins the moved pile to a fixed count that a short library can no
+        longer undercut - `moved_amount` clamped to `len(looked_at)` already
+        equals `len(looked_at)` - every looked-at card is the only legal
+        `moved` (CR 608.2d: "can't choose an option that's ... impossible"),
+        so that forced answer is used directly rather than asked for. Stock
+        Up's library holding one or two cards ("put two of them into your
+        hand") are both this case. A question with candidates but genuine
+        freedom - `moved_exact=False`, or fewer forced than were looked at -
+        is still asked; a client that cannot answer meaningfully is the
+        defect this guards against, not the freedom to choose.
         """
         if isinstance(player, str):
             player = self.player(player)
@@ -7662,24 +7676,32 @@ class Game(EngineModel):
             return [], []
 
         looked_at = self._look_at_top(player, count)
+        if not looked_at:
+            return [], []
+        amount = len(looked_at) if moved_amount is None else min(moved_amount, len(looked_at))
         pending_looks = self._look_before_choosing(player, looked_at, source)
-        answer = self.ask(
-            Decision(
-                kind=DecisionKind.SCRY,
-                player=player.username,
-                prompt=prompt or f"look at the top {count} card(s)",
-                source=source,
-                source_id=source_id,
-                amount=len(looked_at)
-                if moved_amount is None
-                else min(moved_amount, len(looked_at)),
-                exact=moved_exact,
-                cards=tuple(state.id for state in looked_at),
-                moved_label=moved_label,
-                kept_label=kept_label,
+        if moved_exact and amount == len(looked_at):
+            # CR 608.2d: with the library this short, every card looked at is
+            # the only legal `moved` - nothing is left to choose, so nothing
+            # is asked.
+            answer: CardSplit = CardSplit(moved=tuple(state.id for state in looked_at))
+        else:
+            asked = self.ask(
+                Decision(
+                    kind=DecisionKind.SCRY,
+                    player=player.username,
+                    prompt=prompt or f"look at the top {count} card(s)",
+                    source=source,
+                    source_id=source_id,
+                    amount=amount,
+                    exact=moved_exact,
+                    cards=tuple(state.id for state in looked_at),
+                    moved_label=moved_label,
+                    kept_label=kept_label,
+                )
             )
-        )
-        assert isinstance(answer, CardSplit)
+            assert isinstance(asked, CardSplit)
+            answer = asked
         moved, rest = self._split_top(player, looked_at, answer)
         self._end_looks(pending_looks)
         put_back_epoch = player.library_epoch + (0 if rest_in_random_order else 1)

@@ -109,20 +109,18 @@ def test_stock_up_with_four_cards_left_looks_at_four_and_still_takes_two():
 
 
 def test_stock_up_with_one_card_left_puts_that_card_into_hand():
-    """CR 609.3: two cannot be taken from one, so the one is."""
+    """CR 609.3: two cannot be taken from one, so the one is - and CR 608.2d:
+    the one card is the only legal answer, so nothing is asked about it."""
     scenario = _stock_up_board(["Lightning Bolt"]).build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     alice = scenario.player("alice")
     (bolt,) = scenario.top_of_library(1, "alice")
-    _hand_pick(scenario, bolt, source="Stock Up")
 
     _cast_stock_up(scenario)
 
-    question = _split_question(scenario, "Stock Up")
-    assert question.amount == 1
-    assert question.exact is True
     assert bolt.zone is Zone.HAND
     assert alice.library == []
+    assert [q for q in scenario.questions_asked() if q.source == "Stock Up"] == []
 
 
 def test_stock_up_with_an_empty_library_moves_nothing_and_is_not_refused():
@@ -136,6 +134,34 @@ def test_stock_up_with_an_empty_library_moves_nothing_and_is_not_refused():
     assert alice.hand == []
     assert alice.library == []
     assert scenario.find("Stock Up", Zone.GRAVEYARD, "alice") is not None
+
+
+def test_stock_up_with_an_empty_library_asks_no_question():
+    """CR 608.2d: there is nothing to choose among when nothing was looked
+    at, so no question is put to the controller (compare CR 701.22b's "scry
+    0" - no event). A human handed this question would see an empty prompt
+    with nothing to answer."""
+    scenario = _stock_up_board([]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    _cast_stock_up(scenario)
+
+    assert [q for q in scenario.questions_asked() if q.source == "Stock Up"] == []
+
+
+def test_stock_up_with_exactly_two_cards_takes_both_and_asks_no_question():
+    """Library holds exactly the printed number (two): both are forced into
+    hand, nothing is left to order on the bottom, so neither the split
+    question nor the bottom-order question is asked."""
+    scenario = _stock_up_board(["Lightning Bolt", "Mountain"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bolt, mountain = scenario.top_of_library(2, "alice")
+
+    _cast_stock_up(scenario)
+
+    assert bolt.zone is Zone.HAND and mountain.zone is Zone.HAND
+    assert scenario.player("alice").library == []
+    assert [q for q in scenario.questions_asked() if q.source == "Stock Up"] == []
 
 
 def test_stock_up_refuses_one_card_for_hand():
@@ -198,6 +224,48 @@ def test_anticipate_still_asks_for_exactly_one():
     assert question.exact is True
     assert bolt.zone is Zone.HAND
     assert [state.name for state in alice.library] == ["Island", "Forest", "Mountain"]
+
+
+def test_anticipate_with_an_empty_library_asks_no_question():
+    """CR 608.2d/701.22b: nothing was looked at, so nothing is asked."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Anticipate"], library=[], battlefield=["Island", "Island"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    scenario.cast_and_resolve("Anticipate", *scenario.untapped_sources("Island", "Island"))
+
+    alice = scenario.player("alice")
+    assert alice.hand == []
+    assert alice.library == []
+    assert [q for q in scenario.questions_asked() if q.source == "Anticipate"] == []
+
+
+def test_anticipate_with_one_card_left_asks_no_question():
+    """CR 609.3/608.2d: the one card left can only go to hand - the only
+    legal answer - so it is put there without asking."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Anticipate"],
+            library=["Lightning Bolt"],
+            battlefield=["Island", "Island"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (bolt,) = scenario.top_of_library(1, "alice")
+
+    scenario.cast_and_resolve("Anticipate", *scenario.untapped_sources("Island", "Island"))
+
+    assert bolt.zone is Zone.HAND
+    assert scenario.player("alice").library == []
+    assert [q for q in scenario.questions_asked() if q.source == "Anticipate"] == []
 
 
 def _dovin_board(library: list[str]):
