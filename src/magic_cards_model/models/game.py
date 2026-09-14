@@ -1721,6 +1721,17 @@ class Game(EngineModel):
     rather than a flag, so a future card asking "two or more" has the number;
     today only "at least one" is ever asked. Cleared when a new turn begins."""
 
+    creatures_died_this_turn: int = 0
+    """How many creatures have died this turn, whoever controlled them.
+
+    Morbid's condition (an ability word, CR 207.2c): "if a creature died this
+    turn". CR 700.4: "The term dies means 'is put into a graveyard from the
+    battlefield.'" Counted in `put_into_graveyard` next to the
+    `TriggerEvent.DIES` emit, so a creature exiled instead (a finality
+    counter, Rest in Peace) never counts. A count rather than a flag, the
+    same choice `permanents_sacrificed_this_turn` makes. Cleared when a new
+    turn begins."""
+
     open_payment_pools: dict[str, ManaPool] = Field(default_factory=dict)
     """The working mana pool of each player's currently open `CostPayment`.
 
@@ -2054,7 +2065,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 18
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 19
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -2255,6 +2266,11 @@ class Game(EngineModel):
     sacrifice <N> ... If/When you do" now reads a count other than one
     (Leviathan, Scavenger's Talent), so a version-17 stack holding such a
     trigger resolved as a notice and now sacrifices. Refused instead.
+
+    Bumped 18 -> 19: `Game` gained `creatures_died_this_turn` (morbid, CR
+    207.2c, CR 700.4). A version-18 dump has no count of the deaths it already
+    saw this turn, and a default of zero would switch morbid off mid-turn.
+    Refused instead.
     """
 
     @model_validator(mode="before")
@@ -10242,6 +10258,8 @@ class Game(EngineModel):
             # battlefield. Exiled instead, the dies event never happened (CR 614.6).
             if was_on_battlefield and event.destination is Zone.GRAVEYARD:
                 assert left_battlefield_chars is not None
+                if Type.CREATURE in left_battlefield_chars.types:
+                    self.creatures_died_this_turn += 1
                 self.emit(
                     GameEvent(
                         event=TriggerEvent.DIES,
@@ -14634,6 +14652,7 @@ class Game(EngineModel):
             self.spells_cast_this_turn = {}
             self.permanents_left_battlefield_this_turn = {}
             self.permanents_sacrificed_this_turn = {}
+            self.creatures_died_this_turn = 0
             self.cards_drawn_this_turn = {}
             self.cards_discarded_this_turn = {}
             self.life_gained_this_turn = set()

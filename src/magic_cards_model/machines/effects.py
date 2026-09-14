@@ -12219,6 +12219,9 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     citys_blessing_instead = _parse_citys_blessing_instead_clause(whole)
     if citys_blessing_instead is not None:
         return citys_blessing_instead
+    condition_instead = _parse_condition_instead_clause(whole)
+    if condition_instead is not None:
+        return condition_instead
     gift_promised_return = _parse_gift_promised_return_instead_clause(whole)
     if gift_promised_return is not None:
         return gift_promised_return
@@ -18052,7 +18055,9 @@ def _parse_city_blessing_token_copy_clause(
 #: restriction (a plain player, or specifically an opponent) is still
 #: enforced by `machines/targeting.py` through `_targets_understood` below,
 #: not by this regex.
-_REVEAL_HAND_RE = re.compile(r"^target (?:player|opponent) reveals their hand$", re.IGNORECASE)
+_REVEAL_HAND_RE = re.compile(
+    r"^(?P<who>target (?:player|opponent)|that player) reveals their hand$", re.IGNORECASE
+)
 #: "you choose a/an <quality> card from it" - Thoughtseize's, Grief's, and
 #: Thought-Knot Seer's shared second sentence, the CR 701.9b/CR 701.13a
 #: override handing the choice to the resolving spell's/ability's controller
@@ -18067,18 +18072,24 @@ _REVEAL_HAND_RE = re.compile(r"^target (?:player|opponent) reveals their hand$",
 #: mana value a characteristic, so a card above the bound is CR 608.2d's
 #: "option that's illegal" and must not be offered. Left optional so
 #: Thoughtseize, Grief and Thought-Knot Seer read exactly as before.
+#:
+#: The count is `numbers.parse_quantity`'s: "a nonland card" (Thoughtseize),
+#: "two cards" (Gruesome Discovery, no quality at all), "up to two". X is not
+#: read here - nothing in this merge knows the spell's X.
 _CHOOSE_CARD_FROM_REVEALED_RE = re.compile(
-    r"^you choose (?:a|an) (?P<quality>.+?) card from it"
+    rf"^you choose (?P<count>(?:up to )?{COUNT}) (?:(?P<quality>.+?) )?cards? from it"
     r"(?: with mana value (?P<max_mv>\d+) or less)?$",
     re.IGNORECASE,
 )
 #: "that player discards that card" (Thoughtseize, Grief) - the anaphoric
 #: tail naming the same player `_REVEAL_HAND_RE` targeted and the same card
 #: `_CHOOSE_CARD_FROM_REVEALED_RE` just chose.
-_DISCARD_THAT_CARD_RE = re.compile(r"^that player discards that card$", re.IGNORECASE)
+_DISCARD_THAT_CARD_RE = re.compile(
+    r"^(?:then )?that player discards (?:that card|those cards)$", re.IGNORECASE
+)
 #: "exile that card" (Thought-Knot Seer, when not folded into the previous
 #: sentence) - CR 701.13a's move, straight from the revealed hand.
-_EXILE_THAT_CARD_RE = re.compile(r"^exile that card$", re.IGNORECASE)
+_EXILE_THAT_CARD_RE = re.compile(r"^(?:then )?exile (?:that card|those cards)$", re.IGNORECASE)
 #: "you lose N life" - Thoughtseize's own optional fourth sentence.
 _YOU_LOSE_LIFE_RE = re.compile(r"^you lose (?P<life>\d+) life$", re.IGNORECASE)
 
@@ -18298,7 +18309,7 @@ def _parse_choose_up_to_one_target_spell_clauses(
 
 
 def _merge_reveal_hand_choose_discard_clauses(
-    clauses: list[str], index: int, *, for_spell: bool
+    clauses: list[str], index: int, *, for_spell: bool, anaphoric_revealer: bool = False
 ) -> tuple[int, TargetedClause] | None:
     """Thoughtseize's, Grief's, and Thought-Knot Seer's shared paragraph,
     read as one anaphoric run of clauses rather than several independent
@@ -18331,20 +18342,44 @@ def _merge_reveal_hand_choose_discard_clauses(
     A hand with no nonland (or otherwise qualifying) card is CR 608.2d's
     "impossible option": nothing is asked, but the hand is still revealed,
     exactly as the paper cards do.
+
+    The count is printed ("you choose two cards from it", Gruesome
+    Discovery): the chooser picks that many, or every qualifying card when
+    the hand holds fewer (CR 609.3), and the consequence moves all of them.
+
+    `anaphoric_revealer` lets the first clause say "that player reveals their
+    hand" - the player a preceding sentence already targeted, which only a
+    caller that has read that sentence (`_parse_condition_instead_clause`)
+    can vouch for.
     """
     if index + 2 >= len(clauses):
         return None
     reveal_clause = clauses[index].strip()
-    if _REVEAL_HAND_RE.fullmatch(reveal_clause) is None:
+    reveal_match = _REVEAL_HAND_RE.fullmatch(reveal_clause)
+    if reveal_match is None:
         return None
-    if not _targets_understood(reveal_clause.split(" reveals", 1)[0], allow_player_targets=True):
+    if reveal_match.group("who").lower() == "that player":
+        if not anaphoric_revealer:
+            return None
+    elif not _targets_understood(reveal_clause.split(" reveals", 1)[0], allow_player_targets=True):
         return None
     choose_match = _CHOOSE_CARD_FROM_REVEALED_RE.fullmatch(clauses[index + 1].strip())
     if choose_match is None:
         return None
-    quality_matches = _nonland_or_typed_card_matcher(choose_match.group("quality"))
-    if quality_matches is None:
+    quantity = parse_quantity(choose_match.group("count"))
+    if quantity is None or quantity.source is not QuantitySource.FIXED or not quantity.amount:
         return None
+    quality_text = choose_match.group("quality")
+    if quality_text is None:
+
+        def quality_matches(state: CardState) -> bool:
+            return True
+
+    else:
+        read_quality = _nonland_or_typed_card_matcher(quality_text)
+        if read_quality is None:
+            return None
+        quality_matches = read_quality
     max_mv = int(choose_match.group("max_mv")) if choose_match.group("max_mv") else None
 
     def matches(state: CardState) -> bool:
@@ -18367,9 +18402,11 @@ def _merge_reveal_hand_choose_discard_clauses(
             life_loss = int(life_match.group("life"))
             consumed = 4
 
-    quality_description = choose_match.group("quality").strip()
+    quality_description = (quality_text or "").strip()
     if max_mv is not None:
-        quality_description = f"{quality_description} (mana value {max_mv} or less)"
+        quality_description = f"{quality_description} (mana value {max_mv} or less)".strip()
+    printed_count = quantity.amount
+    exact = quantity.exact
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object)
@@ -18383,31 +18420,102 @@ def _merge_reveal_hand_choose_discard_clauses(
                 game.reveal(state, source=source)
             candidates = [state for state in revealer.hand if matches(state)]
             if candidates:
+                most = min(printed_count, len(candidates))
+                noun = f"{quality_description} card".strip()
+                if exact and most == 1:
+                    wanted = with_indefinite_article(noun)
+                else:
+                    wanted = f"{'' if exact else 'up to '}{most} {noun}s"
                 chosen_ids = game.ask(
                     Decision(
                         kind=DecisionKind.CHOOSE_CARDS,
                         player=controller.username,
-                        prompt=(
-                            f"choose {with_indefinite_article(f'{quality_description} card')} from "
-                            f"{revealer.username}'s revealed hand"
-                        ),
+                        prompt=f"choose {wanted} from {revealer.username}'s revealed hand",
                         source=source,
-                        amount=1,
+                        amount=most,
+                        exact=exact,
                         cards=tuple(state.id for state in candidates),
                         source_id=source_id_of(stack_object),
                     )
                 )
                 assert isinstance(chosen_ids, tuple)
                 by_id = {state.id: state for state in candidates}
-                chosen = by_id[chosen_ids[0]]
+                chosen = [by_id[card_id] for card_id in chosen_ids]
                 if to_exile:
-                    game.exile_permanent(chosen)
-                else:
-                    game.discard_cards(revealer.username, [chosen], source=source)
+                    for card in chosen:
+                        game.exile_permanent(card)
+                elif chosen:
+                    game.discard_cards(revealer.username, chosen, source=source)
         if life_loss:
             controller.lose_life(life_loss)
 
     return consumed, effect
+
+
+#: "`<base>`. [`<ability word>` - ]If `<condition>`, instead `<alternative>`."
+#: - Gruesome Discovery: "Target player discards two cards. / Morbid - If a
+#: creature died this turn, instead that player reveals their hand, you
+#: choose two cards from it, then that player discards those cards." CR
+#: 614.1a: "Effects that use the word 'instead' are replacement effects" -
+#: here the alternative replaces the base instruction whole. The ability word
+#: (CR 207.2c) has no rules meaning and is only skipped.
+_CONDITION_INSTEAD_RE = re.compile(
+    r"^(?P<base>[^.]+)\.\s*(?:[a-z][a-z' ]*?\s+[\u2014-]\s+)?"
+    r"if (?P<condition>[^,]+), instead (?P<alternative>.+?)\.?$",
+    re.IGNORECASE,
+)
+
+#: The conditions `_CONDITION_INSTEAD_RE` reads, each asked of the game and the
+#: resolving spell's controller as it resolves. Morbid's "a creature died this
+#: turn" (CR 700.4) reads `Game.creatures_died_this_turn`. A condition not
+#: listed leaves the whole card unread.
+_INSTEAD_CONDITIONS: dict[str, Callable[["Game", str], bool]] = {
+    "a creature died this turn": lambda game, controller: game.creatures_died_this_turn > 0,
+}
+
+
+def _parse_condition_instead_clause(effect_text: str) -> Effect | None:
+    """`_CONDITION_INSTEAD_RE`'s shape: the base instruction, or - when the
+    condition holds as the spell resolves - the alternative in its place.
+
+    The alternative may name "that player", the player the base sentence
+    targeted, which `_merge_reveal_hand_choose_discard_clauses` reads with
+    `anaphoric_revealer`. Both halves must read whole, or the card is left
+    unread rather than half-run (CR 608.2c).
+    """
+    whole = " ".join(_strip_non_effect_preamble(effect_text).split())
+    match = _CONDITION_INSTEAD_RE.fullmatch(whole)
+    if match is None:
+        return None
+    condition = _INSTEAD_CONDITIONS.get(match.group("condition").strip().lower())
+    if condition is None:
+        return None
+    base = parse_mixed_effect_for_spell(match.group("base"))
+    if base is None:
+        return None
+    alternative_text = match.group("alternative")
+    alternative: Effect | None = parse_mixed_effect_for_spell(alternative_text)
+    if alternative is None:
+        # "that player reveals their hand, you choose two cards from it, then
+        # that player discards those cards" is one CR 608.2c series of
+        # instructions joined by commas, which the ordinary splitter keeps whole.
+        clauses = [
+            part.strip() for part in re.split(r",\s*(?:then\s+)?", alternative_text) if part.strip()
+        ]
+        merged = _merge_reveal_hand_choose_discard_clauses(
+            clauses, 0, for_spell=True, anaphoric_revealer=True
+        )
+        if merged is None or merged[0] != len(clauses):
+            return None
+        alternative = merged[1]  # type: ignore[assignment]
+    assert alternative is not None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell).username
+        chosen = alternative if condition(game, controller) else base
+        chosen(game, spell)
+
+    return effect
 
 
 #: "target player discards <count> cards" - Go Blank's own first clause, and
