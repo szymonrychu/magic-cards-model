@@ -18541,17 +18541,31 @@ def _parse_target_player_draws_clause(clause: str, *, for_spell: bool) -> Target
 #: where before only Go Blank's exact "Then exile ..." wording did.
 _EXILE_THAT_PLAYERS_GRAVEYARD_RE = re.compile(r"^exile that player'?s graveyard$", re.IGNORECASE)
 
-#: "you may discard a card" - Formidable Speaker's own first clause, CR
-#: 118.12's optional cost half of "[Do something]. If [a player] does, ...".
-_MAY_DISCARD_A_CARD_RE = re.compile(r"^you may discard a card$", re.IGNORECASE)
+#: "you may discard a card"/"you may discard up to N cards"/"you may discard
+#: any number of cards" - Formidable Speaker's own first clause ("a card"),
+#: and Fable of the Mirror-Breaker II's own "you may discard up to two
+#: cards" - CR 118.12's optional cost half of "[Do something]. If [a player]
+#: does, ...", the same quantity grammar `_DISCARD_A_CARD_RE` reads for the
+#: unconditional shape.
+_MAY_DISCARD_N_CARDS_RE = re.compile(
+    rf"^you may discards? "
+    rf"(?:(?P<any>any number of)|(?:(?P<upto>up to )?(?P<n>{AMOUNT})))\s+cards?$",
+    re.IGNORECASE,
+)
 #: "if you do, <consequence>" - CR 118.12's own consequence clause, split off
-#: from `_MAY_DISCARD_A_CARD_RE`'s clause by `_prepare_effect_clauses`'s
+#: from `_MAY_DISCARD_N_CARDS_RE`'s clause by `_prepare_effect_clauses`'s
 #: period splitting the same way `_MAY_SACRIFICE_IF_YOU_DO_RE`'s own two
 #: halves would be if that shape were not read as one whole-text regex
 #: instead - this one has to be a multi-clause merge, since "you may discard
 #: a card. If you do, search ..." reaches `_parse_mixed_clause` as two
 #: already-split clauses.
 _IF_YOU_DO_RE = re.compile(r"^if you do,\s*(?P<consequence>.+)$", re.IGNORECASE | re.DOTALL)
+#: "draw that many cards" - Fable of the Mirror-Breaker II's own consequence.
+#: Group 0b owns the channel that would let this read the actual count
+#: `_discard_cards` just moved; until it lands this is read as a recognised
+#: but unreadable shape (`UnmodeledTriggerEffectNotice`) rather than treated
+#: as no shape at all.
+_DRAW_THAT_MANY_CARDS_RE = re.compile(r"^draws? that many cards?$", re.IGNORECASE)
 
 
 def _merge_may_discard_if_you_do_clauses(
@@ -18560,7 +18574,10 @@ def _merge_may_discard_if_you_do_clauses(
     """Formidable Speaker's ETB trigger: "you may discard a card. If you do,
     search your library for a creature card, reveal it, put it into your
     hand, then shuffle." (CR 118.12's discard-flavoured cousin of
-    `_parse_conditional_sacrifice_clause`'s sacrifice.)
+    `_parse_conditional_sacrifice_clause`'s sacrifice.) Fable of the
+    Mirror-Breaker II's "you may discard up to two cards. If you do, draw
+    that many cards." is the same shape with a non-exact quantity and a
+    consequence Group 0b has not yet built a reader for.
 
     Reuses `_parse_sacrifice_consequence` outright for the "if you do" half:
     that function's own two shapes (a magnitude-threaded pair of clauses, or
@@ -18574,42 +18591,64 @@ def _merge_may_discard_if_you_do_clauses(
     """
     if index + 1 >= len(clauses):
         return None
-    if _MAY_DISCARD_A_CARD_RE.fullmatch(clauses[index].strip()) is None:
+    discard_match = _MAY_DISCARD_N_CARDS_RE.fullmatch(clauses[index].strip())
+    if discard_match is None:
         return None
+    if discard_match.group("any") is not None:
+        amount: int | None = None
+        exact = False
+    else:
+        amount = parse_count(discard_match.group("n"))
+        if amount is None:
+            return None
+        exact = discard_match.group("upto") is None
     if_match = _IF_YOU_DO_RE.fullmatch(clauses[index + 1].strip())
     if if_match is None:
         return None
-    consequence = _parse_sacrifice_consequence(if_match.group("consequence"))
-    if consequence is None:
+    consequence_text = if_match.group("consequence").strip()
+    consequence = _parse_sacrifice_consequence(consequence_text)
+    that_many = consequence is None and _DRAW_THAT_MANY_CARDS_RE.fullmatch(consequence_text)
+    if consequence is None and not that_many:
         return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         player = game.controller_of(stack_object)
         source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        needed = amount if amount is not None else len(player.hand)
+        prompt = (
+            "discard a card"
+            if amount == 1 and exact
+            else f"discard {'up to ' if not exact else ''}{needed} card(s)"
+        )
         decision = Decision(
             kind=DecisionKind.MAY,
             player=player.username,
-            prompt="discard a card",
+            prompt=prompt,
             source=source,
             affirmative_is_legal=bool(player.hand),
             source_id=source_id_of(stack_object),
         )
         if not game.ask(decision):
             return
-        chosen_ids = game.ask(
-            Decision(
-                kind=DecisionKind.CHOOSE_CARDS,
-                player=player.username,
-                prompt="choose a card to discard",
-                source=source,
-                amount=1,
-                cards=tuple(state.id for state in player.hand),
-                source_id=source_id_of(stack_object),
-            )
+        discarded = _discard_cards(
+            game, player, needed, source, source_id=source_id_of(stack_object), exact=exact
         )
-        assert isinstance(chosen_ids, tuple)
-        by_id = {state.id: state for state in player.hand}
-        game.discard_cards(player.username, [by_id[chosen_ids[0]]], source=source)
+        if not discarded:
+            return
+        if that_many:
+            # CR 608.2c: the discard already ran, in order; "draw that many
+            # cards" is the unreadable remainder, recorded rather than
+            # silently skipped - Group 0b is the channel that reads it.
+            source_id = stack_object.id if for_spell else stack_object.source_id  # type: ignore[union-attr]
+            game.unmodeled_trigger_effect_notices.append(
+                UnmodeledTriggerEffectNotice(
+                    source_id=source_id,
+                    source_name=source,
+                    text=f"if you do, {consequence_text}",
+                )
+            )
+            return
+        assert consequence is not None
         consequence(game, player, None, source, source_id_of(stack_object))
 
     return 2, effect
