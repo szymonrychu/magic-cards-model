@@ -12108,6 +12108,67 @@ def _parse_choose_targets_then_return_to_hand_pair(text: str) -> Effect | None:
     return effect
 
 
+#: "Choose target `<type>`. Create N tokens that are copies of it[, except
+#: ...]." - Rebuild the City's own whole text: "Choose target land. Create
+#: three tokens that are copies of it, except they're 3/3 creatures in
+#: addition to their other types and they have vigilance and menace." Two
+#: sentences, one CR 608.2c instruction pair, the same shape
+#: `_CHOOSE_TARGETS_THEN_RETURN_TO_HAND_RE` just above reads for "those
+#: creatures" - except here the second sentence's pronoun is singular ("it"),
+#: because the first sentence names exactly one target and the effect that
+#: follows never moves or destroys it, only reads it as the thing to copy.
+_CHOOSE_TARGET_THEN_CREATE_TOKEN_COPIES_RE = re.compile(
+    rf"^choose (?P<phrase>target .+?)\.\s*"
+    rf"create {count_pattern('count')} tokens? that (?:are copies|'?s a copy|is a copy) of it"
+    r"(?:, except (?P<except>.+))?\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_choose_target_then_create_token_copies_pair(text: str) -> Effect | None:
+    """`_CHOOSE_TARGET_THEN_CREATE_TOKEN_COPIES_RE`'s shape - Rebuild the
+    City.
+
+    "It" is CR 607.1 anaphora back to the first sentence's own chosen target,
+    not a second "target" word of its own: the whole text carries exactly one
+    "target" (in "choose target land"), and `machines/targeting.py` builds its
+    CR 601.2c requirement off the *printed* text as a whole, not per split
+    clause - so by the time this effect runs, `game.resolve_targets` already
+    has the very land the first sentence named, with nothing left for this
+    sentence to announce. The exception tail is CR 707.9's own channel, read
+    exactly as `_parse_create_token_copies_except_clause` reads it.
+    """
+    match = _CHOOSE_TARGET_THEN_CREATE_TOKEN_COPIES_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase")):
+        return None
+    count = parse_count(match.group("count"))
+    if count is None:
+        return None
+    exception = _read_token_copy_except(match.group("except"))
+    if exception is None:
+        return None
+    added, power, toughness, added_type = exception
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell)
+        for target in game.resolve_targets(spell):
+            if isinstance(target, CardState):
+                token_copy_of(
+                    game,
+                    target,
+                    controller.username,
+                    count=count,
+                    added_abilities=added,
+                    power=power,
+                    toughness=toughness,
+                    added_creature_type=added_type,
+                )
+
+    return effect
+
+
 #: "<instruction>. If you have the city's blessing, <instruction> instead." -
 #: Secrets of the Golden City's "Draw two cards. If you have the city's
 #: blessing, draw three cards instead." The city's blessing (CR 702.131c) is a
@@ -12162,6 +12223,9 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     choose_then_return = _parse_choose_targets_then_return_to_hand_pair(whole)
     if choose_then_return is not None:
         return choose_then_return
+    choose_then_token_copies = _parse_choose_target_then_create_token_copies_pair(whole)
+    if choose_then_token_copies is not None:
+        return choose_then_token_copies
     token_copies_except = _parse_create_token_copies_except_clause(whole, for_spell=True)
     if token_copies_except is not None:
         return token_copies_except
@@ -17835,25 +17899,100 @@ def _parse_create_token_copy_of_target_clause(
 
 #: "Create X tokens that are copies of target creature you control, except
 #: they have "<ability>"." - Aggressive Biomancy. The plural, counted twin of
-#: `_CREATE_TOKEN_COPY_OF_TARGET_RE` above, with CR 707.9a's exception:
-#: "Some copy effects cause the copy to gain an ability as part of the
-#: copying process. This ability becomes part of the copiable values for the
-#: copy, along with any other abilities that were copied."
+#: `_CREATE_TOKEN_COPY_OF_TARGET_RE` above, with CR 707.9's two exception
+#: channels: CR 707.9a's granted ability ("except they have '<ability>'",
+#: Aggressive Biomancy) and CR 707.9b's characteristic override, unquoted -
+#: "except they're `<P>`/`<T>` [`<subtype>`] creatures in addition to their
+#: other types[, and they have `<ability list>`]" (Astral Dragon, Rebuild the
+#: City). `_read_token_copy_except` reads either shape.
 #:
-#: The count is a literal by the time this runs - CR 107.3a's announced X is
-#: substituted by `effect_for` before the second parse attempt - and the
-#: "except" tail is optional, so the singular "create a token that's a copy
-#: of target creature you control" reads here too.
+#: The count reads any `numbers.COUNT` word, not only digits/a/an - Orthion,
+#: Hero of Lavabrink's own "Create five tokens that are copies of another
+#: target creature you control" is the reason - and the target phrase is any
+#: "target ..."/"another target ..." descriptor `machines/targeting.py`
+#: understands, not only "target creature you control": Astral Dragon's own
+#: "target noncreature permanent" is a different restriction on the same
+#: shape. CR 107.3a's announced X is substituted by `effect_for` before the
+#: second parse attempt, same as before.
 #:
-#: Matched against the *whole*, unsplit text: the quoted ability ends in a
-#: full stop of its own, which `split_effect_clauses` would cut the sentence
-#: at, leaving two fragments neither of which is a clause at all.
+#: Matched against the *whole*, unsplit text: an "except" tail ends in a full
+#: stop of its own (the quoted-ability shape) or contains its own "and"
+#: (the type/P-T shape), either of which `split_effect_clauses` would cut the
+#: sentence at, leaving fragments neither of which is a clause at all.
 _CREATE_TOKEN_COPIES_EXCEPT_RE = re.compile(
-    r"^create (?P<count>\d+|a|an) tokens? that (?:are copies|'?s a copy|is a copy) of "
-    r"(?P<phrase>target creature you control)"
-    r"(?:, except (?:they have|it has) [\"“](?P<ability>.+?)[\"”])?\.?$",
+    rf"^create {count_pattern('count')} tokens? that (?:are copies|'?s a copy|is a copy) of "
+    r"(?P<phrase>(?:another )?target .+?)"
+    r"(?:, except (?P<except>.+))?\.?$",
     re.IGNORECASE | re.DOTALL,
 )
+
+#: CR 707.9a's granted-ability exception, quoted - Aggressive Biomancy's own
+#: "except they have 'When this token enters, it fights up to one target
+#: creature you don't control.'"
+_TOKEN_COPY_EXCEPT_QUOTED_RE = re.compile(
+    r'^(?:they have|it has) ["“](?P<ability>.+?)["”]$', re.IGNORECASE | re.DOTALL
+)
+
+#: CR 707.9b's characteristic-override exception, unquoted - "except they're
+#: `<P>`/`<T>` [`<subtype>`] creatures in addition to their other types[, and
+#: they have `<ability list>`]". The subtype is optional: Astral Dragon names
+#: one ("3/3 Dragon creatures"), Rebuild the City does not ("3/3 creatures" -
+#: CR 205.1b's "in addition to" already keeps whatever types and subtypes the
+#: copied permanent had).
+_TOKEN_COPY_EXCEPT_TYPE_PT_RE = re.compile(
+    r"^(?:they'?re|it'?s) (?P<power>\d+)/(?P<toughness>\d+) "
+    r"(?:(?P<subtype>[A-Za-z]+) )?creatures? in addition to (?:their|its) other types"
+    r"(?:,? and (?:they|it) (?:have|has) (?P<abilities>.+))?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _normalize_keyword_list(text: str) -> str:
+    """ "vigilance and menace" -> "Vigilance, Menace": an "except they have"
+    ability list, joined by "and" and/or commas in the printed sentence, put
+    back into the comma-separated capitalised-first-word shape an ordinary
+    printed keyword line uses ("Flying, first strike") so the same keyword
+    reader that already handles a real card's own line handles an added one.
+    """
+    words = [word for word in re.split(r",\s*|\s+and\s+", text.strip()) if word]
+    return ", ".join(word[:1].upper() + word[1:] for word in words)
+
+
+def _read_token_copy_except(
+    except_text: str | None,
+) -> tuple[tuple[str, ...], int | None, int | None, str | None] | None:
+    """A token-copy clause's optional ", except `<tail>`" (CR 707.9a/707.9b),
+    read into `token_copy_of`'s own `(added_abilities, power, toughness,
+    added_creature_type)`. `None` only when a tail is present and neither
+    `_TOKEN_COPY_EXCEPT_QUOTED_RE` nor `_TOKEN_COPY_EXCEPT_TYPE_PT_RE` reads
+    it; an absent tail (`except_text` is `None`) is the plain CR 707.2 copy,
+    no exception at all.
+    """
+    if except_text is None:
+        return (), None, None, None
+    # `_CREATE_TOKEN_COPIES_EXCEPT_RE`'s own trailing `\.?` is outside this
+    # group, so a greedy `.+` swallows the clause's closing full stop along
+    # with everything else rather than leaving it there to be matched
+    # separately - stripped here once, rather than taught to both readers
+    # below, so an added keyword line never carries a stray "Flying." period.
+    stripped = " ".join(except_text.strip().split()).rstrip(".")
+    if quoted := _TOKEN_COPY_EXCEPT_QUOTED_RE.fullmatch(stripped):
+        return (quoted.group("ability").strip(),), None, None, None
+    if type_pt := _TOKEN_COPY_EXCEPT_TYPE_PT_RE.fullmatch(stripped):
+        abilities_text = type_pt.group("abilities")
+        added = (_normalize_keyword_list(abilities_text),) if abilities_text else ()
+        # "" (never `None`) when the clause names no subtype at all - Rebuild
+        # the City's own "3/3 creatures", not "3/3 `<subtype>` creatures" -
+        # so `token_copy_of` still adds CR 707.9b's Creature type; `None` is
+        # reserved for "no type change at all" (the quoted-ability shape, or
+        # no exception clause whatsoever).
+        return (
+            added,
+            int(type_pt.group("power")),
+            int(type_pt.group("toughness")),
+            type_pt.group("subtype") or "",
+        )
+    return None
 
 
 def _parse_create_token_copies_except_clause(
@@ -17865,9 +18004,10 @@ def _parse_create_token_copies_except_clause(
     work here: "the copy acquires the copiable values of the original
     object's characteristics", and an until-end-of-turn animation is not one
     of them - so copying an animated land copies the land. `token_copy_of`
-    already shares the original's printed `Card`; `added_abilities` is the
-    CR 707.9a channel that puts the excepted ability into those copiable
-    values rather than granting it on top of them.
+    already shares the original's printed `Card`; the exception this reads
+    off `_read_token_copy_except` is CR 707.9's own channel for putting an
+    "except" into those copiable values rather than granting it on top of
+    them.
     """
     match = _CREATE_TOKEN_COPIES_EXCEPT_RE.fullmatch(text.strip())
     if match is None:
@@ -17875,14 +18015,27 @@ def _parse_create_token_copies_except_clause(
     if not _targets_understood(match.group("phrase")):
         return None
     count = parse_count(match.group("count"))
-    ability_text = match.group("ability")
-    added = (ability_text.strip(),) if ability_text else ()
+    if count is None:
+        return None
+    exception = _read_token_copy_except(match.group("except"))
+    if exception is None:
+        return None
+    added, power, toughness, added_type = exception
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object)
         for target in game.resolve_targets(stack_object):
             if isinstance(target, CardState):
-                token_copy_of(game, target, controller.username, count=count, added_abilities=added)
+                token_copy_of(
+                    game,
+                    target,
+                    controller.username,
+                    count=count,
+                    added_abilities=added,
+                    power=power,
+                    toughness=toughness,
+                    added_creature_type=added_type,
+                )
 
     return effect
 
@@ -19810,6 +19963,11 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     )
     if create_token_copy_of_target is not None:
         return create_token_copy_of_target
+    create_token_copies_except = _parse_create_token_copies_except_clause(
+        clause, for_spell=for_spell
+    )
+    if create_token_copies_except is not None:
+        return create_token_copies_except
     counter_on_additional_cost_card = _parse_counter_on_additional_cost_card_clause(clause)
     if counter_on_additional_cost_card is not None:
         return counter_on_additional_cost_card

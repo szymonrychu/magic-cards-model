@@ -727,6 +727,33 @@ def copiable_card_with_added_abilities(printed: Card, added: Sequence[str]) -> C
     return printed.model_copy(update={"id": new_card_id, "oracle_text": body})
 
 
+def _type_line_with_added_creature_type(type_line: str, subtype: str) -> str:
+    """`type_line` plus `subtype`, as a creature "in addition to its other
+    types" (CR 205.1b) - Astral Dragon's own "except they're 3/3 Dragon
+    creatures in addition to their other types" reads a noncreature
+    permanent's type line and needs it back with "Creature" added on the left
+    of the dash (if it is not there already) and the named subtype added on
+    the right, every other printed type and subtype kept exactly as they
+    were. "Land" becomes "Land Creature \u2014 Forest Dragon"; "Artifact"
+    with no subtype at all becomes "Artifact Creature \u2014 Dragon".
+
+    `subtype` is `""` (never omitted; see `token_copy_of`'s own docstring)
+    for Rebuild the City's own "3/3 creatures", which names no subtype at
+    all - CR 707.9b's Creature type is still added, only the subtype half
+    is skipped, and `""` is deliberately never written to `right_words`,
+    or every land copy would carry a stray empty subtype token.
+    """
+    left, _, right = type_line.partition("\u2014")
+    left_words = left.split()
+    if "Creature" not in left_words:
+        left_words.append("Creature")
+    right_words = right.split()
+    if subtype and subtype not in right_words:
+        right_words.append(subtype)
+    new_left = " ".join(left_words)
+    return f"{new_left} \u2014 {' '.join(right_words)}" if right_words else new_left
+
+
 def token_copy_of(
     game: "Game",
     original: CardState,
@@ -735,6 +762,7 @@ def token_copy_of(
     added_abilities: Sequence[str] = (),
     power: int | None = None,
     toughness: int | None = None,
+    added_creature_type: str | None = None,
     **options: Any,
 ) -> list[TokenState]:
     """ "Create a token that's a copy of [something]" (CR 701.7a, CR 707.2).
@@ -769,11 +797,26 @@ def token_copy_of(
     `copiable_card_with_added_abilities` for why that distinction decides
     whether the added trigger ever fires.
 
-    `power`/`toughness` is CR 707.9a's other "except" channel - Offspring's
-    own "create a token that's a copy of it, except it's 1/1" (CR 702.175a).
-    Unlike `added_abilities`, which only ever adds a line, this *replaces*
-    the printed values - the copy's copiable P/T is 1/1, not "1/1 in
-    addition to its own".
+    `power`/`toughness` is CR 707.9b's other "except" channel ("some copy
+    effects modify a characteristic as part of the copying process") -
+    Offspring's own "create a token that's a copy of it, except it's 1/1"
+    (CR 702.175a). Unlike `added_abilities`, which only ever adds a line,
+    this *replaces* the printed values - the copy's copiable P/T is 1/1, not
+    "1/1 in addition to its own".
+
+    `added_creature_type` is CR 707.9b again, for the "except they're `<P>`/
+    `<T>` [`<subtype>`] creatures in addition to their other types" shape
+    (Astral Dragon's own "3/3 Dragon creatures", Rebuild the City's own bare
+    "3/3 creatures") - CR 205.1b's "in addition to" is what keeps the
+    original's own types and subtypes rather than replacing them, which
+    `_type_line_with_added_creature_type` reads off `type_line` directly
+    since this is a copiable-values change, not a continuous layer-4 effect
+    (`earthbend`/`amass` above use that channel instead, because those
+    animate an existing permanent rather than build a token's own printed
+    text). `None` means no type change at all; `""` still adds CR 707.9b's
+    Creature type with no named subtype, the shape Rebuild the City prints -
+    a real, distinct value from "no exception clause was printed", not an
+    edge case squeezed into `None`.
 
     **Not modelled**: CR 707.2's "as ... enters" power-and-toughness setting
     (a *different* rule from the "except" override above - that one reads a
@@ -803,15 +846,19 @@ def token_copy_of(
         extra_definitions = list(creation.extra)
 
         copiable = copiable_card_with_added_abilities(original.card, added_abilities)
-        if power is not None or toughness is not None:
+        if power is not None or toughness is not None or added_creature_type is not None:
             update: dict[str, Any] = {}
             if power is not None:
                 update["power"] = str(power)
             if toughness is not None:
                 update["toughness"] = str(toughness)
+            if added_creature_type is not None:
+                update["type_line"] = _type_line_with_added_creature_type(
+                    copiable.type_line, added_creature_type
+                )
             new_card_id = uuid5(
                 NAMESPACE_OID,
-                f"{_TOKEN_CARD_ID_PREFIX}:{copiable.id}:pt:{power}/{toughness}",
+                f"{_TOKEN_CARD_ID_PREFIX}:{copiable.id}:pt:{power}/{toughness}:type:{added_creature_type}",
             )
             copiable = copiable.model_copy(update={"id": new_card_id, **update})
 

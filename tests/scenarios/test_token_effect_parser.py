@@ -316,6 +316,115 @@ def test_replicate_creates_a_token_copy_of_the_target():
     assert copies[0].toughness == 2
 
 
+def test_astral_dragon_creates_two_type_and_pt_overridden_copies():
+    """Astral Dragon (pool card): "Project Image — When this creature enters,
+    create two tokens that are copies of target noncreature permanent,
+    except they're 3/3 Dragon creatures in addition to their other types,
+    and they have flying."
+
+    This is the family `_CREATE_TOKEN_COPIES_EXCEPT_RE` used to refuse
+    outright: its count was digits/a/an only (a word like "two" was
+    rejected), its phrase was pinned to "target creature you control" (Sol
+    Ring, targeted here, is neither a creature nor "you control" qualified -
+    "target noncreature permanent" is a different restriction), and its
+    "except" tail only read a *quoted* granted ability, never an unquoted
+    type/power/toughness override. `_read_token_copy_except`'s `_TOKEN_COPY_
+    EXCEPT_TYPE_PT_RE` half is what reads this one - CR 707.9b's "some copy
+    effects modify a characteristic as part of the copying process", and
+    CR 205.1b's "in addition to its other types" is why the copy is still an
+    artifact too, not only a Dragon creature.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Astral Dragon"],
+            battlefield=["Sol Ring"] + ["Island"] * 8,
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sol_ring = scenario.find("Sol Ring", Zone.BATTLEFIELD, "alice")
+    sources = scenario.untapped_sources(*["Island"] * 8)
+
+    scenario.choose_trigger_targets("Astral Dragon", [sol_ring])
+    scenario.cast_and_resolve("Astral Dragon", *sources)
+    scenario.pass_until_resolved()
+
+    copies = [
+        state
+        for state in scenario.game.permanents_controlled_by("alice")
+        if state.name == "Sol Ring" and state is not sol_ring
+    ]
+    assert len(copies) == 2
+    for copy in copies:
+        assert copy.token
+        assert copy.power == 3
+        assert copy.toughness == 3
+        characteristics = scenario.game.characteristics_of(copy)
+        assert Type.ARTIFACT in characteristics.types  # CR 205.1b: kept
+        assert Type.CREATURE in characteristics.types  # CR 707.9b: added
+        assert "Dragon" in characteristics.subtypes
+        assert has_keyword(copy, Keyword.FLYING, scenario.game)
+        # The original's own ability line is still part of the copiable
+        # values (CR 707.2), sitting alongside the added "Flying" line.
+        assert "{T}: Add {C}{C}." in copy.card.oracle_text
+    # Sol Ring itself is untouched (CR 707.2b: the copy is a snapshot).
+    assert sol_ring.power is None
+    assert not scenario.game.characteristics_of(sol_ring).is_creature
+
+
+def test_rebuild_the_city_copies_the_land_it_chose_not_a_second_target():
+    """Rebuild the City (off-pool, added with `scripts/add_card.py`, verified
+    against its own printed text): "Choose target land. Create three tokens
+    that are copies of it, except they're 3/3 creatures in addition to their
+    other types and they have vigilance and menace."
+
+    Proves the other half of the same family: `_parse_choose_target_then_
+    create_token_copies_pair`'s "it" reads back the ability's own sole
+    target (CR 607.1 anaphora), read off the *first* sentence - "Choose
+    target land." - rather than a second "target" word the second sentence
+    never prints; and the "except" tail's type/P-T override with no named
+    subtype at all ("3/3 creatures", not "3/3 `<subtype>` creatures") still
+    reads through `_TOKEN_COPY_EXCEPT_TYPE_PT_RE`'s optional subtype group.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Rebuild the City"],
+            battlefield=["Forest", "Swamp", "Mountain", "Island", "Island", "Island"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    forest = scenario.find("Forest", Zone.BATTLEFIELD, "alice")
+    sources = scenario.untapped_sources("Forest", "Swamp", "Mountain", "Island", "Island", "Island")
+
+    scenario.cast_and_resolve("Rebuild the City", *sources, targets=[forest])
+
+    copies = [
+        state
+        for state in scenario.game.permanents_controlled_by("alice")
+        if state.name == "Forest" and state is not forest
+    ]
+    assert len(copies) == 3
+    for copy in copies:
+        assert copy.token
+        assert copy.power == 3
+        assert copy.toughness == 3
+        characteristics = scenario.game.characteristics_of(copy)
+        assert Type.LAND in characteristics.types  # CR 205.1b: kept
+        assert Type.CREATURE in characteristics.types  # CR 707.9b: added
+        assert characteristics.subtypes == ("Forest",)  # no added subtype
+        assert has_keyword(copy, Keyword.VIGILANCE, scenario.game)
+        assert has_keyword(copy, Keyword.MENACE, scenario.game)
+    # The original land itself is untouched and still just a land.
+    assert not scenario.game.characteristics_of(forest).is_creature
+
+
 # --------------------------------------------------------------------------
 # Multi-token and keyword-halves regressions, still exercised by name
 # --------------------------------------------------------------------------
