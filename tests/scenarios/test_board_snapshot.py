@@ -23,13 +23,27 @@ itself. This file is the contract that scope has to keep:
   read. A change the engine was not told about - an in-place edit to a zone
   list, or a caller writing into a returned board - raises
   `BoardSnapshotStale` rather than serving a stale board.
+- **Per game.** A change to another game, or to a model that belongs to no
+  game, leaves the board alone.
+- **Closed scopes.** A context copied inside a scope, or scopes on two games
+  ending out of order, never reads from or caches into a scope that ended.
+- **Threads.** A reader holding a scope while another thread runs a command
+  on the same game never serves a board the finished command made stale,
+  however the two interleave.
 
 Every card here is a real printing; nothing is targeted by name.
 """
 
 from __future__ import annotations
 
+import contextlib
+import contextvars
 import json
+import queue
+import sys
+import threading
+from collections.abc import Callable
+from pathlib import Path
 from uuid import NAMESPACE_OID, uuid5
 
 import pytest
@@ -391,3 +405,236 @@ def test_writing_into_a_returned_board_raises():
 
     with pytest.raises(BoardSnapshotStale), game.board_snapshot():
         game.computed_board().of(bears).counters["+1/+1"] = 5
+
+
+# -- closed scopes -----------------------------------------------------------
+
+
+def test_a_context_copied_inside_a_scope_reads_fresh_boards_after_it_ends():
+    """`asyncio.create_task` and `copy_context()` carry the scope's state into
+    the copy. Once the scope has ended, the copy must not keep a board."""
+    scenario = _goyf_board()
+    game = scenario.game
+    goyf = scenario.creature("Tarmogoyf", "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    forest = scenario.untapped_sources("Forest", username="alice")[0]
+
+    with game.board_snapshot():
+        before = game.characteristics_of(goyf).power
+        copied = contextvars.copy_context()
+
+    assert (
+        _computations_during(
+            lambda: copied.run(lambda: (game.computed_board(), game.computed_board()))
+        )
+        == 2
+    ), "a read in the copied context after the scope ended is not cached"
+
+    copied.run(game.computed_board)
+    forest.tap()
+    game.destroy(bears)
+    after = copied.run(lambda: game.characteristics_of(goyf).model_dump(mode="json"))
+    assert after == _truth(game, goyf)
+    assert after["power"] == before + 1
+    assert copied.run(lambda: _actions(game, "alice")) == _actions(game, "alice")
+
+
+def _reading(game: Game) -> object:
+    """A generator holding a scope open across a `yield`, the shape that lets
+    two scopes end in any order."""
+    with game.board_snapshot():
+        game.computed_board()
+        yield
+
+
+def test_scopes_on_two_games_ending_out_of_order_never_serve_a_closed_snapshot():
+    first = _goyf_board()
+    second = _goyf_board()
+    bears = first.creature("Grizzly Bears", "alice")
+    goyf = first.creature("Tarmogoyf", "alice")
+
+    outer = _reading(first.game)
+    next(outer)
+    inner = _reading(second.game)
+    next(inner)
+
+    next(outer, None)  # the first scope ends while the second is still open
+    assert (
+        _computations_during(lambda: (second.game.computed_board(), second.game.computed_board()))
+        == 0
+    ), "the scope still open keeps its board when another one ends first"
+    next(inner, None)
+
+    assert (
+        _computations_during(lambda: (first.game.computed_board(), first.game.computed_board()))
+        == 2
+    )
+    assert (
+        _computations_during(lambda: (second.game.computed_board(), second.game.computed_board()))
+        == 2
+    )
+    first.game.destroy(bears)
+    assert first.game.characteristics_of(goyf).model_dump(mode="json") == _truth(first.game, goyf)
+
+
+# -- per game ----------------------------------------------------------------
+
+
+def test_mutating_another_game_inside_a_snapshot_keeps_this_games_board():
+    """Only a change to this game can make its board stale. A command on
+    another game, or a field assigned on another game's permanent, is not one."""
+    scenario = _goyf_board()
+    game = scenario.game
+    other = _goyf_board()
+    other_bears = other.creature("Grizzly Bears", "alice")
+    other_forest = other.untapped_sources("Forest", username="alice")[0]
+    goyf = scenario.creature("Tarmogoyf", "alice")
+
+    with game.board_snapshot():
+        boards = []
+        assert _computations_during(lambda: boards.append(game.computed_board())) == 1
+        other.game.destroy(other_bears)
+        other.game.add_counters(other.creature("Tarmogoyf", "alice"), "+1/+1", 2)
+        other_forest.tap()
+        other.game.players[0].life -= 3
+        assert _computations_during(lambda: boards.append(game.computed_board())) == 0
+        assert boards[0] is boards[1]
+        assert game.characteristics_of(goyf).model_dump(mode="json") == _truth(game, goyf)
+
+
+# -- threads -----------------------------------------------------------------
+
+_PACKAGE = str(Path(Game.__module__.replace(".", "/")).parent.parent)
+_IN_PLACE = frozenset(
+    {
+        "append",
+        "extend",
+        "insert",
+        "remove",
+        "pop",
+        "clear",
+        "sort",
+        "reverse",
+        "update",
+        "setdefault",
+        "popitem",
+        "__setitem__",
+        "__delitem__",
+    }
+)
+
+
+def _pause_before_every_store(pause: Callable[[], None]) -> Callable[..., None]:
+    """A profile function that stops the thread just before each change to the
+    game lands: a pydantic field store, or an in-place list or dict edit made
+    by engine code. The snapshot bookkeeping itself is left alone."""
+
+    def profile(frame, event, arg) -> None:  # noqa: ANN001
+        code = frame.f_code
+        stores_a_field = (
+            event == "call"
+            and code.co_name in ("__setattr__", "__delattr__")
+            and "pydantic" in code.co_filename
+        )
+        edits_in_place = (
+            event == "c_call"
+            and getattr(arg, "__name__", "") in _IN_PLACE
+            and isinstance(getattr(arg, "__self__", None), list | dict)
+            and _PACKAGE in code.co_filename
+            and not code.co_filename.endswith("snapshot.py")
+        )
+        if stores_a_field or edits_in_place:
+            pause()
+
+    return profile
+
+
+def _read_while_another_thread_commands(game: Game, command: Callable[[], object]) -> None:
+    """Thread A holds a scope and reads the board every time thread B, running
+    `command`, is about to change the game; once B has finished, A's next reads
+    must match the game with every board computed afresh.
+
+    The two threads strictly take turns, handed over by a queue and an Event,
+    so every interleaving point is exercised deterministically, with no sleep.
+    """
+    to_reader: queue.Queue[str] = queue.Queue()
+    resume = threading.Event()
+    started = threading.Event()
+    failures: list[BaseException] = []
+    outcome: list[tuple[object, object]] = []
+    pauses = [0]
+
+    def pause() -> None:
+        pauses[0] += 1
+        to_reader.put("paused")
+        if not resume.wait(120):
+            raise AssertionError("the reader never handed the turn back")
+        resume.clear()
+
+    def reader() -> None:
+        try:
+            with game.board_snapshot():
+                _characteristics(game)
+                started.set()
+                while to_reader.get(timeout=120) != "done":
+                    with contextlib.suppress(Exception):  # a read overlapping the command
+                        _characteristics(game)  # may see it half done: anything goes
+                    resume.set()
+                seen = (_characteristics(game), _actions(game, "alice"))
+                with uncached_boards():
+                    truth = (_characteristics(game), _actions(game, "alice"))
+                outcome.append((seen, truth))
+        except BaseException as error:  # noqa: BLE001
+            failures.append(error)
+            started.set()
+            resume.set()
+
+    def writer() -> None:
+        try:
+            if not started.wait(120):
+                raise AssertionError("the reader never opened its scope")
+            sys.setprofile(_pause_before_every_store(pause))
+            try:
+                command()
+            finally:
+                sys.setprofile(None)
+        except BaseException as error:  # noqa: BLE001
+            failures.append(error)
+        finally:
+            to_reader.put("done")
+
+    threads = [threading.Thread(target=reader), threading.Thread(target=writer)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join(300)
+    assert not any(thread.is_alive() for thread in threads)
+    assert failures == []
+    assert pauses[0] > 0, "the command changed nothing the reader could interleave with"
+    ((seen, truth),) = outcome
+    assert seen == truth, "the reader served a board the finished command had made stale"
+
+
+def test_a_zone_move_on_another_thread_is_never_served_stale():
+    scenario = _goyf_board()
+    bears = scenario.creature("Grizzly Bears", "alice")
+    _read_while_another_thread_commands(scenario.game, lambda: scenario.game.destroy(bears))
+    assert bears.id not in scenario.game.computed_board().characteristics
+
+
+def test_counters_put_on_from_another_thread_are_never_served_stale():
+    scenario = _goyf_board()
+    bears = scenario.creature("Grizzly Bears", "alice")
+    game = scenario.game
+    _read_while_another_thread_commands(game, lambda: game.add_counters(bears, "+1/+1", 2))
+    assert bears.counter_count("+1/+1") == 2
+
+
+def test_a_tap_on_another_thread_is_never_served_stale():
+    """A tap is one field store. The reader must not be able to see the change
+    signalled, recompute from the untapped value and keep that board once the
+    store lands."""
+    scenario = _goyf_board()
+    forest = scenario.untapped_sources("Forest", username="alice")[0]
+    _read_while_another_thread_commands(scenario.game, forest.tap)
+    assert forest.tapped

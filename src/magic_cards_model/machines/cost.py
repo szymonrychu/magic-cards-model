@@ -67,7 +67,7 @@ from ..models.mana import (
     _demand_list,
 )
 from ..models.zone import Zone
-from ..snapshot import EngineModel
+from ..snapshot import EngineModel, announce_mutation, mutation_landed
 from .abilities import (
     ActivatedAbility,
     CostKind,
@@ -5351,7 +5351,11 @@ class CostPayment(EngineModel):
         """
         pools = getattr(self.game, "open_payment_pools", None)
         if pools is not None and self.payer is not None:
+            # An in-place edit of the game outside any command, read by the
+            # layered board (Omnath): announced like one (`snapshot.py`).
+            announce_mutation(self.game)
             pools[self.payer] = self.pool
+            mutation_landed(self.game)
 
     def _unregister_pool(self) -> None:
         """Stop publishing: the payment is paid, cancelled or rewound, and the
@@ -5359,7 +5363,9 @@ class CostPayment(EngineModel):
         and `_restore_payer_pool` have already put the right mana in it)."""
         pools = getattr(self.game, "open_payment_pools", None)
         if pools is not None and self.payer is not None:
+            announce_mutation(self.game)
             pools.pop(self.payer, None)
+            mutation_landed(self.game)
 
     def _write_back_remainder(self) -> None:
         """Leave what the payment did not spend floating in the payer's pool.

@@ -30,7 +30,7 @@ from typing import Any, Protocol
 from pydantic import ConfigDict, Field, model_validator
 
 from ..serialization import SortedFrozenSet
-from ..snapshot import EngineModel, announce_mutation
+from ..snapshot import EngineModel, announce_mutation, mutation_landed
 from .card import Card, Color, Layout, Supertype, Type
 from .zone import Zone
 
@@ -981,7 +981,7 @@ class ManaPool(EngineModel):
     ) -> None:
         if amount < 0:
             raise ValueError("cannot add a negative amount of mana")
-        announce_mutation()
+        announce_mutation(self)
         self.floating[color] = self.floating.get(color, 0) + amount
         if snow:
             self.snow[color] = self.snow.get(color, 0) + amount
@@ -991,6 +991,7 @@ class ManaPool(EngineModel):
         if spend_effect is not None and amount:
             tagged = self._effect_entry_for(spend_effect)
             tagged.amounts[color] = tagged.amounts.get(color, 0) + amount
+        mutation_landed(self, structural=False)
 
     def add_all(
         self,
@@ -1021,8 +1022,9 @@ class ManaPool(EngineModel):
             if entry.restriction == restriction:
                 return entry
         entry = RestrictedMana(restriction=restriction)
-        announce_mutation()
+        announce_mutation(self)
         self.restricted.append(entry)
+        mutation_landed(self)
         return entry
 
     def _effect_entry_for(self, effect: ManaSpendEffect) -> SpendEffectMana:
@@ -1030,8 +1032,9 @@ class ManaPool(EngineModel):
             if entry.effect == effect:
                 return entry
         entry = SpendEffectMana(effect=effect)
-        announce_mutation()
+        announce_mutation(self)
         self.spend_effects.append(entry)
+        mutation_landed(self)
         return entry
 
     # -- paying ------------------------------------------------------------
@@ -1115,22 +1118,25 @@ class ManaPool(EngineModel):
         if payment is None:
             raise ValueError(f"pool {self.floating} cannot pay {cost}")
 
-        for color, amount in payment.spend.items():
-            left = self.floating.get(color, 0) - amount
-            if left < 0:
-                raise ValueError(f"pool {self.floating} cannot pay {cost}")
-            announce_mutation()
-            self.floating[color] = left
-        for color, amount in payment.snow_spent.items():
-            self.snow[color] = max(self.snow.get(color, 0) - amount, 0)
-        for taken in payment.restricted_spent:
-            entry = self._entry_for(taken.restriction)
-            for color, amount in taken.amounts.items():
-                entry.amounts[color] = max(entry.amounts.get(color, 0) - amount, 0)
-        for tagged in payment.spend_effects_spent:
-            marked = self._effect_entry_for(tagged.effect)
-            for color, amount in tagged.amounts.items():
-                marked.amounts[color] = max(marked.amounts.get(color, 0) - amount, 0)
+        announce_mutation(self)
+        try:
+            for color, amount in payment.spend.items():
+                left = self.floating.get(color, 0) - amount
+                if left < 0:
+                    raise ValueError(f"pool {self.floating} cannot pay {cost}")
+                self.floating[color] = left
+            for color, amount in payment.snow_spent.items():
+                self.snow[color] = max(self.snow.get(color, 0) - amount, 0)
+            for taken in payment.restricted_spent:
+                entry = self._entry_for(taken.restriction)
+                for color, amount in taken.amounts.items():
+                    entry.amounts[color] = max(entry.amounts.get(color, 0) - amount, 0)
+            for tagged in payment.spend_effects_spent:
+                marked = self._effect_entry_for(tagged.effect)
+                for color, amount in tagged.amounts.items():
+                    marked.amounts[color] = max(marked.amounts.get(color, 0) - amount, 0)
+        finally:
+            mutation_landed(self, structural=False)
 
         self.floating = {color: n for color, n in self.floating.items() if n > 0}
         self.snow = {color: n for color, n in self.snow.items() if n > 0}

@@ -226,7 +226,7 @@ from ..machines.turn import (
     TurnMachine,
 )
 from ..serialization import SortedFrozenSet, SortedSet
-from ..snapshot import EngineModel, board_snapshot, cached_board, suspended
+from ..snapshot import EngineModel, board_snapshot, cached_board, command
 from .action import Action
 from .card import Card, Color, Layout, Supertype, Type
 from .card_state import (
@@ -2424,8 +2424,10 @@ class Game(EngineModel):
         token = install_id_allocator(self._allocate_id)
         try:
             # A mutating command: no board is cached while it runs, whatever
-            # order it edits lists and assigns fields in (`snapshot.suspended`).
-            with suspended(self):
+            # order it edits lists and assigns fields in, and its end
+            # invalidates every scope on this game in any thread
+            # (`snapshot.command`).
+            with command(self):
                 yield
         finally:
             reset_id_allocator(token)

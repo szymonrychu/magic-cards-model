@@ -15,7 +15,7 @@ from pydantic import (
 )
 
 from ..ids import new_id
-from ..snapshot import AnnouncesMutation, EngineModel, announce_mutation
+from ..snapshot import AnnouncesMutation, EngineModel, announce_mutation, mutation_landed
 from .card import Card, Color, Layout, Supertype, Type, subtypes_of, supertypes_of, types_of
 from .zone import Zone
 
@@ -294,8 +294,9 @@ class Counters(AnnouncesMutation, RootModel[dict[str, int]]):
             raise ValueError("cannot put a negative number of counters on")
         if amount:
             key = _counter_key(kind)
-            announce_mutation()
+            announce_mutation(self)
             self.counts[key] = self.counts.get(key, 0) + amount
+            mutation_landed(self, structural=False)
         return self[kind]
 
     def remove(self, kind: CounterKind, amount: int = 1) -> int:
@@ -313,11 +314,12 @@ class Counters(AnnouncesMutation, RootModel[dict[str, int]]):
         if amount > present:
             raise ValueError(f"cannot remove {amount} {key} counters from {present}")
         remaining = present - amount
-        announce_mutation()
+        announce_mutation(self)
         if remaining:
             self.counts[key] = remaining
         else:
             self.counts.pop(key, None)
+        mutation_landed(self, structural=False)
         return remaining
 
     def set(self, kind: CounterKind, amount: int) -> int:
@@ -325,11 +327,12 @@ class Counters(AnnouncesMutation, RootModel[dict[str, int]]):
         if amount < 0:
             raise ValueError("a permanent cannot have a negative number of counters")
         key = _counter_key(kind)
-        announce_mutation()
+        announce_mutation(self)
         if amount:
             self.counts[key] = amount
         else:
             self.counts.pop(key, None)
+        mutation_landed(self, structural=False)
         return amount
 
     def clear(self) -> None:

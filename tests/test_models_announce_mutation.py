@@ -42,3 +42,30 @@ def test_every_engine_model_announces_mutation():
         if not issubclass(cls, AnnouncesMutation)
     )
     assert silent == []
+
+
+def test_a_model_outside_every_game_leaves_a_scoped_board_alone():
+    """Read paths build fresh models and fill them in - a parsed ability, a
+    pool, a counter tally. None of that belongs to the game the scope is on, so
+    none of it may throw the scope's board away."""
+    from magic_cards_model.machines import Step
+    from magic_cards_model.models import Zone
+    from magic_cards_model.models.mana import ManaPool
+    from magic_cards_model.snapshot import board_computations
+    from tests.cards import card_state
+    from tests.scenarios.harness import Scenario
+
+    scenario = Scenario().player("alice", battlefield=["Tarmogoyf", "Forest"]).player("bob").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    game = scenario.game
+    loose = card_state("Grizzly Bears", Zone.BATTLEFIELD, owner="bob", controller="bob")
+    pool = ManaPool()
+
+    with game.board_snapshot():
+        board = game.computed_board()
+        before = board_computations()
+        loose.tapped = True
+        loose.add_counters("+1/+1", 2)
+        pool.add("G", 2)
+        assert game.computed_board() is board
+        assert board_computations() == before
