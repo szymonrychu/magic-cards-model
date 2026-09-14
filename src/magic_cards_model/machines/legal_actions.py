@@ -88,6 +88,7 @@ from .casting import (
     adventure_face,
     granted_cast_options,
     keyword_cast_options,
+    mandatory_additional_costs,
     marker_cast_options,
     play_permissions_on,
     splice_candidates,
@@ -201,10 +202,25 @@ def _mana_affordability(
     return Affordability.NO, reason, None
 
 
-def _candidate_pool_for(game: Any, payer: str, component: CostComponent) -> list[CardState] | None:
+def _candidate_pool_for(
+    game: Any, payer: str, component: CostComponent, excluding: Any = None
+) -> list[CardState] | None:
     """Where `component`'s still-unchosen objects would come from, or `None`
     when this is not one of the shapes judged here (see `_component_
-    affordability`'s own `UNKNOWN` fallback)."""
+    affordability`'s own `UNKNOWN` fallback).
+
+    `excluding` is the id of the spell being cast: CR 601.2a moves it to the
+    stack before CR 601.2h pays anything, so it can never pay its own cost -
+    Force of Will alone in hand has no blue card to exile."""
+    pool = _unfiltered_candidate_pool(game, payer, component)
+    if pool is None or excluding is None:
+        return pool
+    return [card for card in pool if card.id != excluding]
+
+
+def _unfiltered_candidate_pool(
+    game: Any, payer: str, component: CostComponent
+) -> list[CardState] | None:
     kind = component.kind
     if kind in (ComponentKind.DISCARD, ComponentKind.REVEAL):
         return list(game.player(payer).hand)
@@ -246,7 +262,7 @@ def _candidate_pool_for(game: Any, payer: str, component: CostComponent) -> list
 
 
 def _component_affordability(
-    game: Any, payer: str, component: CostComponent
+    game: Any, payer: str, component: CostComponent, excluding: Any = None
 ) -> tuple[bool | None, str | None]:
     """Whether one non-mana `CostComponent` could be paid, without actually
     choosing anything to pay it with.
@@ -266,7 +282,7 @@ def _component_affordability(
     if len(component.cards) >= component.required:
         refusal = component.why_not(game)
         return refusal is None, refusal
-    pool = _candidate_pool_for(game, payer, component)
+    pool = _candidate_pool_for(game, payer, component, excluding)
     if pool is None:
         return None, (
             f"{component.description or component.kind.value} affordability is not judged "
@@ -294,6 +310,7 @@ def _cost_affordability(
     candidate_scan: list[_ScannedCandidate],
     *,
     spend: ManaSpend | None = None,
+    excluding: Any = None,
 ) -> tuple[Affordability, str | None, tuple[ManaPlanEntry, ...]]:
     """The combined affordability of a `TotalCost`'s mana and every
     non-mana component, worst answer wins (`NO` over `UNKNOWN` over `YES`),
@@ -308,7 +325,7 @@ def _cost_affordability(
     status, reason, plan = _mana_affordability(game, payer, total.mana, spend, candidate_scan)
     reasons = [reason] if reason else []
     for component in total.components:
-        ok, component_reason = _component_affordability(game, payer, component)
+        ok, component_reason = _component_affordability(game, payer, component, excluding)
         if ok is False:
             status = Affordability.NO
         elif ok is None and status is not Affordability.NO:
@@ -493,6 +510,20 @@ def _cast_action(
     unpayable = (
         None if alternative_cost is not None else why_mana_cost_unpayable(card.name, total.mana)
     )
+    # CR 601.2f / 118.9d: the total cost is this row's mana or alternative
+    # cost plus every mandatory additional cost, read by the same helper the
+    # cast itself charges them with.
+    try:
+        extras = mandatory_additional_costs(card, player, None)
+    except ValueError as refusal:
+        extras, unpayable = [], unpayable or str(refusal)
+    if extras:
+        mana = total.mana
+        components = list(total.components)
+        for extra in extras:
+            mana = mana.plus(extra.mana) if extra.mana.symbols else mana
+            components.extend(extra.components)
+        total = TotalCost(mana=mana, components=components)
     pays_with: tuple[ManaPlanEntry, ...] = ()
     if x_range is not None:
         affordable, reason = Affordability.UNKNOWN, "X has not been announced yet (CR 107.3a)"
@@ -506,7 +537,7 @@ def _cast_action(
         affordable, reason = Affordability.NO, unpayable
     else:
         affordable, reason, pays_with = _cost_affordability(
-            game, player, total, candidate_scan, spend=spend
+            game, player, total, candidate_scan, spend=spend, excluding=card.id
         )
         affordable, reason = _widen_for_object_costs(game, player, card, affordable, reason)
     cost_str, mana_cost_str = _cost_strings(total)
