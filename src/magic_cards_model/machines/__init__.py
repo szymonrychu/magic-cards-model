@@ -68,7 +68,16 @@ from .effects import (
     effect_for,
     trigger_effect_for,
 )
-from .hypothetical import EntersPrediction, EntersState, Payability, payability, predict_enters
+from .hypothetical import (
+    EntersPrediction,
+    EntersState,
+    LandPayability,
+    Payability,
+    PayabilityMatrix,
+    payability,
+    payability_matrix,
+    predict_enters,
+)
 from .layers import (
     LAYER_EFFECTS,
     Characteristics,
@@ -195,8 +204,11 @@ __all__ = [
     "legal_actions",
     "EntersPrediction",
     "EntersState",
+    "LandPayability",
     "Payability",
+    "PayabilityMatrix",
     "payability",
+    "payability_matrix",
     "predict_enters",
     "modal_profile",
     "mode_rules_text",
