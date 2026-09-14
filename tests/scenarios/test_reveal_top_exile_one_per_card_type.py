@@ -133,8 +133,10 @@ def test_every_choice_reaches_the_controller_with_a_prompt_naming_it():
 def test_declining_the_free_cast_puts_every_exiled_card_into_hand():
     scenario = _board(FIVE_TYPES)
     alice = scenario.player("alice")
+    forest = scenario.find("Forest", Zone.LIBRARY, "alice")
     scenario.will_take_the_may(True, source=PORTENT, times=5)
     scenario.will_take_the_may(False, source=PORTENT)
+    scenario.will_choose_cards(forest, source=PORTENT)
 
     _cast_portent(scenario, 6)
 
