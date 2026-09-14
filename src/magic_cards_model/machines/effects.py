@@ -16503,6 +16503,40 @@ def _parse_if_additional_cost_paid_clause(clause: str, *, for_spell: bool) -> Ta
     return effect
 
 
+#: "If you have seven or more cards in your graveyard, you may transform this
+#: permanent." (Search for Azcanta, after its "Then" is cut off by the
+#: splitter) and "If there are N or more cards in your graveyard, ..." - a
+#: condition inside an effect, not an intervening *if* (CR 603.4), checked
+#: when this clause is reached (CR 608.2c), after every instruction before it.
+_IF_GRAVEYARD_COUNT_RE = re.compile(
+    rf"^if (?:you have|there are) (?P<n>{_COUNT}) or more cards in your graveyard, (?P<rest>.+)$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_if_graveyard_count_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_IF_GRAVEYARD_COUNT_RE`'s shape: the controller's own graveyard is
+    counted as the clause resolves, and the rest runs only at or above the
+    threshold. The rest is any clause `_parse_mixed_clause` reads, optional
+    or not (CR 608.2d); fail-closed when it reads nothing."""
+    match = _IF_GRAVEYARD_COUNT_RE.fullmatch(clause.strip().rstrip("."))
+    if match is None:
+        return None
+    threshold = _count(match.group("n"))
+    rest = match.group("rest").strip()
+    inner = _parse_optional_mixed_clause(rest, for_spell=for_spell) or _parse_mixed_clause(
+        rest, for_spell=for_spell
+    )
+    if inner is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if len(game.controller_of(stack_object).graveyard) >= threshold:
+            inner(game, stack_object)
+
+    return effect
+
+
 def _parse_delayed_single_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """A whole ability whose *only* clause is a delayed-trigger creation, with
     no antecedent clause of its own to supply "it": either there is no object
@@ -19768,6 +19802,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
         offspring_copy = _parse_offspring_token_copy_clause(clause)
         if offspring_copy is not None:
             return offspring_copy  # type: ignore[return-value]
+        transform_self = _parse_transform_clause(clause)
+        if transform_self is not None:
+            return transform_self
     transform_all = _parse_transform_all_subtype_clause(clause, for_spell=for_spell)
     if transform_all is not None:
         return transform_all
@@ -19830,6 +19867,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     manifest_dread_clause = _parse_manifest_dread_clause(clause, for_spell=for_spell)
     if manifest_dread_clause is not None:
         return manifest_dread_clause
+    if_graveyard_count = _parse_if_graveyard_count_clause(clause, for_spell=for_spell)
+    if if_graveyard_count is not None:
+        return if_graveyard_count
     if_additional_cost_paid = _parse_if_additional_cost_paid_clause(clause, for_spell=for_spell)
     if if_additional_cost_paid is not None:
         return if_additional_cost_paid
