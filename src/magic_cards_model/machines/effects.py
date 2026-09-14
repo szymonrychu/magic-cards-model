@@ -84,7 +84,7 @@ from ..models.token import (
     token_copy_of,
 )
 from ..models.zone import Zone
-from ..numbers import COUNT, parse_count, parse_multiplier
+from ..numbers import COUNT, count_pattern, parse_count, parse_multiplier
 from ..snapshot import EngineModel
 from . import combat as combat_rules
 from .abilities import (
@@ -2858,10 +2858,14 @@ def _parse_hideaway_clause(text: str) -> AbilityEffect | None:
 #: then is the board rechecked (CR 608.2c's "then" orders the two parts, and
 #: CR 608.2b/608.2c evaluates a mid-effect condition against the game state
 #: as it exists at that point in resolution - after the counter was placed,
-#: not before) for whether the free-cast permission is on offer at all.
+#: not before) for whether the free-cast permission is on offer at all. The
+#: counter count and the power threshold are read through `numbers.COUNT`
+#: rather than pinned to Fight Rigging's own "a" and "7", so a future hideaway
+#: permanent printing a different count of either reads for free.
 _HIDEAWAY_COUNTER_THEN_CONDITIONAL_FREE_CAST_RE = re.compile(
-    r"^put a \+1/\+1 counter on target creature you control\. "
-    r"then if you control a creature with power (?P<threshold>\d+) or greater, "
+    rf"^put {count_pattern('n')} \+1/\+1 counters? on target creature you control\. "
+    rf"then if you control a creature with power {count_pattern('threshold', article=False)} "
+    r"or greater, "
     r"you may play the exiled card without paying its mana cost\.?$",
     re.IGNORECASE,
 )
@@ -2882,12 +2886,15 @@ def _parse_hideaway_counter_then_conditional_free_cast_clause(text: str) -> Abil
     match = _HIDEAWAY_COUNTER_THEN_CONDITIONAL_FREE_CAST_RE.fullmatch(text.strip())
     if match is None:
         return None
-    threshold = int(match.group("threshold"))
+    counters = parse_count(match.group("n"))
+    threshold = parse_count(match.group("threshold"), article=False)
+    if counters is None or threshold is None:
+        return None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         for target in game.resolve_targets(ability):
             if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
-                game.add_counters(target, Counter.PLUS_ONE, 1)
+                game.add_counters(target, Counter.PLUS_ONE, counters)
 
         board = game.computed_board()
         controls_big_creature = any(
@@ -3739,11 +3746,16 @@ def _parse_search_mv_lte_count_clause(clause: str, *, for_spell: bool) -> Target
 #: anywhere but the stack, so the graveyard copy answers the same number the
 #: battlefield one did. That is *not* the CR 608.2h last-known-information case
 #: Momentous Fall's power-and-toughness clause is, and deliberately so.
+#: The mana-value offset and the additional-counter count are read through
+#: `numbers.COUNT` rather than pinned to Neoform's own "2" and "an" - a future
+#: card sharing this template with a different offset or counter count reads
+#: for free.
 _SEARCH_MV_EQUAL_TO_SACRIFICED_RE = re.compile(
-    r"^search (?:your|their) library for (?:a|an) (?P<quality>.+?) card with mana value "
-    r"equal to (?P<offset>\d+) plus the sacrificed creature['’]s mana value, "
+    rf"^search (?:your|their) library for (?:a|an) (?P<quality>.+?) card with mana value "
+    rf"equal to {count_pattern('offset', article=False)} plus the sacrificed creature['’]s "
+    r"mana value, "
     r"put that card onto the battlefield"
-    r"(?P<counter> with an additional \+1/\+1 counter on it)?"
+    rf"(?: with {count_pattern('counters')} additional \+1/\+1 counters? on it)?"
     r", then shuffle\.?$",
     re.IGNORECASE,
 )
@@ -3793,8 +3805,16 @@ def _parse_search_mv_equal_to_sacrificed_clause(
     if not _search_quality_is_readable(quality):
         return None
     matches_quality = _quality_matcher(quality)
-    offset = int(match.group("offset"))
-    with_counter = match.group("counter") is not None
+    offset = parse_count(match.group("offset"), article=False)
+    if offset is None:
+        return None
+    counters_word = match.group("counters")
+    if counters_word is None:
+        counters = 0
+    else:
+        counters = parse_count(counters_word)
+        if counters is None:
+            return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object)
@@ -3819,8 +3839,8 @@ def _parse_search_mv_equal_to_sacrificed_clause(
         if found is None:
             return
         permanent = game.put_onto_battlefield(found, controller.username)
-        if with_counter and permanent is not None and permanent.zone is Zone.BATTLEFIELD:
-            game.add_counters(permanent, Counter.PLUS_ONE, 1)
+        if counters and permanent is not None and permanent.zone is Zone.BATTLEFIELD:
+            game.add_counters(permanent, Counter.PLUS_ONE, counters)
 
     return effect
 
@@ -3982,9 +4002,12 @@ def _parse_put_land_from_hand_clause(clause: str, *, for_spell: bool) -> Targete
 #: process." A reflexive "if you do" (CR 118.12) whose own consequence loops
 #: back to the start of the same instruction, so it needs the whole
 #: unsplit text, not `_parse_put_land_from_hand_clause`'s one-shot version.
+#: The draw count is read through `numbers.COUNT` rather than pinned to
+#: Cultivator Colossus's own "a", so a future card looping the same process
+#: over a different draw count reads for free.
 _PUT_LAND_FROM_HAND_REPEAT_RE = re.compile(
-    r"^you may put a land card from your hand onto the battlefield(?P<tapped> tapped)?\. "
-    r"if you do, draw a card and repeat this process\.?$",
+    rf"^you may put a land card from your hand onto the battlefield(?P<tapped> tapped)?\. "
+    rf"if you do, draw {count_pattern('n')} cards? and repeat this process\.?$",
     re.IGNORECASE,
 )
 
@@ -4002,6 +4025,9 @@ def _parse_put_land_from_hand_repeat_clause(text: str) -> AbilityEffect | None:
     if match is None:
         return None
     tapped = bool(match.group("tapped"))
+    draw_count = parse_count(match.group("n"))
+    if draw_count is None:
+        return None
 
     def effect(game: "Game", ability: "AbilityOnStack") -> None:
         controller = game.controller_of(ability)
@@ -4020,7 +4046,7 @@ def _parse_put_land_from_hand_repeat_clause(text: str) -> AbilityEffect | None:
                 game, controller, source, source_id=source_id_of(ability)
             )
             game.put_onto_battlefield(chosen, controller.username, tapped=tapped)
-            game.draw_cards(controller.username, 1)
+            game.draw_cards(controller.username, draw_count)
 
     return effect
 
@@ -4035,9 +4061,15 @@ def _parse_put_land_from_hand_repeat_clause(text: str) -> AbilityEffect | None:
 #: applies to the land placed this way, and Spelunking's own second paragraph
 #: ("Lands you control enter untapped") is a separate static ability read by
 #: `machines/replacement.py`, not part of this trigger's own effect.
+#: The draw count and the life gain are both read through `numbers.COUNT`
+#: rather than pinned to Spelunking's own "a" and "4", so a future card
+#: sharing this exact template with a different draw or life count reads for
+#: free.
 _DRAW_THEN_PUT_LAND_CAVE_BONUS_RE = re.compile(
-    r"^draw a card, then you may put a land card from your hand onto the battlefield\.\s*"
-    r"if you put a cave onto the battlefield this way, you gain (?P<life>[\w-]+) life\.?$",
+    rf"^draw {count_pattern('draw_n')} cards?, then you may put a land card from your hand "
+    rf"onto the battlefield\.\s*"
+    rf"if you put a cave onto the battlefield this way, you gain {count_pattern('life')} "
+    r"life\.?$",
     re.IGNORECASE,
 )
 
@@ -4056,9 +4088,9 @@ def _parse_draw_then_put_land_cave_bonus_clause(text: str) -> AbilityEffect | No
     match = _DRAW_THEN_PUT_LAND_CAVE_BONUS_RE.fullmatch(whole)
     if match is None:
         return None
-    try:
-        life = parse_count(match.group("life"))
-    except KeyError:
+    draw_count = parse_count(match.group("draw_n"))
+    life = parse_count(match.group("life"))
+    if draw_count is None or life is None:
         return None
 
     def is_cave(chars: Characteristics) -> bool:
@@ -4067,7 +4099,7 @@ def _parse_draw_then_put_land_cave_bonus_clause(text: str) -> AbilityEffect | No
     def effect(game: "Game", ability: "AbilityOnStack") -> None:
         controller = game.controller_of(ability)
         source = ability.source_name
-        game.draw_cards(controller.username, 1)
+        game.draw_cards(controller.username, draw_count)
         if not _land_cards_in_hand(controller):
             return
         if not game.may(
@@ -6180,8 +6212,12 @@ def _parse_gains_ability_clause(text: str) -> AbilityEffect | None:
 #: "Activate only if this card is suspended" restriction as CR 702.62b's
 #: proof the source functions from exile - so there is no battlefield gate
 #: to check here.
+#: The counter count is read through `numbers.COUNT` rather than pinned to
+#: Greater Gargadon's own "a", so a future card removing more than one time
+#: counter this way reads for free.
 _REMOVE_TIME_COUNTER_SELF_RE = re.compile(
-    r"^remove a time counter from this (?:card|permanent)\.?$", re.IGNORECASE
+    rf"^remove {count_pattern('n')} time counters? from this (?:card|permanent)\.?$",
+    re.IGNORECASE,
 )
 
 
@@ -6210,14 +6246,19 @@ def _parse_remove_time_counter_from_self_clause(text: str) -> AbilityEffect | No
     responded to, rather than happening invisibly inside somebody else's
     resolution.
     """
-    if _REMOVE_TIME_COUNTER_SELF_RE.fullmatch(text.strip()) is None:
+    match = _REMOVE_TIME_COUNTER_SELF_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    count = parse_count(match.group("n"))
+    if count is None:
         return None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         source = ability.source(game)
         if source is None:
             return
-        remove_suspend_time_counter(game, source)
+        for _ in range(count):
+            remove_suspend_time_counter(game, source)
 
     return effect
 
