@@ -10057,7 +10057,14 @@ _TRANSFORM_ALL_SUBTYPE_RE = re.compile(
 #: Werewolves. Anything else is left unread rather than guessed at - a type
 #: this cannot singularise would silently sweep nothing, which is the same
 #: silence as a card doing nothing at all.
-def _singular_subtype(plural: str) -> str | None:
+def _singular_subtype_case_preserving(plural: str) -> str | None:
+    """Like `_singular_subtype`, but keeps the printed capitalisation instead
+    of lowercasing (`_TRANSFORM_ALL_SUBTYPE_RE`'s own subtype capture is
+    case-sensitive, matched straight against `Characteristics.subtypes`'s own
+    capitalised storage) - a separate function, not a shared one, because the
+    two disagree on that one axis and used to collide under the same name,
+    silently shadowing each other by definition order (the bug `_singular_
+    subtype`'s own docstring below now warns about)."""
     if plural.endswith("ves"):
         return f"{plural[:-3]}f"
     if plural.endswith("ies"):
@@ -10096,7 +10103,7 @@ def _parse_transform_all_subtype_clause(clause: str, *, for_spell: bool) -> Targ
     match = _TRANSFORM_ALL_SUBTYPE_RE.fullmatch(clause.strip())
     if match is None:
         return None
-    subtype = _singular_subtype(match.group("subtype"))
+    subtype = _singular_subtype_case_preserving(match.group("subtype"))
     if subtype is None:
         return None
 
@@ -16085,11 +16092,14 @@ def _parse_earthbend_clause(clause: str, *, for_spell: bool) -> TargetedClause |
 #: subtype is something else.
 #:
 #: The subtype is printed **plural** ("amass Orcs 1") and the token it names
-#: is singular ("Orc Army"), which `_singular_subtype` undoes.
-_AMASS_RE = re.compile(r"^amass (?P<subtype>[A-Za-z][a-z]*) (?P<n>\d+)$", re.IGNORECASE)
+#: is singular ("Orc Army"), which `_amass_singular_subtype` undoes.
+_AMASS_RE = re.compile(
+    rf"^amass (?P<subtype>[A-Za-z][a-z]*) {count_pattern('n', x=True)}{where_x_pattern()}$",
+    re.IGNORECASE,
+)
 
 
-def _singular_subtype(word: str) -> str:
+def _amass_singular_subtype(word: str) -> str:
     """ "Orcs" -> "Orc". Amass prints its creature type in the plural, and CR
     205.3m's subtype list is singular ("Orc", "Zombie", "Army"), so the two
     have to be reconciled before the token is built or the "is it already
@@ -16100,6 +16110,18 @@ def _singular_subtype(word: str) -> str:
     been printed with pluralises that way, and a subtype that does not
     (there is none in CR 205.3m today) would come out wrong in a way a
     cleverer rule would only hide.
+
+    A distinct name from `count_expression`'s own `_singular_subtype` on
+    purpose: this one keeps the printed capitalisation (the token subtype
+    `create_tokens` builds wants "Orc", not "orc") where that one lowercases
+    against a vocabulary. The two used to share the name `_singular_subtype`,
+    which meant whichever of the two module-level definitions came *last* in
+    the file silently won for every caller of either - `count_expression`'s
+    own "the number of Forests you control" was quietly reading this
+    function's un-lowercased "Forest" and comparing it against a lowercased
+    board subtype, never matching. Never reuse a name already defined
+    elsewhere in this module for a function with different behaviour: Python
+    has no error for it, only a wrong answer with no traceback.
     """
     return word[:-1] if word.endswith(("s", "S")) and len(word) > 1 else word
 
@@ -16157,7 +16179,7 @@ def amass(
     token this same call may have just created is printed with it.
     """
     armies = _armies_controlled_by(game, controller)
-    singular = _singular_subtype(subtype)
+    singular = _amass_singular_subtype(subtype)
     if not armies:
         create_tokens(
             game,
@@ -16209,26 +16231,39 @@ def amass(
 
 
 def _parse_amass_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
-    """ "Amass `<subtype>` N." - `_AMASS_RE`'s shape, as one clause among
-    however many the card prints around it.
+    """ "Amass `<subtype>` N." or "Amass `<subtype>` X, where X is `<expr>`." -
+    `_AMASS_RE`'s shape, as one clause among however many the card prints
+    around it.
 
     Amass targets nothing (CR 701.47a's "Choose an Army creature you control"
     is CR 608.2d's choice, not CR 115.1's target), so this reads nothing off
     the stack object but its controller and its name for the prompt - which
     means the same clause works identically for a spell and for an ability,
-    unlike earthbend just above.
+    unlike earthbend just above. Invade the City's "Amass Zombies X, where X
+    is the number of instant and sorcery cards in your graveyard" is CR
+    107.3f's X, read the same way earthbend's own X is: through
+    `_fixed_or_where_x_amount`, refusing the clause rather than amassing for
+    zero when the definition is not one this engine can evaluate.
     """
     match = _AMASS_RE.fullmatch(clause.strip().rstrip("."))
     if match is None:
         return None
     subtype = match.group("subtype")
-    amount = int(match.group("n"))
+    reader = _fixed_or_where_x_amount(match.group("n"), match.group("where_x"))
+    if reader is None:
+        return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        controller = game.controller_of(stack_object).username
+        source_state = (
+            stack_object if isinstance(stack_object, CardState) else stack_object.source(game)
+        )  # type: ignore[union-attr]
+        x_value = stack_object.x_value if isinstance(stack_object, AbilityOnStack) else 0
+        amount = reader(game, controller, source_state, x_value)
         amass(
             game,
-            game.controller_of(stack_object).username,
+            controller,
             subtype,
             amount,
             source,
