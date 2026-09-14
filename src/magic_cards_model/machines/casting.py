@@ -40,6 +40,7 @@ from .abilities import (
     parse_granted_ability_lines,
 )
 from .casting_restrictions import (
+    CastingRuleKind,
     has_sorcery_speed_flash_grant,
     restricted_from_noncreature_casting,
     sorcery_speed_restriction_source,
@@ -1593,7 +1594,14 @@ def why_cannot_cast_restriction(
             f"{restriction.source_name} says {caster} can't cast noncreature spells "
             f"this turn (CR 611.1)"
         )
-    targeted = targeted_cant_cast_restriction(game, caster)
+    targeted = targeted_cant_cast_restriction(
+        game, caster, spell_types=types, spell_subtypes=spell.subtypes
+    )
+    if targeted is not None and targeted.kind == CastingRuleKind.SPELL_COUNT_CANT_CAST:
+        return (
+            f"{targeted.source_name} says {caster} can't cast more than {targeted.amount} "
+            f"such spell(s) each turn, and that many were already cast (CR 601.3, CR 101.2)"
+        )
     if targeted is not None:
         return f"{targeted.source_name} says {caster} can't cast spells this turn (CR 611.1)"
     prohibited_from = zone_cast_prohibition_source(game, spell.card, spell.zone, types=types)
