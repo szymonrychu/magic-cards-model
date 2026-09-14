@@ -109,6 +109,7 @@ from .delayed import (
     GrantExtraTurn,
     PayOrLoseTheGame,
     ReflexiveConsequence,
+    ReflexiveCounterCountConsequence,
     ReflexiveMandatoryTokenDamageConsequence,
     ReflexivePayEnergyConsequence,
     ReturnExiledCardAndAddCounters,
@@ -10523,6 +10524,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     reflexive_mandatory_token = _parse_reflexive_mandatory_token_clause(effect_text)
     if reflexive_mandatory_token is not None:
         return reflexive_mandatory_token
+    reflexive_self_counter_if = _parse_reflexive_self_counter_if_clause(effect_text)
+    if reflexive_self_counter_if is not None:
+        return reflexive_self_counter_if
     create_token_then_may_attach = _parse_create_token_then_may_attach_clause(effect_text)
     if create_token_then_may_attach is not None:
         return create_token_then_may_attach
@@ -14692,6 +14696,98 @@ def _parse_reflexive_mandatory_token_clause(text: str) -> AbilityEffect | None:
             source_id=ability.source_id,
             source_name=source_name,
             callback=ReflexiveMandatoryTokenDamageConsequence(),
+        )
+
+    return effect
+
+
+#: "put `<n>` `<kind>` counter[s] on this `<permanent>`. When you do, if
+#: `<counter-count clause>`, `<consequence>`." - Earthbender Ascension's
+#: landfall: "put a quest counter on this enchantment. When you do, if it has
+#: four or more quest counters on it, put a +1/+1 counter on target creature
+#: you control. It gains trample until end of turn." CR 603.12's mandatory
+#: ("instruct") action on the source, with CR 603.4's intervening *if* nested
+#: in the reflexive clause and read by `machines/triggers.py`'s own counter
+#: count reader, since "it" is the permanent the counter went on.
+_REFLEXIVE_SELF_COUNTER_IF_RE = re.compile(
+    rf"^put (?P<n>{COUNT}) (?P<kind>\S+) counters? on this [a-z]+\.\s*"
+    r"when you do,\s*(?P<reflexive>if (?P<condition>[^,]+),\s*(?P<consequence>.+?))\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+#: The reflexive ability's own text, as `ReflexiveCounterCountConsequence`
+#: re-reads it on resolution: "if `<clause>`, `<consequence>`".
+_REFLEXIVE_COUNTER_IF_TEXT_RE = re.compile(
+    r"^if (?P<condition>[^,]+),\s*(?P<consequence>.+?)\.?$", re.IGNORECASE | re.DOTALL
+)
+
+
+def _reflexive_counter_count_parts(
+    text: str,
+) -> tuple[Callable[[CardState], bool | None], AbilityEffect] | None:
+    """The condition and consequence of a reflexive "if `<counter-count
+    clause>`, `<consequence>`" text, or None when either is unreadable. The
+    condition answers None for a clause `machines/triggers.py`'s counter-count
+    reader does not recognise."""
+    from .triggers import _COUNTER_COUNT_CLAUSE, _counter_count_holds
+
+    match = _REFLEXIVE_COUNTER_IF_TEXT_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    condition = match.group("condition").strip().lower()
+    if _COUNTER_COUNT_CLAUSE.match(condition) is None:
+        return None
+    consequence = parse_mixed_effect(match.group("consequence").strip() + ".")
+    if consequence is None:
+        return None
+
+    def holds(source: CardState) -> bool | None:
+        return _counter_count_holds(condition, source)
+
+    return holds, consequence
+
+
+def _parse_reflexive_self_counter_if_clause(text: str) -> AbilityEffect | None:
+    """`_REFLEXIVE_SELF_COUNTER_IF_RE`'s shape (CR 603.12, CR 603.4).
+
+    The counters are put on the ability's own source. CR 603.12 creates the
+    reflexive ability only if that happened - a source that has left the
+    battlefield, or a counter a replacement effect prevented, reflects
+    nothing. Its intervening *if* is checked as it is created ("checked
+    immediately after being created"), so a count that is too low creates no
+    ability at all; `ReflexiveCounterCountConsequence` checks it again as the
+    ability resolves (CR 603.4).
+    """
+    match = _REFLEXIVE_SELF_COUNTER_IF_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    amount = parse_count(match.group("n"))
+    if amount is None:
+        return None
+    kind = match.group("kind").lower()
+    reflexive_text = match.group("reflexive").strip()
+    parts = _reflexive_counter_count_parts(reflexive_text)
+    if parts is None:
+        return None
+    holds, _consequence = parts
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        before = source.counter_count(kind)
+        game.add_counters(source, kind, amount)
+        if source.counter_count(kind) <= before:
+            return
+        if not holds(source):
+            return
+        controller = game.controller_of(ability)
+        _source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
+        game.create_reflexive_trigger(
+            text=reflexive_text,
+            controller=controller.username,
+            source_id=ability.source_id,
+            source_name=source_name,
+            callback=ReflexiveCounterCountConsequence(),
         )
 
     return effect

@@ -2054,7 +2054,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 17
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 18
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -2248,6 +2248,16 @@ class Game(EngineModel):
     field, and it cannot be rebuilt from what that dump holds once an extra
     turn has been taken, so a default would silently misstate it. Refused
     instead.
+
+    Bumped 17 -> 18: `machines/delayed.py` gained the
+    `reflexive_counter_count_consequence` `DelayedEffectSpec` kind (Earthbender
+    Ascension's "When you do, if it has four or more quest counters on it"),
+    and `machines/triggers.py` condition matches changed for state already on a
+    battlefield: counter-count intervening ifs read "N or more"/"N or fewer",
+    CR 603.8 state triggers read a spelled count, "draw your Nth card each turn"
+    triggers, and "you've cast N or more spells this turn" reads without a type
+    list. A version-17 dump could hold a pending trigger or a landfall ability
+    that now resolves differently.
     """
 
     @model_validator(mode="before")

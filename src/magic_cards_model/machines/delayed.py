@@ -869,6 +869,32 @@ class ReflexiveMandatoryTokenDamageConsequence(DelayedEffectSpecBase):
         deal_the_damage(game, ability)
 
 
+class ReflexiveCounterCountConsequence(DelayedEffectSpecBase):
+    """ "Put a `<kind>` counter on this `<permanent>`. When you do, if it has
+    `<N>` or more `<kind>` counters on it, `<consequence>`." (CR 603.12, CR
+    603.4) - Earthbender Ascension's landfall, `machines/effects.py`'s
+    `_parse_reflexive_self_counter_if_clause`.
+
+    The intervening *if* was checked as this reflexive ability was created;
+    CR 603.4 checks it again as it resolves, against the same source, and the
+    ability does nothing if it is no longer true.
+    """
+
+    kind: Literal["reflexive_counter_count_consequence"] = "reflexive_counter_count_consequence"
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        from .effects import _reflexive_counter_count_parts
+
+        parts = _reflexive_counter_count_parts(trigger.text)
+        if parts is None:
+            return
+        holds, consequence = parts
+        source = ability.source(game)
+        if source is None or not holds(source):
+            return
+        consequence(game, ability)
+
+
 class ReflexiveExileCopiedCard(DelayedEffectSpecBase):
     """Superior Spider-Man's "When you do, exile that card." (CR 603.12,
     `machines/replacement.py`'s `_choose_a_quality`-adjacent copy-choice
@@ -930,6 +956,7 @@ DelayedEffectSpec = Annotated[
     | ReflexiveConsequence
     | ReflexivePayEnergyConsequence
     | ReflexiveMandatoryTokenDamageConsequence
+    | ReflexiveCounterCountConsequence
     | ReflexiveExileCopiedCard,
     Field(discriminator="kind"),
 ]
