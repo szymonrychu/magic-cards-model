@@ -70,7 +70,18 @@ scan. It is dropped by anything that bears on the board - a field store or an
 announced in-place edit on a model of that game, from any thread, whether or
 not a command is running - and lifted for the extent of a command started
 inside it. It serves only the thread that opened it, and never after its
-block ends.
+block ends. Opened inside an open scope on the same game with no command
+running on it (the payment planner's per-source trigger scan inside
+`legal_actions`), a pin is seeded from the scope's board - filling the scope
+if it holds none yet - instead of computing its own; every drop rule above
+still clears it.
+
+**What the fingerprint check cannot see.** The check runs only while nothing
+announced has moved the epoch since the board was cached: an announced change
+or a command explains any difference, so it is skipped. An unannounced
+in-place edit followed by an announced change on the same game, before the
+board is dropped, is therefore never reported, and a read made between the
+two is served the board from before the edit.
 
 Nested scopes on the same game share one board and the outermost one ends it.
 `uncached_boards()` switches caching off entirely for its extent, which is
@@ -518,27 +529,45 @@ def cached_board[B: BaseModel](game: Any, compute: Callable[[], B]) -> B:
     command running on `game` and nothing else changing it meanwhile."""
     global _computations
     key = id(game)
-    pin = None if _uncached.get() else _serving_pin(key)
+    uncached = _uncached.get()
+    pin = None if uncached else _serving_pin(key)
+    snapshot = _open_snapshot(key)
+    serving = snapshot is not None and not uncached and key not in _commanding.get()
     if pin is not None:
         # Read once: another thread's drop may clear it at any moment.
         board = pin.board
         if board is None:
-            _computations += 1
-            drops, token = pin.drops, _pin_filling.set(pin)
-            try:
-                board = compute()
-            finally:
-                _pin_filling.reset(token)
+            drops = pin.drops
+            if serving and key not in _commands:
+                # An open snapshot with no command on the game holds (or
+                # fills) the board the pin would compute: seed the pin from it.
+                assert snapshot is not None
+                board = _snapshot_board(snapshot, game, compute)
+            else:
+                _computations += 1
+                token = _pin_filling.set(pin)
+                try:
+                    board = compute()
+                finally:
+                    _pin_filling.reset(token)
             # Stored first and checked after: a drop counts itself before it
             # clears the board, so it is either seen here or clears the store.
             pin.board = board
             if pin.drops != drops or pin.closed or pin.lifted:
                 pin.board = None
         return board
-    snapshot = _open_snapshot(key)
-    if snapshot is None or _uncached.get() or key in _commanding.get():
+    if not serving:
         _computations += 1
         return compute()
+    assert snapshot is not None
+    return _snapshot_board(snapshot, game, compute)
+
+
+def _snapshot_board[B: BaseModel](snapshot: _Snapshot, game: Any, compute: Callable[[], B]) -> B:
+    """The snapshot's cached board when it is still good, otherwise `compute()`,
+    kept when nothing but this context's own fill moved the epoch meanwhile."""
+    global _computations
+    key = id(game)
     tracked = snapshot.tracked
     cached = snapshot.cached
     if cached is not None and cached.epoch == tracked.epoch:

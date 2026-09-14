@@ -218,6 +218,93 @@ def test_a_pin_does_not_serve_its_own_context_after_its_block_ends():
     assert board_computations() - before == 2
 
 
+# -- a pin opened inside a board snapshot --------------------------------------
+
+
+def test_a_pin_opened_inside_a_snapshot_holding_a_board_computes_nothing():
+    """The payment planner opens a pin per mana source it asks about; a scope
+    that already holds a good board serves every one of them."""
+    game, _, elves = _anthem_board()
+
+    with game.board_snapshot():
+        _power(game, elves)
+        before = board_computations()
+        for _ in range(3):
+            with scan_pin(game):
+                _power(game, elves)
+                _power(game, elves)
+        assert board_computations() - before == 0
+
+
+def test_a_pin_opened_inside_a_snapshot_before_it_holds_a_board_fills_the_snapshot():
+    game, _, elves = _anthem_board()
+
+    with game.board_snapshot():
+        before = board_computations()
+        with scan_pin(game):
+            _power(game, elves)
+        with scan_pin(game):
+            _power(game, elves)
+        _power(game, elves)
+        assert board_computations() - before == 1
+
+
+def test_a_field_store_inside_a_pin_inside_a_snapshot_is_seen_by_the_next_read():
+    game, _, elves = _anthem_board()
+
+    with game.board_snapshot():
+        assert _power(game, elves) == 2
+        with scan_pin(game):
+            assert _power(game, elves) == 2
+            elves.controller = "bob"
+            assert _power(game, elves) == 1
+        assert _power(game, elves) == 1
+
+
+def test_a_counters_edit_inside_a_pin_inside_a_snapshot_is_seen_by_the_next_read():
+    game, _, elves = _anthem_board()
+
+    with game.board_snapshot(), scan_pin(game):
+        assert _power(game, elves) == 2
+        elves.counters.add("+1/+1", 1)
+        assert _power(game, elves) == 3
+
+
+def test_a_change_from_another_thread_inside_a_pin_inside_a_snapshot_is_seen():
+    game, _, elves = _anthem_board()
+
+    with game.board_snapshot(), scan_pin(game):
+        assert _power(game, elves) == 2
+        worker = threading.Thread(target=lambda: setattr(elves, "controller", "bob"))
+        worker.start()
+        worker.join()
+        assert _power(game, elves) == 1
+
+
+def test_a_command_inside_a_pin_inside_a_snapshot_is_seen_by_the_next_read():
+    game, anthem, elves = _anthem_board()
+
+    with game.board_snapshot(), scan_pin(game):
+        assert _power(game, elves) == 2
+        game.destroy(anthem)
+        assert _power(game, elves) == 1
+
+
+def test_a_pin_inside_a_command_inside_a_snapshot_computes_its_own_board_once():
+    """A command suspends the snapshot on its game, so a scan inside it pins
+    exactly as it does with no snapshot open."""
+    game, _, elves = _anthem_board()
+
+    with game.board_snapshot():
+        _power(game, elves)
+        with game._id_allocator_scope():
+            before = board_computations()
+            with scan_pin(game):
+                _power(game, elves)
+                _power(game, elves)
+            assert board_computations() - before == 1
+
+
 # -- an announced in-place edit of the game ------------------------------------
 
 

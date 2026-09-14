@@ -48,9 +48,10 @@ from uuid import NAMESPACE_OID, uuid5
 
 import pytest
 
-from magic_cards_model.machines import Step
+from magic_cards_model.machines import Step, cost
+from magic_cards_model.machines.layers import NotOnBoard
 from magic_cards_model.machines.legal_actions import legal_actions
-from magic_cards_model.models import Zone
+from magic_cards_model.models import Color, Zone
 from magic_cards_model.models.game import Game
 from magic_cards_model.snapshot import BoardSnapshotStale, board_computations, uncached_boards
 from tests.cards import card_state
@@ -148,6 +149,89 @@ def test_legal_actions_computes_the_board_a_constant_number_of_times():
     )
 
 
+def _triggered_mana_board(trigger: str, forests: int) -> PlayedScenario:
+    """alice with a triggered mana ability on the battlefield and `forests`
+    Forests beside Llanowar Elves: the payment planner asks, for every mana
+    source, what tapping it would set off, and each ask is a read-only scan of
+    its own. An Aura is cast onto a Forest the way a player would put it there."""
+    lands = ["Forest"] * forests
+    aura = trigger in ("Wild Growth", "Utopia Sprawl")
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=[
+                "Grizzly Bears",
+                "Walking Ballista",
+                "Llanowar Elves",
+                *([trigger] if aura else []),
+            ],
+            battlefield=[
+                "Llanowar Elves",
+                "Forest",
+                "Forest",
+                *lands,
+                *([] if aura else [trigger]),
+            ],
+        )
+        .player("bob", battlefield=BOB_PERMANENTS[:2])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    if aura:
+        payer, enchanted = scenario.untapped_sources("Forest", "Forest")
+        scenario.will_choose(Color.GREEN.value, source=trigger)
+        scenario.cast_and_resolve(trigger, payer, targets=[enchanted])
+    assert cost.mana_trigger_sources(scenario.game), "the board really has a triggered mana ability"
+    return scenario
+
+
+TRIGGERED_MANA = pytest.mark.parametrize(
+    "trigger", ["Leyline of Abundance", "Badgermole Cub", "Wild Growth", "Utopia Sprawl"]
+)
+
+
+@TRIGGERED_MANA
+def test_legal_actions_with_a_triggered_mana_ability_computes_the_board_a_constant_number_of_times(
+    trigger,
+):
+    """Every scan the payment planner opens is served by the enumeration's own
+    board, however many mana sources it asks about."""
+    few = _triggered_mana_board(trigger, 0)
+    many = _triggered_mana_board(trigger, 8)
+    for scenario in (few, many):
+        legal_actions(scenario.game, "alice")  # warm the timestamp registry
+
+    few_count = _computations_during(lambda: legal_actions(few.game, "alice"))
+    many_count = _computations_during(lambda: legal_actions(many.game, "alice"))
+
+    assert many_count <= 2, f"legal_actions computed the board {many_count} times"
+    assert many_count == few_count, (
+        f"the count grew with the mana sources: {few_count} for "
+        f"{len(few.game.battlefield)} permanents, {many_count} for {len(many.game.battlefield)}"
+    )
+
+
+def test_a_card_the_board_was_not_computed_with_raises_not_on_board():
+    """`ComputedBoard.of` names a card missing from the board with a `KeyError`
+    of its own kind, so a caller can tell a board that predates the card - a
+    permanent put onto the battlefield in place after the board was cached -
+    from any other missing key."""
+    game = _board(ALICE_PERMANENTS[:3], BOB_PERMANENTS[:2]).game
+    extra = card_state("Memnite", Zone.BATTLEFIELD, controller="alice", owner="alice")
+
+    with game.board_snapshot():
+        game.computed_board()
+        extra.bind_to_game(game)
+        game.shared_zones[Zone.BATTLEFIELD].append(extra)
+        with pytest.raises(NotOnBoard) as raised:
+            game.characteristics_of(extra)
+        game.shared_zones[Zone.BATTLEFIELD].remove(extra)
+
+    assert isinstance(raised.value, KeyError)
+    assert str(extra.id) in str(raised.value)
+
+
 def test_outside_a_snapshot_every_read_recomputes():
     """Outside a scope the board is exactly as uncached as it always was."""
     game = _board(ALICE_PERMANENTS, BOB_PERMANENTS).game
@@ -237,6 +321,11 @@ def test_an_ability_removing_effect_and_its_dependency_read_the_same():
     assert board.of(humility).power is not None, "the dependency is really on this board"
 
     _assert_equivalent(scenario)
+
+
+@TRIGGERED_MANA
+def test_a_triggered_mana_ability_reads_the_same(trigger):
+    _assert_equivalent(_triggered_mana_board(trigger, 4))
 
 
 def test_land_type_changing_effects_read_the_same():

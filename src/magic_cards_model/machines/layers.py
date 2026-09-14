@@ -1500,6 +1500,13 @@ class Journal(EngineModel):
     cycles: list[list[str]] = Field(default_factory=list)
 
 
+class NotOnBoard(KeyError):
+    """`ComputedBoard.of` was asked about a card the board was not computed
+    with - for a board served from a snapshot, a permanent put onto the
+    battlefield in place after the board was cached. Still a `KeyError`, so
+    every caller that already handles one is unchanged."""
+
+
 class ComputedBoard(EngineModel):
     """Every permanent's characteristics, plus how the engine got there."""
 
@@ -1512,7 +1519,7 @@ class ComputedBoard(EngineModel):
         try:
             return self.characteristics[card_id]
         except KeyError:
-            raise KeyError(f"{card_id} is not on this board") from None
+            raise NotOnBoard(f"{card_id} is not on this board") from None
 
     def __getitem__(self, card: CardState | UUID) -> Characteristics:
         return self.of(card)
