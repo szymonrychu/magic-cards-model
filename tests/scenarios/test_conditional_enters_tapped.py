@@ -256,3 +256,63 @@ def test_an_unconditional_tapland_is_untouched():
     salvage = scenario.play_land("Dakmor Salvage")
 
     assert salvage.tapped
+
+
+# --------------------------------------------------------------------------
+# "unless you control <N> or more other <land subtype>s"
+# --------------------------------------------------------------------------
+#
+# The same count reader as "two or more other lands", with a land subtype for
+# the noun (CR 205.3i: Mountain and Plains are land types). A permanent's
+# computed subtypes decide it, so a nonbasic Mountain counts. "Plains" is its
+# own plural.
+
+
+def _subtype_land_board(land: str, battlefield=(), bob_battlefield=()):
+    scenario = (
+        Scenario()
+        .player("alice", hand=[land], battlefield=list(battlefield))
+        .player("bob", battlefield=list(bob_battlefield))
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_dwarven_mine_enters_untapped_with_three_other_mountains():
+    scenario = _subtype_land_board("Dwarven Mine", ["Mountain"] * 3)
+
+    assert not scenario.play_land("Dwarven Mine").tapped
+
+
+def test_dwarven_mine_enters_tapped_with_two_other_mountains():
+    scenario = _subtype_land_board("Dwarven Mine", ["Mountain"] * 2)
+
+    assert scenario.play_land("Dwarven Mine").tapped
+
+
+def test_idyllic_grange_counts_plains_whose_plural_is_plains():
+    untapped = _subtype_land_board("Idyllic Grange", ["Plains"] * 3)
+    tapped = _subtype_land_board("Idyllic Grange", ["Plains"] * 2)
+
+    assert not untapped.play_land("Idyllic Grange").tapped
+    assert tapped.play_land("Idyllic Grange").tapped
+
+
+def test_a_nonbasic_mountain_counts_toward_dwarven_mine():
+    """CR 205.3i: Sacred Foundry is a Mountain; "basic" is not asked."""
+    scenario = _subtype_land_board("Dwarven Mine", ["Mountain", "Mountain", "Sacred Foundry"])
+
+    assert not scenario.play_land("Dwarven Mine").tapped
+
+
+def test_the_wrong_subtype_does_not_count():
+    scenario = _subtype_land_board("Dwarven Mine", ["Plains"] * 3)
+
+    assert scenario.play_land("Dwarven Mine").tapped
+
+
+def test_an_opponents_mountains_do_not_count_toward_dwarven_mine():
+    scenario = _subtype_land_board("Dwarven Mine", ["Mountain"], bob_battlefield=["Mountain"] * 3)
+
+    assert scenario.play_land("Dwarven Mine").tapped

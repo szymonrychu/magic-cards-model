@@ -1,0 +1,182 @@
+{
+  "object": "card",
+  "id": "1ca79dd4-67fc-496c-96fc-489b039c4932",
+  "oracle_id": "486bb9a5-73f1-4cec-b097-fb07ac80b72e",
+  "multiverse_ids": [
+    636717,
+    636718
+  ],
+  "mtgo_id": 117830,
+  "arena_id": 87157,
+  "tcgplayer_id": 524230,
+  "cardmarket_id": 740857,
+  "name": "Ojer Taq, Deepest Foundation // Temple of Civilization",
+  "lang": "en",
+  "released_at": "2023-11-17",
+  "uri": "https://api.scryfall.com/cards/1ca79dd4-67fc-496c-96fc-489b039c4932",
+  "scryfall_uri": "https://scryfall.com/card/lci/26/ojer-taq-deepest-foundation-temple-of-civilization?utm_source=api",
+  "layout": "transform",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:36:51Z",
+  "cmc": 6.0,
+  "type_line": "Legendary Creature \u2014 God // Land",
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Vigilance",
+    "Transform"
+  ],
+  "produced_mana": [
+    "W"
+  ],
+  "card_faces": [
+    {
+      "object": "card_face",
+      "name": "Ojer Taq, Deepest Foundation",
+      "mana_cost": "{4}{W}{W}",
+      "type_line": "Legendary Creature \u2014 God",
+      "oracle_text": "Vigilance\nIf one or more creature tokens would be created under your control, three times that many of those tokens are created instead.\nWhen Ojer Taq dies, return it to the battlefield tapped and transformed under its owner's control.",
+      "colors": [
+        "W"
+      ],
+      "power": "6",
+      "toughness": "6",
+      "artist": "Cristi Balanescu",
+      "artist_id": "c09ede88-a1b5-4a18-9895-dc8a965d28a5",
+      "illustration_id": "b48923ff-64d7-4329-a572-04e8235d6f1c",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/front/1/c/1ca79dd4-67fc-496c-96fc-489b039c4932.jpg?1783913811",
+        "normal": "https://cards.scryfall.io/normal/front/1/c/1ca79dd4-67fc-496c-96fc-489b039c4932.jpg?1783913811",
+        "large": "https://cards.scryfall.io/large/front/1/c/1ca79dd4-67fc-496c-96fc-489b039c4932.jpg?1783913811",
+        "png": "https://cards.scryfall.io/png/front/1/c/1ca79dd4-67fc-496c-96fc-489b039c4932.png?1783913811",
+        "art_crop": "https://cards.scryfall.io/art_crop/front/1/c/1ca79dd4-67fc-496c-96fc-489b039c4932.jpg?1783913811",
+        "border_crop": "https://cards.scryfall.io/border_crop/front/1/c/1ca79dd4-67fc-496c-96fc-489b039c4932.jpg?1783913811",
+        "thumb": "https://cards.scryfall.io/thumb/front/1/c/1ca79dd4-67fc-496c-96fc-489b039c4932.webp?1783913811",
+        "grid": "https://cards.scryfall.io/grid/front/1/c/1ca79dd4-67fc-496c-96fc-489b039c4932.webp?1783913811",
+        "display": "https://cards.scryfall.io/display/front/1/c/1ca79dd4-67fc-496c-96fc-489b039c4932.webp?1783913811",
+        "art": "https://cards.scryfall.io/art/front/1/c/1ca79dd4-67fc-496c-96fc-489b039c4932.webp?1783913811",
+        "crop": "https://cards.scryfall.io/crop/front/1/c/1ca79dd4-67fc-496c-96fc-489b039c4932.webp?1783913811"
+      }
+    },
+    {
+      "object": "card_face",
+      "name": "Temple of Civilization",
+      "mana_cost": "",
+      "type_line": "Land",
+      "oracle_text": "(Transforms from Ojer Taq, Deepest Foundation.)\n{T}: Add {W}.\n{2}{W}, {T}: Transform this land. Activate only if you attacked with three or more creatures this turn and only as a sorcery.",
+      "colors": [],
+      "flavor_text": "Chimil gave the Oltec life. Ojer Taq taught them how to live together.",
+      "artist": "Cristi Balanescu",
+      "artist_id": "c09ede88-a1b5-4a18-9895-dc8a965d28a5",
+      "illustration_id": "993edfed-2a1f-4604-88df-cd0217e143cd",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/back/1/c/1ca79dd4-67fc-496c-96fc-489b039c4932.jpg?1783913811",
+        "normal": "https://cards.scryfall.io/normal/back/1/c/1ca79dd4-67fc-496c-96fc-489b039c4932.jpg?1783913811",
+        "large": "https://cards.scryfall.io/large/back/1/c/1ca79dd4-67fc-496c-96fc-489b039c4932.jpg?1783913811",
+        "png": "https://cards.scryfall.io/png/back/1/c/1ca79dd4-67fc-496c-96fc-489b039c4932.png?1783913811",
+        "art_crop": "https://cards.scryfall.io/art_crop/back/1/c/1ca79dd4-67fc-496c-96fc-489b039c4932.jpg?1783913811",
+        "border_crop": "https://cards.scryfall.io/border_crop/back/1/c/1ca79dd4-67fc-496c-96fc-489b039c4932.jpg?1783913811",
+        "thumb": "https://cards.scryfall.io/thumb/back/1/c/1ca79dd4-67fc-496c-96fc-489b039c4932.webp?1783913811",
+        "grid": "https://cards.scryfall.io/grid/back/1/c/1ca79dd4-67fc-496c-96fc-489b039c4932.webp?1783913811",
+        "display": "https://cards.scryfall.io/display/back/1/c/1ca79dd4-67fc-496c-96fc-489b039c4932.webp?1783913811",
+        "art": "https://cards.scryfall.io/art/back/1/c/1ca79dd4-67fc-496c-96fc-489b039c4932.webp?1783913811",
+        "crop": "https://cards.scryfall.io/crop/back/1/c/1ca79dd4-67fc-496c-96fc-489b039c4932.webp?1783913811"
+      }
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "70169a6e-89d1-4a3a-aef7-3152958d55ac",
+  "set": "lci",
+  "set_name": "The Lost Caverns of Ixalan",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/70169a6e-89d1-4a3a-aef7-3152958d55ac",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Alci&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/lci?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/1ca79dd4-67fc-496c-96fc-489b039c4932/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A486bb9a5-73f1-4cec-b097-fb07ac80b72e&unique=prints",
+  "collector_number": "26",
+  "digital": false,
+  "rarity": "mythic",
+  "artist": "Cristi Balanescu",
+  "artist_ids": [
+    "c09ede88-a1b5-4a18-9895-dc8a965d28a5"
+  ],
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 891,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://www.youtube.com/watch?v=Szm0yzSUUm0",
+    "previewed_at": "2023-10-24"
+  },
+  "prices": {
+    "usd": "31.57",
+    "usd_foil": "37.78",
+    "usd_etched": null,
+    "eur": "19.90",
+    "eur_foil": "23.29",
+    "tix": "0.07"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=636717&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DOjer%2BTaq%252C%2BDeepest%2BFoundation%2B%252F%252F%2BTemple%2Bof%2BCivilization",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DOjer%2BTaq%252C%2BDeepest%2BFoundation%2B%252F%252F%2BTemple%2Bof%2BCivilization",
+    "edhrec": "https://edhrec.com/route/?cc=Ojer+Taq%2C+Deepest+Foundation"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F524230%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=740857&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/117830?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
