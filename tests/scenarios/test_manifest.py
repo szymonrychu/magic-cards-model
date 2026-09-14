@@ -89,6 +89,40 @@ def test_abhorrent_oculus_manifest_dreads_on_each_opponents_upkeep():
     assert len(scenario.player("alice").library) == 0
 
 
+def test_ethereal_ambush_manifests_the_top_two_cards():
+    """Ethereal Ambush (off-pool, added with `scripts/add_card.py`, verified
+    against its own printed text): "Manifest the top two cards of your
+    library." Unlike Mastery of the Unseen's fixed "the top card" above, this
+    is `_MANIFEST_TOP_CARD_RE`'s own counted shape - CR 701.40a run twice,
+    top card first, each becoming its own separate 2/2 face-down permanent
+    rather than one look-two-choose-one the way "manifest dread" works.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Ethereal Ambush"],
+            library=["Grizzly Bears", "Forest"],
+            battlefield=["Forest", "Forest", "Forest", "Island", "Island"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Forest", "Forest", "Forest", "Island", "Island")
+
+    scenario.cast_and_resolve("Ethereal Ambush", *sources)
+
+    manifested = [state for state in scenario.game.battlefield if state.face_down]
+    assert len(manifested) == 2
+    assert {state.card.name for state in manifested} == {"Grizzly Bears", "Forest"}
+    for state in manifested:
+        assert state.name == "", "CR 701.40a: no name while face down"
+        assert scenario.game.power_of(state) == 2
+        assert scenario.game.toughness_of(state) == 2
+    assert len(scenario.player("alice").library) == 0
+
+
 def test_bashful_beastie_manifest_dreads_when_it_dies():
     """Bashful Beastie: "When this creature dies, manifest dread." - a
     different trigger event from Abhorrent Oculus's own upkeep, and the same
