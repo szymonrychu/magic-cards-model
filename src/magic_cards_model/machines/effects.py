@@ -865,6 +865,23 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
     return None
 
 
+#: "for each `<quality>` you control" - Immaculate Magistrate's own "Put a
+#: +1/+1 counter on target creature for each Elf you control" and Go-Shintai
+#: of Boundless Vigor's "put a +1/+1 counter on target Shrine for each Shrine
+#: you control". CR 611.2c fixes the multiplier once, at resolution, the same
+#: moment `count_expression`'s own callers already fix theirs.
+#:
+#: Read through `count_expression` itself rather than a second copy of its
+#: card-type/subtype vocabulary: a for-each multiplier is exactly "the number
+#: of `<quality>` you control" without that phrase's own "number of" lead-in,
+#: which a card printing a for-each multiplier never includes.
+def _count_of_quality_you_control(phrase: str) -> Callable[["Game", str], int] | None:
+    stripped = phrase.strip().rstrip(".")
+    if not re.fullmatch(r"[a-z]+ you control", stripped, re.IGNORECASE):
+        return None
+    return count_expression(f"number of {stripped}")
+
+
 #: `(game, controller, object the counters go on, X) -> int`: one amount, read
 #: at the moment the effect or replacement applies.
 AmountReader = Callable[["Game", str, CardState, int], int]
@@ -5758,13 +5775,30 @@ def _parse_create_token_copy_of_cost_exiled_card_clause(text: str) -> AbilityEff
     return effect
 
 
-def put_counters_on_ability_targets(kind: Counter | str, amount: int) -> TargetedClause:
-    """Put counters on each permanent this still legally targets (CR 122.1)."""
+def put_counters_on_ability_targets(
+    kind: Counter | str,
+    amount: int,
+    multiplier: Callable[["Game", str], int] | None = None,
+) -> TargetedClause:
+    """Put counters on each permanent this still legally targets (CR 122.1).
+
+    `multiplier`, when given, is Immaculate Magistrate's own "... for each
+    Elf you control" shape: `amount` is the per-instance count printed before
+    "for each", multiplied by the quality's count, read once against the
+    resolving object's controller (CR 611.2c fixes the magnitude once, at
+    resolution, not once per target).
+    """
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
+        total = amount
+        if multiplier is not None:
+            controller = game.controller_of(stack_object).username
+            total = amount * multiplier(game, controller)
+        if total <= 0:
+            return
         for target in game.resolve_targets(stack_object):
             if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
-                game.add_counters(target, kind, amount)
+                game.add_counters(target, kind, total)
 
     return effect
 
@@ -7088,8 +7122,17 @@ def _parse_target_player_cant_cast_kicked_attack_clause(effect_text: str) -> Eff
 #: target permanent" is exactly that - a named counter with no rules of its
 #: own, put on by a plain activated ability this shape already reads once the
 #: kind word is not pinned to the two P/T spellings.
+#:
+#: Immaculate Magistrate's own "... on target creature for each Elf you
+#: control" and Go-Shintai of Boundless Vigor's "... on target Shrine for
+#: each Shrine you control" trail a for-each multiplier after the targeting
+#: phrase - `phrase` stops short of it (non-greedy) so `_targets_understood`
+#: is never asked to read "target creature for each Elf you control" as one
+#: targeting restriction, and `each` carries the multiplier for
+#: `_count_of_quality_you_control` to read separately.
 _COUNTER_TARGET_RE = re.compile(
-    rf"put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on (?P<phrase>.*target.+)",
+    rf"put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on "
+    rf"(?P<phrase>.*target.+?)(?: for each (?P<each>[^.]+))?\.?$",
     re.IGNORECASE,
 )
 #: Swallow Whole: "Put a +1/+1 counter on the creature tapped to pay this
@@ -8048,7 +8091,15 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
             return None
         amount = parse_count(match.group("n"))
         kind = _counter_kind(match.group("kind"))
-        return put_counters_on_ability_targets(kind, amount)
+        each_text = match.group("each")
+        if each_text is None:
+            return put_counters_on_ability_targets(kind, amount)
+        multiplier = _count_of_quality_you_control(each_text)
+        if multiplier is None:
+            # Fails closed rather than placing the bare per-instance amount:
+            # an unread "for each" is a wrong count, not a missing one.
+            return None
+        return put_counters_on_ability_targets(kind, amount, multiplier)
 
     if for_spell and (match := _DAMAGE_EQUAL_TO_SACRIFICED_CREATURE_POWER_RE.fullmatch(clause)):
         if not _targets_understood(match.group("phrase"), allow_player_targets=True):
