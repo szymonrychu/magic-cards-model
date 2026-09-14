@@ -1585,7 +1585,12 @@ class Game(EngineModel):
     printed text. See `UnmodeledTriggerEffectNotice`'s own docstring for the
     three cases this wave found (Ragavan, Nashi, Questing Beast). The same
     unreadable-is-not-the-same-as-no-effect record every other notice list
-    here keeps."""
+    here keeps.
+
+    Also one entry per resolving instant or sorcery face `effect_for` has no
+    reader for at all (`Game.resolve`), carrying the spell's id and name and
+    the face's whole printed text - a spell that leaves a replacement effect
+    (Plagiarize) is not one."""
 
     control_replacement_notices: list[ControlReplacementNotice] = Field(default_factory=list)
     """One entry per resolving spell whose text reads as a CR 614.1a
@@ -3494,14 +3499,14 @@ class Game(EngineModel):
         # CR 702.131a: ascend on an instant or sorcery is a spell ability,
         # followed as the spell resolves and ahead of the text printed after it.
         ascend_as_a_spell_resolves(self, spell)
-        effects = [
-            effect
-            for effect in (
-                effect_for(face_name, face_text, x_value=x_value)
-                for face_name, face_text in faces_to_resolve
-            )
-            if effect is not None
-        ]
+        effects = []
+        unread_faces: list[tuple[str, str]] = []
+        for face_name, face_text in faces_to_resolve:
+            effect = effect_for(face_name, face_text, x_value=x_value)
+            if effect is not None:
+                effects.append(effect)
+            elif face_text.strip():
+                unread_faces.append((face_name, face_text))
         if effects:
             try:
                 for effect in effects:
@@ -3556,7 +3561,18 @@ class Game(EngineModel):
                 self._before_priority()
                 raise
 
-        self._create_resolution_replacements(spell)
+        left_replacement = self._create_resolution_replacements(spell)
+        if unread_faces and not left_replacement and not spell.is_permanent:
+            # Fail closed: an instant or sorcery whose printed text no parser
+            # reads used to resolve as nothing with no trace (Stock Up, live
+            # game). A permanent spell's `None` is correct (CR 608.3a), and a
+            # spell that left a replacement effect did what it says (CR 614.1a).
+            for face_name, face_text in unread_faces:
+                self.unmodeled_trigger_effect_notices.append(
+                    UnmodeledTriggerEffectNotice(
+                        source_id=spell.id, source_name=face_name, text=face_text
+                    )
+                )
 
         if spell.id in self.turn_ended_exiled_ids or spell.zone is Zone.EXILE:
             # (Also a spell whose own text exiled it as it resolved - Burning
@@ -5794,7 +5810,7 @@ class Game(EngineModel):
             if card_state in zone_cards:
                 zone_cards.remove(card_state)
 
-    def _create_resolution_replacements(self, spell: CardState) -> None:
+    def _create_resolution_replacements(self, spell: CardState) -> bool:
         """A resolving spell that leaves a replacement effect behind (CR 614.1a).
 
         Plagiarize is the printing: "Until end of turn, if target player would
@@ -5808,6 +5824,9 @@ class Game(EngineModel):
         The targeted player is read off the spell's own announced targets,
         which CR 608.2b has already rechecked (`spell_fizzles` ran above and a
         spell whose only target became illegal never got here).
+
+        Returns whether a replacement was left, so a spell with no `effect_for`
+        reader is not reported as unread when this is what it does.
         """
         target = next(
             (
@@ -5819,8 +5838,10 @@ class Game(EngineModel):
         )
         controller = self.controller_of(spell).username
         redirection = draw_redirection_for(spell.oracle_text or "", controller, target)
-        if redirection is not None:
-            self.draw_redirections.append(redirection)
+        if redirection is None:
+            return False
+        self.draw_redirections.append(redirection)
+        return True
 
     def _apply_mana_spend_effects(self, permanent: CardState) -> None:
         """CR 106.6's additional effect, applied to the permanent that spell

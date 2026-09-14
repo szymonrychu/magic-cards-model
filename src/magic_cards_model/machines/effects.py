@@ -16968,6 +16968,14 @@ class UnmodeledTriggerEffectNotice(EngineModel):
     a "you may cast that card" with no recognisable exiling clause in front of
     it to say which card - since granting a permission over nothing at all
     would be the silent half-run this notice exists to prevent.
+
+    **A spell records it too.** An instant or sorcery whose printed text
+    `effect_for` has no reader for resolves and goes to the graveyard
+    (`Game.resolve`), and used to do so with no trace - Stock Up in a live
+    game. It now appends this same notice, `source_id` the spell's own id,
+    `source_name` the face's name, `text` the face's whole printed text. Not
+    for a permanent spell (CR 608.3a) or a spell that left a replacement
+    effect (Plagiarize, CR 614.1a).
     """
 
     model_config = ConfigDict(frozen=True)
