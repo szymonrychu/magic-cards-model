@@ -17000,6 +17000,13 @@ class UnmodeledTriggerEffectNotice(EngineModel):
     `source_name` the face's name, `text` the face's whole printed text. Not
     for a permanent spell (CR 608.3a) or a spell that left a replacement
     effect (Plagiarize, CR 614.1a).
+
+    **So does any triggered ability no reader answers for.** When
+    `trigger_effect_for` returns None for a triggered ability with printed
+    effect text, `Game._note_unread_trigger` appends this notice as the
+    ability resolves, with the ability's whole effect text. Nothing records it
+    at trigger time; Dress Down's end step trigger used to resolve as CHANGED
+    NOTHING with no trace.
     """
 
     model_config = ConfigDict(frozen=True)
