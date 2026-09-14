@@ -3142,6 +3142,22 @@ _SEARCH_AND_PUT_RE = re.compile(
     # it off the *previous* clause's target instead of off this one's own
     # "subject" group (see that function and `_search_and_place_for`).
     r"(?P<subject>you may )?"
+    # The count slot: CR 701.23d's plain "a card"/"three cards" (a quantity
+    # with no printed maximum, which must be found - "must find that many
+    # cards" - as many as possible when the library falls short) and CR
+    # 701.23b's "up to N" (a stated-quality search, which never has to find
+    # anything). `{COUNT}` never matches a bare "X": a cast-announced X
+    # (CR 107.3a, Weird Harvest's own {X} in its mana cost) is substituted to
+    # a digit by `effect_for` before a second parse attempt ever reaches this
+    # regex - see that function's own docstring - so a literal "X" surviving
+    # to here would be CR 107.3f's self-defined kind this wave does not read,
+    # and failing to match at all (rather than matching and then failing to
+    # read the count) is what lets that retry happen at all. "up to that
+    # many" (The Earth King) is a count carried from an earlier instruction -
+    # Group 0b's own channel, not built yet - recognised here so the shape
+    # reads, but `_read_search_count` refuses to guess a number for it.
+    r"search (?:your|their) library for "
+    rf"(?P<upto>up to )?(?:(?P<n>{COUNT})|(?P<that_many>that many)) "
     # The quality is optional: CR 701.23d names "a card" as its own kind of
     # search - "If a player is searching a hidden zone simply for a quantity of
     # cards, such as 'a card' or 'three cards,' that player must find that many
@@ -3149,7 +3165,7 @@ _SEARCH_AND_PUT_RE = re.compile(
     # phrase with a missing restriction, it is a search with no restriction at
     # all. `_search_and_place_for` reads a `None` quality as "every card
     # qualifies".
-    r"search (?:your|their) library for (?:a|an) (?:(?P<quality>.+?) )?card"
+    r"(?:(?P<quality>.+?) )?card(?:s)?"
     r"(?P<basic_land_type> with a basic land type)?"
     r"(?: with mana value (?P<max_mv>\d+) or less)?"
     # "with mana cost {0} or {1}" (Urza's Saga chapter III) names printed
@@ -3157,10 +3173,13 @@ _SEARCH_AND_PUT_RE = re.compile(
     # symbols, so {X} (mana value 0 in a library, CR 202.3e) is neither, and
     # CR 202.1b's "no mana cost" is not {0}. Read by `_exact_mana_cost_matcher`.
     r"(?: with mana cost (?P<mana_costs>" + _MANA_COST_LIST + r"))?"
-    # CR 701.23e: a printed reveal is a real reveal. "reveal it" (Expedition
-    # Map) and "reveal that card" (Trinket Mage) are the same instruction.
-    r"(?P<reveal>, reveal (?:it|that card))?"
-    r", put (?:it|that card) (?P<dest>into your hand|onto the battlefield(?P<tapped> tapped)?)"
+    # CR 701.23e: a printed reveal is a real reveal. "reveal it"/"them"
+    # (Expedition Map, Primeval Titan) and "reveal that card"/"those cards"
+    # (Trinket Mage, Tooth and Nail) are the same instruction, singular or
+    # plural.
+    r"(?P<reveal>, reveal (?:it|them|that card|those cards))?"
+    r", put (?:it|them|that card|those cards) "
+    r"(?P<dest>into your hand|onto the battlefield(?P<tapped> tapped)?)"
     r"(?:, then shuffle)?\.?",
     re.IGNORECASE,
 )
@@ -3560,6 +3579,28 @@ def _unreadable_search_description(text: str) -> str | None:
     return None
 
 
+def _unreadable_search_count(text: str) -> str | None:
+    """The first search clause in `text` whose stated *quality* reads fine
+    but whose *count* does not (`_read_search_count`) - The Earth King's "up
+    to that many basic land cards", CR 701.23's carried count with no channel
+    yet to read it (Group 0b). Distinct from `_unreadable_search_
+    description`'s own check right above, which is the quality half of the
+    same clause.
+    """
+    clauses = _prepare_effect_clauses(text)
+    if clauses is None:
+        return None
+    for clause in clauses:
+        match = _SEARCH_AND_PUT_RE.fullmatch(clause.strip())
+        if match is None:
+            continue
+        if _search_descriptions(match) is None:
+            continue  # `_unreadable_search_description`'s own case
+        if _read_search_count(match) is None:
+            return clause.strip()
+    return None
+
+
 def _bounded_quality_matcher(
     quality: str | None, max_mv: str | None
 ) -> Callable[[CardState], bool]:
@@ -3587,6 +3628,30 @@ def _bounded_quality_matcher(
     return matches
 
 
+def _read_search_count(match: re.Match[str]) -> Callable[["Game", str], int] | None:
+    """The card count `_SEARCH_AND_PUT_RE`/`_REFERENT_SEARCH_RE` name - CR
+    701.23b's "up to N" or CR 701.23d's plain N - fixed once the clause
+    parses, never re-read from the board (nothing in this family's shape
+    varies by resolution the way `count_expression`'s "the number of ... you
+    control" does).
+
+    "up to that many" (`that_many`) is a count carried from an earlier
+    instruction (The Earth King's "search ... for up to that many basic land
+    cards"), which the regex recognises so the clause still reads as a
+    search, but there is no channel yet to carry that count in (Group 0b) -
+    this refuses it (`None`) rather than guessing, and `_unreadable_search_
+    count` turns that refusal into a recorded notice instead of silence.
+    """
+    groups = match.groupdict()
+    if groups.get("that_many"):
+        return None
+    n = groups.get("n")
+    amount = 1 if n is None else parse_count(n)
+    if amount is None:
+        return None
+    return lambda _game, _controller: amount
+
+
 def _search_and_place_for(
     match: re.Match[str], *, optional: bool
 ) -> Callable[["Game", Player, str, str | None], None] | None:
@@ -3606,9 +3671,17 @@ def _search_and_place_for(
     of *which player* has moved out of the search parser entirely and into
     `_parse_anaphoric_clause_pair`, which reads it off the previous clause's
     target rather than off this one's own text.
+
+    The count (`_read_search_count`) is read once here too - Behold the
+    Beyond's plain "three cards" and Primeval Titan's "up to two land cards"
+    are the same shape with a different printed number, not two different
+    instructions.
     """
     described = _search_descriptions(match)
     if described is None:
+        return None
+    count_reader = _read_search_count(match)
+    if count_reader is None:
         return None
     matches, description = described
     tapped = bool(match.group("tapped"))
@@ -3627,6 +3700,7 @@ def _search_and_place_for(
             player,
             matches,
             destination=Zone.HAND if to_hand else Zone.BATTLEFIELD,
+            count=count_reader(game, player.username),
             reveal=reveal,
             tapped=tapped,
             source=source,
@@ -4160,82 +4234,17 @@ def _parse_sacrifice_lands_then_search_that_many_clause(text: str) -> Effect | N
 
 
 #: Primeval Titan's own shape: "search your library for up to two land cards,
-#: put them onto the battlefield tapped, then shuffle" - `_SEARCH_AND_PUT_RE`'s
-#: "a `<quality>` card"/"put it" is singular throughout and does not match a
-#: counted, plural "up to N `<quality>` cards"/"put them" search at all, so this
-#: whole clause fell through to nothing. CR 701.23b still makes each individual
-#: find optional (a stated-quality search never has to find everything there),
-#: and CR 115.6's "up to N" is CR 107.1c's "zero up to N" read onto a search
-#: rather than a target - `game.search_library`'s own `optional=True` already
-#: asks once per candidate up to `count`, the same shape `_search_and_place_for`
-#: uses for the singular case, just handed a `count` above one.
-#: The destination is a choice of two, and the optional "reveal them" between
-#: the search and the move is a real reveal, exactly as the singular
-#: `_SEARCH_AND_PUT_RE`'s "reveal it" is: CR 701.23e makes revealing a
-#: search's finds something an effect must print to do, and when it is printed
-#: `Game.search_and_put` records each find as public (CR 701.20a), carried into
-#: the hand by the put. Tooth and Nail's first
-#: mode - "Search your library for up to two creature cards, reveal them, put
-#: them into your hand, then shuffle." - is the hand-bound twin of Primeval
-#: Titan's battlefield-bound one.
-_SEARCH_UP_TO_N_AND_PUT_RE = re.compile(
-    r"(?P<subject>you may )?"
-    r"search (?:your|their) library for up to (?P<count>[\w-]+) (?P<quality>.+?) cards?"
-    r"(?P<reveal>, reveal (?:them|it|those cards))?"
-    r", put (?:them|it) (?P<dest>into your hand|onto the battlefield(?P<tapped> tapped)?)"
-    r"(?:, then shuffle)?\.?",
-    re.IGNORECASE,
-)
-
-
-def _parse_search_up_to_n_and_put_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
-    """`_SEARCH_UP_TO_N_AND_PUT_RE`'s shape - Primeval Titan's whole trigger
-    once its "enters or attacks" condition has been split off.
-
-    The found cards arrive **untapped** unless the sentence says "tapped"
-    (CR 110.5b), same default `parse_search_and_put_effect` documents for the
-    singular case. Every found card is removed from the library before the
-    single CR 701.24a/701.24b shuffle `game.search_library` performs once,
-    not once per card.
-    """
-    match = _SEARCH_UP_TO_N_AND_PUT_RE.fullmatch(clause.strip())
-    if match is None:
-        return None
-    count = parse_count(match.group("count"))
-    if count is None:
-        # "up to X land cards" (CR 107.3a's X, unresolved) or some other word
-        # that is not a count - fail closed rather than guess.
-        return None
-    matches = _quality_matcher(match.group("quality"))
-    tapped = bool(match.group("tapped"))
-    to_hand = match.group("dest").startswith("into your hand")
-    optional = bool((match.group("subject") or "").strip())
-    reveal = match.group("reveal") is not None
-
-    def effect(game: "Game", stack_object: "StackObject") -> None:
-        player = game.controller_of(stack_object)
-        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
-        if optional and not game.may(
-            player,
-            f"search your library for up to {count} {match.group('quality')} cards",
-            source=source,
-            source_id=source_id_of(stack_object),
-        ):
-            return
-        game.search_and_put(
-            player,
-            matches,
-            destination=Zone.HAND if to_hand else Zone.BATTLEFIELD,
-            count=count,
-            reveal=reveal,
-            tapped=tapped,
-            source=source,
-            source_id=source_id_of(stack_object),
-        )
-
-    return effect
-
-
+#: put them onto the battlefield tapped, then shuffle." Used to need its own
+#: regex and parser (`_SEARCH_UP_TO_N_AND_PUT_RE`/`_parse_search_up_to_n_
+#: and_put_clause`, both retired) because `_SEARCH_AND_PUT_RE`'s count slot
+#: was a literal "a"/"an" and its "put it"/"reveal it" pronouns were singular
+#: throughout - a counted, plural "up to N `<quality>` cards"/"put them"
+#: search did not match it at all, so the whole clause fell through to
+#: nothing. `_SEARCH_AND_PUT_RE` now reads any `{COUNT}` in that slot (see its
+#: own comment) and both pronoun numbers, so this shape - and Behold the
+#: Beyond's un-"up to" "three cards", and Tooth and Nail's hand-bound "up to
+#: two creature cards, reveal them, put them into your hand" - are one
+#: `_parse_search_clause` path rather than two.
 def parse_search_and_put_effect(text: str) -> AbilityEffect | None:
     """Recognise a plain library search off the ability's own printed text,
     instead of a per-card table entry - see `_SEARCH_AND_PUT_RE`.
@@ -10777,6 +10786,25 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
 
         return search_description_notice_only
 
+    unread_search_count = _unreadable_search_count(effect_text)
+    if unread_search_count is not None:
+        # Same notice class as `unread_search` above and, deliberately, the
+        # same closure name: `scripts/sweep_pool.py` recognises a dispatcher
+        # answer as "notice" (not "silent") by this exact name, and this is
+        # the same kind of answer - a search this wave recognised the shape
+        # of but could not run - for a different reason (the count, not the
+        # description).
+        def search_description_notice_only(game: "Game", ability: AbilityOnStack) -> None:
+            game.search_description_notices.append(
+                SearchDescriptionNotice(
+                    source_id=ability.source_id,
+                    source_name=ability.source_name,
+                    text=unread_search_count,
+                )
+            )
+
+        return search_description_notice_only
+
     # `_unreadable_cost_reference_clause` is on this side too, not only the
     # spell side: Birthing Ritual reads back "the sacrificed creature's mana
     # value" out of a *triggered* ability, and without this half of the pair
@@ -12284,6 +12312,20 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
             game.search_description_notices.append(
                 SearchDescriptionNotice(
                     source_id=spell.id, source_name=spell.card.name, text=unread_search
+                )
+            )
+
+        return search_description_notice_only
+
+    unread_search_count = _unreadable_search_count(effect_text)
+    if unread_search_count is not None:
+        # Same notice class and, deliberately, the same closure name as
+        # `unread_search` right above - see that block's own comment on the
+        # ability-dispatcher twin of this one.
+        def search_description_notice_only(game: "Game", spell: CardState) -> None:
+            game.search_description_notices.append(
+                SearchDescriptionNotice(
+                    source_id=spell.id, source_name=spell.card.name, text=unread_search_count
                 )
             )
 
@@ -19739,9 +19781,6 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     search = _parse_search_clause(clause, for_spell=for_spell)
     if search is not None:
         return search
-    search_up_to_n = _parse_search_up_to_n_and_put_clause(clause, for_spell=for_spell)
-    if search_up_to_n is not None:
-        return search_up_to_n
     put_land_from_hand = _parse_put_land_from_hand_clause(clause, for_spell=for_spell)
     if put_land_from_hand is not None:
         return put_land_from_hand
