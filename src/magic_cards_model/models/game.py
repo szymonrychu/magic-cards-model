@@ -226,7 +226,7 @@ from ..machines.turn import (
     Step,
     TurnMachine,
 )
-from ..numbers import count_pattern, parse_count
+from ..numbers import MULTIPLIER, count_pattern, parse_count, parse_multiplier
 from ..serialization import SortedFrozenSet, SortedSet
 from ..snapshot import EngineModel, board_snapshot, cached_board, command, scan_pin
 from .action import Action
@@ -558,6 +558,14 @@ _COLOR_WORDS: dict[str, Color] = {
 _SORCERY_TIMING = re.compile(
     r"activate (?:this ability )?only (?:as a sorcery|any time you could cast a sorcery)",
     re.IGNORECASE,
+)
+#: CR 602.5b's per-turn limit, with its count read rather than assumed to be
+#: one: "Activate only once each turn" (Basking Rootwalla), "... and only once
+#: each turn" (Dragonkin Berserker's joined restriction), "Activate no more
+#: than twice each turn" (Vampire Bats), "no more than three times each turn"
+#: (Manaforge Cinder).
+_ACTIVATION_LIMIT = re.compile(
+    rf"\b(?:only|no more than) (?P<times>{MULTIPLIER}) each turn\b", re.IGNORECASE
 )
 
 #: Mox Opal's Metalcraft: "Activate only if you control three or more
@@ -12992,8 +13000,22 @@ class Game(EngineModel):
                 )
 
         instructions = (ability.instructions or "").lower()
-        if "once each turn" in instructions and self._activation_count(permanent, index):
-            return f"{permanent.name}'s ability has already been activated this turn"
+        limit = _ACTIVATION_LIMIT.search(instructions)
+        if limit is not None:
+            # CR 602.5b: the restriction names how often, and `activations`
+            # already counts every activation this turn per permanent and
+            # ability, so the limit is only compared against it.
+            # `MULTIPLIER` only matches what `parse_multiplier` reads.
+            allowed = parse_multiplier(limit.group("times")) or 1
+            count = self._activation_count(permanent, index)
+            if allowed == 1 and count:
+                return f"{permanent.name}'s ability has already been activated this turn"
+            if count >= allowed:
+                return (
+                    f"{permanent.name}'s ability has already been activated "
+                    f"{limit.group('times').lower()} this turn, the most "
+                    f"{limit.group(0)!r} allows (CR 602.5b)"
+                )
         if _SORCERY_TIMING.search(instructions) and not self.can_cast_sorcery(controller):
             return (
                 f"{permanent.name}'s ability can only be activated as a sorcery: "
