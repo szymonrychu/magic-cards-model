@@ -1854,9 +1854,11 @@ _LAND_ADDED_CHOSEN_MANA_CONDITION = re.compile(
     r"^a land's ability causes you to add one or more mana of the chosen color$"
 )
 
-#: Tamiyo, Inquisitive Student's "you draw your third card in a turn" - an
-#: ordinal over CR 121.2's individual card draws, which are one event each.
-_NTH_DRAW_CONDITION = re.compile(r"^you draw your (?P<ordinal>[a-z]+) card in a turn$")
+#: Tamiyo, Inquisitive Student's "you draw your third card in a turn" and
+#: Faerie Vandal's "you draw your second card each turn" - an ordinal over
+#: CR 121.2's individual card draws, which are one event each. Both suffixes
+#: mean the same turn-scoped count; "each turn" is how most printings say it.
+_NTH_DRAW_CONDITION = re.compile(r"^you draw your (?P<ordinal>[a-z]+) card (?:in a|each) turn$")
 
 #: CR 702.62a's third ability, as `machines/keywords._suspend_abilities`
 #: writes it out: "the last time counter is removed from this card". Never
