@@ -19166,7 +19166,7 @@ def _merge_look_top_hand_bottom_exile_play_clauses(
 #: a card" covers a land found among the exiled cards, which "you may play"
 #: (not "you may cast") is broad enough to reach.
 _EXILE_TOP_N_CARDS_RE = re.compile(
-    r"^exile the top (?P<count>\w+) cards? of your library\.?$", re.IGNORECASE
+    rf"^exile the top (?P<count>{COUNT}) cards? of your library\.?$", re.IGNORECASE
 )
 _UNTIL_END_OF_YOUR_NEXT_TURN_PLAY_RE = re.compile(
     r"^until the end of your next turn, you may play (?:those cards|that card)\.?$",
@@ -19239,7 +19239,7 @@ def _merge_exile_top_then_play_until_next_turn_clauses(
 #: spells" into two fragments before any clause-indexed parser ever sees the
 #: sentence whole, the same trap that function's own docstring names.
 _EXILE_TOP_THEN_CAST_TYPES_FREE_THIS_TURN_RE = re.compile(
-    r"^exile the top (?P<count>\w+) cards? of your library\. you may cast "
+    rf"^exile the top (?P<count>{COUNT}) cards? of your library\. you may cast "
     r"(?P<types>(?:creature|instant|sorcery|artifact|enchantment|planeswalker|land)"
     r"(?: and (?:creature|instant|sorcery|artifact|enchantment|planeswalker|land))?) "
     r"spells from among them this turn without paying their mana costs\.?$",
@@ -19816,7 +19816,7 @@ def _parse_choose_name_search_and_exile_whole_text(
 #: *card* type), so this reads the color alone rather than trying to force
 #: "permanent" through that matcher.
 _DRAW_IF_YOU_CONTROL_COLOR_PERMANENT_RE = re.compile(
-    r"^draw (?:a card|(?P<count>\w+) cards) if you control (?:a|an) "
+    rf"^draw (?:a card|(?P<count>{COUNT}) cards) if you control (?:a|an) "
     r"(?P<color>white|blue|black|red|green) permanent"
     r"(?: other than (?P<exclude>.+))?\.?$",
     re.IGNORECASE,
