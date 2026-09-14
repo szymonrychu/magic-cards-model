@@ -302,3 +302,55 @@ def test_doubling_season_doubles_lagrellas_two_counters():
         scenario.pass_until_resolved()
 
     assert broodscale.counter_count("+1/+1") == 4
+
+
+# -- CR 603.8's state trigger, with its count spelled as a word --------------
+#
+# Mazemind Tome (verified off its Scryfall printing): "When there are four or
+# more page counters on this artifact, exile it. If you do, you gain 4 life."
+# CR 603.8: "Some triggered abilities trigger when a game state ... is true,
+# rather than triggering when an event occurs." The state-trigger reader took
+# only digits - The Millennium Calendar's "1,000" - so a count printed as a
+# word never matched and the Tome's ability was never even found.
+
+
+def mazemind_board() -> Scenario:
+    return Scenario().player("alice", battlefield=["Mazemind Tome"]).player("bob")
+
+
+def test_three_page_counters_do_not_trigger_mazemind_tome():
+    scenario = mazemind_board().build()
+    tome = scenario.find("Mazemind Tome", Zone.BATTLEFIELD, "alice")
+    tome.add_counters("page", 3)
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    assert scenario.game.put_triggers_on_stack() == []
+
+
+def test_the_fourth_page_counter_triggers_mazemind_tome_once():
+    """The count is read as a word, and CR 603.8's latch holds while the
+    ability is still on the stack."""
+    scenario = mazemind_board().build()
+    tome = scenario.find("Mazemind Tome", Zone.BATTLEFIELD, "alice")
+    tome.add_counters("page", 4)
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    (trigger,) = scenario.game.put_triggers_on_stack()
+
+    assert trigger.source_name == "Mazemind Tome"
+    assert scenario.game.put_triggers_on_stack() == []
+
+
+def test_mazemind_tomes_trigger_exiles_it_and_gains_four_life():
+    """ "Exile it. If you do, you gain 4 life." - the Tome was exiled, so the
+    life is gained."""
+    scenario = mazemind_board().build()
+    tome = scenario.find("Mazemind Tome", Zone.BATTLEFIELD, "alice")
+    tome.add_counters("page", 4)
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    scenario.game.put_triggers_on_stack()
+    scenario.resolve_top()
+
+    assert tome.zone is Zone.EXILE
+    assert scenario.player("alice").life == 24

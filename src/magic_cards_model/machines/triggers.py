@@ -3565,13 +3565,15 @@ def additional_trigger_times(
     return extra
 
 
-#: CR 603.8's own shape, as the pool prints it: The Millennium Calendar's
-#: "When there are 1,000 or more time counters on The Millennium Calendar,
-#: sacrifice it and each opponent loses 1,000 life." The count is written with
-#: digit-group commas, which `machines/abilities._split_top_level` already
-#: refuses to read as the CR 603.1 condition/effect boundary.
+#: CR 603.8's own shape: The Millennium Calendar's "When there are 1,000 or
+#: more time counters on The Millennium Calendar, sacrifice it and each
+#: opponent loses 1,000 life." and Mazemind Tome's "When there are four or more
+#: page counters on this artifact, ...". The count is any `numbers.COUNT` -
+#: digits with digit-group commas (which `machines/abilities._split_top_level`
+#: already refuses to read as the CR 603.1 condition/effect boundary) or a
+#: spelled-out word.
 _STATE_COUNTER_TRIGGER_RE = re.compile(
-    r"^there are (?P<count>\d[\d,]*) or more (?P<kind>.+?) counters on (?P<subject>.+?)$",
+    rf"^there are (?P<count>{COUNT}) or more (?P<kind>.+?) counters on (?P<subject>.+?)$",
     re.IGNORECASE,
 )
 
@@ -3613,7 +3615,9 @@ def _state_condition_holds(game: "Game", ability: TriggeredAbility, source: Card
         # can read; answering False keeps CR 603.2's "only if it actually
         # matches" rather than guessing.
         return False
-    needed = int(match["count"].replace(",", ""))
+    needed = parse_count(match["count"], article=False)
+    if needed is None:
+        return False
     return source.counters[match["kind"].strip().lower()] >= needed
 
 

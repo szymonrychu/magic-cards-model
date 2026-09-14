@@ -18419,6 +18419,50 @@ def _merge_may_discard_if_you_do_clauses(
     return 2, effect
 
 
+#: "exile it" / "exile this artifact" - a mandatory action on the ability's
+#: own source, CR 118.12's "[Do something]." half of "[Do something]. If [a
+#: player] does, [effect]." (Mazemind Tome's state trigger: "exile it. If you
+#: do, you gain 4 life.")
+_EXILE_SELF_ACTION_RE = re.compile(r"^exile (?:it|this [a-z]+)$", re.IGNORECASE)
+
+
+def _merge_exile_self_if_you_do_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """ "Exile it. If you do, `<consequence>`." on a triggered or activated
+    ability, CR 118.12: the exile is a mandatory cost paid as the ability
+    resolves, and "if you do" asks whether it was paid.
+
+    The source can only be exiled if it is still where the ability left it; a
+    source that has already changed zones is a new object (CR 400.7) the
+    ability cannot find, so nothing is exiled and the consequence does not
+    happen. Ability-only, like `_parse_exile_dead_self_clause`: a resolving
+    spell has no source permanent to exile.
+    """
+    if for_spell or index + 1 >= len(clauses):
+        return None
+    if _EXILE_SELF_ACTION_RE.fullmatch(clauses[index].strip()) is None:
+        return None
+    if_match = _IF_YOU_DO_RE.fullmatch(clauses[index + 1].strip())
+    if if_match is None:
+        return None
+    consequence = _parse_mixed_clause(if_match.group("consequence").strip(), for_spell=False)
+    if consequence is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        assert isinstance(stack_object, AbilityOnStack)
+        source = stack_object.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        game.exile_permanent(source)
+        if source.zone is not Zone.EXILE:
+            return
+        consequence(game, stack_object)
+
+    return 2, effect
+
+
 # --------------------------------------------------------------------------
 # Wave W1's third primitive: look at the top N cards and split them between
 # two destinations, general past `Game.scry`/`Game.surveil`'s own fixed
@@ -19999,6 +20043,12 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             index += consumed
             continue
         merged = _merge_may_discard_if_you_do_clauses(clauses, index, for_spell=for_spell)
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_exile_self_if_you_do_clauses(clauses, index, for_spell=for_spell)
         if merged is not None:
             consumed, effect = merged
             parsed.append(effect)
