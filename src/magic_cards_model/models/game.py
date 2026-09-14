@@ -2701,6 +2701,20 @@ class Game(EngineModel):
                     player=state.controller,
                 )
             )
+        # CR 502.3's untap is one simultaneous event for the whole step, and
+        # "you untap one or more permanents" asks about it with its count -
+        # the permanents that actually untapped, and none at all is no event
+        # (CR 603.2g).
+        untapped = sum(1 for state in tapped if not state.tapped)
+        if untapped:
+            self.emit(
+                GameEvent(
+                    event=ExtraTriggerEvent.UNTAPPED_DURING_UNTAP_STEP,
+                    player=active.username,
+                    amount=untapped,
+                    step=Step.UNTAP,
+                )
+            )
 
     # -- turn-based actions (CR 703) ---------------------------------------
 

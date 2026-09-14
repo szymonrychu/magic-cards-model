@@ -5889,14 +5889,26 @@ def _counter_kind(word: str) -> Counter | str:
 #: a card that prints its own name instead of "this" (The Filigree Sylex, and
 #: Grist, the Hunger Tide's own "+1") reads exactly the same way.
 _COUNTER_ON_SELF_RE = re.compile(
-    rf"^put (?P<n>{_COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on this \w+\.?$",
+    rf"^put (?P<n>{_COUNT}|that many) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on this \w+\.?$",
     re.IGNORECASE,
 )
 
 
+def _triggering_event_amount(ability: AbilityOnStack) -> int | None:
+    """A trigger's "that many", read off the event that triggered it
+    (`GameEvent.amount`): The Millennium Calendar's permanents untapped,
+    Marauding Mako's cards discarded. `None` when the event carries no count.
+
+    A local pass-through for the event-count half of the number sweep's G0b
+    "that many" channel, which is to absorb it."""
+    event = ability.event
+    return None if event is None else event.amount
+
+
 def _parse_put_counters_on_self_clause(text: str) -> AbilityEffect | None:
     """`_COUNTER_ON_SELF_RE`'s shape - Walking Ballista's `{4}` ability and
-    The Filigree Sylex's `{T}` ability (CR 122.1).
+    The Filigree Sylex's `{T}` ability (CR 122.1), and a trigger's "put that
+    many ... counters" (`_triggering_event_amount`).
 
     CR 113.7a: an ability existing "independently of its source"'s object can
     still be found by id in whatever zone it now occupies, but only a
@@ -5904,17 +5916,29 @@ def _parse_put_counters_on_self_clause(text: str) -> AbilityEffect | None:
     counter marks a permanent, and one that left the battlefield is a new
     object with no counters to add to; `CardState.move_to` already clears them
     on the way out).
+
+    A "that many" whose event carries no count puts nothing and records an
+    `UnmodeledTriggerEffectNotice` rather than guessing a number.
     """
     match = _COUNTER_ON_SELF_RE.fullmatch(text.strip())
     if match is None:
         return None
-    amount = _count(match.group("n"))
+    that_many = match.group("n").lower() == "that many"
+    amount = 0 if that_many else _count(match.group("n"))
     kind = _counter_kind(match.group("kind"))
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
+        count = _triggering_event_amount(ability) if that_many else amount
+        if count is None:
+            game.unmodeled_trigger_effect_notices.append(
+                UnmodeledTriggerEffectNotice(
+                    source_id=ability.source_id, source_name=ability.source_name, text=text
+                )
+            )
+            return
         source = ability.source(game)
         if source is not None and source.zone is Zone.BATTLEFIELD:
-            game.add_counters(source, kind, amount)
+            game.add_counters(source, kind, count)
 
     return effect
 

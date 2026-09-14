@@ -160,6 +160,16 @@ class ExtraTriggerEvent(StrEnum):
     #: and Greater Gargadon's printed "Sacrifice an artifact, creature, or
     #: land: Remove a time counter from this card" - raise it alike.
     LAST_TIME_COUNTER_REMOVED = "last_time_counter_removed"
+    #: CR 502.3: "the active player determines which permanents they control
+    #: will untap. Then they untap them all simultaneously." The Millennium
+    #: Calendar's "Whenever you untap one or more permanents during your untap
+    #: step" watches that one simultaneous untap, not each permanent's own
+    #: `TriggerEvent.BECOMES_UNTAPPED`. `GameEvent.player` is the active
+    #: player and `GameEvent.amount` how many permanents actually untapped.
+    #: Emitted by `Game.untap_step`, and only when that number is not zero
+    #: (CR 603.2g: "An ability triggers only if its trigger event actually
+    #: occurs").
+    UNTAPPED_DURING_UNTAP_STEP = "untapped_during_untap_step"
 
 
 class GameEvent(EngineModel):
@@ -1870,6 +1880,12 @@ _NTH_DRAW_CONDITION = re.compile(r"^you draw your (?P<ordinal>[a-z]+) card in a 
 #: word, and the only text on Lotus Bloom that resembles it is reminder text.
 _LAST_TIME_COUNTER_CONDITION = re.compile(r"^the last time counter is removed from this card$")
 
+#: The Millennium Calendar's "you untap one or more permanents during your
+#: untap step" - `ExtraTriggerEvent.UNTAPPED_DURING_UNTAP_STEP`.
+_UNTAPPED_DURING_UNTAP_STEP_CONDITION = re.compile(
+    r"^you untap one or more permanents during your untap step$"
+)
+
 
 def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTriggerEvent]:
     """The events a condition `machines/abilities._trigger_event` left unread
@@ -1900,6 +1916,8 @@ def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTrig
         return frozenset({ExtraTriggerEvent.MANA_ADDED})
     if _LAST_TIME_COUNTER_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.LAST_TIME_COUNTER_REMOVED})
+    if _UNTAPPED_DURING_UNTAP_STEP_CONDITION.match(lowered):
+        return frozenset({ExtraTriggerEvent.UNTAPPED_DURING_UNTAP_STEP})
     return frozenset()
 
 
@@ -2005,6 +2023,14 @@ def _unread_condition_matches(
             # the condition to be about, so it does not trigger.
             return False
         return any(color.value == chosen.value for color in event.mana_added)
+
+    if _UNTAPPED_DURING_UNTAP_STEP_CONDITION.match(condition):
+        # CR 502.3: only the active player untaps in their untap step, so
+        # "you" and "your untap step" are both the event's own player.
+        return (
+            event.event is ExtraTriggerEvent.UNTAPPED_DURING_UNTAP_STEP
+            and event.player == controller
+        )
 
     if _LAST_TIME_COUNTER_CONDITION.match(condition):
         # CR 702.62a's third ability. "This card" is the source itself and
