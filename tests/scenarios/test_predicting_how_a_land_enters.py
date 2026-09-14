@@ -221,28 +221,30 @@ def test_a_library_shockland_is_predicted_the_same_way():
 
 
 def test_an_unread_condition_is_reported_tapped_with_a_notice():
-    """Canopy Vista's "two or more basic lands" is not one of the conditions
-    `machines/replacement.py` reads, so the prediction refuses to guess and
-    says so - even on a board where the condition would hold."""
-    scenario = _board(hand=["Canopy Vista"], battlefield=["Forest", "Plains"])
+    """Spectator Seating's "two or more opponents" is not one of the
+    conditions `machines/replacement.py` reads, so the prediction refuses to
+    guess and says so - even on a board where the condition would hold."""
+    scenario = (
+        Scenario().player("alice", hand=["Spectator Seating"]).player("bob").player("carol").build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
 
-    prediction = _predict(scenario, "Canopy Vista")
-
-    assert prediction.state is EntersState.TAPPED
-    assert len(prediction.notices) == 1
-    assert "two or more basic lands" in prediction.notices[0]
-
-
-def test_an_unpaired_if_you_dont_is_reported_tapped_with_a_notice():
-    """Port Town's optional cost is a reveal, not life, so its "If you don't"
-    has nothing the engine pairs it with."""
-    scenario = _board(hand=["Port Town", "Island"])
-
-    prediction = _predict(scenario, "Port Town")
+    prediction = _predict(scenario, "Spectator Seating")
 
     assert prediction.state is EntersState.TAPPED
     assert len(prediction.notices) == 1
-    assert "If you don't" in prediction.notices[0]
+    assert "two or more opponents" in prediction.notices[0]
+
+
+def test_battle_and_reveal_lands_are_read_rather_than_failed_closed():
+    """Their lines used to be unread; `test_enters_tapped_unless_you_control_
+    basic_lands.py` and `test_reveal_a_card_or_enters_tapped.py` cover them."""
+    scenario = _board(
+        hand=["Canopy Vista", "Port Town", "Island"], battlefield=["Forest", "Plains"]
+    )
+
+    assert _predict(scenario, "Canopy Vista").notices == ()
+    assert _predict(scenario, "Port Town").state is EntersState.UNTAPPED_IF_PAID
 
 
 # --------------------------------------------------------------------------
