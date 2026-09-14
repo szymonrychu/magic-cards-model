@@ -1591,7 +1591,11 @@ class Game(EngineModel):
     Also one entry per resolving instant or sorcery face `effect_for` has no
     reader for at all (`Game.resolve`), carrying the spell's id and name and
     the face's whole printed text - a spell that leaves a replacement effect
-    (Plagiarize) is not one."""
+    (Plagiarize) is not one.
+
+    And one entry per resolving triggered ability with printed effect text
+    that `_effect_of` has no reader for (`Game._note_unread_trigger`),
+    carrying the source's id and name and the ability's whole effect text."""
 
     control_replacement_notices: list[ControlReplacementNotice] = Field(default_factory=list)
     """One entry per resolving spell whose text reads as a CR 614.1a
@@ -2700,6 +2704,20 @@ class Game(EngineModel):
                     subject_controller=state.controller,
                     subject_card=state.card,
                     player=state.controller,
+                )
+            )
+        # CR 502.3's untap is one simultaneous event for the whole step, and
+        # "you untap one or more permanents" asks about it with its count -
+        # the permanents that actually untapped, and none at all is no event
+        # (CR 603.2g).
+        untapped = sum(1 for state in tapped if not state.tapped)
+        if untapped:
+            self.emit(
+                GameEvent(
+                    event=ExtraTriggerEvent.UNTAPPED_DURING_UNTAP_STEP,
+                    player=active.username,
+                    amount=untapped,
+                    step=Step.UNTAP,
                 )
             )
 
@@ -4898,6 +4916,8 @@ class Game(EngineModel):
                 effect = self._effect_of(ability)
                 if effect is not None:
                     effect(self, ability)
+                else:
+                    self._note_unread_trigger(ability)
             resolved += 1
             added: list[Color] = []
             for username, was in before.items():
@@ -4959,6 +4979,8 @@ class Game(EngineModel):
                     effect = self._effect_of(ability)
                     if effect is not None:
                         effect(self, ability)
+                    else:
+                        self._note_unread_trigger(ability)
         except Exception:
             self.delayed_triggers.discard(ability)  # CR 608.2n: it ceases to exist
             self._before_priority()
@@ -4967,6 +4989,26 @@ class Game(EngineModel):
         self.delayed_triggers.discard(ability)  # CR 608.2n: it ceases to exist
         self._before_priority()
         return ability
+
+    def _note_unread_trigger(self, ability: AbilityOnStack) -> None:
+        """Fail closed for a triggered ability that resolved with no effect.
+
+        `_effect_of` answering None for a triggered ability with printed effect
+        text means no reader exists for that text, not that the ability legally
+        does nothing - Dress Down's end step trigger resolved as CHANGED
+        NOTHING with no trace. Recorded as the ability resolves (nothing
+        records it when it triggers), the same notice a resolving instant or
+        sorcery with unread text leaves.
+        """
+        if not isinstance(ability.ability, TriggeredAbility) or not ability.ability.effect:
+            return
+        self.unmodeled_trigger_effect_notices.append(
+            UnmodeledTriggerEffectNotice(
+                source_id=ability.source_id,
+                source_name=ability.source_name,
+                text=ability.ability.effect,
+            )
+        )
 
     def _effect_of(self, ability: AbilityOnStack) -> object | None:
         """The scripted effect of an ability, or None if nobody has written one.

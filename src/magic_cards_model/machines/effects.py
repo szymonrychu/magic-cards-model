@@ -5889,14 +5889,26 @@ def _counter_kind(word: str) -> Counter | str:
 #: a card that prints its own name instead of "this" (The Filigree Sylex, and
 #: Grist, the Hunger Tide's own "+1") reads exactly the same way.
 _COUNTER_ON_SELF_RE = re.compile(
-    rf"^put (?P<n>{_COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on this \w+\.?$",
+    rf"^put (?P<n>{_COUNT}|that many) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on this \w+\.?$",
     re.IGNORECASE,
 )
 
 
+def _triggering_event_amount(ability: AbilityOnStack) -> int | None:
+    """A trigger's "that many", read off the event that triggered it
+    (`GameEvent.amount`): The Millennium Calendar's permanents untapped,
+    Marauding Mako's cards discarded. `None` when the event carries no count.
+
+    A local pass-through for the event-count half of the number sweep's G0b
+    "that many" channel, which is to absorb it."""
+    event = ability.event
+    return None if event is None else event.amount
+
+
 def _parse_put_counters_on_self_clause(text: str) -> AbilityEffect | None:
     """`_COUNTER_ON_SELF_RE`'s shape - Walking Ballista's `{4}` ability and
-    The Filigree Sylex's `{T}` ability (CR 122.1).
+    The Filigree Sylex's `{T}` ability (CR 122.1), and a trigger's "put that
+    many ... counters" (`_triggering_event_amount`).
 
     CR 113.7a: an ability existing "independently of its source"'s object can
     still be found by id in whatever zone it now occupies, but only a
@@ -5904,17 +5916,29 @@ def _parse_put_counters_on_self_clause(text: str) -> AbilityEffect | None:
     counter marks a permanent, and one that left the battlefield is a new
     object with no counters to add to; `CardState.move_to` already clears them
     on the way out).
+
+    A "that many" whose event carries no count puts nothing and records an
+    `UnmodeledTriggerEffectNotice` rather than guessing a number.
     """
     match = _COUNTER_ON_SELF_RE.fullmatch(text.strip())
     if match is None:
         return None
-    amount = _count(match.group("n"))
+    that_many = match.group("n").lower() == "that many"
+    amount = 0 if that_many else _count(match.group("n"))
     kind = _counter_kind(match.group("kind"))
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
+        count = _triggering_event_amount(ability) if that_many else amount
+        if count is None:
+            game.unmodeled_trigger_effect_notices.append(
+                UnmodeledTriggerEffectNotice(
+                    source_id=ability.source_id, source_name=ability.source_name, text=text
+                )
+            )
+            return
         source = ability.source(game)
         if source is not None and source.zone is Zone.BATTLEFIELD:
-            game.add_counters(source, kind, amount)
+            game.add_counters(source, kind, count)
 
     return effect
 
@@ -16864,6 +16888,13 @@ class UnmodeledTriggerEffectNotice(EngineModel):
     `source_name` the face's name, `text` the face's whole printed text. Not
     for a permanent spell (CR 608.3a) or a spell that left a replacement
     effect (Plagiarize, CR 614.1a).
+
+    **So does any triggered ability no reader answers for.** When
+    `trigger_effect_for` returns None for a triggered ability with printed
+    effect text, `Game._note_unread_trigger` appends this notice as the
+    ability resolves, with the ability's whole effect text. Nothing records it
+    at trigger time; Dress Down's end step trigger used to resolve as CHANGED
+    NOTHING with no trace.
     """
 
     model_config = ConfigDict(frozen=True)
@@ -19453,39 +19484,83 @@ def _parse_return_dead_self_to_hand_clause(
 # --------------------------------------------------------------------------
 
 
-#: "sacrifice it" - the ability's own source, named the same self-referential
-#: way `_EXILE_IT_RE` and `_RETURN_IT_TO_OWNERS_HAND_RE` above name theirs.
-#: The Millennium Calendar's state trigger (CR 603.8) is the printing in the
-#: pool: "When there are 1,000 or more time counters on The Millennium
-#: Calendar, sacrifice it and each opponent loses 1,000 life."
-_SACRIFICE_IT_RE = re.compile(r"^sacrifice it$", re.IGNORECASE)
+#: "sacrifice it" / "sacrifice this <noun>" - the ability's own source, named
+#: the same self-referential way `_EXILE_IT_RE` and
+#: `_RETURN_IT_TO_OWNERS_HAND_RE` above name theirs. The Millennium Calendar's
+#: state trigger (CR 603.8) prints "sacrifice it"; Dress Down prints "sacrifice
+#: this enchantment", Ball Lightning "sacrifice this creature", and a card
+#: printing its own name reaches here as "this permanent" once
+#: `trigger_effect_for` has normalised it. `noun` is checked against
+#: `_SACRIFICE_SELF_NOUNS`, the same set `_sacrifice_restriction` reads.
+_SACRIFICE_IT_RE = re.compile(
+    r"^sacrifice (?:it|this (?P<noun>[a-z]+))(?: unless (?P<unless>.+?))?$", re.IGNORECASE
+)
+
+
+def _source_escaped(game: "Game", source: CardState) -> bool:
+    """CR 702.138b: "A spell or permanent 'escaped' if that spell or the spell
+    that became that permanent as it resolved was cast from a graveyard with an
+    escape ability." `CardState.cast_with_keyword` is set only as a cast spell
+    becomes this exact permanent and cleared on every later move (CR 400.7), so
+    a permanent that was never cast, or was cast for its mana cost, did not."""
+    return (source.cast_with_keyword or "").lower() == "escape"
+
+
+#: The conditions an "unless ..." tail on a self-sacrifice is read with, each
+#: asked about the ability's own source. Uro and Kroxa's "unless it escaped".
+#: A tail not listed here fails the whole clause, so it is never sacrificed
+#: (or spared) on a condition nobody read.
+_SELF_SACRIFICE_UNLESS_CONDITIONS: dict[str, Callable[["Game", CardState], bool]] = {
+    "it escaped": _source_escaped,
+}
 
 
 def _parse_sacrifice_self_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
-    """ "Sacrifice it" - CR 701.21a's keyword action aimed at the ability's own
-    source: "To sacrifice a permanent, its controller moves it from the
-    battlefield directly to its owner's graveyard."
+    """ "Sacrifice it" / "Sacrifice this enchantment" - CR 701.21a's keyword
+    action aimed at the ability's own source: "To sacrifice a permanent, its
+    controller moves it from the battlefield directly to its owner's
+    graveyard."
+
+    An "unless <condition>" tail (Uro, Titan of Nature's Wrath's "sacrifice it
+    unless it escaped") is read through `_SELF_SACRIFICE_UNLESS_CONDITIONS`
+    and checked as the ability resolves; when it holds, nothing is sacrificed.
 
     CR 113.7a keeps the ability alive once its source is gone ("Once activated
     or triggered, an ability exists on the stack independently of its source"),
     so a source that is no longer on the battlefield - already sacrificed,
     destroyed, or bounced in response - is simply not sacrificed again, and the
     rest of the ability still runs. That fail-soft is the same one
-    `_parse_exile_dead_self_clause` gives its own self-reference.
+    `_parse_exile_dead_self_clause` gives its own self-reference. A source that
+    left and came back is a new object (CR 400.7), which `source_stamp` tells
+    apart from the object that triggered, so it is not sacrificed either.
 
     Ability-only (`for_spell=False`): a resolving spell is not a permanent and
     has no "it" of this kind to sacrifice.
     """
     if for_spell:
         return None
-    if not _SACRIFICE_IT_RE.fullmatch(clause.strip()):
+    match = _SACRIFICE_IT_RE.fullmatch(clause.strip())
+    if match is None:
         return None
+    noun = match.group("noun")
+    if noun is not None and noun.lower() not in _SACRIFICE_SELF_NOUNS:
+        return None
+    unless_text = match.group("unless")
+    unless = None
+    if unless_text is not None:
+        unless = _SELF_SACRIFICE_UNLESS_CONDITIONS.get(unless_text.strip().lower())
+        if unless is None:
+            return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         ability = stack_object
         assert isinstance(ability, AbilityOnStack)
         source = ability.source(game)
         if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        if ability.source_stamp is not None and source.zone_change_stamp != ability.source_stamp:
+            return
+        if unless is not None and unless(game, source):
             return
         game.sacrifice(source)
 
