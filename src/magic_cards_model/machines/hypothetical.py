@@ -91,9 +91,14 @@ class EntersPrediction(BaseModel):
     #: The prompts of the optional payments whose refusal taps it ("pay 2
     #: life"), empty unless `state` is `UNTAPPED_IF_PAID`.
     optional_costs: tuple[str, ...] = ()
-    #: Why the answer failed closed (an unread enters-tapped line), and what a
-    #: trigger resolving after it enters would change about it (CR 603.3).
+    #: Why the answer failed closed (an unread enters-tapped line), what a
+    #: trigger resolving after it enters would change about it (CR 603.3), and
+    #: why `lethal_if_paid` is set.
     notices: tuple[str, ...] = ()
+    #: `UNTAPPED_IF_PAID` only: paying `optional_costs` is legal (CR 119.4) but
+    #: would lose the game at the next state-based action check (CR 704.5a),
+    #: so the untapped option is not one a player can use to cast anything.
+    lethal_if_paid: bool = False
 
 
 class Payability(BaseModel):
@@ -153,6 +158,9 @@ class _Settled(NamedTuple):
     resolved: tuple[str, ...]
     #: One per trigger left unresolved.
     notices: tuple[str, ...]
+    #: Who had lost the game once the land entered, before any trigger
+    #: resolved: the state-based check CR 704.3 makes first (CR 704.5a).
+    losers_on_entry: frozenset[str] = frozenset()
 
 
 def _card(game: "Game", card: CardState | UUID) -> CardState:
@@ -296,6 +304,8 @@ def _settle(rebuild: Callable[[], _Built]) -> _Settled:
     for _ in range(_MAX_SETTLE_PASSES):
         board, entered, asked = rebuild()
         entry = _observed(entered)
+        board.check_state_based_actions()  # CR 704.3
+        losers = frozenset(board.losers)
         outcome = _resolve_choice_free(board, skipped)
         if isinstance(outcome[0], UUID):
             blocker, notice = outcome
@@ -308,15 +318,17 @@ def _settle(rebuild: Callable[[], _Built]) -> _Settled:
                 f"triggered abilities were still resolving after {_MAX_RESOLUTIONS}, so "
                 "the answer stops there (CR 603.3)"
             )
-        return _Settled(board, entered, asked, entry, tuple(resolved), tuple(notices))
+        return _Settled(board, entered, asked, entry, tuple(resolved), tuple(notices), losers)
     board, entered, asked = rebuild()
+    entry = _observed(entered)
+    board.check_state_based_actions()  # CR 704.3
     board.pending_triggers = []
     notices = (
         *skipped.values(),
         f"triggered abilities still needed choices after {_MAX_SETTLE_PASSES} attempts, "
         "so none of them is counted (CR 603.3)",
     )
-    return _Settled(board, entered, asked, _observed(entered), (), notices)
+    return _Settled(board, entered, asked, entry, (), notices, frozenset(board.losers))
 
 
 def _change_notice(land_name: str, settled: _Settled) -> str | None:
@@ -368,7 +380,9 @@ def predict_enters(game: "Game", player: str, land: CardState | UUID) -> EntersP
     if paying.entry[1]:
         return EntersPrediction(**base, state=EntersState.TAPPED, notices=triggered)
 
-    _, declining, asked = _enter_on_a_copy(game, player, found.id, decline_optional_payments=True)
+    declining_board, declining, asked = _enter_on_a_copy(
+        game, player, found.id, decline_optional_payments=True
+    )
     assert declining is not None
     if not declining.tapped:
         return EntersPrediction(**base, state=EntersState.UNTAPPED, notices=triggered)
@@ -377,8 +391,23 @@ def predict_enters(game: "Game", player: str, land: CardState | UUID) -> EntersP
         for decision in asked
         if decision.kind in _OPTIONAL_PAYMENTS and decision.player == player
     )
+    # CR 704.3 / 704.5a: a payment is lethal when the player has lost at the
+    # first state-based check after paying, and has not after declining.
+    declining_board.check_state_based_actions()
+    lethal = player in paying.losers_on_entry and declining_board.is_in_game(player)
+    notices = triggered
+    if lethal:
+        notices = (
+            *triggered,
+            f"{found.name}: paying {' and '.join(costs)} is legal (CR 119.4) but leaves "
+            f"{player} at 0 or less life, and they lose the game (CR 704.5a)",
+        )
     return EntersPrediction(
-        **base, state=EntersState.UNTAPPED_IF_PAID, optional_costs=costs, notices=triggered
+        **base,
+        state=EntersState.UNTAPPED_IF_PAID,
+        optional_costs=costs,
+        notices=notices,
+        lethal_if_paid=lethal,
     )
 
 
@@ -407,10 +436,13 @@ def payability(
             )
         assumed = predict_enters(game, player, land)
         fail_closed_tapped = assumed.state is EntersState.TAPPED
+        # A lethal optional payment is not a way to cast anything: the land is
+        # judged as it enters when that payment is declined.
+        decline = assumed.lethal_if_paid
 
         def rebuild() -> _Built:
             board, entered, asked = _enter_on_a_copy(
-                game, player, land.id, decline_optional_payments=False
+                game, player, land.id, decline_optional_payments=decline
             )
             if fail_closed_tapped and entered is not None:
                 # Fail closed on an unread line too: the prediction said tapped.
