@@ -3205,6 +3205,50 @@ def _enters_tapped_condition(effect: ReplacementEffect) -> EntersCondition | Non
     return tapped_unless
 
 
+def unread_self_enters_tapped_lines(card_state: CardState) -> list[str]:
+    """The entering object's own "enters tapped" lines (CR 614.1d) that
+    `_self_enters_modifiers` skips because it cannot read them.
+
+    Two shapes are skipped there, and both are named here from the same parse:
+    a condition none of `_read_enters_condition`'s readers claims (Mystic
+    Sanctuary's "three or more other Islands"), and an "If you don't" whose
+    optional half is not a life payment `_PAY_LIFE_CHOICE` pairs it with (Port
+    Town's reveal). Only the face that is up is read, the same CR 712.8
+    filter `_self_enters_modifiers` applies. `hypothetical.predict_enters`
+    reports a land with any of these tapped, with a notice, rather than
+    repeating the engine's silent untapped guess.
+    """
+    up_face_name = card_state.up_face_name
+    pending_life_payments = 0
+    unread: list[str] = []
+    for effect in parse_replacement_effects(card_state.card):
+        if up_face_name is not None and effect.face not in (None, up_face_name):
+            continue
+        if not effect.self_replacement:
+            continue
+        if (
+            effect.kind is ReplacementKind.AS_ENTERS
+            and effect.optional
+            and _PAY_LIFE_CHOICE.search(effect.replacement or "")
+        ):
+            pending_life_payments += 1
+            continue
+        if effect.kind is not ReplacementKind.ENTERS_TAPPED:
+            continue
+        condition = (effect.condition or "").strip()
+        if not condition:
+            continue
+        if _IF_YOU_DONT.match(condition):
+            if pending_life_payments:
+                pending_life_payments -= 1
+            else:
+                unread.append(effect.text)
+            continue
+        if _enters_tapped_condition(effect) is None:
+            unread.append(effect.text)
+    return unread
+
+
 def _read_enters_condition(condition: str) -> EntersCondition | None:
     match = _YOU_CONTROL_SUBTYPES_RE.match(condition)
     if match is not None:
