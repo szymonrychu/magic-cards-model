@@ -18693,8 +18693,10 @@ def _merge_reveal_top_to_hand_rest_to_graveyard_clauses(
 #: "of them" is optional: Codecracker Hound prints the shorter "Put one into
 #: your hand", Waker of Waves the fuller "Put one of them into your hand" -
 #: the same CR 608.2d split either way.
-_PUT_ONE_OF_THEM_INTO_YOUR_HAND_RE = re.compile(
-    r"^put one(?: of them)? into your hand$", re.IGNORECASE
+#: The count is read, not fixed: Stock Up prints "Put two of them into your
+#: hand", Dovin, Grand Arbiter's -7 "Put three of them into your hand".
+_PUT_N_OF_THEM_INTO_YOUR_HAND_RE = re.compile(
+    rf"^put (?P<count>{_COUNT})(?: of them)? into your hand$", re.IGNORECASE
 )
 #: "the other into your graveyard" - Waker of Waves' own third clause, split
 #: off the second sentence's "and" by `_CLAUSE_SEPARATOR` the same way
@@ -18723,14 +18725,16 @@ def _merge_look_top_split_hand_graveyard_clauses(
     graveyard." - the same anaphoric-run shape `_merge_look_top_reveal_to_
     hand_clauses` reads for Duskwatch Recruiter, with a different pair of
     destinations and no quality restriction or "you may": both halves of the
-    split are mandatory, one card each.
+    split are mandatory.
 
     `Game.look_at_top_and_split` asks the identical CR 608.2d question either
     way; what differs is only what this function does with the two answered
     groups, and the shape it enforces on them - CR 608.2d: "The player can't
     choose an option that's illegal or impossible", so an answer that does not
-    split the looked-at cards exactly one-and-the-rest is refused rather than
-    silently applied.
+    put exactly the printed number into hand is refused rather than silently
+    applied. The printed number is Waker of Waves' "one", Stock Up's "two" or
+    Dovin, Grand Arbiter's "three"; a library holding fewer cards than that
+    gives what it has (CR 609.3).
     """
     if index + 2 >= len(clauses):
         return None
@@ -18744,7 +18748,14 @@ def _merge_look_top_split_hand_graveyard_clauses(
             count = int(count_text)
         except ValueError:
             return None
-    if _PUT_ONE_OF_THEM_INTO_YOUR_HAND_RE.fullmatch(clauses[index + 1].strip()) is None:
+    hand_match = _PUT_N_OF_THEM_INTO_YOUR_HAND_RE.fullmatch(clauses[index + 1].strip())
+    if hand_match is None:
+        return None
+    hand_word = hand_match.group("count").lower()
+    if hand_word in ("a", "an"):
+        return None
+    hand_count = _count(hand_word)
+    if hand_count < 1:
         return None
     other = _THE_OTHER_INTO_A_DESTINATION_RE.fullmatch(clauses[index + 2].strip())
     if other is None:
@@ -18752,6 +18763,11 @@ def _merge_look_top_split_hand_graveyard_clauses(
     to_bottom = other.group("destination").lower().startswith("on the bottom")
     randomised = other.group("random") is not None
     rest_label = "bottom of your library" if to_bottom else "your graveyard"
+    prompt = (
+        f"put one into your hand, the other to {rest_label}"
+        if hand_count == 1
+        else f"put {hand_word} into your hand, the rest to {rest_label}"
+    )
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         player = game.controller_of(stack_object)
@@ -18760,18 +18776,20 @@ def _merge_look_top_split_hand_graveyard_clauses(
             player,
             count,
             source=source,
-            prompt=f"put one into your hand, the other to {rest_label}",
+            prompt=prompt,
             moved_label="your hand",
             kept_label=rest_label,
             rest_in_random_order=randomised,
             source_id=source_id_of(stack_object),
-            moved_amount=1,
+            moved_amount=hand_count,
             moved_exact=True,
         )
-        if (moved or rest) and len(moved) != 1:
+        # CR 609.3: a library shorter than the printed number gives what it has.
+        required = min(hand_count, len(moved) + len(rest))
+        if len(moved) != required:
             raise ValueError(
-                f"{source}: exactly one of the {count} must go to hand, the rest to "
-                f"{rest_label} (CR 608.2d)"
+                f"{source}: exactly {required} of the {len(moved) + len(rest)} looked at must "
+                f"go to hand, the rest to {rest_label} (CR 608.2d)"
             )
         for state in moved:
             player.add(state, Zone.HAND)
