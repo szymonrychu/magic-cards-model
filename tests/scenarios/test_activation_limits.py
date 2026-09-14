@@ -75,3 +75,18 @@ def test_only_once_still_refuses_the_second_activation():
     assert scenario.why_cannot_activate(rootwalla) == (
         "Blazing Rootwalla's ability has already been activated this turn"
     )
+
+
+def test_no_more_than_three_times_refuses_the_fourth_activation():
+    """Sewer Rats: "{B}, Pay 1 life: This creature gets +1/+0 until end of
+    turn. Activate no more than three times each turn." """
+    scenario = _board("Sewer Rats", "Swamp", 4)
+    rats = scenario.creature("Sewer Rats", "alice")
+
+    for _ in range(3):
+        assert scenario.why_cannot_activate(rats) is None
+        scenario.activate(rats, *scenario.untapped_sources("Swamp"))
+
+    with pytest.raises(ValueError, match="already been activated three times this turn"):
+        scenario.activate(rats, *scenario.untapped_sources("Swamp"))
+    assert scenario.player("alice").life == 17

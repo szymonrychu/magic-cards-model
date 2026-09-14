@@ -1,6 +1,6 @@
 """Object costs whose count is X or "one or more": "Remove X +1/+1 counters
 from this creature" (Chamber Sentry), "Exile X cards from your graveyard"
-(Necropolis Fiend), "Sacrifice X other creatures" (Champion of Stray Souls),
+(Necropolis Fiend), "Sacrifice X lands" (Copper-Leaf Angel),
 "Discard X cards" (Gix, Yawgmoth Praetor), "Exile one or more creature cards
 from your graveyard" (Corpseweft), "Sacrifice one or more artifacts" (Radiant
 Lotus).
@@ -118,42 +118,49 @@ def test_exile_x_cards_with_too_few_in_the_graveyard_is_refused():
     assert len(alice.graveyard) == 1
 
 
-# -- Sacrifice X other creatures -------------------------------------------
+# -- Sacrifice X lands -----------------------------------------------------
 
 
 @pytest.mark.parametrize("x_value", [1, 2])
-def test_sacrifice_x_creatures_sacrifices_the_announced_x(x_value: int):
+def test_sacrifice_x_lands_sacrifices_the_announced_x(x_value: int):
+    """Copper-Leaf Angel: "{T}, Sacrifice X lands: Put X +1/+1 counters on this
+    creature." """
     scenario = (
         Scenario()
         .player(
             "alice",
-            library=["Swamp"],
-            battlefield=[
-                "Champion of Stray Souls",
-                *(["Swamp"] * 5),
-                "Grizzly Bears",
-                "Grizzly Bears",
-                "Memnite",
-            ],
-            graveyard=["Memnite", "Memnite"],
+            library=["Forest"],
+            battlefield=["Copper-Leaf Angel", "Forest", "Forest", "Forest"],
         )
-        .player("bob", library=["Swamp"])
+        .player("bob", library=["Forest"])
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    champion = scenario.creature("Champion of Stray Souls", "alice")
-    alice = scenario.player("alice")
-    victims = scenario.creatures("Grizzly Bears", "Grizzly Bears", username="alice")[:x_value]
-    returning = list(alice.graveyard[:x_value])
+    angel = scenario.creature("Copper-Leaf Angel", "alice")
+    victims = scenario.untapped_sources(*["Forest"] * x_value)
 
-    swamps = scenario.untapped_sources(*["Swamp"] * 5)
-    scenario.activate(
-        champion, *swamps, x_value=x_value, sacrificing=list(victims), targets=list(returning)
-    )
+    scenario.activate(angel, x_value=x_value, sacrificing=list(victims))
+    _resolve(scenario)
 
     assert all(victim.zone is Zone.GRAVEYARD for victim in victims)
-    assert scenario.creature("Memnite", "alice").zone is Zone.BATTLEFIELD
-    assert len([c for c in alice.graveyard if c.name == "Grizzly Bears"]) == x_value
+    assert len(scenario.player("alice").graveyard) == x_value
+    assert angel.counters[Counter.PLUS_ONE] == x_value
+
+
+def test_sacrifice_x_lands_with_too_few_named_is_refused():
+    scenario = (
+        Scenario()
+        .player("alice", library=["Forest"], battlefield=["Copper-Leaf Angel", "Forest"])
+        .player("bob", library=["Forest"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    angel = scenario.creature("Copper-Leaf Angel", "alice")
+    forest = scenario.untapped_sources("Forest")
+
+    with pytest.raises(ValueError, match="needs 2 card"):
+        scenario.activate(angel, x_value=2, sacrificing=list(forest))
+    assert forest[0].zone is Zone.BATTLEFIELD
 
 
 # -- Discard X cards -------------------------------------------------------
