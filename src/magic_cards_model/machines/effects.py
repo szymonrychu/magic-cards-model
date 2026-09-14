@@ -84,7 +84,15 @@ from ..models.token import (
     token_copy_of,
 )
 from ..models.zone import Zone
-from ..numbers import COUNT, parse_count, parse_multiplier
+from ..numbers import (
+    COUNT,
+    Quantity,
+    QuantitySource,
+    parse_count,
+    parse_multiplier,
+    parse_quantity,
+    quantity_pattern,
+)
 from ..snapshot import EngineModel
 from . import combat as combat_rules
 from .abilities import (
@@ -3979,14 +3987,20 @@ def _parse_draw_and_gain_off_sacrificed_clause(
     return effect
 
 
-#: "[you may ]put a land card from your hand onto the battlefield[ tapped]" -
-#: Arboreal Grazer's whole trigger (and the first half of Cultivator Colossus's
-#: longer, repeating one, read separately by `_PUT_LAND_FROM_HAND_REPEAT_RE`
-#: below rather than through this single-clause path, since "repeat this
-#: process" needs the loop that clause's own dedicated parser builds).
+#: "[you may ]put `<quantity>` land card(s) from your hand onto the
+#: battlefield[ tapped]" - Arboreal Grazer's whole trigger ("a land card",
+#: `parse_quantity`'s plain 1) and Wrenn and Seven's loyalty 0 ("any number of
+#: land cards", CR 107.1c's zero-or-more) are one shape with a different
+#: printed quantity, not two - the pinned defect this wave fixes was that the
+#: regex only ever matched the article "a" and `_choose_land_from_hand` only
+#: ever asked for exactly one. (The first half of Cultivator Colossus's
+#: longer, repeating "put a land card ... . If you do, ..." is still read
+#: separately by `_PUT_LAND_FROM_HAND_REPEAT_RE` below, since "repeat this
+#: process" needs the loop that clause's own dedicated parser builds, and it
+#: is always the singular "a" - no printed variant of it counts otherwise.)
 _PUT_LAND_FROM_HAND_RE = re.compile(
-    r"(?P<subject>you may )?put a land card from your hand onto the battlefield"
-    r"(?P<tapped> tapped)?\.?",
+    rf"(?P<subject>you may )?put {quantity_pattern('n')} land cards? "
+    r"from your hand onto the battlefield(?P<tapped> tapped)?\.?",
     re.IGNORECASE,
 )
 
@@ -3995,40 +4009,78 @@ def _land_cards_in_hand(player: Player) -> list[CardState]:
     return [state for state in player.hand if Type.LAND in state.types]
 
 
-def _choose_land_from_hand(
-    game: "Game", player: Player, source: str, *, source_id: str | None
-) -> CardState | None:
+def _choose_lands_from_hand(
+    game: "Game", player: Player, source: str, *, quantity: Quantity, source_id: str | None
+) -> list[CardState]:
     """CR 601.2d-shaped choice among a player's own land cards already known
-    to be in hand ("a land card from your hand" is a choice of *which* land,
-    not merely whether to act). Callers check `_land_cards_in_hand` first, so
-    the "you may" this is nested under is never asked with nothing to choose.
+    to be in hand ("a land card from your hand" is a choice of *which*
+    land(s), not merely whether to act). Callers check `_land_cards_in_hand`
+    first, so the "you may" this is nested under is never asked with nothing
+    to choose.
+
+    `quantity.amount` bounds how many - `None` (CR 107.1c's "any number of")
+    reads as every land in hand - and `quantity.exact` (`False` for "any
+    number of") is CR 701.23b's own "need not find everything" shape read
+    onto a hand choice instead of a search: `Decision.exact=False` is what
+    lets the answer be a legal subset the same way `search_library` already
+    asks it. A hand with nothing to choose from is never asked at all, the
+    same "no legal option, no question" rule the singular case always had.
     """
     lands = _land_cards_in_hand(player)
+    limit = len(lands) if quantity.amount is None else min(quantity.amount, len(lands))
+    if limit == 0:
+        return []
     decision = Decision(
         kind=DecisionKind.CHOOSE_CARDS,
         player=player.username,
-        prompt="choose a land card to put onto the battlefield",
+        prompt=f"choose {'a' if limit == 1 else limit} land card(s) to put onto the battlefield",
         source=source,
-        amount=1,
+        amount=limit,
         cards=tuple(state.id for state in lands),
+        exact=quantity.exact,
+        default_cards=tuple(state.id for state in lands[:limit]),
         source_id=source_id,
     )
     chosen_ids = game.ask(decision)
+    assert isinstance(chosen_ids, tuple)
     by_id = {state.id: state for state in lands}
-    return by_id[chosen_ids[0]]
+    return [by_id[card_id] for card_id in chosen_ids]
+
+
+_EXACTLY_ONE_LAND = Quantity(amount=1, minimum=1, source=QuantitySource.FIXED)
+
+
+def _choose_land_from_hand(
+    game: "Game", player: Player, source: str, *, source_id: str | None
+) -> CardState:
+    """The always-singular case - Cultivator Colossus's own repeating "put a
+    land card" and Spelunking's "you may put a land card" both ever ask for
+    exactly one, never a printed quantity - as a thin, one-card wrapper around
+    `_choose_lands_from_hand`. Callers check `_land_cards_in_hand` first, the
+    same precondition `_choose_lands_from_hand` itself relies on, so the
+    single choice it returns is never empty.
+    """
+    (chosen,) = _choose_lands_from_hand(
+        game, player, source, quantity=_EXACTLY_ONE_LAND, source_id=source_id
+    )
+    return chosen
 
 
 def _parse_put_land_from_hand_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
-    """`_PUT_LAND_FROM_HAND_RE`'s shape - Arboreal Grazer's whole trigger.
+    """`_PUT_LAND_FROM_HAND_RE`'s shape - Arboreal Grazer's whole trigger, or
+    Wrenn and Seven's loyalty 0.
 
-    CR 110.5b: the land arrives tapped only because the sentence says so, not
-    because this is a search (`_SEARCH_AND_PUT_RE`'s own default is the same,
-    for the same reason). No land in hand at all leaves nothing to choose, so
-    the "you may" is never even asked - CR 608.2d's choice has to be a real
-    one.
+    CR 110.5b: the land(s) arrive untapped unless the sentence says "tapped",
+    not because this is a search (`_SEARCH_AND_PUT_RE`'s own default is the
+    same, for the same reason). No land in hand at all leaves nothing to
+    choose, so the "you may" is never even asked - CR 608.2d's choice has to
+    be a real one.
     """
     match = _PUT_LAND_FROM_HAND_RE.fullmatch(clause.strip())
     if match is None:
+        return None
+    quantity = parse_quantity(match.group("n"))
+    if quantity is None:
         return None
     tapped = bool(match.group("tapped"))
     optional = bool((match.group("subject") or "").strip())
@@ -4045,8 +4097,11 @@ def _parse_put_land_from_hand_clause(clause: str, *, for_spell: bool) -> Targete
             source_id=source_id_of(stack_object),
         ):
             return
-        chosen = _choose_land_from_hand(game, player, source, source_id=source_id_of(stack_object))
-        game.put_onto_battlefield(chosen, player.username, tapped=tapped)
+        chosen = _choose_lands_from_hand(
+            game, player, source, quantity=quantity, source_id=source_id_of(stack_object)
+        )
+        for card_state in chosen:
+            game.put_onto_battlefield(card_state, player.username, tapped=tapped)
 
     return effect
 
