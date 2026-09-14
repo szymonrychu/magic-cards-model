@@ -84,7 +84,14 @@ from ..models.token import (
     token_copy_of,
 )
 from ..models.zone import Zone
-from ..numbers import COUNT, parse_count, parse_multiplier
+from ..numbers import (
+    COUNT,
+    QuantitySource,
+    parse_count,
+    parse_multiplier,
+    parse_quantity,
+    quantity_pattern,
+)
 from ..snapshot import EngineModel
 from . import combat as combat_rules
 from .abilities import (
@@ -18478,16 +18485,24 @@ def _merge_may_discard_if_you_do_clauses(
 #: "look at the top <count> cards of your library" - Duskwatch Recruiter's
 #: own first clause.
 _LOOK_AT_TOP_N_CARDS_RE = re.compile(
-    r"^look at the top (?P<count>\w+) cards? of your library$", re.IGNORECASE
+    rf"^look at the top (?P<count>{COUNT}) cards? of your library$", re.IGNORECASE
 )
-#: "you may reveal a/an <quality> card from among them" - the second clause,
-#: naming which of the looked-at cards may be taken.
+#: "you may reveal a/an/up to N/any number of <quality> card(s) from among
+#: them" - the second clause, naming which of the looked-at cards may be
+#: taken. Reality Heist and Domri, Chaos Bringer's own -3 print "up to two";
+#: Lead the Stampede prints "any number of" (CR 107.1c). Duskwatch Recruiter's
+#: bare "a" stays readable as `QUANTITY`'s own fixed-one case.
 _MAY_REVEAL_FROM_AMONG_THEM_RE = re.compile(
-    r"^you may reveal (?:a|an) (?P<quality>.+?) card from among them$", re.IGNORECASE
+    rf"^you may reveal {quantity_pattern('n')} (?P<quality>.+?) cards? from among them$",
+    re.IGNORECASE,
 )
-#: "put it into your hand" - `_CLAUSE_SEPARATOR`'s own "and" split of the
-#: second sentence's tail.
-_PUT_IT_INTO_YOUR_HAND_RE = re.compile(r"^put it into your hand$", re.IGNORECASE)
+#: "put it into your hand" / "put them into your hand" / "put the revealed
+#: cards into your hand" - `_CLAUSE_SEPARATOR`'s own "and" split of the second
+#: sentence's tail; "them" is Reality Heist's own plural for a quantity that
+#: can take more than one, "the revealed cards" is Lead the Stampede's.
+_PUT_IT_OR_THEM_INTO_YOUR_HAND_RE = re.compile(
+    r"^put (?:it|them|the revealed cards) into your hand$", re.IGNORECASE
+)
 #: "put the rest on the bottom of your library in any order" - Duskwatch
 #: Recruiter's own third sentence - **or** "... in a random order", which
 #: Monumental Henge, Narset, Parter of Veils and Thundertrap Trainer print for
@@ -18543,14 +18558,29 @@ def _merge_look_top_reveal_to_hand_clauses(
     reveal_match = _MAY_REVEAL_FROM_AMONG_THEM_RE.fullmatch(clauses[index + 1].strip())
     if reveal_match is None:
         return None
+    quantity = parse_quantity(reveal_match.group("n"))
+    # CR 107.1c's "any number of" and a printed "up to N" are both read; an
+    # unreadable quantifier (X, "that many" - no antecedent here) fails
+    # closed rather than guessing.
+    if quantity is None or quantity.source not in (QuantitySource.FIXED, QuantitySource.ANY_NUMBER):
+        return None
     matches = _quality_matcher(reveal_match.group("quality"))
-    if _PUT_IT_INTO_YOUR_HAND_RE.fullmatch(clauses[index + 2].strip()) is None:
+    if _PUT_IT_OR_THEM_INTO_YOUR_HAND_RE.fullmatch(clauses[index + 2].strip()) is None:
         return None
     bottom_match = _PUT_REST_ON_BOTTOM_ANY_ORDER_RE.fullmatch(clauses[index + 3].strip())
     if bottom_match is None:
         return None
     randomised = bottom_match.group("random") is not None
     quality_description = reveal_match.group("quality").strip()
+
+    if quantity.source is QuantitySource.ANY_NUMBER:
+        reveal_prompt = f"reveal any number of {quality_description} cards from the top"
+    elif quantity.amount == 1 and quantity.exact:
+        reveal_prompt = (
+            f"reveal {with_indefinite_article(f'{quality_description} card')} from the top"
+        )
+    else:
+        reveal_prompt = f"reveal up to {quantity.amount} {quality_description} cards from the top"
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         player = game.controller_of(stack_object)
@@ -18563,17 +18593,15 @@ def _merge_look_top_reveal_to_hand_clauses(
             player,
             count,
             source=source,
-            prompt=(
-                f"reveal {with_indefinite_article(f'{quality_description} card')} "
-                f"from the top {count}"
-            ),
+            prompt=f"{reveal_prompt} {count}",
             moved_label="your hand",
             kept_label="bottom of your library",
             rest_in_random_order=randomised,
             source_id=source_id_of(stack_object),
-            # "You may reveal a <quality> card": one card at most, and
-            # `Game.ask` refuses a second (CR 608.2d).
-            moved_amount=1,
+            # "You may reveal a <quality> card": one at most; "up to N"/"any
+            # number of" raise the ceiling (CR 107.1c). `None` here means no
+            # printed ceiling other than the library itself.
+            moved_amount=quantity.amount,
         )
         for state in moved:
             if not matches(state):
