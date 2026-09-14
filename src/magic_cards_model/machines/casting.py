@@ -30,7 +30,7 @@ from ..models.card import Card, Color, Layout, Type, types_of
 from ..models.card_state import CardState, Counter, ExileAnnotation, ExileMarker, TargetRef
 from ..models.mana import ManaCost, ManaSpend
 from ..models.zone import Zone
-from ..numbers import parse_count
+from ..numbers import VariableX, count_pattern, parse_amount, parse_count
 from ..snapshot import EngineModel
 from .abilities import (
     AbilityKind,
@@ -1795,11 +1795,24 @@ class AlternativeCostOption(EngineModel):
         return self.unavailable is None
 
 
-#: CR 701.68a's own inline shape - "you may blight N" - printed inside the
-#: card's "As an additional cost to cast this spell, ..." sentence rather
-#: than as a keyword-cost line, which is why this is read off `additional_
-#: cost_phrases` rather than `_keyword`.
-_BLIGHT_PHRASE = re.compile(r"^you may blight (?P<n>\d+)$", re.IGNORECASE)
+#: CR 701.68a's own inline shape, printed inside the card's "As an additional
+#: cost to cast this spell, ..." sentence rather than as a keyword-cost line,
+#: which is why this is read off `additional_cost_phrases` rather than
+#: `_keyword`. Three forms: optional "you may blight 1" (Requiting Hex),
+#: mandatory "blight X" (Soul Immolation), and "blight 2 or pay {1}" (Wild
+#: Unraveling), where CR 601.2b's announcement picks one of the two.
+_BLIGHT_PHRASE = re.compile(
+    rf"^(?P<optional>you may )?blight {count_pattern('n', x=True, article=False)}"
+    r"(?: or pay (?P<instead>(?:\{[^{}]+\})+))?$",
+    re.IGNORECASE,
+)
+#: "X can't be greater than <bound>." - Soul Immolation's cap on its blight X.
+_X_CAP = re.compile(r"\bX can't be greater than (?P<bound>[^.]+)\.", re.IGNORECASE)
+#: The one bound read: the greatest power or toughness among creatures the
+#: caster controls.
+_GREATEST_AMONG_CREATURES = re.compile(
+    r"^the greatest (?P<stat>power|toughness) among creatures you control$", re.IGNORECASE
+)
 
 #: CR 118.8b: "Some additional costs are optional." An optional one is printed
 #: as a "you may ..." inside the additional-cost sentence - March of
@@ -1810,7 +1823,7 @@ _OPTIONAL_ADDITIONAL_COST = re.compile(r"^you may\b", re.IGNORECASE)
 
 
 def mandatory_additional_costs(
-    spell: CardState, caster: str, x_value: int | None
+    spell: CardState, caster: str, x_value: int | None, *, blighted: bool = False
 ) -> list[TotalCost]:
     """The spell's own printed "As an additional cost to cast this spell, ..."
     sentences as fresh, unfilled `TotalCost`s (CR 118.8a, 601.2f), X
@@ -1827,6 +1840,13 @@ def mandatory_additional_costs(
         phrase = substitute_x(printed, x_value)
         if _OPTIONAL_ADDITIONAL_COST.match(phrase):
             continue
+        blight = _BLIGHT_PHRASE.match(printed)
+        if blight is not None and blighted:
+            # `Casting.pay_blight` already added the blight, with its creature.
+            continue
+        if blight is not None and blight.group("instead"):
+            # CR 601.2b: "blight 2 or pay {1}" not blighted is the mana.
+            phrase = blight.group("instead")
         cost = total_cost_for_phrase(phrase, caster)
         if cost is None:
             raise ValueError(
@@ -3472,14 +3492,19 @@ class Casting(EngineModel):
             raise ValueError(f"{creature.name} is not a creature, so it cannot be blighted")
         match = _BLIGHT_PHRASE.match(phrase)
         assert match is not None
-        amount = int(match.group("n"))
+        amount = parse_amount(match.group("n"))
+        if amount is None:
+            raise ValueError(f"{self.spell.name}'s blight count {match.group('n')!r} is unread")
         component = place_counters_cost(
             creature,
-            amount,
+            0 if isinstance(amount, VariableX) else amount,
             counter_kind=Counter.MINUS_ONE,
             payer=self.caster,
             description=phrase,
         )
+        # CR 107.3a: "blight X" puts the X announced at CR 601.2f
+        # (`_announce_blight_x`), not a number known yet.
+        component.variable_count = isinstance(amount, VariableX)
         self.add_additional_cost(TotalCost(components=[component]))
         self.blight_paid = True
         return self.step
@@ -3964,6 +3989,7 @@ class Casting(EngineModel):
           because CR 118.3 does not let the spell be cast without paying it -
           charging nothing would be the very bug this method exists to fix.
         """
+        self._announce_blight_x()
         if self.printed_additional_costs_charged:
             return
         self.printed_additional_costs_charged = True
@@ -3990,6 +4016,44 @@ class Casting(EngineModel):
                 if refusal is not None:
                     raise ValueError(refusal)
 
+    def _announce_blight_x(self) -> None:
+        """CR 107.3a and CR 601.2b for "blight X": the counters a paid blight
+        puts are the X announced, and the printed cap on X - Soul Immolation's
+        "X can't be greater than the greatest toughness among creatures you
+        control" - is checked now. A cap this cannot read refuses the cast
+        rather than allow an X the card forbids (CR 118.3)."""
+        variable = [
+            component
+            for cost in self.additional_costs
+            for component in cost.components
+            if component.kind is ComponentKind.PLACE_COUNTERS and component.variable_count
+        ]
+        if not variable:
+            return
+        cap = _X_CAP.search(self.spell.card.oracle_text or "")
+        if cap is not None:
+            bound = _GREATEST_AMONG_CREATURES.match(cap.group("bound").strip())
+            if bound is None or self.game is None:
+                raise ValueError(
+                    f"{self.spell.name}'s X is capped by {cap.group(0)!r}, which this engine "
+                    "cannot read, so the cast is refused (CR 107.3a)"
+                )
+            stat = bound.group("stat").lower()
+            values = [
+                getattr(self.game.characteristics_of(state), stat) or 0
+                for state in self.game.permanents_controlled_by(self.caster)
+                if self.game.characteristics_of(state).is_creature
+            ]
+            greatest = max(values, default=0)
+            if self.x_value > greatest:
+                raise ValueError(
+                    f"X of {self.x_value} is greater than the greatest {stat} among creatures "
+                    f"{self.caster} controls ({greatest}), which {self.spell.name} forbids "
+                    "(CR 601.2b)"
+                )
+        for component in variable:
+            component.amount = self.x_value
+
     def _printed_additional_costs(self) -> list[TotalCost]:
         """The card's own additional costs as payable `TotalCost`s, built fresh
         and charged to nothing - see `_charge_printed_additional_costs`, which
@@ -4006,7 +4070,9 @@ class Casting(EngineModel):
             ComponentKind.EXILE: list(self.exiling),
             ComponentKind.TAP: list(self.tapping),
         }
-        for cost in mandatory_additional_costs(self.spell, self.caster, self.x_value):
+        for cost in mandatory_additional_costs(
+            self.spell, self.caster, self.x_value, blighted=self.blight_paid
+        ):
             for component in cost.components:
                 if component.kind is ComponentKind.REVEAL:
                     filled = announce_reveal(

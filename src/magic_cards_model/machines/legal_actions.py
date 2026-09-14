@@ -254,6 +254,8 @@ def _unfiltered_candidate_pool(
         ComponentKind.TAP,
         ComponentKind.UNTAP,
         ComponentKind.EXERT,
+        # "Blight N": a creature the payer controls (CR 701.68a).
+        ComponentKind.PLACE_COUNTERS,
     ):
         pool = game.permanents_controlled_by(payer)
         if kind is ComponentKind.TAP:

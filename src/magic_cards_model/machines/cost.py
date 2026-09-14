@@ -3170,7 +3170,11 @@ def announce_count(component: CostComponent, x_value: int, nominated: int) -> Co
     """
     if not component.variable_count or component.kind is ComponentKind.REVEAL:
         return component
-    if component.kind in {ComponentKind.PAY_LIFE, ComponentKind.REMOVE_COUNTERS}:
+    if component.kind in {
+        ComponentKind.PAY_LIFE,
+        ComponentKind.REMOVE_COUNTERS,
+        ComponentKind.PLACE_COUNTERS,
+    }:
         return component.model_copy(update={"amount": x_value})
     if component.required:
         return component.model_copy(update={"required": max(component.required, nominated)})
@@ -4001,6 +4005,14 @@ _PHRASE_REMOVE_COUNTERS = re.compile(
 )
 
 
+#: CR 701.68a's "Blight N" as a cost - "{1}{R}, {T}, Blight 1" (Sting-Slinger),
+#: "blight X" (Soul Immolation, X already substituted when announced): N -1/-1
+#: counters on a creature the payer controls, chosen as the cost is paid.
+_PHRASE_BLIGHT = re.compile(
+    rf"^blight {count_pattern('count', x=True, article=False)}$", re.IGNORECASE
+)
+
+
 def _cost_count(word: str) -> tuple[int, bool] | None:
     """An object cost's count as (the fewest that pays it, whether the payer
     decides the number), or None when `word` is not a count.
@@ -4206,6 +4218,25 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
         component = remove_counters_cost(
             None, count, counter_kind=kind, payer=payer, description=text
         )
+        component.variable_count = variable
+        return component
+
+    blight = _PHRASE_BLIGHT.match(text)
+    if blight is not None:
+        amount = parse_amount(blight.group("count"))
+        if amount is None:
+            return None
+        variable = isinstance(amount, VariableX)
+        component = place_counters_cost(
+            None,
+            0 if variable else amount,
+            counter_kind=_counter_kind_word("-1/-1"),
+            payer=payer,
+            description=text,
+        )
+        # CR 701.68a: "a creature you control" - the control half is
+        # `_why_not_controlled`, the creature half this requirement.
+        component.requirement = _requirement("creature")
         component.variable_count = variable
         return component
 

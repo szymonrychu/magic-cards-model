@@ -4456,7 +4456,11 @@ class Game(EngineModel):
                         )
                     )
                 casting.pay_gift(opponent)
-        if any(_BLIGHT_PHRASE.match(p) for p in additional_cost_phrases(card.card)):
+        blights = [_BLIGHT_PHRASE.match(p) for p in additional_cost_phrases(card.card)]
+        # Only the optional "you may blight N" is a `MAY` here. A mandatory
+        # "blight X" and "blight 2 or pay {1}" are left to the printed cost:
+        # unpaid, the first refuses (CR 118.3) and the second charges the mana.
+        if any(match is not None and match.group("optional") for match in blights):
             creatures = [
                 state
                 for state in self.permanents_controlled_by(caster)
@@ -13251,6 +13255,35 @@ class Game(EngineModel):
             return not (permanent.oracle_text or "").strip()
         return any(ability.text in line or line in ability.text for line in computed.abilities)
 
+    def _choose_permanent_for_counters(
+        self, component: CostComponent, payer: str, source: CardState
+    ) -> None:
+        """Ask `payer` which permanent a "Blight N" cost puts its counters on
+        (CR 701.68a, paid at CR 601.2h via CR 602.2b). Offered: the permanents
+        `payer` controls that meet the cost's requirement. None to offer leaves
+        the component empty, and it refuses to be paid (CR 701.68b)."""
+        eligible = [
+            state
+            for state in self.permanents_controlled_by(payer)
+            if component.requirement is None
+            or component.requirement.why_not(state, self, payer) is None
+        ]
+        if not eligible:
+            return
+        answer = self.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=payer,
+                prompt=f"choose a creature you control for {component.description!r}",
+                source=source.name,
+                source_id=source_id_of(source),
+                amount=1,
+                cards=tuple(state.id for state in eligible),
+            )
+        )
+        by_id = {state.id: state for state in eligible}
+        component.cards = [by_id[card_id] for card_id in answer]
+
     def _activation_key(self, permanent: CardState, index: int) -> str:
         return f"{permanent.id}:{index}"
 
@@ -13836,6 +13869,13 @@ class Game(EngineModel):
         key = self._activation_key(permanent, index)
         self.announced_reveal_counts.pop(key, None)
         for component in total.components:
+            if (
+                component.kind is ComponentKind.PLACE_COUNTERS
+                and not component.cards
+                and component.requirement is not None
+            ):
+                self._choose_permanent_for_counters(component, controller, permanent)
+                continue
             if component.kind is not ComponentKind.REVEAL:
                 continue
             if revealing is None:
