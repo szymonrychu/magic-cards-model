@@ -3348,6 +3348,17 @@ def _quality_matcher(quality: str) -> Callable[[CardState], bool]:
             return rest(state) and Supertype.BASIC in state.supertypes
 
         return basic_matches
+    # CR 205.4g: "Any permanent with the supertype 'snow' is a snow
+    # permanent" - Glacial Revelation's own "snow permanent card". The
+    # supertype check stacks on whatever the rest of the phrase already
+    # means, the same way "basic " does above.
+    if lowered.startswith("snow "):
+        rest = _quality_matcher(lowered.removeprefix("snow "))
+
+        def snow_matches(state: CardState) -> bool:
+            return rest(state) and Supertype.SNOW in state.supertypes
+
+        return snow_matches
     if lowered == "historic":
         return _historic
     words = [word.strip() for word in re.split(r",\s*|\s+or\s+", lowered) if word.strip()]
@@ -17477,14 +17488,16 @@ def _type_word_is_readable(word: str) -> bool:
 def _search_quality_is_readable(quality: str) -> bool:
     """Whether every word of a stated quality reaches a real matcher.
 
-    Mirrors `_quality_matcher`'s own splitting - "basic " prefix, then words
-    separated by commas or "or", each optionally carrying one of
-    `_HAND_EXILE_COLOR_WORDS`' color adjectives (CR 105.2c) - so the two cannot
-    drift apart on what counts as readable.
+    Mirrors `_quality_matcher`'s own splitting - "basic "/"snow " prefixes
+    (CR 205.4c, CR 205.4g), then words separated by commas or "or", each
+    optionally carrying one of `_HAND_EXILE_COLOR_WORDS`' color adjectives
+    (CR 105.2c) - so the two cannot drift apart on what counts as readable.
     """
     lowered = quality.strip().lower()
     if lowered.startswith("basic "):
         return _search_quality_is_readable(lowered.removeprefix("basic "))
+    if lowered.startswith("snow "):
+        return _search_quality_is_readable(lowered.removeprefix("snow "))
     words = [word.strip() for word in re.split(r",\s*|\s+or\s+", lowered) if word.strip()]
     if not words:
         return False
@@ -18645,11 +18658,16 @@ def _merge_look_top_reveal_to_hand_clauses(
 
 #: "reveal the top <count> cards of your library"
 _REVEAL_TOP_N_CARDS_RE = re.compile(
-    r"^reveal the top (?P<count>\w+) cards? of your library$", re.IGNORECASE
+    rf"^reveal the top (?P<count>{COUNT}) cards? of your library$", re.IGNORECASE
 )
-#: "you may put a/an <quality> card from among them into your hand"
+#: "you may put a/an/up to N/any number of <quality> card(s) from among them
+#: into your hand" - Glacial Revelation prints "any number of" (CR 107.1c),
+#: Kruphix's Insight-shaped cards print "up to N"; a bare "a/an" reads as
+#: `QUANTITY`'s own fixed-one case, unchanged from before this family read
+#: any other quantifier.
 _MAY_PUT_A_CARD_FROM_AMONG_THEM_INTO_HAND_RE = re.compile(
-    r"^you may put (?:a|an) (?P<quality>.+?) card from among them into your hand$",
+    rf"^you may put {quantity_pattern('n')} (?P<quality>.+?) cards? "
+    r"from among them into your hand$",
     re.IGNORECASE,
 )
 #: "put the rest into your graveyard"
@@ -18689,6 +18707,9 @@ def _merge_reveal_top_to_hand_rest_to_graveyard_clauses(
     take_match = _MAY_PUT_A_CARD_FROM_AMONG_THEM_INTO_HAND_RE.fullmatch(clauses[index + 1].strip())
     if take_match is None:
         return None
+    quantity = parse_quantity(take_match.group("n"))
+    if quantity is None or quantity.source not in (QuantitySource.FIXED, QuantitySource.ANY_NUMBER):
+        return None
     quality = take_match.group("quality").strip()
     if not _search_quality_is_readable(quality):
         return None
@@ -18696,6 +18717,12 @@ def _merge_reveal_top_to_hand_rest_to_graveyard_clauses(
     if _PUT_THE_REST_INTO_YOUR_GRAVEYARD_RE.fullmatch(clauses[index + 2].strip()) is None:
         return None
     article = "an" if quality[:1].lower() in "aeiou" else "a"
+    if quantity.source is QuantitySource.ANY_NUMBER:
+        take_noun = f"any number of {quality} cards"
+    elif quantity.exact and quantity.amount == 1:
+        take_noun = f"{article} {quality} card"
+    else:
+        take_noun = f"up to {quantity.amount} {quality} cards"
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         player = game.controller_of(stack_object)
@@ -18707,32 +18734,59 @@ def _merge_reveal_top_to_hand_rest_to_graveyard_clauses(
         for state in revealed:
             game.reveal(state, source=source)
         candidates = [state for state in revealed if matches(state)]
-        chosen: CardState | None = None
-        if candidates and game.may(
-            player,
-            f"put {article} {quality} card from among them into your hand",
-            source=source,
-            source_id=source_id,
-            cards=candidates,
-        ):
-            chosen_ids = game.ask(
-                Decision(
-                    kind=DecisionKind.CHOOSE_CARDS,
-                    player=player.username,
-                    prompt=f"choose {article} {quality} card to put into your hand",
+        chosen: list[CardState] = []
+        if candidates:
+            if quantity.exact:
+                # "you may put a/an <quality> card": a single optional pick,
+                # gated behind the CR 608.2d "may" before naming candidates.
+                if game.may(
+                    player,
+                    f"put {take_noun} from among them into your hand",
                     source=source,
                     source_id=source_id,
-                    amount=1,
-                    cards=tuple(state.id for state in candidates),
-                    default_cards=(candidates[0].id,),
+                    cards=candidates,
+                ):
+                    chosen_ids = game.ask(
+                        Decision(
+                            kind=DecisionKind.CHOOSE_CARDS,
+                            player=player.username,
+                            prompt=f"choose {take_noun} to put into your hand",
+                            source=source,
+                            source_id=source_id,
+                            amount=1,
+                            cards=tuple(state.id for state in candidates),
+                            default_cards=(candidates[0].id,),
+                        )
+                    )
+                    assert isinstance(chosen_ids, tuple)
+                    chosen = [next(state for state in candidates if state.id == chosen_ids[0])]
+            else:
+                # "up to N"/"any number of": CR 107.1c - zero to the ceiling
+                # is one question, with no separate "may" gate in front of it.
+                ceiling = (
+                    len(candidates)
+                    if quantity.amount is None
+                    else min(quantity.amount, len(candidates))
                 )
-            )
-            assert isinstance(chosen_ids, tuple)
-            chosen = next(state for state in candidates if state.id == chosen_ids[0])
-        if chosen is not None:
-            player.move(chosen, Zone.HAND)
+                chosen_ids = game.ask(
+                    Decision(
+                        kind=DecisionKind.CHOOSE_CARDS,
+                        player=player.username,
+                        prompt=f"put {take_noun} from among them into your hand",
+                        source=source,
+                        source_id=source_id,
+                        amount=ceiling,
+                        exact=False,
+                        cards=tuple(state.id for state in candidates),
+                    )
+                )
+                assert isinstance(chosen_ids, tuple)
+                by_id = {state.id: state for state in candidates}
+                chosen = [by_id[card_id] for card_id in chosen_ids]
+        for state in chosen:
+            player.move(state, Zone.HAND)
         for state in revealed:
-            if state is not chosen:
+            if state not in chosen:
                 game.put_into_graveyard(state)
 
     return 3, effect
