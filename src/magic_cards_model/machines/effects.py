@@ -84,7 +84,7 @@ from ..models.token import (
     token_copy_of,
 )
 from ..models.zone import Zone
-from ..numbers import COUNT, parse_count, parse_multiplier
+from ..numbers import COUNT, parse_count, parse_multiplier, where_x_pattern
 from ..snapshot import EngineModel
 from . import combat as combat_rules
 from .abilities import (
@@ -891,6 +891,19 @@ def _greatest_mana_value_among_cards_in_exile(game: "Game", *_: object) -> int:
     return int(max(values)) if values else 0
 
 
+#: "its power"/"its toughness" or "this creature's power"/"this permanent's
+#: toughness" - a term naming the object the expression is being evaluated
+#: for (Heroes' Bane's own "Put X +1/+1 counters on this creature, where X is
+#: its power", Ouroboroid's "... on each creature you control, where X is
+#: this creature's power"). Both point at the ability's own source, never a
+#: different referent - `_read_referent_power_expression`/`_is_referent_
+#: power_expression` above are the narrower "that <type>'s power" shape read
+#: off a *different* object a clause names, which this is not.
+_OBJECT_CHARACTERISTIC_RE = re.compile(
+    r"^(?:its|this [a-z]+'s) (?P<characteristic>power|toughness)$", re.IGNORECASE
+)
+
+
 def _amount_term(term: str) -> AmountReader | None:
     """One term of `amount_expression`, or `None` when it is not readable."""
     text = term.strip()
@@ -909,6 +922,22 @@ def _amount_term(term: str) -> AmountReader | None:
         return lambda game, _controller, _object, _x: _greatest_mana_value_among_cards_in_exile(
             game
         )
+    if match := _OBJECT_CHARACTERISTIC_RE.fullmatch(text):
+        # CR 208.1's power/toughness, CR 208.5's zero default for a value
+        # that can't be determined (the object has already left the
+        # battlefield, or a `*` characteristic-defining ability has nothing
+        # to compute from).
+        wants_power = match.group("characteristic").lower() == "power"
+
+        def read_object_characteristic(
+            game: "Game", _controller: str, obj: CardState | None, _x: int
+        ) -> int:
+            if obj is None:
+                return 0
+            value = game.power_of(obj) if wants_power else game.toughness_of(obj)
+            return max(value, 0) if value is not None else 0
+
+        return read_object_characteristic
     counted = count_expression(text) or _devotion_count(text)
     if counted is not None:
         return lambda game, controller, _object, _x: counted(game, controller)
@@ -5755,7 +5784,7 @@ def put_counters_on_ability_targets(kind: Counter | str, amount: int) -> Targete
 # characteristic read (CR 613.4, CR 613.5), not a count of anything.
 _COUNTER_EACH_GROUP_RE = re.compile(
     rf"^put (?P<n>{COUNT}|x) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on each "
-    r"(?P<group>[a-z]+) you control(?:,\s*where x is (?P<expr>.+))?\.?$",
+    rf"(?P<group>[a-z]+) you control{where_x_pattern('expr')}\.?$",
     re.IGNORECASE,
 )
 
@@ -5771,6 +5800,14 @@ def _parse_put_counters_on_group_clause(text: str) -> AbilityEffect | None:
     documented for a printed-type-line-only read. `<group>` "creature" is a
     card type (CR 205.2a); anything else is read as a creature subtype
     (CR 205.3) rather than a card type, since Ajani's own "Cat" is one.
+
+    "X, where X is `<expr>`" reads `<expr>` through the shared `amount_
+    expression` (Ouroboroid's own "this creature's power", the same reader
+    Voja, Jaws of the Conclave's "the number of Elves you control" already
+    goes through) rather than a literal string match against one printed
+    expression - an expression it cannot read fails closed with an
+    `UnreadableCounterAmountNotice` instead of placing a guessed number
+    (CR 611.2c: the magnitude is fixed once, at resolution).
     """
     match = _COUNTER_EACH_GROUP_RE.fullmatch(text.strip())
     if match is None:
@@ -5779,11 +5816,12 @@ def _parse_put_counters_on_group_clause(text: str) -> AbilityEffect | None:
     group = match.group("group")
     n_text = match.group("n").lower()
     expr = match.group("expr")
-    fixed_amount: int | None
+    reader: AmountReader | None = None
+    fixed_amount: int | None = None
     if n_text == "x":
-        if expr is None or expr.strip().rstrip(".").lower() != "this creature's power":
+        if expr is None:
             return None
-        fixed_amount = None
+        reader = amount_expression(expr)
     else:
         fixed_amount = parse_count(n_text)
 
@@ -5791,13 +5829,22 @@ def _parse_put_counters_on_group_clause(text: str) -> AbilityEffect | None:
         source = ability.source(game)
         if source is None:
             return
-        if fixed_amount is None:
-            amount = 0
-            if source.zone is Zone.BATTLEFIELD:
-                power = game.power_of(source)
-                amount = max(power, 0) if power is not None else 0
-        else:
+        if fixed_amount is not None:
             amount = fixed_amount
+        elif source.zone is not Zone.BATTLEFIELD:
+            amount = 0
+        elif reader is None:
+            game.unreadable_counter_amount_notices.append(
+                UnreadableCounterAmountNotice(
+                    source_id=ability.source_id,
+                    source_name=ability.source_name,
+                    text=text.strip(),
+                    expression=(expr or "").strip(),
+                )
+            )
+            return
+        else:
+            amount = max(reader(game, ability.controller, source, ability.x_value), 0)
         if amount <= 0:
             return
         controller = ability.controller
@@ -5854,16 +5901,40 @@ def _counter_kind(word: str) -> Counter | str:
 #: "permanent") - the source's own name has already been normalised to "this
 #: permanent" by `_self_normalized_effect_text` by the time this ever runs, so
 #: a card that prints its own name instead of "this" (The Filigree Sylex, and
-#: Grist, the Hunger Tide's own "+1") reads exactly the same way.
+#: Grist, the Hunger Tide's own "+1") reads exactly the same way. "That many"
+#: (Marauding Mako's "Whenever you discard one or more cards, put that many
+#: +1/+1 counters on this creature.", The Millennium Calendar's own untap-step
+#: trigger) is CR 607.1's anaphora back to this same ability's triggering
+#: event, read by `_triggering_event_amount`.
 _COUNTER_ON_SELF_RE = re.compile(
-    rf"^put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on this \w+\.?$",
+    rf"^put (?P<n>{COUNT}|x|that many) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on this \w+"
+    rf"{where_x_pattern('expr')}\.?$",
     re.IGNORECASE,
 )
 
 
+def _triggering_event_amount(ability: AbilityOnStack) -> int | None:
+    """A trigger's "that many" (CR 607.1), read off the event that triggered
+    it - Marauding Mako's cards discarded (`TriggerEvent.DISCARDS_A_CARD`'s
+    own `GameEvent.amount`), The Millennium Calendar's permanents untapped
+    during the untap step. `None` when there is no triggering event, or the
+    event carries no count, so the caller can fail closed instead of placing
+    zero counters as though the ability had nothing to do.
+
+    A stand-in for the number sweep's group-0b "that many" event-count
+    channel, which is to absorb this reader once it lands - every other half
+    of a "that many"/X/fixed-N clause in this family is unaffected by the
+    swap.
+    """
+    event = ability.event
+    return None if event is None else event.amount
+
+
 def _parse_put_counters_on_self_clause(text: str) -> AbilityEffect | None:
     """`_COUNTER_ON_SELF_RE`'s shape - Walking Ballista's `{4}` ability and
-    The Filigree Sylex's `{T}` ability (CR 122.1).
+    The Filigree Sylex's `{T}` ability (CR 122.1), Heroes' Bane's own
+    "Put X +1/+1 counters on this creature, where X is its power", and
+    Marauding Mako's/The Millennium Calendar's "that many".
 
     CR 113.7a: an ability existing "independently of its source"'s object can
     still be found by id in whatever zone it now occupies, but only a
@@ -5871,16 +5942,62 @@ def _parse_put_counters_on_self_clause(text: str) -> AbilityEffect | None:
     counter marks a permanent, and one that left the battlefield is a new
     object with no counters to add to; `CardState.move_to` already clears them
     on the way out).
+
+    "X, where X is `<expr>`" reads `<expr>` through the shared `amount_
+    expression`; an expression it cannot read fails closed with an
+    `UnreadableCounterAmountNotice`. "That many" whose triggering event
+    carries no count fails closed the same way with an
+    `UnmodeledTriggerEffectNotice` instead of guessing a number - "unreadable
+    is not the same as no effect".
     """
     match = _COUNTER_ON_SELF_RE.fullmatch(text.strip())
     if match is None:
         return None
-    amount = parse_count(match.group("n"))
+    n_text = match.group("n").lower()
     kind = _counter_kind(match.group("kind"))
+    expr = match.group("expr")
+    that_many = n_text == "that many"
+    reader: AmountReader | None = None
+    fixed_amount: int | None = None
+    if not that_many:
+        if n_text == "x":
+            if expr is None:
+                return None
+            reader = amount_expression(expr)
+        else:
+            fixed_amount = parse_count(n_text)
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         source = ability.source(game)
-        if source is not None and source.zone is Zone.BATTLEFIELD:
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        if that_many:
+            count = _triggering_event_amount(ability)
+            if count is None:
+                game.unmodeled_trigger_effect_notices.append(
+                    UnmodeledTriggerEffectNotice(
+                        source_id=ability.source_id,
+                        source_name=ability.source_name,
+                        text=text.strip(),
+                    )
+                )
+                return
+            amount = count
+        elif fixed_amount is not None:
+            amount = fixed_amount
+        elif reader is None:
+            game.unreadable_counter_amount_notices.append(
+                UnreadableCounterAmountNotice(
+                    source_id=ability.source_id,
+                    source_name=ability.source_name,
+                    text=text.strip(),
+                    expression=(expr or "").strip(),
+                )
+            )
+            return
+        else:
+            amount = max(reader(game, ability.controller, source, ability.x_value), 0)
+        if amount > 0:
             game.add_counters(source, kind, amount)
 
     return effect
@@ -10030,7 +10147,19 @@ _TRANSFORM_ALL_SUBTYPE_RE = re.compile(
 #: Werewolves. Anything else is left unread rather than guessed at - a type
 #: this cannot singularise would silently sweep nothing, which is the same
 #: silence as a card doing nothing at all.
-def _singular_subtype(plural: str) -> str | None:
+#:
+#: Named for its one caller (`_parse_transform_all_subtype_clause`, right
+#: below) rather than the bare `_singular_subtype` this module already has
+#: two other same-named, differently-behaved singularisers of (`count_
+#: expression`'s own, and `amass`'s own `_singular_subtype_for_amass`) - three
+#: functions sharing one name meant only the textually-last definition was
+#: ever reachable (Python resolves a module-level name at call time, not by
+#: which `def` sits nearest), silently shadowing the other two's callers onto
+#: behaviour neither was written for. This wave's number sweep found it by
+#: way of `count_expression("number of Elf you control")` always coming back
+#: 0: the shadowing amass version neither lowercases nor checks
+#: `subtype_vocabulary()`, so "Elf" never matched a board's lowercase "elf".
+def _singular_subtype_for_transform_all(plural: str) -> str | None:
     if plural.endswith("ves"):
         return f"{plural[:-3]}f"
     if plural.endswith("ies"):
@@ -10069,7 +10198,7 @@ def _parse_transform_all_subtype_clause(clause: str, *, for_spell: bool) -> Targ
     match = _TRANSFORM_ALL_SUBTYPE_RE.fullmatch(clause.strip())
     if match is None:
         return None
-    subtype = _singular_subtype(match.group("subtype"))
+    subtype = _singular_subtype_for_transform_all(match.group("subtype"))
     if subtype is None:
         return None
 
@@ -16042,7 +16171,7 @@ def _parse_earthbend_clause(clause: str, *, for_spell: bool) -> TargetedClause |
 _AMASS_RE = re.compile(r"^amass (?P<subtype>[A-Za-z][a-z]*) (?P<n>\d+)$", re.IGNORECASE)
 
 
-def _singular_subtype(word: str) -> str:
+def _singular_subtype_for_amass(word: str) -> str:
     """ "Orcs" -> "Orc". Amass prints its creature type in the plural, and CR
     205.3m's subtype list is singular ("Orc", "Zombie", "Army"), so the two
     have to be reconciled before the token is built or the "is it already
@@ -16053,6 +16182,9 @@ def _singular_subtype(word: str) -> str:
     been printed with pluralises that way, and a subtype that does not
     (there is none in CR 205.3m today) would come out wrong in a way a
     cleverer rule would only hide.
+
+    Named for its one caller, `amass` below - see `_singular_subtype_for_
+    transform_all`'s own docstring for why this plain name changed at all.
     """
     return word[:-1] if word.endswith(("s", "S")) and len(word) > 1 else word
 
@@ -16110,7 +16242,7 @@ def amass(
     token this same call may have just created is printed with it.
     """
     armies = _armies_controlled_by(game, controller)
-    singular = _singular_subtype(subtype)
+    singular = _singular_subtype_for_amass(subtype)
     if not armies:
         create_tokens(
             game,
@@ -19721,6 +19853,17 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
         counters_on_self = _parse_put_counters_on_self_clause(clause)
         if counters_on_self is not None:
             return counters_on_self  # type: ignore[return-value]
+        # "Put N counters on each `<group>` you control." was reachable only
+        # as a *whole* ability's effect, the same gap `counters_on_self` just
+        # above was closed for: Voja, Jaws of the Conclave's "put X +1/+1
+        # counters on each creature you control, where X is the number of
+        # Elves you control. Draw a card for each Wolf you control." is two
+        # clauses, so the whole-text dispatcher's own direct call to this
+        # parser (`fullmatch` against the *entire* two-sentence text) never
+        # matches, and the ability silently did nothing.
+        counters_on_group = _parse_put_counters_on_group_clause(clause)
+        if counters_on_group is not None:
+            return counters_on_group  # type: ignore[return-value]
         counters_equal_to = _parse_put_counters_equal_to_clause(clause)
         if counters_equal_to is not None:
             return counters_equal_to  # type: ignore[return-value]

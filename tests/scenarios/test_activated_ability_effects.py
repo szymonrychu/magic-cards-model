@@ -136,6 +136,60 @@ def test_walking_ballistas_removal_ability_is_undisturbed():
 
 
 # --------------------------------------------------------------------------
+# Heroes' Bane - {2}{G}{G}: Put X +1/+1 counters on this creature, where X is
+# its power. Number-sweep G12-1: `_COUNTER_ON_SELF_RE` only ever matched a
+# fixed count before this wave - "X" (with or without "where X is") did not
+# match at all, so this ability was silently unreadable.
+# --------------------------------------------------------------------------
+
+
+def test_heroes_banes_x_is_its_own_current_power():
+    """CR 122.1a, CR 208.1: Heroes' Bane enters with four +1/+1 counters
+    (0/0 base -> 4/4), so its own ability's X is 4 the first time - not the
+    printed "0" base power, and not a guessed "1"."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Heroes' Bane"], battlefield=["Forest"] * 9)
+        .player("bob", library=["Forest"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources(*["Forest"] * 5)
+    bane = scenario.cast_and_resolve("Heroes' Bane", *sources, auto=True)
+    assert bane.counter_count(Counter.PLUS_ONE) == 4
+    assert bane.power == 4
+
+    activation_sources = scenario.untapped_sources("Forest", "Forest", "Forest", "Forest")
+    scenario.activate(bane, *activation_sources)
+    scenario.pass_until_resolved()
+
+    assert bane.counter_count(Counter.PLUS_ONE) == 8, "X was 4, its power when the ability resolved"
+    assert bane.power == 8
+
+
+def test_heroes_banes_x_grows_with_each_activation():
+    """The second activation reads the *new* power (8), not the original 4 -
+    CR 611.2c fixes the magnitude fresh at each resolution."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Heroes' Bane"], battlefield=["Forest"] * 13)
+        .player("bob", library=["Forest"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources(*["Forest"] * 5)
+    bane = scenario.cast_and_resolve("Heroes' Bane", *sources, auto=True)
+
+    scenario.activate(bane, *scenario.untapped_sources("Forest", "Forest", "Forest", "Forest"))
+    scenario.pass_until_resolved()
+    assert bane.power == 8
+
+    scenario.activate(bane, *scenario.untapped_sources("Forest", "Forest", "Forest", "Forest"))
+    scenario.pass_until_resolved()
+    assert bane.power == 16, "the second activation's X is 8, not the original 4"
+
+
+# --------------------------------------------------------------------------
 # Devoted Druid - Put a -1/-1 counter on this creature: Untap this creature.
 # --------------------------------------------------------------------------
 
