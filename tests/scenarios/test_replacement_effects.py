@@ -555,3 +555,150 @@ def test_gaining_no_life_is_not_an_event_the_angel_can_add_to():
     scenario.game.gain_life("alice", 0)
 
     assert scenario.player("alice").life == 20
+
+
+# --------------------------------------------------------------------------
+# CR 614.16: how many counters are put, read as a multiplier and an addend
+# --------------------------------------------------------------------------
+#
+# Doubling Season's "twice that many", Hardened Scales' "that many plus one",
+# Vizier of Remedies' "that many ... minus one" and Winding Constrictor's "that
+# many plus one of each of those kinds" are one replacement with a number in
+# it. CR 122.6 makes an object given counters as it enters count as counters
+# "put on" it; CR 107.1b floors a subtraction at zero.
+
+
+def _counter_board(*permanents: str, bob: tuple[str, ...] = ()) -> Scenario:
+    return (
+        Scenario()
+        .player("alice", battlefield=list(permanents))
+        .player("bob", battlefield=list(bob))
+    )
+
+
+def test_hardened_scales_adds_one_to_the_counters_put_on_a_creature():
+    """ "...that many plus one +1/+1 counters are put on it instead." Two, three."""
+    scenario = _counter_board("Hardened Scales", "Grizzly Bears").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears")
+
+    scenario.game.add_counters(bears, "+1/+1", 2)
+
+    assert bears.counter_count("+1/+1") == 3
+
+
+def test_hardened_scales_turns_a_single_counter_into_two():
+    """The addend is flat (CR 614.5): one counter becomes two."""
+    scenario = _counter_board("Hardened Scales", "Grizzly Bears").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears")
+
+    scenario.game.add_counters(bears, "+1/+1", 1)
+
+    assert bears.counter_count("+1/+1") == 2
+
+
+def test_branching_evolution_doubles_the_counters_put_on_a_creature():
+    """ "...twice that many +1/+1 counters are put on that creature instead." """
+    scenario = _counter_board("Branching Evolution", "Grizzly Bears").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears")
+
+    scenario.game.add_counters(bears, "+1/+1", 2)
+
+    assert bears.counter_count("+1/+1") == 4
+
+
+def test_hardened_scales_reaches_the_counters_a_creature_enters_with():
+    """CR 122.6: Kalonian Hydra's four entering counters are "put on" it."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Kalonian Hydra"], battlefield=["Hardened Scales"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    hydra = scenario.put_onto_battlefield("Kalonian Hydra")
+
+    assert hydra.counter_count("+1/+1") == 5
+
+
+def test_hardened_scales_leaves_other_kinds_of_counter_alone():
+    """ "If one or more **+1/+1** counters would be put" - a -1/-1 counter is not one."""
+    scenario = _counter_board("Hardened Scales", "Grizzly Bears").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears")
+
+    scenario.game.add_counters(bears, "-1/-1", 1)
+
+    assert bears.counter_count("-1/-1") == 1
+
+
+def test_hardened_scales_leaves_an_opponents_creature_alone():
+    """ "...on a creature **you control**." """
+    scenario = _counter_board("Hardened Scales", bob=("Grizzly Bears",)).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "bob")
+
+    scenario.game.add_counters(bears, "+1/+1", 2)
+
+    assert bears.counter_count("+1/+1") == 2
+
+
+def test_hardened_scales_leaves_a_noncreature_permanent_alone():
+    """ "...on a **creature** you control" - an artifact that is not one is not."""
+    scenario = _counter_board("Hardened Scales", "Chalice of the Void").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    chalice = scenario.creature("Chalice of the Void")
+
+    scenario.game.add_counters(chalice, "+1/+1", 2)
+
+    assert chalice.counter_count("+1/+1") == 2
+
+
+def test_winding_constrictor_adds_one_charge_counter_on_an_artifact():
+    """ "If one or more counters would be put on an artifact or creature you
+    control, that many plus one of each of those kinds of counters..." - any
+    kind, and a noncreature artifact is one of the two types it names."""
+    scenario = _counter_board("Winding Constrictor", "Chalice of the Void").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    chalice = scenario.creature("Chalice of the Void")
+
+    scenario.game.add_counters(chalice, "charge", 1)
+
+    assert chalice.counter_count("charge") == 2
+
+
+def test_winding_constrictor_adds_one_of_a_minus_counter_too():
+    """ "...of each of those kinds" - a -1/-1 counter is a kind like any other."""
+    scenario = _counter_board("Winding Constrictor", "Grizzly Bears").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears")
+
+    scenario.game.add_counters(bears, "-1/-1", 1)
+
+    assert bears.counter_count("-1/-1") == 2
+
+
+def test_winding_constrictor_leaves_a_land_alone():
+    """A land is neither an artifact nor a creature."""
+    scenario = _counter_board("Winding Constrictor", "Mountain").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    mountain = scenario.creature("Mountain")
+
+    scenario.game.add_counters(mountain, "charge", 1)
+
+    assert mountain.counter_count("charge") == 1
+
+
+def test_scales_and_evolution_each_apply_exactly_once():
+    """CR 616.1 orders the two; either way each applies once to one counter:
+    (1 + 1) * 2 = 4 or 1 * 2 + 1 = 3."""
+    scenario = _counter_board("Hardened Scales", "Branching Evolution", "Grizzly Bears").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears")
+
+    scenario.game.add_counters(bears, "+1/+1", 1)
+
+    assert bears.counter_count("+1/+1") in (3, 4)

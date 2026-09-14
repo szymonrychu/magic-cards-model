@@ -1708,24 +1708,40 @@ def _draw_plus(amount: int) -> Apply:
     return apply
 
 
-def _doubling_season_applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
-    """ "If an effect would put one or more counters on a permanent you control..."
+def _counter_amount_applies(
+    kind: str | None, types: frozenset[Type] | None, you_control: bool
+) -> Applies:
+    """ "If one or more [kind] counters would be put on [a creature] [you control]..."
 
     CR 122.6: "counters being put on an object ... refers to putting counters on
     that object while it's on the battlefield and also to an object that's given
     counters as it enters the battlefield", which is why the enters-with
     counters of CR 614.1c reach this too.
+
+    `kind` None is "one or more counters" of any kind; `types` None is "a
+    permanent". A permanent already on the battlefield reads its computed types
+    (CR 613.5) - a land earthbend (CR 701.66a) made a creature is a creature
+    you control, whatever it prints.
     """
-    return (
-        event.kind is EventKind.ADD_COUNTERS
-        and event.amount > 0
-        and event.card is not None
-        and event.card.controller == source.controller
-    )
 
+    def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
+        if event.kind is not EventKind.ADD_COUNTERS or event.amount <= 0:
+            return False
+        card = event.card
+        if card is None:
+            return False
+        if you_control and card.controller != source.controller:
+            return False
+        if kind is not None and (event.counter_kind or "").strip().lower() != kind:
+            return False
+        if types is None:
+            return True
+        card_types = (
+            game.characteristics_of(card).types if card.zone is Zone.BATTLEFIELD else card.types
+        )
+        return any(wanted in card_types for wanted in types)
 
-def _double_counters(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
-    event.amount *= 2
+    return applies
 
 
 def _doubling_season_tokens_applies(
@@ -2535,85 +2551,104 @@ def _compile_extra_token(effect: ReplacementEffect) -> CardReplacement | None:
     )
 
 
-# -- "if an effect would put one or more counters on a permanent you control,
-#     it puts twice that many of those counters on that permanent instead" --
+# -- "if [an effect would put] one or more [kind] counters [would be put] on
+#    [a subject] you control, [N times | that many plus/minus N] ... instead" --
+#
+# Doubling Season ("it puts twice that many of those counters on that
+# permanent"), Branching Evolution ("twice that many +1/+1 counters are put on
+# that creature"), Hardened Scales ("that many plus one +1/+1 counters are put
+# on it"), Winding Constrictor ("that many plus one of each of those kinds of
+# counters are put on that permanent") and Vizier of Remedies ("that many -1/-1
+# counters minus one are put on it") are one replacement: the multiplier or
+# the addend is read as data, never pinned.
+#
+# CR 614.16: "if an effect would put one or more counters on a permanent"
+# replacement effects apply whether the event came from a resolving effect *or
+# from a cost* ("even if the original event being modified wasn't itself an
+# effect") - so this compiler and `Game.add_counters` together are what make
+# Vizier stop Devoted Druid's own activation cost, not only a spell's.
+
+_COUNTER_AMOUNT_EVENT_RE = re.compile(
+    r"^(?:an effect would put one or more counters on (?P<effect_subject>.+?)"
+    r"|one or more (?:(?P<kind>[+/\w-]+) )?counters would be put on (?P<subject>.+?))$",
+    re.IGNORECASE,
+)
+_COUNTER_AMOUNT_REPLACEMENT_RE = re.compile(
+    rf"^(?:it puts (?P<it_mult>{MULTIPLIER}) that many of those counters on that permanent"
+    rf"|(?:(?P<mult>{MULTIPLIER}) that many|that many(?: plus (?P<plus>{COUNT}))?)"
+    r"(?: of each of those kinds of counters"
+    rf"| (?P<kind>[+/\w-]+) counters(?: (?P<op>plus|minus) (?P<n>{COUNT}))?)"
+    r" are put on (?:it|that creature|that permanent))$",
+    re.IGNORECASE,
+)
+#: "a creature you control", "an artifact or creature you control", "a permanent".
+_COUNTER_SUBJECT_RE = re.compile(r"^an? (?P<types>.+?)(?P<you_control> you control)?$")
+
+
+def _counter_subject_types(types_text: str) -> frozenset[Type] | None | bool:
+    """ "permanent" is None (anything), a card-type list is its types (CR
+    205.2a), and anything else - a subtype, a name, "another creature" - is
+    False, which leaves the effect uncompiled rather than guessed at."""
+    words = [word for word in re.split(r",\s*(?:or\s+)?|\s+or\s+", types_text) if word]
+    if words == ["permanent"]:
+        return None
+    types = [_CARD_TYPE_WORDS.get(word.strip()) for word in words]
+    if not types or any(wanted is None for wanted in types):
+        return False
+    return frozenset(wanted for wanted in types if wanted is not None)
+
+
+def _counter_amount(match: re.Match[str]) -> Apply | None:
+    """The multiplier or addend a counter replacement prints, or None."""
+    multiplier_text = match.group("it_mult") or match.group("mult")
+    if multiplier_text is not None:
+        multiplier = parse_multiplier(multiplier_text)
+        return None if multiplier is None else _scale_amount(multiplier=multiplier)
+    addend_text = match.group("plus") or match.group("n")
+    if addend_text is None:
+        return None  # a bare "that many" replaces nothing
+    addend = parse_count(addend_text)
+    if addend is None:
+        return None
+    return _scale_amount(addend=-addend if match.group("op") == "minus" else addend)
 
 
 def _compile_counter_doubler(effect: ReplacementEffect) -> CardReplacement | None:
     if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD:
         return None
-    expected_event = "an effect would put one or more counters on a permanent you control"
-    if (effect.event or "").strip().lower() != expected_event:
+    event_match = _COUNTER_AMOUNT_EVENT_RE.match((effect.event or "").strip())
+    if event_match is None:
         return None
-    expected_replacement = "it puts twice that many of those counters on that permanent"
-    if (effect.replacement or "").strip().rstrip(".").lower() != expected_replacement:
+    replacement_match = _COUNTER_AMOUNT_REPLACEMENT_RE.match(
+        (effect.replacement or "").strip().rstrip(".")
+    )
+    if replacement_match is None:
+        return None
+    subject_match = _COUNTER_SUBJECT_RE.match(
+        (event_match.group("effect_subject") or event_match.group("subject")).lower()
+    )
+    if subject_match is None:
+        return None
+    types = _counter_subject_types(subject_match.group("types"))
+    if types is False:
+        return None
+
+    event_kind = (event_match.group("kind") or "").lower() or None
+    replacement_kind = (replacement_match.group("kind") or "").lower() or None
+    if replacement_kind != event_kind:
+        # "+1/+1 counters would be put ... that many plus one -1/-1 counters"
+        # is no card; "of each of those kinds" answers only a kindless event.
+        return None
+    apply = _counter_amount(replacement_match)
+    if apply is None:
         return None
     return CardReplacement(
-        label=effect.text, applies=_doubling_season_applies, apply=_double_counters
+        label=effect.text,
+        applies=_counter_amount_applies(
+            event_kind, types, subject_match.group("you_control") is not None
+        ),
+        apply=apply,
     )
-
-
-# -- "if one or more <kind> counters would be put on a creature you control,
-#    that many <kind> counters minus one are put on it instead" --
-#
-# Vizier of Remedies: "If one or more -1/-1 counters would be put on a
-# creature you control, that many -1/-1 counters minus one are put on it
-# instead." CR 614.16 is the same clause `_compile_counter_doubler` already
-# leans on - "if an effect would put one or more counters on a permanent"
-# replacement effects apply whether the event came from a resolving effect
-# *or from a cost* ("even if the original event being modified wasn't itself
-# an effect") - so this compiler and `Game.add_counters` together are what
-# make Vizier stop Devoted Druid's own activation cost, not only a spell's.
-_COUNTER_REDUCER_EVENT_RE = re.compile(
-    r"^one or more (?P<kind>[+/\w-]+) counters would be put on a "
-    r"(?P<subject>creature|permanent) you control$",
-    re.IGNORECASE,
-)
-_COUNTER_REDUCER_REPLACEMENT_RE = re.compile(
-    r"^that many (?P<kind>[+/\w-]+) counters minus one are put on it$", re.IGNORECASE
-)
-
-
-def _counter_reducer_applies(
-    kind: str, creature_only: bool
-) -> Callable[["Game", CardState, ReplaceableEvent], bool]:
-    def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
-        if event.kind is not EventKind.ADD_COUNTERS or event.amount <= 0:
-            return False
-        if event.card is None or event.card.controller != source.controller:
-            return False
-        if creature_only:
-            # "a creature you control" (CR 613.5): a permanent already on the
-            # battlefield when its counters would be placed reads its
-            # computed types - a land earthbend (CR 701.66a) made a creature
-            # is a creature you control, whatever it prints.
-            is_creature = (
-                game.characteristics_of(event.card).is_creature
-                if event.card.zone is Zone.BATTLEFIELD
-                else event.card.is_creature
-            )
-            if not is_creature:
-                return False
-        return (event.counter_kind or "").strip().lower() == kind
-
-    return applies
-
-
-def _reduce_counters(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
-    """ "...that many [counters] minus one are put on it instead."
-
-    CR 614.5 gives a replacement effect only one opportunity to affect an
-    event, so this is a flat minus one regardless of how many counters were
-    headed for the permanent - not a floor applied per counter. When only one
-    counter would have been placed, one minus one is zero: no counter is put
-    on at all, which `Game.add_counters` already treats as nothing to do for
-    a non-positive amount, the same way it already does for the doubler's
-    opposite case. There is no numbered CR clause for the zero floor itself -
-    it is what "one minus one" already equals; `max(..., 0)` only guards
-    against a `-1/-1 counters minus one` misreading a larger single removal as
-    negative, which no printed card's wording asks for.
-    """
-    event.amount = max(event.amount - 1, 0)
 
 
 # -- "lands you control enter untapped" (CR 614.1d, general and non-self) --
@@ -2666,29 +2701,6 @@ def _compile_lands_you_control_enter_untapped(effect: ReplacementEffect) -> Card
         label=effect.text,
         applies=_lands_you_control_enter_untapped_applies,
         apply=_lands_you_control_enter_untapped,
-    )
-
-
-def _compile_counter_reducer(effect: ReplacementEffect) -> CardReplacement | None:
-    if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD:
-        return None
-    event_match = _COUNTER_REDUCER_EVENT_RE.match((effect.event or "").strip())
-    if event_match is None:
-        return None
-    replacement_match = _COUNTER_REDUCER_REPLACEMENT_RE.match(
-        (effect.replacement or "").strip().rstrip(".")
-    )
-    if replacement_match is None:
-        return None
-    event_kind = event_match.group("kind").strip().lower()
-    replacement_kind = replacement_match.group("kind").strip().lower()
-    if event_kind != replacement_kind:
-        return None
-    creature_only = event_match.group("subject").strip().lower() == "creature"
-    return CardReplacement(
-        label=effect.text,
-        applies=_counter_reducer_applies(event_kind, creature_only),
-        apply=_reduce_counters,
     )
 
 
@@ -2941,7 +2953,6 @@ _COMPILERS: tuple[Callable[[ReplacementEffect], CardReplacement | None], ...] = 
     _compile_token_doubler,
     _compile_extra_token,
     _compile_counter_doubler,
-    _compile_counter_reducer,
     _compile_lands_you_control_enter_untapped,
 )
 
