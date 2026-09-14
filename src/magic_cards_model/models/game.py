@@ -77,6 +77,7 @@ from ..machines.cost import (
     additional_cost_phrases,
     alternative_cost_offers,
     among_colors,
+    announce_count,
     announce_reveal,
     cost_announces_x,
     cost_component_for_phrase,
@@ -87,7 +88,6 @@ from ..machines.cost import (
     looks_like_unparsed_cost_modifier,
     loyalty_cost,
     mana_candidate_scan,
-    pay_life_cost,
     plan_mana_payment,
     sacrifice_cost,
     spend_restriction,
@@ -228,7 +228,7 @@ from ..machines.turn import (
     Step,
     TurnMachine,
 )
-from ..numbers import count_pattern, parse_count
+from ..numbers import MULTIPLIER, count_pattern, parse_count, parse_multiplier
 from ..serialization import SortedFrozenSet, SortedSet
 from ..snapshot import EngineModel, board_snapshot, cached_board, command, scan_pin
 from .action import Action
@@ -560,6 +560,14 @@ _COLOR_WORDS: dict[str, Color] = {
 _SORCERY_TIMING = re.compile(
     r"activate (?:this ability )?only (?:as a sorcery|any time you could cast a sorcery)",
     re.IGNORECASE,
+)
+#: CR 602.5b's per-turn limit, with its count read rather than assumed to be
+#: one: "Activate only once each turn" (Basking Rootwalla), "... and only once
+#: each turn" (Dragonkin Berserker's joined restriction), "Activate no more
+#: than twice each turn" (Vampire Bats), "no more than three times each turn"
+#: (Manaforge Cinder).
+_ACTIVATION_LIMIT = re.compile(
+    rf"\b(?:only|no more than) (?P<times>{MULTIPLIER}) each turn\b", re.IGNORECASE
 )
 
 #: CR 602.5b's "Activate only if <condition>" restriction, the condition taken
@@ -4633,7 +4641,11 @@ class Game(EngineModel):
                         )
                     )
                 casting.pay_gift(opponent)
-        if any(_BLIGHT_PHRASE.match(p) for p in additional_cost_phrases(card.card)):
+        blights = [_BLIGHT_PHRASE.match(p) for p in additional_cost_phrases(card.card)]
+        # Only the optional "you may blight N" is a `MAY` here. A mandatory
+        # "blight X" and "blight 2 or pay {1}" are left to the printed cost:
+        # unpaid, the first refuses (CR 118.3) and the second charges the mana.
+        if any(match is not None and match.group("optional") for match in blights):
             creatures = [
                 state
                 for state in self.permanents_controlled_by(caster)
@@ -13121,8 +13133,15 @@ class Game(EngineModel):
         life_owed = 0
         for piece in ability.costs:
             if piece.kind is CostKind.PAY_LIFE:
-                digits = re.search(r"\d+", piece.text)
-                life_owed += int(digits.group()) if digits else 0
+                life = cost_component_for_phrase(piece.text, payer=controller)
+                if life is None:
+                    return (
+                        f"{permanent.name}'s cost {piece.text!r} cannot be read, so it "
+                        "refuses to activate rather than pay the wrong amount (CR 118.3)"
+                    )
+                # "Pay X life" owes 0 until X is announced (CR 119.4b), and the
+                # announced amount is checked as the cost is paid.
+                life_owed += life.amount
         if life_owed > 0 and self.player(controller).life < life_owed:
             # CR 119.4: an amount of life greater than 0 may be paid "only if
             # their life total is greater than or equal to the amount of the
@@ -13192,8 +13211,22 @@ class Game(EngineModel):
                 )
 
         instructions = (ability.instructions or "").lower()
-        if "once each turn" in instructions and self._activation_count(permanent, index):
-            return f"{permanent.name}'s ability has already been activated this turn"
+        limit = _ACTIVATION_LIMIT.search(instructions)
+        if limit is not None:
+            # CR 602.5b: the restriction names how often, and `activations`
+            # already counts every activation this turn per permanent and
+            # ability, so the limit is only compared against it.
+            # `MULTIPLIER` only matches what `parse_multiplier` reads.
+            allowed = parse_multiplier(limit.group("times")) or 1
+            count = self._activation_count(permanent, index)
+            if allowed == 1 and count:
+                return f"{permanent.name}'s ability has already been activated this turn"
+            if count >= allowed:
+                return (
+                    f"{permanent.name}'s ability has already been activated "
+                    f"{limit.group('times').lower()} this turn, the most "
+                    f"{limit.group(0)!r} allows (CR 602.5b)"
+                )
         if _SORCERY_TIMING.search(instructions) and not self.can_cast_sorcery(controller):
             return (
                 f"{permanent.name}'s ability can only be activated as a sorcery: "
@@ -13565,6 +13598,35 @@ class Game(EngineModel):
             return not (permanent.oracle_text or "").strip()
         return any(ability.text in line or line in ability.text for line in computed.abilities)
 
+    def _choose_permanent_for_counters(
+        self, component: CostComponent, payer: str, source: CardState
+    ) -> None:
+        """Ask `payer` which permanent a "Blight N" cost puts its counters on
+        (CR 701.68a, paid at CR 601.2h via CR 602.2b). Offered: the permanents
+        `payer` controls that meet the cost's requirement. None to offer leaves
+        the component empty, and it refuses to be paid (CR 701.68b)."""
+        eligible = [
+            state
+            for state in self.permanents_controlled_by(payer)
+            if component.requirement is None
+            or component.requirement.why_not(state, self, payer) is None
+        ]
+        if not eligible:
+            return
+        answer = self.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=payer,
+                prompt=f"choose a creature you control for {component.description!r}",
+                source=source.name,
+                source_id=source_id_of(source),
+                amount=1,
+                cards=tuple(state.id for state in eligible),
+            )
+        )
+        by_id = {state.id: state for state in eligible}
+        component.cards = [by_id[card_id] for card_id in answer]
+
     def _activation_key(self, permanent: CardState, index: int) -> str:
         return f"{permanent.id}:{index}"
 
@@ -13587,6 +13649,7 @@ class Game(EngineModel):
         pool: list[CardState],
         controller: str,
         builder: Callable[..., CostComponent],
+        x_value: int = 0,
     ) -> CostComponent:
         """One `[Sacrifice|Discard]` cost piece, self-reference and quality
         requirement both handled (CR 602.1a, CR 118.3).
@@ -13616,6 +13679,9 @@ class Game(EngineModel):
                 chosen = []
             return builder(*chosen, payer=controller, required=1, description=text)
 
+        # "Sacrifice X Goats" / "Sacrifice one or more artifacts": the count is
+        # the announced X or every nominated object (CR 107.3a).
+        component = announce_count(component, x_value, len(pool))
         chosen = []
         while pool and len(chosen) < component.required:
             chosen.append(pool.pop(0))
@@ -13676,21 +13742,22 @@ class Game(EngineModel):
                 components.append(untap_cost(permanent, payer=controller, description=piece.text))
             elif piece.kind is CostKind.SACRIFICE:
                 components.append(
-                    self._choice_cost(piece.text, permanent, sacrifices, controller, sacrifice_cost)
+                    self._choice_cost(
+                        piece.text, permanent, sacrifices, controller, sacrifice_cost, x_value
+                    )
                 )
             elif piece.kind is CostKind.DISCARD:
                 components.append(
-                    self._choice_cost(piece.text, permanent, discards, controller, discard_cost)
-                )
-            elif piece.kind is CostKind.PAY_LIFE:
-                digits = re.search(r"\d+", piece.text)
-                components.append(
-                    pay_life_cost(
-                        int(digits.group()) if digits else 0,
-                        controller,
-                        description=piece.text,
+                    self._choice_cost(
+                        piece.text, permanent, discards, controller, discard_cost, x_value
                     )
                 )
+            elif piece.kind is CostKind.PAY_LIFE:
+                life = cost_component_for_phrase(piece.text, payer=controller)
+                if life is None:
+                    raise ValueError(f"cannot build a cost for {piece.text!r}")
+                # CR 107.3a: "Pay X life" pays the X announced now.
+                components.append(announce_count(life, x_value, 0))
             elif piece.kind is CostKind.LOYALTY:
                 # CR 606.4: the loyalty symbol is the whole cost, and the
                 # counter change it asks for is the cost itself.
@@ -13766,6 +13833,9 @@ class Game(EngineModel):
                         continue
                 if component is None:
                     raise ValueError(f"cannot build a cost for {piece.text!r}")
+                # "Exile X cards", "Remove X counters", "Exile one or more ...":
+                # the count announced now (CR 107.3a), or every card nominated.
+                component = announce_count(component, x_value, len(exiles))
                 if not component.cards and (
                     _cost_refers_to_self(piece.text, permanent)
                     or _exiles_itself_by_name(piece.text, permanent)
@@ -14142,6 +14212,13 @@ class Game(EngineModel):
         key = self._activation_key(permanent, index)
         self.announced_reveal_counts.pop(key, None)
         for component in total.components:
+            if (
+                component.kind is ComponentKind.PLACE_COUNTERS
+                and not component.cards
+                and component.requirement is not None
+            ):
+                self._choose_permanent_for_counters(component, controller, permanent)
+                continue
             if component.kind is not ComponentKind.REVEAL:
                 continue
             if revealing is None:
