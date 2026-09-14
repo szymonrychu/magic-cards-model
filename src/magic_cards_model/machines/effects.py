@@ -84,7 +84,7 @@ from ..models.token import (
     token_copy_of,
 )
 from ..models.zone import Zone
-from ..numbers import COUNT, parse_count, parse_multiplier
+from ..numbers import COUNT, count_pattern, parse_count, parse_multiplier, where_x_pattern
 from ..snapshot import EngineModel
 from . import combat as combat_rules
 from .abilities import (
@@ -943,6 +943,33 @@ def amount_expression(phrase: str) -> AmountReader | None:
         return max(total, 0)  # CR 107.1b
 
     return evaluate
+
+
+def _fixed_or_where_x_amount(raw: str, where_x: str | None) -> AmountReader | None:
+    """One `numbers.count_pattern(x=True)` capture plus an optional
+    `numbers.where_x_pattern()` tail, read into a uniform `AmountReader` -
+    shared by the CR 701 keyword actions embedded in ability/effect text
+    (earthbend, amass) and the mass-damage "N damage to each ..." shape,
+    none of which carry a spell's own announced X (CR 107.3a) to substitute
+    against: their X, when they print one, is always the printed "where X is
+    `<expr>`" of CR 107.3f, evaluated through `amount_expression` the same
+    way `_parse_put_counters_equal_to_clause` reads its own "equal to
+    `<expr>`" tail.
+
+    `None` when `raw` is "x"/"X" but the clause names no definition, or names
+    one `amount_expression` cannot read - CR 107.3a's self-announced X is a
+    spell-cast concept these keyword actions have no channel to ask a player
+    about, so an undefined X here fails closed rather than being treated as
+    zero or guessed at.
+    """
+    if raw.strip().lower() == "x":
+        if where_x is None:
+            return None
+        return amount_expression(where_x)
+    amount = parse_count(raw)
+    if amount is None:
+        return None
+    return lambda _game, _controller, _obj, _x: amount
 
 
 class UnreadableCounterAmountNotice(EngineModel):
@@ -15860,7 +15887,9 @@ def _parse_airbend_clause(clause: str, *, for_spell: bool) -> TargetedClause | N
 #: "Earthbend N." - never printed with the word "target" (that is CR 701.66a's
 #: own wording, not the card's); `targeting.profile_for_text` is taught the
 #: keyword's implied target so this only has to read the number.
-_EARTHBEND_RE = re.compile(r"^earthbend (?P<n>\d+)$", re.IGNORECASE)
+_EARTHBEND_RE = re.compile(
+    rf"^earthbend {count_pattern('n', x=True)}{where_x_pattern()}$", re.IGNORECASE
+)
 
 
 def earthbend(
@@ -15989,33 +16018,51 @@ def earthbend(
 
 
 def _parse_earthbend_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
-    """ "Earthbend N." - the whole of an ability's effect text once its
-    trigger condition ("When this creature enters, ") has been split off.
+    """ "Earthbend N." or "Earthbend X, where X is `<expr>`." - the whole of
+    a spell's or an ability's effect text once any trigger condition ("When
+    this creature enters, ") has been split off.
 
-    Reads only the target the *ability* chose (CR 601.2c/603.3d already ran
-    by the time this resolves, using the restriction `targeting.profile_for_
-    text` supplies for any text containing the word "earthbend") - there is
-    nothing left for this clause to parse out of the card's own words beyond
-    the number.
+    Reads only the target the *stack object* chose (CR 601.2c/603.3d already
+    ran by the time this resolves, using the restriction `targeting.profile_
+    for_text` supplies for any text containing the word "earthbend") - there
+    is nothing left for this clause to parse out of the card's own words
+    beyond the number. Rockalanche's own "Earthbend X, where X is the number
+    of Forests you control" - printed directly on a sorcery, unlike
+    Badgermole Cub's ability - is why this reads both `for_spell=True` and
+    `for_spell=False` alike: CR 701.66a names no difference between the two,
+    and `earthbend` itself only wants a controller, a source id and a source
+    name, all of which a resolving `CardState` spell carries exactly as an
+    `AbilityOnStack` does. X is CR 107.3f's, read through `_fixed_or_where_x_
+    amount` exactly as `_parse_put_counters_equal_to_clause`'s "equal to
+    `<expr>`" tail is; an "X" this clause cannot evaluate is refused rather
+    than treated as zero, so the whole instruction goes unread instead of
+    earthbending for nothing (CR 608.2c).
     """
-    if for_spell:
-        return None  # no card in the pool prints earthbend on a spell.
     match = _EARTHBEND_RE.fullmatch(clause.strip().rstrip("."))
     if match is None:
         return None
-    amount = int(match.group("n"))
+    reader = _fixed_or_where_x_amount(match.group("n"), match.group("where_x"))
+    if reader is None:
+        return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
-        ability = stack_object
-        assert isinstance(ability, AbilityOnStack)
         targets = [
-            target for target in game.resolve_targets(ability) if isinstance(target, CardState)
+            target for target in game.resolve_targets(stack_object) if isinstance(target, CardState)
         ]
         if not targets:
             return  # CR 608.2b: no legal target left, earthbend does nothing.
-        earthbend(
-            game, targets[0], amount, ability.controller, ability.source_id, ability.source_name
-        )
+        if isinstance(stack_object, AbilityOnStack):
+            controller = stack_object.controller
+            source_id = stack_object.source_id
+            source_name = stack_object.source_name
+            x_value = stack_object.x_value
+        else:
+            controller = game.controller_of(stack_object).username
+            source_id = stack_object.id
+            source_name = stack_object.name
+            x_value = 0
+        amount = reader(game, controller, targets[0], x_value)
+        earthbend(game, targets[0], amount, controller, source_id, source_name)
 
     return effect
 
