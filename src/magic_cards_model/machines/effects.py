@@ -18647,6 +18647,227 @@ _PUT_THE_REST_INTO_YOUR_GRAVEYARD_RE = re.compile(
 )
 
 
+#: "for each card type, you may exile a card of that type from among them"
+#: (Portent of Calamity) and "for each card type, you may put a card of that
+#: type from among the revealed cards into your hand" (Atraxa, Grand Unifier):
+#: one pick per CR 205.2a card type, taken to exile or to hand.
+_FOR_EACH_CARD_TYPE_MAY_TAKE_RE = re.compile(
+    r"^for each card type, you may (?:(?P<exile>exile)|put) a card of that type from among "
+    r"(?:them|the revealed cards)(?P<hand> into your hand)?$",
+    re.IGNORECASE,
+)
+#: "you may cast a spell from among the exiled cards without paying its mana
+#: cost if you exiled four or more cards this way" - a CR 608.2g cast gated on
+#: how many cards the pick above actually exiled.
+_MAY_CAST_FROM_AMONG_EXILED_IF_N_OR_MORE_RE = re.compile(
+    r"^you may cast a spell from among the exiled cards without paying its mana cost "
+    rf"if you exiled (?P<n>{_COUNT}) or more cards this way$",
+    re.IGNORECASE,
+)
+#: "(then) put the rest of the exiled cards into your hand"
+_PUT_THE_REST_OF_THE_EXILED_CARDS_INTO_HAND_RE = re.compile(
+    r"^put the rest of the exiled cards into your hand$", re.IGNORECASE
+)
+
+
+def _merge_reveal_top_one_card_per_type_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """Reveal the top N, then one pick per card type from among them, then the
+    rest somewhere - one anaphoric run.
+
+    Atraxa, Grand Unifier: "reveal the top ten cards of your library. For each
+    card type, you may put a card of that type from among the revealed cards
+    into your hand. Put the rest on the bottom of your library in a random
+    order." Portent of Calamity: "Reveal the top X cards of your library. For
+    each card type, you may exile a card of that type from among them. Put the
+    rest into your graveyard. You may cast a spell from among the exiled cards
+    without paying its mana cost if you exiled four or more cards this way.
+    Then put the rest of the exiled cards into your hand."
+
+    CR 701.20a-b: each revealed card is recorded through `Game.reveal` while
+    it is still in the library. CR 107.3a's X is not read here: `effect_for`
+    substitutes the announced value and retries, so "X" arrives as a number.
+
+    **The loop is over CR 205.2a's card types present among the revealed
+    cards**, in `Type`'s order. A card with several types (an artifact
+    creature) is a candidate for each, and once chosen it is no longer "from
+    among them", so it fills one pick only; Atraxa's 2023-02-04 ruling lets
+    it fill whichever pick the player chooses it for. Each pick is CR
+    608.2d's "you may", asked only while that type still has a candidate,
+    naming the candidates; a choice among two or more follows as a
+    `CHOOSE_CARDS`, and a lone candidate needs none.
+
+    The exile verb requires the free-cast tail and the hand verb forbids it,
+    since an exiled pick with nothing saying where it goes next is not a
+    shape any printing has. The cast is offered only when at least the
+    printed number of cards actually reached exile and at least one of them
+    `Game.can_cast_during_resolution` - a land never is (CR 305.9) - and goes
+    through `Game.cast_during_resolution` (CR 608.2g). Every exiled card still
+    in exile afterwards goes to hand.
+
+    The rest is `_THE_OTHER_INTO_A_DESTINATION_RE`'s: the graveyard, the
+    bottom "in any order" (CR 401.4, asked) or "in a random order" (seeded
+    off `Game.shuffle_seed`, never CR 701.24a's shuffle).
+    """
+    if index + 2 >= len(clauses):
+        return None
+    reveal_match = _REVEAL_TOP_N_CARDS_RE.fullmatch(clauses[index].strip())
+    if reveal_match is None:
+        return None
+    count_text = reveal_match.group("count")
+    if not count_text.isdigit() and count_text.lower() not in _NUMBER_WORDS:
+        return None
+    count = _count(count_text)
+    pick_match = _FOR_EACH_CARD_TYPE_MAY_TAKE_RE.fullmatch(clauses[index + 1].strip())
+    if pick_match is None:
+        return None
+    exiling = pick_match.group("exile") is not None
+    if exiling == (pick_match.group("hand") is not None):
+        return None
+    rest_text = clauses[index + 2].strip()
+    rest_match = _THE_OTHER_INTO_A_DESTINATION_RE.fullmatch(rest_text)
+    if rest_match is None or not rest_text.lower().startswith("put the rest"):
+        return None
+    to_bottom = rest_match.group("destination").lower().startswith("on the bottom")
+    randomised = rest_match.group("random") is not None
+    consumed = 3
+    threshold = 0
+    if exiling:
+        if index + 4 >= len(clauses):
+            return None
+        cast_match = _MAY_CAST_FROM_AMONG_EXILED_IF_N_OR_MORE_RE.fullmatch(
+            clauses[index + 3].strip()
+        )
+        if cast_match is None:
+            return None
+        if (
+            _PUT_THE_REST_OF_THE_EXILED_CARDS_INTO_HAND_RE.fullmatch(clauses[index + 4].strip())
+            is None
+        ):
+            return None
+        threshold = _count(cast_match.group("n"))
+        consumed = 5
+    verb, destination = ("exile", "") if exiling else ("put", " into your hand")
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        player = game.controller_of(stack_object)
+        source = (
+            stack_object.name if isinstance(stack_object, CardState) else stack_object.source_name
+        )
+        source_id = source_id_of(stack_object)
+        revealed = list(player.library[:count])
+        for state in revealed:
+            game.reveal(state, source=source)
+        remaining = list(revealed)
+        taken: list[CardState] = []
+        for card_type in Type:
+            candidates = [state for state in remaining if card_type in state.types]
+            if not candidates:
+                continue
+            quality = with_indefinite_article(f"{card_type.value} card")
+            if not game.may(
+                player,
+                f"{verb} {quality} from among the revealed cards{destination}",
+                source=source,
+                source_id=source_id,
+                cards=candidates,
+            ):
+                continue
+            chosen = _choose_one_card(
+                game,
+                player,
+                candidates,
+                prompt=f"choose {quality} to {verb}{destination}",
+                source=source,
+                source_id=source_id,
+            )
+            remaining.remove(chosen)
+            taken.append(chosen)
+
+        if not exiling:
+            for state in taken:
+                player.move(state, Zone.HAND)
+        if to_bottom and randomised and remaining:
+            rng = Random(f"{game.shuffle_seed}:{game.shuffles_performed}:reveal-{count}-bottom")  # noqa: S311
+            rng.shuffle(remaining)
+            for state in remaining:
+                player.move(state, Zone.LIBRARY)
+            game.shuffles_performed += 1
+        elif to_bottom:
+            for state in game.ask_library_bottom_order(
+                player, remaining, source=source, source_id=source_id
+            ):
+                player.move(state, Zone.LIBRARY)
+        if not exiling:
+            if not to_bottom:
+                for state in remaining:
+                    game.put_into_graveyard(state)
+            return
+
+        exiled = [state for state in game.exile_cards(taken) if state.zone is Zone.EXILE]
+        if not to_bottom:
+            for state in remaining:
+                game.put_into_graveyard(state)
+        if len(exiled) >= threshold:
+            castable = [
+                state for state in exiled if game.can_cast_during_resolution(state, player.username)
+            ]
+            if castable and game.may(
+                player,
+                "cast a spell from among the exiled cards without paying its mana cost",
+                source=source,
+                source_id=source_id,
+                cards=castable,
+            ):
+                spell = _choose_one_card(
+                    game,
+                    player,
+                    castable,
+                    prompt="choose a spell to cast without paying its mana cost",
+                    source=source,
+                    source_id=source_id,
+                )
+                game.cast_during_resolution(
+                    spell, player.username, source_name=source, rule="CR 608.2g"
+                )
+        for state in exiled:
+            if state.zone is Zone.EXILE:
+                game.return_to_hand(state)
+
+    return consumed, effect
+
+
+def _choose_one_card(
+    game: "Game",
+    player: Player,
+    candidates: Sequence[CardState],
+    *,
+    prompt: str,
+    source: str | None,
+    source_id: str | None,
+) -> CardState:
+    """One card from `candidates` (CR 608.2d): asked as a `CHOOSE_CARDS` when
+    there is a choice, the lone candidate otherwise. Unscripted, the first."""
+    if len(candidates) == 1:
+        return candidates[0]
+    chosen_ids = game.ask(
+        Decision(
+            kind=DecisionKind.CHOOSE_CARDS,
+            player=player.username,
+            prompt=prompt,
+            source=source,
+            source_id=source_id,
+            amount=1,
+            exact=True,
+            cards=tuple(state.id for state in candidates),
+            default_cards=(candidates[0].id,),
+        )
+    )
+    assert isinstance(chosen_ids, tuple)
+    return next(state for state in candidates if state.id == chosen_ids[0])
+
+
 def _merge_reveal_top_to_hand_rest_to_graveyard_clauses(
     clauses: list[str], index: int, *, for_spell: bool
 ) -> tuple[int, TargetedClause] | None:
@@ -20099,6 +20320,12 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             index += consumed
             continue
         merged = _merge_look_top_reveal_to_hand_clauses(clauses, index, for_spell=for_spell)
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_reveal_top_one_card_per_type_clauses(clauses, index, for_spell=for_spell)
         if merged is not None:
             consumed, effect = merged
             parsed.append(effect)
