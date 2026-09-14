@@ -2054,7 +2054,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 17
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 18
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -2247,6 +2247,11 @@ class Game(EngineModel):
     read through `TurnMachine.own_turns_taken`. A version-16 dump has no such
     field, and it cannot be rebuilt from what that dump holds once an extra
     turn has been taken, so a default would silently misstate it. Refused
+    instead.
+
+    Bumped 17 -> 18: a finality counter now exiles its permanent instead of
+    letting it reach a graveyard (CR 122.1h). A version-17 battlefield holding
+    one resolves that permanent's death differently under this build. Refused
     instead.
     """
 

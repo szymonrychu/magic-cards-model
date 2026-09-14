@@ -120,7 +120,7 @@ from magic_cards_model.phrases import with_indefinite_article
 
 from ..data.creature_types import creature_types
 from ..models.card import Card, Color, Type
-from ..models.card_state import CardState, Choice, ChoiceKind, ExileMarker
+from ..models.card_state import CardState, Choice, ChoiceKind, Counter, ExileMarker
 from ..models.token import TokenDefinition, is_token
 from ..models.zone import Zone
 from ..numbers import parse_count
@@ -4549,6 +4549,44 @@ def draw_redirection_for(text: str, controller: str, target: str | None) -> Draw
     )
 
 
+def _finality_counter_effects(event: ReplaceableEvent) -> list[ApplicableEffect]:
+    """A finality counter's replacement effect (CR 122.1h): "One or more
+    finality counters on a permanent create a single replacement effect that
+    stops the permanent from going to the graveyard. That effect is 'If this
+    permanent would be put into a graveyard from the battlefield, exile it
+    instead.'"
+
+    Gathered here rather than checked inside `Game.put_into_graveyard` so CR
+    616.1 orders it against every other graveyard replacement (Rest in Peace)
+    the way it orders any two. One effect however many counters there are,
+    keyed by the permanent, so CR 614.5 applies it once. Like a regeneration
+    shield it has no source permanent to ask, so its controller is the
+    permanent's own.
+    """
+    if event.kind is not EventKind.ZONE_CHANGE or event.destination is not Zone.GRAVEYARD:
+        return []
+    if event.origin is not Zone.BATTLEFIELD:
+        return []
+    permanent = event.card
+    if permanent is None or permanent.counter_count(Counter.FINALITY) <= 0:
+        return []
+    return [
+        ApplicableEffect(
+            key=f"finality:{permanent.id}",
+            source=None,
+            label="finality counter: exile it instead (CR 122.1h)",
+            apply=_exile_instead_of_graveyard,
+            controller_username=permanent.controller,
+        )
+    ]
+
+
+def _exile_instead_of_graveyard(
+    game: "Game", source: CardState | None, event: ReplaceableEvent
+) -> None:
+    event.destination = Zone.EXILE
+
+
 def _draw_redirection_effects(game: "Game", event: ReplaceableEvent) -> list[ApplicableEffect]:
     """The draw redirections waiting on this draw event (CR 614.1a).
 
@@ -4599,6 +4637,7 @@ def applicable_effects(game: "Game", event: ReplaceableEvent) -> list[Applicable
     found.extend(_protection_effects(game, event))
     found.extend(_shield_effects(game, event))
     found.extend(_regeneration_effects(game, event))
+    found.extend(_finality_counter_effects(event))
     found.extend(_draw_redirection_effects(game, event))
 
     if event.kind is EventKind.ENTERS_BATTLEFIELD and event.card is not None:
