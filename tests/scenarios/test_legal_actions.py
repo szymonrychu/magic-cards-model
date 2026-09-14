@@ -308,8 +308,8 @@ def test_modal_and_x_actions_carry_a_parameter_space_not_an_enumeration():
     x_scenario.start_at(Step.PRECOMBAT_MAIN)
     (x_cast,) = _of_kind(legal_actions(x_scenario.game, "alice"), ActionKind.CAST)
     assert x_cast.x_range is not None
-    assert x_cast.affordable is Affordability.UNKNOWN
-    assert x_cast.unaffordable_reason is not None
+    # CR 107.3a / 107.1b: X=0 is a legal announcement, and {G} is payable.
+    assert x_cast.affordable is Affordability.YES
 
 
 def test_convoke_widens_a_no_into_an_honest_unknown():

@@ -489,6 +489,7 @@ other work.
 
 | Area | Rules | Note |
 |---|---|---|
+| A printed minimum for X ("X can't be 0") | CR 107.3a, 107.1b | Nothing reads one, so `legal_actions` judges every X cast at X=0 and `Game.cast` accepts X=0. No mana-cost X card in the pool prints a minimum (the only "X can't be 0" found is a suspend cost), so the two agree today; a card that prints one needs the minimum read in both places. |
 | A self "enters tapped" line with a condition nothing reads, or an "If you don't" whose optional half is not a life payment | CR 614.1d, 614.12a | `_self_enters_modifiers` skips both, so the land enters untapped with no notice: Canopy Vista's "unless you control two or more basic lands", Port Town's reveal-or-tapped. `replacement.unread_self_enters_tapped_lines` names them, and `hypothetical.predict_enters` reports such a land `tapped` with a notice instead of repeating the guess, but the real play is unchanged. |
 | A continuous effect from an activated ability whose source left the battlefield paying its cost | CR 608.2b | `create_continuous_effect_of_ability` returns at once when the source is not on the battlefield, so Martyr of Spores's "Target creature gets +X/+X until end of turn" (the Martyr is sacrificed to pay) does nothing and records nothing, although CR 608.2b uses the source's last known information. |
 | An activated ability's "Counter target spell unless its controller pays {X}" | - | Martyr of Frost: `activated_effect_for` has no reading for the counter-unless-pay shape on an ability, even with X substituted. |

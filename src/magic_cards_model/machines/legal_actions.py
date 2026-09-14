@@ -64,6 +64,7 @@ enumerating every legal subset or permutation of it.
   battles, not a wider multiplayer-attack-target menu.
 """
 
+import re
 from collections.abc import Iterable
 from typing import Any, NamedTuple
 
@@ -107,6 +108,7 @@ from .cost import (
     _ScannedCandidate,
     _SpendContext,
     _withheld_mana_sources,
+    additional_cost_phrases,
     mana_ability_index,
     mana_candidate_scan,
     plan_mana_payment,
@@ -480,6 +482,11 @@ def _target_slots(
     )
 
 
+#: An X standing alone in a printed additional cost ("pay X life"), the
+#: variable CR 107.3a has the caster announce.
+_A_LONE_X = re.compile(r"\bX\b")
+
+
 def _cast_action(
     game: Any,
     player: str,
@@ -495,7 +502,12 @@ def _cast_action(
 ) -> Action:
     modal = modal_profile(card.card)
     modes = tuple(mode.text for mode in modal.modes) if modal is not None else ()
-    x_range = (0, None) if "{X}" in (card.card.mana_cost or "") and modal is None else None
+    # CR 107.3a: X is announced for an {X} in the mana cost and for an X in
+    # an additional cost alike (Toxic Deluge's "pay X life").
+    announces_x = "{X}" in (card.card.mana_cost or "") or any(
+        _A_LONE_X.search(phrase) for phrase in additional_cost_phrases(card.card)
+    )
+    x_range = (0, None) if announces_x and modal is None else None
     # CR 709.3b/715.3b: the row is about one face, so the phrase it reports
     # has to be that face's own. `announcement_profile` took no face and fell
     # through to `targeting_profile(card)`, which reads the *front* half - so
@@ -513,21 +525,25 @@ def _cast_action(
     # CR 601.2f / 118.9d: the total cost is this row's mana or alternative
     # cost plus every mandatory additional cost, read by the same helper the
     # cast itself charges them with.
+    #
+    # X has not been announced yet (CR 107.3a), so the row is judged at the
+    # cheapest legal announcement: CR 107.1b makes 0 a legal choice, and the
+    # engine reads no printed minimum. A larger X only adds generic mana or
+    # more of the same payment ("pay X life"), so a cost unpayable at X=0 is
+    # unpayable at every X, and one payable at X=0 is a castable spell.
+    x_value = 0 if announces_x else None
     try:
-        extras = mandatory_additional_costs(card, player, None)
+        extras = mandatory_additional_costs(card, player, x_value)
     except ValueError as refusal:
         extras, unpayable = [], unpayable or str(refusal)
-    if extras:
-        mana = total.mana
-        components = list(total.components)
-        for extra in extras:
-            mana = mana.plus(extra.mana) if extra.mana.symbols else mana
-            components.extend(extra.components)
-        total = TotalCost(mana=mana, components=components)
+    mana = total.mana.with_x(0) if total.mana.x_count else total.mana
+    components = list(total.components)
+    for extra in extras:
+        mana = mana.plus(extra.mana.with_x(0)) if extra.mana.symbols else mana
+        components.extend(extra.components)
+    total = TotalCost(mana=mana, components=components)
     pays_with: tuple[ManaPlanEntry, ...] = ()
-    if x_range is not None:
-        affordable, reason = Affordability.UNKNOWN, "X has not been announced yet (CR 107.3a)"
-    elif unpayable is not None:
+    if unpayable is not None:
         # CR 118.6: a card with no mana symbols at all (Living End, Ancestral
         # Vision) has an unpayable cost, and CR 118.6 itself is explicit that
         # attempting to *pay* one is illegal - `Game.cast` would refuse with
