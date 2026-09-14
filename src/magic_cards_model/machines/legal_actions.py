@@ -582,7 +582,15 @@ def _cast_action(
     shown_components = list(total.components)
     for extra in shown_extras:
         shown_mana = shown_mana.plus(extra.mana) if extra.mana.symbols else shown_mana
-        shown_components.extend(extra.components)
+        # The unannounced X of "pay X life" / "blight X" is read now
+        # (`CostComponent.variable_count`), no longer an unreadable phrase
+        # that dropped the extra, so it is left out here instead. A reveal of
+        # X cards shows as it always did.
+        shown_components.extend(
+            component
+            for component in extra.components
+            if not component.variable_count or component.kind is ComponentKind.REVEAL
+        )
     cost_str, mana_cost_str = _cost_strings(TotalCost(mana=shown_mana, components=shown_components))
     return Action(
         kind=ActionKind.CAST,
