@@ -28,6 +28,14 @@ Sunbaked Canyon are in the deck pool. Silent Clearing, another horizon land,
 and Mana Confluence, whose effect reads "one mana of any color" instead of
 two colours, are not in any registered deck. Lotus Petal's "{T}, Sacrifice
 this artifact" is the other extra cost, and it fails closed.
+
+Every horizon land in the pool costs exactly 1 life, so proving the plan
+prefers the cheaper of two life-paid sources needs a second real printing
+that costs more of the *same* mana. Myr Convert ("{T}, Pay 2 life: Add one
+mana of any color.") is that card: off-pool like Silent Clearing above, it
+offers the same "any color" choice Mana Confluence does, at twice the price,
+so the two compete for the very same colour bucket and the plan has to pick
+between them on life cost alone rather than on which colour sorts first.
 """
 
 from magic_cards_model.machines import Step, payability, payability_matrix
@@ -176,6 +184,31 @@ def test_mana_confluence_pays_for_birds_of_paradise():
 
     assert report.payable
     assert report.life_paid == 1
+
+
+# --------------------------------------------------------------------------
+# Among several life-paid sources, the plan reaches for the cheapest one
+# --------------------------------------------------------------------------
+
+
+def test_the_cheaper_life_paid_source_is_spent_first():
+    """Mana Confluence costs 1 life for a mana of any colour; Myr Convert
+    costs 2 life for the same choice. Both can pay Preordain's {U} alone, so
+    the plan must not reach for Myr Convert while Mana Confluence sits
+    untapped offering the same {U}."""
+    # Myr Convert first on the battlefield, so a fix that merely preserved
+    # scan order rather than sorting on the life amount would coincidentally
+    # still pick Mana Confluence - this ordering is the one that catches that.
+    scenario = _board(hand=["Preordain"], battlefield=["Myr Convert", "Mana Confluence"])
+    convert = scenario.find("Myr Convert", Zone.BATTLEFIELD, "alice")
+    convert.summoning_sick = False  # isolate the mana-ability choice from CR 302.6
+
+    report = _payable(scenario, "Preordain")
+
+    assert report.payable
+    assert report.life_paid == 1
+    (cast,) = report.options
+    assert [entry.name for entry in cast.pays_with] == ["Mana Confluence"]
 
 
 # --------------------------------------------------------------------------

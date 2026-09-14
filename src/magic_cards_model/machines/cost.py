@@ -1196,11 +1196,15 @@ def _scan_mana_candidates(
     about.
 
     `include_life_paid` adds `life_paid_mana_activations`' rows, sorted after
-    every free row so a plan reaches for life last. It is off everywhere the
-    engine pays on a player's behalf (CR 118.3c).
+    every free row so a plan reaches for life last, and - among those rows -
+    by the life each one costs, ascending, so a plan that does reach for life
+    reaches for the cheapest source rather than whichever one this scan found
+    first. It is off everywhere the engine pays on a player's behalf
+    (CR 118.3c).
     """
     candidates: list[_ScannedCandidate] = []
     paying_life: set[tuple[Any, int]] = set()
+    life_cost: dict[tuple[Any, int], int] = {}
     trigger_sources = mana_trigger_sources(payment.game) if payment.payer is not None else []
     for source in sources:
         if source.zone is not Zone.BATTLEFIELD or source.tapped:
@@ -1214,6 +1218,7 @@ def _scan_mana_candidates(
         if include_life_paid:
             life_paid = life_paid_mana_activations(source, payment.game)
             paying_life.update((source.id, index) for index, _ability, _life in life_paid)
+            life_cost.update({(source.id, index): life for index, _ability, life in life_paid})
             activations += [(index, activation) for index, activation, _life in life_paid]
         for index, activation in activations:
             ability = activation.mana
@@ -1240,9 +1245,15 @@ def _scan_mana_candidates(
     # A restricted ability first among a source's own abilities, so the mana
     # that can do less is the mana spent - the same preference `ManaPool._buckets`
     # applies inside the pool, applied here to which ability is activated.
+    #
+    # Free sources sort first (`paying_life`); among life-paid ones, the
+    # cheaper life cost sorts first (`life_cost`, 0 for every free row) so a
+    # plan reaching for life at all reaches for the smallest amount, not just
+    # the first one this scan happened to find.
     candidates.sort(
         key=lambda item: (
             (item[0].id, item[4]) in paying_life,
+            life_cost.get((item[0].id, item[4]), 0),
             _flexibility(item[1], item[3]),
             item[2] is None,
         )
