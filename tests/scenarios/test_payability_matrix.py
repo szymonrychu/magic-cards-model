@@ -20,7 +20,7 @@ answer, which is what the first test here asserts.
 import time
 from collections import Counter
 
-from magic_cards_model.machines import Step, payability, payability_matrix
+from magic_cards_model.machines import Step, hypothetical, payability, payability_matrix
 from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario
 from tests.scenarios.test_dimir_frog_deck import DIMIR_FROG_MAIN
@@ -113,6 +113,56 @@ def test_library_copies_of_one_printing_share_an_answer_but_keep_their_ids():
     assert first.assumed_land.card_id == graves[0].id
     assert second.assumed_land.card_id == graves[1].id
     assert first.payable == second.payable
+
+
+def test_a_library_copy_on_top_is_evaluated_on_its_own(monkeypatch):
+    """Two library copies of one printing are worked out once (the module
+    docstring says so, and the test above proves it) - but they are only
+    interchangeable because nothing in the pool reads *which* copy entered.
+    A play-from-top effect would read exactly that, and could disagree about
+    the copy currently on top. No such card is needed to prove the fix: the
+    top copy must get its own evaluation rather than the shared one, which
+    this proves by counting real calls to `_evaluate_land` (still the real
+    implementation - only counted, never faked), and the matrix must still
+    agree with a single call for both the top and the buried copy."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Psychic Frog"],
+            battlefield=["Island", "Swamp"],
+            library=["Watery Grave", "Island", "Watery Grave"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    frog = scenario.find("Psychic Frog", Zone.HAND, "alice")
+    graves = [card for card in scenario.game.player("alice").library if card.name == "Watery Grave"]
+    top, buried = graves
+    assert scenario.game.player("alice").library[0].id == top.id
+
+    calls: list = []
+    real_evaluate_land = hypothetical._evaluate_land
+
+    def counting_evaluate_land(game, player, land):
+        calls.append(land.id)
+        return real_evaluate_land(game, player, land)
+
+    monkeypatch.setattr(hypothetical, "_evaluate_land", counting_evaluate_land)
+
+    matrix = payability_matrix(scenario.game, "alice", [frog], [top, buried])
+
+    # The top copy is never shared - one call for it, one for the buried
+    # copy - rather than the one shared call two same-printing library
+    # copies get when neither of them is on top.
+    assert calls == [top.id, buried.id]
+    assert _shape(matrix.get(frog.id, top.id)) == _shape(
+        payability(scenario.game, "alice", frog, assuming_land=top)
+    )
+    assert _shape(matrix.get(frog.id, buried.id)) == _shape(
+        payability(scenario.game, "alice", frog, assuming_land=buried)
+    )
 
 
 def test_a_land_in_hand_is_not_asked_about_itself():

@@ -52,7 +52,11 @@ prediction already built, so a payability question never enters a land a
 second time. `payability_matrix` settles one copy for "now" and one board per
 distinct land, runs `legal_actions` once on each and reads every card's options
 off that one enumeration, and treats every library copy of one printing as the
-same question - the card identity differs, nothing a payment reads does.
+same question, with one exception: the copy currently on top of the library
+always gets its own evaluation, never the shared one, because a play-from-top
+effect (CR 401.5) reads which physical copy is there and a buried copy is not
+interchangeable with it. Every other library copy of that printing still
+shares - the card identity differs, nothing else a payment reads does.
 
 **What "assuming" does not check.** It does not ask whether the land could be
 played this turn (CR 305.2's land drop) or how it would get from the library to
@@ -584,13 +588,30 @@ def payability_matrix(
         _answer(target.id, now_options[target.id], None, now.notices) for target in targets
     )
 
+    # Two library copies of one printing are the same question only because
+    # nothing here reads which physical copy entered. An effect that plays
+    # from a revealed top of the library (CR 401.5) reads exactly that, and a
+    # copy on top of the library is not interchangeable with a buried one
+    # under it - so the top card is never folded into the shared cache below,
+    # even though every other same-printing copy still is. This is the
+    # smallest rule that stays correct for such an effect without giving up
+    # the sharing that makes a big library affordable to batch: it costs at
+    # most one extra evaluation (the top card's own), not one per copy.
+    library = game.player(player).library
+    top_id = library[0].id if library else None
+
     shared: dict[str, tuple[_Evaluated, dict[UUID, list[Action]]]] = {}
     columns: list[LandPayability] = []
     for reference in lands:
         land = _land_to_enter(game, player, reference)
         # Library copies of one printing are one question - unless a copy is
-        # also a card asked about, whose options would read the entered copy.
-        key = str(land.card.id) if land.zone is Zone.LIBRARY and land.id not in target_ids else None
+        # also a card asked about, whose options would read the entered copy,
+        # or is the top card, whose answer a play-from-top effect could read.
+        key = (
+            str(land.card.id)
+            if land.zone is Zone.LIBRARY and land.id not in target_ids and land.id != top_id
+            else None
+        )
         if key is not None and key in shared:
             evaluated, options = shared[key]
         else:
