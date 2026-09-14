@@ -31,6 +31,7 @@ type="rules")` in the session that wrote it:
 """
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.effects import effect_for
 from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario
 
@@ -172,3 +173,132 @@ def test_scapeshift_cannot_sacrifice_more_lands_than_are_there():
     scenario.will_choose_cards(*forests, library_card, username="alice", source="Scapeshift")
     with pytest.raises(ValueError):
         scenario.cast_and_resolve("Scapeshift", *forests)
+
+
+# -- Behold the Beyond: CR 701.23d's plain, un-"up to" quantity - "Search
+# your library for three cards" - rather than a stated quality's "up to N".
+# `_SEARCH_AND_PUT_RE` used to accept only the literal article "a"/"an", so
+# this shape never matched at all; the count slot now reads any `{COUNT}`.
+#
+# Behold the Beyond's own first sentence, "Discard your hand.", is a
+# separate, pre-existing gap this wave does not own (no parser anywhere reads
+# a bare "discard your hand" - as opposed to a counted "discard N cards" -
+# and it was not part of any family this sweep assigned; found here and
+# reported, not fixed). Casting the whole card through the ordinary path
+# would exercise that unrelated gap and fail closed on it before ever
+# reaching the search sentence this file is actually about, so this drives
+# the search clause directly - `effect_for` on the real printed sentence,
+# run against a real board and the real `StackObject` casting the real card
+# produces - rather than through the two-clause `cast_and_resolve` that gap
+# currently blocks.
+_BEHOLD_THE_BEYOND_SEARCH = (
+    "Search your library for three cards, put them into your hand, then shuffle."
+)
+
+
+def test_behold_the_beyond_finds_the_printed_three_cards():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Behold the Beyond"],
+            library=["Forest", "Mountain", "Swamp", "Island", "Plains"],
+            battlefield=["Swamp"] * 7,
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    forest = scenario.find("Forest", Zone.LIBRARY, "alice")
+    mountain = scenario.find("Mountain", Zone.LIBRARY, "alice")
+    swamp = scenario.find("Swamp", Zone.LIBRARY, "alice")
+    sources = scenario.untapped_sources(*(["Swamp"] * 7))
+
+    scenario.will_choose_cards(
+        forest, mountain, swamp, username="alice", source="Behold the Beyond"
+    )
+    casting = scenario.cast("Behold the Beyond")
+    casting.determine_cost()
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *sources)
+    stack_object = scenario.put_on_stack(casting)
+
+    effect = effect_for("Behold the Beyond", _BEHOLD_THE_BEYOND_SEARCH)
+    assert effect is not None
+    effect(scenario.game, stack_object)
+
+    alice = scenario.player("alice")
+    assert {c.name for c in alice.hand} == {"Forest", "Mountain", "Swamp"}
+    assert {c.name for c in alice.library} == {"Island", "Plains"}, (
+        "exactly three left the library - not one, and not all five"
+    )
+
+
+def test_behold_the_beyond_finds_fewer_than_three_when_the_library_runs_short():
+    """CR 701.23d: "must find that many cards (or as many as possible, if the
+    zone doesn't contain that many)" - a two-card library still finds both,
+    never an error and never a third card that is not there."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Behold the Beyond"],
+            library=["Forest", "Mountain"],
+            battlefield=["Swamp"] * 7,
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources(*(["Swamp"] * 7))
+
+    casting = scenario.cast("Behold the Beyond")
+    casting.determine_cost()
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *sources)
+    stack_object = scenario.put_on_stack(casting)
+
+    effect = effect_for("Behold the Beyond", _BEHOLD_THE_BEYOND_SEARCH)
+    assert effect is not None
+    effect(scenario.game, stack_object)
+
+    alice = scenario.player("alice")
+    assert {c.name for c in alice.hand} == {"Forest", "Mountain"}
+    assert alice.library == []
+
+
+# -- The Earth King: "up to that many" carries a count from an earlier
+# instruction (here, how many qualifying creatures attacked) rather than
+# printing one - Group 0b's own channel, not built yet. `_SEARCH_AND_PUT_RE`
+# recognises the shape (so the clause is not treated as unreadable
+# altogether) but `_read_search_count` refuses to guess the number, and
+# `_unreadable_search_count` turns that refusal into a recorded notice
+# instead of the trigger silently doing nothing.
+
+
+def test_the_earth_king_records_a_notice_instead_of_guessing_that_many():
+    """ "Whenever one or more creatures you control with power 4 or greater
+    attack, search your library for up to that many basic land cards, put
+    them onto the battlefield tapped, then shuffle." Anafenza (4/4) attacking
+    fires the trigger; the search itself is left to Group 0b and is recorded
+    here rather than run - the library is untouched."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["The Earth King", "Anafenza, the Foremost"],
+            library=["Forest", "Mountain"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    anafenza = scenario.find("Anafenza, the Foremost", Zone.BATTLEFIELD, "alice")
+    scenario.attack_with(anafenza)
+    scenario.pass_until_resolved()
+
+    assert scenario.player("alice").library == [
+        scenario.find("Forest", Zone.LIBRARY, "alice"),
+        scenario.find("Mountain", Zone.LIBRARY, "alice"),
+    ], "the search was not run - Group 0b's own carried-count channel"
+    (notice,) = scenario.game.search_description_notices
+    assert notice.source_name == "The Earth King"
+    assert "that many" in notice.text
