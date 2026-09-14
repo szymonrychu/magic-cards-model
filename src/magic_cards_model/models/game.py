@@ -12,6 +12,7 @@ from uuid import NAMESPACE_OID, UUID, uuid4, uuid5
 
 from pydantic import ConfigDict, Field, PrivateAttr, model_validator
 
+from ..data.subtypes import canonical_subtype
 from ..ids import install_id_allocator, reset_id_allocator
 from ..machines import combat as combat_rules
 from ..machines.abilities import (
@@ -151,6 +152,7 @@ from ..machines.keywords import (
     grant_the_citys_blessing,
     has_paradigm,
     has_rebound,
+    has_suspend,
     is_indestructible,
     keyword_effect_for,
     turn_face_up_cost,
@@ -560,38 +562,95 @@ _SORCERY_TIMING = re.compile(
     re.IGNORECASE,
 )
 
-#: Mox Opal's Metalcraft: "Activate only if you control three or more
-#: artifacts." Number words rather than digits, matching how these two
-#: restrictions are actually printed in the pool.
-_ACTIVATE_ONLY_IF_CONTROL = re.compile(
-    r"activate only if you control (?P<count>\w+) or more (?P<quality>\w+)s?",
+#: CR 602.5b's "Activate only if <condition>" restriction, the condition taken
+#: to the end of its sentence. A trailing "and only as a sorcery" / "and only
+#: once each turn" is a second restriction, read by its own check, and is cut
+#: off by `_activation_condition` before the condition is read.
+_ACTIVATE_ONLY_IF = re.compile(r"activate only if (?P<condition>[^.]+)", re.IGNORECASE)
+_AND_ONLY_TAIL = re.compile(r"\s+and only\b.*$", re.IGNORECASE)
+
+#: The board conditions `Game.condition_holds` reads, shared by "Activate only
+#: if ..." (CR 602.5b) and a modal instruction's "If ..., choose N instead"
+#: (CR 700.2). Every count is `magic_cards_model.numbers`' `COUNT`, never a
+#: table of its own, so "six", "eight" and "20" read the way "three" does -
+#: Metalcraft ("you control three or more artifacts"), Shrine of the Forsaken
+#: Gods ("seven or more lands"), Kelpie Guide ("eight or more lands").
+#: The counted noun is a quality phrase (`_permanent_quality`), so Rimewind
+#: Cryomancer's "snow permanents" (CR 205.4a) is read, not dropped.
+_CONDITION_CONTROLS_N = re.compile(
+    rf"(?P<who>you control|an opponent controls) {count_pattern('count')} or more "
+    r"(?P<quality>.+)",
     re.IGNORECASE,
 )
-#: Fanatic of Rhonas's Ferocious: "Activate only if you control a creature
-#: with power 4 or greater."
-_ACTIVATE_ONLY_IF_POWER = re.compile(
-    r"activate only if you control a creature with power (?P<power>\d+) or greater",
-    re.IGNORECASE,
+#: Fanatic of Rhonas's Ferocious: "you control a creature with power 4 or
+#: greater."
+_CONDITION_POWER = re.compile(
+    r"you control a creature with power (?P<power>\d+) or greater", re.IGNORECASE
 )
-#: Diamond City: "Activate only if two or more creatures entered the
-#: battlefield under your control this turn." Number words, matching the
-#: printed wording rather than digits, the same convention `_ACTIVATE_ONLY_IF_
-#: CONTROL` follows.
-_ACTIVATE_ONLY_IF_ENTERED_THIS_TURN = re.compile(
-    r"activate only if (?P<count>\w+) or more creatures entered the battlefield "
+#: Flame of Anor's "you control a Wizard", Soul Transfer's "you control an
+#: artifact and an enchantment" - one or more "a(n) <quality>" joined by "and".
+_CONDITION_CONTROLS_A = re.compile(r"you control (?P<qualities>an? .+)", re.IGNORECASE)
+_AND_AN = re.compile(r"\s+and\s+(?=an?\s)", re.IGNORECASE)
+_A_QUALITY = re.compile(r"an? (?P<quality>.+)", re.IGNORECASE)
+#: Diamond City: "two or more creatures entered the battlefield under your
+#: control this turn."
+_CONDITION_ENTERED_THIS_TURN = re.compile(
+    rf"{count_pattern('count')} or more creatures entered the battlefield "
     r"under your control this turn",
     re.IGNORECASE,
 )
-#: Shifting Woodland's own *Delirium* activation gate: "Activate only if
-#: there are four or more card types among cards in your graveyard."
-#: CR 207.2c: *Delirium* is an ability word with no rules meaning of its
-#: own - the whole restriction is this one sentence, the activated-ability
-#: cousin of Unholy Heat's/Violent Urge's *delirium* clauses (which gate a
-#: resolution effect and a static ability instead of an activation).
-_ACTIVATE_ONLY_IF_DELIRIUM = re.compile(
-    r"activate only if there (?:is|are) (?P<count>\w+) or more card types "
+#: Delirium (CR 207.2c: an ability word, no rules meaning of its own - the
+#: whole condition is the sentence): "there are four or more card types among
+#: cards in your graveyard", and its "permanent types" sibling (CR 110.4).
+_CONDITION_TYPES_AMONG_GRAVEYARD = re.compile(
+    rf"there (?:is|are) {count_pattern('count')} or more (?P<kind>card|permanent) types "
     r"among cards in your graveyard",
     re.IGNORECASE,
+)
+#: Threshold: "there are seven or more cards in your graveyard" (Barbarian
+#: Ring), qualified - "six or more creature cards" (Gate to the Afterlife),
+#: "eight or more permanent cards" (Uchbenbak) - or "... cards are in your
+#: graveyard".
+_CONDITION_GRAVEYARD_CARDS = re.compile(
+    rf"(?:there (?:is|are) )?{count_pattern('count')} or more (?:(?P<quality>[\w-]+) )?"
+    r"cards? (?:are |is )?in your graveyard",
+    re.IGNORECASE,
+)
+#: Merfolk Windrobber: "an opponent has eight or more cards in their graveyard."
+_CONDITION_OPPONENT_GRAVEYARD_CARDS = re.compile(
+    rf"an opponent has {count_pattern('count')} or more cards in their graveyard",
+    re.IGNORECASE,
+)
+#: Resonating Lute: "you have seven or more cards in your hand."
+_CONDITION_HAND_CARDS = re.compile(
+    rf"you have {count_pattern('count')} or more cards in (?:your )?hand", re.IGNORECASE
+)
+#: Fleshless Gladiator: "an opponent has three or more poison counters"
+#: (CR 122.1f).
+_CONDITION_OPPONENT_POISON = re.compile(
+    rf"an opponent has {count_pattern('count')} or more poison counters", re.IGNORECASE
+)
+#: Luminarch Ascension's "this enchantment has four or more quest counters on
+#: it" and Oracle's Vault's "there are three or more brick counters on this
+#: artifact" - counters on the ability's own source (CR 122.1).
+_CONDITION_SELF_COUNTERS = re.compile(
+    rf"(?:this \w+ has {count_pattern('count')} or more (?P<kind>[\w+/-]+) counters on it"
+    rf"|there (?:is|are) {count_pattern('count2')} or more (?P<kind2>[\w+/-]+) counters? "
+    r"on this \w+)",
+    re.IGNORECASE,
+)
+#: CR 702.62b: "A card is 'suspended' if it's in the exile zone, has suspend,
+#: and has a time counter on it." Greater Gargadon's own restriction.
+_CONDITION_SUSPENDED = re.compile(r"this (?:card|permanent) is suspended", re.IGNORECASE)
+#: Xerex Strobe-Knight: "you've cast two or more spells this turn" - counted
+#: off `Game.spells_cast_this_turn`, which already excludes copies (CR 707.10).
+_CONDITION_SPELLS_CAST_THIS_TURN = re.compile(
+    rf"you(?:'ve| have) cast {count_pattern('count')} or more spells this turn", re.IGNORECASE
+)
+#: CR 110.4a: "Specifically, it means an artifact, battle, creature,
+#: enchantment, land, or planeswalker card."
+_PERMANENT_TYPES = frozenset(
+    {Type.ARTIFACT, Type.BATTLE, Type.CREATURE, Type.ENCHANTMENT, Type.LAND, Type.PLANESWALKER}
 )
 
 
@@ -618,6 +677,95 @@ def _card_type_named(quality: str) -> Type | None:
         return Type(word)
     except ValueError:
         return None
+
+
+def _activation_condition(instructions: str) -> str | None:
+    """The condition of an "Activate only if <condition>" restriction (CR
+    602.5b), without a trailing "and only as a sorcery"-style second
+    restriction, or None when the ability prints none."""
+    match = _ACTIVATE_ONLY_IF.search(instructions)
+    if match is None:
+        return None
+    return _AND_ONLY_TAIL.sub("", match.group("condition")).strip()
+
+
+def _characteristic_word(word: str) -> Callable[[Characteristics], bool] | None:
+    """One word of a counted noun phrase as a test on computed characteristics,
+    or None when the word names nothing this reads.
+
+    A color (CR 105.1; "colorless" is CR 105.2c's "no color"), a supertype
+    (CR 205.4a: basic, legendary, ongoing, snow, world), a card type in the
+    singular or plural (CR 205.2a), or a subtype (CR 205.3, read back from its
+    printed plural by `canonical_subtype`). A "non" prefix negates any of
+    those ("nonland", "non-Human").
+    """
+    lowered = word.lower()
+    if lowered.startswith("non") and len(lowered) > 4:
+        inner = _characteristic_word(lowered.removeprefix("non").lstrip("-"))
+        if inner is None:
+            return None
+        return lambda chars: not inner(chars)
+    if lowered == "colorless":
+        return lambda chars: not chars.colors
+    color = _COLOR_WORDS.get(lowered)
+    if color is not None:
+        return lambda chars: color in chars.colors
+    supertype = next((each for each in Supertype if each.value == lowered), None)
+    if supertype is not None:
+        return lambda chars: supertype in chars.supertypes
+    card_type = _card_type_named(lowered)
+    if card_type is not None:
+        return lambda chars: card_type in chars.types
+    subtype = canonical_subtype(word)
+    if subtype is not None:
+        return lambda chars: any(each.lower() == subtype for each in chars.subtypes)
+    return None
+
+
+def _permanent_quality(phrase: str) -> Callable[[Characteristics], bool] | None:
+    """A counted noun phrase - "artifacts", "lands", "snow permanents", "black
+    permanents", "Vampires" - as a test on a permanent's computed
+    characteristics (CR 613.5), or None when any word of it is not read.
+
+    The last word is the noun ("permanents" is every permanent, CR 110.4);
+    every word before it is a qualifier `_characteristic_word` must read. A
+    phrase with a word it cannot read - "creatures with different powers" -
+    is refused whole rather than read as its first word.
+    """
+    words = phrase.strip().split()
+    if not words:
+        return None
+    *qualifiers, noun = words
+    tests: list[Callable[[Characteristics], bool]] = []
+    if noun.lower() not in ("permanent", "permanents"):
+        noun_test = _characteristic_word(noun)
+        if noun_test is None:
+            return None
+        tests.append(noun_test)
+    for qualifier in qualifiers:
+        qualifier_test = _characteristic_word(qualifier)
+        if qualifier_test is None:
+            return None
+        tests.append(qualifier_test)
+    return lambda chars: all(test(chars) for test in tests)
+
+
+def _card_quality(word: str | None) -> Callable[[CardState], bool] | None:
+    """A graveyard card's one-word quality - "creature", "permanent" (CR
+    110.4a), a card type or subtype - or every card when the text prints
+    none. None when the word is not read."""
+    if word is None:
+        return lambda state: True
+    lowered = word.lower()
+    if lowered == "permanent":
+        return lambda state: bool(_PERMANENT_TYPES.intersection(state.types))
+    card_type = _card_type_named(lowered)
+    if card_type is not None:
+        return lambda state: card_type in state.types
+    subtype = canonical_subtype(word)
+    if subtype is not None:
+        return lambda state: any(each.lower() == subtype for each in state.subtypes)
+    return None
 
 
 #: A static ability that stops other permanents' activated abilities from being
@@ -4013,7 +4161,8 @@ class Game(EngineModel):
         modal = modal_profile(card.card) if option is None else None
         if modal is not None and modal.understood:
             legal = [mode for mode in modal.modes if self._spell_mode_is_legal(card, caster, mode)]
-            if len(legal) < modal.allowed_range()[0]:
+            alternative = self.modal_alternative_applies(modal, caster, card.id, card.name, card)
+            if len(legal) < modal.allowed_range(alternative=alternative)[0]:
                 return False
         else:
             profile = profile_for_text(text)
@@ -4586,7 +4735,9 @@ class Game(EngineModel):
         uses), and an escalate spell offers a further mode only while its
         escalate cost's objects can still be paid (CR 702.120a, CR 118.3)."""
         offered = [mode for mode in modal.modes if self._spell_mode_is_legal(card, caster, mode)]
-        minimum, maximum = modal.allowed_range()
+        minimum, maximum = modal.allowed_range(
+            alternative=self.modal_alternative_applies(modal, caster, card.id, card.name, card)
+        )
         if len(offered) < minimum:
             raise ValueError(f"{card.name} has too few legal modes to cast (CR 700.2a)")
         if modal.escalate_cost is not None:
@@ -5320,7 +5471,13 @@ class Game(EngineModel):
         Then each chosen mode's targets are asked for in order.
         """
         legal = [mode for mode in modal.modes if self._trigger_mode_is_legal(ability, mode)]
-        minimum, maximum = modal.allowed_range()
+        # CR 603.3c: a "choose N instead" condition is checked as the ability
+        # is put on the stack, the same moment its modes are announced.
+        minimum, maximum = modal.allowed_range(
+            alternative=self.modal_alternative_applies(
+                modal, ability.controller, ability.source_id, ability.source_name
+            )
+        )
         if len(legal) < minimum:
             return False
         chosen: list[Mode] = []
@@ -9078,7 +9235,12 @@ class Game(EngineModel):
             return profile_for_text(substitute_x(effect, x_value))
         modal = modal_profile(state.card)
         if modes and modal is not None:
-            chosen = modal.resolve(modes)
+            chosen = modal.resolve(
+                modes,
+                alternative=self.modal_alternative_applies(
+                    modal, state.controller or state.owner or "", state.id, state.name, state
+                ),
+            )
             profile, _owners = profile_for_modes_with_owners(state.card, chosen, x_value)
             return profile
         face = face_being_cast(state.card, spell_face)
@@ -13010,42 +13172,63 @@ class Game(EngineModel):
                 f"{controller}'s main phase, with the stack empty "
                 f"(CR 602.5d, CR 307.5)"
             )
-        if "activate only if" in instructions and not self._activation_condition_holds(
-            ability, controller
-        ):
-            return f"{permanent.name}'s activation restriction is not met (CR 602.5b)"
+        condition = _activation_condition(ability.instructions or "")
+        if condition is not None:
+            held = self._activation_condition_holds(ability, controller, permanent)
+            if held is None:
+                return (
+                    f'{permanent.name}\'s activation restriction "Activate only if {condition}" '
+                    "is not read by this engine, so the activation is refused rather than "
+                    "allowed unchecked (CR 602.5b)"
+                )
+            if not held:
+                return f"{permanent.name}'s activation restriction is not met (CR 602.5b)"
         return None
 
-    def _activation_condition_holds(self, ability: ActivatedAbility, controller: str) -> bool:
-        """Whether an "Activate only if [board state]" restriction is met (CR 602.5b).
+    def _activation_condition_holds(
+        self, ability: ActivatedAbility, controller: str, source: CardState | None = None
+    ) -> bool | None:
+        """Whether an "Activate only if [condition]" restriction is met (CR 602.5b).
 
-        Two shapes are read, both of this pool's own examples: Mox Opal's
-        Metalcraft ("you control three or more artifacts") and Fanatic of
-        Rhonas's Ferocious ("you control a creature with power 4 or
-        greater"). Anything else this cannot read is **not** blocked - an
-        unparsed restriction refusing every activation would trade a narrow,
-        documented gap (see `docs/engine-coverage.md`) for a much louder
-        wrong one, on cards this restriction was never meant to touch.
-
-        CR 613.5: every count below is read off the computed board - a card
-        type (Liquimetal Coating's "becomes an artifact"), a creature's
-        power, or whether it is a creature at all (an earthbent land) can
-        each be true only there.
+        True when the ability prints no such restriction, otherwise
+        `condition_holds`' answer - which is None for a condition this engine
+        does not read. `why_cannot_activate` refuses that None: a restriction
+        nobody checked is not known to be met, and letting it through made
+        every unread gate (Barbarian Ring's threshold, Rimewind Cryomancer's
+        "snow permanents") a restriction that never restricted anything.
         """
-        instructions = ability.instructions or ""
-        controlled = self.permanents_controlled_by(controller)
+        condition = _activation_condition(ability.instructions or "")
+        if condition is None:
+            return True
+        return self.condition_holds(controller, condition, source)
+
+    def condition_holds(
+        self, controller: str, condition: str, source: CardState | None = None
+    ) -> bool | None:
+        """Whether a printed board condition is true for `controller` right now,
+        or None when this does not read it.
+
+        One reader for the conditions a card gates something on without a
+        trigger: CR 602.5b's "Activate only if <condition>" and a modal
+        instruction's "If <condition>, choose N instead" (CR 700.2, checked as
+        the modes are chosen - CR 601.2b for a spell, CR 603.3c for a
+        triggered ability). The shapes are the `_CONDITION_*` patterns above;
+        every count goes through `magic_cards_model.numbers`.
+
+        CR 613.5: a count of permanents reads the computed board - a card type
+        (Liquimetal Coating's "becomes an artifact"), a creature's power, or
+        whether it is a creature at all (an earthbent land) can each be true
+        only there. `source` is the object the condition is printed on, for
+        the shapes that talk about it ("this card is suspended", "this
+        artifact has N or more ... counters on it"); without one those are not
+        read.
+        """
+        text = condition.strip().rstrip(".").strip()
         board = self.computed_board()
+        controlled = self.permanents_controlled_by(controller)
+        opponents = [player for player in self.players_in_game if player.username != controller]
 
-        match = _ACTIVATE_ONLY_IF_CONTROL.search(instructions)
-        if match is not None:
-            needed = parse_count(match.group("count"))
-            card_type = _card_type_named(match.group("quality"))
-            if needed is not None and card_type is not None:
-                count = sum(1 for state in controlled if card_type in board.of(state).types)
-                return count >= needed
-
-        match = _ACTIVATE_ONLY_IF_POWER.search(instructions)
-        if match is not None:
+        if match := _CONDITION_POWER.fullmatch(text):
             threshold = int(match.group("power"))
             return any(
                 board.of(state).is_creature
@@ -13054,27 +13237,149 @@ class Game(EngineModel):
                 for state in controlled
             )
 
-        match = _ACTIVATE_ONLY_IF_ENTERED_THIS_TURN.search(instructions)
-        if match is not None:
+        if match := _CONDITION_CONTROLS_N.fullmatch(text):
             needed = parse_count(match.group("count"))
-            if needed is not None:
-                turn_number = getattr(self.turn, "turn_number", None)
-                if turn_number is None:
-                    return False
-                entered = sum(
-                    1
-                    for state in controlled
-                    if board.of(state).is_creature and state.turn_entered == turn_number
-                )
-                return entered >= needed
+            quality = _permanent_quality(match.group("quality"))
+            if needed is None or quality is None:
+                return None
+            if match.group("who").lower() == "you control":
+                owners = [controller]
+            else:
+                owners = [player.username for player in opponents]
+            return any(
+                sum(1 for state in self.permanents_controlled_by(owner) if quality(board.of(state)))
+                >= needed
+                for owner in owners
+            )
 
-        match = _ACTIVATE_ONLY_IF_DELIRIUM.search(instructions)
-        if match is not None:
+        if match := _CONDITION_CONTROLS_A.fullmatch(text):
+            qualities: list[Callable[[Characteristics], bool]] = []
+            for part in _AND_AN.split(match.group("qualities")):
+                named = _A_QUALITY.fullmatch(part.strip())
+                quality = _permanent_quality(named.group("quality")) if named else None
+                if quality is None:
+                    return None
+                qualities.append(quality)
+            return all(
+                any(quality(board.of(state)) for state in controlled) for quality in qualities
+            )
+
+        if match := _CONDITION_ENTERED_THIS_TURN.fullmatch(text):
             needed = parse_count(match.group("count"))
-            if needed is not None:
-                return count_card_types(self.player(controller).graveyard) >= needed
+            turn_number = getattr(self.turn, "turn_number", None)
+            if needed is None:
+                return None
+            if turn_number is None:
+                return False
+            entered = sum(
+                1
+                for state in controlled
+                if board.of(state).is_creature and state.turn_entered == turn_number
+            )
+            return entered >= needed
 
-        return True
+        if match := _CONDITION_TYPES_AMONG_GRAVEYARD.fullmatch(text):
+            needed = parse_count(match.group("count"))
+            if needed is None:
+                return None
+            graveyard = self.player(controller).graveyard
+            if match.group("kind").lower() == "card":
+                return count_card_types(graveyard) >= needed
+            permanent_types = {
+                card_type
+                for state in graveyard
+                for card_type in state.types
+                if card_type in _PERMANENT_TYPES
+            }
+            return len(permanent_types) >= needed
+
+        if match := _CONDITION_GRAVEYARD_CARDS.fullmatch(text):
+            needed = parse_count(match.group("count"))
+            card_quality = _card_quality(match.group("quality"))
+            if needed is None or card_quality is None:
+                return None
+            graveyard = self.player(controller).graveyard
+            return sum(1 for state in graveyard if card_quality(state)) >= needed
+
+        if match := _CONDITION_OPPONENT_GRAVEYARD_CARDS.fullmatch(text):
+            needed = parse_count(match.group("count"))
+            if needed is None:
+                return None
+            return any(len(player.graveyard) >= needed for player in opponents)
+
+        if match := _CONDITION_HAND_CARDS.fullmatch(text):
+            needed = parse_count(match.group("count"))
+            if needed is None:
+                return None
+            return len(self.player(controller).hand) >= needed
+
+        if match := _CONDITION_OPPONENT_POISON.fullmatch(text):
+            needed = parse_count(match.group("count"))
+            if needed is None:
+                return None
+            return any(player.poison >= needed for player in opponents)
+
+        if match := _CONDITION_SELF_COUNTERS.fullmatch(text):
+            needed = parse_count(match.group("count") or match.group("count2"))
+            kind = (match.group("kind") or match.group("kind2")).lower()
+            counter = next((each for each in Counter if each.value == kind), None)
+            if needed is None or source is None or counter is None:
+                return None
+            return source.counter_count(counter) >= needed
+
+        if match := _CONDITION_SPELLS_CAST_THIS_TURN.fullmatch(text):
+            needed = parse_count(match.group("count"))
+            if needed is None:
+                return None
+            return len(self.spells_cast_this_turn.get(controller, [])) >= needed
+
+        if _CONDITION_SUSPENDED.fullmatch(text):
+            if source is None:
+                return None
+            return (
+                source.zone is Zone.EXILE
+                and has_suspend(source.card)
+                and source.counter_count(Counter.TIME) > 0
+            )
+
+        return None
+
+    def modal_alternative_applies(
+        self,
+        modal: ModalProfile,
+        controller: str,
+        source_id: UUID | None,
+        source_name: str,
+        source: CardState | None = None,
+    ) -> bool:
+        """Whether a modal instruction's "If <condition>, [you may] choose N
+        instead" raises its mode count right now (CR 700.2).
+
+        False when the instruction prints no such sentence. A condition
+        `condition_holds` does not read, or an alternative count
+        `machines/modes.py` did not read, keeps the printed count and records a
+        `ConditionalClauseNotice`: the larger count is a permission nobody
+        checked, and granting it unchecked would let a spell do more than its
+        caster is entitled to.
+        """
+        condition = modal.alternative_condition
+        if condition is None:
+            return False
+        held = (
+            None
+            if modal.alternative_minimum is None
+            else self.condition_holds(controller, condition, source)
+        )
+        if held is None:
+            notice = ConditionalClauseNotice(
+                source_id=source_id,
+                source_name=source_name,
+                text=f"If {condition}, choose {modal.alternative_text or 'more'} instead",
+            )
+            if notice not in self.conditional_clause_notices:
+                self.conditional_clause_notices.append(notice)
+            return False
+        return held
 
     def _activation_prohibition(
         self, permanent: CardState, ability: ActivatedAbility

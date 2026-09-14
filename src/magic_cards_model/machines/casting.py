@@ -40,6 +40,7 @@ from .abilities import (
     parse_granted_ability_lines,
 )
 from .casting_restrictions import (
+    CastingRuleKind,
     has_sorcery_speed_flash_grant,
     restricted_from_noncreature_casting,
     sorcery_speed_restriction_source,
@@ -1593,7 +1594,14 @@ def why_cannot_cast_restriction(
             f"{restriction.source_name} says {caster} can't cast noncreature spells "
             f"this turn (CR 611.1)"
         )
-    targeted = targeted_cant_cast_restriction(game, caster)
+    targeted = targeted_cant_cast_restriction(
+        game, caster, spell_types=types, spell_subtypes=spell.subtypes
+    )
+    if targeted is not None and targeted.kind == CastingRuleKind.SPELL_COUNT_CANT_CAST:
+        return (
+            f"{targeted.source_name} says {caster} can't cast more than {targeted.amount} "
+            f"such spell(s) each turn, and that many were already cast (CR 601.3, CR 101.2)"
+        )
     if targeted is not None:
         return f"{targeted.source_name} says {caster} can't cast spells this turn (CR 611.1)"
     prohibited_from = zone_cast_prohibition_source(game, spell.card, spell.zone, types=types)
@@ -2607,7 +2615,11 @@ class Casting(EngineModel):
             self.chosen_modes = [mode.text for mode in chosen]
             self.chosen_mode_numbers = [mode.number for mode in chosen]
         else:
-            chosen = list(modal.resolve(modes, entwined=entwined))
+            chosen = list(
+                modal.resolve(
+                    modes, entwined=entwined, alternative=self._alternative_mode_count(modal)
+                )
+            )
             self.chosen_modes = [mode.text for mode in chosen]
             self.chosen_mode_numbers = [mode.number for mode in chosen]
             self._charge_mode_costs(chosen)
@@ -2618,6 +2630,15 @@ class Casting(EngineModel):
         if x_value is not None:
             self.x_value = x_value
         return self.step
+
+    def _alternative_mode_count(self, modal: ModalProfile) -> bool:
+        """Whether `modal`'s "If ..., choose N instead" holds as this spell is
+        cast (CR 601.2b), read by `Game.modal_alternative_applies`."""
+        if self.game is None:
+            return False
+        return self.game.modal_alternative_applies(
+            modal, self.caster, self.spell.id, self.spell.name, self.spell
+        )
 
     def _charge_entwine(self, modal: ModalProfile | None) -> None:
         """CR 702.42a: "If you do, you pay an additional [cost]."
@@ -4160,7 +4181,9 @@ class Casting(EngineModel):
         modal = self.modal
         if modal is None or not modal.understood:
             return
-        minimum, maximum = modal.allowed_range(entwined=self.entwined)
+        minimum, maximum = modal.allowed_range(
+            entwined=self.entwined, alternative=self._alternative_mode_count(modal)
+        )
         chosen = len(self.chosen_mode_numbers)
         if minimum <= chosen <= maximum:
             return

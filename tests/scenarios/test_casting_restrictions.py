@@ -516,3 +516,130 @@ def test_another_adventurer_cards_adventure_half_is_refused_as_well():
 
     # The creature half still goes through, flash and all (CR 702.8a).
     assert scenario.cast("Brazen Borrower", username="bob") is not None
+
+
+# --------------------------------------------------------------------------
+# Spell-count caps: "<who> can't cast more than N [quality] spell(s) each
+# turn" and "<who> can cast no more than N spells each turn" (CR 601.3,
+# CR 101.2). The count, the subject, and the quality are all read off the
+# sentence, not pinned to High Noon's "each player ... one spell".
+# --------------------------------------------------------------------------
+
+
+def _bolt(scenario: Scenario, username: str, at: str):
+    if scenario.priority_holder != username:
+        scenario.pass_priority(scenario.priority_holder)
+    (mountain,) = scenario.untapped_sources("Mountain", username=username)[:1]
+    return scenario.cast_and_resolve("Lightning Bolt", mountain, username=username, targets=[at])
+
+
+def _cap_board(alice_battlefield: list[str], *, alice_hand: list[str], bob_hand: list[str]):
+    return (
+        Scenario()
+        .player(
+            "alice",
+            hand=alice_hand,
+            battlefield=alice_battlefield + ["Mountain"] * 4 + ["Forest"],
+            library=["Mountain"] * 5,
+        )
+        .player(
+            "bob",
+            hand=bob_hand,
+            battlefield=["Mountain"] * 4,
+            library=["Mountain"] * 5,
+        )
+        .build()
+    )
+
+
+def test_curse_of_exhaustion_caps_the_enchanted_player():
+    """ "Enchanted player can't cast more than one spell each turn." - bob is
+    enchanted, so bob's second spell is refused."""
+    scenario = _cap_board(
+        ["Curse of Exhaustion"],
+        alice_hand=[],
+        bob_hand=["Lightning Bolt", "Lightning Bolt"],
+    )
+    curse = scenario.find("Curse of Exhaustion", Zone.BATTLEFIELD, username="alice")
+    curse.attach_to(scenario.player("bob"))
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    _advance_to_bobs_precombat_main(scenario)
+
+    _bolt(scenario, "bob", "alice")
+    with pytest.raises(ValueError, match="Curse of Exhaustion"):
+        scenario.cast("Lightning Bolt", username="bob", targets=["alice"])
+    assert scenario.player("alice").life == 17
+
+
+def test_curse_of_exhaustion_leaves_the_unenchanted_player_alone():
+    """The curse's own controller is not the enchanted player: two spells."""
+    scenario = _cap_board(
+        ["Curse of Exhaustion"],
+        alice_hand=["Lightning Bolt", "Lightning Bolt"],
+        bob_hand=[],
+    )
+    curse = scenario.find("Curse of Exhaustion", Zone.BATTLEFIELD, username="alice")
+    curse.attach_to(scenario.player("bob"))
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    _bolt(scenario, "alice", "bob")
+    _bolt(scenario, "alice", "bob")
+
+    assert scenario.player("bob").life == 14
+
+
+def test_fires_of_invention_allows_two_spells_and_refuses_the_third():
+    scenario = _cap_board(
+        ["Fires of Invention"],
+        alice_hand=["Lightning Bolt"] * 3,
+        bob_hand=[],
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    _bolt(scenario, "alice", "bob")
+    _bolt(scenario, "alice", "bob")
+    with pytest.raises(ValueError, match="Fires of Invention"):
+        scenario.cast("Lightning Bolt", username="alice", targets=["bob"])
+    assert scenario.player("bob").life == 14
+
+
+def test_fires_of_invention_refuses_its_controller_on_another_players_turn():
+    """ "You can cast spells only during your turn" - the first half of the
+    same sentence, which the count cap must not swallow."""
+    scenario = _cap_board(
+        ["Fires of Invention"],
+        alice_hand=["Lightning Bolt"],
+        bob_hand=["Lightning Bolt", "Lightning Bolt", "Lightning Bolt"],
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    _advance_to_bobs_precombat_main(scenario)
+
+    with pytest.raises(ValueError, match="Fires of Invention"):
+        if scenario.priority_holder != "alice":
+            scenario.pass_priority(scenario.priority_holder)
+        scenario.cast("Lightning Bolt", username="alice", targets=["bob"])
+
+    _bolt(scenario, "bob", "alice")
+    _bolt(scenario, "bob", "alice")
+    _bolt(scenario, "bob", "alice")
+    assert scenario.player("alice").life == 11, "bob is not the one Fires restricts"
+
+
+def test_deafening_silence_caps_noncreature_spells_only():
+    """ "Each player can't cast more than one noncreature spell each turn." A
+    second noncreature spell is refused; a creature spell after it is not."""
+    scenario = _cap_board(
+        ["Deafening Silence"],
+        alice_hand=["Lightning Bolt", "Lightning Bolt", "Grizzly Bears"],
+        bob_hand=[],
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    _bolt(scenario, "alice", "bob")
+    with pytest.raises(ValueError, match="Deafening Silence"):
+        scenario.cast("Lightning Bolt", username="alice", targets=["bob"])
+
+    mountain = scenario.untapped_sources("Mountain", username="alice")[0]
+    (forest,) = scenario.untapped_sources("Forest", username="alice")
+    bears = scenario.cast_and_resolve("Grizzly Bears", mountain, forest, username="alice")
+    assert bears.zone is Zone.BATTLEFIELD

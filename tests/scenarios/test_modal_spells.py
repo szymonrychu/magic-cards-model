@@ -717,3 +717,138 @@ def test_a_modal_x_spell_asks_for_no_targets_before_its_modes_are_chosen():
     casting.choose_modes([3, 4], x_value=1)
     assert casting.targeting.understood
     assert casting.targeting.min_targets == 1, "only the chosen modes target (CR 700.2c)"
+
+
+# --------------------------------------------------------------------------
+# "Choose one. If <condition>, [you may] choose <N> instead." - the second
+# sentence of the instruction raises the number of modes when its condition
+# holds as the spell is cast (CR 601.2b, CR 700.2a) or as the ability is put
+# on the stack (CR 700.2b). The alternative count is read like any other
+# instruction count; the condition is read by the same board reader
+# "Activate only if" uses, and one it cannot read keeps the printed count and
+# records a notice.
+# --------------------------------------------------------------------------
+
+
+def _flame_board(*, wizard: bool) -> "Scenario":
+    battlefield = ["Island", "Mountain", "Mountain"]
+    if wizard:
+        battlefield.append("Rootwater Mystic")
+    return (
+        Scenario()
+        .player("alice", hand=["Flame of Anor"], battlefield=battlefield, library=["Forest"] * 3)
+        .player("bob", battlefield=["Sol Ring"], library=["Forest"] * 3)
+        .build()
+    )
+
+
+def test_flame_of_anor_without_a_wizard_takes_one_mode():
+    scenario = _flame_board(wizard=False)
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    casting = scenario.cast("Flame of Anor")
+    with pytest.raises(ValueError, match="too many modes"):
+        casting.choose_modes([1, 2])
+
+
+def test_flame_of_anor_with_a_wizard_may_take_two_modes():
+    scenario = _flame_board(wizard=True)
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sol_ring = scenario.find("Sol Ring", Zone.BATTLEFIELD, username="bob")
+
+    casting = scenario.cast("Flame of Anor")
+    casting.choose_modes([1, 2])
+    casting.choose_targets(["bob", sol_ring])
+    payment = casting.determine_cost()
+    scenario.auto_pay(payment, username="alice")
+    casting.begin_paying()
+    casting.cast()
+    scenario.pass_until_resolved()
+
+    assert sol_ring.zone is Zone.GRAVEYARD
+    assert len(scenario.player("bob").hand) == 2
+
+
+def test_flame_of_anor_with_a_wizard_still_takes_one_mode_if_asked():
+    """ "You may choose two instead" - one mode stays legal."""
+    scenario = _flame_board(wizard=True)
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    casting = scenario.cast("Flame of Anor")
+    casting.choose_modes([2])
+
+
+def test_flame_of_anor_with_a_wizard_is_capped_at_two():
+    scenario = _flame_board(wizard=True)
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    casting = scenario.cast("Flame of Anor")
+    with pytest.raises(ValueError, match="too many modes"):
+        casting.choose_modes([1, 2, 3])
+
+
+def _titan_board(graveyard: list[str]) -> "Scenario":
+    return (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Prophetic Titan"],
+            graveyard=graveyard,
+            battlefield=["Mountain"] * 6,
+            library=["Forest"] * 6,
+        )
+        .player("bob", library=["Forest"] * 3)
+        .build()
+    )
+
+
+def _mode_questions(scenario):
+    from magic_cards_model.machines.decisions import DecisionKind
+
+    return [q for q in scenario.questions_asked() if q.kind is DecisionKind.CHOOSE_A_MODE]
+
+
+def test_prophetic_titan_with_delirium_chooses_both_modes():
+    """ "If there are four or more card types among cards in your graveyard,
+    choose both instead." - not optional: both modes are chosen."""
+    scenario = _titan_board(["Lightning Bolt", "Grizzly Bears", "Sol Ring", "Mountain"])
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.will_choose_targets("bob", username="alice")
+
+    scenario.put_onto_battlefield("Prophetic Titan")
+    scenario.pass_until_resolved()
+
+    assert len(_mode_questions(scenario)) == 2
+    assert scenario.player("bob").life == 16
+
+
+def test_prophetic_titan_without_delirium_chooses_one_mode():
+    scenario = _titan_board(["Lightning Bolt", "Grizzly Bears", "Mountain"])
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.will_choose_targets("bob", username="alice")
+
+    scenario.put_onto_battlefield("Prophetic Titan")
+    scenario.pass_until_resolved()
+
+    (question,) = _mode_questions(scenario)
+    assert len(question.options) == 2
+
+
+def test_an_unread_mode_condition_keeps_the_printed_count_and_says_so():
+    """Molten Collapse's "If you descended this turn" (CR 700.11) is not a
+    condition this engine tracks. Both modes are refused - the printed
+    "Choose one" is what is known - and the unread clause is recorded."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Molten Collapse"], battlefield=["Swamp", "Mountain"])
+        .player("bob", battlefield=["Grizzly Bears", "Sol Ring"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    casting = scenario.cast("Molten Collapse")
+    with pytest.raises(ValueError, match="too many modes"):
+        casting.choose_modes([1, 2])
+
+    notices = [notice.text for notice in scenario.game.conditional_clause_notices]
+    assert any("descended this turn" in text for text in notices)
