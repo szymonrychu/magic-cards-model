@@ -85,3 +85,29 @@ in `tests/scenarios/test_board_snapshot.py` pause the writer before every
 pydantic field store and every in-place list/dict edit with a profile
 function, and let the reader read at each pause, so every interleaving is
 exercised without a sleep.
+
+**Inside commands (T11, 2026-09-14).** `snapshot.command` never caches, so
+every scan a command runs used to rebuild the board per permanent. The
+engine's own read-only scans inside commands pin one board with
+`snapshot.scan_pin(game)`: `triggers.abilities_triggered_by`,
+`triggers.state_triggers_for`'s sweep (before its latch bookkeeping) and
+`Game._state_based_action_losers` (moves after, in
+`_put_state_based_action_losers`). A pin is not a scope: nothing is
+fingerprinted, so a notice or the legend-rule question inside it is fine (a
+`board_snapshot` there raised `BoardSnapshotStale`). It is dropped by every
+store `_before`/`_signal` sees on a model of that game, from any thread and
+whether or not a command is running (`_signal`'s skip of commanding games is
+for scopes only), lifted by `command()` for a nested command, and serves only
+the thread that opened it, never after its block ends. What it cannot see is an
+unannounced in-place edit to a zone list inside the pinned block, so pin wide
+read-only scans only. Checking that a pinned block left the board inputs
+unchanged (a fingerprint taken as the pin opens) belongs in a test run, never
+in production.
+
+**Board effect ids.** `_compute_board` mints the effects it builds from a
+per-computation allocator (`uuid5(game_uid:board:n)`, n from zero), never
+`_allocate_id`. Before that, each computation inside a command advanced
+`objects_created`, so fewer computations changed every id minted afterwards
+and replay determinism depended on how often the board happened to be
+computed. `tests/scenarios/test_board_snapshot_commands.py` pins count,
+equivalence and the id rule.

@@ -1,5 +1,6 @@
 """A single game: the players, the shared zones, and where the turn is."""
 
+import itertools
 import re
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import AbstractContextManager, contextmanager
@@ -226,7 +227,7 @@ from ..machines.turn import (
     TurnMachine,
 )
 from ..serialization import SortedFrozenSet, SortedSet
-from ..snapshot import EngineModel, board_snapshot, cached_board, command
+from ..snapshot import EngineModel, board_snapshot, cached_board, command, scan_pin
 from .action import Action
 from .card import Card, Color, Layout, Supertype, Type
 from .card_state import (
@@ -10836,7 +10837,23 @@ class Game(EngineModel):
                 for player in self.players_in_game
             },
         )
-        return self.continuous_effects.board(self.battlefield, context, self)
+        # The effects a board is built from are rebuilt on every computation and
+        # discarded with it, so they must not draw on `_allocate_id`: how often a
+        # command computes the board (which a snapshot scope, or another
+        # thread's change moving its epoch, decides) would otherwise move
+        # `objects_created` and every id minted after it, and a replayed command
+        # would stop minting the ids it minted the first time. Each computation
+        # numbers its own effects from zero instead, the same way every time.
+        minted = itertools.count()
+
+        def board_effect_id() -> UUID:
+            return uuid5(NAMESPACE_OID, f"{self.game_uid}:board:{next(minted)}")
+
+        token = install_id_allocator(board_effect_id)
+        try:
+            return self.continuous_effects.board(self.battlefield, context, self)
+        finally:
+            reset_id_allocator(token)
 
     def unspent_mana_of(self, player: Player) -> ManaPool:
         """The mana this player has produced and not yet spent (CR 106.4).
@@ -10897,6 +10914,16 @@ class Game(EngineModel):
         gone_tokens = tokens_that_cease_to_exist(self)  # CR 704.5d, CR 111.7
         self._remember_sources_that_ceased_to_exist(gone_tokens)
 
+        # Every check below reads the battlefield and moves nothing, so they
+        # share one layered board (`snapshot.scan_pin`); the moves come after.
+        with scan_pin(self):
+            board, leaving = self._state_based_action_losers()
+        self._put_state_based_action_losers(leaving, board)
+        return leaving + gone_tokens
+
+    def _state_based_action_losers(self) -> tuple[ComputedBoard, list[CardState]]:
+        """The permanents one round of `_state_based_actions_once` removes, and
+        the board they were judged on. Reads only."""
         board = self.computed_board()
         leaving = [
             state
@@ -10925,6 +10952,13 @@ class Game(EngineModel):
         # CR 704.5s, CR 714.4: a Saga whose lore counters reached its final
         # chapter number, once nothing left to run off it is still triggered.
         leaving += [state for state in self._sagas_to_put_into_graveyard() if state not in leaving]
+        return board, leaving
+
+    def _put_state_based_action_losers(
+        self, leaving: list[CardState], board: ComputedBoard
+    ) -> None:
+        """`_state_based_actions_once`'s acting half: move `leaving`, then the
+        attachment and ascend checks that follow it."""
         # `put_into_graveyard` rather than `destroy`, because CR 701.8b says only
         # CR 704.5g and CR 704.5h destroy: CR 704.5f, the legend rule (704.5j),
         # CR 704.5i, CR 704.5m and CR 704.5z all read "is put into its owner's
@@ -10966,7 +11000,6 @@ class Game(EngineModel):
         # here too for a change no event announces. See
         # `machines/keywords.grant_the_citys_blessing`.
         grant_the_citys_blessing(self)
-        return leaving + gone_tokens
 
     def _roles_beyond_the_newest(self, board: ComputedBoard) -> list[CardState]:
         """The Roles CR 704.5z puts into their owners' graveyards.

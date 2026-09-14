@@ -61,7 +61,7 @@ from ..models.card import Card, Color, Type
 from ..models.card_state import CardState, ChoiceKind, Counter, TargetRef
 from ..models.token import TokenState
 from ..models.zone import Zone
-from ..snapshot import EngineModel
+from ..snapshot import EngineModel, scan_pin
 from .abilities import (
     Ability,
     AbilityKind,
@@ -3424,18 +3424,23 @@ def abilities_triggered_by(
     tap would set off (`machines/cost.triggered_mana_bonus`) as often as it
     likes; `triggers_for` is this plus the once-per-turn bookkeeping and the
     stack objects.
+
+    Every source is asked on one layered board (`snapshot.scan_pin`):
+    nothing moves while they are, and a mutating command that raises the event
+    would otherwise recompute the board once per source.
     """
     found: list[tuple[CardState, TriggeredAbility, str]] = []
-    for source in sources:
-        controller = controller_of_source(game, source)
-        for ability in triggered_abilities_on(game, source):
-            if not condition_matches(game, ability, source, controller, event):
-                continue
-            if source.zone not in zones_ability_functions_in(ability, source):
-                continue  # CR 113.6: doesn't function from the zone it's in.
-            if not intervening_if_holds(game, ability, source, event):
-                continue  # CR 603.4: it does not trigger at all.
-            found.append((source, ability, controller))
+    with scan_pin(game):
+        for source in sources:
+            controller = controller_of_source(game, source)
+            for ability in triggered_abilities_on(game, source):
+                if not condition_matches(game, ability, source, controller, event):
+                    continue
+                if source.zone not in zones_ability_functions_in(ability, source):
+                    continue  # CR 113.6: doesn't function from the zone it's in.
+                if not intervening_if_holds(game, ability, source, event):
+                    continue  # CR 603.4: it does not trigger at all.
+                found.append((source, ability, controller))
     return found
 
 
@@ -3643,25 +3648,32 @@ def state_triggers_for(game: "Game") -> list[AbilityOnStack]:
         if ability_id not in live:
             del game.state_trigger_latches[key]
 
+    # Read first, on one layered board (`snapshot.scan_pin`), and act
+    # after: the sweep asks every permanent while nothing moves, and the
+    # latch bookkeeping below is kept out of the read.
+    with scan_pin(game):
+        holding = [
+            (source, source.controller or game.active_player.username, ability)
+            for source in list(game.battlefield)
+            for ability in _state_trigger_abilities(game, source)
+            if _state_condition_holds(game, ability, source)
+        ]
+
     triggered: list[AbilityOnStack] = []
-    for source in list(game.battlefield):
-        controller = source.controller or game.active_player.username
-        for ability in _state_trigger_abilities(game, source):
-            if not _state_condition_holds(game, ability, source):
-                continue
-            key = f"{source.id}:{ability.condition}"
-            if key in game.state_trigger_latches:
-                continue
-            on_stack = AbilityOnStack(
-                kind=AbilityKind.TRIGGERED,
-                ability=ability,
-                source_id=source.id,
-                source_name=source.name,
-                controller=controller,
-                source_stamp=source.zone_change_stamp,
-            )
-            game.state_trigger_latches[key] = on_stack.id
-            triggered.append(on_stack)
+    for source, controller, ability in holding:
+        key = f"{source.id}:{ability.condition}"
+        if key in game.state_trigger_latches:
+            continue
+        on_stack = AbilityOnStack(
+            kind=AbilityKind.TRIGGERED,
+            ability=ability,
+            source_id=source.id,
+            source_name=source.name,
+            controller=controller,
+            source_stamp=source.zone_change_stamp,
+        )
+        game.state_trigger_latches[key] = on_stack.id
+        triggered.append(on_stack)
     return triggered
 
 
