@@ -84,7 +84,7 @@ from ..models.token import (
     token_copy_of,
 )
 from ..models.zone import Zone
-from ..numbers import COUNT, parse_count, parse_multiplier
+from ..numbers import AMOUNT, COUNT, parse_count, parse_multiplier, where_x_pattern
 from ..snapshot import EngineModel
 from . import combat as combat_rules
 from .abilities import (
@@ -1140,7 +1140,7 @@ def _parse_devotion_drain_clauses(
 #: with the same `_SCRY_RE` `parse_clause_effect` already uses for a plain
 #: "scry N" clause elsewhere, so a future card sharing this shape but a
 #: different N still reads.
-_SCRY_N_ONLY_RE = re.compile(r"^scry (?P<n>\d+)$", re.IGNORECASE)
+_SCRY_N_ONLY_RE = re.compile(rf"^scry (?P<n>{COUNT})$", re.IGNORECASE)
 #: "If you weren't the starting player, you may untap `<name>` instead."
 #: (Forsaken Crossroads) - CR 103.8's starting player, and CR 608.2d's "you
 #: may" over what the previous clause would otherwise do.
@@ -1174,7 +1174,9 @@ def _parse_scry_or_untap_if_not_starting_player_clauses(
     scry_match = _SCRY_N_ONLY_RE.fullmatch(clauses[index].strip())
     if scry_match is None:
         return None
-    count = int(scry_match.group("n"))
+    count = parse_count(scry_match.group("n"))
+    if count is None:
+        return None
     untap_match = _IF_NOT_STARTING_PLAYER_MAY_UNTAP_INSTEAD_RE.fullmatch(clauses[index + 1].strip())
     if untap_match is None:
         return None
@@ -4286,10 +4288,17 @@ ClauseEffect = Callable[["Game", Player, str, str | None], None]
 # phrasing is deliberately left to the targeted-effects wave.
 #: "you gain N life", and "you gain three times X life" (Martyr of Sands) once
 #: CR 107.3a's X is substituted - a multiplier on the count, read the same way.
+#: The optional "for each `<expr>`" tail - Mastery of the Unseen's "gain 1
+#: life for each creature you control" - is read by `_for_each_multiplier`
+#: below, once, at the moment CR 608.2h fixes the count.
 _GAIN_LIFE_RE = re.compile(
-    rf"you gains? (?:(?P<times>{COUNT}) times )?(?P<n>{COUNT}) life", re.IGNORECASE
+    rf"you gains? (?:(?P<times>{COUNT}) times )?(?P<n>{COUNT}) life"
+    rf"(?: for each (?P<each>.+))?",
+    re.IGNORECASE,
 )
-_LOSE_LIFE_RE = re.compile(rf"you loses? (?P<n>{COUNT}) life", re.IGNORECASE)
+_LOSE_LIFE_RE = re.compile(
+    rf"you loses? (?P<n>{COUNT}) life(?: for each (?P<each>.+))?", re.IGNORECASE
+)
 #: "Each opponent loses N life." - Cauldron Familiar's own enters trigger,
 #: the flat-number twin of `_EACH_OPPONENT_LOSES_LIFE_EQUAL_TO_RE`'s counted
 #: amount. CR 119.3 adjusts a life total directly, and unlike CR 119.2's
@@ -4303,8 +4312,16 @@ _EACH_OPPONENT_LOSES_LIFE_RE = re.compile(
 _ENERGY_RE = re.compile(r"(?:you )?gets? (?P<e>(?:\{e\})+)", re.IGNORECASE)
 # CR 121.1/121.2: drawing, one card at a time. The "you" is often left
 # implicit - a triggered or activated ability's effect just says "Draw a
-# card."
-_DRAW_RE = re.compile(rf"(?:you )?draws? (?:a card|(?P<n>{COUNT}) cards?)", re.IGNORECASE)
+# card." The optional "for each `<expr>`" tail folds in Kaito, Bane of
+# Nightmares' own "draw a card for each opponent who lost life this turn" -
+# `_for_each_multiplier` reads "opponent who lost life this turn" as one of
+# its own qualifiers, rather than this regex pinning that one sentence - and
+# Keruga, the Macrosage's "draw a card for each other permanent you control
+# with mana value 3 or greater".
+_DRAW_RE = re.compile(
+    rf"(?:you )?draws? (?:a card|(?P<n>{COUNT}) cards?)(?: for each (?P<each>.+))?",
+    re.IGNORECASE,
+)
 # CR 701.9a: "To discard a card, move it from its owner's hand to that
 # player's graveyard." CR 701.9b: absent an override, the discarding player
 # chooses which - Wistfulness's own "draw two cards, then discard a card" is
@@ -4316,15 +4333,31 @@ _DRAW_RE = re.compile(rf"(?:you )?draws? (?:a card|(?P<n>{COUNT}) cards?)", re.I
 # ability's own effect, spoken as an instruction) or "you may discard a
 # card" (peeled off by `_parse_optional_player_clause` before this ever
 # runs), so there is no "you discard a card" shape left to also match.
-_DISCARD_A_CARD_RE = re.compile(rf"^discards? (?:a card|(?P<n>{COUNT}) cards?)$", re.IGNORECASE)
+#
+# "up to `<n>`"/"any number of" - CR 107.1c's own "any positive number or
+# zero" - a non-exact discard (`_discard_cards`'s own `exact` argument),
+# never "that many": that count is carried from an earlier clause this file
+# does not yet have a channel for (Group 0b), and a bare `parse_clause_effect`
+# clause has no earlier clause to carry it from anyway.
+_DISCARD_A_CARD_RE = re.compile(
+    rf"^discards? (?:(?P<any>any number of)|(?:(?P<upto>up to )?(?P<n>{AMOUNT})))\s+cards?$",
+    re.IGNORECASE,
+)
 # CR 701.17a: "puts that many cards from the top of their library into their
-# graveyard."
-_MILL_RE = re.compile(rf"(?:you )?mills? (?:a card|(?P<n>{COUNT}) cards?)", re.IGNORECASE)
-# CR 701.25a / CR 701.22a.
-_SURVEIL_RE = re.compile(r"surveils? (?P<n>\d+)", re.IGNORECASE)
+# graveyard." The optional "for each `<expr>`" tail is the same reader as
+# `_DRAW_RE`'s own.
+_MILL_RE = re.compile(
+    rf"(?:you )?mills? (?:a card|(?P<n>{COUNT}) cards?)(?: for each (?P<each>.+))?",
+    re.IGNORECASE,
+)
+#: CR 701.25a / CR 701.22a. "Surveil X, where X is `<expr>`" (Cerebral
+#: Download) reads `<expr>` through `count_expression`, the same reader
+#: `amount_expression`'s own terms already call.
+_SURVEIL_RE = re.compile(rf"surveils? (?P<n>{AMOUNT}){where_x_pattern()}", re.IGNORECASE)
 #: "Scry N" (Preordain, most spells) and "Target player scries N" (Kozilek's
 #: Command's third-person mode) - `scr(?:y|ies)` reads both conjugations.
-_SCRY_RE = re.compile(r"scr(?:y|ies) (?P<n>\d+)", re.IGNORECASE)
+#: "Scry X, where X is `<expr>`" (Oath of Jace) reads the same way.
+_SCRY_RE = re.compile(rf"scr(?:y|ies) (?P<n>{AMOUNT}){where_x_pattern()}", re.IGNORECASE)
 #: "You gain life equal to the life you've lost this turn." - Children of
 #: Korlis. The amount is read off `Player.life_lost_this_turn`, the gross
 #: per-turn ledger, not the net change in the life total: every route down
@@ -4339,22 +4372,153 @@ _GAIN_LIFE_EQUAL_TO_LIFE_LOST_THIS_TURN_RE = re.compile(
     r"you gains? life equal to the life you'?(?:ve|’ve)? lost this turn",
     re.IGNORECASE,
 )
-#: "Draw a card for each opponent who lost life this turn." - Kaito, Bane of
-#: Nightmares' `0`. The count is one card **per opponent**, not per point of
-#: life, and "lost life this turn" is `Player.life_lost_this_turn` - the same
-#: gross per-turn ledger `_GAIN_LIFE_EQUAL_TO_LIFE_LOST_THIS_TURN_RE` above
-#: already reads for Children of Korlis, which counts every route down
-#: (CR 119.2/120.3a's damage, CR 118.3b's paid life) rather than the net
-#: change in a life total.
-_DRAW_FOR_EACH_OPPONENT_WHO_LOST_LIFE_RE = re.compile(
-    r"^draws? a card for each opponent who lost life this turn$", re.IGNORECASE
+
+#: "(other) `<qualifier>` you control[ with power/toughness/mana value `<n>`
+#: or greater/less]" - Keruga, the Macrosage's "for each other permanent you
+#: control with mana value 3 or greater" and Blessing of Frost's "for each
+#: creature you control with power 4 or greater". `<qualifier>` is a card
+#: type (`_singular_card_type`) or subtype (`_singular_subtype`) the same way
+#: `count_expression`'s own "number of `<qualifier>` you control" reads it,
+#: plus the bare word "permanent(s)" for no type filter at all (CR 110.1).
+_QUALIFIER_YOU_CONTROL_RE = re.compile(
+    rf"^(?P<other>other )?(?P<qualifier>[a-z]+) you control"
+    rf"(?: with (?P<attr>power|toughness|mana value) (?P<n>{COUNT}) or (?P<dir>greater|less))?$",
+    re.IGNORECASE,
 )
 
 
+def _for_each_qualifier_count(phrase: str) -> Callable[["Game", str, str | None], int] | None:
+    """`_QUALIFIER_YOU_CONTROL_RE`'s shape as a `(game, controller, source_id)
+    -> int` reader, or `None` when `phrase` is not that shape.
+
+    "other" (Keruga's own "other permanent") excludes the permanent whose id
+    is `source_id` - CR 110.1's own object, not the ability - from the count;
+    a static or triggered ability's `source_id` is the permanent it triggers
+    from, the same one CR 608.2h already lets a "for each" count exclude by
+    name when a card prints "other".
+    """
+    match = _QUALIFIER_YOU_CONTROL_RE.fullmatch(phrase.strip())
+    if match is None:
+        return None
+    qualifier_word = match.group("qualifier")
+    universal = qualifier_word.lower() in ("permanent", "permanents")
+    card_type = None if universal else _singular_card_type(qualifier_word)
+    subtype = None if universal or card_type is not None else _singular_subtype(qualifier_word)
+    if not universal and card_type is None and subtype is None:
+        return None
+    other = match.group("other") is not None
+    attr = match.group("attr")
+    bound = parse_count(match.group("n")) if match.group("n") else None
+    greater = match.group("dir") == "greater" if match.group("dir") else None
+
+    def count(game: "Game", controller: str, source_id: str | None) -> int:
+        board = game.computed_board()
+        total = 0
+        for permanent in game.battlefield:
+            chars = board.of(permanent)
+            if chars.controller != controller:
+                continue
+            if other and source_id is not None and str(permanent.id) == source_id:
+                continue
+            if not universal:
+                if card_type is not None and card_type not in chars.types:
+                    continue
+                if card_type is None and not any(
+                    word.lower() == subtype for word in chars.subtypes
+                ):
+                    continue
+            if attr is not None:
+                if attr == "power":
+                    value = chars.numeric_power
+                elif attr == "toughness":
+                    value = chars.numeric_toughness
+                else:
+                    value = permanent.mana_value
+                if greater and value < bound:
+                    continue
+                if not greater and value > bound:
+                    continue
+            total += 1
+        return total
+
+    return count
+
+
+def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int] | None:
+    """The count of an "N `<effect>` for each `<phrase>`" tail, as a
+    `(game, controller, source_id) -> int` reader, or `None` when `phrase` is
+    not one this wave can read.
+
+    Tries, in order: Kaito, Bane of Nightmares' own "opponent who lost life
+    this turn" (folded in here rather than pinned to its exact whole
+    sentence, as `_DRAW_FOR_EACH_OPPONENT_WHO_LOST_LIFE_RE` used to);
+    `_for_each_qualifier_count`'s "(other) `<qualifier>` you control[ with
+    ...]"; and `count_expression`'s own "the number of `<qualifier>` you
+    control" / "... cards in your graveyard/hand" shapes, for a card that
+    spells the count out that way instead.
+    """
+    stripped = phrase.strip().rstrip(".")
+    if stripped.lower() == "opponent who lost life this turn":
+
+        def count_opponents_who_lost_life(
+            game: "Game", controller: str, source_id: str | None
+        ) -> int:
+            # CR 608.2h: the count is taken once, when the effect applies -
+            # every card is drawn against this one number, not re-counted
+            # between draws.
+            return sum(
+                1 for opponent in _opponents(game, controller) if opponent.life_lost_this_turn > 0
+            )
+
+        return count_opponents_who_lost_life
+    qualifier_reader = _for_each_qualifier_count(stripped)
+    if qualifier_reader is not None:
+        return qualifier_reader
+    generic = count_expression(stripped)
+    if generic is not None:
+        return lambda game, controller, _source_id: generic(game, controller)
+    return None
+
+
+def _amount_reader(n_text: str, where_text: str | None) -> Callable[["Game", str], int] | None:
+    """`n_text` is one of `numbers.AMOUNT`'s own captures ("2", "two", "x");
+    `where_text` is the expression after "where X is", or `None` when the
+    card prints no where-clause. Returns a `(game, controller) -> int` reader
+    of the count, or `None` when `n_text` is CR 107.3a's X with nothing
+    readable to determine it by.
+
+    `n_text` alone (no where-clause) is not CR 107.3a's X *announced* at
+    cast: `Game.scry`/`Game.surveil`'s own callers here are triggered and
+    static abilities, which carry no announced X for this reader to reach -
+    only a card that spells its own X out with "where X is `<expr>`" (Oath of
+    Jace's "scry X, where X is the number of planeswalkers you control")
+    gives this anything to evaluate.
+    """
+    count = parse_count(n_text)
+    if count is not None:
+        return lambda _game, _controller: count
+    if where_text is None:
+        return None
+    evaluator = count_expression(where_text)
+    if evaluator is None:
+        return None
+    return evaluator
+
+
 def _discard_cards(
-    game: "Game", player: Player, count: int, source: str, *, source_id: str | None
+    game: "Game",
+    player: Player,
+    count: int,
+    source: str,
+    *,
+    source_id: str | None,
+    exact: bool = True,
 ) -> list[CardState]:
-    """CR 701.9a/701.9b: `player` discards `count` cards of their own choice.
+    """CR 701.9a/701.9b: `player` discards `count` cards of their own choice -
+    exactly `count` when `exact` is `True` (every caller before "up to N"/"any
+    number of" discards existed), or CR 107.1c's own "any positive number or
+    zero" up to `count` when it is `False` (Fable of the Mirror-Breaker's own
+    "you may discard up to two cards").
 
     A hand shorter than `count` is not a violation - the player discards
     their whole hand, one card at a time, the same floor
@@ -4374,11 +4538,12 @@ def _discard_cards(
         Decision(
             kind=DecisionKind.CHOOSE_CARDS,
             player=player.username,
-            prompt=f"discard {needed} card(s)",
+            prompt=f"discard {'up to ' if not exact else ''}{needed} card(s)",
             source=source,
             amount=needed,
             cards=tuple(state.id for state in player.hand),
             source_id=source_id,
+            exact=exact,
         )
     )
     assert isinstance(chosen_ids, tuple)
@@ -4424,6 +4589,11 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
         amount = parse_count(match.group("n"))
         if match.group("times") is not None:
             amount *= parse_count(match.group("times"))
+        each = match.group("each")
+        multiplier = _for_each_multiplier(each) if each is not None else None
+        if each is not None and multiplier is None:
+            return None
+
         # Through `Game.gain_life`, not `Player.gain_life`. CR 119.9: "Some
         # triggered abilities are written, 'Whenever [a player] gains life,
         # . . . .' Such abilities are treated as though they are written,
@@ -4433,7 +4603,13 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
         # `Player.gain_life` directly adjusted the total (CR 119.3) but
         # emitted nothing, so Amalia Benavides Aguirre and every other
         # "whenever you gain life" card was blind to every spell in the pool.
-        return lambda game, player, source, source_id: game.gain_life(player, amount)
+        def gain_life(game: "Game", player: Player, source: str, source_id: str | None) -> None:
+            # CR 608.2h: a "for each" count is taken once, when the effect
+            # applies.
+            total = amount * multiplier(game, player.username, source_id) if multiplier else amount
+            game.gain_life(player, total)
+
+        return gain_life
 
     if _GAIN_LIFE_EQUAL_TO_LIFE_LOST_THIS_TURN_RE.fullmatch(clause):
         # Through `Game.gain_life` for the same CR 119.9 reason the flat
@@ -4444,7 +4620,16 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
 
     if match := _LOSE_LIFE_RE.fullmatch(clause):
         amount = parse_count(match.group("n"))
-        return lambda game, player, source, source_id: player.lose_life(amount)
+        each = match.group("each")
+        multiplier = _for_each_multiplier(each) if each is not None else None
+        if each is not None and multiplier is None:
+            return None
+
+        def lose_life(game: "Game", player: Player, source: str, source_id: str | None) -> None:
+            total = amount * multiplier(game, player.username, source_id) if multiplier else amount
+            player.lose_life(total)
+
+        return lose_life
 
     if match := _EACH_OPPONENT_LOSES_LIFE_RE.fullmatch(clause):
         amount = parse_count(match.group("n"))
@@ -4457,53 +4642,64 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
 
         return each_opponent_loses
 
-    if _DRAW_FOR_EACH_OPPONENT_WHO_LOST_LIFE_RE.fullmatch(clause):
-
-        def draw_for_each_opponent_who_lost_life(
-            game: "Game", player: Player, source: str, source_id: str | None
-        ) -> None:
-            # CR 608.2h: "If an effect requires information from the game ...
-            # the answer is determined only once, when the effect is applied" -
-            # so the count is taken here, in one pass, and every card is drawn
-            # against that one number rather than re-counting between draws.
-            count = sum(
-                1
-                for opponent in _opponents(game, player.username)
-                if opponent.life_lost_this_turn > 0
-            )
-            if count:
-                game.draw_cards(player.username, count)
-
-        return draw_for_each_opponent_who_lost_life
-
     if match := _ENERGY_RE.fullmatch(clause):
         amount = len(re.findall(r"\{e\}", match.group("e"), re.IGNORECASE))
         return lambda game, player, source, source_id: player.add_counters(Counter.ENERGY, amount)
 
     if match := _DRAW_RE.fullmatch(clause):
         amount = parse_count(match.group("n")) if match.group("n") else 1
-        return lambda game, player, source, source_id: game.draw_cards(player.username, amount)
+        each = match.group("each")
+        multiplier = _for_each_multiplier(each) if each is not None else None
+        if each is not None and multiplier is None:
+            return None
+
+        def draw(game: "Game", player: Player, source: str, source_id: str | None) -> None:
+            total = amount * multiplier(game, player.username, source_id) if multiplier else amount
+            if total:
+                game.draw_cards(player.username, total)
+
+        return draw
 
     if match := _DISCARD_A_CARD_RE.fullmatch(clause):
-        amount = parse_count(match.group("n")) if match.group("n") else 1
+        if match.group("any") is not None:
+            return lambda game, player, source, source_id: _discard_cards(
+                game, player, len(player.hand), source, source_id=source_id, exact=False
+            )
+        amount = parse_count(match.group("n"))
+        if amount is None:
+            return None
+        exact = match.group("upto") is None
         return lambda game, player, source, source_id: _discard_cards(
-            game, player, amount, source, source_id=source_id
+            game, player, amount, source, source_id=source_id, exact=exact
         )
 
     if match := _MILL_RE.fullmatch(clause):
         amount = parse_count(match.group("n")) if match.group("n") else 1
-        return lambda game, player, source, source_id: _mill(game, player, amount)
+        each = match.group("each")
+        multiplier = _for_each_multiplier(each) if each is not None else None
+        if each is not None and multiplier is None:
+            return None
+
+        def mill(game: "Game", player: Player, source: str, source_id: str | None) -> None:
+            total = amount * multiplier(game, player.username, source_id) if multiplier else amount
+            _mill(game, player, total)
+
+        return mill
 
     if match := _SURVEIL_RE.fullmatch(clause):
-        amount = int(match.group("n"))
+        reader = _amount_reader(match.group("n"), match.group("where_x"))
+        if reader is None:
+            return None
         return lambda game, player, source, source_id: game.surveil(
-            player, amount, source=source, source_id=source_id
+            player, reader(game, player.username), source=source, source_id=source_id
         )
 
     if match := _SCRY_RE.fullmatch(clause):
-        amount = int(match.group("n"))
+        reader = _amount_reader(match.group("n"), match.group("where_x"))
+        if reader is None:
+            return None
         return lambda game, player, source, source_id: game.scry(
-            player, amount, source=source, source_id=source_id
+            player, reader(game, player.username), source=source, source_id=source_id
         )
 
     return None

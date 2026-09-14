@@ -1,0 +1,136 @@
+{
+  "object": "card",
+  "id": "da62e9a8-d1aa-4fea-abb7-50c10d40fa6a",
+  "oracle_id": "dc92b420-8ac7-4478-a287-3d897357be08",
+  "multiverse_ids": [
+    625259
+  ],
+  "mtgo_id": 114049,
+  "tcgplayer_id": 505803,
+  "cardmarket_id": 722980,
+  "name": "Oath of Jace",
+  "lang": "en",
+  "released_at": "2023-08-04",
+  "uri": "https://api.scryfall.com/cards/da62e9a8-d1aa-4fea-abb7-50c10d40fa6a",
+  "scryfall_uri": "https://scryfall.com/card/cmm/854/oath-of-jace?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T04:03:59Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/d/a/da62e9a8-d1aa-4fea-abb7-50c10d40fa6a.jpg?1783915439",
+    "normal": "https://cards.scryfall.io/normal/front/d/a/da62e9a8-d1aa-4fea-abb7-50c10d40fa6a.jpg?1783915439",
+    "large": "https://cards.scryfall.io/large/front/d/a/da62e9a8-d1aa-4fea-abb7-50c10d40fa6a.jpg?1783915439",
+    "png": "https://cards.scryfall.io/png/front/d/a/da62e9a8-d1aa-4fea-abb7-50c10d40fa6a.png?1783915439",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/d/a/da62e9a8-d1aa-4fea-abb7-50c10d40fa6a.jpg?1783915439",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/d/a/da62e9a8-d1aa-4fea-abb7-50c10d40fa6a.jpg?1783915439",
+    "thumb": "https://cards.scryfall.io/thumb/front/d/a/da62e9a8-d1aa-4fea-abb7-50c10d40fa6a.webp?1783915439",
+    "grid": "https://cards.scryfall.io/grid/front/d/a/da62e9a8-d1aa-4fea-abb7-50c10d40fa6a.webp?1783915439",
+    "display": "https://cards.scryfall.io/display/front/d/a/da62e9a8-d1aa-4fea-abb7-50c10d40fa6a.webp?1783915439",
+    "art": "https://cards.scryfall.io/art/front/d/a/da62e9a8-d1aa-4fea-abb7-50c10d40fa6a.webp?1783915439",
+    "crop": "https://cards.scryfall.io/crop/front/d/a/da62e9a8-d1aa-4fea-abb7-50c10d40fa6a.webp?1783915439"
+  },
+  "mana_cost": "{2}{U}",
+  "cmc": 3.0,
+  "type_line": "Legendary Enchantment",
+  "oracle_text": "When Oath of Jace enters, draw three cards, then discard two cards.\nAt the beginning of your upkeep, scry X, where X is the number of planeswalkers you control.",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Scry"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "cd05036f-2698-43e6-a48e-5c8d82f0a551",
+  "set": "cmm",
+  "set_name": "Commander Masters",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/cd05036f-2698-43e6-a48e-5c8d82f0a551",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Acmm&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/cmm?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/da62e9a8-d1aa-4fea-abb7-50c10d40fa6a/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Adc92b420-8ac7-4478-a287-3d897357be08&unique=prints",
+  "collector_number": "854",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "\"For the sake of the Multiverse, I will keep watch.\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Wesley Burt",
+  "artist_ids": [
+    "b98c9d94-8bdb-49af-871d-7bac92274535"
+  ],
+  "illustration_id": "d0f31306-58ea-42cb-8e3d-69aa358546dd",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 10125,
+  "penny_rank": 2737,
+  "prices": {
+    "usd": "0.35",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.21",
+    "eur_foil": null,
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=625259&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DOath%2Bof%2BJace",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DOath%2Bof%2BJace",
+    "edhrec": "https://edhrec.com/route/?cc=Oath+of+Jace"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F505803%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=722980&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/114049?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
