@@ -8819,13 +8819,18 @@ _ANAPHORIC_SUBJECT_RE = re.compile(
 #: reads, but with no subject group of its own to match against (there is
 #: nothing left in `rest` for one), because the "may" here is never optional
 #: in the way `_build_search_clause`'s own "you may" prefix is: every card
-#: this shape reaches prints it.
+#: this shape reaches prints it. The count slot is `_SEARCH_AND_PUT_RE`'s own
+#: (see its comment) - Dire-Strain Rampage's "may search ... for up to two
+#: basic land cards" is the same widening this family needed.
 _REFERENT_SEARCH_RE = re.compile(
-    r"^may search (?:your|their) library for (?:a|an) (?P<quality>.+?) card"
+    rf"^may search (?:your|their) library for "
+    rf"(?P<upto>up to )?(?:(?P<n>{COUNT})|(?P<that_many>that many)) "
+    r"(?:(?P<quality>.+?) )?card(?:s)?"
     r"(?P<basic_land_type> with a basic land type)?"
     r"(?: with mana value (?P<max_mv>\d+) or less)?"
-    r"(?P<reveal>, reveal (?:it|that card))?"
-    r", put (?:it|that card) (?P<dest>into your hand|onto the battlefield(?P<tapped> tapped)?)"
+    r"(?P<reveal>, reveal (?:it|them|that card|those cards))?"
+    r", put (?:it|them|that card|those cards) "
+    r"(?P<dest>into your hand|onto the battlefield(?P<tapped> tapped)?)"
     r"(?:, then shuffle)?\.?$",
     re.IGNORECASE,
 )
@@ -8841,11 +8846,22 @@ _REFERENT_TOKEN_RE = re.compile(
     re.IGNORECASE | re.DOTALL,
 )
 
-#: "gains life equal to its power" - Solitude's and Swords to Plowshares' own
-#: second sentence. `its power` is the only value expression this wave reads;
-#: anything else (toughness, a fixed number, a modified power) is refused,
-#: which is what `_read_referent_power_expression` enforces.
-_REFERENT_GAIN_LIFE_RE = re.compile(r"^gains? life equal to (?P<expr>.+)$", re.IGNORECASE)
+#: "gains life equal to its power" (Solitude, Swords to Plowshares) or "gains
+#: N life" (Nature's Claim, Last Breath) - the referent's controller's own
+#: second sentence, either a look-back value expression or a plain printed
+#: count. `its power` is the only value expression this wave reads for the
+#: first shape; anything else (toughness, a modified power) is refused, which
+#: is what `_read_referent_power_expression` enforces. The pinned defect this
+#: wave fixes was that the second shape had no alternative here at all -
+#: `_REFERENT_GAIN_LIFE_RE` matched only "equal to <expr>", so Nature's
+#: Claim's whole two-clause instruction (destroy, then gain 4 life) failed
+#: closed with no notice, the entire spell doing nothing (the destroy half
+#: too - `_parse_referent_clause` returning `None` for the second clause
+#: makes `_parse_anaphoric_clause_pair` refuse the pair as a whole, CR 608.2c
+#: having no notion of running half an instruction).
+_REFERENT_GAIN_LIFE_RE = re.compile(
+    rf"^gains? (?:life equal to (?P<expr>.+)|(?P<n>{COUNT}) life\.?)$", re.IGNORECASE
+)
 
 
 def _read_referent_power_expression(expr: str) -> bool:
@@ -8892,9 +8908,20 @@ def _parse_referent_clause(rest: str) -> ReferentClause | None:
     rest = rest.strip()
 
     if match := _REFERENT_GAIN_LIFE_RE.fullmatch(rest):
-        if not _read_referent_power_expression(match.group("expr")):
+        if match.group("expr") is not None:
+            if not _read_referent_power_expression(match.group("expr")):
+                return None
+            return _referent_gain_life
+        amount = parse_count(match.group("n"))
+        if amount is None:
             return None
-        return _referent_gain_life
+
+        def fixed_referent_gain_life(
+            game: "Game", player: Player, power: int | None, source: str, source_id: str | None
+        ) -> None:
+            player.gain_life(amount)
+
+        return fixed_referent_gain_life
 
     if match := _REFERENT_SEARCH_RE.fullmatch(rest):
         run = _search_and_place_for(match, optional=True)
