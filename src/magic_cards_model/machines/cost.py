@@ -67,7 +67,7 @@ from ..models.mana import (
     _demand_list,
 )
 from ..models.zone import Zone
-from ..numbers import parse_count
+from ..numbers import VariableX, count_pattern, parse_amount, parse_count
 from ..snapshot import EngineModel, announce_mutation, mutation_landed
 from .abilities import (
     ActivatedAbility,
@@ -2324,10 +2324,11 @@ class CostComponent(EngineModel):
     """
 
     variable_count: bool = False
-    """`ComponentKind.REVEAL` only: the printed count is CR 107.3a's X ("Reveal
-    X white cards from your hand"), so `required` is whatever the payer
-    announced - the number of cards they chose to reveal - rather than a
-    number the text fixes."""
+    """The printed count is CR 107.3a's X, so the number is whatever the payer
+    announced rather than one the text fixes. For `ComponentKind.REVEAL`
+    ("Reveal X white cards from your hand") that is `required`, the number of
+    cards they chose to reveal; for `ComponentKind.PAY_LIFE` ("Pay X life")
+    it is `amount`."""
 
     source: str | None = None
     """The card whose cost this is, by name - the `Reveal.source` a paid
@@ -3836,7 +3837,9 @@ _COLOR_WORDS = {
     "colorless": Color.COLORLESS,
 }
 
-_PHRASE_PAY_LIFE = re.compile(r"^pay (?P<amount>\d+) life$", re.IGNORECASE)
+#: "Pay 2 life" and CR 107.3a's "Pay X life" (Krumar Initiate), whose amount is
+#: the X announced as the cost is paid.
+_PHRASE_PAY_LIFE = re.compile(rf"^pay {count_pattern('amount', x=True)} life$", re.IGNORECASE)
 #: `Exile a black card from your hand` (Force of Will) and the self-referential
 #: `Exile this card from your graveyard` (Seasoned Pyromancer). CR 406.2 never
 #: restricts exiling to the hand, so the zone is read off the sentence rather
@@ -4097,7 +4100,16 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
 
     life = _PHRASE_PAY_LIFE.match(text)
     if life is not None:
-        return pay_life_cost(int(life.group("amount")), payer, description=text)
+        amount = parse_amount(life.group("amount"))
+        if amount is None:
+            return None
+        if isinstance(amount, VariableX):
+            # CR 118.3b: players can always pay 0 life, so 0 stands until the
+            # X is announced (`Game.activation_cost`).
+            return pay_life_cost(0, payer, description=text).model_copy(
+                update={"variable_count": True}
+            )
+        return pay_life_cost(amount, payer, description=text)
 
     mill = _PHRASE_MILL.match(text)
     if mill is not None:

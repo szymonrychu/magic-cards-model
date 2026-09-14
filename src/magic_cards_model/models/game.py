@@ -86,7 +86,6 @@ from ..machines.cost import (
     looks_like_unparsed_cost_modifier,
     loyalty_cost,
     mana_candidate_scan,
-    pay_life_cost,
     plan_mana_payment,
     sacrifice_cost,
     spend_restriction,
@@ -12929,8 +12928,15 @@ class Game(EngineModel):
         life_owed = 0
         for piece in ability.costs:
             if piece.kind is CostKind.PAY_LIFE:
-                digits = re.search(r"\d+", piece.text)
-                life_owed += int(digits.group()) if digits else 0
+                life = cost_component_for_phrase(piece.text, payer=controller)
+                if life is None:
+                    return (
+                        f"{permanent.name}'s cost {piece.text!r} cannot be read, so it "
+                        "refuses to activate rather than pay the wrong amount (CR 118.3)"
+                    )
+                # "Pay X life" owes 0 until X is announced (CR 119.4b), and the
+                # announced amount is checked as the cost is paid.
+                life_owed += life.amount
         if life_owed > 0 and self.player(controller).life < life_owed:
             # CR 119.4: an amount of life greater than 0 may be paid "only if
             # their life total is greater than or equal to the amount of the
@@ -13362,14 +13368,13 @@ class Game(EngineModel):
                     self._choice_cost(piece.text, permanent, discards, controller, discard_cost)
                 )
             elif piece.kind is CostKind.PAY_LIFE:
-                digits = re.search(r"\d+", piece.text)
-                components.append(
-                    pay_life_cost(
-                        int(digits.group()) if digits else 0,
-                        controller,
-                        description=piece.text,
-                    )
-                )
+                life = cost_component_for_phrase(piece.text, payer=controller)
+                if life is None:
+                    raise ValueError(f"cannot build a cost for {piece.text!r}")
+                if life.variable_count:
+                    # CR 107.3a: "Pay X life" pays the X announced now.
+                    life = life.model_copy(update={"amount": x_value})
+                components.append(life)
             elif piece.kind is CostKind.LOYALTY:
                 # CR 606.4: the loyalty symbol is the whole cost, and the
                 # counter change it asks for is the cost itself.
