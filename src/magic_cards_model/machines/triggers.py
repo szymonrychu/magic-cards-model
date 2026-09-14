@@ -54,13 +54,14 @@ from enum import StrEnum
 from typing import TYPE_CHECKING, Annotated, Any, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import ConfigDict, Field
 
 from ..ids import new_id
 from ..models.card import Card, Color, Type
 from ..models.card_state import CardState, ChoiceKind, Counter, TargetRef
 from ..models.token import TokenState
 from ..models.zone import Zone
+from ..snapshot import EngineModel
 from .abilities import (
     Ability,
     AbilityKind,
@@ -161,7 +162,7 @@ class ExtraTriggerEvent(StrEnum):
     LAST_TIME_COUNTER_REMOVED = "last_time_counter_removed"
 
 
-class GameEvent(BaseModel):
+class GameEvent(EngineModel):
     """One thing that happened, in the shape a trigger condition is matched against.
 
     CR 603.2 asks whether "a game event or game state matches a triggered
@@ -323,7 +324,7 @@ class TargetingNoticeKind(StrEnum):
     fizzle, which only ever applies to a target that *was* chosen."""
 
 
-class TargetingNotice(BaseModel):
+class TargetingNotice(EngineModel):
     """One triggered ability whose targets could not be asked for as normal.
 
     `Game._ask_trigger_targets` used to `return []` silently whenever a
@@ -345,7 +346,7 @@ class TargetingNotice(BaseModel):
     """The ability's own rules text, read for its restriction."""
 
 
-class InterveningIfNotice(BaseModel):
+class InterveningIfNotice(EngineModel):
     """One triggered ability whose intervening *if* clause (CR 603.4) could not
     be evaluated, and so was made to fail closed rather than fire on a
     condition nobody actually checked.
@@ -370,7 +371,7 @@ class InterveningIfNotice(BaseModel):
     "if")."""
 
 
-class CastConditionNotice(BaseModel):
+class CastConditionNotice(EngineModel):
     """One "Whenever you cast a [restriction] spell" condition (CR 601.2,
     603.2) whose restriction this module recognised as a mana-value
     comparison but could not parse into a number and a direction, and so was
@@ -394,7 +395,7 @@ class CastConditionNotice(BaseModel):
     "whenever", or "at")."""
 
 
-class AbilityOnStack(BaseModel):
+class AbilityOnStack(EngineModel):
     """An activated or triggered ability as an object on the stack (CR 113.1c).
 
     This is deliberately *not* a `CardState`. CR 405.1: an ability "goes on top

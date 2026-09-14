@@ -13,7 +13,9 @@ from enum import StrEnum
 from functools import cache
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import ConfigDict
+
+from ..snapshot import EngineModel
 
 # --------------------------------------------------------------------------
 # Rules enums
@@ -118,7 +120,7 @@ class Legality(StrEnum):
 # --------------------------------------------------------------------------
 
 
-class ScryfallModel(BaseModel):
+class ScryfallModel(EngineModel):
     """Base for every Scryfall-shaped model.
 
     Unknown keys are ignored, which both drops the print fields and keeps a new

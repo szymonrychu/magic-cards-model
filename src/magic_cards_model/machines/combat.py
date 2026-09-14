@@ -44,13 +44,14 @@ from enum import StrEnum
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import ConfigDict, Field
 
 from magic_cards_model.phrases import with_indefinite_article
 
 from ..models.card import Type
 from ..models.card_state import CardState, TargetRef
 from ..models.zone import Zone
+from ..snapshot import EngineModel
 from .abilities import (
     TriggerEvent,
     keywords_in_lines,
@@ -154,7 +155,7 @@ def has_keyword(state: CardState, keyword: Keyword | str, game: "Game | None" = 
     return any(printed.lower() == wanted for printed in state.keywords)
 
 
-class KeywordLineNotice(BaseModel):
+class KeywordLineNotice(EngineModel):
     """One computed ability line that is part CR 702 keywords and part something
     this engine's keyword reader cannot name.
 
@@ -258,7 +259,7 @@ def _computed_keywords(state: CardState, game: "Game | None", *wanted: str) -> s
     return keywords_in_lines(lines, vocabulary)
 
 
-class Attack(BaseModel):
+class Attack(EngineModel):
     """One attacking creature and what it is attacking (CR 508.1).
 
     `blockers` is in declaration order, which is the order combat damage is
@@ -273,7 +274,7 @@ class Attack(BaseModel):
     blocked: bool = False
 
 
-class CombatMachine(BaseModel):
+class CombatMachine(EngineModel):
     """Who is attacking whom, who is blocking, and how much damage is done.
 
     Everything is held by id rather than by object, so the combat state is one
@@ -469,7 +470,7 @@ def declare_attacker(game: "Game", creature: CardState, defender: TargetRef) -> 
 # -- declaring blockers ----------------------------------------------------
 
 
-class EvasionNotice(BaseModel):
+class EvasionNotice(EngineModel):
     """One attacker whose own "can't be blocked" restriction text could not be
     read into a block refusal (CR 509.1a).
 
@@ -916,7 +917,7 @@ def _deal_combat_damage(game: "Game", source: CardState, target: "Targetable", a
     return dealt
 
 
-class UndefinedPowerNotice(BaseModel):
+class UndefinedPowerNotice(EngineModel):
     """One creature whose power could not be computed when combat needed it.
 
     A printed `*` with no characteristic-defining ability the engine can read

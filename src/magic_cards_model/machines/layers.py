@@ -76,13 +76,14 @@ bottom is where, and `Duration` is how long.
 
 from __future__ import annotations
 
+import functools
 import re
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from enum import IntEnum, StrEnum
 from typing import TYPE_CHECKING, Annotated, Literal, cast
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, model_validator
+from pydantic import ConfigDict, Field, PrivateAttr, model_validator
 
 from magic_cards_model.phrases import with_indefinite_article
 
@@ -90,6 +91,7 @@ from ..ids import new_id
 from ..models.card import Color, Supertype, Type
 from ..models.card_state import CardState, Counter
 from ..models.zone import Zone
+from ..snapshot import EngineModel
 from .abilities import layer_readable_sentences, self_normalized_effect_text
 from .combat import KEYWORDS_OUTSIDE_COMBAT, Keyword
 
@@ -228,7 +230,7 @@ class Duration(StrEnum):
 # --------------------------------------------------------------------------
 
 
-class Characteristics(BaseModel):
+class Characteristics(EngineModel):
     """One permanent's characteristics with every continuous effect applied.
 
     This is the answer, not the state: it is recomputed from the printing plus
@@ -363,7 +365,7 @@ Board = Mapping[UUID, Characteristics]
 # animation-shaped effects the suite never runs.
 
 
-class CountBase(BaseModel):
+class CountBase(EngineModel):
     """How many of something an effect counts (CR 613.5) - the `Count` union's
     common shape. Judged against one object and the board as it stands in
     whichever sublayer asks.
@@ -465,7 +467,7 @@ Count = Annotated[
 ]
 
 
-class SelectorBase(BaseModel):
+class SelectorBase(EngineModel):
     """Does this effect apply to that object? Judged against characteristics as
     computed so far, with the rest of the board available for effects that
     count things or say "each other" (CR 613.5).
@@ -751,7 +753,7 @@ Selector = Annotated[
 ]
 
 
-class ModificationBase(BaseModel):
+class ModificationBase(EngineModel):
     """What the effect does to one object it applies to. Pure: returns a new
     `Characteristics`, never edits the one it was handed.
     """
@@ -1165,7 +1167,7 @@ Modification = Annotated[
 ]
 
 
-class ConditionBase(BaseModel):
+class ConditionBase(EngineModel):
     """Whether a "for as long as" duration is still running (CR 611.2b).
 
     Takes the `Game`, not the layer engine's board: "for as long as this
@@ -1334,7 +1336,7 @@ def _as_number(value: str | None) -> int | None:
 # --------------------------------------------------------------------------
 
 
-class ContinuousEffect(BaseModel):
+class ContinuousEffect(EngineModel):
     """One continuous effect waiting to be applied in its layer (CR 611.1).
 
     Four things decide where it lands and what it does:
@@ -1480,7 +1482,7 @@ class ContinuousEffect(BaseModel):
 # --------------------------------------------------------------------------
 
 
-class Journal(BaseModel):
+class Journal(EngineModel):
     """What the engine did, in order, so a test can assert on the ordering.
 
     The characteristics alone cannot tell you whether dependency or timestamp
@@ -1498,7 +1500,7 @@ class Journal(BaseModel):
     cycles: list[list[str]] = Field(default_factory=list)
 
 
-class ComputedBoard(BaseModel):
+class ComputedBoard(EngineModel):
     """Every permanent's characteristics, plus how the engine got there."""
 
     characteristics: dict[UUID, Characteristics]
@@ -3458,6 +3460,26 @@ def _strip_ability_word(sentence: str) -> str:
 def _effect_sentences(
     oracle_text: str | None, *, static_only: bool = False, card_name: str | None = None
 ) -> list[str]:
+    """`_effect_sentences_uncached`, memoised on every argument - the battlefield
+    sweep asks it for every permanent on every board computation, and the answer
+    depends on nothing but the printed text and these flags. Each caller gets a
+    list of its own, so nobody can edit what the next caller reads.
+    """
+    return list(_effect_sentences_memo(oracle_text, static_only, card_name))
+
+
+@functools.lru_cache(maxsize=16384)
+def _effect_sentences_memo(
+    oracle_text: str | None, static_only: bool, card_name: str | None
+) -> tuple[str, ...]:
+    return tuple(
+        _effect_sentences_uncached(oracle_text, static_only=static_only, card_name=card_name)
+    )
+
+
+def _effect_sentences_uncached(
+    oracle_text: str | None, *, static_only: bool = False, card_name: str | None = None
+) -> list[str]:
     """Every sentence a continuous effect could come from, off a card's own
     printed text.
 
@@ -3824,7 +3846,7 @@ def _creature_group(
     )
 
 
-class CreatureQualifiers(BaseModel):
+class CreatureQualifiers(EngineModel):
     """The qualifier words a printed anthem subject may carry, parsed once and
     handed to `_creature_group`.
 
@@ -5696,7 +5718,7 @@ def is_resolution_layer_effect_text(text: str | None) -> bool:
     return False
 
 
-class LayerNotice(BaseModel):
+class LayerNotice(EngineModel):
     """One permanent or spell whose static/pump text could not be read into a
     continuous effect (W5).
 
@@ -5721,7 +5743,7 @@ class LayerNotice(BaseModel):
 # --------------------------------------------------------------------------
 
 
-class LayerContext(BaseModel):
+class LayerContext(EngineModel):
     """What an effect needs to know that is not standing on the battlefield.
 
     Almost every continuous effect reads only the board, which is what
@@ -6634,7 +6656,7 @@ def additional_land_plays(permanents: Sequence[CardState]) -> int:
 # --------------------------------------------------------------------------
 
 
-class ContinuousEffects(BaseModel):
+class ContinuousEffects(EngineModel):
     """Every continuous effect a resolving spell or ability has created (CR 611.2).
 
     CR 611.2: "A continuous effect may be generated by the resolution of a spell

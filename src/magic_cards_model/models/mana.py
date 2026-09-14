@@ -27,9 +27,10 @@ from enum import StrEnum
 from itertools import combinations_with_replacement, product
 from typing import Any, Protocol
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import ConfigDict, Field, model_validator
 
 from ..serialization import SortedFrozenSet
+from ..snapshot import EngineModel, announce_mutation
 from .card import Card, Color, Layout, Supertype, Type
 from .zone import Zone
 
@@ -89,7 +90,7 @@ class SymbolKind(StrEnum):
     SNOW = "snow"
 
 
-class PaymentOption(BaseModel):
+class PaymentOption(EngineModel):
     """One way a single symbol may be paid.
 
     Exactly one of the three resources is used: `generic` mana, one mana of
@@ -113,7 +114,7 @@ class PaymentOption(BaseModel):
         return f"{{{self.generic}}}"
 
 
-class ManaSymbol(BaseModel):
+class ManaSymbol(EngineModel):
     """One symbol of a mana cost, and the ways it can be paid."""
 
     model_config = ConfigDict(frozen=True)
@@ -233,7 +234,7 @@ def _symbols_from_parts(
     return symbols
 
 
-class ManaCost(BaseModel):
+class ManaCost(EngineModel):
     """A mana cost as its ordered list of symbols.
 
     Order is kept so `str(ManaCost.parse(s)) == s` for a real printed cost;
@@ -524,7 +525,7 @@ class SpendPurpose(StrEnum):
     PAY_CUMULATIVE_UPKEEP = "pay_cumulative_upkeep"
 
 
-class ManaSpend(BaseModel):
+class ManaSpend(EngineModel):
     """The object mana is about to be spent on, reduced to what a restriction
     can ask about: whether it is being cast or activated, and the
     characteristics of the spell (for a cast) or of the ability's source (for
@@ -610,7 +611,7 @@ class ManaSpend(BaseModel):
         return cls._of(SpendPurpose.ACTIVATE_ABILITY, card, None)
 
 
-class SpendClause(BaseModel):
+class SpendClause(EngineModel):
     """One thing a CR 106.6 restriction permits its mana to be spent on.
 
     A restriction can permit more than one - Eldrazi Temple's is two clauses
@@ -695,7 +696,7 @@ class SpendClause(BaseModel):
         return all(asked <= held for asked, held in printed)
 
 
-class ManaRestriction(BaseModel):
+class ManaRestriction(EngineModel):
     """A CR 106.6 "Spend this mana only to ..." tag, carried by the mana.
 
     `text` is the printed sentence verbatim, so a refusal can quote the card
@@ -736,7 +737,7 @@ class ManaRestriction(BaseModel):
         return self.text
 
 
-class ManaSpendEffect(BaseModel):
+class ManaSpendEffect(EngineModel):
     """CR 106.6's *second* clause, carried by the mana the same way a
     restriction is: "have an additional effect that affects the spell or
     ability that mana is spent on".
@@ -766,7 +767,7 @@ class ManaSpendEffect(BaseModel):
         return self.text
 
 
-class SpendEffectMana(BaseModel):
+class SpendEffectMana(EngineModel):
     """How much mana in a pool carries one particular `ManaSpendEffect`.
 
     `RestrictedMana`'s twin, kept in its own list for the same reason: the
@@ -782,7 +783,7 @@ class SpendEffectMana(BaseModel):
         return sum(self.amounts.values())
 
 
-class RestrictedMana(BaseModel):
+class RestrictedMana(EngineModel):
     """How much mana in a pool carries one particular restriction.
 
     A pool holds a list of these beside its `floating` total, rather than
@@ -799,7 +800,7 @@ class RestrictedMana(BaseModel):
         return sum(self.amounts.values())
 
 
-class ManaPayment(BaseModel):
+class ManaPayment(EngineModel):
     """One settled way to pay a cost: what each symbol was paid with.
 
     `options` lines up with `ManaCost.symbols`. `spend` is the mana taken out
@@ -929,7 +930,7 @@ def _demand_list(
     return demands
 
 
-class ManaPool(BaseModel):
+class ManaPool(EngineModel):
     """Mana floating in a player's pool.
 
     Mana knows whether it came from a snow source (CR 106.3), because `{S}`
@@ -980,6 +981,7 @@ class ManaPool(BaseModel):
     ) -> None:
         if amount < 0:
             raise ValueError("cannot add a negative amount of mana")
+        announce_mutation()
         self.floating[color] = self.floating.get(color, 0) + amount
         if snow:
             self.snow[color] = self.snow.get(color, 0) + amount
@@ -1019,6 +1021,7 @@ class ManaPool(BaseModel):
             if entry.restriction == restriction:
                 return entry
         entry = RestrictedMana(restriction=restriction)
+        announce_mutation()
         self.restricted.append(entry)
         return entry
 
@@ -1027,6 +1030,7 @@ class ManaPool(BaseModel):
             if entry.effect == effect:
                 return entry
         entry = SpendEffectMana(effect=effect)
+        announce_mutation()
         self.spend_effects.append(entry)
         return entry
 
@@ -1115,6 +1119,7 @@ class ManaPool(BaseModel):
             left = self.floating.get(color, 0) - amount
             if left < 0:
                 raise ValueError(f"pool {self.floating} cannot pay {cost}")
+            announce_mutation()
             self.floating[color] = left
         for color, amount in payment.snow_spent.items():
             self.snow[color] = max(self.snow.get(color, 0) - amount, 0)

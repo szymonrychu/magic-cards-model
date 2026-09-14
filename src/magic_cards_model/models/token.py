@@ -77,8 +77,9 @@ from collections.abc import Callable, Iterable, Sequence
 from typing import TYPE_CHECKING, Any, Literal
 from uuid import NAMESPACE_OID, UUID, uuid5
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import ConfigDict
 
+from ..snapshot import EngineModel
 from .card import Card, Color, Layout, Legalities, Legality, Rarity, Supertype, Type
 from .card_state import CardState, CounterKind
 from .zone import Zone
@@ -157,7 +158,7 @@ def _token_card_id(definition: "TokenDefinition") -> UUID:
     return uuid5(NAMESPACE_OID, f"{_TOKEN_CARD_ID_PREFIX}:{definition.model_dump_json()}")
 
 
-class TokenDefinition(BaseModel):
+class TokenDefinition(EngineModel):
     """What a spell or ability says a token is (CR 111.3).
 
     "The spell or ability that creates a token may define the values of any

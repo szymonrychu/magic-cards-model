@@ -19,8 +19,9 @@ what every unattended game and every scenario wants.
 
 from random import Random
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
+from ..snapshot import EngineModel
 from .deck import CardResolver, Deck
 from .game import Game
 from .player import Player
@@ -52,7 +53,7 @@ def register_card_resolver(name: str, resolver: CardResolver) -> None:
     _CARD_RESOLVERS[name] = resolver
 
 
-class Match(BaseModel):
+class Match(EngineModel):
     """A best-of-N series. Constructed play is best of three.
 
     Sideboarding between games is why `Player.sideboard` exists, though nothing

@@ -2,14 +2,14 @@
 
 import re
 from collections.abc import Callable, Iterator, Mapping, Sequence
-from contextlib import contextmanager
+from contextlib import AbstractContextManager, contextmanager
 from dataclasses import replace
 from enum import StrEnum
 from random import Random
 from typing import Annotated, Any, ClassVar, Literal
 from uuid import NAMESPACE_OID, UUID, uuid4, uuid5
 
-from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, model_validator
+from pydantic import ConfigDict, Field, PrivateAttr, model_validator
 
 from ..ids import install_id_allocator, reset_id_allocator
 from ..machines import combat as combat_rules
@@ -226,6 +226,7 @@ from ..machines.turn import (
     TurnMachine,
 )
 from ..serialization import SortedFrozenSet, SortedSet
+from ..snapshot import EngineModel, board_snapshot, cached_board, suspended
 from .action import Action
 from .card import Card, Color, Layout, Supertype, Type
 from .card_state import (
@@ -755,7 +756,7 @@ _LOOKS_LIKE_HASTE_ACTIVATION_PERMISSION_RE = re.compile(
 _CHOSEN_NAME_SUBJECT_RE = re.compile(r"\bthe chosen\b", re.IGNORECASE)
 
 
-class ActivationProhibition(BaseModel):
+class ActivationProhibition(EngineModel):
     """One "activated abilities of ... can't be activated" static, read (CR 602.5).
 
     `qualities` are the card types the sentence names its subjects by - Karn,
@@ -803,7 +804,7 @@ def _parse_activation_prohibition(text: str) -> ActivationProhibition | None:
     )
 
 
-class Reveal(BaseModel):
+class Reveal(EngineModel):
     """One card shown to all players (CR 701.20a), or to one (CR 701.20e).
 
     "To reveal a card, show that card to all players for a brief time." That is
@@ -865,7 +866,7 @@ class Reveal(BaseModel):
     as a `LibraryOrderKept` row instead."""
 
 
-class KnownCarry(BaseModel):
+class KnownCarry(EngineModel):
     """A library record carried into its owner's hand by the move itself.
 
     **A knowledge policy, not a Comprehensive Rules rule** - the project
@@ -901,7 +902,7 @@ class KnownCarry(BaseModel):
     """When the carried record was made, not when the card moved."""
 
 
-class LibraryOrderKept(BaseModel):
+class LibraryOrderKept(EngineModel):
     """One library card, as one object, kept its place through one library put.
 
     CR 701.20d ends a library reveal only for "revealed cards that are
@@ -926,7 +927,7 @@ class LibraryOrderKept(BaseModel):
     """The owner's `Player.library_epoch` the put moved the library to."""
 
 
-class KnownCard(BaseModel):
+class KnownCard(EngineModel):
     """One hidden card a player knows, as `Game.known_to` answers it.
 
     Ids only, never a live `CardState`, the same convention `models/action.py`
@@ -962,7 +963,7 @@ def _illegal_option_refusal(decision: Decision) -> str:
     return refusal
 
 
-class CastRecord(BaseModel):
+class CastRecord(EngineModel):
     """What was announced while a spell was being cast (CR 601.2b, 601.2c).
 
     A `CardState` on the stack is the card and its targets and nothing else, so
@@ -1126,7 +1127,7 @@ class ShieldKind(StrEnum):
     ALL = "all"
 
 
-class PreventionShield(BaseModel):
+class PreventionShield(EngineModel):
     """One prevention effect waiting for a damage event (CR 615.1).
 
     "Like replacement effects (see rule 614), prevention effects apply
@@ -1240,7 +1241,7 @@ class PreventionShield(BaseModel):
         return self.used_up or (self.kind is ShieldKind.AMOUNT and self.amount <= 0)
 
 
-class ObjectCostOffer(BaseModel):
+class ObjectCostOffer(EngineModel):
     """One convoke/delve/improvise/crew offer for a card's cost, and the
     cards eligible to pay it right now - `Game.object_cost_offers`'s own
     answer, typed so a caller can read it without importing
@@ -1281,7 +1282,7 @@ class SchemaVersionMismatch(RuntimeError):
     """
 
 
-class Game(BaseModel):
+class Game(EngineModel):
     """One game of Magic, from the first untap step to somebody winning.
 
     Holds the four shared zones. The per-player zones - library, hand,
@@ -2422,7 +2423,10 @@ class Game(BaseModel):
         """
         token = install_id_allocator(self._allocate_id)
         try:
-            yield
+            # A mutating command: no board is cached while it runs, whatever
+            # order it edits lists and assigns fields in (`snapshot.suspended`).
+            with suspended(self):
+                yield
         finally:
             reset_id_allocator(token)
 
@@ -10793,7 +10797,28 @@ class Game(BaseModel):
         creature cards in its own controller's graveyard only. Without this,
         every such CDA is built against an empty world and reads as if every
         graveyard were empty, whatever is actually in them.
+
+        Inside `board_snapshot()` the board is computed once and reused until
+        the game changes; outside every scope it is recomputed on every call,
+        exactly as described above.
         """
+        return cached_board(self, self._compute_board)
+
+    def board_snapshot(self) -> AbstractContextManager[None]:
+        """A scope in which `computed_board` is computed once and reused.
+
+        For read-only work that asks the board many times - enumerating legal
+        actions, serialising every card's characteristics - so the board is
+        built once rather than once per question. Any change to the game made
+        inside the scope drops the cached board or, when the engine could not
+        see the change happen, raises `snapshot.BoardSnapshotStale`; nested
+        scopes share one board. The full contract is `magic_cards_model/
+        snapshot.py`'s module docstring.
+        """
+        return board_snapshot(self)
+
+    def _compute_board(self) -> ComputedBoard:
+        """`computed_board`, always computed afresh."""
         self.continuous_effects.note(self.battlefield)
         context = LayerContext(
             graveyards=tuple(card for player in self.players_in_game for card in player.graveyard),

@@ -6,7 +6,6 @@ from typing import Any, Literal, Self
 from uuid import UUID
 
 from pydantic import (
-    BaseModel,
     ConfigDict,
     Field,
     PrivateAttr,
@@ -16,6 +15,7 @@ from pydantic import (
 )
 
 from ..ids import new_id
+from ..snapshot import AnnouncesMutation, EngineModel, announce_mutation
 from .card import Card, Color, Layout, Supertype, Type, subtypes_of, supertypes_of, types_of
 from .zone import Zone
 
@@ -31,7 +31,7 @@ class TargetKind(StrEnum):
     PLAYER = "player"
 
 
-class TargetRef(BaseModel):
+class TargetRef(EngineModel):
     """One target of a spell or ability: an object, or a player (CR 115.1).
 
     "Only permanents, spells, cards, players, and planeswalkers can be
@@ -221,7 +221,7 @@ def _counter_key(kind: CounterKind) -> str:
     return str(kind)
 
 
-class Counters(RootModel[dict[str, int]]):
+class Counters(AnnouncesMutation, RootModel[dict[str, int]]):
     """The counters on one object or player, by kind (CR 122.1).
 
     A count per kind rather than a list of markers: counters have no
@@ -294,6 +294,7 @@ class Counters(RootModel[dict[str, int]]):
             raise ValueError("cannot put a negative number of counters on")
         if amount:
             key = _counter_key(kind)
+            announce_mutation()
             self.counts[key] = self.counts.get(key, 0) + amount
         return self[kind]
 
@@ -312,6 +313,7 @@ class Counters(RootModel[dict[str, int]]):
         if amount > present:
             raise ValueError(f"cannot remove {amount} {key} counters from {present}")
         remaining = present - amount
+        announce_mutation()
         if remaining:
             self.counts[key] = remaining
         else:
@@ -323,6 +325,7 @@ class Counters(RootModel[dict[str, int]]):
         if amount < 0:
             raise ValueError("a permanent cannot have a negative number of counters")
         key = _counter_key(kind)
+        announce_mutation()
         if amount:
             self.counts[key] = amount
         else:
@@ -450,7 +453,7 @@ class ChoiceKind(StrEnum):
     CREATURE_TYPE = "creature_type"
 
 
-class Choice(BaseModel):
+class Choice(EngineModel):
     """One "as [this] enters, choose ..." answer, recorded on the object that
     asked (CR 614.12a).
 
@@ -464,7 +467,7 @@ class Choice(BaseModel):
     value: str
 
 
-class FaceDownCharacteristics(BaseModel):
+class FaceDownCharacteristics(EngineModel):
     """What a face-down object *is*, in place of what its card says (CR 708.2).
 
     "Face-down spells and face-down permanents have no characteristics other
@@ -502,7 +505,7 @@ class FaceDownCharacteristics(BaseModel):
     """The rule that listed these characteristics, for an error message."""
 
 
-class ExileAnnotation(BaseModel):
+class ExileAnnotation(EngineModel):
     """The note that travels with a card into exile (CR 406.4).
 
     Exile is a public zone (CR 400.2) holding cards that are otherwise
@@ -540,7 +543,7 @@ class ExileAnnotation(BaseModel):
     "same id, new object" approximation the rest of this model already makes."""
 
 
-class CardState(BaseModel):
+class CardState(EngineModel):
     """One physical card in a game: which printing it is, where it is, how it sits.
 
     `Card` stays the immutable Scryfall printing. Four copies of the same card in

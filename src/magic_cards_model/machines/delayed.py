@@ -79,7 +79,7 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING, Annotated, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import ConfigDict, Field
 
 from ..ids import new_id
 from ..models.card import Type
@@ -87,6 +87,7 @@ from ..models.card_state import PERMANENT_TYPES, CardState, Counter
 from ..models.mana import ManaCost
 from ..models.token import TokenDefinition, create_tokens
 from ..models.zone import Zone
+from ..snapshot import EngineModel
 from .abilities import AbilityKind, TriggeredAbility, TriggerEvent, TriggerWord
 from .decisions import source_id_of
 from .triggers import AbilityOnStack, GameEvent
@@ -111,7 +112,7 @@ DelayedEffect = Callable[["Game", AbilityOnStack, "DelayedTrigger"], None]
 # ---------------------------------------------------------------------------
 
 
-class DelayedEffectSpecBase(BaseModel):
+class DelayedEffectSpecBase(EngineModel):
     """One delayed triggered ability's resolution, as a frozen, serializable
     value rather than a Python closure.
 
@@ -719,7 +720,7 @@ class CopyNextSpellYouCast(DelayedEffectSpecBase):
             )
 
 
-class ReturnRiderCounter(BaseModel):
+class ReturnRiderCounter(EngineModel):
     """Phelia, Exuberant Shepherd's third sentence: "If it entered under your
     control, put a +1/+1 counter on Phelia."
 
@@ -956,7 +957,7 @@ return_earthbent_land = ReturnEarthbentLand()
 devourer_of_destiny_first_upkeep = DevourerOfDestinyFirstUpkeep()
 
 
-class DelayedTrigger(BaseModel):
+class DelayedTrigger(EngineModel):
     """One delayed triggered ability, waiting for its event (CR 603.7)."""
 
     id: UUID = Field(default_factory=new_id)
@@ -1325,7 +1326,7 @@ _ANAPHORIC_VERBS: dict[str, tuple[DelayedEffectSpecBase, Zone]] = {
 }
 
 
-class AnaphoricDelayedClause(BaseModel):
+class AnaphoricDelayedClause(EngineModel):
     """One delayed-trigger clause (CR 603.7) whose subject is a pronoun,
     read off the printed text but not yet attached to an object.
 
@@ -1491,7 +1492,7 @@ def anaphoric_delayed_trigger(
     return trigger.model_copy(update={"text": clause.strip()})
 
 
-class DelayedTriggers(BaseModel):
+class DelayedTriggers(EngineModel):
     """Every delayed triggered ability a game is currently carrying (CR 603.7).
 
     A `Game` holds one. It is not a zone and not part of the board: CR 603.7a

@@ -51,13 +51,14 @@ from enum import StrEnum
 from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import ConfigDict
 
 from ..models.card import Card, Color, Type
 from ..models.card_state import CardState
 from ..models.mana import PaymentOption
 from ..models.zone import Zone
 from ..serialization import SortedFrozenSet
+from ..snapshot import EngineModel
 from .abilities import keyword_abilities
 from .cost import CostComponent, CostPayment, CostSubstitution, exile_cost, tap_cost
 
@@ -69,7 +70,7 @@ class ObjectAction(StrEnum):
     EXILE = "exile"
 
 
-class ObjectOffer(BaseModel):
+class ObjectOffer(EngineModel):
     """Which objects a keyword lets a player spend, and what it does to them.
 
     One of these per keyword instance. It answers `why_not` for a candidate and

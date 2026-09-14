@@ -24,12 +24,13 @@ from enum import StrEnum
 from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import ConfigDict, Field
 
 from ..models.card import Card, Color, Layout, Type, types_of
 from ..models.card_state import CardState, Counter, ExileAnnotation, ExileMarker, TargetRef
 from ..models.mana import ManaCost, ManaSpend
 from ..models.zone import Zone
+from ..snapshot import EngineModel
 from .abilities import (
     AbilityKind,
     KeywordAbility,
@@ -94,7 +95,7 @@ class CastTiming(StrEnum):
     SORCERY = "sorcery"
 
 
-class KeywordCastOption(BaseModel):
+class KeywordCastOption(EngineModel):
     """One way a keyword lets a card be cast (CR 601.3).
 
     "A player can begin to cast a spell only if a rule or effect allows that
@@ -713,7 +714,7 @@ _COST_IS_THE_CARDS_MANA_COST = re.compile(
 )
 
 
-class GrantedCastOption(BaseModel):
+class GrantedCastOption(EngineModel):
     """One `KeywordCastOption` another permanent handed this spell (CR 610.5)."""
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -976,7 +977,7 @@ class PlayAction(StrEnum):
     PLAY = "play"
 
 
-class PlayPermission(BaseModel):
+class PlayPermission(EngineModel):
     """CR 601.3's "a rule or effect allows that player to [play] it", handed
     out by a resolving effect to **one specific card**, for a bounded time.
 
@@ -1696,7 +1697,7 @@ _NUMBER_WORDS: dict[str, int] = {
 _PAY_ONLY_MANA = re.compile(r"^(?:pay\s+)?(?P<mana>(?:\{[^{}]+\}\s*)+)$", re.IGNORECASE)
 
 
-class ConditionalAlternativeCostOffer(BaseModel):
+class ConditionalAlternativeCostOffer(EngineModel):
     """One CR 118.9 offer whose sentence prints a condition ahead of it."""
 
     model_config = ConfigDict(frozen=True)
@@ -1766,7 +1767,7 @@ class AlternativeCostSource(StrEnum):
     Omniscience."""
 
 
-class AlternativeCostOption(BaseModel):
+class AlternativeCostOption(EngineModel):
     """One CR 118.9 alternative cost a spell could be announced under, and
     whether it can be announced right now.
 
@@ -1841,7 +1842,7 @@ CASTING_ORDER: tuple[CastingStep, ...] = (
 )
 
 
-class Casting(BaseModel):
+class Casting(EngineModel):
     """One spell on its way to the stack.
 
     Created with the card being cast. Walk it through the steps in order, then
@@ -4724,7 +4725,7 @@ def annotate_exile(
     return card
 
 
-class MarkedExile(BaseModel):
+class MarkedExile(EngineModel):
     """One of CR 116.2's exile-it-now, cast-it-later special actions.
 
     Three of them are modelled: plot (CR 116.2k, CR 702.170b), foretell
@@ -5158,7 +5159,7 @@ def _keyword(card: Card, keyword: str) -> KeywordAbility | None:
     return None
 
 
-class SpliceCandidate(BaseModel):
+class SpliceCandidate(EngineModel):
     """One card in a hand that could be revealed to splice onto `spell`
     right now (CR 702.47a) - `splice_candidates`'s own return shape, read
     by `legal_actions` to build `Action.splice_options` without ever

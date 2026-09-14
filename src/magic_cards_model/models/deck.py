@@ -20,8 +20,9 @@ import re
 from collections.abc import Callable, Iterator
 from typing import Self
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
+from ..snapshot import EngineModel
 from .card import Card, Supertype
 
 CardResolver = Callable[[str], Card]
@@ -56,7 +57,7 @@ class DeckIllegal(ValueError):
         super().__init__("; ".join(problems))
 
 
-class DeckLimits(BaseModel):
+class DeckLimits(EngineModel):
     """One format's deck construction limits.
 
     Defaults are constructed (CR 100.2a, 100.4a). Every field is overridable,
@@ -108,7 +109,7 @@ class DeckLimits(BaseModel):
         return self.max_copies
 
 
-class Deck(BaseModel):
+class Deck(EngineModel):
     """A decklist: how many of each card in the deck and in the sideboard.
 
     Counts rather than a list of names, because that is how a decklist is

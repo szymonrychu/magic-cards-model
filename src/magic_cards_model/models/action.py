@@ -28,8 +28,9 @@ from enum import StrEnum
 from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, model_serializer
+from pydantic import ConfigDict, model_serializer
 
+from ..snapshot import EngineModel
 from .card import Color
 from .zone import Zone
 
@@ -109,7 +110,7 @@ class Affordability(StrEnum):
     before X is announced. See `Action.modes`/`Action.x_range`."""
 
 
-class TargetSlot(BaseModel):
+class TargetSlot(EngineModel):
     """One targeting requirement of a cast or an activation (CR 601.2c, and
     CR 602.2b for an activation): its phrase, how many targets it takes, and
     which objects and players it could legally name right now.
@@ -135,7 +136,7 @@ class TargetSlot(BaseModel):
     requirement could name right now."""
 
 
-class SpliceOption(BaseModel):
+class SpliceOption(EngineModel):
     """One card in `player`'s hand that could be revealed to splice its text
     onto this `CAST` action's spell (CR 702.47a), before any is chosen.
 
@@ -158,7 +159,7 @@ class SpliceOption(BaseModel):
     unresolved cost variance either."""
 
 
-class ManaPlanEntry(BaseModel):
+class ManaPlanEntry(EngineModel):
     """One tap in the plan `Action.pays_with` carries: which permanent, which
     of its mana abilities, what that adds, and CR 106.6's restriction on the
     mana if it has one.
@@ -215,7 +216,7 @@ class ManaPlanEntry(BaseModel):
         return dumped
 
 
-class Action(BaseModel):
+class Action(EngineModel):
     """The arguments one engine entry point takes - a serializable call spec.
 
     Built so "what a seat took" and "what else was legal at that moment" are

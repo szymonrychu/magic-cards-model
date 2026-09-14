@@ -5,8 +5,9 @@ from random import Random
 from typing import Annotated, Any
 from uuid import UUID
 
-from pydantic import AfterValidator, BaseModel, ConfigDict, Field
+from pydantic import AfterValidator, ConfigDict, Field
 
+from ..snapshot import EngineModel
 from .card import Card
 from .card_state import CardState, Counter, CounterKind, Counters
 from .deck import CardResolver, Deck
@@ -83,7 +84,7 @@ def _rng(seed: Seed) -> Random:
     return seed if isinstance(seed, Random) else Random(seed)  # noqa: S311 - not cryptographic
 
 
-class Player(BaseModel):
+class Player(EngineModel):
     """One player and everything they own.
 
     Only the per-player zones live here. The battlefield, stack, exile, and

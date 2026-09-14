@@ -59,7 +59,7 @@ from random import Random
 from typing import TYPE_CHECKING, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import ConfigDict
 
 from magic_cards_model.phrases import with_indefinite_article
 
@@ -84,6 +84,7 @@ from ..models.token import (
     token_copy_of,
 )
 from ..models.zone import Zone
+from ..snapshot import EngineModel
 from . import combat as combat_rules
 from .abilities import (
     ActivatedAbility,
@@ -943,7 +944,7 @@ def amount_expression(phrase: str) -> AmountReader | None:
     return evaluate
 
 
-class UnreadableCounterAmountNotice(BaseModel):
+class UnreadableCounterAmountNotice(EngineModel):
     """Counters whose "equal to `<expr>`" amount could not be evaluated.
 
     Recorded instead of placing a guessed number: the counters are not placed
@@ -3526,7 +3527,7 @@ def _and_has_a_basic_land_type(base: Callable[[CardState], bool]) -> Callable[[C
     return matches
 
 
-class SearchDescriptionNotice(BaseModel):
+class SearchDescriptionNotice(EngineModel):
     """One library search whose card description this engine cannot read.
 
     CR 701.23a's search finds "a card that matches the given description", and
@@ -8537,7 +8538,7 @@ def parse_mode_effect(mode: Mode, x_value: int) -> Effect | None:
     return parse_mixed_effect_for_spell(text)
 
 
-class ModeNotice(BaseModel):
+class ModeNotice(EngineModel):
     """One chosen mode of a resolving modal spell (CR 700.2a) whose text this
     wave could not read into an effect.
 
@@ -8883,7 +8884,7 @@ def _parse_referent_clause(rest: str) -> ReferentClause | None:
     return None
 
 
-class AnaphoricClauseNotice(BaseModel):
+class AnaphoricClauseNotice(EngineModel):
     """One "<verb> target X. Its/that X's controller ..." effect whose second,
     anaphoric clause (CR 400.7's back-reference to the first clause's own
     target, not a target of its own) this wave could not read.
@@ -9139,7 +9140,7 @@ def _unreadable_anaphoric_clause(text: str, *, for_spell: bool) -> str | None:
     return None
 
 
-class ImprintNotice(BaseModel):
+class ImprintNotice(EngineModel):
     """One "you may exile a `<quality>` card ... from your hand" effect (CR
     207.2c's "Imprint" ability word, and its plain-English relatives) whose
     stated quality this wave could not read.
@@ -9163,7 +9164,7 @@ class ImprintNotice(BaseModel):
     """The unreadable clause itself, as printed."""
 
 
-class CastFromHandExileNotice(BaseModel):
+class CastFromHandExileNotice(EngineModel):
     """One "Whenever a player casts a spell from their hand, that player
     exiles it[, ...]" effect (Knowledge Pool's and Possibility Storm's shared
     opening clause, confirmed identical with `resolve_cards` in the session
@@ -14031,7 +14032,7 @@ def _parse_sacrifice_consequence(consequence: str) -> _SacrificeConsequence | No
     return None
 
 
-class ConditionalClauseNotice(BaseModel):
+class ConditionalClauseNotice(EngineModel):
     """One "you may sacrifice `<restriction>`. If you do, `<consequence>`."
     effect (CR 118.12) whose restriction or consequence this wave could not
     read.
@@ -14052,7 +14053,7 @@ class ConditionalClauseNotice(BaseModel):
     """The unreadable clause itself, as printed."""
 
 
-class SuspendRedirectNotice(BaseModel):
+class SuspendRedirectNotice(EngineModel):
     """A "counter target spell. If [it] is countered this way, exile it with
     N time counters ... instead of ... graveyard. If it doesn't have suspend,
     it gains suspend." effect (Delay) - genuinely read (the shape is
@@ -14287,7 +14288,7 @@ _REFLEXIVE_CLAUSE_RE = re.compile(
 )
 
 
-class ReflexiveClauseNotice(BaseModel):
+class ReflexiveClauseNotice(EngineModel):
     """One "`<action>`. When you do, `<consequence>`." effect (CR 603.12)
     whose action or consequence this wave could not read.
 
@@ -16826,7 +16827,7 @@ def _parse_delayed_reanimate_haste_exile_clauses(
     return 3, effect
 
 
-class DelayedClauseNotice(BaseModel):
+class DelayedClauseNotice(EngineModel):
     """One delayed-trigger clause (CR 603.7) whose timing this wave recognised
     - "at the beginning of the next end step", "at end of combat", "at the
     beginning of the next turn's upkeep" - but whose antecedent or verb it
@@ -16847,7 +16848,7 @@ class DelayedClauseNotice(BaseModel):
     text: str
 
 
-class ControlReplacementNotice(BaseModel):
+class ControlReplacementNotice(EngineModel):
     """A resolving spell's own "if [a permanent] would enter the battlefield
     under [a player]'s control [this turn], it enters under [another
     player]'s control instead" (CR 614.1a's `IF_WOULD_INSTEAD` shape,
@@ -16899,7 +16900,7 @@ def _unreadable_delayed_clause(text: str, *, for_spell: bool) -> str | None:
     return None
 
 
-class UnmodeledTriggerEffectNotice(BaseModel):
+class UnmodeledTriggerEffectNotice(EngineModel):
     """One triggered ability whose *condition* this engine reads and fires
     for real - CR 120.2a's "deals combat damage to a player"/"to an opponent",
     matched generically off any card's printed text by

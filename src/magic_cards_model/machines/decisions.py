@@ -131,11 +131,12 @@ from itertools import zip_longest
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import ConfigDict, model_validator
 
 from magic_cards_model.phrases import with_indefinite_article
 
 from ..models.card_state import TargetRef
+from ..snapshot import EngineModel
 
 if TYPE_CHECKING:  # pragma: no cover - import cycle: the models build on the machines
     from ..models.card_state import CardState
@@ -752,7 +753,7 @@ assert set(_ANSWER_FIELD_FOR_KIND) == set(DecisionKind), (
 _ANSWER_VALUE_FIELDS = frozenset(_ANSWER_FIELD_FOR_KIND.values())
 
 
-class DeclaredPair(BaseModel):
+class DeclaredPair(EngineModel):
     """One `(creature, defender)` pair in a recorded `DECLARE_ATTACKERS` or
     `DECLARE_BLOCKERS` answer (CR 508.1, CR 509.1).
 
@@ -791,7 +792,7 @@ class DeclaredPair(BaseModel):
         return self
 
 
-class DamageAssignment(BaseModel):
+class DamageAssignment(EngineModel):
     """One `(recipient, amount)` entry of a recorded `ASSIGN_COMBAT_DAMAGE`
     answer (CR 510.1c, CR 702.19b).
 
@@ -883,7 +884,7 @@ def damage_assignment_answer(
     return tuple((canonical[ref], amount) for ref, amount in chosen.items() if amount)
 
 
-class Answer(BaseModel):
+class Answer(EngineModel):
     """One recorded answer to one `Decision` - the tape `DecisionScript.recorded`
     is made of, and what `Game.ask`/`ask_mulligan`/`ask_trigger_order`/
     `_ask_declaration` read from it (see the module docstring's "Pausing

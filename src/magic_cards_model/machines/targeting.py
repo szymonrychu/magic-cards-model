@@ -98,7 +98,7 @@ from enum import StrEnum
 from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import ConfigDict
 
 from magic_cards_model.phrases import with_indefinite_article
 
@@ -106,6 +106,7 @@ from ..models.card import Card, Color, Supertype, Type
 from ..models.card_state import CardState, ExileMarker, TargetRef
 from ..models.zone import Zone
 from ..serialization import SortedFrozenSet
+from ..snapshot import EngineModel
 from .abilities import AbilityKind, keyword_abilities
 from .combat import has_keyword
 from .layers import BASIC_LAND_TYPES
@@ -190,7 +191,7 @@ class CombatState(StrEnum):
 ANY_TARGET_TYPES = frozenset({Type.CREATURE, Type.PLANESWALKER, Type.BATTLE})
 
 
-class TargetRequirement(BaseModel):
+class TargetRequirement(EngineModel):
     """One "target ..." the spell asks for, and what satisfies it."""
 
     model_config = ConfigDict(frozen=True)
@@ -981,7 +982,7 @@ class TargetRequirement(BaseModel):
 TargetRequirement.model_rebuild()
 
 
-class Division(BaseModel):
+class Division(EngineModel):
     """An effect the caster splits among the targets (CR 601.2d).
 
     "If the spell requires the player to divide or distribute an effect (such as
@@ -1016,7 +1017,7 @@ class Division(BaseModel):
     or plain-X division that carries no such clause."""
 
 
-class TargetingProfile(BaseModel):
+class TargetingProfile(EngineModel):
     """Everything one card's text asks it to target."""
 
     model_config = ConfigDict(frozen=True)

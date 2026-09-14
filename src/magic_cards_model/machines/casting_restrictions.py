@@ -65,11 +65,12 @@ from collections.abc import Callable, Sequence
 from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import ConfigDict, Field
 
 from ..ids import new_id
 from ..models.card import Card, Type
 from ..models.zone import Zone
+from ..snapshot import EngineModel
 from .abilities import AbilityKind, parse_abilities
 from .layers import Duration
 from .triggers import AbilityOnStack
@@ -117,7 +118,7 @@ class CastingRuleKind:
     its origin zone - rather than by the blanket reader below."""
 
 
-class CastingRuleEffect(BaseModel):
+class CastingRuleEffect(EngineModel):
     """One recorded CR 611.1 effect over who may cast what.
 
     Deliberately not a `machines.layers.ContinuousEffect`: that model exists

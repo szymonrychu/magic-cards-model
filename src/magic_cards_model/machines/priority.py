@@ -17,7 +17,9 @@ step that does grant priority begins.
 
 from enum import StrEnum
 
-from pydantic import BaseModel, Field
+from pydantic import Field
+
+from ..snapshot import EngineModel
 
 
 class PriorityOutcome(StrEnum):
@@ -37,7 +39,7 @@ class PriorityOutcome(StrEnum):
     pass did nothing."""
 
 
-class PriorityMachine(BaseModel):
+class PriorityMachine(EngineModel):
     """Who holds priority, and how many players have passed in a row."""
 
     players: list[str] = Field(min_length=1)

@@ -78,10 +78,11 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import ConfigDict
 
 from ..models.card import Card
 from ..models.card_state import CardState
+from ..snapshot import EngineModel
 from .abilities import TriggerEvent
 from .decisions import Decision, DecisionKind, source_id_of
 from .delayed import DelayedTrigger, devourer_of_destiny_first_upkeep
@@ -126,7 +127,7 @@ class OpeningHandAction:
     rider: str = ""
 
 
-class OpeningHandNotice(BaseModel):
+class OpeningHandNotice(EngineModel):
     """A card that claims an opening-hand action the engine did not carry out.
 
     Recorded rather than swallowed: an unreadable paragraph is not the same

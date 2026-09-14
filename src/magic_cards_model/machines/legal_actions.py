@@ -80,6 +80,7 @@ from ..models.card_state import CardState
 from ..models.mana import ManaCost, ManaSpend
 from ..models.player import Player
 from ..models.zone import Zone
+from ..snapshot import board_snapshot
 from .abilities import printed_production
 from .casting import (
     AlternativeCostSource,
@@ -1618,7 +1619,19 @@ def legal_actions(
     different from the lazy caching this engine already does elsewhere, but
     real enough that a caller diffing `model_dump_json` before and after a
     cold game's first call will see it move.
+
+    Runs inside `Game.board_snapshot()`, so the whole enumeration shares one
+    layered board instead of rebuilding it for every permanent and ability it
+    asks about; a caller already holding a scope on this game shares that one.
     """
+    with board_snapshot(game):
+        return _legal_actions(game, player, pending=pending)
+
+
+def _legal_actions(
+    game: Any, player: str, *, pending: PendingDecision | None = None
+) -> list[Action]:
+    """`legal_actions`, inside its board snapshot."""
     if game.is_over:
         return []  # CR 104.1: nothing is legal in a game that has ended
     if pending is not None:

@@ -114,7 +114,7 @@ from enum import StrEnum
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import ConfigDict
 
 from magic_cards_model.phrases import with_indefinite_article
 
@@ -123,6 +123,7 @@ from ..models.card import Card, Color, Type
 from ..models.card_state import CardState, Choice, ChoiceKind, ExileMarker
 from ..models.token import TokenDefinition, is_token
 from ..models.zone import Zone
+from ..snapshot import EngineModel
 from .abilities import keywords_in_lines
 from .combat import Keyword
 from .decisions import Decision, DecisionKind, source_id_of
@@ -216,7 +217,7 @@ ENTERS_KINDS = frozenset(
 # --------------------------------------------------------------------------
 
 
-class CopyException(BaseModel):
+class CopyException(EngineModel):
     """CR 707.9b's modifications to a copy, read off an "except ..." tail.
 
     CR 707.9b: "Some copy effects modify a characteristic as part of the
@@ -246,7 +247,7 @@ class CopyException(BaseModel):
     added_subtypes: tuple[str, ...] = ()
 
 
-class ReplacementEffect(BaseModel):
+class ReplacementEffect(EngineModel):
     """One replacement or prevention effect read off a card.
 
     Most fields are per-kind and stay `None` when the kind does not carry them.
@@ -3260,7 +3261,7 @@ def _classify_choice(replacement_text: str) -> ChoiceKind | None:
     return None
 
 
-class UnwiredChoiceNotice(BaseModel):
+class UnwiredChoiceNotice(EngineModel):
     """A card's own sentence reads back "the chosen color/card name/creature
     type" (CR 614.12a's choice, once made), but this wave only performs the
     one shape that adds mana - `machines/effects.py`'s "adds an additional
@@ -3578,7 +3579,7 @@ def _create_linked_reflexive_trigger(
     )
 
 
-class UnreadableCopyExceptionNotice(BaseModel):
+class UnreadableCopyExceptionNotice(EngineModel):
     """A card's "enter as a copy of X, except ..." tail exists but this parser
     could not read it - recorded instead of the copy silently applying no
     exception at all, the same shape `UnwiredChoiceNotice`/`LayerNotice`/
@@ -4341,7 +4342,7 @@ def _regeneration_effects(game: "Game", event: ReplaceableEvent) -> list[Applica
     ]
 
 
-class DrawRedirection(BaseModel):
+class DrawRedirection(EngineModel):
     """One player's draws taken by another, for a duration (CR 614.1a).
 
     Plagiarize prints the only one in this pool: "Until end of turn, if target

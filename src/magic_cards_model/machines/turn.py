@@ -60,7 +60,9 @@ of a turn that a caller walks by hand.
 
 from enum import StrEnum
 
-from pydantic import BaseModel, Field
+from pydantic import Field
+
+from ..snapshot import EngineModel
 
 
 class Phase(StrEnum):
@@ -197,7 +199,7 @@ phase out ...". The no-priority rule is CR 502.4.)
 """
 
 
-class TurnMachine(BaseModel):
+class TurnMachine(EngineModel):
     """Where a game is in the turn sequence."""
 
     players: list[str] = Field(min_length=1)

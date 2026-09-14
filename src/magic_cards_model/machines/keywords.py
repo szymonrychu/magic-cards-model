@@ -35,7 +35,7 @@ from enum import StrEnum
 from typing import Any, NamedTuple
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import ConfigDict, Field
 
 from magic_cards_model.phrases import with_indefinite_article
 
@@ -50,6 +50,7 @@ from ..models.card_state import (
 )
 from ..models.mana import ManaCost
 from ..models.zone import Zone
+from ..snapshot import EngineModel
 from .abilities import (
     AbilityKind,
     ActivatedAbility,
@@ -965,7 +966,7 @@ def granted_keyword_triggered_abilities(texts: Sequence[str]) -> list[TriggeredA
 # --------------------------------------------------------------------------
 
 
-class KeywordActivation(BaseModel):
+class KeywordActivation(EngineModel):
     """One activation of a keyword's activated ability (CR 602.2).
 
     "To activate an ability is to put it onto the stack and pay its costs, so
@@ -2685,7 +2686,7 @@ def off_zone_activation(
 # --------------------------------------------------------------------------
 
 
-class WardTrigger(BaseModel):
+class WardTrigger(EngineModel):
     """The optional payment on one ward trigger that is already on the stack.
 
     CR 702.21a: "Ward is a triggered ability. Ward [cost] means "Whenever this
@@ -2863,7 +2864,7 @@ prowess_bonus: tuple[int, int] = (1, 1)
 # --------------------------------------------------------------------------
 
 
-class CascadeResult(BaseModel):
+class CascadeResult(EngineModel):
     """What one cascade trigger exiled and what it found (CR 702.85a)."""
 
     model_config = ConfigDict(arbitrary_types_allowed=True)

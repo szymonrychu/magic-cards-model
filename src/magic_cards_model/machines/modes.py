@@ -56,9 +56,10 @@ This module is parsing and validation only. It never touches game state.
 import re
 from collections.abc import Iterable, Sequence
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import ConfigDict
 
 from ..models.card import Card
+from ..snapshot import EngineModel
 
 #: The bullet WOTC prints in front of each mode.
 BULLET = "•"
@@ -110,7 +111,7 @@ _REMINDER = re.compile(r"\([^()]*\)")
 _X = re.compile(r"(?<![\w])X(?![\w])")
 
 
-class Mode(BaseModel):
+class Mode(EngineModel):
     """One option from the bulleted list (CR 700.2)."""
 
     model_config = ConfigDict(frozen=True)
@@ -128,7 +129,7 @@ class Mode(BaseModel):
         return f"{self.number}. {self.text}"
 
 
-class ModalProfile(BaseModel):
+class ModalProfile(EngineModel):
     """The modal structure of one card: its instruction and its modes."""
 
     model_config = ConfigDict(frozen=True)

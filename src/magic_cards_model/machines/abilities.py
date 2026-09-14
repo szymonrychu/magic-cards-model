@@ -107,16 +107,18 @@ Deliberate limits, all of them visible as tests:
     ``Game.why_cannot_activate`` refuse the whole ability.
 """
 
+import functools
 import re
 from collections.abc import Sequence
 from enum import StrEnum
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from ..models.card import Card, Color, Type, subtypes_of, types_of
 from ..models.zone import Zone
+from ..snapshot import EngineModel
 
 # --------------------------------------------------------------------------
 # Mana abilities (CR 605)
@@ -289,7 +291,7 @@ def one_named_color(color: "Color | Sequence[Color] | str | None") -> Color | No
     return named[0] if named is not None and len(named) == 1 else None
 
 
-class ManaCondition(BaseModel):
+class ManaCondition(EngineModel):
     """CR 605.1a's ability still, but a later ``instead`` clause overrides what
     the base effect adds when the board matches (Urza's Tower, Gemstone
     Caverns). Two shapes are read, matching the pool:
@@ -334,7 +336,7 @@ class ManaCondition(BaseModel):
         return False
 
 
-class ManaAbilityRider(BaseModel):
+class ManaAbilityRider(EngineModel):
     """CR 405.6c: "If a mana ability both produces mana and has another
     effect, the mana is produced and the other effect happens immediately."
 
@@ -440,7 +442,7 @@ def _parse_mana_rider(rest: str) -> tuple[ManaAbilityRider | None, str | None, s
     return rider, unparsed, spend_effect
 
 
-class ManaAbility(BaseModel):
+class ManaAbility(EngineModel):
     """One `{T}: Add ...` ability read off a card."""
 
     #: Each option this ability can produce. One entry means no choice.
@@ -1338,7 +1340,7 @@ class CostKind(StrEnum):
     OTHER = "other"
 
 
-class Cost(BaseModel):
+class Cost(EngineModel):
     """One piece of an activation cost, as printed."""
 
     kind: CostKind
@@ -1354,7 +1356,7 @@ class Cost(BaseModel):
 _LOYALTY_SYMBOL = re.compile(r"^\+(?P<plus>\d+)$|^[−-](?P<minus>\d+|[Xx])$|^0$")
 
 
-class LoyaltyCost(BaseModel):
+class LoyaltyCost(EngineModel):
     """One loyalty symbol read out of an activation cost (CR 107.7, CR 606.2)."""
 
     #: The symbol as printed: `+2`, `0`, `−X`.
@@ -1389,7 +1391,7 @@ def _loyalty_symbol(text: str) -> LoyaltyCost | None:
     return LoyaltyCost(printed=text, amount=0)
 
 
-class BaseAbility(BaseModel):
+class BaseAbility(EngineModel):
     """What every parsed line carries, whatever it turned out to be."""
 
     #: The line exactly as printed, reminder text included.
@@ -1417,7 +1419,7 @@ class BaseAbility(BaseModel):
     class_level: int | None = None
 
 
-class ActivationCostReduction(BaseModel):
+class ActivationCostReduction(EngineModel):
     """CR 601.2f's "reduce the cost" step, applied to an activated ability's
     own cost via CR 602.2b ("the remainder of the process for activating an
     ability is identical to the process for casting a spell"): "This ability
@@ -1846,6 +1848,38 @@ def self_normalized_effect_text(card_name: str, effect_text: str) -> str:
 
 
 def layer_readable_sentences(
+    text: str | None,
+    known_keywords: list[str] | None = None,
+    *,
+    static_only: bool = False,
+    card_name: str | None = None,
+) -> list[str]:
+    """`_layer_readable_sentences_uncached`, memoised - see that for what the
+    sentences are.
+
+    The layer engine asks this for every permanent every time a board is
+    computed, and the answer is a pure function of printed text and these
+    arguments, so it is cached on all of them (`known_keywords` as a tuple, in
+    the order given). Strings are immutable and every caller gets a list of its
+    own, so no caller can edit what the next one reads.
+    """
+    return list(
+        _layer_readable_sentences_memo(text, tuple(known_keywords or ()), static_only, card_name)
+    )
+
+
+@functools.lru_cache(maxsize=16384)
+def _layer_readable_sentences_memo(
+    text: str | None, known_keywords: tuple[str, ...], static_only: bool, card_name: str | None
+) -> tuple[str, ...]:
+    return tuple(
+        _layer_readable_sentences_uncached(
+            text, list(known_keywords), static_only=static_only, card_name=card_name
+        )
+    )
+
+
+def _layer_readable_sentences_uncached(
     text: str | None,
     known_keywords: list[str] | None = None,
     *,
@@ -2729,10 +2763,18 @@ def _parse_activated(text: str, common: dict) -> ActivatedAbility | None:
     if add:
         mana = _parse_effect(add.group("effect"))
         if mana is not None:
-            mana.costs_mana = any(piece.kind is CostKind.MANA for piece in costs)
-            mana.conditional = _parse_conditional_clauses(add.group("rest"))
-            mana.rider, mana.unparsed_rider, mana.spend_effect = _parse_mana_rider(
-                add.group("rest")
+            # Built as a copy rather than assigned field by field: the parse is
+            # read-only work, and an engine model's field assignment announces a
+            # game change (`snapshot.py`) that would drop a board snapshot.
+            rider, unparsed_rider, spend_effect = _parse_mana_rider(add.group("rest"))
+            mana = mana.model_copy(
+                update={
+                    "costs_mana": any(piece.kind is CostKind.MANA for piece in costs),
+                    "conditional": _parse_conditional_clauses(add.group("rest")),
+                    "rider": rider,
+                    "unparsed_rider": unparsed_rider,
+                    "spend_effect": spend_effect,
+                }
             )
 
     zone, zone_rule = _activated_ability_zone(costs, effect_text, instructions)
@@ -2850,7 +2892,7 @@ def parse_mana_count(phrase: str) -> tuple[str, Type | None, str] | None:
         return None
 
 
-class TriggeredManaShape(BaseModel):
+class TriggeredManaShape(EngineModel):
     """The mana a triggered mana ability adds (CR 605.1b), as data.
 
     Exactly one of `colors`, `chosen_color`, `any_color` or `produced_type`

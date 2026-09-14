@@ -40,7 +40,7 @@ from itertools import combinations, combinations_with_replacement, product
 from typing import Any, NamedTuple
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
+from pydantic import ConfigDict, Field, PrivateAttr
 
 from magic_cards_model.phrases import with_indefinite_article
 
@@ -67,6 +67,7 @@ from ..models.mana import (
     _demand_list,
 )
 from ..models.zone import Zone
+from ..snapshot import EngineModel
 from .abilities import (
     ActivatedAbility,
     CostKind,
@@ -2036,7 +2037,7 @@ _OBJECT_KINDS = frozenset(
 )
 
 
-class CardRequirement(BaseModel):
+class CardRequirement(EngineModel):
     """What a cost demands of the cards chosen to pay it.
 
     CR 118.3 is the rule this serves: a player cannot pay a cost without the
@@ -2182,7 +2183,7 @@ class CardRequirement(BaseModel):
         return wanted
 
 
-class CostComponent(BaseModel):
+class CostComponent(EngineModel):
     """One non-mana piece of a cost, with the objects chosen to pay it.
 
     The choice of *which* permanent to sacrifice is made while announcing the
@@ -3269,7 +3270,7 @@ def place_counters_cost(
 # --------------------------------------------------------------------------
 
 
-class TotalCost(BaseModel):
+class TotalCost(EngineModel):
     """What casting a spell actually costs: a mana part and everything else.
 
     CR 601.2f calls this the total cost. It is what an alternative cost
@@ -3416,7 +3417,7 @@ class CostModifierKind(StrEnum):
     set, matching which of the two shapes was printed."""
 
 
-class CostModifierEffect(BaseModel):
+class CostModifierEffect(EngineModel):
     """One static cost-modifying ability, read off a permanent's oracle text."""
 
     model_config = ConfigDict(frozen=True)
@@ -3607,7 +3608,7 @@ def cost_modifier_effect(text: str) -> CostModifierEffect | None:
     return None
 
 
-class CostModifierNotice(BaseModel):
+class CostModifierNotice(EngineModel):
     """One permanent whose cost-modifying text could not be read (DDR#978).
 
     The same "unreadable is not the same as no effect" record `TargetingNotice`
@@ -3666,7 +3667,7 @@ def alternative_cost_phrases(card: Card) -> list[str]:
     return [match.group("what") for match in _ALTERNATIVE.finditer(card.oracle_text or "")]
 
 
-class AlternativeCostOffer(BaseModel):
+class AlternativeCostOffer(EngineModel):
     """One CR 118.9 "rather than pay this spell's mana cost" offer, read off a
     spell's own printed text rather than off a named keyword - Force of
     Will's pitch cost is inline text, not a keyword the way Evoke or
@@ -3711,7 +3712,7 @@ _STATIC_FREE_CAST = re.compile(
 )
 
 
-class StaticFreeCastGrant(BaseModel):
+class StaticFreeCastGrant(EngineModel):
     """A permanent's static ability applying CR 118.9's alternative cost of
     *nothing at all* to spells its controller casts - Omniscience.
 
@@ -4505,7 +4506,7 @@ def _copy_pool(pool: ManaPool) -> ManaPool:
     )
 
 
-class CostSubstitution(BaseModel):
+class CostSubstitution(EngineModel):
     """One object standing in for one mana symbol of a total cost.
 
     The shared shape behind convoke (CR 702.51a) and delve (CR 702.66a), and
@@ -4591,7 +4592,7 @@ def cost_less(cost: ManaCost, options: Iterable[PaymentOption]) -> ManaCost:
     return ManaCost(symbols=tuple(remaining))
 
 
-class CostPayment(BaseModel):
+class CostPayment(EngineModel):
     """Paying one total cost, from tapping sources through to the leftover mana."""
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
