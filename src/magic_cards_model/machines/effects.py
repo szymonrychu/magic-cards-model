@@ -15789,36 +15789,59 @@ def _parse_delayed_pay_or_lose_clauses(
 
 
 #: "look at the top card of target player's/your/their library" - Mishra's
-#: Bauble's first clause, ahead of its own delayed-trigger second clause.
-#: CR 701.20e: "looking at a card follows the same rules as revealing a card,
-#: except that the card is shown only to the specified player" - so it moves
-#: nothing, and is recorded through `Game.look` for `Game.known_to`.
+#: Bauble's first clause, ahead of its own delayed-trigger second clause -
+#: or "look at the top N cards", Orcish Spy's "Look at the top three cards
+#: of target player's library". CR 701.20e: "looking at a card follows the
+#: same rules as revealing a card, except that the card is shown only to the
+#: specified player" - so it moves nothing, and is recorded through
+#: `Game.look` for `Game.known_to`, once per card.
 _LOOK_AT_TOP_CARD_RE = re.compile(
-    r"^look at the top card of (?:target player's|your|their) library$", re.IGNORECASE
+    rf"^look at the top (?:card|(?P<n>{COUNT}) cards?) of "
+    r"(?:target player's|your|their) library$",
+    re.IGNORECASE,
 )
 
 
-def _look_at_top_card(game: "Game", stack_object: "StackObject") -> None:
-    """The controller looks at the top card of each targeted player's library
-    (CR 701.20e), or of their own for the untargeted "your library" wording.
+def _parse_look_at_top_card_clause(
+    clause: str,
+) -> Callable[["Game", "StackObject"], None] | None:
+    """`_LOOK_AT_TOP_CARD_RE`'s shape, or `None`."""
+    match = _LOOK_AT_TOP_CARD_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    count = 1 if match.group("n") is None else parse_count(match.group("n"))
+    if count is None:
+        return None
 
-    `Game.look` records it with the controller as the only viewer. A target
-    that is gone by resolution is refused the ordinary way (CR 608.2b), and a
-    player with an empty library has no top card to look at.
-    """
-    viewer = game.controller_of(stack_object)
-    source = (
-        stack_object.source_name if isinstance(stack_object, AbilityOnStack) else stack_object.name
-    )
-    if stack_object.targets:
-        players = [
-            target for target in game.resolve_targets(stack_object) if isinstance(target, Player)
-        ]
-    else:
-        players = [viewer]
-    for player in players:
-        if player.library:
-            game.look(player.library[0], viewer.username, source=source)
+    def look_at_top_card(game: "Game", stack_object: "StackObject") -> None:
+        """The controller looks at the top `count` cards of each targeted
+        player's library (CR 701.20e), or of their own for the untargeted
+        "your library" wording.
+
+        `Game.look` records each of the `count` cards with the controller as
+        the only viewer. A target that is gone by resolution is refused the
+        ordinary way (CR 608.2b), and CR 609.3 gives a shorter library
+        whatever it has.
+        """
+        viewer = game.controller_of(stack_object)
+        source = (
+            stack_object.source_name
+            if isinstance(stack_object, AbilityOnStack)
+            else stack_object.name
+        )
+        if stack_object.targets:
+            players = [
+                target
+                for target in game.resolve_targets(stack_object)
+                if isinstance(target, Player)
+            ]
+        else:
+            players = [viewer]
+        for player in players:
+            for card in player.library[:count]:
+                game.look(card, viewer.username, source=source)
+
+    return look_at_top_card
 
 
 #: "Look at target player's hand." (Gitaxian Probe, Peek) - the same CR 701.20e
@@ -20009,8 +20032,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     )
     if defending_player_exiles is not None:
         return defending_player_exiles
-    if _LOOK_AT_TOP_CARD_RE.fullmatch(clause.strip()):
-        return _look_at_top_card
+    look_at_top_card = _parse_look_at_top_card_clause(clause)
+    if look_at_top_card is not None:
+        return look_at_top_card
     if _LOOK_AT_TARGET_HAND_RE.fullmatch(clause.strip()):
         return _look_at_target_hand
     # -- Wave W1's own single-clause additions, contiguous block ----------
