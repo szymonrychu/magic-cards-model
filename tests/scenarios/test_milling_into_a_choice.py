@@ -54,12 +54,13 @@ same family off a Saga's own triggered ability rather than a spell, with
 CR 107.1c's own "up to two" in place of the fixed "a", and no printed "you
 may" at all (the "up to" already carries the optionality). The chapter
 ability is reached the ordinary way, by transforming a permanent already on
-the battlefield and adding a lore counter directly
-(`Game.saga_lore_step`) - CR 712/714.3a's own intrinsic "enters with a lore
-counter" applies only to *entering*, not to transforming, which is why
-`CardState.transform()` on its own adds no counter here and one has to be
-added, exactly as CR 714.3c's precombat main phase turn-based action would on
-a later turn.
+the battlefield and adding a lore counter directly (`Game.saga_lore_step`) -
+CR 701.27a: to transform a permanent is to "turn it over so that its other
+face is up", not a zone change (CR 400.7 only makes a new object of one),
+so CR 714.3a's own intrinsic "enters with a lore counter" never applies and
+`CardState.transform()` on its own adds no counter here. One has to be
+added the way CR 714.3c's precombat main phase turn-based action would on a
+later turn.
 """
 
 from magic_cards_model.machines import Step
@@ -210,10 +211,11 @@ def _grand_evolution_board(library: list[str]) -> Scenario:
 def _transform_and_add_a_lore_counter(scenario) -> None:
     """`CardState.transform` alone adds no lore counter - CR 714.3a's
     intrinsic "enters with a lore counter" is a replacement effect tied to
-    *entering* (CR 614.1c), and transforming is not that (CR 701.27a/712).
-    `Game.saga_lore_step` is the same turn-based action CR 714.3c's own
-    precombat main phase would run on alice's *next* turn; calling it once
-    here is production behaviour brought forward, not a shortcut around it."""
+    *entering* (CR 614.1c), and CR 701.27a's transform ("turn it over so
+    that its other face is up") is not that. `Game.saga_lore_step` is the
+    same turn-based action CR 714.3c's own precombat main phase would run on
+    alice's *next* turn; calling it once here is production behaviour
+    brought forward, not a shortcut around it."""
     vorinclex = scenario.find("Vorinclex", Zone.BATTLEFIELD)
     vorinclex.transform()
     scenario.game.saga_lore_step()
