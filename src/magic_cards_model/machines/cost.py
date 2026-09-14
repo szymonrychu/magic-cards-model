@@ -555,8 +555,15 @@ _SPEND_CAST_CLAUSE = re.compile(
 #: "activate abilities of creature sources", "activate abilities of colorless
 #: Eldrazi". The trailing "sources" is WOTC's own word for "the object the
 #: ability is on" and narrows nothing further.
+#: The "of <quality>" qualifier is optional - Boommobile's own "Spend this
+#: mana only to activate abilities." (no qualifier at all, so CR 106.6's
+#: restriction is "an activated ability", full stop) is the same bare shape
+#: `_SPEND_CAST_CLAUSE`'s own `(?P<quality>.*?)` already reads for "cast
+#: spells" with nothing narrowing it. `_spend_clause` already turns an empty
+#: quality into a `SpendClause` with every qualifier set empty - unrestricted
+#: within its purpose - so no other change is needed to read it correctly.
 _SPEND_ACTIVATE_CLAUSE = re.compile(
-    r"^activate abilities of (?P<quality>.+?)(?: sources)?$", re.IGNORECASE
+    r"^activate abilities(?: of (?P<quality>.+?)(?: sources)?)?$", re.IGNORECASE
 )
 #: A rider joined onto the restriction sentence with ", and" - the
 #: can't-be-countered half of Cavern of Souls and Delighted Halfling.
@@ -827,7 +834,7 @@ def _one_spend_clause(phrase: str, chosen_type: str | None) -> SpendClause | Non
 
     activate = _SPEND_ACTIVATE_CLAUSE.match(phrase)
     if activate is not None:
-        return _spend_clause(activate.group("quality"), SpendPurpose.ACTIVATE_ABILITY, None)
+        return _spend_clause(activate.group("quality") or "", SpendPurpose.ACTIVATE_ABILITY, None)
     if _SPEND_CUMULATIVE_UPKEEP_CLAUSE.match(phrase):
         # CR 702.24a's cost, not a spell or an ability: no quality to read.
         return SpendClause(purpose=SpendPurpose.PAY_CUMULATIVE_UPKEEP)
