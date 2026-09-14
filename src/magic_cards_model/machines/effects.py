@@ -11915,13 +11915,25 @@ _EACH_PLAYER_EXILES_TOP_RE = re.compile(
     re.IGNORECASE,
 )
 
-#: "searches their library for a <quality> card, puts it onto the battlefield"
-#: - Field of Ruin's own basic-land fetch, run for every player rather than
-#: for the resolving ability's controller, which is why it cannot go through
-#: `_SEARCH_AND_PUT_RE`'s controller-scoped clause builder.
+#: "[may ]search(es) their library for `<quantity>` <quality> cards, [reveal
+#: them,] put(s) it/them onto the battlefield/into their hand" - Field of
+#: Ruin's own mandatory single basic-land fetch, run for every player rather
+#: than for the resolving ability's controller (which is why it cannot go
+#: through `_SEARCH_AND_PUT_RE`'s controller-scoped clause builder), and Weird
+#: Harvest's "each player **may** search ... for **up to X** creature cards,
+#: reveal those cards, put them **into their hand**" - one shape with a wider
+#: printed count, a per-player "may", a reveal, and the other destination, not
+#: a different instruction. Weird Harvest's own X is CR 107.3a's cast-
+#: announced kind: `{COUNT}` never matches a bare "X" (see `_SEARCH_AND_PUT_
+#: RE`'s own comment on why), so the unsubstituted first pass fails to match
+#: here exactly as it does there, and `effect_for`'s substitution retry is
+#: what actually makes it readable.
 _EACH_PLAYER_SEARCH_RE = re.compile(
-    r"^searches? (?:their|his or her) library for (?:a|an) (?P<quality>.+?) card, "
-    r"puts? (?:it|that card) onto the battlefield(?P<tapped> tapped)?$",
+    rf"^(?P<subject>may )?search(?:es)? (?:your|their|his or her) library for "
+    rf"(?P<upto>up to )?(?:(?P<n>{COUNT})|(?P<that_many>that many)) (?P<quality>.+?) cards?"
+    r"(?P<reveal>, reveal (?:them|it|those cards|that card))?"
+    r", puts? (?:it|them|that card|those cards) "
+    r"(?P<dest>onto the battlefield(?P<tapped> tapped)?|into (?:your|their|his or her) hand)$",
     re.IGNORECASE,
 )
 
@@ -12010,15 +12022,41 @@ def _parse_each_player_step(text: str) -> ClauseEffect | None:
         return exile_top_of_library
 
     if match := _EACH_PLAYER_SEARCH_RE.fullmatch(clause):
+        if match.group("that_many"):
+            # No carried-count channel yet (Group 0b) - fails this step
+            # closed rather than guessing a number, same as `_read_search_
+            # count` does for `_SEARCH_AND_PUT_RE`.
+            return None
+        count = parse_count(match.group("n"))
+        if count is None:
+            return None
         matcher = _quality_matcher(match.group("quality"))
+        quality = match.group("quality")
+        to_hand = match.group("dest").startswith("into")
         tapped = match.group("tapped") is not None
+        reveal = match.group("reveal") is not None
+        optional = bool((match.group("subject") or "").strip())
 
         def search_and_put(
             game: "Game", player: Player, source: str, source_id: str | None
         ) -> None:
-            found = _search_library(game, player, matcher, source=source, source_id=source_id)
-            if found is not None:
-                game.put_onto_battlefield(found, player.username, tapped=tapped)
+            if optional and not game.may(
+                player,
+                f"search your library for up to {count} {quality} cards",
+                source=source,
+                source_id=source_id,
+            ):
+                return
+            found = game.search_library(
+                player, matcher, count=count, optional=True, source=source, source_id=source_id
+            )
+            for state in found:
+                if reveal:
+                    game.reveal(state, source=source)
+                if to_hand:
+                    player.add(state, Zone.HAND)
+                else:
+                    game.put_onto_battlefield(state, player.username, tapped=tapped)
 
         return search_and_put
 

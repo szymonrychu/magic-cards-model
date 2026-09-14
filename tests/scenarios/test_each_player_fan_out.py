@@ -147,3 +147,85 @@ def test_field_of_ruin_fetches_a_basic_for_every_player_not_just_its_controller(
     bob_lands = [state.name for state in scenario.game.battlefield if state.controller == "bob"]
     assert alice_lands.count("Island") == 3, "two in play plus the one just fetched"
     assert "Plains" in bob_lands, "the opponent replaces the land they lost"
+
+
+# -- Weird Harvest: a printed count wider than one, a per-player "may", and
+# a reveal-to-hand destination instead of Field of Ruin's mandatory-to-
+# battlefield one - the same "each player ..." sentence with every optional
+# part actually used at once. `_EACH_PLAYER_SEARCH_RE` used to accept only
+# the mandatory singular "a <quality> card, puts it onto the battlefield"
+# shape, so this whole sentence - "Each player may search their library for
+# up to X creature cards, reveal those cards, put them into their hand, then
+# shuffle." - never matched at all.
+
+
+def test_weird_harvest_each_player_may_search_up_to_x_creature_cards():
+    """CR 107.3a: X is announced once, here 2, and applies through the whole
+    spell for both players alike - it is not re-announced per player."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Weird Harvest"],
+            battlefield=["Forest", "Forest", "Forest", "Forest"],
+            library=["Grizzly Bears", "Elvish Mystic", "Island"],
+        )
+        .player("bob", library=["Grizzly Bears", "Island", "Island"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice_bears = scenario.find("Grizzly Bears", Zone.LIBRARY, "alice")
+    alice_mystic = scenario.find("Elvish Mystic", Zone.LIBRARY, "alice")
+    bob_bears = scenario.find("Grizzly Bears", Zone.LIBRARY, "bob")
+    sources = scenario.untapped_sources("Forest", "Forest", "Forest", "Forest")
+
+    scenario.will_take_the_may(True, username="alice", source="Weird Harvest")
+    scenario.will_choose_cards(alice_bears, alice_mystic, username="alice", source="Weird Harvest")
+    scenario.will_take_the_may(True, username="bob", source="Weird Harvest")
+    scenario.will_choose_cards(bob_bears, username="bob", source="Weird Harvest")
+
+    casting = scenario.cast("Weird Harvest")
+    casting.determine_cost(x_value=2)
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *sources)
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    alice = scenario.player("alice")
+    bob = scenario.player("bob")
+    assert {c.name for c in alice.hand} == {"Grizzly Bears", "Elvish Mystic"}
+    assert {c.name for c in bob.hand} == {"Grizzly Bears"}
+    assert "Island" in [c.name for c in bob.library], "bob's own non-creature card was untouched"
+
+
+def test_weird_harvest_a_declining_player_takes_nothing():
+    """CR 608.2d: each player's own "may" is a separate, real choice - one
+    player taking it never forces the other's answer."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Weird Harvest"],
+            battlefield=["Forest", "Forest", "Forest"],
+            library=["Grizzly Bears"],
+        )
+        .player("bob", library=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Forest", "Forest", "Forest")
+
+    scenario.will_take_the_may(False, username="alice", source="Weird Harvest")
+    scenario.will_take_the_may(False, username="bob", source="Weird Harvest")
+
+    casting = scenario.cast("Weird Harvest")
+    casting.determine_cost(x_value=1)
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *sources)
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    assert scenario.player("alice").hand == []
+    assert scenario.player("bob").hand == []
+    assert scenario.find("Grizzly Bears", Zone.LIBRARY, "alice").zone is Zone.LIBRARY
+    assert scenario.find("Grizzly Bears", Zone.LIBRARY, "bob").zone is Zone.LIBRARY
