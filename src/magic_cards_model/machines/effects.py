@@ -15692,22 +15692,19 @@ def _parse_may_cost_then_attacking_token_clause(text: str) -> AbilityEffect | No
             )
             if not game.ask(decision):
                 return
-            chosen_ids = game.ask(
-                Decision(
-                    kind=DecisionKind.CHOOSE_CARDS,
-                    player=controller.username,
-                    prompt="choose a permanent to sacrifice",
-                    source=source_name,
-                    amount=1,
-                    cards=tuple(candidate.id for candidate in available),
-                    source_id=source_id_of(ability),
-                )
+            # Each "or" item prints its own article, so the count is one; the
+            # shared chooser asks for it the way every "you may sacrifice" does.
+            chosen = _choose_permanents_to_sacrifice(
+                game,
+                controller,
+                _SacrificeRestriction(False, candidates_of, _ONE_PERMANENT),
+                available,
+                source_name=source_name,
+                source_id=source_id_of(ability),
             )
-            assert isinstance(chosen_ids, tuple)
-            if not chosen_ids:
+            if not chosen:
                 return
-            by_id = {candidate.id: candidate for candidate in available}
-            game.sacrifice(by_id[chosen_ids[0]])
+            game.sacrifice(chosen[0])
 
         created = create_tokens(
             game,
