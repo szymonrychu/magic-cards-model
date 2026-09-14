@@ -102,3 +102,86 @@ def test_an_x_in_an_additional_cost_does_not_pay_the_mana():
     scenario = _board(["Toxic Deluge"], battlefield=["Swamp"])
 
     assert _cast_row(scenario, "Toxic Deluge").affordable is Affordability.NO
+
+
+# ---------------------------------------------------------------------------
+# The row's displayed cost keeps X unresolved - CR 107.3a says nobody has
+# announced a value yet, so folding the X=0 stand-in used to judge
+# affordability into `Action.cost`/`mana_cost` would show a number nobody
+# chose. Only the affordability *verdict* is judged at X=0 (CR 107.1b); the
+# strings a caller reads keep the printed X, mandatory additional costs
+# included when they do not themselves depend on the unannounced X.
+# ---------------------------------------------------------------------------
+
+
+def test_a_pure_x_mana_cost_keeps_x_in_both_strings():
+    """Walking Ballista and Chalice of the Void both print {X}{X}: the
+    displayed cost is the printed cost, not the X=0 total it is judged by."""
+    for name in ("Walking Ballista", "Chalice of the Void"):
+        scenario = _board([name], battlefield=["Island", "Island"])
+
+        row = _cast_row(scenario, name)
+
+        assert row.affordable is Affordability.YES, (name, row.unaffordable_reason)
+        assert row.cost == "{X}{X}", name
+        assert row.mana_cost == "{X}{X}", name
+
+
+def test_a_single_x_mana_cost_keeps_x_in_both_strings():
+    """Engineered Explosives prints a lone {X}."""
+    scenario = _board(["Engineered Explosives"], battlefield=["Island"])
+
+    row = _cast_row(scenario, "Engineered Explosives")
+
+    assert row.affordable is Affordability.YES, row.unaffordable_reason
+    assert row.cost == "{X}"
+    assert row.mana_cost == "{X}"
+
+
+def test_a_colored_x_mana_cost_keeps_x_in_both_strings():
+    """Meltdown proves this on a card outside the four the regression named,
+    with a different mana-cost shape ({X}{R} rather than a bare {X} or a
+    doubled {X}{X})."""
+    scenario = _board(["Meltdown"], battlefield=["Mountain"])
+
+    row = _cast_row(scenario, "Meltdown")
+
+    assert row.affordable is Affordability.YES, row.unaffordable_reason
+    assert row.cost == "{X}{R}"
+    assert row.mana_cost == "{X}{R}"
+
+
+def test_an_x_mana_cost_alongside_colored_pips_keeps_x_in_mana_cost():
+    """Disrupting Shoal is {X}{U}{U}: the row that pays with mana (as opposed
+    to the row that exiles a blue card instead, CR 118.9) must not drop the X
+    the way it did while affordability judged the X=0 total directly."""
+    scenario = _board(["Disrupting Shoal"], battlefield=["Island", "Island", "Island"])
+    shoal = scenario.find("Disrupting Shoal", Zone.HAND, "alice")
+    (row,) = [
+        action
+        for action in legal_actions(scenario.game, "alice")
+        if action.card_id == shoal.id
+        and action.kind is ActionKind.CAST
+        and action.alternative_cost is None
+    ]
+
+    assert row.affordable is Affordability.YES, row.unaffordable_reason
+    assert row.cost == "{X}{U}{U}"
+    assert row.mana_cost == "{X}{U}{U}"
+
+
+def test_an_x_in_an_additional_cost_is_dropped_from_the_displayed_extra():
+    """Toxic Deluge's mana cost, {2}{B}, has no X in it - only its printed
+    additional cost ("pay X life") does, and that cannot be shown resolved
+    to the X=0 stand-in (that would claim the spell always costs 0 life) nor
+    literally as "X" (a life payment carries only a concrete amount). The
+    honest, smallest choice is to leave the unresolved extra out of the
+    string, matching what the cost showed before this row counted mandatory
+    additional costs at all."""
+    scenario = _board(["Toxic Deluge"], battlefield=["Swamp", "Swamp", "Swamp"])
+
+    row = _cast_row(scenario, "Toxic Deluge")
+
+    assert row.affordable is Affordability.YES, row.unaffordable_reason
+    assert row.cost == "{2}{B}"
+    assert row.mana_cost == "{2}{B}"

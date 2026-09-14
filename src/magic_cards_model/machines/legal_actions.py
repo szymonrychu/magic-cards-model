@@ -536,12 +536,16 @@ def _cast_action(
         extras = mandatory_additional_costs(card, player, x_value)
     except ValueError as refusal:
         extras, unpayable = [], unpayable or str(refusal)
-    mana = total.mana.with_x(0) if total.mana.x_count else total.mana
-    components = list(total.components)
+    # `judged_total` is the X=0 stand-in `_cost_affordability` is asked about
+    # below - never what a caller reads back. A larger X only adds generic
+    # mana or more of the same additional payment, so a cost unpayable at
+    # X=0 is unpayable at every X, and this is judged, never displayed.
+    judged_mana = total.mana.with_x(0) if total.mana.x_count else total.mana
+    judged_components = list(total.components)
     for extra in extras:
-        mana = mana.plus(extra.mana.with_x(0)) if extra.mana.symbols else mana
-        components.extend(extra.components)
-    total = TotalCost(mana=mana, components=components)
+        judged_mana = judged_mana.plus(extra.mana.with_x(0)) if extra.mana.symbols else judged_mana
+        judged_components.extend(extra.components)
+    judged_total = TotalCost(mana=judged_mana, components=judged_components)
     pays_with: tuple[ManaPlanEntry, ...] = ()
     if unpayable is not None:
         # CR 118.6: a card with no mana symbols at all (Living End, Ancestral
@@ -553,10 +557,30 @@ def _cast_action(
         affordable, reason = Affordability.NO, unpayable
     else:
         affordable, reason, pays_with = _cost_affordability(
-            game, player, total, candidate_scan, spend=spend, excluding=card.id
+            game, player, judged_total, candidate_scan, spend=spend, excluding=card.id
         )
         affordable, reason = _widen_for_object_costs(game, player, card, affordable, reason)
-    cost_str, mana_cost_str = _cost_strings(total)
+    # The displayed cost is a different question from the judged one (CR
+    # 107.3a: nobody has announced X yet), so it keeps the printed X exactly
+    # as `total` already carried it - `judged_total`'s X=0 stand-in never
+    # reaches `Action.cost`/`mana_cost`. A mandatory additional cost is
+    # folded in the same way, except one whose own phrase contains the
+    # unannounced X: its amount cannot be shown resolved (that would claim a
+    # value nobody chose) nor literally as "X" (a life payment, the only
+    # shape CR 118.8a's additional costs take here, carries a concrete
+    # amount), so it is the one case left out of the string - the honest,
+    # smallest reading, and the one the cost showed before this row counted
+    # mandatory additional costs at all.
+    try:
+        shown_extras = extras if not announces_x else mandatory_additional_costs(card, player, None)
+    except ValueError:
+        shown_extras = []
+    shown_mana = total.mana
+    shown_components = list(total.components)
+    for extra in shown_extras:
+        shown_mana = shown_mana.plus(extra.mana) if extra.mana.symbols else shown_mana
+        shown_components.extend(extra.components)
+    cost_str, mana_cost_str = _cost_strings(TotalCost(mana=shown_mana, components=shown_components))
     return Action(
         kind=ActionKind.CAST,
         player=player,
