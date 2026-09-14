@@ -517,3 +517,37 @@ def test_a_pin_filled_while_another_thread_is_dropping_it_is_never_kept(commandi
         pause_at += 1
 
     assert pause_at > 2
+
+
+def test_a_pin_opened_while_another_thread_runs_a_command_is_lifted_by_its_own_command():
+    """Another thread's command is running when the pin opens, and ends while
+    it is open. A command started inside the pin afterwards still lifts it for
+    its whole extent: its reads are uncached, so taking the Anthem off the
+    battlefield in place - an edit only the command's end announces - is seen
+    by the read after it."""
+    game, anthem, elves = _anthem_board()
+    started = threading.Event()
+    finish = threading.Event()
+
+    def run_a_command() -> None:
+        with game._id_allocator_scope():
+            started.set()
+            assert finish.wait(10), "the pinned thread never let the command end"
+
+    worker = threading.Thread(target=run_a_command)
+    worker.start()
+    try:
+        assert started.wait(10), "the other thread's command never started"
+        with scan_pin(game):
+            assert _power(game, elves) == 2
+            finish.set()
+            worker.join()
+            with game._id_allocator_scope():
+                before = board_computations()
+                assert _power(game, elves) == 2
+                game.battlefield.remove(anthem)
+                assert _power(game, elves) == 1
+                assert board_computations() - before == 2
+    finally:
+        finish.set()
+        worker.join()

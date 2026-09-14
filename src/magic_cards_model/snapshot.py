@@ -180,20 +180,21 @@ _pin_filling: ContextVar[_Pin | None] = ContextVar("magic_cards_model_pin_fillin
 _open_pins: list[_Pin] = []
 
 
-def _drop_pins(model: object | None, *, structural: bool, lift: int = 0) -> None:
+def _drop_pin(pin: _Pin, *, structural: bool) -> None:
+    # Counted before the board is cleared, which is what lets a fill in the
+    # pin's own thread store first and check after (`cached_board`).
+    pin.drops += 1
+    pin.board = None
+    if structural:
+        pin.tracked.structure += 1
+
+
+def _drop_pins(model: object | None, *, structural: bool) -> None:
     """Drop every open pin on a game `model` belongs to - commands or not."""
     filling = _pin_filling.get()
     for pin in tuple(_open_pins):
-        if pin is not filling and (lift or _holds(pin.tracked, model)):
-            if lift and pin.tracked.game is not model:
-                continue
-            pin.lifted += lift
-            # Counted before the board is cleared, which is what lets a fill in
-            # the pin's own thread store first and check after (`cached_board`).
-            pin.drops += 1
-            pin.board = None
-            if structural:
-                pin.tracked.structure += 1
+        if pin is not filling and _holds(pin.tracked, model):
+            _drop_pin(pin, structural=structural)
 
 
 _ATTACHES = (BaseModel, list, tuple, dict, set, frozenset)
@@ -451,12 +452,22 @@ def _serving_pin(key: int) -> _Pin | None:
 def command(game: Any) -> Iterator[None]:
     """A mutating command is running on `game`: `_command`, with every scan pin
     on `game` lifted for its extent and dropped once it ends."""
-    _drop_pins(game, structural=True, lift=1)
+    # Only the pins open now are lifted, and only they are lowered at the end:
+    # a pin another thread opens meanwhile is dropped by the end, not lowered.
+    filling = _pin_filling.get()
+    lifted = [pin for pin in tuple(_open_pins) if pin.tracked.game is game and pin is not filling]
+    for pin in lifted:
+        pin.lifted += 1
+        _drop_pin(pin, structural=True)
     try:
         with _command(game):
             yield
     finally:
-        _drop_pins(game, structural=True, lift=-1)
+        for pin in lifted:
+            pin.lifted -= 1
+        for pin in tuple(_open_pins):
+            if pin.tracked.game is game and pin is not filling:
+                _drop_pin(pin, structural=True)
 
 
 @contextmanager
