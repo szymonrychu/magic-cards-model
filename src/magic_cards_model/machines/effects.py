@@ -459,6 +459,37 @@ def create_continuous_effect(game: "Game", spell: CardState) -> None:
     )
 
 
+#: "Switch target creature's power and toughness until end of turn. Draw N
+#: cards." - Twisted Image's whole text (CR 613.4d's switch, sublayer 7d, is
+#: `layers._twisted_image`'s own `LAYER_EFFECTS` row - unaffected by this
+#: parser, which only wires the draw after it). Read whole, ahead of
+#: `parse_mixed_effect_for_spell`'s per-clause split: `_CLAUSE_SEPARATOR`
+#: cuts any bare " and ", including the one inside "power and toughness",
+#: into two fragments neither `_parse_targeted_clause` nor any other clause
+#: shape can read back together. The draw count is read through
+#: `numbers.COUNT` rather than pinned to Twisted Image's own "a", so a future
+#: card sharing this exact template with a different draw count reads for
+#: free.
+_SWITCH_POWER_TOUGHNESS_THEN_DRAW_RE = re.compile(
+    rf"^switch target creature['’]s power and toughness until end of turn\.\s*"
+    rf"draw {count_pattern('n')} cards?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_switch_power_toughness_then_draw_clause(text: str) -> Effect | None:
+    """`_SWITCH_POWER_TOUGHNESS_THEN_DRAW_RE`'s shape - Twisted Image's whole
+    text (CR 608.2c orders the draw after the switch, the order printed).
+    """
+    match = _SWITCH_POWER_TOUGHNESS_THEN_DRAW_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    count = parse_count(match.group("n"))
+    if count is None:
+        return None
+    return sequence(create_continuous_effect, draw_cards(count))
+
+
 def layer_context_for(game: "Game", controller: Player) -> LayerContext:
     """The graveyards a resolving effect may need to count (CR 205.2a card types)."""
     everyone: list[CardState] = []
@@ -1697,6 +1728,42 @@ def delirium_damage(normal: int, with_delirium: int) -> Effect:
     return effect
 
 
+#: "<name> deals N damage to target <targets>. Delirium - <name> deals M
+#: damage instead if there are four or more card types among cards in your
+#: graveyard." - Unholy Heat's whole text (CR 207.2c: *Delirium* is an
+#: ability word, so the sentence after it is the whole condition, not a
+#: keyword this wave needs machinery for). The card's own name is captured
+#: and matched again with a backreference rather than written literally, so a
+#: future card sharing this exact template - with a different pair of damage
+#: amounts - reads for free; `normal`/`with_delirium` are read through
+#: `numbers.COUNT` rather than pinned to Unholy Heat's own "2"/"6".
+_DELIRIUM_DAMAGE_INSTEAD_RE = re.compile(
+    rf"^(?P<name>.+?) deals {count_pattern('normal', article=False)} damage to target "
+    r"(?P<targets>[^.]+)\.\s*"
+    rf"delirium\s*(?:—|-)\s*(?P=name) deals {count_pattern('with_delirium', article=False)} "
+    r"damage instead if there are four or more card types among cards in your graveyard\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_delirium_damage_instead_clause(text: str) -> Effect | None:
+    """`_DELIRIUM_DAMAGE_INSTEAD_RE`'s shape - Unholy Heat's whole text.
+
+    `targets` is not read further here: `Game.resolve_targets` already
+    enforces whatever the spell's own declared targets were restricted to at
+    announcement (CR 601.2c), the same trust `delirium_damage` itself already
+    placed in its caller before this parser existed.
+    """
+    match = _DELIRIUM_DAMAGE_INSTEAD_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    normal = parse_count(match.group("normal"), article=False)
+    with_delirium = parse_count(match.group("with_delirium"), article=False)
+    if normal is None or with_delirium is None:
+        return None
+    return delirium_damage(normal, with_delirium)
+
+
 # --------------------------------------------------------------------------
 # Tokens (CR 111, CR 701.7)
 # --------------------------------------------------------------------------
@@ -1798,17 +1865,32 @@ def apply_gift_if_promised(game: "Game", spell: CardState) -> None:
         effect(game, record.gift_chosen_player)
 
 
-def seasoned_pyromancer(game: "Game", ability: AbilityOnStack) -> None:
-    """Seasoned Pyromancer: "When this creature enters, discard two cards, then
-    draw two cards. For each nonland card discarded this way, create a 1/1 red
-    Elemental creature token."
+#: "Discard N cards, then draw M cards. For each nonland card discarded this
+#: way, create [a|N] <token descriptor> token(s)[ with <tail>]." - Seasoned
+#: Pyromancer's whole enters-the-battlefield trigger, read as one CR 608.2c
+#: instruction: the discard, then the draw, then the per-card token creation.
+#: The discard and draw counts, and the token's own P/T, color and subtypes,
+#: are read through `numbers.COUNT` and `_parse_generic_token_descriptor`
+#: rather than pinned to Seasoned Pyromancer's own "two"/"two"/"1/1 red
+#: Elemental", so a future card sharing this exact template - a different
+#: discard count, draw count, or token - reads for free. "For each nonland
+#: card discarded this way" is *not* itself a `numbers.COUNT` word - it is a
+#: linked count over exactly the cards this discard put into the graveyard,
+#: counted as they go rather than by looking at the graveyard afterwards,
+#: same as before this row was replaced.
+_DISCARD_THEN_DRAW_TOKEN_PER_NONLAND_RE = re.compile(
+    rf"^discard {count_pattern('discard_n')} cards?,\s*then draw {count_pattern('draw_n')} "
+    rf"cards?\.\s*for each nonland card discarded this way, create (?:a|an|{COUNT}) "
+    r"(?P<desc>.+?) \btokens?\b(?:\s+with\s+(?P<tail>.+?))?\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
 
-    In printed order (CR 608.2c): the discard, then the draw, then the tokens.
-    "Discard this way" is a linked count over exactly the cards this discard put
-    into the graveyard, which is why they are counted as they go rather than by
-    looking at the graveyard afterwards.
 
-    **Which two cards are discarded is the discarding player's own choice**
+def _parse_discard_then_draw_token_per_nonland_clause(text: str) -> AbilityEffect | None:
+    """`_DISCARD_THEN_DRAW_TOKEN_PER_NONLAND_RE`'s shape - Seasoned
+    Pyromancer's whole enters-the-battlefield trigger.
+
+    **Which cards are discarded is the discarding player's own choice**
     (CR 701.9b: "By default, effects that cause a player to discard a card allow
     the affected player to choose which card to discard"), so this is a
     `CHOOSE_CARDS` question through `Game.ask`, the same CR 608.2d machinery as
@@ -1817,36 +1899,53 @@ def seasoned_pyromancer(game: "Game", ability: AbilityOnStack) -> None:
     cards" - lands on the *front* of the hand, reproducing the old hardcoded
     `hand[:2]` byte for byte when nobody answers.
     """
-    player = game.player(ability.controller)
-    hand = list(player.hand)
-    amount = min(2, len(hand))
-    decision = Decision(
-        kind=DecisionKind.CHOOSE_CARDS,
-        player=player.username,
-        prompt=f"choose {amount} card(s) to discard",
-        source=ability.source_name,
-        source_id=source_id_of(ability),
-        amount=amount,
-        cards=tuple(state.id for state in reversed(hand)),
-    )
-    chosen_ids = game.ask(decision)
-    by_id = {state.id: state for state in hand}
-    discarded = [by_id[card_id] for card_id in chosen_ids]
-    # Through `Game.discard_cards` and `Game.draw_cards`, never `Player.discard`
-    # / `Player.draw`: the `Player` methods move cards and nothing else, so a
-    # discard performed that way raises no `DISCARDS_A_CARD` event (CR 701.9a is
-    # only the move; the event is what a "whenever you discard" ability watches),
-    # is not counted in `Game.cards_discarded_this_turn`, and gets no CR 702.35a
-    # madness replacement - and a draw performed that way raises no
-    # `DRAWS_A_CARD` and skips CR 121.6's draw replacements. CR 601.2f's cost
-    # reduction is read off that discard count, so Hollow One was charged the
-    # wrong price after a Pyromancer's discard until this routed through the
-    # `Game`. CR 121.2 makes "draw two cards" two individual draws, which
-    # `Game.draw_cards` performs one at a time.
-    game.discard_cards(player.username, discarded, source=ability.source_name)
-    game.draw_cards(player, 2)
-    nonlands = sum(1 for state in discarded if not state.card.is_land)
-    create_tokens(game, ELEMENTAL, ability.controller, nonlands)
+    match = _DISCARD_THEN_DRAW_TOKEN_PER_NONLAND_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    discard_n = parse_count(match.group("discard_n"))
+    draw_n = parse_count(match.group("draw_n"))
+    if discard_n is None or draw_n is None:
+        return None
+    words = match.group("desc").strip().split()
+    if not words:
+        return None
+    definition = _parse_generic_token_descriptor(words, match.group("tail"))
+    if definition is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = game.player(ability.controller)
+        hand = list(player.hand)
+        amount = min(discard_n, len(hand))
+        decision = Decision(
+            kind=DecisionKind.CHOOSE_CARDS,
+            player=player.username,
+            prompt=f"choose {amount} card(s) to discard",
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+            amount=amount,
+            cards=tuple(state.id for state in reversed(hand)),
+        )
+        chosen_ids = game.ask(decision)
+        by_id = {state.id: state for state in hand}
+        discarded = [by_id[card_id] for card_id in chosen_ids]
+        # Through `Game.discard_cards` and `Game.draw_cards`, never `Player.discard`
+        # / `Player.draw`: the `Player` methods move cards and nothing else, so a
+        # discard performed that way raises no `DISCARDS_A_CARD` event (CR 701.9a is
+        # only the move; the event is what a "whenever you discard" ability watches),
+        # is not counted in `Game.cards_discarded_this_turn`, and gets no CR 702.35a
+        # madness replacement - and a draw performed that way raises no
+        # `DRAWS_A_CARD` and skips CR 121.6's draw replacements. CR 601.2f's cost
+        # reduction is read off that discard count, so Hollow One was charged the
+        # wrong price after a Pyromancer's discard until this routed through the
+        # `Game`. CR 121.2 makes "draw two cards" two individual draws, which
+        # `Game.draw_cards` performs one at a time.
+        game.discard_cards(player.username, discarded, source=ability.source_name)
+        game.draw_cards(player, draw_n)
+        nonlands = sum(1 for state in discarded if not state.card.is_land)
+        create_tokens(game, definition, ability.controller, nonlands)
+
+    return effect
 
 
 def hangarback_dies(game: "Game", ability: AbilityOnStack) -> None:
@@ -2194,8 +2293,13 @@ EFFECTS: dict[str, Effect] = {
     # draw is `parse_clause_effect`'s ordinary player clause, and
     # `effect_for`'s fallback reaches both in printed order. See
     # `test_registry_is_minimal.py`.
-    # CR 608.2c: the switch first, then the draw, in the order printed.
-    "Twisted Image": sequence(create_continuous_effect, draw_cards(1)),
+    # "Twisted Image": "Switch target creature's power and toughness until
+    # end of turn. Draw a card." is not entered here any more:
+    # `_parse_switch_power_toughness_then_draw_clause` reads the whole text,
+    # ahead of the ordinary clause split, off the card's own printed text
+    # (CR 608.2c: the switch first, then the draw, in the order printed), so
+    # `effect_for`'s fallback reaches it and a future card sharing the
+    # template with a different draw count is covered for free.
     # "Giant Growth" and "Dismember" are not entered here any more (W5): both
     # are exactly `_CONTINUOUS_PUMP_OR_KEYWORD_RE`'s shape, read off the
     # card's own printed text (Dismember's Phyrexian-mana reminder line
@@ -2210,7 +2314,13 @@ EFFECTS: dict[str, Effect] = {
     # form of a keyword line had no regex of its own. See
     # `tests/test_targeted_effects.py::
     # test_a_flashback_line_no_longer_takes_the_whole_effect_down`.
-    "Unholy Heat": delirium_damage(2, 6),
+    # "Unholy Heat": "Unholy Heat deals 2 damage to target creature or
+    # planeswalker. Delirium - Unholy Heat deals 6 damage instead if there
+    # are four or more card types among cards in your graveyard." is not
+    # entered here any more: `_parse_delirium_damage_instead_clause` reads
+    # the whole text off the card's own printed name and numbers, so
+    # `effect_for`'s fallback reaches it and a future card sharing the
+    # template with a different pair of damage amounts is covered for free.
     # -- tokens (CR 111, CR 701.7a) -------------------------------------
     # Spectral Procession's "Create three 1/1 white Spirit creature tokens
     # with flying." is not entered here any more (W4): the whole spell is one
@@ -2525,30 +2635,48 @@ def delver_upkeep(game: "Game", ability: AbilityOnStack) -> None:
         source.transform()  # CR 701.27a
 
 
-def thopter_assembly_upkeep(game: "Game", ability: AbilityOnStack) -> None:
-    """Thopter Assembly: "return this creature to its owner's hand and create five
-    1/1 colorless Thopter artifact creature tokens with flying."
+#: "Return this creature to its owner's hand and create N <token descriptor>
+#: token(s)[ with <tail>]." - Thopter Assembly's whole upkeep trigger, read as
+#: one CR 608.2c instruction: the return, then the token creation, in printed
+#: order. The token count and its own P/T, color and subtypes are read
+#: through `numbers.COUNT` and `_parse_generic_token_descriptor` rather than
+#: pinned to Thopter Assembly's own "five"/"1/1 colorless Thopter artifact",
+#: so a future card sharing this exact self-return-and-create template with a
+#: different token reads for free. The card's own name is not matched
+#: literally - "this creature"/"this permanent" is CR 201.5's own shortened
+#: self-reference - so nothing here is keyed to Thopter Assembly at all.
+_RETURN_SELF_THEN_CREATE_TOKENS_RE = re.compile(
+    r"^return this (?:creature|permanent|artifact) to its owner['’]s hand"
+    r"(?:,)?\s+and\s+(?P<token_clause>create .+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
 
-    Both halves now, in printed order (CR 608.2c) - `models/token.py`'s
-    `create_tokens`/`THOPTER` are the same machinery `hangarback_dies` already
-    uses elsewhere in this file, so there was never a modelling gap here, only
-    a stale one: this function used to return to hand and stop, which is
-    exactly the kind of row-masked bug this wave's deletions are meant to
-    surface, found while auditing this row rather than by deleting it (the
-    "return this creature" self-reference has no generic clause parser yet,
-    so the row itself stays - see the docstring at the top of this module).
+
+def _parse_return_self_then_create_tokens_clause(text: str) -> AbilityEffect | None:
+    """`_RETURN_SELF_THEN_CREATE_TOKENS_RE`'s shape - Thopter Assembly's whole
+    upkeep trigger (CR 401's return, CR 111.9's token creation).
 
     **The intervening *if* - "if you control no Thopters other than this
     creature" (CR 603.4) - is still not modelled**, so the trigger always goes
     on the stack and this always runs, which is wrong the turn after the first
-    (five new Thopters plus this one both count). Left as a documented gap,
-    not attempted here.
+    (the new Thopters plus this one both count). Left as a documented gap,
+    not attempted here - unchanged by this parser replacing the row.
     """
-    source = ability.source(game)
-    if source is None or source.zone is not Zone.BATTLEFIELD:
-        return
-    game.return_to_hand(source)
-    create_tokens(game, THOPTER, ability.controller, 5)
+    match = _RETURN_SELF_THEN_CREATE_TOKENS_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    token_effect = _parse_token_clause(match.group("token_clause"), for_spell=False)
+    if token_effect is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        game.return_to_hand(source)
+        token_effect(game, ability)
+
+    return effect
 
 
 def exile_ability_targets(game: "Game", ability: AbilityOnStack) -> None:
@@ -10535,6 +10663,14 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     draw_then_put_land_cave = _parse_draw_then_put_land_cave_bonus_clause(effect_text)
     if draw_then_put_land_cave is not None:
         return draw_then_put_land_cave
+    discard_then_draw_token_per_nonland = _parse_discard_then_draw_token_per_nonland_clause(
+        effect_text
+    )
+    if discard_then_draw_token_per_nonland is not None:
+        return discard_then_draw_token_per_nonland
+    return_self_then_create_tokens = _parse_return_self_then_create_tokens_clause(effect_text)
+    if return_self_then_create_tokens is not None:
+        return return_self_then_create_tokens
     reveal_until_land = _parse_reveal_until_land_damage_clause(effect_text)
     if reveal_until_land is not None:
         return reveal_until_land
@@ -12166,6 +12302,12 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     `LayerNotice` rather than the card doing nothing with no trace.
     """
     whole = _strip_non_effect_preamble(effect_text).strip()
+    switch_power_toughness_then_draw = _parse_switch_power_toughness_then_draw_clause(whole)
+    if switch_power_toughness_then_draw is not None:
+        return switch_power_toughness_then_draw
+    delirium_damage_instead = _parse_delirium_damage_instead_clause(whole)
+    if delirium_damage_instead is not None:
+        return delirium_damage_instead
     choose_then_return = _parse_choose_targets_then_return_to_hand_pair(whole)
     if choose_then_return is not None:
         return choose_then_return
@@ -20570,7 +20712,14 @@ TRIGGER_EFFECTS: dict[TriggerKey, AbilityEffect] = {
     ("Hellrider", TriggerEvent.ATTACKS, ""): damage_the_attacked_player(1),
     ("Ashmouth Hound", TriggerEvent.BLOCKS, ""): damage_the_other_combatant(1),
     ("Delver of Secrets", TriggerEvent.BEGINNING_OF_STEP, ""): delver_upkeep,
-    ("Thopter Assembly", TriggerEvent.BEGINNING_OF_STEP, ""): thopter_assembly_upkeep,
+    # Thopter Assembly's own "return this creature to its owner's hand and
+    # create five 1/1 colorless Thopter artifact creature tokens with
+    # flying." is not entered here any more: it is
+    # `_parse_return_self_then_create_tokens_clause`'s shape, read off the
+    # card's own printed text ("this creature" is CR 201.5's own self-
+    # reference, not the literal name), so `trigger_effect_for`'s fallback
+    # reaches it and a future card sharing the template with a different
+    # token count is covered for free.
     # Devourer of Destiny's cast trigger - "exile target permanent that's one
     # or more colors" - is not entered here any more: it is the single-clause
     # shape `parse_targeted_effect` reads off the ability's own printed text
@@ -20649,7 +20798,13 @@ TRIGGER_EFFECTS: dict[TriggerKey, AbilityEffect] = {
     # with no row at all, and a future ascend card with the same "for each
     # token you control that entered this turn, create a token that's a copy
     # of it" shape is covered for free. See `tests/scenarios/test_ascend.py`.
-    ("Seasoned Pyromancer", TriggerEvent.ENTERS_THE_BATTLEFIELD, ""): seasoned_pyromancer,
+    # Seasoned Pyromancer's own "discard two cards, then draw two cards. For
+    # each nonland card discarded this way, create a 1/1 red Elemental
+    # creature token." is not entered here any more: it is
+    # `_parse_discard_then_draw_token_per_nonland_clause`'s shape, read off
+    # the card's own printed text, so `trigger_effect_for`'s fallback reaches
+    # it and a future card sharing the template with a different discard,
+    # draw, or token count is covered for free.
     ("Hangarback Walker", TriggerEvent.DIES, ""): hangarback_dies,
     # Ragavan, Nimble Pilferer's, Nashi, Searcher in the Dark's, and Questing
     # Beast's combat-damage-to-a-player triggers are not entered here at all
