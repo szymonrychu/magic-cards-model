@@ -9703,7 +9703,14 @@ _SELECT_FROM_TOP_RE = re.compile(
     r"card from among (?:them|the cards milled this way) "
     r"(?P<dest>into your hand|onto the battlefield tapped|onto the battlefield"
     r"|into your graveyard)\.\s*"
-    r"(?P<decline_counter>if you don't, put a \+1/\+1 counter on this creature\.\s*)?"
+    r"(?:(?P<decline_counter>if you don't, put a \+1/\+1 counter on this creature\.\s*)"
+    # Planar Genesis: "If you don't, put a card from among them into your
+    # hand." - a second, mandatory take from the same seen cards.
+    r"|if you don't, put (?:a|an|one) "
+    r"(?:(?P<decline_kind>permanent|land|creature|artifact|enchantment|instant|sorcery|"
+    r"planeswalker) )?card from among them "
+    r"(?P<decline_dest>into your hand|onto the battlefield tapped|onto the battlefield"
+    r"|into your graveyard)\.\s*)?"
     rf"(?:you gain (?P<life>{_COUNT}) life\.\s*)?"
     r"(?:put the rest (?P<rest>on the bottom of your library in a random order"
     r"|on the bottom of your library in any order"
@@ -9750,9 +9757,25 @@ def _select_from_top_runner(
         predicate = found
     destination = match.group("dest").lower()
     counter_when_declined = match.group("decline_counter") is not None
+    decline_dest = (match.group("decline_dest") or "").lower()
+    decline_kind_word = (match.group("decline_kind") or "").lower()
+    decline_predicate = _SELECT_FROM_TOP_KINDS[decline_kind_word]
+    decline_noun = f"{decline_kind_word} card" if decline_kind_word else "card"
     life = _count(match.group("life")) if match.group("life") else 0
     rest = (match.group("rest") or "").lower()
     noun = f"{kind_word} card" if kind_word else "card"
+
+    def put(game: "Game", player: Player, chosen: CardState, where: str) -> None:
+        if where == "into your hand":
+            player.move(chosen, Zone.HAND)
+        elif where == "into your graveyard":
+            game.put_into_graveyard(chosen)
+        else:
+            # CR 110.4a's permanent card, put onto the battlefield without
+            # being cast (no spell, so no cast trigger); "tapped" is a
+            # property of how it enters, not a later action. A land put this
+            # way is not a land played (CR 305.4).
+            game.put_onto_battlefield(chosen, player.username, tapped=where.endswith("tapped"))
 
     def run(
         game: "Game",
@@ -9797,17 +9820,30 @@ def _select_from_top_runner(
             chosen = by_id[chosen_ids[0]]
 
         if chosen is not None and chosen.zone is home:
-            if destination == "into your hand":
-                player.move(chosen, Zone.HAND)
-            elif destination == "into your graveyard":
-                game.put_into_graveyard(chosen)
-            else:
-                # CR 110.4a's permanent card, put onto the battlefield without
-                # being cast (no spell, so no cast trigger); "tapped" is a
-                # property of how it enters, not a later action.
-                game.put_onto_battlefield(
-                    chosen, player.username, tapped=destination.endswith("tapped")
+            put(game, player, chosen, destination)
+
+        # "If you don't, put a card from among them ..." is not a "you may":
+        # when the first take was declined or had no candidate, one of the
+        # seen cards still qualifying is chosen and moved (CR 608.2d).
+        if chosen is None and decline_dest:
+            fallback = [state for state in seen if state.zone is home and decline_predicate(state)]
+            if fallback:
+                fallback_ids = game.ask(
+                    Decision(
+                        kind=DecisionKind.CHOOSE_CARDS,
+                        player=player.username,
+                        prompt=f"choose {with_indefinite_article(decline_noun)} to put "
+                        f"{decline_dest}",
+                        source=source_name,
+                        amount=1,
+                        cards=tuple(candidate.id for candidate in fallback),
+                        default_cards=(fallback[0].id,),
+                        source_id=source_id,
+                    )
                 )
+                assert isinstance(fallback_ids, tuple)
+                chosen = next(state for state in fallback if state.id == fallback_ids[0])
+                put(game, player, chosen, decline_dest)
 
         # "If you don't" covers both branches that leave the follow-up untaken:
         # declining the may, and having no legal candidate to choose at all
@@ -16966,6 +17002,14 @@ class UnmodeledTriggerEffectNotice(EngineModel):
     a "you may cast that card" with no recognisable exiling clause in front of
     it to say which card - since granting a permission over nothing at all
     would be the silent half-run this notice exists to prevent.
+
+    **A spell records it too.** An instant or sorcery whose printed text
+    `effect_for` has no reader for resolves and goes to the graveyard
+    (`Game.resolve`), and used to do so with no trace - Stock Up in a live
+    game. It now appends this same notice, `source_id` the spell's own id,
+    `source_name` the face's name, `text` the face's whole printed text. Not
+    for a permanent spell (CR 608.3a) or a spell that left a replacement
+    effect (Plagiarize, CR 614.1a).
     """
 
     model_config = ConfigDict(frozen=True)
@@ -18727,8 +18771,10 @@ def _merge_reveal_top_to_hand_rest_to_graveyard_clauses(
 #: "of them" is optional: Codecracker Hound prints the shorter "Put one into
 #: your hand", Waker of Waves the fuller "Put one of them into your hand" -
 #: the same CR 608.2d split either way.
-_PUT_ONE_OF_THEM_INTO_YOUR_HAND_RE = re.compile(
-    r"^put one(?: of them)? into your hand$", re.IGNORECASE
+#: The count is read, not fixed: Stock Up prints "Put two of them into your
+#: hand", Dovin, Grand Arbiter's -7 "Put three of them into your hand".
+_PUT_N_OF_THEM_INTO_YOUR_HAND_RE = re.compile(
+    rf"^put (?P<count>{_COUNT})(?: of them)? into your hand$", re.IGNORECASE
 )
 #: "the other into your graveyard" - Waker of Waves' own third clause, split
 #: off the second sentence's "and" by `_CLAUSE_SEPARATOR` the same way
@@ -18757,14 +18803,16 @@ def _merge_look_top_split_hand_graveyard_clauses(
     graveyard." - the same anaphoric-run shape `_merge_look_top_reveal_to_
     hand_clauses` reads for Duskwatch Recruiter, with a different pair of
     destinations and no quality restriction or "you may": both halves of the
-    split are mandatory, one card each.
+    split are mandatory.
 
     `Game.look_at_top_and_split` asks the identical CR 608.2d question either
     way; what differs is only what this function does with the two answered
     groups, and the shape it enforces on them - CR 608.2d: "The player can't
     choose an option that's illegal or impossible", so an answer that does not
-    split the looked-at cards exactly one-and-the-rest is refused rather than
-    silently applied.
+    put exactly the printed number into hand is refused rather than silently
+    applied. The printed number is Waker of Waves' "one", Stock Up's "two" or
+    Dovin, Grand Arbiter's "three"; a library holding fewer cards than that
+    gives what it has (CR 609.3).
     """
     if index + 2 >= len(clauses):
         return None
@@ -18778,7 +18826,14 @@ def _merge_look_top_split_hand_graveyard_clauses(
             count = int(count_text)
         except ValueError:
             return None
-    if _PUT_ONE_OF_THEM_INTO_YOUR_HAND_RE.fullmatch(clauses[index + 1].strip()) is None:
+    hand_match = _PUT_N_OF_THEM_INTO_YOUR_HAND_RE.fullmatch(clauses[index + 1].strip())
+    if hand_match is None:
+        return None
+    hand_word = hand_match.group("count").lower()
+    if hand_word in ("a", "an"):
+        return None
+    hand_count = _count(hand_word)
+    if hand_count < 1:
         return None
     other = _THE_OTHER_INTO_A_DESTINATION_RE.fullmatch(clauses[index + 2].strip())
     if other is None:
@@ -18786,6 +18841,11 @@ def _merge_look_top_split_hand_graveyard_clauses(
     to_bottom = other.group("destination").lower().startswith("on the bottom")
     randomised = other.group("random") is not None
     rest_label = "bottom of your library" if to_bottom else "your graveyard"
+    prompt = (
+        f"put one into your hand, the other to {rest_label}"
+        if hand_count == 1
+        else f"put {hand_word} into your hand, the rest to {rest_label}"
+    )
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         player = game.controller_of(stack_object)
@@ -18794,18 +18854,20 @@ def _merge_look_top_split_hand_graveyard_clauses(
             player,
             count,
             source=source,
-            prompt=f"put one into your hand, the other to {rest_label}",
+            prompt=prompt,
             moved_label="your hand",
             kept_label=rest_label,
             rest_in_random_order=randomised,
             source_id=source_id_of(stack_object),
-            moved_amount=1,
+            moved_amount=hand_count,
             moved_exact=True,
         )
-        if (moved or rest) and len(moved) != 1:
+        # CR 609.3: a library shorter than the printed number gives what it has.
+        required = min(hand_count, len(moved) + len(rest))
+        if len(moved) != required:
             raise ValueError(
-                f"{source}: exactly one of the {count} must go to hand, the rest to "
-                f"{rest_label} (CR 608.2d)"
+                f"{source}: exactly {required} of the {len(moved) + len(rest)} looked at must "
+                f"go to hand, the rest to {rest_label} (CR 608.2d)"
             )
         for state in moved:
             player.add(state, Zone.HAND)
