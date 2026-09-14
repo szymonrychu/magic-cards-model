@@ -1744,39 +1744,6 @@ def _counter_amount_applies(
     return applies
 
 
-def _doubling_season_tokens_applies(
-    game: "Game", source: CardState, event: ReplaceableEvent
-) -> bool:
-    """ "If an effect would create one or more tokens under your control..."
-
-    "Under your control" is CR 111.2's "the token enters the battlefield under
-    that player's control", so the test is against the player *creating* them and
-    not against whoever the effect belongs to - Kozilek's Command makes the
-    targeted player the creator, and a Doubling Season that player does not
-    control does nothing about it.
-
-    "One or more" is why `amount > 0` is checked: creating nothing is not an
-    event this can double.
-    """
-    return (
-        event.kind is EventKind.CREATE_TOKENS
-        and event.amount > 0
-        and event.player is not None
-        and event.player.username == source.controller
-    )
-
-
-def _double_tokens(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
-    """ "...it creates twice that many of those tokens instead."
-
-    "Those tokens" - the characteristics are untouched, only the count changes,
-    which is what CR 701.7b's ordering guarantees is still possible: the
-    replacement lands before any continuous effect has had a say about what the
-    tokens will look like.
-    """
-    event.amount *= 2
-
-
 def _fog_bank_applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
     """ "Prevent all combat damage that would be dealt to and dealt by this creature."
 
@@ -2331,51 +2298,86 @@ def _compile_draw_plus(effect: ReplacementEffect) -> CardReplacement | None:
     return CardReplacement(label=effect.text, applies=applies, apply=_draw_plus(amount))
 
 
-# -- "if an effect would create one or more tokens under your control, it
-#     creates twice that many of those tokens instead" --
+# -- "if [an effect would create] one or more [type] tokens [would be created]
+#    under your control, [N times that many of those tokens | those tokens
+#    plus <count> <token>] ... instead" --
+#
+# CR 614.16, verified this session: "Some replacement effects apply 'if an
+# effect would create one or more tokens' ... These replacement effects apply
+# if the effect of a resolving spell or ability creates a token" - so a token
+# created by a resolving triggered ability (Hangarback Walker's dies trigger)
+# is squarely in scope.
+#
+# CR 701.7b is what makes a type filter readable at all: "If a replacement
+# effect applies to a token being created, that effect applies before
+# considering any continuous effects that will modify the characteristics of
+# that token." The `CREATE_TOKENS` event is raised before a single token has
+# been built, so the `TokenDefinition` on it is still exactly what the creating
+# effect stated (CR 111.3) and "creature tokens" is a question that can be
+# answered.
+
+#: The event half, shared by both replacement shapes below. `filter` is an
+#: optional single word naming a card type, and only `_CARD_TYPE_WORDS` are
+#: read - a filter this cannot check ("Thopter tokens") leaves the whole effect
+#: uncompiled, per the fail-closed rule above.
+_TOKEN_CREATION_EVENT_RE = re.compile(
+    r"^(?:an effect would create one or more tokens under your control"
+    r"|one or more (?:(?P<filter>\w+) )?tokens would be created under your control)$",
+    re.IGNORECASE,
+)
+#: Doubling Season's "it creates twice that many of those tokens", Adrix and
+#: Nev's "twice that many of those tokens are created", Ojer Taq's "three times
+#: that many of those tokens are created".
+_TOKEN_MULTIPLIER_RE = re.compile(
+    rf"^(?:it creates (?P<it_mult>{MULTIPLIER}) that many of those tokens"
+    rf"|(?P<mult>{MULTIPLIER}) that many of those tokens are created)$",
+    re.IGNORECASE,
+)
+#: Stridehangar Automaton's "those tokens plus an additional 1/1 ... Thopter
+#: ...", Quina's "those tokens plus a 1/1 green Frog creature token",
+#: Chatterfang's "those tokens plus that many 1/1 green Squirrel creature tokens".
+_EXTRA_TOKEN_REPLACEMENT_RE = re.compile(
+    rf"^those tokens plus (?P<count>that many|{COUNT})(?: additional)? "
+    r"(?P<descriptor>.+?) are created$",
+    re.IGNORECASE,
+)
+
+
+def _token_creation_filter(effect: ReplacementEffect) -> frozenset[Type] | None:
+    """The card type a token-creation event names, as a set: empty for "one or
+    more tokens", `None` when the event is not this shape or names something
+    that cannot be checked."""
+    match = _TOKEN_CREATION_EVENT_RE.match((effect.event or "").strip())
+    if match is None:
+        return None
+    word = match.group("filter")
+    if word is None:
+        return frozenset()
+    wanted = _CARD_TYPE_WORDS.get(word.lower())
+    return None if wanted is None else frozenset({wanted})
 
 
 def _compile_token_doubler(effect: ReplacementEffect) -> CardReplacement | None:
+    """ "...N times that many of those tokens" - "those tokens" leaves the
+    characteristics untouched and only the count changes, which CR 701.7b's
+    ordering guarantees is still possible."""
     if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD:
         return None
-    expected_event = "an effect would create one or more tokens under your control"
-    if (effect.event or "").strip().lower() != expected_event:
+    wanted = _token_creation_filter(effect)
+    if wanted is None:
         return None
-    expected = "it creates twice that many of those tokens"
-    if (effect.replacement or "").strip().rstrip(".").lower() != expected:
+    match = _TOKEN_MULTIPLIER_RE.match((effect.replacement or "").strip().rstrip("."))
+    if match is None:
+        return None
+    multiplier = parse_multiplier(match.group("it_mult") or match.group("mult"))
+    if multiplier is None:
         return None
     return CardReplacement(
-        label=effect.text, applies=_doubling_season_tokens_applies, apply=_double_tokens
+        label=effect.text,
+        applies=_extra_token_applies(wanted),
+        apply=_scale_amount(multiplier=multiplier),
     )
 
-
-# -- "if one or more <filter> tokens would be created under your control, those
-#     tokens plus an additional <descriptor> are created instead" --
-#
-# Stridehangar Automaton. CR 614.16, verified this session: "Some replacement
-# effects apply 'if an effect would create one or more tokens' ... These
-# replacement effects apply if the effect of a resolving spell or ability
-# creates the tokens" - the same clause `_compile_token_doubler` above leans
-# on, so a token created by a resolving triggered ability (Hangarback Walker's
-# dies trigger) is squarely in scope.
-#
-# CR 701.7b is what makes this readable at all: "If a replacement effect
-# applies to a token being created, that effect applies before considering any
-# continuous effects that will modify the characteristics of that token." The
-# `CREATE_TOKENS` event is raised before a single token has been built, so the
-# `TokenDefinition` on it is still exactly what the creating effect stated
-# (CR 111.3) and "artifact tokens" is a question that can be answered.
-
-#: The event half. `filter` is a single word naming a card type, and only the
-#: types below are read - a filter this cannot check ("Thopter tokens",
-#: "creature tokens you control that aren't Thopters") matches nothing and the
-#: whole effect goes uncompiled, per the fail-closed rule above.
-_EXTRA_TOKEN_EVENT_RE = re.compile(
-    r"^one or more (?P<filter>\w+) tokens would be created under your control$", re.IGNORECASE
-)
-_EXTRA_TOKEN_REPLACEMENT_RE = re.compile(
-    r"^those tokens plus an additional (?P<descriptor>.+?) are created$", re.IGNORECASE
-)
 
 #: The card types a filter may name, as CR 205.2a spells them.
 _CARD_TYPE_WORDS: dict[str, Type] = {
@@ -2451,7 +2453,8 @@ def _read_token_descriptor(descriptor: str) -> TokenDefinition | None:
         text = tail_match.group("head")
 
     words = text.split()
-    if not words or words[-1].lower() != "token":
+    # "token", or "tokens" after a count above one or "that many".
+    if not words or words[-1].lower() not in ("token", "tokens"):
         return None
     words = words[:-1]
     if not words or words[-1].lower() != "creature":
@@ -2488,17 +2491,21 @@ def _read_token_descriptor(descriptor: str) -> TokenDefinition | None:
     )
 
 
-def _extra_token_applies(wanted: Type) -> Applies:
-    """ "If one or more **artifact** tokens would be created under your control".
+def _extra_token_applies(wanted: frozenset[Type]) -> Applies:
+    """ "If one or more [**artifact**] tokens would be created under your control".
 
     "Under your control" is CR 111.2's "the token enters the battlefield under
-    that player's control", so the test is against the player *creating* them,
-    exactly as `_doubling_season_tokens_applies` already reads the same phrase.
+    that player's control", so the test is against the player *creating* them
+    and not against whoever the effect belongs to - Kozilek's Command makes the
+    targeted player the creator, and a Doubling Season that player does not
+    control does nothing about it. "One or more" is why `amount > 0` is
+    checked: creating nothing is not an event to replace.
 
     What kind of token is read off the event's `definition` when the creating
     effect stated one (CR 111.3), and off the original permanent's own types
     when this is a token *copy* instead, whose characteristics are a printed
     card's (CR 707.2, CR 111.3's "functionally equivalent" both ways round).
+    An empty `wanted` names no type and takes every token.
     """
 
     def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
@@ -2506,23 +2513,30 @@ def _extra_token_applies(wanted: Type) -> Applies:
             return False
         if event.player is None or event.player.username != source.controller:
             return False
+        if not wanted:
+            return True
         if event.definition is not None:
-            return wanted in event.definition.types
-        return event.card is not None and wanted in event.card.types
+            types: Iterable[Type] = event.definition.types
+        elif event.card is not None:
+            types = event.card.types
+        else:
+            return False
+        return any(card_type in wanted for card_type in types)
 
     return applies
 
 
-def _create_an_additional_token(extra: TokenDefinition) -> Apply:
-    """ "...those tokens plus an additional [token] are created instead."
+def _create_additional_tokens(extra: TokenDefinition, count: int | None) -> Apply:
+    """ "...those tokens plus [an additional | a | that many] [token] are created instead."
 
     "Those tokens" is the batch untouched - `amount` and `definition` are left
     exactly as they were - and the addition is queued on the event for
     `create_tokens` to drain. One modified event, one creation (CR 614.6).
+    `count` None is "that many": the event's own count as this effect applies.
     """
 
     def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
-        event.extra.append(extra)
+        event.extra.extend([extra] * (event.amount if count is None else count))
 
     return apply
 
@@ -2530,10 +2544,7 @@ def _create_an_additional_token(extra: TokenDefinition) -> Apply:
 def _compile_extra_token(effect: ReplacementEffect) -> CardReplacement | None:
     if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD:
         return None
-    event_match = _EXTRA_TOKEN_EVENT_RE.match((effect.event or "").strip())
-    if event_match is None:
-        return None
-    wanted = _CARD_TYPE_WORDS.get(event_match.group("filter").lower())
+    wanted = _token_creation_filter(effect)
     if wanted is None:
         return None
     replacement_match = _EXTRA_TOKEN_REPLACEMENT_RE.match(
@@ -2541,13 +2552,19 @@ def _compile_extra_token(effect: ReplacementEffect) -> CardReplacement | None:
     )
     if replacement_match is None:
         return None
+    count_text = replacement_match.group("count")
+    count: int | None = None
+    if count_text.lower() != "that many":
+        count = parse_count(count_text)
+        if count is None:
+            return None
     extra = _read_token_descriptor(replacement_match.group("descriptor"))
     if extra is None:
         return None
     return CardReplacement(
         label=effect.text,
         applies=_extra_token_applies(wanted),
-        apply=_create_an_additional_token(extra),
+        apply=_create_additional_tokens(extra, count),
     )
 
 

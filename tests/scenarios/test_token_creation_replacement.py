@@ -24,7 +24,7 @@ the mechanic is the creation event, not the token.
 
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
-from magic_cards_model.models.card import Color
+from magic_cards_model.models.card import Color, Type
 from magic_cards_model.models.card_state import Counter
 from magic_cards_model.models.token import TokenDefinition, create_tokens, token_copy_of
 from tests.scenarios.harness import Scenario
@@ -276,3 +276,140 @@ def test_a_doubling_season_that_arrives_after_the_creation_does_nothing():
 
     assert scenario.find("Doubling Season", Zone.BATTLEFIELD, username="alice")
     assert len(_spirits(scenario)) == 3, "the creation had already happened"
+
+
+# --------------------------------------------------------------------------
+# How many: a multiplier read off the card, not a pinned "twice"
+# --------------------------------------------------------------------------
+#
+# Doubling Season's "it creates twice that many of those tokens", Adrix and
+# Nev's "twice that many of those tokens are created" and Ojer Taq's "three
+# times that many of those tokens are created" are one replacement with a
+# number in it (CR 614.1a, CR 614.16).
+
+FOOD = TokenDefinition(types=(Type.ARTIFACT,), subtypes=("Food",))
+
+
+def _named(scenario, name: str) -> list:
+    return [state for state in scenario.game.battlefield if state.name == name]
+
+
+def test_ojer_taq_triples_a_creature_token_creation():
+    """ "...three times that many of those tokens are created instead." 3, 9."""
+    scenario = _procession("Ojer Taq, Deepest Foundation").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    _cast_procession(scenario)
+
+    assert len(_spirits(scenario)) == 9
+
+
+def test_adrix_and_nev_double_with_the_passive_wording():
+    """ "If one or more tokens would be created under your control, twice that
+    many of those tokens are created instead" - Doubling Season's replacement
+    in other words."""
+    scenario = _procession("Adrix and Nev, Twincasters").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    _cast_procession(scenario)
+
+    assert len(_spirits(scenario)) == 6
+
+
+def test_ojer_taq_leaves_a_noncreature_token_alone():
+    """ "If one or more **creature** tokens would be created" - Food is not one."""
+    scenario = Scenario().player("alice", battlefield=["Ojer Taq, Deepest Foundation"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    create_tokens(scenario.game, FOOD, "alice", 2)
+
+    assert len(_named(scenario, "Food Token")) == 2
+
+
+def test_adrix_and_nev_double_a_noncreature_token_too():
+    """No filter on "one or more tokens": Food doubles."""
+    scenario = Scenario().player("alice", battlefield=["Adrix and Nev, Twincasters"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    create_tokens(scenario.game, FOOD, "alice", 2)
+
+    assert len(_named(scenario, "Food Token")) == 4
+
+
+def test_an_opponents_ojer_taq_does_not_triple_your_tokens():
+    """CR 111.2: "under your control" is the creator's control."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Spectral Procession"], battlefield=["Plains"] * 6)
+        .player("bob", battlefield=["Ojer Taq, Deepest Foundation"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    _cast_procession(scenario)
+
+    assert len(_spirits(scenario)) == 3
+
+
+def test_ojer_taq_and_doubling_season_multiply_in_either_order():
+    """CR 616.1 orders the two, CR 614.5 applies each once: 3 * 3 * 2 = 18."""
+    scenario = _procession("Ojer Taq, Deepest Foundation", "Doubling Season").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    _cast_procession(scenario)
+
+    assert len(_spirits(scenario)) == 18
+
+
+# --------------------------------------------------------------------------
+# "those tokens plus <a count of> <token>": the addition's count is read
+# --------------------------------------------------------------------------
+#
+# Stridehangar Automaton's "plus an additional 1/1 ... Thopter", Quina's "plus
+# a 1/1 green Frog creature token" and Chatterfang's "plus that many 1/1 green
+# Squirrel creature tokens". "That many" is the count of the event being
+# replaced, as Doubling Season's own "twice that many" reads it.
+
+
+def test_quina_adds_one_frog_to_a_creature_token_creation():
+    scenario = _procession("Quina, Qu Gourmet").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    _cast_procession(scenario)
+
+    assert len(_spirits(scenario)) == 3
+    assert len(_named(scenario, "Frog Token")) == 1
+
+
+def test_quina_adds_one_frog_to_a_noncreature_token_creation():
+    """ "If one or more tokens would be created" names no type: Food counts."""
+    scenario = Scenario().player("alice", battlefield=["Quina, Qu Gourmet"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    create_tokens(scenario.game, FOOD, "alice", 2)
+
+    assert len(_named(scenario, "Food Token")) == 2
+    assert len(_named(scenario, "Frog Token")) == 1
+
+
+def test_chatterfang_adds_that_many_squirrels():
+    """ "...those tokens plus that many 1/1 green Squirrel creature tokens." 3, 3."""
+    scenario = _procession("Chatterfang, Squirrel General").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    _cast_procession(scenario)
+
+    assert len(_spirits(scenario)) == 3
+    squirrels = _named(scenario, "Squirrel Token")
+    assert len(squirrels) == 3
+    assert all(squirrel.power == 1 and squirrel.toughness == 1 for squirrel in squirrels)
+
+
+def test_chatterfang_adds_one_squirrel_to_a_single_food():
+    scenario = Scenario().player("alice", battlefield=["Chatterfang, Squirrel General"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    create_tokens(scenario.game, FOOD, "alice", 1)
+
+    assert len(_named(scenario, "Food Token")) == 1
+    assert len(_named(scenario, "Squirrel Token")) == 1
