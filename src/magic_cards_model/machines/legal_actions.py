@@ -1669,13 +1669,23 @@ def decision_answers(decision: Decision, game: Any = None) -> list[Action]:
 
 
 def legal_actions(
-    game: Any, player: str, *, pending: PendingDecision | None = None
+    game: Any,
+    player: str,
+    *,
+    pending: PendingDecision | None = None,
+    include_life_paid_mana: bool = False,
 ) -> list[Action]:
     """Every legal action `player` could take right now.
 
     See the module docstring for what "legal" means here (never gated on
     affordability), what a pending `Decision` does to the answer, and what is
     deliberately not enumerated.
+
+    `include_life_paid_mana` judges affordability as if `player` also
+    activated their "{T}, Pay N life: Add ..." mana abilities themselves
+    (`cost.life_paid_mana_activations`, CR 605.3a), which auto-tap never does
+    for them (CR 118.3c). It does not check whether the life paid is lethal;
+    `machines/hypothetical.py` does that on a copy. Off by default.
 
     Mutates nothing a caller can observe through `Game.model_dump_json`:
     every predicate this calls (`why_cannot_*`, `could_pay_mana_cost`,
@@ -1703,7 +1713,9 @@ def legal_actions(
     if not game.is_in_game(player):
         return []
 
-    candidate_scan = mana_candidate_scan(game.battlefield, game=game, payer=player)
+    candidate_scan = mana_candidate_scan(
+        game.battlefield, game=game, payer=player, include_life_paid=include_life_paid_mana
+    )
     actions: list[Action] = [
         Action(
             kind=ActionKind.PASS_PRIORITY,

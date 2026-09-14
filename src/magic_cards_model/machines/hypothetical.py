@@ -58,6 +58,21 @@ effect (CR 401.5) reads which physical copy is there and a buried copy is not
 interchangeable with it. Every other library copy of that printing still
 shares - the card identity differs, nothing else a payment reads does.
 
+**Mana abilities that cost life.** Auto-tap never activates a mana ability
+whose cost is more than a bare {T} (CR 118.3c), but the player may (CR 601.2g,
+605.3a), so a what-if answer counts "{T}, Pay N life: Add ..." abilities
+(`cost.life_paid_mana_activations`). An option the ordinary enumeration calls
+unaffordable is judged again with them (`legal_actions(...,
+include_life_paid_mana=True)`, life rows tried last). A plan that needs one is
+then played on a further copy: each life-paid ability in it is activated
+through `Game.begin_activating`/`activate_ability` for the colours the plan
+chose, the state-based check runs (CR 704.5a), and the option is counted only
+if the player is still in the game and the ordinary enumeration now calls it
+affordable from the floating mana. `Payability.life_paid` is the life the
+cheapest payable option costs, and a notice names each ability. Any other
+extra cost (a sacrifice, a mana payment) is not activated: a card left
+unpayable names each such source in a notice instead.
+
 **What "assuming" does not check.** It does not ask whether the land could be
 played this turn (CR 305.2's land drop) or how it would get from the library to
 the battlefield (a fetch land's search) - the caller composes those. A land in
@@ -73,9 +88,12 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
-from ..models.action import Action, ActionKind, Affordability
+from ..models.action import Action, ActionKind, Affordability, ManaPlanEntry
+from ..models.card import Color
 from ..models.card_state import CardState
 from ..models.zone import Zone
+from .abilities import ActivatedAbility
+from .cost import _SpendContext, _withheld_mana_sources, life_paid_mana_activations
 from .decisions import Decision, DecisionKind, DecisionScript, ScriptedAnswer
 from .legal_actions import legal_actions
 from .replacement import unread_self_enters_tapped_lines
@@ -133,8 +151,15 @@ class Payability(BaseModel):
     #: How `assuming_land` was taken to enter, when one was given.
     assumed_land: EntersPrediction | None = None
     #: Each triggered ability the answer left unresolved because resolving it
-    #: needed somebody's choice, named rather than guessed.
+    #: needed somebody's choice, named rather than guessed; each life-paid
+    #: mana ability an option counts, or was refused because paying it loses
+    #: the game (CR 704.5a); and, when an option is still unpayable, each mana
+    #: ability with another extra cost that was not activated (CR 118.3c).
     notices: tuple[str, ...] = ()
+    #: The life the cheapest payable option costs through "{T}, Pay N life"
+    #: mana abilities the player activates themselves (CR 605.3a). 0 when a
+    #: payable option needs none, and when nothing is payable.
+    life_paid: int = 0
 
 
 class LandPayability(BaseModel):
@@ -499,27 +524,232 @@ def _now(game: "Game") -> _Settled:
     return _settle(lambda: (_decoded_copy(game), None, []))
 
 
-def _options_by_card(board: "Game", player: str, card_ids: set[UUID]) -> dict[UUID, list[Action]]:
-    """One `legal_actions` enumeration, read for every card asked about."""
+class _CardOptions(NamedTuple):
+    """One card's options on one board, with what judging them added."""
+
+    options: list[Action]
+    notices: tuple[str, ...] = ()
+    life_paid: int = 0
+
+
+#: `(permanent id, ability index)` of each life-paid mana ability on a board,
+#: with its permanent, the ability and the life it costs.
+_LifePaid = dict[tuple[UUID, int], tuple[CardState, ActivatedAbility, int]]
+
+#: The fields an affordability verdict sets on an `Action`, cleared to compare
+#: the same action across two enumerations.
+_VERDICT: dict[str, Any] = {
+    "affordable": Affordability.UNKNOWN,
+    "unaffordable_reason": None,
+    "pays_with": (),
+}
+
+
+class _Played(NamedTuple):
+    """The outcome of activating one set of life-paid mana abilities on a
+    copy: the enumeration afterwards, or why there is none."""
+
+    after: list[Action]
+    #: Why nothing was enumerated: a refused activation, or a lost game.
+    refusal: str | None = None
+    lethal: bool = False
+
+
+def _grouped(actions: list[Action], card_ids: set[UUID]) -> dict[UUID, list[Action]]:
     grouped: dict[UUID, list[Action]] = {card_id: [] for card_id in card_ids}
-    for action in legal_actions(board, player):
+    for action in actions:
         if action.card_id in grouped and action.kind is not ActionKind.PLAY_LAND:
             grouped[action.card_id].append(action)
     return grouped
 
 
+def _twin(action: Action, among: list[Action]) -> Action | None:
+    """`action` as another enumeration of the same board reports it."""
+    bare = action.model_copy(update=_VERDICT)
+    return next((other for other in among if other.model_copy(update=_VERDICT) == bare), None)
+
+
+def _life_paid_sources(board: "Game", player: str) -> _LifePaid:
+    found: _LifePaid = {}
+    for source in board.battlefield:
+        if source.tapped or source.controller not in (None, player):
+            continue
+        for index, ability, life in life_paid_mana_activations(source, board):
+            found[(source.id, index)] = (source, ability, life)
+    return found
+
+
+def _key(entry: ManaPlanEntry) -> tuple[UUID, int]:
+    assert entry.ability_index is not None  # a life-paid row always has its index
+    return entry.card_id, entry.ability_index
+
+
+def _named(entries: Sequence[ManaPlanEntry], life_paid: _LifePaid) -> str:
+    return "; ".join(
+        f'{source.name}\'s "{ability.cost}: {ability.effect}"'
+        for source, ability, _life in (life_paid[_key(entry)] for entry in entries)
+    )
+
+
+def _own_colors(ability: ActivatedAbility, adds: str) -> Color | list[Color]:
+    """The colours a plan entry's ability makes itself, without what a
+    triggered mana ability adds after it (`cost._with_triggered_mana` lists
+    the ability's own mana first)."""
+    mana = ability.mana
+    assert mana is not None  # a life-paid mana ability
+    count = len(mana.options[0]) if mana.options else mana.any_color_count
+    colors = [Color(symbol) for symbol in adds][:count]
+    return colors[0] if len(colors) == 1 else colors
+
+
+def _play_life_payments(
+    board: "Game", player: str, entries: Sequence[ManaPlanEntry], life_paid: _LifePaid
+) -> _Played:
+    """Activate each life-paid ability in `entries` on a copy of `board`
+    (CR 605.3a, costs paid per CR 602.2b), run the state-based check
+    (CR 704.5a), and enumerate again."""
+    copy = _decoded_copy(board)
+    try:
+        for entry in entries:
+            assert entry.ability_index is not None
+            source = copy.find_by_id(entry.card_id)
+            assert source is not None  # decoded from the board the plan was made on
+            ability = life_paid[(entry.card_id, entry.ability_index)][1]
+            payment = copy.begin_activating(source, entry.ability_index, player)
+            payment.pay()
+            copy.activate_ability(
+                source, entry.ability_index, player, color=_own_colors(ability, entry.adds)
+            )
+    except ValueError as refusal:
+        return _Played([], refusal=str(refusal))
+    copy.check_state_based_actions()
+    if not copy.is_in_game(player):
+        return _Played([], lethal=True)
+    return _Played(legal_actions(copy, player))
+
+
+def _option_label(option: Action) -> str:
+    return option.keyword or option.alternative_cost or option.kind.value
+
+
+def _with_life_payments(
+    board: "Game",
+    player: str,
+    options: list[Action],
+    judged_again: list[Action],
+    life_paid: _LifePaid,
+    played: dict[tuple[Any, ...], _Played],
+) -> _CardOptions:
+    """`options` with each unaffordable one that life-paid mana abilities pay
+    for replaced by its affordable twin from `judged_again`."""
+    result: list[Action] = []
+    notices: list[str] = []
+    costs: list[int] = []
+    for option in options:
+        twin = _twin(option, judged_again) if option.affordable is Affordability.NO else None
+        paying = (
+            [entry for entry in twin.pays_with if (entry.card_id, entry.ability_index) in life_paid]
+            if twin is not None and twin.affordable is Affordability.YES
+            else []
+        )
+        if not paying:
+            result.append(option)
+            if option.affordable is Affordability.YES:
+                costs.append(0)
+            continue
+        key = tuple((entry.card_id, entry.ability_index, entry.adds) for entry in paying)
+        if key not in played:
+            played[key] = _play_life_payments(board, player, paying, life_paid)
+        outcome = played[key]
+        life = sum(life_paid[_key(entry)][2] for entry in paying)
+        named = _named(paying, life_paid)
+        after = _twin(option, outcome.after)
+        if outcome.lethal:
+            notices.append(
+                f"{_option_label(option)}: activating {named} pays {life} life and leaves "
+                f"{player} at 0 or less life, and they lose the game (CR 704.5a), so it "
+                "is not counted"
+            )
+            result.append(option)
+        elif (
+            outcome.refusal is not None
+            or after is None
+            or after.affordable is not Affordability.YES
+        ):
+            why = outcome.refusal or "the mana it makes still does not pay for it"
+            notices.append(f"{_option_label(option)}: activating {named} is not counted ({why})")
+            result.append(option)
+        else:
+            notices.append(
+                f"{_option_label(option)}: payable by activating {named}, paying {life} life, "
+                f"which auto-tap never does for {player} (CR 118.3c) but they may (CR 605.3a)"
+            )
+            assert twin is not None  # `paying` is read off it
+            result.append(twin)
+            costs.append(life)
+    return _CardOptions(result, tuple(notices), min(costs) if costs else 0)
+
+
+def _other_extra_costs(board: "Game", player: str, life_paid: _LifePaid) -> tuple[str, ...]:
+    """Each mana ability auto-tap withholds whose extra cost is not life."""
+    counted = {(source.id, ability.raw) for source, ability, _life in life_paid.values()}
+    context = _SpendContext(game=board, payer=player, spend=None)
+    return tuple(
+        dict.fromkeys(
+            f'{source.name}\'s mana ability "{ability.cost}: {ability.effect}" costs more than '
+            "{T} and life, so it is not activated here (CR 118.3c)"
+            for source, ability in _withheld_mana_sources(context, board.battlefield)
+            if (source.id, ability.raw) not in counted
+        )
+    )
+
+
+def _options_by_card(board: "Game", player: str, card_ids: set[UUID]) -> dict[UUID, _CardOptions]:
+    """One `legal_actions` enumeration, read for every card asked about, and
+    judged again with life-paid mana abilities when an option is unaffordable
+    (see "Mana abilities that cost life" in the module docstring)."""
+    grouped = _grouped(legal_actions(board, player), card_ids)
+    answers = {card_id: _CardOptions(options) for card_id, options in grouped.items()}
+    unpaid = {
+        card_id
+        for card_id, options in grouped.items()
+        if any(option.affordable is Affordability.NO for option in options)
+    }
+    if not unpaid:
+        return answers
+    life_paid = _life_paid_sources(board, player)
+    if life_paid:
+        judged_again = _grouped(legal_actions(board, player, include_life_paid_mana=True), unpaid)
+        played: dict[tuple[Any, ...], _Played] = {}
+        for card_id in unpaid:
+            answers[card_id] = _with_life_payments(
+                board, player, grouped[card_id], judged_again[card_id], life_paid, played
+            )
+    others: tuple[str, ...] | None = None
+    for card_id in unpaid:
+        answer = answers[card_id]
+        if all(option.affordable is not Affordability.NO for option in answer.options):
+            continue
+        if others is None:
+            others = _other_extra_costs(board, player, life_paid)
+        if others:
+            answers[card_id] = answer._replace(notices=(*answer.notices, *others))
+    return answers
+
+
 def _answer(
     card_id: UUID,
-    options: list[Action],
+    judged: _CardOptions,
     assumed: EntersPrediction | None,
     notices: tuple[str, ...],
 ) -> Payability:
     return Payability(
         card_id=card_id,
-        payable=any(option.affordable is Affordability.YES for option in options),
-        options=tuple(options),
+        payable=any(option.affordable is Affordability.YES for option in judged.options),
+        options=tuple(judged.options),
         assumed_land=assumed,
-        notices=notices,
+        notices=(*notices, *judged.notices),
+        life_paid=judged.life_paid,
     )
 
 
@@ -600,7 +830,7 @@ def payability_matrix(
     library = game.player(player).library
     top_id = library[0].id if library else None
 
-    shared: dict[str, tuple[_Evaluated, dict[UUID, list[Action]]]] = {}
+    shared: dict[str, tuple[_Evaluated, dict[UUID, _CardOptions]]] = {}
     columns: list[LandPayability] = []
     for reference in lands:
         land = _land_to_enter(game, player, reference)

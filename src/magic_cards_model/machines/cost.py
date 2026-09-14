@@ -263,6 +263,39 @@ def tappable_mana_activations(
     ]
 
 
+def life_paid_mana_activations(
+    source: CardState, game: Any = None
+) -> list[tuple[int, ActivatedAbility, int]]:
+    """Every mana ability of `source` whose cost is `{T}` plus paying a fixed
+    amount of life ("{T}, Pay 1 life: Add {U} or {R}."), each with the index
+    `Game.activated_abilities` knows it by and the life it costs.
+
+    These are what `tappable_mana_activations` leaves out on CR 118.3c's
+    ground: the player may activate one (CR 605.3a), the engine may not do it
+    for them. Nothing that pays for anything on a player's behalf reads this.
+    It exists for a what-if answer about what the player could pay
+    (`mana_candidate_scan(..., include_life_paid=True)`). Any other extra
+    cost (a sacrifice, a mana payment, a discard) is not here.
+    """
+    found: list[tuple[int, ActivatedAbility, int]] = []
+    for index, ability in enumerate(_activations_of(source, game)):
+        if ability.mana is None:
+            continue
+        kinds = [piece.kind for piece in ability.costs]
+        if kinds.count(CostKind.TAP) != 1 or len(kinds) < 2:
+            continue
+        amounts = [
+            _PHRASE_PAY_LIFE.match(piece.text.strip().rstrip("."))
+            for piece in ability.costs
+            if piece.kind is not CostKind.TAP
+        ]
+        if any(amount is None for amount in amounts):
+            continue
+        life = sum(int(amount.group("amount")) for amount in amounts if amount is not None)
+        found.append((index, ability, life))
+    return found
+
+
 def _activation_refused(
     payment: "CostPayment | _SpendContext", source: CardState, index: int
 ) -> str | None:
@@ -1133,7 +1166,10 @@ _ScannedCandidate = tuple[CardState, list[list[Color]], ManaRestriction | None, 
 
 
 def _scan_mana_candidates(
-    payment: "CostPayment | _SpendContext", sources: Iterable[CardState]
+    payment: "CostPayment | _SpendContext",
+    sources: Iterable[CardState],
+    *,
+    include_life_paid: bool = False,
 ) -> list[_ScannedCandidate]:
     """The board-reading half of `_auto_tap_candidates`, with CR 106.6's
     restriction recorded but not yet judged against any particular spend.
@@ -1158,8 +1194,13 @@ def _scan_mana_candidates(
     spend disallows yields the same relative order for what remains - one
     scan, one sort, safe to filter as many times as there are spends to ask
     about.
+
+    `include_life_paid` adds `life_paid_mana_activations`' rows, sorted after
+    every free row so a plan reaches for life last. It is off everywhere the
+    engine pays on a player's behalf (CR 118.3c).
     """
     candidates: list[_ScannedCandidate] = []
+    paying_life: set[tuple[Any, int]] = set()
     trigger_sources = mana_trigger_sources(payment.game) if payment.payer is not None else []
     for source in sources:
         if source.zone is not Zone.BATTLEFIELD or source.tapped:
@@ -1169,7 +1210,12 @@ def _scan_mana_candidates(
         if not can_tap_for_mana(source, payment.game):
             continue
         land_types, own_counters, has_imprinted_card = _mana_context(payment, source)
-        for index, activation in tappable_mana_activations(source, payment.game):
+        activations = tappable_mana_activations(source, payment.game)
+        if include_life_paid:
+            life_paid = life_paid_mana_activations(source, payment.game)
+            paying_life.update((source.id, index) for index, _ability, _life in life_paid)
+            activations += [(index, activation) for index, activation, _life in life_paid]
+        for index, activation in activations:
             ability = activation.mana
             if ability is None:
                 continue
@@ -1194,7 +1240,13 @@ def _scan_mana_candidates(
     # A restricted ability first among a source's own abilities, so the mana
     # that can do less is the mana spent - the same preference `ManaPool._buckets`
     # applies inside the pool, applied here to which ability is activated.
-    candidates.sort(key=lambda item: (_flexibility(item[1], item[3]), item[2] is None))
+    candidates.sort(
+        key=lambda item: (
+            (item[0].id, item[4]) in paying_life,
+            _flexibility(item[1], item[3]),
+            item[2] is None,
+        )
+    )
     return candidates
 
 
@@ -1216,7 +1268,11 @@ def _filter_candidate_scan(
 
 
 def mana_candidate_scan(
-    sources: Iterable[CardState], *, game: Any = None, payer: str | None = None
+    sources: Iterable[CardState],
+    *,
+    game: Any = None,
+    payer: str | None = None,
+    include_life_paid: bool = False,
 ) -> list[_ScannedCandidate]:
     """The public entry point for hoisting `_scan_mana_candidates` out of a
     loop over several costs - `legal_actions` calls this exactly once per
@@ -1228,7 +1284,11 @@ def mana_candidate_scan(
     own spend purpose - `could_pay_mana_cost` applies `_filter_candidate_scan`
     with its own `spend` against the same rows.
     """
-    return _scan_mana_candidates(_SpendContext(game=game, payer=payer, spend=None), sources)
+    return _scan_mana_candidates(
+        _SpendContext(game=game, payer=payer, spend=None),
+        sources,
+        include_life_paid=include_life_paid,
+    )
 
 
 def _withheld_mana_sources(
