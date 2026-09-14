@@ -3913,7 +3913,7 @@ _ZONE_WORDS: dict[str, Zone] = {
 #: a strict subset of this one's start, so this is tried first rather than
 #: matching the exile half and silently dropping "and pay its mana cost".
 _PHRASE_EXILE_AND_PAY_MANA_COST = re.compile(
-    r"^exile (?:this card|(?P<count>\w+) (?P<quality>[\w ]*?)cards?)"
+    rf"^exile (?:this card|{count_pattern('count')} (?P<quality>[\w ]*?)cards?)"
     r"(?: from (?:your|their) (?P<zone>hand|graveyard|library|battlefield))? and pay "
     r"(?:its|their) mana cost$",
     re.IGNORECASE,
@@ -3948,7 +3948,9 @@ _PHRASE_TAP = re.compile(
 #: 6.`) - CR 701.59a's keyword action used as a cost. Nothing is named to
 #: choose: "any number of cards ... with total mana value N or greater" is a
 #: threshold, not a count, so this carries only N.
-_PHRASE_COLLECT_EVIDENCE = re.compile(r"^collect evidence (?P<amount>\d+)$", re.IGNORECASE)
+_PHRASE_COLLECT_EVIDENCE = re.compile(
+    rf"^collect evidence {count_pattern('amount', article=False)}$", re.IGNORECASE
+)
 #: `{Q}`, CR 107.6's untap symbol, which "in an activation cost means 'Untap
 #: this permanent.'" Umbral Mantle's granted `{3}, {Q}:` is the pool's
 #: printing. Read here rather than left to `ManaCost.parse` because it is not
@@ -3957,7 +3959,7 @@ _PHRASE_UNTAP_SYMBOL = re.compile(r"^\{Q\}$", re.IGNORECASE)
 #: `Mill a card` (Millikin's `{T}, Mill a card: Add {C}.`) - CR 701.17a's
 #: keyword action used as a cost. Nothing is chosen: the cards come off the top
 #: of the payer's own library, so this carries a count and no requirement.
-_PHRASE_MILL = re.compile(r"^mill (?P<count>\w+) cards?$", re.IGNORECASE)
+_PHRASE_MILL = re.compile(rf"^mill {count_pattern('count')} cards?$", re.IGNORECASE)
 #: `Waterbend {3}` (Flexible Waterbender) - CR 701.67a: "'Waterbend [cost]'
 #: means 'Pay [cost]. For each generic mana in that cost, you may tap an
 #: untapped artifact or creature you control rather than pay that mana.'" The
@@ -3996,7 +3998,7 @@ _PHRASE_EXERT_SELF = re.compile(
 #: caller fails closed (see `cost_component_for_phrase`'s docstring).
 _COUNTER_SELF_SUBJECT = r"this (?:creature|permanent|artifact|enchantment|planeswalker|land)"
 _PHRASE_PLACE_COUNTERS = re.compile(
-    rf"^put (?P<count>\w+) (?P<kind>[\w+/−-]+) counters? on {_COUNTER_SELF_SUBJECT}$",
+    rf"^put {count_pattern('count')} (?P<kind>[\w+/−-]+) counters? on {_COUNTER_SELF_SUBJECT}$",
     re.IGNORECASE,
 )
 _PHRASE_REMOVE_COUNTERS = re.compile(
@@ -4184,7 +4186,10 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
 
     evidence = _PHRASE_COLLECT_EVIDENCE.match(text)
     if evidence is not None:
-        return collect_evidence_cost(int(evidence.group("amount")), payer, description=text)
+        amount = parse_count(evidence.group("amount"), article=False)
+        if amount is None:
+            return None
+        return collect_evidence_cost(amount, payer, description=text)
 
     if _PHRASE_UNTAP_SYMBOL.match(text):
         # CR 107.6's "Untap this permanent": the permanent is the one whose
