@@ -32,6 +32,17 @@ CR 608.2d - `default_answer`'s own policy), and once with each one declined. A
 land that is untapped only in the first run is `untapped_if_paid`, and the
 declined questions' prompts are its `optional_costs`.
 
+**Triggers.** Entering can trigger abilities (CR 603.2): Amulet of Vigor
+untapping the land, a landfall ability adding mana. In a real game they go on
+the stack before anyone next gets priority (CR 603.3), so before a sorcery-speed
+spell could be cast. The copy puts them on the stack and resolves them through
+the engine, one at a time, as long as neither step asks anybody a question.
+A trigger that asks one - a color, a target, a surveil - is not answered by a
+guess: the copy is rebuilt with that trigger left out, and the answer names it
+in a notice. `predict_enters` still reports how the land *enters*, because the
+trigger resolves after it is on the battlefield, and adds a notice when a
+resolved trigger would untap or otherwise change it.
+
 **What "assuming" does not check.** It does not ask whether the land could be
 played this turn (CR 305.2's land drop) or how it would get from the library to
 the battlefield (a fetch land's search) - the caller composes those. A land in
@@ -40,8 +51,9 @@ that is a modal double-faced card with a land back is played with that face up
 (CR 712.12), mirroring `Game.play_land`.
 """
 
+from collections.abc import Callable
 from enum import StrEnum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, NamedTuple
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
@@ -79,7 +91,8 @@ class EntersPrediction(BaseModel):
     #: The prompts of the optional payments whose refusal taps it ("pay 2
     #: life"), empty unless `state` is `UNTAPPED_IF_PAID`.
     optional_costs: tuple[str, ...] = ()
-    #: Why the answer failed closed, one entry per unread enters-tapped line.
+    #: Why the answer failed closed (an unread enters-tapped line), and what a
+    #: trigger resolving after it enters would change about it (CR 603.3).
     notices: tuple[str, ...] = ()
 
 
@@ -99,6 +112,9 @@ class Payability(BaseModel):
     options: tuple[Action, ...]
     #: How `assuming_land` was taken to enter, when one was given.
     assumed_land: EntersPrediction | None = None
+    #: Each triggered ability the answer left unresolved because resolving it
+    #: needed somebody's choice, named rather than guessed.
+    notices: tuple[str, ...] = ()
 
 
 #: The yes-or-no payments an entering permanent can offer (CR 608.2d). Declining
@@ -109,6 +125,34 @@ _OPTIONAL_PAYMENTS = (
     DecisionKind.PAY_ENERGY,
     DecisionKind.PAY_MANA,
 )
+
+#: Asked while simultaneous triggers are put on the stack (CR 603.3b). The
+#: copy resolves only triggers that need no choice, and what each of those
+#: does does not depend on the order it resolves in, so this is not a guess.
+_NOT_A_TRIGGER_CHOICE = frozenset({DecisionKind.ORDER_TRIGGERS})
+
+#: Bounds on settling triggers: rebuilds of the copy (one per trigger found to
+#: need a choice), and resolutions per rebuild. A board past either bound is
+#: answered without its triggers, with a notice.
+_MAX_SETTLE_PASSES = 16
+_MAX_RESOLUTIONS = 64
+
+#: What `_enter_on_a_copy` returns: the copy, the entered land (or None for the
+#: board as it is), and every question asked while it entered.
+_Built = tuple["Game", CardState | None, list[Decision]]
+
+
+class _Settled(NamedTuple):
+    board: "Game"
+    entered: CardState | None
+    #: Questions asked while the land entered, before any trigger resolved.
+    asked: list[Decision]
+    #: The entered land's (zone, tapped, controller, counters) as it entered.
+    entry: tuple[Any, ...] | None
+    #: Source names of the triggers that resolved, in order.
+    resolved: tuple[str, ...]
+    #: One per trigger left unresolved.
+    notices: tuple[str, ...]
 
 
 def _card(game: "Game", card: CardState | UUID) -> CardState:
@@ -140,7 +184,7 @@ def _decoded_copy(game: "Game") -> "Game":
 
 def _enter_on_a_copy(
     game: "Game", player: str, land_id: UUID, *, decline_optional_payments: bool
-) -> tuple["Game", CardState, list[Decision]]:
+) -> _Built:
     copy = _decoded_copy(game)
     if decline_optional_payments:
         for kind in _OPTIONAL_PAYMENTS:
@@ -171,6 +215,135 @@ def _unread_notices(game: "Game", player: str, land_id: UUID) -> tuple[str, ...]
     )
 
 
+# --------------------------------------------------------------------------
+# Triggers (CR 603.2, 603.3)
+# --------------------------------------------------------------------------
+
+
+def _observed(card: CardState | None) -> tuple[Any, ...] | None:
+    if card is None:
+        return None
+    return (card.zone, card.tapped, card.controller, dict(card.counters))
+
+
+def _name_of(stack_object: Any) -> str:
+    return str(getattr(stack_object, "source_name", None) or getattr(stack_object, "name", "?"))
+
+
+def _choices(asked: list[Decision]) -> list[Decision]:
+    """The questions in `asked` that are somebody's real choice: not trigger
+    ordering, and not a question whose only legal answer is no."""
+    return [
+        decision
+        for decision in asked
+        if decision.kind not in _NOT_A_TRIGGER_CHOICE and decision.affirmative_is_legal
+    ]
+
+
+def _left_unresolved(name: str, asked: list[Decision]) -> str:
+    prompts = "; ".join(dict.fromkeys(decision.prompt for decision in asked))
+    return (
+        f"{name}'s triggered ability needs a choice ({prompts}), so it is left "
+        "unresolved rather than guessed (CR 603.3)"
+    )
+
+
+def _resolve_choice_free(
+    board: "Game", skipped: dict[UUID, str]
+) -> tuple[UUID, str] | tuple[list[str], bool]:
+    """Put `board`'s pending triggers on the stack and resolve them, one at a
+    time, leaving out every id in `skipped`.
+
+    Returns `(id, notice)` for the first trigger that asks a real question -
+    the board is then half-settled and must be rebuilt - or `(resolved source
+    names, finished)`, `finished` False when `_MAX_RESOLUTIONS` ran out.
+    Objects already on the stack before this was called are never resolved.
+    """
+    base = len(board.stack)
+    resolved: list[str] = []
+    for _ in range(_MAX_RESOLUTIONS):
+        board.check_state_based_actions()  # CR 704.3, before triggers go on
+        if board.is_over:
+            return resolved, True
+        waiting = [trigger for trigger in board.pending_triggers if trigger.id not in skipped]
+        if waiting:
+            first, rest = waiting[0], waiting[1:]
+            board.pending_triggers = [first]
+            mark = len(board.decisions.asked)
+            board.put_triggers_on_stack()
+            board.pending_triggers = rest + board.pending_triggers
+            asked = _choices(board.decisions.asked[mark:])
+            if asked:
+                return first.id, _left_unresolved(_name_of(first), asked)
+            continue
+        board.pending_triggers = []
+        if len(board.stack) <= base:
+            return resolved, True
+        top = board.stack[-1]
+        mark = len(board.decisions.asked)
+        board.resolve_top()
+        asked = _choices(board.decisions.asked[mark:])
+        if asked:
+            return top.id, _left_unresolved(_name_of(top), asked)
+        resolved.append(_name_of(top))
+    return resolved, False
+
+
+def _settle(rebuild: Callable[[], _Built]) -> _Settled:
+    """A board built by `rebuild` with every choice-free trigger resolved and
+    every other one left out and named. See the module docstring."""
+    skipped: dict[UUID, str] = {}
+    for _ in range(_MAX_SETTLE_PASSES):
+        board, entered, asked = rebuild()
+        entry = _observed(entered)
+        outcome = _resolve_choice_free(board, skipped)
+        if isinstance(outcome[0], UUID):
+            blocker, notice = outcome
+            skipped[blocker] = str(notice)
+            continue
+        resolved, finished = outcome
+        notices = list(skipped.values())
+        if not finished:
+            notices.append(
+                f"triggered abilities were still resolving after {_MAX_RESOLUTIONS}, so "
+                "the answer stops there (CR 603.3)"
+            )
+        return _Settled(board, entered, asked, entry, tuple(resolved), tuple(notices))
+    board, entered, asked = rebuild()
+    board.pending_triggers = []
+    notices = (
+        *skipped.values(),
+        f"triggered abilities still needed choices after {_MAX_SETTLE_PASSES} attempts, "
+        "so none of them is counted (CR 603.3)",
+    )
+    return _Settled(board, entered, asked, _observed(entered), (), notices)
+
+
+def _change_notice(land_name: str, settled: _Settled) -> str | None:
+    """What resolving triggers did to the entered land, if anything."""
+    if settled.entered is None or settled.entry is None or not settled.resolved:
+        return None
+    now = _observed(settled.board.find_by_id(settled.entered.id))
+    if now == settled.entry:
+        return None
+    sources = ", ".join(dict.fromkeys(settled.resolved))
+    entered_tapped = settled.entry[1]
+    if now is not None and now[0] == settled.entry[0] and entered_tapped and not now[1]:
+        what = "untap it"
+    else:
+        what = "change it"
+    state = "tapped" if entered_tapped else "untapped"
+    return (
+        f"{land_name} enters {state}; once it is on the battlefield a triggered "
+        f"ability ({sources}) would {what} (CR 603.3)"
+    )
+
+
+# --------------------------------------------------------------------------
+# Public entry points
+# --------------------------------------------------------------------------
+
+
 def predict_enters(game: "Game", player: str, land: CardState | UUID) -> EntersPrediction:
     """How `land`, in `player`'s hand or library, would enter the battlefield
     under `player`'s control right now. Mutates nothing. See the module
@@ -186,19 +359,27 @@ def predict_enters(game: "Game", player: str, land: CardState | UUID) -> EntersP
     if notices:
         return EntersPrediction(**base, state=EntersState.TAPPED, notices=notices)
 
-    _, paying, _ = _enter_on_a_copy(game, player, found.id, decline_optional_payments=False)
-    if paying.tapped:
-        return EntersPrediction(**base, state=EntersState.TAPPED)
+    paying = _settle(
+        lambda: _enter_on_a_copy(game, player, found.id, decline_optional_payments=False)
+    )
+    change = _change_notice(found.name, paying)
+    triggered = (change,) if change is not None else ()
+    assert paying.entry is not None
+    if paying.entry[1]:
+        return EntersPrediction(**base, state=EntersState.TAPPED, notices=triggered)
 
     _, declining, asked = _enter_on_a_copy(game, player, found.id, decline_optional_payments=True)
+    assert declining is not None
     if not declining.tapped:
-        return EntersPrediction(**base, state=EntersState.UNTAPPED)
+        return EntersPrediction(**base, state=EntersState.UNTAPPED, notices=triggered)
     costs = tuple(
         decision.prompt
         for decision in asked
         if decision.kind in _OPTIONAL_PAYMENTS and decision.player == player
     )
-    return EntersPrediction(**base, state=EntersState.UNTAPPED_IF_PAID, optional_costs=costs)
+    return EntersPrediction(
+        **base, state=EntersState.UNTAPPED_IF_PAID, optional_costs=costs, notices=triggered
+    )
 
 
 def payability(
@@ -210,13 +391,14 @@ def payability(
 ) -> Payability:
     """Whether `player` could pay for `card` right now, or with
     `assuming_land` (a land in their hand or library) on the battlefield as
-    `predict_enters` says it would enter, its optional cost paid when legal.
-    Mutates nothing. See the module docstring.
+    `predict_enters` says it would enter, its optional cost paid when legal and
+    its choice-free triggers resolved. Mutates nothing. See the module
+    docstring.
     """
     target = _card(game, card)
     assumed: EntersPrediction | None = None
     if assuming_land is None:
-        board: Any = _decoded_copy(game)
+        settled = _settle(lambda: (_decoded_copy(game), None, []))
     else:
         land = _land_to_enter(game, player, assuming_land)
         if land.id == target.id:
@@ -224,13 +406,21 @@ def payability(
                 f"{land.name} cannot be both the card asked about and the land assumed"
             )
         assumed = predict_enters(game, player, land)
-        board, entered, _ = _enter_on_a_copy(game, player, land.id, decline_optional_payments=False)
-        if assumed.state is EntersState.TAPPED:
-            # Fail closed on an unread line too: the prediction said tapped.
-            entered.tapped = True
+        fail_closed_tapped = assumed.state is EntersState.TAPPED
+
+        def rebuild() -> _Built:
+            board, entered, asked = _enter_on_a_copy(
+                game, player, land.id, decline_optional_payments=False
+            )
+            if fail_closed_tapped and entered is not None:
+                # Fail closed on an unread line too: the prediction said tapped.
+                entered.tapped = True
+            return board, entered, asked
+
+        settled = _settle(rebuild)
     options = tuple(
         action
-        for action in legal_actions(board, player)
+        for action in legal_actions(settled.board, player)
         if action.card_id == target.id and action.kind is not ActionKind.PLAY_LAND
     )
     return Payability(
@@ -238,6 +428,7 @@ def payability(
         payable=any(option.affordable is Affordability.YES for option in options),
         options=options,
         assumed_land=assumed,
+        notices=settled.notices,
     )
 
 
