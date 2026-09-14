@@ -93,12 +93,12 @@ def test_a_nonblue_card_does_not_count():
 
 
 def test_the_same_template_on_an_off_pool_card():
-    """Misdirection prints the pitch without Force of Will's life payment."""
-    alone = _board(["Misdirection"])
-    with_blue = _board(["Misdirection", "Preordain"])
+    """Snapback prints the pitch without Force of Will's life payment."""
+    alone = _board(["Snapback"])
+    with_blue = _board(["Snapback", "Preordain"])
 
-    assert _alternative_row(alone, "Misdirection").affordable is Affordability.NO
-    assert _alternative_row(with_blue, "Misdirection").affordable is Affordability.YES
+    assert _alternative_row(alone, "Snapback").affordable is Affordability.NO
+    assert _alternative_row(with_blue, "Snapback").affordable is Affordability.YES
 
 
 def test_a_count_of_two_needs_two_other_cards():
