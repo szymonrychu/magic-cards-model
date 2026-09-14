@@ -456,3 +456,117 @@ def test_fallaji_is_never_asked_when_every_milled_card_is_a_creature_or_a_land()
     ] == []
     assert archaeologist.counters["+1/+1"] == 1
     assert scenario.player("alice").hand == []
+
+
+# -- "If you don't, put a card from among them into your hand" --------------
+#
+# Planar Genesis: "Look at the top four cards of your library. You may put a
+# land card from among them onto the battlefield tapped. If you don't, put a
+# card from among them into your hand. Put the rest on the bottom of your
+# library in a random order."
+#
+# The decline branch is a second take from the same looked-at cards, and it is
+# not optional: "put a card" has no "you may". "If you don't" covers declining
+# the may and having no land to take at all (CR 608.2d only offers a choice
+# that exists). A land put this way is not a land played (CR 305.4). Planar
+# Genesis is the only printing of this sentence on Scryfall (`o:"If you don't,
+# put a card from among them into your hand"`), so the decline tail is read as
+# a kind and a destination, like the may before it, rather than as one card.
+
+
+def _genesis_board(library: list[str]) -> Scenario:
+    return (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Planar Genesis"],
+            battlefield=["Forest", "Island"],
+            library=library,
+        )
+        .player("bob")
+    )
+
+
+def _cast_genesis(scenario) -> None:
+    scenario.cast_and_resolve("Planar Genesis", *scenario.untapped_sources("Forest", "Island"))
+    resolve_all(scenario)
+
+
+_GENESIS_LIBRARY = ["Lightning Bolt", "Swamp", "Counterspell", "Grizzly Bears", "Island"]
+
+
+def test_planar_genesis_puts_a_land_onto_the_battlefield_tapped_and_the_rest_on_the_bottom():
+    scenario = _genesis_board(_GENESIS_LIBRARY).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice = scenario.player("alice")
+    bolt, swamp, counterspell, bears = scenario.top_of_library(4, "alice")
+    scenario.will_take_the_may(True, source="Planar Genesis")
+    scenario.will_choose_cards(swamp, source="Planar Genesis")
+
+    _cast_genesis(scenario)
+
+    assert swamp.zone is Zone.BATTLEFIELD
+    assert swamp.tapped
+    assert scenario.game.lands_played.get("alice", 0) == 0, "CR 305.4: put, not played"
+    assert alice.hand == []
+    assert alice.library[0].name == "Island", "the fifth card was never looked at"
+    assert sorted(state.name for state in alice.library[1:]) == [
+        "Counterspell",
+        "Grizzly Bears",
+        "Lightning Bolt",
+    ]
+    assert DecisionKind.CHOOSE_CARDS not in [
+        q.kind
+        for q in scenario.questions_asked()
+        if q.source == "Planar Genesis" and q.prompt.startswith("order")
+    ], "a random order is nobody's arrangement"
+    scenario.assert_in_exactly_one_zone(bolt, swamp, counterspell, bears)
+
+
+def test_declining_the_land_puts_a_chosen_card_into_hand_instead():
+    scenario = _genesis_board(_GENESIS_LIBRARY).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice = scenario.player("alice")
+    bolt, swamp, counterspell, bears = scenario.top_of_library(4, "alice")
+    scenario.will_take_the_may(False, source="Planar Genesis")
+    scenario.will_choose_cards(counterspell, source="Planar Genesis")
+
+    _cast_genesis(scenario)
+
+    assert counterspell.zone is Zone.HAND
+    assert swamp.zone is Zone.LIBRARY, "the declined land goes to the bottom with the rest"
+    assert alice.library[0].name == "Island"
+    assert sorted(state.name for state in alice.library[1:]) == [
+        "Grizzly Bears",
+        "Lightning Bolt",
+        "Swamp",
+    ]
+    hand_question = [
+        q
+        for q in scenario.questions_asked()
+        if q.source == "Planar Genesis" and q.kind is DecisionKind.CHOOSE_CARDS
+    ][-1]
+    assert set(hand_question.cards) == {bolt.id, swamp.id, counterspell.id, bears.id}
+    assert hand_question.amount == 1
+    scenario.assert_in_exactly_one_zone(bolt, swamp, counterspell, bears)
+
+
+def test_with_no_land_among_them_the_may_is_never_asked_and_a_card_still_goes_to_hand():
+    scenario = _genesis_board(
+        ["Lightning Bolt", "Counterspell", "Grizzly Bears", "Lightning Bolt", "Island"]
+    ).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice = scenario.player("alice")
+    looked = scenario.top_of_library(4, "alice")
+    scenario.will_choose_cards(looked[2], source="Planar Genesis")
+
+    _cast_genesis(scenario)
+
+    assert [
+        q
+        for q in scenario.questions_asked()
+        if q.source == "Planar Genesis" and q.kind is DecisionKind.MAY
+    ] == []
+    assert looked[2].zone is Zone.HAND
+    assert len(alice.library) == 4
+    scenario.assert_in_exactly_one_zone(*looked)
