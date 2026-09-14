@@ -76,6 +76,7 @@ from ..machines.cost import (
     additional_cost_phrases,
     alternative_cost_offers,
     among_colors,
+    announce_count,
     announce_reveal,
     cost_announces_x,
     cost_component_for_phrase,
@@ -13272,6 +13273,7 @@ class Game(EngineModel):
         pool: list[CardState],
         controller: str,
         builder: Callable[..., CostComponent],
+        x_value: int = 0,
     ) -> CostComponent:
         """One `[Sacrifice|Discard]` cost piece, self-reference and quality
         requirement both handled (CR 602.1a, CR 118.3).
@@ -13301,6 +13303,9 @@ class Game(EngineModel):
                 chosen = []
             return builder(*chosen, payer=controller, required=1, description=text)
 
+        # "Sacrifice X Goats" / "Sacrifice one or more artifacts": the count is
+        # the announced X or every nominated object (CR 107.3a).
+        component = announce_count(component, x_value, len(pool))
         chosen = []
         while pool and len(chosen) < component.required:
             chosen.append(pool.pop(0))
@@ -13361,20 +13366,22 @@ class Game(EngineModel):
                 components.append(untap_cost(permanent, payer=controller, description=piece.text))
             elif piece.kind is CostKind.SACRIFICE:
                 components.append(
-                    self._choice_cost(piece.text, permanent, sacrifices, controller, sacrifice_cost)
+                    self._choice_cost(
+                        piece.text, permanent, sacrifices, controller, sacrifice_cost, x_value
+                    )
                 )
             elif piece.kind is CostKind.DISCARD:
                 components.append(
-                    self._choice_cost(piece.text, permanent, discards, controller, discard_cost)
+                    self._choice_cost(
+                        piece.text, permanent, discards, controller, discard_cost, x_value
+                    )
                 )
             elif piece.kind is CostKind.PAY_LIFE:
                 life = cost_component_for_phrase(piece.text, payer=controller)
                 if life is None:
                     raise ValueError(f"cannot build a cost for {piece.text!r}")
-                if life.variable_count:
-                    # CR 107.3a: "Pay X life" pays the X announced now.
-                    life = life.model_copy(update={"amount": x_value})
-                components.append(life)
+                # CR 107.3a: "Pay X life" pays the X announced now.
+                components.append(announce_count(life, x_value, 0))
             elif piece.kind is CostKind.LOYALTY:
                 # CR 606.4: the loyalty symbol is the whole cost, and the
                 # counter change it asks for is the cost itself.
@@ -13450,6 +13457,9 @@ class Game(EngineModel):
                         continue
                 if component is None:
                     raise ValueError(f"cannot build a cost for {piece.text!r}")
+                # "Exile X cards", "Remove X counters", "Exile one or more ...":
+                # the count announced now (CR 107.3a), or every card nominated.
+                component = announce_count(component, x_value, len(exiles))
                 if not component.cards and (
                     _cost_refers_to_self(piece.text, permanent)
                     or _exiles_itself_by_name(piece.text, permanent)

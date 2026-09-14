@@ -67,7 +67,14 @@ from ..models.mana import (
     _demand_list,
 )
 from ..models.zone import Zone
-from ..numbers import VariableX, count_pattern, parse_amount, parse_count
+from ..numbers import (
+    QuantitySource,
+    VariableX,
+    count_pattern,
+    parse_amount,
+    parse_count,
+    parse_quantity,
+)
 from ..snapshot import EngineModel, announce_mutation, mutation_landed
 from .abilities import (
     ActivatedAbility,
@@ -2324,11 +2331,14 @@ class CostComponent(EngineModel):
     """
 
     variable_count: bool = False
-    """The printed count is CR 107.3a's X, so the number is whatever the payer
-    announced rather than one the text fixes. For `ComponentKind.REVEAL`
-    ("Reveal X white cards from your hand") that is `required`, the number of
-    cards they chose to reveal; for `ComponentKind.PAY_LIFE` ("Pay X life")
-    it is `amount`."""
+    """The printed count is CR 107.3a's X or "one or more", so the number is
+    whatever the payer announced or chose rather than one the text fixes. For
+    `ComponentKind.REVEAL` ("Reveal X white cards from your hand") that is
+    `required`, the number of cards they chose to reveal; for
+    `ComponentKind.PAY_LIFE` ("Pay X life") and `REMOVE_COUNTERS` ("Remove X
+    +1/+1 counters") it is `amount`; for the other object kinds it is
+    `required`, which the reader leaves at the fewest that pays - 0 for X, 1
+    for "one or more" - until `announce_count` fixes it."""
 
     source: str | None = None
     """The card whose cost this is, by name - the `Reveal.source` a paid
@@ -3149,6 +3159,24 @@ def announce_reveal(
     return component.model_copy(update={"cards": cards, "required": required, "source": source})
 
 
+def announce_count(component: CostComponent, x_value: int, nominated: int) -> CostComponent:
+    """A variable-count component with its number fixed as the cost is paid.
+
+    CR 107.3a: an X in the cost is the `x_value` announced - life paid,
+    counters removed, or objects chosen. "One or more" is every one of the
+    `nominated` objects, and never fewer than one (CR 118.3 then refuses a
+    choice of none). A fixed count, and a reveal (`announce_reveal`), come
+    back unchanged.
+    """
+    if not component.variable_count or component.kind is ComponentKind.REVEAL:
+        return component
+    if component.kind in {ComponentKind.PAY_LIFE, ComponentKind.REMOVE_COUNTERS}:
+        return component.model_copy(update={"amount": x_value})
+    if component.required:
+        return component.model_copy(update={"required": max(component.required, nominated)})
+    return component.model_copy(update={"required": x_value})
+
+
 def cost_announces_x(cost_text: str) -> bool:
     """Whether a printed cost has an X in it (CR 107.3a: "a mana cost,
     alternative cost, additional cost, and/or activation cost with an {X},
@@ -3840,6 +3868,10 @@ _COLOR_WORDS = {
 #: "Pay 2 life" and CR 107.3a's "Pay X life" (Krumar Initiate), whose amount is
 #: the X announced as the cost is paid.
 _PHRASE_PAY_LIFE = re.compile(rf"^pay {count_pattern('amount', x=True)} life$", re.IGNORECASE)
+#: The count of an object cost: a number, CR 107.3a's X ("Exile X cards from
+#: your graveyard", Necropolis Fiend), or "one or more" ("Sacrifice one or
+#: more artifacts", Radiant Lotus). Read back with `_cost_count`.
+_COST_COUNT = rf"(?P<count>one or more|{count_pattern(x=True)})"
 #: `Exile a black card from your hand` (Force of Will) and the self-referential
 #: `Exile this card from your graveyard` (Seasoned Pyromancer). CR 406.2 never
 #: restricts exiling to the hand, so the zone is read off the sentence rather
@@ -3851,7 +3883,7 @@ _PHRASE_PAY_LIFE = re.compile(rf"^pay {count_pattern('amount', x=True)} life$", 
 #: here and shared by every phrase that can carry it.
 _MANA_VALUE_TAIL = r"(?: with mana value (?P<mana_value>\d+))?"
 _PHRASE_EXILE = re.compile(
-    r"^exile (?:this card|(?P<count>\w+) (?P<quality>[\w ]*?)cards?)"
+    rf"^exile (?:this card|{_COST_COUNT} (?P<quality>[\w ]*?)cards?)"
     + _MANA_VALUE_TAIL
     + r"(?: from (?:your|their) (?P<zone>hand|graveyard|library|battlefield))?$",
     re.IGNORECASE,
@@ -3886,14 +3918,14 @@ _PHRASE_EXILE_AND_PAY_MANA_COST = re.compile(
 #: "Sacrifice an artifact, creature, or land" (Greater Gargadon) - matches as
 #: one phrase rather than being split by `_split_cost_phrase`'s own comma cut;
 #: `_requirement` is what turns the list into a `CardRequirement` disjunction.
-_PHRASE_SACRIFICE = re.compile(r"^sacrifice (?P<count>\w+) (?P<quality>[\w ,]+)$", re.IGNORECASE)
+_PHRASE_SACRIFICE = re.compile(rf"^sacrifice {_COST_COUNT} (?P<quality>[\w ,]+)$", re.IGNORECASE)
 #: `Discard a card`, `Discard a legendary card with the same name as a
 #: legendary permanent you control` (Key to the Side-Door). The same-name tail
 #: is a second demand on the *same* card - CR 201.2a's "at least one name in
 #: common" against something the payer controls - not a second card to choose,
 #: so it becomes a nested `CardRequirement` rather than another component.
 _PHRASE_DISCARD = re.compile(
-    r"^discard (?P<count>\w+) (?P<quality>[\w ]*?)cards?"
+    rf"^discard {_COST_COUNT} (?P<quality>[\w ]*?)cards?"
     r"(?: with the same name as (?:a|an) (?P<same_name>[\w ]+?) you control)?$",
     re.IGNORECASE,
 )
@@ -3906,7 +3938,7 @@ _PHRASE_DISCARD = re.compile(
 #: tapped again to pay the cost" is true whether or not the sentence says so -
 #: `CostComponent._why_not_tap` enforces it either way.
 _PHRASE_TAP = re.compile(
-    r"^tap (?P<count>\w+) (?:untapped )?(?P<quality>[\w ,]+?) you control$", re.IGNORECASE
+    rf"^tap {_COST_COUNT} (?:untapped )?(?P<quality>[\w ,]+?) you control$", re.IGNORECASE
 )
 #: `Collect evidence 6` (Detective's Phoenix's `Bestow-{R}, Collect evidence
 #: 6.`) - CR 701.59a's keyword action used as a cost. Nothing is named to
@@ -3964,9 +3996,29 @@ _PHRASE_PLACE_COUNTERS = re.compile(
     re.IGNORECASE,
 )
 _PHRASE_REMOVE_COUNTERS = re.compile(
-    rf"^remove (?P<count>\w+) (?P<kind>[\w+/−-]+) counters? from {_COUNTER_SELF_SUBJECT}$",
+    rf"^remove {_COST_COUNT} (?P<kind>[\w+/−-]+) counters? from {_COUNTER_SELF_SUBJECT}$",
     re.IGNORECASE,
 )
+
+
+def _cost_count(word: str) -> tuple[int, bool] | None:
+    """An object cost's count as (the fewest that pays it, whether the payer
+    decides the number), or None when `word` is not a count.
+
+    A printed number is exact. CR 107.3a's X is announced as the cost is paid
+    and may be 0. "One or more" is every object the payer chooses, at least
+    one. The chosen number is filled in by `announce_count`.
+    """
+    quantity = parse_quantity(word)
+    if quantity is None:
+        return None
+    if quantity.source is QuantitySource.X:
+        return 0, True
+    if quantity.source is QuantitySource.ONE_OR_MORE:
+        return 1, True
+    if quantity.source is QuantitySource.FIXED and quantity.amount is not None:
+        return quantity.amount, False
+    return None
 
 
 def _counter_kind_word(word: str) -> str:
@@ -4145,11 +4197,17 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
 
     remove_counters = _PHRASE_REMOVE_COUNTERS.match(text)
     if remove_counters is not None:
-        count = parse_count(remove_counters.group("count"))
-        if count is None:
+        read = _cost_count(remove_counters.group("count"))
+        if read is None or (read[1] and read[0]):
+            # "Remove one or more counters" has no announced number to remove.
             return None
+        count, variable = read
         kind = _counter_kind_word(remove_counters.group("kind"))
-        return remove_counters_cost(None, count, counter_kind=kind, payer=payer, description=text)
+        component = remove_counters_cost(
+            None, count, counter_kind=kind, payer=payer, description=text
+        )
+        component.variable_count = variable
+        return component
 
     reveal = _PHRASE_REVEAL.match(text)
     if reveal is not None:
@@ -4185,50 +4243,54 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
             # reference, so there is nothing to choose - only the caller
             # knows which permanent this is, same as `_PHRASE_EXERT_SELF`.
             return exile_cost(payer=payer, required=1, description=text, zone=zone)
-        count = parse_count(exile.group("count"))
+        read = _cost_count(exile.group("count"))
         requirement = _requirement(exile.group("quality"))
-        if count is None or requirement is None:
+        if read is None or requirement is None:
             return None
         if exile.group("mana_value") is not None:
             requirement.mana_value = int(exile.group("mana_value"))
-        component = exile_cost(payer=payer, required=count, description=text, zone=zone)
+        component = exile_cost(payer=payer, required=read[0], description=text, zone=zone)
         component.requirement = requirement
+        component.variable_count = read[1]
         return component
 
     discard = _PHRASE_DISCARD.match(text)
     if discard is not None:
-        count = parse_count(discard.group("count"))
+        read = _cost_count(discard.group("count"))
         requirement = _requirement(discard.group("quality"))
-        if count is None or requirement is None:
+        if read is None or requirement is None:
             return None
         if discard.group("same_name") is not None:
             same_name = _controlled_requirement(discard.group("same_name"))
             if same_name is None:
                 return None
             requirement.same_name_as = same_name
-        component = discard_cost(payer=payer, required=count, description=text)
+        component = discard_cost(payer=payer, required=read[0], description=text)
         component.requirement = requirement
+        component.variable_count = read[1]
         return component
 
     sacrifice = _PHRASE_SACRIFICE.match(text)
     if sacrifice is not None:
-        count = parse_count(sacrifice.group("count"))
+        read = _cost_count(sacrifice.group("count"))
         requirement = _requirement(sacrifice.group("quality"))
-        if count is None or requirement is None:
+        if read is None or requirement is None:
             return None
-        component = sacrifice_cost(payer=payer, required=count, description=text)
+        component = sacrifice_cost(payer=payer, required=read[0], description=text)
         component.requirement = requirement
+        component.variable_count = read[1]
         return component
 
     tap = _PHRASE_TAP.match(text)
     if tap is not None:
-        count = parse_count(tap.group("count"))
+        read = _cost_count(tap.group("count"))
         requirement = _requirement(tap.group("quality"))
-        if count is None or requirement is None:
+        if read is None or requirement is None:
             return None
         component = tap_cost(payer=payer, description=text)
-        component.required = count
+        component.required = read[0]
         component.requirement = requirement
+        component.variable_count = read[1]
         return component
 
     return None
