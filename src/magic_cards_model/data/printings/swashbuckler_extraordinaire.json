@@ -1,0 +1,163 @@
+{
+  "object": "card",
+  "id": "b06604f3-c70c-44d6-b1b9-e915552084e0",
+  "oracle_id": "66f0f43c-829d-44d6-adda-d8885bfbfbaf",
+  "multiverse_ids": [
+    563081
+  ],
+  "mtgo_id": 100420,
+  "tcgplayer_id": 273107,
+  "cardmarket_id": 660739,
+  "name": "Swashbuckler Extraordinaire",
+  "lang": "en",
+  "released_at": "2022-06-10",
+  "uri": "https://api.scryfall.com/cards/b06604f3-c70c-44d6-b1b9-e915552084e0",
+  "scryfall_uri": "https://scryfall.com/card/clb/198/swashbuckler-extraordinaire?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:05:31Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/b/0/b06604f3-c70c-44d6-b1b9-e915552084e0.jpg?1783922731",
+    "normal": "https://cards.scryfall.io/normal/front/b/0/b06604f3-c70c-44d6-b1b9-e915552084e0.jpg?1783922731",
+    "large": "https://cards.scryfall.io/large/front/b/0/b06604f3-c70c-44d6-b1b9-e915552084e0.jpg?1783922731",
+    "png": "https://cards.scryfall.io/png/front/b/0/b06604f3-c70c-44d6-b1b9-e915552084e0.png?1783922731",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/b/0/b06604f3-c70c-44d6-b1b9-e915552084e0.jpg?1783922731",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/b/0/b06604f3-c70c-44d6-b1b9-e915552084e0.jpg?1783922731",
+    "thumb": "https://cards.scryfall.io/thumb/front/b/0/b06604f3-c70c-44d6-b1b9-e915552084e0.webp?1783922731",
+    "grid": "https://cards.scryfall.io/grid/front/b/0/b06604f3-c70c-44d6-b1b9-e915552084e0.webp?1783922731",
+    "display": "https://cards.scryfall.io/display/front/b/0/b06604f3-c70c-44d6-b1b9-e915552084e0.webp?1783922731",
+    "art": "https://cards.scryfall.io/art/front/b/0/b06604f3-c70c-44d6-b1b9-e915552084e0.webp?1783922731",
+    "crop": "https://cards.scryfall.io/crop/front/b/0/b06604f3-c70c-44d6-b1b9-e915552084e0.webp?1783922731"
+  },
+  "mana_cost": "{2}{R}",
+  "cmc": 3.0,
+  "type_line": "Creature \u2014 Dragon Rogue Warrior",
+  "oracle_text": "When this creature enters, create a Treasure token. (It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")\nWhenever you attack, you may sacrifice one or more Treasures. When you do, up to that many target creatures gain double strike until end of turn.",
+  "power": "2",
+  "toughness": "2",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Treasure"
+  ],
+  "produced_mana": [
+    "B",
+    "G",
+    "R",
+    "U",
+    "W"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "770b988d-4f31-4746-8c23-4ed8d9a6b393",
+      "component": "token",
+      "name": "Treasure",
+      "type_line": "Token Artifact \u2014 Treasure",
+      "uri": "https://api.scryfall.com/cards/770b988d-4f31-4746-8c23-4ed8d9a6b393"
+    },
+    {
+      "object": "related_card",
+      "id": "b06604f3-c70c-44d6-b1b9-e915552084e0",
+      "component": "combo_piece",
+      "name": "Swashbuckler Extraordinaire",
+      "type_line": "Creature \u2014 Dragon Rogue Warrior",
+      "uri": "https://api.scryfall.com/cards/b06604f3-c70c-44d6-b1b9-e915552084e0"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "5e4c3fe8-fd57-4b20-ad56-c03790a16cea",
+  "set": "clb",
+  "set_name": "Commander Legends: Battle for Baldur's Gate",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/5e4c3fe8-fd57-4b20-ad56-c03790a16cea",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aclb&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/clb?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/b06604f3-c70c-44d6-b1b9-e915552084e0/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A66f0f43c-829d-44d6-adda-d8885bfbfbaf&unique=prints",
+  "collector_number": "198",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Durion",
+  "artist_ids": [
+    "8c824995-c4bd-49f2-84b6-f42e39357c87"
+  ],
+  "illustration_id": "3367ca70-549c-4702-b054-498589ef53ea",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 4459,
+  "preview": {
+    "source": "Mental Misplay",
+    "source_uri": "https://www.youtube.com/watch?v=wjVdQZu80F0",
+    "previewed_at": "2022-05-25"
+  },
+  "prices": {
+    "usd": "0.36",
+    "usd_foil": "0.60",
+    "usd_etched": null,
+    "eur": "0.33",
+    "eur_foil": "0.69",
+    "tix": "2.44"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=563081&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSwashbuckler%2BExtraordinaire",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSwashbuckler%2BExtraordinaire",
+    "edhrec": "https://edhrec.com/route/?cc=Swashbuckler+Extraordinaire"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F273107%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=660739&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/100420?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
