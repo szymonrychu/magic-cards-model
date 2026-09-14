@@ -822,7 +822,22 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
     if match := _COUNT_CARDS_IN_YOUR_GRAVEYARD_RE.fullmatch(stripped):
         card_type = _singular_card_type(match.group("qualifier"))
         if card_type is None:
-            return None
+            # Not one of CR 205.2a's card types - Calamitous Cave-In's own
+            # "the number of Cave cards in your graveyard" names a land
+            # subtype (CR 205.3i) instead, the same fallback the "you
+            # control" branch just above already takes.
+            subtype = _singular_subtype(match.group("qualifier"))
+            if subtype is None:
+                return None
+
+            def count_subtype_in_graveyard(game: "Game", controller: str) -> int:
+                return sum(
+                    1
+                    for state in game.player(controller).graveyard
+                    if any(word.lower() == subtype for word in state.subtypes)
+                )
+
+            return count_subtype_in_graveyard
 
         def count_in_graveyard(game: "Game", controller: str) -> int:
             return sum(1 for state in game.player(controller).graveyard if card_type in state.types)
@@ -11347,7 +11362,8 @@ def _parse_destroy_each_clause(sentence: str) -> TargetedClause | None:
 #: named types. The leading `.*` reads past the card naming itself, the same
 #: way `_DAMAGE_EACH_OPPONENT_RE` does.
 _DAMAGE_EACH_GROUP_RE = re.compile(
-    r"^.*\bdeals? (?P<n>\d+) damage to each (?P<groups>[a-z]+(?:\s+and\s+each\s+[a-z]+)*)\.?$",
+    rf"^.*\bdeals? {count_pattern('n', x=True)} damage to each "
+    rf"(?P<groups>[a-z]+(?:\s+and\s+each\s+[a-z]+)*){where_x_pattern()}\.?$",
     re.IGNORECASE,
 )
 
@@ -11357,11 +11373,20 @@ def _parse_damage_each_group_clause(clause: str) -> TargetedClause | None:
     (CR 120.1) to every permanent presently on the battlefield matching one of
     the named card types - no target at all, so CR 608.2b's legality recheck
     never applies, only the board as it stands when this runs.
+
+    Calamitous Cave-In's own "X damage to each creature and each
+    planeswalker, where X is the number of Caves you control plus the number
+    of Cave cards in your graveyard" is CR 107.3f's X, read through
+    `_fixed_or_where_x_amount` the same way earthbend's and amass's own X are
+    just above - an "X" this clause cannot evaluate leaves the whole
+    instruction unread (CR 608.2c) rather than dealing zero.
     """
     match = _DAMAGE_EACH_GROUP_RE.fullmatch(clause.strip())
     if match is None:
         return None
-    amount = int(match.group("n"))
+    reader = _fixed_or_where_x_amount(match.group("n"), match.group("where_x"))
+    if reader is None:
+        return None
     words = re.split(r"\s+and\s+each\s+", match.group("groups"))
     types: set[Type] = set()
     for word in words:
@@ -11372,6 +11397,9 @@ def _parse_damage_each_group_clause(clause: str) -> TargetedClause | None:
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         source = stack_object if isinstance(stack_object, CardState) else stack_object.source(game)
+        controller = game.controller_of(stack_object).username
+        x_value = stack_object.x_value if isinstance(stack_object, AbilityOnStack) else 0
+        amount = reader(game, controller, source, x_value)
         board = game.computed_board()
         for permanent in list(game.battlefield):
             if types & set(board.of(permanent).types):
@@ -11589,8 +11617,12 @@ def _merge_damage_each_filtered_clauses(
 #: A bare "each `<type>`[, each `<type>`]*" continuation, split off from
 #: `_DAMAGE_EACH_GROUP_RE`'s own sentence by the generic "and" clause
 #: splitter - "deals 3 damage to each creature" / "each planeswalker" is
-#: exactly this shape once cut in two.
-_BARE_EACH_GROUP_RE = re.compile(r"^each ([a-z]+)$", re.IGNORECASE)
+#: exactly this shape once cut in two. The optional `where_x_pattern` tail is
+#: for Calamitous Cave-In's own split: its ", where X is ..." definition
+#: rides on the *last* "each `<type>`" fragment ("each planeswalker, where X
+#: is the number of Caves you control plus the number of Cave cards in your
+#: graveyard"), since nothing in `_CLAUSE_SEPARATOR` breaks on a plain comma.
+_BARE_EACH_GROUP_RE = re.compile(rf"^each ([a-z]+){where_x_pattern()}$", re.IGNORECASE)
 
 
 def _merge_damage_each_group_clauses(
