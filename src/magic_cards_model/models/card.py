@@ -324,7 +324,14 @@ class Card(ScryfallModel):
         `Casting.base_cost` already needed for an MDFC's blank top-level
         `mana_cost`: the land's own characteristics live only on `card_faces`,
         so a caller choosing which face to play (CR 712.12) has to look there.
+
+        Only a `modal_dfc` has one. CR 712.12 lets a player play "a modal
+        double-faced card" as a land, and CR 712.1 makes nonmodal (transform)
+        and meld cards different kinds: Treasure Map // Treasure Cove's land
+        back is reached only by transforming (CR 712.2), never by a land drop.
         """
+        if self.layout is not Layout.MODAL_DFC:
+            return None
         for face in self.card_faces or []:
             if face.type_line and "land" in _words_before_dash(face.type_line):
                 return face
