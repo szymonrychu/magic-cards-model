@@ -19352,7 +19352,27 @@ def _parse_return_dead_self_to_hand_clause(
 #: printing its own name reaches here as "this permanent" once
 #: `trigger_effect_for` has normalised it. `noun` is checked against
 #: `_SACRIFICE_SELF_NOUNS`, the same set `_sacrifice_restriction` reads.
-_SACRIFICE_IT_RE = re.compile(r"^sacrifice (?:it|this (?P<noun>[a-z]+))$", re.IGNORECASE)
+_SACRIFICE_IT_RE = re.compile(
+    r"^sacrifice (?:it|this (?P<noun>[a-z]+))(?: unless (?P<unless>.+?))?$", re.IGNORECASE
+)
+
+
+def _source_escaped(game: "Game", source: CardState) -> bool:
+    """CR 702.138b: "A spell or permanent 'escaped' if that spell or the spell
+    that became that permanent as it resolved was cast from a graveyard with an
+    escape ability." `CardState.cast_with_keyword` is set only as a cast spell
+    becomes this exact permanent and cleared on every later move (CR 400.7), so
+    a permanent that was never cast, or was cast for its mana cost, did not."""
+    return (source.cast_with_keyword or "").lower() == "escape"
+
+
+#: The conditions an "unless ..." tail on a self-sacrifice is read with, each
+#: asked about the ability's own source. Uro and Kroxa's "unless it escaped".
+#: A tail not listed here fails the whole clause, so it is never sacrificed
+#: (or spared) on a condition nobody read.
+_SELF_SACRIFICE_UNLESS_CONDITIONS: dict[str, Callable[["Game", CardState], bool]] = {
+    "it escaped": _source_escaped,
+}
 
 
 def _parse_sacrifice_self_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
@@ -19360,6 +19380,10 @@ def _parse_sacrifice_self_clause(clause: str, *, for_spell: bool) -> TargetedCla
     action aimed at the ability's own source: "To sacrifice a permanent, its
     controller moves it from the battlefield directly to its owner's
     graveyard."
+
+    An "unless <condition>" tail (Uro, Titan of Nature's Wrath's "sacrifice it
+    unless it escaped") is read through `_SELF_SACRIFICE_UNLESS_CONDITIONS`
+    and checked as the ability resolves; when it holds, nothing is sacrificed.
 
     CR 113.7a keeps the ability alive once its source is gone ("Once activated
     or triggered, an ability exists on the stack independently of its source"),
@@ -19381,6 +19405,12 @@ def _parse_sacrifice_self_clause(clause: str, *, for_spell: bool) -> TargetedCla
     noun = match.group("noun")
     if noun is not None and noun.lower() not in _SACRIFICE_SELF_NOUNS:
         return None
+    unless_text = match.group("unless")
+    unless = None
+    if unless_text is not None:
+        unless = _SELF_SACRIFICE_UNLESS_CONDITIONS.get(unless_text.strip().lower())
+        if unless is None:
+            return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         ability = stack_object
@@ -19389,6 +19419,8 @@ def _parse_sacrifice_self_clause(clause: str, *, for_spell: bool) -> TargetedCla
         if source is None or source.zone is not Zone.BATTLEFIELD:
             return
         if ability.source_stamp is not None and source.zone_change_stamp != ability.source_stamp:
+            return
+        if unless is not None and unless(game, source):
             return
         game.sacrifice(source)
 
