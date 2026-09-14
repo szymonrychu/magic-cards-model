@@ -9703,7 +9703,14 @@ _SELECT_FROM_TOP_RE = re.compile(
     r"card from among (?:them|the cards milled this way) "
     r"(?P<dest>into your hand|onto the battlefield tapped|onto the battlefield"
     r"|into your graveyard)\.\s*"
-    r"(?P<decline_counter>if you don't, put a \+1/\+1 counter on this creature\.\s*)?"
+    r"(?:(?P<decline_counter>if you don't, put a \+1/\+1 counter on this creature\.\s*)"
+    # Planar Genesis: "If you don't, put a card from among them into your
+    # hand." - a second, mandatory take from the same seen cards.
+    r"|if you don't, put (?:a|an|one) "
+    r"(?:(?P<decline_kind>permanent|land|creature|artifact|enchantment|instant|sorcery|"
+    r"planeswalker) )?card from among them "
+    r"(?P<decline_dest>into your hand|onto the battlefield tapped|onto the battlefield"
+    r"|into your graveyard)\.\s*)?"
     rf"(?:you gain (?P<life>{_COUNT}) life\.\s*)?"
     r"(?:put the rest (?P<rest>on the bottom of your library in a random order"
     r"|on the bottom of your library in any order"
@@ -9750,9 +9757,25 @@ def _select_from_top_runner(
         predicate = found
     destination = match.group("dest").lower()
     counter_when_declined = match.group("decline_counter") is not None
+    decline_dest = (match.group("decline_dest") or "").lower()
+    decline_kind_word = (match.group("decline_kind") or "").lower()
+    decline_predicate = _SELECT_FROM_TOP_KINDS[decline_kind_word]
+    decline_noun = f"{decline_kind_word} card" if decline_kind_word else "card"
     life = _count(match.group("life")) if match.group("life") else 0
     rest = (match.group("rest") or "").lower()
     noun = f"{kind_word} card" if kind_word else "card"
+
+    def put(game: "Game", player: Player, chosen: CardState, where: str) -> None:
+        if where == "into your hand":
+            player.move(chosen, Zone.HAND)
+        elif where == "into your graveyard":
+            game.put_into_graveyard(chosen)
+        else:
+            # CR 110.4a's permanent card, put onto the battlefield without
+            # being cast (no spell, so no cast trigger); "tapped" is a
+            # property of how it enters, not a later action. A land put this
+            # way is not a land played (CR 305.4).
+            game.put_onto_battlefield(chosen, player.username, tapped=where.endswith("tapped"))
 
     def run(
         game: "Game",
@@ -9797,17 +9820,30 @@ def _select_from_top_runner(
             chosen = by_id[chosen_ids[0]]
 
         if chosen is not None and chosen.zone is home:
-            if destination == "into your hand":
-                player.move(chosen, Zone.HAND)
-            elif destination == "into your graveyard":
-                game.put_into_graveyard(chosen)
-            else:
-                # CR 110.4a's permanent card, put onto the battlefield without
-                # being cast (no spell, so no cast trigger); "tapped" is a
-                # property of how it enters, not a later action.
-                game.put_onto_battlefield(
-                    chosen, player.username, tapped=destination.endswith("tapped")
+            put(game, player, chosen, destination)
+
+        # "If you don't, put a card from among them ..." is not a "you may":
+        # when the first take was declined or had no candidate, one of the
+        # seen cards still qualifying is chosen and moved (CR 608.2d).
+        if chosen is None and decline_dest:
+            fallback = [state for state in seen if state.zone is home and decline_predicate(state)]
+            if fallback:
+                fallback_ids = game.ask(
+                    Decision(
+                        kind=DecisionKind.CHOOSE_CARDS,
+                        player=player.username,
+                        prompt=f"choose {with_indefinite_article(decline_noun)} to put "
+                        f"{decline_dest}",
+                        source=source_name,
+                        amount=1,
+                        cards=tuple(candidate.id for candidate in fallback),
+                        default_cards=(fallback[0].id,),
+                        source_id=source_id,
+                    )
                 )
+                assert isinstance(fallback_ids, tuple)
+                chosen = next(state for state in fallback if state.id == fallback_ids[0])
+                put(game, player, chosen, decline_dest)
 
         # "If you don't" covers both branches that leave the follow-up untaken:
         # declining the may, and having no legal candidate to choose at all
