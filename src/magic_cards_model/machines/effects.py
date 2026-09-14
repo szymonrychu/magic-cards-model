@@ -7750,9 +7750,18 @@ _GAIN_LIFE_EQUAL_TO_DAMAGE_PREVENTED_RE = re.compile(
 #: is `machines/layers.py`'s selector, read off the card's own text by
 #: `parsed_layer_effects` - and there is no `same name as that creature`
 #: selector there yet, so this text still comes back unreadable from that side.
+#:
+#: The second alternative is Dauntless Onslaught's own plural CR 115.6 shape:
+#: "Up to two target creatures each get +2/+2 until end of turn." - this
+#: dispatcher only has to recognise the shape (`create_continuous_effect`
+#: reads every legally-resolved target the same way regardless of count, and
+#: `machines/layers.py`'s own `_PUMP_RE` is what actually builds one
+#: `ContinuousEffect` per target), so admitting the plural subject here costs
+#: nothing beyond matching it.
 _CONTINUOUS_PUMP_OR_KEYWORD_RE = re.compile(
-    r"^target (?:[a-z]+ )?creature"
+    r"^(?:target (?:[a-z]+ )?creature"
     r"(?: and all other creatures with the same name as that creature)?"
+    rf"|(?:up to )?{AMOUNT} target (?:[a-z]+ )?creatures(?: each)?)"
     r" (?:gets? [+-]\d+/[+-]\d+|gains? [a-z ]+) until end of turn\.?$",
     re.IGNORECASE,
 )
