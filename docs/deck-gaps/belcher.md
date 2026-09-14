@@ -52,9 +52,9 @@ turns - it cannot win the way the archetype wins.
 
 ## Survey outcome
 
-25 distinct names: 9 handled, 13 silent, 3 `no_rules_text`.
+25 distinct names: 10 handled, 12 silent, 3 `no_rules_text`.
 
-### Silent (13) - every one named
+### Silent (12) - every one named
 
 `silent` is the only category that is a bug: nothing happened and nothing was
 recorded.
@@ -66,7 +66,6 @@ recorded.
 | **Disrupting Shoal** | Both clauses. `Counter target spell if its mana value is X.` is silent, **and** the pitch cost `You may exile a blue card with mana value X from your hand rather than pay this spell's mana cost.` is found as a `PRINTED` `AlternativeCostOption` but `total_cost_for_phrase` returns `None`, so the option is marked unavailable. The X in the exile clause is what defeats it. A 4-of that is completely inert. |
 | **Spell Snare** | `Counter target spell with mana value 2.` A conditional counter - plain `Counterspell` is handled, this shape is not. |
 | **Stern Scolding** | `Counter target creature spell with power or toughness 2 or less.` Same shape family. |
-| **Stock Up** | `Look at the top five cards of your library. Put two of them into your hand and the rest on the bottom of your library in any order.` |
 | **Into the Flood Maw** | `Return target creature an opponent controls to its owner's hand. If the gift was promised, instead return target nonland permanent an opponent controls to its owner's hand.` Gift also an ignored keyword. |
 | **Tameshi, Reality Architect** | Both abilities. Trigger `Whenever one or more noncreature permanents are returned to hand, draw a card. This ability triggers only once each turn.` and activated `{X}{W}, Return a land you control to its owner's hand: Return target artifact or enchantment card with mana value X or less from your graveyard to the battlefield.` |
 | **Sea Gate Restoration** | Spell face only: `Draw cards equal to the number of cards in your hand plus one. You have no maximum hand size for the rest of the game.` Its land back **does** tap for `{U}`. |
@@ -94,7 +93,7 @@ a permanent. Each of the three was hand-audited.
 
 Genuinely empty: **0 of 3**. Only 1 of 3 is real coverage.
 
-### Handled (9) - clause by clause
+### Handled (10) - clause by clause
 
 `classify_card` reports the **best** outcome per card, so a dead clause hides
 behind a working one. Each handled card was probed per printed clause.
@@ -103,6 +102,7 @@ behind a working one. Each handled card was probed per printed clause.
 |---|---|---|
 | Counterspell | `Counter target spell.` | handled |
 | Preordain | `Scry 2, then draw a card.` | handled |
+| Stock Up | `Look at the top five cards of your library. Put two of them into your hand and the rest on the bottom of your library in any order.` | handled - `_merge_look_top_split_hand_graveyard_clauses` reads the count; was silent until `scenarios/test_look_at_top_put_n_into_hand.py` |
 | **Consign to Memory** (SB) | `Counter target triggered ability or colorless spell.` | handled |
 | | `Replicate {1}` | **DEAD** - ignored keyword. Every copy the deck would make is lost. |
 | **Engineered Explosives** (SB) | `{2}, Sacrifice this artifact: Destroy each nonland permanent with mana value equal to the number of charge counters on this artifact.` | handled |
@@ -166,5 +166,5 @@ paths.
 
 The deck loads, shuffles, deals opening hands, plays its lands, and makes mana.
 It cannot execute its win condition, cannot tutor for it, and cannot draw into
-it. Nine of the thirteen silent cards are counterspells or card selection - this
+it. Eight of the twelve silent cards are counterspells or card selection - this
 list is 20 pieces of interaction plus a combo the engine cannot run.

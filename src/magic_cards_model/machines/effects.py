@@ -3440,6 +3440,17 @@ def _quality_matcher(quality: str) -> Callable[[CardState], bool]:
             return rest(state) and Supertype.BASIC in state.supertypes
 
         return basic_matches
+    # CR 205.4g: "Any permanent with the supertype 'snow' is a snow
+    # permanent" - Glacial Revelation's own "snow permanent card". The
+    # supertype check stacks on whatever the rest of the phrase already
+    # means, the same way "basic " does above.
+    if lowered.startswith("snow "):
+        rest = _quality_matcher(lowered.removeprefix("snow "))
+
+        def snow_matches(state: CardState) -> bool:
+            return rest(state) and Supertype.SNOW in state.supertypes
+
+        return snow_matches
     if lowered == "historic":
         return _historic
     words = [word.strip() for word in re.split(r",\s*|\s+or\s+", lowered) if word.strip()]
@@ -10150,7 +10161,12 @@ _SELECT_FROM_TOP_RE = re.compile(
     r"^(?:[a-z][a-z '-]* — )?"
     rf"(?:mill (?P<mill_n>{COUNT}) cards?"
     rf"|look at the top (?P<look_n>{COUNT}) cards? of your library)\.\s*"
-    r"you may put (?:a|an|one) "
+    # Cartographer's Survey/Deploy the Gatewatch print "put up to two ..."
+    # with no "you may" at all - CR 608.2d's optionality already lives in
+    # "up to"/"any number of" themselves. A bare fixed count ("a"/"an"/"one")
+    # has no such built-in optionality, so it still needs the "you may" that
+    # every printing pairing it with this shape carries.
+    rf"(?P<may>you may )?put {quantity_pattern('n')} "
     # Either one positive kind word, or a run of CR 205.2a negations -
     # Fallaji Archaeologist's "a noncreature, nonland card", where the comma
     # is a conjunction (a card that is neither), the same De Morgan reading
@@ -10159,10 +10175,17 @@ _SELECT_FROM_TOP_RE = re.compile(
     r"planeswalker) |(?P<negated>non[a-z]+(?:, ?non[a-z]+)*) )?"
     # "from among them" and "from among the cards milled this way" name the
     # same set - the cards this clause's own first sentence just saw.
-    r"card from among (?:them|the cards milled this way) "
+    r"cards? from among (?:them|the cards milled this way) "
     r"(?P<dest>into your hand|onto the battlefield tapped|onto the battlefield"
     r"|into your graveyard)\.\s*"
-    r"(?P<decline_counter>if you don't, put a \+1/\+1 counter on this creature\.\s*)?"
+    r"(?:(?P<decline_counter>if you don't, put a \+1/\+1 counter on this creature\.\s*)"
+    # Planar Genesis: "If you don't, put a card from among them into your
+    # hand." - a second, mandatory take from the same seen cards.
+    r"|if you don't, put (?:a|an|one) "
+    r"(?:(?P<decline_kind>permanent|land|creature|artifact|enchantment|instant|sorcery|"
+    r"planeswalker) )?card from among them "
+    r"(?P<decline_dest>into your hand|onto the battlefield tapped|onto the battlefield"
+    r"|into your graveyard)\.\s*)?"
     rf"(?:you gain (?P<life>{COUNT}) life\.\s*)?"
     r"(?:put the rest (?P<rest>on the bottom of your library in a random order"
     r"|on the bottom of your library in any order"
@@ -10188,6 +10211,15 @@ def _select_from_top_runner(
         return None
     milling = match.group("mill_n") is not None
     count = parse_count(match.group("mill_n") if milling else match.group("look_n"))
+    quantity = parse_quantity(match.group("n"))
+    if quantity is None or quantity.source not in (QuantitySource.FIXED, QuantitySource.ANY_NUMBER):
+        return None
+    # A bare fixed count ("put a land card ...") with no printed "you may" is
+    # CR 608.2d's *mandatory* form, which this family does not model - every
+    # printing of that shape pairs it with "you may". "up to N"/"any number
+    # of" carry their own optionality (CR 107.1c) and need no such prefix.
+    if quantity.exact and match.group("may") is None:
+        return None
     kind_word = (match.group("kind") or "").lower()
     negated = (match.group("negated") or "").lower()
     if negated:
@@ -10209,9 +10241,32 @@ def _select_from_top_runner(
         predicate = found
     destination = match.group("dest").lower()
     counter_when_declined = match.group("decline_counter") is not None
+    decline_dest = (match.group("decline_dest") or "").lower()
+    decline_kind_word = (match.group("decline_kind") or "").lower()
+    decline_predicate = _SELECT_FROM_TOP_KINDS[decline_kind_word]
+    decline_noun = f"{decline_kind_word} card" if decline_kind_word else "card"
     life = parse_count(match.group("life")) if match.group("life") else 0
     rest = (match.group("rest") or "").lower()
     noun = f"{kind_word} card" if kind_word else "card"
+    plural_noun = f"{kind_word} cards" if kind_word else "cards"
+    if quantity.source is QuantitySource.ANY_NUMBER:
+        take_noun = f"any number of {plural_noun}"
+    elif quantity.exact and quantity.amount == 1:
+        take_noun = with_indefinite_article(noun)
+    else:
+        take_noun = f"up to {quantity.amount} {plural_noun}"
+
+    def put(game: "Game", player: Player, chosen: CardState, where: str) -> None:
+        if where == "into your hand":
+            player.move(chosen, Zone.HAND)
+        elif where == "into your graveyard":
+            game.put_into_graveyard(chosen)
+        else:
+            # CR 110.4a's permanent card, put onto the battlefield without
+            # being cast (no spell, so no cast trigger); "tapped" is a
+            # property of how it enters, not a later action. A land put this
+            # way is not a land played (CR 305.4).
+            game.put_onto_battlefield(chosen, player.username, tapped=where.endswith("tapped"))
 
     def run(
         game: "Game",
@@ -10233,46 +10288,89 @@ def _select_from_top_runner(
         home = Zone.GRAVEYARD if milling else Zone.LIBRARY
         candidates = [state for state in seen if state.zone is home and predicate(state)]
 
-        chosen: CardState | None = None
-        if candidates and game.may(
-            player,
-            f"put {with_indefinite_article(noun)} from among them {destination}",
-            source=source_name,
-            source_id=source_id,
-        ):
-            chosen_ids = game.ask(
-                Decision(
-                    kind=DecisionKind.CHOOSE_CARDS,
-                    player=player.username,
-                    prompt=f"choose {with_indefinite_article(noun)} to put {destination}",
+        chosen: list[CardState] = []
+        if candidates:
+            if quantity.exact:
+                # "you may put a/an/one <kind> card": a single optional
+                # pick, gated behind the CR 608.2d "may" before naming
+                # candidates - unchanged from before this family read any
+                # other quantifier.
+                if game.may(
+                    player,
+                    f"put {take_noun} from among them {destination}",
                     source=source_name,
-                    amount=1,
-                    cards=tuple(candidate.id for candidate in candidates),
                     source_id=source_id,
-                )
-            )
-            assert isinstance(chosen_ids, tuple)
-            by_id = {candidate.id: candidate for candidate in candidates}
-            chosen = by_id[chosen_ids[0]]
-
-        if chosen is not None and chosen.zone is home:
-            if destination == "into your hand":
-                player.move(chosen, Zone.HAND)
-            elif destination == "into your graveyard":
-                game.put_into_graveyard(chosen)
+                ):
+                    chosen_ids = game.ask(
+                        Decision(
+                            kind=DecisionKind.CHOOSE_CARDS,
+                            player=player.username,
+                            prompt=f"choose {take_noun} to put {destination}",
+                            source=source_name,
+                            amount=1,
+                            cards=tuple(candidate.id for candidate in candidates),
+                            source_id=source_id,
+                        )
+                    )
+                    assert isinstance(chosen_ids, tuple)
+                    by_id = {candidate.id: candidate for candidate in candidates}
+                    chosen = [by_id[chosen_ids[0]]]
             else:
-                # CR 110.4a's permanent card, put onto the battlefield without
-                # being cast (no spell, so no cast trigger); "tapped" is a
-                # property of how it enters, not a later action.
-                game.put_onto_battlefield(
-                    chosen, player.username, tapped=destination.endswith("tapped")
+                # "up to N"/"any number of": CR 107.1c - zero to the
+                # ceiling is one question, with no separate "may" gate.
+                ceiling = (
+                    len(candidates)
+                    if quantity.amount is None
+                    else min(quantity.amount, len(candidates))
                 )
+                chosen_ids = game.ask(
+                    Decision(
+                        kind=DecisionKind.CHOOSE_CARDS,
+                        player=player.username,
+                        prompt=f"put {take_noun} from among them {destination}",
+                        source=source_name,
+                        amount=ceiling,
+                        exact=False,
+                        cards=tuple(candidate.id for candidate in candidates),
+                        source_id=source_id,
+                    )
+                )
+                assert isinstance(chosen_ids, tuple)
+                by_id = {candidate.id: candidate for candidate in candidates}
+                chosen = [by_id[card_id] for card_id in chosen_ids]
+
+        for state in chosen:
+            if state.zone is home:
+                put(game, player, state, destination)
+
+        # "If you don't, put a card from among them ..." is not a "you may":
+        # when the first take was declined or had no candidate, one of the
+        # seen cards still qualifying is chosen and moved (CR 608.2d).
+        if not chosen and decline_dest:
+            fallback = [state for state in seen if state.zone is home and decline_predicate(state)]
+            if fallback:
+                fallback_ids = game.ask(
+                    Decision(
+                        kind=DecisionKind.CHOOSE_CARDS,
+                        player=player.username,
+                        prompt=f"choose {with_indefinite_article(decline_noun)} to put "
+                        f"{decline_dest}",
+                        source=source_name,
+                        amount=1,
+                        cards=tuple(candidate.id for candidate in fallback),
+                        default_cards=(fallback[0].id,),
+                        source_id=source_id,
+                    )
+                )
+                assert isinstance(fallback_ids, tuple)
+                chosen = [next(state for state in fallback if state.id == fallback_ids[0])]
+                put(game, player, chosen[0], decline_dest)
 
         # "If you don't" covers both branches that leave the follow-up untaken:
         # declining the may, and having no legal candidate to choose at all
         # (CR 608.2d only offers a choice that exists).
         if (
-            chosen is None
+            not chosen
             and counter_when_declined
             and source is not None
             and source.zone is Zone.BATTLEFIELD
@@ -10286,7 +10384,7 @@ def _select_from_top_runner(
             # Only the look arm has a "rest": the mill arm already moved every
             # card it saw into the graveyard.
             remainder = [
-                state for state in seen if state is not chosen and state.zone is Zone.LIBRARY
+                state for state in seen if state not in chosen and state.zone is Zone.LIBRARY
             ]
             if rest == "into your graveyard":
                 for state in remainder:
@@ -11176,6 +11274,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     select_from_top = _parse_select_from_top_clause(effect_text)
     if select_from_top is not None:
         return select_from_top
+    mill_then_take_from_milled_ability = _parse_mill_then_may_take_from_milled_ability(effect_text)
+    if mill_then_take_from_milled_ability is not None:
+        return mill_then_take_from_milled_ability
     look_top_card_conditional = _parse_look_top_card_conditional_clause(effect_text)
     if look_top_card_conditional is not None:
         return look_top_card_conditional
@@ -16453,36 +16554,59 @@ def _parse_delayed_pay_or_lose_clauses(
 
 
 #: "look at the top card of target player's/your/their library" - Mishra's
-#: Bauble's first clause, ahead of its own delayed-trigger second clause.
-#: CR 701.20e: "looking at a card follows the same rules as revealing a card,
-#: except that the card is shown only to the specified player" - so it moves
-#: nothing, and is recorded through `Game.look` for `Game.known_to`.
+#: Bauble's first clause, ahead of its own delayed-trigger second clause -
+#: or "look at the top N cards", Orcish Spy's "Look at the top three cards
+#: of target player's library". CR 701.20e: "looking at a card follows the
+#: same rules as revealing a card, except that the card is shown only to the
+#: specified player" - so it moves nothing, and is recorded through
+#: `Game.look` for `Game.known_to`, once per card.
 _LOOK_AT_TOP_CARD_RE = re.compile(
-    r"^look at the top card of (?:target player's|your|their) library$", re.IGNORECASE
+    rf"^look at the top (?:card|(?P<n>{COUNT}) cards?) of "
+    r"(?:target player's|your|their) library$",
+    re.IGNORECASE,
 )
 
 
-def _look_at_top_card(game: "Game", stack_object: "StackObject") -> None:
-    """The controller looks at the top card of each targeted player's library
-    (CR 701.20e), or of their own for the untargeted "your library" wording.
+def _parse_look_at_top_card_clause(
+    clause: str,
+) -> Callable[["Game", "StackObject"], None] | None:
+    """`_LOOK_AT_TOP_CARD_RE`'s shape, or `None`."""
+    match = _LOOK_AT_TOP_CARD_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    count = 1 if match.group("n") is None else parse_count(match.group("n"))
+    if count is None:
+        return None
 
-    `Game.look` records it with the controller as the only viewer. A target
-    that is gone by resolution is refused the ordinary way (CR 608.2b), and a
-    player with an empty library has no top card to look at.
-    """
-    viewer = game.controller_of(stack_object)
-    source = (
-        stack_object.source_name if isinstance(stack_object, AbilityOnStack) else stack_object.name
-    )
-    if stack_object.targets:
-        players = [
-            target for target in game.resolve_targets(stack_object) if isinstance(target, Player)
-        ]
-    else:
-        players = [viewer]
-    for player in players:
-        if player.library:
-            game.look(player.library[0], viewer.username, source=source)
+    def look_at_top_card(game: "Game", stack_object: "StackObject") -> None:
+        """The controller looks at the top `count` cards of each targeted
+        player's library (CR 701.20e), or of their own for the untargeted
+        "your library" wording.
+
+        `Game.look` records each of the `count` cards with the controller as
+        the only viewer. A target that is gone by resolution is refused the
+        ordinary way (CR 608.2b), and CR 609.3 gives a shorter library
+        whatever it has.
+        """
+        viewer = game.controller_of(stack_object)
+        source = (
+            stack_object.source_name
+            if isinstance(stack_object, AbilityOnStack)
+            else stack_object.name
+        )
+        if stack_object.targets:
+            players = [
+                target
+                for target in game.resolve_targets(stack_object)
+                if isinstance(target, Player)
+            ]
+        else:
+            players = [viewer]
+        for player in players:
+            for card in player.library[:count]:
+                game.look(card, viewer.username, source=source)
+
+    return look_at_top_card
 
 
 #: "Look at target player's hand." (Gitaxian Probe, Peek) - the same CR 701.20e
@@ -17693,6 +17817,14 @@ class UnmodeledTriggerEffectNotice(EngineModel):
     a "you may cast that card" with no recognisable exiling clause in front of
     it to say which card - since granting a permission over nothing at all
     would be the silent half-run this notice exists to prevent.
+
+    **A spell records it too.** An instant or sorcery whose printed text
+    `effect_for` has no reader for resolves and goes to the graveyard
+    (`Game.resolve`), and used to do so with no trace - Stock Up in a live
+    game. It now appends this same notice, `source_id` the spell's own id,
+    `source_name` the face's name, `text` the face's whole printed text. Not
+    for a permanent spell (CR 608.3a) or a spell that left a replacement
+    effect (Plagiarize, CR 614.1a).
     """
 
     model_config = ConfigDict(frozen=True)
@@ -18198,14 +18330,16 @@ def _type_word_is_readable(word: str) -> bool:
 def _search_quality_is_readable(quality: str) -> bool:
     """Whether every word of a stated quality reaches a real matcher.
 
-    Mirrors `_quality_matcher`'s own splitting - "basic " prefix, then words
-    separated by commas or "or", each optionally carrying one of
-    `_HAND_EXILE_COLOR_WORDS`' color adjectives (CR 105.2c) - so the two cannot
-    drift apart on what counts as readable.
+    Mirrors `_quality_matcher`'s own splitting - "basic "/"snow " prefixes
+    (CR 205.4c, CR 205.4g), then words separated by commas or "or", each
+    optionally carrying one of `_HAND_EXILE_COLOR_WORDS`' color adjectives
+    (CR 105.2c) - so the two cannot drift apart on what counts as readable.
     """
     lowered = quality.strip().lower()
     if lowered.startswith("basic "):
         return _search_quality_is_readable(lowered.removeprefix("basic "))
+    if lowered.startswith("snow "):
+        return _search_quality_is_readable(lowered.removeprefix("snow "))
     words = [word.strip() for word in re.split(r",\s*|\s+or\s+", lowered) if word.strip()]
     if not words:
         return False
@@ -19355,16 +19489,24 @@ def _merge_exile_self_if_you_do_clauses(
 #: "look at the top <count> cards of your library" - Duskwatch Recruiter's
 #: own first clause.
 _LOOK_AT_TOP_N_CARDS_RE = re.compile(
-    r"^look at the top (?P<count>\w+) cards? of your library$", re.IGNORECASE
+    rf"^look at the top (?P<count>{COUNT}) cards? of your library$", re.IGNORECASE
 )
-#: "you may reveal a/an <quality> card from among them" - the second clause,
-#: naming which of the looked-at cards may be taken.
+#: "you may reveal a/an/up to N/any number of <quality> card(s) from among
+#: them" - the second clause, naming which of the looked-at cards may be
+#: taken. Reality Heist and Domri, Chaos Bringer's own -3 print "up to two";
+#: Lead the Stampede prints "any number of" (CR 107.1c). Duskwatch Recruiter's
+#: bare "a" stays readable as `QUANTITY`'s own fixed-one case.
 _MAY_REVEAL_FROM_AMONG_THEM_RE = re.compile(
-    r"^you may reveal (?:a|an) (?P<quality>.+?) card from among them$", re.IGNORECASE
+    rf"^you may reveal {quantity_pattern('n')} (?P<quality>.+?) cards? from among them$",
+    re.IGNORECASE,
 )
-#: "put it into your hand" - `_CLAUSE_SEPARATOR`'s own "and" split of the
-#: second sentence's tail.
-_PUT_IT_INTO_YOUR_HAND_RE = re.compile(r"^put it into your hand$", re.IGNORECASE)
+#: "put it into your hand" / "put them into your hand" / "put the revealed
+#: cards into your hand" - `_CLAUSE_SEPARATOR`'s own "and" split of the second
+#: sentence's tail; "them" is Reality Heist's own plural for a quantity that
+#: can take more than one, "the revealed cards" is Lead the Stampede's.
+_PUT_IT_OR_THEM_INTO_YOUR_HAND_RE = re.compile(
+    r"^put (?:it|them|the revealed cards) into your hand$", re.IGNORECASE
+)
 #: "put the rest on the bottom of your library in any order" - Duskwatch
 #: Recruiter's own third sentence - **or** "... in a random order", which
 #: Monumental Henge, Narset, Parter of Veils and Thundertrap Trainer print for
@@ -19420,14 +19562,29 @@ def _merge_look_top_reveal_to_hand_clauses(
     reveal_match = _MAY_REVEAL_FROM_AMONG_THEM_RE.fullmatch(clauses[index + 1].strip())
     if reveal_match is None:
         return None
+    quantity = parse_quantity(reveal_match.group("n"))
+    # CR 107.1c's "any number of" and a printed "up to N" are both read; an
+    # unreadable quantifier (X, "that many" - no antecedent here) fails
+    # closed rather than guessing.
+    if quantity is None or quantity.source not in (QuantitySource.FIXED, QuantitySource.ANY_NUMBER):
+        return None
     matches = _quality_matcher(reveal_match.group("quality"))
-    if _PUT_IT_INTO_YOUR_HAND_RE.fullmatch(clauses[index + 2].strip()) is None:
+    if _PUT_IT_OR_THEM_INTO_YOUR_HAND_RE.fullmatch(clauses[index + 2].strip()) is None:
         return None
     bottom_match = _PUT_REST_ON_BOTTOM_ANY_ORDER_RE.fullmatch(clauses[index + 3].strip())
     if bottom_match is None:
         return None
     randomised = bottom_match.group("random") is not None
     quality_description = reveal_match.group("quality").strip()
+
+    if quantity.source is QuantitySource.ANY_NUMBER:
+        reveal_prompt = f"reveal any number of {quality_description} cards from the top"
+    elif quantity.amount == 1 and quantity.exact:
+        reveal_prompt = (
+            f"reveal {with_indefinite_article(f'{quality_description} card')} from the top"
+        )
+    else:
+        reveal_prompt = f"reveal up to {quantity.amount} {quality_description} cards from the top"
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         player = game.controller_of(stack_object)
@@ -19440,17 +19597,15 @@ def _merge_look_top_reveal_to_hand_clauses(
             player,
             count,
             source=source,
-            prompt=(
-                f"reveal {with_indefinite_article(f'{quality_description} card')} "
-                f"from the top {count}"
-            ),
+            prompt=f"{reveal_prompt} {count}",
             moved_label="your hand",
             kept_label="bottom of your library",
             rest_in_random_order=randomised,
             source_id=source_id_of(stack_object),
-            # "You may reveal a <quality> card": one card at most, and
-            # `Game.ask` refuses a second (CR 608.2d).
-            moved_amount=1,
+            # "You may reveal a <quality> card": one at most; "up to N"/"any
+            # number of" raise the ceiling (CR 107.1c). `None` here means no
+            # printed ceiling other than the library itself.
+            moved_amount=quantity.amount,
         )
         for state in moved:
             if not matches(state):
@@ -19494,11 +19649,16 @@ def _merge_look_top_reveal_to_hand_clauses(
 
 #: "reveal the top <count> cards of your library"
 _REVEAL_TOP_N_CARDS_RE = re.compile(
-    r"^reveal the top (?P<count>\w+) cards? of your library$", re.IGNORECASE
+    rf"^reveal the top (?P<count>{COUNT}) cards? of your library$", re.IGNORECASE
 )
-#: "you may put a/an <quality> card from among them into your hand"
+#: "you may put a/an/up to N/any number of <quality> card(s) from among them
+#: into your hand" - Glacial Revelation prints "any number of" (CR 107.1c),
+#: Kruphix's Insight-shaped cards print "up to N"; a bare "a/an" reads as
+#: `QUANTITY`'s own fixed-one case, unchanged from before this family read
+#: any other quantifier.
 _MAY_PUT_A_CARD_FROM_AMONG_THEM_INTO_HAND_RE = re.compile(
-    r"^you may put (?:a|an) (?P<quality>.+?) card from among them into your hand$",
+    rf"^you may put {quantity_pattern('n')} (?P<quality>.+?) cards? "
+    r"from among them into your hand$",
     re.IGNORECASE,
 )
 #: "put the rest into your graveyard"
@@ -19538,6 +19698,9 @@ def _merge_reveal_top_to_hand_rest_to_graveyard_clauses(
     take_match = _MAY_PUT_A_CARD_FROM_AMONG_THEM_INTO_HAND_RE.fullmatch(clauses[index + 1].strip())
     if take_match is None:
         return None
+    quantity = parse_quantity(take_match.group("n"))
+    if quantity is None or quantity.source not in (QuantitySource.FIXED, QuantitySource.ANY_NUMBER):
+        return None
     quality = take_match.group("quality").strip()
     if not _search_quality_is_readable(quality):
         return None
@@ -19545,6 +19708,12 @@ def _merge_reveal_top_to_hand_rest_to_graveyard_clauses(
     if _PUT_THE_REST_INTO_YOUR_GRAVEYARD_RE.fullmatch(clauses[index + 2].strip()) is None:
         return None
     article = "an" if quality[:1].lower() in "aeiou" else "a"
+    if quantity.source is QuantitySource.ANY_NUMBER:
+        take_noun = f"any number of {quality} cards"
+    elif quantity.exact and quantity.amount == 1:
+        take_noun = f"{article} {quality} card"
+    else:
+        take_noun = f"up to {quantity.amount} {quality} cards"
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         player = game.controller_of(stack_object)
@@ -19556,32 +19725,59 @@ def _merge_reveal_top_to_hand_rest_to_graveyard_clauses(
         for state in revealed:
             game.reveal(state, source=source)
         candidates = [state for state in revealed if matches(state)]
-        chosen: CardState | None = None
-        if candidates and game.may(
-            player,
-            f"put {article} {quality} card from among them into your hand",
-            source=source,
-            source_id=source_id,
-            cards=candidates,
-        ):
-            chosen_ids = game.ask(
-                Decision(
-                    kind=DecisionKind.CHOOSE_CARDS,
-                    player=player.username,
-                    prompt=f"choose {article} {quality} card to put into your hand",
+        chosen: list[CardState] = []
+        if candidates:
+            if quantity.exact:
+                # "you may put a/an <quality> card": a single optional pick,
+                # gated behind the CR 608.2d "may" before naming candidates.
+                if game.may(
+                    player,
+                    f"put {take_noun} from among them into your hand",
                     source=source,
                     source_id=source_id,
-                    amount=1,
-                    cards=tuple(state.id for state in candidates),
-                    default_cards=(candidates[0].id,),
+                    cards=candidates,
+                ):
+                    chosen_ids = game.ask(
+                        Decision(
+                            kind=DecisionKind.CHOOSE_CARDS,
+                            player=player.username,
+                            prompt=f"choose {take_noun} to put into your hand",
+                            source=source,
+                            source_id=source_id,
+                            amount=1,
+                            cards=tuple(state.id for state in candidates),
+                            default_cards=(candidates[0].id,),
+                        )
+                    )
+                    assert isinstance(chosen_ids, tuple)
+                    chosen = [next(state for state in candidates if state.id == chosen_ids[0])]
+            else:
+                # "up to N"/"any number of": CR 107.1c - zero to the ceiling
+                # is one question, with no separate "may" gate in front of it.
+                ceiling = (
+                    len(candidates)
+                    if quantity.amount is None
+                    else min(quantity.amount, len(candidates))
                 )
-            )
-            assert isinstance(chosen_ids, tuple)
-            chosen = next(state for state in candidates if state.id == chosen_ids[0])
-        if chosen is not None:
-            player.move(chosen, Zone.HAND)
+                chosen_ids = game.ask(
+                    Decision(
+                        kind=DecisionKind.CHOOSE_CARDS,
+                        player=player.username,
+                        prompt=f"put {take_noun} from among them into your hand",
+                        source=source,
+                        source_id=source_id,
+                        amount=ceiling,
+                        exact=False,
+                        cards=tuple(state.id for state in candidates),
+                    )
+                )
+                assert isinstance(chosen_ids, tuple)
+                by_id = {state.id: state for state in candidates}
+                chosen = [by_id[card_id] for card_id in chosen_ids]
+        for state in chosen:
+            player.move(state, Zone.HAND)
         for state in revealed:
-            if state is not chosen:
+            if state not in chosen:
                 game.put_into_graveyard(state)
 
     return 3, effect
@@ -19596,8 +19792,10 @@ def _merge_reveal_top_to_hand_rest_to_graveyard_clauses(
 #: "of them" is optional: Codecracker Hound prints the shorter "Put one into
 #: your hand", Waker of Waves the fuller "Put one of them into your hand" -
 #: the same CR 608.2d split either way.
-_PUT_ONE_OF_THEM_INTO_YOUR_HAND_RE = re.compile(
-    r"^put one(?: of them)? into your hand$", re.IGNORECASE
+#: The count is read, not fixed: Stock Up prints "Put two of them into your
+#: hand", Dovin, Grand Arbiter's -7 "Put three of them into your hand".
+_PUT_N_OF_THEM_INTO_YOUR_HAND_RE = re.compile(
+    rf"^put (?P<count>{COUNT})(?: of them)? into your hand$", re.IGNORECASE
 )
 #: "the other into your graveyard" - Waker of Waves' own third clause, split
 #: off the second sentence's "and" by `_CLAUSE_SEPARATOR` the same way
@@ -19626,14 +19824,16 @@ def _merge_look_top_split_hand_graveyard_clauses(
     graveyard." - the same anaphoric-run shape `_merge_look_top_reveal_to_
     hand_clauses` reads for Duskwatch Recruiter, with a different pair of
     destinations and no quality restriction or "you may": both halves of the
-    split are mandatory, one card each.
+    split are mandatory.
 
     `Game.look_at_top_and_split` asks the identical CR 608.2d question either
     way; what differs is only what this function does with the two answered
     groups, and the shape it enforces on them - CR 608.2d: "The player can't
     choose an option that's illegal or impossible", so an answer that does not
-    split the looked-at cards exactly one-and-the-rest is refused rather than
-    silently applied.
+    put exactly the printed number into hand is refused rather than silently
+    applied. The printed number is Waker of Waves' "one", Stock Up's "two" or
+    Dovin, Grand Arbiter's "three"; a library holding fewer cards than that
+    gives what it has (CR 609.3).
     """
     if index + 2 >= len(clauses):
         return None
@@ -19643,7 +19843,14 @@ def _merge_look_top_split_hand_graveyard_clauses(
     count = parse_count(look_match.group("count"))
     if count is None:
         return None
-    if _PUT_ONE_OF_THEM_INTO_YOUR_HAND_RE.fullmatch(clauses[index + 1].strip()) is None:
+    hand_match = _PUT_N_OF_THEM_INTO_YOUR_HAND_RE.fullmatch(clauses[index + 1].strip())
+    if hand_match is None:
+        return None
+    hand_word = hand_match.group("count").lower()
+    if hand_word in ("a", "an"):
+        return None
+    hand_count = parse_count(hand_word)
+    if hand_count is None or hand_count < 1:
         return None
     other = _THE_OTHER_INTO_A_DESTINATION_RE.fullmatch(clauses[index + 2].strip())
     if other is None:
@@ -19651,6 +19858,11 @@ def _merge_look_top_split_hand_graveyard_clauses(
     to_bottom = other.group("destination").lower().startswith("on the bottom")
     randomised = other.group("random") is not None
     rest_label = "bottom of your library" if to_bottom else "your graveyard"
+    prompt = (
+        f"put one into your hand, the other to {rest_label}"
+        if hand_count == 1
+        else f"put {hand_word} into your hand, the rest to {rest_label}"
+    )
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         player = game.controller_of(stack_object)
@@ -19659,18 +19871,20 @@ def _merge_look_top_split_hand_graveyard_clauses(
             player,
             count,
             source=source,
-            prompt=f"put one into your hand, the other to {rest_label}",
+            prompt=prompt,
             moved_label="your hand",
             kept_label=rest_label,
             rest_in_random_order=randomised,
             source_id=source_id_of(stack_object),
-            moved_amount=1,
+            moved_amount=hand_count,
             moved_exact=True,
         )
-        if (moved or rest) and len(moved) != 1:
+        # CR 609.3: a library shorter than the printed number gives what it has.
+        required = min(hand_count, len(moved) + len(rest))
+        if len(moved) != required:
             raise ValueError(
-                f"{source}: exactly one of the {count} must go to hand, the rest to "
-                f"{rest_label} (CR 608.2d)"
+                f"{source}: exactly {required} of the {len(moved) + len(rest)} looked at must "
+                f"go to hand, the rest to {rest_label} (CR 608.2d)"
             )
         for state in moved:
             player.add(state, Zone.HAND)
@@ -19866,7 +20080,7 @@ def _merge_look_top_hand_bottom_exile_play_clauses(
 #: a card" covers a land found among the exiled cards, which "you may play"
 #: (not "you may cast") is broad enough to reach.
 _EXILE_TOP_N_CARDS_RE = re.compile(
-    r"^exile the top (?P<count>\w+) cards? of your library\.?$", re.IGNORECASE
+    rf"^exile the top (?P<count>{COUNT}) cards? of your library\.?$", re.IGNORECASE
 )
 _UNTIL_END_OF_YOUR_NEXT_TURN_PLAY_RE = re.compile(
     r"^until the end of your next turn, you may play (?:those cards|that card)\.?$",
@@ -19939,7 +20153,7 @@ def _merge_exile_top_then_play_until_next_turn_clauses(
 #: spells" into two fragments before any clause-indexed parser ever sees the
 #: sentence whole, the same trap that function's own docstring names.
 _EXILE_TOP_THEN_CAST_TYPES_FREE_THIS_TURN_RE = re.compile(
-    r"^exile the top (?P<count>\w+) cards? of your library\. you may cast "
+    rf"^exile the top (?P<count>{COUNT}) cards? of your library\. you may cast "
     r"(?P<types>(?:creature|instant|sorcery|artifact|enchantment|planeswalker|land)"
     r"(?: and (?:creature|instant|sorcery|artifact|enchantment|planeswalker|land))?) "
     r"spells from among them this turn without paying their mana costs\.?$",
@@ -20516,7 +20730,7 @@ def _parse_choose_name_search_and_exile_whole_text(
 #: *card* type), so this reads the color alone rather than trying to force
 #: "permanent" through that matcher.
 _DRAW_IF_YOU_CONTROL_COLOR_PERMANENT_RE = re.compile(
-    r"^draw (?:a card|(?P<count>\w+) cards) if you control (?:a|an) "
+    rf"^draw (?:a card|(?P<count>{COUNT}) cards) if you control (?:a|an) "
     r"(?P<color>white|blue|black|red|green) permanent"
     r"(?: other than (?P<exclude>.+))?\.?$",
     re.IGNORECASE,
@@ -20751,8 +20965,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     )
     if defending_player_exiles is not None:
         return defending_player_exiles
-    if _LOOK_AT_TOP_CARD_RE.fullmatch(clause.strip()):
-        return _look_at_top_card
+    look_at_top_card = _parse_look_at_top_card_clause(clause)
+    if look_at_top_card is not None:
+        return look_at_top_card
     if _LOOK_AT_TARGET_HAND_RE.fullmatch(clause.strip()):
         return _look_at_target_hand
     # -- Wave W1's own single-clause additions, contiguous block ----------
@@ -23497,16 +23712,27 @@ def _parse_mill_then_may_return_to_hand_clause(text: str) -> AbilityEffect | Non
 # to be read together: only the first sentence knows which cards those are
 # (CR 700.7's anaphora again).
 
+#: Rapid Rescue's fixed "a", Vorinclex // The Grand Evolution's chapter I
+#: "up to two ... onto the battlefield": `QUANTITY` reads either. A bare
+#: fixed count needs the printed "you may" for its CR 608.2d optionality,
+#: exactly as `_SELECT_FROM_TOP_RE` requires it above; "up to N"/"any number
+#: of" carry their own (CR 107.1c) and print no "you may" at all.
 _MILL_THEN_MAY_TAKE_FROM_MILLED_RE = re.compile(
-    rf"^mill (?P<n>{COUNT}) cards?\.\s*"
-    r"you may put (?:an?|one) (?P<group>[a-z]+) card from among the milled cards "
-    r"into your hand\.(?:\s*you gain (?P<life>\d+) life\.?)?$",
+    rf"^mill (?P<mill_n>{COUNT}) cards?\.\s*"
+    rf"(?P<may>you may )?put {quantity_pattern('take_n')} (?P<group>[a-z]+) cards? "
+    r"from among the milled cards "
+    r"(?P<dest>into your hand|onto the battlefield)"
+    r"\.(?:\s*you gain (?P<life>\d+) life\.?)?$",
     re.IGNORECASE | re.DOTALL,
 )
 
 
-def _parse_mill_then_may_take_from_milled(text: str) -> Effect | None:
-    """`_MILL_THEN_MAY_TAKE_FROM_MILLED_RE`'s shape - Rapid Rescue.
+def _mill_then_may_take_from_milled_runner(
+    text: str,
+) -> Callable[["Game", Player, str, str | None], None] | None:
+    """Compile `_MILL_THEN_MAY_TAKE_FROM_MILLED_RE`'s shape into one runner
+    both the spell side (Rapid Rescue) and the ability side (Vorinclex //
+    The Grand Evolution's own chapter I) call.
 
     The optional trailing life gain is part of this pattern rather than left
     to the ordinary player-clause path, because a whole-text parser has to
@@ -23517,44 +23743,118 @@ def _parse_mill_then_may_take_from_milled(text: str) -> Effect | None:
     match = _MILL_THEN_MAY_TAKE_FROM_MILLED_RE.fullmatch(_strip_non_effect_preamble(text).strip())
     if match is None:
         return None
-    count = parse_count(match.group("n"))
+    count = parse_count(match.group("mill_n"))
     if count is None:
+        return None
+    quantity = parse_quantity(match.group("take_n"))
+    if quantity is None or quantity.source not in (QuantitySource.FIXED, QuantitySource.ANY_NUMBER):
+        return None
+    if quantity.exact and match.group("may") is None:
         return None
     predicate = _parse_card_group_qualifier(match.group("group"))
     if predicate is None:
         return None
+    destination = match.group("dest").lower()
     life = int(match.group("life")) if match.group("life") else 0
+    if quantity.source is QuantitySource.ANY_NUMBER:
+        take_noun = "any number of cards"
+    elif quantity.exact and quantity.amount == 1:
+        take_noun = "a card"
+    else:
+        take_noun = f"up to {quantity.amount} cards"
 
-    def effect(game: "Game", spell: CardState) -> None:
-        controller = game.controller_of(spell)
+    def run(game: "Game", controller: Player, source_name: str, source_id: str | None) -> None:
         milled = _mill(game, controller, count)
         candidates = [
             state for state in milled if state.zone is Zone.GRAVEYARD and predicate(state)
         ]
-        if candidates and game.may(
-            controller,
-            "put a card from among the milled cards into your hand",
-            source=spell.name,
-            source_id=source_id_of(spell),
-        ):
-            chosen_ids = game.ask(
-                Decision(
-                    kind=DecisionKind.CHOOSE_CARDS,
-                    player=controller.username,
-                    prompt="choose a milled card to put into your hand",
-                    source=spell.name,
-                    source_id=source_id_of(spell),
-                    amount=1,
-                    cards=tuple(state.id for state in candidates),
+        chosen: list[CardState] = []
+        if candidates:
+            if quantity.exact:
+                # A single optional pick, CR 608.2d's "may" gate before
+                # naming candidates - unchanged from before this family
+                # read any other quantifier.
+                if game.may(
+                    controller,
+                    f"put {take_noun} from among the milled cards {destination}",
+                    source=source_name,
+                    source_id=source_id,
+                ):
+                    chosen_ids = game.ask(
+                        Decision(
+                            kind=DecisionKind.CHOOSE_CARDS,
+                            player=controller.username,
+                            prompt=f"choose {take_noun} to put {destination}",
+                            source=source_name,
+                            source_id=source_id,
+                            amount=1,
+                            cards=tuple(state.id for state in candidates),
+                        )
+                    )
+                    by_id = {state.id: state for state in candidates}
+                    chosen = [
+                        state for card_id in chosen_ids if (state := by_id.get(card_id)) is not None
+                    ]
+            else:
+                # "up to N"/"any number of": CR 107.1c - zero to the
+                # ceiling is one question, with no separate "may" gate.
+                ceiling = (
+                    len(candidates)
+                    if quantity.amount is None
+                    else min(quantity.amount, len(candidates))
                 )
-            )
-            by_id = {state.id: state for state in candidates}
-            for card_id in chosen_ids:
-                state = by_id.get(card_id)
-                if state is not None and state.zone is Zone.GRAVEYARD:
-                    controller.move(state, Zone.HAND)
+                chosen_ids = game.ask(
+                    Decision(
+                        kind=DecisionKind.CHOOSE_CARDS,
+                        player=controller.username,
+                        prompt=f"put {take_noun} from among the milled cards {destination}",
+                        source=source_name,
+                        source_id=source_id,
+                        amount=ceiling,
+                        exact=False,
+                        cards=tuple(state.id for state in candidates),
+                    )
+                )
+                by_id = {state.id: state for state in candidates}
+                chosen = [
+                    state for card_id in chosen_ids if (state := by_id.get(card_id)) is not None
+                ]
+        for state in chosen:
+            if state.zone is not Zone.GRAVEYARD:
+                continue
+            if destination == "into your hand":
+                controller.move(state, Zone.HAND)
+            else:
+                # CR 110.4a's permanent card, put onto the battlefield
+                # without being cast (no spell, so no cast trigger).
+                game.put_onto_battlefield(state, controller.username)
         if life:
             game.gain_life(controller, life)
+
+    return run
+
+
+def _parse_mill_then_may_take_from_milled(text: str) -> Effect | None:
+    """The runner above, on a spell (CR 608.3) - Rapid Rescue."""
+    run = _mill_then_may_take_from_milled_runner(text)
+    if run is None:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        run(game, game.controller_of(spell), spell.name, source_id_of(spell))
+
+    return effect
+
+
+def _parse_mill_then_may_take_from_milled_ability(text: str) -> AbilityEffect | None:
+    """The runner above, on a triggered or activated ability (CR 603.3a,
+    CR 602.2a) - Vorinclex // The Grand Evolution's chapter I."""
+    run = _mill_then_may_take_from_milled_runner(text)
+    if run is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        run(game, game.player(ability.controller), ability.source_name, source_id_of(ability))
 
     return effect
 

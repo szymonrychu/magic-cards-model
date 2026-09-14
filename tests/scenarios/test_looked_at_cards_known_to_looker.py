@@ -595,3 +595,57 @@ def test_explores_reveal_fills_every_field():
     assert reveal.zone_change_stamp == stamp
     assert reveal.library_epoch == epoch
     assert reveal.turn == scenario.game.turn.turns_taken
+
+
+# -- the count is read, not fixed at "the top card": Orcish Spy's "Look at
+# the top three cards of target player's library" (CR 701.20e) -------------
+
+
+def test_orcish_spy_looks_at_the_top_three_cards_of_the_targeted_library():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Orcish Spy"])
+        .player("bob", library=["Lightning Bolt", "Island", "Forest", "Mountain"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bob = scenario.player("bob")
+    bolt, island, forest, mountain = bob.library[:4]
+    spy = scenario.find("Orcish Spy", Zone.BATTLEFIELD)
+
+    scenario.activate(spy, username="alice", targets=["bob"])
+    scenario.pass_until_resolved()
+
+    assert known(scenario.game, "alice") == [
+        ("Lightning Bolt", Zone.LIBRARY, 0, False),
+        ("Island", Zone.LIBRARY, 1, False),
+        ("Forest", Zone.LIBRARY, 2, False),
+    ]
+    assert known(scenario.game, "bob") == [], "CR 701.20e: shown only to the looker"
+    assert mountain.zone is Zone.LIBRARY
+    reveals = [r for r in scenario.game.reveals if r.source == "Orcish Spy"]
+    assert [r.card_id for r in reveals] == [bolt.id, island.id, forest.id]
+    assert all(r.viewers == ["alice"] for r in reveals)
+
+
+def test_orcish_spy_with_a_two_card_library_looks_at_both():
+    """CR 609.3: a library shorter than the printed count gives what it
+    has."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Orcish Spy"])
+        .player("bob", library=["Lightning Bolt", "Island"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bob = scenario.player("bob")
+    bolt, island = bob.library[:2]
+    spy = scenario.find("Orcish Spy", Zone.BATTLEFIELD)
+
+    scenario.activate(spy, username="alice", targets=["bob"])
+    scenario.pass_until_resolved()
+
+    assert known(scenario.game, "alice") == [
+        ("Lightning Bolt", Zone.LIBRARY, 0, False),
+        ("Island", Zone.LIBRARY, 1, False),
+    ]

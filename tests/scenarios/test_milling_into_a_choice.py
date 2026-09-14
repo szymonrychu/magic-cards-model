@@ -46,6 +46,21 @@ the session that wrote this file:
   permission is stamped to the object it was granted over.
 - **CR 205.3m** - creature types, of which Avatar is one; Overlord names it to
   exclude itself and its kin.
+
+Rapid Rescue's own quantity is fixed at "a" (one card, CR 608.2d's "may").
+Vorinclex // The Grand Evolution's chapter I - "Mill ten cards. Put up to two
+creature cards from among the milled cards onto the battlefield." - reads the
+same family off a Saga's own triggered ability rather than a spell, with
+CR 107.1c's own "up to two" in place of the fixed "a", and no printed "you
+may" at all (the "up to" already carries the optionality). The chapter
+ability is reached the ordinary way, by transforming a permanent already on
+the battlefield and adding a lore counter directly (`Game.saga_lore_step`) -
+CR 701.27a: to transform a permanent is to "turn it over so that its other
+face is up", not a zone change (CR 400.7 only makes a new object of one),
+so CR 714.3a's own intrinsic "enters with a lore counter" never applies and
+`CardState.transform()` on its own adds no counter here. One has to be
+added the way CR 714.3c's precombat main phase turn-based action would on a
+later turn.
 """
 
 from magic_cards_model.machines import Step
@@ -179,6 +194,116 @@ def test_declining_the_may_leaves_both_milled_cards_in_the_graveyard():
     assert [question.kind for question in asked] == [DecisionKind.MAY], (
         "the question was put and answered no; nothing followed it"
     )
+
+
+# -- Vorinclex // The Grand Evolution: the quantity is read, not fixed at "a",
+# and the pool moves onto the battlefield rather than to hand --------------
+
+
+def _grand_evolution_board(library: list[str]) -> Scenario:
+    return (
+        Scenario()
+        .player("alice", battlefield=["Vorinclex // The Grand Evolution"], library=list(library))
+        .player("bob")
+    )
+
+
+def _transform_and_add_a_lore_counter(scenario) -> None:
+    """`CardState.transform` alone adds no lore counter - CR 714.3a's
+    intrinsic "enters with a lore counter" is a replacement effect tied to
+    *entering* (CR 614.1c), and CR 701.27a's transform ("turn it over so
+    that its other face is up") is not that. `Game.saga_lore_step` is the
+    same turn-based action CR 714.3c's own precombat main phase would run on
+    alice's *next* turn; calling it once here is production behaviour
+    brought forward, not a shortcut around it."""
+    vorinclex = scenario.find("Vorinclex", Zone.BATTLEFIELD)
+    vorinclex.transform()
+    scenario.game.saga_lore_step()
+    scenario.game.put_triggers_on_stack()
+    while scenario.game.stack:
+        scenario.resolve_top()
+
+
+def test_chapter_one_puts_up_to_two_milled_creatures_onto_the_battlefield():
+    scenario = _grand_evolution_board(
+        [
+            "Grizzly Bears",
+            "Lightning Bolt",
+            "Forest",
+            "Mishra's Bauble",
+            "Sol Ring",
+            "Island",
+            "Swamp",
+            "Grizzly Bears",
+            "Opt",
+            "Counterspell",
+        ]
+    ).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    library = scenario.player("alice").library[:10]
+    bears = [state for state in library if state.name == "Grizzly Bears"]
+    assert len(bears) == 2
+    scenario.will_choose_cards(*bears, source="The Grand Evolution")
+
+    _transform_and_add_a_lore_counter(scenario)
+
+    for bear in bears:
+        assert bear.zone is Zone.BATTLEFIELD
+    nonbears = [state for state in library if state.name != "Grizzly Bears"]
+    assert all(state.zone is Zone.GRAVEYARD for state in nonbears)
+    assert scenario.player("alice").library == []
+
+
+def test_chapter_one_may_take_only_one_of_two_milled_creatures():
+    """CR 608.2d: "up to two" permits any count from zero through two -
+    taking only one is as legal as taking both."""
+    scenario = _grand_evolution_board(
+        [
+            "Grizzly Bears",
+            "Lightning Bolt",
+            "Forest",
+            "Mishra's Bauble",
+            "Sol Ring",
+            "Island",
+            "Swamp",
+            "Grizzly Bears",
+            "Opt",
+            "Counterspell",
+        ]
+    ).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    library = scenario.player("alice").library[:10]
+    bears = [state for state in library if state.name == "Grizzly Bears"]
+    scenario.will_choose_cards(bears[0], source="The Grand Evolution")
+
+    _transform_and_add_a_lore_counter(scenario)
+
+    assert bears[0].zone is Zone.BATTLEFIELD
+    assert bears[1].zone is Zone.GRAVEYARD
+
+
+def test_chapter_one_with_no_creatures_milled_asks_no_question():
+    scenario = _grand_evolution_board(
+        [
+            "Lightning Bolt",
+            "Forest",
+            "Mishra's Bauble",
+            "Sol Ring",
+            "Island",
+            "Swamp",
+            "Opt",
+            "Counterspell",
+            "Lightning Bolt",
+            "Forest",
+        ]
+    ).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    library = scenario.player("alice").library[:10]
+
+    _transform_and_add_a_lore_counter(scenario)
+
+    assert _questions_from(scenario, "The Grand Evolution") == []
+    assert all(state.zone is Zone.GRAVEYARD for state in library)
 
 
 # -- Overlord of the Balemurk: the pool is the whole graveyard --------------

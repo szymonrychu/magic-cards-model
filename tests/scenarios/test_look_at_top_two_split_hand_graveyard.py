@@ -7,7 +7,7 @@ own Waker of Waves coverage for that primitive's origin).
 
 Codecracker Hound is the vehicle here rather than Waker of Waves: its own
 printed sentence elides "of them" ("Put one into your hand", not "Put one of
-them into your hand"), which `_PUT_ONE_OF_THEM_INTO_YOUR_HAND_RE` has to read
+them into your hand"), which `_PUT_N_OF_THEM_INTO_YOUR_HAND_RE` has to read
 as the same shape - the fix this file is here to prove, and the reason it
 exists as its own scenario rather than only extending Waker of Waves'.
 
