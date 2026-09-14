@@ -2352,3 +2352,40 @@ four or more card types among cards exiled with this creature" needs the exile
 pile scoped to a permanent, which `LayerContext` does not carry. Those two are
 the sweeper's controls in `tests/test_sweep_pool.py` and
 `tests/test_survey_cards.py`, which used to be Rancor and Angel of Jubilation.
+
+## Number words: one shared count reader (number sweep G0)
+
+Every count a card prints is read by `magic_cards_model/numbers.py`: "a"/"an",
+"zero" through "twenty", the tens to "fifty", digits including "1,000" (CR
+107.1: "The only numbers the Magic game uses are integers"), CR 107.3's X and
+"X, where X is ..." as a `VariableX` marker, "once"/"twice"/"thrice"/"N times",
+the ordinals "first" through "twentieth", and quantifiers ("up to N", CR
+107.1c's "any number of", "one or more", "that many") as a `Quantity`. The
+fourteen tables that used to live in `effects.py`, `cost.py`, `casting.py`,
+`targeting.py`, `modes.py`, `companion.py`, `abilities.py` (two), `triggers.py`
+(two), `replacement.py`, `layers.py`, `game.py` (two) and `models/deck.py` are
+gone, and investigate's multiplier reads `parse_multiplier`. Most tables
+stopped at "ten", so a card printing "thirteen" did nothing.
+
+Proven on off-pool printings: Army of the Damned ("Create thirteen tapped 2/2
+black Zombie creature tokens") and Archive Trap ("Target opponent mills
+thirteen cards") in `tests/scenarios/test_number_words_beyond_ten.py`; the
+reader itself in `tests/test_numbers.py`.
+
+**Fails closed now.** The replacement reader split "enters with that many
++1/+1 counters" into an unknown count word and took CR 107.3m's X for it, with
+a made-up counter kind. A word that is not a count now makes the sentence
+`UNPARSED` (Shimatsu the Bloodcloaked, Devouring Hellion, and the "your choice
+of a flying counter or ..." lines). The six whole-card parsers that captured
+`\w+` and raised `KeyError` on an X (The Darkness Crystal, Turntimber
+Symbiosis, Atraxa, Nashi, Dalkovan Encampment, Guide of Souls) capture a count
+only.
+
+**Still not read, and not number gaps:**
+
+| Gap | Card | Where |
+|---|---|---|
+| "that many" carried from an earlier instruction or event | Shimatsu the Bloodcloaked, Devouring Hellion | number sweep G0b |
+| "Each opponent mills N cards" is unread for any N | Fractured Sanity | `effects.py` player clauses |
+| "Tap N untapped <quality> you control" as an activation cost has no chooser: `Game.activation_cost` fills only EXILE and REVEAL object costs | Persistent Petitioners | `models/game.py` `activation_cost` |
+| "You may pay {B} rather than pay this spell's mana cost if there are N or more creatures on the battlefield" | Blasphemous Edict | `casting.py` conditional alternative costs |
