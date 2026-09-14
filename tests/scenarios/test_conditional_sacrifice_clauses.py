@@ -278,3 +278,244 @@ def test_declining_the_sacrifice_leaves_the_land_and_library_untouched():
     assert sanctum.zone is Zone.BATTLEFIELD
     assert len(alice.library) == 1
     assert all(state.name != "Thought-Knot Seer" for state in alice.hand)
+
+
+# --------------------------------------------------------------------------
+# A counted restriction: "you may sacrifice two Islands" / "three other
+# nonland permanents" (CR 118.3, CR 118.12, CR 701.21a)
+# --------------------------------------------------------------------------
+#
+# Looked up with `mise run rules:find` in the session that wrote these:
+#
+# - CR 118.3 - "A player can't pay a cost without having the necessary
+#   resources to pay it fully." The sacrifice before "If you do" is a cost
+#   (CR 118.12), so one Island short is not a smaller payment: "yes" is not a
+#   legal answer at all.
+# - CR 701.21a - "A player can't sacrifice something that isn't a permanent,
+#   or something that's a permanent they don't control" - an opponent's
+#   Islands never count toward the two.
+
+LEVIATHAN = "Leviathan"
+TALENT = "Scavenger's Talent"
+
+
+def _leviathan_upkeep(scenario) -> None:
+    scenario.start_at(Step.UNTAP)
+    scenario.advance()  # upkeep: "At the beginning of your upkeep" triggers
+    scenario.game.put_triggers_on_stack()
+
+
+def test_leviathan_sacrifices_exactly_the_two_chosen_islands_and_untaps():
+    """Leviathan: "At the beginning of your upkeep, you may sacrifice two
+    Islands. If you do, untap this creature." Three Islands, two chosen: the
+    question asks for exactly two, the third Island stays."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Leviathan", "Island", "Island", "Island"])
+        .player("bob")
+        .build()
+    )
+    leviathan = scenario.creature(LEVIATHAN)
+    leviathan.tap()
+    first, second, third = scenario.untapped_sources("Island", "Island", "Island")
+    scenario.will_take_the_may(True, source=LEVIATHAN)
+    scenario.will_choose_cards(first, third, source=LEVIATHAN)
+
+    _leviathan_upkeep(scenario)
+    scenario.resolve_top()
+
+    assert first.zone is Zone.GRAVEYARD
+    assert third.zone is Zone.GRAVEYARD
+    assert second.zone is Zone.BATTLEFIELD
+    assert not leviathan.tapped
+    (choose,) = [q for q in scenario.questions_asked() if q.kind is DecisionKind.CHOOSE_CARDS]
+    assert choose.player == "alice"
+    assert choose.amount == 2
+    assert set(choose.cards) == {first.id, second.id, third.id}
+    assert scenario.game.conditional_clause_notices == []
+
+
+def test_leviathan_one_island_short_cannot_pay_and_stays_tapped():
+    """CR 118.3: one Island cannot pay "sacrifice two Islands", so "yes" is
+    not a legal answer and nothing is sacrificed."""
+    scenario = Scenario().player("alice", battlefield=["Leviathan", "Island"]).player("bob").build()
+    leviathan = scenario.creature(LEVIATHAN)
+    leviathan.tap()
+    island = scenario.find("Island", Zone.BATTLEFIELD, "alice")
+
+    _leviathan_upkeep(scenario)
+    scenario.resolve_top()
+
+    (may,) = [q for q in scenario.questions_asked() if q.kind is DecisionKind.MAY]
+    assert may.affirmative_is_legal is False
+    assert island.zone is Zone.BATTLEFIELD
+    assert leviathan.tapped
+    assert scenario.game.conditional_clause_notices == []
+
+
+def test_leviathan_cannot_count_an_opponents_islands():
+    """CR 701.21a: a player sacrifices only permanents they control - bob's
+    two Islands do not make up alice's second one."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Leviathan", "Island"])
+        .player("bob", battlefield=["Island", "Island"])
+        .build()
+    )
+    leviathan = scenario.creature(LEVIATHAN)
+    leviathan.tap()
+
+    _leviathan_upkeep(scenario)
+    scenario.resolve_top()
+
+    (may,) = [q for q in scenario.questions_asked() if q.kind is DecisionKind.MAY]
+    assert may.affirmative_is_legal is False
+    assert leviathan.tapped
+    assert len([p for p in scenario.game.battlefield if p.name == "Island"]) == 3
+
+
+def test_leviathan_declining_keeps_both_islands_and_stays_tapped():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Leviathan", "Island", "Island"])
+        .player("bob")
+        .build()
+    )
+    leviathan = scenario.creature(LEVIATHAN)
+    leviathan.tap()
+    scenario.will_take_the_may(False, source=LEVIATHAN)
+
+    _leviathan_upkeep(scenario)
+    scenario.resolve_top()
+
+    assert leviathan.tapped
+    assert len([p for p in scenario.game.battlefield if p.name == "Island"]) == 2
+
+
+def _talent_end_step(scenario) -> None:
+    talent = scenario.find(TALENT, Zone.BATTLEFIELD, "alice")
+    talent.class_level = 3
+    scenario.start_at(Step.POSTCOMBAT_MAIN)
+    scenario.advance()  # end step: "At the beginning of your end step" triggers
+    scenario.game.put_triggers_on_stack()
+
+
+def test_scavengers_talent_sacrifices_three_other_nonland_permanents_and_returns_a_creature():
+    """Scavenger's Talent, level 3: "At the beginning of your end step, you
+    may sacrifice three other nonland permanents. If you do, return a
+    creature card from your graveyard to the battlefield with a finality
+    counter on it." Four candidates, three chosen; the Talent itself and the
+    lands are never offered."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=[TALENT, "Goblin Guide", "Sol Ring", "Grizzly Bears", "Memnite", "Swamp"],
+            graveyard=["Thought-Knot Seer"],
+        )
+        .player("bob")
+        .build()
+    )
+    talent = scenario.find(TALENT, Zone.BATTLEFIELD, "alice")
+    goblin = scenario.creature("Goblin Guide")
+    ring = scenario.find("Sol Ring", Zone.BATTLEFIELD, "alice")
+    bears = scenario.creature("Grizzly Bears")
+    memnite = scenario.creature("Memnite")
+    swamp = scenario.find("Swamp", Zone.BATTLEFIELD, "alice")
+    seer = scenario.find("Thought-Knot Seer", Zone.GRAVEYARD, "alice")
+    scenario.will_take_the_may(True, source=TALENT)
+    scenario.will_choose_cards(goblin, ring, bears, source=TALENT)
+    scenario.will_choose_cards(seer, source=TALENT)
+
+    _talent_end_step(scenario)
+    scenario.resolve_top()
+
+    assert {goblin.zone, ring.zone, bears.zone} == {Zone.GRAVEYARD}
+    assert memnite.zone is Zone.BATTLEFIELD
+    assert talent.zone is Zone.BATTLEFIELD
+    assert swamp.zone is Zone.BATTLEFIELD
+    assert seer.zone is Zone.BATTLEFIELD
+    assert seer.counters["finality"] == 1
+    sacrifice_question = next(
+        q for q in scenario.questions_asked() if q.kind is DecisionKind.CHOOSE_CARDS
+    )
+    assert sacrifice_question.amount == 3
+    assert set(sacrifice_question.cards) == {goblin.id, ring.id, bears.id, memnite.id}
+    assert scenario.game.conditional_clause_notices == []
+
+
+def test_scavengers_talent_two_others_cannot_pay_even_counting_itself_and_lands():
+    """Two other nonland permanents: the Talent is a third nonland permanent
+    but not an *other* one, and the Swamp is not nonland, so CR 118.3 leaves
+    no legal "yes"."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=[TALENT, "Goblin Guide", "Sol Ring", "Swamp"],
+            graveyard=["Thought-Knot Seer"],
+        )
+        .player("bob")
+        .build()
+    )
+    goblin = scenario.creature("Goblin Guide")
+    seer = scenario.find("Thought-Knot Seer", Zone.GRAVEYARD, "alice")
+
+    _talent_end_step(scenario)
+    scenario.resolve_top()
+
+    (may,) = [q for q in scenario.questions_asked() if q.kind is DecisionKind.MAY]
+    assert may.affirmative_is_legal is False
+    assert goblin.zone is Zone.BATTLEFIELD
+    assert seer.zone is Zone.GRAVEYARD
+
+
+def test_scavengers_talent_with_no_creature_card_still_sacrifices_the_three():
+    """CR 118.12: "If you do" checks the payment, not what the consequence
+    finds - three noncreature permanents are gone even with no creature card
+    in the graveyard to return."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=[TALENT, "Sol Ring", "Mishra's Bauble", "Pithing Needle"])
+        .player("bob")
+        .build()
+    )
+    ring = scenario.find("Sol Ring", Zone.BATTLEFIELD, "alice")
+    bauble = scenario.find("Mishra's Bauble", Zone.BATTLEFIELD, "alice")
+    needle = scenario.find("Pithing Needle", Zone.BATTLEFIELD, "alice")
+    scenario.will_take_the_may(True, source=TALENT)
+
+    _talent_end_step(scenario)
+    scenario.resolve_top()
+
+    assert {ring.zone, bauble.zone, needle.zone} == {Zone.GRAVEYARD}
+    assert not [p for p in scenario.game.battlefield if p.counters["finality"]]
+    assert not [q for q in scenario.questions_asked() if "return" in q.prompt]
+
+
+def test_scavengers_talent_may_return_a_creature_it_just_sacrificed():
+    """The sacrifice is paid before the consequence runs (CR 118.12), so a
+    creature sacrificed to pay is already a creature card in the graveyard
+    when "return a creature card" looks - and it comes back with the
+    finality counter."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=[TALENT, "Memnite", "Sol Ring", "Mishra's Bauble"])
+        .player("bob")
+        .build()
+    )
+    memnite = scenario.creature("Memnite")
+    scenario.will_take_the_may(True, source=TALENT)
+    scenario.will_choose_cards(
+        memnite,
+        scenario.find("Sol Ring", Zone.BATTLEFIELD, "alice"),
+        scenario.find("Mishra's Bauble", Zone.BATTLEFIELD, "alice"),
+        source=TALENT,
+    )
+    scenario.will_choose_cards(memnite, source=TALENT)
+
+    _talent_end_step(scenario)
+    scenario.resolve_top()
+
+    assert memnite.zone is Zone.BATTLEFIELD
+    assert memnite.counters["finality"] == 1

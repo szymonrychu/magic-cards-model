@@ -509,3 +509,36 @@ def test_ajani_creates_no_reflexive_ability_when_the_intervening_if_fails():
     assert not scenario.game.pending_triggers
     assert scenario.stack_names() == []
     assert bob.life == 20
+
+
+def test_one_or_more_then_that_many_fails_closed_until_the_count_is_carried():
+    """Swashbuckler Extraordinaire: "Whenever you attack, you may sacrifice
+    one or more Treasures. When you do, up to that many target creatures gain
+    double strike until end of turn." The restriction's count is readable,
+    but "that many" needs the sacrificed count carried into the reflexive
+    ability, which nothing carries yet: the ability records a
+    `ReflexiveClauseNotice` and sacrifices nothing, rather than sacrificing
+    Treasures for a consequence it cannot run."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Swashbuckler Extraordinaire"], battlefield=["Grizzly Bears"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.put_onto_battlefield("Swashbuckler Extraordinaire", "alice")
+    scenario.game.put_triggers_on_stack()
+    scenario.resolve_top()  # "When this creature enters, create a Treasure token."
+    treasures = [p for p in scenario.game.battlefield if p.name == "Treasure Token"]
+    assert len(treasures) == 1
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+
+    scenario.attack_with(bears)
+    scenario.game.put_triggers_on_stack()
+    scenario.resolve_top()
+
+    assert treasures[0].zone is Zone.BATTLEFIELD
+    assert [notice.source_name for notice in scenario.game.reflexive_clause_notices] == [
+        "Swashbuckler Extraordinaire"
+    ]

@@ -2251,8 +2251,10 @@ class Game(EngineModel):
 
     Bumped 17 -> 18: a finality counter now exiles its permanent instead of
     letting it reach a graveyard (CR 122.1h). A version-17 battlefield holding
-    one resolves that permanent's death differently under this build. Refused
-    instead.
+    one resolves that permanent's death differently under this build. "You may
+    sacrifice <N> ... If/When you do" now reads a count other than one
+    (Leviathan, Scavenger's Talent), so a version-17 stack holding such a
+    trigger resolved as a notice and now sacrifices. Refused instead.
     """
 
     @model_validator(mode="before")

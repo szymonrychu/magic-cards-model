@@ -56,7 +56,7 @@ travel.
 import re
 from collections.abc import Callable, Iterable, Sequence
 from random import Random
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, NamedTuple
 from uuid import UUID
 
 from pydantic import ConfigDict
@@ -84,7 +84,15 @@ from ..models.token import (
     token_copy_of,
 )
 from ..models.zone import Zone
-from ..numbers import COUNT, parse_count, parse_multiplier
+from ..numbers import (
+    COUNT,
+    QUANTITY,
+    Quantity,
+    QuantitySource,
+    parse_count,
+    parse_multiplier,
+    parse_quantity,
+)
 from ..snapshot import EngineModel
 from . import combat as combat_rules
 from .abilities import (
@@ -9602,6 +9610,69 @@ def _parse_mill_then_may_return_creature_clause(text: str) -> AbilityEffect | No
     return effect
 
 
+#: "Return a creature card from your graveyard to the battlefield with a
+#: finality counter on it." (Scavenger's Talent) - no target: the player
+#: chooses among their own graveyard's matching cards as the effect resolves
+#: (CR 608.2d). An optional "tapped" and an optional "with N `<kind>`
+#: counter(s) on it/them" ride along.
+_RETURN_CARDS_FROM_YOUR_GRAVEYARD_RE = re.compile(
+    rf"^return (?P<n>{COUNT}) (?P<quality>[a-z ,]+?) cards? from your graveyard to the battlefield"
+    r"(?P<tapped> tapped)?"
+    rf"(?: with (?P<counter_n>{COUNT}) (?P<counter>[a-z0-9+/-]+) counters? on (?:it|them))?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_return_cards_from_your_graveyard_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_RETURN_CARDS_FROM_YOUR_GRAVEYARD_RE`'s shape.
+
+    CR 609.3: a graveyard holding fewer matching cards than the count returns
+    what it has. The counters are placed as each permanent arrives, the way
+    Neoform's "with an additional +1/+1 counter on it" already is, so a
+    finality counter (CR 122.1h) is on it from then on.
+    """
+    match = _RETURN_CARDS_FROM_YOUR_GRAVEYARD_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    count = parse_count(match.group("n"))
+    if count is None or count < 1:
+        return None
+    matches = _quality_matcher(match.group("quality"))
+    counter_kind = match.group("counter")
+    counter_amount = parse_count(match.group("counter_n")) if counter_kind else 0
+    if counter_kind and not counter_amount:
+        return None
+    tapped = match.group("tapped") is not None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        player = game.controller_of(stack_object)
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        candidates = [state for state in player.cards_in(Zone.GRAVEYARD) if matches(state)]
+        wanted = min(count, len(candidates))
+        if wanted <= 0:
+            return
+        chosen_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=player.username,
+                prompt=f"choose {wanted} card(s) to return from your graveyard to the battlefield",
+                source=source,
+                amount=wanted,
+                cards=tuple(state.id for state in candidates),
+                source_id=source_id_of(stack_object),
+            )
+        )
+        by_id = {state.id: state for state in candidates}
+        for card_id in chosen_ids:
+            permanent = game.put_onto_battlefield(by_id[card_id], player.username, tapped=tapped)
+            if counter_kind and permanent.zone is Zone.BATTLEFIELD:
+                game.add_counters(permanent, counter_kind.lower(), counter_amount or 0)
+
+    return effect
+
+
 #: --- The "see the top N, then optionally move one of them" family ---------
 #:
 #: One printed shape, not one card. A player sees the top N cards of their own
@@ -13798,34 +13869,56 @@ _GAIN_X_LIFE_RE = re.compile(r"^(?:you )?gains? X life$", re.IGNORECASE)
 _DRAW_X_CARDS_RE = re.compile(r"^draws? X cards?$", re.IGNORECASE)
 
 
-def _sacrifice_restriction(
-    restriction: str,
-) -> tuple[bool, Callable[["Game", Player, UUID], list[CardState]]] | None:
+#: One permanent - "this `<type>`", "another `<type>`", "a `<type>`".
+_ONE_PERMANENT = Quantity(amount=1, minimum=1, source=QuantitySource.FIXED)
+
+#: "`<quantity>` [other ]`<description>`" - "a creature", "two Islands",
+#: "three other nonland permanents", "one or more Treasures" - and "another
+#: `<description>`", which is "one other". The description is read by
+#: `machines/targeting.permanent_description`, the grammar an edict's "sacrifices
+#: a `<description>` of their choice" already shares with a "target ..." phrase.
+_COUNTED_SACRIFICE_RE = re.compile(
+    rf"^(?:(?P<another>another)|(?P<quantity>{QUANTITY})\s+(?P<other>other\s+)?)\s*"
+    r"(?P<description>.+)$",
+    re.IGNORECASE,
+)
+
+
+class _SacrificeRestriction(NamedTuple):
+    """What `_sacrifice_restriction` read: whether the permanent is the
+    ability's own source, how many to sacrifice, and a function reading the
+    legal candidates off the battlefield as the effect resolves."""
+
+    is_self: bool
+    candidates: Callable[["Game", Player, UUID | None], list[CardState]]
+    quantity: Quantity
+
+
+def _sacrifice_restriction(restriction: str) -> _SacrificeRestriction | None:
     """`restriction` - the text between "sacrifice" and the following period -
     read as "this `<type>`" (the permanent bearing the ability itself,
-    Sanctum of Ugin), "another `<type>`" (a second permanent the player
-    controls of the stated type, Disciple of Freyalise), or a bare "a `<type>`"
-    /"an `<type>`" (any permanent of the stated type the player controls, no
-    self-exclusion - Grist, the Hunger Tide's "-2") - each paired with a
-    function that reads the actual legal candidates off the battlefield at
-    resolution time - never at parse time, since what is on the battlefield
-    changes between then and resolution. Off the *computed* battlefield
-    (`computed_permanents`, CR 613.5): "sacrifice a creature" may be paid with
-    a land animated into one, and may not be paid with a creature some layer-4
-    effect has stopped being one.
+    Sanctum of Ugin) or a counted description of permanents the player
+    controls: "another creature" (Disciple of Freyalise), "a creature"
+    (Grist, the Hunger Tide's "-2"), "two Islands" (Leviathan), "three other
+    nonland permanents" (Scavenger's Talent), "one or more Treasures".
 
-    Returns `(is_self, candidates)`: `is_self` says whether there is a real
-    CR 608.2d choice of *which* permanent to sacrifice (false for "this
-    `<type>`", where there is only ever one, CR 601.2c never asks a question
-    with one answer) or a genuine one among however many candidates
-    `candidates` finds (true only in name for "another `<type>`"/bare "a
-    `<type>`" - the "false"/"true" pairing here is the reverse of confusing:
-    `is_self` is true for the self-reference shape).
+    The candidates are read off the battlefield at resolution time - never at
+    parse time, since what is on the battlefield changes between then and
+    resolution - and off the *computed* battlefield (CR 613.5): "sacrifice a
+    creature" may be paid with a land animated into one. "Another" and
+    "other" exclude the ability's own source. Only the player's own
+    permanents count (CR 701.21a: "A player can't sacrifice ... something
+    that's a permanent they don't control").
 
-    Anything else - a compound restriction, a `<type>` this wave cannot read
-    as a single `Type` - comes back `None`, fail-closed.
+    The count is `numbers.parse_quantity`'s. X and "that many" are refused:
+    neither is a number this reader has, so the whole clause fails closed
+    rather than sacrificing a guessed amount.
+
+    Anything else - a description `permanent_description` cannot read -
+    comes back `None`, fail-closed.
     """
-    restriction = restriction.strip().lower()
+    printed = restriction.strip()
+    restriction = printed.lower()
     if restriction.startswith("this "):
         noun = restriction.removeprefix("this ").strip()
         if noun not in _SACRIFICE_SELF_NOUNS:
@@ -13837,52 +13930,119 @@ def _sacrifice_restriction(
                 return []
             return [permanent]
 
-        return True, self_candidates
+        return _SacrificeRestriction(True, self_candidates, _ONE_PERMANENT)
 
-    if restriction.startswith("another "):
-        noun = restriction.removeprefix("another ").strip()
-        try:
-            card_type = Type(noun)
-        except ValueError:
-            return None
+    # The printed case, not the lowered one: a subtype reads capitalised ("Islands").
+    match = _COUNTED_SACRIFICE_RE.fullmatch(printed)
+    if match is None:
+        return None
+    if match.group("another") is not None:
+        quantity: Quantity | None = _ONE_PERMANENT
+    else:
+        quantity = parse_quantity(match.group("quantity"))
+    if quantity is None or quantity.source in (QuantitySource.X, QuantitySource.THAT_MANY):
+        return None
+    if quantity.amount is not None and quantity.amount < 1:
+        return None
+    excludes_source = match.group("another") is not None or match.group("other") is not None
+    subtype = _bare_subtype_word(match.group("description"))
+    requirement = None if subtype is not None else permanent_description(match.group("description"))
+    if subtype is None and requirement is None:
+        return None
 
-        def other_candidates(game: "Game", player: Player, source_id: UUID) -> list[CardState]:
+    def counted_candidates(game: "Game", player: Player, source_id: UUID | None) -> list[CardState]:
+        own = [
+            permanent
+            for permanent in game.permanents_controlled_by(player.username)
+            if not (excludes_source and permanent.id == source_id)
+        ]
+        if subtype is not None:
+            # CR 613.5: the computed subtypes, so a type-changed land counts.
             return computed_permanents(
-                game,
-                (
-                    permanent
-                    for permanent in game.battlefield
-                    if permanent.controller == player.username and permanent.id != source_id
-                ),
-                lambda chars: card_type in chars.types,
+                game, own, lambda chars: subtype in {word.lower() for word in chars.subtypes}
             )
+        assert requirement is not None
+        return [p for p in own if requirement.rejects(p, player.username, game) is None]
 
-        return False, other_candidates
+    return _SacrificeRestriction(False, counted_candidates, quantity)
 
-    for article in ("a ", "an "):
-        if not restriction.startswith(article):
-            continue
-        try:
-            card_type = Type(restriction.removeprefix(article).strip())
-        except ValueError:
-            return None
 
-        def any_candidates(
-            game: "Game", player: Player, source_id: UUID, card_type: Type = card_type
-        ) -> list[CardState]:
-            return computed_permanents(
-                game,
-                (
-                    permanent
-                    for permanent in game.battlefield
-                    if permanent.controller == player.username
-                ),
-                lambda chars: card_type in chars.types,
-            )
+def _bare_subtype_word(description: str) -> str | None:
+    """ "Islands" -> "island", "Foods" -> "food": a description that is one
+    printed subtype (CR 205.3) in the plural or singular, lowercased, or None.
 
-        return False, any_candidates
+    Read here rather than through `permanent_description`, whose target
+    grammar takes a lone plural noun it does not know as a creature type and
+    would demand the Island be a creature. A card type ("creatures") is left
+    to that grammar.
+    """
+    word = description.strip()
+    if " " in word or _singular_card_type(word) is not None:
+        return None
+    lowered = word.lower()
+    vocabulary = subtype_vocabulary()
+    spellings = [lowered, lowered.removesuffix("s")]
+    if lowered.endswith("ves"):
+        spellings.append(lowered.removesuffix("ves") + "f")
+    return next((spelling for spelling in spellings if spelling in vocabulary), None)
 
-    return None
+
+def _sacrifice_is_payable(quantity: Quantity, candidates: list[CardState]) -> bool:
+    """CR 118.3: "A player can't pay a cost without having the necessary
+    resources to pay it fully." An exact count needs that many candidates; a
+    range ("one or more", "any number of", "up to N") needs at least one,
+    since sacrificing nothing is not doing it (CR 118.12's "if you do")."""
+    if quantity.exact and quantity.amount is not None:
+        return len(candidates) >= quantity.amount
+    return len(candidates) >= max(quantity.minimum or 0, 1)
+
+
+def _choose_permanents_to_sacrifice(
+    game: "Game",
+    player: Player,
+    restriction: _SacrificeRestriction,
+    candidates: list[CardState],
+    *,
+    source_name: str,
+    source_id: str | None,
+) -> list[CardState]:
+    """Which of `candidates` the player sacrifices, once they have said yes
+    to the "you may" (CR 608.2d): the ability's own source when that is the
+    only one there is, or one `CHOOSE_CARDS` question asking for exactly the
+    printed count - or, for a range, any count from its minimum up to every
+    candidate. An answer below a range's minimum is not a payment and returns
+    no permanents, so the caller does not run the "if/when you do" half.
+    """
+    if restriction.is_self:
+        return candidates[:1]
+    quantity = restriction.quantity
+    exact = quantity.exact and quantity.amount is not None
+    most = quantity.amount if exact else min(quantity.amount or len(candidates), len(candidates))
+    fewest = most if exact else max(quantity.minimum or 0, 1)
+    assert most is not None
+    prompt = (
+        "choose a permanent to sacrifice"
+        if exact and most == 1
+        else f"choose {most if exact else f'{fewest} to {most}'} permanents to sacrifice"
+    )
+    chosen_ids = game.ask(
+        Decision(
+            kind=DecisionKind.CHOOSE_CARDS,
+            player=player.username,
+            prompt=prompt,
+            source=source_name,
+            amount=most,
+            exact=exact,
+            default_cards=None if exact else tuple(c.id for c in candidates[:fewest]),
+            cards=tuple(candidate.id for candidate in candidates),
+            source_id=source_id,
+        )
+    )
+    assert isinstance(chosen_ids, tuple)
+    if len(chosen_ids) < fewest:
+        return []
+    by_id = {candidate.id: candidate for candidate in candidates}
+    return [by_id[card_id] for card_id in chosen_ids]
 
 
 def _is_referent_power_expression(expr: str) -> bool:
@@ -14123,46 +14283,61 @@ def _parse_conditional_sacrifice_clause(text: str, *, for_spell: bool) -> Target
     restriction = _sacrifice_restriction(match.group("restriction"))
     if restriction is None:
         return None
-    is_self, candidates_of = restriction
-    consequence = _parse_sacrifice_consequence(match.group("consequence"))
-    if consequence is None:
+    consequence_text = match.group("consequence")
+    if re.search(r"\botherwise\b", consequence_text, re.IGNORECASE):
+        # "Otherwise, ..." (Giant Opportunity) is a second branch on the same
+        # payment; reading only the "if you do" half would drop it.
         return None
+    single = restriction.quantity.exact and restriction.quantity.amount == 1
+    if not single and re.search(r"where x is", consequence_text, re.IGNORECASE):
+        # "that creature's power" names one sacrificed permanent.
+        return None
+    consequence = _parse_sacrifice_consequence(consequence_text)
+    clause: TargetedClause | None = None
+    if consequence is None:
+        # Any other instruction ("untap this creature", "return a creature
+        # card from your graveyard to the battlefield ...") is read by the
+        # ordinary clause parser and run against the same resolving object.
+        clause = (
+            parse_mixed_effect_for_spell(consequence_text)  # type: ignore[assignment]
+            if for_spell
+            else parse_mixed_effect(consequence_text)
+        )
+        if clause is None:
+            return None
     prompt = f"sacrifice {match.group('restriction').strip()}"
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         player = game.controller_of(stack_object)
         source_id, source_name = _permanent_id_and_name(stack_object, for_spell=for_spell)
-        candidates = candidates_of(game, player, source_id)
+        candidates = restriction.candidates(game, player, source_id)
         decision = Decision(
             kind=DecisionKind.MAY,
             player=player.username,
             prompt=prompt,
             source=source_name,
-            affirmative_is_legal=bool(candidates),
+            affirmative_is_legal=_sacrifice_is_payable(restriction.quantity, candidates),
             source_id=source_id_of(stack_object),
         )
         if not game.ask(decision):
             return
-        if is_self:
-            chosen = candidates[0]
-        else:
-            chosen_ids = game.ask(
-                Decision(
-                    kind=DecisionKind.CHOOSE_CARDS,
-                    player=player.username,
-                    prompt="choose a permanent to sacrifice",
-                    source=source_name,
-                    amount=1,
-                    cards=tuple(candidate.id for candidate in candidates),
-                    source_id=source_id_of(stack_object),
-                )
-            )
-            assert isinstance(chosen_ids, tuple)
-            by_id = {candidate.id: candidate for candidate in candidates}
-            chosen = by_id[chosen_ids[0]]
-        power = game.power_of(chosen)
-        game.sacrifice(chosen)
-        consequence(game, player, power, source_name, source_id_of(stack_object))
+        chosen = _choose_permanents_to_sacrifice(
+            game,
+            player,
+            restriction,
+            candidates,
+            source_name=source_name,
+            source_id=source_id_of(stack_object),
+        )
+        if not chosen:
+            return
+        power = game.power_of(chosen[0]) if len(chosen) == 1 else None
+        for permanent in chosen:
+            game.sacrifice(permanent)
+        if consequence is not None:
+            consequence(game, player, power, source_name, source_id_of(stack_object))
+        elif clause is not None:
+            clause(game, stack_object)  # type: ignore[arg-type]
 
     return effect
 
@@ -14313,7 +14488,6 @@ def _parse_reflexive_sacrifice_clause(text: str) -> AbilityEffect | None:
     restriction = _sacrifice_restriction(match.group("restriction"))
     if restriction is None:
         return None
-    is_self, candidates_of = restriction
     consequence_text = match.group("consequence").strip()
     consequence_effect = parse_mixed_effect(consequence_text)
     if consequence_effect is None:
@@ -14323,35 +14497,31 @@ def _parse_reflexive_sacrifice_clause(text: str) -> AbilityEffect | None:
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         player = game.controller_of(ability)
         source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
-        candidates = candidates_of(game, player, source_id)
+        candidates = restriction.candidates(game, player, source_id)
         decision = Decision(
             kind=DecisionKind.MAY,
             player=player.username,
             prompt=prompt,
             source=source_name,
-            affirmative_is_legal=bool(candidates),
+            affirmative_is_legal=_sacrifice_is_payable(restriction.quantity, candidates),
             source_id=source_id_of(ability),
         )
         if not game.ask(decision):
             return
-        if is_self:
-            chosen = candidates[0]
-        else:
-            chosen_ids = game.ask(
-                Decision(
-                    kind=DecisionKind.CHOOSE_CARDS,
-                    player=player.username,
-                    prompt="choose a permanent to sacrifice",
-                    source=source_name,
-                    amount=1,
-                    cards=tuple(candidate.id for candidate in candidates),
-                    source_id=source_id_of(ability),
-                )
-            )
-            assert isinstance(chosen_ids, tuple)
-            by_id = {candidate.id: candidate for candidate in candidates}
-            chosen = by_id[chosen_ids[0]]
-        game.sacrifice(chosen)
+        chosen = _choose_permanents_to_sacrifice(
+            game,
+            player,
+            restriction,
+            candidates,
+            source_name=source_name,
+            source_id=source_id_of(ability),
+        )
+        if not chosen:
+            return
+        # CR 603.12a: paying a cost several times in one go triggers the
+        # reflexive ability once.
+        for permanent in chosen:
+            game.sacrifice(permanent)
         # CR 603.12: the reflexive ability is created *now*, after the action
         # - not before it, and not offered a target of its own until it goes
         # on the stack (CR 603.3d), which `create_reflexive_trigger` defers to
@@ -19733,6 +19903,14 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
         transform_self = _parse_transform_clause(clause)
         if transform_self is not None:
             return transform_self
+        untap_self = _parse_untap_self_clause(clause)
+        if untap_self is not None:
+            return untap_self  # type: ignore[return-value]
+    return_from_your_graveyard = _parse_return_cards_from_your_graveyard_clause(
+        clause, for_spell=for_spell
+    )
+    if return_from_your_graveyard is not None:
+        return return_from_your_graveyard
     transform_all = _parse_transform_all_subtype_clause(clause, for_spell=for_spell)
     if transform_all is not None:
         return transform_all
