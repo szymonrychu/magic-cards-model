@@ -86,12 +86,13 @@ from enum import StrEnum
 from typing import TYPE_CHECKING, Any, NamedTuple
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import ConfigDict
 
 from ..models.action import Action, ActionKind, Affordability, ManaPlanEntry
 from ..models.card import Color
 from ..models.card_state import CardState
 from ..models.zone import Zone
+from ..snapshot import EngineModel
 from .abilities import ActivatedAbility
 from .cost import _SpendContext, _withheld_mana_sources, life_paid_mana_activations
 from .decisions import Decision, DecisionKind, DecisionScript, ScriptedAnswer
@@ -112,7 +113,7 @@ class EntersState(StrEnum):
     UNTAPPED_IF_PAID = "untapped_if_paid"
 
 
-class EntersPrediction(BaseModel):
+class EntersPrediction(EngineModel):
     """`predict_enters`'s answer. Ids and strings only, never a live object."""
 
     model_config = ConfigDict(frozen=True)
@@ -134,7 +135,7 @@ class EntersPrediction(BaseModel):
     lethal_if_paid: bool = False
 
 
-class Payability(BaseModel):
+class Payability(EngineModel):
     """`payability`'s answer."""
 
     model_config = ConfigDict(frozen=True)
@@ -162,7 +163,7 @@ class Payability(BaseModel):
     life_paid: int = 0
 
 
-class LandPayability(BaseModel):
+class LandPayability(EngineModel):
     """One land's column of `PayabilityMatrix`."""
 
     model_config = ConfigDict(frozen=True)
@@ -175,7 +176,7 @@ class LandPayability(BaseModel):
     cards: tuple[Payability, ...]
 
 
-class PayabilityMatrix(BaseModel):
+class PayabilityMatrix(EngineModel):
     """`payability_matrix`'s answer."""
 
     model_config = ConfigDict(frozen=True)
