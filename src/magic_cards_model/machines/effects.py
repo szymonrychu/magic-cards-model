@@ -6135,29 +6135,41 @@ def _parse_untap_trigger_subject_clause(text: str) -> AbilityEffect | None:
 
 #: "When this land enters, return a land you control to its owner's hand."
 #: (Gruul Turf, Simic Growth Chamber, and every other "Karoo"-cycle bounce
-#: land - the shape generalises past this batch's two prints). CR 608.2d: no
-#: "target" is named, so the controller picks any land they control,
+#: land - the shape generalises past this batch's two prints) or "return two
+#: lands you control" (Khalni Gem) or "return up to two lands you control"
+#: (Kazandu Stomper) - one printed quantity, not always "a". CR 608.2d: no
+#: "target" is named, so the controller picks which land(s) they control,
 #: including this one, as the ability resolves.
 _RETURN_A_LAND_YOU_CONTROL_RE = re.compile(
-    r"^return a land you control to (?:its|their) owner'?s hand\.?$", re.IGNORECASE
+    rf"^return {quantity_pattern('n')} lands? you control to (?:its|their) owner'?s hand\.?$",
+    re.IGNORECASE,
 )
 
 
 def _parse_return_a_land_you_control_clause(text: str) -> AbilityEffect | None:
     """`_RETURN_A_LAND_YOU_CONTROL_RE`'s shape - a Karoo-cycle bounce land's
-    own ETB trigger.
+    own ETB trigger, or Khalni Gem's own printed-N one.
 
-    CR 608.2d's controller-chosen "a land you control" is `DecisionKind.
+    CR 608.2d's controller-chosen "N land(s) you control" is `DecisionKind.
     CHOOSE_CARDS` over `game.permanents_controlled_by(controller)` filtered to
     `Type.LAND`, the same `MAY` + `CHOOSE_CARDS` shape `_parse_imprint_clause`
-    already uses for a hand card - here there is no `MAY` half, because the
-    instruction is mandatory and always has at least one legal answer: the
-    land that is resolving this very trigger is itself a land its controller
-    controls (CR 110.5) by the time this runs, so the candidate set is never
-    empty. `game.return_to_hand` is CR 701.19a's own "return", the same
-    primitive `machines/delayed.py`'s own return-to-hand callbacks use.
+    already uses for a hand card - here there is no `MAY` half for the plain
+    "return N", because the instruction is mandatory; "up to N" is `Decision.
+    exact=False`, the "up to that many, or as many as possible" shape used
+    throughout this wave for the same reason `search_library` reads it that
+    way. A source that is not itself a land can genuinely control fewer lands
+    than the printed count (Khalni Gem, cast off two lands, has none of its
+    own to offer); the singular case's own candidate set was never empty only
+    because the land resolving the trigger always counts as one of its own
+    controller's lands (CR 110.5) - that guarantee does not extend to N > 1,
+    so this caps the choice at whatever is actually there rather than asking
+    for more than exists.
     """
-    if _RETURN_A_LAND_YOU_CONTROL_RE.fullmatch(text.strip()) is None:
+    match = _RETURN_A_LAND_YOU_CONTROL_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    quantity = parse_quantity(match.group("n"))
+    if quantity is None:
         return None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
@@ -6169,22 +6181,30 @@ def _parse_return_a_land_you_control_clause(text: str) -> AbilityEffect | None:
         )
         if not candidates:
             return
+        limit = (
+            len(candidates) if quantity.amount is None else min(quantity.amount, len(candidates))
+        )
+        if limit == 0:
+            return
         source_name = ability.source_name
         chosen_ids = game.ask(
             Decision(
                 kind=DecisionKind.CHOOSE_CARDS,
                 player=controller,
-                prompt="return a land you control to its owner's hand",
+                prompt=f"return {'a' if limit == 1 else limit} land(s) you control "
+                "to its owner's hand",
                 source=source_name,
-                amount=1,
+                amount=limit,
                 cards=tuple(state.id for state in candidates),
+                exact=quantity.exact,
+                default_cards=tuple(state.id for state in candidates[:limit]),
                 source_id=source_id_of(ability),
             )
         )
         assert isinstance(chosen_ids, tuple)
         by_id = {state.id: state for state in candidates}
-        chosen = by_id[chosen_ids[0]]
-        game.return_to_hand(chosen)
+        for card_id in chosen_ids:
+            game.return_to_hand(by_id[card_id])
 
     return effect
 
