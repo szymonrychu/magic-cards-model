@@ -89,9 +89,11 @@ from ..numbers import (
     QUANTITY,
     Quantity,
     QuantitySource,
+    count_pattern,
     parse_count,
     parse_multiplier,
     parse_quantity,
+    where_x_pattern,
 )
 from ..snapshot import EngineModel
 from . import combat as combat_rules
@@ -765,10 +767,32 @@ def _singular_card_type(word: str) -> Type | None:
         return None
 
 
-def _singular_subtype(word: str) -> str | None:
-    """ "Faeries" -> "faerie", "Elves" -> "elf": a plural subtype word as
-    `subtype_vocabulary` stores it (lowercased, singular), or None when the
-    word is no printed subtype in any of those spellings."""
+def _singular_subtype_for_count_expression(word: str) -> str | None:
+    """ "Faeries" -> "faerie", "Elves" -> "elf", "Shrines" -> "shrine": a
+    plural subtype word as `subtype_vocabulary` stores it (lowercased,
+    singular), or None when the word is no printed subtype in any of those
+    spellings.
+
+    Named for its one caller (`count_expression`) rather than plainly
+    `_singular_subtype`, because this file already defines two other
+    functions under that exact name for two other mechanics (amass token
+    creation, and a mass-transform clause) - three module-level `def`s
+    sharing one name silently overwrite each other as the module loads, so
+    by the time any of the three actually ran, all three callers got
+    whichever definition was written last in the file, never their own.
+    That is how "the number of Shrines you control" (Sanctum of Fruitful
+    Harvest, G7-3) read zero Shrines with Sanctum itself on the battlefield:
+    this function's own vocabulary-checked, properly-lowercased answer was
+    unreachable, silently replaced by a same-named helper elsewhere in the
+    file that only drops a trailing "s" and keeps the printed case ("Shrine",
+    not "shrine" - `Counters`-style case-sensitive comparison then never
+    matched). Renaming this one - the only shadowed definition this fix's own
+    dependency chain reaches - repairs `count_expression`'s subtype branch
+    without touching the other two definitions or their own callers, which
+    was out of this fix's own scope; the number-sweep integration merge
+    later renamed the amass one to `_singular_subtype_for_amass` too, so the
+    remaining `_singular_subtype` (the transform-all "vocabulary" one) is no
+    longer shadowed by anything."""
     lowered = word.lower()
     vocabulary = subtype_vocabulary()
     candidates = [lowered, lowered.removesuffix("s")]
@@ -799,7 +823,7 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
     if match := _COUNT_YOU_CONTROL_RE.fullmatch(stripped):
         card_type = _singular_card_type(match.group("qualifier"))
         if card_type is None:
-            subtype = _singular_subtype(match.group("qualifier"))
+            subtype = _singular_subtype_for_count_expression(match.group("qualifier"))
             if subtype is None:
                 return None
 
@@ -9467,45 +9491,110 @@ def _parse_firebending_add_mana(text: str) -> AbilityEffect | None:
     return effect
 
 
-#: "When this land enters, add one mana of any color." (Crumbling Vestige).
-#: **Not** a mana ability - CR 605.1b requires a mana-producing trigger to
-#: fire "from the activation or resolution of an activated mana ability", and
-#: an enters-the-battlefield trigger fires from neither, so CR 605.5's own
-#: catch-all ("abilities that don't meet the criteria ... aren't mana
-#: abilities") applies: this is an ordinary triggered ability, goes on the
-#: stack, and can be responded to, unlike the land's own separate "{T}: Add
-#: {C}." mana ability parsed off its printed text by `machines/abilities.py`.
-_ADD_ONE_MANA_OF_ANY_COLOR_TRIGGER_RE = re.compile(r"^add one mana of any color\.?$", re.IGNORECASE)
+#: "When this land enters, add one mana of any color." (Crumbling Vestige),
+#: "When this Vehicle enters, add four mana of any one color." (Boommobile),
+#: "At the beginning of your first main phase, add X mana of any one color,
+#: where X is the number of Shrines you control." (Sanctum of Fruitful
+#: Harvest). **Not** a mana ability - CR 605.1b requires a mana-producing
+#: trigger to fire "from the activation or resolution of an activated mana
+#: ability", and neither an enters-the-battlefield nor a beginning-of-phase
+#: trigger fires from either, so CR 605.5's own catch-all ("abilities that
+#: don't meet the criteria ... aren't mana abilities") applies: this is an
+#: ordinary triggered ability, goes on the stack, and can be responded to,
+#: unlike a permanent's own separate "{T}: Add ..." mana ability parsed off
+#: its printed text by `machines/abilities.py` (which reads the identical "X
+#: mana of any one color, where X is ..." shape for an *activated* ability -
+#: Seance Board, Woodland Weavemaster - through its own `_read_mana_count`,
+#: since a mana ability's own X has to be read off the board at the moment
+#: *it* resolves, not here).
+#:
+#: "any one color" is one colour choice for the whole count; a count of one
+#: makes that the same choice a bare "any color" (Crumbling Vestige, Lotus
+#: Cobra) already is, which is why "one " is optional here rather than
+#: required - every real printing above count one prints "any **one**
+#: color", and none of these triggers prints "any color" (per-mana choice)
+#: at a count above one, so a single colour chosen once and multiplied is
+#: the right reading of every one of them.
+_ADD_ONE_MANA_OF_ANY_COLOR_TRIGGER_RE = re.compile(
+    rf"^add {count_pattern('count', x=True)} mana of any (?:one )?color{where_x_pattern()}\.?$",
+    re.IGNORECASE,
+)
 
 
 def _parse_add_one_mana_of_any_color_trigger(text: str) -> AbilityEffect | None:
     """`_ADD_ONE_MANA_OF_ANY_COLOR_TRIGGER_RE`'s shape - Crumbling Vestige's
-    ETB trigger, and the general "add one mana of any color" trigger shape
-    with it.
+    "one", Boommobile's printed "four", and Sanctum of Fruitful Harvest's
+    CR 107.3 X, defined by a `count_expression` shape ("the number of
+    Shrines you control"). An X this parser cannot read - no "where X is ..."
+    at all, or one naming something `count_expression` does not - fails the
+    whole trigger closed rather than adding a guessed amount.
 
     CR 105.1/105.4: "any color" is one of the five colors - "if a player is
     asked to choose a color, they must choose one of the five colors ...
     [n]either is 'colorless'" - distinct from CR 106.1b's six *types* of mana
     (the five colors plus colorless), which is why this is never read as a
-    sixth option. The choice is CR 608.2d's own, made as the ability
+    sixth option. The choice is CR 608.2d's own, made once as the ability
     resolves, through the same `_choose_a_color`/`DecisionKind.CHOOSE_A_
     QUALITY` helper Wild Mongrel's and Culling Ritual's colour choices
-    already use.
+    already use - "any **one** color" is a single choice for every mana
+    added, not one choice per mana.
     """
-    if _ADD_ONE_MANA_OF_ANY_COLOR_TRIGGER_RE.fullmatch(text.strip()) is None:
+    # CR 106.6's "Spend this mana only ..." sentence (Boommobile's own) is a
+    # second sentence trailing the "add ..." one this regex reads - split it
+    # off first, the same way `abilities._parse_mana_rider` and
+    # `parse_triggered_mana`'s own `_TRIGGERED_MANA_SPEND_ONLY_RE` do for the
+    # identical templating on an activated or a CR 605.1b triggered mana
+    # ability, so it is never mistaken for part of the count/colour clause.
+    sentences = [part for part in re.split(r"(?<=\.)\s+", text.strip()) if part]
+    if not sentences:
         return None
+    match = _ADD_ONE_MANA_OF_ANY_COLOR_TRIGGER_RE.fullmatch(sentences[0])
+    if match is None:
+        return None
+    if len(sentences) > 1 and any(
+        sentence.lower().startswith("spend this mana only") for sentence in sentences[1:]
+    ):
+        restriction_text: str | None = text
+    else:
+        restriction_text = None
+    word = match.group("count")
+    fixed_count: int | None = None
+    count_reader: Callable[[Game, str], int] | None = None
+    if word.lower() == "x":
+        where_x = match.group("where_x")
+        if where_x is None:
+            return None
+        count_reader = count_expression(where_x.strip())
+        if count_reader is None:
+            return None
+    else:
+        fixed_count = parse_count(word)
+        if fixed_count is None:
+            return None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         controller = ability.controller
         player = game.player(controller)
+        # CR 608.2h: an X this trigger's own text defines is read now, as the
+        # ability resolves - a board pumped while it waited on the stack adds
+        # more mana. CR 107.1b: a result below 0 is 0 instead.
+        count = fixed_count if fixed_count is not None else max(count_reader(game, controller), 0)
+        if count <= 0:
+            return
         color = _choose_a_color(
             game,
             player,
             ability.source_name,
-            "add one mana of any color",
+            "add mana of any color",
             source_id=source_id_of(ability),
         )
-        player.mana_pool.add(color)
+        restriction = (
+            spend_restriction(restriction_text, ability.source(game))
+            if restriction_text is not None
+            else None
+        )
+        for _ in range(count):
+            player.mana_pool.add(color, restriction=restriction)
 
     return effect
 
@@ -16363,11 +16452,11 @@ def _parse_earthbend_clause(clause: str, *, for_spell: bool) -> TargetedClause |
 #: subtype is something else.
 #:
 #: The subtype is printed **plural** ("amass Orcs 1") and the token it names
-#: is singular ("Orc Army"), which `_singular_subtype` undoes.
+#: is singular ("Orc Army"), which `_singular_subtype_for_amass` undoes.
 _AMASS_RE = re.compile(r"^amass (?P<subtype>[A-Za-z][a-z]*) (?P<n>\d+)$", re.IGNORECASE)
 
 
-def _singular_subtype(word: str) -> str:
+def _singular_subtype_for_amass(word: str) -> str:
     """ "Orcs" -> "Orc". Amass prints its creature type in the plural, and CR
     205.3m's subtype list is singular ("Orc", "Zombie", "Army"), so the two
     have to be reconciled before the token is built or the "is it already
@@ -16435,7 +16524,7 @@ def amass(
     token this same call may have just created is printed with it.
     """
     armies = _armies_controlled_by(game, controller)
-    singular = _singular_subtype(subtype)
+    singular = _singular_subtype_for_amass(subtype)
     if not armies:
         create_tokens(
             game,
