@@ -59,6 +59,7 @@ from collections.abc import Iterable, Sequence
 from pydantic import ConfigDict
 
 from ..models.card import Card
+from ..numbers import parse_count
 from ..snapshot import EngineModel
 
 #: The bullet WOTC prints in front of each mode.
@@ -93,19 +94,6 @@ _PARENTHETICAL_INSTRUCTION = re.compile(r"\((?P<inner>Choose\b[^()]*)\)", re.IGN
 
 _ENTWINE = re.compile(r"^Entwine\s*[-—]?\s*(?P<cost>[^(]+)", re.IGNORECASE)
 _ESCALATE = re.compile(r"^Escalate\s*[-—]?\s*(?P<cost>[^(]+)", re.IGNORECASE)
-
-_WORD_NUMBERS = {
-    "one": 1,
-    "two": 2,
-    "three": 3,
-    "four": 4,
-    "five": 5,
-    "six": 6,
-    "seven": 7,
-    "eight": 8,
-    "nine": 9,
-    "ten": 10,
-}
 
 _REMINDER = re.compile(r"\([^()]*\)")
 _X = re.compile(r"(?<![\w])X(?![\w])")
@@ -421,27 +409,21 @@ def _read_counts(instruction: str, mode_count: int) -> tuple[int, int] | None:
 
     up_to = _UP_TO.match(rest)
     if up_to is not None:
-        count = _number(up_to.group("count"))
+        count = parse_count(up_to.group("count"), article=False)
         return None if count is None else (0, min(count, mode_count))
 
     or_more = _OR_MORE.match(rest)
     if or_more is not None:
-        count = _number(or_more.group("count"))
+        count = parse_count(or_more.group("count"), article=False)
         return None if count is None else (count, mode_count)
 
     plain = _PLAIN.match(rest)
     if plain is None:
         return None
-    count = _number(plain.group("count"))
+    count = parse_count(plain.group("count"), article=False)
     if count is None or count > mode_count:
         return None
     return count, count
-
-
-def _number(word: str) -> int | None:
-    if word.isdigit():
-        return int(word)
-    return _WORD_NUMBERS.get(word.lower())
 
 
 def _keyword_cost(

@@ -105,6 +105,7 @@ from magic_cards_model.phrases import with_indefinite_article
 from ..models.card import Card, Color, Supertype, Type
 from ..models.card_state import CardState, ExileMarker, TargetRef
 from ..models.zone import Zone
+from ..numbers import parse_count
 from ..serialization import SortedFrozenSet
 from ..snapshot import EngineModel
 from .abilities import AbilityKind, keyword_abilities
@@ -1480,21 +1481,6 @@ _ABILITY_OR_COLOR_COUNT_SPELL_RE = re.compile(
     r"^or\s+(?P<color_count>multicolored|monocolored|colorless)\s+spell$", re.IGNORECASE
 )
 
-_NUMBERS = {
-    "a": 1,
-    "an": 1,
-    "one": 1,
-    "two": 2,
-    "three": 3,
-    "four": 4,
-    "five": 5,
-    "six": 6,
-    "seven": 7,
-    "eight": 8,
-    "nine": 9,
-    "ten": 10,
-}
-
 _TYPE_NOUNS = {
     "creature": Type.CREATURE,
     "artifact": Type.ARTIFACT,
@@ -2060,19 +2046,12 @@ def _read_division(text: str) -> Division | None:
             doubled = _DOUBLED_IF_X_AT_LEAST_RE.search(text)
             threshold = int(doubled.group("threshold")) if doubled else None
             return Division(amount=None, what="damage", doubled_if_x_at_least=threshold)
-        amount = _count_word(word)
+        amount = parse_count(word)
         return None if amount is None else Division(amount=amount, what="damage")
-    amount = _count_word(match.group("counters").lower())
+    amount = parse_count(match.group("counters").lower())
     if amount is None:
         return None
     return Division(amount=amount, what=f"{match.group('kind')} counters")
-
-
-def _count_word(word: str) -> int | None:
-    """A number written as a word, or as a digit once X has been substituted."""
-    if word.isdigit():
-        return int(word)
-    return _NUMBERS.get(word)
 
 
 def _read_count(prefix: str) -> tuple[int, int | None, bool] | None:
@@ -2116,15 +2095,15 @@ def _read_count(prefix: str) -> tuple[int, int | None, bool] | None:
     if len(words) >= 3 and words[-3] == "up" and words[-2] == "to":
         if words[-1] == "x":
             return 0, None, True
-        count = _count_word(words[-1])
+        count = parse_count(words[-1])
         return None if count is None else (0, count, False)
     if len(words) >= 3 and words[-2] == "or":
-        fewest, most = _count_word(words[-3]), _count_word(words[-1])
+        fewest, most = parse_count(words[-3]), parse_count(words[-1])
         if fewest is not None and most is not None:
             return (fewest, most, False) if fewest <= most else None
     if words and words[-1] == "x":
         return 0, None, True
-    if words and words[-1] not in {"a", "an"} and (count := _count_word(words[-1])) is not None:
+    if words and words[-1] not in {"a", "an"} and (count := parse_count(words[-1])) is not None:
         return count, count, False
     return 1, 1, False
 

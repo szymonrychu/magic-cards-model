@@ -61,6 +61,7 @@ from ..models.card import Card, Color, Type
 from ..models.card_state import CardState, ChoiceKind, Counter, TargetRef
 from ..models.token import TokenState
 from ..models.zone import Zone
+from ..numbers import parse_count, parse_ordinal
 from ..snapshot import EngineModel, scan_pin
 from .abilities import (
     Ability,
@@ -1038,13 +1039,6 @@ def _required_cast_subtype(condition: str) -> str | None:
 #: revisited.
 _ORDINAL_SPELL_EACH_TURN = re.compile(r"your (?P<ordinal>[a-z]+) spells? each turn")
 
-#: The ordinals these clauses spell out. A word this doesn't know - "sixth"
-#: and up, not printed on any pool card - falls through to `condition_matches`'
-#: own "anything else returns False" default (see its docstring's closing
-#: line), the same safe direction every other unread CAST_SPELL restriction
-#: there already fails toward.
-_ORDINAL_WORDS = {"first": 1, "second": 2, "third": 3, "fourth": 4, "fifth": 5}
-
 
 def _ordinal_spell_this_turn_matches(
     game: "Game", condition: str, controller: str, event: GameEvent
@@ -1064,7 +1058,7 @@ def _ordinal_spell_this_turn_matches(
     match = _ORDINAL_SPELL_EACH_TURN.search(condition.lower())
     if match is None:
         return None
-    ordinal = _ORDINAL_WORDS.get(match.group("ordinal"))
+    ordinal = parse_ordinal(match.group("ordinal"))
     if ordinal is None:
         return False
     cast_this_turn = game.spells_cast_this_turn.get(controller, [])
@@ -1976,7 +1970,7 @@ def _unread_condition_matches(
     if match is not None:
         if event.event is not TriggerEvent.DRAWS_A_CARD or event.player != controller:
             return False
-        ordinal = _ORDINAL_WORDS.get(match.group("ordinal"))
+        ordinal = parse_ordinal(match.group("ordinal"))
         if ordinal is None:
             return False
         # CR 121.2 makes each card its own draw, so the ordinal is a count of
@@ -2639,7 +2633,7 @@ def _counter_count_holds(clause: str, source: CardState) -> bool | None:
     on_it = source.counter_count(match.group("kind"))
     if match.group("none") is not None:
         return on_it == 0
-    wanted = _NUMBER_WORDS.get(match.group("count"))
+    wanted = parse_count(match.group("count"), article=False)
     if wanted is None:
         return None
     return _COUNTER_COMPARISONS[match.group("comparison")](on_it, wanted)
@@ -2671,7 +2665,7 @@ def _ordinal_spell_cast_this_turn_holds(
     match = _ORDINAL_SPELL_CAST_THIS_TURN.match(clause)
     if match is None or event is None or event.subject_id is None:
         return None
-    ordinal = _ORDINAL_WORDS.get(match.group("ordinal"))
+    ordinal = parse_ordinal(match.group("ordinal"))
     card_type = _TYPE_WORDS.get(match.group("word"))
     if ordinal is None or card_type is None:
         return None
@@ -2809,7 +2803,7 @@ def _spells_cast_this_turn_holds(game: "Game", clause: str, source: CardState) -
     match = _SPELLS_CAST_THIS_TURN.match(clause)
     if match is None:
         return None
-    wanted = _NUMBER_WORDS.get(match.group("count"))
+    wanted = parse_count(match.group("count"), article=False)
     if wanted is None:
         return None
     wanted_types: set[Type] = set()
@@ -2836,11 +2830,6 @@ _NO_SPELLS_LAST_TURN = re.compile(r"^no spells were cast last turn$")
 #: the back face (Krallenhorde Howler), asked of *each* player separately: one
 #: player casting two is what it wants, not two spells between them.
 _SPELLS_CAST_LAST_TURN = re.compile(r"^a player cast (?P<count>\w+) or more spells last turn$")
-
-#: The counts these clauses are printed with, spelled out as the cards spell
-#: them. A number this does not know is left to `_fail_closed`.
-_NUMBER_WORDS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5}
-
 
 #: Valakut, the Molten Pinnacle's clause: "you control at least five other
 #: Mountains". A board count of permanents with a named subtype (CR 205.3i's
@@ -2890,7 +2879,7 @@ def _controlled_subtype_count_holds(game: "Game", clause: str, source: CardState
     match = _CONTROLLED_SUBTYPE_COUNT.match(clause)
     if match is None:
         return None
-    wanted = _NUMBER_WORDS.get(match.group("count"))
+    wanted = parse_count(match.group("count"), article=False)
     if wanted is None:
         return None
 
@@ -2938,7 +2927,7 @@ def _spells_cast_last_turn_holds(game: "Game", clause: str) -> bool | None:
 
     match = _SPELLS_CAST_LAST_TURN.match(clause)
     if match is not None:
-        wanted = _NUMBER_WORDS.get(match.group("count"))
+        wanted = parse_count(match.group("count"), article=False)
         if wanted is None:
             return None
         return any(len(cast) >= wanted for cast in game.spells_cast_last_turn.values())

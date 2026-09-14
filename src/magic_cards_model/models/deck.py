@@ -22,6 +22,7 @@ from typing import Self
 
 from pydantic import Field
 
+from ..numbers import parse_count
 from ..snapshot import EngineModel
 from .card import Card, Supertype
 
@@ -30,19 +31,6 @@ CardResolver = Callable[[str], Card]
 
 _ANY_NUMBER = re.compile(r"A deck can have any number of cards named", re.IGNORECASE)
 _UP_TO_N = re.compile(r"A deck can have up to (\w+) cards named", re.IGNORECASE)
-_NUMBER_WORDS = {
-    "one": 1,
-    "two": 2,
-    "three": 3,
-    "four": 4,
-    "five": 5,
-    "six": 6,
-    "seven": 7,
-    "eight": 8,
-    "nine": 9,
-    "ten": 10,
-    "twelve": 12,
-}
 
 
 class DeckIllegal(ValueError):
@@ -103,9 +91,12 @@ class DeckLimits(EngineModel):
             return None
         printed = _UP_TO_N.search(text)
         if printed is not None:
-            word = printed.group(1).lower()
-            if word in _NUMBER_WORDS:
-                return _NUMBER_WORDS[word]
+            copies = parse_count(printed.group(1), article=False)
+            if copies is not None:
+                return copies
+            # A count this cannot read keeps the four-copy default: the
+            # stricter limit, so an unreadable text refuses a deck rather than
+            # admitting one.
         return self.max_copies
 
 

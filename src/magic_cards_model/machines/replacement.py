@@ -123,6 +123,7 @@ from ..models.card import Card, Color, Type
 from ..models.card_state import CardState, Choice, ChoiceKind, ExileMarker
 from ..models.token import TokenDefinition, is_token
 from ..models.zone import Zone
+from ..numbers import parse_count
 from ..snapshot import EngineModel
 from .abilities import keywords_in_lines
 from .combat import Keyword
@@ -403,23 +404,6 @@ def strip_reminder_text(text: str) -> tuple[str, str | None]:
 # --------------------------------------------------------------------------
 # Vocabulary
 # --------------------------------------------------------------------------
-
-_NUMBER_WORDS = {
-    "one": 1,
-    "two": 2,
-    "three": 3,
-    "four": 4,
-    "five": 5,
-    "six": 6,
-    "seven": 7,
-    "eight": 8,
-    "nine": 9,
-    "ten": 10,
-    "eleven": 11,
-    "twelve": 12,
-    "a": 1,
-    "an": 1,
-}
 
 #: Cue words that make a sentence worth reporting as `UNPARSED` when nothing
 #: matched. Without this gate every vanilla line would come back as a non-effect.
@@ -844,16 +828,20 @@ def _is_optional(phrase: str | None) -> bool:
     return bool(phrase) and bool(re.search(r"\byou may\b", phrase, re.IGNORECASE))
 
 
-def _amount_of(word: str) -> tuple[int | None, bool]:
-    """Read a templated count. Returns (amount, variable)."""
+def _amount_of(word: str) -> tuple[int | None, bool] | None:
+    """Read a templated count. Returns (amount, variable), or None when the
+    word is not a count at all.
+
+    A word that is not a count - the "that" a split "that many" leaves, the
+    "twice" of "twice that many", the "your" of "your choice of" - is refused,
+    never read as CR 107.3m's X: that would take the count from the cast's
+    announcement, which has nothing to do with the sentence.
+    """
     word = word.strip().lower()
     if word in ("x", "that many", "any number"):
         return None, True
-    if word.isdigit():
-        return int(word), False
-    if word in _NUMBER_WORDS:
-        return _NUMBER_WORDS[word], False
-    return None, True
+    amount = parse_count(word)
+    return None if amount is None else (amount, False)
 
 
 # --------------------------------------------------------------------------
@@ -865,7 +853,10 @@ def _try_prevent_next(sentence: str, names: tuple[str, ...]) -> list[Replacement
     match = _PREVENT_NEXT.match(sentence)
     if not match:
         return []
-    amount, variable = _amount_of(match.group("amount"))
+    read = _amount_of(match.group("amount"))
+    if read is None:
+        return []
+    amount, variable = read
     return [
         _make(
             ReplacementKind.PREVENT_NEXT,
@@ -1076,7 +1067,12 @@ def _try_enters_with(sentence: str, names: tuple[str, ...]) -> list[ReplacementE
         return []
     subject = match.group("subject").strip()
     what = match.group("what").strip()
-    amount, variable, counter_kind, expression = _read_counters(what)
+    counters = _read_counters(what)
+    if counters is None:
+        # A counter count this cannot read fails closed as UNPARSED rather
+        # than as an enters-with effect with a made-up amount or kind.
+        return [ReplacementEffect(kind=ReplacementKind.UNPARSED, raw=sentence, text=sentence)]
+    amount, variable, counter_kind, expression = counters
     return [
         _make(
             ReplacementKind.ENTERS_WITH,
@@ -1108,7 +1104,7 @@ _COUNTERS_EQUAL_TO = re.compile(
 )
 
 
-def _read_counters(what: str) -> tuple[int | None, bool, str | None, str | None]:
+def _read_counters(what: str) -> tuple[int | None, bool, str | None, str | None] | None:
     """Read "four +1/+1 counters", "X charge counters", "a shield counter",
     and "a number of +1/+1 counters on it equal to [expression]".
 
@@ -1117,7 +1113,9 @@ def _read_counters(what: str) -> tuple[int | None, bool, str | None, str | None]
     count is not knowable from the text alone.
 
     Anything more elaborate - Agent's Toolkit enters with four different kinds
-    at once - leaves the counter fields empty rather than picking one.
+    at once - leaves the counter fields empty rather than picking one. A count
+    word that is not a count ("that many", "twice that many", "your choice
+    of") is None: unreadable, not a variable.
     """
     text = what.strip()
     equal_to = _COUNTERS_EQUAL_TO.match(text)
@@ -1126,7 +1124,10 @@ def _read_counters(what: str) -> tuple[int | None, bool, str | None, str | None]
     match = _COUNTERS.match(text)
     if not match:
         return None, False, None, None
-    amount, variable = _amount_of(match.group("amount"))
+    read = _amount_of(match.group("amount"))
+    if read is None:
+        return None
+    amount, variable = read
     return amount, variable, match.group("kind").strip(), None
 
 
@@ -2256,8 +2257,8 @@ def _compile_draw_plus(effect: ReplacementEffect) -> CardReplacement | None:
     match = _DRAW_PLUS_RE.match((effect.replacement or "").strip().rstrip("."))
     if match is None:
         return None
-    amount, variable = _amount_of(match.group("amount"))
-    if amount is None or variable:
+    amount = parse_count(match.group("amount"))
+    if amount is None:
         return None
 
     hand_limit: int | None = None
@@ -2265,8 +2266,8 @@ def _compile_draw_plus(effect: ReplacementEffect) -> CardReplacement | None:
         condition = _FEWER_CARDS_IN_HAND_RE.match(effect.condition.strip().rstrip(","))
         if condition is None:
             return None  # an "as long as" clause this cannot check - fail closed.
-        hand_limit, hand_variable = _amount_of(condition.group("count"))
-        if hand_limit is None or hand_variable:
+        hand_limit = parse_count(condition.group("count"))
+        if hand_limit is None:
             return None
 
     def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
@@ -3347,8 +3348,8 @@ def _read_enters_condition(condition: str) -> EntersCondition | None:
 
     match = _YOU_CONTROL_OTHER_LANDS_RE.match(condition)
     if match is not None:
-        count, variable = _amount_of(match.group("count"))
-        if count is None or variable:
+        count = parse_count(match.group("count"))
+        if count is None:
             return None
         return _controls_other_lands(
             count,

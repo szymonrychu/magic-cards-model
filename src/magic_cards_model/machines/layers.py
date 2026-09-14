@@ -91,6 +91,7 @@ from ..ids import new_id
 from ..models.card import Color, Supertype, Type
 from ..models.card_state import CardState, Counter
 from ..models.zone import Zone
+from ..numbers import parse_count
 from ..snapshot import EngineModel
 from .abilities import layer_readable_sentences, self_normalized_effect_text
 from .combat import KEYWORDS_OUTSIDE_COMBAT, Keyword
@@ -4330,22 +4331,6 @@ _GRAVEYARD_CARD_TYPES_GATED_SELF_STATIC_RE = re.compile(
     re.IGNORECASE,
 )
 
-#: The number words a printed condition spells out. CR 107.1 is the general
-#: rule that a number in the rules text is a number; the words themselves are
-#: just English, and only the ones the pool actually prints are listed.
-_NUMBER_WORDS: dict[str, int] = {
-    "one": 1,
-    "two": 2,
-    "three": 3,
-    "four": 4,
-    "five": 5,
-    "six": 6,
-    "seven": 7,
-    "eight": 8,
-    "nine": 9,
-    "ten": 10,
-}
-
 #: "Each creature you control has vigilance if it's white, hexproof if it's
 #: blue, lifelink if it's black, first strike if it's red, and trample if it's
 #: green." (Scion of Draco, confirmed with `resolve_cards`) - one layer 6 grant
@@ -5218,7 +5203,7 @@ def _parse_board_gated_group_sentence(sentence: str) -> EffectBuilder | None:
     match = _BOARD_COUNT_GATE_RE.fullmatch(sentence)
     if match is None:
         return None
-    threshold = _NUMBER_WORDS.get(match.group("count").lower())
+    threshold = parse_count(match.group("count"), article=False)
     card_type = _card_type_word(match.group("subject"))
     if threshold is None or card_type is None:
         return None
@@ -5519,7 +5504,7 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
     if match := _ALL_COLORS_RE.fullmatch(sentence):
         return _all_colors_builder(nonland=match.group("nonland") is not None, line=sentence)
     if match := _GRAVEYARD_CARD_TYPES_GATED_SELF_STATIC_RE.fullmatch(sentence):
-        threshold = _NUMBER_WORDS.get(match.group("count").lower())
+        threshold = parse_count(match.group("count"), article=False)
         if threshold is None:
             return None
         granted = _split_gated_grants(match.group("rest"))

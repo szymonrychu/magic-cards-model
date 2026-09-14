@@ -226,6 +226,7 @@ from ..machines.turn import (
     Step,
     TurnMachine,
 )
+from ..numbers import count_pattern, parse_count
 from ..serialization import SortedFrozenSet, SortedSet
 from ..snapshot import EngineModel, board_snapshot, cached_board, command, scan_pin
 from .action import Action
@@ -453,25 +454,10 @@ _AFFINITY_SUBTYPES: dict[str, str] = {
 _COSTS_LESS_WHILE_GRAVEYARD_COUNT_RE = re.compile(
     r"(?P<excludes>non)?(?P<type>creature|artifact|enchantment|instant|sorcery|land) "
     r"spells you cast cost \{(?P<amount>\d+)\} less to cast as long as there are "
-    r"(?P<count>one|two|three|four|five|six|seven|eight|nine|ten|\d+) or more "
+    rf"(?P<count>{count_pattern(article=False)}) or more "
     r"(?P<subtype>[A-Za-z' -]+?) cards in your graveyard",
     re.IGNORECASE,
 )
-
-#: The number words `_COSTS_LESS_WHILE_GRAVEYARD_COUNT_RE` accepts, since a
-#: card prints "three or more", never "3 or more".
-_NUMBER_WORDS: dict[str, int] = {
-    "one": 1,
-    "two": 2,
-    "three": 3,
-    "four": 4,
-    "five": 5,
-    "six": 6,
-    "seven": 7,
-    "eight": 8,
-    "nine": 9,
-    "ten": 10,
-}
 
 #: Ral, Monsoon Mage's own back-face intrinsic (CR 306.5b's own "additional"
 #: shape, layered on top of the printed loyalty number rather than replacing
@@ -607,15 +593,6 @@ _ACTIVATE_ONLY_IF_DELIRIUM = re.compile(
     r"among cards in your graveyard",
     re.IGNORECASE,
 )
-_CONDITION_COUNT_WORDS: dict[str, int] = {
-    "a": 1,
-    "an": 1,
-    "one": 1,
-    "two": 2,
-    "three": 3,
-    "four": 4,
-    "five": 5,
-}
 
 
 def _is_minus_symbol(printed: str) -> bool:
@@ -12719,8 +12696,7 @@ class Game(EngineModel):
             if bool(gated.group("excludes")) == has_type:
                 return False
 
-        wanted = gated.group("count").lower()
-        needed = int(wanted) if wanted.isdigit() else _NUMBER_WORDS.get(wanted, 0)
+        needed = parse_count(gated.group("count"), article=False)
         if not needed:
             return False
 
@@ -13052,7 +13028,7 @@ class Game(EngineModel):
 
         match = _ACTIVATE_ONLY_IF_CONTROL.search(instructions)
         if match is not None:
-            needed = _CONDITION_COUNT_WORDS.get(match.group("count").lower())
+            needed = parse_count(match.group("count"))
             card_type = _card_type_named(match.group("quality"))
             if needed is not None and card_type is not None:
                 count = sum(1 for state in controlled if card_type in board.of(state).types)
@@ -13070,7 +13046,7 @@ class Game(EngineModel):
 
         match = _ACTIVATE_ONLY_IF_ENTERED_THIS_TURN.search(instructions)
         if match is not None:
-            needed = _CONDITION_COUNT_WORDS.get(match.group("count").lower())
+            needed = parse_count(match.group("count"))
             if needed is not None:
                 turn_number = getattr(self.turn, "turn_number", None)
                 if turn_number is None:
@@ -13084,7 +13060,7 @@ class Game(EngineModel):
 
         match = _ACTIVATE_ONLY_IF_DELIRIUM.search(instructions)
         if match is not None:
-            needed = _CONDITION_COUNT_WORDS.get(match.group("count").lower())
+            needed = parse_count(match.group("count"))
             if needed is not None:
                 return count_card_types(self.player(controller).graveyard) >= needed
 

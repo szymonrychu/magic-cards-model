@@ -30,6 +30,7 @@ from ..models.card import Card, Color, Layout, Type, types_of
 from ..models.card_state import CardState, Counter, ExileAnnotation, ExileMarker, TargetRef
 from ..models.mana import ManaCost, ManaSpend
 from ..models.zone import Zone
+from ..numbers import parse_count
 from ..snapshot import EngineModel
 from .abilities import (
     AbilityKind,
@@ -1676,20 +1677,6 @@ _OPPONENT_SPELL_COUNT_CONDITION = re.compile(
     r"^an opponent cast (?P<count>[\w-]+) or more spells this turn$", re.IGNORECASE
 )
 
-#: CR 107.1's numbers, spelled the way a card spells them.
-_NUMBER_WORDS: dict[str, int] = {
-    "one": 1,
-    "two": 2,
-    "three": 3,
-    "four": 4,
-    "five": 5,
-    "six": 6,
-    "seven": 7,
-    "eight": 8,
-    "nine": 9,
-    "ten": 10,
-}
-
 #: A cost phrase that is nothing but mana, with or without the verb in front of
 #: it: Mindbreak Trap prints "pay {0}", and CR 118.5 makes that a real cost
 #: ("Some costs are represented by {0} ... Even though such a cost requires no
@@ -3269,7 +3256,7 @@ class Casting(EngineModel):
                 f"{self.spell.name}'s alternative cost is offered only 'if "
                 f"{condition}', which this engine cannot read (CR 118.9)"
             )
-        needed = _NUMBER_WORDS.get(match.group("count").lower())
+        needed = parse_count(match.group("count"), article=False)
         if needed is None:
             return (
                 f"{self.spell.name}'s alternative cost asks for "

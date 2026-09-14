@@ -84,6 +84,7 @@ from ..models.token import (
     token_copy_of,
 )
 from ..models.zone import Zone
+from ..numbers import COUNT, parse_count, parse_multiplier
 from ..snapshot import EngineModel
 from . import combat as combat_rules
 from .abilities import (
@@ -894,8 +895,8 @@ def _amount_term(term: str) -> AmountReader | None:
     """One term of `amount_expression`, or `None` when it is not readable."""
     text = term.strip()
     lowered = text.lower()
-    if text.isdigit() or lowered in _NUMBER_WORDS:
-        constant = _count(text)
+    constant = parse_count(text)
+    if constant is not None:
         return lambda _game, _controller, _object, _x: constant
     if lowered == "x":
         return lambda _game, _controller, _object, x: x
@@ -4056,7 +4057,7 @@ def _parse_draw_then_put_land_cave_bonus_clause(text: str) -> AbilityEffect | No
     if match is None:
         return None
     try:
-        life = _count(match.group("life"))
+        life = parse_count(match.group("life"))
     except KeyError:
         return None
 
@@ -4200,11 +4201,10 @@ def _parse_search_up_to_n_and_put_clause(clause: str, *, for_spell: bool) -> Tar
     match = _SEARCH_UP_TO_N_AND_PUT_RE.fullmatch(clause.strip())
     if match is None:
         return None
-    try:
-        count = _count(match.group("count"))
-    except KeyError:
+    count = parse_count(match.group("count"))
+    if count is None:
         # "up to X land cards" (CR 107.3a's X, unresolved) or some other word
-        # `_NUMBER_WORDS` does not carry - fail closed rather than guess.
+        # that is not a count - fail closed rather than guess.
         return None
     matches = _quality_matcher(match.group("quality"))
     tapped = bool(match.group("tapped"))
@@ -4271,39 +4271,6 @@ def parse_search_and_put_effect(text: str) -> AbilityEffect | None:
 # Single-clause player effects, read off the ability's own printed text
 # --------------------------------------------------------------------------
 
-#: Spelled-out numbers small enough that a real card prints them this way -
-#: Griselbrand's "Draw seven cards" is the reason this exists at all. "Twenty"
-#: is Ulamog, the Ceaseless Hunger's own "exiles the top twenty cards of their
-#: library" - the largest spelled-out count anywhere in the pool.
-_NUMBER_WORDS = {
-    "a": 1,
-    "an": 1,
-    "one": 1,
-    "two": 2,
-    "three": 3,
-    "four": 4,
-    "five": 5,
-    "six": 6,
-    "seven": 7,
-    "eight": 8,
-    "nine": 9,
-    "ten": 10,
-    "twenty": 20,
-}
-#: A number as a card prints it. The comma-grouped alternative comes first so
-#: "1,000" is read whole rather than as a bare "1" with a stray ",000" left
-#: over - The Millennium Calendar's "each opponent loses 1,000 life" is the
-#: printing that needs it, and its own trigger condition ("1,000 or more time
-#: counters") is already read past the same digit-group comma in
-#: `machines/triggers.py`.
-_COUNT = r"(?:\d{1,3}(?:,\d{3})+|\d+|a|an|one|two|three|four|five|six|seven|eight|nine|ten|twenty)"
-
-
-def _count(word: str) -> int:
-    plain = word.replace(",", "")
-    return int(plain) if plain.isdigit() else _NUMBER_WORDS[word.lower()]
-
-
 #: A clause's effect on one player, once the controller has been worked out -
 #: the same shape whether that controller came from a spell (CR 608.2c) or
 #: from a triggered or activated ability (CR 603.3a, CR 602.2). `source` is a
@@ -4320,9 +4287,9 @@ ClauseEffect = Callable[["Game", Player, str, str | None], None]
 #: "you gain N life", and "you gain three times X life" (Martyr of Sands) once
 #: CR 107.3a's X is substituted - a multiplier on the count, read the same way.
 _GAIN_LIFE_RE = re.compile(
-    rf"you gains? (?:(?P<times>{_COUNT}) times )?(?P<n>{_COUNT}) life", re.IGNORECASE
+    rf"you gains? (?:(?P<times>{COUNT}) times )?(?P<n>{COUNT}) life", re.IGNORECASE
 )
-_LOSE_LIFE_RE = re.compile(rf"you loses? (?P<n>{_COUNT}) life", re.IGNORECASE)
+_LOSE_LIFE_RE = re.compile(rf"you loses? (?P<n>{COUNT}) life", re.IGNORECASE)
 #: "Each opponent loses N life." - Cauldron Familiar's own enters trigger,
 #: the flat-number twin of `_EACH_OPPONENT_LOSES_LIFE_EQUAL_TO_RE`'s counted
 #: amount. CR 119.3 adjusts a life total directly, and unlike CR 119.2's
@@ -4330,14 +4297,14 @@ _LOSE_LIFE_RE = re.compile(rf"you loses? (?P<n>{_COUNT}) life", re.IGNORECASE)
 #: applies; CR 102.2's "each opponent" is every player in the game other than
 #: the clause's own controller.
 _EACH_OPPONENT_LOSES_LIFE_RE = re.compile(
-    rf"each opponent loses (?P<n>{_COUNT}) life", re.IGNORECASE
+    rf"each opponent loses (?P<n>{COUNT}) life", re.IGNORECASE
 )
 # CR 107.14: "The energy symbol is {E}. It represents one energy counter."
 _ENERGY_RE = re.compile(r"(?:you )?gets? (?P<e>(?:\{e\})+)", re.IGNORECASE)
 # CR 121.1/121.2: drawing, one card at a time. The "you" is often left
 # implicit - a triggered or activated ability's effect just says "Draw a
 # card."
-_DRAW_RE = re.compile(rf"(?:you )?draws? (?:a card|(?P<n>{_COUNT}) cards?)", re.IGNORECASE)
+_DRAW_RE = re.compile(rf"(?:you )?draws? (?:a card|(?P<n>{COUNT}) cards?)", re.IGNORECASE)
 # CR 701.9a: "To discard a card, move it from its owner's hand to that
 # player's graveyard." CR 701.9b: absent an override, the discarding player
 # chooses which - Wistfulness's own "draw two cards, then discard a card" is
@@ -4349,10 +4316,10 @@ _DRAW_RE = re.compile(rf"(?:you )?draws? (?:a card|(?P<n>{_COUNT}) cards?)", re.
 # ability's own effect, spoken as an instruction) or "you may discard a
 # card" (peeled off by `_parse_optional_player_clause` before this ever
 # runs), so there is no "you discard a card" shape left to also match.
-_DISCARD_A_CARD_RE = re.compile(rf"^discards? (?:a card|(?P<n>{_COUNT}) cards?)$", re.IGNORECASE)
+_DISCARD_A_CARD_RE = re.compile(rf"^discards? (?:a card|(?P<n>{COUNT}) cards?)$", re.IGNORECASE)
 # CR 701.17a: "puts that many cards from the top of their library into their
 # graveyard."
-_MILL_RE = re.compile(rf"(?:you )?mills? (?:a card|(?P<n>{_COUNT}) cards?)", re.IGNORECASE)
+_MILL_RE = re.compile(rf"(?:you )?mills? (?:a card|(?P<n>{COUNT}) cards?)", re.IGNORECASE)
 # CR 701.25a / CR 701.22a.
 _SURVEIL_RE = re.compile(r"surveils? (?P<n>\d+)", re.IGNORECASE)
 #: "Scry N" (Preordain, most spells) and "Target player scries N" (Kozilek's
@@ -4454,9 +4421,9 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
     clause = re.sub(r"\s*\([^()]*\)\s*$", "", clause).strip().rstrip(".").strip()
 
     if match := _GAIN_LIFE_RE.fullmatch(clause):
-        amount = _count(match.group("n"))
+        amount = parse_count(match.group("n"))
         if match.group("times") is not None:
-            amount *= _count(match.group("times"))
+            amount *= parse_count(match.group("times"))
         # Through `Game.gain_life`, not `Player.gain_life`. CR 119.9: "Some
         # triggered abilities are written, 'Whenever [a player] gains life,
         # . . . .' Such abilities are treated as though they are written,
@@ -4476,11 +4443,11 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
         )
 
     if match := _LOSE_LIFE_RE.fullmatch(clause):
-        amount = _count(match.group("n"))
+        amount = parse_count(match.group("n"))
         return lambda game, player, source, source_id: player.lose_life(amount)
 
     if match := _EACH_OPPONENT_LOSES_LIFE_RE.fullmatch(clause):
-        amount = _count(match.group("n"))
+        amount = parse_count(match.group("n"))
 
         def each_opponent_loses(
             game: "Game", player: Player, source: str, source_id: str | None
@@ -4514,17 +4481,17 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
         return lambda game, player, source, source_id: player.add_counters(Counter.ENERGY, amount)
 
     if match := _DRAW_RE.fullmatch(clause):
-        amount = _count(match.group("n")) if match.group("n") else 1
+        amount = parse_count(match.group("n")) if match.group("n") else 1
         return lambda game, player, source, source_id: game.draw_cards(player.username, amount)
 
     if match := _DISCARD_A_CARD_RE.fullmatch(clause):
-        amount = _count(match.group("n")) if match.group("n") else 1
+        amount = parse_count(match.group("n")) if match.group("n") else 1
         return lambda game, player, source, source_id: _discard_cards(
             game, player, amount, source, source_id=source_id
         )
 
     if match := _MILL_RE.fullmatch(clause):
-        amount = _count(match.group("n")) if match.group("n") else 1
+        amount = parse_count(match.group("n")) if match.group("n") else 1
         return lambda game, player, source, source_id: _mill(game, player, amount)
 
     if match := _SURVEIL_RE.fullmatch(clause):
@@ -5287,7 +5254,7 @@ def _parse_tap_target_then_no_untap_clause(text: str) -> AbilityEffect | None:
 #: SELF_SUBJECT`'s "this `<noun>`" shape, reused from `cost.py`'s own counter
 #: phrasing) and a target destination.
 _MOVE_COUNTER_RE = re.compile(
-    rf"^move (?P<n>{_COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? from this \w+ onto "
+    rf"^move (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? from this \w+ onto "
     r"(?P<phrase>target .+)\.?$",
     re.IGNORECASE,
 )
@@ -5306,7 +5273,7 @@ def _parse_move_counter_clause(text: str) -> AbilityEffect | None:
         return None
     if not _targets_understood(match.group("phrase"), count_agnostic=False):
         return None
-    amount = _count(match.group("n"))
+    amount = parse_count(match.group("n"))
     kind = _counter_kind(match.group("kind"))
     if amount is None:
         return None
@@ -5339,7 +5306,7 @@ def _parse_move_counter_clause(text: str) -> AbilityEffect | None:
 #: happens once a legal one is chosen.
 _PUT_EXILED_TARGET_ONTO_BATTLEFIELD_RE = re.compile(
     r"^put (?P<phrase>target .+?) onto the battlefield(?P<tapped> tapped)? "
-    r"under your control(?: with (?P<n>\w+) additional (?P<kind>\+1/\+1|-1/-1|[a-z]+) "
+    rf"under your control(?: with (?P<n>{COUNT}) additional (?P<kind>\+1/\+1|-1/-1|[a-z]+) "
     r"counters? on it)?\.?$",
     re.IGNORECASE,
 )
@@ -5360,7 +5327,7 @@ def _parse_put_exiled_target_onto_battlefield_clause(text: str) -> AbilityEffect
     if not _targets_understood(match.group("phrase"), count_agnostic=False, battlefield_only=False):
         return None
     tapped = match.group("tapped") is not None
-    amount = _count(match.group("n")) if match.group("n") else None
+    amount = parse_count(match.group("n")) if match.group("n") else None
     kind = _counter_kind(match.group("kind")) if match.group("kind") else None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
@@ -5787,7 +5754,7 @@ def put_counters_on_ability_targets(kind: Counter | str, amount: int) -> Targete
 # `count_expression`'s "the number of ..." shape, since this is a plain
 # characteristic read (CR 613.4, CR 613.5), not a count of anything.
 _COUNTER_EACH_GROUP_RE = re.compile(
-    rf"^put (?P<n>{_COUNT}|x) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on each "
+    rf"^put (?P<n>{COUNT}|x) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on each "
     r"(?P<group>[a-z]+) you control(?:,\s*where x is (?P<expr>.+))?\.?$",
     re.IGNORECASE,
 )
@@ -5818,7 +5785,7 @@ def _parse_put_counters_on_group_clause(text: str) -> AbilityEffect | None:
             return None
         fixed_amount = None
     else:
-        fixed_amount = _count(n_text)
+        fixed_amount = parse_count(n_text)
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         source = ability.source(game)
@@ -5889,7 +5856,7 @@ def _counter_kind(word: str) -> Counter | str:
 #: a card that prints its own name instead of "this" (The Filigree Sylex, and
 #: Grist, the Hunger Tide's own "+1") reads exactly the same way.
 _COUNTER_ON_SELF_RE = re.compile(
-    rf"^put (?P<n>{_COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on this \w+\.?$",
+    rf"^put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on this \w+\.?$",
     re.IGNORECASE,
 )
 
@@ -5908,7 +5875,7 @@ def _parse_put_counters_on_self_clause(text: str) -> AbilityEffect | None:
     match = _COUNTER_ON_SELF_RE.fullmatch(text.strip())
     if match is None:
         return None
-    amount = _count(match.group("n"))
+    amount = parse_count(match.group("n"))
     kind = _counter_kind(match.group("kind"))
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
@@ -5942,9 +5909,9 @@ def _parse_put_counters_on_self_clause(text: str) -> AbilityEffect | None:
 #: "Exactly", "at least" and "fewer than" are all read, because the shape is
 #: the reflexive check, not the one comparison this card happens to print.
 _PUT_COUNTER_ON_SELF_THEN_IF_COUNT_RE = re.compile(
-    rf"^put (?P<n>{_COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on (?:it|this \w+)\.\s*"
+    rf"^put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on (?:it|this \w+)\.\s*"
     rf"then if it has (?P<comparison>exactly|at least|fewer than|more than) "
-    rf"(?P<threshold>{_COUNT}) (?P<other_kind>\+1/\+1|-1/-1|[a-z]+) counters? on it, "
+    rf"(?P<threshold>{COUNT}) (?P<other_kind>\+1/\+1|-1/-1|[a-z]+) counters? on it, "
     r"(?P<rest>.+)$",
     re.IGNORECASE | re.DOTALL,
 )
@@ -5982,8 +5949,8 @@ def _parse_put_counter_on_self_then_if_count_clause(text: str) -> AbilityEffect 
         # and reading it would need the two kinds tracked apart here, so it
         # fails closed rather than being answered with the wrong count.
         return None
-    amount = _count(match.group("n"))
-    threshold = _count(match.group("threshold"))
+    amount = parse_count(match.group("n"))
+    threshold = parse_count(match.group("threshold"))
     kind = _counter_kind(match.group("kind"))
     compare = _COUNTER_COUNT_COMPARISONS[match.group("comparison").lower()]
     rest = parse_mixed_effect(match.group("rest").strip())
@@ -6591,7 +6558,7 @@ _EXILE_TARGETS_UNTIL_LEAVES_THEN_COUNTERS_RE = re.compile(
     r"^exile (?P<phrase>.+?) until this "
     r"(?:permanent|enchantment|artifact|creature|planeswalker) leaves the battlefield\.\s*"
     r"when an exiled card enters under your control this way, "
-    rf"put (?P<n>{_COUNT}) (?P<kind>[+-]\d+/[+-]\d+|\w+) counters? on it\.?$",
+    rf"put (?P<n>{COUNT}) (?P<kind>[+-]\d+/[+-]\d+|\w+) counters? on it\.?$",
     re.IGNORECASE,
 )
 
@@ -6661,7 +6628,7 @@ def _parse_exile_targets_until_leaves_then_counters(text: str) -> AbilityEffect 
     if not _targets_understood(match.group("phrase"), count_agnostic=True):
         return None
     kind = _counter_kind(match.group("kind"))
-    amount = _count(match.group("n"))
+    amount = parse_count(match.group("n"))
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         source = ability.source(game)
@@ -6905,12 +6872,12 @@ def _parse_regenerate_self_clause(clause: str) -> AbilityEffect | None:
 #: to any target." read as nothing until it was (battle 8 follow-up).
 _UNQUOTED_PREFIX = r"(?:[^\"“”'‘’]|(?<=\w)['’](?=\w))*"
 _DAMAGE_TARGET_RE = re.compile(
-    rf"{_UNQUOTED_PREFIX}\bdeals? (?P<n>{_COUNT}) damage to (?P<phrase>any target|.*target.+)",
+    rf"{_UNQUOTED_PREFIX}\bdeals? (?P<n>{COUNT}) damage to (?P<phrase>any target|.*target.+)",
     re.IGNORECASE,
 )
 #: Fling: "<Source> deals damage equal to the sacrificed creature's power to
 #: any target." An additional-cost-bound amount, not `_DAMAGE_TARGET_RE`'s
-#: literal number - `_COUNT` never matches the word "equal", so this needs
+#: literal number - `COUNT` never matches the word "equal", so this needs
 #: its own regex and its own resolution-time read of `Game.cast_record`'s
 #: `additional_cost_cards` (CR 118.8a's "sacrifice a creature" additional
 #: cost, CR 601.2h's payment already ran by the time this clause resolves).
@@ -7005,7 +6972,7 @@ def _parse_target_player_cant_cast_kicked_attack_clause(effect_text: str) -> Eff
 #: own, put on by a plain activated ability this shape already reads once the
 #: kind word is not pinned to the two P/T spellings.
 _COUNTER_TARGET_RE = re.compile(
-    rf"put (?P<n>{_COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on (?P<phrase>.*target.+)",
+    rf"put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on (?P<phrase>.*target.+)",
     re.IGNORECASE,
 )
 #: Swallow Whole: "Put a +1/+1 counter on the creature tapped to pay this
@@ -7018,7 +6985,7 @@ _COUNTER_TARGET_RE = re.compile(
 #: The creature stays on the battlefield (only tapped, not sacrificed), so
 #: `game.find_by_id` reaches it with no zone lookup needed.
 _COUNTER_ON_ADDITIONAL_COST_CARD_RE = re.compile(
-    rf"^put (?P<n>{_COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on the "
+    rf"^put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on the "
     r"(?:creature|permanent|card) (?:tapped|sacrificed|exiled|discarded) to pay "
     r"this spell'?s additional cost\.?$",
     re.IGNORECASE,
@@ -7143,7 +7110,7 @@ def _parse_counter_on_additional_cost_card_clause(clause: str) -> TargetedClause
     match = _COUNTER_ON_ADDITIONAL_COST_CARD_RE.fullmatch(clause.strip())
     if match is None:
         return None
-    amount = _count(match.group("n"))
+    amount = parse_count(match.group("n"))
     if amount is None:
         return None
     kind = _counter_kind(match.group("kind"))
@@ -7178,7 +7145,7 @@ def _parse_counter_on_additional_cost_card_clause(clause: str) -> TargetedClause
 #: targets at announcement, and the payout below is driven by how many were
 #: actually chosen and by the caster's announced division.
 _DIVIDED_DAMAGE_RE = re.compile(
-    rf".*\bdeals? (?P<n>{_COUNT}) damage divided as you choose "
+    rf".*\bdeals? (?P<n>{COUNT}) damage divided as you choose "
     r"among one(?:, two)?,? or (?:two|three) targets\.?$",
     re.IGNORECASE,
 )
@@ -7288,10 +7255,10 @@ def _parse_bottom_hand_then_draw_plus_one_clause(text: str) -> Effect | None:
 #: mana value 3 or less, it enters with three additional +1/+1 counters on
 #: it. Put the rest on the bottom of your library in a random order."
 _LOOK_TOP_N_MAY_BATTLEFIELD_CREATURE_BONUS_RE = re.compile(
-    r"^look at the top (?P<n>[\w-]+) cards? of your library\. "
+    rf"^look at the top (?P<n>{COUNT}) cards? of your library\. "
     r"you may put a creature card from among them onto the battlefield\. "
     r"if that card has mana value (?P<threshold>\d+) or less, it enters with "
-    r"(?P<bonus>[\w-]+) additional \+1/\+1 counters? on it\. "
+    rf"(?P<bonus>{COUNT}) additional \+1/\+1 counters? on it\. "
     r"put the rest on the bottom of your library in a random order\.?$",
     re.IGNORECASE,
 )
@@ -7321,9 +7288,9 @@ def _parse_look_top_n_may_battlefield_creature_bonus_clause(text: str) -> Effect
     match = _LOOK_TOP_N_MAY_BATTLEFIELD_CREATURE_BONUS_RE.fullmatch(whole)
     if match is None:
         return None
-    n = _count(match.group("n"))
+    n = parse_count(match.group("n"))
     threshold = int(match.group("threshold"))
-    bonus = _count(match.group("bonus"))
+    bonus = parse_count(match.group("bonus"))
     if n is None or bonus is None:
         return None
 
@@ -7461,7 +7428,7 @@ def _parse_reveal_until_land_damage_clause(text: str) -> AbilityEffect | None:
 #: number of picks. Nothing else in the pool prints that shape, which is why
 #: it needs its own reader rather than a wider quantity on an existing one.
 _REVEAL_TOP_N_ONE_PER_CARD_TYPE_RE = re.compile(
-    r"^reveal the top (?P<n>[\w-]+) cards? of your library\. "
+    rf"^reveal the top (?P<n>{COUNT}) cards? of your library\. "
     r"for each card type, you may put a card of that type from among the "
     r"revealed cards into your hand\. "
     r"put the rest on the bottom of your library in a random order\.?$",
@@ -7498,7 +7465,7 @@ def _parse_reveal_top_n_one_per_card_type_clause(text: str) -> AbilityEffect | N
     match = _REVEAL_TOP_N_ONE_PER_CARD_TYPE_RE.fullmatch(text.strip())
     if match is None:
         return None
-    n = _count(match.group("n"))
+    n = parse_count(match.group("n"))
     if n is None:
         return None
 
@@ -7568,13 +7535,13 @@ def _parse_reveal_top_n_one_per_card_type_clause(text: str) -> AbilityEffect | N
 #: handed a triggered or activated ability here (no spell in the pool prints
 #: this shape).
 _DAMAGE_EACH_OPPONENT_RE = re.compile(
-    rf".*\bdeals? (?P<n>{_COUNT}) damage to each opponent\.?$", re.IGNORECASE
+    rf".*\bdeals? (?P<n>{COUNT}) damage to each opponent\.?$", re.IGNORECASE
 )
 #: "<Source> deals N damage to each creature." (Extinguisher Battleship) -
 #: CR 119.3, also with no target: "each creature" is every creature on the
 #: battlefield, not something chosen or a player group.
 _DAMAGE_EACH_CREATURE_RE = re.compile(
-    rf".*\bdeals? (?P<n>{_COUNT}) damage to each creature\.?$", re.IGNORECASE
+    rf".*\bdeals? (?P<n>{COUNT}) damage to each creature\.?$", re.IGNORECASE
 )
 #: "Prevent all combat damage that would be dealt this turn." (Fog, Angelsong)
 #: - CR 615.1a's prevention effect naming neither a permanent nor a player, so
@@ -7600,7 +7567,7 @@ _PREVENT_ALL_COMBAT_DAMAGE_EXCEPT_RE = re.compile(
 #: (Bandage) - CR 615.7's counting shield around whichever kind of target CR
 #: 115.1 hands back; see `prevent_next_damage_to_target`.
 _PREVENT_NEXT_DAMAGE_TO_TARGET_RE = re.compile(
-    rf"prevent the next (?P<n>{_COUNT}) damage that would be dealt to "
+    rf"prevent the next (?P<n>{COUNT}) damage that would be dealt to "
     r"(?P<phrase>any target|.*target.+) this turn\.?$",
     re.IGNORECASE,
 )
@@ -7962,7 +7929,7 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
     if match := _COUNTER_TARGET_RE.fullmatch(clause):
         if not _targets_understood(match.group("phrase"), count_agnostic=True):
             return None
-        amount = _count(match.group("n"))
+        amount = parse_count(match.group("n"))
         kind = _counter_kind(match.group("kind"))
         return put_counters_on_ability_targets(kind, amount)
 
@@ -7979,13 +7946,13 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
         # by this parser). The strict single-mandatory-target check stays.
         if not _targets_understood(match.group("phrase"), allow_player_targets=True):
             return None
-        amount = _count(match.group("n"))
+        amount = parse_count(match.group("n"))
         return deal_damage(amount) if for_spell else damage_ability_targets(amount)
 
     if match := _DIVIDED_DAMAGE_RE.fullmatch(clause):
         # "one or two targets" is fixed by the sentence itself (CR 601.2d),
         # never a printed restriction to vet through `_targets_understood`.
-        amount = _count(match.group("n"))
+        amount = parse_count(match.group("n"))
         return deal_divided_damage(amount)  # type: ignore[return-value]
 
     if match := _DAMAGE_EACH_OPPONENT_RE.fullmatch(clause):
@@ -7994,12 +7961,12 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
         # `ability.controller` directly, which only an `AbilityOnStack` has.
         if for_spell:
             return None
-        amount = _count(match.group("n"))
+        amount = parse_count(match.group("n"))
         return damage_each_opponent(amount)  # type: ignore[return-value]
 
     if match := _DAMAGE_EACH_CREATURE_RE.fullmatch(clause):
         # No target either (every creature on the battlefield, CR 119.3).
-        amount = _count(match.group("n"))
+        amount = parse_count(match.group("n"))
         if for_spell:
             return damage_each_creature_spell(amount)
         return damage_each_creature(amount)  # type: ignore[return-value]
@@ -8019,7 +7986,7 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
     if match := _PREVENT_NEXT_DAMAGE_TO_TARGET_RE.fullmatch(clause):
         if not _targets_understood(match.group("phrase"), allow_player_targets=True):
             return None
-        amount = _count(match.group("n"))
+        amount = parse_count(match.group("n"))
         return prevent_next_damage_to_target(amount)  # type: ignore[return-value]
 
     if match := _TARGET_PLAYER_OR_OPPONENT_VERB_RE.fullmatch(clause):
@@ -8121,7 +8088,7 @@ def parse_targeted_effect(text: str) -> AbilityEffect | None:
 #   `token_copy_of` (CR 707.2) rather than through this parser.
 # - **A count this parser cannot read as a fixed number** - Hangarback
 #   Walker's "for each +1/+1 counter on this creature", Seasoned Pyromancer's
-#   "for each nonland card discarded this way" - is not a `_COUNT` word at
+#   "for each nonland card discarded this way" - is not a `COUNT` word at
 #   all, so `_TOKEN_CLAUSE_RE` simply does not match text of that shape;
 #   nothing silently falls back to a count of one.
 # - **A tail after "with" that is not a single quoted ability or a keyword
@@ -8146,7 +8113,7 @@ def parse_targeted_effect(text: str) -> AbilityEffect | None:
 #: merely contains the letters "token" could never match it - none in the
 #: pool do, but the boundary costs nothing.
 _TOKEN_CLAUSE_RE = re.compile(
-    rf"^(?:create )?(?P<n>{_COUNT}) (?P<desc>.+?) \btokens?\b"
+    rf"^(?:create )?(?P<n>{COUNT}) (?P<desc>.+?) \btokens?\b"
     r"(?:\s+named (?P<name>.+?))?"
     r"(?:\s+with\s+(?P<tail>.+))?\.?$",
     re.IGNORECASE | re.DOTALL,
@@ -8366,7 +8333,7 @@ def _parse_token_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     match = _TOKEN_CLAUSE_RE.fullmatch(clause)
     if match is None:
         return None
-    count = _count(match.group("n"))
+    count = parse_count(match.group("n"))
     words = match.group("desc").strip().split()
     tail = match.group("tail")
     name = match.group("name")
@@ -8423,7 +8390,7 @@ def _parse_token_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
 #: subject). `creates?` reads both "creates" (third person, as printed here)
 #: and a hypothetical "create".
 _TARGET_PLAYER_TOKEN_RE = re.compile(
-    rf"^target player creates? (?P<n>{_COUNT}) (?P<desc>.+?) \btokens?\b"
+    rf"^target player creates? (?P<n>{COUNT}) (?P<desc>.+?) \btokens?\b"
     rf"(?:\s+with\s+(?P<tail>.+))?\.?$",
     re.IGNORECASE | re.DOTALL,
 )
@@ -8436,7 +8403,7 @@ def _parse_target_player_token_mode(text: str) -> Effect | None:
     X has already been substituted by the time this is called
     (`substitute_x`, not `mode_rules_text` - the quoted granted ability has to
     survive, which `mode_rules_text`'s quote-blanking would not let it), so
-    "creates X ..." arrives as "creates 1 ...", a plain `_COUNT` the same
+    "creates X ..." arrives as "creates 1 ...", a plain `COUNT` the same
     `_parse_generic_token_descriptor`/`_parse_token_tail` already read for
     every other token-creating card - CR 111.3's "This becomes the token's
     'text'" applies exactly the same to a token a target player creates as to
@@ -8447,7 +8414,7 @@ def _parse_target_player_token_mode(text: str) -> Effect | None:
         return None
     if "copy of" in text.lower():
         return None  # CR 707.2 copying needs copiable values this wave does not read.
-    count = _count(match.group("n"))
+    count = parse_count(match.group("n"))
     words = match.group("desc").strip().split()
     if not words:
         return None
@@ -8786,7 +8753,7 @@ _REFERENT_SEARCH_RE = re.compile(
 #: always third-person ("creates"), never the imperative "create" a spell's
 #: own clause prints.
 _REFERENT_TOKEN_RE = re.compile(
-    rf"^creates? (?P<n>{_COUNT}) (?P<desc>.+?) \btokens?\b(?:\s+with\s+(?P<tail>.+))?\.?$",
+    rf"^creates? (?P<n>{COUNT}) (?P<desc>.+?) \btokens?\b(?:\s+with\s+(?P<tail>.+))?\.?$",
     re.IGNORECASE | re.DOTALL,
 )
 
@@ -8858,7 +8825,7 @@ def _parse_referent_clause(rest: str) -> ReferentClause | None:
         return search_effect
 
     if match := _REFERENT_TOKEN_RE.fullmatch(rest):
-        count = _count(match.group("n"))
+        count = parse_count(match.group("n"))
         words = match.group("desc").strip().split()
         tail = match.group("tail")
         tapped = bool(words) and words[0].lower() == "tapped"
@@ -9574,7 +9541,7 @@ def _parse_create_token_mill_repeat_clause(text: str) -> AbilityEffect | None:
 #: not a "target" at all, the same shape `_bring_in_from_outside_the_game_or_
 #: exile`'s `DecisionKind.CHOOSE_CARDS` already reads for Karn's `-2`.
 _MILL_THEN_MAY_RETURN_CREATURE_RE = re.compile(
-    rf"^mill (?P<n>{_COUNT}) cards?, then you may return a creature card "
+    rf"^mill (?P<n>{COUNT}) cards?, then you may return a creature card "
     r"with mana value (?P<max_mv>\d+) or less from your graveyard "
     r"to the battlefield\.?$",
     re.IGNORECASE,
@@ -9595,7 +9562,7 @@ def _parse_mill_then_may_return_creature_clause(text: str) -> AbilityEffect | No
     match = _MILL_THEN_MAY_RETURN_CREATURE_RE.fullmatch(_strip_non_effect_preamble(text).strip())
     if match is None:
         return None
-    count = _count(match.group("n"))
+    count = parse_count(match.group("n"))
     ceiling = int(match.group("max_mv"))
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
@@ -9689,8 +9656,8 @@ _SELECT_FROM_TOP_RE = re.compile(
     # Scout the City's first mode) is italic flavour with no rules meaning, so
     # it is stepped over rather than read.
     r"^(?:[a-z][a-z '-]* — )?"
-    rf"(?:mill (?P<mill_n>{_COUNT}) cards?"
-    rf"|look at the top (?P<look_n>{_COUNT}) cards? of your library)\.\s*"
+    rf"(?:mill (?P<mill_n>{COUNT}) cards?"
+    rf"|look at the top (?P<look_n>{COUNT}) cards? of your library)\.\s*"
     r"you may put (?:a|an|one) "
     # Either one positive kind word, or a run of CR 205.2a negations -
     # Fallaji Archaeologist's "a noncreature, nonland card", where the comma
@@ -9704,7 +9671,7 @@ _SELECT_FROM_TOP_RE = re.compile(
     r"(?P<dest>into your hand|onto the battlefield tapped|onto the battlefield"
     r"|into your graveyard)\.\s*"
     r"(?P<decline_counter>if you don't, put a \+1/\+1 counter on this creature\.\s*)?"
-    rf"(?:you gain (?P<life>{_COUNT}) life\.\s*)?"
+    rf"(?:you gain (?P<life>{COUNT}) life\.\s*)?"
     r"(?:put the rest (?P<rest>on the bottom of your library in a random order"
     r"|on the bottom of your library in any order"
     r"|on the bottom of your library"
@@ -9728,7 +9695,7 @@ def _select_from_top_runner(
     if match is None:
         return None
     milling = match.group("mill_n") is not None
-    count = _count(match.group("mill_n") if milling else match.group("look_n"))
+    count = parse_count(match.group("mill_n") if milling else match.group("look_n"))
     kind_word = (match.group("kind") or "").lower()
     negated = (match.group("negated") or "").lower()
     if negated:
@@ -9750,7 +9717,7 @@ def _select_from_top_runner(
         predicate = found
     destination = match.group("dest").lower()
     counter_when_declined = match.group("decline_counter") is not None
-    life = _count(match.group("life")) if match.group("life") else 0
+    life = parse_count(match.group("life")) if match.group("life") else 0
     rest = (match.group("rest") or "").lower()
     noun = f"{kind_word} card" if kind_word else "card"
 
@@ -10144,7 +10111,7 @@ _MILL_THAT_MANY_THEN_TAKE_FROM_AMONG_THEM_RE = re.compile(
     r"^you mill that many cards\.\s*"
     r"you may put any number of (?P<quality>.+?) cards from among them into your hand\.\s*"
     r"if you put no cards into your hand this way, "
-    r"put (?P<n>a|an|\w+) (?P<kind>\+1/\+1|-1/-1) counters? on (?P<name>[^.]+)\.?$",
+    rf"put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1) counters? on (?P<name>[^.]+)\.?$",
     re.IGNORECASE | re.DOTALL,
 )
 
@@ -10162,7 +10129,7 @@ def _parse_mill_that_many_then_take_from_among_them(text: str) -> AbilityEffect 
         return None
     quality = match.group("quality").replace(" and/or ", " or ")
     matches = _quality_matcher(quality)
-    amount = 1 if match.group("n").lower() in {"a", "an"} else _count(match.group("n"))
+    amount = parse_count(match.group("n"))
     if amount is None:
         return None
     kind = _counter_kind(match.group("kind"))
@@ -11393,7 +11360,7 @@ def _parse_damage_each_group_clause(clause: str) -> TargetedClause | None:
 #: guessed at, because a mass-damage filter read too widely wipes a board the
 #: card never touched.
 _DAMAGE_EACH_FILTERED_RE = re.compile(
-    rf"^.*\bdeals? (?P<n>{_COUNT}) damage to each (?P<filter>.+?)\.?$", re.IGNORECASE
+    rf"^.*\bdeals? (?P<n>{COUNT}) damage to each (?P<filter>.+?)\.?$", re.IGNORECASE
 )
 
 #: "each opponent and each <types> they control" - End the Festivities. The
@@ -11496,7 +11463,7 @@ def _parse_damage_each_filtered_clause(clause: str) -> TargetedClause | None:
     match = _DAMAGE_EACH_FILTERED_RE.fullmatch(clause.strip())
     if match is None:
         return None
-    amount = _count(match.group("n"))
+    amount = parse_count(match.group("n"))
     phrase = match.group("filter").strip()
 
     opponents_match = _DAMAGE_EACH_OPPONENT_AND_THEIRS_RE.fullmatch(phrase)
@@ -11790,7 +11757,7 @@ _EACH_PLAYER_HEAD_RE = re.compile(r"^each player (?P<rest>.+)$", re.IGNORECASE)
 #: choose which card to discard. Some effects, however, require a random
 #: discard", so nobody is asked anything.
 _DISCARD_AT_RANDOM_RE = re.compile(
-    rf"^discards? (?:a card|(?P<n>{_COUNT}) cards?) at random$", re.IGNORECASE
+    rf"^discards? (?:a card|(?P<n>{COUNT}) cards?) at random$", re.IGNORECASE
 )
 
 #: "shuffles their hand and graveyard into their library" - Day's Undoing.
@@ -11813,7 +11780,7 @@ _BARE_SHUFFLE_RE = re.compile(r"^shuffles?$", re.IGNORECASE)
 #: CR 202.3a then reads as a mana value of 0. The phrase is optional in the
 #: pattern because the plain face-up exile is the same instruction otherwise.
 _EACH_PLAYER_EXILES_TOP_RE = re.compile(
-    rf"^exiles? the top (?:card|(?P<n>{_COUNT}) cards) of (?:their|his or her) library"
+    rf"^exiles? the top (?:card|(?P<n>{COUNT}) cards) of (?:their|his or her) library"
     r"(?P<face_down> face down)?$",
     re.IGNORECASE,
 )
@@ -11874,7 +11841,7 @@ def _parse_each_player_step(text: str) -> ClauseEffect | None:
         return None
 
     if match := _DISCARD_AT_RANDOM_RE.fullmatch(clause):
-        amount = _count(match.group("n")) if match.group("n") else 1
+        amount = parse_count(match.group("n")) if match.group("n") else 1
         return lambda game, player, source, source_id: _discard_at_random(
             game, player, amount, source
         )
@@ -11894,7 +11861,7 @@ def _parse_each_player_step(text: str) -> ClauseEffect | None:
         return lambda game, player, source, source_id: game.shuffle_library(player)
 
     if match := _EACH_PLAYER_EXILES_TOP_RE.fullmatch(clause):
-        amount = _count(match.group("n")) if match.group("n") else 1
+        amount = parse_count(match.group("n")) if match.group("n") else 1
         face_down = match.group("face_down") is not None
 
         def exile_top_of_library(
@@ -12818,7 +12785,7 @@ ReferentObjectClause = Callable[["Game", list[CardState], "StackObject"], None]
 #: Nightmares' `-2`. The counter kind is any single word, exactly as
 #: `_COUNTER_TARGET_RE` reads it, because CR 122.1 leaves the set open.
 _RIDER_PUT_COUNTERS_RE = re.compile(
-    rf"^put (?P<n>{_COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on {_OBJECT_ANAPHOR}$",
+    rf"^put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on {_OBJECT_ANAPHOR}$",
     re.IGNORECASE,
 )
 
@@ -12868,7 +12835,7 @@ def _parse_referent_object_clause(rider: str) -> ReferentObjectClause | None:
     rider = rider.strip().rstrip(".").strip()
 
     if match := _RIDER_PUT_COUNTERS_RE.fullmatch(rider):
-        amount = _count(match.group("n"))
+        amount = parse_count(match.group("n"))
         kind = _counter_kind(match.group("kind"))
         if amount is None:
             return None
@@ -14013,12 +13980,7 @@ def _parse_sacrifice_consequence(consequence: str) -> _SacrificeConsequence | No
     draw_match = _DRAW_N_CARDS_RE.fullmatch(consequence)
     if draw_match is not None:
         count_text = draw_match.group("count")
-        if count_text is None:
-            count = 1
-        else:
-            count = _NUMBER_WORDS.get(count_text.lower())
-            if count is None and count_text.isdigit():
-                count = int(count_text)
+        count = 1 if count_text is None else parse_count(count_text)
         if count is None:
             return None
 
@@ -14512,7 +14474,7 @@ _REFLEXIVE_MAY_PAY_ENERGY_RE = re.compile(
 #: does - the whole reason this is its own reader rather than a
 #: `parsed_layer_effects` sentence.
 _COUNTERS_AND_BECOMES_TYPE_RE = re.compile(
-    r"^put (?P<n>\w+) \+1/\+1 counters? and an? (?P<keyword>[a-z]+) counter on "
+    rf"^put (?P<n>{COUNT}) \+1/\+1 counters? and an? (?P<keyword>[a-z]+) counter on "
     r"(?P<phrase>target [^.]+)\.\s*it becomes an? (?P<subtype>[a-z]+) in addition to "
     r"its other types\.?$",
     re.IGNORECASE,
@@ -14536,7 +14498,9 @@ def _parse_counters_and_becomes_type_clause(text: str) -> AbilityEffect | None:
         return None
     if not _targets_understood(match.group("phrase"), count_agnostic=True):
         return None
-    amount = _count(match.group("n"))
+    amount = parse_count(match.group("n"))
+    if amount is None:
+        return None
     keyword = match.group("keyword").lower()
     subtype = match.group("subtype").capitalize()
 
@@ -14694,7 +14658,7 @@ def _parse_reflexive_mandatory_token_clause(text: str) -> AbilityEffect | None:
     token_match = _TOKEN_CLAUSE_RE.fullmatch(action_text)
     if token_match is None:
         return None
-    count = _count(token_match.group("n"))
+    count = parse_count(token_match.group("n"))
     words = token_match.group("desc").strip().split()
     tail = token_match.group("tail")
     if not words:
@@ -14773,7 +14737,7 @@ def _parse_create_token_then_may_attach_clause(text: str) -> AbilityEffect | Non
     token_match = _TOKEN_CLAUSE_RE.fullmatch(action_text)
     if token_match is None:
         return None
-    count = _count(token_match.group("n"))
+    count = parse_count(token_match.group("n"))
     if count != 1:
         return None
     words = token_match.group("desc").strip().split()
@@ -14950,7 +14914,7 @@ def _parse_undergrowth_pump_and_fight_clause(text: str) -> AbilityEffect | None:
 # siblings already use, not a new plural-subject field on `DelayedTrigger`.
 
 _ATTACK_THIS_TURN_TAPPED_ATTACKING_TOKENS_RE = re.compile(
-    r"^whenever you attack this turn,\s*create (?P<n>\w+) (?P<desc>.+?) tokens? "
+    rf"^whenever you attack this turn,\s*create (?P<n>{COUNT}) (?P<desc>.+?) tokens? "
     r"that are tapped and attacking\.\s*sacrifice them at the beginning of the "
     r"next end step\.?$",
     re.IGNORECASE,
@@ -14963,10 +14927,10 @@ def _parse_attack_this_turn_create_tapped_attacking_tokens(text: str) -> Ability
     )
     if match is None:
         return None
-    count = _count(match.group("n"))
+    count = parse_count(match.group("n"))
     words = match.group("desc").strip().split()
     definition = _parse_generic_token_descriptor(words, None)
-    if definition is None:
+    if count is None or definition is None:
         return None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
@@ -15023,7 +14987,7 @@ def _parse_attack_this_turn_create_tapped_attacking_tokens(text: str) -> Ability
 #: that other ability." CR 701.21a is the sacrifice itself - "its controller
 #: moves it from the battlefield directly to its owner's graveyard."
 _ATTACK_TAPPED_ATTACKING_TOKENS_THEN_SACRIFICE_RE = re.compile(
-    rf"^create (?P<n>{_COUNT}) (?P<desc>.+?) \btokens?\b"
+    rf"^create (?P<n>{COUNT}) (?P<desc>.+?) \btokens?\b"
     r"(?:\s+with\s+(?P<tail>.+?))?"
     r"(?:\s+named (?P<name>.+?))?"
     r"\s+that(?:'s|’s| is| are) tapped and attacking\.\s*"
@@ -15330,7 +15294,7 @@ def _parse_create_tapped_attacking_tokens_then_sacrifice(text: str) -> AbilityEf
     )
     if match is None:
         return None
-    count = _count(match.group("n"))
+    count = parse_count(match.group("n"))
     definition = _parse_generic_token_descriptor(
         match.group("desc").strip().split(), match.group("tail")
     )
@@ -15409,7 +15373,7 @@ _SACRIFICE_ITEM_RE = re.compile(r"^(?:a|an|another)?\s*(?P<noun>[a-z]+)$", re.IG
 
 _MAY_COST_THEN_ATTACKING_TOKEN_RE = re.compile(
     r"^you may (?:pay (?P<mana>(?:\{[^}]+\})+)|sacrifice (?P<restriction>[^.]+))\.\s*"
-    rf"if you do, create (?P<n>{_COUNT}) (?P<desc>.+?) \btokens?\b"
+    rf"if you do, create (?P<n>{COUNT}) (?P<desc>.+?) \btokens?\b"
     r"(?:\s+with\s+(?P<tail>.+?))?"
     r"(?:\s+named (?P<name>.+?))?"
     r"\s+that(?:'s|’s| is| are) tapped and attacking\."
@@ -15516,7 +15480,7 @@ def _parse_may_cost_then_attacking_token_clause(text: str) -> AbilityEffect | No
             return None
         prompt = f"sacrifice {restriction.strip()}"
 
-    count = _count(match.group("n"))
+    count = parse_count(match.group("n"))
     definition = _parse_generic_token_descriptor(
         match.group("desc").strip().split(), match.group("tail")
     )
@@ -16259,19 +16223,10 @@ def _parse_investigate_clause(clause: str, *, for_spell: bool) -> TargetedClause
     if match is None:
         return None
     word = match.group("multiplier")
-    if word is None:
-        amount = 1
-    elif word.lower() == "twice":
-        amount = 2
-    elif word.lower() == "thrice":
-        amount = 3
-    elif word.lower() == "once":
-        amount = 1
-    else:
-        try:
-            amount = _count(word)
-        except (KeyError, ValueError):
-            return None
+    # The group holds "twice" or the "three" of "three times".
+    amount = 1 if word is None else parse_multiplier(word) or parse_multiplier(f"{word} times")
+    if amount is None:
+        return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         investigate(game, game.controller_of(stack_object).username, amount)
@@ -16509,7 +16464,7 @@ def _parse_if_additional_cost_paid_clause(clause: str, *, for_spell: bool) -> Ta
 #: condition inside an effect, not an intervening *if* (CR 603.4), checked
 #: when this clause is reached (CR 608.2c), after every instruction before it.
 _IF_GRAVEYARD_COUNT_RE = re.compile(
-    rf"^if (?:you have|there are) (?P<n>{_COUNT}) or more cards in your graveyard, (?P<rest>.+)$",
+    rf"^if (?:you have|there are) (?P<n>{COUNT}) or more cards in your graveyard, (?P<rest>.+)$",
     re.IGNORECASE | re.DOTALL,
 )
 
@@ -16522,7 +16477,7 @@ def _parse_if_graveyard_count_clause(clause: str, *, for_spell: bool) -> Targete
     match = _IF_GRAVEYARD_COUNT_RE.fullmatch(clause.strip().rstrip("."))
     if match is None:
         return None
-    threshold = _count(match.group("n"))
+    threshold = parse_count(match.group("n"))
     rest = match.group("rest").strip()
     inner = _parse_optional_mixed_clause(rest, for_spell=for_spell) or _parse_mixed_clause(
         rest, for_spell=for_spell
@@ -16639,7 +16594,7 @@ def _parse_return_rider_clause(clause: str) -> ReturnRiderCounter | None:
     match = _RETURN_RIDER_COUNTER_RE.fullmatch(clause.strip().rstrip("."))
     if match is None:
         return None
-    amount = _count(match.group("n"))
+    amount = parse_count(match.group("n"))
     who = match.group("who").strip().lower()
     return ReturnRiderCounter(amount=amount, who=who)
 
@@ -17124,7 +17079,7 @@ def _parse_exile_that_players_library_clause(
 #: exactly as `_parse_exile_that_players_library_clause` reads "that player"
 #: off a different event field just above.
 _DEFENDING_PLAYER_EXILES_TOP_N_RE = re.compile(
-    rf"^defending player exiles the top (?P<count>{_COUNT}) cards? of their library$",
+    rf"^defending player exiles the top (?P<count>{COUNT}) cards? of their library$",
     re.IGNORECASE,
 )
 
@@ -17140,7 +17095,7 @@ def _parse_defending_player_exiles_top_n_clause(
     match = _DEFENDING_PLAYER_EXILES_TOP_N_RE.fullmatch(clause.strip())
     if match is None:
         return None
-    count = _count(match.group("count"))
+    count = parse_count(match.group("count"))
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         ability = stack_object
@@ -17702,7 +17657,7 @@ def _parse_add_mana_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
 #: nothing about "any combination of colors" picks a subset the way Culling
 #: Ritual's own printed "{B} or {G}" does.
 _ADD_ANY_COMBINATION_MANA_RE = re.compile(
-    rf"^add (?P<n>{_COUNT}) mana in any combination of colors\.?$", re.IGNORECASE
+    rf"^add (?P<n>{COUNT}) mana in any combination of colors\.?$", re.IGNORECASE
 )
 
 
@@ -17713,7 +17668,7 @@ def _parse_add_any_combination_mana_clause(
     match = _ADD_ANY_COMBINATION_MANA_RE.fullmatch(clause.strip())
     if match is None:
         return None
-    count = _count(match.group("n"))
+    count = parse_count(match.group("n"))
     if count <= 0:
         return None
 
@@ -17810,7 +17765,7 @@ def _parse_create_token_copies_except_clause(
         return None
     if not _targets_understood(match.group("phrase")):
         return None
-    count = _count(match.group("count"))
+    count = parse_count(match.group("count"))
     ability_text = match.group("ability")
     added = (ability_text.strip(),) if ability_text else ()
 
@@ -18040,7 +17995,7 @@ def _spell_target_requirement(phrase: str) -> TargetRequirement | None:
 #: `CHOOSE_CARDS` question that picks *which* cards: the answer is an ordered
 #: list, and the first card named ends up nearest the top.
 _PUT_CARDS_FROM_HAND_INTO_LIBRARY_RE = re.compile(
-    rf"^put (?P<count>{_COUNT}) cards? from your hand "
+    rf"^put (?P<count>{COUNT}) cards? from your hand "
     r"on (?:(?P<top>top)|the (?P<bottom>bottom)) of your library"
     r"(?: in any order)?\.?$",
     re.IGNORECASE,
@@ -18064,7 +18019,7 @@ def _parse_put_cards_from_hand_into_library_clause(
     match = _PUT_CARDS_FROM_HAND_INTO_LIBRARY_RE.fullmatch(clause.strip())
     if match is None:
         return None
-    count = _count(match.group("count"))
+    count = parse_count(match.group("count"))
     to_bottom = match.group("bottom") is not None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
@@ -18290,7 +18245,7 @@ def _merge_reveal_hand_choose_discard_clauses(
 #: so CR 701.9b's default (the discarding player themselves) is left alone.
 _TARGET_PLAYER_DISCARDS_RE = re.compile(
     r"^target player discards "
-    r"(?P<count>a|an|one|two|three|four|five|six|seven|eight|nine|ten|\d+) cards?$",
+    rf"(?P<count>{COUNT}) cards?$",
     re.IGNORECASE,
 )
 
@@ -18311,10 +18266,9 @@ def _parse_target_player_discards_clause(clause: str, *, for_spell: bool) -> Tar
         return None
     if not _targets_understood("target player", allow_player_targets=True):
         return None
-    count_text = match.group("count").lower()
-    count = _NUMBER_WORDS.get(count_text)
+    count = parse_count(match.group("count"))
     if count is None:
-        count = int(count_text)
+        return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
@@ -18351,7 +18305,7 @@ def _parse_target_player_discards_clause(clause: str, *, for_spell: bool) -> Tar
 #: for CR 121.1's.
 _TARGET_PLAYER_DRAWS_RE = re.compile(
     r"^target player draws "
-    r"(?P<count>a|an|one|two|three|four|five|six|seven|eight|nine|ten|\d+) cards?$",
+    rf"(?P<count>{COUNT}) cards?$",
     re.IGNORECASE,
 )
 
@@ -18363,10 +18317,9 @@ def _parse_target_player_draws_clause(clause: str, *, for_spell: bool) -> Target
         return None
     if not _targets_understood("target player", allow_player_targets=True):
         return None
-    count_text = match.group("count").lower()
-    count = _NUMBER_WORDS.get(count_text)
+    count = parse_count(match.group("count"))
     if count is None:
-        count = int(count_text)
+        return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         for target in game.resolve_targets(stack_object):
@@ -18540,13 +18493,9 @@ def _merge_look_top_reveal_to_hand_clauses(
     look_match = _LOOK_AT_TOP_N_CARDS_RE.fullmatch(clauses[index].strip())
     if look_match is None:
         return None
-    count_text = look_match.group("count").lower()
-    count = _NUMBER_WORDS.get(count_text)
+    count = parse_count(look_match.group("count"))
     if count is None:
-        try:
-            count = int(count_text)
-        except ValueError:
-            return None
+        return None
     reveal_match = _MAY_REVEAL_FROM_AMONG_THEM_RE.fullmatch(clauses[index + 1].strip())
     if reveal_match is None:
         return None
@@ -18662,10 +18611,9 @@ def _merge_reveal_top_to_hand_rest_to_graveyard_clauses(
     reveal_match = _REVEAL_TOP_N_CARDS_RE.fullmatch(clauses[index].strip())
     if reveal_match is None:
         return None
-    count_text = reveal_match.group("count")
-    if not count_text.isdigit() and count_text.lower() not in _NUMBER_WORDS:
+    count = parse_count(reveal_match.group("count"))
+    if count is None:
         return None
-    count = _count(count_text)
     take_match = _MAY_PUT_A_CARD_FROM_AMONG_THEM_INTO_HAND_RE.fullmatch(clauses[index + 1].strip())
     if take_match is None:
         return None
@@ -18771,13 +18719,9 @@ def _merge_look_top_split_hand_graveyard_clauses(
     look_match = _LOOK_AT_TOP_N_CARDS_RE.fullmatch(clauses[index].strip())
     if look_match is None:
         return None
-    count_text = look_match.group("count").lower()
-    count = _NUMBER_WORDS.get(count_text)
+    count = parse_count(look_match.group("count"))
     if count is None:
-        try:
-            count = int(count_text)
-        except ValueError:
-            return None
+        return None
     if _PUT_ONE_OF_THEM_INTO_YOUR_HAND_RE.fullmatch(clauses[index + 1].strip()) is None:
         return None
     other = _THE_OTHER_INTO_A_DESTINATION_RE.fullmatch(clauses[index + 2].strip())
@@ -18874,13 +18818,9 @@ def _merge_look_top_one_to_hand_exile_rest_clauses(
     look_match = _LOOK_AT_TOP_PUT_ONE_INTO_HAND_RE.fullmatch(clauses[index].strip())
     if look_match is None or _EXILE_THE_REST_RE.fullmatch(clauses[index + 1].strip()) is None:
         return None
-    count_text = look_match.group("count").lower()
-    count = _NUMBER_WORDS.get(count_text)
+    count = parse_count(look_match.group("count"))
     if count is None:
-        try:
-            count = int(count_text)
-        except ValueError:
-            return None
+        return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         player = game.controller_of(stack_object)
@@ -18924,13 +18864,9 @@ def _merge_look_top_hand_bottom_exile_play_clauses(
     look_match = _LOOK_AT_TOP_N_CARDS_RE.fullmatch(clauses[index].strip())
     if look_match is None:
         return None
-    count_text = look_match.group("count").lower()
-    count = _NUMBER_WORDS.get(count_text)
+    count = parse_count(look_match.group("count"))
     if count is None:
-        try:
-            count = int(count_text)
-        except ValueError:
-            return None
+        return None
     if _PUT_HAND_AND_BOTTOM_RE.fullmatch(clauses[index + 1].strip()) is None:
         return None
     if _EXILE_ONE_OF_THEM_RE.fullmatch(clauses[index + 2].strip()) is None:
@@ -19043,13 +18979,9 @@ def _merge_exile_top_then_play_until_next_turn_clauses(
         return None
     if not _UNTIL_END_OF_YOUR_NEXT_TURN_PLAY_RE.fullmatch(clauses[index + 1].strip()):
         return None
-    count_text = exile_match.group("count").lower()
-    count = _NUMBER_WORDS.get(count_text)
+    count = parse_count(exile_match.group("count"))
     if count is None:
-        try:
-            count = int(count_text)
-        except ValueError:
-            return None
+        return None
 
     def effect(game: "Game", spell: CardState) -> None:
         player = game.controller_of(spell)
@@ -19115,13 +19047,9 @@ def _parse_exile_top_then_cast_types_free_this_turn_whole_text(
     match = _EXILE_TOP_THEN_CAST_TYPES_FREE_THIS_TURN_RE.fullmatch(text.strip())
     if match is None:
         return None
-    count_text = match.group("count").lower()
-    count = _NUMBER_WORDS.get(count_text)
+    count = parse_count(match.group("count"))
     if count is None:
-        try:
-            count = int(count_text)
-        except ValueError:
-            return None
+        return None
     words = [word.strip().lower() for word in match.group("types").split(" and ")]
     try:
         types = tuple(Type(word) for word in words)
@@ -19524,7 +19452,7 @@ def _search_and_exile_matching_name(
 _STONE_BRAIN_RE = re.compile(
     r"^choose a card name\.\s*"
     r"search target opponent's graveyard, hand, and library for up to "
-    r"(?P<cap>a|an|one|two|three|four|five|six|seven|eight|nine|ten|\d+) cards? "
+    rf"(?P<cap>{COUNT}) cards? "
     r"with that name and exile them\.\s*"
     r"that player shuffles, then draws a card for each card exiled from "
     r"their hand this way\.?$",
@@ -19560,9 +19488,9 @@ def _parse_stone_brain_clause(text: str, *, for_spell: bool) -> TargetedClause |
         return None
     if not _targets_understood("target opponent", allow_player_targets=True):
         return None
-    cap = _NUMBER_WORDS.get(match.group("cap").lower())
+    cap = parse_count(match.group("cap"))
     if cap is None:
-        cap = int(match.group("cap"))
+        return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         ability = stack_object
@@ -19686,7 +19614,7 @@ def _parse_draw_if_you_control_color_permanent_clause(clause: str) -> TargetedCl
     if count_text is None:
         count = 1
     else:
-        count = _NUMBER_WORDS.get(count_text.lower())
+        count = parse_count(count_text)
         if count is None:
             return None
     excludes_self = match.group("exclude") is not None
@@ -20398,7 +20326,7 @@ def _parse_create_token_then_copy_spell_retargeted_clause(text: str) -> AbilityE
     token_match = _TOKEN_CLAUSE_RE.fullmatch(token_text)
     if token_match is None:
         return None
-    count = _count(token_match.group("n"))
+    count = parse_count(token_match.group("n"))
     words = token_match.group("desc").strip().split()
     tapped = bool(words) and words[0].lower() == "tapped"
     if tapped:
@@ -21610,7 +21538,7 @@ def _parse_mass_return_to_hand_clause(clause: str, *, for_spell: bool) -> Target
 # itself and that land.
 
 _SACRIFICE_N_GROUP_RE = re.compile(
-    rf"^sacrifice (?P<n>{_COUNT}) (?P<group>[a-z]+s)\.?$", re.IGNORECASE
+    rf"^sacrifice (?P<n>{COUNT}) (?P<group>[a-z]+s)\.?$", re.IGNORECASE
 )
 
 
@@ -21627,7 +21555,7 @@ def _parse_sacrifice_n_of_a_group_clause(clause: str, *, for_spell: bool) -> Tar
     match = _SACRIFICE_N_GROUP_RE.fullmatch(clause.strip())
     if match is None:
         return None
-    count = _count(match.group("n"))
+    count = parse_count(match.group("n"))
     if count is None:
         return None
     card_type = _singular_card_type(match.group("group"))
@@ -21689,7 +21617,7 @@ def _parse_sacrifice_n_of_a_group_clause(clause: str, *, for_spell: bool) -> Tar
 # no choice to make and is not asked either.
 
 _EACH_SACRIFICES_OF_THEIR_CHOICE_RE = re.compile(
-    rf"^each (?P<who>opponent|player) sacrifices (?P<n>{_COUNT}) (?P<description>.+?) "
+    rf"^each (?P<who>opponent|player) sacrifices (?P<n>{COUNT}) (?P<description>.+?) "
     r"of their choice(?P<tail> with [^.]+?)?\.?$",
     re.IGNORECASE,
 )
@@ -21700,7 +21628,7 @@ def _parse_each_sacrifices_of_their_choice_clause(clause: str) -> TargetedClause
     match = _EACH_SACRIFICES_OF_THEIR_CHOICE_RE.fullmatch(clause.strip())
     if match is None:
         return None
-    count = _count(match.group("n"))
+    count = parse_count(match.group("n"))
     description = match.group("description").strip()
     if match.group("tail") is not None:
         description = f"{description}{match.group('tail')}"
@@ -21773,7 +21701,7 @@ def _parse_each_sacrifices_of_their_choice_clause(clause: str) -> TargetedClause
 # an attacker).
 
 _ATTACKING_TOKEN_CLAUSE_RE = re.compile(
-    rf"^(?:create )?(?P<n>{_COUNT}) (?P<desc>.+?) \btokens?\b(?:\s+with\s+(?P<tail>.+?))?"
+    rf"^(?:create )?(?P<n>{COUNT}) (?P<desc>.+?) \btokens?\b(?:\s+with\s+(?P<tail>.+?))?"
     r"\s+that (?:are|is) attacking\.?$",
     re.IGNORECASE | re.DOTALL,
 )
@@ -21806,7 +21734,7 @@ def _parse_attacking_token_clause(clause: str, *, for_spell: bool) -> TargetedCl
         return None
     if "copy of" in clause.lower():
         return None  # CR 707.2 copying needs copiable values this file does not read.
-    count = _count(match.group("n"))
+    count = parse_count(match.group("n"))
     if count is None:
         return None
     words = match.group("desc").strip().split()
@@ -22054,14 +21982,12 @@ def _parse_put_permanent_card_from_hand_clause(
         return None
     amount = 1
     if match.group("count"):
-        try:
-            amount = _count(match.group("count"))
-        except KeyError:
+        parsed = parse_count(match.group("count"))
+        if parsed is None:
             # "up to X creature cards" (CR 107.3a's X, unsubstituted) or a word
-            # `_NUMBER_WORDS` does not carry - fail closed rather than guess.
+            # that is not a count - fail closed rather than guess.
             return None
-        if amount is None:
-            return None
+        amount = parsed
     optional = match.group("may") is not None
     tapped = match.group("tapped") is not None
 
@@ -22449,7 +22375,7 @@ def _parse_return_target_from_graveyard_gains_then_bounce(text: str) -> AbilityE
 # what the first sentence just moved, and neither sentence is readable alone.
 
 _EXILE_TOP_THEN_PLAY_UNTIL_NEXT_TURN_RE = re.compile(
-    rf"^exile the top (?P<n>{_COUNT}) cards? of your library\.\s*"
+    rf"^exile the top (?P<n>{COUNT}) cards? of your library\.\s*"
     r"until the end of your next turn, you may play (?:those|that) cards?\.?$",
     re.IGNORECASE | re.DOTALL,
 )
@@ -22470,7 +22396,7 @@ def _parse_exile_top_then_play_until_next_turn(text: str) -> AbilityEffect | Non
     match = _EXILE_TOP_THEN_PLAY_UNTIL_NEXT_TURN_RE.fullmatch(text.strip())
     if match is None:
         return None
-    count = _count(match.group("n"))
+    count = parse_count(match.group("n"))
     if count is None:
         return None
 
@@ -22498,7 +22424,7 @@ def _parse_exile_top_then_play_until_next_turn(text: str) -> AbilityEffect | Non
 
 
 _MILL_THEN_PLAY_THAT_CARD_RE = re.compile(
-    rf"^mill (?P<n>{_COUNT}) cards?\.\s*you may play (?:that|those) cards?\s+this turn\.?$",
+    rf"^mill (?P<n>{COUNT}) cards?\.\s*you may play (?:that|those) cards?\s+this turn\.?$",
     re.IGNORECASE | re.DOTALL,
 )
 
@@ -22516,7 +22442,7 @@ def _parse_mill_then_play_that_card(text: str) -> AbilityEffect | None:
     match = _MILL_THEN_PLAY_THAT_CARD_RE.fullmatch(text.strip())
     if match is None:
         return None
-    count = _count(match.group("n"))
+    count = parse_count(match.group("n"))
     if count is None:
         return None
 
@@ -22552,7 +22478,7 @@ def _parse_mill_then_play_that_card(text: str) -> AbilityEffect | None:
 # regex reads.
 
 _MILL_THEN_MAY_RETURN_TO_HAND_RE = re.compile(
-    rf"^mill (?P<n>{_COUNT}) cards?, then you may return (?P<group>.+?) "
+    rf"^mill (?P<n>{COUNT}) cards?, then you may return (?P<group>.+?) "
     r"from your graveyard to your hand\.?$",
     re.IGNORECASE | re.DOTALL,
 )
@@ -22570,7 +22496,7 @@ def _parse_mill_then_may_return_to_hand_clause(text: str) -> AbilityEffect | Non
     match = _MILL_THEN_MAY_RETURN_TO_HAND_RE.fullmatch(_strip_non_effect_preamble(text).strip())
     if match is None:
         return None
-    count = _count(match.group("n"))
+    count = parse_count(match.group("n"))
     if count is None:
         return None
     predicate = _parse_card_group_alternatives(match.group("group"))
@@ -22623,7 +22549,7 @@ def _parse_mill_then_may_return_to_hand_clause(text: str) -> AbilityEffect | Non
 # (CR 700.7's anaphora again).
 
 _MILL_THEN_MAY_TAKE_FROM_MILLED_RE = re.compile(
-    rf"^mill (?P<n>{_COUNT}) cards?\.\s*"
+    rf"^mill (?P<n>{COUNT}) cards?\.\s*"
     r"you may put (?:an?|one) (?P<group>[a-z]+) card from among the milled cards "
     r"into your hand\.(?:\s*you gain (?P<life>\d+) life\.?)?$",
     re.IGNORECASE | re.DOTALL,
@@ -22642,7 +22568,7 @@ def _parse_mill_then_may_take_from_milled(text: str) -> Effect | None:
     match = _MILL_THEN_MAY_TAKE_FROM_MILLED_RE.fullmatch(_strip_non_effect_preamble(text).strip())
     if match is None:
         return None
-    count = _count(match.group("n"))
+    count = parse_count(match.group("n"))
     if count is None:
         return None
     predicate = _parse_card_group_qualifier(match.group("group"))
@@ -22695,7 +22621,7 @@ def _parse_mill_then_may_take_from_milled(text: str) -> Effect | None:
 # they do not does the larger discard happen.
 
 _DRAW_THEN_DISCARD_UNLESS_RE = re.compile(
-    rf"^draw (?P<draw>{_COUNT}) cards?\.\s*then discard (?P<n>{_COUNT}) cards? "
+    rf"^draw (?P<draw>{COUNT}) cards?\.\s*then discard (?P<n>{COUNT}) cards? "
     r"unless you discard an? (?P<group>[a-z]+) card\.?$",
     re.IGNORECASE | re.DOTALL,
 )
@@ -22713,8 +22639,8 @@ def _parse_draw_then_discard_unless(text: str) -> Effect | None:
     match = _DRAW_THEN_DISCARD_UNLESS_RE.fullmatch(_strip_non_effect_preamble(text).strip())
     if match is None:
         return None
-    draw = _count(match.group("draw"))
-    penalty = _count(match.group("n"))
+    draw = parse_count(match.group("draw"))
+    penalty = parse_count(match.group("n"))
     if draw is None or penalty is None:
         return None
     predicate = _parse_card_group_qualifier(match.group("group"))
@@ -22771,9 +22697,9 @@ def _parse_draw_then_discard_unless(text: str) -> Effect | None:
 # a noun phrase read off the card.
 
 _CONDITIONAL_TOKEN_COUNT_ON_SACRIFICED_RE = re.compile(
-    rf"^create (?P<n>{_COUNT}) (?P<desc>.+?) tokens?\.\s*"
+    rf"^create (?P<n>{COUNT}) (?P<desc>.+?) tokens?\.\s*"
     r"if the sacrificed creature'?s (?P<attribute>power|toughness) was "
-    rf"(?P<threshold>\d+) or greater, create (?P<n2>{_COUNT}) (?P<desc2>.+?) tokens? instead\.?$",
+    rf"(?P<threshold>\d+) or greater, create (?P<n2>{COUNT}) (?P<desc2>.+?) tokens? instead\.?$",
     re.IGNORECASE | re.DOTALL,
 )
 
@@ -22798,8 +22724,8 @@ def _parse_conditional_token_count_on_sacrificed(text: str) -> AbilityEffect | N
         return None
     if match.group("desc").strip().lower() != match.group("desc2").strip().lower():
         return None
-    base = _count(match.group("n"))
-    boosted = _count(match.group("n2"))
+    base = parse_count(match.group("n"))
+    boosted = parse_count(match.group("n2"))
     if base is None or boosted is None:
         return None
     name = match.group("desc").strip()
@@ -22874,8 +22800,8 @@ def _bottom_in_random_order(game: "Game", player: Player, cards: list[CardState]
 
 _LOOK_TOP_LANDS_TAKE_TO_HAND_RE = re.compile(
     r"^look at the top x cards of your library, where x is the number of lands you control\.\s*"
-    rf"put (?P<n>{_COUNT}) of those cards into your hand\.\s*"
-    rf"if this spell was kicked, put (?P<kicked>{_COUNT}) of those cards "
+    rf"put (?P<n>{COUNT}) of those cards into your hand\.\s*"
+    rf"if this spell was kicked, put (?P<kicked>{COUNT}) of those cards "
     r"into your hand instead\.\s*"
     r"put the rest on the bottom of your library in a random order\.?$",
     re.IGNORECASE | re.DOTALL,
@@ -22899,8 +22825,8 @@ def _parse_look_top_lands_take_to_hand(text: str) -> Effect | None:
     match = _LOOK_TOP_LANDS_TAKE_TO_HAND_RE.fullmatch(_strip_non_effect_preamble(text).strip())
     if match is None:
         return None
-    plain = _count(match.group("n"))
-    kicked_count = _count(match.group("kicked"))
+    plain = parse_count(match.group("n"))
+    kicked_count = parse_count(match.group("kicked"))
     if plain is None or kicked_count is None:
         return None
 
@@ -22940,8 +22866,8 @@ def _parse_look_top_lands_take_to_hand(text: str) -> Effect | None:
 
 
 _LOOK_TOP_N_PUT_TOTAL_MV_ONTO_BATTLEFIELD_RE = re.compile(
-    rf"^look at the top (?P<n>{_COUNT}) cards of your library\.\s*"
-    rf"put up to (?P<take>{_COUNT}) (?P<group>[a-z]+) cards with total mana value "
+    rf"^look at the top (?P<n>{COUNT}) cards of your library\.\s*"
+    rf"put up to (?P<take>{COUNT}) (?P<group>[a-z]+) cards with total mana value "
     r"(?P<total>\d+) or less from among them onto the battlefield and the rest on the "
     r"bottom of your library in a random order\.?$",
     re.IGNORECASE | re.DOTALL,
@@ -22965,8 +22891,8 @@ def _parse_look_top_n_put_total_mv_onto_battlefield(text: str) -> Effect | None:
     )
     if match is None:
         return None
-    look = _count(match.group("n"))
-    take = _count(match.group("take"))
+    look = parse_count(match.group("n"))
+    take = parse_count(match.group("take"))
     if look is None or take is None:
         return None
     predicate = _parse_card_group_qualifier(match.group("group"))

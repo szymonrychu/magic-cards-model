@@ -67,6 +67,7 @@ from ..models.mana import (
     _demand_list,
 )
 from ..models.zone import Zone
+from ..numbers import parse_count
 from ..snapshot import EngineModel, announce_mutation, mutation_landed
 from .abilities import (
     ActivatedAbility,
@@ -3643,8 +3644,8 @@ def cost_modifier_effect(text: str) -> CostModifierEffect | None:
         )
     match = _SPELL_COST_FLOOR.search(text)
     if match is not None:
-        threshold = _count(match.group("threshold"))
-        total = _count(match.group("total"))
+        threshold = parse_count(match.group("threshold"))
+        total = parse_count(match.group("total"))
         if threshold is None or total is None:
             return None
         return CostModifierEffect(
@@ -3826,21 +3827,6 @@ def static_free_cast_grant(text: str) -> StaticFreeCastGrant | None:
 # Reading a printed cost phrase into something payable
 # --------------------------------------------------------------------------
 
-_COUNT_WORDS = {
-    "a": 1,
-    "an": 1,
-    "one": 1,
-    "two": 2,
-    "three": 3,
-    "four": 4,
-    "five": 5,
-    "six": 6,
-    "seven": 7,
-    "eight": 8,
-    "nine": 9,
-    "ten": 10,
-}
-
 _COLOR_WORDS = {
     "white": Color.WHITE,
     "blue": Color.BLUE,
@@ -3994,12 +3980,6 @@ def _counter_kind_word(word: str) -> str:
     return word.lower()
 
 
-def _count(word: str) -> int | None:
-    if word.isdigit():
-        return int(word)
-    return _COUNT_WORDS.get(word.lower())
-
-
 #: Connector words a comma-and-"or" (or "and") list of card types leaves
 #: between its items - "an artifact, creature, or land" - that name nothing
 #: themselves and are skipped rather than treated as an unread word.
@@ -4121,7 +4101,7 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
 
     mill = _PHRASE_MILL.match(text)
     if mill is not None:
-        count = _count(mill.group("count"))
+        count = parse_count(mill.group("count"))
         if count is None:
             return None
         return mill_cost(count, payer, description=text)
@@ -4145,7 +4125,7 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
 
     place = _PHRASE_PLACE_COUNTERS.match(text)
     if place is not None:
-        count = _count(place.group("count"))
+        count = parse_count(place.group("count"))
         if count is None:
             return None
         kind = _counter_kind_word(place.group("kind"))
@@ -4153,7 +4133,7 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
 
     remove_counters = _PHRASE_REMOVE_COUNTERS.match(text)
     if remove_counters is not None:
-        count = _count(remove_counters.group("count"))
+        count = parse_count(remove_counters.group("count"))
         if count is None:
             return None
         kind = _counter_kind_word(remove_counters.group("kind"))
@@ -4167,7 +4147,7 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
         if reveal.group("count").lower() == "x":
             component = reveal_cost(payer=payer, required=0, description=text, variable_count=True)
         else:
-            reveal_count = _count(reveal.group("count"))
+            reveal_count = parse_count(reveal.group("count"))
             if reveal_count is None:
                 return None
             component = reveal_cost(payer=payer, required=reveal_count, description=text)
@@ -4177,7 +4157,7 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
     exile_and_pay = _PHRASE_EXILE_AND_PAY_MANA_COST.match(text)
     if exile_and_pay is not None:
         zone = _ZONE_WORDS.get((exile_and_pay.group("zone") or "graveyard").lower(), Zone.GRAVEYARD)
-        count = _count(exile_and_pay.group("count"))
+        count = parse_count(exile_and_pay.group("count"))
         requirement = _requirement(exile_and_pay.group("quality") or "")
         if count is None or requirement is None:
             return None
@@ -4193,7 +4173,7 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
             # reference, so there is nothing to choose - only the caller
             # knows which permanent this is, same as `_PHRASE_EXERT_SELF`.
             return exile_cost(payer=payer, required=1, description=text, zone=zone)
-        count = _count(exile.group("count"))
+        count = parse_count(exile.group("count"))
         requirement = _requirement(exile.group("quality"))
         if count is None or requirement is None:
             return None
@@ -4205,7 +4185,7 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
 
     discard = _PHRASE_DISCARD.match(text)
     if discard is not None:
-        count = _count(discard.group("count"))
+        count = parse_count(discard.group("count"))
         requirement = _requirement(discard.group("quality"))
         if count is None or requirement is None:
             return None
@@ -4220,7 +4200,7 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
 
     sacrifice = _PHRASE_SACRIFICE.match(text)
     if sacrifice is not None:
-        count = _count(sacrifice.group("count"))
+        count = parse_count(sacrifice.group("count"))
         requirement = _requirement(sacrifice.group("quality"))
         if count is None or requirement is None:
             return None
@@ -4230,7 +4210,7 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
 
     tap = _PHRASE_TAP.match(text)
     if tap is not None:
-        count = _count(tap.group("count"))
+        count = parse_count(tap.group("count"))
         requirement = _requirement(tap.group("quality"))
         if count is None or requirement is None:
             return None

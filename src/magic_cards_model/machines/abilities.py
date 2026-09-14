@@ -118,38 +118,13 @@ from pydantic import Field
 
 from ..models.card import Card, Color, Type, subtypes_of, types_of
 from ..models.zone import Zone
+from ..numbers import COUNT, parse_count
 from ..snapshot import EngineModel
 
 # --------------------------------------------------------------------------
 # Mana abilities (CR 605)
 # --------------------------------------------------------------------------
 
-#: The number words a printed "Add ..." can put in front of "mana", and what
-#: each is worth. Magic spells its counts out - "Add five mana in any
-#: combination of colors" (Cascading Cataracts), "Add four mana in any
-#: combination of colors" (Baxter Building) - and stops well short of ten, so
-#: the vocabulary is the numbers rather than the handful the first printings
-#: read here happened to need. "a" is the article standing in for one, which is
-#: how the singular is templated ("Add a mana of any color" does not print, but
-#: "a" reaches the shared `_COUNT` alternation through the same table).
-_ANY_COLOR_COUNTS = {
-    "a": 1,
-    "one": 1,
-    "two": 2,
-    "three": 3,
-    "four": 4,
-    "five": 5,
-    "six": 6,
-    "seven": 7,
-    "eight": 8,
-    "nine": 9,
-    "ten": 10,
-}
-#: The alternation those words make, longest first so a word that is a prefix
-#: of another can never win the match short. Every "Add <count> mana ..."
-#: pattern below is built from this one string, so a count word is learned
-#: once rather than once per shape.
-_COUNT = "|".join(sorted(_ANY_COLOR_COUNTS, key=len, reverse=True))
 
 _SYMBOL = re.compile(r"\{([WUBRGC])\}")
 #: "Add one mana of any color." (Cavern of Souls, Delighted Halfling) and
@@ -157,7 +132,7 @@ _SYMBOL = re.compile(r"\{([WUBRGC])\}")
 #: shape adds more than one mana and requires them all to be the same colour,
 #: which is what "any **one** color" says; the count is kept so `resolve` adds
 #: that many rather than always one.
-_ANY_COLOR = re.compile(rf"(?P<count>{_COUNT}) mana of any (?:one )?color", re.IGNORECASE)
+_ANY_COLOR = re.compile(rf"(?P<count>{COUNT}) mana of any (?:one )?color", re.IGNORECASE)
 #: "Add two mana in any combination of colors." (Interdimensional Web Watch and
 #: Smokebraider, both in the pool and both played in
 #: `tests/scenarios/test_mana_spend_restrictions.py`). The same amount as
@@ -167,7 +142,7 @@ _ANY_COLOR = re.compile(rf"(?P<count>{_COUNT}) mana of any (?:one )?color", re.I
 #: CR 106.1a's five colors are the universe for both; colorless is a type and
 #: not a color (CR 106.1b), so neither reaches it.
 _ANY_COLOR_COMBINATION = re.compile(
-    rf"(?P<count>{_COUNT}) mana in any combination of colors", re.IGNORECASE
+    rf"(?P<count>{COUNT}) mana in any combination of colors", re.IGNORECASE
 )
 #: Nykthos, Shrine to Nyx: "Choose a color. Add an amount of mana of that
 #: color equal to your devotion to that color." Still a mana ability under
@@ -207,7 +182,7 @@ _MANA_COST_IN_COST = re.compile(r"\{(\d+|[WUBRGCX])\}")
 #: CR 106.1a has five colors of mana, CR 106.1b six *types*, colorless
 #: included. So Reflecting Pool can copy a Wastes and Exotic Orchard cannot.
 _COULD_PRODUCE = re.compile(
-    rf"(?P<count>{_COUNT}) mana of any (?P<kind>type|color) that a land "
+    rf"(?P<count>{COUNT}) mana of any (?P<kind>type|color) that a land "
     r"(?P<whose>you control|an opponent controls) could produce",
     re.IGNORECASE,
 )
@@ -218,7 +193,7 @@ _COULD_PRODUCE = re.compile(
 #: five colors, so colorless is never an answer. Until the choice is known
 #: the ability's type is undefined and CR 106.5 makes it produce no mana -
 #: see `ManaAbility.effective`.
-_CHOSEN_COLOR_MANA = re.compile(rf"(?P<count>{_COUNT}) mana of the chosen color", re.IGNORECASE)
+_CHOSEN_COLOR_MANA = re.compile(rf"(?P<count>{COUNT}) mana of the chosen color", re.IGNORECASE)
 
 #: `Add {G}, {R}, or {W}` is a choice; `Add {C}{C}` is both at once. The comma
 #: is what separates them in WOTC templating.
@@ -845,7 +820,9 @@ def _parse_effect(effect: str) -> ManaAbility | None:
     # off a Plains. CR 106.7's survey is the whole meaning of the sentence.
     could_produce = _COULD_PRODUCE.search(effect)
     if could_produce:
-        count = _ANY_COLOR_COUNTS[could_produce.group("count").lower()]
+        count = parse_count(could_produce.group("count"))
+        if count is None:
+            return None
         # CR 106.1a: five colors of mana. CR 106.1b: six *types*, colorless
         # included. Reflecting Pool says "type" and so can copy a colorless
         # source; Exotic Orchard says "color" and cannot.
@@ -871,7 +848,9 @@ def _parse_effect(effect: str) -> ManaAbility | None:
     # either regex from silently reordering them.
     chosen = _CHOSEN_COLOR_MANA.search(effect)
     if chosen:
-        count = _ANY_COLOR_COUNTS[chosen.group("count").lower()]
+        count = parse_count(chosen.group("count"))
+        if count is None:
+            return None
         return ManaAbility(
             options=[[color] * count for color in _COLORS],
             any_color_count=count,
@@ -880,7 +859,9 @@ def _parse_effect(effect: str) -> ManaAbility | None:
 
     combination = _ANY_COLOR_COMBINATION.search(effect)
     if combination:
-        count = _ANY_COLOR_COUNTS[combination.group("count").lower()]
+        count = parse_count(combination.group("count"))
+        if count is None:
+            return None
         return ManaAbility(
             options=[[color] * count for color in _COLORS],
             any_color=True,
@@ -890,7 +871,9 @@ def _parse_effect(effect: str) -> ManaAbility | None:
 
     any_color = _ANY_COLOR.search(effect)
     if any_color:
-        count = _ANY_COLOR_COUNTS[any_color.group("count").lower()]
+        count = parse_count(any_color.group("count"))
+        if count is None:
+            return None
         return ManaAbility(
             options=[[color] * count for color in _COLORS],
             any_color=True,
@@ -2845,7 +2828,7 @@ _TRIGGERED_MANA_CHOSEN_RE = re.compile(r"^one mana of (?:the chosen|that) color$
 #: "one mana of any color" (Fertile Ground) and "two mana in any combination
 #: of colors" (Market Festival): one colour chosen per mana (CR 105.1).
 _TRIGGERED_MANA_ANY_COLOR_RE = re.compile(
-    r"^(?P<count>one|two|three|\d+) mana (?:of any color|in any combination of colors)$",
+    rf"^(?P<count>{COUNT}) mana (?:of any color|in any combination of colors)$",
     re.IGNORECASE,
 )
 #: "one mana of any type that land produced" (Zendikar Resurgent, Mirari's
@@ -2854,7 +2837,6 @@ _TRIGGERED_MANA_ANY_COLOR_RE = re.compile(
 _TRIGGERED_MANA_PRODUCED_TYPE_RE = re.compile(
     r"^one mana of any type that (?:[a-z]+ )*?[a-z]+ produced$", re.IGNORECASE
 )
-_TRIGGERED_MANA_COUNTS = {"one": 1, "two": 2, "three": 3}
 #: "<mana> for each <phrase>" (Elvish Guidance's "{G} for each Elf on the
 #: battlefield"): the mana, that many times, counted as it is added
 #: (CR 608.2h).
@@ -2946,7 +2928,7 @@ def _parse_add_mana_sentence(sentence: str) -> TriggeredManaShape | None:
     any_color = _TRIGGERED_MANA_ANY_COLOR_RE.fullmatch(mana)
     if any_color is not None:
         word = any_color.group("count").lower()
-        amount = _TRIGGERED_MANA_COUNTS.get(word) or (int(word) if word.isdigit() else 0)
+        amount = parse_count(word) or 0
         return TriggeredManaShape(any_color=amount, **common) if amount else None
     symbols = _TRIGGERED_MANA_SYMBOLS_RE.findall(mana)
     round_trip = "".join(f"{{{symbol}}}" for symbol in symbols)
