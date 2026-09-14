@@ -19344,32 +19344,42 @@ def _parse_return_dead_self_to_hand_clause(
 # --------------------------------------------------------------------------
 
 
-#: "sacrifice it" - the ability's own source, named the same self-referential
-#: way `_EXILE_IT_RE` and `_RETURN_IT_TO_OWNERS_HAND_RE` above name theirs.
-#: The Millennium Calendar's state trigger (CR 603.8) is the printing in the
-#: pool: "When there are 1,000 or more time counters on The Millennium
-#: Calendar, sacrifice it and each opponent loses 1,000 life."
-_SACRIFICE_IT_RE = re.compile(r"^sacrifice it$", re.IGNORECASE)
+#: "sacrifice it" / "sacrifice this <noun>" - the ability's own source, named
+#: the same self-referential way `_EXILE_IT_RE` and
+#: `_RETURN_IT_TO_OWNERS_HAND_RE` above name theirs. The Millennium Calendar's
+#: state trigger (CR 603.8) prints "sacrifice it"; Dress Down prints "sacrifice
+#: this enchantment", Ball Lightning "sacrifice this creature", and a card
+#: printing its own name reaches here as "this permanent" once
+#: `trigger_effect_for` has normalised it. `noun` is checked against
+#: `_SACRIFICE_SELF_NOUNS`, the same set `_sacrifice_restriction` reads.
+_SACRIFICE_IT_RE = re.compile(r"^sacrifice (?:it|this (?P<noun>[a-z]+))$", re.IGNORECASE)
 
 
 def _parse_sacrifice_self_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
-    """ "Sacrifice it" - CR 701.21a's keyword action aimed at the ability's own
-    source: "To sacrifice a permanent, its controller moves it from the
-    battlefield directly to its owner's graveyard."
+    """ "Sacrifice it" / "Sacrifice this enchantment" - CR 701.21a's keyword
+    action aimed at the ability's own source: "To sacrifice a permanent, its
+    controller moves it from the battlefield directly to its owner's
+    graveyard."
 
     CR 113.7a keeps the ability alive once its source is gone ("Once activated
     or triggered, an ability exists on the stack independently of its source"),
     so a source that is no longer on the battlefield - already sacrificed,
     destroyed, or bounced in response - is simply not sacrificed again, and the
     rest of the ability still runs. That fail-soft is the same one
-    `_parse_exile_dead_self_clause` gives its own self-reference.
+    `_parse_exile_dead_self_clause` gives its own self-reference. A source that
+    left and came back is a new object (CR 400.7), which `source_stamp` tells
+    apart from the object that triggered, so it is not sacrificed either.
 
     Ability-only (`for_spell=False`): a resolving spell is not a permanent and
     has no "it" of this kind to sacrifice.
     """
     if for_spell:
         return None
-    if not _SACRIFICE_IT_RE.fullmatch(clause.strip()):
+    match = _SACRIFICE_IT_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    noun = match.group("noun")
+    if noun is not None and noun.lower() not in _SACRIFICE_SELF_NOUNS:
         return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
@@ -19377,6 +19387,8 @@ def _parse_sacrifice_self_clause(clause: str, *, for_spell: bool) -> TargetedCla
         assert isinstance(ability, AbilityOnStack)
         source = ability.source(game)
         if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        if ability.source_stamp is not None and source.zone_change_stamp != ability.source_stamp:
             return
         game.sacrifice(source)
 
