@@ -3232,10 +3232,14 @@ _YOU_CONTROL_SUBTYPES_RE = re.compile(r"^you control (an? [A-Z][\w'-]*(?: or an?
 _A_SUBTYPE_RE = re.compile(r"an? ([A-Z][\w'-]*)")
 
 #: "you control two or more other lands", "you control two or fewer other lands",
-#: and the battle lands' "you control two or more basic lands" (CR 205.4c).
+#: the battle lands' "you control two or more basic lands" (CR 205.4c), and
+#: "you control three or more other Mountains" (Dwarven Mine). A land subtype
+#: is a capitalized single word (CR 305.5), so the capital is required even
+#: under IGNORECASE - "other creatures" is a noun this cannot check.
 _YOU_CONTROL_OTHER_LANDS_RE = re.compile(
-    r"^you control (?P<count>[\w-]+) or (?P<direction>more|fewer) "
-    r"(?:(?P<other>other) )?(?:(?P<basic>basic) )?lands$",
+    rf"^you control (?P<count>{COUNT}) or (?P<direction>more|fewer) "
+    r"(?:(?P<other>other) )?(?:(?P<basic>basic) )?"
+    r"(?:lands|(?P<subtype>(?-i:[A-Z])[\w'-]*))$",
     re.IGNORECASE,
 )
 
@@ -3273,8 +3277,14 @@ def _controls_a_subtype(subtypes: frozenset[str]) -> EntersCondition:
     return holds
 
 
-def _controls_other_lands(count: int, at_least: bool, basic: bool = False) -> EntersCondition:
-    """ "you control [N] or more/fewer **other** lands".
+def _controls_other_lands(
+    count: int, at_least: bool, basic: bool = False, subtype_plural: str | None = None
+) -> EntersCondition:
+    """ "you control [N] or more/fewer **other** [lands | Mountains]".
+
+    `subtype_plural` is the printed plural of a land type (CR 205.3i), matched
+    against each land's computed subtypes as that word or that word plus "s" -
+    "Plains" is its own plural, "Mountains" is "Mountain" plus one.
 
     "Other" is why the entering permanent is excluded by id: CR 614.12's
     effects are read while the permanent is still on its way in
@@ -3298,6 +3308,13 @@ def _controls_other_lands(count: int, at_least: bool, basic: bool = False) -> En
             and Type.LAND in board.of(permanent).types
             # CR 205.4c: "basic" is the supertype, never a basic land type.
             and (not basic or board.of(permanent).is_basic)
+            and (
+                subtype_plural is None
+                or any(
+                    subtype_plural in (subtype, f"{subtype}s")
+                    for subtype in board.of(permanent).subtypes
+                )
+            )
             and permanent.id != entering.id
         )
         return lands >= count if at_least else lands <= count
@@ -3361,8 +3378,8 @@ def unread_self_enters_tapped_lines(card_state: CardState) -> list[str]:
     `_self_enters_modifiers` skips because it cannot read them.
 
     Two shapes are skipped there, and both are named here from the same parse:
-    a condition none of `_read_enters_condition`'s readers claims (Mystic
-    Sanctuary's "three or more other Islands"), and an "If you don't" whose
+    a condition none of `_read_enters_condition`'s readers claims (a count
+    of a noun it cannot check), and an "If you don't" whose
     optional half is not a payment `_optional_enters_payment` reads. Only the
     face that is up is read, the same CR 712.8 filter `_self_enters_modifiers`
     applies. `hypothetical.predict_enters` reports a land with any of these
@@ -3415,6 +3432,7 @@ def _read_enters_condition(condition: str) -> EntersCondition | None:
             count,
             at_least=match.group("direction").lower() == "more",
             basic=match.group("basic") is not None,
+            subtype_plural=match.group("subtype"),
         )
 
     match = _A_PLAYER_HAS_LIFE_RE.match(condition)
