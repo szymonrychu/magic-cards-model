@@ -2615,7 +2615,11 @@ class Casting(EngineModel):
             self.chosen_modes = [mode.text for mode in chosen]
             self.chosen_mode_numbers = [mode.number for mode in chosen]
         else:
-            chosen = list(modal.resolve(modes, entwined=entwined))
+            chosen = list(
+                modal.resolve(
+                    modes, entwined=entwined, alternative=self._alternative_mode_count(modal)
+                )
+            )
             self.chosen_modes = [mode.text for mode in chosen]
             self.chosen_mode_numbers = [mode.number for mode in chosen]
             self._charge_mode_costs(chosen)
@@ -2626,6 +2630,15 @@ class Casting(EngineModel):
         if x_value is not None:
             self.x_value = x_value
         return self.step
+
+    def _alternative_mode_count(self, modal: ModalProfile) -> bool:
+        """Whether `modal`'s "If ..., choose N instead" holds as this spell is
+        cast (CR 601.2b), read by `Game.modal_alternative_applies`."""
+        if self.game is None:
+            return False
+        return self.game.modal_alternative_applies(
+            modal, self.caster, self.spell.id, self.spell.name, self.spell
+        )
 
     def _charge_entwine(self, modal: ModalProfile | None) -> None:
         """CR 702.42a: "If you do, you pay an additional [cost]."
@@ -4168,7 +4181,9 @@ class Casting(EngineModel):
         modal = self.modal
         if modal is None or not modal.understood:
             return
-        minimum, maximum = modal.allowed_range(entwined=self.entwined)
+        minimum, maximum = modal.allowed_range(
+            entwined=self.entwined, alternative=self._alternative_mode_count(modal)
+        )
         chosen = len(self.chosen_mode_numbers)
         if minimum <= chosen <= maximum:
             return

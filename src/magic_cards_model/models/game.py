@@ -4151,7 +4151,8 @@ class Game(EngineModel):
         modal = modal_profile(card.card) if option is None else None
         if modal is not None and modal.understood:
             legal = [mode for mode in modal.modes if self._spell_mode_is_legal(card, caster, mode)]
-            if len(legal) < modal.allowed_range()[0]:
+            alternative = self.modal_alternative_applies(modal, caster, card.id, card.name, card)
+            if len(legal) < modal.allowed_range(alternative=alternative)[0]:
                 return False
         else:
             profile = profile_for_text(text)
@@ -4724,7 +4725,9 @@ class Game(EngineModel):
         uses), and an escalate spell offers a further mode only while its
         escalate cost's objects can still be paid (CR 702.120a, CR 118.3)."""
         offered = [mode for mode in modal.modes if self._spell_mode_is_legal(card, caster, mode)]
-        minimum, maximum = modal.allowed_range()
+        minimum, maximum = modal.allowed_range(
+            alternative=self.modal_alternative_applies(modal, caster, card.id, card.name, card)
+        )
         if len(offered) < minimum:
             raise ValueError(f"{card.name} has too few legal modes to cast (CR 700.2a)")
         if modal.escalate_cost is not None:
@@ -5458,7 +5461,13 @@ class Game(EngineModel):
         Then each chosen mode's targets are asked for in order.
         """
         legal = [mode for mode in modal.modes if self._trigger_mode_is_legal(ability, mode)]
-        minimum, maximum = modal.allowed_range()
+        # CR 603.3c: a "choose N instead" condition is checked as the ability
+        # is put on the stack, the same moment its modes are announced.
+        minimum, maximum = modal.allowed_range(
+            alternative=self.modal_alternative_applies(
+                modal, ability.controller, ability.source_id, ability.source_name
+            )
+        )
         if len(legal) < minimum:
             return False
         chosen: list[Mode] = []
@@ -9216,7 +9225,12 @@ class Game(EngineModel):
             return profile_for_text(substitute_x(effect, x_value))
         modal = modal_profile(state.card)
         if modes and modal is not None:
-            chosen = modal.resolve(modes)
+            chosen = modal.resolve(
+                modes,
+                alternative=self.modal_alternative_applies(
+                    modal, state.controller or state.owner or "", state.id, state.name, state
+                ),
+            )
             profile, _owners = profile_for_modes_with_owners(state.card, chosen, x_value)
             return profile
         face = face_being_cast(state.card, spell_face)
@@ -13319,6 +13333,43 @@ class Game(EngineModel):
             )
 
         return None
+
+    def modal_alternative_applies(
+        self,
+        modal: ModalProfile,
+        controller: str,
+        source_id: UUID | None,
+        source_name: str,
+        source: CardState | None = None,
+    ) -> bool:
+        """Whether a modal instruction's "If <condition>, [you may] choose N
+        instead" raises its mode count right now (CR 700.2).
+
+        False when the instruction prints no such sentence. A condition
+        `condition_holds` does not read, or an alternative count
+        `machines/modes.py` did not read, keeps the printed count and records a
+        `ConditionalClauseNotice`: the larger count is a permission nobody
+        checked, and granting it unchecked would let a spell do more than its
+        caster is entitled to.
+        """
+        condition = modal.alternative_condition
+        if condition is None:
+            return False
+        held = (
+            None
+            if modal.alternative_minimum is None
+            else self.condition_holds(controller, condition, source)
+        )
+        if held is None:
+            notice = ConditionalClauseNotice(
+                source_id=source_id,
+                source_name=source_name,
+                text=f"If {condition}, choose {modal.alternative_text or 'more'} instead",
+            )
+            if notice not in self.conditional_clause_notices:
+                self.conditional_clause_notices.append(notice)
+            return False
+        return held
 
     def _activation_prohibition(
         self, permanent: CardState, ability: ActivatedAbility

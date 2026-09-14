@@ -1714,8 +1714,13 @@ def parse_granted_ability_lines(texts: Sequence[str]) -> list[Ability]:
 #: "choose two —", "choose one or more —" - the header of a bulleted modal
 #: list. Anchored on the trailing em dash Scryfall prints, so an ordinary
 #: sentence that happens to contain the word "choose" ("Choose target
-#: creature.") never matches.
-_MODAL_INSTRUCTION_TAIL = re.compile(r"choose\b.*[-—]\s*$", re.IGNORECASE)
+#: creature.") never matches. The instruction may end in its own second
+#: sentence instead - "choose one. If there are four or more card types among
+#: cards in your graveyard, choose both instead." (Prophetic Titan) - which is
+#: still the header of the bullets under it.
+_MODAL_INSTRUCTION_TAIL = re.compile(
+    r"choose\b.*(?:[-—]|\bchoose [^.]+ instead\.)\s*$", re.IGNORECASE
+)
 
 
 def _merge_modal_bullet_lines(lines: list[str]) -> list[str]:

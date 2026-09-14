@@ -70,6 +70,16 @@ _REPEATABLE = re.compile(r"you may choose the same mode more than once", re.IGNO
 _UP_TO = re.compile(r"^\s*up to (?P<count>[\w]+)\b")
 _OR_MORE = re.compile(r"^\s*(?P<count>[\w]+)\s+or\s+(?:more|both)\b", re.IGNORECASE)
 _PLAIN = re.compile(r"^\s*(?P<count>[\w]+)\b")
+#: The instruction's second sentence: "Choose one. If you control a Wizard as
+#: you cast this spell, you may choose two instead." (Flame of Anor), "If there
+#: are four or more card types among cards in your graveyard, choose both
+#: instead." (Prophetic Titan). The condition is read by `Game.condition_holds`
+#: when the modes are chosen; "as you cast this spell" is only when (CR 601.2b).
+_ALTERNATIVE = re.compile(
+    r"\.\s*if (?P<condition>[^,]+?)(?: as you cast this spell)?,\s*"
+    r"(?P<optional>you may )?choose (?P<count>[^.]+?) instead\b",
+    re.IGNORECASE,
+)
 
 #: CR 700.2h: a mode whose effect is preceded by a cost. An optional short
 #: label (Tiered's tier name: "Fire", "Fira", "Firaga") followed by a dash,
@@ -137,6 +147,18 @@ class ModalProfile(EngineModel):
     #: False when the card is modal but this parser could not read its
     #: structure. Callers must not enforce anything from an unread profile.
     understood: bool = True
+    #: The condition of the instruction's "If <condition>, [you may] choose N
+    #: instead" sentence, or None when it prints none. `Game.
+    #: modal_alternative_applies` answers it as the modes are chosen.
+    alternative_condition: str | None = None
+    #: The printed alternative count ("two", "both", "one or more").
+    alternative_text: str | None = None
+    #: How many modes may be chosen while the condition holds - the printed
+    #: range widened to the alternative for "you may choose N instead", replaced
+    #: by it for a mandatory "choose N instead". None when the alternative count
+    #: was not read, which keeps the printed range and records a notice.
+    alternative_minimum: int | None = None
+    alternative_maximum: int | None = None
 
     @property
     def has_entwine(self) -> bool:
@@ -178,6 +200,7 @@ class ModalProfile(EngineModel):
         chosen: Sequence["int | str | Mode"],
         *,
         entwined: bool = False,
+        alternative: bool = False,
     ) -> tuple[Mode, ...]:
         """The modes a caster announced, checked against what the card allows.
 
@@ -187,6 +210,9 @@ class ModalProfile(EngineModel):
 
         `entwined` is CR 702.42a: paying the entwine cost lets the caster choose
         all of the modes instead of the number the instruction specifies.
+
+        `alternative` is whether the instruction's "If ..., choose N instead"
+        condition holds for this choice (`Game.modal_alternative_applies`).
         """
         modes = tuple(self.mode(spec) for spec in chosen)
 
@@ -200,7 +226,7 @@ class ModalProfile(EngineModel):
                     )
                 seen.add(mode.number)
 
-        minimum, maximum = self.allowed_range(entwined=entwined)
+        minimum, maximum = self.allowed_range(entwined=entwined, alternative=alternative)
         if len(modes) < minimum:
             raise ValueError(
                 f"too few modes: {len(modes)} chosen where the spell requires {minimum}"
@@ -211,12 +237,21 @@ class ModalProfile(EngineModel):
             )
         return modes
 
-    def allowed_range(self, *, entwined: bool = False) -> tuple[int, int]:
-        """How many modes may be chosen, entwine included (CR 702.42a)."""
+    def allowed_range(
+        self, *, entwined: bool = False, alternative: bool = False
+    ) -> tuple[int, int]:
+        """How many modes may be chosen, entwine (CR 702.42a) and a held
+        "choose N instead" condition (`alternative`) included."""
         if entwined:
             if not self.has_entwine:
                 raise ValueError("this spell has no entwine cost to pay")
             return len(self.modes), len(self.modes)
+        if (
+            alternative
+            and self.alternative_minimum is not None
+            and self.alternative_maximum is not None
+        ):
+            return self.alternative_minimum, self.alternative_maximum
         return self.minimum, self.maximum
 
 
@@ -381,6 +416,7 @@ def _parse(oracle_text: str, keywords: Iterable[str]) -> ModalProfile | None:
     }
 
     counted = _read_counts(instruction_line, len(modes))
+    profile_kwargs.update(_read_alternative(instruction_line, len(modes), counted))
     unreadable = counted is None or _PAWPRINT.search(instruction_line) is not None
     if unreadable:
         minimum, maximum = counted or (0, 0)
@@ -424,6 +460,41 @@ def _read_counts(instruction: str, mode_count: int) -> tuple[int, int] | None:
     if count is None or count > mode_count:
         return None
     return count, count
+
+
+def _read_alternative(
+    instruction: str, mode_count: int, counted: tuple[int, int] | None
+) -> dict[str, str | int]:
+    """The `alternative_*` fields for an instruction's "If <condition>, [you
+    may] choose N instead" sentence, or nothing when it prints none.
+
+    The alternative count is read the way the printed one is (`_read_counts`),
+    so "two", "one or more" and "up to three" all work; "both" and "all" are
+    every mode. "You may choose two instead" of "Choose one" leaves one legal
+    too, so the range is widened rather than replaced; a mandatory "choose
+    both instead" replaces it. An unread count keeps only the condition, which
+    `Game.modal_alternative_applies` turns into a notice.
+    """
+    match = _ALTERNATIVE.search(instruction)
+    if match is None:
+        return {}
+    text = match.group("count").strip()
+    fields: dict[str, str | int] = {
+        "alternative_condition": match.group("condition").strip(),
+        "alternative_text": text,
+    }
+    if text.lower() in ("both", "all"):
+        alternative: tuple[int, int] | None = (mode_count, mode_count)
+    else:
+        alternative = _read_counts(f"Choose {text}", mode_count)
+    if alternative is None or counted is None:
+        return fields
+    minimum, maximum = alternative
+    if match.group("optional"):
+        minimum, maximum = min(minimum, counted[0]), max(maximum, counted[1])
+    fields["alternative_minimum"] = minimum
+    fields["alternative_maximum"] = maximum
+    return fields
 
 
 def _keyword_cost(
