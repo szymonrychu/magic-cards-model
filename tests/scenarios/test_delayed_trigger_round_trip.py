@@ -37,6 +37,7 @@ from magic_cards_model.machines.abilities import TriggerEvent
 from magic_cards_model.machines.decisions import DecisionKind, ScriptedAnswer
 from magic_cards_model.machines.delayed import (
     DelayedTrigger,
+    DrawACardForController,
     GrantExtraTurn,
     SacrificeSubject,
     anaphoric_delayed_trigger,
@@ -351,6 +352,46 @@ def test_draw_a_card_for_controller_survives_a_round_trip():
         replay.resolve_top()
 
     assert len(replay.player("alice").hand) == hand_before + 1
+
+
+def test_draw_a_card_for_controller_with_a_count_survives_a_round_trip():
+    """G1-6: no Modern printing of a delayed "draw N cards at the beginning
+    of ..." exists to cast, so `count` is exercised the same way `Game.
+    create_delayed_trigger` itself is called from `machines/effects.py`'s
+    own `_parse_delayed_single_clause` - staged directly on a real board, the
+    way `tests/test_delayed.py` already stages every anaphoric shape with no
+    printed card of its own. `DrawACardForController.count` defaults to 1
+    (Mishra's Bauble's own shape, proven above); this is the same class with
+    a different count, not a new `DelayedTrigger.effect` kind."""
+    scenario = (
+        Scenario()
+        .player("alice", library=["Forest"] * 3, battlefield=["Mishra's Bauble"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bauble = scenario.find("Mishra's Bauble", Zone.BATTLEFIELD, "alice")
+    hand_before = len(scenario.player("alice").hand)
+
+    scenario.game.create_delayed_trigger(
+        DelayedTrigger(
+            text="Draw three cards at the beginning of the next turn's upkeep.",
+            event=TriggerEvent.BEGINNING_OF_STEP,
+            step=Step.UPKEEP,
+            controller="alice",
+            source_id=bauble.id,
+            source_name=bauble.name,
+            effect=DrawACardForController(count=3),
+        )
+    )
+
+    replay = _round_trip(scenario.game)
+
+    walk_to(replay, Step.UPKEEP)
+    while not replay.game.stack_is_empty:
+        replay.resolve_top()
+
+    assert len(replay.player("alice").hand) == hand_before + 3
 
 
 # --------------------------------------------------------------------------

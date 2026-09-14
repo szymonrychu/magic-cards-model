@@ -106,6 +106,7 @@ from .delayed import (
     CreateAttackingTokens,
     DelayedBlinkReturnWithRider,
     DelayedTrigger,
+    DrawACardForController,
     GrantExtraTurn,
     PayOrLoseTheGame,
     ReflexiveConsequence,
@@ -14175,8 +14176,7 @@ def _parse_sacrifice_consequence(consequence: str) -> _SacrificeConsequence | No
 
     draw_match = _DRAW_N_CARDS_RE.fullmatch(consequence)
     if draw_match is not None:
-        count_text = draw_match.group("count")
-        count = 1 if count_text is None else parse_count(count_text)
+        count = parse_count(draw_match.group("count"))
         if count is None:
             return None
 
@@ -15944,13 +15944,12 @@ _RETURN_TO_BATTLEFIELD_OWNER_RE = re.compile(
     re.IGNORECASE,
 )
 
-#: "draw a card" - Mishra's Bauble's second half, with no object at all.
-_DRAW_A_CARD_RE = re.compile(r"^draw a card$", re.IGNORECASE)
-
-#: "draw a card"/"draw N cards" - `_DRAW_A_CARD_RE`'s own generalization,
-#: used where a count word may appear (Artist's Talent's "If you do, draw a
-#: card" as a `_parse_sacrifice_consequence` shape).
-_DRAW_N_CARDS_RE = re.compile(r"^draw (?:a|(?P<count>\w+)) cards?$", re.IGNORECASE)
+#: "draw a card"/"draw N cards" - Mishra's Bauble's own bare "draw a card"
+#: (no object at all), used where a count word may appear (Artist's Talent's
+#: "If you do, draw a card" as a `_parse_sacrifice_consequence` shape, and a
+#: delayed "draw N cards at the beginning of ..." in `_parse_delayed_single_
+#: clause`).
+_DRAW_N_CARDS_RE = re.compile(rf"^draw (?P<count>{COUNT}) cards?$", re.IGNORECASE)
 
 
 # --------------------------------------------------------------------------
@@ -16707,7 +16706,19 @@ def _parse_delayed_single_clause(clause: str, *, for_spell: bool) -> TargetedCla
         return None
     step, verb = timing
 
-    if _DRAW_A_CARD_RE.fullmatch(verb):
+    if draw_match := _DRAW_N_CARDS_RE.fullmatch(verb):
+        draw_count = parse_count(draw_match.group("count"))
+        if draw_count is None:
+            return None
+        # `draw_a_card_for_controller`'s own shared singleton for the
+        # printed-everywhere "draw a card" count; a card naming a different
+        # count gets its own `DrawACardForController` instance instead of
+        # a new `DelayedTrigger.effect` kind.
+        draw_spec = (
+            draw_a_card_for_controller
+            if draw_count == 1
+            else DrawACardForController(count=draw_count)
+        )
 
         def draw_effect(game: "Game", stack_object: "StackObject") -> None:
             ability = stack_object
@@ -16720,7 +16731,7 @@ def _parse_delayed_single_clause(clause: str, *, for_spell: bool) -> TargetedCla
                     controller=ability.controller,
                     source_id=ability.source_id,
                     source_name=ability.source_name,
-                    effect=draw_a_card_for_controller,
+                    effect=draw_spec,
                 )
             )
 

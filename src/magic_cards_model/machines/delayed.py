@@ -389,14 +389,17 @@ class DrawACardForController(DelayedEffectSpecBase):
     """ "Draw a card at the beginning of the next turn's upkeep" - Mishra's
     Bauble's second half. No object is named at all (CR 603.7c has nothing to
     check), so this is the creating ability's controller, drawing on their own
-    behalf (CR 121.2).
+    behalf (CR 121.2). `count` is 1 for every card in the pool; a future
+    "draw `<n>` cards at the beginning of ..." delayed trigger reads the same
+    way with a different count, rather than needing a new `kind` of its own.
     """
 
     kind: Literal["draw_a_card_for_controller"] = "draw_a_card_for_controller"
+    count: int = 1
 
     def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
         if game.is_in_game(trigger.controller):
-            game.draw_cards(trigger.controller, 1)
+            game.draw_cards(trigger.controller, self.count)
 
 
 class DestroySubject(DelayedEffectSpecBase):
