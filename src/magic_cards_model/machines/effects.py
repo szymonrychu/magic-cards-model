@@ -109,6 +109,7 @@ from .delayed import (
     GrantExtraTurn,
     PayOrLoseTheGame,
     ReflexiveConsequence,
+    ReflexiveCounterCountConsequence,
     ReflexiveMandatoryTokenDamageConsequence,
     ReflexivePayEnergyConsequence,
     ReturnExiledCardAndAddCounters,
@@ -10582,6 +10583,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     reflexive_mandatory_token = _parse_reflexive_mandatory_token_clause(effect_text)
     if reflexive_mandatory_token is not None:
         return reflexive_mandatory_token
+    reflexive_self_counter_if = _parse_reflexive_self_counter_if_clause(effect_text)
+    if reflexive_self_counter_if is not None:
+        return reflexive_self_counter_if
     create_token_then_may_attach = _parse_create_token_then_may_attach_clause(effect_text)
     if create_token_then_may_attach is not None:
         return create_token_then_may_attach
@@ -14756,6 +14760,98 @@ def _parse_reflexive_mandatory_token_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "put `<n>` `<kind>` counter[s] on this `<permanent>`. When you do, if
+#: `<counter-count clause>`, `<consequence>`." - Earthbender Ascension's
+#: landfall: "put a quest counter on this enchantment. When you do, if it has
+#: four or more quest counters on it, put a +1/+1 counter on target creature
+#: you control. It gains trample until end of turn." CR 603.12's mandatory
+#: ("instruct") action on the source, with CR 603.4's intervening *if* nested
+#: in the reflexive clause and read by `machines/triggers.py`'s own counter
+#: count reader, since "it" is the permanent the counter went on.
+_REFLEXIVE_SELF_COUNTER_IF_RE = re.compile(
+    rf"^put (?P<n>{COUNT}) (?P<kind>\S+) counters? on this [a-z]+\.\s*"
+    r"when you do,\s*(?P<reflexive>if (?P<condition>[^,]+),\s*(?P<consequence>.+?))\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+#: The reflexive ability's own text, as `ReflexiveCounterCountConsequence`
+#: re-reads it on resolution: "if `<clause>`, `<consequence>`".
+_REFLEXIVE_COUNTER_IF_TEXT_RE = re.compile(
+    r"^if (?P<condition>[^,]+),\s*(?P<consequence>.+?)\.?$", re.IGNORECASE | re.DOTALL
+)
+
+
+def _reflexive_counter_count_parts(
+    text: str,
+) -> tuple[Callable[[CardState], bool | None], AbilityEffect] | None:
+    """The condition and consequence of a reflexive "if `<counter-count
+    clause>`, `<consequence>`" text, or None when either is unreadable. The
+    condition answers None for a clause `machines/triggers.py`'s counter-count
+    reader does not recognise."""
+    from .triggers import _COUNTER_COUNT_CLAUSE, _counter_count_holds
+
+    match = _REFLEXIVE_COUNTER_IF_TEXT_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    condition = match.group("condition").strip().lower()
+    if _COUNTER_COUNT_CLAUSE.match(condition) is None:
+        return None
+    consequence = parse_mixed_effect(match.group("consequence").strip() + ".")
+    if consequence is None:
+        return None
+
+    def holds(source: CardState) -> bool | None:
+        return _counter_count_holds(condition, source)
+
+    return holds, consequence
+
+
+def _parse_reflexive_self_counter_if_clause(text: str) -> AbilityEffect | None:
+    """`_REFLEXIVE_SELF_COUNTER_IF_RE`'s shape (CR 603.12, CR 603.4).
+
+    The counters are put on the ability's own source. CR 603.12 creates the
+    reflexive ability only if that happened - a source that has left the
+    battlefield, or a counter a replacement effect prevented, reflects
+    nothing. Its intervening *if* is checked as it is created ("checked
+    immediately after being created"), so a count that is too low creates no
+    ability at all; `ReflexiveCounterCountConsequence` checks it again as the
+    ability resolves (CR 603.4).
+    """
+    match = _REFLEXIVE_SELF_COUNTER_IF_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    amount = parse_count(match.group("n"))
+    if amount is None:
+        return None
+    kind = match.group("kind").lower()
+    reflexive_text = match.group("reflexive").strip()
+    parts = _reflexive_counter_count_parts(reflexive_text)
+    if parts is None:
+        return None
+    holds, _consequence = parts
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        before = source.counter_count(kind)
+        game.add_counters(source, kind, amount)
+        if source.counter_count(kind) <= before:
+            return
+        if not holds(source):
+            return
+        controller = game.controller_of(ability)
+        _source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
+        game.create_reflexive_trigger(
+            text=reflexive_text,
+            controller=controller.username,
+            source_id=ability.source_id,
+            source_name=source_name,
+            callback=ReflexiveCounterCountConsequence(),
+        )
+
+    return effect
+
+
 #: Cori-Steel Cutter's *Flurry* trigger: "create a 1/1 white Monk creature
 #: token with prowess. You may attach this Equipment to it." CR 701.3a's
 #: "attach" is the general action - "take it from where it currently is and
@@ -18478,6 +18574,50 @@ def _merge_may_discard_if_you_do_clauses(
     return 2, effect
 
 
+#: "exile it" / "exile this artifact" - a mandatory action on the ability's
+#: own source, CR 118.12's "[Do something]." half of "[Do something]. If [a
+#: player] does, [effect]." (Mazemind Tome's state trigger: "exile it. If you
+#: do, you gain 4 life.")
+_EXILE_SELF_ACTION_RE = re.compile(r"^exile (?:it|this [a-z]+)$", re.IGNORECASE)
+
+
+def _merge_exile_self_if_you_do_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """ "Exile it. If you do, `<consequence>`." on a triggered or activated
+    ability, CR 118.12: the exile is a mandatory cost paid as the ability
+    resolves, and "if you do" asks whether it was paid.
+
+    The source can only be exiled if it is still where the ability left it; a
+    source that has already changed zones is a new object (CR 400.7) the
+    ability cannot find, so nothing is exiled and the consequence does not
+    happen. Ability-only, like `_parse_exile_dead_self_clause`: a resolving
+    spell has no source permanent to exile.
+    """
+    if for_spell or index + 1 >= len(clauses):
+        return None
+    if _EXILE_SELF_ACTION_RE.fullmatch(clauses[index].strip()) is None:
+        return None
+    if_match = _IF_YOU_DO_RE.fullmatch(clauses[index + 1].strip())
+    if if_match is None:
+        return None
+    consequence = _parse_mixed_clause(if_match.group("consequence").strip(), for_spell=False)
+    if consequence is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        assert isinstance(stack_object, AbilityOnStack)
+        source = stack_object.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        game.exile_permanent(source)
+        if source.zone is not Zone.EXILE:
+            return
+        consequence(game, stack_object)
+
+    return 2, effect
+
+
 # --------------------------------------------------------------------------
 # Wave W1's third primitive: look at the top N cards and split them between
 # two destinations, general past `Game.scry`/`Game.surveil`'s own fixed
@@ -20058,6 +20198,12 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             index += consumed
             continue
         merged = _merge_may_discard_if_you_do_clauses(clauses, index, for_spell=for_spell)
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_exile_self_if_you_do_clauses(clauses, index, for_spell=for_spell)
         if merged is not None:
             consumed, effect = merged
             parsed.append(effect)

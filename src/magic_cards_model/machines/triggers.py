@@ -61,7 +61,7 @@ from ..models.card import Card, Color, Type
 from ..models.card_state import CardState, ChoiceKind, Counter, TargetRef
 from ..models.token import TokenState
 from ..models.zone import Zone
-from ..numbers import parse_count, parse_ordinal
+from ..numbers import COUNT, parse_count, parse_ordinal
 from ..snapshot import EngineModel, scan_pin
 from .abilities import (
     Ability,
@@ -1854,9 +1854,11 @@ _LAND_ADDED_CHOSEN_MANA_CONDITION = re.compile(
     r"^a land's ability causes you to add one or more mana of the chosen color$"
 )
 
-#: Tamiyo, Inquisitive Student's "you draw your third card in a turn" - an
-#: ordinal over CR 121.2's individual card draws, which are one event each.
-_NTH_DRAW_CONDITION = re.compile(r"^you draw your (?P<ordinal>[a-z]+) card in a turn$")
+#: Tamiyo, Inquisitive Student's "you draw your third card in a turn" and
+#: Faerie Vandal's "you draw your second card each turn" - an ordinal over
+#: CR 121.2's individual card draws, which are one event each. Both suffixes
+#: mean the same turn-scoped count; "each turn" is how most printings say it.
+_NTH_DRAW_CONDITION = re.compile(r"^you draw your (?P<ordinal>[a-z]+) card (?:in a|each) turn$")
 
 #: CR 702.62a's third ability, as `machines/keywords._suspend_abilities`
 #: writes it out: "the last time counter is removed from this card". Never
@@ -2598,23 +2600,29 @@ def intervening_if_holds(
     return _fail_closed(game, ability, source)
 
 
-#: Ayara's Oathsworn's clause: "it has fewer than four +1/+1 counters on it".
-#: "It" is the source itself - the only subject this shape is printed with in
-#: this pool, and CR 603.4's clause is read about the ability's own source
-#: unless it plainly names something else.
+#: Ayara's Oathsworn's clause: "it has fewer than four +1/+1 counters on it",
+#: and the suffix form most cards print: Lightning Coils' "this artifact has
+#: five or more charge counters on it", Earthbender Ascension's "it has four or
+#: more quest counters on it". "It" is the source itself - the only subject
+#: this shape is printed with in this pool, and CR 603.4's clause is read about
+#: the ability's own source unless it plainly names something else.
 _COUNTER_COUNT_CLAUSE = re.compile(
     r"^(?:it|this [a-z]+) has "
-    r"(?:(?P<comparison>fewer than|more than|at least|exactly) (?P<count>[a-z]+)|(?P<none>no))"
+    rf"(?:(?P<comparison>fewer than|more than|at least|exactly) (?P<count>{COUNT})"
+    rf"|(?P<suffix_count>{COUNT}) or (?P<direction>more|fewer)"
+    r"|(?P<none>no))"
     r" (?P<kind>\S+) counters? on it$"
 )
 
 #: How each comparison word answers, given the counters actually there and the
-#: number the clause names.
+#: number the clause names. "N or more" and "N or fewer" are inclusive.
 _COUNTER_COMPARISONS = {
     "fewer than": operator.lt,
     "more than": operator.gt,
     "at least": operator.ge,
     "exactly": operator.eq,
+    "more": operator.ge,
+    "fewer": operator.le,
 }
 
 
@@ -2633,10 +2641,14 @@ def _counter_count_holds(clause: str, source: CardState) -> bool | None:
     on_it = source.counter_count(match.group("kind"))
     if match.group("none") is not None:
         return on_it == 0
-    wanted = parse_count(match.group("count"), article=False)
+    if match.group("suffix_count") is not None:
+        count_word, comparison = match.group("suffix_count"), match.group("direction")
+    else:
+        count_word, comparison = match.group("count"), match.group("comparison")
+    wanted = parse_count(count_word, article=False)
     if wanted is None:
         return None
-    return _COUNTER_COMPARISONS[match.group("comparison")](on_it, wanted)
+    return _COUNTER_COMPARISONS[comparison](on_it, wanted)
 
 
 #: Vengevine's clause: "it's the second creature spell you cast this turn".
@@ -2750,11 +2762,14 @@ def _source_tapped_holds(clause: str, source: CardState) -> bool | None:
 
 
 #: "you've cast three or more instant and sorcery spells this turn" - Arclight
-#: Phoenix's own combat trigger. The type list is CR 205.2a's card types,
-#: joined with a bare "and"/"or"/comma; a spell matching *any* of them counts
-#: once, which is what the card means (an instant is not also a sorcery).
+#: Phoenix's own combat trigger - and Loan Shark's untyped "you've cast two or
+#: more spells this turn". The type list is optional; when printed it is CR
+#: 205.2a's card types, joined with a bare "and"/"or"/comma, and a spell
+#: matching *any* of them counts once, which is what the card means (an
+#: instant is not also a sorcery). Without one, every spell counts.
 _SPELLS_CAST_THIS_TURN = re.compile(
-    r"^you(?:'ve| have) cast (?P<count>\w+) or more (?P<types>[a-z, ]+?) spells this turn$"
+    rf"^you(?:'ve| have) cast (?P<count>{COUNT}) or more "
+    r"(?:(?P<types>[a-z, ]+?) )?spells this turn$"
 )
 #: "you've cast another spell this turn" - Sage of the Skies' own cast
 #: trigger. "Another" excludes the spell the trigger is printed on, which is
@@ -2806,6 +2821,10 @@ def _spells_cast_this_turn_holds(game: "Game", clause: str, source: CardState) -
     wanted = parse_count(match.group("count"), article=False)
     if wanted is None:
         return None
+    controller = source.controller or game.active_player.username
+    cast = game.spells_cast_this_turn.get(controller, [])
+    if match.group("types") is None:
+        return len(cast) >= wanted
     wanted_types: set[Type] = set()
     for word in re.split(r",|\band\b|\bor\b", match.group("types")):
         word = word.strip()
@@ -2817,8 +2836,6 @@ def _spells_cast_this_turn_holds(game: "Game", clause: str, source: CardState) -
         wanted_types.add(card_type)
     if not wanted_types:
         return None
-    controller = source.controller or game.active_player.username
-    cast = game.spells_cast_this_turn.get(controller, [])
     matching = sum(1 for state in cast if wanted_types & set(state.card.types))
     return matching >= wanted
 
@@ -3558,13 +3575,15 @@ def additional_trigger_times(
     return extra
 
 
-#: CR 603.8's own shape, as the pool prints it: The Millennium Calendar's
-#: "When there are 1,000 or more time counters on The Millennium Calendar,
-#: sacrifice it and each opponent loses 1,000 life." The count is written with
-#: digit-group commas, which `machines/abilities._split_top_level` already
-#: refuses to read as the CR 603.1 condition/effect boundary.
+#: CR 603.8's own shape: The Millennium Calendar's "When there are 1,000 or
+#: more time counters on The Millennium Calendar, sacrifice it and each
+#: opponent loses 1,000 life." and Mazemind Tome's "When there are four or more
+#: page counters on this artifact, ...". The count is any `numbers.COUNT` -
+#: digits with digit-group commas (which `machines/abilities._split_top_level`
+#: already refuses to read as the CR 603.1 condition/effect boundary) or a
+#: spelled-out word.
 _STATE_COUNTER_TRIGGER_RE = re.compile(
-    r"^there are (?P<count>\d[\d,]*) or more (?P<kind>.+?) counters on (?P<subject>.+?)$",
+    rf"^there are (?P<count>{COUNT}) or more (?P<kind>.+?) counters on (?P<subject>.+?)$",
     re.IGNORECASE,
 )
 
@@ -3606,7 +3625,9 @@ def _state_condition_holds(game: "Game", ability: TriggeredAbility, source: Card
         # can read; answering False keeps CR 603.2's "only if it actually
         # matches" rather than guessing.
         return False
-    needed = int(match["count"].replace(",", ""))
+    needed = parse_count(match["count"], article=False)
+    if needed is None:
+        return False
     return source.counters[match["kind"].strip().lower()] >= needed
 
 

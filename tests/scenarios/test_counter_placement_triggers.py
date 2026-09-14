@@ -42,6 +42,7 @@ Card text verified with `resolve_cards`. Every CR number here was looked up with
 """
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.combat import Keyword, has_keyword
 from magic_cards_model.machines.triggers import ExtraTriggerEvent, GameEvent
 from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario
@@ -302,3 +303,144 @@ def test_doubling_season_doubles_lagrellas_two_counters():
         scenario.pass_until_resolved()
 
     assert broodscale.counter_count("+1/+1") == 4
+
+
+# -- CR 603.8's state trigger, with its count spelled as a word --------------
+#
+# Mazemind Tome (verified off its Scryfall printing): "When there are four or
+# more page counters on this artifact, exile it. If you do, you gain 4 life."
+# CR 603.8: "Some triggered abilities trigger when a game state ... is true,
+# rather than triggering when an event occurs." The state-trigger reader took
+# only digits - The Millennium Calendar's "1,000" - so a count printed as a
+# word never matched and the Tome's ability was never even found.
+
+
+def mazemind_board() -> Scenario:
+    return Scenario().player("alice", battlefield=["Mazemind Tome"]).player("bob")
+
+
+def test_three_page_counters_do_not_trigger_mazemind_tome():
+    scenario = mazemind_board().build()
+    tome = scenario.find("Mazemind Tome", Zone.BATTLEFIELD, "alice")
+    tome.add_counters("page", 3)
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    assert scenario.game.put_triggers_on_stack() == []
+
+
+def test_the_fourth_page_counter_triggers_mazemind_tome_once():
+    """The count is read as a word, and CR 603.8's latch holds while the
+    ability is still on the stack."""
+    scenario = mazemind_board().build()
+    tome = scenario.find("Mazemind Tome", Zone.BATTLEFIELD, "alice")
+    tome.add_counters("page", 4)
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    (trigger,) = scenario.game.put_triggers_on_stack()
+
+    assert trigger.source_name == "Mazemind Tome"
+    assert scenario.game.put_triggers_on_stack() == []
+
+
+def test_mazemind_tomes_trigger_exiles_it_and_gains_four_life():
+    """ "Exile it. If you do, you gain 4 life." - the Tome was exiled, so the
+    life is gained."""
+    scenario = mazemind_board().build()
+    tome = scenario.find("Mazemind Tome", Zone.BATTLEFIELD, "alice")
+    tome.add_counters("page", 4)
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    scenario.game.put_triggers_on_stack()
+    scenario.resolve_top()
+
+    assert tome.zone is Zone.EXILE
+    assert scenario.player("alice").life == 24
+
+
+# -- a reflexive trigger gated on the counter count --------------------------
+#
+# Earthbender Ascension (verified off its Scryfall printing): "Landfall -
+# Whenever a land you control enters, put a quest counter on this enchantment.
+# When you do, if it has four or more quest counters on it, put a +1/+1 counter
+# on target creature you control. It gains trample until end of turn."
+#
+# CR 603.12: "When you do" is a reflexive triggered ability, created as the
+# landfall ability resolves and checked immediately. CR 603.4: its "if" is an
+# intervening if, checked as it triggers and again as it resolves. "It" is the
+# enchantment the quest counter went on. The reflexive ability's target is
+# asked of alice as it goes on the stack (CR 603.3d), through `Game.ask`.
+
+
+def earthbender_board(quest: int) -> Scenario:
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Forest"],
+            battlefield=["Earthbender Ascension", "Grizzly Bears"],
+        )
+        .player("bob")
+        .build()
+    )
+    ascension = scenario.find("Earthbender Ascension", Zone.BATTLEFIELD, "alice")
+    ascension.add_counters("quest", quest)
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def resolve_landfall(scenario) -> None:
+    """Play the land; `Game.play_land` puts the landfall trigger on the stack,
+    and resolving it puts any reflexive ability there too (CR 603.3)."""
+    scenario.play_land("Forest")
+    assert scenario.stack_names() == ["Earthbender Ascension's triggered ability"]
+    scenario.resolve_top()
+
+
+def test_the_fourth_quest_counter_pumps_a_creature_and_gives_it_trample():
+    scenario = earthbender_board(3)
+    bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
+    ascension = scenario.find("Earthbender Ascension", Zone.BATTLEFIELD, "alice")
+    scenario.will_choose_targets(bears, source="Earthbender Ascension")
+
+    resolve_landfall(scenario)
+
+    assert ascension.counter_count("quest") == 4
+    assert scenario.stack_names() == ["Earthbender Ascension's triggered ability"]
+    scenario.resolve_top()
+    assert bears.counter_count("+1/+1") == 1
+    assert has_keyword(bears, Keyword.TRAMPLE, scenario.game)
+    assert scenario.game.intervening_if_notices == []
+
+
+def test_the_third_quest_counter_creates_no_reflexive_trigger():
+    """Three is not four or more: the counter is still put on, and the
+    reflexive ability does not trigger at all."""
+    scenario = earthbender_board(2)
+    bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
+    ascension = scenario.find("Earthbender Ascension", Zone.BATTLEFIELD, "alice")
+    scenario.will_choose_targets(bears, source="Earthbender Ascension")
+
+    resolve_landfall(scenario)
+
+    assert ascension.counter_count("quest") == 3
+    assert scenario.stack_names() == []
+    assert scenario.pending_triggers == []
+    assert bears.counter_count("+1/+1") == 0
+
+
+def test_the_reflexive_ability_rechecks_the_count_as_it_resolves():
+    """CR 603.4: "If the ability triggers, it checks the stated condition
+    again as it resolves." The quest counters are gone by then, so the
+    reflexive ability does nothing."""
+    scenario = earthbender_board(3)
+    bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
+    ascension = scenario.find("Earthbender Ascension", Zone.BATTLEFIELD, "alice")
+    scenario.will_choose_targets(bears, source="Earthbender Ascension")
+    resolve_landfall(scenario)
+    assert scenario.stack_names() == ["Earthbender Ascension's triggered ability"]
+
+    ascension.remove_counters("quest", 4)
+    scenario.resolve_top()
+
+    assert bears.counter_count("+1/+1") == 0
+    assert not has_keyword(bears, Keyword.TRAMPLE, scenario.game)
