@@ -1706,11 +1706,17 @@ def legal_actions(
     asks about; a caller already holding a scope on this game shares that one.
     """
     with board_snapshot(game):
-        return _legal_actions(game, player, pending=pending)
+        return _legal_actions(
+            game, player, pending=pending, include_life_paid_mana=include_life_paid_mana
+        )
 
 
 def _legal_actions(
-    game: Any, player: str, *, pending: PendingDecision | None = None
+    game: Any,
+    player: str,
+    *,
+    pending: PendingDecision | None = None,
+    include_life_paid_mana: bool = False,
 ) -> list[Action]:
     """`legal_actions`, inside its board snapshot."""
     if game.is_over:
