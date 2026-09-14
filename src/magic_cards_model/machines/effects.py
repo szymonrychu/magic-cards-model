@@ -5889,14 +5889,26 @@ def _counter_kind(word: str) -> Counter | str:
 #: a card that prints its own name instead of "this" (The Filigree Sylex, and
 #: Grist, the Hunger Tide's own "+1") reads exactly the same way.
 _COUNTER_ON_SELF_RE = re.compile(
-    rf"^put (?P<n>{_COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on this \w+\.?$",
+    rf"^put (?P<n>{_COUNT}|that many) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on this \w+\.?$",
     re.IGNORECASE,
 )
 
 
+def _triggering_event_amount(ability: AbilityOnStack) -> int | None:
+    """A trigger's "that many", read off the event that triggered it
+    (`GameEvent.amount`): The Millennium Calendar's permanents untapped,
+    Marauding Mako's cards discarded. `None` when the event carries no count.
+
+    A local pass-through for the event-count half of the number sweep's G0b
+    "that many" channel, which is to absorb it."""
+    event = ability.event
+    return None if event is None else event.amount
+
+
 def _parse_put_counters_on_self_clause(text: str) -> AbilityEffect | None:
     """`_COUNTER_ON_SELF_RE`'s shape - Walking Ballista's `{4}` ability and
-    The Filigree Sylex's `{T}` ability (CR 122.1).
+    The Filigree Sylex's `{T}` ability (CR 122.1), and a trigger's "put that
+    many ... counters" (`_triggering_event_amount`).
 
     CR 113.7a: an ability existing "independently of its source"'s object can
     still be found by id in whatever zone it now occupies, but only a
@@ -5904,17 +5916,29 @@ def _parse_put_counters_on_self_clause(text: str) -> AbilityEffect | None:
     counter marks a permanent, and one that left the battlefield is a new
     object with no counters to add to; `CardState.move_to` already clears them
     on the way out).
+
+    A "that many" whose event carries no count puts nothing and records an
+    `UnmodeledTriggerEffectNotice` rather than guessing a number.
     """
     match = _COUNTER_ON_SELF_RE.fullmatch(text.strip())
     if match is None:
         return None
-    amount = _count(match.group("n"))
+    that_many = match.group("n").lower() == "that many"
+    amount = 0 if that_many else _count(match.group("n"))
     kind = _counter_kind(match.group("kind"))
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
+        count = _triggering_event_amount(ability) if that_many else amount
+        if count is None:
+            game.unmodeled_trigger_effect_notices.append(
+                UnmodeledTriggerEffectNotice(
+                    source_id=ability.source_id, source_name=ability.source_name, text=text
+                )
+            )
+            return
         source = ability.source(game)
         if source is not None and source.zone is Zone.BATTLEFIELD:
-            game.add_counters(source, kind, amount)
+            game.add_counters(source, kind, count)
 
     return effect
 
@@ -7447,115 +7471,6 @@ def _parse_reveal_until_land_damage_clause(text: str) -> AbilityEffect | None:
             controller, revealed, source=ability.source_name, source_id=source_id_of(ability)
         ):
             controller.move(state, Zone.LIBRARY)
-
-    return effect
-
-
-#: Atraxa, Grand Unifier's enters trigger: "reveal the top ten cards of your
-#: library. For each card type, you may put a card of that type from among the
-#: revealed cards into your hand. Put the rest on the bottom of your library
-#: in a random order."
-#:
-#: One CR 608.2c instruction in three sentences, and the middle one is the
-#: whole card: a *loop over card types* (CR 205.2a / CR 300.1), not a fixed
-#: number of picks. Nothing else in the pool prints that shape, which is why
-#: it needs its own reader rather than a wider quantity on an existing one.
-_REVEAL_TOP_N_ONE_PER_CARD_TYPE_RE = re.compile(
-    r"^reveal the top (?P<n>[\w-]+) cards? of your library\. "
-    r"for each card type, you may put a card of that type from among the "
-    r"revealed cards into your hand\. "
-    r"put the rest on the bottom of your library in a random order\.?$",
-    re.IGNORECASE,
-)
-
-
-def _parse_reveal_top_n_one_per_card_type_clause(text: str) -> AbilityEffect | None:
-    """`_REVEAL_TOP_N_ONE_PER_CARD_TYPE_RE`'s shape - see above.
-
-    CR 701.20a's reveal moves nothing; each revealed card is recorded through
-    `Game.reveal`, and what matters beyond that is which of them end up in
-    hand and which go to the bottom (where CR 701.20d ends their records).
-
-    **The loop is over the card types actually present among the revealed
-    cards**, not over CR 300.1's full list. That is the same set of
-    opportunities - a type nobody revealed offers no card to choose - and it
-    avoids hard-coding a list of types the rules keep adding to. A card with
-    two types (an artifact creature) is a candidate for either, and is taken
-    off the table for the rest of the loop once it has been chosen: it is no
-    longer "from among the revealed cards", so the artifact pick and the
-    creature pick cannot both be the same card.
-
-    Each pick is CR 608.2d's own "you may", asked once per type and only when
-    that type still has a candidate left, so a player is never asked a
-    question with no legal affirmative answer.
-
-    The leftovers go to the bottom "in a random order", which is deliberately
-    *not* CR 701.24a's shuffle - that verb is never printed here - so no
-    shuffle happens and nothing watching for one fires. The randomisation
-    reuses `Game.shuffle_library`'s reproducible seed, the same convention
-    `puts_graveyard_on_bottom_of_library` already keeps.
-    """
-    match = _REVEAL_TOP_N_ONE_PER_CARD_TYPE_RE.fullmatch(text.strip())
-    if match is None:
-        return None
-    n = _count(match.group("n"))
-    if n is None:
-        return None
-
-    def effect(game: "Game", ability: AbilityOnStack) -> None:
-        controller = game.player(ability.controller)
-        revealed = list(controller.library[:n])
-        if not revealed:
-            return
-        for state in revealed:
-            game.reveal(state, source=ability.source_name)
-        remaining = list(revealed)
-        kept: list[CardState] = []
-        # A stable order over the types present, so the questions are asked
-        # the same way twice. CR 205.2a's own printed order is what `Type`
-        # already enumerates.
-        present = [
-            card_type for card_type in Type if any(card_type in state.types for state in revealed)
-        ]
-        for card_type in present:
-            candidates = [state for state in remaining if card_type in state.types]
-            if not candidates:
-                continue
-            if not game.may(
-                controller.username,
-                f"put {with_indefinite_article(f'{card_type.value} card')} "
-                f"from among the revealed cards into your hand",
-                source=ability.source_name,
-                source_id=source_id_of(ability),
-            ):
-                continue
-            chosen_ids = game.ask(
-                Decision(
-                    kind=DecisionKind.CHOOSE_CARDS,
-                    player=controller.username,
-                    prompt=(
-                        f"choose {with_indefinite_article(f'{card_type.value} card')} "
-                        "to put into your hand"
-                    ),
-                    source=ability.source_name,
-                    source_id=source_id_of(ability),
-                    amount=1,
-                    cards=tuple(state.id for state in candidates),
-                )
-            )
-            by_id = {state.id: state for state in candidates}
-            chosen = by_id[chosen_ids[0]]
-            remaining.remove(chosen)
-            kept.append(chosen)
-
-        for state in kept:
-            controller.move(state, Zone.HAND)
-        if remaining:
-            rng = Random(f"{game.shuffle_seed}:{game.shuffles_performed}:reveal-{n}-bottom")  # noqa: S311
-            rng.shuffle(remaining)
-            for state in remaining:
-                controller.move(state, Zone.LIBRARY)
-            game.shuffles_performed += 1
 
     return effect
 
@@ -10566,9 +10481,6 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     reveal_until_land = _parse_reveal_until_land_damage_clause(effect_text)
     if reveal_until_land is not None:
         return reveal_until_land
-    reveal_one_per_type = _parse_reveal_top_n_one_per_card_type_clause(effect_text)
-    if reveal_one_per_type is not None:
-        return reveal_one_per_type
     outside_the_game = _parse_outside_the_game_fetch(effect_text)
     if outside_the_game is not None:
         return outside_the_game
@@ -17010,6 +16922,13 @@ class UnmodeledTriggerEffectNotice(EngineModel):
     `source_name` the face's name, `text` the face's whole printed text. Not
     for a permanent spell (CR 608.3a) or a spell that left a replacement
     effect (Plagiarize, CR 614.1a).
+
+    **So does any triggered ability no reader answers for.** When
+    `trigger_effect_for` returns None for a triggered ability with printed
+    effect text, `Game._note_unread_trigger` appends this notice as the
+    ability resolves, with the ability's whole effect text. Nothing records it
+    at trigger time; Dress Down's end step trigger used to resolve as CHANGED
+    NOTHING with no trace.
     """
 
     model_config = ConfigDict(frozen=True)
@@ -18681,6 +18600,227 @@ _PUT_THE_REST_INTO_YOUR_GRAVEYARD_RE = re.compile(
 )
 
 
+#: "for each card type, you may exile a card of that type from among them"
+#: (Portent of Calamity) and "for each card type, you may put a card of that
+#: type from among the revealed cards into your hand" (Atraxa, Grand Unifier):
+#: one pick per CR 205.2a card type, taken to exile or to hand.
+_FOR_EACH_CARD_TYPE_MAY_TAKE_RE = re.compile(
+    r"^for each card type, you may (?:(?P<exile>exile)|put) a card of that type from among "
+    r"(?:them|the revealed cards)(?P<hand> into your hand)?$",
+    re.IGNORECASE,
+)
+#: "you may cast a spell from among the exiled cards without paying its mana
+#: cost if you exiled four or more cards this way" - a CR 608.2g cast gated on
+#: how many cards the pick above actually exiled.
+_MAY_CAST_FROM_AMONG_EXILED_IF_N_OR_MORE_RE = re.compile(
+    r"^you may cast a spell from among the exiled cards without paying its mana cost "
+    rf"if you exiled (?P<n>{_COUNT}) or more cards this way$",
+    re.IGNORECASE,
+)
+#: "(then) put the rest of the exiled cards into your hand"
+_PUT_THE_REST_OF_THE_EXILED_CARDS_INTO_HAND_RE = re.compile(
+    r"^put the rest of the exiled cards into your hand$", re.IGNORECASE
+)
+
+
+def _merge_reveal_top_one_card_per_type_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """Reveal the top N, then one pick per card type from among them, then the
+    rest somewhere - one anaphoric run.
+
+    Atraxa, Grand Unifier: "reveal the top ten cards of your library. For each
+    card type, you may put a card of that type from among the revealed cards
+    into your hand. Put the rest on the bottom of your library in a random
+    order." Portent of Calamity: "Reveal the top X cards of your library. For
+    each card type, you may exile a card of that type from among them. Put the
+    rest into your graveyard. You may cast a spell from among the exiled cards
+    without paying its mana cost if you exiled four or more cards this way.
+    Then put the rest of the exiled cards into your hand."
+
+    CR 701.20a-b: each revealed card is recorded through `Game.reveal` while
+    it is still in the library. CR 107.3a's X is not read here: `effect_for`
+    substitutes the announced value and retries, so "X" arrives as a number.
+
+    **The loop is over CR 205.2a's card types present among the revealed
+    cards**, in `Type`'s order. A card with several types (an artifact
+    creature) is a candidate for each, and once chosen it is no longer "from
+    among them", so it fills one pick only; Atraxa's 2023-02-04 ruling lets
+    it fill whichever pick the player chooses it for. Each pick is CR
+    608.2d's "you may", asked only while that type still has a candidate,
+    naming the candidates; a choice among two or more follows as a
+    `CHOOSE_CARDS`, and a lone candidate needs none.
+
+    The exile verb requires the free-cast tail and the hand verb forbids it,
+    since an exiled pick with nothing saying where it goes next is not a
+    shape any printing has. The cast is offered only when at least the
+    printed number of cards actually reached exile and at least one of them
+    `Game.can_cast_during_resolution` - a land never is (CR 305.9) - and goes
+    through `Game.cast_during_resolution` (CR 608.2g). Every exiled card still
+    in exile afterwards goes to hand.
+
+    The rest is `_THE_OTHER_INTO_A_DESTINATION_RE`'s: the graveyard, the
+    bottom "in any order" (CR 401.4, asked) or "in a random order" (seeded
+    off `Game.shuffle_seed`, never CR 701.24a's shuffle).
+    """
+    if index + 2 >= len(clauses):
+        return None
+    reveal_match = _REVEAL_TOP_N_CARDS_RE.fullmatch(clauses[index].strip())
+    if reveal_match is None:
+        return None
+    count_text = reveal_match.group("count")
+    if not count_text.isdigit() and count_text.lower() not in _NUMBER_WORDS:
+        return None
+    count = _count(count_text)
+    pick_match = _FOR_EACH_CARD_TYPE_MAY_TAKE_RE.fullmatch(clauses[index + 1].strip())
+    if pick_match is None:
+        return None
+    exiling = pick_match.group("exile") is not None
+    if exiling == (pick_match.group("hand") is not None):
+        return None
+    rest_text = clauses[index + 2].strip()
+    rest_match = _THE_OTHER_INTO_A_DESTINATION_RE.fullmatch(rest_text)
+    if rest_match is None or not rest_text.lower().startswith("put the rest"):
+        return None
+    to_bottom = rest_match.group("destination").lower().startswith("on the bottom")
+    randomised = rest_match.group("random") is not None
+    consumed = 3
+    threshold = 0
+    if exiling:
+        if index + 4 >= len(clauses):
+            return None
+        cast_match = _MAY_CAST_FROM_AMONG_EXILED_IF_N_OR_MORE_RE.fullmatch(
+            clauses[index + 3].strip()
+        )
+        if cast_match is None:
+            return None
+        if (
+            _PUT_THE_REST_OF_THE_EXILED_CARDS_INTO_HAND_RE.fullmatch(clauses[index + 4].strip())
+            is None
+        ):
+            return None
+        threshold = _count(cast_match.group("n"))
+        consumed = 5
+    verb, destination = ("exile", "") if exiling else ("put", " into your hand")
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        player = game.controller_of(stack_object)
+        source = (
+            stack_object.name if isinstance(stack_object, CardState) else stack_object.source_name
+        )
+        source_id = source_id_of(stack_object)
+        revealed = list(player.library[:count])
+        for state in revealed:
+            game.reveal(state, source=source)
+        remaining = list(revealed)
+        taken: list[CardState] = []
+        for card_type in Type:
+            candidates = [state for state in remaining if card_type in state.types]
+            if not candidates:
+                continue
+            quality = with_indefinite_article(f"{card_type.value} card")
+            if not game.may(
+                player,
+                f"{verb} {quality} from among the revealed cards{destination}",
+                source=source,
+                source_id=source_id,
+                cards=candidates,
+            ):
+                continue
+            chosen = _choose_one_card(
+                game,
+                player,
+                candidates,
+                prompt=f"choose {quality} to {verb}{destination}",
+                source=source,
+                source_id=source_id,
+            )
+            remaining.remove(chosen)
+            taken.append(chosen)
+
+        if not exiling:
+            for state in taken:
+                player.move(state, Zone.HAND)
+        if to_bottom and randomised and remaining:
+            rng = Random(f"{game.shuffle_seed}:{game.shuffles_performed}:reveal-{count}-bottom")  # noqa: S311
+            rng.shuffle(remaining)
+            for state in remaining:
+                player.move(state, Zone.LIBRARY)
+            game.shuffles_performed += 1
+        elif to_bottom:
+            for state in game.ask_library_bottom_order(
+                player, remaining, source=source, source_id=source_id
+            ):
+                player.move(state, Zone.LIBRARY)
+        if not exiling:
+            if not to_bottom:
+                for state in remaining:
+                    game.put_into_graveyard(state)
+            return
+
+        exiled = [state for state in game.exile_cards(taken) if state.zone is Zone.EXILE]
+        if not to_bottom:
+            for state in remaining:
+                game.put_into_graveyard(state)
+        if len(exiled) >= threshold:
+            castable = [
+                state for state in exiled if game.can_cast_during_resolution(state, player.username)
+            ]
+            if castable and game.may(
+                player,
+                "cast a spell from among the exiled cards without paying its mana cost",
+                source=source,
+                source_id=source_id,
+                cards=castable,
+            ):
+                spell = _choose_one_card(
+                    game,
+                    player,
+                    castable,
+                    prompt="choose a spell to cast without paying its mana cost",
+                    source=source,
+                    source_id=source_id,
+                )
+                game.cast_during_resolution(
+                    spell, player.username, source_name=source, rule="CR 608.2g"
+                )
+        for state in exiled:
+            if state.zone is Zone.EXILE:
+                game.return_to_hand(state)
+
+    return consumed, effect
+
+
+def _choose_one_card(
+    game: "Game",
+    player: Player,
+    candidates: Sequence[CardState],
+    *,
+    prompt: str,
+    source: str | None,
+    source_id: str | None,
+) -> CardState:
+    """One card from `candidates` (CR 608.2d): asked as a `CHOOSE_CARDS` when
+    there is a choice, the lone candidate otherwise. Unscripted, the engine's
+    `CHOOSE_CARDS` default: the last card offered."""
+    if len(candidates) == 1:
+        return candidates[0]
+    chosen_ids = game.ask(
+        Decision(
+            kind=DecisionKind.CHOOSE_CARDS,
+            player=player.username,
+            prompt=prompt,
+            source=source,
+            source_id=source_id,
+            amount=1,
+            exact=True,
+            cards=tuple(state.id for state in candidates),
+        )
+    )
+    assert isinstance(chosen_ids, tuple)
+    return next(state for state in candidates if state.id == chosen_ids[0])
+
+
 def _merge_reveal_top_to_hand_rest_to_graveyard_clauses(
     clauses: list[str], index: int, *, for_spell: bool
 ) -> tuple[int, TargetedClause] | None:
@@ -19378,39 +19518,83 @@ def _parse_return_dead_self_to_hand_clause(
 # --------------------------------------------------------------------------
 
 
-#: "sacrifice it" - the ability's own source, named the same self-referential
-#: way `_EXILE_IT_RE` and `_RETURN_IT_TO_OWNERS_HAND_RE` above name theirs.
-#: The Millennium Calendar's state trigger (CR 603.8) is the printing in the
-#: pool: "When there are 1,000 or more time counters on The Millennium
-#: Calendar, sacrifice it and each opponent loses 1,000 life."
-_SACRIFICE_IT_RE = re.compile(r"^sacrifice it$", re.IGNORECASE)
+#: "sacrifice it" / "sacrifice this <noun>" - the ability's own source, named
+#: the same self-referential way `_EXILE_IT_RE` and
+#: `_RETURN_IT_TO_OWNERS_HAND_RE` above name theirs. The Millennium Calendar's
+#: state trigger (CR 603.8) prints "sacrifice it"; Dress Down prints "sacrifice
+#: this enchantment", Ball Lightning "sacrifice this creature", and a card
+#: printing its own name reaches here as "this permanent" once
+#: `trigger_effect_for` has normalised it. `noun` is checked against
+#: `_SACRIFICE_SELF_NOUNS`, the same set `_sacrifice_restriction` reads.
+_SACRIFICE_IT_RE = re.compile(
+    r"^sacrifice (?:it|this (?P<noun>[a-z]+))(?: unless (?P<unless>.+?))?$", re.IGNORECASE
+)
+
+
+def _source_escaped(game: "Game", source: CardState) -> bool:
+    """CR 702.138b: "A spell or permanent 'escaped' if that spell or the spell
+    that became that permanent as it resolved was cast from a graveyard with an
+    escape ability." `CardState.cast_with_keyword` is set only as a cast spell
+    becomes this exact permanent and cleared on every later move (CR 400.7), so
+    a permanent that was never cast, or was cast for its mana cost, did not."""
+    return (source.cast_with_keyword or "").lower() == "escape"
+
+
+#: The conditions an "unless ..." tail on a self-sacrifice is read with, each
+#: asked about the ability's own source. Uro and Kroxa's "unless it escaped".
+#: A tail not listed here fails the whole clause, so it is never sacrificed
+#: (or spared) on a condition nobody read.
+_SELF_SACRIFICE_UNLESS_CONDITIONS: dict[str, Callable[["Game", CardState], bool]] = {
+    "it escaped": _source_escaped,
+}
 
 
 def _parse_sacrifice_self_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
-    """ "Sacrifice it" - CR 701.21a's keyword action aimed at the ability's own
-    source: "To sacrifice a permanent, its controller moves it from the
-    battlefield directly to its owner's graveyard."
+    """ "Sacrifice it" / "Sacrifice this enchantment" - CR 701.21a's keyword
+    action aimed at the ability's own source: "To sacrifice a permanent, its
+    controller moves it from the battlefield directly to its owner's
+    graveyard."
+
+    An "unless <condition>" tail (Uro, Titan of Nature's Wrath's "sacrifice it
+    unless it escaped") is read through `_SELF_SACRIFICE_UNLESS_CONDITIONS`
+    and checked as the ability resolves; when it holds, nothing is sacrificed.
 
     CR 113.7a keeps the ability alive once its source is gone ("Once activated
     or triggered, an ability exists on the stack independently of its source"),
     so a source that is no longer on the battlefield - already sacrificed,
     destroyed, or bounced in response - is simply not sacrificed again, and the
     rest of the ability still runs. That fail-soft is the same one
-    `_parse_exile_dead_self_clause` gives its own self-reference.
+    `_parse_exile_dead_self_clause` gives its own self-reference. A source that
+    left and came back is a new object (CR 400.7), which `source_stamp` tells
+    apart from the object that triggered, so it is not sacrificed either.
 
     Ability-only (`for_spell=False`): a resolving spell is not a permanent and
     has no "it" of this kind to sacrifice.
     """
     if for_spell:
         return None
-    if not _SACRIFICE_IT_RE.fullmatch(clause.strip()):
+    match = _SACRIFICE_IT_RE.fullmatch(clause.strip())
+    if match is None:
         return None
+    noun = match.group("noun")
+    if noun is not None and noun.lower() not in _SACRIFICE_SELF_NOUNS:
+        return None
+    unless_text = match.group("unless")
+    unless = None
+    if unless_text is not None:
+        unless = _SELF_SACRIFICE_UNLESS_CONDITIONS.get(unless_text.strip().lower())
+        if unless is None:
+            return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         ability = stack_object
         assert isinstance(ability, AbilityOnStack)
         source = ability.source(game)
         if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        if ability.source_stamp is not None and source.zone_change_stamp != ability.source_stamp:
+            return
+        if unless is not None and unless(game, source):
             return
         game.sacrifice(source)
 
@@ -20139,6 +20323,12 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             index += consumed
             continue
         merged = _merge_look_top_reveal_to_hand_clauses(clauses, index, for_spell=for_spell)
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_reveal_top_one_card_per_type_clauses(clauses, index, for_spell=for_spell)
         if merged is not None:
             consumed, effect = merged
             parsed.append(effect)
