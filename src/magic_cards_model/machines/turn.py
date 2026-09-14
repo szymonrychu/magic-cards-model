@@ -225,6 +225,24 @@ class TurnMachine(EngineModel):
     activation counts.
     """
 
+    turns_taken_by: dict[str, int] = Field(
+        default_factory=lambda data: (
+            {data["players"][data["active_index"]]: 1} if data["turns_taken"] else {}
+        )
+    )
+    """How many of their own turns each player has begun, extra ones included.
+
+    CR 102.1: "The active player is the player whose turn it is", so the entry
+    for the active player goes up as each turn of theirs begins, normal or extra
+    (CR 500.7), and reads N for the whole of their Nth turn. Neither
+    `turn_number` (rounds, blind to extra turns) nor `turns_taken` (every
+    player's turns) answers that, and it cannot be derived after the fact: an
+    extra turn leaves no record once `extra_turns` is popped. A player with no
+    turn begun yet has no entry; `own_turns_taken` reads that as 0. Empty in the
+    pregame (CR 103.8's first turn has not begun). A machine built directly at
+    turn 1 is already in its active player's first turn, hence the default.
+    """
+
     extra_turns: list[str] = Field(default_factory=list)
     """Extra turns waiting to be taken, in the order they were created (CR 500.7).
 
@@ -349,6 +367,19 @@ class TurnMachine(EngineModel):
         """
         return self.step not in NO_PRIORITY and self.step not in PREGAME_STEPS
 
+    def own_turns_taken(self, player: str) -> int:
+        """How many of their own turns `player` has begun, this one included.
+
+        CR 102.1 makes a turn the active player's own; CR 500.7's extra turns
+        count. 0 before the player's first turn, and for everyone in the pregame.
+        """
+        return self.turns_taken_by.get(player, 0)
+
+    def _begin_own_turn(self) -> None:
+        """Count a turn of the active player's as it begins (CR 102.1, 500.7)."""
+        player = self.active_player
+        self.turns_taken_by[player] = self.turns_taken_by.get(player, 0) + 1
+
     @property
     def is_first_turn(self) -> bool:
         return self.turn_number == 1
@@ -404,6 +435,7 @@ class TurnMachine(EngineModel):
         self.step = Step.MULLIGAN
         self.turn_number = 0
         self.turns_taken = 0
+        self.turns_taken_by = {}
         return self.step
 
     def begin_first_turn(self) -> Step:
@@ -421,6 +453,7 @@ class TurnMachine(EngineModel):
         self.step = Step.UNTAP
         self.turn_number = 1
         self.turns_taken = 1
+        self.turns_taken_by = {self.active_player: 1}
         return self.step
 
     def advance(self) -> Step:
@@ -465,6 +498,7 @@ class TurnMachine(EngineModel):
             self.order_index = rotation
             self.active_index = self.players.index(extra)
             self.taking_extra_turn = True
+            self._begin_own_turn()
             self._begin_player_control()
             return
 
@@ -477,6 +511,7 @@ class TurnMachine(EngineModel):
             if self.active_player not in self.departed:
                 break
         self.order_index = None
+        self._begin_own_turn()
         self._begin_player_control()
 
     # -- extra turns (CR 500.7) --------------------------------------------

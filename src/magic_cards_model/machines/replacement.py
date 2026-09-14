@@ -3050,6 +3050,90 @@ def _pay_life_or_tapped(amount: int, card_name: str) -> Apply:
     return apply
 
 
+#: "you may reveal a Plains or Island card from your hand" - the optional half
+#: of a reveal land's CR 614.12a choice. The part after "you may" is an
+#: ordinary reveal cost, read by the same `total_cost_for_phrase` a spell's
+#: "Reveal X white cards from your hand" is.
+_REVEAL_CHOICE = re.compile(r"^you may (?P<cost>reveal .+ from your hand)\.?$", re.IGNORECASE)
+
+
+def _optional_enters_payment(effect: ReplacementEffect, card_name: str) -> Apply | None:
+    """What an optional "As this enters, you may ..." (CR 614.1c) does as the
+    permanent enters, or `None` when no reader claims its payment.
+
+    Its caller pairs it with the "If you don't, it enters tapped" that
+    follows, because the two sentences are one CR 614.12a choice. Two payments
+    are read: paying life (the shocklands) and revealing a card of a stated
+    quality from hand (the reveal lands, whatever quality they print).
+    """
+    replacement = (effect.replacement or "").strip()
+    payment = _PAY_LIFE_CHOICE.search(replacement)
+    if payment:
+        return _pay_life_or_tapped(int(payment.group(1)), card_name)
+    reveal = _REVEAL_CHOICE.match(replacement)
+    if reveal is None:
+        return None
+    from .cost import ComponentKind, total_cost_for_phrase
+
+    phrase = reveal.group("cost")
+    cost = total_cost_for_phrase(phrase)
+    if (
+        cost is None
+        or cost.mana.symbols
+        or len(cost.components) != 1
+        or cost.components[0].kind is not ComponentKind.REVEAL
+        or cost.components[0].variable_count
+    ):
+        return None
+    return _reveal_or_tapped(phrase, card_name)
+
+
+def _reveal_or_tapped(phrase: str, card_name: str) -> Apply:
+    """A reveal land's branch, as one CR 614.12a choice made before it enters.
+
+    With no qualifying card in hand there is nothing to reveal (CR 118.3), so
+    nobody is asked and the land enters tapped. Otherwise its controller is
+    asked whether to reveal; yes asks which card (`Game.choose_cards_to_reveal`,
+    the question a reveal cost on a spell asks) and pays the reveal, which
+    shows the card to every player and leaves it in hand (CR 701.20a-b); no
+    enters it tapped.
+    """
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        from .cost import total_cost_for_phrase
+
+        who = event.card.controller if event.card is not None else None
+        cost = total_cost_for_phrase(phrase, who) if who is not None else None
+        if who is None or cost is None:
+            event.tapped = True
+            return
+        (component,) = cost.components
+        component.source = card_name
+        entering_id = event.card.id if event.card is not None else None
+        eligible = [
+            card
+            for card in game.player(who).hand
+            if card.id != entering_id
+            and (
+                component.requirement is None
+                or component.requirement.why_not(card, game, who) is None
+            )
+        ]
+        source_id = source_id_of(source)
+        if not eligible or not game.may(
+            who, phrase, source=card_name, source_id=source_id, cards=eligible
+        ):
+            event.tapped = True
+            return
+        game.choose_cards_to_reveal(component, who, source=card_name, source_id=source_id)
+        if component.why_not(game) is not None:
+            event.tapped = True
+            return
+        component.pay(game)
+
+    return apply
+
+
 # --------------------------------------------------------------------------
 # The condition on a self "enters tapped" line (CR 614.1d)
 # --------------------------------------------------------------------------
@@ -3086,9 +3170,12 @@ EntersCondition = Callable[["Game", CardState], bool]
 _YOU_CONTROL_SUBTYPES_RE = re.compile(r"^you control (an? [A-Z][\w'-]*(?: or an? [A-Z][\w'-]*)*)$")
 _A_SUBTYPE_RE = re.compile(r"an? ([A-Z][\w'-]*)")
 
-#: "you control two or more other lands", "you control two or fewer other lands".
+#: "you control two or more other lands", "you control two or fewer other lands",
+#: and the battle lands' "you control two or more basic lands" (CR 205.4c).
 _YOU_CONTROL_OTHER_LANDS_RE = re.compile(
-    r"^you control (?P<count>[\w-]+) or (?P<direction>more|fewer) other lands$", re.IGNORECASE
+    r"^you control (?P<count>[\w-]+) or (?P<direction>more|fewer) "
+    r"(?:(?P<other>other) )?(?:(?P<basic>basic) )?lands$",
+    re.IGNORECASE,
 )
 
 #: "a player has 13 or less life" - any player at the table, not only the
@@ -3125,7 +3212,7 @@ def _controls_a_subtype(subtypes: frozenset[str]) -> EntersCondition:
     return holds
 
 
-def _controls_other_lands(count: int, at_least: bool) -> EntersCondition:
+def _controls_other_lands(count: int, at_least: bool, basic: bool = False) -> EntersCondition:
     """ "you control [N] or more/fewer **other** lands".
 
     "Other" is why the entering permanent is excluded by id: CR 614.12's
@@ -3148,6 +3235,8 @@ def _controls_other_lands(count: int, at_least: bool) -> EntersCondition:
             for permanent in game.battlefield
             if permanent.controller == controller
             and Type.LAND in board.of(permanent).types
+            # CR 205.4c: "basic" is the supertype, never a basic land type.
+            and (not basic or board.of(permanent).is_basic)
             and permanent.id != entering.id
         )
         return lands >= count if at_least else lands <= count
@@ -3206,6 +3295,50 @@ def _enters_tapped_condition(effect: ReplacementEffect) -> EntersCondition | Non
     return tapped_unless
 
 
+def unread_self_enters_tapped_lines(card_state: CardState) -> list[str]:
+    """The entering object's own "enters tapped" lines (CR 614.1d) that
+    `_self_enters_modifiers` skips because it cannot read them.
+
+    Two shapes are skipped there, and both are named here from the same parse:
+    a condition none of `_read_enters_condition`'s readers claims (Mystic
+    Sanctuary's "three or more other Islands"), and an "If you don't" whose
+    optional half is not a payment `_optional_enters_payment` reads. Only the
+    face that is up is read, the same CR 712.8 filter `_self_enters_modifiers`
+    applies. `hypothetical.predict_enters` reports a land with any of these
+    tapped, with a notice, rather than repeating the engine's silent untapped
+    guess.
+    """
+    up_face_name = card_state.up_face_name
+    pending_payments = 0
+    unread: list[str] = []
+    for effect in parse_replacement_effects(card_state.card):
+        if up_face_name is not None and effect.face not in (None, up_face_name):
+            continue
+        if not effect.self_replacement:
+            continue
+        if (
+            effect.kind is ReplacementKind.AS_ENTERS
+            and effect.optional
+            and _optional_enters_payment(effect, card_state.card.name) is not None
+        ):
+            pending_payments += 1
+            continue
+        if effect.kind is not ReplacementKind.ENTERS_TAPPED:
+            continue
+        condition = (effect.condition or "").strip()
+        if not condition:
+            continue
+        if _IF_YOU_DONT.match(condition):
+            if pending_payments:
+                pending_payments -= 1
+            else:
+                unread.append(effect.text)
+            continue
+        if _enters_tapped_condition(effect) is None:
+            unread.append(effect.text)
+    return unread
+
+
 def _read_enters_condition(condition: str) -> EntersCondition | None:
     match = _YOU_CONTROL_SUBTYPES_RE.match(condition)
     if match is not None:
@@ -3217,7 +3350,11 @@ def _read_enters_condition(condition: str) -> EntersCondition | None:
         count, variable = _amount_of(match.group("count"))
         if count is None or variable:
             return None
-        return _controls_other_lands(count, at_least=match.group("direction").lower() == "more")
+        return _controls_other_lands(
+            count,
+            at_least=match.group("direction").lower() == "more",
+            basic=match.group("basic") is not None,
+        )
 
     match = _A_PLAYER_HAS_LIFE_RE.match(condition)
     if match is not None:
@@ -3816,8 +3953,12 @@ def _self_enters_modifiers(
         if index in consumed or not effect.self_replacement:
             continue
 
-        payment = _PAY_LIFE_CHOICE.search(effect.replacement or "")
-        if effect.kind is ReplacementKind.AS_ENTERS and effect.optional and payment:
+        choice = (
+            _optional_enters_payment(effect, card_state.card.name)
+            if effect.kind is ReplacementKind.AS_ENTERS and effect.optional
+            else None
+        )
+        if choice is not None:
             follower = next(
                 (
                     other
@@ -3833,7 +3974,7 @@ def _self_enters_modifiers(
                 performable.append(
                     (
                         f"self:{index}",
-                        _pay_life_or_tapped(int(payment.group(1)), card_state.card.name),
+                        choice,
                         f"{effect.text} {parsed[follower].text}",
                         False,
                     )

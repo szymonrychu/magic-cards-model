@@ -1822,6 +1822,34 @@ _BLIGHT_PHRASE = re.compile(r"^you may blight (?P<n>\d+)$", re.IGNORECASE)
 _OPTIONAL_ADDITIONAL_COST = re.compile(r"^you may\b", re.IGNORECASE)
 
 
+def mandatory_additional_costs(
+    spell: CardState, caster: str, x_value: int | None
+) -> list[TotalCost]:
+    """The spell's own printed "As an additional cost to cast this spell, ..."
+    sentences as fresh, unfilled `TotalCost`s (CR 118.8a, 601.2f), X
+    substituted first (CR 107.3a) and every optional one left out (CR 118.8b).
+
+    The one reading both `Casting._printed_additional_costs` (which then fills
+    the chosen objects in) and `legal_actions` (which counts whether they
+    exist) use, so the two cannot disagree about what the cost is. A
+    mandatory sentence that cannot be read raises, because CR 118.3 does not
+    let the spell be cast without paying it.
+    """
+    built: list[TotalCost] = []
+    for printed in additional_cost_phrases(spell.card):
+        phrase = substitute_x(printed, x_value)
+        if _OPTIONAL_ADDITIONAL_COST.match(phrase):
+            continue
+        cost = total_cost_for_phrase(phrase, caster)
+        if cost is None:
+            raise ValueError(
+                f"{spell.name}'s additional cost {phrase!r} could not be read, "
+                f"so it cannot be paid (CR 118.3, 601.2f)"
+            )
+        built.append(cost)
+    return built
+
+
 class CastingStep(StrEnum):
     PROPOSED = "proposed"
     MODES = "modes"
@@ -3991,16 +4019,7 @@ class Casting(EngineModel):
             ComponentKind.EXILE: list(self.exiling),
             ComponentKind.TAP: list(self.tapping),
         }
-        for printed in additional_cost_phrases(self.spell.card):
-            phrase = substitute_x(printed, self.x_value)
-            if _OPTIONAL_ADDITIONAL_COST.match(phrase):
-                continue
-            cost = total_cost_for_phrase(phrase, self.caster)
-            if cost is None:
-                raise ValueError(
-                    f"{self.spell.name}'s additional cost {phrase!r} could not be read, "
-                    f"so it cannot be paid (CR 118.3, 601.2f)"
-                )
+        for cost in mandatory_additional_costs(self.spell, self.caster, self.x_value):
             for component in cost.components:
                 if component.kind is ComponentKind.REVEAL:
                     filled = announce_reveal(

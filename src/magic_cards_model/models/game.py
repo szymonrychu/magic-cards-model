@@ -2077,7 +2077,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 16
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 17
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -2264,6 +2264,13 @@ class Game(EngineModel):
     (CR 113.7a). A version-15 dump holds id-keyed records that would read as
     no record at all.
     Refused instead.
+
+    Bumped 16 -> 17: `TurnMachine` gained `turns_taken_by`, each player's
+    count of their own turns begun (CR 102.1, CR 500.7 extra turns included),
+    read through `TurnMachine.own_turns_taken`. A version-16 dump has no such
+    field, and it cannot be rebuilt from what that dump holds once an extra
+    turn has been taken, so a default would silently misstate it. Refused
+    instead.
     """
 
     @model_validator(mode="before")
