@@ -9676,7 +9676,12 @@ _SELECT_FROM_TOP_RE = re.compile(
     r"^(?:[a-z][a-z '-]* — )?"
     rf"(?:mill (?P<mill_n>{COUNT}) cards?"
     rf"|look at the top (?P<look_n>{COUNT}) cards? of your library)\.\s*"
-    r"you may put (?:a|an|one) "
+    # Cartographer's Survey/Deploy the Gatewatch print "put up to two ..."
+    # with no "you may" at all - CR 608.2d's optionality already lives in
+    # "up to"/"any number of" themselves. A bare fixed count ("a"/"an"/"one")
+    # has no such built-in optionality, so it still needs the "you may" that
+    # every printing pairing it with this shape carries.
+    rf"(?P<may>you may )?put {quantity_pattern('n')} "
     # Either one positive kind word, or a run of CR 205.2a negations -
     # Fallaji Archaeologist's "a noncreature, nonland card", where the comma
     # is a conjunction (a card that is neither), the same De Morgan reading
@@ -9685,7 +9690,7 @@ _SELECT_FROM_TOP_RE = re.compile(
     r"planeswalker) |(?P<negated>non[a-z]+(?:, ?non[a-z]+)*) )?"
     # "from among them" and "from among the cards milled this way" name the
     # same set - the cards this clause's own first sentence just saw.
-    r"card from among (?:them|the cards milled this way) "
+    r"cards? from among (?:them|the cards milled this way) "
     r"(?P<dest>into your hand|onto the battlefield tapped|onto the battlefield"
     r"|into your graveyard)\.\s*"
     r"(?:(?P<decline_counter>if you don't, put a \+1/\+1 counter on this creature\.\s*)"
@@ -9721,6 +9726,15 @@ def _select_from_top_runner(
         return None
     milling = match.group("mill_n") is not None
     count = parse_count(match.group("mill_n") if milling else match.group("look_n"))
+    quantity = parse_quantity(match.group("n"))
+    if quantity is None or quantity.source not in (QuantitySource.FIXED, QuantitySource.ANY_NUMBER):
+        return None
+    # A bare fixed count ("put a land card ...") with no printed "you may" is
+    # CR 608.2d's *mandatory* form, which this family does not model - every
+    # printing of that shape pairs it with "you may". "up to N"/"any number
+    # of" carry their own optionality (CR 107.1c) and need no such prefix.
+    if quantity.exact and match.group("may") is None:
+        return None
     kind_word = (match.group("kind") or "").lower()
     negated = (match.group("negated") or "").lower()
     if negated:
@@ -9749,6 +9763,13 @@ def _select_from_top_runner(
     life = parse_count(match.group("life")) if match.group("life") else 0
     rest = (match.group("rest") or "").lower()
     noun = f"{kind_word} card" if kind_word else "card"
+    plural_noun = f"{kind_word} cards" if kind_word else "cards"
+    if quantity.source is QuantitySource.ANY_NUMBER:
+        take_noun = f"any number of {plural_noun}"
+    elif quantity.exact and quantity.amount == 1:
+        take_noun = with_indefinite_article(noun)
+    else:
+        take_noun = f"up to {quantity.amount} {plural_noun}"
 
     def put(game: "Game", player: Player, chosen: CardState, where: str) -> None:
         if where == "into your hand":
@@ -9782,35 +9803,65 @@ def _select_from_top_runner(
         home = Zone.GRAVEYARD if milling else Zone.LIBRARY
         candidates = [state for state in seen if state.zone is home and predicate(state)]
 
-        chosen: CardState | None = None
-        if candidates and game.may(
-            player,
-            f"put {with_indefinite_article(noun)} from among them {destination}",
-            source=source_name,
-            source_id=source_id,
-        ):
-            chosen_ids = game.ask(
-                Decision(
-                    kind=DecisionKind.CHOOSE_CARDS,
-                    player=player.username,
-                    prompt=f"choose {with_indefinite_article(noun)} to put {destination}",
+        chosen: list[CardState] = []
+        if candidates:
+            if quantity.exact:
+                # "you may put a/an/one <kind> card": a single optional
+                # pick, gated behind the CR 608.2d "may" before naming
+                # candidates - unchanged from before this family read any
+                # other quantifier.
+                if game.may(
+                    player,
+                    f"put {take_noun} from among them {destination}",
                     source=source_name,
-                    amount=1,
-                    cards=tuple(candidate.id for candidate in candidates),
                     source_id=source_id,
+                ):
+                    chosen_ids = game.ask(
+                        Decision(
+                            kind=DecisionKind.CHOOSE_CARDS,
+                            player=player.username,
+                            prompt=f"choose {take_noun} to put {destination}",
+                            source=source_name,
+                            amount=1,
+                            cards=tuple(candidate.id for candidate in candidates),
+                            source_id=source_id,
+                        )
+                    )
+                    assert isinstance(chosen_ids, tuple)
+                    by_id = {candidate.id: candidate for candidate in candidates}
+                    chosen = [by_id[chosen_ids[0]]]
+            else:
+                # "up to N"/"any number of": CR 107.1c - zero to the
+                # ceiling is one question, with no separate "may" gate.
+                ceiling = (
+                    len(candidates)
+                    if quantity.amount is None
+                    else min(quantity.amount, len(candidates))
                 )
-            )
-            assert isinstance(chosen_ids, tuple)
-            by_id = {candidate.id: candidate for candidate in candidates}
-            chosen = by_id[chosen_ids[0]]
+                chosen_ids = game.ask(
+                    Decision(
+                        kind=DecisionKind.CHOOSE_CARDS,
+                        player=player.username,
+                        prompt=f"put {take_noun} from among them {destination}",
+                        source=source_name,
+                        amount=ceiling,
+                        exact=False,
+                        cards=tuple(candidate.id for candidate in candidates),
+                        source_id=source_id,
+                    )
+                )
+                assert isinstance(chosen_ids, tuple)
+                by_id = {candidate.id: candidate for candidate in candidates}
+                chosen = [by_id[card_id] for card_id in chosen_ids]
 
-        if chosen is not None and chosen.zone is home:
-            put(game, player, chosen, destination)
+        for state in chosen:
+            if state.zone is home:
+                put(game, player, state, destination)
 
         # "If you don't, put a card from among them ..." is not a "you may":
         # when the first take was declined or had no candidate, one of the
         # seen cards still qualifying is chosen and moved (CR 608.2d).
-        if chosen is None and decline_dest:
+        if not chosen and decline_dest:
             fallback = [state for state in seen if state.zone is home and decline_predicate(state)]
             if fallback:
                 fallback_ids = game.ask(
@@ -9827,14 +9878,14 @@ def _select_from_top_runner(
                     )
                 )
                 assert isinstance(fallback_ids, tuple)
-                chosen = next(state for state in fallback if state.id == fallback_ids[0])
-                put(game, player, chosen, decline_dest)
+                chosen = [next(state for state in fallback if state.id == fallback_ids[0])]
+                put(game, player, chosen[0], decline_dest)
 
         # "If you don't" covers both branches that leave the follow-up untaken:
         # declining the may, and having no legal candidate to choose at all
         # (CR 608.2d only offers a choice that exists).
         if (
-            chosen is None
+            not chosen
             and counter_when_declined
             and source is not None
             and source.zone is Zone.BATTLEFIELD
@@ -9848,7 +9899,7 @@ def _select_from_top_runner(
             # Only the look arm has a "rest": the mill arm already moved every
             # card it saw into the graveyard.
             remainder = [
-                state for state in seen if state is not chosen and state.zone is Zone.LIBRARY
+                state for state in seen if state not in chosen and state.zone is Zone.LIBRARY
             ]
             if rest == "into your graveyard":
                 for state in remainder:
