@@ -48,6 +48,7 @@ from ..machines.casting import (
     play_permissions_on,
     spell_has_type_word,
     static_free_cast_grants,
+    types_being_cast,
     usable_play_permission,
     why_cannot_cast_restriction,
 )
@@ -3980,9 +3981,14 @@ class Game(EngineModel):
         spell's mana value". CR 608.2d: "the player can't choose an option
         that's illegal or impossible", so an option left out is never offered.
         X counts as 0: a spell cast without paying its mana cost has X of 0
-        (CR 107.3b)."""
+        (CR 107.3b). A land is never an option: "If an object is both a land
+        and another card type, it can be played only as a land. It can't be
+        cast as a spell" (CR 305.9), so an effect that offers a cast from among
+        several cards (Portent of Calamity) never offers the land."""
         options: list[str | None] = []
         for option in castable_faces(card.card):
+            if Type.LAND in types_being_cast(card.card, option):
+                continue
             if why_cannot_cast_restriction(card, caster, self, face=option) is not None:
                 continue
             if mana_value_below is not None and (
