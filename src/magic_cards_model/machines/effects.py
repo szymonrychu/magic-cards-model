@@ -5215,9 +5215,22 @@ def regenerate_ability_targets(game: "Game", stack_object: "StackObject") -> Non
 #: `_parse_targeted_clauses`'s independent per-clause dispatch, the same
 #: reason `_X_DAMAGE_DIVIDED_DOUBLED_RE` reads Shatterskull Smashing's own
 #: two sentences together.
+#:
+#: The old shape hardcoded "up to \S+" ahead of "target" and a singular "it"
+#: pronoun, so it read only Tamiyo's own exact wording. Frost Breath's real
+#: printing - "Tap up to two target creatures. Those creatures don't untap
+#: during their controller's next untap step." - has neither: a plural count
+#: with no "it" at all. Chill of the Grave's real printing has the opposite
+#: gap - no "up to" prefix, a single mandatory target ("Tap target creature.
+#: It doesn't untap ..."). The count word itself is read entirely by
+#: `_targets_understood(count_agnostic=True)` below, same as before; the
+#: phrase only has to admit an optional leading count and the plural pronoun
+#: pair `_targets_understood` already knows how to size (one target, several,
+#: or "up to" any of them).
 _TAP_TARGET_THEN_NO_UNTAP_RE = re.compile(
-    r"^tap (?P<phrase>up to \S+ target .+?)\.\s*"
-    r"it doesn'?t untap during its controller'?s next untap step\.?$",
+    rf"^tap (?P<phrase>(?:up to )?(?:{COUNT} )?target .+?)\.\s*"
+    r"(?:it doesn'?t|(?:those \w+|they) don'?t) untap during "
+    r"(?:its|their) controller'?s next untap step\.?$",
     re.IGNORECASE | re.DOTALL,
 )
 
@@ -5247,6 +5260,31 @@ def _parse_tap_target_then_no_untap_clause(text: str) -> AbilityEffect | None:
                 target.exerted = True
 
     return effect
+
+
+def _merge_tap_target_then_no_untap_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """Frost Breath, Chill of the Grave: the same "Tap ... target(s). It/
+    those creatures don't untap ..." pair `_parse_tap_target_then_no_untap_
+    clause` already reads whole for Tamiyo's loyalty ability, but printed on
+    an instant instead - and, for Chill of the Grave, with a further "Draw a
+    card." clause after it. `split_effect_clauses` cuts a spell's own text
+    into one clause per sentence with no notion that this pair is one CR
+    608.2c instruction, so `_parse_mixed_clauses` has to try the two adjacent
+    clauses together before falling back to reading each alone; unused
+    `for_spell` kept only for the same signature every other merge function
+    in this chain has, since `effect()` below is generic over an ability or a
+    spell already (`game.resolve_targets` and `game.controller_of` take
+    either).
+    """
+    if index + 1 >= len(clauses):
+        return None
+    pair = f"{clauses[index].strip()}. {clauses[index + 1].strip()}."
+    effect = _parse_tap_target_then_no_untap_clause(pair)
+    if effect is None:
+        return None
+    return 2, effect
 
 
 #: Diamond City: "Move a shield counter from this land onto target creature."
@@ -20068,6 +20106,12 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
         merged = _parse_scry_or_untap_if_not_starting_player_clauses(
             clauses, index, for_spell=for_spell
         )
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_tap_target_then_no_untap_clauses(clauses, index, for_spell=for_spell)
         if merged is not None:
             consumed, effect = merged
             parsed.append(effect)
