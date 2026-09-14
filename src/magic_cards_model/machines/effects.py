@@ -6491,8 +6491,17 @@ _EXILE_QUALITY_FROM_ALL_GRAVEYARDS_RE = re.compile(
 #: own two-sibling "dies or is put into exile" shape, extended to the three
 #: departure routes this pool's permanents can actually take (destroyed,
 #: sacrificed - both `TriggerEvent.DIES` - exiled, or bounced to hand).
+#:
+#: The phrase used to require "target" as the very next word after "exile ",
+#: so Prayer of Binding's real "exile up to one target nonland permanent an
+#: opponent controls until this enchantment leaves the battlefield" (an "up
+#: to" count ahead of the word "target") never matched at all - silent, per
+#: the number sweep. `.*target.+?` is the same loose phrase shape
+#: `_EXILE_TARGET_RE` already uses for the plain "exile target ..." family;
+#: the count word itself is read by `_targets_understood(count_agnostic=
+#: True)` below, not by this regex.
 _EXILE_UNTIL_THIS_LEAVES_BATTLEFIELD_RE = re.compile(
-    r"^exile (?P<phrase>target .+?) until this "
+    r"^exile (?P<phrase>.*target.+?) until this "
     r"(?:permanent|enchantment|artifact|creature|planeswalker) leaves the battlefield$",
     re.IGNORECASE,
 )
@@ -6551,13 +6560,24 @@ def _parse_exile_until_leaves_battlefield_clause(
     shape on a spell, and the "this `<type>`" pronoun needs a live source
     object on the battlefield to watch (`ability.source(game)`), which only
     an ability - never a spell resolving itself off the stack - carries.
+
+    `count_agnostic=True`, the same reading `_targets_understood`'s own
+    docstring already gives Mindbreak Trap's "exile any number of target
+    spells": Prayer of Binding and Touch the Spirit Realm both print "exile
+    up to one target ..." here, CR 115.6's zero-or-one, not the exactly-one
+    `_EXILE_UNTIL_THIS_LEAVES_BATTLEFIELD_RE` used to enforce alone. Every
+    legal target is exiled and watched, the same "one departure watch per
+    exiled card" shape `_parse_exile_targets_until_leaves_then_counters`
+    (Lagrella, the Magpie) already uses for its own count-agnostic "any
+    number of other target creatures" - "up to one" is not a fourth shape,
+    only a narrower bound on the same one.
     """
     if for_spell:
         return None
     match = _EXILE_UNTIL_THIS_LEAVES_BATTLEFIELD_RE.fullmatch(clause.strip())
     if match is None:
         return None
-    if not _targets_understood(match.group("phrase")):
+    if not _targets_understood(match.group("phrase"), count_agnostic=True):
         return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
@@ -6567,14 +6587,15 @@ def _parse_exile_until_leaves_battlefield_clause(
             target for target in game.resolve_targets(ability) if isinstance(target, CardState)
         ]
         if not targets:
-            return  # CR 608.2b: the target is gone, so there is nothing to exile.
+            return  # CR 608.2b/115.6: no (legal) target chosen; nothing to exile.
         source = ability.source(game)
         if source is None:
             return  # CR 113.7a: the source is already gone; nothing left to watch leave.
-        exiled = game.exile_permanent(targets[0])
-        if exiled.zone is not Zone.EXILE:
-            return  # CR 111.8: a token refused the move; nothing to bring back later.
-        _watch_for_departure_and_return_exiled_card(game, source, exiled, ability.controller)
+        for target in targets:
+            exiled = game.exile_permanent(target)
+            if exiled.zone is not Zone.EXILE:
+                continue  # CR 111.8: a token refused the move; nothing to bring back later.
+            _watch_for_departure_and_return_exiled_card(game, source, exiled, ability.controller)
 
     return effect
 
