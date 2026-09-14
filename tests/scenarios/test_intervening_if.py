@@ -290,3 +290,63 @@ def test_ruby_rechecks_the_condition_on_resolution():
 
     characteristics = scenario.game.characteristics_of(ruby)
     assert (characteristics.power, characteristics.toughness) == (1, 2)
+
+
+# -- "you've cast N or more spells this turn", with no spell type ------------
+#
+# Loan Shark (verified off its Scryfall printing): "When this creature enters,
+# if you've cast two or more spells this turn, draw a card." Arclight Phoenix's
+# "three or more instant and sorcery spells" was the only shape read, with the
+# type list mandatory, so an untyped count fell through to `_fail_closed` and
+# never drew. Two, not three: a different count than the pool's Phoenix.
+
+
+def loan_shark_board() -> Scenario:
+    return (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Lightning Bolt", "Loan Shark"],
+            battlefield=["Mountain", "Island", "Island", "Island", "Island"],
+            library=["Grizzly Bears", "Grizzly Bears"],
+        )
+        .player("bob")
+    )
+
+
+def test_loan_shark_draws_when_it_is_the_second_spell_this_turn():
+    """CR 603.4: the clause is true as it enters - Lightning Bolt and Loan
+    Shark itself are two spells alice cast this turn."""
+    scenario = loan_shark_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice = scenario.player("alice")
+    scenario.cast_and_resolve(
+        "Lightning Bolt",
+        *scenario.untapped_sources("Mountain"),
+        targets=[scenario.player("bob")],
+    )
+
+    scenario.cast_and_resolve(
+        "Loan Shark", *scenario.untapped_sources("Island", "Island", "Island", "Island")
+    )
+    scenario.pass_until_resolved()
+
+    assert [state.name for state in alice.hand] == ["Grizzly Bears"]
+    assert scenario.game.intervening_if_notices == []
+
+
+def test_loan_shark_alone_is_one_spell_and_draws_nothing():
+    """The false case is read, not refused: one spell is fewer than two, so
+    nothing triggers and no notice is recorded."""
+    scenario = loan_shark_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice = scenario.player("alice")
+
+    scenario.cast_and_resolve(
+        "Loan Shark", *scenario.untapped_sources("Island", "Island", "Island", "Island")
+    )
+    scenario.pass_until_resolved()
+
+    assert [state.name for state in alice.hand] == ["Lightning Bolt"]
+    assert scenario.pending_triggers == []
+    assert scenario.game.intervening_if_notices == []

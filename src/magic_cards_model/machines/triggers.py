@@ -61,7 +61,7 @@ from ..models.card import Card, Color, Type
 from ..models.card_state import CardState, ChoiceKind, Counter, TargetRef
 from ..models.token import TokenState
 from ..models.zone import Zone
-from ..numbers import parse_count, parse_ordinal
+from ..numbers import COUNT, parse_count, parse_ordinal
 from ..snapshot import EngineModel, scan_pin
 from .abilities import (
     Ability,
@@ -2752,11 +2752,14 @@ def _source_tapped_holds(clause: str, source: CardState) -> bool | None:
 
 
 #: "you've cast three or more instant and sorcery spells this turn" - Arclight
-#: Phoenix's own combat trigger. The type list is CR 205.2a's card types,
-#: joined with a bare "and"/"or"/comma; a spell matching *any* of them counts
-#: once, which is what the card means (an instant is not also a sorcery).
+#: Phoenix's own combat trigger - and Loan Shark's untyped "you've cast two or
+#: more spells this turn". The type list is optional; when printed it is CR
+#: 205.2a's card types, joined with a bare "and"/"or"/comma, and a spell
+#: matching *any* of them counts once, which is what the card means (an
+#: instant is not also a sorcery). Without one, every spell counts.
 _SPELLS_CAST_THIS_TURN = re.compile(
-    r"^you(?:'ve| have) cast (?P<count>\w+) or more (?P<types>[a-z, ]+?) spells this turn$"
+    rf"^you(?:'ve| have) cast (?P<count>{COUNT}) or more "
+    r"(?:(?P<types>[a-z, ]+?) )?spells this turn$"
 )
 #: "you've cast another spell this turn" - Sage of the Skies' own cast
 #: trigger. "Another" excludes the spell the trigger is printed on, which is
@@ -2808,6 +2811,10 @@ def _spells_cast_this_turn_holds(game: "Game", clause: str, source: CardState) -
     wanted = parse_count(match.group("count"), article=False)
     if wanted is None:
         return None
+    controller = source.controller or game.active_player.username
+    cast = game.spells_cast_this_turn.get(controller, [])
+    if match.group("types") is None:
+        return len(cast) >= wanted
     wanted_types: set[Type] = set()
     for word in re.split(r",|\band\b|\bor\b", match.group("types")):
         word = word.strip()
@@ -2819,8 +2826,6 @@ def _spells_cast_this_turn_holds(game: "Game", clause: str, source: CardState) -
         wanted_types.add(card_type)
     if not wanted_types:
         return None
-    controller = source.controller or game.active_player.username
-    cast = game.spells_cast_this_turn.get(controller, [])
     matching = sum(1 for state in cast if wanted_types & set(state.card.types))
     return matching >= wanted
 
