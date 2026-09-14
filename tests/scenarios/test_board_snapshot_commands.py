@@ -27,6 +27,7 @@ Every card here is a real printing; nothing is targeted by name.
 from __future__ import annotations
 
 from collections.abc import Callable
+from contextlib import nullcontext
 
 import pytest
 
@@ -192,10 +193,13 @@ def test_a_scan_after_a_mutation_in_the_same_command_reads_the_board_it_left():
         "board snapshot one."
     ),
 )
-def test_a_creature_that_lost_its_dies_trigger_does_not_trigger():
-    _, cached = _run(_dress_down_resolving(), _resolve)
+@pytest.mark.parametrize("uncached", [False, True], ids=["cached", "uncached"])
+def test_a_creature_that_lost_its_dies_trigger_does_not_trigger(uncached: bool):
+    raw = _dress_down_resolving()
+    with uncached_boards() if uncached else nullcontext():
+        _, played = _run(raw, _resolve)
 
-    game = Game.model_validate_json(cached)
+    game = Game.model_validate_json(played)
     assert [card.name for card in game.player("bob").graveyard] == ["Grizzly Bears"]
     triggered = [item.source_name for item in (*game.stack, *game.pending_triggers)]
     assert "Blood Artist" not in triggered, triggered
