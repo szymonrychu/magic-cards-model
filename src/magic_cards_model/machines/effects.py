@@ -3463,8 +3463,18 @@ def damage_each_player_spell(amount: int) -> Effect:
 #: reads its subject: `event.player` when the event names an acting player
 #: directly (loyalty activation, cast, draw), `event.subject_controller`
 #: when it only names an object (a permanent entering).
+#:
+#: "That creature's controller" is the identical CR 400.7 anaphor, spelled
+#: as Oracle templates it when the earlier condition named an *object*
+#: rather than a player outright - Tetsuko Umezawa, Pursuer's own "Whenever
+#: a creature an opponent controls with power or toughness 1 or less
+#: blocks, Tetsuko Umezawa deals 1 damage to that creature's controller."
+#: Both phrasings resolve through the same `event.player or event.subject_
+#: controller` read below; there is no second mechanism here, only a second
+#: way the same referent is printed.
 _DAMAGE_THAT_PLAYER_RE = re.compile(
-    rf".*\bdeals? (?P<n>{COUNT}) damage to that player\.?$", re.IGNORECASE
+    rf".*\bdeals? (?P<n>{COUNT}) damage to (?:that player|that creature'?s controller)\.?$",
+    re.IGNORECASE,
 )
 
 
