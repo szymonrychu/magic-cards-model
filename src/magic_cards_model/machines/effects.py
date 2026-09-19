@@ -9693,6 +9693,15 @@ _DAMAGE_THEN_GROUP_TYPE_ABILITY_GRANT_RE = re.compile(
 #: `machines/replacement.py`'s exile-on-leaving-the-stack check
 #: (`_stack_replacements`) actually reads. See `PlayPermission.flashback`'s
 #: own docstring.
+#:
+#: The identical sentence is also a creature's ETB trigger consequence
+#: rather than a whole spell's only instruction - Stingcaster Mage: "When
+#: this creature enters, target instant or sorcery card in your graveyard
+#: gains flashback until end of turn. The flashback cost is equal to its
+#: mana cost." Same regex, same effect, read by `_ability_effect_or_notice`
+#: (triggered/activated abilities) as well as `_spell_effect_or_notice`
+#: (a spell's own resolution) - CR 601.3's grant does not care which kind
+#: of resolving object handed it out.
 _GRANT_FLASHBACK_RE = re.compile(
     r"^(?P<phrase>target instant or sorcery card in your graveyard) gains flashback "
     r"until end of turn\.\s*the flashback cost is equal to its mana cost\.?$",
@@ -11451,6 +11460,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     cast_from_hand_then_exile = _parse_cast_from_hand_then_exile_clause(effect_text)
     if cast_from_hand_then_exile is not None:
         return cast_from_hand_then_exile
+    flashback_grant = _parse_grant_flashback_clause(effect_text)
+    if flashback_grant is not None:
+        return flashback_grant
     casting_rule_whole = parse_casting_rule_clause(effect_text, for_spell=False)
     if casting_rule_whole is not None:
         return casting_rule_whole
