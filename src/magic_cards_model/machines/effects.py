@@ -5123,8 +5123,15 @@ _DRAW_RE = re.compile(
 # never "that many": that count is carried from an earlier clause this file
 # does not yet have a channel for (Group 0b), and a bare `parse_clause_effect`
 # clause has no earlier clause to carry it from anyway.
+#
+# `<quality>` (Borborygmos and Fblthp's own "discard any number of land
+# cards") is optional and, when printed, any single word `_nonland_or_typed_
+# card_matcher`/`_quality_matcher` already read - CR 701.9b's "the affected
+# player chooses which card" narrowed to only the cards satisfying it, the
+# same restriction `_discard_cards`'s own `predicate` now applies.
 _DISCARD_A_CARD_RE = re.compile(
-    rf"^discards? (?:(?P<any>any number of)|(?:(?P<upto>up to )?(?P<n>{AMOUNT})))\s+cards?$",
+    rf"^discards? (?:(?P<any>any number of)|(?:(?P<upto>up to )?(?P<n>{AMOUNT})))\s+"
+    rf"(?:(?P<quality>[a-z]+) )?cards?$",
     re.IGNORECASE,
 )
 
@@ -5511,6 +5518,7 @@ def _discard_cards(
     *,
     source_id: str | None,
     exact: bool = True,
+    predicate: Callable[[CardState], bool] | None = None,
 ) -> list[CardState]:
     """CR 701.9a/701.9b: `player` discards `count` cards of their own choice -
     exactly `count` when `exact` is `True` (every caller before "up to N"/"any
@@ -5518,8 +5526,16 @@ def _discard_cards(
     zero" up to `count` when it is `False` (Fable of the Mirror-Breaker's own
     "you may discard up to two cards").
 
-    A hand shorter than `count` is not a violation - the player discards
-    their whole hand, one card at a time, the same floor
+    `predicate`, when given, narrows both the pool offered and the floor
+    below to only the cards satisfying it - Borborygmos and Fblthp's own
+    "discard any number of land cards" (CR 701.9b's "the affected player
+    chooses which card" narrowed the identical way `_nonland_or_typed_card_
+    matcher` already narrows a *search*). `None` is every existing caller,
+    unchanged.
+
+    A hand shorter than `count` (or, with `predicate`, a matching-card pool
+    shorter than `count`) is not a violation - the player discards as many
+    as they have, one card at a time, the same floor
     `_parse_target_player_discards_clause` already applies to a discard the
     resolving spell aims at someone else.
 
@@ -5529,7 +5545,8 @@ def _discard_cards(
     card" - can read the answer off the move rather than re-deriving it.
     Every existing caller ignores the value, exactly as before.
     """
-    needed = min(count, len(player.hand))
+    pool = [card for card in player.hand if predicate is None or predicate(card)]
+    needed = min(count, len(pool))
     if needed <= 0:
         return []
     chosen_ids = game.ask(
@@ -5539,13 +5556,13 @@ def _discard_cards(
             prompt=f"discard {'up to ' if not exact else ''}{needed} card(s)",
             source=source,
             amount=needed,
-            cards=tuple(state.id for state in player.hand),
+            cards=tuple(state.id for state in pool),
             source_id=source_id,
             exact=exact,
         )
     )
     assert isinstance(chosen_ids, tuple)
-    by_id = {state.id: state for state in player.hand}
+    by_id = {state.id: state for state in pool}
     return game.discard_cards(
         player.username, [by_id[card_id] for card_id in chosen_ids], source=source
     )
@@ -5659,16 +5676,36 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
         return draw
 
     if match := _DISCARD_A_CARD_RE.fullmatch(clause):
+        quality_word = match.group("quality")
+        predicate: Callable[[CardState], bool] | None = None
+        if quality_word is not None:
+            predicate = _nonland_or_typed_card_matcher(quality_word) or _quality_matcher(
+                quality_word
+            )
+            if predicate is None:
+                return None
         if match.group("any") is not None:
             return lambda game, player, source, source_id: _discard_cards(
-                game, player, len(player.hand), source, source_id=source_id, exact=False
+                game,
+                player,
+                len(player.hand),
+                source,
+                source_id=source_id,
+                exact=False,
+                predicate=predicate,
             )
         amount = parse_count(match.group("n"))
         if amount is None:
             return None
         exact = match.group("upto") is None
         return lambda game, player, source, source_id: _discard_cards(
-            game, player, amount, source, source_id=source_id, exact=exact
+            game,
+            player,
+            amount,
+            source,
+            source_id=source_id,
+            exact=exact,
+            predicate=predicate,
         )
 
     if _DISCARD_YOUR_HAND_RE.fullmatch(clause):
@@ -12969,6 +13006,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     if mill_then_may_return_creature is not None:
         return mill_then_may_return_creature
     # -- whole-text shapes whose sentences point back at one another -------
+    reflexive_discard_count = _parse_reflexive_discard_count_clause(effect_text)
+    if reflexive_discard_count is not None:
+        return reflexive_discard_count
     explores_then_destroy = _parse_explores_then_conditional_mass_destroy(effect_text)
     if explores_then_destroy is not None:
         return explores_then_destroy
@@ -15122,8 +15162,16 @@ _LOOKS_LIKE_RETURN_TO_BATTLEFIELD_RE = re.compile(
 #:
 #: "That player" is **not** here: it is a player anaphor and
 #: `_ANAPHORIC_SUBJECT_RE`/`_parse_referent_clause` already own it.
+#:
+#: "Each of them" is the same plural anaphor as bare "them", written the way
+#: CR templating spells it when the rider's own verb is distributive rather
+#: than collective - Seasoned Cryomancer's own "tap up to that many target
+#: creatures and put a stun counter on **each of them**" is "on them" with
+#: the same referent, not a different antecedent shape; `_parse_object_
+#: anaphor_clause_pair`'s per-referent rider loop already applies every
+#: rider to each object in the list one at a time; either wording runs it.
 _OBJECT_ANAPHOR = (
-    r"(?:it|they|them|he|she|him|her|"
+    r"(?:it|they|them|each of them|he|she|him|her|"
     r"that (?:creature|permanent|artifact|enchantment|land|token|card))"
 )
 _OBJECT_ANAPHOR_RE = re.compile(rf"\b{_OBJECT_ANAPHOR}\b", re.IGNORECASE)
@@ -17653,6 +17701,119 @@ def _parse_reflexive_mandatory_mill_clause(text: str) -> AbilityEffect | None:
             return
         game.create_reflexive_trigger(
             text=consequence_text,
+            controller=controller.username,
+            source_id=ability.source_id,
+            source_name=source_name,
+            callback=ReflexiveConsequence(),
+        )
+
+    return effect
+
+
+#: CR 607.1's "that many"/"that much" anaphora, and its own "twice `<x>`"
+#: multiplier (Borborygmos and Fblthp's own "twice that much damage") - read
+#: as one substitution so the multiplied form is never mistaken for two
+#: separate occurrences of the bare one. Tried as an alternation, "twice"
+#: first, so `re.sub`'s left-to-right, non-overlapping scan consumes the
+#: whole "twice that much" span in one match rather than leaving "that much"
+#: behind for a second, wrongly-unmultiplied substitution.
+_REFLEXIVE_THAT_MANY_RE = re.compile(r"twice that (?:many|much)|that (?:many|much)", re.IGNORECASE)
+
+
+def _substitute_reflexive_count(text: str, count: int) -> str:
+    """`text` with every CR 607.1 "that many"/"that much"/"twice that
+    much" replaced by `count` (or `2 * count`), the same "read the count off
+    an earlier instruction in this same ability, then substitute it in before
+    the rest is parsed" idiom `substitute_x` already applies for CR 107.3a's
+    X - just carrying a reflexive trigger's own qualifying count instead of
+    an announced one.
+    """
+
+    def replace(match: re.Match[str]) -> str:
+        return str(count * 2) if match.group(0).lower().startswith("twice") else str(count)
+
+    return _REFLEXIVE_THAT_MANY_RE.sub(replace, text)
+
+
+#: "`<antecedent, ending in a discard>`. When you discard one or more
+#: [`<quality>`] cards this way, `<consequence>`." (CR 603.12, CR 607.1) -
+#: Seasoned Cryomancer's own ETB: "draw two cards, then discard two cards.
+#: When you discard one or more nonland cards this way, tap up to that many
+#: target creatures and put a stun counter on each of them." CR 603.12's
+#: own "when [something happens] this way" reflexive family, read with a
+#: minimum-one *count* of qualifying cards attached to the trigger
+#: description itself, rather than a bare "when you do" - `<quality>` is
+#: optional
+#: (Borborygmos and Fblthp's own "when you discard one or more cards this
+#: way" carries none at all, any card qualifies) and, when printed, is any
+#: single word `_nonland_or_typed_card_matcher`/`_quality_matcher` already
+#: read - "nonland" is not special-cased here.
+_REFLEXIVE_DISCARD_COUNT_RE = re.compile(
+    r"^(?P<antecedent>.+?)\.\s*when you discard one or more "
+    r"(?:(?P<quality>[a-z]+) )?cards? this way,\s*(?P<consequence>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_reflexive_discard_count_clause(text: str) -> AbilityEffect | None:
+    """`_REFLEXIVE_DISCARD_COUNT_RE`'s shape, or `None`.
+
+    The antecedent is run exactly as it would be on its own, through
+    `_ability_effect_or_notice` recursively - nothing here teaches a new way
+    to draw or discard. "This way" (CR 608.2c) is read off a graveyard
+    before/after diff taken *around the whole antecedent call*, not around
+    whichever of its own sub-clauses says "discard": every card that is in
+    the controller's graveyard afterward and was not there before is a card
+    the antecedent just discarded, since nothing in this family's own
+    antecedent shape (draw, then discard) sends a card to the graveyard any
+    other way - which also means a card drawn earlier in that very same
+    antecedent and then discarded is still counted, unlike a hand-before
+    diff would give.
+
+    CR 603.12: a qualifying count of zero means the event this reflexive
+    ability describes never occurred, so no reflexive ability is created at
+    all - the same "checked immediately, no ability if it didn't happen"
+    rule `_parse_reflexive_mandatory_token_clause`'s own intervening *if*
+    already follows, one level up from a bare mandatory action.
+    """
+    match = _REFLEXIVE_DISCARD_COUNT_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    antecedent_text = match.group("antecedent").strip()
+    if not antecedent_text.endswith("."):
+        antecedent_text += "."
+    antecedent_effect = _ability_effect_or_notice(antecedent_text)
+    if antecedent_effect is None:
+        return None
+    quality_word = match.group("quality")
+    quality_matcher: Callable[[CardState], bool] | None = None
+    if quality_word is not None:
+        quality_matcher = _nonland_or_typed_card_matcher(quality_word) or _quality_matcher(
+            quality_word
+        )
+        if quality_matcher is None:
+            return None
+    consequence_text = match.group("consequence").strip()
+    # Fails closed here, at parse time, rather than only discovering at
+    # resolution that the consequence was never readable at all - tried with
+    # a placeholder count so a "that many"/"that much" clause is exercised
+    # the same way it will actually run.
+    if parse_mixed_effect(_substitute_reflexive_count(consequence_text, 1)) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.controller_of(ability)
+        _source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
+        graveyard_before = {card.id for card in controller.graveyard}
+        antecedent_effect(game, ability)
+        discarded = [card for card in controller.graveyard if card.id not in graveyard_before]
+        if quality_matcher is not None:
+            discarded = [card for card in discarded if quality_matcher(card)]
+        count = len(discarded)
+        if count <= 0:
+            return
+        game.create_reflexive_trigger(
+            text=_substitute_reflexive_count(consequence_text, count),
             controller=controller.username,
             source_id=ability.source_id,
             source_name=source_name,
