@@ -59,6 +59,7 @@ from ..machines.casting_restrictions import (
     CastingRuleEffect,
     CastingRuleKind,
     cannot_be_countered,
+    combat_lockdown_restriction_source,
 )
 from ..machines.combat import (
     Attack,
@@ -13385,6 +13386,12 @@ class Game(EngineModel):
                     f"{split_second_source} has split second: as long as it is on the "
                     f"stack, players can't activate abilities that aren't mana abilities "
                     "(CR 702.61a)"
+                )
+            combat_lockdown_source = combat_lockdown_restriction_source(self)
+            if combat_lockdown_source is not None:
+                return (
+                    f"{combat_lockdown_source} says players can't activate abilities "
+                    f"that aren't mana abilities during combat (CR 506.1)"
                 )
 
         instructions = (ability.instructions or "").lower()

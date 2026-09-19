@@ -41,6 +41,7 @@ from .abilities import (
 )
 from .casting_restrictions import (
     CastingRuleKind,
+    combat_lockdown_restriction_source,
     has_sorcery_speed_flash_grant,
     restricted_from_noncreature_casting,
     sorcery_speed_restriction_source,
@@ -1674,6 +1675,9 @@ def why_cannot_cast_restriction(
             f"{split_second_source} has split second: as long as it is on the stack, "
             f"players can't cast other spells (CR 702.61a)"
         )
+    combat_lockdown_source = combat_lockdown_restriction_source(game)
+    if combat_lockdown_source is not None:
+        return f"{combat_lockdown_source} says players can't cast spells during combat (CR 506.1)"
     types = types_being_cast(spell.card, face)
     restriction = restricted_from_noncreature_casting(game, caster)
     if restriction is not None and Type.CREATURE not in types:
