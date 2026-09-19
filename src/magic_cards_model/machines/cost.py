@@ -663,6 +663,7 @@ def _spend_clause(
     where being wrong permits the wrong spells.
     """
     types: set[Type] = set()
+    excluded_types: set[Type] = set()
     subtypes: set[str] = set()
     supertypes: set[Supertype] = set()
     colorless = False
@@ -684,6 +685,14 @@ def _spend_clause(
 
         if lowered == "colorless":
             colorless = True
+        elif lowered.startswith("non") and lowered.removeprefix("non").removesuffix("s") in (
+            _TYPE_WORDS
+        ):
+            # CR 109.2's negation of a printed card type - Chandra, Chill of
+            # Compliance's own "a noncreature spell", the same "non<type>"
+            # idiom `machines/effects.py`'s own `_nonland_or_typed_card_
+            # matcher` already reads for a search/reveal quality.
+            excluded_types.add(_TYPE_WORDS[lowered.removeprefix("non").removesuffix("s")])
         elif lowered in _SUPERTYPE_WORDS:
             supertypes.add(_SUPERTYPE_WORDS[lowered])
         elif lowered.removesuffix("s") in _TYPE_WORDS:
@@ -717,6 +726,7 @@ def _spend_clause(
     return SpendClause(
         purpose=purpose,
         types=frozenset(types),
+        excluded_types=frozenset(excluded_types),
         subtypes=frozenset(subtypes),
         supertypes=frozenset(supertypes),
         joined=joined,

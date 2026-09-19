@@ -7,7 +7,7 @@ session. Only the first of the three is modelled; the "additional effect" half
 (Cavern of Souls's and Delighted Halfling's "and that spell can't be countered")
 is still not.
 
-Fourteen printings in the pool carry one, and between them they cover both
+Fifteen printings in the pool carry one, and between them they cover both
 purposes a restriction can name and every shape of clause the grammar reads:
 
   Shang-Chi, Master of Kung Fu  "... only to activate abilities of creature
@@ -34,6 +34,12 @@ purposes a restriction can name and every shape of clause the grammar reads:
   Séance Board                  "... only to cast instant, sorcery, Demon,
                                  and Spirit spells."
   Rivaz of the Claw             "... only to cast Dragon creature spells."
+  Chandra, Chill of Compliance  "... only to cast a noncreature spell." -
+                                 CR 109.2's negation of a printed card type
+                                 (`SpendClause.excluded_types`), a loyalty
+                                 ability's own resolution-time "Add", never a
+                                 `{T}: Add` mana ability at all (CR 605.1a
+                                 excludes loyalty abilities by name).
 
 Tablet of Discovery, Fíli and Kíli and the Web Watch are the first clause
 shapes beyond a single quality word; Smokebraider prints Eldrazi Temple's
@@ -475,6 +481,51 @@ def test_delighted_halflings_mana_refuses_a_nonlegendary_spell():
         scenario.cast("Llanowar Elves", "alice").begin_paying().pay()
 
 
+def test_chandras_mana_refuses_a_creature_spell():
+    """Chandra, Chill of Compliance's second `+1`: "Add {U}. Spend this mana
+    only to cast a noncreature spell." (CR 109.2's negation of CR 205.2a's
+    card type.) A loyalty ability (CR 606), not a mana ability at all
+    (CR 605.1a excludes loyalty abilities by name) - the mana is added as
+    the ability *resolves*, off the stack, not straight into the pool the
+    way `{T}: Add` skips the stack for.
+
+    Aerial Doombot is a creature spell and blue, so the colour is right and
+    the restriction is still the reason it is refused.
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Aerial Doombot"], battlefield=["Chandra, Chill of Compliance"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    chandra = scenario.find("Chandra, Chill of Compliance", Zone.BATTLEFIELD)
+    scenario.activate(chandra, index=1)
+    scenario.pass_until_resolved()
+
+    assert scenario.player().mana_pool.floating == {Color.BLUE: 1}
+    with pytest.raises(ValueError, match="Spend this mana only to cast a noncreature spell"):
+        scenario.cast("Aerial Doombot", "alice").begin_paying().pay()
+
+
+def test_chandras_mana_pays_for_a_noncreature_spell():
+    """The legal direction: Opt is an instant, not a creature, so "noncreature
+    spell" is satisfied and Chandra's own restricted {U} pays for it."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Opt"], battlefield=["Chandra, Chill of Compliance"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    chandra = scenario.find("Chandra, Chill of Compliance", Zone.BATTLEFIELD)
+    scenario.activate(chandra, index=1)
+    scenario.pass_until_resolved()
+
+    scenario.cast("Opt", "alice").begin_paying().pay()
+    assert scenario.player().mana_pool.floating == {}
+
+
 # --------------------------------------------------------------------------
 # Reading the sentence
 # --------------------------------------------------------------------------
@@ -496,21 +547,6 @@ KNOWN_UNREAD_RESTRICTIONS = {
     # published as `False` rather than filtered away, so making the grammar
     # read it means finding that test another card, not deleting the row.
     "Rosheen Meanderer": "Spend this mana only on costs that contain {X}.",
-    # `_spend_clause`'s own word-by-word vocabulary (an article, a list
-    # joiner, "colorless", a printed supertype, a printed card type, or a
-    # capitalised subtype) has no "non<type>" branch at all - unlike
-    # `machines/effects.py`'s own search/reveal quality reader
-    # (`_nonland_or_typed_card_matcher`, FRA stream S8's own fix), a mana
-    # spend restriction's `SpendClause` has no `excluded_types` field to put
-    # a negated type into even once the word itself is read, so making this
-    # readable is a schema change to `SpendClause` plus the matching this
-    # engine's `auto_tap`/`ManaRestriction` machinery already does with it -
-    # out of scope for a zone-movement-template stream (FRA S8) to make on a
-    # mana-cost restriction, which is stream S10's own territory. Added by
-    # S8 alongside its own new "Chandra, Chill of Compliance" fixture (a
-    # genuinely different card, discovered by this pool sweep rather than
-    # engineered around it).
-    "Chandra, Chill of Compliance": "Spend this mana only to cast a noncreature spell.",
 }
 
 
