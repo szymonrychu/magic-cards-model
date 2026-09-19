@@ -542,3 +542,115 @@ def test_one_or_more_then_that_many_carries_the_sacrificed_count():
     scenario.game.put_triggers_on_stack()
     (reflexive,) = scenario.game.stack
     assert reflexive.ability.text.startswith("up to 1 target creatures")
+
+
+# --------------------------------------------------------------------------
+# "You may discard a card. When you do, <consequence>." (CR 603.12) -
+# `_parse_reflexive_may_discard_clause`. Tether Technician's own ETB used to
+# discard the card and then do nothing at all: no notice, no target ever
+# asked, the reflexive ability simply never created. Miasma Demon is the
+# off-pool generality proof - a different discard quantity ("any number of
+# cards", not "a card") and a different consequence shape (a mass, carried-
+# count debuff, not a single fixed-amount damage clause).
+# --------------------------------------------------------------------------
+
+
+def test_tether_technician_discards_then_the_reflexive_ability_damages_any_target():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Tether Technician", "Mountain"],
+            battlefield=["Mountain", "Mountain", "Mountain", "Mountain", "Mountain"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    spare_mountain = scenario.find("Mountain", Zone.HAND, "alice")
+    bob = scenario.player("bob")
+    life_before = bob.life
+    scenario.will_take_the_may(True, source="Tether Technician")
+    scenario.will_choose_cards(spare_mountain, source="Tether Technician")
+    scenario.will_choose_targets("bob", source="Tether Technician")
+
+    scenario.cast_and_resolve(
+        "Tether Technician",
+        *scenario.untapped_sources("Mountain", "Mountain", "Mountain", "Mountain", "Mountain"),
+    )
+    scenario.resolve_top()  # the ETB trigger: discards, creates the reflexive ability
+
+    assert spare_mountain.zone is Zone.GRAVEYARD
+    assert scenario.game.reflexive_clause_notices == []
+    assert scenario.game.layer_remainder_notices == []
+    assert bob.life == life_before, "the reflexive ability has not resolved yet"
+
+    scenario.pass_until_resolved()  # the reflexive ability: 2 damage to bob
+
+    assert bob.life == life_before - 2
+
+
+def test_tether_technician_declining_the_discard_creates_no_reflexive_ability():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Tether Technician", "Mountain"],
+            battlefield=["Mountain", "Mountain", "Mountain", "Mountain", "Mountain"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bob = scenario.player("bob")
+    life_before = bob.life
+    scenario.will_take_the_may(False, source="Tether Technician")
+
+    scenario.cast_and_resolve(
+        "Tether Technician",
+        *scenario.untapped_sources("Mountain", "Mountain", "Mountain", "Mountain", "Mountain"),
+    )
+    scenario.resolve_top()  # declines the discard
+
+    assert len(scenario.player("alice").hand) == 1, "the spare Mountain, never discarded"
+    assert bob.life == life_before
+    assert scenario.stack_names() == []
+
+
+def test_miasma_demon_discards_any_number_then_debuffs_that_many_creatures_off_pool():
+    """Off-pool generality proof: Miasma Demon's own ETB - "you may discard
+    any number of cards. When you do, up to that many target creatures each
+    get -2/-2 until end of turn." - a different quantity grammar branch
+    (`any`, not a fixed count) and a mass, carried-count consequence rather
+    than Tether Technician's own single fixed-amount damage."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Miasma Demon", "Mountain", "Forest"],
+            battlefield=["Swamp", "Swamp", "Swamp", "Swamp", "Swamp", "Swamp"],
+        )
+        .player("bob", battlefield=["Grizzly Bears", "Hill Giant"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    mountain = scenario.find("Mountain", Zone.HAND, "alice")
+    forest = scenario.find("Forest", Zone.HAND, "alice")
+    bears = scenario.creature("Grizzly Bears", "bob")
+    giant = scenario.creature("Hill Giant", "bob")
+    scenario.will_take_the_may(True, source="Miasma Demon")
+    scenario.will_choose_cards(mountain, forest, source="Miasma Demon")
+    scenario.will_choose_targets(bears, giant, source="Miasma Demon")
+
+    scenario.cast_and_resolve("Miasma Demon", *scenario.untapped_sources(*["Swamp"] * 6))
+    scenario.resolve_top()  # the ETB trigger: discards two, creates the reflexive ability
+
+    assert mountain.zone is Zone.GRAVEYARD
+    assert forest.zone is Zone.GRAVEYARD
+    assert scenario.game.reflexive_clause_notices == []
+
+    scenario.pass_until_resolved()  # the reflexive ability
+
+    assert bears.zone is Zone.GRAVEYARD, "a 2/2 with -2/-2 is 0/0, a state-based action (CR 704.5f)"
+    board = scenario.game.continuous_effects.board(scenario.game.battlefield)
+    assert board.of(giant).power_toughness == (1, 1)

@@ -16862,6 +16862,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     reflexive_sacrifice = _parse_reflexive_sacrifice_clause(effect_text)
     if reflexive_sacrifice is not None:
         return reflexive_sacrifice
+    reflexive_may_discard = _parse_reflexive_may_discard_clause(effect_text)
+    if reflexive_may_discard is not None:
+        return reflexive_may_discard
     reflexive_pay_energy = _parse_reflexive_pay_energy_clause(effect_text)
     if reflexive_pay_energy is not None:
         return reflexive_pay_energy
@@ -22364,6 +22367,8 @@ def _unreadable_reflexive_clause(text: str) -> str | None:
         return None
     if _parse_reflexive_sacrifice_clause(text) is not None:
         return None
+    if _parse_reflexive_may_discard_clause(text) is not None:
+        return None
     if _parse_reflexive_pay_energy_clause(text) is not None:
         return None
     if _parse_reflexive_mandatory_token_clause(text) is not None:
@@ -22461,6 +22466,87 @@ def _parse_reflexive_sacrifice_clause(text: str) -> AbilityEffect | None:
         # sacrificed.
         game.create_reflexive_trigger(
             text=_carry_count(consequence_text, len(chosen), x=x_count),
+            controller=player.username,
+            source_id=ability.source_id,
+            source_name=source_name,
+            callback=ReflexiveConsequence(),
+        )
+
+    return effect
+
+
+#: "You may discard a card. When you do, `<consequence>`." - Tether
+#: Technician's own ETB trigger, the discard-flavoured twin of
+#: `_REFLEXIVE_MAY_SACRIFICE_RE`. "up to N cards"/"any number of cards" read
+#: the identical quantity grammar `_MAY_DISCARD_N_CARDS_RE` already reads for
+#: CR 118.12's "if you do" sibling shape - "when you do" is CR 603.12's own
+#: separate reflexive trigger instead (see that regex's own docstring for
+#: why the two connectors are never folded into one).
+_REFLEXIVE_MAY_DISCARD_RE = re.compile(
+    rf"^you may discards? "
+    rf"(?:(?P<any>any number of)|(?:(?P<upto>up to )?(?P<n>{AMOUNT})))\s+cards?\.\s*"
+    r"when you do,\s*(?P<consequence>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_reflexive_may_discard_clause(text: str) -> AbilityEffect | None:
+    """`_REFLEXIVE_MAY_DISCARD_RE`'s shape, or `None`.
+
+    CR 603.12: the discard is the optional action, and "When you do" creates
+    a *second* triggered ability that announces its own targets ("any
+    target", CR 601.2c) once it goes on the stack - never the parent
+    ability's own targets, which is why Tether Technician's "deals 2 damage
+    to any target" reached no target at all before this existed (the ETB
+    trigger itself has no target for it to be, and nothing ever asked). The
+    consequence is parsed once, up front (`reflexive_consequence_effect`),
+    with a stand-in count so an unreadable one fails the whole ability closed
+    before the discard happens, the same guard `_parse_reflexive_sacrifice_
+    clause` already applies.
+    """
+    match = _REFLEXIVE_MAY_DISCARD_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    if match.group("any") is not None:
+        amount: int | None = None
+        exact = False
+    else:
+        amount = parse_count(match.group("n"))
+        if amount is None:
+            return None
+        exact = match.group("upto") is None
+    consequence_text = match.group("consequence").strip()
+    if reflexive_consequence_effect(_carry_count(consequence_text, 2, x=False)) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = game.controller_of(ability)
+        _source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
+        needed = amount if amount is not None else len(player.hand)
+        prompt = (
+            "discard a card"
+            if amount == 1 and exact
+            else f"discard {'up to ' if not exact else ''}{needed} card(s)"
+        )
+        decision = Decision(
+            kind=DecisionKind.MAY,
+            player=player.username,
+            prompt=prompt,
+            source=source_name,
+            affirmative_is_legal=bool(player.hand),
+            source_id=source_id_of(ability),
+        )
+        if not game.ask(decision):
+            return
+        discarded = _discard_cards(
+            game, player, needed, source_name, source_id=source_id_of(ability), exact=exact
+        )
+        if not discarded:
+            return
+        # CR 603.12a: paying a cost several times in one go triggers the
+        # reflexive ability once.
+        game.create_reflexive_trigger(
+            text=_carry_count(consequence_text, len(discarded), x=False),
             controller=player.username,
             source_id=ability.source_id,
             source_name=source_name,
