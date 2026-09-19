@@ -95,6 +95,7 @@ from .layers import (
     Duration,
     Layer,
     Sublayer,
+    grant_ability,
     modify_power_toughness,
     only_this_incarnation,
 )
@@ -1174,6 +1175,60 @@ class PumpEventSubject(DelayedEffectSpecBase):
         )
 
 
+class CountersAndKeywordsEventSubject(DelayedEffectSpecBase):
+    """ "Whenever a creature you control attacks alone this turn, put three
+    +1/+1 counters on it. It gains trample, lifelink, and indestructible
+    until end of turn." - The Last Ronin's own Saga chapter III (CR 714.4):
+    a delayed trigger created as that chapter's own effect, watching
+    whichever creature the *next* qualifying `ATTACKS` event names, the
+    identical "a creature" reading `PumpEventSubject` already gives Jace,
+    Reality Sculptor's own delayed pump - but putting a *permanent* counter
+    (CR 122.1) on the subject alongside a temporary keyword grant, rather
+    than `PumpEventSubject`'s own single until-end-of-turn power/toughness
+    change.
+
+    `counter_kind`/`counter_amount` of `0` skips the counter half entirely
+    (Group 0b's "put N counters" convention elsewhere already treats zero as
+    nothing to add), and an empty `keywords` skips the grant half - so this
+    also covers a card that prints only one half of the shape, not only
+    both at once.
+    """
+
+    kind: Literal["counters_and_keywords_event_subject"] = "counters_and_keywords_event_subject"
+
+    counter_kind: Counter | str
+    counter_amount: int
+    keywords: tuple[str, ...]
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        event = ability.event
+        if event is None or event.subject_id is None:
+            return
+        target = game.find_by_id(event.subject_id)
+        if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
+            return
+        if self.counter_amount > 0:
+            # `Game.add_counters`, never `CardState.add_counters` - CR 614.16's
+            # replacement effects (Vizier of Remedies, a doubling effect) and
+            # CR 122.6's "counters put on an object" event both need this to
+            # go through the game, the same reason `ReturnExiledCardAndAdd
+            # Counters` above does.
+            game.add_counters(target, self.counter_kind, self.counter_amount)
+        for keyword in self.keywords:
+            game.continuous_effects.add(
+                ContinuousEffect(
+                    description=f"{trigger.source_name}: {target.name} gains {keyword}",
+                    layer=Layer.ABILITY,
+                    timestamp=game.continuous_effects.tick(),
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    source_id=trigger.source_id,
+                    selector=only_this_incarnation(target, target.zone_change_stamp),
+                    modification=grant_ability(keyword),
+                ),
+                game,
+            )
+
+
 #: What a delayed (or reflexive) triggered ability does when it resolves -
 #: `DelayedTrigger.effect`'s own type. Every string this task's requirement 2
 #: names (`"warp:exile"`, `"grant_extra_turn"`, `"sacrifice"`) is a member's
@@ -1212,7 +1267,8 @@ DelayedEffectSpec = Annotated[
     | ReflexiveExileCopiedCard
     | RevokeGrantedAbility
     | AddManaWhenLandTapped
-    | PumpEventSubject,
+    | PumpEventSubject
+    | CountersAndKeywordsEventSubject,
     Field(discriminator="kind"),
 ]
 
@@ -1416,6 +1472,17 @@ class DelayedTrigger(EngineModel):
     "... deals combat damage **to a player** ...". `False` matches damage to
     a permanent too."""
 
+    attacking_alone_only: bool = False
+    """Match only an `ATTACKS` event with `GameEvent.attacking_alone` true
+    (CR 506.5) - The Last Ronin's own Saga chapter III, "Whenever a creature
+    you control attacks alone this turn, ...". The printed-ability matcher in
+    `machines/triggers.condition_matches` reads "alone" off the ability's own
+    condition string; `DelayedTrigger.matches` has no string to read it off
+    (the same reason `combat_only`/`to_player_only` are their own narrow
+    fields rather than a clause parser), so this is that one purpose-built
+    flag. `False` (the default) matches any attack, which is every delayed
+    trigger in the pool before this one."""
+
     def matches(self, event: GameEvent) -> bool:
         """Whether this event is the one being waited for (CR 603.2, 603.7b).
 
@@ -1450,6 +1517,8 @@ class DelayedTrigger(EngineModel):
         if self.defending_controller_only and event.defender_controller != self.controller:
             return False
         if self.to_player_only and event.player is None:
+            return False
+        if self.attacking_alone_only and not event.attacking_alone:
             return False
         if (
             self.forbidden_types

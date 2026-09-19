@@ -123,6 +123,7 @@ from .delayed import (
     AddManaWhenLandTapped,
     CombatDamageToPlayerDraw,
     CopyNextSpellYouCast,
+    CountersAndKeywordsEventSubject,
     CreateAttackingTokens,
     CreateTokenCopyOfControlledToken,
     DelayedBlinkReturnWithRider,
@@ -15740,6 +15741,62 @@ def _parse_until_your_next_turn_attack_pump_clause(text: str) -> AbilityEffect |
     return effect
 
 
+#: "Whenever a creature you control attacks alone this turn, put `<n>`
+#: `<kind>` counter(s) on it. It gains `<keywords>` until end of turn." - The
+#: Last Ronin's own Saga chapter III (CR 714.4): a delayed trigger created as
+#: that chapter's own effect, the identical "watch this turn, act on
+#: whichever creature the event actually names" shape `_UNTIL_YOUR_NEXT_
+#: TURN_ATTACK_PUMP_RE` already reads for Jace, Reality Sculptor's own `-3`,
+#: with `attacking_alone_only` (CR 506.5) in place of `defending_controller_
+#: only`, `remaining=None`/`expires_end_of_turn=True` for the shorter "this
+#: turn" watch (CR 603.7b, Dalkovan Encampment's own "whenever you attack
+#: this turn" already uses the identical pair), and `CountersAndKeywords
+#: EventSubject`'s permanent counter plus temporary keyword grant in place
+#: of `PumpEventSubject`'s own single power/toughness change.
+_ATTACKS_ALONE_THIS_TURN_COUNTERS_AND_KEYWORDS_RE = re.compile(
+    r"^whenever a creature you control attacks alone this turn, "
+    rf"put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on it\. "
+    r"it gains (?P<keywords>[^.]+) until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_attacks_alone_this_turn_counters_and_keywords_clause(
+    text: str,
+) -> AbilityEffect | None:
+    """`_ATTACKS_ALONE_THIS_TURN_COUNTERS_AND_KEYWORDS_RE`'s shape."""
+    whole = " ".join(text.strip().split())
+    match = _ATTACKS_ALONE_THIS_TURN_COUNTERS_AND_KEYWORDS_RE.fullmatch(whole)
+    if match is None:
+        return None
+    amount = parse_count(match.group("n"))
+    if amount is None:
+        return None
+    kind = _counter_kind(match.group("kind"))
+    keywords = split_and_validate_keywords(match.group("keywords"))
+    if keywords is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        game.create_delayed_trigger(
+            DelayedTrigger(
+                text=whole,
+                event=TriggerEvent.ATTACKS,
+                controller=ability.controller,
+                source_id=ability.source_id,
+                source_name=ability.source_name,
+                remaining=None,
+                expires_end_of_turn=True,
+                attacking_alone_only=True,
+                effect=CountersAndKeywordsEventSubject(
+                    counter_kind=kind, counter_amount=amount, keywords=tuple(keywords)
+                ),
+            )
+        )
+
+    return effect
+
+
 def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     """`parse_mixed_effect` on `effect_text`, or - if that failed specifically
     on an unreadable anaphoric second clause - a stand-in effect that records
@@ -15831,6 +15888,11 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     until_your_next_turn_attack_pump = _parse_until_your_next_turn_attack_pump_clause(effect_text)
     if until_your_next_turn_attack_pump is not None:
         return until_your_next_turn_attack_pump
+    attacks_alone_this_turn_counters_and_keywords = (
+        _parse_attacks_alone_this_turn_counters_and_keywords_clause(effect_text)
+    )
+    if attacks_alone_this_turn_counters_and_keywords is not None:
+        return attacks_alone_this_turn_counters_and_keywords
     ante_self = _parse_ante_self_if_you_do_clause(effect_text)
     if ante_self is not None:
         return ante_self
@@ -27146,6 +27208,120 @@ def _parse_target_player_sacrifices_clause(
     return effect
 
 
+#: "Separate all `<quality>` target player controls into two piles.
+#: `<consequence>` all `<quality>` in the pile of that player's choice." -
+#: CR 700.3's pile primitive (CR 700.3a: every qualifying permanent goes
+#: into exactly one pile; CR 700.3d: a pile may be empty), read whole across
+#: both sentences the way every other "this way"/anaphoric rider in this
+#: module already is: the second sentence's "the pile of their choice" names
+#: an object the first sentence's own division created, not something
+#: readable on its own.
+#:
+#: Liliana of the Veil's own `-6` is the reported ability ("... That player
+#: sacrifices all permanents in the pile of their choice."). Do or Die (real,
+#: non-FRA, non-pool) is the off-set proof: the identical two-sentence shape,
+#: narrowed to "creatures" rather than "permanents" and "Destroy" rather than
+#: "sacrifices" - the consequence verb genuinely varies, which is why it is
+#: its own captured alternative rather than folded into the shared regex.
+#: Do or Die's own trailing "They can't be regenerated." is accepted and
+#: read as reinforcing "destroy" (CR 701.16a already refuses regeneration on
+#: a permanent this instruction already destroys outright with no separate
+#: replacement effect asked about) rather than as a third, independent
+#: instruction.
+#:
+#: **Both cards give the *same* player both choices** - dividing into piles
+#: and then picking one - which CR 700.3's own "every object in exactly one
+#: pile, any pile may be empty" makes rules-equivalent to that one player
+#: freely choosing any subset, zero up to all, of their own qualifying
+#: permanents to end up in the consequence pile: nothing about *how* they
+#: arrived at that subset (naming it as "the other pile" first) is
+#: observable or game-relevant once only one player ever makes both
+#: decisions. Modelled directly as that free "any number" choice
+#: (`exact=False`, the same floor `_discard_cards`'s own "any number of land
+#: cards" shape already uses) rather than building a second, general
+#: pile-division primitive no other card in the pool needs yet.
+_SEPARATE_INTO_TWO_PILES_RE = re.compile(
+    r"^separate all (?P<quality>.+?) target player controls into two piles\.?$",
+    re.IGNORECASE,
+)
+_THAT_PLAYER_SACRIFICES_PILE_OF_CHOICE_RE = re.compile(
+    r"^that player sacrifices all (?P<quality>.+?) in the pile of their choice\.?$",
+    re.IGNORECASE,
+)
+_DESTROY_PILE_OF_CHOICE_RE = re.compile(
+    r"^destroy all (?P<quality>.+?) in the pile of that player'?s choice\.?"
+    r"(?:\s*they can'?t be regenerated\.?)?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_separate_into_two_piles_then_consequence_whole_text(
+    text: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_SEPARATE_INTO_TWO_PILES_RE`'s shape, paired with either
+    `_THAT_PLAYER_SACRIFICES_PILE_OF_CHOICE_RE` or
+    `_DESTROY_PILE_OF_CHOICE_RE` - see the banner above."""
+    sentences = _plain_resolution_sentences(text)
+    if len(sentences) < 2:
+        return None
+    separate_match = _SEPARATE_INTO_TWO_PILES_RE.fullmatch(sentences[0].strip())
+    if separate_match is None:
+        return None
+    if not _targets_understood("target player", allow_player_targets=True):
+        return None
+    rest = " ".join(sentence.strip() for sentence in sentences[1:] if sentence.strip())
+    sacrifice_match = _THAT_PLAYER_SACRIFICES_PILE_OF_CHOICE_RE.fullmatch(rest)
+    destroy_match = (
+        None if sacrifice_match is not None else _DESTROY_PILE_OF_CHOICE_RE.fullmatch(rest)
+    )
+    consequence_match = sacrifice_match or destroy_match
+    if consequence_match is None:
+        return None
+    quality = separate_match.group("quality").strip()
+    requirement = permanent_description(quality)
+    if requirement is None:
+        return None
+    verb = "sacrifice" if sacrifice_match is not None else "destroy"
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = (
+            stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        )
+        for target in game.resolve_targets(stack_object):
+            if not isinstance(target, Player):
+                continue
+            candidates = [
+                permanent
+                for permanent in game.permanents_controlled_by(target.username)
+                if requirement.rejects(permanent, target.username, game) is None
+            ]
+            if not candidates:
+                continue
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=target.username,
+                    prompt=f"choose which of these to {verb}",
+                    source=source,
+                    amount=len(candidates),
+                    cards=tuple(permanent.id for permanent in candidates),
+                    source_id=source_id_of(stack_object),
+                    exact=False,
+                )
+            )
+            by_id = {permanent.id: permanent for permanent in candidates}
+            chosen = [by_id[card_id] for card_id in chosen_ids if card_id in by_id]
+            for permanent in chosen:
+                if permanent.zone is not Zone.BATTLEFIELD:
+                    continue
+                if verb == "sacrifice":
+                    game.sacrifice(permanent)
+                else:
+                    game.destroy(permanent)
+
+    return effect
+
+
 #: "Target player draws `<n>` cards and loses `<m>` life." - Ancestral
 #: Craving's and Blood Pact's own whole shape: one compound predicate, one
 #: subject, not two independent instructions. `_CLAUSE_SEPARATOR`'s bare
@@ -30045,6 +30221,11 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     )
     if each_sacrifices_then_conditional is not None:
         return [each_sacrifices_then_conditional]
+    separate_into_two_piles = _parse_separate_into_two_piles_then_consequence_whole_text(
+        text, for_spell=for_spell
+    )
+    if separate_into_two_piles is not None:
+        return [separate_into_two_piles]
     each_discards_then_draw_per_shortfall = (
         _parse_each_opponent_discards_then_draw_per_shortfall_whole_text(text, for_spell=for_spell)
     )
