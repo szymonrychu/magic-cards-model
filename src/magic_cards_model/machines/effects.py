@@ -74,7 +74,7 @@ from ..models.card_state import (
     FaceDownCharacteristics,
     TargetRef,
 )
-from ..models.mana import ManaCost
+from ..models.mana import ManaCost, ManaRetentionScope
 from ..models.player import Player
 from ..models.token import (
     PREDEFINED,
@@ -10447,11 +10447,12 @@ def _parse_mana_adding_trigger(text: str) -> AbilityEffect | None:
 #: when the effect is applied." Applied is as this ability resolves, so a
 #: creature pumped while the trigger waits on the stack makes more mana.
 #:
-#: The second sentence is matched but not carried out: keeping mana through a
-#: step or phase ending is a replacement effect on CR 500.5/703.4q's turn-based
-#: action, and `Game.empty_mana_pools` records that whole family (Horizon Stone
-#: and friends) as unmodelled. It is matched rather than ignored so that the
-#: sentence cannot be silently mistaken for text this parser has read.
+#: The second sentence is carried out too: keeping mana through a step or
+#: phase ending is a replacement effect on CR 500.5/703.4q's turn-based
+#: action (CR 500.5a - "until end of combat" expires at the end of the combat
+#: phase), modelled generally by `ManaRetentionScope`/`ManaPool.retained` -
+#: see `models/mana.py`'s own docstring for the family this and Photon,
+#: Mighty Marvel's trigger both belong to.
 _FIREBENDING_ADD_MANA_RE = re.compile(
     r"^add (?P<amount>x|\d+)\s*(?P<mana>(?:\{[wubrgc]\}\s*)+)"
     r"(?:,\s*where x is (?P<expr>[^.]+?))?\.\s*"
@@ -10507,7 +10508,7 @@ def _parse_firebending_add_mana(text: str) -> AbilityEffect | None:
         pool = game.player(ability.controller).mana_pool
         for _ in range(count):
             for color in colors:
-                pool.add(color)
+                pool.add(color, retain_until=ManaRetentionScope.END_OF_COMBAT)
 
     return effect
 
@@ -10547,11 +10548,12 @@ _ADD_ONE_MANA_OF_ANY_COLOR_TRIGGER_RE = re.compile(
 )
 
 #: "Until end of turn, you don't lose this mana as steps and phases end." -
-#: a replacement of CR 500.5's mana emptying that this engine does not model
-#: (`Game.empty_mana_pools`, the Horizon Stone family), matched rather than
-#: ignored the same way firebending's "until end of combat" twin is
-#: (`_FIREBENDING_ADD_MANA_RE`), so the sentence is never mistaken for text a
-#: parser read.
+#: a replacement of CR 500.5's mana emptying, modelled the same general way
+#: firebending's "until end of combat" twin is (`_FIREBENDING_ADD_MANA_RE`,
+#: `ManaRetentionScope`/`ManaPool.retained` in `models/mana.py`): any
+#: sentence here that matches this regex tags the mana it follows with
+#: `ManaRetentionScope.END_OF_TURN`, whether or not the trigger's count is
+#: Photon's own "that much".
 _KEEP_MANA_UNTIL_END_OF_TURN_RE = re.compile(
     r"^until end of turn, you don'?t lose this mana as steps and phases end\.?$",
     re.IGNORECASE,
@@ -10600,6 +10602,19 @@ def _parse_add_one_mana_of_any_color_trigger(text: str) -> AbilityEffect | None:
         _KEEP_MANA_UNTIL_END_OF_TURN_RE.fullmatch(sentence) is None for sentence in sentences[1:]
     ):
         return None
+    # CR 500.5b: whichever sentence carries the "you don't lose this mana as
+    # steps and phases end" clause tags every unit of mana this trigger adds
+    # with `ManaRetentionScope.END_OF_TURN` - Photon's own shape (checked
+    # above: "that much" requires it), and, generally, any future non-"that
+    # much" printing of the identical sentence.
+    retain_until = (
+        ManaRetentionScope.END_OF_TURN
+        if any(
+            _KEEP_MANA_UNTIL_END_OF_TURN_RE.fullmatch(sentence) is not None
+            for sentence in sentences[1:]
+        )
+        else None
+    )
     fixed_count: int | None = None
     count_reader: Callable[[Game, str], int] | None = None
     if adds_that_much:
@@ -10653,7 +10668,7 @@ def _parse_add_one_mana_of_any_color_trigger(text: str) -> AbilityEffect | None:
             else None
         )
         for _ in range(count):
-            player.mana_pool.add(color, restriction=restriction)
+            player.mana_pool.add(color, restriction=restriction, retain_until=retain_until)
 
     return effect
 
