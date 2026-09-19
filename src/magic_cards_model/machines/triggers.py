@@ -319,6 +319,56 @@ class GameEvent(EngineModel):
     from exile (Knowledge Pool's second ability) would re-trigger itself
     forever. `None` for an event this field was never populated for."""
 
+    target_id: UUID | None = None
+    """For a `TriggerEvent.DEALS_DAMAGE` event whose target is a permanent
+    (CR 120.3e), that permanent's id - the *recipient*, as opposed to
+    `subject_id`'s source/dealer. Hexhaven Invigorator's own "Whenever this
+    creature is dealt damage" is the only shape in the pool that asks about
+    the receiving end rather than the dealing one, which is why this is its
+    own field instead of overloading `subject_id`: a self-damaging source
+    ("this creature deals damage to itself") needs both ends distinguishable
+    at once. `None` for damage aimed at a player (that player is
+    `GameEvent.player` already) and for every non-damage event."""
+
+    target_controller: str | None = None
+    """The controller of `target_id`, read the same way `subject_controller`
+    is - `None` whenever `target_id` is."""
+
+    target_types: tuple[Type, ...] | None = None
+    """`target_id`'s computed card types (CR 613.5) at the moment of the
+    event, the recipient-side twin of `subject_types`. `None` whenever
+    `target_id` is."""
+
+    discarded_ids: tuple[UUID, ...] = ()
+    """Which cards `TriggerEvent.DISCARDS_A_CARD` actually moved, for Titanbones,
+    Towering Heart's own self-referential "When you discard this card, ...".
+    `Game.discard_cards` batches every card of one discard instruction into a
+    single event (`GameEvent.amount` is the count, CR 603.2c's "one event,
+    multiple occurrences"), so a self-reference has to be checked against the
+    whole batch rather than a single `subject_id` - this is that batch, in
+    the order `discard_cards` moved them. Empty for every other event."""
+
+    attacking_alone: bool = False
+    """Whether the whole attacking party this combat was this one creature
+    (CR 506.5) - settled only once every attacker in the declaration is
+    known, so `Game.declare_attackers` computes it after registering every
+    attack in the batch and before emitting any of their `ATTACKS` events,
+    never mid-loop. `False` for every event that is not `TriggerEvent.
+    ATTACKS`, and for an `ATTACKS` event with no attacker of its own (the
+    once-per-declaration "you attack" event `GameEvent.subject_id is None`
+    already carries)."""
+
+    attacking_player_alone: bool = False
+    """CR 506.6's narrower cousin of `attacking_alone`: whether this
+    attacker is the only creature attacking the *same defending player* it
+    is attacking (irrelevant, and left `False`, for an attack on a
+    planeswalker or a battle - CR 506.6 names a player specifically). Jiang
+    Yanggu, Alone and Yuriko, Blade of the Mighty both print "attacks a
+    player alone" rather than the bare CR 506.5 form, and the two conditions
+    disagree the moment a second creature attacks a *different* player in
+    the same combat: that declaration is not `attacking_alone`, but each
+    attacker is still `attacking_player_alone`."""
+
 
 class TargetingNoticeKind(StrEnum):
     """Why a triggered ability went on the stack with no targets chosen."""
@@ -915,23 +965,49 @@ def _self_referential(condition: str, source_name: str) -> bool:
     return bool(short) and short in lowered
 
 
+def _plural_type_word_pattern(word: str) -> str:
+    """`word`'s own singular-or-plural regex fragment (CR 205.2a's card
+    types, pluralized the ordinary English way Scryfall's own oracle text
+    already uses: "creature" -> "creatures", "sorcery" -> "sorceries").
+
+    Gardenize's and Scavenger's Talent's own "Whenever a/one or more
+    creature**s** you control di**e**" both name the type in the plural -
+    `\bcreature\b`'s trailing word boundary refuses to match inside
+    "creatures" at all (the 's' is a word character, not a boundary), so a
+    condition naming a type only in its plural form was read as naming no
+    type, which `_types_match` then reads as "no restriction" rather than
+    "the source doesn't have to be a creature to match" - the wrong kind of
+    permissive for a noncreature source to widen past CR 603.10a's
+    "another"/"other" requirement on. `-y` words (only "sorcery" in this
+    pool's `_TYPE_WORDS`) pluralize by swapping the 'y' for '-ies', same as
+    English; everything else just takes a trailing 's'.
+    """
+    if word.endswith("y"):
+        return f"{word[:-1]}(?:y|ies)"
+    return f"{word}s?"
+
+
 def _required_types(condition: str) -> tuple[set[Type], set[Type]]:
     """The types a condition asks the subject to have, and the ones it forbids.
 
     `"an instant or sorcery spell"` requires one of instant or sorcery;
     `"a noncreature spell"` forbids creature. A condition naming no type at all
-    requires nothing, which is what "whenever you cast a spell" means.
+    requires nothing, which is what "whenever you cast a spell" means. Reads
+    either the singular or the plural form of each type word (`_plural_type_
+    word_pattern`) - "one or more creatures die" is exactly as much a
+    creature-type restriction as "a creature dies" is.
     """
     lowered = condition.lower()
     forbidden = {
         card_type
         for word, card_type in _TYPE_WORDS.items()
-        if re.search(rf"\bnon-?{word}\b", lowered)
+        if re.search(rf"\bnon-?{_plural_type_word_pattern(word)}\b", lowered)
     }
     required = {
         card_type
         for word, card_type in _TYPE_WORDS.items()
-        if card_type not in forbidden and re.search(rf"\b{word}\b", lowered)
+        if card_type not in forbidden
+        and re.search(rf"\b{_plural_type_word_pattern(word)}\b", lowered)
     }
     return required, forbidden
 
@@ -1031,6 +1107,55 @@ def _subtype_matches(subtypes: tuple[str, ...] | None, subtype: str | None) -> b
     if subtypes is None:
         return False
     return any(word.lower() == subtype.lower() for word in subtypes)
+
+
+#: Tetsuko Umezawa, Pursuer's own "with power or toughness 1 or less" -
+#: which characteristic is not fixed to the pool's one printing (a
+#: differently worded card could as easily say "power 4 or greater" or
+#: "toughness 3 or less").
+_POWER_OR_TOUGHNESS_QUALIFIER = re.compile(
+    rf"\bwith (?P<stat>power|toughness|power or toughness) "
+    rf"(?P<count>{COUNT}) or (?P<direction>less|greater|more)\b"
+)
+
+
+def _power_or_toughness_qualifier_holds(
+    game: "Game", condition: str, subject_id: "UUID | None"
+) -> bool | None:
+    """Whether a trigger condition's "with power [or toughness] N or
+    less/greater" qualifier (CR 208.1) is true of `subject_id` right now, or
+    `None` when the condition carries no such qualifier at all - which
+    `condition_matches`'s BLOCKS branch reads as "nothing to check", not as a
+    refusal.
+
+    Read off the live, computed board (CR 613.5) rather than anything the
+    event snapshot carries: power and toughness are exactly the
+    characteristics a static ability can still be changing the moment this
+    is asked, and `GameEvent` was never meant to snapshot every one of a
+    permanent's numbers."""
+    match = _POWER_OR_TOUGHNESS_QUALIFIER.search(condition.lower())
+    if match is None:
+        return None
+    if subject_id is None:
+        return False
+    subject = game.find_by_id(subject_id)
+    if subject is None:
+        return False
+    threshold = parse_count(match.group("count"), article=False)
+    if threshold is None:
+        return None
+    chars = game.characteristics_of(subject) if subject.zone is Zone.BATTLEFIELD else None
+    power = chars.power if chars is not None else subject.power
+    toughness = chars.toughness if chars is not None else subject.toughness
+    values = [value for value in (power, toughness) if value is not None]
+    if match.group("stat") == "power":
+        values = [power] if power is not None else []
+    elif match.group("stat") == "toughness":
+        values = [toughness] if toughness is not None else []
+    if not values:
+        return False
+    compare = operator.le if match.group("direction") == "less" else operator.ge
+    return any(compare(value, threshold) for value in values)
 
 
 #: "a Dragon spell", "the first Otter spell" - a subtype named on a "cast a
@@ -1521,6 +1646,15 @@ def condition_matches(
         return True
 
     if ability.event is TriggerEvent.DIES:
+        if "enchanted" in lowered:
+            # Ferocity of the Hunt's own "When enchanted creature dies, ..."
+            # (CR 303.4b/303.4m's "enchanted [object]"), the DIES twin of
+            # `TAPPED_FOR_MANA`'s own "enchanted [land]" read above -
+            # `source.attached_to` is CR 603.10a's look-back: the Aura's own
+            # SBA-triggered fall (CR 303.4c, CR 704.5m) has not run the
+            # sweep yet at the moment this event fires, so it still names
+            # the creature that just died rather than nothing.
+            return event.subject_id is not None and event.subject_id == source.attached_to
         if event.subject_id == source.id:
             # Covers both "When this creature dies" and the self half of
             # "Whenever this creature or another creature dies" (Blood
@@ -1531,7 +1665,13 @@ def condition_matches(
         # something else - "another"/"other" - can still match (CR 700.4,
         # 603.10a). A pure "When this creature dies" does not; a condition
         # naming no object of its own at all ("Whenever a creature dies",
-        # an emblem's) is about any creature.
+        # an emblem's, Gardenize's own "Whenever a creature you control
+        # dies" on an Enchantment) is about any creature, since it never
+        # named itself as the one being asked about in the first place -
+        # `mine` is false the moment the condition names no self-phrase and
+        # no self-name (`_self_referential`), and only a condition that
+        # *does* self-reference needs "another"/"other" to say "besides me
+        # too" rather than "instead of me" (CR 603.10a).
         if mine and "another" not in lowered and "other" not in lowered:
             return False
         subtype = _required_subtype(condition)
@@ -1567,6 +1707,16 @@ def condition_matches(
             return event.subject_id is None and event.player == controller
         if event.subject_id is None:
             return False
+        # CR 506.6: Jiang Yanggu, Alone's and Yuriko, Blade of the Mighty's
+        # own "attacks a player alone" - checked first since the phrase
+        # contains "alone" too and would otherwise also satisfy the plainer
+        # CR 506.5 branch below.
+        if "a player alone" in lowered and not event.attacking_player_alone:
+            return False
+        # CR 506.5, Exalted's own defining shape (Agents of S.H.I.E.L.D.'s
+        # "a creature you control attacks alone").
+        if "a player alone" not in lowered and "alone" in lowered and not event.attacking_alone:
+            return False
         if mine:
             return event.subject_id == source.id
         return _controller_clause_holds(
@@ -1574,11 +1724,25 @@ def condition_matches(
         ) and _types_match(event.subject_types, condition)
 
     if ability.event is TriggerEvent.BLOCKS:
-        if not mine:
+        if mine:
+            blocks = "blocks" in lowered and event.subject_id == source.id
+            blocked = "becomes blocked" in lowered and event.related_id == source.id
+            return blocks or blocked
+        # Tetsuko Umezawa, Pursuer's own non-self-referential form: "a
+        # creature an opponent controls with power or toughness 1 or less
+        # blocks" (CR 509.1a) - the subject is the blocker, not the source,
+        # so the controller/type/subtype clause is read the same general
+        # way `ATTACKS`'s own non-self branch reads an attacker.
+        if "blocks" not in lowered:
             return False
-        blocks = "blocks" in lowered and event.subject_id == source.id
-        blocked = "becomes blocked" in lowered and event.related_id == source.id
-        return blocks or blocked
+        if not (
+            _controller_clause_holds(condition, controller, event.subject_controller)
+            and _types_match(event.subject_types, condition)
+            and _subtype_matches(event.subject_subtypes, _required_subtype(condition))
+        ):
+            return False
+        power_or_toughness = _power_or_toughness_qualifier_holds(game, condition, event.subject_id)
+        return power_or_toughness is None or power_or_toughness
 
     if ability.event is TriggerEvent.BEGINNING_OF_STEP:
         return _step_matches(condition, controller, event)
@@ -1737,6 +1901,34 @@ def condition_matches(
         return _controller_clause_holds(condition, controller, event.player)
 
     if ability.event is TriggerEvent.DEALS_DAMAGE:
+        if re.search(r"\b(?:is|are) dealt\b", lowered):
+            # Passive voice reads the *recipient*, not the dealer - Hexhaven
+            # Invigorator's self-referential "this creature is dealt damage"
+            # and Master of Barbs'/Massacre Girl, Most Wanted's/Fblthp,
+            # Impossibly Lost's "an opponent is/one or more opponents are
+            # dealt [non]combat damage[, during your turn]" none of them say
+            # anything about who *dealt* it, so the dealer-oriented checks
+            # below (which read `subject_id`/`subject_controller`, the
+            # dealer) do not apply at all; `target_id`/`player` (the
+            # recipient) are read instead.
+            if mine:
+                if event.target_id != source.id:
+                    return False
+            elif "opponent" in lowered:
+                if event.player is None or event.player == controller:
+                    return False
+            else:
+                return False
+            if "noncombat damage" in lowered:
+                if event.combat:
+                    return False
+            elif "combat damage" in lowered and not event.combat:
+                return False
+            if "during your turn" in lowered or "during their turn" in lowered:
+                turn = getattr(game, "turn", None)
+                if turn is None or turn.active_player != controller:
+                    return False
+            return True
         # CR 120.1: "An object that deals damage is the source of that
         # damage" - the subject is the source, so the self-referential form
         # checks the source and the general form checks the controller clause
@@ -1802,6 +1994,16 @@ def condition_matches(
         return mine and event.subject_id == source.id
 
     if ability.event is TriggerEvent.DISCARDS_A_CARD:
+        # Titanbones, Towering Heart's own "When you discard this card, ..."
+        # - self-referential (CR 603.10a's look-back shape: the card is
+        # already gone from the hand by the time this is checked), matched
+        # against the whole batch a single discard instruction moved
+        # (`GameEvent.discarded_ids`), since a discard fires once per
+        # instruction rather than once per card. Checked ahead of the plain
+        # controller-clause read below, which would otherwise treat "you
+        # discard this card" as nothing narrower than "you discard".
+        if mine:
+            return source.id in event.discarded_ids
         # CR 701.9a. "Whenever you discard one or more cards" (Captain
         # Howler, Sea Scourge) asks about the controller's own discards -
         # `event.player` is who did the discarding, `_controller_clause_
@@ -1822,6 +2024,30 @@ def condition_matches(
         new_total = source.lore_counters
         old_total = new_total - added
         return old_total < ability.chapter <= new_total
+
+    if ability.event is TriggerEvent.SCRY_OR_SURVEIL:
+        # CR 701.22a/701.25a. "Whenever you scry or surveil" (Denzilore
+        # Fatehold, Matoya, Archon Elder) is the only shape this pool prints.
+        # "an opponent [verb]" is read directly - the same way `DRAWS_A_CARD`/
+        # `GAINS_LIFE` read it - rather than through `_controller_clause_
+        # holds`, which only recognises the "controls" phrasing ("an
+        # opponent controls"), not an action verb like "scries"/"surveils".
+        if "an opponent" in lowered:
+            return event.player is not None and event.player != controller
+        return _controller_clause_holds(condition, controller, event.player)
+
+    if ability.event is TriggerEvent.LOYALTY_ABILITY_ACTIVATED:
+        # CR 606.2/602.2. Ajani Unrelenting's "Whenever you activate a
+        # loyalty ability" and Gideon the Oathless's "Whenever an opponent
+        # activates a loyalty ability" - the subject is the permanent whose
+        # ability was activated. "an opponent activates" is read the same
+        # direct way `SCRY_OR_SURVEIL` just did, for the same reason: CR
+        # 602.2's "activates" is not `_controller_clause_holds`'s "controls".
+        if mine:
+            return event.subject_id == source.id
+        if "an opponent" in lowered:
+            return event.player is not None and event.player != controller
+        return _controller_clause_holds(condition, controller, event.player)
 
     return False
 
@@ -1874,6 +2100,19 @@ def _targeting_object_matches(game: "Game", condition: str, event: GameEvent) ->
 #: condition naming +1/+1 is not fired by a charge counter.
 _COUNTERS_PUT_CONDITION = re.compile(
     r"^one or more (?P<kind>\S+) counters are put on (?P<subject>.+)$"
+)
+
+#: Inspired Tethermage's "Whenever you put one or more loyalty counters on a
+#: planeswalker, ..." (CR 122.6, CR 606.4) - a different shape from
+#: `_COUNTERS_PUT_CONDITION` above in every way that matters: active voice
+#: ("you put", not "are put"), a controller clause instead of a bare kind,
+#: and "a planeswalker" - any one, not only the ability's own source - as the
+#: subject rather than "this creature". CR 606.4's own "to activate a loyalty
+#: ability of a permanent is to put on or remove ... loyalty counters" is
+#: what makes activating a `[+N]` ability the ordinary way this fires,
+#: alongside any effect that puts loyalty counters on directly.
+_LOYALTY_COUNTERS_PUT_ON_PLANESWALKER_CONDITION = re.compile(
+    r"^(?P<who>you put|an opponent puts) one or more loyalty counters on a planeswalker$"
 )
 
 #: Hardened Academic's "one or more cards leave your graveyard" and Murktide
@@ -1941,6 +2180,8 @@ def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTrig
     lowered = condition.lower().strip()
     if _COUNTERS_PUT_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.COUNTERS_PUT})
+    if _LOYALTY_COUNTERS_PUT_ON_PLANESWALKER_CONDITION.match(lowered):
+        return frozenset({ExtraTriggerEvent.COUNTERS_PUT})
     if _LEAVES_GRAVEYARD_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.LEAVES_GRAVEYARD})
     if _PUT_INTO_LIBRARY_CONDITION.match(lowered):
@@ -2004,6 +2245,22 @@ def _unread_condition_matches(
         # the pool names itself as that object ("on this creature"). A
         # condition naming something else is not read at all.
         return mine and event.subject_id == source.id
+
+    match = _LOYALTY_COUNTERS_PUT_ON_PLANESWALKER_CONDITION.match(condition)
+    if match is not None:
+        # CR 122.6/606.4: any planeswalker, not only the source - the
+        # subject here is whichever permanent the loyalty counters actually
+        # landed on, read straight off the event the same way the
+        # self-referential branch above reads it, minus the self-reference.
+        if event.event is not ExtraTriggerEvent.COUNTERS_PUT:
+            return False
+        if event.counter_kind != "loyalty":
+            return False
+        if Type.PLANESWALKER not in (event.subject_types or ()):
+            return False
+        if match.group("who") == "you put":
+            return event.subject_controller == controller
+        return event.subject_controller is not None and event.subject_controller != controller
 
     match = _LEAVES_GRAVEYARD_CONDITION.match(condition)
     if match is not None:
@@ -2186,6 +2443,18 @@ def zones_ability_functions_in(ability: TriggeredAbility, source: CardState) -> 
     # a different event.
     if ability.event is TriggerEvent.CAST_SPELL and "this spell" in lowered:
         return frozenset({Zone.STACK})
+
+    # CR 113.6k again, the discard twin of the cast-trigger branch just
+    # above: "discard this card" (CR 701.9a) can never occur on the
+    # battlefield either - a permanent is never discarded, only a card in a
+    # hand is - so Titanbones, Towering Heart's own "When you discard this
+    # card, ..." functions wherever the discard actually lands it.
+    # `Game.discard_cards` moves the card before it ever calls `Game.emit`,
+    # so by the time this is asked the card already sits in the graveyard
+    # (CR 701.9a's ordinary destination) or, for a madness-replaced discard,
+    # exile (CR 702.35a) - both are offered rather than guessing which.
+    if ability.event is TriggerEvent.DISCARDS_A_CARD and "this card" in lowered:
+        return frozenset({Zone.GRAVEYARD, Zone.EXILE})
 
     # CR 702.35a: madness watches its own exile, which can only be observed
     # while the card is, in fact, being exiled that way.
@@ -2638,6 +2907,41 @@ def intervening_if_holds(
         controller = source.controller or game.active_player.username
         return controller in game.life_gained_this_turn
 
+    if clause in (
+        "you've scried or surveilled this turn",
+        "you have scried or surveilled this turn",
+    ):
+        # CR 701.22a/701.25a. Surveillance Phantasm prints the same fact as a
+        # static "as long as" (S9's own layer-conditional reading);
+        # Desperate Futurescribe's own printing folds it into an "instead"
+        # continuous-effect upgrade rather than a bare intervening *if* - the
+        # predicate is the same fact either way, and this is that predicate,
+        # exposed for whichever clause parser needs to ask it. CR 109.5's
+        # "you" (`controller_of_source`) rather than the bare `source.
+        # controller or active_player` fallback most of this function's
+        # older branches still use - Command the Stage's own graveyard-
+        # functioning ability is exactly the case that fallback gets wrong,
+        # crediting whoever's turn it happens to be instead of the card's
+        # own owner (`test_turn_history_predicates.py` caught this live).
+        return game.turn_fact_holds("scried_or_surveilled", controller_of_source(game, source))
+
+    if clause == "you've activated a loyalty ability this turn":
+        # Kiora of Salt and Sand's own "Whenever you attack, if you've
+        # activated a loyalty ability this turn, ..." (CR 606.2).
+        return game.turn_fact_holds("loyalty_ability_activated", controller_of_source(game, source))
+
+    noncombat_damage = _opponent_dealt_noncombat_damage_holds(game, clause, source)
+    if noncombat_damage is not None:
+        return noncombat_damage
+
+    creatures_died = _creatures_died_this_turn_holds(game, clause)
+    if creatures_died is not None:
+        return creatures_died
+
+    other_subtype_count = _controls_at_least_other_subtype_count_holds(game, clause, source)
+    if other_subtype_count is not None:
+        return other_subtype_count
+
     if clause in _REVOLT_CLAUSES:
         # CR 207.2c: Revolt is an ability word, so no numbered rule spells out
         # the condition itself; the wording is the card's own. Renegade
@@ -2820,6 +3124,90 @@ def _sacrificed_this_turn_holds(game: "Game", clause: str, source: CardState) ->
         return None
     controller = source.controller or game.active_player.username
     return bool(sacrificed.get(controller))
+
+
+#: Command the Stage's "an opponent was dealt noncombat damage last turn"
+#: and Grim Repriser's activation-restriction twin "an opponent has been
+#: dealt noncombat damage this turn" (CR 120.2a) - the same fact, asked
+#: about either turn.
+_OPPONENT_DEALT_NONCOMBAT_DAMAGE = re.compile(
+    r"^an opponent (?:was|has been) dealt noncombat damage (?P<when>this|last) turn$"
+)
+
+
+def _opponent_dealt_noncombat_damage_holds(
+    game: "Game", clause: str, source: CardState
+) -> bool | None:
+    """Whether any of `source`'s controller's opponents was dealt noncombat
+    damage this turn or last turn, off `Game.turn_facts`' "dealt_noncombat_
+    damage" ledger (`Game.deal_damage`'s own record of it).
+
+    `controller_of_source`, not a bare `source.controller or active_player`
+    fallback: Command the Stage's own printing of this clause functions from
+    a graveyard (CR 113.6m) and is checked at *any* player's upkeep, so the
+    active player is frequently not this card's owner at all - Grim
+    Repriser's activation-restriction twin has the identical shape.
+    """
+    match = _OPPONENT_DEALT_NONCOMBAT_DAMAGE.match(clause)
+    if match is None:
+        return None
+    controller = controller_of_source(game, source)
+    last_turn = match.group("when") == "last"
+    return any(
+        game.turn_fact_holds("dealt_noncombat_damage", player.username, last_turn=last_turn)
+        for player in game.players_in_game
+        if player.username != controller
+    )
+
+
+#: Darklight Phoenix's "two or more creatures died this turn" (CR 700.4),
+#: an ordinary count over `Game.creatures_died_this_turn` rather than
+#: pinned to the number two - a different printing naming a different
+#: threshold reads the same way.
+_CREATURES_DIED_THIS_TURN = re.compile(rf"^(?P<count>{COUNT}) or more creatures died this turn$")
+
+
+def _creatures_died_this_turn_holds(game: "Game", clause: str) -> bool | None:
+    match = _CREATURES_DIED_THIS_TURN.match(clause)
+    if match is None:
+        return None
+    needed = parse_count(match.group("count"), article=False)
+    if needed is None:
+        return None
+    return game.creatures_died_this_turn >= needed
+
+
+#: Roiling Canopy's "you control at least five other Forests" (CR 205.3i's
+#: land subtype) - the counted twin of the "you control no [subtype]s other
+#: than this [type]" shape already read above, generalised the same way: a
+#: subtype word and a count, not a fixed number or a fixed subtype.
+_CONTROL_AT_LEAST_OTHER_SUBTYPE = re.compile(
+    rf"^you control at least (?P<count>{COUNT}) other (?P<subtype>\w+?)s?$"
+)
+
+
+def _controls_at_least_other_subtype_count_holds(
+    game: "Game", clause: str, source: CardState
+) -> bool | None:
+    match = _CONTROL_AT_LEAST_OTHER_SUBTYPE.match(clause)
+    if match is None:
+        return None
+    needed = parse_count(match.group("count"), article=False)
+    if needed is None:
+        return None
+    subtype = match.group("subtype").lower()
+    controller = controller_of_source(game, source)
+    # CR 613.5: the computed subtypes, not the printed line - a land that is
+    # a Forest only because of an animating/typechanging effect still counts,
+    # and one that lost the subtype does not.
+    board = game.computed_board()
+    others = [
+        state
+        for state in game.permanents_controlled_by(controller)
+        if state.id != source.id
+        and any(word.lower() == subtype for word in board.of(state).subtypes)
+    ]
+    return len(others) >= needed
 
 
 #: "if Kona is tapped" / "if this creature is untapped" - a clause about the

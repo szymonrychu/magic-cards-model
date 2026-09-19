@@ -1,0 +1,136 @@
+{
+  "object": "card",
+  "id": "a0ff9689-ea49-4fff-b37c-4abbaeb0f73d",
+  "oracle_id": "f3087daa-d2ff-4227-abff-3398da6297af",
+  "multiverse_ids": [],
+  "cardmarket_id": 908445,
+  "name": "Way of the Necromancer",
+  "lang": "en",
+  "released_at": "2026-10-02",
+  "uri": "https://api.scryfall.com/cards/a0ff9689-ea49-4fff-b37c-4abbaeb0f73d",
+  "scryfall_uri": "https://scryfall.com/card/fra/239/way-of-the-necromancer?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-09-18T11:05:26Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/a/0/a0ff9689-ea49-4fff-b37c-4abbaeb0f73d.jpg?1789729526",
+    "normal": "https://cards.scryfall.io/normal/front/a/0/a0ff9689-ea49-4fff-b37c-4abbaeb0f73d.jpg?1789729526",
+    "large": "https://cards.scryfall.io/large/front/a/0/a0ff9689-ea49-4fff-b37c-4abbaeb0f73d.jpg?1789729526",
+    "png": "https://cards.scryfall.io/png/front/a/0/a0ff9689-ea49-4fff-b37c-4abbaeb0f73d.png?1789729526",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/a/0/a0ff9689-ea49-4fff-b37c-4abbaeb0f73d.jpg?1789729526",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/a/0/a0ff9689-ea49-4fff-b37c-4abbaeb0f73d.jpg?1789729526",
+    "thumb": "https://cards.scryfall.io/thumb/front/a/0/a0ff9689-ea49-4fff-b37c-4abbaeb0f73d.webp?1789729526",
+    "grid": "https://cards.scryfall.io/grid/front/a/0/a0ff9689-ea49-4fff-b37c-4abbaeb0f73d.webp?1789729526",
+    "display": "https://cards.scryfall.io/display/front/a/0/a0ff9689-ea49-4fff-b37c-4abbaeb0f73d.webp?1789729526",
+    "art": "https://cards.scryfall.io/art/front/a/0/a0ff9689-ea49-4fff-b37c-4abbaeb0f73d.webp?1789729526",
+    "crop": "https://cards.scryfall.io/crop/front/a/0/a0ff9689-ea49-4fff-b37c-4abbaeb0f73d.webp?1789729526"
+  },
+  "mana_cost": "{1}{B}",
+  "cmc": 2.0,
+  "type_line": "Legendary Enchantment",
+  "oracle_text": "When Way of the Necromancer enters, empower Jace 2. (Put two loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[\u22121]: Surveil 1\" and \"[\u22123]: Draw a card.\")\nWhenever a creature you control dies, put a loyalty counter on each planeswalker you control.",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Surveil"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "not_legal",
+    "pauper": "not_legal",
+    "vintage": "not_legal",
+    "penny": "not_legal",
+    "commander": "not_legal",
+    "oathbreaker": "not_legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "not_legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set": "fra",
+  "set_name": "Reality Fracture",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afra&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fra?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/a0ff9689-ea49-4fff-b37c-4abbaeb0f73d/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Af3087daa-d2ff-4227-abff-3398da6297af&unique=prints",
+  "collector_number": "239",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Pauline Voss",
+  "artist_ids": [
+    "d0d814a5-f4bc-4383-afe5-a3f329b68dce"
+  ],
+  "illustration_id": "97943a1e-0dd0-4110-a9b6-73a694ae3896",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "enchantment",
+    "legendary"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 29896,
+  "preview": {
+    "source": "Pauline Voss",
+    "source_uri": "https://www.facebook.com/photo?fbid=10232659906471169&set=a.1014484053459",
+    "previewed_at": "2026-09-10"
+  },
+  "prices": {
+    "usd": null,
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "1.17",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DWay%2Bof%2Bthe%2BNecromancer",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DWay%2Bof%2Bthe%2BNecromancer",
+    "edhrec": "https://edhrec.com/route/?cc=Way+of+the+Necromancer"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fmagic%2Fproduct%3FproductLineName%3Dmagic%26q%3DWay%2Bof%2Bthe%2BNecromancer%26view%3Dgrid",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=908445&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Way+of+the+Necromancer&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

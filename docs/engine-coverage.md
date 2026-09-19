@@ -2527,3 +2527,129 @@ haste" both need `effect_for`'s token-clause-then-trailing-grant composition
 static this wave does not read (S9).
 
 Scenario coverage: `tests/scenarios/test_token_effect_parser.py`.
+
+## FRA S5: trigger events and per-turn history
+
+Reality Fracture's own "trigger events and per-turn history" stream. Seven new
+trigger event shapes (CR 603.2), a general per-turn/last-turn history record,
+and three previously-unmatchable trigger conditions closed directly (a
+fourth, Gardenize's and Way of the Necromancer's own noncreature-source DIES
+gap, was reconciled at the int-engine-dsl merge in favour of a more general
+sibling fix - see below).
+
+**New `TriggerEvent`/`ExtraTriggerEvent` shapes, `machines/triggers.py`,
+`machines/abilities.py`:**
+
+| Condition shape | Event | Emitted from | Card |
+|---|---|---|---|
+| "Whenever you scry or surveil" | `SCRY_OR_SURVEIL` | `Game.scry`/`Game.surveil` (only when `count > 0`, CR 701.22b/701.25c) | Denzilore Fatehold; off-pool Matoya, Archon Elder |
+| "Whenever you activate a loyalty ability" / "an opponent activates ..." | `LOYALTY_ABILITY_ACTIVATED` | `Game.activate_ability`'s loyalty branch | Ajani Unrelenting, Gideon the Oathless |
+| "Whenever you put one or more loyalty counters on a planeswalker" | `ExtraTriggerEvent.COUNTERS_PUT` (unread-condition path, `_LOYALTY_COUNTERS_PUT_ON_PLANESWALKER_CONDITION`) | Already emitted generically by `Game.add_counters`; only the condition parser was missing | Inspired Tethermage |
+| "This creature is dealt damage" / "an/one or more opponent(s) [is/are] dealt [non]combat damage[, during your turn]" | `DEALS_DAMAGE`, recipient side (`GameEvent.target_id`/`target_controller`/`target_types`, alongside the existing dealer side) | `Game.deal_damage` | Hexhaven Invigorator, Master of Barbs, Massacre Girl Most Wanted, Fblthp Impossibly Lost; off-pool Bellowing Aegisaur, Wildfire Elemental |
+| "When you discard this card" | `DISCARDS_A_CARD` self-reference (`GameEvent.discarded_ids`, the whole batch one discard instruction moved) | `Game.discard_cards`; `zones_ability_functions_in` gained a branch since a discard trigger can never occur on the battlefield (CR 113.6k) | Titanbones, Towering Heart; off-pool Edgar's Awakening |
+| "Attacks alone" (CR 506.5) / "attacks a player alone" (CR 506.6) | `ATTACKS` (`GameEvent.attacking_alone`/`attacking_player_alone`) | `Game.declare_attackers`, now registering every attacker of a declaration before emitting any of their events (previously one at a time, which settled "alone" off a partial party) | Agents of S.H.I.E.L.D. (off-pool), Jiang Yanggu Alone, Yuriko Blade of the Mighty |
+| "Until end of turn, whenever [self] deals combat damage to a player, draw N cards" | Granted delayed trigger (`machines/delayed.DelayedTrigger` gained `combat_only`/`to_player_only`) | `machines/effects._parse_until_end_of_turn_self_combat_damage_draw_clause`, matched against the CR 201.5-normalized self-reference, not the literal card name | Lyra, Tolarian Archangel |
+
+**General per-turn history**, rather than one more single-purpose `Game`
+field per fact: `Game.turn_facts`/`turn_facts_last_turn` (`record_turn_fact`/
+`turn_fact_holds`, a fact name to the set of players it is true for) and
+`Game.graveyard_arrivals_this_turn` (`GraveyardArrival`, one entry per card
+that reached a graveyard this turn, with its origin zone and whether it was a
+permanent card as it left the battlefield - shaped to answer a Descend-style
+"permanent cards put into graveyards this turn" as well as this stream's own
+"from a library"). Wired into `intervening_if_holds`/`Game.condition_holds`:
+Kiora of Salt and Sand's "activated a loyalty ability this turn", Roiling
+Canopy's "at least five other Forests", Darklight Phoenix's "two or more
+creatures died this turn", Command the Stage's "dealt noncombat damage last
+turn", and Grim Repriser's "... this turn" activation restriction. This
+stream also built its own `Player.life_gained_tally`/`life_gained_tally_turn`
+for Germinate Recruits'/Enlightened Confidant's own "the amount of life you
+gained this turn" - reconciled at the int-engine-dsl merge in favour of the
+fra-s3 line's own `Game.life_gained_amount_this_turn`, which landed
+independently for the identical fact and already has `machines/effects.py`
+reading it; dropped rather than carried forward, one mechanism per fact.
+
+**Gardenize's and Way of the Necromancer's own noncreature-source DIES
+gap** ("Whenever a creature you control dies" on an Enchantment, which used
+to require "another"/"other" in the text unconditionally before it would
+widen past the source's own death) was reconciled at the int-engine-dsl
+merge against the num-g0b line of development's own, more general fix to
+the identical `condition_matches` DIES branch: g0b's guard widens whenever
+the condition is not self-referential at all (`mine`, off `_self_
+referential`) rather than checking `_types_match(source.types, condition)`
+the way this stream's own first attempt did - simpler, and it also closes
+Vein Ripper's and Ygra, Eater of All's own longstanding `unmatchable_
+condition` gaps (a *creature* source's plain, self-reference-free "a
+creature dies", and a condition naming a subtype rather than a card type,
+neither of which this stream's own `_types_match`-gated version could
+reach). g0b's mechanism is what `main` keeps; this stream's own version was
+dropped. `_required_types` still separately gained plural type-word
+matching from this stream (`_plural_type_word_pattern`, `\bcreature\b`
+never matched inside "creatures") - not needed for g0b's guard itself, but
+still read by the DIES branch's own fallthrough `_types_match(event.
+subject_types, condition)` check, so Scavenger's Talent's own "one or more
+creatures you control die" now correctly requires the dying permanent to
+actually be a creature, not merely widens to match anything.
+
+**Three previously-`unmatchable_condition` `condition_matches` gaps this
+stream closed on its own** (`scripts/sweep_pool.py`'s own synthetic prober
+could not satisfy any real permanent against them either, which is the
+check that found them), off-pool proofs noted:
+
+- **"When enchanted creature dies"** - read `source.attached_to` (CR
+  303.4b/303.4m), CR 603.10a's look-back working because the Aura's own SBA
+  fall (CR 303.4c/704.5m) has not swept yet when the event fires. Ferocity of
+  the Hunt; off-pool Bequeathal.
+- **BLOCKS with a power/toughness qualifier** - "a creature ... with power
+  [or toughness] N or less/greater blocks" read only the self-referential
+  "this creature blocks" forms before; the general form reads the live board
+  (`_power_or_toughness_qualifier_holds`, CR 208.1) the same parametrised way
+  every other counted condition does. Tetsuko Umezawa, Pursuer.
+  `scripts/sweep_pool.py`'s own probe pool needed real power/toughness-varied
+  creatures too (`_cards_by_power_or_toughness`), since its capped five-per-
+  type cache is built with no stat in mind.
+
+**`KeywordActivation.why_not` (off-battlefield activation, `machines/
+keywords.py`)** never checked a printed "Activate only if <condition>"
+restriction (CR 602.5b) at all - only the battlefield path
+(`Game.why_cannot_activate`) did. Grim Repriser's own graveyard-functioning
+ability could be activated whether or not "an opponent has been dealt
+noncombat damage this turn" held. Fixed by reusing `Game.
+_activation_condition_holds`, skipped for `rule == "CR 702.62b"` (Greater
+Gargadon's own suspend-only restriction, already checked earlier in
+`why_not`'s sequence and more precisely via `CardState.is_suspended`).
+
+Scenario tests: `tests/scenarios/test_scry_or_surveil_trigger.py`,
+`test_loyalty_ability_activated_trigger.py`,
+`test_loyalty_counters_put_trigger.py`, `test_damage_recipient_triggers.py`,
+`test_discard_this_card_trigger.py`, `test_attacks_alone_trigger.py`,
+`test_granted_combat_damage_draw_delayed_trigger.py`,
+`test_dies_trigger_noncreature_source.py`,
+`test_enchanted_creature_dies_trigger.py`,
+`test_block_power_toughness_qualifier_trigger.py`,
+`test_dies_trigger_plural_type_word.py`,
+`test_off_battlefield_activation_restriction.py`,
+`test_turn_history_predicates.py`.
+
+**Genuine, named gaps this stream leaves open, not silently dropped:**
+(Vein Ripper and Ygra, Eater of All, both flagged as still-open in this
+stream's own first pass, are closed by the num-g0b line's own DIES fix
+instead - see above; `scripts/sweep_pool.py --effects` reports zero
+`unmatchable_condition` cards pool-wide after this merge.)
+
+- `scripts/sweep_pool.py`'s power/toughness probe only tries the whole pool
+  for the *one* qualifier a condition names; a hypothetical condition naming
+  two different creatures' stats at once (none in the pool) would need a
+  second axis of variation this closure does not build.
+
+**Sweep, this merge:** `scripts/sweep_pool.py --effects` moves from 119
+silent of 1000 (`c3f154c`, before this merge) to 133 of 1026. The rise is
+the 25 real fixture printings this stream's own `scripts/add_card.py` calls
+add to the pool (CR-mandated proof cards, `CLAUDE.md`'s no-mocks rule) - 14
+of them are themselves silent, for clauses this stream never owned (Empower
+Jace on Ajani Unrelenting/Gideon the Oathless/Way of the Necromancer, static
+grants on Roiling Canopy/Tetsuko Umezawa Pursuer, and similar S1/S2/S6/S9
+territory), which accounts for the entire delta (133 - 119 = 14) exactly.
+No pre-existing card regressed. Registry rows (`EFFECTS`/`TRIGGER_EFFECTS`/
+`ACTIVATED_EFFECTS`) stay at 7, unchanged - every fix in this section is a
+parser or a matcher, never a name-keyed row.

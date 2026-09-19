@@ -1,0 +1,133 @@
+{
+  "object": "card",
+  "id": "ccbe92a5-42bc-4228-9d5a-212df2f5dc15",
+  "oracle_id": "f89b0143-4b19-4ab1-a96b-356b21e435ef",
+  "multiverse_ids": [],
+  "tcgplayer_id": 716627,
+  "cardmarket_id": 908825,
+  "name": "Yuriko, Blade of the Mighty",
+  "lang": "en",
+  "released_at": "2026-10-02",
+  "uri": "https://api.scryfall.com/cards/ccbe92a5-42bc-4228-9d5a-212df2f5dc15",
+  "scryfall_uri": "https://scryfall.com/card/fra/210/yuriko-blade-of-the-mighty?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-09-11T12:00:47Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/c/c/ccbe92a5-42bc-4228-9d5a-212df2f5dc15.jpg?1789128047",
+    "normal": "https://cards.scryfall.io/normal/front/c/c/ccbe92a5-42bc-4228-9d5a-212df2f5dc15.jpg?1789128047",
+    "large": "https://cards.scryfall.io/large/front/c/c/ccbe92a5-42bc-4228-9d5a-212df2f5dc15.jpg?1789128047",
+    "png": "https://cards.scryfall.io/png/front/c/c/ccbe92a5-42bc-4228-9d5a-212df2f5dc15.png?1789128047",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/c/c/ccbe92a5-42bc-4228-9d5a-212df2f5dc15.jpg?1789128047",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/c/c/ccbe92a5-42bc-4228-9d5a-212df2f5dc15.jpg?1789128047",
+    "thumb": "https://cards.scryfall.io/thumb/front/c/c/ccbe92a5-42bc-4228-9d5a-212df2f5dc15.webp?1789128047",
+    "grid": "https://cards.scryfall.io/grid/front/c/c/ccbe92a5-42bc-4228-9d5a-212df2f5dc15.webp?1789128047",
+    "display": "https://cards.scryfall.io/display/front/c/c/ccbe92a5-42bc-4228-9d5a-212df2f5dc15.webp?1789128047",
+    "art": "https://cards.scryfall.io/art/front/c/c/ccbe92a5-42bc-4228-9d5a-212df2f5dc15.webp?1789128047",
+    "crop": "https://cards.scryfall.io/crop/front/c/c/ccbe92a5-42bc-4228-9d5a-212df2f5dc15.webp?1789128047"
+  },
+  "mana_cost": "{3}{W}",
+  "cmc": 4.0,
+  "type_line": "Legendary Creature \u2014 Human Samurai",
+  "oracle_text": "During combat, players can't cast spells or activate abilities that aren't mana abilities.\nWhenever a creature you control attacks a player alone, it gains double strike until end of turn.",
+  "power": "2",
+  "toughness": "3",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "not_legal",
+    "pauper": "not_legal",
+    "vintage": "not_legal",
+    "penny": "not_legal",
+    "commander": "not_legal",
+    "oathbreaker": "not_legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "not_legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set": "fra",
+  "set_name": "Reality Fracture",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afra&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fra?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/ccbe92a5-42bc-4228-9d5a-212df2f5dc15/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Af89b0143-4b19-4ab1-a96b-356b21e435ef&unique=prints",
+  "collector_number": "210",
+  "digital": false,
+  "rarity": "uncommon",
+  "watermark": "echoverse",
+  "flavor_text": "\"Emperor Tamiyo rules with truth, respect, and passion. She has more than earned my loyalty.\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Lie Setiawan",
+  "artist_ids": [
+    "6f771d3f-310e-4aa4-841f-5ba4ba9f025a"
+  ],
+  "illustration_id": "4ed19765-6400-4824-bfc4-0c16f7df4a31",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 30697,
+  "prices": {
+    "usd": "2.91",
+    "usd_foil": "4.00",
+    "usd_etched": null,
+    "eur": "0.25",
+    "eur_foil": "1.39",
+    "tix": null
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DYuriko%252C%2BBlade%2Bof%2Bthe%2BMighty",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DYuriko%252C%2BBlade%2Bof%2Bthe%2BMighty",
+    "edhrec": "https://edhrec.com/route/?cc=Yuriko%2C+Blade+of+the+Mighty"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F716627%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=908825&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Yuriko%2C+Blade+of+the+Mighty&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

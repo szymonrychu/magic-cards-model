@@ -1440,6 +1440,20 @@ class TriggerEvent(StrEnum):
     #: `TriggeredAbility.chapter`, the same way a keyword ability's expansion
     #: carries no printed condition either.
     LORE_COUNTERS_ADDED = "lore_counters_added"
+    #: CR 701.22a's scry and CR 701.25a's surveil, watched together the way
+    #: every printing in the pool asks for it - "Whenever you scry or
+    #: surveil, ..." (Denzilore Fatehold, Matoya, Archon Elder) - never one
+    #: without the other. CR 701.22b/701.25c both say plainly that scrying or
+    #: surveilling for 0 "is not a scry/surveil event" at all, so `Game.scry`/
+    #: `Game.surveil` emit this only once `count > 0`.
+    SCRY_OR_SURVEIL = "scry_or_surveil"
+    #: CR 606.2's loyalty ability, activated (CR 602.2, the ordinary
+    #: activation process). "Whenever you activate a loyalty ability" (Ajani
+    #: Unrelenting) and "Whenever an opponent activates a loyalty ability"
+    #: (Gideon the Oathless) are both the controller-clause shape every other
+    #: "you"/"an opponent" condition already reads. Emitted by `Game.
+    #: activate_ability`, the one place CR 602.2's activation process runs.
+    LOYALTY_ABILITY_ACTIVATED = "loyalty_ability_activated"
 
 
 class CostKind(StrEnum):
@@ -2733,8 +2747,20 @@ def _trigger_event(condition: str) -> TriggerEvent | None:
     # CR 701.9a. Checked ahead of "cast"/"sacrific" below, neither of which
     # this phrase contains, again only for grouping with the other
     # special-action-shaped conditions above.
-    if re.search(r"\bdiscards? (?:a card|one or more cards)\b", lowered):
+    if re.search(r"\bdiscards? (?:a card|one or more cards|this card)\b", lowered):
         return TriggerEvent.DISCARDS_A_CARD
+    # CR 701.22a/701.25a, watched together - see `TriggerEvent.SCRY_OR_
+    # SURVEIL`'s own docstring. Checked ahead of nothing in particular; the
+    # word "scry"/"surveil" never collides with another condition shape.
+    if re.search(r"\b(?:scry|surveil)s?\b", lowered):
+        return TriggerEvent.SCRY_OR_SURVEIL
+    # CR 606.2. "you activate" (Ajani Unrelenting) and "an opponent
+    # activates" (Gideon the Oathless) inflect the verb differently, so both
+    # forms are read. Checked ahead of nothing else in this pool - CR 602.2
+    # targeting triggers are ward's/Loki's own "becomes the target" shape,
+    # matched separately above.
+    if re.search(r"\bactivates? a loyalty ability\b", lowered):
+        return TriggerEvent.LOYALTY_ABILITY_ACTIVATED
     # "enter" (no s) is the plural-subject form printed on "Whenever one or
     # more tokens you control enter" (Caretaker's Talent) - the same
     # singular/plural split `\battacks?\b` already reads for "attacks" versus
@@ -2781,10 +2807,15 @@ def _trigger_event(condition: str) -> TriggerEvent | None:
         return TriggerEvent.IS_SACRIFICED
     if re.search(r"\bgain(?:s)? life\b", lowered):
         return TriggerEvent.GAINS_LIFE
-    # "Whenever Ragavan deals combat damage to a player" - one event kind for
-    # combat and noncombat; the matcher reads the "combat" word off the
-    # condition and `GameEvent.combat` off the event.
-    if re.search(r"\bdeals (?:combat )?damage\b", lowered):
+    # "Whenever Ragavan deals combat damage to a player" (the dealer) and
+    # "Whenever this creature is dealt damage"/"one or more opponents are
+    # dealt noncombat damage" (the recipient, CR 120.1's passive voice) are
+    # both this one event - the matcher reads "combat"/"noncombat" and
+    # active/passive voice off the condition, `GameEvent.combat` and
+    # `target_id` vs `subject_id` off the event.
+    if re.search(
+        r"\bdeals (?:combat )?damage\b|\b(?:is|are) dealt (?:combat |noncombat )?damage\b", lowered
+    ):
         return TriggerEvent.DEALS_DAMAGE
     # Aerie Worshippers prints "Whenever this creature becomes untapped".
     if "becomes untapped" in lowered:

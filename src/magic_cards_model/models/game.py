@@ -670,6 +670,11 @@ _CONDITION_SUSPENDED = re.compile(r"this (?:card|permanent) is suspended", re.IG
 _CONDITION_SPELLS_CAST_THIS_TURN = re.compile(
     rf"you(?:'ve| have) cast {count_pattern('count')} or more spells this turn", re.IGNORECASE
 )
+#: Grim Repriser's own "Activate only if an opponent has been dealt
+#: noncombat damage this turn" (CR 120.2a, CR 602.5b).
+_CONDITION_OPPONENT_NONCOMBAT_DAMAGE_THIS_TURN = re.compile(
+    r"an opponent has been dealt noncombat damage this turn", re.IGNORECASE
+)
 #: CR 110.4a: "Specifically, it means an artifact, battle, creature,
 #: enchantment, land, or planeswalker card."
 _PERMANENT_TYPES = frozenset(
@@ -1405,6 +1410,45 @@ class ObjectCostOffer(EngineModel):
     candidates: list[CardState] = Field(default_factory=list)
 
 
+class GraveyardArrival(EngineModel):
+    """One card's arrival at a graveyard this turn (CR 400.6's "put into a
+    graveyard").
+
+    A general record rather than another single-purpose counter: it is the
+    same underlying fact - "a card was put into a graveyard, from where,
+    belonging to whom, was it a permanent card" - that several different
+    printed conditions each ask a narrower question of. Wan Shi Tong-style
+    "cards put into a library" already gets its own per-event `GameEvent`
+    (`ExtraTriggerEvent.PUT_INTO_LIBRARY`); a graveyard arrival gets no
+    trigger event of its own in this pool, only intervening-*if*/activation
+    questions about the turn as a whole, which is why this is a plain
+    `Game`-level ledger rather than something `machines/triggers.py` matches.
+
+    `Game.put_into_graveyard` is the one place every graveyard arrival passes
+    through (CR 400.6, 614.1a's own docstring on that method), so it is
+    recorded there and nowhere else. `origin_zone` is the zone the card left
+    (captured before the move, the same way `CastRecord.origin_zone` is), and
+    `permanent_types` is the computed types the object had while it was still
+    on the battlefield for a card that arrived that way (`None` for a card
+    that reached the graveyard from anywhere else, since CR 613.5's computed
+    board has nothing to compute for an object that was never a permanent).
+
+    Cleared when a new turn begins, the same reset every other per-turn
+    ledger on `Game` already gets.
+    """
+
+    player: str
+    """The graveyard's owner (CR 111.4/400.3: a card's owner's graveyard is
+    where it goes), read off `Game._owner_of` at the moment of arrival."""
+    origin_zone: Zone
+    permanent_types: tuple[Type, ...] | None = None
+    """The computed card types (CR 613.5) the object had while still a
+    permanent, for an arrival straight off the battlefield (CR 700.4's dies,
+    a sacrifice, a destroy effect). `None` for a card that was never on the
+    battlefield on this trip - a discard, a mill, a countered or resolved
+    spell leaving the stack."""
+
+
 class SchemaVersionMismatch(RuntimeError):
     """A `Game` snapshot's `schema_version` does not match this build's
     `Game.CURRENT_SCHEMA_VERSION`, or the snapshot has no `schema_version` at
@@ -2017,7 +2061,41 @@ class Game(EngineModel):
     (`Player.gain_life`) for the same CR 119.9 reason, the same shape
     `cards_drawn_this_turn` already counts a per-player total in. Feeds
     Germinate Recruits' own "where X is the amount of life you gained this
-    turn" (CR 107.3f). Cleared when a new turn begins."""
+    turn" (CR 107.3f). Cleared when a new turn begins.
+
+    The FRA "trigger events and per-turn history" stream (S5) independently
+    built the identical fact as `Player.life_gained_tally`/`life_gained_
+    tally_turn` before this field landed; reconciled at merge in favour of
+    this one, since Germinate Recruits' own effect (`machines/effects.py`)
+    already reads it - `Player.gain_life` keeps only one recorder, not two,
+    per `CLAUDE.md`'s "keep one mechanism" rule."""
+
+    turn_facts: dict[str, SortedSet[str]] = Field(default_factory=dict)
+    """A general per-turn, per-player fact ledger: `turn_facts[fact]` is the
+    set of usernames for whom `fact` has happened this turn.
+
+    `life_gained_this_turn`, `cards_discarded_this_turn`, and the other
+    single-purpose per-turn fields above each grew a new `Game` field the
+    first time a card needed one; this is the FRA "trigger events and
+    per-turn history" stream's alternative for the batch of this-turn
+    predicates it adds (CR 701.22d's scry, CR 701.25c's surveil, CR 606.3's
+    loyalty ability, CR 120.2a's noncombat damage) - one field, many keys,
+    rather than one field per fact. `record_turn_fact`/`turn_fact_holds` are
+    the read/write pair; nothing reads or writes this dict directly.
+    Cleared when a new turn begins, `turn_facts_last_turn` keeping the
+    previous turn's copy the same way `spells_cast_last_turn` already does
+    for `spells_cast_this_turn`."""
+
+    turn_facts_last_turn: dict[str, SortedSet[str]] = Field(default_factory=dict)
+    """What `turn_facts` held during the turn before this one - Command the
+    Stage's own "if an opponent was dealt noncombat damage **last turn**"
+    (CR 603.4), the same snapshot `spells_cast_last_turn` already takes."""
+
+    graveyard_arrivals_this_turn: list[GraveyardArrival] = Field(default_factory=list)
+    """Every card that arrived at a graveyard this turn (CR 400.6), one entry
+    per arrival - see `GraveyardArrival`'s own docstring for why this is one
+    general ledger rather than a narrower counter. Cleared when a new turn
+    begins."""
 
     activations: dict[str, int] = Field(default_factory=dict)
     """How often each ability has been activated this turn, keyed
@@ -2285,7 +2363,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 24
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 25
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -2549,6 +2627,39 @@ class Game(EngineModel):
     where life was in fact already gained before the snapshot. Merged onto
     the G0b/fu-costs line above; the number moves on once more. Refused
     instead.
+
+    Bumped 24 -> 25: the FRA S5 line of development (trigger events and
+    per-turn history), reconciled at the same merge as this note. `Game`
+    gained `turn_facts`/`turn_facts_last_turn` - a general per-turn,
+    per-player fact ledger (`record_turn_fact`/`turn_fact_holds`) for the
+    batch of this-turn predicates the stream adds (CR 701.22d's scry, CR
+    701.25c's surveil, CR 606.3's loyalty ability, CR 120.2a's noncombat
+    damage) - and `graveyard_arrivals_this_turn` (`GraveyardArrival`, one
+    entry per card that reached a graveyard this turn, with its origin zone
+    and whether it was a permanent card as it left the battlefield):
+    deliberately shaped so a Descend-style "permanent cards put into
+    graveyards this turn" count and this stream's own "from a library" one
+    both read the same ledger, for whichever of this branch and fu-events'
+    (not yet merged) lands its own record second. `GameEvent` (reachable
+    from a decoded `AbilityOnStack.event`) gained `target_id`/
+    `target_controller`/`target_types` (a damage event's recipient, not just
+    its source), `discarded_ids` (which cards a batched discard actually
+    moved), and `attacking_alone`/`attacking_player_alone` (CR 506.5/506.6,
+    settled once the whole attacking party is known). `machines/delayed.
+    DelayedTrigger` (reachable from `Game.delayed_triggers`) gained
+    `combat_only`/`to_player_only`, both defaulting `False` - Lyra, Tolarian
+    Archangel's own granted "Until end of turn, whenever Lyra deals combat
+    damage to a player, draw two cards." None of these fields existed for a
+    version-24 dump to have populated, so a default would silently read
+    every attacks-alone/is-dealt-damage/discard-this-card condition as
+    false, or a delayed trigger of Lyra's shape as also matching noncombat
+    damage and damage to a creature, rather than admit the state was never
+    recorded. Refused instead. (The stream's own independent `Player.
+    life_gained_tally`/`life_gained_tally_turn` field, for the identical
+    fact fra-s3's `life_gained_amount_this_turn` above already covers, was
+    dropped at this same merge rather than carried forward - one mechanism,
+    not two; no schema bump needed for a field that never reached a build
+    anyone decoded.)
     """
 
     @model_validator(mode="before")
@@ -6360,6 +6471,48 @@ class Game(EngineModel):
         time conditions from."""
         return self.permanents_left_battlefield_this_turn.get(controller, 0) > 0
 
+    def record_turn_fact(self, fact: str, player: str) -> None:
+        """Note that `fact` happened for `player` this turn - `turn_facts`'
+        own write half.
+
+        Idempotent (a `set`, not a counter): a fact that already holds for
+        `player` this turn is unchanged by happening again, which is what
+        every consumer of this ledger asks - "did you", never "how many
+        times"."""
+        self.turn_facts.setdefault(fact, set()).add(player)
+
+    def turn_fact_holds(self, fact: str, player: str, *, last_turn: bool = False) -> bool:
+        """Whether `fact` has happened for `player` this turn, or last turn
+        with `last_turn=True` (`turn_facts_last_turn`, the same snapshot
+        `spells_cast_last_turn` already takes for its own ledger)."""
+        ledger = self.turn_facts_last_turn if last_turn else self.turn_facts
+        return player in ledger.get(fact, set())
+
+    def cards_put_into_graveyard_this_turn(
+        self,
+        player: str,
+        *,
+        from_zone: Zone | None = None,
+        permanent_only: bool = False,
+    ) -> int:
+        """How many cards reached `player`'s graveyard this turn, from
+        `graveyard_arrivals_this_turn`'s ledger.
+
+        `from_zone=Zone.LIBRARY` answers a mill's own "cards put into a
+        graveyard from a library this turn"; `permanent_only=True` answers
+        the narrower "permanent cards put into graveyards this turn" a
+        Descend-style count asks (CR 702.187a-adjacent - whether the card was
+        a permanent card as it left the battlefield, not what it is now that
+        it is a card in a graveyard). Both filters compose, and neither
+        filter given counts every arrival, permanent or not."""
+        return sum(
+            1
+            for arrival in self.graveyard_arrivals_this_turn
+            if arrival.player == player
+            and (from_zone is None or arrival.origin_zone is from_zone)
+            and (not permanent_only or bool(arrival.permanent_types))
+        )
+
     def _additional_entering_loyalty(self, card_state: CardState) -> int:
         """Ral, Monsoon Mage's back face: "Ral enters with an additional
         loyalty counter on him for each instant and sorcery spell you've
@@ -7893,6 +8046,14 @@ class Game(EngineModel):
             if count <= 0:
                 return CardSplit()
 
+            # CR 701.22d has no rule number of its own to cite - the trigger
+            # is a plain CR 603.2 "matches the event" question, and CR
+            # 701.22b already draws the line this checks: scry 0 "is not a
+            # scry event" at all. Denzilore Fatehold's and Matoya, Archon
+            # Elder's own "Whenever you scry or surveil" is what reads this.
+            self.emit(GameEvent(event=TriggerEvent.SCRY_OR_SURVEIL, player=player.username))
+            self.record_turn_fact("scried_or_surveilled", player.username)
+
             looked_at = self._look_at_top(player, count)
             pending_looks = self._look_before_choosing(player, looked_at, source)
             answer = self.ask(
@@ -7967,6 +8128,11 @@ class Game(EngineModel):
                 player = self.player(player)
             if count <= 0:
                 return CardSplit()
+
+            # CR 701.25c mirrors CR 701.22b: surveil 0 "is not a surveil
+            # event" either - see `scry`'s own emit for the rest.
+            self.emit(GameEvent(event=TriggerEvent.SCRY_OR_SURVEIL, player=player.username))
+            self.record_turn_fact("scried_or_surveilled", player.username)
 
             looked_at = self._look_at_top(player, count)
             pending_looks = self._look_before_choosing(player, looked_at, source)
@@ -10057,6 +10223,19 @@ class Game(EngineModel):
                 source_chars = self.characteristics_of(source)
                 source_types = source_chars.types
                 source_subtypes = source_chars.subtypes
+            # CR 613.5, the recipient's own side of the same read above - for
+            # Hexhaven Invigorator's own "Whenever this creature is dealt
+            # damage" (`GameEvent.target_id`, the receiving end, as opposed to
+            # `subject_id`'s dealing end).
+            target_types = None
+            target_controller = None
+            if not isinstance(target, Player):
+                target_types = target.types
+                if target.zone is Zone.BATTLEFIELD:
+                    target_chars = self.characteristics_of(target)
+                    target_types = target_chars.types
+                target_controller = self.controller_of(target).username
+            damaged_player = target if isinstance(target, Player) else None
             # CR 120.1: "An object that deals damage is the source of that
             # damage" - the subject is the source, and the player, when there is
             # one, is who the damage went to. A prevention or replacement that
@@ -10070,11 +10249,22 @@ class Game(EngineModel):
                     subject_card=source.card if source is not None else None,
                     subject_types=source_types,
                     subject_subtypes=source_subtypes,
-                    player=target.username if isinstance(target, Player) else None,
+                    target_id=target.id if not isinstance(target, Player) else None,
+                    target_controller=target_controller,
+                    target_types=target_types,
+                    player=damaged_player.username if damaged_player is not None else None,
                     combat=event.combat,
                     amount=event.amount,
                 )
             )
+            if damaged_player is not None and not event.combat:
+                # Master of Barbs' and Massacre Girl, Most Wanted's own
+                # "whenever [an/one or more] opponent[s] [is/are] dealt
+                # noncombat damage" (CR 120.2a) are matched straight off the
+                # event above; this is the this-turn/last-turn half - Grim
+                # Repriser's "an opponent has been dealt noncombat damage
+                # this turn" and Command the Stage's "... last turn".
+                self.record_turn_fact("dealt_noncombat_damage", damaged_player.username)
             return event.amount
 
         # -- prevention effects with a duration (CR 615) --------------------------
@@ -10650,6 +10840,12 @@ class Game(EngineModel):
                     event=TriggerEvent.DISCARDS_A_CARD,
                     player=username,
                     amount=len(discarded),
+                    # Titanbones, Towering Heart's own self-referential "When
+                    # you discard this card, ..." - the batch's own ids, since
+                    # a discard fires once for the whole instruction and any
+                    # one of the discarded cards may be the self-referencing
+                    # source.
+                    discarded_ids=tuple(card.id for card in discarded),
                 )
             )
             return discarded
@@ -10724,6 +10920,19 @@ class Game(EngineModel):
 
             if event.destination is Zone.GRAVEYARD:
                 self._owner_of(card_state).add(card_state, Zone.GRAVEYARD)
+                # CR 400.6/400.3: one ledger entry per arrival, whoever's
+                # graveyard it lands in and wherever it came from - see
+                # `GraveyardArrival`'s own docstring for why this is a
+                # general record rather than a single-purpose counter.
+                self.graveyard_arrivals_this_turn.append(
+                    GraveyardArrival(
+                        player=self._owner_of(card_state).username,
+                        origin_zone=Zone.BATTLEFIELD if was_on_battlefield else origin,
+                        permanent_types=(
+                            left_battlefield_chars.types if was_on_battlefield else None
+                        ),
+                    )
+                )
             elif event.destination is Zone.EXILE:
                 card_state.move_to(Zone.EXILE)
                 self.exile.append(card_state)
@@ -11795,13 +12004,43 @@ class Game(EngineModel):
         being declared onto the stack "before the active player gets priority",
         and no player receives priority between one declaration and the next.
         `declare_attackers` opens that window once the whole attack is declared.
+
+        A single call registers and emits together, correct for the only
+        case a lone call to this method can mean: this creature really is the
+        whole attacking party. `declare_attackers` (CR 508.1a's "all at
+        once") does not call this - registering and emitting a whole batch
+        one creature at a time here would settle "alone" (CR 506.5/506.6)
+        off however many attackers happened to be registered *so far*, which
+        is wrong for every attacker but the last; see its own docstring.
         """
         self._refuse_if_over()
         attack = combat_rules.declare_attacker(self, creature, self.attack_target(defender))
+        self._emit_attacks(creature, attack)
+        return attack
+
+    def _emit_attacks(self, creature: CardState, attack: "Attack") -> None:
+        """Emit one attacker's own `ATTACKS` event (CR 508.3c/d), read against
+        the *whole* attacking party as it stands right now.
+
+        Split out of `declare_attacker` so `declare_attackers` can register
+        every attacker of a batch first and only then call this once per
+        attacker, which is what makes `attacking_alone`/`attacking_player_
+        alone` (CR 506.5/506.6) correct for a multi-attacker declaration -
+        both ask about the finished declaration, never a partial one.
+        """
         # CR 613.5: the attacker's characteristics for this event are the
         # computed ones - a land animated by earthbend is a creature only
         # there - and it is still on the battlefield here (CR 508.1a).
         chars = self.characteristics_of(creature)
+        # CR 506.5: "the only creature declared as an attacker" this combat.
+        alone = len(self.combat.attacks) == 1
+        # CR 506.6: "no other creature is declared as an attacker attacking
+        # that player" - scoped to attacks sharing this one's defender, and
+        # only meaningful when that defender is a player at all.
+        player_alone = attack.defender.is_player and all(
+            other.defender != attack.defender or other.attacker_id == creature.id
+            for other in self.combat.attacks
+        )
         self.emit(
             GameEvent(
                 event=TriggerEvent.ATTACKS,
@@ -11813,9 +12052,10 @@ class Game(EngineModel):
                 subject_subtypes=chars.subtypes,
                 defender=attack.defender,
                 player=self.controller_of(creature).username,
+                attacking_alone=alone,
+                attacking_player_alone=player_alone,
             )
         )
-        return attack
 
     def _refuse_unobeyed_attack_requirements(
         self, attacks: "Sequence[tuple[CardState, Targetable | str]]"
@@ -11851,12 +12091,28 @@ class Game(EngineModel):
         ]
 
     def declare_attackers(self, attacks: list[tuple[CardState, "Targetable | str"]]) -> None:
-        """Declare a whole attack at once, in order (CR 508.1, 508.2b)."""
+        """Declare a whole attack at once, in order (CR 508.1, 508.2b).
+
+        CR 508.1a: "the active player... declares [attackers]. This is done
+        all at once". Registration (tapping, adding to `self.combat.attacks`)
+        happens for every attacker first, in declaration order; only once the
+        whole party is known does anything emit its own `ATTACKS` event, so
+        `attacking_alone`/`attacking_player_alone` (CR 506.5/506.6) are read
+        off the finished declaration for every attacker, not a partial one -
+        see `_emit_attacks`'s own docstring.
+        """
         self._refuse_if_over()
         with self._id_allocator_scope():
             self._refuse_unobeyed_attack_requirements(attacks)
-            for creature, defender in attacks:
-                self.declare_attacker(creature, defender)
+            registered = [
+                (
+                    creature,
+                    combat_rules.declare_attacker(self, creature, self.attack_target(defender)),
+                )
+                for creature, defender in attacks
+            ]
+            for creature, attack in registered:
+                self._emit_attacks(creature, attack)
             if attacks:
                 # CR 508.3d: "An ability that reads 'Whenever [a player]
                 # attacks, . . .' triggers if one or more creatures that
@@ -11907,6 +12163,13 @@ class Game(EngineModel):
                     if pair in self.blocks_triggered:
                         continue
                     self.blocks_triggered.append(pair)
+                    # CR 613.5: the blocker's characteristics for this event
+                    # are the computed ones - Tetsuko Umezawa, Pursuer's own
+                    # "a creature an opponent controls with power or
+                    # toughness 1 or less blocks" needs both the up-face
+                    # type/subtype and the live power/toughness, and the
+                    # blocker is still on the battlefield here (CR 509.1a).
+                    blocker_chars = self.characteristics_of(blocker)
                     self.emit(
                         GameEvent(
                             event=TriggerEvent.BLOCKS,
@@ -11914,6 +12177,8 @@ class Game(EngineModel):
                             subject_name=blocker.name,
                             subject_controller=self.controller_of(blocker).username,
                             subject_card=blocker.card,
+                            subject_types=blocker_chars.types,
+                            subject_subtypes=blocker_chars.subtypes,
                             related_id=attacker.id,
                             player=self.controller_of(blocker).username,
                         )
@@ -13696,6 +13961,12 @@ class Game(EngineModel):
                 return None
             return len(self.spells_cast_this_turn.get(controller, [])) >= needed
 
+        if _CONDITION_OPPONENT_NONCOMBAT_DAMAGE_THIS_TURN.fullmatch(text):
+            return any(
+                self.turn_fact_holds("dealt_noncombat_damage", opponent.username)
+                for opponent in opponents
+            )
+
         if _CONDITION_SUSPENDED.fullmatch(text):
             if source is None:
                 return None
@@ -14718,6 +14989,23 @@ class Game(EngineModel):
                 self.loyalty_activations[str(permanent.id)] = (
                     self.loyalty_activations.get(str(permanent.id), 0) + 1
                 )
+                # CR 606.2/602.2: Ajani Unrelenting's own "Whenever you
+                # activate a loyalty ability" and Gideon the Oathless's
+                # "Whenever an opponent activates a loyalty ability" both
+                # watch this same activation, and Kiora of Salt and Sand's
+                # "if you've activated a loyalty ability this turn" reads the
+                # ledger it feeds.
+                self.emit(
+                    GameEvent(
+                        event=TriggerEvent.LOYALTY_ABILITY_ACTIVATED,
+                        subject_id=permanent.id,
+                        subject_name=permanent.name,
+                        subject_controller=controller,
+                        subject_card=permanent.card,
+                        player=controller,
+                    )
+                )
+                self.record_turn_fact("loyalty_ability_activated", controller)
 
             if (
                 ability.mana is not None
@@ -15424,6 +15712,11 @@ class Game(EngineModel):
             self.cards_discarded_this_turn = {}
             self.life_gained_this_turn = set()
             self.life_gained_amount_this_turn = {}
+            # Snapshotted the same way `spells_cast_last_turn` is: Command
+            # the Stage's own "dealt noncombat damage last turn" needs it.
+            self.turn_facts_last_turn = self.turn_facts
+            self.turn_facts = {}
+            self.graveyard_arrivals_this_turn = []
             # `play_permissions` is deliberately **not** cleared here. CR 514.2
             # ends an "until end of turn" effect in the cleanup step and
             # `cleanup_step` does exactly that; a game driven step by step may
