@@ -2810,6 +2810,42 @@ def damage_each_opponent(amount: int) -> AbilityEffect:
     return effect
 
 
+def damage_to_itself(amount: int) -> AbilityEffect:
+    """ "This creature/permanent deals N damage to itself" (CR 119.3, CR
+    120.2b) - Goblin Kaboomist's own "this creature deals 2 damage to
+    itself", the losing half of its coin flip.
+
+    "Itself" is the ability's own source, still on the battlefield or this
+    does nothing (CR 113.7a: gone by resolution is not a legal target for a
+    non-targeted effect to still find).
+    """
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        game.deal_damage(source, amount, source=source)
+
+    return effect
+
+
+def damage_to_controller(amount: int) -> AbilityEffect:
+    """ "This artifact/creature/permanent deals N damage to you" (CR 119.3,
+    120.2b) - Mana Crypt's own "this artifact deals 3 damage to you", the
+    losing half of its own upkeep coin flip.
+
+    "You" (CR 105.3a is a player pronoun, not a search or count question) is
+    the ability's own controller - the player who would flip the coin in the
+    first place (CR 705.2: "the player that flips the coin").
+    """
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        game.deal_damage(game.player(ability.controller), amount, source=source)
+
+    return effect
+
+
 #: "Each opponent skips their next untap step." - Brine Elemental's own
 #: "turned face up" trigger (CR 702.37e, CR 614.10, CR 502.3).
 _EACH_OPPONENT_SKIPS_NEXT_UNTAP_RE = re.compile(
@@ -8757,6 +8793,18 @@ def _parse_reveal_until_land_damage_clause(text: str) -> AbilityEffect | None:
 _DAMAGE_EACH_OPPONENT_RE = re.compile(
     rf".*\bdeals? (?P<n>{AMOUNT}) damage to each opponent{where_x_pattern()}\.?$", re.IGNORECASE
 )
+#: "<Source> deals N damage to itself." (CR 119.3, 120.2b) - Goblin
+#: Kaboomist's own coin-flip loser. Same `.*\bdeals?` source-agnostic prefix
+#: as `_DAMAGE_EACH_OPPONENT_RE` just above, so "this creature", "this
+#: token", or a self-named reference (CR 201.5) all read identically.
+_DAMAGE_TO_ITSELF_RE = re.compile(
+    rf".*\bdeals? (?P<n>{AMOUNT}) damage to itself{where_x_pattern()}\.?$", re.IGNORECASE
+)
+#: "<Source> deals N damage to you." (CR 119.3, 120.2b) - Mana Crypt's own
+#: coin-flip loser. Same source-agnostic prefix as the two patterns above.
+_DAMAGE_TO_CONTROLLER_RE = re.compile(
+    rf".*\bdeals? (?P<n>{AMOUNT}) damage to you{where_x_pattern()}\.?$", re.IGNORECASE
+)
 #: "<Source> deals N damage to each creature." (Extinguisher Battleship) -
 #: CR 119.3, also with no target: "each creature" is every creature on the
 #: battlefield, not something chosen or a player group. Same X/where-X
@@ -9340,6 +9388,29 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
         if amount_fn is None:
             return None
         return _damage_each_opponent_for_expression(amount_fn)  # type: ignore[return-value]
+
+    if match := _DAMAGE_TO_ITSELF_RE.fullmatch(clause):
+        # No target either (CR 120.2b's own source, not something chosen),
+        # and ability-only for the same reason `_DAMAGE_EACH_OPPONENT_RE` is:
+        # `damage_to_itself` reads `AbilityOnStack.source`.
+        if for_spell:
+            return None
+        where_x = match.group("where_x")
+        if where_x is not None:
+            return None  # no printing in the pool needs a variable self-damage count yet
+        amount = parse_count(match.group("n"))
+        return damage_to_itself(amount)  # type: ignore[return-value]
+
+    if match := _DAMAGE_TO_CONTROLLER_RE.fullmatch(clause):
+        # Ability-only, same reason: `damage_to_controller` reads
+        # `AbilityOnStack.controller`.
+        if for_spell:
+            return None
+        where_x = match.group("where_x")
+        if where_x is not None:
+            return None  # no printing in the pool needs a variable count here yet
+        amount = parse_count(match.group("n"))
+        return damage_to_controller(amount)  # type: ignore[return-value]
 
     if match := _DAMAGE_EACH_CREATURE_RE.fullmatch(clause):
         # No target either (every creature on the battlefield, CR 119.3).
@@ -12344,6 +12415,55 @@ def _merge_flip_coin_damage_or_exile_transform_clauses(
             game.deal_damage(game.player(controller), lose_amount, source=source)
 
     return 4, effect
+
+
+#: "Flip a coin. If you lose the flip, `<consequence>`." - CR 705.1/705.2's
+#: coin flip with only a losing branch printed (nothing at all happens on a
+#: win, unlike Ral, Monsoon Mage's own four-clause shape above, which always
+#: prints both). Goblin Kaboomist's own upkeep trigger: "... create a
+#: colorless artifact token named Land Mine with '...'. Then flip a coin. If
+#: you lose the flip, this creature deals 2 damage to itself." `<consequence>`
+#: is read through the same per-clause dispatcher (`parse_mixed_effect`)
+#: every other ability's own effect goes through, not a hand-written shape
+#: fitted to Goblin Kaboomist's own self-damage - a future card pairing
+#: "flip a coin. If you lose the flip, ..." with any other clause this file
+#: already reads gets it for free.
+_IF_YOU_LOSE_THE_FLIP_RE = re.compile(
+    r"^if you lose the flip, (?P<consequence>.+)$", re.IGNORECASE | re.DOTALL
+)
+
+
+def _merge_flip_coin_lose_consequence_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """`_FLIP_A_COIN_RE` then `_IF_YOU_LOSE_THE_FLIP_RE`, as one CR 608.2c
+    instruction pair - the second sentence means nothing without knowing
+    which side of the flip it answers for, the same reason Ral, Monsoon
+    Mage's own four-clause merge above reads all of its sentences together.
+
+    Ability-only: no spell in the pool prints this shape, the same as Ral's.
+    Tried after the four-clause merger above, so a card that prints both a
+    losing *and* a winning branch (Ral's own shape) is still read by that
+    more specific merger first; this one only ever sees the pair when there
+    is no third "if you win the flip" sentence to go with it.
+    """
+    if for_spell or index + 1 >= len(clauses):
+        return None
+    if _FLIP_A_COIN_RE.fullmatch(clauses[index].strip()) is None:
+        return None
+    match = _IF_YOU_LOSE_THE_FLIP_RE.fullmatch(clauses[index + 1].strip())
+    if match is None:
+        return None
+    consequence_text = match.group("consequence").strip().rstrip(".") + "."
+    consequence = parse_mixed_effect(consequence_text)
+    if consequence is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        if not game.flip_coin():
+            consequence(game, ability)  # type: ignore[arg-type]
+
+    return 2, effect
 
 
 #: Ajani, Nacatl Avenger's `−4`: "Each opponent chooses an artifact, a
@@ -24070,6 +24190,12 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
         merged = _merge_flip_coin_damage_or_exile_transform_clauses(
             clauses, index, for_spell=for_spell
         )
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_flip_coin_lose_consequence_clauses(clauses, index, for_spell=for_spell)
         if merged is not None:
             consumed, effect = merged
             parsed.append(effect)
