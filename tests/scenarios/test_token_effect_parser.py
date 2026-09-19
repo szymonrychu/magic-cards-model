@@ -850,3 +850,109 @@ def test_germinate_recruits_creates_no_tokens_with_no_life_gained():
     scenario.cast_and_resolve("Germinate Recruits", *sources, username="alice")
 
     assert not any(state.name == "Cadet" for state in scenario.game.battlefield)
+
+
+# --------------------------------------------------------------------------
+# "If this spell was cast from a graveyard, put counters on {that token|each
+# of them}" - CR 601.2, CR 702.34a's flashback
+# --------------------------------------------------------------------------
+
+
+def test_retrieve_the_esper_puts_two_counters_only_when_cast_from_the_graveyard():
+    """Off-set: Retrieve the Esper: "Create a 3/3 blue Robot Warrior artifact
+    creature token. Then if this spell was cast from a graveyard, put two
+    +1/+1 counters on that token." A literal flat count, no divisor tail -
+    the plain shape, and read whole ahead of the ordinary per-clause split
+    (the sentence boundary is a period `_CLAUSE_SEPARATOR` would cut on too).
+    """
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Retrieve the Esper"], battlefield=["Island"] * 4)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources(*["Island"] * 4, username="alice")
+    scenario.cast_and_resolve("Retrieve the Esper", *sources, username="alice")
+
+    robot = scenario.find("Robot Warrior Token", Zone.BATTLEFIELD)
+    assert robot.counter_count("+1/+1") == 0  # cast from hand: no bonus
+
+
+def test_retrieve_the_esper_from_the_graveyard_gets_its_two_counters():
+    """The same card, cast via flashback out of the graveyard this time -
+    `Game.cast_record(spell).origin_zone` is `Zone.GRAVEYARD`, so the second
+    sentence's condition is true and the token gets its two counters."""
+    scenario = (
+        Scenario()
+        .player("alice", graveyard=["Retrieve the Esper"], battlefield=["Island"] * 6)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources(*["Island"] * 6, username="alice")
+    casting = scenario.cast("Retrieve the Esper", from_zone=Zone.GRAVEYARD)
+    casting.use_keyword("Flashback")
+    scenario.pay_with(casting.begin_paying(), *sources)
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    robot = scenario.find("Robot Warrior Token", Zone.BATTLEFIELD)
+    assert robot.counter_count("+1/+1") == 2
+
+
+def test_recursive_recruitment_puts_counters_by_graveyard_size_when_flashed_back():
+    """On-set: Recursive Recruitment: "Create two 2/2 colorless Wizard
+    Soldier creature tokens named Cadet. If this spell was cast from a
+    graveyard, put a +1/+1 counter on each of them for every three cards in
+    your graveyard." Differently worded from Retrieve the Esper (plural
+    "each of them" instead of "that token", no "Then", a "for every three
+    cards" divisor instead of a flat count, two tokens instead of one) -
+    proof the reader is not fitted to either card's own sentence.
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            graveyard=["Recursive Recruitment"] + ["Plains"] * 6,
+            battlefield=["Island", "Swamp"] + ["Plains"] * 6,
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Island", "Swamp", *["Plains"] * 6, username="alice")
+    casting = scenario.cast("Recursive Recruitment", from_zone=Zone.GRAVEYARD)
+    casting.use_keyword("Flashback")
+    scenario.pay_with(casting.begin_paying(), *sources)
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    cadets = [state for state in scenario.game.battlefield if state.name == "Cadet"]
+    assert len(cadets) == 2
+    # Six Plains left in the graveyard once the spell itself moved to the
+    # stack: 6 // 3 = 2 counters on each token.
+    assert len(scenario.player("alice").graveyard) == 6
+    assert all(cadet.counter_count("+1/+1") == 2 for cadet in cadets)
+
+
+def test_recursive_recruitment_from_hand_puts_no_counters():
+    """Cast for its ordinary mana cost, from the hand - the "cast from a
+    graveyard" condition is false, so the Cadets arrive with no counters."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Recursive Recruitment"],
+            battlefield=["Island", "Swamp", "Plains", "Plains"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Island", "Swamp", "Plains", "Plains", username="alice")
+    scenario.cast_and_resolve("Recursive Recruitment", *sources, username="alice")
+
+    cadets = [state for state in scenario.game.battlefield if state.name == "Cadet"]
+    assert len(cadets) == 2
+    assert all(cadet.counter_count("+1/+1") == 0 for cadet in cadets)

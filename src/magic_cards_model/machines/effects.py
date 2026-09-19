@@ -13297,6 +13297,90 @@ def _parse_citys_blessing_instead_clause(effect_text: str) -> Effect | None:
     return effect
 
 
+#: "Create `<n>` `<descriptor>` tokens[ named `<Name>`]. [Then ]if this spell
+#: was cast from a graveyard, put `<base>` `<kind>` counters on {that token|
+#: each of them}[ for every `<divisor>` cards in your graveyard]." - Recursive
+#: Recruitment's own "put a +1/+1 counter on each of them for every three
+#: cards in your graveyard" and off-set Retrieve the Esper's "Then if this
+#: spell was cast from a graveyard, put two +1/+1 counters on that token."
+#: Read whole, ahead of the ordinary per-clause split - the sentence boundary
+#: (a period) is one `_CLAUSE_SEPARATOR` would cut on too, and the second
+#: sentence's "each of them"/"that token" refers back to the first sentence's
+#: own tokens, which only a whole-text reader can carry forward.
+_CREATE_TOKENS_GRAVEYARD_CAST_COUNTERS_RE = re.compile(
+    rf"^create (?P<n>{COUNT}) (?P<desc>.+?) \btokens?\b(?:\s+named (?P<name>.+?))?\.\s*"
+    r"(?:then\s+)?if this spell was cast from a graveyard,\s*"
+    rf"put (?P<base>{COUNT}) (?P<kind>\+1/\+1|-1/-1) counters? on "
+    r"(?:that token|each of them)"
+    rf"(?:\s+for every (?P<divisor>{COUNT}) cards? in your graveyard)?\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_create_tokens_graveyard_cast_counters_clause(text: str) -> Effect | None:
+    """`_CREATE_TOKENS_GRAVEYARD_CAST_COUNTERS_RE`'s shape, or `None`.
+
+    `Game.cast_record(spell).origin_zone` (CR 601.2, already recorded by
+    `Game.note_cast` for every keyword-cast case, flashback's own exile
+    included) is CR 608.2c's "this spell" - the resolving object itself, not
+    the target of anything - so no target-resolution step is needed the way
+    the copy-token shapes above need one. `<base>` counters "for every
+    `<divisor>` cards in your graveyard" is CR 107.1's plain integer
+    division: one `<base>`-sized helping per whole `<divisor>` cards, applied
+    identically to every token the first sentence created, the same way
+    Recursive Recruitment's own plural "each of them" reads. No divisor tail
+    at all is Retrieve the Esper's own flat count instead.
+    """
+    match = _CREATE_TOKENS_GRAVEYARD_CAST_COUNTERS_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    if "copy of" in text.lower():
+        return None
+    count = parse_count(match.group("n"))
+    words = match.group("desc").strip().split()
+    tapped = bool(words) and words[0].lower() == "tapped"
+    if tapped:
+        words = words[1:]
+    if not words:
+        return None
+    predefined_name = " ".join(words)
+    name = match.group("name")
+    if name is None and predefined_name in PREDEFINED:
+        definition = PREDEFINED[predefined_name]
+    else:
+        definition = _parse_generic_token_descriptor(words, None)
+        if definition is None:
+            return None
+        if name is not None:
+            definition = definition.model_copy(update={"name": name.strip()})
+
+    kind = _counter_kind(match.group("kind"))
+    base = parse_count(match.group("base"))
+    divisor_text = match.group("divisor")
+    divisor = parse_count(divisor_text) if divisor_text is not None else None
+    if divisor_text is not None and not divisor:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell).username
+        created = create_tokens(game, definition, controller, count, tapped=tapped)
+        if not created:
+            return
+        if game.cast_record(spell).origin_zone is not Zone.GRAVEYARD:
+            return
+        if divisor is not None:
+            graveyard_count = len(game.player(controller).graveyard)
+            amount = base * (graveyard_count // divisor)
+        else:
+            amount = base
+        if amount <= 0:
+            return
+        for token in created:
+            game.add_counters(token, kind, amount)
+
+    return effect
+
+
 def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     """The spell-side twin of `_ability_effect_or_notice`, for `effect_for`.
 
@@ -13328,6 +13412,9 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     )
     if for_each_creature_target_player_copy is not None:
         return for_each_creature_target_player_copy
+    tokens_graveyard_cast_counters = _parse_create_tokens_graveyard_cast_counters_clause(whole)
+    if tokens_graveyard_cast_counters is not None:
+        return tokens_graveyard_cast_counters
     untap_and_gain_control = _parse_untap_and_gain_control_clause(whole)
     if untap_and_gain_control is not None:
         return untap_and_gain_control
