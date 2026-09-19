@@ -23351,7 +23351,12 @@ def _merge_look_top_split_hand_graveyard_clauses(
         else:
             for state in rest:
                 player.add(state, Zone.GRAVEYARD)
-                game._record_descend(state)  # noqa: SLF001 - CR 700.11
+                # CR 700.11/CR 400.6: this puts a looked-at library card
+                # straight into the graveyard without going through `Game.
+                # put_into_graveyard`, so it has to feed the ledger itself.
+                game._record_graveyard_arrival(  # noqa: SLF001
+                    state, origin_zone=Zone.LIBRARY, permanent_types=None
+                )
 
     return 3, effect
 
